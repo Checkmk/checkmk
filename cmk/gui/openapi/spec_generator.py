@@ -24,7 +24,7 @@ from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.fields import Field
 from cmk.gui.openapi.restful_objects import permissions
-from cmk.gui.openapi.restful_objects.api_error import ApiError
+from cmk.gui.openapi.restful_objects.api_error import api_default_error_schema
 from cmk.gui.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
@@ -40,6 +40,7 @@ from cmk.gui.openapi.restful_objects.specification import make_spec, spec_path
 from cmk.gui.openapi.restful_objects.type_defs import (
     ContentObject,
     EndpointTarget,
+    ErrorStatusCodeInt,
     LocationType,
     OpenAPIParameter,
     OpenAPITag,
@@ -154,49 +155,59 @@ def _to_operation_dict(  # pylint: disable=too-many-branches
 
     responses: ResponseType = {}
 
-    responses["406"] = _path_item(
+    responses["406"] = _error_response_path_item(
         endpoint, 406, "The requests accept headers can not be satisfied."
     )
 
     if 401 in endpoint.expected_status_codes:
-        responses["401"] = _path_item(
+        responses["401"] = _error_response_path_item(
             endpoint, 401, "The user is not authorized to do this request."
         )
 
     if endpoint.tag_group == "Setup":
-        responses["403"] = _path_item(endpoint, 403, "Configuration via Setup is disabled.")
+        responses["403"] = _error_response_path_item(
+            endpoint, 403, "Configuration via Setup is disabled."
+        )
     if endpoint.tag_group == "Checkmk Internal" and 403 in endpoint.expected_status_codes:
-        responses["403"] = _path_item(
+        responses["403"] = _error_response_path_item(
             endpoint,
             403,
             "You have insufficient permissions for this operation.",
         )
 
     if 404 in endpoint.expected_status_codes:
-        responses["404"] = _path_item(endpoint, 404, "The requested object has not been found.")
+        responses["404"] = _error_response_path_item(
+            endpoint, 404, "The requested object has not been found."
+        )
 
     if 422 in endpoint.expected_status_codes:
-        responses["422"] = _path_item(endpoint, 422, "The request could not be processed.")
+        responses["422"] = _error_response_path_item(
+            endpoint, 422, "The request could not be processed."
+        )
 
     if 423 in endpoint.expected_status_codes:
-        responses["423"] = _path_item(endpoint, 423, "This resource is currently locked.")
+        responses["423"] = _error_response_path_item(
+            endpoint, 423, "This resource is currently locked."
+        )
 
     if 405 in endpoint.expected_status_codes:
-        responses["405"] = _path_item(
+        responses["405"] = _error_response_path_item(
             endpoint,
             405,
             "Method not allowed: This request is only allowed with other HTTP methods",
         )
 
     if 409 in endpoint.expected_status_codes:
-        responses["409"] = _path_item(
+        responses["409"] = _error_response_path_item(
             endpoint,
             409,
             "The request is in conflict with the stored resource.",
         )
 
     if 415 in endpoint.expected_status_codes:
-        responses["415"] = _path_item(endpoint, 415, "The submitted content-type is not supported.")
+        responses["415"] = _error_response_path_item(
+            endpoint, 415, "The submitted content-type is not supported."
+        )
 
     if 302 in endpoint.expected_status_codes:
         responses["302"] = _path_item(
@@ -207,7 +218,9 @@ def _to_operation_dict(  # pylint: disable=too-many-branches
         )
 
     if 400 in endpoint.expected_status_codes:
-        responses["400"] = _path_item(endpoint, 400, "Parameter or validation failure.")
+        responses["400"] = _error_response_path_item(
+            endpoint, 400, "Parameter or validation failure."
+        )
 
     # We don't(!) support any endpoint without an output schema.
     # Just define one!
@@ -242,14 +255,16 @@ def _to_operation_dict(  # pylint: disable=too-many-branches
         )
 
     if 412 in endpoint.expected_status_codes:
-        responses["412"] = _path_item(
+        responses["412"] = _error_response_path_item(
             endpoint,
             412,
             "The value of the If-Match header doesn't match the object's ETag.",
         )
 
     if 428 in endpoint.expected_status_codes:
-        responses["428"] = _path_item(endpoint, 428, "The required If-Match header is missing.")
+        responses["428"] = _error_response_path_item(
+            endpoint, 428, "The required If-Match header is missing."
+        )
 
     docstring_name = _docstring_name(module_obj.__doc__)
     tag_obj: OpenAPITag = {
@@ -552,35 +567,33 @@ def _path_item(
     content: dict[str, Any] | None = None,
     headers: dict[str, OpenAPIParameter] | None = None,
 ) -> PathItem:
-    message = endpoint.status_descriptions.get(status_code)
-    if message is None:
-        message = description
-    return _render_path_item(
-        endpoint,
-        status_code,
-        message,
-        error_schema=endpoint.error_schemas.get(status_code, ApiError),  # type: ignore[arg-type]
-        content=content,
-        headers=headers,
-    )
+    if status_code in endpoint.status_descriptions:
+        description = endpoint.status_descriptions[status_code]
 
-
-def _render_path_item(
-    endpoint: Endpoint,
-    status_code: int,
-    description: str,
-    error_schema: type[Schema],
-    content: dict[str, Any] | None = None,
-    headers: dict[str, OpenAPIParameter] | None = None,
-) -> PathItem:
-    response: PathItem = {"description": f"{http.client.responses[status_code]}: {description}"}
-    if status_code >= 400 and content is None:
-        content = {"application/problem+json": {"schema": error_schema}}
-    if content is None:
-        content = {}
-    response["content"] = content
+    response: PathItem = {
+        "description": f"{http.client.responses[status_code]}: {description}",
+        "content": content if content is not None else {},
+    }
     if headers:
         response["headers"] = headers
+    return response
+
+
+def _error_response_path_item(
+    endpoint: Endpoint,
+    status_code: ErrorStatusCodeInt,
+    description: str,
+) -> PathItem:
+    if status_code in endpoint.status_descriptions:
+        description = endpoint.status_descriptions[status_code]
+
+    error_schema = endpoint.error_schemas.get(
+        status_code, api_default_error_schema(status_code, description)
+    )
+    response: PathItem = {
+        "description": f"{http.client.responses[status_code]}: {description}",
+        "content": {"application/problem+json": {"schema": error_schema}},
+    }
     return response
 
 

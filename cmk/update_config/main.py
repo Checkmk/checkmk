@@ -146,6 +146,10 @@ def _setup_logging(arguments: argparse.Namespace) -> logging.Logger:
         del log.logger.handlers[:]
         logging.getLogger().addHandler(console_handler)
 
+        # Special case for PIL module producing messages like "STREAM b'IHDR'
+        # 16 13" in debug level
+        logging.getLogger("PIL").setLevel(logging.INFO)
+
     gui_logger.setLevel(_our_logging_level_to_gui_logging_level(logger.getEffectiveLevel()))
 
     return logger

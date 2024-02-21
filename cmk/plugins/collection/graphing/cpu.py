@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_COUNT = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(0))
 
@@ -26,6 +26,12 @@ metric_load15 = metrics.Metric(
     title=Title("CPU load average of last 15 minutes"),
     unit=UNIT_COUNT,
     color=metrics.Color.DARK_BLUE,
+)
+
+perfometer_load1 = perfometers.Perfometer(
+    name="load1",
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(10)),
+    segments=["load1"],
 )
 
 graph_cpu_load = graphs.Graph(

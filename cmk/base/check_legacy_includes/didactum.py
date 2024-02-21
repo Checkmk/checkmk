@@ -5,8 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2 import Service
-from cmk.agent_based.v2.type_defs import DiscoveryResult
+from cmk.agent_based.v2 import DiscoveryResult, Service
 
 from .elphase import check_elphase
 from .humidity import check_humidity

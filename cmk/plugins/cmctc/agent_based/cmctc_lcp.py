@@ -6,8 +6,18 @@
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NamedTuple, TypeAlias
 
-from cmk.agent_based.v2 import CheckPlugin, Metric, Result, Service, SNMPSection, SNMPTree, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.cmctc import cmctc_translate_status, cmctc_translate_status_text, DETECT_CMCTC
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
 

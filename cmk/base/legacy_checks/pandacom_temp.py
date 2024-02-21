@@ -7,8 +7,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.pandacom import DETECT_PANDACOM
 
 PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS = {"levels": (35.0, 40.0)}

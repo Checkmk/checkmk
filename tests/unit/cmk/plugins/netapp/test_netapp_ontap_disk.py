@@ -9,8 +9,7 @@ from typing import Any
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from cmk.agent_based.v2 import Metric, Result, State, TableRow
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State, TableRow
 from cmk.plugins.netapp.agent_based.netapp_ontap_disk import (
     check_netapp_ontap_disk_summary,
     inventory_netapp_ontap_disk,

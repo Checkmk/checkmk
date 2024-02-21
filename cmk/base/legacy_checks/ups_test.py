@@ -10,8 +10,7 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import parse_snmp_uptime
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import render, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 # Description of OIDs used from RFC 1628

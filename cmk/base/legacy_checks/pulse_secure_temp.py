@@ -10,8 +10,7 @@ from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
 import cmk.plugins.lib.pulse_secure as pulse_secure
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 
 def parse_pulse_secure_temp(string_table: StringTable) -> Mapping[str, int] | None:

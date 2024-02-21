@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import render, Result, State, type_defs
+from cmk.agent_based.v2 import CheckResult, render, Result, State
 
 CheckParams = Mapping[str, Any] | None
 Sensor = Mapping[str, Any]
@@ -26,7 +26,7 @@ def check_elphase(  # pylint: disable=too-many-branches
     item: str,
     params: CheckParams,
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if item not in section:
         return  # Item not found in SNMP data
 

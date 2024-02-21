@@ -7,8 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import OIDBytes, Service, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2 import DiscoveryResult, OIDBytes, Service, SNMPTree, startswith, StringTable
 
 
 def discover_hp_mcs_system(section: StringTable) -> DiscoveryResult:

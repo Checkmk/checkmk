@@ -20,8 +20,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import contains, OIDEnd, SNMPTree, StringTable
 
 
 def h3c_lanswitch_cpu_genitem(item):

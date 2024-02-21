@@ -11,8 +11,16 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, any_of, equals, exists, not_exists, OIDEnd, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    equals,
+    exists,
+    not_exists,
+    OIDEnd,
+    SNMPTree,
+    StringTable,
+)
 
 
 def inventory_akcp_daisy_temp(info):

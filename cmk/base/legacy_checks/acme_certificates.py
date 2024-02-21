@@ -9,8 +9,7 @@ import time
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import render, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import render, SNMPTree, StringTable
 from cmk.plugins.lib.acme import DETECT_ACME
 
 # .1.3.6.1.4.1.9148.3.9.1.10.1.3.65.1 rootca

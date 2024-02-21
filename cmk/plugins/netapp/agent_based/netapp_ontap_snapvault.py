@@ -7,8 +7,17 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.netapp import models
 
 # <<<netapp_ontap_snapvault:sep(0)>>>

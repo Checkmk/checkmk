@@ -8,8 +8,15 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, exists, Service, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    DiscoveryResult,
+    exists,
+    Service,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
 # .1.3.6.1.4.1.9.2.1.57.0 13 --> OLD-CISCO-CPU-MIB::avgBusy1.0
 

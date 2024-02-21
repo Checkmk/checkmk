@@ -10,13 +10,15 @@ from typing import Any
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
     Metric,
     Result,
     RuleSetType,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.df import (
     df_check_filesystem_single,
     df_discovery,

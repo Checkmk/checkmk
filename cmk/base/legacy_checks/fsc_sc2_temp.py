@@ -9,8 +9,7 @@ from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 # .1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.1 "Ambient"
 # .1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.1.2 "Systemboard 1"

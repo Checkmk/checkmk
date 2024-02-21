@@ -31,6 +31,12 @@ def test_v2() -> None:
         "SNMPSection",
         "CheckPlugin",
         "InventoryPlugin",
+        "CheckResult",
+        "DiscoveryResult",
+        "HostLabelGenerator",
+        "InventoryResult",
+        "StringByteTable",
+        "StringTable",
         "RuleSetType",
         "Attributes",
         "GetRateError",
@@ -68,7 +74,6 @@ def test_v2() -> None:
         "not_startswith",
         "render",
         "startswith",
-        "type_defs",
     }
     assert _names(v2) == expected
 
@@ -89,18 +94,6 @@ def test_v2_render() -> None:
         "time_offset",
     }
     assert _names(v2.render) == expected
-
-
-def test_v1_type_defs() -> None:
-    expected = {
-        "CheckResult",
-        "DiscoveryResult",
-        "HostLabelGenerator",
-        "InventoryResult",
-        "StringByteTable",
-        "StringTable",
-    }
-    assert _names(v2.type_defs) == expected
 
 
 def test_v1_clusterize() -> None:

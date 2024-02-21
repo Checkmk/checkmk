@@ -9,8 +9,7 @@ from dataclasses import dataclass
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2 import Attributes, TableRow
-from cmk.agent_based.v2.type_defs import InventoryResult
+from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
 
 
 @dataclass

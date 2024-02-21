@@ -7,8 +7,16 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import CheckPlugin, Metric, render, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.netapp import models
 
 VolumesSection = Mapping[str, models.VolumeModel]

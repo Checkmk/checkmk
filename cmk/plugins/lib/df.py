@@ -9,8 +9,7 @@ from enum import Enum
 from typing import Any, Literal, NamedTuple, NewType
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import Metric, render, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, render, Result, Service, State
 
 from .size_trend import size_trend
 

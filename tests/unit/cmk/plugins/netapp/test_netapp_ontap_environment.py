@@ -10,8 +10,7 @@ import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 import cmk.plugins.netapp.agent_based.netapp_ontap_environment as ontap_env
-from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.netapp.agent_based.netapp_ontap_environment import (
     check_netapp_ontap_environment_discrete,
     check_netapp_ontap_environment_threshold,

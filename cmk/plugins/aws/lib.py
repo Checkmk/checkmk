@@ -9,8 +9,17 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, render, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 GenericAWSSection = Sequence[Any]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]

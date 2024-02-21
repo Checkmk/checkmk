@@ -11,6 +11,8 @@ from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
     IgnoreResultsError,
     render,
@@ -18,7 +20,6 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.azure import (
     create_check_metrics_function_single,

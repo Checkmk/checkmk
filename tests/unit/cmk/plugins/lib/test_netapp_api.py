@@ -9,8 +9,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import render, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult, StringTable
+from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
 from cmk.plugins.lib.netapp_api import (
     check_netapp_luns,
     get_single_check,

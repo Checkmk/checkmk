@@ -31,8 +31,17 @@ from dataclasses import dataclass
 from itertools import islice
 from typing import Any, ClassVar, NamedTuple
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, Metric, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.apt import (
     ESM_ENABLED,
     ESM_NOT_ENABLED,

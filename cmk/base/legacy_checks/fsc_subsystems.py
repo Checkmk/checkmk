@@ -7,8 +7,16 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, any_of, exists, Service, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    DiscoveryResult,
+    exists,
+    Service,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
 
 def discover_fsc_subsystems(string_table: StringTable) -> DiscoveryResult:

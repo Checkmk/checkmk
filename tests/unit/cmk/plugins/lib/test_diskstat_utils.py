@@ -14,8 +14,15 @@ import time_machine
 
 from cmk.gui.plugins.wato.check_parameters.diskstat import scale_back, scale_forth
 
-from cmk.agent_based.v2 import get_rate, IgnoreResultsError, Metric, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import (
+    CheckResult,
+    get_rate,
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.lib import diskstat
 
 

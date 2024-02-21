@@ -8,8 +8,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import Metric, render, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
 
 
 @dataclass(frozen=True, kw_only=True)

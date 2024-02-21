@@ -14,6 +14,10 @@ Note that changes are expressed in relation to the API version 1.
 You can find a script in `doc/treasures/migration_helpers/` that
 will do most of the migration for you.
 
+`type_defs` module is dissolved
+*******************************
+The `type_defs` module has been dissolved.
+All types are now directly imported from the `v2` module.
 
 `check_levels` signature changed
 ********************************
@@ -96,7 +100,15 @@ from ..v1 import (
 )
 from ..v1._detection import SNMPDetectSpecification  # sorry
 from ..v1.register import RuleSetType
-from . import clusterize, render, type_defs
+from ..v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    HostLabelGenerator,
+    InventoryResult,
+    StringByteTable,
+    StringTable,
+)
+from . import clusterize, render
 from ._check_levels import check_levels
 from ._plugins import AgentSection, CheckPlugin, InventoryPlugin, SimpleSNMPSection, SNMPSection
 
@@ -108,6 +120,12 @@ __all__ = [
     "SimpleSNMPSection",
     "SNMPDetectSpecification",
     "InventoryPlugin",
+    "CheckResult",
+    "DiscoveryResult",
+    "HostLabelGenerator",
+    "InventoryResult",
+    "StringByteTable",
+    "StringTable",
     # begin with section stuff
     "all_of",
     "any_of",
@@ -144,6 +162,5 @@ __all__ = [
     "SNMPTree",
     "State",
     "TableRow",
-    "type_defs",
     "GetRateError",
 ]

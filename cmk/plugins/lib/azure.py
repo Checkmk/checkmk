@@ -11,8 +11,15 @@ from typing import Any, NamedTuple
 from pydantic import BaseModel, Field
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import IgnoreResultsError, render, Service, ServiceLabel
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    render,
+    Service,
+    ServiceLabel,
+    StringTable,
+)
 
 AZURE_AGENT_SEPARATOR = "|"
 

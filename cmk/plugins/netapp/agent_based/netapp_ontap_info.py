@@ -6,8 +6,17 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2 import Attributes, CheckPlugin, InventoryPlugin, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, InventoryResult
+from cmk.agent_based.v2 import (
+    Attributes,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    InventoryPlugin,
+    InventoryResult,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.netapp import models
 
 Section = Mapping[str, models.NodeModel]

@@ -9,8 +9,7 @@ from typing import Any
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State
 from cmk.plugins.netapp.agent_based.netapp_ontap_ports import (
     check_netapp_ontap_ports,
     discover_netapp_ontap_ports,

@@ -6,8 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import render
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, render
 
 
 def check_cache_hitratio(hitratio: float, params: Mapping[str, Any]) -> CheckResult:

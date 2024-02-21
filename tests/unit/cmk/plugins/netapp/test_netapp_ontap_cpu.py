@@ -10,8 +10,7 @@ import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 import cmk.plugins.netapp.agent_based.netapp_ontap_cpu as ontap_cpu
-from cmk.agent_based.v2 import Metric, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.netapp.agent_based.netapp_ontap_cpu import (
     check_netapp_ontap_cpu_utilization,
     check_netapp_ontap_nvram_bat,

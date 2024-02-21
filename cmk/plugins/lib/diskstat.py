@@ -10,6 +10,8 @@ from typing import Any, DefaultDict, TypedDict
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive
 from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
     get_average,
     get_rate,
     IgnoreResultsError,
@@ -18,7 +20,6 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
-    type_defs,
 )
 
 Disk = Mapping[str, float]
@@ -30,7 +31,7 @@ DISKSTAT_DISKLESS_PATTERN = re.compile("x?[shv]d[a-z]*[0-9]+")
 def discovery_diskstat_generic(
     params: Sequence[Mapping[str, Any]],
     section: Iterable[str],
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     item_candidates = list(section)
     # Skip over on empty data
     if not item_candidates:
@@ -390,7 +391,7 @@ def check_diskstat_dict(
     disk: Disk,
     value_store: MutableMapping,
     this_time: float,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if not disk:
         return
 

@@ -11,13 +11,15 @@ from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
     IgnoreResultsError,
     render,
     Result,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.aws.lib import (
     aws_get_counts_rate_human_readable,
     aws_rds_service_item,

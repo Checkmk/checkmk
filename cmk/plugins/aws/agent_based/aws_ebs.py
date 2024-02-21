@@ -7,8 +7,16 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_rate, get_value_store, render
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    render,
+    StringTable,
+)
 from cmk.plugins.aws.lib import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
 from cmk.plugins.lib.diskstat import check_diskstat_dict
 

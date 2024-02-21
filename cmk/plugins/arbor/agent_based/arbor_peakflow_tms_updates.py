@@ -5,8 +5,17 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2 import CheckPlugin, Result, Service, SimpleSNMPSection, SNMPTree, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
 from .lib import DETECT_PEAKFLOW_TMS
 

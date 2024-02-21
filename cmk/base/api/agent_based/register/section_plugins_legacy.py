@@ -19,8 +19,8 @@ from cmk.agent_based.v2 import (
     SNMPDetectSpecification,
     SNMPSection,
     SNMPTree,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import StringTable
 
 
 def create_section_plugin_from_legacy(

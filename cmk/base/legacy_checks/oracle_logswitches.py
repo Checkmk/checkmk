@@ -11,8 +11,7 @@ from cmk.base.check_legacy_includes.oracle import (
 )
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import IgnoreResultsError
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import IgnoreResultsError, StringTable
 
 # <<<oracle_logswitches>>>
 # pengt  15

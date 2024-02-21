@@ -11,13 +11,15 @@ from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     IgnoreResultsError,
     render,
     Result,
     Service,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # <<<mssql_backup>>>
 # MSSQL_SQLEXPRESS1 test123 1331207325

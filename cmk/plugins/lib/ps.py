@@ -20,10 +20,13 @@ from typing import Any, Literal
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
     get_average,
     get_rate,
     get_value_store,
     HostLabel,
+    HostLabelGenerator,
     IgnoreResultsError,
     Metric,
     render,
@@ -31,7 +34,6 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator
 
 from . import cpu, memory
 

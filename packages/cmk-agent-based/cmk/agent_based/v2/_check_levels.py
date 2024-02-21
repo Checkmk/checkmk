@@ -6,17 +6,21 @@
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, replace
 from enum import Enum, StrEnum
-from typing import Literal
+from typing import Literal, TypeVar
 
 from ..v1 import Metric, Result, State
 
-_NoLevels = tuple[Literal["no_levels"], None]
+_NumberT = TypeVar("_NumberT", int, float)
 
-_FixedLevels = tuple[Literal["fixed"], tuple[int, int] | tuple[float, float]]
+NoLevelsT = tuple[Literal["no_levels"], None]
 
-_PredictiveLevels = tuple[
-    Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]
+FixedLevelsT = tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
+
+PredictiveLevelsT = tuple[
+    Literal["predictive"], tuple[str, float | None, tuple[_NumberT, _NumberT] | None]
 ]
+
+LevelsT = NoLevelsT | FixedLevelsT[_NumberT] | PredictiveLevelsT[_NumberT]
 
 
 class Direction(StrEnum):
@@ -110,7 +114,7 @@ def _make_prediction_metric(name: str, value: float | None, direction: Direction
 
 def _check_levels(
     value: float,
-    levels: _NoLevels | _FixedLevels | _PredictiveLevels | None,
+    levels: LevelsT[_NumberT] | None,
     levels_direction: Direction,
     render_func: Callable[[float], str],
 ) -> CheckLevelsResult:
@@ -165,8 +169,8 @@ def _summarize_predictions(
 def check_levels(  # pylint: disable=too-many-arguments,too-many-locals
     value: float,
     *,
-    levels_upper: _NoLevels | _FixedLevels | _PredictiveLevels | None = None,
-    levels_lower: _NoLevels | _FixedLevels | _PredictiveLevels | None = None,
+    levels_upper: LevelsT[_NumberT] | None = None,
+    levels_lower: LevelsT[_NumberT] | None = None,
     metric_name: str | None = None,
     render_func: Callable[[float], str] | None = None,
     label: str | None = None,

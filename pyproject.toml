@@ -153,6 +153,7 @@ module = [
     "cmk.update_config.*",
     "cmk.utils.crypto.*",
     "cmk.utils.livestatus_helpers.*",
+    "tests.composition.*",
     "tests.gui_e2e.*",
     "tests.testlib.*",
     "tests.unit.cmk.ec.*",

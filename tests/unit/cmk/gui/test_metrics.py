@@ -22,14 +22,14 @@ def test_add_graphing_plugins() -> None:
     assert "idle_connections" in metric_info
     assert metric_info["idle_connections"] == {
         "title": "Idle connections",
-        "unit": "count",
+        "unit": "",
         "color": "#5200a3",
     }
 
     assert "active_connections" in metric_info
     assert metric_info["active_connections"] == {
         "title": "Active connections",
-        "unit": "count",
+        "unit": "",
         "color": "#7f00ff",
     }
 

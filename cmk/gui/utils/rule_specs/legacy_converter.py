@@ -500,7 +500,7 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.form_specs.TimeSpan():
             return _convert_to_legacy_time_span(to_convert, localizer)
 
-        case ruleset_api_v1.form_specs.Levels():
+        case ruleset_api_v1.form_specs.Levels() | ruleset_api_v1.form_specs.SimpleLevels():
             return _convert_to_legacy_levels(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.BooleanChoice():
@@ -1338,7 +1338,9 @@ class _LevelDynamicChoice(enum.StrEnum):
 
 
 def _convert_to_legacy_levels(
-    to_convert: ruleset_api_v1.form_specs.Levels[_NumberT], localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.Levels[_NumberT]
+    | ruleset_api_v1.form_specs.SimpleLevels[_NumberT],
+    localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
     choices: list[tuple[str, str, legacy_valuespecs.ValueSpec]] = [
         (
@@ -1363,7 +1365,7 @@ def _convert_to_legacy_levels(
             ),
         ),
     ]
-    if to_convert.predictive is not None:
+    if isinstance(to_convert, ruleset_api_v1.form_specs.Levels):
         choices.append(
             (
                 _LevelDynamicChoice.PREDICTIVE.value,

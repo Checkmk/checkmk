@@ -59,16 +59,80 @@ class _PredictiveLevelsT(Generic[_NumberT], TypedDict):
     bound: tuple[_NumberT, _NumberT] | None
 
 
+SimpleLevelsConfigModel = (
+    tuple[Literal["no_levels"], None] | tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
+)
+
+
 LevelsConfigModel = (
-    tuple[Literal["no_levels"], None]
-    | tuple[Literal["fixed"], tuple[_NumberT, _NumberT]]
-    | tuple[Literal["predictive"], _PredictiveLevelsT[_NumberT]]
+    SimpleLevelsConfigModel[_NumberT] | tuple[Literal["predictive"], _PredictiveLevelsT[_NumberT]]
 )
 
 
 @dataclass(frozen=True, kw_only=True)
+class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
+    """Specifies a form for configuring levels without predictive levels
+
+    Args:
+        form_spec_template: Template for the specification of the form fields of the warning and
+            critical levels. If `title` or `prefill_value` are provided here, they will be ignored
+        level_direction: Do the levels represent the lower or the upper bound.
+            It's used only to provide labels and error messages in the UI.
+        prefill_fixed_levels: Value to pre-populate the form fields of fixed levels with.
+            If None, the backend will decide whether to leave the field empty or to prefill it
+            with a canonical value.
+
+    Consumer model:
+        **Type**: ``_NoLevels | _FixedLevels``
+
+        The value presented to consumers will be crafted in a way that makes it a suitable
+        argument for the ``check_levels`` function of the agent based API.
+        These are the two possible types defined in the consumer model::
+
+          _NoLevels = tuple[
+              Literal["no_levels"],
+              None,
+          ]
+
+          _FixedLevels = tuple[
+              Literal["fixed"],
+              # (warn, crit)
+              tuple[int, int] | tuple[float, float],
+          ]
+
+        The configured value will be presented to consumers as a 2-tuple consisting of
+        level type identifier and either None or a 2-tuple of numbers.
+
+        **Example**: Levels used to configure no levels will look
+        like this::
+
+            ("no_levels", None)
+
+        Levels used to configure fixed lower levels might look
+        like this::
+
+            ("fixed", (5.0, 1.0))
+
+    """
+
+    # no idea why pylint will not see that we inherit these four anyway.
+    title: Title | None = None
+    help_text: Help | None = None
+    migrate: Callable[[object], SimpleLevelsConfigModel[_NumberT]] | None = None
+    custom_validate: Callable[[SimpleLevelsConfigModel[_NumberT]], object] | None = None
+
+    form_spec_template: FormSpec[_NumberT]
+    level_direction: LevelDirection
+
+    prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]
+
+
+@dataclass(frozen=True, kw_only=True)
 class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
-    """Specifies a form for configuring levels
+    """Specifies a form for configuring levels including predictive levels
+
+    This creates a FormSpec that extends the SimpleLevels with the possibility to configure
+    predictive levels.
 
     Args:
         form_spec_template: Template for the specification of the form fields of the warning and
@@ -85,18 +149,9 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
 
         The value presented to consumers will be crafted in a way that makes it a suitable
         argument for the ``check_levels`` function of the agent based API.
-        These are the tree possible types defined in the consumer model::
-
-          _NoLevels = tuple[
-              Literal["no_levels"],
-              None,
-          ]
-
-          _FixedLevels = tuple[
-              Literal["fixed"],
-              # (warn, crit)
-              tuple[int, int] | tuple[float, float],
-          ]
+        In addition to the two types defined in :class:`SimpleLevels`, this class also
+        allows for predictive levels.
+        The model of the predictive levels is::
 
           _PredictiveLevels = tuple[
               Literal["predictive"],
@@ -105,21 +160,10 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
           ]
 
         The configured value will be presented to consumers as a 2-tuple consisting of
-        level type identifier and one of the 3 types: None, 2-tuple of numbers or a
-        3-tuple containing the name of the reference metric used for prediction,
-        the predicted value and the resulting levels tuple.
+        the level type identifier ``"predictive"`` and a 3-tuple containing the name of the
+        reference metric used for prediction, the predicted value and the resulting levels tuple.
 
-        **Example**: Levels used to configure no levels will look
-        like this::
-
-            ("no_levels", None)
-
-        Levels used to configure fixed lower levels might look
-        like this::
-
-            ("fixed", (5.0, 1.0))
-
-        Levels resulting from configured upper predictive levels might look
+        **Example**: Levels resulting from configured upper predictive levels might look
         like this::
 
             ("predictive", ("mem_used_percent", 42.1, (50.3, 60.7)))
@@ -134,6 +178,6 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
 
     form_spec_template: FormSpec[_NumberT]
     level_direction: LevelDirection
-    predictive: PredictiveLevels[_NumberT] | None
+    predictive: PredictiveLevels[_NumberT]
 
     prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]

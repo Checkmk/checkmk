@@ -16,13 +16,14 @@ from cmk.rulesets.v1.form_specs import (
     InputHint,
     Integer,
     LevelDirection,
-    Levels,
     List,
     MatchingScope,
     Password,
     Proxy,
     RegularExpression,
     SIMagnitude,
+    SimpleLevels,
+    SimpleLevelsConfigModel,
     SingleChoice,
     SingleChoiceElement,
     String,
@@ -559,14 +560,13 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
         title=(Title("Standard settings") if is_standard else Title("Individual settings")),
         elements={
             "connection": DictElement(parameter_form=_valuespec_connection()),
-            "response_time": DictElement(
-                parameter_form=Levels(
+            "response_time": DictElement[SimpleLevelsConfigModel[float]](
+                parameter_form=SimpleLevels[float](
                     title=Title("Response time"),
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
                     ),
                     level_direction=LevelDirection.UPPER,
-                    predictive=None,
                     help_text=Help("Maximum time the request may take."),
                     prefill_fixed_levels=DefaultValue((0.1, 0.2)),
                 ),
@@ -580,14 +580,13 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="validate",
                             title=Title("Certificate validity"),
-                            parameter_form=Levels[float](
+                            parameter_form=SimpleLevels[float](
                                 title=Title("Check validity"),
                                 form_spec_template=TimeSpan(
                                     displayed_magnitudes=(TimeMagnitude.DAY,)
                                 ),
                                 level_direction=LevelDirection.LOWER,
                                 prefill_fixed_levels=InputHint((90.0 * _DAY, 60.0 * _DAY)),
-                                predictive=None,
                                 help_text=Help(
                                     "Minimum number of days a certificate has to be valid."
                                 ),

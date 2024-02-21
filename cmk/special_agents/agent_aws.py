@@ -580,6 +580,17 @@ def fetch_resources_matching_tags(
     return matching_resources_arn
 
 
+def _describe_alarms(
+    client: BaseClient, get_response_content: Callable, names: Sequence[str] | None = None
+) -> Iterator[Mapping[str, object]]:
+    paginator = client.get_paginator("describe_alarms")
+    kwargs = {"AlarmNames": names} if names else {}
+
+    for page in paginator.paginate(**kwargs):
+        for alarm in get_response_content(page, "MetricAlarms"):
+            yield alarm
+
+
 # .
 #   .--section API---------------------------------------------------------.
 #   |                       _   _                  _    ____ ___           |
@@ -4074,9 +4085,8 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args):
-        response = self._client.describe_alarms()  # type: ignore[attr-defined]
-        return self._get_response_content(response, "MetricAlarms")
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
+        return list(_describe_alarms(self._client, self._get_response_content))
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -4131,10 +4141,10 @@ class CloudwatchAlarms(AWSSection):
                     for alarm in colleague_contents.content
                     if alarm["AlarmName"] in self._names
                 ]
-            response = self._client.describe_alarms(AlarmNames=self._names)  # type: ignore[attr-defined]
-        else:
-            response = self._client.describe_alarms()  # type: ignore[attr-defined]
-        return self._get_response_content(response, "MetricAlarms")
+            return list(
+                _describe_alarms(self._client, self._get_response_content, names=self._names)
+            )
+        return list(_describe_alarms(self._client, self._get_response_content))
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents

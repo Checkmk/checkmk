@@ -609,6 +609,18 @@ class NetworkLink extends AbstractLink {
                 }
             });
         }
+
+        const core_source = get_core_info(this._link_data.source);
+        const core_target = get_core_info(this._link_data.target);
+        if (!core_source || !core_target) return;
+        this._root_selection!.classed(
+            "local_link",
+            core_source.hostname == core_target.hostname
+        );
+        this._root_selection!.classed(
+            "foreign_link",
+            core_source.hostname != core_target.hostname
+        );
     }
 
     _show_link_info(event: {layerX: number; layerY: number}, info: string[]) {
@@ -646,17 +658,6 @@ export class HostServiceLink extends NetworkLink {
                     force_options
                 );
         }
-    }
-
-    override render_into(selection: d3SelectionG): void {
-        super.render_into(selection);
-        const core_source = get_core_info(this._link_data.source);
-        const core_target = get_core_info(this._link_data.target);
-        if (!core_source || !core_target) return;
-        this._root_selection!.classed(
-            "host_service_link",
-            core_source.hostname == core_target.hostname
-        );
     }
 }
 

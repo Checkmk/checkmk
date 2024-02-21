@@ -121,25 +121,23 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 ),
                 required=False,
             ),
-            "levels": form_specs.DictElement[form_specs.LevelsConfigModel[float]](
-                parameter_form=form_specs.Levels[float](
+            "levels": form_specs.DictElement[form_specs.SimpleLevelsConfigModel[float]](
+                parameter_form=form_specs.SimpleLevels[float](
                     title=Title("Upper levels for first output item"),
                     level_direction=form_specs.LevelDirection.UPPER,
                     form_spec_template=form_specs.Float(),
                     prefill_fixed_levels=form_specs.InputHint((0.0, 0.0)),
-                    predictive=None,
-                    migrate=form_specs.migrate_to_upper_float_levels,
+                    migrate=form_specs.migrate_to_float_simple_levels,
                 ),
                 required=False,
             ),
-            "levels_low": form_specs.DictElement[form_specs.LevelsConfigModel[float]](
-                parameter_form=form_specs.Levels[float](
+            "levels_low": form_specs.DictElement[form_specs.SimpleLevelsConfigModel[float]](
+                parameter_form=form_specs.SimpleLevels[float](
                     title=Title("Lower levels for first output item"),
                     level_direction=form_specs.LevelDirection.LOWER,
                     form_spec_template=form_specs.Float(),
                     prefill_fixed_levels=form_specs.InputHint((0.0, 0.0)),
-                    predictive=None,
-                    migrate=form_specs.migrate_to_lower_float_levels,
+                    migrate=form_specs.migrate_to_float_simple_levels,
                 ),
                 required=False,
             ),

@@ -12,10 +12,9 @@ from cmk.rulesets.v1.form_specs import (
     InputHint,
     Integer,
     LevelDirection,
-    Levels,
-    LevelsConfigModel,
-    migrate_to_upper_float_levels,
-    migrate_to_upper_integer_levels,
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
+    SimpleLevels,
     TimeMagnitude,
     TimeSpan,
 )
@@ -27,13 +26,12 @@ _DAY = 24 * 3600
 def _parameter_form_wlan_controllers_clients() -> Dictionary:
     return Dictionary(
         elements={
-            "clients": DictElement[LevelsConfigModel[int]](
-                parameter_form=Levels[int](
+            "clients": DictElement(
+                parameter_form=SimpleLevels[int](
                     title=Title("Maximum number of clients"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),
-                    predictive=None,
-                    migrate=migrate_to_upper_integer_levels,
+                    migrate=migrate_to_integer_simple_levels,
                     prefill_fixed_levels=InputHint(value=(0, 0)),
                 ),
             )
@@ -53,13 +51,12 @@ rule_spec_cisco_prime_wlan_controller_clients = CheckParameters(
 def _parameter_form_wlan_controllers_access_points() -> Dictionary:
     return Dictionary(
         elements={
-            "access_points": DictElement[LevelsConfigModel[int]](
-                parameter_form=Levels[int](
+            "access_points": DictElement(
+                parameter_form=SimpleLevels[int](
                     title=Title("Maximum number of access points"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=Integer(),
-                    predictive=None,
-                    migrate=migrate_to_upper_integer_levels,
+                    migrate=migrate_to_integer_simple_levels,
                     prefill_fixed_levels=InputHint(value=(0, 0)),
                 ),
             ),
@@ -79,8 +76,8 @@ rule_spec_cisco_prime_wlan_controller_access_points = CheckParameters(
 def _parameter_form_wlan_controllers_last_backup() -> Dictionary:
     return Dictionary(
         elements={
-            "last_backup": DictElement[LevelsConfigModel[float]](
-                parameter_form=Levels[float](
+            "last_backup": DictElement(
+                parameter_form=SimpleLevels[float](
                     title=Title("Time since last backup"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=TimeSpan(
@@ -91,8 +88,7 @@ def _parameter_form_wlan_controllers_last_backup() -> Dictionary:
                         ],
                     ),
                     prefill_fixed_levels=DefaultValue((7 * _DAY, 30 * _DAY)),
-                    predictive=None,
-                    migrate=migrate_to_upper_float_levels,
+                    migrate=migrate_to_float_simple_levels,
                 ),
             )
         },

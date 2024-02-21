@@ -18,9 +18,9 @@ from cmk.rulesets.v1.form_specs import (
     InputHint,
     Integer,
     LevelDirection,
-    Levels,
-    LevelsConfigModel,
     List,
+    SimpleLevels,
+    SimpleLevelsConfigModel,
     String,
     TimeMagnitude,
     TimeSpan,
@@ -33,25 +33,23 @@ def _valuespec_response_time() -> Dictionary:
     return Dictionary(
         title=Title("Response time"),
         elements={
-            "levels_lower": DictElement[LevelsConfigModel[float]](
-                parameter_form=Levels[float](
+            "levels_lower": DictElement[SimpleLevelsConfigModel[float]](
+                parameter_form=SimpleLevels[float](
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
                     ),
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0.0, 0.0)),
-                    predictive=None,
                 ),
                 required=True,
             ),
-            "levels_upper": DictElement[LevelsConfigModel[float]](
-                parameter_form=Levels[float](
+            "levels_upper": DictElement[SimpleLevelsConfigModel[float]](
+                parameter_form=SimpleLevels[float](
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
                     ),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.001, 0.002)),
-                    predictive=None,
                 ),
                 required=True,
             ),
@@ -63,7 +61,7 @@ def _valuespec_validity() -> Dictionary:
     return Dictionary(
         title=Title("Check certificate validity"),
         elements={
-            "remaining": DictElement[LevelsConfigModel[float]](
+            "remaining": DictElement[SimpleLevelsConfigModel[float]](
                 parameter_form=_valuespec_remaining_validity()
             ),
             "maximum": DictElement[float](
@@ -171,7 +169,7 @@ def _valuespec_specific_values() -> Dictionary:
                         "org_unit": DictElement[str](
                             parameter_form=String(title=Title("Organizational unit (OU)"))
                         ),
-                        "pubkey_algorithm": DictElement[tuple[str, object]](
+                        "pubkey_algorithm": DictElement(
                             parameter_form=CascadingSingleChoice(
                                 title=Title("Public key algorithm"),
                                 prefill=DefaultValue("rsa"),
@@ -232,8 +230,8 @@ def _valuespec_specific_values() -> Dictionary:
     )
 
 
-def _valuespec_remaining_validity() -> Levels[float]:
-    return Levels[float](
+def _valuespec_remaining_validity() -> SimpleLevels[float]:
+    return SimpleLevels[float](
         title=Title("Remaining validity time"),
         help_text=Help("Minimum number of days a certificate has to be valid."),
         form_spec_template=TimeSpan(
@@ -242,7 +240,6 @@ def _valuespec_remaining_validity() -> Levels[float]:
         ),
         level_direction=LevelDirection.LOWER,
         prefill_fixed_levels=InputHint((0.0, 0.0)),
-        predictive=None,
     )
 
 

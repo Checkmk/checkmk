@@ -14,12 +14,14 @@ from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, R
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import interfaces
 from .utils.aws import (
+    aws_host_labels,
     AWSMetric,
     check_aws_metrics,
     discover_aws_generic,
     discover_aws_generic_single,
     extract_aws_metrics_by_labels,
     parse_aws,
+    parse_aws_labels,
 )
 
 Section = Mapping[str, float]
@@ -63,6 +65,12 @@ def parse_aws_ec2(string_table: StringTable) -> Section:
 register.agent_section(
     name="aws_ec2",
     parse_function=parse_aws_ec2,
+)
+
+register.agent_section(
+    name="ec2_labels",
+    parse_function=parse_aws_labels,
+    host_label_function=aws_host_labels,
 )
 
 #   .--status check--------------------------------------------------------.

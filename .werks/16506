@@ -1,0 +1,14 @@
+Title: aws: Inventorization of EC2 and ELB tags as host labels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1708516567
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+There was a problem during service discovery which prevented Checkmk
+from assigning the AWS EC2 and ELB tags delivered by the AWS agent to
+their respective piggyback hosts. This werk fixes the discovery process
+such that the data is parsed properly and custom tags from AWS will
+now show up as host labels on the created piggyback hosts.

@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Seque
 
 from ..agent_based_api.v1 import (
     check_levels,
+    HostLabel,
     IgnoreResultsError,
     Metric,
     render,
@@ -16,7 +17,13 @@ from ..agent_based_api.v1 import (
     Service,
     State,
 )
-from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from ..agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    HostLabelGenerator,
+    StringTable,
+)
+from .labels import custom_tags_to_valid_labels
 
 GenericAWSSection = Sequence[Any]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]
@@ -65,6 +72,34 @@ def discover_lambda_functions(
         return
     for lambda_function in section_aws_lambda_summary:
         yield Service(item=lambda_function)
+
+
+def parse_aws_labels(string_table: StringTable) -> Mapping[str, str]:
+    """Load json dicts.
+
+    Example:
+
+        <<<ec2_labels:sep(0)>>>
+        {"tier": "control-plane", "component": "kube-scheduler"}
+
+    """
+    labels = {}
+    for line in string_table:
+        labels.update(json.loads(line[0]))
+    return labels
+
+
+def aws_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:
+    """Generate aws host labels.
+
+    Labels:
+        cmk/aws/tag/{key}:{value}:
+            These labels are yielded for each tag of an AWS resource
+            that is monitored as its own host.
+    """
+    labels = custom_tags_to_valid_labels(section)
+    for key, value in labels.items():
+        yield HostLabel(f"cmk/aws/tag/{key}", value)
 
 
 def parse_aws(string_table: StringTable) -> GenericAWSSection:

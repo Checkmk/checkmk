@@ -5,7 +5,7 @@
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
-UNIT_COUNT = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(0))
+UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("1/s"))
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
@@ -27,21 +27,21 @@ metric_subscriptions = metrics.Metric(
 metric_clients_connected = metrics.Metric(
     name="clients_connected",
     title=Title("Clients connected"),
-    unit=UNIT_COUNT,
+    unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_clients_maximum = metrics.Metric(
     name="clients_maximum",
     title=Title("Clients maximum"),
-    unit=UNIT_COUNT,
+    unit=UNIT_NUMBER,
     color=metrics.Color.ORANGE,
 )
 
 metric_clients_total = metrics.Metric(
     name="clients_total",
     title=Title("Clients total"),
-    unit=UNIT_COUNT,
+    unit=UNIT_NUMBER,
     color=metrics.Color.YELLOW,
 )
 
@@ -104,14 +104,14 @@ metric_publish_messages_sent_rate = metrics.Metric(
 metric_retained_messages = metrics.Metric(
     name="retained_messages",
     title=Title("Retained messages"),
-    unit=UNIT_COUNT,
+    unit=UNIT_NUMBER,
     color=metrics.Color.PURPLE,
 )
 
 metric_stored_messages = metrics.Metric(
     name="stored_messages",
     title=Title("Stored messages"),
-    unit=UNIT_COUNT,
+    unit=UNIT_NUMBER,
     color=metrics.Color.ORANGE,
 )
 

@@ -306,6 +306,7 @@ export interface ContextMenuElement {
     text?: string;
     href?: string;
     img?: string;
+    tick?: boolean;
     dom?: HTMLDivElement;
     on?: (event: Event, data: any) => void;
     data?: any;

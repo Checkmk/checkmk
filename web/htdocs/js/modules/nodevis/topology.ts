@@ -399,10 +399,7 @@ class TopologyHost extends TopologyCoreEntity {
         options.forEach(([ident, text]) => {
             const world = this._world;
             service_choice.children!.push({
-                img:
-                    current_setting == ident
-                        ? "themes/facelift/images/icon_tick.svg"
-                        : "",
+                tick: current_setting == ident,
                 text: text,
                 on: () => changed_option(world, ident),
             });

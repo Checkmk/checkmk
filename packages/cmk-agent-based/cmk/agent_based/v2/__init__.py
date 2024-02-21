@@ -24,6 +24,8 @@ All types are now directly imported from the `v2` module.
 
 The new func:`check_levels` function accepts is designed to work well
 with the `Levels` element from the new `rulesets API v1`.
+The types of the arguments have been added to the API and can be found in
+:mod:`cmk.agent_based.v2.type_defs`.
 
 
 Registration is replaced by a discovery approach
@@ -109,7 +111,7 @@ from ..v1.type_defs import (
     StringTable,
 )
 from . import clusterize, render
-from ._check_levels import check_levels
+from ._check_levels import check_levels, FixedLevelsT, LevelsT, NoLevelsT, PredictiveLevelsT
 from ._plugins import AgentSection, CheckPlugin, InventoryPlugin, SimpleSNMPSection, SNMPSection
 
 __all__ = [
@@ -143,6 +145,10 @@ __all__ = [
     "not_startswith",
     "Attributes",
     "check_levels",
+    "LevelsT",
+    "FixedLevelsT",
+    "NoLevelsT",
+    "PredictiveLevelsT",
     "clusterize",
     "get_average",
     "get_rate",

@@ -3006,14 +3006,19 @@ class WAFV2ListTagsForResourceIB(InstanceBuilder):
 #   |         |_|  \__,_|_|\_\___|  \___|_|_|\___|_| |_|\__|___/           |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-class FakeCloudwatchClient:
-    def describe_alarms(self, AlarmNames=None):
+class FakeCloudwatchClientDescribeAlarmsPaginator:
+    def paginate(self, AlarmNames=None):
         alarms = CloudwatchDescribeAlarmsIB.create_instances(amount=2)
         if AlarmNames:
             alarms = [alarm for alarm in alarms if alarm["AlarmName"] in AlarmNames]
-        return {"MetricAlarms": alarms, "NextToken": "string"}
+        yield {"MetricAlarms": alarms, "NextToken": "string"}
+
+
+class FakeCloudwatchClient:
+    def get_paginator(self, api_call):
+        if api_call == "describe_alarms":
+            return FakeCloudwatchClientDescribeAlarmsPaginator()
+        raise NotImplementedError(f"Please implement the paginator for {api_call}")
 
     def get_metric_data(self, MetricDataQueries, StartTime="START", EndTime="END"):
         results = []

@@ -110,25 +110,8 @@ request = urllib.request.Request(
             indent(skip_lines=1, spaces=4) }}).encode('utf-8'),
     {%- endif %}
 )
-response = urllib.request.urlopen(request)
-{%- if downloadable %}
-if resp.status_code == 200:
-    file_name = resp.headers["content-disposition"].split("filename=")[1].strip('\"')
-    with open(file_name, 'wb') as out_file:
-        shutil.copyfileobj(response, out_file)
-    print("Done")
-{%- else %}
-if resp.status_code == 200:
-    pprint.pprint(resp.json())
-elif resp.status_code == 204:
-    print("Done")
-{%- endif %}
-{%- if endpoint.does_redirects %}
-elif resp.status_code == 302:
-    print("Redirected to", resp.headers["location"])
-{%- endif %}
-else:
-    raise RuntimeError(pprint.pformat(resp.json()))
+resp = urllib.request.urlopen(request)
+{{ formatted_if_statement }}
 """
 
 CODE_TEMPLATE_CURL = """
@@ -281,25 +264,7 @@ resp = session.{{ method }}(
     stream=True,
     {%- endif %}
 )
-{%- if downloadable %}
-if resp.status_code == 200:
-    file_name = resp.headers["content-disposition"].split("filename=")[1].strip('\"')
-    with open(file_name, 'wb') as out_file:
-        resp.raw.decode_content = True
-        shutil.copyfileobj(resp.raw, out_file)
-    print("Done")
-{%- else %}
-if resp.status_code == 200:
-    pprint.pprint(resp.json())
-elif resp.status_code == 204:
-    print("Done")
-{%- endif %}
-{%- if endpoint.does_redirects %}
-elif resp.status_code == 302:
-    print("Redirected to", resp.headers["location"])
-{%- endif %}
-else:
-    raise RuntimeError(pprint.pformat(resp.json()))
+{{ formatted_if_statement }}
 """
 
 
@@ -530,6 +495,11 @@ def code_samples(  # type: ignore[no-untyped-def]
                     request_method=endpoint.method,
                     request_schema=schema,
                     request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
+                    formatted_if_statement=formatted_if_statement_for_responses(
+                        endpoint.expected_status_codes,
+                        endpoint.content_type == "application/octet-stream",
+                        example.label,
+                    ),
                 )
                 .strip(),
             }
@@ -656,6 +626,50 @@ def _jinja_environment(spec: APISpec) -> jinja2.Environment:
         spec=spec,
     )
     return tmpl_env
+
+
+def formatted_if_statement_for_responses(
+    expected_response_status_codes: list[int],
+    downloadable: bool,
+    code_example: str,
+) -> str:
+    """Return a formatted if-statement for the requests or urrlib code examples.
+
+    Returns:
+        A string with a formatted if-statement.
+
+    """
+    formatted_str = ""
+    for status_code in sorted(expected_response_status_codes):
+        if status_code < 400:
+            if len(formatted_str) == 0:
+                formatted_str += f"if resp.status_code == {status_code}:\n"
+            else:
+                formatted_str += f"elif resp.status_code == {status_code}:\n"
+
+            if status_code == 200:
+                if downloadable:
+                    formatted_str += "    file_name = resp.headers['content-disposition'].split('filename=')[1].strip('\"')\n"
+                    formatted_str += "    with open(file_name, 'wb') as out_file:\n"
+
+                    if code_example == "requests":
+                        formatted_str += "        resp.raw.decode_content = True\n"
+                        formatted_str += "        shutil.copyfileobj(resp.raw, out_file)\n"
+                    else:
+                        formatted_str += "        shutil.copyfileobj(resp, out_file)\n"
+
+                    formatted_str += "    print('Done')\n"
+
+                else:
+                    formatted_str += "    pprint.pprint(resp.json())\n"
+            elif status_code == 204:
+                formatted_str += "    print('Done')\n"
+            elif status_code == 302:
+                formatted_str += "    print('Redirected to', resp.headers['location'])\n"
+
+    formatted_str += "else:\n"
+    formatted_str += "    raise RuntimeError(pprint.pformat(resp.json()))\n"
+    return formatted_str
 
 
 def _escape_single_quotes(text: str) -> str:

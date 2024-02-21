@@ -68,13 +68,8 @@ from cmk.gui.openapi.endpoints.host_config.response_schemas import (
     HostConfigSchema,
 )
 from cmk.gui.openapi.endpoints.utils import folder_slug
-from cmk.gui.openapi.restful_objects import (
-    api_error,
-    constructors,
-    Endpoint,
-    permissions,
-    response_schemas,
-)
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import LinkType
@@ -260,7 +255,19 @@ class FailedHosts(BaseSchema):
     )
 
 
-class BulkHostActionWithFailedHosts(api_error.ApiError):
+class BulkHostActionWithFailedHosts(ApiError):
+    title = fields.String(
+        description="A summary of the problem.",
+        example="Some actions failed",
+    )
+    status = fields.Integer(
+        description="The HTTP status code.",
+        example=400,
+    )
+    detail = fields.String(
+        description="Detailed information on what exactly went wrong.",
+        example="Some of the actions were performed but the following were faulty and were skipped: ['host1', 'host2'].",
+    )
     ext = fields.Nested(
         FailedHosts,
         description="Details for which hosts have failed",

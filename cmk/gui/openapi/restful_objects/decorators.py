@@ -350,6 +350,11 @@ class Endpoint:
                 UserWarning,
             )
 
+        self._expected_status_codes.append(406)
+
+        if self.tag_group == "Setup":
+            self._expected_status_codes.append(403)
+
         if self.output_empty:
             self._expected_status_codes.append(204)  # no content
 

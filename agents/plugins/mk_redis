@@ -107,7 +107,7 @@ main() {
         echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
 
         # execute command
-        waitmax 3 ${REDIS_CLI_COMMAND} "${REDIS_ARGS[@]}" || true
+        waitmax 3 bash -c "${REDIS_CLI_COMMAND} ${REDIS_ARGS[*]}" || true
         echo
     done
 

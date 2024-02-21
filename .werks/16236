@@ -1,0 +1,11 @@
+Title: Regression when obtaining mails from mailbox
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1708521462
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+This regression exists since 2.2.0b1. Monitoring mails in your in box may have not been possible.
+This is fixed now.

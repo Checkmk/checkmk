@@ -1,0 +1,14 @@
+Title: Add option to disable "Ntopng host" filter
+Class: feature
+Compatible: compat
+Component: ntopng_integration
+Date: 1708524991
+Edition: cee
+Level: 1
+Version: 2.2.0p28
+
+The "Ntopng hosts" filter can now be disabled via configuration in
+the ntopng connection parameters.
+
+Disabling the filter can have a positive impact on the performance
+of the ntopng integration.

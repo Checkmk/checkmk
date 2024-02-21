@@ -541,13 +541,13 @@ div.node_vis {
     line,
     path {
       stroke: $darkgrey;
+      pointer-events: stroke;
     }
 
     &.foreign_link {
       line,
       path {
         stroke-dasharray: 2 3;
-        stroke-width: 1;
       }
     }
 
@@ -555,7 +555,6 @@ div.node_vis {
       line,
       path {
         stroke-dasharray: none;
-        stroke-width: 1;
       }
     }
 

@@ -10,20 +10,22 @@ from cmk.agent_based.v2 import (
     AgentSection,
     Attributes,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     InventoryPlugin,
+    InventoryResult,
     Result,
     RuleSetType,
     Service,
     State,
-    type_defs,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 from cmk.plugins.lib import interfaces, uptime
 
 Section = Mapping[str, str]
 
 
-def parse_fritz(string_table: type_defs.StringTable) -> Section:
+def parse_fritz(string_table: StringTable) -> Section:
     return {line[0]: " ".join(line[1:]) for line in string_table if len(line) > 1}
 
 
@@ -73,7 +75,7 @@ def _section_to_interface(section: Section) -> interfaces.Section[interfaces.Int
 def discover_fritz_wan_if(
     params: Sequence[Mapping[str, Any]],
     section: Section,
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
         _section_to_interface(section),
@@ -84,7 +86,7 @@ def check_fritz_wan_if(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item,
         {
@@ -254,7 +256,7 @@ _CONFIG_FIELDS = [
 _UNCONFIGURED_VALUE = "0.0.0.0"
 
 
-def inventory_fritz(section: Section) -> type_defs.InventoryResult:
+def inventory_fritz(section: Section) -> InventoryResult:
     yield Attributes(
         path=["hardware", "system"],
         inventory_attributes={"model": section.get("VersionDevice")},

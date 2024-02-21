@@ -6,8 +6,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
 
 # The typical OSN power unit delivers 750 W max

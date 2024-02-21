@@ -6,8 +6,18 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, InventoryPlugin, render, Service, TableRow
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    InventoryPlugin,
+    InventoryResult,
+    render,
+    Service,
+    StringTable,
+    TableRow,
+)
 from cmk.plugins.lib.filerdisks import (
     check_filer_disks,
     FILER_DISKS_CHECK_DEFAULT_PARAMETERS,

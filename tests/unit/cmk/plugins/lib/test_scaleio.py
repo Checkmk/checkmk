@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 from cmk.plugins.lib.scaleio import parse_scaleio
 
 

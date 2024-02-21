@@ -7,12 +7,12 @@ from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import render, type_defs
+from cmk.agent_based.v2 import CheckResult, render
 
 CheckParams = None | Mapping[str, Any] | list[float] | None | tuple[float, float, float, float]
 
 
-def check_humidity(humidity: float, params: CheckParams) -> type_defs.CheckResult:
+def check_humidity(humidity: float, params: CheckParams) -> CheckResult:
     levels_upper, levels_lower = None, None
     if isinstance(params, (dict, Mapping)):
         levels_upper = params.get("levels") or None

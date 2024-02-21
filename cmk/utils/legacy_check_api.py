@@ -7,8 +7,14 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, Generator
 
-from cmk.agent_based.v2 import IgnoreResults, Metric, Result, SNMPDetectSpecification, SNMPTree
-from cmk.agent_based.v2.type_defs import DiscoveryResult
+from cmk.agent_based.v2 import (
+    DiscoveryResult,
+    IgnoreResults,
+    Metric,
+    Result,
+    SNMPDetectSpecification,
+    SNMPTree,
+)
 
 _DiscoveredParameters = Mapping | tuple | str | None
 

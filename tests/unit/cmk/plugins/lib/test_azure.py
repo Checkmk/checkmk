@@ -9,6 +9,8 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
     IgnoreResultsError,
     Metric,
     render,
@@ -17,7 +19,6 @@ from cmk.agent_based.v2 import (
     ServiceLabel,
     State,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 from cmk.plugins.lib.azure import (
     _get_metrics,
     _get_metrics_number,

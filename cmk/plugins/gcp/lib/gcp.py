@@ -10,8 +10,7 @@ from enum import IntEnum, unique
 from typing import Any, NewType
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
 
 Project = str
 

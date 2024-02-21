@@ -6,8 +6,14 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Service
-from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    DiscoveryResult,
+    render,
+    Service,
+    StringTable,
+)
 from cmk.plugins.aws.lib import AWSLimitsByRegion, check_aws_limits, parse_aws
 
 AWS_EBS_LIMITS_DEFAULT_PARAMS = {

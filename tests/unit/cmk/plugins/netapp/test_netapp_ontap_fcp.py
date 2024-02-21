@@ -14,8 +14,7 @@ import time_machine
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 import cmk.plugins.netapp.agent_based.netapp_ontap_fcp as ontap_fcp
-from cmk.agent_based.v2 import Metric, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, Result, State
 from cmk.plugins.netapp.agent_based.netapp_ontap_fcp import (
     _io_bytes_results,
     _io_ops_results,

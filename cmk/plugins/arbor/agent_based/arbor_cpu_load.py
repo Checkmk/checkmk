@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
 from cmk.plugins.lib.cpu import Load, Section
 
 from .lib import DETECT_PEAKFLOW_SP, DETECT_PEAKFLOW_TMS, DETECT_PRAVAIL

@@ -7,8 +7,17 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_value_store, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.df import (
     FILESYSTEM_DEFAULT_LEVELS,
     MAGIC_FACTOR_DEFAULT_PARAMS,

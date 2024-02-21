@@ -21,8 +21,9 @@ from cmk.agent_based.v2 import (
     SimpleSNMPSection,
     SNMPSection,
     SNMPTree,
+    StringByteTable,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import StringByteTable, StringTable
 
 
 def _generator_function():

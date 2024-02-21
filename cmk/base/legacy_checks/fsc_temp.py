@@ -8,8 +8,17 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, any_of, exists, not_exists, Service, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    DiscoveryResult,
+    exists,
+    not_exists,
+    Service,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
 
 # We fetch the following columns from SNMP:
 # 13: name of the temperature sensor (used as item)

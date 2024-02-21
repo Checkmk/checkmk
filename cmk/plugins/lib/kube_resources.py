@@ -8,8 +8,7 @@ from collections.abc import Callable, Iterable, Mapping, MutableMapping
 from typing import Any, cast, Literal, TypedDict
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import Metric, render, Result
-from cmk.agent_based.v2.type_defs import CheckResult, StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, render, Result, StringTable
 
 from .kube import PerformanceUsage, Section
 

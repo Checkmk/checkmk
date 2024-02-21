@@ -8,8 +8,7 @@ from typing import Any, Literal
 from typing_extensions import TypedDict
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive
-from cmk.agent_based.v2 import Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Result, State
 
 from .cpu import ProcessorType, Section
 

@@ -11,8 +11,7 @@ from typing import Any, Literal
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
 from cmk.plugins.cisco.agent_based.prime_wlan_controller import (
     AlarmStatus,
     check_wlan_controller_access_points,

@@ -15,8 +15,13 @@ from cmk.base.check_legacy_includes.jolokia import (
 )
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_rate, get_value_store, GetRateError, IgnoreResultsError
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import (
+    get_rate,
+    get_value_store,
+    GetRateError,
+    IgnoreResultsError,
+    StringTable,
+)
 
 # Example output from agent:
 # <<<jolokia_metrics>>>

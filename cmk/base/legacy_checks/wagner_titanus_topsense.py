@@ -10,8 +10,7 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import any_of, equals, render, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, StringTable
 
 
 def parse_wagner_titanus_topsense(

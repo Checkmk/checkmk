@@ -5,8 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin
-from cmk.agent_based.v2.type_defs import CheckResult, StringTable
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, CheckResult, StringTable
 from cmk.plugins.lib import netapp_api
 from cmk.plugins.netapp import models
 

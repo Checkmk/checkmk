@@ -9,8 +9,7 @@ from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 #

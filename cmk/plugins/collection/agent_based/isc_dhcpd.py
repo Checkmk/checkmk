@@ -8,8 +8,16 @@ from dataclasses import dataclass
 from ipaddress import IPv4Address
 from typing import Self
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.lib.dhcp_pools import check_dhcp_pools_levels
 
 

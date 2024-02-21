@@ -9,6 +9,8 @@ from typing import Any, Literal, NamedTuple
 from typing_extensions import TypedDict
 
 from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
     get_rate,
     GetRateError,
     IgnoreResultsError,
@@ -17,8 +19,8 @@ from cmk.agent_based.v2 import (
     Result,
     Service,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.df import df_check_filesystem_single
 

@@ -11,8 +11,7 @@ from cmk.base.check_legacy_includes.dell_poweredge import (
 )
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
 
 

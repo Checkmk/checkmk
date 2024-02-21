@@ -16,7 +16,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 
 def inventory_heartbeat_nodes(info):

@@ -8,8 +8,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import assert_never
 
-from cmk.agent_based.v2 import any_of, contains, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import any_of, CheckResult, contains, Result, State
 
 DETECT = any_of(
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1682"),

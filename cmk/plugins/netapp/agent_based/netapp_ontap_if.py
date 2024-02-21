@@ -10,12 +10,14 @@ from typing import Any
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
     Result,
     RuleSetType,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.netapp_api import (
     check_netapp_interfaces,

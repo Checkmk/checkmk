@@ -6,8 +6,7 @@ from collections.abc import Mapping
 from typing import Any, Final
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import get_value_store, render, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult, StringTable
+from cmk.agent_based.v2 import CheckResult, get_value_store, render, Result, State, StringTable
 
 from .df import df_check_filesystem_list
 

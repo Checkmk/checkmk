@@ -11,14 +11,16 @@ from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     IgnoreResultsError,
     Metric,
     render,
     Result,
     Service,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.azure import (
     create_check_metrics_function,
     get_service_labels_from_resource_tags,

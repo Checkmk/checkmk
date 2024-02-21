@@ -22,8 +22,14 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_value_store
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    StringTable,
+)
 from cmk.plugins.lib import df, netapp_api
 from cmk.plugins.lib.netapp_api import Qtree
 from cmk.plugins.netapp import models

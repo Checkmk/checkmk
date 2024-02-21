@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Any, Literal, TypedDict
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import Metric, Result, Service, State, type_defs
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, Service, State
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 
@@ -74,7 +74,7 @@ class DiscoveryParams(TypedDict):
 def discover_individual_sensors(
     ignore_params: IgnoreParams,
     section: Section,
-) -> type_defs.DiscoveryResult:
+) -> DiscoveryResult:
     yield from (
         Service(item=sensor_name)
         for sensor_name, sensor in section.items()
@@ -117,7 +117,7 @@ def check_ipmi(
     section: Section,
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if item in ["Summary", "Summary FreeIPMI"]:
         yield from _check_ipmi_summarized(
             params,
@@ -194,7 +194,7 @@ def _check_ipmi_detailed(
     sensor: Sensor,
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield _check_status(sensor, status_txt_mapping, params.get("sensor_states", []), label="Status")
 
     if sensor.value is None:
@@ -245,7 +245,7 @@ def _check_ipmi_summarized(
     params: Mapping[str, Any],
     section: Section,
     status_txt_mapping: StatusTxtMapping,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     yield from _average_ambient_temperature(section)
 
     yield Result(state=State.OK, summary=f"{len(section)} sensors in total")

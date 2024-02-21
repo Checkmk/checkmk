@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import type_defs
+from cmk.agent_based.v2 import StringTable
 
 GenericSection = dict[str, dict[str, dict[str, str]]]
 
 
-def generic_parse(string_table: type_defs.StringTable) -> GenericSection:
+def generic_parse(string_table: StringTable) -> GenericSection:
     """
     >>> from pprint import pprint
     >>> pprint(generic_parse([

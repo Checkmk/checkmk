@@ -11,8 +11,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.agent_based.v2 import Metric, render, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult
+from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
 from cmk.plugins.lib.fileinfo import (
     _cast_value,
     _fileinfo_check_conjunctions,

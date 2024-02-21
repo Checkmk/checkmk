@@ -7,8 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, contains, equals, SNMPTree, StringTable
 
 
 def inventory_cisco_srst_phones(info):

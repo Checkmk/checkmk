@@ -14,13 +14,13 @@ from cmk.agent_based.v2._check_levels import (
     _check_levels,
     _check_predictive_levels,
     _default_rendering,
-    _FixedLevels,
-    _NoLevels,
-    _PredictiveLevels,
     _summarize_predictions,
     check_levels,
     CheckLevelsResult,
     Direction,
+    FixedLevelsT,
+    LevelsT,
+    NoLevelsT,
     Type,
 )
 
@@ -79,7 +79,7 @@ def test_check_predictive_levels() -> None:
 )
 def test__check_levels(
     value: float,
-    levels: _NoLevels | _FixedLevels | _PredictiveLevels | None,
+    levels: LevelsT[float] | None,
     expected_result: CheckLevelsResult,
 ) -> None:
     result = _check_levels(value, levels, Direction.UPPER, _default_rendering)
@@ -114,7 +114,7 @@ def test__check_levels(
 )
 def test__check_levels_errors(
     value: float,
-    levels: _NoLevels | _FixedLevels | _PredictiveLevels | None,
+    levels: LevelsT[float] | None,
     error_type: typing.Type[Exception],
     error_message: str,
 ) -> None:
@@ -237,8 +237,8 @@ def test_summarize_predictions(
 )
 def test_check_levels(  # pylint: disable=too-many-arguments
     value: float,
-    levels_upper: _NoLevels | _FixedLevels | None,
-    levels_lower: _NoLevels | _FixedLevels | None,
+    levels_upper: NoLevelsT | FixedLevelsT[float] | None,
+    levels_lower: NoLevelsT | FixedLevelsT[float] | None,
     render_function: Callable[[float], str] | None,
     label: str | None,
     boundaries: tuple[float | None, float | None] | None,
@@ -319,8 +319,8 @@ def test_check_levels(  # pylint: disable=too-many-arguments
 )
 def test_check_levels_with_metric(  # pylint: disable=too-many-arguments
     value: float,
-    levels_upper: _NoLevels | _FixedLevels | _PredictiveLevels | None,
-    levels_lower: _NoLevels | _FixedLevels | _PredictiveLevels | None,
+    levels_upper: LevelsT[float] | None,
+    levels_lower: LevelsT[float] | None,
     metric_name: str,
     render_function: Callable[[float], str] | None,
     label: str | None,

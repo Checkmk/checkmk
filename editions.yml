@@ -36,7 +36,7 @@ internal_distros: &internal_distros
 editions:
     enterprise:
         release: [*common, "cma-3", "cma-4"]
-        daily: [*common, *internal_distros, "cma-4"]
+        daily: [*common, *internal_distros, "cma-3", "cma-4"]
         daily_tests: [*common, *internal_distros]
         # Don't test the update process for internal distros, they are not public anyway
         daily_update_tests: [*common]

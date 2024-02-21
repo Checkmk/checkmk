@@ -63,3 +63,23 @@ def registered_units() -> Sequence[tuple[str, str]]:
         + [(unit_id, info["symbol"]) for (unit_id, info) in units_from_api.items()],
         key=lambda x: x[1],
     )
+
+
+class PerfometersFromAPI(
+    Registry[perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked]
+):
+    def plugin_name(
+        self, instance: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked
+    ) -> str:
+        return instance.name
+
+
+perfometers_from_api = PerfometersFromAPI()
+
+
+class GraphsFromAPI(Registry[graphs.Graph | graphs.Bidirectional]):
+    def plugin_name(self, instance: graphs.Graph | graphs.Bidirectional) -> str:
+        return instance.name
+
+
+graphs_from_api = GraphsFromAPI()

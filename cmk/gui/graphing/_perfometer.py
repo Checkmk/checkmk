@@ -27,7 +27,7 @@ from ._expression import (
     parse_conditional_expression,
     parse_expression,
 )
-from ._loader import load_graphing_plugins
+from ._loader import perfometers_from_api
 from ._type_defs import TranslatedMetric, UnitInfo
 from ._unit_info import unit_info
 
@@ -182,14 +182,7 @@ def get_first_matching_perfometer(
 ) -> (
     perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked | PerfometerSpec | None
 ):
-    for perfometer in [
-        plugin
-        for plugin in load_graphing_plugins().plugins.values()
-        if isinstance(
-            plugin,
-            (perfometers.Perfometer, perfometers.Bidirectional, perfometers.Stacked),
-        )
-    ]:
+    for perfometer in perfometers_from_api.values():
         if perfometer_matches(perfometer, translated_metrics):
             return perfometer
 

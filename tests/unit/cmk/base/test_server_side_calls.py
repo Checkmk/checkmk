@@ -1076,6 +1076,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             "$HOSTNAME$": "test_host",
             "$HOSTADDRESS$": "0.0.0.0",
             "HOSTALIAS": "test alias",
+            "$HOST_EC_SL$": 30,
         },
     )
 
@@ -1116,6 +1117,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             "$HOST_TAG_tag2$": "value2",
             "$HOST_ATTR_attr1$": "value1",
             "HOSTALIAS": "test alias",
+            "$HOST_EC_SL$": "30",
         },
     )
 

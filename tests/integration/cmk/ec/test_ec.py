@@ -10,6 +10,16 @@ import pytest
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
+from cmk.ec.config import (  # pylint: disable=cmk-module-layer-violation
+    ECRulePackSpec,
+    EventLimit,
+    Rule,
+    ServiceLevel,
+    State,
+)
+
+from cmk.gui.watolib.site_changes import ChangeSpec  # pylint: disable=cmk-module-layer-violation
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,55 +39,52 @@ def _validate_process_return_code(process: subprocess.Popen, assert_msg: str) ->
         raise AssertionError("\n".join(msg))
 
 
-def _get_ec_rule(rule_id: str, title: str, state: int, match: str) -> list:
+def _get_ec_rule_packs(rule_id: str, title: str, state: State, match: str) -> list[ECRulePackSpec]:
     """EC rule to inject in the test-site"""
+    rule = Rule(
+        id=rule_id,
+        description="",
+        comment="",
+        docu_url="",
+        disabled=False,
+        state=state,
+        sl=ServiceLevel(value=0, precedence="message"),
+        actions=[],
+        actions_in_downtime=True,
+        cancel_actions=[],
+        cancel_action_phases="always",
+        autodelete=False,
+        event_limit=EventLimit(action="None", limit=0),
+        match=match,
+        invert_matching=False,
+    )
     return [
-        {
-            "id": rule_id,
-            "title": title,
-            "disabled": False,
-            "rules": [
-                {
-                    "id": rule_id,
-                    "description": "",
-                    "comment": "",
-                    "docu_url": "",
-                    "disabled": False,
-                    "drop": False,
-                    "state": state,
-                    "sl": {"value": 0, "precedence": "message"},
-                    "actions": [],
-                    "actions_in_downtime": True,
-                    "cancel_actions": [],
-                    "cancel_action_phases": "always",
-                    "autodelete": False,
-                    "event_limit": None,
-                    "match": match,
-                    "invert_matching": False,
-                }
-            ],
-        },
-        {"id": "default", "title": "Default rule pack", "rules": [], "disabled": False},
+        ECRulePackSpec(
+            id=rule_id,
+            title=title,
+            disabled=False,
+            rules=[rule],
+        )
     ]
 
 
-def _get_replication_change() -> dict:
+def _get_replication_change() -> ChangeSpec:
     """Replication change to inject in the test-site"""
-    return {
-        "id": "",
-        "action_name": "edit-rule-pack",
-        "text": "Modified rule pack test",
-        "object": None,
-        "user_id": "cmkadmin",
-        "domains": ["ec"],
-        "time": 0,
-        "need_sync": True,
-        "need_restart": True,
-        "domain_settings": {},
-        "prevent_discard_changes": False,
-        "diff_text": None,
-        "has_been_activated": False,
-    }
+    return ChangeSpec(
+        id="",
+        action_name="edit-rule-pack",
+        text="Modified rule pack test",
+        object=None,
+        user_id="cmkadmin",
+        domains=["ec"],
+        time=0,
+        need_sync=True,
+        need_restart=True,
+        domain_settings={},
+        prevent_discard_changes=False,
+        diff_text=None,
+        has_been_activated=False,
+    )
 
 
 def _write_ec_rule(site: Site, rule: list | None) -> None:
@@ -124,9 +131,11 @@ def _get_snmp_trap_cmd(event_message: str) -> list:
 def _setup_ec(site: Site) -> Iterator:
     match = "dummy"
     rule_id = f"test {match}"
-    rule_state = 1
+    rule_state: State = 1
 
-    _write_ec_rule(site, _get_ec_rule(title="", rule_id=rule_id, state=rule_state, match=match))
+    _write_ec_rule(
+        site, _get_ec_rule_packs(title="", rule_id=rule_id, state=rule_state, match=match)
+    )
 
     # in order for the EC rule to take effect, we need to inject a change in the EC domain and
     # perform a changes' activation

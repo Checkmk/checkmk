@@ -108,7 +108,7 @@ main() {
 
         # TODO: Use an array instead of the suppression for the command, too.
         # shellcheck disable=SC2086
-        waitmax 3 ${REDIS_CLI_COMMAND} "${REDIS_ARGS[@]}" || true
+        waitmax 3 bash -c "${REDIS_CLI_COMMAND} ${REDIS_ARGS[*]}" || true
         echo
     done
 

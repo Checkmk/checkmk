@@ -569,10 +569,12 @@ class NetworkLink extends AbstractLink {
     }
 
     override render_into(selection: d3SelectionG) {
-        super.render_into(selection);
-        this.selection()
-            .style("pointer-events", "all")
-            .on("mouseover", event => {
+        super.render_into(selection, true);
+        this.selection().each((_d, idx, nodes) => {
+            const line = d3.select(nodes[idx]);
+            if (!line.classed("halo_line")) return;
+            line.style("stroke-dasharray", "none");
+            line.on("mouseover", event => {
                 this.highlight_connection(new Set<string>());
                 this._show_link_info(
                     event,
@@ -581,18 +583,19 @@ class NetworkLink extends AbstractLink {
                         : []
                 );
             })
-            .on("mouseout", event => {
-                this.hide_connection(new Set<string>());
-                this._show_link_info(event, []);
-            })
-            .on("mousemove", event => {
-                this._show_link_info(
-                    event,
-                    this._link_data.config.link_info
-                        ? [this._link_data.config.link_info]
-                        : []
-                );
-            });
+                .on("mouseout", event => {
+                    this.hide_connection(new Set<string>());
+                    this._show_link_info(event, []);
+                })
+                .on("mousemove", event => {
+                    this._show_link_info(
+                        event,
+                        this._link_data.config.link_info
+                            ? [this._link_data.config.link_info]
+                            : []
+                    );
+                });
+        });
         if (this._link_data.config.topology_classes) {
             const data: [TranslationKey, boolean][] = this._link_data.config
                 .topology_classes as unknown as [TranslationKey, boolean][];

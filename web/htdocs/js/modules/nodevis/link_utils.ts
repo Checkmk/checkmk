@@ -54,26 +54,36 @@ export class AbstractLink implements TypeWithName {
         return compute_link_id(this._link_data);
     }
 
-    render_into(selection: d3SelectionG): void {
+    render_into(selection: d3SelectionG, add_hidden_halo = false): void {
         this._root_selection = selection;
 
-        // Straigth line style
+        const lines: [string, number, number, boolean][] = [];
+        lines.push([this.id(), 1, 1, false]);
+        if (add_hidden_halo)
+            lines.push(["hidden_halo_" + this.id(), 15, 0, true]);
+
+        // Straight line style
         const line_selection = selection
-            .selectAll("line")
-            .data(this._line_config.style == "straight" ? [this.id()] : [])
+            .selectAll<SVGLineElement, [string, number, number, boolean]>(
+                "line"
+            )
+            .data(this._line_config.style == "straight" ? lines : [], d => d[0])
             .join("line")
-            .attr("stroke-width", function (d) {
-                // @ts-ignore
-                return Math.max(1, 2 - d.depth);
-            });
+            .classed("halo_line", d => d[3])
+            .attr("opacity", d => d[2])
+            .attr("stroke-width", d => d[1]);
 
         // Elbow and round style
         const path_selection = selection
-            .selectAll("path")
-            .data(this._line_config.style != "straight" ? [this.id()] : [])
+            .selectAll<SVGPathElement, [string, number, number, boolean]>(
+                "path"
+            )
+            .data(this._line_config.style != "straight" ? lines : [], d => d[0])
             .join("path")
             .attr("fill", "none")
-            .attr("stroke-width", 1);
+            .classed("halo_line", d => d[3])
+            .attr("opacity", d => d[2])
+            .attr("stroke-width", d => d[1]);
 
         // @ts-ignore
         this._selection =

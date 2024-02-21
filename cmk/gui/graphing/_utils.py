@@ -49,7 +49,7 @@ from ._expression import (
     Sum,
     WarningOf,
 )
-from ._loader import load_graphing_plugins
+from ._loader import graphs_from_api, perfometers_from_api
 from ._parser import parse_color, parse_or_add_unit
 from ._type_defs import (
     GraphConsoldiationFunction,
@@ -634,6 +634,14 @@ def add_graphing_plugins(
                     for old_name, translation in plugin.translations.items()
                 }
 
+        elif isinstance(
+            plugin, (perfometers.Perfometer, perfometers.Bidirectional, perfometers.Stacked)
+        ):
+            perfometers_from_api.register(plugin)
+
+        elif isinstance(plugin, (graphs.Graph, graphs.Bidirectional)):
+            graphs_from_api.register(plugin)
+
 
 # .
 #   .--Constants-----------------------------------------------------------.
@@ -1119,11 +1127,11 @@ def translated_metrics_from_row(row: Row) -> Mapping[str, TranslatedMetric]:
 def graph_templates_internal() -> dict[str, GraphTemplate]:
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     graph_templates: dict[str, GraphTemplate] = {}
-    for plugin in load_graphing_plugins().plugins.values():
-        if isinstance(plugin, graphs.Graph):
-            graph_templates[plugin.name] = GraphTemplate.from_graph(plugin)
-        elif isinstance(plugin, graphs.Bidirectional):
-            graph_templates[plugin.name] = GraphTemplate.from_bidirectional(plugin)
+    for graph in graphs_from_api.values():
+        if isinstance(graph, graphs.Graph):
+            graph_templates[graph.name] = GraphTemplate.from_graph(graph)
+        elif isinstance(graph, graphs.Bidirectional):
+            graph_templates[graph.name] = GraphTemplate.from_bidirectional(graph)
     for template_id, template in graph_info.items():
         if template_id not in graph_templates:
             graph_templates[template_id] = GraphTemplate.from_template(template_id, template)

@@ -1,0 +1,11 @@
+Title: mk_redis: Fix for Werk #16329
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1708512017
+Edition: cre
+Level: 1
+Version: 2.1.0p40
+
+With werk #16329 when a password was set, the plugin did not work.
+This has now been fixed and configuring a password shouldn't cause any issues.

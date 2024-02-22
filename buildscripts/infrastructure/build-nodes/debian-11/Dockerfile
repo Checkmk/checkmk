@@ -1,6 +1,8 @@
-ARG IMAGE_DEBIAN_11
+ARG DISTRO_IMAGE_BASE
+
 # hadolint ignore=DL3006
-FROM ${IMAGE_DEBIAN_11} as base
+# Create base image
+FROM ${DISTRO_IMAGE_BASE} as base
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -107,6 +109,7 @@ FROM base
 # Copy our standard tool chain for building
 COPY --from=builder /opt /opt
 ARG DISTRO
+ARG DISTRO_MK_FILE
 ARG BRANCH_VERSION
 ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
 
@@ -122,6 +125,8 @@ RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
 RUN /opt/install-pipenv.sh
+
+COPY scripts/"${DISTRO_MK_FILE}" /opt/
 RUN /opt/install-cmk-dependencies.sh
 RUN /opt/install-patchelf.sh
 

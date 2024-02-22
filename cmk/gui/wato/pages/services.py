@@ -194,8 +194,7 @@ class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
         return HostName(request.get_str_input_mandatory("hostname"))
 
     def execute(self, api_request: HostName) -> str:
-        host = Host.load_host(api_request)
-        job = ServiceDiscoveryBackgroundJob(host.name())
+        job = ServiceDiscoveryBackgroundJob(api_request)
         job_snapshot = asdict(job.get_status_snapshot())
         if "status" in job_snapshot:
             # additional conversion due to pydantic usage for status only

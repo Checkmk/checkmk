@@ -1,0 +1,15 @@
+Title: service_discovery: allow discovery on fresh remote host
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1708620908
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+The werk 16465 addressed a problem that prevented fetching
+information about the service discovery background job on a
+remote site. However, this solution introduced a new limitation,
+disallowing the execution of discovery in 'refresh' and
+'tabula_rasa' modes for newly created hosts on remote sites.
+This werk successfully resolves this subsequent issue.

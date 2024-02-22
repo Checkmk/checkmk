@@ -30,7 +30,12 @@ from ._graph_specification import GraphDataRange, GraphRecipe
 from ._loader import get_unit_info
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
-from ._utils import check_metrics, CheckMetricEntry, find_matching_translation, metric_info
+from ._utils import (
+    check_metrics,
+    CheckMetricEntry,
+    find_matching_translation,
+    get_extended_metric_info,
+)
 
 
 def fetch_rrd_data_for_graph(
@@ -300,8 +305,5 @@ def translate_and_merge_rrd_columns(
 
 
 def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[float], float]:
-    if not (metric_spec := metric_info.get(metric_name)):
-        return lambda v: v
-    if (unit := metric_spec.get("unit")) is None:
-        return lambda v: v
-    return get_unit_info(unit).get("conversion", lambda v: v)
+    mie = get_extended_metric_info(metric_name)
+    return mie["unit"].get("conversion", lambda v: v)

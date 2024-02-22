@@ -536,3 +536,40 @@ class TestWindows:
         )
         expected = ("/home/postgres/db2.env", "USER_NAME", "/PATH/TO/.pgpass", "hi")
         assert got == expected
+
+
+def test_parse_env_file(tmp_path):
+    path = tmp_path / ".env"
+    with open(str(path), "wb") as fo:
+        fo.write(
+            (
+                "export PGDATABASE='ut_pg_database'\n"
+                "PGPORT=ut_pg_port  # missing export, but still parsed... \n"
+                'export PGVERSION="some version"   \n'
+            ).encode("utf-8")
+        )
+    assert mk_postgres.parse_env_file(str(path)) == (
+        "'ut_pg_database'",  # this double quoting seems to be funny.
+        # but this is the expected behaviour (and we want to make a minimal change)
+        # the value will be used on the commandline, so bash will handle the quoting...
+        "ut_pg_port",
+        '"some version"',  # same as above
+    )
+
+
+def test_parse_env_file_comments(tmp_path):
+    path = tmp_path / ".env"
+    with open(str(path), "wb") as fo:
+        fo.write(
+            (
+                "export PGDATABASE=ut_pg_database\n"
+                "# export PGDATABASE=ut_some_other_database\n"
+                "PGPORT=123\n"
+                "#PGPORT=345\n"
+            ).encode("utf-8")
+        )
+    assert mk_postgres.parse_env_file(str(path)) == (
+        "ut_some_other_database",  # this is a bug, should be ut_pg_database
+        "345",  # this is a bug, should be 123
+        None,
+    )

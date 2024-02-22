@@ -412,6 +412,9 @@ def build_tar_gz(
                 repository=f"{docker_repo_name}/check-mk-{args.edition}",
                 tag=f"{args.version}",
             )
+            # reload this object from the server and update attrs
+            image.reload()
+            LOG.debug(f"Image tags after re-tagging: {image.tags}")
             this_tag = f"{docker_repo_name}/check-mk-{args.edition}:{args.version}"
             with gzip.open(tar_name, "wb") as tar_ball:
                 # image.save() can only take elements of the tags list of an image

@@ -570,13 +570,16 @@ def entry_point_prefixes() -> (  # type: ignore[misc]  # explicit Any
     To be discovered, the plugin must be of one of the types returned by this function and its name
     must start with the corresponding prefix.
 
+    Example:
+    ********
+
     >>> for plugin_type, prefix in entry_point_prefixes().items():
-    ...     print(f'{plugin_type.__name__}: "{prefix}"')
-    SimpleSNMPSection: "snmp_section_"
-    SNMPSection: "snmp_section_"
-    AgentSection: "agent_section_"
-    CheckPlugin: "check_plugin_"
-    InventoryPlugin: "inventory_plugin_"
+    ...     print(f'{prefix}... = {plugin_type.__name__}(...)')
+    snmp_section_... = SimpleSNMPSection(...)
+    snmp_section_... = SNMPSection(...)
+    agent_section_... = AgentSection(...)
+    check_plugin_... = CheckPlugin(...)
+    inventory_plugin_... = InventoryPlugin(...)
     """
     return {  # type: ignore[misc]  # expression contains Any
         SimpleSNMPSection: "snmp_section_",

@@ -16,7 +16,7 @@ class _Operation(enum.Enum):
     ADD = enum.auto()
 
 
-class Localizable:
+class _Localizable:
     """
     Base class for creating a localizable string
 
@@ -31,30 +31,30 @@ class Localizable:
         An object that can later be translated by the backend.
 
     Examples:
-        Examples are given for the `Localizable` class, but they apply to all subclasses.
-        Instead of using `Localizable`, you should use one of the subclasses, such as
-        `Title`, `Label`, `Help` or `Message`.
+        Examples are given for the `_Localizable` class, but they are meant to be implemented
+        using the appropriate subclasses, such as :class:`Title`, :class:`Label`, :class:`Help`,
+        and :class:`Message`.
 
         This is a simple use case:
 
-        >>> title = Localizable("Translate this title")
+        >>> title = _Localizable("Translate this title")
 
         Note that the returned type only supports `%` formatting and addition.
 
         When adding localizables, you must make sure the translations of the individual
         components are available.
 
-        >>> help = Localizable("Translate this. ") + Localizable("Translate this separately.")
+        >>> help = _Localizable("Translate this. ") + _Localizable("Translate this separately.")
 
         Sometimes you might want to format individually localized strings, to ensure
         consistent translations:
 
-        >>> help = Localizable("Please use '%s' for foo") % Localizable("params for foo")
+        >>> help = _Localizable("Please use '%s' for foo") % _Localizable("params for foo")
 
         Be aware that this does *not* result in an instance of a `Localizable`:
 
-        >>> "%s!" % Localizable("hi")
-        "Localizable('hi')!"
+        >>> "%s!" % _Localizable("hi")
+        "_Localizable('hi')!"
 
     """
 
@@ -106,20 +106,20 @@ class Localizable:
         return self.__class__(other, modifier=(_Operation.MOD, (self,)))
 
 
-class Title(Localizable):  # pylint: disable=too-few-public-methods
+class Title(_Localizable):  # pylint: disable=too-few-public-methods
     """Create a localizable title which shortly describes an element"""
 
 
-class Label(Localizable):  # pylint: disable=too-few-public-methods
+class Label(_Localizable):  # pylint: disable=too-few-public-methods
     """Create a localizable label which acts an extension of the input field with additional
     information"""
 
 
-class Help(Localizable):  # pylint: disable=too-few-public-methods
+class Help(_Localizable):  # pylint: disable=too-few-public-methods
     """Create a localizable help text for more detailed descriptions which can contain more complex
     formatting"""
 
 
-class Message(Localizable):  # pylint: disable=too-few-public-methods
+class Message(_Localizable):  # pylint: disable=too-few-public-methods
     """Create a localizable message which notifies the user during runtime, e.g. to clarify why a
     validation has failed."""

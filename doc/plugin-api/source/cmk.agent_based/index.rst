@@ -24,4 +24,3 @@ Version 2
    v2
    v2.clusterize
    v2.render
-   v2.type_defs

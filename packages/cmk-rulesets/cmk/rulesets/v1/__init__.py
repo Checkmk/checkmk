@@ -34,20 +34,23 @@ def entry_point_prefixes() -> (
     To be discovered, the plugin must be of one of the types returned by this function and its name
     must start with the corresponding prefix.
 
+    Example:
+    ********
+
     >>> for plugin_type, prefix in entry_point_prefixes().items():
-    ...     print(f'{plugin_type.__name__}: "{prefix}"')
-    ActiveCheck: "rule_spec_"
-    AgentConfig: "rule_spec_"
-    AgentAccess: "rule_spec_"
-    EnforcedService: "rule_spec_"
-    CheckParameters: "rule_spec_"
-    Host: "rule_spec_"
-    InventoryParameters: "rule_spec_"
-    NotificationParameters: "rule_spec_"
-    DiscoveryParameters: "rule_spec_"
-    Service: "rule_spec_"
-    SNMP: "rule_spec_"
-    SpecialAgent: "rule_spec_"
+    ...     print(f'{prefix}... = {plugin_type.__name__}(...)')
+    rule_spec_... = ActiveCheck(...)
+    rule_spec_... = AgentConfig(...)
+    rule_spec_... = AgentAccess(...)
+    rule_spec_... = EnforcedService(...)
+    rule_spec_... = CheckParameters(...)
+    rule_spec_... = Host(...)
+    rule_spec_... = InventoryParameters(...)
+    rule_spec_... = NotificationParameters(...)
+    rule_spec_... = DiscoveryParameters(...)
+    rule_spec_... = Service(...)
+    rule_spec_... = SNMP(...)
+    rule_spec_... = SpecialAgent(...)
     """
     return {
         rule_specs.ActiveCheck: "rule_spec_",

@@ -33,10 +33,13 @@ def entry_point_prefixes() -> (
     To be discovered, the plugin must be of one of the types returned by this function and its name
     must start with the corresponding prefix.
 
+    Example:
+    ********
+
     >>> for plugin_type, prefix in entry_point_prefixes().items():
-    ...     print(f'{plugin_type.__name__}: "{prefix}"')
-    ActiveCheckConfig: "active_check_"
-    SpecialAgentConfig: "special_agent_"
+    ...     print(f'{prefix}... = {plugin_type.__name__}(...)')
+    active_check_... = ActiveCheckConfig(...)
+    special_agent_... = SpecialAgentConfig(...)
     """
     return {  # type: ignore[misc] # expression contains Any
         ActiveCheckConfig: "active_check_",
@@ -45,6 +48,7 @@ def entry_point_prefixes() -> (
 
 
 __all__ = [
+    "entry_point_prefixes",
     "ActiveCheckConfig",
     "ActiveCheckCommand",
     "parse_http_proxy",

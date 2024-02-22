@@ -407,6 +407,13 @@ def walk_skel(
     exclude_if_in: str | None = None,
     relbase: str = ".",
 ) -> Iterable[str]:
+    # Files that should not be managed by the update process (anymore).
+    ignored_files = [
+        # We have removed the unused htpasswd skel file, but we don't want to ask users if they wish
+        # to delete their existing htpasswd.
+        "skel/etc/htpasswd",
+    ]
+
     with chdir(root):
         # Note: os.walk first finds level 1 directories, then deeper
         # layers. If we need a real depth search instead, where we first
@@ -432,6 +439,9 @@ def walk_skel(
                     path = path[2:]
 
                 if exclude_if_in and os.path.exists(exclude_if_in + "/" + path):
+                    continue
+
+                if path in ignored_files:
                     continue
 
                 yield path

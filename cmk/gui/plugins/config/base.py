@@ -89,7 +89,7 @@ class CREConfig:
     screenshotmode: bool = False
     profile: bool | str = False
     users: list[str] = field(default_factory=list)
-    admin_users: list[str] = field(default_factory=lambda: ["omdadmin", "cmkadmin"])
+    admin_users: list[str] = field(default_factory=lambda: ["cmkadmin"])
     guest_users: list[str] = field(default_factory=list)
     default_user_role: str = "user"
     user_online_maxage: int = 30  # seconds

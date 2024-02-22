@@ -22,7 +22,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, Config
 from cmk.gui.graphing._color import render_color_icon
 from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import get_extended_metric_info, metric_info
+from cmk.gui.graphing._utils import get_extended_metric_info, registered_metrics
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -5365,7 +5365,7 @@ class AbstractColumnSpecificMetric(Painter):
     @request_memoize()
     def _metric_choices(cls) -> list[tuple[str, str]]:
         return sorted(
-            [(k, str(v.get("title", k))) for k, v in metric_info.items()],
+            ((metric_id, metric_title) for metric_id, metric_title in registered_metrics()),
             key=lambda x: x[1],
         )
 

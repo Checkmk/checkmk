@@ -38,7 +38,12 @@ from cmk.gui.visuals import livestatus_query_bare
 from ..config import active_config
 from ._graph_render_config import GraphRenderConfigBase
 from ._loader import registered_units
-from ._utils import get_extended_metric_info, metric_info, parse_perf_data, perfvar_translation
+from ._utils import (
+    get_extended_metric_info,
+    parse_perf_data,
+    perfvar_translation,
+    registered_metrics,
+)
 
 
 def migrate_graph_render_options_title_format(
@@ -344,8 +349,8 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         return [
             next(
                 (
-                    (metric_id, str(metric_detail["title"]))
-                    for metric_id, metric_detail in metric_info.items()
+                    (metric_id, metric_title)
+                    for metric_id, metric_title in registered_metrics()
                     if metric_id == value
                 ),
                 (value, value.title()),
@@ -385,8 +390,3 @@ def metrics_of_query(
         yield from _metric_choices(
             str(row["host_check_command"]), tuple(map(str, row["host_metrics"]))
         )
-
-
-def registered_metrics() -> Iterator[Choice]:
-    for metric_id, metric_detail in metric_info.items():
-        yield metric_id, str(metric_detail["title"])

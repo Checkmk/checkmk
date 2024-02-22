@@ -18,6 +18,7 @@ from livestatus import livestatus_lql
 import cmk.utils.regex
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.metrics import MetricName
+from cmk.utils.plugin_registry import Registry
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config, Config
@@ -48,7 +49,7 @@ from ._expression import (
     Sum,
     WarningOf,
 )
-from ._loader import get_unit_info, load_graphing_plugins
+from ._loader import load_graphing_plugins
 from ._parser import parse_color, parse_or_add_unit
 from ._type_defs import (
     GraphConsoldiationFunction,
@@ -57,6 +58,7 @@ from ._type_defs import (
     TranslatedMetric,
     UnitInfo,
 )
+from ._unit_info import unit_info
 
 
 class ScalarDefinition(NamedTuple):
@@ -193,7 +195,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Metric(quantity),
                 line_type=line_type,
-                title=str(metric_info[quantity]["title"]),
+                title=str(metrics_from_api[quantity]["title"]),
             )
         case metrics.Constant():
             return MetricDefinition(
@@ -206,21 +208,21 @@ def _parse_quantity(
                 title=str(quantity.title.localize(_)),
             )
         case metrics.WarningOf():
-            metric_ = metric_info[quantity.metric_name]
+            metric_ = metrics_from_api[quantity.metric_name]
             return MetricDefinition(
                 expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
                 title=str(metric_["title"]),
             )
         case metrics.CriticalOf():
-            metric_ = metric_info[quantity.metric_name]
+            metric_ = metrics_from_api[quantity.metric_name]
             return MetricDefinition(
                 expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
                 title=str(metric_["title"]),
             )
         case metrics.MinimumOf():
-            metric_ = metric_info[quantity.metric_name]
+            metric_ = metrics_from_api[quantity.metric_name]
             return MetricDefinition(
                 expression=MinimumOf(
                     Metric(quantity.metric_name),
@@ -230,7 +232,7 @@ def _parse_quantity(
                 title=str(metric_["title"]),
             )
         case metrics.MaximumOf():
-            metric_ = metric_info[quantity.metric_name]
+            metric_ = metrics_from_api[quantity.metric_name]
             return MetricDefinition(
                 expression=MaximumOf(
                     Metric(quantity.metric_name),
@@ -481,6 +483,7 @@ class MetricInfo(_MetricInfoMandatory, total=False):
 
 
 class _MetricInfoExtendedMandatory(TypedDict):
+    name: MetricName
     title: str | LazyString
     unit: UnitInfo
     color: str
@@ -533,6 +536,23 @@ class AutomaticDict(OrderedDict[str, RawGraphTemplate]):
 
 
 metric_info: dict[MetricName, MetricInfo] = {}
+
+
+class MetricsFromAPI(Registry[MetricInfoExtended]):
+    def plugin_name(self, instance: MetricInfoExtended) -> str:
+        return instance["name"]
+
+
+metrics_from_api = MetricsFromAPI()
+
+
+def registered_metrics() -> Iterator[tuple[str, str]]:
+    for metric_id, mi in metric_info.items():
+        yield metric_id, str(mi["title"])
+    for metric_id, mie in metrics_from_api.items():
+        yield metric_id, str(mie["title"])
+
+
 check_metrics: dict[str, dict[MetricName, CheckMetricEntry]] = {}
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
@@ -598,11 +618,14 @@ def add_graphing_plugins(
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     for plugin in plugins.plugins.values():
         if isinstance(plugin, metrics.Metric):
-            metric_info[MetricName(plugin.name)] = {
-                "title": plugin.title.localize(_),
-                "unit": parse_or_add_unit(plugin.unit)["id"],
-                "color": parse_color(plugin.color),
-            }
+            metrics_from_api.register(
+                MetricInfoExtended(
+                    name=plugin.name,
+                    title=plugin.title.localize(_),
+                    unit=parse_or_add_unit(plugin.unit),
+                    color=parse_color(plugin.color),
+                )
+            )
 
         elif isinstance(plugin, translations.Translation):
             for check_command in plugin.check_commands:
@@ -893,7 +916,7 @@ def _normalize_perf_data(
     return translation_entry["name"], new_entry
 
 
-def _get_metric_info(
+def _get_legacy_metric_info(
     metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
 ) -> MetricInfo:
     if metric_name in metric_info:
@@ -910,25 +933,46 @@ def _get_extended_metric_info(
     metric_name: str, color_counter: Counter[Literal["metric", "predictive"]]
 ) -> MetricInfoExtended:
     if metric_name.startswith("predict_lower_"):
-        mi_ = _get_metric_info(metric_name[14:], color_counter)
+        if (lookup_metric_name := metric_name[14:]) in metrics_from_api:
+            mfa = metrics_from_api[lookup_metric_name]
+            return MetricInfoExtended(
+                name=metric_name,
+                title=_("Prediction of ") + mfa["title"] + _(" (lower levels)"),
+                unit=mfa["unit"],
+                color=get_gray_tone(color_counter),
+            )
+
+        mi_ = _get_legacy_metric_info(lookup_metric_name, color_counter)
         mi = MetricInfo(
             title=_("Prediction of ") + mi_["title"] + _(" (lower levels)"),
             unit=mi_["unit"],
             color=get_gray_tone(color_counter),
         )
     elif metric_name.startswith("predict_"):
-        mi_ = _get_metric_info(metric_name[8:], color_counter)
+        if (lookup_metric_name := metric_name[8:]) in metrics_from_api:
+            mfa = metrics_from_api[lookup_metric_name]
+            return MetricInfoExtended(
+                name=metric_name,
+                title=_("Prediction of ") + mfa["title"] + _(" (lower levels)"),
+                unit=mfa["unit"],
+                color=get_gray_tone(color_counter),
+            )
+
+        mi_ = _get_legacy_metric_info(lookup_metric_name, color_counter)
         mi = MetricInfo(
             title=_("Prediction of ") + mi_["title"] + _(" (upper levels)"),
             unit=mi_["unit"],
             color=get_gray_tone(color_counter),
         )
+    elif metric_name in metrics_from_api:
+        return metrics_from_api[metric_name]
     else:
-        mi = _get_metric_info(metric_name, color_counter)
+        mi = _get_legacy_metric_info(metric_name, color_counter)
 
     mie = MetricInfoExtended(
+        name=metric_name,
         title=mi["title"],
-        unit=get_unit_info(mi["unit"]),
+        unit=unit_info[mi["unit"]],
         color=parse_color_into_hexrgb(mi["color"]),
     )
     if "help" in mi:
@@ -1240,9 +1284,7 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
 
 
 def metric_title(metric_name: MetricName) -> str:
-    if metric_name in metric_info:
-        return str(metric_info[metric_name]["title"])
-    return metric_name.title()
+    return str(get_extended_metric_info(metric_name)["title"])
 
 
 # .

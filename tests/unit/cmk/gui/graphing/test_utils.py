@@ -29,11 +29,14 @@ from cmk.gui.graphing._expression import (
     Sum,
     WarningOf,
 )
+from cmk.gui.graphing._type_defs import UnitInfo
 from cmk.gui.graphing._utils import (
     _compute_predictive_metrics,
     _NormalizedPerfData,
     AutomaticDict,
     MetricDefinition,
+    MetricInfoExtended,
+    metrics_from_api,
     TranslationInfo,
 )
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
@@ -424,14 +427,14 @@ def test__compute_predictive_metrics(
     )
 
 
-def test__get_metric_info() -> None:
+def test__get_legacy_metric_info() -> None:
     color_counter: Counter[Literal["metric", "predictive"]] = Counter()
-    assert utils._get_metric_info("foo", color_counter) == {
+    assert utils._get_legacy_metric_info("foo", color_counter) == {
         "title": "Foo",
         "unit": "",
         "color": "12/a",
     }
-    assert utils._get_metric_info("bar", color_counter) == {
+    assert utils._get_legacy_metric_info("bar", color_counter) == {
         "title": "Bar",
         "unit": "",
         "color": "13/a",
@@ -1656,7 +1659,19 @@ def test_graph_template_from_graph(
     graph: graphs.Graph, raw_metric_names: Sequence[str], expected_template: utils.GraphTemplate
 ) -> None:
     for r in raw_metric_names:
-        utils.metric_info[r] = {"title": r, "unit": "", "color": "#000000"}
+        metrics_from_api.register(
+            MetricInfoExtended(
+                name=r,
+                title=r,
+                unit=UnitInfo(
+                    title="",
+                    symbol="",
+                    render=str,
+                    js_render="",
+                ),
+                color="#000000",
+            )
+        )
     assert utils.GraphTemplate.from_graph(graph) == expected_template
 
 
@@ -1869,5 +1884,17 @@ def test_graph_template_from_bidirectional(
     expected_template: utils.GraphTemplate,
 ) -> None:
     for r in raw_metric_names:
-        utils.metric_info[r] = {"title": r, "unit": "", "color": "#000000"}
+        metrics_from_api.register(
+            MetricInfoExtended(
+                name=r,
+                title=r,
+                unit=UnitInfo(
+                    title="",
+                    symbol="",
+                    render=str,
+                    js_render="",
+                ),
+                color="#000000",
+            )
+        )
     assert utils.GraphTemplate.from_bidirectional(graph) == expected_template

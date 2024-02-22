@@ -41,7 +41,7 @@ def validate_time_range(time_range: TIME_RANGE) -> None:
     start_hour, start_minute = map(int, time_range[0].split(":"))
     end_hour, end_minute = map(int, time_range[1].split(":"))
 
-    if (end_hour * 60 + end_minute) <= (start_hour * 60 + start_minute):
+    if (end_hour * 60 + end_minute) < (start_hour * 60 + start_minute):
         raise ValueError(f"Invalid time range: {time_range}")
 
 

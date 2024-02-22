@@ -997,3 +997,17 @@ def test_timeperiod_config_validator_on_file() -> None:
         },
     }
     validate_timeperiods(time_periods)
+
+
+def test_openapi_time_period_time_range_shorter_than_one_minute(
+    clients: ClientRegistry,
+) -> None:
+    clients.TimePeriod.create(
+        time_period_data={
+            "name": "foo",
+            "alias": "foo",
+            "active_time_ranges": [
+                {"time_ranges": [{"start": "00:01:00.267271Z", "end": "00:01:32.724825Z"}]}
+            ],
+        },
+    )

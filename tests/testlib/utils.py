@@ -315,10 +315,13 @@ def spawn_expect_process(
     logfile_path: str = "/tmp/sep.out",
     auto_wrap_length: int = 49,
     break_long_words: bool = False,
+    timeout: int = 30,
 ) -> int:
     """Spawn an interactive CLI process via pexpect and process supplied expected dialogs
     "dialogs" must be a list of objects with the following format:
     {"expect": str, "send": str, "count": int, "optional": bool}
+
+    By default, 'timeout' has a value of 30 seconds.
 
     Return codes:
     0: success
@@ -348,7 +351,8 @@ def spawn_expect_process(
                             dialog.expect,  # rc=0
                             pexpect.EOF,  # rc=1
                             pexpect.TIMEOUT,  # rc=2
-                        ]
+                        ],
+                        timeout=timeout,
                     )
                     if rc == 0:
                         # msg found; sending input
@@ -377,7 +381,7 @@ def spawn_expect_process(
                         # max count reached
                         break
             if p.isalive():
-                rc = p.expect(pexpect.EOF)
+                rc = p.expect(pexpect.EOF, timeout=timeout)
             else:
                 rc = p.status
         except Exception as e:

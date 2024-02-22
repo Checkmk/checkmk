@@ -165,12 +165,9 @@ class Crawler:
             tasks: set = set()
             while tasks or self._todos:
                 while self._todos and len(tasks) < max_tasks:
-                    tasks.add(
-                        asyncio.create_task(
-                            self.visit_url(browser, storage_state, self._todos.popleft())
-                        )
-                    )
-
+                    url = self._todos.popleft()
+                    logger.debug("Checking URL %s", url.url)
+                    tasks.add(asyncio.create_task(self.visit_url(browser, storage_state, url)))
                 done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                 progress.done(done=sum(1 for t in done if t.result()))
                 self.duration = progress.duration

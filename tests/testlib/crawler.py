@@ -268,12 +268,23 @@ class Crawler:
             )
             return False
 
-        content_type = response.headers.get("content-type")
-        if response.status_code != 200 or content_type != "application/x-tar":
+        status_code = response.status_code
+        expected_status_code = 200
+        if status_code != expected_status_code:
             self.handle_error(
                 Url(url=crash_report_url, referer_url=url.url),
                 "CrashReportDownloadFailed",
-                f"status code: {response.status_code}, content-type: {content_type}",
+                f"status code: {status_code}, expected: {expected_status_code}",
+            )
+            return False
+
+        content_type = response.headers.get("content-type")
+        expected_content_type = "application/x-tgz"
+        if content_type != expected_content_type:
+            self.handle_error(
+                Url(url=crash_report_url, referer_url=url.url),
+                "CrashReportDownloadFailed",
+                f"content-type: {content_type}, expected: {expected_content_type}",
             )
             return False
 

@@ -22,10 +22,6 @@ BINUTILS_VERSION="2.41"
 BINUTILS_ARCHIVE_NAME="binutils-${BINUTILS_VERSION}.tar.gz"
 BINUTILS_URL="${MIRROR_URL}binutils/${BINUTILS_ARCHIVE_NAME}"
 
-GDB_VERSION="13.2"
-GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
-GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
-
 DIR_NAME=gcc-${GCC_VERSION}
 TARGET_DIR="${TARGET_DIR:-/opt}"
 PREFIX=${TARGET_DIR}/${DIR_NAME}
@@ -41,7 +37,6 @@ download_sources() {
     # Get the sources from nexus or upstream
     mirrored_download "${BINUTILS_ARCHIVE_NAME}" "${BINUTILS_URL}"
     mirrored_download "${GCC_ARCHIVE_NAME}" "${GCC_URL}"
-    mirrored_download "${GDB_ARCHIVE_NAME}" "${GDB_URL}"
 
     # Some GCC dependency download optimization
     local FILE_NAME="gcc-${GCC_VERSION}-with-prerequisites.tar.gz"
@@ -108,25 +103,6 @@ build_gcc() {
     make install
 }
 
-build_gdb() {
-    log "Build gdb-${GDB_VERSION}"
-    cd "${BUILD_DIR}"
-    tar xzf gdb-${GDB_VERSION}.tar.gz
-    # remove potential older build directories
-    if [[ -d gdb-${GDB_VERSION}-build ]]; then
-        rm -rf "gdb-${GDB_VERSION}-build"
-    fi
-    mkdir gdb-${GDB_VERSION}-build
-    cd gdb-${GDB_VERSION}-build
-    ../gdb-${GDB_VERSION}/configure \
-        --prefix="${PREFIX}" \
-        CC="${PREFIX}/bin/gcc-${GCC_MAJOR}" \
-        CXX="${PREFIX}/bin/g++-${GCC_MAJOR}" \
-        "$(python -V 2>&1 | grep -q 'Python 2\.4\.' && echo "--with-python=no")"
-    make -j4
-    make install
-}
-
 set_symlinks() {
     log "Set symlink"
 
@@ -162,7 +138,6 @@ build_package() {
     download_sources
     build_binutils
     build_gcc
-    build_gdb
 
     cd "$TARGET_DIR"
     rm -rf "$TARGET_DIR/src"
@@ -190,4 +165,3 @@ set_symlinks
 
 test_packages
 test_package "/usr/bin/gcc --version" "$GCC_VERSION"
-test_package "/usr/bin/gdb --version" "$GDB_VERSION"

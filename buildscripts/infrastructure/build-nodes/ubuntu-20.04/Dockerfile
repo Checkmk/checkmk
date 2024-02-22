@@ -127,6 +127,10 @@ RUN /opt/install-openssl.sh
 COPY scripts/install-python.sh /opt/
 RUN /opt/install-python.sh
 
+# install GDB after Python as it requires shared object files, see CMK-15854
+COPY scripts/install-gdb.sh /opt/
+RUN /opt/install-gdb.sh
+
 COPY scripts/install-freetds.sh /opt/
 RUN /opt/install-freetds.sh
 

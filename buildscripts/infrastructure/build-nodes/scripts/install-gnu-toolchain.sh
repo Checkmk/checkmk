@@ -35,7 +35,7 @@ BUILD_DIR="${TARGET_DIR}/src"
 # NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
 # Only the GCC_VERSION is part of the cache key, so be sure to bump this, too,
 # e.g. when changing the binutils or gdb version!
-BUILD_ID=1
+BUILD_ID="${GDB_VERSION}-1"
 
 download_sources() {
     # Get the sources from nexus or upstream

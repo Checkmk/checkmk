@@ -225,8 +225,7 @@ class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
         return request.get_validated_type_input_mandatory(HostName, "hostname")
 
     def execute(self, api_request: HostName) -> str:
-        host = Host.load_host(api_request)
-        job = ServiceDiscoveryBackgroundJob(host.name())
+        job = ServiceDiscoveryBackgroundJob(api_request)
         job_snapshot = asdict(job.get_status_snapshot())
         if "status" in job_snapshot:
             # additional conversion due to pydantic usage for status only

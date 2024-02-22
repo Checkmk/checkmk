@@ -10,8 +10,8 @@ from cmk.gui.graphing._utils import (
     check_metrics,
     graph_templates_internal,
     GraphTemplate,
-    metric_info,
     MetricDefinition,
+    metrics_from_api,
     ScalarDefinition,
 )
 
@@ -19,19 +19,19 @@ from cmk.gui.graphing._utils import (
 def test_add_graphing_plugins() -> None:
     add_graphing_plugins(load_graphing_plugins())
 
-    assert "idle_connections" in metric_info
-    assert metric_info["idle_connections"] == {
-        "title": "Idle connections",
-        "unit": "DecimalNotation__StrictPrecision_2",
-        "color": "#5200a3",
-    }
+    assert "idle_connections" in metrics_from_api
+    idle_connections = metrics_from_api["idle_connections"]
+    assert idle_connections["name"] == "idle_connections"
+    assert idle_connections["title"] == "Idle connections"
+    assert idle_connections["unit"]["id"] == "DecimalNotation__StrictPrecision_2"
+    assert idle_connections["color"] == "#5200a3"
 
-    assert "active_connections" in metric_info
-    assert metric_info["active_connections"] == {
-        "title": "Active connections",
-        "unit": "DecimalNotation__StrictPrecision_2",
-        "color": "#7f00ff",
-    }
+    assert "active_connections" in metrics_from_api
+    active_connections = metrics_from_api["active_connections"]
+    assert active_connections["name"] == "active_connections"
+    assert active_connections["title"] == "Active connections"
+    assert active_connections["unit"]["id"] == "DecimalNotation__StrictPrecision_2"
+    assert active_connections["color"] == "#7f00ff"
 
     assert "check_mk-citrix_serverload" in check_metrics
     assert check_metrics["check_mk-citrix_serverload"] == {

@@ -15,30 +15,47 @@ _NumberT = TypeVar("_NumberT", int, float)
 
 @dataclass(frozen=True, kw_only=True)
 class PredictiveLevels(Generic[_NumberT]):
-    """Definition for levels that change over time based on a prediction of the monitored value.
-    Usable only in conjunction with :class:`Levels`
+    """Definition for levels based on a prediction of the monitored value.
 
-    Args:
-        reference_metric: The name of the metric that should be used to compute the prediction.
-         This value is hardcoded by you, the developer. It is your responsibility to make sure
-         that all plugins subscribing to the ruleset actually create this metric.
-         Failing to do so will prevent the backend from providing a prediction, currently leading
-         to an always OK service.
-        prefill_abs_diff: Value to pre-populate the form fields with when the levels depend on the
-         absolute difference to the predicted value. If None, the backend will decide whether to
-         leave the field empty or to prefill it with a canonical value.
-        prefill_rel_diff: Value to pre-populate the form fields with when the levels depend on the
-         relative difference to the predicted value. If None, the backend will decide whether to
-         leave the field empty or to prefill it with a canonical value.
-        prefill_stddev_diff: Value to pre-populate the form fields with when the levels depend on
-         the relation of the predicted value to the standard deviation. If None, the backend will
-         decide whether to leave the field empty or to prefill it with a canonical value.
+    Usable only in conjunction with :class:`Levels`.
+
+    Example:
+    ********
+
+    >>> predictive = PredictiveLevels(
+    ...     reference_metric="mem_used_percent",
+    ...     prefill_abs_diff=DefaultValue((5.0, 10.0)),
+    ...     prefill_rel_diff=DefaultValue((10.0, 20.0)),
+    ...     prefill_stddev_diff=DefaultValue((2.0, 4.0)),
+    ... )
+
+    Arguments:
+    **********
     """
 
     reference_metric: str
+    """The name of the metric that should be used to compute the prediction.
+
+    This value is hardcoded by you, the developer.
+    It is your responsibility to make sure that all plugins subscribing to the ruleset actually
+    create this metric.
+    Failing to do so will prevent the backend from providing a prediction, currently leading to an
+    always OK service.
+    """
     prefill_abs_diff: Prefill[tuple[_NumberT, _NumberT]]
+    """Value to pre-populate the form fields with when the levels depend on the
+    absolute difference to the predicted value. If None, the backend will decide whether to
+    leave the field empty or to prefill it with a canonical value."""
+
     prefill_rel_diff: Prefill[tuple[float, float]] = DefaultValue((10.0, 20.0))
+    """Value to pre-populate the form fields with when the levels depend on the
+    relative difference to the predicted value. If None, the backend will decide whether to
+    leave the field empty or to prefill it with a canonical value."""
     prefill_stddev_diff: Prefill[tuple[float, float]] = DefaultValue((2.0, 4.0))
+    """Value to pre-populate the form fields with when the levels depend on
+    the relation of the predicted value to the standard deviation. If None, the backend will
+    decide whether to leave the field empty or to prefill it with a canonical value.
+    """
 
 
 class LevelDirection(enum.Enum):
@@ -71,23 +88,21 @@ LevelsConfigModel = (
 
 @dataclass(frozen=True, kw_only=True)
 class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
-    """Specifies a form for configuring levels without predictive levels
+    """Specifies a form for configuring levels without predictive levels.
 
-    Args:
-        form_spec_template: Template for the specification of the form fields of the warning and
-            critical levels. If `title` or `prefill_value` are provided here, they will be ignored
-        level_direction: Do the levels represent the lower or the upper bound.
-            It's used only to provide labels and error messages in the UI.
-        prefill_fixed_levels: Value to pre-populate the form fields of fixed levels with.
-            If None, the backend will decide whether to leave the field empty or to prefill it
-            with a canonical value.
+    This creates a FormSpec that allows to configure simple levels, i.e.
+    either configure to not use levels at all, or to configure fixed levels.
 
     Consumer model:
-        **Type**: ``_NoLevels | _FixedLevels``
+    ***************
 
-        The value presented to consumers will be crafted in a way that makes it a suitable
-        argument for the ``check_levels`` function of the agent based API.
-        These are the two possible types defined in the consumer model::
+    **Type**: ``_NoLevels`` | ``_FixedLevels``.
+
+    The value presented to consumers will be crafted in a way that makes it a suitable
+    argument for the ``check_levels`` function of the agent based API v2.
+    They either represent that no levels should be applied, or they contain a 2-tuple
+    of numbers representing the warning and critical levels. Here ``Number`` can be either
+    ``float`` or ``int``, depending on the consumer model of the used form spec::
 
           _NoLevels = tuple[
               Literal["no_levels"],
@@ -96,23 +111,14 @@ class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
 
           _FixedLevels = tuple[
               Literal["fixed"],
-              # (warn, crit)
-              tuple[int, int] | tuple[float, float],
+              tuple[Number, Number],
           ]
 
-        The configured value will be presented to consumers as a 2-tuple consisting of
-        level type identifier and either None or a 2-tuple of numbers.
+    **Example**: SimpleLevels used to configure no levels will look like ``("no_levels", None)``,
+    levels used to configure fixed lower levels might be ``("fixed", (5.0, 10.0))``.
 
-        **Example**: Levels used to configure no levels will look
-        like this::
-
-            ("no_levels", None)
-
-        Levels used to configure fixed lower levels might look
-        like this::
-
-            ("fixed", (5.0, 1.0))
-
+    Arguments:
+    **********
     """
 
     # no idea why pylint will not see that we inherit these four anyway.
@@ -122,9 +128,13 @@ class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
     custom_validate: Callable[[SimpleLevelsConfigModel[_NumberT]], object] | None = None
 
     form_spec_template: FormSpec[_NumberT]
+    """Template for the specification of the form fields of the warning and critical levels.
+    If `title` or `prefill_value` are provided here, they will be ignored."""
     level_direction: LevelDirection
-
+    """Specifies the type of bound the levels represents. This is used only to adjust the
+    labels and error messages in the UI."""
     prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]
+    """Value to pre-populate the form fields with."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -132,41 +142,33 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
     """Specifies a form for configuring levels including predictive levels
 
     This creates a FormSpec that extends the SimpleLevels with the possibility to configure
-    predictive levels.
-
-    Args:
-        form_spec_template: Template for the specification of the form fields of the warning and
-            critical levels. If `title` or `prefill_value` are provided here, they will be ignored
-        level_direction: Do the levels represent the lower or the upper bound.
-            It's used only to provide labels and error messages in the UI.
-        predictive: Specification for the predictive levels
-        prefill_fixed_levels: Value to pre-populate the form fields of fixed levels with.
-            If None, the backend will decide whether to leave the field empty or to prefill it
-            with a canonical value.
+    predictive levels, i.e. levels that are based on a prediction of the monitored value.
 
     Consumer model:
-        **Type**: ``_NoLevels | _FixedLevels | _PredictiveLevels``
+    ***************
 
-        The value presented to consumers will be crafted in a way that makes it a suitable
-        argument for the ``check_levels`` function of the agent based API.
-        In addition to the two types defined in :class:`SimpleLevels`, this class also
-        allows for predictive levels.
-        The model of the predictive levels is::
+    **Type**: ``_NoLevels`` | ``_FixedLevels`` | ``_PredictiveLevels``.
 
-          _PredictiveLevels = tuple[
-              Literal["predictive"],
-              # (reference_metric, predicted_value, levels_tuple)
-              tuple[str, float | None, tuple[float, float] | None],
-          ]
+    The value presented to consumers will be crafted in a way that makes it a suitable
+    argument for the ``check_levels`` function of the agent based API.
+    In addition to the two types defined in :class:`SimpleLevels`, this class also
+    allows for predictive levels.
+    The model of the predictive levels is::
 
-        The configured value will be presented to consumers as a 2-tuple consisting of
-        the level type identifier ``"predictive"`` and a 3-tuple containing the name of the
-        reference metric used for prediction, the predicted value and the resulting levels tuple.
+        _PredictiveLevels = tuple[
+            Literal["predictive"],
+            # (reference_metric, predicted_value, levels_tuple)
+            tuple[str, float | None, tuple[float, float] | None],
+        ]
 
-        **Example**: Levels resulting from configured upper predictive levels might look
-        like this::
+    The configured value will be presented to consumers as a 2-tuple consisting of
+    the level type identifier ``"predictive"`` and a 3-tuple containing the name of the
+    reference metric used for prediction, the predicted value and the resulting levels tuple.
 
-            ("predictive", ("mem_used_percent", 42.1, (50.3, 60.7)))
+    **Example**: Levels resulting from configured upper predictive levels might look
+    like this::
+
+        ("predictive", ("mem_used_percent", 42.1, (50.3, 60.7)))
 
     """
 
@@ -177,7 +179,12 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
     custom_validate: Callable[[LevelsConfigModel[_NumberT]], object] | None = None
 
     form_spec_template: FormSpec[_NumberT]
+    """Template for the specification of the form fields of the warning and critical levels.
+    If `title` or `prefill_value` are provided here, they will be ignored."""
     level_direction: LevelDirection
-    predictive: PredictiveLevels[_NumberT]
-
+    """Specifies the type of bound the levels represents. This is used only to adjust the
+    labels and error messages in the UI."""
     prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]
+    """Value to pre-populate the form fields with."""
+    predictive: PredictiveLevels[_NumberT]
+    """Specification for the predictive levels."""

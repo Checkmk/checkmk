@@ -14,21 +14,26 @@ from ._base import DefaultValue, FormSpec, InputHint, Prefill
 
 @dataclass(frozen=True, kw_only=True)
 class BooleanChoice(FormSpec[bool]):
-    """Specifies a form for configuring a choice between boolean values
+    """Specifies a form for configuring a choice between boolean values.
 
-    Args:
-        title: Human readable title
-        help_text: Description to help the user with the configuration
-        label: Text displayed as an extension to the input field
-        prefill: Value to pre-populate the choice with.
-        migrate: Transformation of the stored configuration
+    Consumer model:
+    ***************
+        **Type**: ``bool``
+
+    Arguments:
+    **********
     """
 
     label: Label | None = None
+    """Text displayed as an extension to the input field."""
     prefill: DefaultValue[bool] = DefaultValue(False)
+    """Value to pre-populate the form field with."""
 
 
 class SIMagnitude(Enum):
+    """SI magnitudes for data storage capacity.
+    These scale the value using powers of 1000."""
+
     BYTE = auto()
     KILO = auto()
     MEGA = auto()
@@ -41,6 +46,9 @@ class SIMagnitude(Enum):
 
 
 class IECMagnitude(Enum):
+    """IEC magnitudes for memory capacity.
+    These scale the value using powers of 1024."""
+
     BYTE = auto()
     KIBI = auto()
     MEBI = auto()
@@ -56,46 +64,53 @@ class IECMagnitude(Enum):
 class DataSize(FormSpec[int]):
     """Specifies an input field for data storage capacity
 
-    Args:
-        label: Text displayed as an extension to the input field
-        displayed_magnitudes: Magnitudes of data that can be entered in the UI
-        prefill: Value in bytes to pre-populate the form field with.
+    Consumer model:
+    ***************
+      **Type**: ``int``
+
+    Arguments:
+    **********
     """
 
     label: Label | None = None
+    """Text displayed as an extension to the input field"""
     displayed_magnitudes: Sequence[SIMagnitude] | Sequence[IECMagnitude]
+    """Magnitudes of data that can be entered in the UI"""
     prefill: Prefill[int] = InputHint(0)
+    """Value in bytes to pre-populate the form field with."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class FileUpload(FormSpec[tuple[str, str, bytes]]):
     """Specifies a file upload form.
 
-    Args:
-        extensions: The extensions of the files to choose from. If set to `None`,
-            all extensions are selectable.
-        mime_types: The allowed mime types of uploaded files. If set to `None`,
-            all mime types will be uploadable.
-
     Consumer model:
-        **Type**: ``tuple[str, str, bytes]``
+    ***************
 
-        The configured value will be presented as a 3-tuple consisting of the name of
-        the uploaded file, its mime type, and the files content as bytes.
+    The configured value will be presented as a 3-tuple consisting of the name of
+    the uploaded file, its mime type, and the files content as bytes.
 
-        **Example**: Choosing a pem file to upload would result
-        in::
+    **Type**: ``tuple[str, str, bytes]``
 
-            (
-                "my_cert.pem",
-                "application/octet-stream",
-                b"-----BEGIN CERTIFICATE-----\\n....",
-            )
+    **Example**: Choosing a pem file to upload would result
+    in::
 
+       (
+            "my_cert.pem",
+            "application/octet-stream",
+            b"-----BEGIN CERTIFICATE-----\\n....",
+        )
+
+    Arguments:
+    **********
     """
 
     extensions: tuple[str, ...] | None = None
+    """The extensions of the files to choose from. If set to `None`,
+    all extensions are selectable."""
     mime_types: tuple[str, ...] | None = None
+    """The allowed mime types of uploaded files. If set to `None`,
+    all mime types will be uploadable."""
 
 
 _FixedValueT = TypeVar("_FixedValueT", int, float, str, bool, None)
@@ -104,17 +119,22 @@ _FixedValueT = TypeVar("_FixedValueT", int, float, str, bool, None)
 @dataclass(frozen=True, kw_only=True)
 class FixedValue(FormSpec[_FixedValueT]):
     """
-    Specifies a fixed non-editable value
+    Specifies a fixed non-editable value.
 
     Can be used in a CascadingSingleChoice and Dictionary to represent a fixed value option.
 
-    Args:
-        value: Atomic value produced by the form spec
-        label: Text displayed underneath the title
+    Consumer model:
+    ***************
+    The consumer model is equal to the configuration model, i.e. the value that it contains.
+
+    Arguments:
+    **********
     """
 
     value: _FixedValueT
+    """Atomic value produced by the form spec"""
     label: Label | None = None
+    """Text displayed underneath the title."""
 
     def __post_init__(self) -> None:
         try:
@@ -131,28 +151,43 @@ class FixedValue(FormSpec[_FixedValueT]):
 
 @dataclass(frozen=True, kw_only=True)
 class Float(FormSpec[float]):
-    """Specifies an input field for floating point numbers
+    """Specifies an input field for floating point numbers.
 
-    Args:
-        label: Text displayed as an extension to the input field
-        unit_symbol: Unit symbol to add to the input field
-        prefill: Value to pre-populate the form field with.
+    Consumer model:
+    ***************
+    **Type**: ``float``
+
+    Arguments:
+    **********
     """
 
     label: Label | None = None
+    """Text displayed as an extension to the input field."""
     unit_symbol: str = ""
+    """Unit symbol to add to the input field."""
 
     prefill: Prefill[float] = InputHint(0.0)
+    """Value to pre-populate the form field with."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class HostState(FormSpec[Literal[0, 1, 2]]):
     """Specifies the configuration of a host state.
 
+    Consumer model:
+    ***************
+    **Type**: ``Literal[0, 1, 2]``
+
+    Example:
+    ********
+
     >>> state_form_spec = HostState(
     ...     title=Title("Host state"),
     ...     prefill=DefaultValue(HostState.UP),
     ... )
+
+    Arguments:
+    **********
     """
 
     UP: ClassVar = 0
@@ -160,70 +195,73 @@ class HostState(FormSpec[Literal[0, 1, 2]]):
     UNREACH: ClassVar = 2
 
     prefill: DefaultValue[Literal[0, 1, 2]] = DefaultValue(0)
+    """Value to pre-populate the form field with."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class Integer(FormSpec[int]):
-    """Specifies an input field for whole numbers
-
-    Args:
-        label: Text displayed as an extension to the input field
-        unit_symbol: Unit symbol to add to the input field
-        prefill: Value to pre-populate the form field with.
+    """Specifies an input field for whole numbers.
 
     Consumer model:
-        **Type**: ``int``
+    ***************
+    **Type**: ``int``
 
-        The configured value will be presented as an integer to consumers.
+    Arguments:
+    **********
     """
 
     label: Label | None = None
+    """Text displayed as an extension to the input field."""
     unit_symbol: str = ""
+    """Unit symbol to add to the input field."""
     prefill: Prefill[int] = InputHint(0)
+    """Value to pre-populate the form field with."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class MultilineText(FormSpec[str]):
-    """Specifies a multiline text form
-
-    Args:
-        monospaced: Display text in the form as monospaced
-        macro_support: Hint in the UI that macros can be used in the field.
-            Replacing the macros in the plugin is a responsibility of the plugin developer.
-        label: Text displayed in front of the input field
-        prefill: Value to pre-populate the form field with.
+    """Specifies a multiline text form.
 
     Consumer model:
-        **Type**: ``str``
+    ***************
+    **Type**: ``str``
 
-        The configured value will be presented as a string.
+    **Example**: Inputting "some text" in a MultilineText form would result
+    in::
 
-        **Example**: Inputting "some text" in a MultilineText form would result
-        in::
+        "some text\\n"
 
-            "some text\\n"
+    Arguments:
+    **********
     """
 
     monospaced: bool = False
+    """Display text in the form as monospaced."""
     macro_support: bool = False
-
+    """Hint in the UI that macros can be used in the field.
+    Replacing the macros in the plugin is a responsibility of the plugin developer."""
     label: Label | None = None
-
+    """Text displayed in front of the input field."""
     prefill: Prefill[str] = InputHint("")
+    """Value to pre-populate the form field with."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class Percentage(FormSpec[float]):
-    """Specifies an input field for percentages
+    """Specifies an input field for percentages.
 
-    Args:
-        label: Text displayed in front of the input field
-        prefill: Value to pre-populate the form field with.
+    Consumer model:
+    ***************
+    **Type**: ``float``
+
+    Arguments:
+    **********
     """
 
     label: Label | None = None
-
+    """Text displayed in front of the input field."""
     prefill: Prefill[float] = InputHint(0.0)
+    """Value to pre-populate the form field with."""
 
 
 class MatchingScope(Enum):
@@ -235,29 +273,46 @@ class MatchingScope(Enum):
 @dataclass(frozen=True, kw_only=True)
 class RegularExpression(FormSpec[str]):
     """
-    Specifies an input field for regular expressions
+    Specifies an input field for regular expressions.
 
-    Args:
-        predefined_help_text: Adds pre-formulated help text on how the pattern will be used to match
-                              for commonly used matching behavior.
-        label: Text displayed as an extension to the input field
-        prefill: Value to pre-populate the form field with.
+    Consumer model:
+    ***************
+    **Type**: ``str``
+
+    Arguments:
+    **********
     """
 
     predefined_help_text: MatchingScope
+    """Adds pre-formulated help text.
+    For commonly used matching behavior you can choose from predefined help texts
+    to describe how the pattern will be used to match.
+    Implementing it in a way that fulfills this promise is a responsibility of the plugin developer.
+    """
     label: Label | None = None
-
+    """Text displayed in front of the input field."""
     prefill: Prefill[str] = InputHint("")
+    """Value to pre-populate the form field with."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class ServiceState(FormSpec[Literal[0, 1, 2, 3]]):
     """Specifies the configuration of a service state.
 
+    Consumer model:
+    ***************
+    **Type**: ``Literal[0, 1, 2, 3]``
+
+    Example:
+    ********
+
     >>> state_form_spec = ServiceState(
     ...     title=Title("State if something happens"),
     ...     prefill=DefaultValue(ServiceState.WARN),
     ... )
+
+    Arguments:
+    **********
     """
 
     OK: ClassVar = 0
@@ -266,22 +321,29 @@ class ServiceState(FormSpec[Literal[0, 1, 2, 3]]):
     UNKNOWN: ClassVar = 3
 
     prefill: DefaultValue[Literal[0, 1, 2, 3]] = DefaultValue(0)
+    """Value to pre-populate the form field with."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class String(FormSpec[str]):
     """
-    Args:
-        label: Text displayed in front of the input field
-        macro_support: Hint in the UI that macros can be used in the field.
-            Replacing the macros in the plugin is a responsibility of the plugin developer.
-        prefill: Value to pre-populate the form field with.
+    Specifies an input field for single line text.
+
+    Consumer model:
+    ***************
+    **Type**: ``str``
+
+    Arguments:
+    **********
     """
 
     label: Label | None = None
+    """Text displayed in front of the input field."""
     macro_support: bool = False
-
+    """Hint in the UI that macros can be used in the field.
+    Replacing the macros in the plugin is a responsibility of the plugin developer."""
     prefill: Prefill[str] = InputHint("")
+    """Value to pre-populate the form field with."""
 
 
 class TimeMagnitude(Enum):
@@ -294,23 +356,37 @@ class TimeMagnitude(Enum):
 
 @dataclass(frozen=True, kw_only=True)
 class TimeSpan(FormSpec[float]):
-    """Specifies an input field for time span
-
-    Args:
-        label: Text displayed as an extension to the input field
-        displayed_magnitudes: Units that can be configured in the UI. All of the listed units can be
-                        configured and the value is the sum of the configured fields in seconds.
-        prefill: Value in seconds to pre-populate the form fields with.
+    """Specifies an input field for time span.
 
     Consumer model:
-        **Type**: ``float``
+    ***************
+    **Type**: ``float``
 
-        The configured value will be presented as a float to consumers.
+    Example:
+    ********
+
+    >>> time_span_form_spec = TimeSpan(
+    ...     title=Title("Time span"),
+    ...     displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MINUTE],
+    ...     prefill=DefaultValue(60.0),
+    ... )
+
+    The above example would allow the user to configure a time span by entering
+    "3 minutes 20 seconds", resulting in a value of ``200.0``.
+
+    Arguments:
+    **********
     """
 
     label: Label | None = None
+    """Text displayed as an extension to the input field."""
     displayed_magnitudes: Sequence[TimeMagnitude]
+    """Magnitudes that can be entered in the UI.
+
+    All of the listed magnitudes can be used to configure the desired time span, which will be the
+    sum of the configured fields in seconds."""
     prefill: Prefill[float] = InputHint(0.0)
+    """Value to pre-populate the form field with."""
 
 
 class InvalidElementMode(Enum):
@@ -327,15 +403,16 @@ class InvalidElementValidator:
 
 @dataclass(frozen=True)
 class SingleChoiceElement:
-    """Specifies an element of a single choice form
+    """Specifies an element of a single choice form.
 
-    Args:
-        name: Identifier of the SingleChoiceElement. Must be a valid Python identifier.
-        title: Human readable title that will be shown in the UI
+    Arguments:
+    **********
     """
 
     name: str
+    """Identifier of the SingleChoiceElement. Must be a valid Python identifier."""
     title: Title
+    """Human readable title that will be shown in the UI."""
 
     def __post_init__(self) -> None:
         if not self.name.isidentifier():
@@ -344,30 +421,35 @@ class SingleChoiceElement:
 
 @dataclass(frozen=True, kw_only=True)
 class SingleChoice(FormSpec[str]):
-    """Specification for a (single-)selection from multiple options
+    """Specification for a (single-)selection from multiple options.
 
-    Args:
-        elements: Elements to choose from
-        no_elements_text: Text to show if no elements are given
-        frozen: If the value can be changed after initial configuration, e.g. for identifiers
-        label: Text displayed in front of the input field
-        prefill: Pre-selected choice. Must be one of the elements names.
-        deprecated_elements: Elements that can still be present in stored user configurations, but
-                             are no longer offered
-        invalid_element_validation: Validate if the selected value is still offered as a choice
+    Consumer model:
+    ***************
+    **Type**: ``str``
+
+    Arguments:
+    **********
     """
 
     elements: Sequence[SingleChoiceElement]
+    """Elements to choose from."""
     no_elements_text: Message | None = None
-
+    """Text to show if no elements are given."""
     frozen: bool = False
-
+    """Set to `True` to prevent the value from being changed after initial configuration,
+    e.g. for identifiers."""
     label: Label | None = None
-
+    """Text displayed in front of the input field."""
     prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please choose"))
-
+    """Pre-selected choice.
+    
+    If a DefaultValue is used, it must be one of the elements names.
+    If an InputHint is used, its title will be shown as a placeholder in the input field, requiring
+    the user to make a choice."""
     deprecated_elements: tuple[str, ...] | None = None
+    """Elements that can still be present in old user configurations, but are no longer offered."""
     invalid_element_validation: InvalidElementValidator | None = None
+    """Validate if the selected value is still offered as a choice."""
 
     def __post_init__(self) -> None:
         valid = {elem.name for elem in self.elements}

@@ -19,32 +19,55 @@ class FormSpec(Generic[ModelT]):
     Even if the ``migrate`` and ``custom_validate`` arguments do not always
     make sense, all form specs have them for consistency.
 
-    Args:
-        title: A human readable title.
-        help_text: Description to help the user with the configuration.
-        migrate: A function to change the value every time it is loaded into the form spec.
-            You can add a migration function to a form spec to update the value from an
-            old version to be compatible with the current definition.
-            This function is executed every time a stored value is loaded into the form spec,
-            so it is important that it is idem potent.
-            In other words: The function should change values only once, and in subsequent calls
-            leave the value alone.
-            Counter example: Simply multiplying a value by 10 will increase it during every
-            (patch) upgrade and also every time the surprised user looks at their configuration.
-            By default the value remains unchanged.
-        custom_validate: An optional additional validator.
-            After the validation of the specific form spec is successful, this function is executed.
-            It must raise a ValidationError in case validation fails.
-            The return value of the function will not be used.
+    Every form spec has a configuration model and a consumer model.
+    The configuration model is the type of the value that is expected to be
+    stored in the configuration. This type is the generic parameter of this class.
 
+    The consumer model is the type of the value that is expected to be passed to the
+    consumer of the ruleset. It will be the same as the configuration model in most cases,
+    but there are exceptions.
+
+    The consumer model is not part of the form spec, but it is important to keep it in mind
+    when implementing the consumer of the ruleset.
+
+    **Example:**
+
+    A form spec that represents a single choice will have a configuration model of str
+    and a consumer model of str. A form spec that represents predictive levels will have
+    a configuration model containing the metric name and information on how to compute the
+    predictive levels and a consumer model containing the metric name and the predictive
+    levels themselves.
+
+    Common arguments:
+    *****************
     """
 
     title: Title | None = None
+    """A human readable title."""
     help_text: Help | None = None
+    """Description to help the user with the configuration."""
     migrate: Callable[[object], ModelT] | None = None
+    """A function to change the value every time it is loaded into the form spec.
+
+    You can add a migration function to a form spec to update the value from an
+    old version to be compatible with the current definition.
+    This function is executed every time a stored value is loaded into the form spec,
+    so it is important that it is idem potent.
+    In other words: The function should change values only once, and in subsequent calls
+    leave the value alone.
+    Counter example: Simply multiplying a value by 10 will increase it during every
+    (patch) upgrade and also every time the surprised user looks at their configuration.
+    By default the value remains unchanged.
+    """
     # Since we can't have a default `migrate` other than `None`, we also allow it here for
     # consistency, although a no-op validator would work as well.
     custom_validate: Callable[[ModelT], object] | None = None
+    """An optional additional validator.
+
+    After the validation of the specific form spec is successful, this function is executed.
+    It must raise a ValidationError in case validation fails.
+    The return value of the function will not be used.
+    """
 
 
 @dataclass(frozen=True)

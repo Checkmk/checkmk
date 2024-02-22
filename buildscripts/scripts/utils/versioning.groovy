@@ -87,9 +87,10 @@ def get_cmk_version(branch_name, branch_version, version) {
 }
 /* groovylint-enable DuplicateListLiteral */
 
-def configured_or_overridden_distros(edition, distro_list, use_case="daily") {
+def configured_or_overridden_distros(edition, distros, use_case="daily") {
+    def distro_list = (distros ?: "").replaceAll(',', ' ').split(' ').grep();
     if(distro_list) {
-        return distro_list.trim().replaceAll(',', ' ').split(' ');
+        return distro_list;
     }
     docker_image_from_alias("IMAGE_TESTING").inside() {
         dir("${checkout_dir}") {

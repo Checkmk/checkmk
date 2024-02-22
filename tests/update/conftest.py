@@ -194,10 +194,11 @@ def _get_site(  # pylint: disable=too-many-branches
                 base_site,  # type: ignore
                 target_version=version,
                 min_version=min_version,
+                timeout=60,
             )
         else:  # interactive site creation
             try:
-                site = sf.interactive_create(site.id, logfile_path)
+                site = sf.interactive_create(site.id, logfile_path, timeout=60)
                 restart_httpd()
             except Exception as e:
                 if f"Version {version.version} could not be installed" in str(e):

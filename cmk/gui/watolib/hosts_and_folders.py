@@ -3673,7 +3673,7 @@ def rebuild_folder_lookup_cache() -> None:
 
 
 def ajax_popup_host_action_menu() -> None:
-    hostname: HostName = HostName(request.get_ascii_input_mandatory("hostname"))
+    hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     host = Host.host(hostname)
     if host is None:
         html.show_error(_('"%s" is not a valid host name') % hostname)

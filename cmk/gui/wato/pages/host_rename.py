@@ -404,7 +404,7 @@ class ModeRenameHost(WatoMode):
         return ModeEditHost
 
     def _from_vars(self) -> None:
-        host_name = HostName(request.get_ascii_input_mandatory("host"))
+        host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
         folder = folder_from_request()
         if not folder.has_host(host_name):
@@ -474,7 +474,7 @@ class ModeRenameHost(WatoMode):
                 % renamed_host_site,
             )
 
-        newname = HostName(request.get_ascii_input_mandatory("newname"))
+        newname = request.get_validated_type_input_mandatory(HostName, "newname")
         folder = folder_from_request()
         self._check_new_host_name(folder, "newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of

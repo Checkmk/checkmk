@@ -72,7 +72,7 @@ class ModeObjectParameters(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        self._hostname = HostName(request.get_ascii_input_mandatory("host"))
+        self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
         host = folder_from_request().host(self._hostname)
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))

@@ -90,7 +90,7 @@ class ModeDiagHost(WatoMode):
         ]
 
     def _from_vars(self) -> None:
-        self._hostname = HostName(request.get_ascii_input_mandatory("host"))
+        self._hostname = request.get_validated_type_input_mandatory(HostName, "host")
         self._host = folder_from_request().load_host(self._hostname)
         self._host.permissions.need_permission("read")
 

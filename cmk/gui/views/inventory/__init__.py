@@ -2363,7 +2363,7 @@ def _load_inventory_tree(site_id: SiteId, host_name: HostName) -> ImmutableTree:
 # Ajax call for fetching parts of the tree
 def ajax_inv_render_tree() -> None:
     site_id = SiteId(request.get_ascii_input_mandatory("site"))
-    host_name = HostName(request.get_ascii_input_mandatory("host"))
+    host_name = request.get_validated_type_input_mandatory(HostName, "host")
     inventory.verify_permission(host_name, site_id)
 
     raw_path = request.get_ascii_input_mandatory("raw_path")

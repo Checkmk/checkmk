@@ -131,12 +131,16 @@ def _select_prediction(
 
     return _Predictions(
         title=selected_title,
-        upper=None
-        if (meta := selected_prediction_infos.get("upper")) is None
-        else (meta, querier.query_prediction_data(meta)),
-        lower=None
-        if (meta := selected_prediction_infos.get("lower")) is None
-        else (meta, querier.query_prediction_data(meta)),
+        upper=(
+            None
+            if (meta := selected_prediction_infos.get("upper")) is None
+            else (meta, querier.query_prediction_data(meta))
+        ),
+        lower=(
+            None
+            if (meta := selected_prediction_infos.get("lower")) is None
+            else (meta, querier.query_prediction_data(meta))
+        ),
     )
 
 
@@ -155,7 +159,7 @@ def _available_predictions(
 
 
 def page_graph() -> None:
-    host_name = HostName(request_.get_str_input_mandatory("host"))
+    host_name = request_.get_validated_type_input_mandatory(HostName, "host")
     service_name = ServiceName(request_.get_str_input_mandatory("service"))
     metric_name = MetricName(request_.get_str_input_mandatory("dsname"))
     livestatus_connection = live().get_connection(SiteId(request_.get_str_input_mandatory("site")))
@@ -380,9 +384,13 @@ def _make_prediction_curves(
 
     warn, crit = [], []
     for levels in (
-        estimate_levels(p.average, p.stdev, meta.direction, meta.params.levels, meta.params.bound)
-        if p
-        else None
+        (
+            estimate_levels(
+                p.average, p.stdev, meta.direction, meta.params.levels, meta.params.bound
+            )
+            if p
+            else None
+        )
         for p in predictions
     ):
         warn.append(levels[0] if levels else None)

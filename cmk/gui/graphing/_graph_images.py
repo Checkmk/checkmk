@@ -16,7 +16,6 @@ from pydantic import ValidationError as PydanticValidationError
 
 import livestatus
 
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pdf as pdf
@@ -59,9 +58,7 @@ def ajax_graph_images_for_notifications() -> None:
 
 def _answer_graph_image_request() -> None:
     try:
-        host_name = HostName(request.get_ascii_input_mandatory("host"))
-        if not host_name:
-            raise MKGeneralException(_('Missing mandatory "host" parameter'))
+        host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
         service_description = request.get_str_input_mandatory("service", "_HOST_")
 

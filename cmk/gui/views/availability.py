@@ -216,7 +216,7 @@ def show_availability_page(  # pylint: disable=too-many-branches
     if request.var("av_host"):
         av_object = (
             SiteId(request.get_str_input_mandatory("av_site")),
-            HostName(request.get_str_input_mandatory("av_host")),
+            request.get_validated_type_input_mandatory(HostName, "av_host"),
             ServiceName(request.get_str_input_mandatory("av_service")),
         )
         title += av_object[1]

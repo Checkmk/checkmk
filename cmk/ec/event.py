@@ -313,11 +313,11 @@ def parse_syslog_info(content: str) -> Event:
         application = parts[0]
         pid = 0
         text = parts[1].strip()
-    return {
-        "application": application,
-        "pid": pid,
-        "text": text,
-    }
+    return Event(
+        application=application,
+        pid=pid,
+        text=text,
+    )
 
 
 def parse_monitoring_info(line: str) -> Event:

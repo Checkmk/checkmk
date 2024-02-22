@@ -79,6 +79,7 @@ class EventLimits(TypedDict):
 
 LogLevel = int
 
+# TODO: Use keys which are valid identifiers
 LogConfig = TypedDict(
     "LogConfig",
     {

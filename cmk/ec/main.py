@@ -2595,12 +2595,12 @@ class EventStatus:
         )
 
     def pack_status(self) -> PackedEventStatus:
-        return {
-            "next_event_id": self._next_event_id,
-            "events": self._events,
-            "rule_stats": self._rule_stats,
-            "interval_starts": self._interval_starts,
-        }
+        return PackedEventStatus(
+            next_event_id=self._next_event_id,
+            events=self._events,
+            rule_stats=self._rule_stats,
+            interval_starts=self._interval_starts,
+        )
 
     def unpack_status(self, status: PackedEventStatus) -> None:
         self._next_event_id = status["next_event_id"]
@@ -3249,21 +3249,21 @@ def save_slave_status(settings: Settings, slave_status: SlaveStatus) -> None:
 
 
 def default_slave_status_master() -> SlaveStatus:
-    return {
-        "last_sync": 0,
-        "last_master_down": None,
-        "mode": "master",
-        "success": True,
-    }
+    return SlaveStatus(
+        last_sync=0,
+        last_master_down=None,
+        mode="master",
+        success=True,
+    )
 
 
 def default_slave_status_sync() -> SlaveStatus:
-    return {
-        "last_sync": 0,
-        "last_master_down": None,
-        "mode": "sync",
-        "success": True,
-    }
+    return SlaveStatus(
+        last_sync=0,
+        last_master_down=None,
+        mode="sync",
+        success=True,
+    )
 
 
 def update_slave_status(
@@ -3296,11 +3296,11 @@ def update_slave_status(
 
 
 def make_config(config: ConfigFromWATO) -> Config:
-    return {
+    return Config(
         **config,
-        "action": {action["id"]: action for action in config["actions"]},
-        "last_reload": int(time.time()),
-    }
+        action={action["id"]: action for action in config["actions"]},
+        last_reload=int(time.time()),
+    )
 
 
 def load_configuration(settings: Settings, logger: Logger, slave_status: SlaveStatus) -> Config:

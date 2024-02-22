@@ -98,7 +98,7 @@ def desc_rm_table_bottom() {
 
 def desc_add_row(ITEM_1, ITEM_2, ITEM_3, ITEM_4) {
     desc_rm_table_bottom();
-    currentBuild.description += """<tr>;
+    currentBuild.description += """<tr>
     <td>${ITEM_1}</td><td>${ITEM_2}</td><td>${ITEM_3}</td><td>${ITEM_4}</td>
     </tr>""";
     desc_add_table_bottom();

@@ -144,7 +144,7 @@ class ModeDiscovery(WatoMode):
 
     def _from_vars(self) -> None:
         self._host = folder_from_request().load_host(
-            HostName(request.get_ascii_input_mandatory("host"))
+            request.get_validated_type_input_mandatory(HostName, "host")
         )
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -222,7 +222,7 @@ class AutomationServiceDiscoveryJobSnapshot(AutomationCommand):
         return "service-discovery-job-snapshot"
 
     def get_request(self) -> HostName:
-        return HostName(request.get_str_input_mandatory("hostname"))
+        return request.get_validated_type_input_mandatory(HostName, "hostname")
 
     def execute(self, api_request: HostName) -> str:
         host = Host.load_host(api_request)
@@ -1701,7 +1701,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         if self._site not in sitenames():
             raise MKUserError("site", _("You called this page with an invalid site."))
 
-        self._host_name = HostName(request.get_ascii_input_mandatory("host"))
+        self._host_name = request.get_validated_type_input_mandatory(HostName, "host")
         self._host = folder_from_request().host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -2155,7 +2155,7 @@ def _start_js_call(host: Host, options: DiscoveryOptions, request_vars: dict | N
 
 def ajax_popup_service_action_menu() -> None:
     checkbox_name = request.get_ascii_input_mandatory("checkboxname")
-    hostname = HostName(request.get_ascii_input_mandatory("hostname"))
+    hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
     if checkbox_name is None or hostname is None or not entry:
         html.show_error(_("Cannot render dropdown: Missing required information"))

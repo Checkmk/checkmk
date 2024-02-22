@@ -1682,11 +1682,11 @@ def mode_check_discovery(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    check_result = ActiveCheckResult(3, "unknown error")
+    checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
     with error_handler:
         fetched = fetcher(hostname, ip_address=None)
         with plugin_contexts.current_host(hostname):
-            check_result = execute_check_discovery(
+            checks_result = execute_check_discovery(
                 hostname,
                 is_cluster=hostname in config_cache.hosts_config.clusters,
                 cluster_nodes=config_cache.nodes(hostname),
@@ -1712,7 +1712,9 @@ def mode_check_discovery(
             )
 
     if error_handler.result is not None:
-        check_result = error_handler.result
+        checks_result = [error_handler.result]
+
+    check_result = ActiveCheckResult.from_subresults(*checks_result)
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
@@ -2165,7 +2167,7 @@ def mode_check(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    check_result = ActiveCheckResult(3, "unknown error")
+    checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
     fetched: Sequence[
         tuple[
             SourceInfo,
@@ -2185,7 +2187,7 @@ def mode_check(
             rtc_package=None,
         )
         with CPUTracker() as tracker:
-            check_result = execute_checkmk_checks(
+            checks_result = execute_checkmk_checks(
                 hostname=hostname,
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
@@ -2216,17 +2218,19 @@ def mode_check(
                 exit_spec=config_cache.exit_code_spec(hostname),
             )
 
-        check_result = ActiveCheckResult.from_subresults(
-            check_result,
+        checks_result = [
+            *checks_result,
             make_timing_results(
                 tracker.duration,
                 tuple((f[0], f[2]) for f in fetched),
                 perfdata_with_times=config.check_mk_perfdata_with_times,
             ),
-        )
+        ]
 
     if error_handler.result is not None:
-        check_result = error_handler.result
+        checks_result = [error_handler.result]
+
+    check_result = ActiveCheckResult.from_subresults(*checks_result)
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:

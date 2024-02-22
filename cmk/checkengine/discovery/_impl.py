@@ -90,7 +90,7 @@ def execute_check_discovery(
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
     enforced_services: Container[ServiceID],
-) -> ActiveCheckResult:
+) -> Sequence[ActiveCheckResult]:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
     #    - Set FileCacheGlobals.maybe = True (set max_cachefile_age, else 0)
@@ -174,7 +174,7 @@ def execute_check_discovery(
     )
     failed_sources = [r for r in summarizer(host_sections) if r.state != 0]
 
-    return ActiveCheckResult.from_subresults(
+    return [
         *itertools.chain(
             services_result,
             host_labels_result,
@@ -191,7 +191,7 @@ def execute_check_discovery(
                 )
             ],
         )
-    )
+    ]
 
 
 def _check_service_lists(

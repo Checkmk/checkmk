@@ -570,10 +570,8 @@ def _convert_to_legacy_integer(
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
+        "unit": to_convert.unit_symbol,
     }
-    converted_kwargs["unit"] = ""
-    if to_convert.unit is not None:
-        converted_kwargs["unit"] = to_convert.unit.localize(localizer)
 
     match to_convert.prefill:
         case ruleset_api_v1.form_specs.DefaultValue():
@@ -597,10 +595,8 @@ def _convert_to_legacy_float(
         "help": _localize_optional(to_convert.help_text, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "display_format": "%r",
+        "unit": to_convert.unit_symbol,
     }
-    converted_kwargs["unit"] = ""
-    if to_convert.unit is not None:
-        converted_kwargs["unit"] = to_convert.unit.localize(localizer)
 
     match to_convert.prefill:
         case ruleset_api_v1.form_specs.DefaultValue():

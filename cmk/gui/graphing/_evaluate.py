@@ -173,7 +173,7 @@ def evaluate_quantity(
         case metrics.Constant():
             return EvaluatedQuantity(
                 str(quantity.title),
-                parse_or_add_unit(quantity.unit).info,
+                parse_or_add_unit(quantity.unit),
                 parse_color(quantity.color),
                 quantity.value,
             )
@@ -229,7 +229,7 @@ def evaluate_quantity(
                 product *= evaluate_quantity(f, translated_metrics).value
             return EvaluatedQuantity(
                 str(quantity.title),
-                parse_or_add_unit(quantity.unit).info,
+                parse_or_add_unit(quantity.unit),
                 parse_color(quantity.color),
                 product,
             )
@@ -245,7 +245,7 @@ def evaluate_quantity(
         case metrics.Fraction():
             return EvaluatedQuantity(
                 str(quantity.title),
-                parse_or_add_unit(quantity.unit).info,
+                parse_or_add_unit(quantity.unit),
                 parse_color(quantity.color),
                 (
                     evaluate_quantity(quantity.dividend, translated_metrics).value

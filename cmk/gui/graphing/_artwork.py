@@ -17,14 +17,14 @@ from typing_extensions import TypedDict
 
 import cmk.utils.render
 
-from cmk.gui.graphing._color import fade_color, parse_color, render_color
-from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
+from ._color import fade_color, parse_color, render_color
 from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe, HorizontalRule
+from ._loader import get_unit_info
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point
 from ._type_defs import LineType, RRDData, UnitInfo
@@ -410,7 +410,7 @@ def order_graph_curves_for_legend_and_mouse_hover(
 def _compute_scalars(
     graph_recipe: GraphRecipe, curves: Iterable[Curve], pin_time: int | None
 ) -> None:
-    unit = unit_info[graph_recipe.unit]
+    unit = get_unit_info(graph_recipe.unit)
 
     for curve in curves:
         rrddata = curve["rrddata"]
@@ -440,7 +440,7 @@ def _compute_scalars(
 def compute_curve_values_at_timestamp(
     curves: Iterable[Curve], unit_id: str, hover_time: int
 ) -> Iterator[CurveValue]:
-    unit = unit_info[unit_id]
+    unit = get_unit_info(unit_id)
     yield from (
         CurveValue(
             title=curve["title"],
@@ -494,7 +494,7 @@ def _compute_graph_v_axis(
     layouted_curves: Sequence[LayoutedCurve],
     mirrored: bool,
 ) -> VerticalAxis:
-    unit = unit_info[graph_recipe.unit]
+    unit = get_unit_info(graph_recipe.unit)
 
     # Calculate the the value range
     # real_range -> physical range, without extra margin or zooming

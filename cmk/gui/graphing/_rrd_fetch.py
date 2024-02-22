@@ -27,9 +27,9 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName
 
 from ._graph_specification import GraphDataRange, GraphRecipe
+from ._loader import get_unit_info
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
-from ._unit_info import unit_info
 from ._utils import check_metrics, CheckMetricEntry, find_matching_translation, metric_info
 
 
@@ -37,7 +37,7 @@ def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
 ) -> RRDData:
-    unit_conversion = unit_info[graph_recipe.unit].get(
+    unit_conversion = get_unit_info(graph_recipe.unit).get(
         "conversion",
         lambda v: v,
     )
@@ -304,4 +304,4 @@ def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[flo
         return lambda v: v
     if (unit := metric_spec.get("unit")) is None:
         return lambda v: v
-    return unit_info[unit].get("conversion", lambda v: v)
+    return get_unit_info(unit).get("conversion", lambda v: v)

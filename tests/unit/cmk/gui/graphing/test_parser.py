@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.graphing._parser import _parse_unit
+from cmk.gui.graphing._parser import parse_or_add_unit
 
 from cmk.graphing.v1 import metrics
 
@@ -125,11 +125,11 @@ from cmk.graphing.v1 import metrics
         ),
     ],
 )
-def test_parse_unit(
+def test_parse_or_add_unit(
     precision: metrics.AutoPrecision | metrics.StrictPrecision, value: int | float, expected: str
 ) -> None:
     unit = metrics.Unit(metrics.DecimalNotation("unit"), precision)
-    assert _parse_unit(unit)["render"](value) == expected
+    assert parse_or_add_unit(unit)["render"](value) == expected
 
 
 @pytest.mark.parametrize(
@@ -233,7 +233,7 @@ def test_render_unit_notation(
     expected: str,
 ) -> None:
     unit = metrics.Unit(notation, metrics.StrictPrecision(2))
-    assert _parse_unit(unit)["render"](value) == expected
+    assert parse_or_add_unit(unit)["render"](value) == expected
 
 
 @pytest.mark.parametrize(
@@ -404,4 +404,4 @@ def test_render_unit_notation(
     ],
 )
 def test_js_render_unit_notation(unit: metrics.Unit, expected: str) -> None:
-    assert _parse_unit(unit)["js_render"] == expected
+    assert parse_or_add_unit(unit)["js_render"] == expected

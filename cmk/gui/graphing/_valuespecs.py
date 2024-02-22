@@ -37,7 +37,7 @@ from cmk.gui.visuals import livestatus_query_bare
 
 from ..config import active_config
 from ._graph_render_config import GraphRenderConfigBase
-from ._unit_info import unit_info
+from ._loader import registered_units
 from ._utils import get_extended_metric_info, metric_info, parse_perf_data, perfvar_translation
 
 
@@ -251,7 +251,7 @@ class ValuesWithUnits(CascadingDropdown):
         validate_value_elemets: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
         help: ValueSpecHelp | None = None,
     ):
-        super().__init__(choices=self._unit_choices, help=help)
+        super().__init__(choices=registered_units(), help=help)
         self._vs_name = vs_name
         self._metric_vs_name = metric_vs_name
         self._elements = elements
@@ -270,18 +270,12 @@ class ValuesWithUnits(CascadingDropdown):
             validate=self._validate_value_elements,
         )
 
-    def _unit_choices(self):
-        return [
-            (name, info.get("description", info["title"]), self._unit_vs(info))
-            for (name, info) in unit_info.items()
-        ]
-
     @staticmethod
     def resolve_units(metric_name: MetricName_ | None) -> PageResult:
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
-        known_units = list(unit_info.keys())
+        known_units = [id_ for id_, _title in registered_units()]
         if metric_name:
             required_unit = get_extended_metric_info(metric_name)["unit"]["id"]
         else:

@@ -48,7 +48,7 @@ from ._expression import (
     Sum,
     WarningOf,
 )
-from ._loader import load_graphing_plugins
+from ._loader import get_unit_info, load_graphing_plugins
 from ._parser import parse_color, parse_or_add_unit
 from ._type_defs import (
     GraphConsoldiationFunction,
@@ -57,7 +57,6 @@ from ._type_defs import (
     TranslatedMetric,
     UnitInfo,
 )
-from ._unit_info import unit_info
 
 
 class ScalarDefinition(NamedTuple):
@@ -200,7 +199,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Constant(
                     quantity.value,
-                    explicit_unit_name=parse_or_add_unit(quantity.unit).name,
+                    explicit_unit_name=parse_or_add_unit(quantity.unit)["id"],
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
@@ -253,7 +252,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Product(
                     [_parse_quantity(f, line_type).expression for f in quantity.factors],
-                    explicit_unit_name=parse_or_add_unit(quantity.unit).name,
+                    explicit_unit_name=parse_or_add_unit(quantity.unit)["id"],
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
@@ -274,7 +273,7 @@ def _parse_quantity(
                 expression=Fraction(
                     dividend=_parse_quantity(quantity.dividend, line_type).expression,
                     divisor=_parse_quantity(quantity.divisor, line_type).expression,
-                    explicit_unit_name=parse_or_add_unit(quantity.unit).name,
+                    explicit_unit_name=parse_or_add_unit(quantity.unit)["id"],
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
@@ -601,7 +600,7 @@ def add_graphing_plugins(
         if isinstance(plugin, metrics.Metric):
             metric_info[MetricName(plugin.name)] = {
                 "title": plugin.title.localize(_),
-                "unit": parse_or_add_unit(plugin.unit).name,
+                "unit": parse_or_add_unit(plugin.unit)["id"],
                 "color": parse_color(plugin.color),
             }
 
@@ -929,7 +928,7 @@ def _get_extended_metric_info(
 
     mie = MetricInfoExtended(
         title=mi["title"],
-        unit=unit_info[mi["unit"]],
+        unit=get_unit_info(mi["unit"]),
         color=parse_color_into_hexrgb(mi["color"]),
     )
     if "help" in mi:

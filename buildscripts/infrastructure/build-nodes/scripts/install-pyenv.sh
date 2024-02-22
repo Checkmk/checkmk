@@ -12,17 +12,26 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 TARGET_DIR="${TARGET_DIR:-/opt}"
 
-get_desired_python_version() {
-    # to use "make print-PYTHON_VERISON" the git repo with "Makefile" and "artifacts.make" would be necessary at a known location
-    sed -n 's|^PYTHON_VERSION = \"\(\S*\)\"$|\1|p' "${SCRIPT_DIR}"/package_versions.bzl
-}
-
 install() {
+    # source potential default pyenv path as the user calling this script did not source its bashrc file
+    if [[ -d "$HOME/.pyenv/bin" ]]; then
+        print_debug "Potential pyenv installation found"
+        # there is a potential pyenv installation available
+        export PYENV_ROOT="$HOME/.pyenv"
+        export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+    fi
+
     if type pyenv >/dev/null 2>&1; then
         # show me a better way to communicate between scripts called by different users
         echo "1" >>"${SCRIPT_DIR}"/INSTALLED_BY_PYENV
-        pyenv install "$(get_desired_python_version)"
-        pyenv global "$(get_desired_python_version)" # make pip3 available
+
+        # Update available versions for pyenv
+        cd "$HOME"/.pyenv/plugins/python-build/../.. && git pull && cd -
+
+        pyenv update
+        pyenv install "$(get_desired_python_version "${SCRIPT_DIR}")"
+        pyenv global "$(get_desired_python_version "${SCRIPT_DIR}")" # make pip3 available
         install_pipenv
     else
         print_blue "Team CI recommends to install pyenv for easy use. It is currently not yet installed."
@@ -31,7 +40,7 @@ install() {
             # CI build, don't ask
             INSTALL_PYENV="y"
         else
-            read -rp "Should pyenv it be installed now? (y/n): " INSTALL_PYENV
+            read -rp "Should pyenv be installed now? (y/n): " INSTALL_PYENV
             echo # (optional) move to a new line
         fi
         if [[ $INSTALL_PYENV =~ ^[Yy]$ ]]; then
@@ -57,8 +66,8 @@ EOF
                 eval "$(tail -n -3 ~/.bashrc)"
             fi
 
-            pyenv install "$(get_desired_python_version)"
-            pyenv global "$(get_desired_python_version)" # make pip3 available
+            pyenv install "$(get_desired_python_version "${SCRIPT_DIR}")"
+            pyenv global "$(get_desired_python_version "${SCRIPT_DIR}")" # make pip3 available
             install_pipenv
         fi
     fi

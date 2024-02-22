@@ -7,12 +7,10 @@ import math
 from dataclasses import dataclass
 from typing import Callable, Final, Protocol
 
-from cmk.gui.i18n import _
-
 from cmk.graphing.v1 import metrics
 
+from ._loader import units_from_api
 from ._type_defs import UnitInfo
-from ._unit_info import unit_info
 
 
 class Formatter(Protocol):
@@ -267,16 +265,15 @@ def _render(value: int | float, formatter: Formatter) -> str:
     return formatter.format_large_number(value).strip()
 
 
-def _parse_unit(unit: metrics.Unit) -> UnitInfo:
-    # TODO implement js_formatter
-    if unit.notation.symbol:
-        title = _("Time") if unit.notation.symbol == "s" else unit.notation.symbol
-    else:
-        title = (
-            _("Count")
-            if unit.precision == metrics.StrictPrecision(0)
-            else _("Floating point number")
+def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
+    if (
+        unit_id := (
+            f"{unit.notation.__class__.__name__}_{unit.notation.symbol}"
+            f"_{unit.precision.__class__.__name__}_{unit.precision.digits}"
         )
+    ) in units_from_api:
+        return units_from_api[unit_id]
+
     match unit.notation:
         case metrics.DecimalNotation():
             preformat_small_number = _preformat_number
@@ -308,19 +305,22 @@ def _parse_unit(unit: metrics.Unit) -> UnitInfo:
             preformat_large_number = _time_preformat_large_number
             js_preformat_small_number = "time_preformat_small_number"
             js_preformat_large_number = "time_preformat_large_number"
-    return UnitInfo(
-        title=title,
-        symbol=unit.notation.symbol,
-        render=lambda v: _render(
-            v,
-            formatter=NotationFormatter(
-                unit.notation.symbol,
-                unit.precision,
-                preformat_small_number,
-                preformat_large_number,
+
+    return units_from_api.register(
+        UnitInfo(
+            id=unit_id,
+            title=unit.notation.symbol,
+            symbol=unit.notation.symbol,
+            render=lambda v: _render(
+                v,
+                formatter=NotationFormatter(
+                    unit.notation.symbol,
+                    unit.precision,
+                    preformat_small_number,
+                    preformat_large_number,
+                ),
             ),
-        ),
-        js_render=f"""v => cmk.number_format.render(
+            js_render=f"""v => cmk.number_format.render(
     v,
     cmk.number_format.NotationFormatter(
         "{unit.notation.symbol}",
@@ -329,27 +329,8 @@ def _parse_unit(unit: metrics.Unit) -> UnitInfo:
         cmk.number_format.{js_preformat_large_number},
     )
 )""",
+        )
     )
-
-
-@dataclass(frozen=True)
-class UnitNameAndInfo:
-    name: str
-    info: UnitInfo
-
-
-def parse_or_add_unit(unit: metrics.Unit) -> UnitNameAndInfo:
-    def _unit_name() -> str:
-        if unit.notation.symbol:
-            return unit.notation.symbol
-        return "count" if unit.precision == metrics.StrictPrecision(0) else ""
-
-    if (unit_name := _unit_name()) in set(unit_info.keys()):
-        return UnitNameAndInfo(unit_name, unit_info[unit_name])
-
-    parsed = _parse_unit(unit)
-    unit_info[unit_name] = parsed
-    return UnitNameAndInfo(unit_name, parsed)
 
 
 @dataclass(frozen=True)

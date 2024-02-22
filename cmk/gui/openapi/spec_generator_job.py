@@ -20,6 +20,7 @@ from cmk.gui.i18n import _
 def register(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(SpecGeneratorBackgroundJob)
     hooks.register_builtin("tags-changed", _trigger_spec_generation_in_background)
+    hooks.register_builtin("mkp-changed", _trigger_spec_generation_in_background)
 
 
 def _trigger_spec_generation_in_background() -> None:

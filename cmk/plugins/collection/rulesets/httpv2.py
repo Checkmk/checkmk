@@ -18,8 +18,10 @@ from cmk.rulesets.v1.form_specs import (
     LevelDirection,
     Levels,
     List,
+    MatchingScope,
     Password,
     Proxy,
+    RegularExpression,
     SIMagnitude,
     SingleChoice,
     SingleChoiceElement,
@@ -29,6 +31,8 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
+
+_DAY = 24.0 * 3600.0
 
 
 def _valuespec_response() -> Dictionary:
@@ -43,6 +47,7 @@ def _valuespec_response() -> Dictionary:
                 required=True,
             ),
             # TODO Not yet implemented
+            # NOTE: (mo) There will be no ListOfStrings; use List[str] instead.
             # "ignored": ListOfStrings(
             #        title=Title("Ignored"),
             #        orientation="horizontal",
@@ -76,7 +81,6 @@ def _valuespec_document() -> Dictionary:
                 required=True,
             ),
             "max_age": DictElement(
-                # TODO How to use AGE correctly?!
                 parameter_form=TimeSpan(
                     title=Title("Age"),
                     displayed_magnitudes=[
@@ -87,7 +91,7 @@ def _valuespec_document() -> Dictionary:
                     ],
                     label=Label("Warn, if the age is older than"),
                     help_text=Help("Warn, if the age of the page is older than this"),
-                    prefill=DefaultValue(3600 * 24),
+                    prefill=DefaultValue(_DAY),
                 ),
             ),
             "page_size": DictElement(
@@ -126,25 +130,23 @@ def _valuespec_document() -> Dictionary:
 def _valuespec_expected_regex_header() -> Dictionary:
     return Dictionary(
         title=Title("Regular expressions to expect"),
-        # orientation="vertical",
-        # show_titles=False,
         elements={
-            # TODO Regex currently not implemented in ruleset API
+            # TODO max len
             "regex": DictElement(
                 parameter_form=Dictionary(
                     elements={
-                        "header_name_pattern": DictElement(
-                            parameter_form=String(
+                        "header_name_pattern": DictElement[str](
+                            parameter_form=RegularExpression(
                                 label=Label("Header name pattern"),
-                                # mode=RegExp.infix,
+                                predefined_help_text=MatchingScope.INFIX
                                 # maxlen=1023,
                             ),
                             required=True,
                         ),
-                        "header_value_pattern": DictElement(
-                            parameter_form=String(
+                        "header_value_pattern": DictElement[str](
+                            parameter_form=RegularExpression(
                                 label=Label("Header value pattern"),
-                                # mode=RegExp.infix,
+                                predefined_help_text=MatchingScope.INFIX
                                 # maxlen=1023,
                             ),
                             required=True,
@@ -170,14 +172,12 @@ def _valuespec_expected_regex_header() -> Dictionary:
 def _valuespec_expected_regex_body() -> Dictionary:
     return Dictionary(
         title=Title("Regular expression to expect"),
-        # orientation="vertical",
-        # show_titles=False,
         elements={
-            # TODO Regex currently not implemented in ruleset API
-            "regex": DictElement(
-                parameter_form=String(
+            # TODO max len
+            "regex": DictElement[str](
+                parameter_form=RegularExpression(
                     label=Label("Pattern"),
-                    # mode=RegExp.infix,
+                    predefined_help_text=MatchingScope.INFIX,
                     # maxlen=1023,
                 ),
                 required=True,
@@ -434,9 +434,9 @@ def _valuespec_connection() -> Dictionary:
                 ),
             ),
             "timeout": DictElement(
-                parameter_form=Integer(
+                parameter_form=TimeSpan(
                     title=Title("Connection timeout"),
-                    unit=Label("sec"),
+                    displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
                     prefill=DefaultValue(10),
                 ),
             ),
@@ -580,11 +580,13 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                         CascadingSingleChoiceElement(
                             name="validate",
                             title=Title("Certificate validity"),
-                            parameter_form=Levels(
+                            parameter_form=Levels[float](
                                 title=Title("Check validity"),
-                                form_spec_template=Integer(unit=Label("days")),
+                                form_spec_template=TimeSpan(
+                                    displayed_magnitudes=(TimeMagnitude.DAY,)
+                                ),
                                 level_direction=LevelDirection.LOWER,
-                                prefill_fixed_levels=InputHint((90, 60)),
+                                prefill_fixed_levels=InputHint((90.0 * _DAY, 60.0 * _DAY)),
                                 predictive=None,
                                 help_text=Help(
                                     "Minimum number of days a certificate has to be valid."

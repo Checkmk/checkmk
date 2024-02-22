@@ -1,0 +1,11 @@
+Title: EC: fix a wrong message on a matched rule
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1708676070
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+
+Previously, the tooltip on a matched rule would say it is a cancelling rule. 
+This message was misleading and was changed.

@@ -2346,7 +2346,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     if not isinstance(result, ec.MatchSuccess):
                         html.icon("rulenmatch", _("Rule does not match: %s") % result.reason)
                     else:
-                        cancelling, groups = result.match_groups, result.match_groups
+                        cancelling, groups = result.cancelling, result.match_groups
                         if have_match:
                             msg = _("This rule matches, but is overruled by a previous match.")
                             icon = "rulepmatch"

@@ -3,7 +3,7 @@
 /// file: windows.groovy
 
 def build(Map args) {
-    def jenkins_base_folder = new File(currentBuild.fullProjectName).parent;
+    def jenkins_base_folder = new File(currentBuild.fullProjectName).parent;    // groovylint-disable JavaIoPackageAccess
     def artifacts_dir = 'artefacts';
 
     print("jenkins_base_folder: ${jenkins_base_folder}");
@@ -60,7 +60,7 @@ def build(Map args) {
             raise("${args.TARGET} is not known!")
         )
 
-        timeout(time: 45, unit: 'MINUTES') {
+        timeout(time: 60, unit: 'MINUTES') {
             dir(subdir) {
                 bat(command);
             }
@@ -69,12 +69,17 @@ def build(Map args) {
         if (artifacts != '') {
             dir(artifacts_dir) {
                 if (args.STASH_NAME == null ) {
-                    archiveArtifacts(artifacts);
+                    show_duration("archiveArtifacts") {
+                        archiveArtifacts(
+                            artifacts: artifacts,
+                            fingerprint: true,
+                        );
+                    }
                 } else {
                     stash(
                         name: args.STASH_NAME,
                         includes: artifacts
-                    )
+                    );
                 }
             }
         }

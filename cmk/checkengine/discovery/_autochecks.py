@@ -10,9 +10,11 @@ from pathlib import Path
 from typing import NamedTuple, TypedDict
 
 import cmk.utils.paths
+import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ServiceLabel
+from cmk.utils.log import console
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.store import ObjectStore
 
@@ -229,9 +231,15 @@ class AutochecksManager:
         self,
         hostname: HostName,
     ) -> Sequence[AutocheckEntry]:
-        if hostname not in self._raw_autochecks_cache:
-            self._raw_autochecks_cache[hostname] = AutochecksStore(hostname).read()
-        return self._raw_autochecks_cache[hostname]
+        try:
+            if hostname not in self._raw_autochecks_cache:
+                self._raw_autochecks_cache[hostname] = AutochecksStore(hostname).read()
+            return self._raw_autochecks_cache[hostname]
+        except MKGeneralException as e:
+            console.error(
+                f"\n{tty.red + tty.bold}Error{tty.normal} processing autochecks: \n{tty.yellow + tty.bold}{e}{tty.normal}\n"
+            )
+        return []
 
 
 def set_autochecks_of_real_hosts(

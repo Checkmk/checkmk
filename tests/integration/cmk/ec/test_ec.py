@@ -102,10 +102,10 @@ def _generate_event_message(site: Site, message: str) -> None:
     """Generate EC message via Unix socket"""
     events_path = site.path("tmp/run/mkeventd/events")
     cmd = f"sudo su -l {site.id} -c 'echo {message} > {events_path}'"
-    process = subprocess.Popen(  # pylint: disable=consider-using-with
+    with subprocess.Popen(
         cmd, encoding="utf-8", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    _validate_process_return_code(process, "Failed to generate EC message via Unix socket.")
+    ) as process:
+        _validate_process_return_code(process, "Failed to generate EC message via Unix socket.")
 
 
 def _get_snmp_trap_cmd(event_message: str) -> list:
@@ -162,15 +162,56 @@ def _setup_ec(site: Site) -> Iterator:
         assert resp.status_code == 204, pprint.pformat(resp.json())
 
 
-def _change_snmp_trap_receiver(site: Site, enable_receiver: bool = True) -> None:
+@pytest.fixture(name="restart_site", scope="module")
+def _restart_site(site: Site) -> Iterator[None]:
     site.stop()
-    process = site.execute(
-        ["omd", "config", "set", "MKEVENTD_SNMPTRAP", "on" if enable_receiver else "off"],
+    yield
+    site.start()
+
+
+@pytest.fixture(name="enable_snmp_trap_receiver", scope="module")
+def _enable_snmp_trap_receiver(site: Site, restart_site: None) -> Iterator[None]:
+    with site.execute(
+        ["omd", "config", "show", "MKEVENTD_SNMPTRAP"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-    )
-    _validate_process_return_code(process, "Failed to change SNMP trap receivers.")
+    ) as process:
+        _validate_process_return_code(process, "Failed to retrieve SNMP trap receiver status.")
+        initial_config = process.communicate()[0].strip()
+
+    logger.info("Setting SNMP trap receiver to 'on'...")
+    with site.execute(
+        ["omd", "config", "set", "MKEVENTD_SNMPTRAP", "on"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as process:
+        _validate_process_return_code(process, "Failed to change SNMP trap receivers.")
     site.start()
+
+    yield
+
+    site.stop()
+    logger.info("Setting SNMP trap receiver to '%s'...", initial_config)
+    with site.execute(
+        ["omd", "config", "set", "MKEVENTD_SNMPTRAP", f"{initial_config}"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as process:
+        _validate_process_return_code(process, "Failed to change SNMP trap receivers.")
+
+
+@pytest.fixture(name="enable_snmp_trap_translation", scope="function")
+def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
+    logger.info("Enabling SNMP trap translation...")
+    ec_global_rules_path = site.path("etc/check_mk/mkeventd.d/wato/9999-test_ec.mk")
+    site.write_text_file(str(ec_global_rules_path), "translate_snmptraps = (True, {})")
+    _activate_ec_changes(site)
+
+    yield
+
+    logger.info("Disabling SNMP trap translation...")
+    site.delete_file(str(ec_global_rules_path))
+    _activate_ec_changes(site)
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
@@ -217,12 +258,12 @@ def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:
+def test_ec_rule_match_snmp_trap(
+    site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
+) -> None:
     """Generate a message via SNMP trap matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
     event_message = f"some {match} status"
-
-    _change_snmp_trap_receiver(site, enable_receiver=True)
 
     process = site.execute(
         _get_snmp_trap_cmd(event_message), stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -247,18 +288,15 @@ def test_ec_rule_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:
     assert len(queried_event_messages) == 1
     assert event_message in queried_event_messages[0]
 
-    # cleanup: disable SNMP trap receiver
-    _change_snmp_trap_receiver(site, enable_receiver=False)
-
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:
+def test_ec_rule_no_match_snmp_trap(
+    site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
+) -> None:
     """Generate a message via SNMP trap not matching any EC rule and assert no event is created"""
     match, _, _ = setup_ec
     event_message = "some other status"
     assert match not in event_message
-
-    _change_snmp_trap_receiver(site, enable_receiver=True)
 
     process = site.execute(
         _get_snmp_trap_cmd(event_message), stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -273,12 +311,14 @@ def test_ec_rule_no_match_snmp_trap(site: Site, setup_ec: Iterator) -> None:
     queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
     assert not queried_event_messages
 
-    # cleanup: disable SNMP trap receiver
-    _change_snmp_trap_receiver(site, enable_receiver=False)
-
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-def test_ec_global_settings(site: Site, setup_ec: Iterator) -> None:
+def test_ec_global_settings(
+    site: Site,
+    setup_ec: Iterator,
+    enable_snmp_trap_receiver: None,
+    enable_snmp_trap_translation: None,
+) -> None:
     """Assert that global settings of the EC are applied to the EC
 
     * Activate SNMP traps translation via EC global rules
@@ -287,14 +327,6 @@ def test_ec_global_settings(site: Site, setup_ec: Iterator) -> None:
     """
     match, _, _ = setup_ec
     event_message = f"some {match} status"
-
-    _change_snmp_trap_receiver(site, enable_receiver=True)
-
-    # activate EC global rules to translate SNMP traps
-    ec_global_rules_path = site.path("etc/check_mk/mkeventd.d/wato/global.mk")
-    site.write_text_file(str(ec_global_rules_path), "translate_snmptraps = (True, {})")
-
-    _activate_ec_changes(site)
 
     process = site.execute(
         _get_snmp_trap_cmd(event_message), stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -318,6 +350,3 @@ def test_ec_global_settings(site: Site, setup_ec: Iterator) -> None:
     assert re.compile(pattern).search(
         queried_event_messages[0]
     ), f"{pattern} not found in the event message:\n {queried_event_messages[0]}"
-
-    # cleanup: disable SNMP trap receiver
-    _change_snmp_trap_receiver(site, enable_receiver=False)

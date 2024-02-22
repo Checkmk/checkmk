@@ -1861,9 +1861,21 @@ class CommandScheduleDowntimes(Command):
                 attributes += HTMLWriter.render_li(_("Child hosts also go in downtime."))
 
         if duration := self._flexible_option():
+            hours, remaining_seconds = divmod(duration, 3600)
+            minutes, _seconds = divmod(remaining_seconds, 60)
             attributes += HTMLWriter.render_li(
-                _("Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours.")
-                % (duration / 3600)
+                _(
+                    "Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours and %d %s."
+                )
+                % (
+                    hours,
+                    minutes,
+                    ungettext(
+                        "minute",
+                        "minutes",
+                        minutes,
+                    ),
+                )
             )
 
         if attributes:

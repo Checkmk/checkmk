@@ -67,8 +67,8 @@ def _formspec_inventory_sap_values():
             ),
             "limit_item_levels": form_specs.DictElement(
                 parameter_form=form_specs.Integer(
-                    title=Title("Limit Path Levels for Service Names"),
-                    unit=Label("path levels"),
+                    title=Title("Limit path levels for service names"),
+                    label=Label("Number of levels:"),
                     help_text=Help(
                         "The service descriptions of the inventorized services are named like the "
                         "paths in SAP. You can use this option to let the inventory function only "

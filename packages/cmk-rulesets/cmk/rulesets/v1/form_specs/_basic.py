@@ -135,12 +135,12 @@ class Float(FormSpec[float]):
 
     Args:
         label: Text displayed as an extension to the input field
-        unit: Unit of the input (only for display)
+        unit_symbol: Unit symbol to add to the input field
         prefill: Value to pre-populate the form field with.
     """
 
     label: Label | None = None
-    unit: Label | None = None
+    unit_symbol: str = ""
 
     prefill: Prefill[float] = InputHint(0.0)
 
@@ -168,7 +168,7 @@ class Integer(FormSpec[int]):
 
     Args:
         label: Text displayed as an extension to the input field
-        unit: Unit of the input (only for display)
+        unit_symbol: Unit symbol to add to the input field
         prefill: Value to pre-populate the form field with.
 
     Consumer model:
@@ -178,7 +178,7 @@ class Integer(FormSpec[int]):
     """
 
     label: Label | None = None
-    unit: Label | None = None
+    unit_symbol: str = ""
     prefill: Prefill[int] = InputHint(0)
 
 

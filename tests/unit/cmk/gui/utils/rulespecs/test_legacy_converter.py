@@ -154,7 +154,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Title("title"),
                 help_text=api_v1.Help("help"),
                 label=api_v1.Label("label"),
-                unit=api_v1.Label("days"),
+                unit_symbol="d",
                 prefill=api_v1.form_specs.DefaultValue(-1),
                 custom_validate=lambda x: None,
             ),
@@ -162,7 +162,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=_("title"),
                 help=_("help"),
                 label=_("label"),
-                unit=_("days"),
+                unit="d",
                 default_value=-1,
                 validate=lambda x, y: None,
             ),
@@ -178,7 +178,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Title("title"),
                 help_text=api_v1.Help("help"),
                 label=api_v1.Label("label"),
-                unit=api_v1.Label("1/s"),
+                unit_symbol="1/s",
                 prefill=api_v1.form_specs.DefaultValue(-1.0),
                 custom_validate=lambda x: None,
             ),
@@ -187,7 +187,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help=_("help"),
                 label=_("label"),
                 display_format="%r",
-                unit=_("1/s"),
+                unit="1/s",
                 default_value=-1.0,
                 validate=lambda x, y: None,
             ),
@@ -433,7 +433,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 element_template=api_v1.form_specs.TupleDoNotUseWillbeRemoved(
                     elements=[
                         api_v1.form_specs.String(),
-                        api_v1.form_specs.Integer(unit=api_v1.Label("km")),
+                        api_v1.form_specs.Integer(unit_symbol="km"),
                     ]
                 ),
                 title=api_v1.Title("list title"),
@@ -1803,7 +1803,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
         pytest.param(
             api_v1.form_specs.Levels[int](
                 title=api_v1.Title("Upper levels"),
-                form_spec_template=api_v1.form_specs.Integer(unit=api_v1.Label("GiB")),
+                form_spec_template=api_v1.form_specs.Integer(unit_symbol="GiB"),
                 level_direction=api_v1.form_specs.LevelDirection.UPPER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
                 predictive=api_v1.form_specs.PredictiveLevels(

@@ -158,7 +158,7 @@ class VueFormSpecVisitor:
                 config={
                     "value": 0 if value is None else value,
                     "label": form_spec.title.localize(_) if form_spec.title else None,
-                    "unit": form_spec.unit.localize(_) if form_spec.unit else None,
+                    "unit": form_spec.unit_symbol if form_spec.unit_symbol else None,
                 },
             ),
             value,
@@ -172,7 +172,7 @@ class VueFormSpecVisitor:
                 config={
                     "value": 0 if value is None else value,
                     "label": form_spec.title.localize(_) if form_spec.title else None,
-                    "unit": form_spec.unit.localize(_) if form_spec.unit else None,
+                    "unit": form_spec.unit_symbol if form_spec.unit_symbol else None,
                 },
             ),
             value,

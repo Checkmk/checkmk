@@ -94,7 +94,6 @@ genrule(
         "skel/etc/pnp4nagios/check_commands/check_nwstat.cfg-sample",
         "skel/etc/pnp4nagios/check_commands/check_jmx4perl.cfg",
         "skel/etc/pnp4nagios/process_perfdata.cfg",
-        "skel/etc/pnp4nagios/config.php",
         "skel/etc/pnp4nagios/background.pdf",
         "skel/etc/pnp4nagios/nagios_gearman.cfg",
         "skel/etc/pnp4nagios/nagios_npcd.cfg",

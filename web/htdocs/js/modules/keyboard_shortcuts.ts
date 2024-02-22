@@ -9,6 +9,9 @@ import * as utils from "utils";
 function handle_main_menu_shortcuts(event: Event): void {
     if (!(event instanceof KeyboardEvent)) return;
 
+    // Make sure this does not collide with browser shortcuts
+    event.preventDefault();
+
     let menu_id = "";
     if (event.altKey && event.key.toLowerCase() === "m")
         menu_id = "popup_trigger_mega_menu_monitoring";

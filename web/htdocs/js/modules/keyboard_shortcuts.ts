@@ -9,16 +9,16 @@ import * as utils from "utils";
 function handle_main_menu_shortcuts(event: Event): void {
     if (!(event instanceof KeyboardEvent)) return;
 
-    // Make sure this does not collide with browser shortcuts
-    event.preventDefault();
-
     let menu_id = "";
-    if (event.altKey && event.key.toLowerCase() === "m")
+    if (event.altKey && event.key.toLowerCase() === "m") {
         menu_id = "popup_trigger_mega_menu_monitoring";
-    else if (event.altKey && event.key.toLowerCase() === "s")
+    } else if (event.altKey && event.key.toLowerCase() === "s") {
+        // Make sure this does not collide with browser shortcuts (Firefox)
+        event.preventDefault();
         menu_id = "popup_trigger_mega_menu_setup";
-    else if (event.altKey && event.key.toLowerCase() === "c")
+    } else if (event.altKey && event.key.toLowerCase() === "c") {
         menu_id = "popup_trigger_mega_menu_customize";
+    }
 
     // Get the top level document, when already executed from that context and
     // also when executed from the content frame document

@@ -332,7 +332,7 @@ class ModeEditHost(ABCHostMode):
         return self.mode_url(host=self._host.name())
 
     def _init_host(self) -> Host:
-        hostname = HostName(request.get_ascii_input_mandatory("host"))
+        hostname = request.get_validated_type_input_mandatory(HostName, "host")
         folder = folder_from_request()
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -634,7 +634,7 @@ class CreateHostMode(ABCHostMode):
         attributes = collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = HostName(request.get_ascii_input_mandatory("host"))
+        hostname = request.get_validated_type_input_mandatory(HostName, "host")
         Hostname().validate_value(hostname, "host")
 
         folder = folder_from_request()
@@ -698,7 +698,9 @@ class ModeCreateHost(CreateHostMode):
     def _init_new_host_object(cls) -> Host:
         return Host(
             folder=folder_from_request(),
-            host_name=HostName(request.get_ascii_input_mandatory("host", "")),
+            host_name=request.get_validated_type_input_mandatory(
+                HostName, "host", deflt=HostName("")
+            ),
             attributes={},
             cluster_nodes=None,
         )
@@ -730,7 +732,9 @@ class ModeCreateCluster(CreateHostMode):
     def _init_new_host_object(cls) -> Host:
         return Host(
             folder=folder_from_request(),
-            host_name=HostName(request.get_ascii_input_mandatory("host", "")),
+            host_name=request.get_validated_type_input_mandatory(
+                HostName, "host", deflt=HostName("")
+            ),
             attributes={},
             cluster_nodes=[],
         )

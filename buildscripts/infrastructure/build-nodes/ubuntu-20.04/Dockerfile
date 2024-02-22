@@ -5,7 +5,11 @@ ARG DISTRO_IMAGE_BASE
 FROM ${DISTRO_IMAGE_BASE} as base
 
 SHELL ["/bin/bash", "-c"]
-ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
+ENV \
+    DEBIAN_FRONTEND=noninteractive \
+    LC_ALL=C.UTF-8 \
+    LANG=C.UTF-8 \
+    PATH="/opt/bin:${PATH}"
 
 RUN apt-get update \
     && apt-get install -y \
@@ -25,7 +29,7 @@ RUN apt-get update \
     strace \
     sudo \
     vim \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*  # about 50M
 
 RUN apt-get update \
     && apt-get install -y \
@@ -96,19 +100,25 @@ ARG NEXUS_USERNAME
 ARG NEXUS_PASSWORD
 ARG DISTRO
 ARG BRANCH_VERSION
-ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+ENV \
+    NEXUS_ARCHIVES_URL="${NEXUS_ARCHIVES_URL}" \
+    NEXUS_USERNAME="${NEXUS_USERNAME}" \
+    NEXUS_PASSWORD="${NEXUS_PASSWORD}" \
+    DISTRO="${DISTRO}" \
+    BRANCH_VERSION="${BRANCH_VERSION}"
 
+# Copy over stuff that's needed by lots of scripts (has to be copied to context before)
+COPY \
+    scripts/.bazelversion \
+    scripts/package_versions.bzl \
+    scripts/static_variables.bzl \
+    scripts/defines.make \
+    /opt/
 
-COPY scripts/.bazelversion /opt/
-COPY scripts/install-iwyu.sh /opt/
-COPY scripts/Check_MK-pubkey.gpg /opt/
-
-# used by lots of scripts (has to be copied to `scripts/` before)
-COPY scripts/package_versions.bzl /opt/
-COPY scripts/defines.make /opt/
-
-# used by install scripts
-COPY scripts/build_lib.sh /opt/
+COPY \
+    scripts/build_lib.sh \
+    scripts/Check_MK-pubkey.gpg \
+    /opt/
 
 COPY scripts/install-gnu-toolchain.sh /opt/
 RUN /opt/install-gnu-toolchain.sh
@@ -154,8 +164,11 @@ FROM base
 COPY --from=builder /opt /opt
 
 ARG DISTRO
+ARG DISTRO_MK_FILE
 ARG BRANCH_VERSION
-ENV DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
+ENV \
+    DISTRO="${DISTRO}" \
+    BRANCH_VERSION="${BRANCH_VERSION}"
 
 # Set symlinks
 RUN /opt/install-gnu-toolchain.sh link-only
@@ -178,7 +191,11 @@ RUN /opt/install-make-dist-deps.sh
 COPY scripts/install-nodejs.sh /opt/
 RUN /opt/install-nodejs.sh
 
-COPY scripts/install-clang.sh /opt/
+COPY \
+    scripts/install-clang.sh \
+    scripts/install-iwyu.sh \
+    /opt/
+
 RUN /opt/install-clang.sh
 
 COPY scripts/install-shellcheck.sh /opt/
@@ -221,7 +238,7 @@ RUN mkdir -p /home/jenkins/.cache/ \
     && chown jenkins:jenkins /home/jenkins/.cache/
 
 ARG VERS_TAG
-RUN echo $VERS_TAG > /version.txt
+RUN echo "${VERS_TAG}" > /version.txt
 
 ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \

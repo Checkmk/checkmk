@@ -1398,7 +1398,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Constant(
                             value=10,
-                            explicit_unit_name="",
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
                             explicit_color="#0000ff",
                         ),
                         "stack",
@@ -1441,7 +1441,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Product(
                             [Metric("metric-name-7")],
-                            explicit_unit_name="",
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
                             explicit_color="#0000ff",
                         ),
                         "stack",
@@ -1460,7 +1460,7 @@ def test_graph_template_from_template(
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_name="",
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
                             explicit_color="#0000ff",
                         ),
                         "stack",
@@ -1560,7 +1560,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Constant(
                             value=10,
-                            explicit_unit_name="",
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
                             explicit_color="#0000ff",
                         ),
                         "line",
@@ -1577,7 +1577,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Product(
                             [Metric("metric-name-7")],
-                            explicit_unit_name="",
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
                             explicit_color="#0000ff",
                         ),
                         "line",
@@ -1596,7 +1596,7 @@ def test_graph_template_from_template(
                         Fraction(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
-                            explicit_unit_name="",
+                            explicit_unit_name="DecimalNotation__AutoPrecision_2",
                             explicit_color="#0000ff",
                         ),
                         "line",

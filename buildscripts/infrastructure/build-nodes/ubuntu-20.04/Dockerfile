@@ -1,7 +1,8 @@
-ARG IMAGE_UBUNTU_20_04
+ARG DISTRO_IMAGE_BASE
+
 # hadolint ignore=DL3006
 # Create base image
-FROM ${IMAGE_UBUNTU_20_04} as base
+FROM ${DISTRO_IMAGE_BASE} as base
 
 SHELL ["/bin/bash", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -183,7 +184,6 @@ RUN /opt/install-clang.sh
 COPY scripts/install-shellcheck.sh /opt/
 RUN /opt/install-shellcheck.sh
 
-COPY scripts/install-rust-cargo.sh /opt/
 RUN /opt/install-rust-cargo.sh link-only
 
 COPY scripts/install-musl-tools.sh /opt/
@@ -193,7 +193,7 @@ RUN /opt/install-musl-tools.sh
 COPY scripts/install-pipenv.sh /opt/
 RUN /opt/install-pipenv.sh
 
-COPY scripts/UBUNTU_20.04.mk /opt/
+COPY scripts/"${DISTRO_MK_FILE}" /opt/
 COPY scripts/install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh
 

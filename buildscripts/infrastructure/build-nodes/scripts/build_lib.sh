@@ -31,6 +31,11 @@ print_debug() {
     print_blue "    $1"
 }
 
+get_desired_python_version() {
+    # to use "make print-PYTHON_VERISON" the git repo with "Makefile" and "artifacts.make" would be necessary at a known location
+    sed -n 's|^PYTHON_VERSION = \"\(\S*\)\"$|\1|p' "${1}"/package_versions.bzl
+}
+
 _artifact_name() {
     local DIR_NAME="$1"
     local DISTRO="$2"

@@ -293,6 +293,31 @@ strip_for_cpp() {
     strip_binaries "$(find "${INSTALL_PATH}" -maxdepth 1 -type d -name "freetds-*" -print -quit | head -n 1)"
 }
 
+install_for_gdb() {
+    print_green "Installing everything for GDB ..."
+
+    # install GDB after Python as it requires shared object files, see CMK-15854
+    install_for_python_dev
+    # after here we're potentially root again, without knowledge of $HOME/.pyenv of a user
+
+    # source potential default pyenv path as the user calling this script did not source its bashrc file at this point
+    potential_sudo_user_home=$(eval echo ~"${SUDO_USER:-root}")
+    if [[ -d "${potential_sudo_user_home}/.pyenv/bin" ]]; then
+        print_debug "Potential pyenv installation found at: ${potential_sudo_user_home}"
+        export PYENV_ROOT="${potential_sudo_user_home}/.pyenv"
+        export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init -)"
+    else
+        # maybe it has been installed without pyenv ...
+        export PATH="${TARGET_DIR}/bin:$PATH"
+    fi
+    test_package "python3 --version" "$(get_desired_python_version "${SCRIPT_DIR}")"
+
+    "${SCRIPT_DIR}"/install-gdb.sh
+
+    print_green "Installation for GDB with $(python3 --version) done"
+}
+
 install_cmk_package_dependencies() {
     print_green "Installing everything for CMK development ..."
 
@@ -460,10 +485,12 @@ fi
 
 setup_env_variables
 
-# CPP, actually "python3-dev" needs to be installed/called before install-python.sh
-# to have "libpython3.10.so.1.0" available for gdb
 if [[ $INSTALL_FOR_CPP -eq 1 ]]; then
     install_for_cpp_dev
+
+    # Python needs to be installed before GDB as "libpython3.10.so.1.0" is required
+    # "python3-dev" package might provide a different version than specified
+    install_for_gdb
 fi
 if [[ $INSTALL_FOR_PYTHON -eq 1 ]]; then
     install_for_python_dev

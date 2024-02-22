@@ -98,6 +98,8 @@ RUN /opt/install-cmake.sh
 RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python.sh
+# install GDB after Python as it requires shared object files, see CMK-15854
+RUN /opt/install-gdb.sh
 RUN /opt/install-freetds.sh
 RUN /opt/install-rust-cargo.sh
 

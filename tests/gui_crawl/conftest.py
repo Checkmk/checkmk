@@ -24,7 +24,11 @@ def get_site() -> Generator[Site, None, None]:
 def crawler(test_site: Site) -> Generator[Crawler, None, None]:
     xss_crawl = os.environ.get("XSS_CRAWL", "0") == "1"
     crawler_type = XssCrawler if xss_crawl else Crawler
-    test_crawler = crawler_type(test_site, report_file=os.environ.get("CRAWL_REPORT"))
+    test_crawler = crawler_type(
+        test_site,
+        report_file=os.environ.get("CRAWL_REPORT"),
+        max_urls=int(os.environ.get("GUI_CRAWLER_URL_LIMIT", 0)),
+    )
     try:
         yield test_crawler
     finally:

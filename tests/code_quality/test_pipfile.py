@@ -335,7 +335,6 @@ CEE_UNUSED_PACKAGES = [
     "markupsafe",
     "more-itertools",
     "multidict",
-    "ordered-set",
     "pbr",
     "ply",
     "psycopg2-binary",

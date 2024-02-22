@@ -41,7 +41,7 @@ def test_make_object_diff_changed_dict_value() -> None:
 def test_make_object_diff_multiple_changes() -> None:
     assert (
         make_diff_text({"a": "0", "b": "1"}, {"a": "1"})
-        == 'Attribute "b" with value "1" removed.\nValue of "a" changed from "0" to "1".'
+        == 'Value of "a" changed from "0" to "1".\nAttribute "b" with value "1" removed.'
     )
 
 

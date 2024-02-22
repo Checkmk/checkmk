@@ -241,12 +241,17 @@ def test_extension_compatibility(
     name: str,
 ) -> None:
     extension = _download_extension(extension_download_url)
-    expected_errors = _get_expected_errors(name, site22, extension)
-
     site.write_binary_file(extension_filename := "tmp.mkp", extension)
     with _install_extension(site, site.resolve_path(Path(extension_filename))):
         encountered_errors = _ImportErrors.collect_from_site(site)
 
+    if not (encountered_errors.base_errors or encountered_errors.gui_errors):
+        # that's good. Just ensure we don't have left over import errors and
+        # we're done
+        assert name not in _EXPECTED_IMPORT_ERRORS
+        return
+
+    expected_errors = _get_expected_errors(name, site22, extension)
     assert encountered_errors.base_errors == expected_errors.base_errors
     assert encountered_errors.gui_errors == expected_errors.gui_errors
 

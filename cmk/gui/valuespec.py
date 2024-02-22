@@ -8255,7 +8255,7 @@ def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
     )
 
 
-class _CAorCAChain(UploadOrPasteTextFile):
+class CAorCAChain(UploadOrPasteTextFile):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # UploadOrPasteTextFile
@@ -8383,7 +8383,7 @@ def ListOfCAs(  # pylint: disable=redefined-builtin
     validate: ValueSpecValidateFunc[ListOfModel[T]] | None = None,
 ) -> ListOf:
     return ListOf(
-        valuespec=_CAorCAChain(),
+        valuespec=CAorCAChain(),
         magic=magic,
         add_label=_("Add new CA certificate or chain") if add_label is None else add_label,
         del_label=del_label,

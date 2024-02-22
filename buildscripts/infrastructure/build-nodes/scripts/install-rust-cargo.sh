@@ -23,8 +23,11 @@ DEFAULT_TOOLCHAIN_VERSION="1.75"
 # - 1.72: mk-sql is currently known to properly work with this version
 ADDITIONAL_TOOLCHAIN_VERSIONS="1.72"
 
-TOOLCHAIN_SUFFIX="x86_64-unknown-linux-gnu"
-DEFAULT_TOOLCHAIN="${DEFAULT_TOOLCHAIN_VERSION}-${TOOLCHAIN_SUFFIX}"
+DEFAULT_TARGET="x86_64-unknown-linux-gnu"
+# List additional targets here, separated by space.
+# These targets will be installed for all toolchain versions.
+ADDITIONAL_TARGETS="x86_64-unknown-linux-musl"
+DEFAULT_TOOLCHAIN="${DEFAULT_TOOLCHAIN_VERSION}-${DEFAULT_TARGET}"
 DIR_NAME="rust"
 TARGET_DIR="${TARGET_DIR:-/opt}"
 
@@ -39,6 +42,12 @@ BUILD_ID="8-$DEFAULT_TOOLCHAIN_VERSION"
 # included in the cached archive.
 for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
     BUILD_ID="$BUILD_ID-$toolchain_version"
+done
+# This adds all present targets to the build ID to make sure they are included
+# in the cached archive.
+BUILD_ID="$BUILD_ID-$DEFAULT_TARGET"
+for target in $ADDITIONAL_TARGETS; do
+    BUILD_ID="$BUILD_ID-$target"
 done
 
 build_package() {
@@ -60,10 +69,18 @@ build_package() {
     mirrored_download "rustup-init.sh" "https://sh.rustup.rs"
     chmod +x rustup-init.sh
     ./rustup-init.sh -y --no-modify-path --default-toolchain "$DEFAULT_TOOLCHAIN"
-    "${CARGO_HOME}"/bin/rustup update
-    "${CARGO_HOME}"/bin/rustup target add x86_64-unknown-linux-musl
     "${CARGO_HOME}"/bin/rustup toolchain install $DEFAULT_TOOLCHAIN_VERSION $ADDITIONAL_TOOLCHAIN_VERSIONS
+
+    # Install additional targets for all versions
+    for target in $ADDITIONAL_TARGETS; do
+        "${CARGO_HOME}"/bin/rustup target add $target --toolchain $DEFAULT_TOOLCHAIN_VERSION
+
+        for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
+            "${CARGO_HOME}"/bin/rustup target add $target --toolchain $toolchain_version
+        done
+    done
     "${CARGO_HOME}"/bin/rustup default $DEFAULT_TOOLCHAIN_VERSION
+    "${CARGO_HOME}"/bin/rustup update
 
     # saves space
     remove_doc_dirs() {
@@ -75,7 +92,13 @@ build_package() {
 
     remove_doc_dirs "$DEFAULT_TOOLCHAIN"
     for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
-        remove_doc_dirs "${toolchain_version}-${TOOLCHAIN_SUFFIX}"
+        remove_doc_dirs "${toolchain_version}-${DEFAULT_TARGET}"
+    done
+    for target in $ADDITIONAL_TARGETS; do
+        remove_doc_dirs "${DEFAULT_TOOLCHAIN_VERSION}-${target}"
+        for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
+            remove_doc_dirs "${toolchain_version}-${target}"
+        done
     done
 }
 
@@ -86,5 +109,5 @@ ln -sf "${CARGO_HOME}/bin/"* /usr/bin/
 
 test_package "rustc --version" "^rustc $DEFAULT_TOOLCHAIN_VERSION\."
 for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
-    test_package "$RUSTUP_HOME/toolchains/${toolchain_version}-${TOOLCHAIN_SUFFIX}/bin/rustc --version" "^rustc $toolchain_version\."
+    test_package "$RUSTUP_HOME/toolchains/${toolchain_version}-${DEFAULT_TARGET}/bin/rustc --version" "^rustc $toolchain_version\."
 done

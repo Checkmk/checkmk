@@ -15,7 +15,6 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
-    Float,
     InputHint,
     Integer,
     LevelDirection,
@@ -23,20 +22,22 @@ from cmk.rulesets.v1.form_specs import (
     LevelsConfigModel,
     List,
     String,
+    TimeMagnitude,
+    TimeSpan,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
 
 
 def _valuespec_response_time() -> Dictionary:
-    # TODO API uses seconds, we need ms here!
-    # NOTE (mo): store seconds, not milliseconds. Use TimeSpan Formspec!
     return Dictionary(
         title=Title("Response time"),
         elements={
             "levels_lower": DictElement[LevelsConfigModel[float]](
                 parameter_form=Levels[float](
-                    form_spec_template=Float(unit=Label("seconds")),
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
+                    ),
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0.0, 0.0)),
                     predictive=None,
@@ -45,7 +46,9 @@ def _valuespec_response_time() -> Dictionary:
             ),
             "levels_upper": DictElement[LevelsConfigModel[float]](
                 parameter_form=Levels[float](
-                    form_spec_template=Float(unit=Label("seconds")),
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
+                    ),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((0.001, 0.002)),
                     predictive=None,
@@ -60,13 +63,13 @@ def _valuespec_validity() -> Dictionary:
     return Dictionary(
         title=Title("Check certificate validity"),
         elements={
-            "remaining": DictElement[LevelsConfigModel[int]](
+            "remaining": DictElement[LevelsConfigModel[float]](
                 parameter_form=_valuespec_remaining_validity()
             ),
-            "maximum": DictElement[int](
-                parameter_form=Integer(
+            "maximum": DictElement[float](
+                parameter_form=TimeSpan(
                     title=Title("Maximum allowed validity"),
-                    unit=Label("days"),
+                    displayed_magnitudes=[TimeMagnitude.DAY],
                     custom_validate=validators.InRange(min_value=0),
                 )
             ),
@@ -229,15 +232,16 @@ def _valuespec_specific_values() -> Dictionary:
     )
 
 
-def _valuespec_remaining_validity() -> Levels[int]:
-    return Levels[int](
+def _valuespec_remaining_validity() -> Levels[float]:
+    return Levels[float](
         title=Title("Remaining validity time"),
         help_text=Help("Minimum number of days a certificate has to be valid."),
-        form_spec_template=Integer(
-            custom_validate=validators.InRange(min_value=0), unit=Label("days")
+        form_spec_template=TimeSpan(
+            displayed_magnitudes=[TimeMagnitude.DAY],
+            custom_validate=validators.InRange(min_value=0),
         ),
         level_direction=LevelDirection.LOWER,
-        prefill_fixed_levels=InputHint(value=(0, 0)),
+        prefill_fixed_levels=InputHint((0.0, 0.0)),
         predictive=None,
     )
 
@@ -246,6 +250,7 @@ def _valuespec_port() -> Integer:
     return Integer(
         title=Title("Port"),
         prefill=DefaultValue(443),
+        custom_validate=validators.NetworkPort(),
     )
 
 

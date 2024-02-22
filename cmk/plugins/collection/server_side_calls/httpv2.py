@@ -16,6 +16,8 @@ from cmk.server_side_calls.v1 import (
     parse_http_proxy,
 )
 
+_DAY = 24 * 3600
+
 
 class HttpVersion(StrEnum):
     AUTO = "auto"
@@ -168,7 +170,7 @@ class Connection(BaseModel):
     method: tuple[HttpMethod, SendData | None] | None = None  # TODO(ma): CMK-15749
     proxy: ProxySpec | None = None
     redirects: RedirectPolicy | None = None
-    timeout: int | None = None
+    timeout: float | None = None
     user_agent: str | None = None
     add_headers: list[HeaderSpec] | None = None
     auth: (
@@ -452,9 +454,9 @@ def _http_version_args(http_version: HttpVersion) -> Iterator[str]:
     }[http_version]
 
 
-def _timeout_args(timeout: int) -> Iterator[str]:
+def _timeout_args(timeout: float) -> Iterator[str]:
     yield "--timeout"
-    yield str(timeout)
+    yield str(round(timeout))
 
 
 def _user_agent_args(user_agent: str) -> Iterator[str]:
@@ -488,9 +490,9 @@ def _cert_args(
     )
 ) -> Iterator[str]:
     match cert_validation:
-        case (Validation.VALIDATE, (LevelsType.FIXED, (int(warn), int(crit)))):
+        case (Validation.VALIDATE, (LevelsType.FIXED, (float(warn), float(crit)))):
             yield "--certificate-levels"
-            yield f"{warn},{crit}"
+            yield f"{round(warn / _DAY)},{round(crit / _DAY)}"
 
 
 def _document_args(document: Document) -> Iterator[str]:

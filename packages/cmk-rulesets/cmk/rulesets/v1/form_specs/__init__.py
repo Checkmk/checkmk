@@ -66,6 +66,7 @@ from ._preconfigured import (
 )
 
 __all__ = [
+    "FormSpec",
     "DefaultValue",
     "InputHint",
     "BooleanChoice",
@@ -78,7 +79,6 @@ __all__ = [
     "FileUpload",
     "FixedValue",
     "Float",
-    "FormSpec",
     "HostState",
     "IECMagnitude",
     "Integer",

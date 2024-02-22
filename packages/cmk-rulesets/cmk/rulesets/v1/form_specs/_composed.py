@@ -19,16 +19,18 @@ class TupleDoNotUseWillbeRemoved(FormSpec[tuple[object, ...]]):
 
 @dataclass(frozen=True, kw_only=True)
 class CascadingSingleChoiceElement(Generic[ModelT]):
-    """Specifies an element of a single choice cascading form
+    """Specifies an element of a single choice cascading form.
 
-    Args:
-        name: Identifier of the CascadingSingleChoiceElement. Must be a valid Python identifier.
-        title: Human readable title that will be shown in the UI
+    Arguments:
+    **********
     """
 
     name: str
+    """Identifier of the CascadingSingleChoiceElement. Must be a valid Python identifier."""
     title: Title
+    """Human readable title that will be shown in the UI."""
     parameter_form: FormSpec[ModelT]
+    """Configuration specification of this entry."""
 
     def __post_init__(self) -> None:
         if not self.name.isidentifier():
@@ -37,27 +39,32 @@ class CascadingSingleChoiceElement(Generic[ModelT]):
 
 @dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
 class CascadingSingleChoice(FormSpec[tuple[str, object]]):
-    """Specification for a single-selection from multiple options. Selection is another spec
+    """Specification for a single-selection from multiple options.
 
-    Args:
-        elements: Elements to choose from
-        label: Text displayed in front of the input field
-        prefill: Name of pre-selected choice. Must be one of the elements names.
+    Every option can have its own configuration form.
 
     Consumer model:
-        **Type**: ``tuple[str, object]``
+    ***************
+    **Type**: ``tuple[str, object]``
 
-        The configured value will be presented as a 2-tuple consisting of the name of the choice and
-        the consumer model of the selected form specification.
+    The configured value will be presented as a 2-tuple consisting of the name of the choice and
+    the consumer model of the selected form specification.
 
-        **Example**: A CascadingSingleChoice with a selected :class:`Dictionary` form specification
-        would result in ``("my_value", {...})``
+    **Example**: A CascadingSingleChoice with a selected :class:`Dictionary` form specification
+    would result in ``("my_value", {...})``
+
+    Arguments:
+    **********
     """
 
     elements: Sequence[CascadingSingleChoiceElement[Any]]
+    """Elements to choose from."""
     label: Label | None = None
-
+    """Text displayed in front of the input field."""
     prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please choose"))
+    """Name of pre-selected choice. If DefaultValue is used, it must be one of the elements names.
+    If InputHint is used, its title will be shown as a placeholder in the UI, requiring the user to
+    select a value."""
 
     def __post_init__(self) -> None:
         avail_idents = {elem.name for elem in self.elements}  # type: ignore[misc]
@@ -67,18 +74,22 @@ class CascadingSingleChoice(FormSpec[tuple[str, object]]):
 
 @dataclass(frozen=True, kw_only=True)
 class DictElement(Generic[ModelT]):
-    """Specifies an element of a dictionary form
+    """Specifies an element of a dictionary form.
 
-    Args:
-        parameter_form: Configuration specification of this entry
-        required: Whether the user has to configure the value in question. If set to False, it may
-                  be omitted.
-        render_only: Element that can't be edited. Can be used to store the discovered parameters.
+    Arguments:
+    **********
     """
 
     parameter_form: FormSpec[ModelT]
+    """Configuration specification of this entry."""
     required: bool = False
+    """Whether the user has to configure the value in question.
+     
+    If set to False, it may be omitted and values will be inherited from more general rules
+    or the default configuration.
+    """
     render_only: bool = False
+    """Element that can't be edited. Can be used to store the discovered parameters."""
 
 
 @dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
@@ -86,23 +97,27 @@ class Dictionary(FormSpec[Mapping[str, object]]):
     """
     Specifies a (multi-)selection of configuration options.
 
-    Args:
-        elements: key-value mapping where the key identifies the selected option and the value
-                  specifies how the option can be configured. The key has to be a valid Python
-                  identifier.
-        deprecated_elements: Elements that can no longer be configured, but aren't removed
-                            from the old rules that already have them configured. Can be
-                            used when deprecating elements, to avoid breaking the old
-                            configurations.
-                            They are configured with a list of element keys.
-        no_elements_text: Text to show if no elements are specified
+    Consumer model:
+    ***************
+    **Type**: ``dict[str, object]``
+    The configured value will be presented as a dictionary consisting of the names of provided
+    configuration options and their respective consumer models.
+
+    Arguments:
+    **********
     """
 
     elements: Mapping[str, DictElement[Any]]
+    """key-value mapping where the key identifies the option and the value specifies how
+    the nested form can be configured. The key has to be a valid Python identifier."""
 
     no_elements_text: Message = Message("(no parameters)")
+    """Text to show if no elements are specified"""
 
     deprecated_elements: tuple[str, ...] = ()
+    """Elements that can no longer be configured, but aren't removed from the old rules that
+    already have them configured. Can be used when deprecating elements, to avoid breaking the
+    old configurations."""
 
     def __post_init__(self) -> None:
         for key in self.elements:  # type: ignore[misc]
@@ -115,33 +130,41 @@ class List(FormSpec[Sequence[ModelT]]):
     """
     Specifies a list of configuration elements of the same type.
 
-    Args:
-        element_template: Configuration specification of the list elements
-        add_element_label: Label used to customize the add element button.
-        remove_element_label: Label used to customize the remove element button.
-        no_element_label: Label used in the rule summary if the list is empty.
-        editable_order: Can the elements be reordered in the UI
+    Consumer model:
+    ***************
+    **Type**: ``list[object]``
+    The configured value will be presented as a list consisting of the consumer models of the
+    configured elements.
+
+    Arguments:
+    **********
     """
 
     element_template: FormSpec[ModelT]
+    """Configuration specification of the list elements."""
     add_element_label: Label = Label("Add new entry")
+    """Label used to customize the add element button."""
     remove_element_label: Label = Label("Remove this entry")
+    """Label used to customize the remove element button."""
     no_element_label: Label = Label("No entries")
+    """Label used in the rule summary if the list is empty."""
 
     editable_order: bool = True
+    """Indicate if the users should be able to reorder the elements in the UI."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class MultipleChoiceElement:
-    """Specifies an element of a multiple choice form
+    """Specifies an element of a multiple choice form.
 
-    Args:
-        name: Identifier of the MultipleChoiceElement. Must be a valid Python identifier.
-        title: Human readable title that will be shown in the UI
+    Arguments:
+    **********
     """
 
     name: str
+    """Identifier of the MultipleChoiceElement. Must be a valid Python identifier."""
     title: Title
+    """Human readable title that will be shown in the UI."""
 
     def __post_init__(self) -> None:
         if not self.name.isidentifier():
@@ -150,30 +173,25 @@ class MultipleChoiceElement:
 
 @dataclass(frozen=True, kw_only=True)
 class MultipleChoice(FormSpec[Sequence[str]]):
-    """Specifies a multiple choice form
-
-    Args:
-        elements: Elements to choose from
-        show_toggle_all: Show toggle all elements option in the UI
-        prefill: Element names to select by default
+    """Specifies a multiple choice form.
 
     Consumer model:
-        **Type**: ``list[str]``
+    ***************
+    **Type**: ``list[str]``
+    The configured value will be presented as a list consisting of the names of the selected
+    elements.
 
-        The configured value will be presented as a list consisting of the names
-        of the selected elements.
-
-        **Example**: MultipleChoice with two selected elements would result
-        in::
-
-            ["choice1", "choice2"]
-
+    Arguments:
+    **********
     """
 
     elements: Sequence[MultipleChoiceElement]
+    """Elements to choose from."""
     show_toggle_all: bool = False
+    """Show toggle all elements option in the UI."""
 
     prefill: DefaultValue[Sequence[str]] = DefaultValue(())
+    """Element names to select by default."""
 
     def __post_init__(self) -> None:
         available_names = {elem.name for elem in self.elements}

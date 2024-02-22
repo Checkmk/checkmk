@@ -29,15 +29,18 @@ def entry_point_prefixes() -> (
     To be discovered, the plugin must be of one of the types returned by this function and its name
     must start with the corresponding prefix.
 
+    Example:
+    ********
+
     >>> for plugin_type, prefix in entry_point_prefixes().items():
-    ...     print(f'{plugin_type.__name__}: "{prefix}"')
-    Metric: "metric_"
-    Translation: "translation_"
-    Perfometer: "perfometer_"
-    Bidirectional: "perfometer_"
-    Stacked: "perfometer_"
-    Graph: "graph_"
-    Bidirectional: "graph_"
+    ...     print(f'{prefix}... = {plugin_type.__name__}(...)')
+    metric_... = Metric(...)
+    translation_... = Translation(...)
+    perfometer_... = Perfometer(...)
+    perfometer_... = Bidirectional(...)
+    perfometer_... = Stacked(...)
+    graph_... = Graph(...)
+    graph_... = Bidirectional(...)
     """
     return {
         metrics.Metric: "metric_",

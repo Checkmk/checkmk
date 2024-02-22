@@ -33,8 +33,8 @@ def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
         title=Title("Absolute levels for total number of used processes"),
         parameter_form=TupleDoNotUseWillbeRemoved(
             elements=[
-                Integer(title=Title("Warning at"), unit=Label("processes")),
-                Integer(title=Title("Critical at"), unit=Label("processes")),
+                Integer(title=Title("Warning at"), label=Label("Processes:")),
+                Integer(title=Title("Critical at"), label=Label("Processes:")),
             ],
         ),
     )

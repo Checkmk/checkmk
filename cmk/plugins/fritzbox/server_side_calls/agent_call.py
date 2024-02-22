@@ -19,7 +19,7 @@ def fritzbox_arguments(
 
     yield SpecialAgentCommand(
         command_arguments=(
-            *(() if params.timeout is None else ("--timeout", str(params.timeout))),
+            *(() if params.timeout is None else ("--timeout", str(int(params.timeout)))),
             host_config.resolved_address,
         )
     )

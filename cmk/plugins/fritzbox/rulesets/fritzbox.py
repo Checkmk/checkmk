@@ -5,7 +5,7 @@
 
 
 from cmk.plugins.fritzbox.lib.config import AgentConfigParams
-from cmk.rulesets.v1 import form_specs, Help, Label, rule_specs, Title
+from cmk.rulesets.v1 import form_specs, Help, rule_specs, Title
 
 
 def _formspec_fritzbox():
@@ -16,16 +16,17 @@ def _formspec_fritzbox():
         ),
         elements={
             "timeout": form_specs.DictElement(
-                parameter_form=form_specs.Integer(
-                    title=Title("Connection Timeout"),
+                parameter_form=form_specs.TimeSpan(
+                    title=Title("Connection timeout"),
+                    displayed_magnitudes=[form_specs.TimeMagnitude.SECOND],
                     help_text=Help(
                         "The network timeout in seconds when communicating via UPNP. "
                         "The default is 10 seconds. Please note that this "
                         "is not a total timeout, instead it is applied to each API call."
                     ),
-                    prefill=form_specs.DefaultValue(10),
-                    custom_validate=form_specs.validators.InRange(1, float("inf")),
-                    unit=Label("seconds"),
+                    prefill=form_specs.DefaultValue(10.0),
+                    custom_validate=form_specs.validators.InRange(1.0, float("inf")),
+                    migrate=float,  # type: ignore[arg-type]
                 ),
             ),
         },

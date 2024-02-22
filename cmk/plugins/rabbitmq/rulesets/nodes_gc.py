@@ -46,15 +46,15 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
         elements={
             "gc_num_upper": DictElement(
                 parameter_form=SimpleLevels(
-                    form_spec_template=Integer(unit=Label("runs")),
+                    form_spec_template=Integer(label=Label("Number of runs:")),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0, 0)),
-                    title=Title("Upper level for total number of GC runs"),
+                    title=Title("Upper level for GC runs"),
                 )
             ),
             "gc_num_rate_upper": DictElement(
                 parameter_form=SimpleLevels(
-                    form_spec_template=Float(unit=Label("1/s")),
+                    form_spec_template=Float(unit_symbol="1/s"),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint((0.0, 0.0)),
                     title=Title("Upper level for GC run rate"),
@@ -62,7 +62,7 @@ def _parameter_form_rabbitmq_nodes_gc() -> Dictionary:
             ),
             "gc_num_rate_lower": DictElement(
                 parameter_form=SimpleLevels(
-                    form_spec_template=Float(unit=Label("1/s")),
+                    form_spec_template=Float(unit_symbol="1/s"),
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=InputHint((0.0, 0.0)),
                     title=Title("Lower level for GC run rate"),

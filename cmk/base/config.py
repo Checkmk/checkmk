@@ -45,12 +45,7 @@ import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
-from cmk.utils.check_utils import (
-    maincheckify,
-    ParametersTypeAlias,
-    section_name_of,
-    unwrap_parameters,
-)
+from cmk.utils.check_utils import maincheckify, ParametersTypeAlias, section_name_of
 from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
@@ -101,13 +96,7 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.discovery import (
-    AutocheckEntry,
-    AutochecksManager,
-    CheckPreviewEntry,
-    DiscoveryCheckParameters,
-    DiscoveryPlugin,
-)
+from cmk.checkengine.discovery import AutochecksManager, CheckPreviewEntry, DiscoveryCheckParameters
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
@@ -1100,44 +1089,18 @@ def service_description(
             return f"Unimplemented check {check_plugin_name} / {item}"
         return f"Unimplemented check {check_plugin_name}"
 
-    def __discovery_function(
-        check_plugin_name: CheckPluginName, *args: object, **kw: object
-    ) -> Iterable[AutocheckEntry]:
-        # Deal with impededance mismatch between check API and check engine.
-        yield from (
-            AutocheckEntry(
-                check_plugin_name=check_plugin_name,
-                item=service.item,
-                parameters=unwrap_parameters(service.parameters),
-                service_labels={label.name: label.value for label in service.labels},
-            )
-            for service in check_plugin.discovery_function(*args, **kw)
-        )
-
-    plugin = DiscoveryPlugin(
-        sections=check_plugin.sections,
-        service_name=check_plugin.service_name,
-        function=__discovery_function,
-        parameters=functools.partial(
-            get_plugin_parameters,
-            matcher=matcher,
-            default_parameters=check_plugin.discovery_default_parameters,
-            ruleset_name=check_plugin.discovery_ruleset_name,
-            ruleset_type=check_plugin.discovery_ruleset_type,
-            rules_getter_function=agent_based_register.get_host_label_ruleset,
-        ),
-    )
-
     return get_final_service_description(
         _format_item_with_template(
-            *_get_service_description_template_and_item(check_plugin_name, plugin, item)
+            *_get_service_description_template_and_item(
+                check_plugin_name, check_plugin.service_name, item
+            )
         ),
         get_service_translations(matcher, hostname),
     )
 
 
 def _get_service_description_template_and_item(
-    plugin_name: CheckPluginName, plugin: DiscoveryPlugin, item: Item
+    plugin_name: CheckPluginName, service_name_template: str, item: Item
 ) -> tuple[ServiceName, Item]:
     plugin_name_str = str(plugin_name)
 
@@ -1147,7 +1110,7 @@ def _get_service_description_template_and_item(
 
     old_descr = _old_service_descriptions.get(plugin_name_str)
     if old_descr is None or plugin_name_str in use_new_descriptions_for:
-        return plugin.service_name, item
+        return service_name_template, item
     return old_descr(item)
 
 

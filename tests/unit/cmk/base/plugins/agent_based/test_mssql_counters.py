@@ -204,10 +204,6 @@ big_parsed_data = {
     ('MSSQL_VEEAMSQL2012:SQL_Errors', '_Total'): {
         'errors/sec': 228398
     },
-    ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): {
-        'batch_requests/sec': 22476651,
-        'misguided_plan_executions/sec': 0
-    },
     ('MSSQL_VEEAMSQL2012:Plan_Cache', 'Temporary_Tables_&_Table_Variables'): {
         'cache_hit_ratio': 588
     },

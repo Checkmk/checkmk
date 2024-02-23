@@ -148,6 +148,12 @@ def test_parse_or_add_unit(
             id="si-large",
         ),
         pytest.param(
+            metrics.SINotation("unit"),
+            999.999,
+            "1000 unit",
+            id="si-large-border",
+        ),
+        pytest.param(
             metrics.IECNotation("unit"),
             0.0000123456789,
             "0 unit",
@@ -158,6 +164,12 @@ def test_parse_or_add_unit(
             123456.789,
             "120.56 Kiunit",
             id="iec-large",
+        ),
+        pytest.param(
+            metrics.IECNotation("unit"),
+            1023.999,
+            "1024 unit",
+            id="iec-large-border",
         ),
         pytest.param(
             metrics.StandardScientificNotation("unit"),
@@ -218,6 +230,12 @@ def test_parse_or_add_unit(
             123456.789,
             "1.43 d",
             id="time-large",
+        ),
+        pytest.param(
+            metrics.TimeNotation(),
+            86399.999,
+            "24 h",
+            id="time-large-border",
         ),
     ],
 )

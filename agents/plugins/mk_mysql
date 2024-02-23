@@ -43,6 +43,7 @@ do_query() {
 
 }
 
+# The following logic exists as well in the windows vbs script mk_mysql
 if [ ! -f "${MK_CONFDIR}/mysql.local.cfg" ]; then
     cat <<EOF >"${MK_CONFDIR}/mysql.local.cfg"
 # This file is created because some versions of mysqladmin

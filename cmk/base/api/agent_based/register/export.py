@@ -256,7 +256,7 @@ def snmp_section(
 
     return register_snmp_section(
         # supressions: we have to live with what the old api gives us. It will be validated.
-        SNMPSection(  # type:ignore[misc]
+        SNMPSection(  # type: ignore[misc]
             name=name,
             detect=detect,
             fetch=fetch,
@@ -269,7 +269,7 @@ def snmp_section(
             supersedes=supersedes,
         )
         if isinstance(fetch, list)
-        else SimpleSNMPSection(  # type:ignore[misc]
+        else SimpleSNMPSection(  # type: ignore[misc]
             name=name,
             detect=detect,
             fetch=fetch,

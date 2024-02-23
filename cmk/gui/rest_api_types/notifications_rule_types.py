@@ -45,7 +45,7 @@ from cmk.utils.notify_types import (
     WebHookUrl,
 )
 
-import cmk.ec.export as ec  # pylint:disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 CheckboxState = Literal["enabled", "disabled"]
 

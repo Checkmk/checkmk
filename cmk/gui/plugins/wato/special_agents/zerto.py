@@ -42,7 +42,10 @@ def _valuespec_special_agents_zerto():
         ],
         required_keys=["username", "password"],
         title=_("Zerto"),
-        help=_("This rule selects the Zerto special agent for an existing Checkmk host"),
+        help=_(
+            "Monitor if your VMs are properly protected by the "
+            "disaster recovery software Zerto (compatible with Zerto v9.x)."
+        ),
     )
 
 

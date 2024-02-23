@@ -294,7 +294,7 @@ def _valuespec_standard_settings() -> Dictionary:
     return Dictionary(
         title=Title("Standard settings"),
         elements={
-            "port": DictElement[int](parameter_form=_valuespec_port()),
+            "port": DictElement[int](parameter_form=_valuespec_port(), required=True),
             "response_time": DictElement[Mapping[str, object]](
                 parameter_form=_valuespec_response_time()
             ),
@@ -314,7 +314,8 @@ def _form_active_checks_cert() -> Dictionary:
                 required=True,
             ),
             "standard_settings": DictElement[Mapping[str, object]](
-                parameter_form=_valuespec_standard_settings()
+                parameter_form=_valuespec_standard_settings(),
+                required=True,
             ),
         },
     )

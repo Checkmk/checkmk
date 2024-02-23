@@ -43,11 +43,11 @@ def get_average(  # type: ignore[misc]
 
        b = (1-w) ∑ᵢ₌₀ᵏ⁻¹  wⁱ  =>  w = (1 - b) ** (1/k)    ("geometric sum")
 
-    For shorter timeseries we give the backlog more than those 50% weight
-    with the advantages that
+    Until the averaging horizon has been reached, we set the horizon to
+    the time passed since starting to average. This:
 
-        * the initial value becomes irrelevant, and
-        * for beginning timeseries we reach a meaningful value more quickly.
+        * Avoids giving undue weight to the first value
+        * Helps arriving at a meaningful average more quickly
 
     Returns:
 
@@ -73,14 +73,14 @@ def get_average(  # type: ignore[misc]
         # Gracefully handle time-anomaly of target systems
         return last_average
 
-    backlog_count = (backlog_minutes * 60.0) / time_diff
+    time_since_starting_averaging = time - start_time
+    if backlog_minutes * 60.0 < time_since_starting_averaging:
+        backlog_count = (backlog_minutes * 60.0) / time_diff
+    else:
+        backlog_count = time_since_starting_averaging / time_diff
 
-    relative_series_legth = (time - start_time) / (backlog_minutes * 60.0)
-    # go back to regular EMA once the timeseries is twice   ↓ the backlog.
-    # float**float is Any to mypy :-(
-    backlog_weight = 0.5 ** min(1.0, relative_series_legth / 2.0)  # type: ignore[misc]
-
-    weight: float = (1 - backlog_weight) ** (1.0 / backlog_count)  # type: ignore[misc]
+    backlog_weight = 0.5
+    weight: float = (1 - backlog_weight) ** (1.0 / backlog_count)
 
     average = (1.0 - weight) * value + weight * last_average
     value_store[key] = (start_time, time, average)

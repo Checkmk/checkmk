@@ -1886,9 +1886,9 @@ class CommandScheduleDowntimes(Command):
             )
 
         return additions + HTMLWriter.render_p(
-            _("<u>Info</u>: Downtime also applies to services.")
+            _("<u>Info</u>: Downtime also applies to all services of the hosts.")
             if cmdtag == "HOST"
-            else _("Info: Downtime does not apply to host.")
+            else _("<u>Info</u>: Downtime does not apply to host.")
         )
 
     def _flexible_option(self) -> int:

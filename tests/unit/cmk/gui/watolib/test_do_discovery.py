@@ -264,10 +264,6 @@ known_results = {
     ): _expected_clustered(),
     (
         DiscoveryState.CLUSTERED_IGNORED,
-        DiscoveryState.CLUSTERED_OLD,
-    ): _expected_clustered(),
-    (
-        DiscoveryState.CLUSTERED_IGNORED,
         DiscoveryState.CLUSTERED_IGNORED,
     ): _expected_clustered(),
     (

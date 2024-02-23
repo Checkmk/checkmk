@@ -21,7 +21,7 @@ from tests.testlib.site import Site
 
 from cmk.utils.version import __version__, parse_check_mk_version
 
-NUMBER_OF_EXTENSIONS_CHECKED = 150
+NUMBER_OF_EXTENSIONS_TO_COVER = 150
 
 
 CURRENTLY_UNDER_TEST = (
@@ -171,6 +171,18 @@ CURRENTLY_UNDER_TEST = (
     "https://exchange.checkmk.com/api/packages/download/452/urbackup_check-2.0.5.mkp",
     "https://exchange.checkmk.com/api/packages/download/571/openvpn_clients-0.4.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/653/m365_service_health-1.2.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/109/emcunity-2.2.2.mkp",
+    "https://exchange.checkmk.com/api/packages/download/112/entropy_avail-5.2.4.mkp",
+    "https://exchange.checkmk.com/api/packages/download/184/mikrotik-2.5.3.mkp",
+    "https://exchange.checkmk.com/api/packages/download/209/netifaces-7.1.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/362/yum-2.4.4.mkp",
+    "https://exchange.checkmk.com/api/packages/download/409/crl_url-1.1.2.mkp",
+    "https://exchange.checkmk.com/api/packages/download/419/hci_cluster-1.0.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/442/smart_patch-1.1.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/481/sonicwall-2.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/544/msteams-1.2.2.mkp",
+    "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.30.mkp",
+    "https://exchange.checkmk.com/api/packages/download/97/dir_size-1.1.1.mkp",
 )
 
 
@@ -313,11 +325,10 @@ def test_package_list_up_to_date() -> None:
     #     print(f"{extension.latest_version.link}\t{extension.downloads:5}")
     # assert False
 
-    # the tested ones should be amongst the #M most popular ones.
-    tested_unpopular = set(CURRENTLY_UNDER_TEST) - {
-        e.latest_version.link for e in extensions[:NUMBER_OF_EXTENSIONS_CHECKED]
-    }
-    assert not tested_unpopular
+    must_haves = {e.latest_version.link for e in extensions[:NUMBER_OF_EXTENSIONS_TO_COVER]}
+
+    missing_test_cases = must_haves - set(CURRENTLY_UNDER_TEST)
+    assert not missing_test_cases
 
 
 def _compatible_extensions_sorted_by_n_downloads(parsed_version: int) -> list[_Extension]:

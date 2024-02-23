@@ -5,6 +5,7 @@
 
 import dataclasses
 import enum
+from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
@@ -217,22 +218,27 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
     #              [u'2008', u'SW#2, Sensor#1, GREEN', u'37', u'68', u'1'],
     #              ...]
 
-    description_info, state_info, levels_info, perfstuff, admin_states = string_table
+    container = defaultdict(set)
+    if len(string_table) == 6:  # backwards compatibility
+        (
+            description_info,
+            state_info,
+            levels_info,
+            perfstuff,
+            admin_states,
+            sensor_if_map,
+        ) = string_table
 
-    # Create dict of sensor descriptions
-    descriptions = dict(description_info)
+        descriptions = {sensor_id: descr for sensor_id, _, descr in description_info}
+        for sensor_id, contained_in, descr in description_info:
+            container[contained_in].add(sensor_id)
 
-    # Map admin state of Ethernet ports to sensor_ids of corresponding ethernet port sensors.
-    # E.g. Ethernet1/9 -> Ethernet1/9(Rx-dBm), Ethernet1/9(Tx-dBm)
-    # In case the description has been modified in the switch device this
-    # mapping will not be successful. The description contains an ID instead of
-    # a human readable string to identify the sensors then. The sensors cannot
-    # be looked up in the description_info then.
-    admin_states_dict = {}
-    for if_name, admin_state in admin_states:
-        for sensor_id, descr in descriptions.items():
-            if descr.startswith(if_name):
-                admin_states_dict[sensor_id] = _CISCO_TEMPERATURE_ADMIN_STATE_MAP.get(admin_state)
+    else:
+        (description_info, state_info, levels_info, perfstuff, admin_states) = string_table
+        descriptions = dict(description_info)
+        sensor_if_map = []
+
+    admin_states_dict = _map_admin_states(admin_states, container, descriptions, sensor_if_map)
 
     # Create dict with thresholds
     thresholds: dict[str, list[EntSensorThreshold]] = {}
@@ -365,6 +371,104 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
     return parsed
 
 
+def _map_admin_states_exact_name(
+    admin_states: Sequence[Sequence[str]], descriptions: Mapping[str, str]
+) -> Mapping[str, str | None]:
+    # Map admin state of Ethernet ports to sensor_ids of corresponding ethernet port sensors.
+    # E.g. Ethernet1/9 -> Ethernet1/9(Rx-dBm), Ethernet1/9(Tx-dBm)
+    # In case the description has been modified in the switch device this
+    # mapping will not be successful. The description contains an ID instead of
+    # a human readable string to identify the sensors then. The sensors cannot
+    # be looked up in the description_info then.
+
+    admin_states_dict = {}
+    for val in admin_states:
+        if len(val) == 3:  # backwards compatibility
+            _, if_name, admin_state = val
+        else:
+            if_name, admin_state = val
+        for sensor_id, descr in descriptions.items():
+            if descr.startswith(if_name):
+                admin_states_dict[sensor_id] = _CISCO_TEMPERATURE_ADMIN_STATE_MAP.get(admin_state)
+    return admin_states_dict
+
+
+def _get_child_contained_sensor_ids(sensor_id: str, container: Mapping[str, set[str]]) -> set[str]:
+    children = {sensor_id}
+    for child in container.get(sensor_id, []):
+        children.update(_get_child_contained_sensor_ids(child, container))
+        children.add(child)
+    return children
+
+
+def _get_contained_sensor_ids(
+    sensor_oid: str, admin_state_ids: set[str], container: Mapping[str, set[str]]
+) -> set[str]:
+    # different cisco systems have different ways how containers work/where the admin state is set
+    to_add_status_to = set()
+    for container_id, sensors in container.items():
+        if sensor_oid in sensors:
+            # if the admin state is set for a sensor within a container where other sensors also
+            # have an admin state set -> apply status only to children
+            if len(sensors.intersection(admin_state_ids)) > 1:
+                to_add_status_to.update(_get_child_contained_sensor_ids(sensor_oid, container))
+            else:
+                # admin state is set only for one sensor within container
+                # -> apply status to all sensors
+                to_add_status_to.update(container_id)
+                for sensor in sensors:
+                    to_add_status_to.update(_get_child_contained_sensor_ids(sensor, container))
+    return to_add_status_to
+
+
+def _map_admin_states_container(
+    if_oid_admin_states: Mapping[str, str],
+    sensor_if_map: Sequence[Sequence[str]],
+    container: Mapping[str, set[str]],
+) -> Mapping[str, str | None]:
+    admin_states_dict = {}
+
+    sensor_oid_admin_status_map = {
+        sensor_oid.removesuffix(".0"): _CISCO_TEMPERATURE_ADMIN_STATE_MAP.get(
+            if_oid_admin_states.get(if_ref_oid.split(".")[-1], "")
+        )
+        for [sensor_oid, if_ref_oid] in sensor_if_map
+        # this was written with the expectation that the entAliasMappingIdentifier always
+        # points to ifTable. If not, the referenced oid needs to be added to the SNMPTree
+        if if_ref_oid.startswith(".1.3.6.1.2.1.2.2.1.1")
+        # this should be a scalar value and not a table
+        and sensor_oid.endswith(".0")
+    }
+
+    for sensor_oid, admin_status in sensor_oid_admin_status_map.items():
+        for contained_in in _get_contained_sensor_ids(
+            sensor_oid, set(sensor_oid_admin_status_map.keys()), container
+        ):
+            admin_states_dict[contained_in] = admin_status
+    return admin_states_dict
+
+
+def _map_admin_states(
+    admin_states: Sequence[Sequence[str]],
+    container: Mapping[str, set[str]],
+    descriptions: Mapping[str, str],
+    sensor_if_map: Sequence[Sequence[str]],
+) -> Mapping[str, str | None]:
+    if len(sensor_if_map) == 0:  # fallback if entAliasMapping is not provided
+        return _map_admin_states_exact_name(admin_states, descriptions)
+
+    # Map admin state of Ethernet ports to sensor_ids of corresponding ethernet port sensors.
+    # Since the naming schema in the description can differ between interfaces and physical entities
+    # use the entAliasMappingIdentifier to map between the ifEntry and the entPhysicalEntry
+    if_oid_admin_states = {if_oid: admin_state for if_oid, if_name, admin_state in admin_states}
+    admin_states_dict = _map_admin_states_container(if_oid_admin_states, sensor_if_map, container)
+
+    if len(admin_states_dict) == 0:  # fallback if entAliasMapping did not work
+        return _map_admin_states_exact_name(admin_states, descriptions)
+
+    return admin_states_dict
+
+
 register.snmp_section(
     name="cisco_temperature",
     parse_function=parse_cisco_temperature,
@@ -381,6 +485,7 @@ register.snmp_section(
             base=".1.3.6.1.2.1.47.1.1.1.1",
             oids=[
                 OIDEnd(),
+                "4",  # entPhysicalContainedIn
                 OIDCached("7"),  # Name of the sensor
             ],
         ),
@@ -420,8 +525,16 @@ register.snmp_section(
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
             oids=[
+                OIDEnd(),
                 OIDCached("2"),  # Description of the sensor
                 OIDCached("7"),  # ifAdminStatus
+            ],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.2.1.47.1.3.2.1",  # entAliasMappingEntry
+            oids=[
+                OIDEnd(),
+                "2",  # entAliasMappingIdentifier
             ],
         ),
     ],

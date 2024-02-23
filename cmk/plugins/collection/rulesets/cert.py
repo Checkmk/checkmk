@@ -29,31 +29,17 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
 
 
-def _valuespec_response_time() -> Dictionary:
-    return Dictionary(
+def _valuespec_response_time() -> SimpleLevels[float]:
+    return SimpleLevels[float](
         title=Title("Response time"),
-        elements={
-            "levels_lower": DictElement[SimpleLevelsConfigModel[float]](
-                parameter_form=SimpleLevels[float](
-                    form_spec_template=TimeSpan(
-                        displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
-                    ),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint((0.0, 0.0)),
-                ),
-                required=True,
-            ),
-            "levels_upper": DictElement[SimpleLevelsConfigModel[float]](
-                parameter_form=SimpleLevels[float](
-                    form_spec_template=TimeSpan(
-                        displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
-                    ),
-                    level_direction=LevelDirection.UPPER,
-                    prefill_fixed_levels=DefaultValue((0.001, 0.002)),
-                ),
-                required=True,
-            ),
-        },
+        form_spec_template=TimeSpan(
+            displayed_magnitudes=[
+                TimeMagnitude.SECOND,
+                TimeMagnitude.MILLISECOND,
+            ],
+        ),
+        level_direction=LevelDirection.UPPER,
+        prefill_fixed_levels=DefaultValue((0.1, 0.2)),
     )
 
 
@@ -273,9 +259,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                     parameter_form=Dictionary(
                         title=Title("Individual settings for this endpoint"),
                         elements={
-                            "response_time": DictElement[Mapping[str, object]](
-                                parameter_form=_valuespec_response_time()
-                            ),
+                            "response_time": DictElement(parameter_form=_valuespec_response_time()),
                             "validity": DictElement[Mapping[str, object]](
                                 parameter_form=_valuespec_validity()
                             ),
@@ -283,7 +267,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                 parameter_form=_valuespec_specific_values()
                             ),
                         },
-                    )
+                    ),
                 ),
             },
         ),
@@ -295,9 +279,7 @@ def _valuespec_standard_settings() -> Dictionary:
         title=Title("Standard settings for all endpoints"),
         elements={
             "port": DictElement[int](parameter_form=_valuespec_port(), required=True),
-            "response_time": DictElement[Mapping[str, object]](
-                parameter_form=_valuespec_response_time()
-            ),
+            "response_time": DictElement(parameter_form=_valuespec_response_time()),
             "validity": DictElement[Mapping[str, object]](parameter_form=_valuespec_validity()),
             "cert_details": DictElement[Mapping[str, object]](
                 parameter_form=_valuespec_specific_values()

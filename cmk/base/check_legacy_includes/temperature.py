@@ -45,9 +45,8 @@ class CheckTempKwargs(TypedDict):
 #                                 NOTE
 #                           !! PLEASE READ !!
 #
-#       check_temperature_list has NOT been migrated to the new check API yet.
-#
-#       check_temperature_trend and check_temperature have been migrated to the new check API.
+#       check_temperature_trend, check_temperature  and check_temperature_list have been
+#       migrated to the new check API.
 #       The functions below must be decomissioned (i.e. deleted) once all checks using
 #       the check_temperature function have been migrated.
 #

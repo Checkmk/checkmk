@@ -66,9 +66,6 @@ std::string replace_first(const std::string &str, const std::string &from,
 std::string replace_all(const std::string &str, const std::string &from,
                         const std::string &to);
 
-std::string from_multi_line(const std::string &str);
-std::string to_multi_line(const std::string &str);
-
 std::string ipv4ToString(in_addr_t ipv4_address);
 
 namespace ec {

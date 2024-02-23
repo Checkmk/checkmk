@@ -15,6 +15,8 @@
 #include <utility>
 #include <vector>
 
+#include "livestatus/StringUtils.h"
+
 using namespace std::string_view_literals;
 
 namespace {
@@ -221,6 +223,14 @@ LogEntry::LogEntry(size_t lineno, std::string line)
     time_ = std::chrono::system_clock::from_time_t(timestamp);
 
     classifyLogMessage();
+}
+
+std::string LogEntry::long_plugin_output() const {
+    return LogEntry::encode(std::string{long_plugin_output_});
+}
+
+std::string LogEntry::encode(const std::string &str) {
+    return mk::replace_all(str, R"(\n)", "\n");
 }
 
 void LogEntry::assign(LogEntryParam par, std::string_view field) {

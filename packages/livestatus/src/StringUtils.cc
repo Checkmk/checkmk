@@ -142,14 +142,6 @@ std::string replace_chars(const std::string &str,
     return result;
 }
 
-std::string from_multi_line(const std::string &str) {
-    return replace_all(str, "\n", R"(\n)");
-}
-
-std::string to_multi_line(const std::string &str) {
-    return replace_all(str, R"(\n)", "\n");
-}
-
 std::string ipv4ToString(in_addr_t ipv4_address) {
     char addr_buf[INET_ADDRSTRLEN];
     struct in_addr ia = {ipv4_address};

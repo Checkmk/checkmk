@@ -1,0 +1,23 @@
+Title: Path to mysql.ini under Windows for mk_sql
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1708687568
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+If you've been using mysql and the corresponding agent plugin <em>mk_sql</em>
+under Windows, the plugin may have crashed and the agent output would then
+show the following error:
+
+C+:
+<<<mysql_ping>>>
+[[MySQL83]]
+mysqladmin: File '\etc\check_mk\mysql.local.ini' not found (OS errno 2 - No such file or directory)
+mysqladmin: [ERROR] Stopped processing the 'include' directive in file C:\ProgramData\checkmk\agent\config\mysql.ini at line 8.
+C-:
+
+Under Windows, the plugin config path <code>C:\ProgramData\checkmk\agent\config</code> is now used.
+
+In contrast to the corresponding Linux plugin <code>mk_mysql</code>, the config path under Windows cannot be changed.

@@ -13,6 +13,7 @@ from cmk.base.plugins.agent_based.check_mk import host_label_function_labels, pa
 from cmk.agent_based.v1.type_defs import StringTable
 
 # TODO(sk):  tests should use native agent data as input, not manually parsed string table
+# TODO(sk):  the lone test should be separated into three tests, one for each case
 
 
 @pytest.mark.parametrize(
@@ -50,7 +51,6 @@ from cmk.agent_based.v1.type_defs import StringTable
             ],
             [
                 HostLabel("cmk/os_family", "linux"),
-                HostLabel("cmk/os_type", "linux"),
                 HostLabel("cmk/os_platform", "linux"),
             ],
             id="old agent",
@@ -64,7 +64,6 @@ from cmk.agent_based.v1.type_defs import StringTable
             ],
             [
                 HostLabel("cmk/os_family", "windows"),
-                HostLabel("cmk/os_type", "windows"),
                 HostLabel("cmk/os_platform", "windows"),
             ],
             id="windows agent",

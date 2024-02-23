@@ -271,7 +271,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                 "port": DictElement[int](parameter_form=_valuespec_port()),
                 "individual_settings": DictElement[Mapping[str, object]](
                     parameter_form=Dictionary(
-                        title=Title("Individual settings"),
+                        title=Title("Individual settings for this endpoint"),
                         elements={
                             "response_time": DictElement[Mapping[str, object]](
                                 parameter_form=_valuespec_response_time()
@@ -292,7 +292,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
 
 def _valuespec_standard_settings() -> Dictionary:
     return Dictionary(
-        title=Title("Standard settings"),
+        title=Title("Standard settings for all endpoints"),
         elements={
             "port": DictElement[int](parameter_form=_valuespec_port(), required=True),
             "response_time": DictElement[Mapping[str, object]](
@@ -309,7 +309,7 @@ def _valuespec_standard_settings() -> Dictionary:
 def _form_active_checks_cert() -> Dictionary:
     return Dictionary(
         elements={
-            "connection": DictElement[Sequence[Mapping[str, object]]](
+            "connections": DictElement[Sequence[Mapping[str, object]]](
                 parameter_form=_valuespec_host_settings(),
                 required=True,
             ),

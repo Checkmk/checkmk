@@ -260,22 +260,15 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
         custom_validate=validators.DisallowEmpty(),
         element_template=Dictionary(
             elements={
-                "connection": DictElement[Mapping[str, object]](
-                    parameter_form=Dictionary(
-                        elements={
-                            "address": DictElement[str](
-                                parameter_form=String(
-                                    title=Title("Host address or name"),
-                                    prefill=InputHint("my.host.tld | 192.168.0.73"),
-                                    custom_validate=validators.DisallowEmpty(),
-                                ),
-                                required=True,
-                            ),
-                            "port": DictElement[int](parameter_form=_valuespec_port()),
-                        },
+                "address": DictElement[str](
+                    parameter_form=String(
+                        title=Title("Host address or name"),
+                        prefill=InputHint("my.host.tld | 192.168.0.73"),
+                        custom_validate=validators.DisallowEmpty(),
                     ),
                     required=True,
                 ),
+                "port": DictElement[int](parameter_form=_valuespec_port()),
                 "individual_settings": DictElement[Mapping[str, object]](
                     parameter_form=Dictionary(
                         title=Title("Individual settings"),
@@ -316,7 +309,7 @@ def _valuespec_standard_settings() -> Dictionary:
 def _form_active_checks_cert() -> Dictionary:
     return Dictionary(
         elements={
-            "host_settings": DictElement[Sequence[Mapping[str, object]]](
+            "connection": DictElement[Sequence[Mapping[str, object]]](
                 parameter_form=_valuespec_host_settings(),
                 required=True,
             ),

@@ -1184,19 +1184,19 @@ class ActivateChanges:
         return self._changes_by_site_until[site_id]
 
 
-def has_been_activated(change) -> bool:  # type:ignore[no-untyped-def]
+def has_been_activated(change) -> bool:  # type: ignore[no-untyped-def]
     return change.get("has_been_activated", False)
 
 
-def prevent_discard_changes(change) -> bool:  # type:ignore[no-untyped-def]
+def prevent_discard_changes(change) -> bool:  # type: ignore[no-untyped-def]
     return change.get("prevent_discard_changes", False)
 
 
-def is_foreign_change(change) -> bool:  # type:ignore[no-untyped-def]
+def is_foreign_change(change) -> bool:  # type: ignore[no-untyped-def]
     return change["user_id"] and change["user_id"] != user.id
 
 
-def affects_all_sites(change) -> bool:  # type:ignore[no-untyped-def]
+def affects_all_sites(change) -> bool:  # type: ignore[no-untyped-def]
     return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
 

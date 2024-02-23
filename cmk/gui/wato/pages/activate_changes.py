@@ -309,7 +309,7 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
         _change_table(self._all_changes, _("Revert changes"))
 
 
-def _change_table(changes, title: str):  # type:ignore[no-untyped-def]
+def _change_table(changes, title: str):  # type: ignore[no-untyped-def]
     with table_element(
         "changes",
         title=title,

@@ -88,7 +88,7 @@ def parse_aws_labels(string_table: StringTable) -> Mapping[str, str]:
     return labels
 
 
-def aws_host_labels(tags: Mapping[str, str]) -> HostLabelGenerator:
+def aws_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:
     """Generate aws host labels.
 
     Labels:
@@ -96,7 +96,7 @@ def aws_host_labels(tags: Mapping[str, str]) -> HostLabelGenerator:
             These labels are yielded for each tag of an AWS resource
             that is monitored as its own host.
     """
-    labels = custom_tags_to_valid_labels(tags)
+    labels = custom_tags_to_valid_labels(section)
     for key, value in labels.items():
         yield HostLabel(f"cmk/aws/tag/{key}", value)
 

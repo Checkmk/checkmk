@@ -60,15 +60,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
     [
         pytest.param(
             api_v1.form_specs.HostState(),
-            legacy_valuespecs.DropdownChoice(
-                choices=[
-                    (0, _("Up")),
-                    (1, _("Down")),
-                    (2, _("Unreachable")),
-                ],
-                sorted=False,
-                default_value=0,
-            ),
+            legacy_valuespecs.HostState(),
             id="minimal HostState",
         ),
         pytest.param(
@@ -77,12 +69,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Help("help text"),
                 prefill=api_v1.form_specs.DefaultValue(1),
             ),
-            legacy_valuespecs.DropdownChoice(
-                choices=[
-                    (0, _("Up")),
-                    (1, _("Down")),
-                    (2, _("Unreachable")),
-                ],
+            legacy_valuespecs.HostState(
                 sorted=False,
                 title=_("title"),
                 help=_("help text"),

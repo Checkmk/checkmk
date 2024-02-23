@@ -3409,53 +3409,55 @@ def MonitoringState(  # type: ignore[no-untyped-def] # pylint: disable=redefined
 HostStateValue = Literal[0, 1, 2]
 
 
-def HostState(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
-    # DropdownChoice
-    sorted: bool = False,
-    label: str | None = None,
-    help_separator: str | None = None,
-    prefix_values: bool = False,
-    empty_text: str | None = None,
-    invalid_choice: DropdownInvalidChoice = "complain",
-    invalid_choice_title: str | None = None,
-    invalid_choice_error: str | None = None,
-    no_preselect_title: str | None = None,
-    on_change: str | None = None,
-    read_only: bool = False,
-    encode_value: bool = True,
-    html_attrs: HTMLTagAttributes | None = None,
-    # ValueSpec
-    title: str | None = None,
-    help: ValueSpecHelp | None = None,
-    default_value: ValueSpecDefault[int] = 0,  # NOTE: Different!
-    validate: ValueSpecValidateFunc[int | None] | None = None,
-    deprecated_choices: Sequence[int] = (),
-):
-    return DropdownChoice(
-        choices=[
-            (0, _("UP")),
-            (1, _("DOWN")),
-            (2, _("UNREACHABLE")),
-        ],
-        sorted=sorted,
-        label=label,
-        help_separator=help_separator,
-        prefix_values=prefix_values,
-        empty_text=empty_text,
-        invalid_choice=invalid_choice,
-        invalid_choice_title=invalid_choice_title,
-        invalid_choice_error=invalid_choice_error,
-        no_preselect_title=no_preselect_title,
-        on_change=on_change,
-        read_only=read_only,
-        encode_value=encode_value,
-        html_attrs=html_attrs,
-        title=title,
-        help=help,
-        default_value=default_value,
-        validate=validate,
-        deprecated_choices=deprecated_choices,
-    )
+class HostState(DropdownChoice):
+    def __init__(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+        self,
+        # DropdownChoice
+        sorted: bool = False,
+        label: str | None = None,
+        help_separator: str | None = None,
+        prefix_values: bool = False,
+        empty_text: str | None = None,
+        invalid_choice: DropdownInvalidChoice = "complain",
+        invalid_choice_title: str | None = None,
+        invalid_choice_error: str | None = None,
+        no_preselect_title: str | None = None,
+        on_change: str | None = None,
+        read_only: bool = False,
+        encode_value: bool = True,
+        html_attrs: HTMLTagAttributes | None = None,
+        # ValueSpec
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+        default_value: ValueSpecDefault[int] = 0,  # NOTE: Different!
+        validate: ValueSpecValidateFunc[int | None] | None = None,
+        deprecated_choices: Sequence[int] = (),
+    ):
+        super().__init__(
+            choices=[
+                (0, _("UP")),
+                (1, _("DOWN")),
+                (2, _("UNREACHABLE")),
+            ],
+            sorted=sorted,
+            label=label,
+            help_separator=help_separator,
+            prefix_values=prefix_values,
+            empty_text=empty_text,
+            invalid_choice=invalid_choice,
+            invalid_choice_title=invalid_choice_title,
+            invalid_choice_error=invalid_choice_error,
+            no_preselect_title=no_preselect_title,
+            on_change=on_change,
+            read_only=read_only,
+            encode_value=encode_value,
+            html_attrs=html_attrs,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+            deprecated_choices=deprecated_choices,
+        )
 
 
 CascadingDropdownChoiceIdent = None | str | bool | int

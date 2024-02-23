@@ -808,20 +808,14 @@ def _convert_to_legacy_monitoring_state(
 
 def _convert_to_legacy_host_state(
     to_convert: ruleset_api_v1.form_specs.HostState, localizer: Callable[[str], str]
-) -> legacy_valuespecs.DropdownChoice:
+) -> legacy_valuespecs.HostState:
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "default_value": to_convert.prefill.value,
     }
 
-    return legacy_valuespecs.DropdownChoice(
-        choices=[
-            (0, ruleset_api_v1.Title("Up").localize(localizer)),
-            (1, ruleset_api_v1.Title("Down").localize(localizer)),
-            (2, ruleset_api_v1.Title("Unreachable").localize(localizer)),
-        ],
-        sorted=False,
+    return legacy_valuespecs.HostState(
         **converted_kwargs,
     )
 

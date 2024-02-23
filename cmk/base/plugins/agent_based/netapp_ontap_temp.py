@@ -130,8 +130,10 @@ register.agent_section(
 
 def discovery_netapp_ontap_temp(section: Section) -> DiscoveryResult:
     for sensor_name, sensor in section.items():
-        yield Service(item=f"Ambient Shelf Sensor {sensor_name}") if sensor.ambient else Service(
-            item=f"Internal Shelf Sensor {sensor_name}"
+        yield (
+            Service(item=f"Ambient Shelf Sensor {sensor_name}")
+            if sensor.ambient
+            else Service(item=f"Internal Shelf Sensor {sensor_name}")
         )
 
 

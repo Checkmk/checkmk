@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import math
 import time
-from collections.abc import Generator, MutableMapping
-from typing import Any
+from collections.abc import Generator, MutableMapping, Sequence
+from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import CheckResult, get_average, get_rate, Result, State
+from cmk.agent_based.v2 import CheckResult, get_average, get_rate, Metric, Result, State
 from cmk.agent_based.v2.render import timespan
 
 StatusType = int
@@ -40,6 +41,23 @@ class TempParamDict(TypedDict, total=False):
 
 
 TempParamType = None | TwoLevelsType | FourLevelsType | TempParamDict
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CheckTempKwargs:
+    """
+    dev_unit (str): The unit. May be one of 'c', 'f' or 'k'.
+    dev_levels (tuple[float, float] or None): The upper levels (warn, crit)
+    dev_levels_lower (tuple[float, float] or None): The lower levels (warn, crit)
+    dev_status (StatusType or None): The status according to the device itself.
+    dev_status_name (str or None): The device's own name for the status.
+    """
+
+    dev_unit: Literal["k", "f", "c"]
+    dev_levels: tuple[float, float] | None
+    dev_levels_lower: tuple[float, float] | None
+    dev_status: StatusType | None
+    dev_status_name: str | None
 
 
 def fahrenheit_to_celsius(tempf, relative=False):
@@ -151,7 +169,7 @@ def _migrate_params(params: TempParamType) -> TempParamDict:
     return params
 
 
-def _validate_levels(
+def parse_levels(
     levels: tuple[float | None, float | None] | None = None,
 ) -> tuple[float, float] | None:
     if levels is None:
@@ -193,9 +211,9 @@ def _check_trend(
     )
 
     trend = rate_avg * trend_range_min * 60.0
-    levels_upper_trend = _validate_levels(params.get("trend_levels"))
+    levels_upper_trend = parse_levels(params.get("trend_levels"))
 
-    levels_lower_trend = _validate_levels(params.get("trend_levels_lower"))
+    levels_lower_trend = parse_levels(params.get("trend_levels_lower"))
     if levels_lower_trend is not None:
         # GUI representation of this parameter is labelled 'temperature decrease'; the user may input this
         # as a positive or negative value
@@ -309,8 +327,8 @@ def check_temperature(  # pylint: disable=too-many-branches
     temp = to_celsius(reading, input_unit)
 
     # User levels are already in Celsius
-    usr_levels_upper = _validate_levels(params.get("levels"))
-    usr_levels_lower = _validate_levels(params.get("levels_lower"))
+    usr_levels_upper = parse_levels(params.get("levels"))
+    usr_levels_lower = parse_levels(params.get("levels_lower"))
     dev_levels_upper = to_celsius(dev_levels, dev_unit)
     dev_levels_lower = to_celsius(dev_levels_lower, dev_unit)
 
@@ -468,3 +486,81 @@ def check_temperature(  # pylint: disable=too-many-branches
         yield Result(state=State.OK, notice="Configuration: show least critical state")
 
         return
+
+
+def check_temperature_list(
+    sensorlist: Sequence[tuple[str, float, CheckTempKwargs]],
+    params: TempParamDict,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    """This function checks a list of temperature values against specified levels and issues a warn/cirt
+    message. Levels can be supplied by the user or the device. The user has the possibility to configure
+    the preferred levels. Additionally, it is possible to check temperature trends. All internal
+    computations are done in Celsius.
+
+    Args:
+        sensorlist (List[tuple[str, float, CheckTempKwargs]]): A list of tuple containing the sensor ID,
+        the temperature value, and the single sensor's arguments (See CheckTempKwargs).
+        params (dict): A dictionary giving the user's configuration. See below.
+        value_store: The Value Store to used for trend computation
+
+    Configuration:
+        see check_temperature docstring
+
+    """
+
+    if not sensorlist:
+        return
+
+    sensor_count = len(sensorlist)
+    yield Result(state=State.OK, summary=f"Sensors: {sensor_count}")
+
+    output_unit = params.get("output_unit", "c")
+    unitsym = temp_unitsym[output_unit]
+
+    tempmax = max(temp for _item, temp, _kwargs in sensorlist)
+    yield Result(state=State.OK, summary=f"Highest: {render_temp(tempmax, output_unit)} {unitsym}")
+    yield Metric("temp", tempmax)
+
+    tempavg = sum(temp for _item, temp, _kwargs in sensorlist) / float(sensor_count)
+    yield Result(state=State.OK, summary=f"Average: {render_temp(tempavg, output_unit)} {unitsym}")
+
+    tempmin = min(temp for _item, temp, _kwargs in sensorlist)
+    yield Result(state=State.OK, summary=f"Lowest: {render_temp(tempmin, output_unit)} {unitsym}")
+
+    for sub_item, temperature, kwargs in sensorlist:
+        _sub_metric, sub_result, *_ = check_temperature(
+            temperature,
+            params,
+            unique_name=sub_item,
+            value_store=value_store,
+            dev_unit=kwargs.dev_unit,
+            dev_levels=kwargs.dev_levels,
+            dev_levels_lower=kwargs.dev_levels_lower,
+            dev_status=kwargs.dev_status,
+            dev_status_name=kwargs.dev_status_name,
+        )
+
+        if isinstance(sub_result, Result) and sub_result.state != State.OK:
+            yield Result(
+                state=sub_result.state,
+                summary=f"{sub_item}: {sub_result.summary}",
+            )
+
+    if "trend_compute" in params and "period" in params["trend_compute"]:
+        usr_crit, usr_crit_lower = None, None
+        if (user_levels := params.get("levels")) is not None:
+            _, usr_crit = user_levels
+
+        if (user_levels_lower := params.get("levels_lower")) is not None:
+            _, usr_crit_lower = user_levels_lower
+
+        yield from _check_trend(
+            value_store=value_store,
+            temp=tempavg,
+            params=params["trend_compute"],
+            output_unit=output_unit,
+            crit_temp=usr_crit,
+            crit_temp_lower=usr_crit_lower,
+            unique_name="overall_trend",
+        )

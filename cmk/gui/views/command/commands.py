@@ -171,6 +171,13 @@ class CommandReschedule(Command):
             "_resched_spread", default_value="5", size=3, cssclass="number", required=True
         )
         html.write_text(" " + _("minutes"))
+        html.help(
+            _(
+                "Spreading distributes checks evenly over the specified period. "
+                "This helps to avoid short-term peaks in CPU usage and "
+                "therefore, performance problems."
+            )
+        )
         html.close_div()
 
         html.open_div(class_="group")

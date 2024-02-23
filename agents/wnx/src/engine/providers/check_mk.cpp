@@ -72,28 +72,17 @@ std::string CheckMk::makeOnlyFrom() {
 
 namespace {
 std::string MakeInfo() {
-    const auto os = wtools::GetOsInfo();
-    const std::pair<std::string, std::optional<std::string>> infos[] = {
-        {"Version", {CHECK_MK_VERSION}},
-        {"BuildDate", {__DATE__}},
-        {"AgentOS", {"windows"}},
-        {"Hostname", {cfg::GetHostName()}},
-        {"Architecture", {tgt::Is64bit() ? "64bit" : "32bit"}},
-        {"OSName", os.has_value() ? std::optional{wtools::ToUtf8(os->name)}
-                                  : std::nullopt},
-        {"OSVersion", os.has_value()
-                          ? std::optional{wtools::ToUtf8(os->version)}
-                          : std::nullopt},
-        {"OSType", {"windows"}},
-        {"Time", {PrintIsoTime(std::chrono::system_clock::now())}},
+    const std::pair<std::string, std::string> infos[] = {
+        {"Version", CHECK_MK_VERSION},
+        {"BuildDate", __DATE__},
+        {"AgentOS", "windows"},
+        {"Hostname", cfg::GetHostName()},
+        {"Architecture", tgt::Is64bit() ? "64bit" : "32bit"},
+        {"Time", PrintIsoTime(std::chrono::system_clock::now())},
     };
     std::string out;
     for (const auto &info : infos) {
-        if (info.second.has_value()) {
-            out += fmt::format("{}: {}\n", info.first, info.second.value());
-        } else {
-            XLOG::l("Info '{}' is empty", info.first);
-        }
+        out += fmt::format("{}: {}\n", info.first, info.second);
     }
 
     return out;

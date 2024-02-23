@@ -3748,55 +3748,6 @@ AdapterInfoStore GetAdapterInfoStore() {
     return store;
 }
 
-namespace {
-/// return string vector with Name and Version
-/// on error empty vector
-std::vector<std::wstring> GetOsRawInfo() {
-    wtools::WmiWrapper wmi;
-    wmi.open();
-    wmi.connect(L"ROOT\\CIMV2");
-    if (!wmi.impersonate()) {
-        XLOG::l("Failed to impersonate");
-    }
-    auto [result, status] = wmi.queryTable({L"Name", L"Version"},
-                                           L"Win32_OperatingSystem", L"\t", 5);
-    if (status != WmiStatus::ok) {
-        XLOG::l("Failed to query Win32_OperatingSystem");
-        return {};
-    }
-    const auto rows = cma::tools::SplitString(result, L"\n");
-    if (rows.size() != 2) {
-        XLOG::l("Query Win32_OperatingSystem returns bad data {}",
-                wtools::ToUtf8(result));
-        return {};
-    }
-    auto values = cma::tools::SplitString(rows[1], L"\t");
-    if (values.size() != 2) {
-        XLOG::l("Query Win32_OperatingSystem returns bad data {}",
-                wtools::ToUtf8(result));
-        return {};
-    }
-    const auto name_and_dirs = cma::tools::SplitString(values[0], L"|");
-
-    // contains smth like:
-    // Microsoft Windows 10 Pro|C:\Windows|\Device\Harddisk0\Partition3
-    values[0] = name_and_dirs[0];
-
-    return values;
-}
-}  // namespace
-
-std::optional<OsInfo> GetOsInfo() {
-    static auto os_info = GetOsRawInfo();
-    if (os_info.empty()) {
-        os_info = GetOsRawInfo();
-    }
-    if (os_info.empty()) {
-        return {};
-    }
-    return OsInfo{.name = os_info[0], .version = os_info[1]};
-}
-
 }  // namespace wtools
 
 // verified code from the legacy client

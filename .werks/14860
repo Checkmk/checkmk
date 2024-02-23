@@ -1,0 +1,16 @@
+Title: EC: improve handling of non-UTF-8 characters in messages
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1708674008
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+
+Previously, the Event Console would show an error such as
+"UnicodeDecodeError: 'utf-8' codec can't decode byte 0x80 in position 0: invalid start byte"
+when trying to process a message that contained non-UTF-8 characters.
+
+With this werk, the EC no longer crashes.
+Any non-UTF-8 sequence of bytes is replaced with U+FFFD,
+the standard Unicode replacement character for an unrecognized character.

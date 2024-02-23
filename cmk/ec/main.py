@@ -791,7 +791,7 @@ class EventServer(ECServerThread):
     def process_raw_lines(self, data: bytes, address: tuple[str, int] | None) -> None:
         """Takes several lines of messages, handles encoding and processes them separated."""
         for line_bytes in data.splitlines():
-            if line := scrub_string(line_bytes.rstrip().decode("utf-8")):
+            if line := scrub_string(line_bytes.rstrip().decode("utf-8", errors="replace")):
                 try:
 
                     def handler(line: str = line) -> None:

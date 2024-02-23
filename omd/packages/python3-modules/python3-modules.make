@@ -31,9 +31,17 @@ $(PYTHON3_MODULES_BUILD):
 	$(OPTIONAL_BUILD_ARGS) $(BAZEL_BUILD) //omd/packages/python3-modules:python3-modules-modify
 
 $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
-	$(RSYNC) $(PYTHON3_MODULES_BUILD_DIR)/ $(PYTHON3_MODULES_INSTALL_DIR)/
+	# keep timestamps to make sure .py timestamps still match .pyc file content
+	$(RSYNC) --times $(PYTHON3_MODULES_BUILD_DIR)/ $(PYTHON3_MODULES_INSTALL_DIR)/
 	# TODO: Investigate why this fix-up is needed
 	chmod +x $(PYTHON3_MODULES_INSTALL_DIR)/bin/*
 
 $(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_INTERMEDIATE_INSTALL)
-	$(RSYNC) $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
+	# keep timestamps to make sure .py timestamps still match .pyc file content
+	$(PACKAGE_PYTHON_EXECUTABLE) -m compileall \
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s $(PACKAGE_PYTHON3_MODULES_PYTHONPATH)/ \
+	    $(PACKAGE_PYTHON3_MODULES_PYTHONPATH)/
+	$(RSYNC) --times $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
+

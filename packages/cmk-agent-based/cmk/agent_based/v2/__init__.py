@@ -74,7 +74,6 @@ from ..v1 import (
     endswith,
     equals,
     exists,
-    get_average,
     get_rate,
     get_value_store,
     GetRateError,
@@ -112,6 +111,7 @@ from ..v1.type_defs import (
 )
 from . import clusterize, render
 from ._check_levels import check_levels, FixedLevelsT, LevelsT, NoLevelsT, PredictiveLevelsT
+from ._get_average import get_average
 from ._plugins import (
     AgentSection,
     CheckPlugin,

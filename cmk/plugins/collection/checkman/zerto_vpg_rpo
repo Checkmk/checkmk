@@ -9,6 +9,7 @@ description:
  {CRIT}. If the VPG is initializing, in failover or move operations, being deleted
  or recovered, the check will be {WARN}.
  The VPG data is piggybacked to each VM.
+ This check is compatible with Zerto v9.x.
 
 item:
  The name of the VPG

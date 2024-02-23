@@ -94,19 +94,19 @@ def _valuespec_specific_values() -> Dictionary:
                         ),
                         CascadingSingleChoiceElement[None](
                             name="ed25519",
-                            title=Title("ED25519"),
+                            title=Title("Ed25519"),
                             parameter_form=FixedValue[None](
                                 value=None,
-                                title=Title("ED25519"),
-                                label=Label("Hashing algorithm included in encryption"),
+                                title=Title("Ed25519"),
+                                label=Label("SHA-512 (fixed)"),
                             ),
                         ),
                         CascadingSingleChoiceElement[None](
                             name="rsassa_pss",
-                            title=Title("RSASSA_PSS"),
+                            title=Title("RSASSA-PSS"),
                             parameter_form=FixedValue[None](
                                 value=None,
-                                title=Title("RSASSA_PSS"),
+                                title=Title("RSASSA-PSS"),
                                 label=Label(
                                     "Defined by signature algorithm parameters",
                                 ),
@@ -288,19 +288,16 @@ def _form_active_checks_cert() -> Dictionary:
 
 
 def _get_hashing_algorithm(algorithm: Literal["RSA", "ECDSA", "DSA"]) -> CascadingSingleChoice:
-    sha2 = [
-        ("sha224", Title("SHA224")),
-        ("sha256", Title("SHA256")),
-        ("sha384", Title("SHA384")),
-        ("sha512", Title("SHA512")),
+    choices = [
+        ("sha224", Title("SHA-224")),
+        ("sha256", Title("SHA-256")),
+        ("sha384", Title("SHA-384")),
+        ("sha512", Title("SHA-512")),
+        ("sha3_224", Title("SHA3-224")),
+        ("sha3_256", Title("SHA3-256")),
+        ("sha3_384", Title("SHA3-384")),
+        ("sha3_512", Title("SHA3-512")),
     ]
-    sha3 = [
-        ("sha3_224", Title("SHA3_224")),
-        ("sha3_256", Title("SHA3_256")),
-        ("sha3_384", Title("SHA3_384")),
-        ("sha3_512", Title("SHA3_512")),
-    ]
-    elements = sha2 + sha3 if algorithm in ["RSA", "ECDSA"] else sha2
     return CascadingSingleChoice(
         title=Title(algorithm),
         elements=[
@@ -312,7 +309,7 @@ def _get_hashing_algorithm(algorithm: Literal["RSA", "ECDSA", "DSA"]) -> Cascadi
                     title=title,
                 ),
             )
-            for value, title in elements
+            for value, title in choices
         ],
         prefill=DefaultValue("sha256"),
     )

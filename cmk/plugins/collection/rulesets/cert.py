@@ -253,6 +253,11 @@ def _valuespec_port() -> Integer:
 
 def _valuespec_host_settings() -> List[Mapping[str, object]]:
     return List(
+        title=Title("Endpoints to monitor"),
+        add_element_label=Label("Add new endpoint"),
+        remove_element_label=Label("Remove this endpoint"),
+        no_element_label=Label("Please add at least one endpoint to monitor"),
+        custom_validate=validators.DisallowEmpty(),
         element_template=Dictionary(
             elements={
                 "connection": DictElement[Mapping[str, object]](
@@ -288,7 +293,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                     )
                 ),
             },
-        )
+        ),
     )
 
 

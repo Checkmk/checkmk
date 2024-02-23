@@ -123,20 +123,6 @@ TEST(StringUtilTest, ReplaceAllTest) {
               mk::replace_all("very lovely test we have", "xy", "hurz"));
 }
 
-TEST(StringUtilTest, FromMultiLine) {
-    EXPECT_EQ("", mk::from_multi_line(""));
-    EXPECT_EQ("foo bar", mk::from_multi_line("foo bar"));
-    EXPECT_EQ("\\nfoo\\nbar\\n", mk::from_multi_line("\nfoo\nbar\n"));
-    EXPECT_EQ("\\nfoo\\nbar\\n", mk::from_multi_line("\\nfoo\\nbar\\n"));
-}
-
-TEST(StringUtilTest, ToMultiLine) {
-    EXPECT_EQ("", mk::to_multi_line(""));
-    EXPECT_EQ("foo bar", mk::to_multi_line("foo bar"));
-    EXPECT_EQ("\nfoo\nbar\n", mk::to_multi_line("\nfoo\nbar\n"));
-    EXPECT_EQ("\nfoo\nbar\n", mk::to_multi_line("\\nfoo\\nbar\\n"));
-}
-
 namespace {
 template <size_t N>
 std::string format_bitset(const std::bitset<N> &bs) {

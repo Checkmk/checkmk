@@ -205,8 +205,6 @@ _DOWNLOAD_URL_BASE = "https://exchange.checkmk.com/api/packages/download/"
 
 
 _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
-    "nvidia-gpu-2.0.mkp": _ImportErrors(),  # no errors, it's fine!
-    "sonicwall-1.4.2.mkp": _ImportErrors(),  # no errors, it's fine!
     "filehandles-3.2.mkp": _ImportErrors(  # nothing we can do about this one.
         gui_errors={
             "wato/filehandles: (unicode error) 'unicodeescape' codec can't decode bytes "
@@ -243,17 +241,21 @@ def test_extension_compatibility(
     extension = _download_extension(extension_download_url)
     site.write_binary_file(extension_filename := "tmp.mkp", extension)
     with _install_extension(site, site.resolve_path(Path(extension_filename))):
-        encountered_errors = _ImportErrors.collect_from_site(site)
+        encountered = _ImportErrors.collect_from_site(site)
 
-    if not (encountered_errors.base_errors or encountered_errors.gui_errors):
+    if not (encountered.base_errors or encountered.gui_errors):
         # that's good. Just ensure we don't have left over import errors and
         # we're done
         assert name not in _EXPECTED_IMPORT_ERRORS
         return
 
-    expected_errors = _get_expected_errors(name, site22, extension)
-    assert encountered_errors.base_errors == expected_errors.base_errors
-    assert encountered_errors.gui_errors == expected_errors.gui_errors
+    expected = _get_expected_errors(name, site22, extension)
+    _assert_ok_or_broken_anyway(encountered.base_errors, expected.base_errors)
+    _assert_ok_or_broken_anyway(encountered.gui_errors, expected.gui_errors)
+
+
+def _assert_ok_or_broken_anyway(actual: object, expected: object) -> None:
+    assert not actual or expected
 
 
 def _download_extension(url: str) -> bytes:

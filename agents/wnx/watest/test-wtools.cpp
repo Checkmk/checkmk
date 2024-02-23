@@ -839,4 +839,17 @@ TEST(Wtools, MangleNameForPerfCounter) {
               L"__!@_$%^&**[]__ `~'\"");
 }
 
+TEST(Wtools, OsInfo) {
+    const auto obtained = *GetOsInfo();
+    EXPECT_TRUE(obtained.name.starts_with(L"Microsoft Windows"));
+    EXPECT_TRUE(obtained.name.ends_with(L"Pro") ||      // local
+                obtained.name.ends_with(L"Standard"));  // CI
+
+    const auto num_strings = cma::tools::SplitString(obtained.version, L".");
+    // 10.0.14559
+    EXPECT_GE(std::stoi(num_strings[0]), 10);
+    EXPECT_GE(std::stoi(num_strings[1]), 0);
+    EXPECT_GE(std::stoi(num_strings[2]), 20);
+}
+
 }  // namespace wtools

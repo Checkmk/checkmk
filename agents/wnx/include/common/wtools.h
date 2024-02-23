@@ -1130,6 +1130,13 @@ AdapterInfoStore GetAdapterInfoStore();
 /// See: MSDN, PerformanceCounter.InstanceName Property
 /// https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.performancecounter.instancename?view=dotnet-plat-ext-8.0
 std::wstring MangleNameForPerfCounter(std::wstring_view name) noexcept;
+
+struct OsInfo {
+    std::wstring name;
+    std::wstring version;
+};
+
+std::optional<OsInfo> GetOsInfo();
 }  // namespace wtools
 
 #endif  // WTOOLS_H

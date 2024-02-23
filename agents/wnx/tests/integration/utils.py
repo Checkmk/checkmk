@@ -22,6 +22,9 @@ import yaml
 # Version: 2.3.0b1
 # BuildDate: Jan  5 2024
 # AgentOS: windows
+# OSName: Microsoft Windows 10 Pro
+# OSVersion: 10.0.19045
+# OSType: windows
 # Hostname: klapp-9999
 # Architecture: 64bit
 # Time: 2024-01-05T14:47:46+0100
@@ -45,8 +48,8 @@ AGENT_EXE_NAME: Final = "check_mk_agent.exe"
 _HOST: Final = "localhost"
 USER_YAML_CONFIG: Final = "check_mk.user.yml"
 SECTION_COUNT: Final = 18
-ONLY_FROM_LINE: Final = 18
-CTL_STATUS_LINE: Final = 20
+ONLY_FROM_LINE: Final = 21
+CTL_STATUS_LINE: Final = ONLY_FROM_LINE + 2
 PYTHON_CAB_NAME: Final = "python-3.cab"
 CMK_UPDATER_PY: Final = "cmk_update_agent.py"
 CMK_UPDATER_CHECKMK_PY: Final = "cmk_update_agent.checkmk.py"

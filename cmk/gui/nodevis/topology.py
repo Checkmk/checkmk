@@ -84,7 +84,7 @@ from cmk.gui.visuals.filter import FilterRegistry
 
 
 @request_memoize()
-def _core_data_provider():
+def _core_data_provider() -> CoreDataProvider:
     return CoreDataProvider()
 
 
@@ -662,8 +662,13 @@ class NetworkDataLookup:
     def translate_hostnames_to_network_id(self, hostnames: set[HostName]) -> set[str]:
         return {self.hostname[x] for x in hostnames if x in self.hostname}
 
-    def core_entity_for_id(self, node_id: str) -> str | tuple[str, str] | None:
-        return self.id.get(node_id, {}).get("link", {}).get("core")
+    def core_entity_for_id(self, node_id: str) -> HostName | tuple[HostName, str] | None:
+        value = self.id.get(node_id, {}).get("link", {}).get("core")
+        if value is None:
+            return value
+        if isinstance(value, str):
+            return HostName(value)
+        return HostName(value[0]), value[1]
 
 
 def _get_network_data(folder: Path, data_type: str) -> NetworkDataLookup:
@@ -733,23 +738,18 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         extra_info = self._node_extra_info.get(node.id)
         result: dict[str, Any] = {}
         if extra_info:
-            if "service" in extra_info:
-                result["core"] = {
-                    "hostname": extra_info["hostname"],
-                    "service": extra_info["service"],
-                    "state": extra_info["state"],
-                }
-            else:
-                result["core"] = {
-                    "hostname": extra_info["hostname"],
-                    "state": self._map_host_state(node, extra_info),
-                    "num_services_warn": extra_info["num_services_warn"],
-                    "num_services_crit": extra_info["num_services_crit"],
-                }
+            core_values = {}
+            for what in ("service", "hostname", "state", "num_services_warn", "num_services_crit"):
+                if (value := extra_info.get(what)) is not None:
+                    core_values[what] = value
+            if "state" in core_values and "service" not in core_values:
+                core_values["state"] = self._map_host_state(node, extra_info)
+
             if icon := node.metadata.get("icon"):
-                result["core"]["icon"] = theme.detect_icon_path(icon, prefix="")
+                core_values["icon"] = theme.detect_icon_path(icon, prefix="")
             elif icon := extra_info.get("icon"):
-                result["core"]["icon"] = icon
+                core_values["icon"] = icon
+            result["core"] = core_values
         if custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
             node.id
         ):
@@ -841,7 +841,7 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
 
         # Depending on the configuration, remove service nodes and link hosts directly
         for node_id, node in list(self._topology_nodes.items()):
-            if node.type != NodeType.TOPOLOGY_SERVICE:
+            if node.type not in (NodeType.TOPOLOGY_SERVICE, NodeType.TOPOLOGY_UNKNOWN_SERVICE):
                 continue
 
             visibility = general_service_visibility
@@ -870,9 +870,9 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             node.type = NodeType.TOPOLOGY_UNKNOWN
             if core_entity := self._network_data.core_entity_for_id(node_id):
                 if isinstance(core_entity, str):
-                    core_hostnames.add(core_entity)
+                    core_hostnames.add(HostName(core_entity))
                 else:
-                    core_services.add(tuple(core_entity))
+                    core_services.add((HostName(core_entity[0]), core_entity[1]))
 
         core_data_provider = _core_data_provider()
         core_data_provider.fetch_host_info(core_hostnames)
@@ -880,32 +880,43 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
 
         for node_id, node in self._topology_nodes.items():
             if core_entity := self._network_data.core_entity_for_id(node_id):
-                if isinstance(core_entity, str):
-                    if info := core_data_provider.core_hosts.get(core_entity):
-                        node.type = NodeType.TOPOLOGY_HOST
-                        self._node_extra_info[node_id] = {
-                            "site": info.site,
-                            "hostname": info.hostname,
-                            "icon": theme.detect_icon_path(info.icon_image, "icon_")
-                            if info.icon_image
-                            else None,
-                            "state": info.state,
-                            "has_been_checked": info.has_been_checked,
-                            "num_services_warn": info.num_services_warn,
-                            "num_services_crit": info.num_services_crit,
-                        }
-                else:
-                    if info := core_data_provider.core_services.get(tuple(core_entity)):
+                extra_info: dict[str, Any] = {}
+                if isinstance(core_entity, tuple):
+                    extra_info.update({"hostname": core_entity[0], "service": core_entity[1]})
+                    if service_info := core_data_provider.core_services.get(
+                        (HostName(core_entity[0]), core_entity[1])
+                    ):
                         node.type = NodeType.TOPOLOGY_SERVICE
-                        self._node_extra_info[node_id] = {
-                            "site": info.site,
-                            "hostname": info.hostname,
-                            "service": info.name,
-                            "icon": theme.detect_icon_path(info.icon_image, "icon_")
-                            if info.icon_image
-                            else None,
-                            "state": info.state,
-                        }
+                        extra_info.update(
+                            {
+                                "site": service_info.site,
+                                "icon": theme.detect_icon_path(service_info.icon_image, "icon_")
+                                if service_info.icon_image
+                                else None,
+                                "state": service_info.state,
+                            }
+                        )
+                    else:
+                        node.type = NodeType.TOPOLOGY_UNKNOWN_SERVICE
+                else:
+                    extra_info.update({"hostname": core_entity})
+                    if host_info := core_data_provider.core_hosts.get(core_entity):
+                        node.type = NodeType.TOPOLOGY_HOST
+                        extra_info.update(
+                            {
+                                "site": host_info.site,
+                                "icon": theme.detect_icon_path(host_info.icon_image, "icon_")
+                                if host_info.icon_image
+                                else None,
+                                "state": host_info.state,
+                                "has_been_checked": host_info.has_been_checked,
+                                "num_services_warn": host_info.num_services_warn,
+                                "num_services_crit": host_info.num_services_crit,
+                            }
+                        )
+                    else:
+                        node.type = NodeType.TOPOLOGY_UNKNOWN_HOST
+                self._node_extra_info[node_id] = extra_info
 
 
 def _resolve_circular_mesh_depths(
@@ -1253,14 +1264,15 @@ def _compute_growth_settings(
 
 
 def _compute_mesh_links(merged_results: dict[str, TopologyNode]) -> list[TopologyLink]:
+    type_to_base_type = {
+        NodeType.TOPOLOGY_UNKNOWN_HOST: NodeType.TOPOLOGY_HOST,
+        NodeType.TOPOLOGY_UNKNOWN_SERVICE: NodeType.TOPOLOGY_SERVICE,
+        NodeType.TOPOLOGY_UNKNOWN: NodeType.TOPOLOGY_HOST,
+    }
+
     def link_type(node1: TopologyNode, node2: TopologyNode) -> str:
-        # Unknown nodes are treated as hosts
-        node1_type = (
-            NodeType.TOPOLOGY_HOST if node1.type == NodeType.TOPOLOGY_UNKNOWN else node1.type
-        )
-        node2_type = (
-            NodeType.TOPOLOGY_HOST if node2.type == NodeType.TOPOLOGY_UNKNOWN else node2.type
-        )
+        node1_type = type_to_base_type.get(node1.type, node1.type)
+        node2_type = type_to_base_type.get(node2.type, node2.type)
         if node1_type == node2_type:
             if node1_type == NodeType.TOPOLOGY_HOST:
                 return TopologyLinkType.HOST2HOST.value

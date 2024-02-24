@@ -64,6 +64,10 @@ const default_lookup = {
     forbid_hops: "Stop growing here",
     continue_hop: "Continue growth here",
     stop_continue_hop: "Do no longer continue here",
+    unknown_service: "Unknown service",
+    unknown_host: "Unknown host",
+    host: "Host",
+    service: "Service",
 };
 
 export type TranslationKey = keyof typeof default_lookup;

@@ -15,6 +15,7 @@ import {StyleOptionSpecRange} from "nodevis/layout_utils";
 import {AbstractLink, link_type_class_registry} from "nodevis/link_utils";
 import {TopologyNode} from "nodevis/node_types";
 import {
+    BasicQuickinfo,
     get_core_info,
     get_custom_node_settings,
     node_type_class_registry,
@@ -510,6 +511,68 @@ class TopologyService extends TopologyCoreEntity {
     }
 }
 
+class TopologyUnknownHost extends TopologyHost {
+    constructor(world: NodevisWorld, node: NodevisNode) {
+        super(world, node);
+        this._provides_external_quickinfo_data = false;
+    }
+
+    override class_name(): string {
+        return "topology_unknown_host";
+    }
+
+    override _get_basic_quickinfo(): BasicQuickinfo[] {
+        return [
+            {
+                name: texts.get("unknown_host"),
+                value: "",
+            },
+            {
+                name: texts.get("host"),
+                value: this.node.data.type_specific.core.hostname,
+            },
+        ];
+    }
+
+    override render_object() {
+        super.render_object();
+        render_unknown_icon(this.selection());
+    }
+}
+
+class TopologyUnknownService extends TopologyService {
+    constructor(world: NodevisWorld, node: NodevisNode) {
+        super(world, node);
+        this._provides_external_quickinfo_data = false;
+    }
+
+    override class_name(): string {
+        return "topology_unknown_service";
+    }
+
+    override _get_basic_quickinfo(): BasicQuickinfo[] {
+        return [
+            {
+                name: texts.get("unknown_service"),
+                value: "",
+            },
+            {
+                name: texts.get("host"),
+                value: this.node.data.type_specific.core.hostname,
+            },
+            {
+                name: texts.get("service"),
+                value: this.node.data.type_specific.core.service,
+            },
+        ];
+    }
+
+    override render_object() {
+        super.render_object();
+        render_unknown_icon(this.selection(), 18);
+    }
+}
+
 class TopologyUnknown extends TopologyNode {
     override class_name(): string {
         return "topology_unknown";
@@ -517,21 +580,27 @@ class TopologyUnknown extends TopologyNode {
 
     override render_object() {
         super.render_object();
-        this.selection()
-            .selectAll("image.unknown")
-            .data([this.id()])
-            .enter()
-            .insert("svg:image", "image")
-            .classed("unknown", true)
-            .attr("xlink:href", "themes/facelift/images/icon_alert_unreach.png")
-            .attr("x", -10)
-            .attr("y", -10)
-            .attr("width", 20)
-            .attr("height", 20);
+        render_unknown_icon(this.selection());
     }
 }
 
+function render_unknown_icon(selection: d3SelectionG, size = 30) {
+    selection
+        .selectAll("image.unknown")
+        .data([null])
+        .enter()
+        .insert("svg:image", "image")
+        .classed("unknown", true)
+        .attr("xlink:href", "themes/facelift/images/icon_alert_unreach.png")
+        .attr("x", -size / 2)
+        .attr("y", -size / 2)
+        .attr("width", size)
+        .attr("height", size);
+}
+
 node_type_class_registry.register(TopologyUnknown);
+node_type_class_registry.register(TopologyUnknownHost);
+node_type_class_registry.register(TopologyUnknownService);
 node_type_class_registry.register(TopologyHost);
 node_type_class_registry.register(TopologyService);
 

@@ -27,6 +27,7 @@ Example:
 """
 from collections.abc import Generator as _Generator
 from collections.abc import Iterable as _Iterable
+from typing import List as _List
 
 from ._checking_classes import CheckResult, DiscoveryResult
 from ._checking_classes import HostLabel as _HostLabel
@@ -34,8 +35,11 @@ from ._inventory_classes import Attributes as _Attributes
 from ._inventory_classes import TableRow as _TableRow
 
 InventoryResult = _Iterable[_Attributes | _TableRow]
-StringTable = list[list[str]]
-StringByteTable = list[list[str | list[int]]]
+
+# unfortunately we really need 'List' here, not 'list'.
+StringTable = _List[_List[str]]
+StringByteTable = _List[_List[str | _List[int]]]
+
 HostLabelGenerator = _Generator[_HostLabel, None, None]
 
 

@@ -102,14 +102,7 @@ from ..v1 import (
 )
 from ..v1._detection import SNMPDetectSpecification  # sorry
 from ..v1.register import RuleSetType
-from ..v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    HostLabelGenerator,
-    InventoryResult,
-    StringByteTable,
-    StringTable,
-)
+from ..v1.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator, InventoryResult
 from . import clusterize, render
 from ._check_levels import check_levels, FixedLevelsT, LevelsT, NoLevelsT, PredictiveLevelsT
 from ._plugins import (
@@ -120,6 +113,10 @@ from ._plugins import (
     SimpleSNMPSection,
     SNMPSection,
 )
+
+StringTable = list[list[str]]
+StringByteTable = list[list[str | list[int]]]
+
 
 __all__ = [
     "entry_point_prefixes",

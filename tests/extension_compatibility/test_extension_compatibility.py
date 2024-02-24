@@ -24,7 +24,7 @@ from cmk.utils.version import __version__, parse_check_mk_version
 NUMBER_OF_EXTENSIONS_TO_COVER = 150
 
 
-CURRENTLY_UNDER_TEST = (
+CURRENTLY_UNDER_TEST = {
     "https://exchange.checkmk.com/api/packages/download/101/dovereplstat-4.3.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/103/dynamicscrm-0.4.mkp",
     "https://exchange.checkmk.com/api/packages/download/104/ecallch-1.1.mkp",
@@ -36,6 +36,7 @@ CURRENTLY_UNDER_TEST = (
     "https://exchange.checkmk.com/api/packages/download/133/freebox-v6-2.3.0.mkp",
     "https://exchange.checkmk.com/api/packages/download/134/gamatronic-1.0.mkp",
     "https://exchange.checkmk.com/api/packages/download/142/huawei-2.3.mkp",
+    "https://exchange.checkmk.com/api/packages/download/143/hwg_wld-1.0.mkp",
     "https://exchange.checkmk.com/api/packages/download/145/icpraid-5.2.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/146/imap-3.0.0.mkp",
     "https://exchange.checkmk.com/api/packages/download/14/apt-3.4.4.mkp",
@@ -180,9 +181,12 @@ CURRENTLY_UNDER_TEST = (
     "https://exchange.checkmk.com/api/packages/download/77/cpufreq-2.3.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/89/dell_omsa-3.0.mkp",
     "https://exchange.checkmk.com/api/packages/download/91/dell_sc-3.2.mkp",
+}
+
+UNTESTABLE = {
     # This one can't be installed anymore. It tries to deploy a part called 'pnp-rraconf'
-    # "https://exchange.checkmk.com/api/packages/download/97/dir_size-1.1.1.mkp",
-)
+    "https://exchange.checkmk.com/api/packages/download/97/dir_size-1.1.1.mkp",
+}
 
 
 class _ExtensionName(str):
@@ -339,7 +343,7 @@ def test_package_list_up_to_date() -> None:
 
     must_haves = {e.latest_version.link for e in extensions[:NUMBER_OF_EXTENSIONS_TO_COVER]}
 
-    missing_test_cases = must_haves - set(CURRENTLY_UNDER_TEST)
+    missing_test_cases = must_haves - CURRENTLY_UNDER_TEST - UNTESTABLE
     assert not missing_test_cases
 
 

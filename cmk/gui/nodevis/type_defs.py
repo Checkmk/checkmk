@@ -35,6 +35,8 @@ class NodeType(Enum):
     TOPOLOGY = "topology"
     TOPOLOGY_HOST = "topology_host"
     TOPOLOGY_SERVICE = "topology_service"
+    TOPOLOGY_UNKNOWN_HOST = "topology_unknown_host"
+    TOPOLOGY_UNKNOWN_SERVICE = "topology_unknown_service"
     TOPOLOGY_UNKNOWN = "topology_unknown"
 
 

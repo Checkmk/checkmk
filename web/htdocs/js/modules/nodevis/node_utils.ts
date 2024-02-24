@@ -518,10 +518,10 @@ export class AbstractGUINode implements TypeWithName {
                     .classed("state_circle", true)
             );
 
-        const icon = ((this.node.data.type_specific || {}).core || {}).icon;
+        const icon_url = this._get_icon_url();
         this.selection()
             .selectAll<SVGImageElement, string>("g image.main_icon")
-            .data(icon ? [icon] : [], d => d)
+            .data(icon_url ? [icon_url] : [], d => d)
             .join(enter =>
                 enter
                     .append("g")
@@ -532,6 +532,20 @@ export class AbstractGUINode implements TypeWithName {
             .attr("xlink:href", d => d)
             .attr("width", 24)
             .attr("height", 24);
+    }
+
+    _get_icon_url(): string | null {
+        // Return the URL of the icon to be used for the node
+        // Explicit images are preferred over the default ones from the core
+        const type_specific = this.node.data.type_specific;
+        if (!type_specific) return "";
+
+        const explicit_icon = type_specific.node_images?.icon;
+        if (explicit_icon) return explicit_icon;
+
+        const core_icon = type_specific.core?.icon;
+        if (core_icon) return core_icon;
+        return null;
     }
 
     update_position(enforce_transition = false) {

@@ -745,11 +745,15 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             if "state" in core_values and "service" not in core_values:
                 core_values["state"] = self._map_host_state(node, extra_info)
 
-            if icon := node.metadata.get("icon"):
-                core_values["icon"] = theme.detect_icon_path(icon, prefix="")
-            elif icon := extra_info.get("icon"):
+            if icon := extra_info.get("icon"):
                 core_values["icon"] = icon
             result["core"] = core_values
+
+        image_metadata = node.metadata.get("images", {})
+        for icon_type in ("icon", "emblem"):
+            if icon := image_metadata.get(icon_type):
+                result.setdefault("node_images", {})[icon_type] = theme.detect_icon_path(icon, "")
+
         if custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
             node.id
         ):

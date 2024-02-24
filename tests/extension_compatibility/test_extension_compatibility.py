@@ -232,13 +232,6 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
             " cannot import name 'get_rate' from 'cmk.base.check_api'",
         }
     ),
-    "yum-2.4.4.mkp": _ImportErrors(  # FIXME
-        base_errors={
-            "Error in agent based plugin yum:"
-            " expected parse function argument annotation 'StringTable',"
-            " got typing.List[typing.List[str]]\n",
-        },
-    ),
 }
 
 

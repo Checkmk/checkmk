@@ -6,7 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import CheckResult, exists, OIDBytes, StringByteTable
+from cmk.agent_based.v1.type_defs import StringByteTable
+from cmk.agent_based.v2 import CheckResult, exists, OIDBytes
 
 from . import interfaces
 

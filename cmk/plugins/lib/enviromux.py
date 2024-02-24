@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.agent_based.v1 import check_levels
-from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Service, startswith, StringTable
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Service, startswith
 
 from .humidity import check_humidity
 from .temperature import check_temperature, TempParamType

@@ -130,7 +130,8 @@ def _check_levels(
 
         case "predictive", (metric, prediction, p_levels):
             assert isinstance(metric, str)
-            assert prediction is None or isinstance(prediction, float)
+            # we expect `float`, but since typing does not prevent us from passing `int`, be nice
+            assert prediction is None or isinstance(prediction, (float, int))
             assert p_levels is None or isinstance(p_levels, tuple)
             return _check_predictive_levels(
                 value, metric, prediction, p_levels, levels_direction, render_func

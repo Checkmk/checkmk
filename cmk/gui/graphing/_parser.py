@@ -24,48 +24,22 @@ class Formatter(Protocol):
         ...
 
 
+def _apply_precision(
+    value: int | float, precision: metrics.AutoPrecision | metrics.StrictPrecision
+) -> float:
+    value_floor = math.floor(value)
+    if value == value_floor:
+        return value
+    fractional_part = value - value_floor
+    digits = precision.digits
+    if isinstance(precision, metrics.AutoPrecision):
+        if exponent := abs(math.ceil(math.log(fractional_part, 10))):
+            digits = max(exponent + 1, precision.digits)
+    return value_floor + round(fractional_part, digits)
+
+
 def _sanitize(value: str) -> str:
     return value.rstrip("0").rstrip(".") if "." in value else value
-
-
-def _apply_small_auto_precision(value: int | float, digits: int) -> str:
-    if exponent := abs(math.ceil(math.log(value, 10))):
-        digits = max(exponent + 1, digits)
-    return f"{value:.{digits}f}"
-
-
-@dataclass(frozen=True)
-class CoefficientFormatter:
-    precision: metrics.AutoPrecision | metrics.StrictPrecision
-
-    def format_zero_or_one(self, value: int | float) -> str:
-        return str(value)
-
-    def format_small_number(self, value: int | float) -> str:
-        match self.precision:
-            case metrics.AutoPrecision():
-                value_with_precision = _apply_small_auto_precision(value, self.precision.digits)
-            case metrics.StrictPrecision():
-                value_with_precision = f"{value:.{self.precision.digits}f}"
-        return _sanitize(value_with_precision)
-
-    def format_large_number(self, value: int | float) -> str:
-        match self.precision:
-            case metrics.AutoPrecision():
-                value_floor = math.floor(value)
-                value_with_precision = str(
-                    value
-                    if value == value_floor
-                    else (
-                        value_floor
-                        + float(
-                            _apply_small_auto_precision(value - value_floor, self.precision.digits)
-                        )
-                    )
-                )
-            case metrics.StrictPrecision():
-                value_with_precision = f"{value:.{self.precision.digits}f}"
-        return _sanitize(value_with_precision)
 
 
 @dataclass(frozen=True)
@@ -83,7 +57,7 @@ class NotationFormatter:
         preformat_large_number: Callable[[int | float, str], Preformatted],
     ) -> None:
         self.symbol: Final = symbol
-        self.coefficient_formatter: Final = CoefficientFormatter(precision)
+        self.precision: Final = precision
         self.preformat_small_number: Final = preformat_small_number
         self.preformat_large_number: Final = preformat_large_number
 
@@ -91,12 +65,14 @@ class NotationFormatter:
         return f"{value} {self.symbol}"
 
     def format_small_number(self, value: int | float) -> str:
-        formatted = self.preformat_small_number(value, self.symbol)
-        return f"{_render(formatted.value, self.coefficient_formatter)}{formatted.suffix}"
+        preformatted = self.preformat_small_number(value, self.symbol)
+        value_with_precision = _apply_precision(preformatted.value, self.precision)
+        return f"{_sanitize(str(value_with_precision))}{preformatted.suffix}"
 
     def format_large_number(self, value: int | float) -> str:
-        formatted = self.preformat_large_number(value, self.symbol)
-        return f"{_render(formatted.value, self.coefficient_formatter)}{formatted.suffix}"
+        preformatted = self.preformat_large_number(value, self.symbol)
+        value_with_precision = _apply_precision(preformatted.value, self.precision)
+        return f"{_sanitize(str(value_with_precision))}{preformatted.suffix}"
 
 
 def _preformat_number(value: int | float, symbol: str) -> Preformatted:
@@ -313,7 +289,7 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
             symbol=unit.notation.symbol,
             render=lambda v: _render(
                 v,
-                formatter=NotationFormatter(
+                NotationFormatter(
                     unit.notation.symbol,
                     unit.precision,
                     preformat_small_number,

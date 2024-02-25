@@ -287,6 +287,25 @@ interface Formatter {
     format_large_number(value: number): string;
 }
 
+function apply_precision(
+    value: number,
+    precision: AutoPrecision | StrictPrecision
+): number {
+    const value_floor = Math.floor(value);
+    if (value == value_floor) {
+        return value;
+    }
+    const fractional_part = value - value_floor;
+    let digits = precision.digits;
+    if (precision instanceof AutoPrecision) {
+        const exponent = Math.abs(Math.ceil(Math.log10(fractional_part)));
+        if (exponent > 0) {
+            digits = Math.max(exponent + 1, precision.digits);
+        }
+    }
+    return value_floor + parseFloat(fractional_part.toPrecision(digits));
+}
+
 function rstrip(value: string, chars: string): string {
     let end = value.length - 1;
     while (chars.indexOf(value[end]) >= 0) {
@@ -300,77 +319,12 @@ function sanitize(value: string): string {
     return rstrip(value, ".");
 }
 
-function apply_small_auto_precision(value: number, digits: number): string {
-    const exponent = Math.abs(Math.ceil(Math.log10(value)));
-    if (exponent > 0) {
-        digits = Math.max(exponent + 1, digits);
-    }
-    return value.toPrecision(digits);
-}
-
-class CoefficientFormatter implements Formatter {
-    precision: AutoPrecision | StrictPrecision;
-
-    constructor(precision: AutoPrecision | StrictPrecision) {
-        this.precision = precision;
-    }
-
-    format_zero_or_one(value: number): string {
-        return String(value);
-    }
-
-    format_small_number(value: number): string {
-        let value_with_precision: string;
-        switch (this.precision.constructor) {
-            case AutoPrecision:
-                value_with_precision = apply_small_auto_precision(
-                    value,
-                    this.precision.digits
-                );
-                break;
-            case StrictPrecision:
-                value_with_precision = value.toPrecision(this.precision.digits);
-                break;
-            default:
-                throw new Error();
-        }
-        return sanitize(value_with_precision);
-    }
-
-    format_large_number(value: number): string {
-        let value_with_precision: string;
-        switch (this.precision.constructor) {
-            case AutoPrecision: {
-                const value_floor = Math.floor(value);
-                if (value == value_floor) {
-                    value_with_precision = String(value);
-                } else {
-                    value_with_precision = String(
-                        value_floor +
-                            apply_small_auto_precision(
-                                value - value_floor,
-                                this.precision.digits
-                            )
-                    );
-                }
-                break;
-            }
-            case StrictPrecision:
-                value_with_precision = value.toPrecision(this.precision.digits);
-                break;
-            default:
-                throw new Error();
-        }
-        return sanitize(value_with_precision);
-    }
-}
-
 class Preformatted {
-    coefficient: number;
+    value: number;
     suffix: string;
 
-    constructor(coefficient: number, suffix: string) {
-        this.coefficient = coefficient;
+    constructor(value: number, suffix: string) {
+        this.value = value;
         this.suffix = suffix;
     }
 }
@@ -381,9 +335,9 @@ interface preformat_number {
 
 export class NotationFormatter {
     symbol: string;
+    precision: AutoPrecision | StrictPrecision;
     preformat_small_number: preformat_number;
     preformat_large_number: preformat_number;
-    coefficient_formatter: CoefficientFormatter;
 
     constructor(
         symbol: string,
@@ -392,7 +346,7 @@ export class NotationFormatter {
         preformat_large_number: preformat_number
     ) {
         this.symbol = symbol;
-        this.coefficient_formatter = new CoefficientFormatter(precision);
+        this.precision = precision;
         this.preformat_small_number = preformat_small_number;
         this.preformat_large_number = preformat_large_number;
     }
@@ -402,19 +356,21 @@ export class NotationFormatter {
     }
 
     format_small_number(value: number): string {
-        const formatted = this.preformat_small_number(value, this.symbol);
-        return (
-            render(formatted.coefficient, this.coefficient_formatter) +
-            formatted.suffix
+        const preformatted = this.preformat_small_number(value, this.symbol);
+        const value_with_precision = apply_precision(
+            preformatted.value,
+            this.precision
         );
+        return sanitize(String(value_with_precision)) + preformatted.suffix;
     }
 
     format_large_number(value: number): string {
-        const formatted = this.preformat_large_number(value, this.symbol);
-        return (
-            render(formatted.coefficient, this.coefficient_formatter) +
-            formatted.suffix
+        const preformatted = this.preformat_large_number(value, this.symbol);
+        const value_with_precision = apply_precision(
+            preformatted.value,
+            this.precision
         );
+        return sanitize(String(value_with_precision)) + preformatted.suffix;
     }
 }
 

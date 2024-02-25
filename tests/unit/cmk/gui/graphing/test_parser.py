@@ -186,13 +186,13 @@ def test_parse_or_add_unit(
         pytest.param(
             metrics.StandardScientificNotation("unit"),
             0.00001,
-            "1.0e-5 unit",
+            "1e-5 unit",
             id="standard-scientific-small-power-of-ten",
         ),
         pytest.param(
             metrics.StandardScientificNotation("unit"),
             100000.0,
-            "1.0e+5 unit",
+            "1e+5 unit",
             id="standard-scientific-large-power-of-ten",
         ),
         pytest.param(

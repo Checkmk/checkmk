@@ -260,163 +260,127 @@ def test_render_unit_notation(
         #
         pytest.param(
             metrics.Unit(metrics.DecimalNotation("unit"), metrics.AutoPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.AutoPrecision(2),
-        cmk.number_format.preformat_number,
-        cmk.number_format.preformat_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.AutoPrecision(2),
+    cmk.number_format.preformat_number,
+    cmk.number_format.preformat_number,
+).render(v)""",
             id="decimal-auto",
         ),
         pytest.param(
             metrics.Unit(metrics.DecimalNotation("unit"), metrics.StrictPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.StrictPrecision(2),
-        cmk.number_format.preformat_number,
-        cmk.number_format.preformat_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.StrictPrecision(2),
+    cmk.number_format.preformat_number,
+    cmk.number_format.preformat_number,
+).render(v)""",
             id="decimal-strict",
         ),
         #
         pytest.param(
             metrics.Unit(metrics.SINotation("unit"), metrics.AutoPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.AutoPrecision(2),
-        cmk.number_format.si_preformat_small_number,
-        cmk.number_format.si_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.AutoPrecision(2),
+    cmk.number_format.si_preformat_small_number,
+    cmk.number_format.si_preformat_large_number,
+).render(v)""",
             id="si-auto",
         ),
         pytest.param(
             metrics.Unit(metrics.SINotation("unit"), metrics.StrictPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.StrictPrecision(2),
-        cmk.number_format.si_preformat_small_number,
-        cmk.number_format.si_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.StrictPrecision(2),
+    cmk.number_format.si_preformat_small_number,
+    cmk.number_format.si_preformat_large_number,
+).render(v)""",
             id="si-strict",
         ),
         #
         pytest.param(
             metrics.Unit(metrics.IECNotation("unit"), metrics.AutoPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.AutoPrecision(2),
-        cmk.number_format.preformat_number,
-        cmk.number_format.iec_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.AutoPrecision(2),
+    cmk.number_format.preformat_number,
+    cmk.number_format.iec_preformat_large_number,
+).render(v)""",
             id="iec-auto",
         ),
         pytest.param(
             metrics.Unit(metrics.IECNotation("unit"), metrics.StrictPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.StrictPrecision(2),
-        cmk.number_format.preformat_number,
-        cmk.number_format.iec_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.StrictPrecision(2),
+    cmk.number_format.preformat_number,
+    cmk.number_format.iec_preformat_large_number,
+).render(v)""",
             id="iec-strict",
         ),
         #
         pytest.param(
             metrics.Unit(metrics.StandardScientificNotation("unit"), metrics.AutoPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.AutoPrecision(2),
-        cmk.number_format.standard_scientific_preformat_small_number,
-        cmk.number_format.standard_scientific_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.AutoPrecision(2),
+    cmk.number_format.standard_scientific_preformat_small_number,
+    cmk.number_format.standard_scientific_preformat_large_number,
+).render(v)""",
             id="standard-scientific-auto",
         ),
         pytest.param(
             metrics.Unit(metrics.StandardScientificNotation("unit"), metrics.StrictPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.StrictPrecision(2),
-        cmk.number_format.standard_scientific_preformat_small_number,
-        cmk.number_format.standard_scientific_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.StrictPrecision(2),
+    cmk.number_format.standard_scientific_preformat_small_number,
+    cmk.number_format.standard_scientific_preformat_large_number,
+).render(v)""",
             id="standard-scientific-strict",
         ),
         #
         pytest.param(
             metrics.Unit(metrics.EngineeringScientificNotation("unit"), metrics.AutoPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.AutoPrecision(2),
-        cmk.number_format.engineering_scientific_preformat_small_number,
-        cmk.number_format.engineering_scientific_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.AutoPrecision(2),
+    cmk.number_format.engineering_scientific_preformat_small_number,
+    cmk.number_format.engineering_scientific_preformat_large_number,
+).render(v)""",
             id="engineering-scientific-auto",
         ),
         pytest.param(
             metrics.Unit(metrics.EngineeringScientificNotation("unit"), metrics.StrictPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "unit",
-        new cmk.number_format.StrictPrecision(2),
-        cmk.number_format.engineering_scientific_preformat_small_number,
-        cmk.number_format.engineering_scientific_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "unit",
+    new cmk.number_format.StrictPrecision(2),
+    cmk.number_format.engineering_scientific_preformat_small_number,
+    cmk.number_format.engineering_scientific_preformat_large_number,
+).render(v)""",
             id="engineering-scientific-strict",
         ),
         #
         pytest.param(
             metrics.Unit(metrics.TimeNotation(), metrics.AutoPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "s",
-        new cmk.number_format.AutoPrecision(2),
-        cmk.number_format.time_preformat_small_number,
-        cmk.number_format.time_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "s",
+    new cmk.number_format.AutoPrecision(2),
+    cmk.number_format.time_preformat_small_number,
+    cmk.number_format.time_preformat_large_number,
+).render(v)""",
             id="time-auto",
         ),
         pytest.param(
             metrics.Unit(metrics.TimeNotation(), metrics.StrictPrecision(2)),
-            """v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "s",
-        new cmk.number_format.StrictPrecision(2),
-        cmk.number_format.time_preformat_small_number,
-        cmk.number_format.time_preformat_large_number,
-    )
-)""",
+            """v => new cmk.number_format.NotationFormatter(
+    "s",
+    new cmk.number_format.StrictPrecision(2),
+    cmk.number_format.time_preformat_small_number,
+    cmk.number_format.time_preformat_large_number,
+).render(v)""",
             id="time-strict",
         ),
     ],

@@ -652,6 +652,48 @@ class NetworkLink extends AbstractLink {
         });
     }
 
+    _set_topology_classes() {
+        const data: [TranslationKey, boolean][] = this._link_data.config
+            .topology_classes as unknown as [TranslationKey, boolean][];
+        this.selection().selectAll("title.topology_info").remove();
+        data.forEach(entry => {
+            this._root_selection!.classed(entry[0], entry[1]);
+            if (entry[1]) {
+                this.selection()
+                    .selectAll("title.topology_info")
+                    .data([entry[0]])
+                    .join("title")
+                    .classed("topology_info", true)
+                    .text(d => texts.get(d));
+            }
+        });
+    }
+
+    _set_link_class() {
+        const core_source = get_core_info(this._link_data.source);
+        const core_target = get_core_info(this._link_data.target);
+        if (!core_source || !core_target) return;
+        this._root_selection!.classed(
+            "local_link",
+            core_source.hostname == core_target.hostname
+        );
+        this._root_selection!.classed(
+            "foreign_link",
+            core_source.hostname != core_target.hostname
+        );
+    }
+
+    _adjust_line_style() {
+        const line_config = this._link_data.config.line_config;
+        if (!line_config) return;
+        if (line_config.thickness) {
+            this.selection().style("stroke-width", line_config.thickness);
+        }
+        if (line_config.color) {
+            this.selection().style("stroke", line_config.color);
+        }
+    }
+
     override render_into(selection: d3SelectionG) {
         super.render_into(selection, true);
         this.selection().each((_d, idx, nodes) => {
@@ -680,34 +722,9 @@ class NetworkLink extends AbstractLink {
                     );
                 });
         });
-        if (this._link_data.config.topology_classes) {
-            const data: [TranslationKey, boolean][] = this._link_data.config
-                .topology_classes as unknown as [TranslationKey, boolean][];
-            this.selection().selectAll("title.topology_info").remove();
-            data.forEach(entry => {
-                this._root_selection!.classed(entry[0], entry[1]);
-                if (entry[1]) {
-                    this.selection()
-                        .selectAll("title.topology_info")
-                        .data([entry[0]])
-                        .join("title")
-                        .classed("topology_info", true)
-                        .text(d => texts.get(d));
-                }
-            });
-        }
-
-        const core_source = get_core_info(this._link_data.source);
-        const core_target = get_core_info(this._link_data.target);
-        if (!core_source || !core_target) return;
-        this._root_selection!.classed(
-            "local_link",
-            core_source.hostname == core_target.hostname
-        );
-        this._root_selection!.classed(
-            "foreign_link",
-            core_source.hostname != core_target.hostname
-        );
+        this._set_topology_classes();
+        this._set_link_class();
+        this._adjust_line_style();
     }
 
     _show_link_info(event: {layerX: number; layerY: number}, info: string[]) {

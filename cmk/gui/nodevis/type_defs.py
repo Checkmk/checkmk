@@ -276,11 +276,14 @@ TopologyNodes = dict[str, TopologyNode]
 class TopologyLink:
     source: str
     target: str
-    config: dict[str, Any]
+    config: dict[str, Any] = field(default_factory=dict)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         tokens = tuple(sorted([self.source, self.target]))
         return ("%s_%s" % tokens).__hash__()
+
+    def __eq__(self, other: object) -> bool:
+        return hash(self) == hash(other)
 
 
 @dataclass(kw_only=True)

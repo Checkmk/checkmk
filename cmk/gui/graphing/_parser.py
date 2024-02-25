@@ -5,41 +5,12 @@
 
 import math
 from dataclasses import dataclass
-from typing import Callable, Final, Protocol
+from typing import Callable, Final
 
 from cmk.graphing.v1 import metrics
 
 from ._loader import units_from_api
 from ._type_defs import UnitInfo
-
-
-class Formatter(Protocol):
-    def format_zero_or_one(self, value: int | float) -> str:
-        ...
-
-    def format_small_number(self, value: int | float) -> str:
-        ...
-
-    def format_large_number(self, value: int | float) -> str:
-        ...
-
-
-def _apply_precision(
-    value: int | float, precision: metrics.AutoPrecision | metrics.StrictPrecision
-) -> float:
-    value_floor = math.floor(value)
-    if value == value_floor:
-        return value
-    fractional_part = value - value_floor
-    digits = precision.digits
-    if isinstance(precision, metrics.AutoPrecision):
-        if exponent := abs(math.ceil(math.log(fractional_part, 10))):
-            digits = max(exponent + 1, precision.digits)
-    return value_floor + round(fractional_part, digits)
-
-
-def _sanitize(value: str) -> str:
-    return value.rstrip("0").rstrip(".") if "." in value else value
 
 
 @dataclass(frozen=True)
@@ -48,30 +19,38 @@ class Preformatted:
     suffix: str
 
 
+def _sanitize(value: str) -> str:
+    return value.rstrip("0").rstrip(".") if "." in value else value
+
+
+@dataclass(frozen=True)
 class NotationFormatter:
-    def __init__(
-        self,
-        symbol: str,
-        precision: metrics.AutoPrecision | metrics.StrictPrecision,
-        preformat_small_number: Callable[[int | float, str], Preformatted],
-        preformat_large_number: Callable[[int | float, str], Preformatted],
-    ) -> None:
-        self.symbol: Final = symbol
-        self.precision: Final = precision
-        self.preformat_small_number: Final = preformat_small_number
-        self.preformat_large_number: Final = preformat_large_number
+    symbol: str
+    precision: metrics.AutoPrecision | metrics.StrictPrecision
+    preformat_small_number: Callable[[int | float, str], Preformatted]
+    preformat_large_number: Callable[[int | float, str], Preformatted]
 
-    def format_zero_or_one(self, value: int | float) -> str:
-        return f"{value} {self.symbol}"
+    def _apply_precision(self, value: int | float) -> float:
+        value_floor = math.floor(value)
+        if value == value_floor:
+            return value
+        fractional_part = value - value_floor
+        digits = self.precision.digits
+        if isinstance(self.precision, metrics.AutoPrecision):
+            if exponent := abs(math.ceil(math.log(fractional_part, 10))):
+                digits = max(exponent + 1, self.precision.digits)
+        return value_floor + round(fractional_part, digits)
 
-    def format_small_number(self, value: int | float) -> str:
-        preformatted = self.preformat_small_number(value, self.symbol)
-        value_with_precision = _apply_precision(preformatted.value, self.precision)
-        return f"{_sanitize(str(value_with_precision))}{preformatted.suffix}"
-
-    def format_large_number(self, value: int | float) -> str:
-        preformatted = self.preformat_large_number(value, self.symbol)
-        value_with_precision = _apply_precision(preformatted.value, self.precision)
+    def render(self, value: int | float) -> str:
+        if value < 0:
+            return f"-{self.render(abs(value))}"
+        if value in (0, 1):
+            return f"{value} {self.symbol}".strip()
+        if value < 1:
+            preformatted = self.preformat_small_number(value, self.symbol)
+        else:  # value > 1
+            preformatted = self.preformat_large_number(value, self.symbol)
+        value_with_precision = self._apply_precision(preformatted.value)
         return f"{_sanitize(str(value_with_precision))}{preformatted.suffix}"
 
 
@@ -230,17 +209,6 @@ def _time_preformat_large_number(value: int | float, symbol: str) -> Preformatte
     return Preformatted(value / factor, f" {symbol}")
 
 
-def _render(value: int | float, formatter: Formatter) -> str:
-    if value < 0:
-        return f"-{_render(abs(value), formatter)}"
-    if value in (0, 1):
-        return formatter.format_zero_or_one(value).strip()
-    if value < 1:
-        return formatter.format_small_number(value).strip()
-    # value > 1
-    return formatter.format_large_number(value).strip()
-
-
 def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
     if (
         unit_id := (
@@ -287,24 +255,18 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
             id=unit_id,
             title=unit.notation.symbol,
             symbol=unit.notation.symbol,
-            render=lambda v: _render(
-                v,
-                NotationFormatter(
-                    unit.notation.symbol,
-                    unit.precision,
-                    preformat_small_number,
-                    preformat_large_number,
-                ),
-            ),
-            js_render=f"""v => cmk.number_format.render(
-    v,
-    new cmk.number_format.NotationFormatter(
-        "{unit.notation.symbol}",
-        new cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
-        cmk.number_format.{js_preformat_small_number},
-        cmk.number_format.{js_preformat_large_number},
-    )
-)""",
+            render=lambda v: NotationFormatter(
+                unit.notation.symbol,
+                unit.precision,
+                preformat_small_number,
+                preformat_large_number,
+            ).render(v),
+            js_render=f"""v => new cmk.number_format.NotationFormatter(
+    "{unit.notation.symbol}",
+    new cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
+    cmk.number_format.{js_preformat_small_number},
+    cmk.number_format.{js_preformat_large_number},
+).render(v)""",
         )
     )
 

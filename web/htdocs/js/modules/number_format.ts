@@ -281,31 +281,6 @@ export class StrictPrecision {
     }
 }
 
-interface Formatter {
-    format_zero_or_one(value: number): string;
-    format_small_number(value: number): string;
-    format_large_number(value: number): string;
-}
-
-function apply_precision(
-    value: number,
-    precision: AutoPrecision | StrictPrecision
-): number {
-    const value_floor = Math.floor(value);
-    if (value == value_floor) {
-        return value;
-    }
-    const fractional_part = value - value_floor;
-    let digits = precision.digits;
-    if (precision instanceof AutoPrecision) {
-        const exponent = Math.abs(Math.ceil(Math.log10(fractional_part)));
-        if (exponent > 0) {
-            digits = Math.max(exponent + 1, precision.digits);
-        }
-    }
-    return value_floor + parseFloat(fractional_part.toPrecision(digits));
-}
-
 function rstrip(value: string, chars: string): string {
     let end = value.length - 1;
     while (chars.indexOf(value[end]) >= 0) {
@@ -351,25 +326,37 @@ export class NotationFormatter {
         this.preformat_large_number = preformat_large_number;
     }
 
-    format_zero_or_one(value: number): string {
-        return String(value) + " " + this.symbol;
+    apply_precision(value: number): number {
+        const value_floor = Math.floor(value);
+        if (value == value_floor) {
+            return value;
+        }
+        const fractional_part = value - value_floor;
+        let digits = this.precision.digits;
+        if (this.precision instanceof AutoPrecision) {
+            const exponent = Math.abs(Math.ceil(Math.log10(fractional_part)));
+            if (exponent > 0) {
+                digits = Math.max(exponent + 1, this.precision.digits);
+            }
+        }
+        return value_floor + parseFloat(fractional_part.toPrecision(digits));
     }
 
-    format_small_number(value: number): string {
-        const preformatted = this.preformat_small_number(value, this.symbol);
-        const value_with_precision = apply_precision(
-            preformatted.value,
-            this.precision
-        );
-        return sanitize(String(value_with_precision)) + preformatted.suffix;
-    }
-
-    format_large_number(value: number): string {
-        const preformatted = this.preformat_large_number(value, this.symbol);
-        const value_with_precision = apply_precision(
-            preformatted.value,
-            this.precision
-        );
+    render(value: number): string {
+        if (value < 0) {
+            return "-" + this.render(Math.abs(value));
+        }
+        if ([0, 1].includes(value)) {
+            return (String(value) + " " + this.symbol).trim();
+        }
+        let preformatted;
+        if (value < 1) {
+            preformatted = this.preformat_small_number(value, this.symbol);
+        } else {
+            // value > 1
+            preformatted = this.preformat_large_number(value, this.symbol);
+        }
+        const value_with_precision = this.apply_precision(preformatted.value);
         return sanitize(String(value_with_precision)) + preformatted.suffix;
     }
 }
@@ -578,18 +565,4 @@ export function time_preformat_large_number(
         symbol = "s";
     }
     return new Preformatted(value / factor, " " + symbol);
-}
-
-export function render(value: number, formatter: Formatter): string {
-    if (value < 0) {
-        return "-" + render(Math.abs(value), formatter);
-    }
-    if ([0, 1].includes(value)) {
-        return formatter.format_zero_or_one(value).trim();
-    }
-    if (value < 1) {
-        return formatter.format_small_number(value).trim();
-    }
-    // value > 1
-    return formatter.format_large_number(value).trim();
 }

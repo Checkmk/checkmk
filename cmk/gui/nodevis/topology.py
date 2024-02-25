@@ -382,6 +382,7 @@ class ABCTopologyNodeDataGenerator:
         data_folder: Path,
         add_data_root_node: bool = True,
     ):
+        self._link_metadata: dict[tuple[str, str], Any] = {}
         self._topology_configuration = topology_configuration
         self._root_hostnames_from_core = root_hostnames_from_core
         self._data_folder = data_folder
@@ -394,6 +395,10 @@ class ABCTopologyNodeDataGenerator:
     @abc.abstractmethod
     def unique_id(self) -> str:
         pass
+
+    @property
+    def link_metadata(self) -> dict[tuple[str, str], Any]:
+        return self._link_metadata
 
     @abc.abstractmethod
     def name(self) -> str:
@@ -771,6 +776,11 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
         }
         return state_map.get(extra_info["state"], 3)
 
+    def _store_link_metadata(
+        self, source_id: str, target_id: str, metadata: dict[str, Any]
+    ) -> None:
+        self._link_metadata.setdefault((source_id, target_id), {}).update(metadata)
+
     def _fetch_data(self, node_ids: set[str]) -> TopologyNodes:
         response: TopologyNodes = {}
         for node_id in node_ids:
@@ -780,13 +790,14 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
                     name=network_object.get("name", node_id),
                     metadata=network_object.get("metadata", {}),
                 )
-                for (source, target), _metadata in self._network_data.connections_by_id.get(
+                for (source, target), metadata in self._network_data.connections_by_id.get(
                     node_id, []
                 ):
                     if source == node_id:
                         topology_node.outgoing.add(target)
                     else:
                         topology_node.incoming.add(source)
+                    self._store_link_metadata(source, target, metadata)
                 response[node_id] = topology_node
         return response
 
@@ -1267,50 +1278,78 @@ def _compute_growth_settings(
     )
 
 
-def _compute_mesh_links(merged_results: dict[str, TopologyNode]) -> list[TopologyLink]:
-    type_to_base_type = {
-        NodeType.TOPOLOGY_UNKNOWN_HOST: NodeType.TOPOLOGY_HOST,
-        NodeType.TOPOLOGY_UNKNOWN_SERVICE: NodeType.TOPOLOGY_SERVICE,
-        NodeType.TOPOLOGY_UNKNOWN: NodeType.TOPOLOGY_HOST,
-    }
+_type_to_base_type = {
+    NodeType.TOPOLOGY_UNKNOWN_HOST: NodeType.TOPOLOGY_HOST,
+    NodeType.TOPOLOGY_UNKNOWN_SERVICE: NodeType.TOPOLOGY_SERVICE,
+    NodeType.TOPOLOGY_UNKNOWN: NodeType.TOPOLOGY_HOST,
+}
 
-    def link_type(node1: TopologyNode, node2: TopologyNode) -> str:
-        node1_type = type_to_base_type.get(node1.type, node1.type)
-        node2_type = type_to_base_type.get(node2.type, node2.type)
-        if node1_type == node2_type:
-            if node1_type == NodeType.TOPOLOGY_HOST:
-                return TopologyLinkType.HOST2HOST.value
-            if node1_type == NodeType.TOPOLOGY_SERVICE:
-                return TopologyLinkType.SERVICE2SERVICE.value
-        if (node1_type == NodeType.TOPOLOGY_SERVICE and node2_type == NodeType.TOPOLOGY_HOST) or (
-            node1_type == NodeType.TOPOLOGY_HOST and node2_type == NodeType.TOPOLOGY_SERVICE
-        ):
-            return TopologyLinkType.HOST2SERVICE.value
-        return TopologyLinkType.DEFAULT.value
 
-    mesh_links: set[TopologyLink] = set()
+def _link_type(node1: TopologyNode, node2: TopologyNode) -> str:
+    node1_type = _type_to_base_type.get(node1.type, node1.type)
+    node2_type = _type_to_base_type.get(node2.type, node2.type)
+    if node1_type == node2_type:
+        if node1_type == NodeType.TOPOLOGY_HOST:
+            return TopologyLinkType.HOST2HOST.value
+        if node1_type == NodeType.TOPOLOGY_SERVICE:
+            return TopologyLinkType.SERVICE2SERVICE.value
+    if (node1_type == NodeType.TOPOLOGY_SERVICE and node2_type == NodeType.TOPOLOGY_HOST) or (
+        node1_type == NodeType.TOPOLOGY_HOST and node2_type == NodeType.TOPOLOGY_SERVICE
+    ):
+        return TopologyLinkType.HOST2SERVICE.value
+    return TopologyLinkType.DEFAULT.value
+
+
+def _get_link_config(
+    start_node: TopologyNode,
+    end_node: TopologyNode,
+    computed_layers: dict[str, ABCTopologyNodeDataGenerator],
+) -> dict[str, Any]:
+    config = {"type": _link_type(start_node, end_node)}
+    # Add/Merge link metadata from all involved layers
+    for layer in computed_layers.values():
+        if link_metadata := layer.link_metadata.get((start_node.id, end_node.id)):
+            config.update(link_metadata)
+    return config
+
+
+def _compute_mesh_links(topology: Topology) -> list[TopologyLink]:
+    merged_results: dict[str, TopologyNode] = topology.merged_results
+    computed_layers: dict[str, ABCTopologyNodeDataGenerator] = topology.computed_layers
+    mesh_links: dict[int, TopologyLink] = {}
+
+    def add_mesh_link(link: TopologyLink) -> None:
+        # Ensure that only one link is specified, but merged configurations of duplicate links
+        if existing_link := mesh_links.get(hash(link)):
+            existing_link.config.update(link.config)
+        else:
+            mesh_links[hash(link)] = link
+
     for node_id, node in list(merged_results.items()):
         for incoming_node_id in node.incoming:
             if incoming_node_id not in merged_results:
                 continue
-            mesh_links.add(
-                TopologyLink(
-                    incoming_node_id,
-                    node_id,
-                    {"type": link_type(node, merged_results[incoming_node_id])},
-                )
+            new_link = TopologyLink(
+                incoming_node_id,
+                node_id,
             )
+            new_link.config = _get_link_config(
+                node, merged_results[incoming_node_id], computed_layers
+            )
+            add_mesh_link(new_link)
         for outgoing_node_id in node.outgoing:
             if outgoing_node_id not in merged_results:
                 continue
-            mesh_links.add(
-                TopologyLink(
-                    node_id,
-                    outgoing_node_id,
-                    {"type": link_type(node, merged_results[outgoing_node_id])},
-                )
+            new_link = TopologyLink(
+                node_id,
+                outgoing_node_id,
             )
-    return list(mesh_links)
+            new_link.config = _get_link_config(
+                node, merged_results[outgoing_node_id], computed_layers
+            )
+            add_mesh_link(new_link)
+
+    return list(mesh_links.values())
 
 
 class TopologyLayerRegistry(cmk.utils.plugin_registry.Registry[type[ABCTopologyNodeDataGenerator]]):
@@ -1699,13 +1738,15 @@ def _compute_topology_response(topology_configuration: TopologyConfiguration) ->
     ds_config = topology_configuration.frontend.datasource_configuration
     reference = Topology(topology_configuration, ds_config.reference)
 
-    link_config: dict[TopologyLink, dict[str, Any]] = {}
+    link_config_comparison: dict[TopologyLink, dict[str, Any]] = {}
     if ds_config.reference != ds_config.compare_to:
         compare_to = Topology(topology_configuration, ds_config.compare_to)
         # Compute link_config, will be used later on
-        ref_mesh_links = _compute_mesh_links(reference.merged_results)
-        compare_mesh_links = _compute_mesh_links(compare_to.merged_results)
-        link_config = _compute_link_config_for_comparison(ref_mesh_links, compare_mesh_links)
+        ref_mesh_links = _compute_mesh_links(reference)
+        compare_mesh_links = _compute_mesh_links(compare_to)
+        link_config_comparison = _compute_link_config_for_comparison(
+            ref_mesh_links, compare_mesh_links
+        )
         _integrate_node_changes_in_reference(reference, compare_to)
     else:
         # Always reset classes used in frontend
@@ -1714,11 +1755,8 @@ def _compute_topology_response(topology_configuration: TopologyConfiguration) ->
 
     result = _compute_topology_result(
         topology_configuration,
-        reference.computed_layers,
-        reference.merged_results,
-        reference.node_specific_infos,
-        reference.growth_root_nodes,
-        link_config,
+        reference,
+        link_config_comparison,
     )
 
     # import pprint
@@ -1746,12 +1784,14 @@ def _compute_link_config_for_comparison(
 
 def _compute_topology_result(
     topology_configuration: TopologyConfiguration,
-    active_layers: dict[str, ABCTopologyNodeDataGenerator],
-    merged_results: TopologyNodes,
-    node_specific_infos: dict[str, Any],
-    growth_root_nodes: set[str],
-    link_config: dict[TopologyLink, dict[str, Any]],
+    topology: Topology,
+    link_config_comparison: dict[TopologyLink, dict[str, Any]],
 ) -> TopologyResponse:
+    active_layers: dict[str, ABCTopologyNodeDataGenerator] = topology.computed_layers
+    merged_results: TopologyNodes = topology.merged_results
+    node_specific_infos: dict[str, Any] = topology.node_specific_infos
+    growth_root_nodes: set[str] = topology.growth_root_nodes
+
     headline = _("Topology for ") + ", ".join(layer.name() for layer in active_layers.values())
 
     if len(merged_results) > topology_configuration.filter.max_nodes:
@@ -1764,21 +1804,21 @@ def _compute_topology_result(
         growth_root_nodes,
     )
 
-    # Reduced mesh links without references
-    mesh_links = _compute_mesh_links(merged_results)
+    # Reduce mesh links without references
+    mesh_links = _compute_mesh_links(topology)
 
     def mesh_link_visible(link: TopologyLink) -> bool:
         return link.source in assigned_node_ids and link.target in assigned_node_ids
 
     shown_mesh_links = list(filter(mesh_link_visible, mesh_links))
     for link in shown_mesh_links:
-        if config := link_config.get(link):
-            topology_config = config
+        if config := link_config_comparison.get(link):
+            comparison_config = config
         else:
-            topology_config = {
+            comparison_config = {
                 "topology_classes": [["only_in_ref", False], ["missing_in_ref", False]]
             }
-        link.config.update(topology_config)
+        link.config.update(comparison_config)
 
     frontend_config = NodeConfig(topology_center, shown_mesh_links)
 

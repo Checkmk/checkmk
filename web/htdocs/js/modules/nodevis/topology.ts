@@ -15,6 +15,7 @@ import {StyleOptionSpecRange} from "nodevis/layout_utils";
 import {AbstractLink, link_type_class_registry} from "nodevis/link_utils";
 import {TopologyNode} from "nodevis/node_types";
 import {
+    AbstractGUINode,
     BasicQuickinfo,
     get_core_info,
     get_custom_node_settings,
@@ -487,11 +488,9 @@ class TopologyService extends TopologyCoreEntity {
         return elements;
     }
 
-    _get_hostname_and_service() {
-        return [
-            this.node.data.type_specific.core.hostname,
-            this.node.data.type_specific.core.service,
-        ];
+    _get_hostname_and_service(): [string, string] {
+        const core_info = get_core_info(this.node)!;
+        return [core_info.hostname, core_info.service!];
     }
 
     override _get_node_type_specific_force(
@@ -511,9 +510,17 @@ class TopologyService extends TopologyCoreEntity {
     }
 }
 
+function get_emblem_url(node: NodevisNode): string {
+    return (
+        node.data.type_specific.node_images?.emblem ||
+        "themes/facelift/images/icon_alert_unreach.png"
+    );
+}
+
 class TopologyUnknownHost extends TopologyHost {
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
+        this.radius = 3;
         this._provides_external_quickinfo_data = false;
     }
 
@@ -529,20 +536,21 @@ class TopologyUnknownHost extends TopologyHost {
             },
             {
                 name: texts.get("host"),
-                value: this.node.data.type_specific.core.hostname,
+                value: get_core_info(this.node)!.hostname,
             },
         ];
     }
 
     override render_object() {
         super.render_object();
-        render_unknown_icon(this.selection());
+        render_emblem(this, 30);
     }
 }
 
 class TopologyUnknownService extends TopologyService {
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
+        this.radius = 3;
         this._provides_external_quickinfo_data = false;
     }
 
@@ -569,29 +577,36 @@ class TopologyUnknownService extends TopologyService {
 
     override render_object() {
         super.render_object();
-        render_unknown_icon(this.selection(), 18);
+        render_emblem(this, 18);
     }
 }
 
 class TopologyUnknown extends TopologyNode {
+    constructor(world: NodevisWorld, node: NodevisNode) {
+        super(world, node);
+        this.radius = 3;
+    }
+
     override class_name(): string {
         return "topology_unknown";
     }
 
     override render_object() {
         super.render_object();
-        render_unknown_icon(this.selection());
+        render_emblem(this, 30);
     }
 }
 
-function render_unknown_icon(selection: d3SelectionG, size = 30) {
+function render_emblem(gui_node: AbstractGUINode, size: number) {
+    const selection = gui_node.selection();
+    const emblem_url = get_emblem_url(gui_node.node);
     selection
-        .selectAll("image.unknown")
-        .data([null])
+        .selectAll("image.emblem")
+        .data([gui_node.id()])
         .enter()
-        .insert("svg:image", "image")
-        .classed("unknown", true)
-        .attr("xlink:href", "themes/facelift/images/icon_alert_unreach.png")
+        .insert("svg:image")
+        .classed("emblem", true)
+        .attr("xlink:href", emblem_url)
         .attr("x", -size / 2)
         .attr("y", -size / 2)
         .attr("width", size)

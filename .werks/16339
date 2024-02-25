@@ -1,0 +1,12 @@
+Title: mtr: Fix section parsing error
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1708900251
+Edition: cre
+Level: 1
+Version: 2.2.0p23
+
+When the mtr section contained a line that started with <code><strong>ERROR</strong></code>, the parsing of the section failed.
+This has now been fixed.
+The lines starting with <code><strong>ERROR</strong></code> will be ignored.

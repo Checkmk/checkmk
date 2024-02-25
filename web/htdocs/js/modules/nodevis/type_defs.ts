@@ -281,11 +281,15 @@ export interface CoreInfo {
     state?: number;
 }
 
+export interface LineConfig {
+    thickness?: number;
+    color?: string;
+}
+
 export interface LinkConfig {
     type: "default";
-    width?: number;
-    color?: string;
     css?: string;
+    line_config?: LineConfig;
     link_info?: string;
     topology_classes?: [string, boolean][];
 }

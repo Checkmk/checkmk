@@ -1108,15 +1108,15 @@ class LayoutApplier {
                 });
             }
         }
-        elements.push(nested);
-
         if (!node) {
-            elements.push({
-                text: texts.get("remove_all_styles"),
+            nested.children!.push({
+                text: texts.get("free_floating_style"),
                 on: () => this._convert_all(null),
                 href: "",
             });
         }
+
+        elements.push(nested);
 
         if (node && node.data.use_style) {
             elements.push({

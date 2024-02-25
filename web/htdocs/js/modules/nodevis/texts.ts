@@ -18,7 +18,7 @@ const default_lookup = {
     show_force_configuration: "Show gravity configuration",
     layout_configuration: "Layout configuration",
     remove_style: "Remove style",
-    remove_all_styles: "Remove all styles",
+    free_floating_style: "Free floating style",
     convert_to: "Change structure of this node to",
     convert_all_nodes_to: "Change structure of all nodes to",
     viewport_information: "Viewport information",

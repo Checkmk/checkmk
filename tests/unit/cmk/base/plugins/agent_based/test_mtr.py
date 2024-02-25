@@ -330,6 +330,13 @@ def test_parse_mtr() -> None:
                     "128.1",
                     "28.1",
                 ],
+                [
+                    # This should be skipped
+                    "**ERROR** Report file "
+                    "/var/lib/check_mk_agent/mtr.report.8-8-8-8 has less than 3 "
+                    "lines, expecting at least 1 hop! Throwing away invalid "
+                    "report"
+                ],
             ]
         )
         == SECTION

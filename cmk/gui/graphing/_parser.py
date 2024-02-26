@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
 import math
 from dataclasses import dataclass
-from typing import Callable, Final
+from typing import Final
 
 from cmk.graphing.v1 import metrics
 
@@ -27,8 +28,14 @@ def _sanitize(value: str) -> str:
 class NotationFormatter:
     symbol: str
     precision: metrics.AutoPrecision | metrics.StrictPrecision
-    preformat_small_number: Callable[[int | float, str], Preformatted]
-    preformat_large_number: Callable[[int | float, str], Preformatted]
+
+    @abc.abstractmethod
+    def _preformat_small_number(self, value: int | float) -> Preformatted:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _preformat_large_number(self, value: int | float) -> Preformatted:
+        raise NotImplementedError()
 
     def _apply_precision(self, value: int | float) -> float:
         value_floor = math.floor(value)
@@ -47,145 +54,139 @@ class NotationFormatter:
         if value in (0, 1):
             return f"{value} {self.symbol}".strip()
         if value < 1:
-            preformatted = self.preformat_small_number(value, self.symbol)
+            preformatted = self._preformat_small_number(value)
         else:  # value > 1
-            preformatted = self.preformat_large_number(value, self.symbol)
+            preformatted = self._preformat_large_number(value)
         value_with_precision = self._apply_precision(preformatted.value)
         return f"{_sanitize(str(value_with_precision))}{preformatted.suffix}"
 
 
-def _preformat_number(value: int | float, symbol: str) -> Preformatted:
-    return Preformatted(value, f" {symbol}")
+class DecimalFormatter(NotationFormatter):
+    def _preformat_small_number(self, value: int | float) -> Preformatted:
+        return Preformatted(value, f" {self.symbol}")
+
+    def _preformat_large_number(self, value: int | float) -> Preformatted:
+        return Preformatted(value, f" {self.symbol}")
 
 
-def _si_preformat_small_number(value: int | float, symbol: str) -> Preformatted:
-    exponent = math.floor(math.log(value, 10)) - 1
-    if exponent <= -24:
-        factor = pow(1000, 8)
-        prefix = "y"
-    elif exponent <= -21:
-        factor = pow(1000, 7)
-        prefix = "z"
-    elif exponent <= -18:
-        factor = pow(1000, 6)
-        prefix = "a"
-    elif exponent <= -15:
-        factor = pow(1000, 5)
-        prefix = "f"
-    elif exponent <= -12:
-        factor = pow(1000, 4)
-        prefix = "p"
-    elif exponent <= -9:
-        factor = pow(1000, 3)
-        prefix = "n"
-    elif exponent <= -6:
-        factor = pow(1000, 2)
-        prefix = "μ"
-    elif exponent <= -3:
-        factor = 1000
-        prefix = "m"
-    else:
-        factor = 1
-        prefix = ""
-    return Preformatted(value * factor, f" {prefix}{symbol}")
+class SIFormatter(NotationFormatter):
+    def _preformat_small_number(self, value: int | float) -> Preformatted:
+        exponent = math.floor(math.log(value, 10)) - 1
+        if exponent <= -24:
+            factor = pow(1000, 8)
+            prefix = "y"
+        elif exponent <= -21:
+            factor = pow(1000, 7)
+            prefix = "z"
+        elif exponent <= -18:
+            factor = pow(1000, 6)
+            prefix = "a"
+        elif exponent <= -15:
+            factor = pow(1000, 5)
+            prefix = "f"
+        elif exponent <= -12:
+            factor = pow(1000, 4)
+            prefix = "p"
+        elif exponent <= -9:
+            factor = pow(1000, 3)
+            prefix = "n"
+        elif exponent <= -6:
+            factor = pow(1000, 2)
+            prefix = "μ"
+        elif exponent <= -3:
+            factor = 1000
+            prefix = "m"
+        else:
+            factor = 1
+            prefix = ""
+        return Preformatted(value * factor, f" {prefix}{self.symbol}")
+
+    def _preformat_large_number(self, value: int | float) -> Preformatted:
+        exponent = math.floor(math.log(value, 10))
+        if exponent >= 24:
+            factor = pow(1000, 8)
+            prefix = "Y"
+        elif exponent >= 21:
+            factor = pow(1000, 7)
+            prefix = "Z"
+        elif exponent >= 18:
+            factor = pow(1000, 6)
+            prefix = "E"
+        elif exponent >= 15:
+            factor = pow(1000, 5)
+            prefix = "P"
+        elif exponent >= 12:
+            factor = pow(1000, 4)
+            prefix = "T"
+        elif exponent >= 9:
+            factor = pow(1000, 3)
+            prefix = "G"
+        elif exponent >= 6:
+            factor = pow(1000, 2)
+            prefix = "M"
+        elif exponent >= 3:
+            factor = 1000
+            prefix = "k"
+        else:
+            factor = 1
+            prefix = ""
+        return Preformatted(value / factor, f" {prefix}{self.symbol}")
 
 
-def _si_preformat_large_number(value: int | float, symbol: str) -> Preformatted:
-    exponent = math.floor(math.log(value, 10))
-    if exponent >= 24:
-        factor = pow(1000, 8)
-        prefix = "Y"
-    elif exponent >= 21:
-        factor = pow(1000, 7)
-        prefix = "Z"
-    elif exponent >= 18:
-        factor = pow(1000, 6)
-        prefix = "E"
-    elif exponent >= 15:
-        factor = pow(1000, 5)
-        prefix = "P"
-    elif exponent >= 12:
-        factor = pow(1000, 4)
-        prefix = "T"
-    elif exponent >= 9:
-        factor = pow(1000, 3)
-        prefix = "G"
-    elif exponent >= 6:
-        factor = pow(1000, 2)
-        prefix = "M"
-    elif exponent >= 3:
-        factor = 1000
-        prefix = "k"
-    else:
-        factor = 1
-        prefix = ""
-    return Preformatted(value / factor, f" {prefix}{symbol}")
+class IECFormatter(NotationFormatter):
+    def _preformat_small_number(self, value: int | float) -> Preformatted:
+        return Preformatted(value, f" {self.symbol}")
+
+    def _preformat_large_number(self, value: int | float) -> Preformatted:
+        exponent = math.floor(math.log(value, 2))
+        if exponent >= 80:
+            factor = pow(1024, 8)
+            prefix = "Yi"
+        elif exponent >= 70:
+            factor = pow(1024, 7)
+            prefix = "Zi"
+        elif exponent >= 60:
+            factor = pow(1024, 6)
+            prefix = "Ei"
+        elif exponent >= 50:
+            factor = pow(1024, 5)
+            prefix = "Pi"
+        elif exponent >= 40:
+            factor = pow(1024, 4)
+            prefix = "Ti"
+        elif exponent >= 30:
+            factor = pow(1024, 3)
+            prefix = "Gi"
+        elif exponent >= 20:
+            factor = pow(1024, 2)
+            prefix = "Mi"
+        elif exponent >= 10:
+            factor = 1024
+            prefix = "Ki"
+        else:
+            factor = 1
+            prefix = ""
+        return Preformatted(value / factor, f" {prefix}{self.symbol}")
 
 
-def _iec_preformat_large_number(value: int | float, symbol: str) -> Preformatted:
-    exponent = math.floor(math.log(value, 2))
-    if exponent >= 80:
-        factor = pow(1024, 8)
-        prefix = "Yi"
-    elif exponent >= 70:
-        factor = pow(1024, 7)
-        prefix = "Zi"
-    elif exponent >= 60:
-        factor = pow(1024, 6)
-        prefix = "Ei"
-    elif exponent >= 50:
-        factor = pow(1024, 5)
-        prefix = "Pi"
-    elif exponent >= 40:
-        factor = pow(1024, 4)
-        prefix = "Ti"
-    elif exponent >= 30:
-        factor = pow(1024, 3)
-        prefix = "Gi"
-    elif exponent >= 20:
-        factor = pow(1024, 2)
-        prefix = "Mi"
-    elif exponent >= 10:
-        factor = 1024
-        prefix = "Ki"
-    else:
-        factor = 1
-        prefix = ""
-    return Preformatted(value / factor, f" {prefix}{symbol}")
+class StandardScientificFormatter(NotationFormatter):
+    def _preformat_small_number(self, value: int | float) -> Preformatted:
+        exponent = math.floor(math.log(value, 10))
+        return Preformatted(value / pow(10, exponent), f"e{exponent} {self.symbol}")
+
+    def _preformat_large_number(self, value: int | float) -> Preformatted:
+        exponent = math.floor(math.log(value, 10))
+        return Preformatted(value / pow(10, exponent), f"e+{exponent} {self.symbol}")
 
 
-def _standard_scientific_preformat_small_number(value: int | float, symbol: str) -> Preformatted:
-    exponent = math.floor(math.log(value, 10))
-    return Preformatted(value / pow(10, exponent), f"e{exponent} {symbol}")
+class EngineeringScientificFormatter(NotationFormatter):
+    def _preformat_small_number(self, value: int | float) -> Preformatted:
+        exponent = math.floor(math.log(value, 10) / 3) * 3
+        return Preformatted(value / pow(10, exponent), f"e{exponent} {self.symbol}")
 
-
-def _standard_scientific_preformat_large_number(value: int | float, symbol: str) -> Preformatted:
-    exponent = math.floor(math.log(value, 10))
-    return Preformatted(value / pow(10, exponent), f"e+{exponent} {symbol}")
-
-
-def _engineering_scientific_preformat_small_number(value: int | float, symbol: str) -> Preformatted:
-    exponent = math.floor(math.log(value, 10) / 3) * 3
-    return Preformatted(value / pow(10, exponent), f"e{exponent} {symbol}")
-
-
-def _engineering_scientific_preformat_large_number(value: int | float, symbol: str) -> Preformatted:
-    exponent = math.floor(math.log(10000, 10) / 3) * 3
-    return Preformatted(value / pow(10, exponent), f"e+{exponent} {symbol}")
-
-
-def _time_preformat_small_number(value: int | float, symbol: str) -> Preformatted:
-    exponent = math.floor(math.log(value, 10)) - 1
-    if exponent <= -6:
-        factor = pow(1000, 2)
-        symbol = "µs"
-    elif exponent <= -3:
-        factor = 1000
-        symbol = "ms"
-    else:
-        factor = 1
-        symbol = "s"
-    return Preformatted(value * factor, f" {symbol}")
+    def _preformat_large_number(self, value: int | float) -> Preformatted:
+        exponent = math.floor(math.log(10000, 10) / 3) * 3
+        return Preformatted(value / pow(10, exponent), f"e+{exponent} {self.symbol}")
 
 
 _ONE_DAY: Final = 86400
@@ -193,20 +194,34 @@ _ONE_HOUR: Final = 3600
 _ONE_MINUTE: Final = 60
 
 
-def _time_preformat_large_number(value: int | float, symbol: str) -> Preformatted:
-    if value >= _ONE_DAY:
-        factor = _ONE_DAY
-        symbol = "d"
-    elif value >= _ONE_HOUR:
-        factor = _ONE_HOUR
-        symbol = "h"
-    elif value >= _ONE_MINUTE:
-        factor = _ONE_MINUTE
-        symbol = "min"
-    else:
-        factor = 1
-        symbol = "s"
-    return Preformatted(value / factor, f" {symbol}")
+class TimeFormatter(NotationFormatter):
+    def _preformat_small_number(self, value: int | float) -> Preformatted:
+        exponent = math.floor(math.log(value, 10)) - 1
+        if exponent <= -6:
+            factor = pow(1000, 2)
+            prefix = "µ"
+        elif exponent <= -3:
+            factor = 1000
+            prefix = "m"
+        else:
+            factor = 1
+            prefix = ""
+        return Preformatted(value * factor, f" {prefix}{self.symbol}")
+
+    def _preformat_large_number(self, value: int | float) -> Preformatted:
+        if value >= _ONE_DAY:
+            factor = _ONE_DAY
+            symbol = "d"
+        elif value >= _ONE_HOUR:
+            factor = _ONE_HOUR
+            symbol = "h"
+        elif value >= _ONE_MINUTE:
+            factor = _ONE_MINUTE
+            symbol = "min"
+        else:
+            factor = 1
+            symbol = self.symbol
+        return Preformatted(value / factor, f" {symbol}")
 
 
 def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
@@ -218,54 +233,36 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
     ) in units_from_api:
         return units_from_api[unit_id]
 
+    formatter: NotationFormatter
     match unit.notation:
         case metrics.DecimalNotation():
-            preformat_small_number = _preformat_number
-            preformat_large_number = _preformat_number
-            js_preformat_small_number = "preformat_number"
-            js_preformat_large_number = "preformat_number"
+            formatter = DecimalFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "DecimalFormatter"
         case metrics.SINotation():
-            preformat_small_number = _si_preformat_small_number
-            preformat_large_number = _si_preformat_large_number
-            js_preformat_small_number = "si_preformat_small_number"
-            js_preformat_large_number = "si_preformat_large_number"
+            formatter = SIFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "SIFormatter"
         case metrics.IECNotation():
-            preformat_small_number = _preformat_number
-            preformat_large_number = _iec_preformat_large_number
-            js_preformat_small_number = "preformat_number"
-            js_preformat_large_number = "iec_preformat_large_number"
+            formatter = IECFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "IECFormatter"
         case metrics.StandardScientificNotation():
-            preformat_small_number = _standard_scientific_preformat_small_number
-            preformat_large_number = _standard_scientific_preformat_large_number
-            js_preformat_small_number = "standard_scientific_preformat_small_number"
-            js_preformat_large_number = "standard_scientific_preformat_large_number"
+            formatter = StandardScientificFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "StandardScientificFormatter"
         case metrics.EngineeringScientificNotation():
-            preformat_small_number = _engineering_scientific_preformat_small_number
-            preformat_large_number = _engineering_scientific_preformat_large_number
-            js_preformat_small_number = "engineering_scientific_preformat_small_number"
-            js_preformat_large_number = "engineering_scientific_preformat_large_number"
+            formatter = EngineeringScientificFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "EngineeringScientificFormatter"
         case metrics.TimeNotation():
-            preformat_small_number = _time_preformat_small_number
-            preformat_large_number = _time_preformat_large_number
-            js_preformat_small_number = "time_preformat_small_number"
-            js_preformat_large_number = "time_preformat_large_number"
+            formatter = TimeFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "TimeFormatter"
 
     return units_from_api.register(
         UnitInfo(
             id=unit_id,
             title=unit.notation.symbol,
             symbol=unit.notation.symbol,
-            render=lambda v: NotationFormatter(
-                unit.notation.symbol,
-                unit.precision,
-                preformat_small_number,
-                preformat_large_number,
-            ).render(v),
-            js_render=f"""v => new cmk.number_format.NotationFormatter(
+            render=formatter.render,
+            js_render=f"""v => new cmk.number_format.{js_formatter}(
     "{unit.notation.symbol}",
     new cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
-    cmk.number_format.{js_preformat_small_number},
-    cmk.number_format.{js_preformat_large_number},
 ).render(v)""",
         )
     )

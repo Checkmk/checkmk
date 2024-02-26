@@ -79,7 +79,7 @@ def _valuespec_specific_values() -> Dictionary:
             ),
             "signature_algorithm": DictElement[tuple[str, object]](
                 parameter_form=CascadingSingleChoice(
-                    title=Title("Encryption algorithm"),
+                    title=Title("Certificate signature algorithm"),
                     prefill=DefaultValue("rsa"),
                     elements=[
                         CascadingSingleChoiceElement[tuple[str, object]](

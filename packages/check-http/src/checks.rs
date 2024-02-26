@@ -313,7 +313,7 @@ fn check_response_time(
     let mut ret = check_upper_levels(
         "Response time",
         response_time.as_secs_f64(),
-        Some(" seconds"),
+        |secs| format!("{} seconds", secs),
         &response_time_levels,
     );
     ret.push(CheckResult::metric(
@@ -353,7 +353,7 @@ fn check_document_age(
     check_upper_levels(
         "Document age",
         age.as_secs(),
-        Some(" seconds"),
+        |secs| format!("{} seconds", secs),
         &document_age_levels,
     )
 }
@@ -380,7 +380,7 @@ fn check_certificate(
     check_lower_levels(
         "Server certificate validity",
         validity.whole_days().max(0).unsigned_abs(),
-        Some(" days"),
+        |days| format!("{} days", days),
         &certificate_levels,
     )
 }

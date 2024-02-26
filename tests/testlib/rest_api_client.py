@@ -1549,6 +1549,45 @@ class DowntimeClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def modify(
+        self,
+        modify_type: Literal["by_id", "query", "params"],
+        site_id: str | None = None,
+        downtime_id: str | None = None,
+        query: str | None = None,
+        host_name: str | None = None,
+        service_descriptions: list[str] | None = None,
+        comment: str | None = None,
+        end_time: str | int | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            "modify_type": modify_type,
+            "comment": comment,
+        }
+
+        if modify_type == "by_id":
+            body.update({"downtime_id": downtime_id, "site_id": site_id})
+
+        elif modify_type == "query":
+            body.update({"query": query})
+
+        else:
+            body.update({"host_name": host_name, "service_descriptions": service_descriptions})
+
+        if end_time is not None:
+            body["end_time"] = {
+                "value": end_time,
+                "modify_type": "relative" if isinstance(end_time, int) else "absolute",
+            }
+
+        return self.request(
+            "put",
+            url=f"/domain-types/{self.domain}/actions/modify/invoke",
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
 
 class GroupConfig(RestApiClient):
     domain: API_DOMAIN

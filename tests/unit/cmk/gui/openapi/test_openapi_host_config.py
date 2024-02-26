@@ -1534,3 +1534,31 @@ def test_move_host_between_nested_folders(clients: ClientRegistry) -> None:
     clients.HostConfig.move(host_name="host1", target_folder="~F1~F11~F111")
     clients.HostConfig.move(host_name="host1", target_folder="~F1~F11")
     clients.HostConfig.move(host_name="host1", target_folder="~F1")
+
+
+@managedtest
+def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="test_host")
+    resp = clients.HostConfig.edit(
+        host_name="test_host", update_attributes={"parents": ["non-existent"]}, expect_ok=False
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: update_attributes"
+    assert (
+        resp.json["fields"]["update_attributes"]["parents"]["0"][0]
+        == "Host not found: 'non-existent'"
+    )
+
+
+@managedtest
+def test_update_host_parent_must_be_list_of_strings(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="test_host")
+    resp = clients.HostConfig.edit(
+        host_name="test_host", update_attributes={"parents": "wrong-type"}, expect_ok=False
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: update_attributes"
+    assert (
+        "Expected data type is list, but your type is str."
+        in resp.json["fields"]["update_attributes"]["parents"]
+    )

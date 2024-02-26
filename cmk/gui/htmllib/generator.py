@@ -174,9 +174,9 @@ class HTMLWriter:
     def javascript(self, code: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_javascript(code, **attrs))
 
-    def javascript_file(self, src: str) -> None:
+    def javascript_file(self, src: str, *, type_: str = "text/javascript") -> None:
         """<script type="text/javascript" src="%(name)"/>\n"""
-        self.write_html(render_element("script", "", type_="text/javascript", src=src))
+        self.write_html(render_element("script", "", type_=type_, src=src))
 
     def show_message_by_msg_type(
         self,

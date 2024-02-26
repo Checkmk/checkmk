@@ -94,6 +94,10 @@ def inject_js_profiling_code():
     ) or html.request.has_var("inject_js_profiling_code")
 
 
+def enable_frontend_vue_auto_hot_reload() -> bool:
+    return active_config.experimental_features.get("load_frontend_vue") == "inject"
+
+
 EncType = typing.Literal[
     "application/x-url-encoded",
     "application/x-www-form-urlencoded",
@@ -264,10 +268,15 @@ class HTMLGenerator(HTMLWriter):
 
         # Load all scripts
         for js in javascripts:
-            js_filepath = f"js/{js}_min.js"
-            if current_app.debug:
-                HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
-            self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
+            if js == "vue" and enable_frontend_vue_auto_hot_reload():
+                # those two files are injected by the vite dev server in `./packages/frontend_vue`
+                self.javascript_file("/frontend_vue_ahr/@vite/client", type_="module")
+                self.javascript_file("/frontend_vue_ahr/src/ahr.ts", type_="module")
+            else:
+                js_filepath = f"js/{js}_min.js"
+                if current_app.debug:
+                    HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
+                self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
 
         self.set_js_csrf_token()
 

@@ -683,9 +683,7 @@ def ajax_snapin():
             since = request.get_float_input_mandatory("since", 0)
             newest = since
             for site in sites.states().values():
-                prog_start = site.get("program_start", 0)
-                if prog_start > newest:
-                    newest = prog_start
+                newest = max(newest, site.get("program_start", 0))
             if newest <= since:
                 # no restart
                 snapin_code.append("")

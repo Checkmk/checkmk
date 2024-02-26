@@ -1830,24 +1830,23 @@ async fn _obtain_instance_builders(
         .collect()
 }
 
+/// returns instances found in registry
+/// if registry is unavailable returns empty list, this is ok too
 async fn try_find_instances_in_registry(client: &mut Client) -> Vec<SqlInstanceBuilder> {
-    let normal_instances =
-        exec_win_registry_sql_instances_query(client, &sqls::get_win_registry_instances_query())
+    let mut result: Vec<SqlInstanceBuilder> = vec![];
+    for q in [
+        &sqls::get_win_registry_instances_query(),
+        &sqls::get_wow64_32_registry_instances_query(),
+    ] {
+        let instances = exec_win_registry_sql_instances_query(client, q)
             .await
             .unwrap_or_else(|e| {
                 log::info!("Can't get normal instances: {e}, it is not error");
                 Vec::new()
             });
-    let wow_instances = exec_win_registry_sql_instances_query(
-        client,
-        &sqls::get_wow64_32_registry_instances_query(),
-    )
-    .await
-    .unwrap_or_else(|e| {
-        log::info!("Can't get normal instances: {e}");
-        Vec::new()
-    });
-    [&normal_instances[..], &wow_instances[..]].concat()
+        result.extend(instances);
+    }
+    result
 }
 
 /// return all MS SQL instances installed

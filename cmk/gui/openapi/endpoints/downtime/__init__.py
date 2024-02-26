@@ -31,7 +31,7 @@ Downtime object can have the following relations:
 import datetime as dt
 import json
 from collections.abc import Callable, Mapping
-from typing import Any, Literal
+from typing import Any, Literal, Optional, Tuple
 
 from livestatus import SiteId
 
@@ -51,6 +51,8 @@ from cmk.gui.openapi.endpoints.downtime.request_schemas import (
     CreateHostRelatedDowntime,
     CreateServiceRelatedDowntime,
     DeleteDowntime,
+    DOWNTIME_ID,
+    ModifyDowntime,
 )
 from cmk.gui.openapi.endpoints.downtime.response_schemas import DowntimeCollection, DowntimeObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
@@ -62,6 +64,8 @@ from cmk import fields
 DowntimeType = Literal[
     "host", "service", "hostgroup", "servicegroup", "host_by_query", "service_by_query"
 ]
+
+FindByType = Literal["query", "by_id", "params"]
 
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
@@ -393,14 +397,7 @@ def _show_downtimes(param):
     "cmk/show",
     method="get",
     tag_group="Monitoring",
-    path_params=[
-        {
-            "downtime_id": fields.Integer(
-                description="The id of the downtime",
-                example="1",
-            )
-        }
-    ],
+    path_params=[{"downtime_id": DOWNTIME_ID}],
     query_params=[
         {
             "site_id": gui_fields.SiteField(
@@ -458,15 +455,69 @@ def show_downtime(params: Mapping[str, Any]) -> Response:
 def delete_downtime(params: Mapping[str, Any]) -> Response:
     """Delete a scheduled downtime"""
     body = params["body"]
-    delete_type: Literal["query", "by_id", "params"] = body["delete_type"]
-
+    delete_type: FindByType = body["delete_type"]
+    site_id: SiteId | None
     query_expr: QueryExpression
 
+    query_expr, site_id = _generate_target_downtimes_query(delete_type, body)
+
+    downtime_commands.delete_downtime(sites.live(), query_expr, site_id)
+    return Response(status=204)
+
+
+@Endpoint(
+    constructors.domain_type_action_href("downtime", "modify"),
+    ".../update",
+    method="put",
+    tag_group="Monitoring",
+    skip_locking=True,
+    request_schema=ModifyDowntime,
+    output_empty=True,
+    permissions_required=RW_PERMISSIONS,
+    update_config_generation=False,
+)
+def modify_host_downtime(params: Mapping[str, Any]) -> Response:
+    """Modify a scheduled downtime"""
+    body = params["body"]
+    update_type: FindByType = body["modify_type"]
+    site_id: SiteId | None
+    query_expr: QueryExpression
+
+    query_expr, site_id = _generate_target_downtimes_query(update_type, body)
+
+    end_time = body.get("end_time")
+    comment = body.get("comment")
+
+    if end_time is None and comment is None:
+        return problem(
+            status=400,
+            title="No modification specified",
+            detail="You must especify at least one field to modify",
+        )
+
+    end_time_value = None if end_time is None else end_time.get("value")
+
+    downtime_commands.modify_downtimes(
+        sites.live(),
+        query_expr,
+        site_id,
+        user_id=user.ident,
+        end_time=end_time_value,
+        comment=comment,
+    )
+
+    return Response(status=204)
+
+
+def _generate_target_downtimes_query(
+    find_type: FindByType, body: Mapping[str, Any]
+) -> Tuple[QueryExpression, Optional[SiteId]]:
     site_id: SiteId | None = None
-    if delete_type == "query":
+
+    if find_type == "query":
         query_expr = body["query"]
 
-    elif delete_type == "by_id":
+    elif find_type == "by_id":
         query_expr = Downtimes.id == body["downtime_id"]
         site_id = SiteId(body["site_id"])
     else:
@@ -483,9 +534,7 @@ def delete_downtime(params: Mapping[str, Any]) -> Response:
                     ]
                 ),
             )
-
-    downtime_commands.delete_downtime(sites.live(), query_expr, site_id)
-    return Response(status=204)
+    return query_expr, site_id
 
 
 def _serialize_downtimes(downtimes):
@@ -559,3 +608,4 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(show_downtimes)
     endpoint_registry.register(show_downtime)
     endpoint_registry.register(delete_downtime)
+    endpoint_registry.register(modify_host_downtime)

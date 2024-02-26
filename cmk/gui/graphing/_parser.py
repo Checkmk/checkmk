@@ -322,9 +322,9 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
             ),
             js_render=f"""v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "{unit.notation.symbol}",
-        cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
+        new cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
         cmk.number_format.{js_preformat_small_number},
         cmk.number_format.{js_preformat_large_number},
     )

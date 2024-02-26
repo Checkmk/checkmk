@@ -1,0 +1,13 @@
+Title: Make EC UPDATE command use a list of events
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1708958925
+Edition: cee
+Level: 1
+Version: 2.2.0p23
+
+Event Console UPDATE command accepts a list of events instead of a single event.
+With this change the GUI will send a list of events to be updated to the Event Console.
+This allows for multiple events to be updated in a single command. Avoids the situation where
+some events are updated and others are not. 

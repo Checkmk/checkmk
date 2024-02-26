@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 import json
-from collections.abc import Mapping
+from collections import defaultdict
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -14,9 +15,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils import netapp_ontap_models as models
-from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamDict
+from cmk.base.plugins.agent_based.utils.temperature import (
+    aggregate_temperature_results,
+    check_temperature,
+    parse_levels,
+    TemperatureSensor,
+    TempParamDict,
+)
 
-Section = Mapping[str, models.ShelfTemperatureModel]
+Section = Mapping[str, Sequence[models.ShelfTemperatureModel]]
 
 # <<<netapp_ontap_temp:sep(0)>>>
 # {
@@ -115,11 +122,15 @@ Section = Mapping[str, models.ShelfTemperatureModel]
 
 
 def parse_netapp_ontap_temp(string_table: StringTable) -> Section:
-    return {
-        fan.item_name(): fan
-        for line in string_table
-        if (fan := models.ShelfTemperatureModel(**json.loads(line[0])))
-    }
+    section = defaultdict(list)
+
+    for line in string_table:
+        sensor = models.ShelfTemperatureModel(**json.loads(line[0]))
+        section[f"{'Ambient' if sensor.ambient else 'Internal'} Shelf {sensor.list_id}"].append(
+            sensor
+        )
+
+    return section
 
 
 register.agent_section(
@@ -129,43 +140,44 @@ register.agent_section(
 
 
 def discovery_netapp_ontap_temp(section: Section) -> DiscoveryResult:
-    for sensor_name, sensor in section.items():
-        yield (
-            Service(item=f"Ambient Shelf Sensor {sensor_name}")
-            if sensor.ambient
-            else Service(item=f"Internal Shelf Sensor {sensor_name}")
+    yield from (Service(item=item) for item in section)
+
+
+def _check_netapp_ontap_temp(
+    item: str, params: TempParamDict, section: Section, value_store: MutableMapping[str, Any]
+) -> CheckResult:
+    if not (sensors := section.get(item)):
+        return
+
+    checksensors: Sequence[TemperatureSensor] = [
+        TemperatureSensor(
+            id=sensor.item_name(),
+            temp=sensor.temperature,
+            result=check_temperature(
+                sensor.temperature,
+                params,
+                dev_levels=parse_levels(
+                    (
+                        sensor.high_warning,
+                        sensor.high_critical,
+                    )
+                ),
+                dev_levels_lower=parse_levels(
+                    (
+                        sensor.low_warning,
+                        sensor.low_critical,
+                    )
+                ),
+            ).reading,
         )
+        for sensor in sensors
+    ]
+
+    yield from aggregate_temperature_results(checksensors, params, value_store)
 
 
 def check_netapp_ontap_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:
-    if not (sensor := section.get(item.split()[-1])):
-        return
-
-    dev_levels = (
-        (
-            float(sensor.high_warning),
-            float(sensor.high_critical),
-        )
-        if sensor.high_warning is not None and sensor.high_critical is not None
-        else None
-    )
-    dev_levels_lower = (
-        (
-            float(sensor.low_warning),
-            float(sensor.low_critical),
-        )
-        if sensor.low_warning is not None and sensor.low_critical is not None
-        else None
-    )
-
-    yield from check_temperature(
-        reading=sensor.temperature,
-        params=params,
-        unique_name=f"Temperature sensor {sensor.item_name()}",
-        dev_levels=dev_levels,
-        dev_levels_lower=dev_levels_lower,
-        value_store=get_value_store(),
-    )
+    yield from _check_netapp_ontap_temp(item, params, section, get_value_store())
 
 
 register.check_plugin(

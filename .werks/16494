@@ -1,0 +1,13 @@
+Title: netapp_ontap_temp: restore check of list of sensors
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1708967815
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+The above-mentioned plugin now monitors the list of ambient and internal temperature sensors,
+sticking to the logic of the netapp_api_temp plugin (old Netapp API).
+
+A re-discovery is needed to monitor the new services.

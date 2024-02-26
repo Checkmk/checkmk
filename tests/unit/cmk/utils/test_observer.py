@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.utils.observer import FetcherMemoryObserver
+from cmk.utils.observer import FetcherMemoryObserver, vm_size
 
 LOG_MESSAGE = "13;heute;checking;60"
+ONE_KiB = 2**10  # 1024
 
 
 def _change_state(
@@ -22,12 +23,11 @@ def _change_state(
 
 
 def test_fetcher_memory_observer_before_steady() -> None:
-    observer = FetcherMemoryObserver(100)
+    memory_used = ONE_KiB
+    observer = FetcherMemoryObserver(100, lambda: memory_used)
     _change_state(observer)
-    # use real RAM
-    very_big_object = []
-    for _ in range(10000):
-        very_big_object.append(10000 * "aaa")
+    # exceed 'hard_limit' of memory usage.
+    memory_used += ONE_KiB
     # expected NO reaction on overflow BEFORE steady achieved
     _change_state(observer)
 
@@ -40,28 +40,41 @@ def test_fetcher_memory_observer_steady_setup() -> None:
     assert observer.memory_usage() != 0
 
 
-def test_fetcher_memory_overflow() -> None:
-    observer = FetcherMemoryObserver(100)
+def test_fetcher_memory_observer_overflow() -> None:
+    memory_used = ONE_KiB
+    observer = FetcherMemoryObserver(100, lambda: memory_used)
     _change_state(observer, steady=True, log=LOG_MESSAGE)
-    # use real RAM
-    very_big_object = []
-    for _ in range(10000):
-        very_big_object.append(10000 * "aaa")
+    # exceed 'hard_limit' of memory usage.
+    overflow = 1
+    memory_used += overflow
     # expected EXIT on overflow AFTER steady achieved
     with pytest.raises(SystemExit) as exit_expected:
         observer.check_resources(None, False)
-    assert exit_expected.type == SystemExit
     assert exit_expected.value.code == 14
 
 
-def test_fetcher_memory_observer_no_overflow() -> None:
-    observer = FetcherMemoryObserver(1000)
+@pytest.mark.parametrize("delta", [0, 10], ids=["at_limit", "below_limit"])
+def test_fetcher_memory_observer_no_overflow(delta: int) -> None:
+    memory_used = ONE_KiB
+    factor = 2
+    # 'allowed_growth' calculates 'hard_limit' as a factor of current memory usage.
+    observer = FetcherMemoryObserver(factor * 100, lambda: memory_used)
     _change_state(observer, steady=True, log=LOG_MESSAGE)
-    very_big_object = []
-    for _ in range(10000):
-        very_big_object.append(10000 * "aaa")
-    # no reaction for very big numbers(as checker)
+    # define 'hard_limit' of memory usage.
+    memory_used = (memory_used * factor) - delta
+    # expected NO reaction
     _change_state(observer)
+
+
+def test_fetcher_memory_obeserver_vm_size():
+    mibs_to_bytes = 2**20
+    memory_assigned = mibs_to_bytes * 50  # 50 MiBs
+    initial_measure = vm_size()
+    _ = bytearray(memory_assigned)  # use memory in RAM
+    final_measure = vm_size()
+    threshold = 5 * ONE_KiB
+    _assertion = (final_measure - initial_measure) - memory_assigned  # observed - expected
+    assert 0 < _assertion <= threshold
 
 
 def test_fetcher_memory_observer_hard_limit() -> None:

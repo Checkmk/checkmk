@@ -109,6 +109,7 @@ def test_diagnostics_element_general() -> None:
     )
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_diagnostics_element_general_content(
     tmp_path: PurePath,
 ) -> None:

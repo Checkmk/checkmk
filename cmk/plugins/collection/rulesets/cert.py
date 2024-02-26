@@ -181,22 +181,6 @@ def _valuespec_specific_values() -> Dictionary:
                                             value="dsa", title=Title("DSA")
                                         ),
                                     ),
-                                    CascadingSingleChoiceElement[None](
-                                        name="gost_r3410",
-                                        title=Title("GOST R 34.10-2001"),
-                                        parameter_form=FixedValue[None](
-                                            value=None,
-                                            title=Title("GOST R 34.10-2001"),
-                                        ),
-                                    ),
-                                    CascadingSingleChoiceElement[None](
-                                        name="gost_r3410_2012",
-                                        title=Title("GOST R 34.10-2012"),
-                                        parameter_form=FixedValue[None](
-                                            value=None,
-                                            title=Title("GOST R 34.10-2012"),
-                                        ),
-                                    ),
                                 ],
                             )
                         ),

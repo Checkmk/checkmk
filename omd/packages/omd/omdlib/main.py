@@ -403,7 +403,6 @@ def try_chown(filename: str, user: str) -> None:
 # as base for the walk instead of walking the whole tree.
 def walk_skel(
     root: str,
-    conflict_mode: str,
     depth_first: bool,
     exclude_if_in: str | None = None,
     relbase: str = ".",
@@ -2750,9 +2749,7 @@ def diff_list(
         if not rel_path:
             rel_path = "."
 
-        for file_path in walk_skel(
-            from_skelroot, conflict_mode="ask", depth_first=False, relbase=rel_path
-        ):
+        for file_path in walk_skel(from_skelroot, depth_first=False, relbase=rel_path):
             print_diff(
                 file_path,
                 global_opts,
@@ -3002,7 +2999,7 @@ def main_update(  # pylint: disable=too-many-branches
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
     # First walk through skeleton files of new version
-    for relpath in walk_skel(to_skelroot, conflict_mode=conflict_mode, depth_first=False):
+    for relpath in walk_skel(to_skelroot, depth_first=False):
         _execute_update_file(
             relpath,
             site,
@@ -3016,9 +3013,7 @@ def main_update(  # pylint: disable=too-many-branches
         )
 
     # Now handle files present in old but not in new skel files
-    for relpath in walk_skel(
-        from_skelroot, conflict_mode=conflict_mode, depth_first=True, exclude_if_in=to_skelroot
-    ):
+    for relpath in walk_skel(from_skelroot, depth_first=True, exclude_if_in=to_skelroot):
         _execute_update_file(
             relpath,
             site,

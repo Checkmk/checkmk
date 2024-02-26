@@ -35,12 +35,6 @@ set)
 ServerName $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 Listen $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 EOF
-
-    # Since werk #14281 these files are not used anymore. Better remove them to
-    # not confuse users. Can be removed with 2.3.
-    if [ -f "$OMD_ROOT/etc/apache/proxy-port.conf" ]; then
-        rm "$OMD_ROOT/etc/apache/proxy-port.conf"
-    fi
     ;;
 depends)
     [ "$CONFIG_APACHE_MODE" = own ]

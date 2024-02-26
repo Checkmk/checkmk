@@ -137,11 +137,6 @@ def delete_apache_hook(sitename: str) -> None:
         sys.stderr.write(f"Cannot remove apache hook {hook_path}: {e}\n")
 
 
-def has_old_apache_hook_in_site(site: SiteContext) -> bool:
-    with open(os.path.join(omdlib.utils.omd_base_path(), "omd/apache/%s.conf" % site.name)) as f:
-        return f.readline().startswith("Include ")
-
-
 def init_cmd(version_info: VersionInfo, name: str, action: str) -> str:
     return version_info.INIT_CMD % {
         "name": name,

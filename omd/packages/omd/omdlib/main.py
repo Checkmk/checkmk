@@ -965,12 +965,6 @@ def update_file(  # pylint: disable=too-many-branches
         not os.path.islink(user_path) and os.path.isdir(user_path) and bool(os.listdir(user_path))
     )
 
-    #     if global_opts.verbose:
-    #         sys.stdout.write("%s%s%s:\n" % (tty.bold, relpath, tty.normal))
-    #         sys.stdout.write("  you       : %s\n" % user_type)
-    #         sys.stdout.write("  %-10s: %s\n" % (old_version, old_type))
-    #         sys.stdout.write("  %-10s: %s\n" % (new_version, new_type))
-
     # A --> MISSING FILES
 
     # Handle cases with missing files first. At least old or new are present,

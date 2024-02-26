@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import math
 import time
 from collections.abc import Generator, MutableMapping
 from typing import Any
@@ -183,7 +184,6 @@ def _check_trend(
         value=temp,
     )
 
-    # average trend, initialized with initial temperature value on first check
     rate_avg = get_average(
         value_store=value_store,
         key="temp.%s.trend" % unique_name,
@@ -235,14 +235,13 @@ def _check_trend(
         levels_timeleft_sec = (warn_timeleft_min * 60.0, crit_timeleft_min * 60.0)
 
     diff_to_limit = limit - temp
-    seconds_left = float(diff_to_limit / rate_avg)
-
-    yield from check_levels(
-        value=seconds_left,
-        levels_lower=levels_timeleft_sec,
-        render_func=timespan,
-        label="Time until temperature limit reached",
-    )
+    if rate_avg != 0 and not math.isinf(seconds_left := float(diff_to_limit / rate_avg)):
+        yield from check_levels(
+            value=seconds_left,
+            levels_lower=levels_timeleft_sec,
+            render_func=timespan,
+            label="Time until temperature limit reached",
+        )
 
 
 def check_temperature(  # pylint: disable=too-many-branches

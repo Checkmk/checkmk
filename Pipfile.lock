@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "7eafe759408b0f8462fdebd798e2c931ce9368499e894d2fb5d73a7cb7a7f8ac"
+            "sha256": "95d423259ffbc683531f30558fd90dd8ed062fc5b22911617782851426158786"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -2831,12 +2831,12 @@
         },
         "hypothesis-jsonschema": {
             "hashes": [
-                "sha256:082968cb86a6aac2369627b08753cbf714c08054b1ebfce3588e3756e652cde6",
-                "sha256:5dd7449009f323e408a9aa64afb4d18bd1f60ea2eabf5bf152a510da728b34f2"
+                "sha256:bbf13b49970216b69adfeab666e483bd83691573d9fee55f3c69adeefa978a09",
+                "sha256:c3cc5ecddd78efcb5c10cc3fbcf06aa4d32d8300d0babb8c6f89485f7a503aef"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==0.22.1"
+            "markers": "python_version >= '3.8'",
+            "version": "==0.23.0"
         },
         "identify": {
             "hashes": [
@@ -3906,12 +3906,12 @@
         },
         "schemathesis": {
             "hashes": [
-                "sha256:d02fe7aefc071a8a0a81cc76d2e18ac83bc647a3ecb6204e9acae7ef94b10576",
-                "sha256:f3be922432cb89e44ef6283891c4bd79fab6975094b6bdfaf7a6932aed7e024a"
+                "sha256:8c0fdd700b856feb2d9743a29d319ed3cb9123b79f2ad203e9b6b1e05fe83f9e",
+                "sha256:e74aa1e8fbc6e2ce18ee477469cd5795f960c7e8d4f4bc39ae98999a11b47ee5"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==3.21.2"
+            "markers": "python_version >= '3.8'",
+            "version": "==3.25.4"
         },
         "secretstorage": {
             "hashes": [
@@ -4092,11 +4092,11 @@
         },
         "starlette-testclient": {
             "hashes": [
-                "sha256:3fb6681d1dc7e9ab6dc05b5ab455b822a03f37e7371316a828e2d8380a198a4a",
-                "sha256:dfbcceba46302d58bec086645c789032707a3bb0256d4cf0de66d40c13ded20e"
+                "sha256:31c28c10abd240beb327ef1ee4dc395403c87da07d4665126b7d3c7b60444e04",
+                "sha256:84306a5ca443f81b2d5e838071ed175e9f1ece4ff0806b94778f5122b1c57ee6"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==0.2.0"
+            "version": "==0.3.0"
         },
         "stevedore": {
             "hashes": [

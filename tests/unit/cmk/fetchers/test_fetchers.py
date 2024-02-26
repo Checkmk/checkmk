@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import dataclasses
 import json
 import os
 import socket
@@ -18,7 +17,6 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import]
 from pytest import MonkeyPatch
 
 import cmk.utils.resulttype as result
-import cmk.utils.version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -255,13 +253,6 @@ class TestIPMIFetcher:
     def test_repr(self, fetcher: IPMIFetcher) -> None:
         assert isinstance(repr(fetcher), str)
 
-    def test_fetcher_deserialization(self, fetcher: IPMIFetcher) -> None:
-        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
-        assert isinstance(other, type(fetcher))
-        assert other.address == fetcher.address
-        assert other.username == fetcher.username
-        assert other.password == fetcher.password
-
     def test_with_cached_does_not_open(self, monkeypatch: MonkeyPatch) -> None:
         def open_(*args):
             raise IpmiException()
@@ -314,13 +305,6 @@ class TestPiggybackFetcher:
     def test_repr(self, fetcher: PiggybackFetcher) -> None:
         assert isinstance(repr(fetcher), str)
 
-    def test_fetcher_deserialization(self, fetcher: PiggybackFetcher) -> None:
-        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
-        assert isinstance(other, type(fetcher))
-        assert other.hostname == fetcher.hostname
-        assert other.address == fetcher.address
-        assert other.time_settings == fetcher.time_settings
-
 
 class TestProgramFetcher:
     @pytest.fixture
@@ -333,13 +317,6 @@ class TestProgramFetcher:
 
     def test_repr(self, fetcher: ProgramFetcher) -> None:
         assert isinstance(repr(fetcher), str)
-
-    def test_fetcher_deserialization(self, fetcher: ProgramFetcher) -> None:
-        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
-        assert isinstance(other, ProgramFetcher)
-        assert other.cmdline == fetcher.cmdline
-        assert other.stdin == fetcher.stdin
-        assert other.is_cmc == fetcher.is_cmc
 
 
 class TestSNMPPluginStore:
@@ -428,63 +405,8 @@ class TestSNMPFetcherDeserialization:
             ),
         )
 
-    @pytest.fixture
-    def fetcher_inline(self) -> SNMPFetcher:
-        return SNMPFetcher(
-            sections={},
-            on_error=OnError.RAISE,
-            missing_sys_description=False,
-            do_status_data_inventory=False,
-            section_store_path="/tmp/db",
-            snmp_config=SNMPHostConfig(
-                is_ipv6_primary=False,
-                hostname=HostName("bob"),
-                ipaddress=HostAddress("1.2.3.4"),
-                credentials="public",
-                port=42,
-                is_bulkwalk_host=False,
-                is_snmpv2or3_without_bulkwalk_host=False,
-                bulk_walk_size_of=0,
-                timing={},
-                oid_range_limits={},
-                snmpv3_contexts=[],
-                character_encoding=None,
-                snmp_backend=(
-                    SNMPBackendEnum.INLINE
-                    if cmk_version.edition() is not cmk_version.Edition.CRE
-                    else SNMPBackendEnum.CLASSIC
-                ),
-            ),
-        )
-
-    def test_fetcher_inline_backend_deserialization(self, fetcher_inline: SNMPFetcher) -> None:
-        other = type(fetcher_inline).from_json(json_identity(fetcher_inline.to_json()))
-        assert other.snmp_config.snmp_backend == (
-            SNMPBackendEnum.INLINE
-            if cmk_version.edition() is not cmk_version.Edition.CRE
-            else SNMPBackendEnum.CLASSIC
-        )
-
     def test_repr(self, fetcher: SNMPFetcher) -> None:
         assert isinstance(repr(fetcher), str)
-
-    def test_fetcher_deserialization(self, fetcher: SNMPFetcher) -> None:
-        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
-        assert isinstance(other, SNMPFetcher)
-        assert other.plugin_store == fetcher.plugin_store
-        assert other.checking_sections == fetcher.checking_sections
-        assert other.on_error == fetcher.on_error
-        assert other.missing_sys_description == fetcher.missing_sys_description
-        assert other.snmp_config == fetcher.snmp_config
-        assert other.snmp_config.snmp_backend == SNMPBackendEnum.CLASSIC
-
-    def test_fetcher_deserialization_snmpv3_credentials(self, fetcher: SNMPFetcher) -> None:
-        # snmp_config is Final, but for testing...
-        fetcher.snmp_config = dataclasses.replace(  # type: ignore[misc]
-            fetcher.snmp_config, credentials=("authNoPriv", "md5", "md5", "abc")
-        )
-        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
-        assert other.snmp_config.credentials == fetcher.snmp_config.credentials
 
 
 class TestSNMPFetcherFetch:
@@ -848,15 +770,6 @@ class TestTCPFetcher:
     def test_repr(self, fetcher: TCPFetcher) -> None:
         assert isinstance(repr(fetcher), str)
 
-    def test_fetcher_deserialization(self, fetcher: TCPFetcher) -> None:
-        other = type(fetcher).from_json(json_identity(fetcher.to_json()))
-        assert isinstance(other, type(fetcher))
-        assert other.family == fetcher.family
-        assert other.address == fetcher.address
-        assert other.timeout == fetcher.timeout
-        assert other.encryption_handling == fetcher.encryption_handling
-        assert other.pre_shared_secret == fetcher.pre_shared_secret
-
     def test_with_cached_does_not_open(self) -> None:
         file_cache = StubFileCache[AgentRawData](
             HostName("hostname"),
@@ -927,13 +840,6 @@ class TestFetcherCaching:
     @pytest.fixture
     def fetcher(self) -> Fetcher[AgentRawData]:
         class _Fetcher(Fetcher[AgentRawData]):
-            @classmethod
-            def _from_json(cls, *args: object) -> NoReturn:
-                raise NotImplementedError()
-
-            def to_json(self) -> NoReturn:
-                raise NotImplementedError()
-
             def open(self) -> None:
                 pass
 
@@ -978,13 +884,6 @@ class TestFetcherTimeout:
     T: TypeAlias = tuple[None]
 
     class TimeoutFetcher(Fetcher[T]):
-        @classmethod
-        def _from_json(cls, *args: object) -> NoReturn:
-            raise NotImplementedError()
-
-        def to_json(self) -> NoReturn:
-            raise NotImplementedError()
-
         def open(self) -> None:
             pass
 

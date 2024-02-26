@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import logging
 import os
 import signal
 import subprocess
-from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any, Final
+from typing import Final
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError
@@ -46,17 +44,6 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             )
             + ")"
         )
-
-    @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> "ProgramFetcher":
-        return cls(**copy.deepcopy(dict(serialized)))
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "cmdline": self.cmdline,
-            "stdin": self.stdin,
-            "is_cmc": self.is_cmc,
-        }
 
     def open(self) -> None:
         self._logger.debug("Calling: %s", self.cmdline)

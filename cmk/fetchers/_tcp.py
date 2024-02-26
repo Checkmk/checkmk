@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import logging
 import socket
 import ssl
 import sys
-from collections.abc import Mapping
-from typing import Any, Final
+from typing import Final
 
 import cmk.utils.debug
 from cmk.utils import paths
@@ -108,29 +106,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
             )
             + ")"
         )
-
-    @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
-        serialized_ = copy.deepcopy(dict(serialized))
-        address: tuple[HostAddress, int] = serialized_.pop("address")
-        host_name = HostName(serialized_.pop("host_name"))
-        encryption_handling = TCPEncryptionHandling(serialized_.pop("encryption_handling"))
-        return cls(
-            address=address,
-            host_name=host_name,
-            encryption_handling=encryption_handling,
-            **serialized_,
-        )
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "family": self.family,
-            "address": self.address,
-            "timeout": self.timeout,
-            "host_name": str(self.host_name),
-            "encryption_handling": self.encryption_handling.value,
-            "pre_shared_secret": self.pre_shared_secret,
-        }
 
     def open(self) -> None:
         self._logger.debug(

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import dataclasses
 import logging
 import time
@@ -218,40 +217,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             )
             + ")"
         )
-
-    @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> "SNMPFetcher":
-        # The SNMPv3 configuration is represented by a tuple of different lengths (see
-        # SNMPCredentials). Since we just deserialized from JSON, we have to convert the
-        # list used by JSON back to a tuple.
-        # SNMPv1/v2 communities are represented by a string: Leave it untouched.
-        serialized_ = copy.deepcopy(dict(serialized))
-        if isinstance(serialized_["snmp_config"]["credentials"], list):
-            serialized_["snmp_config"]["credentials"] = tuple(
-                serialized_["snmp_config"]["credentials"]
-            )
-
-        return cls(
-            sections={
-                SectionName(s): SNMPSectionMeta.deserialize(m)
-                for s, m in serialized_["sections"].items()
-            },
-            on_error=OnError(serialized_["on_error"]),
-            missing_sys_description=serialized_["missing_sys_description"],
-            do_status_data_inventory=serialized_["do_status_data_inventory"],
-            section_store_path=serialized_["section_store_path"],
-            snmp_config=SNMPHostConfig.deserialize(serialized_["snmp_config"]),
-        )
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "sections": {str(s): m.serialize() for s, m in self.sections.items()},
-            "on_error": self.on_error.value,
-            "missing_sys_description": self.missing_sys_description,
-            "do_status_data_inventory": self.do_status_data_inventory,
-            "section_store_path": str(self._section_store.path),
-            "snmp_config": self.snmp_config.serialize(),
-        }
 
     def open(self) -> None:
         self._backend = make_backend(self.snmp_config, self._logger)

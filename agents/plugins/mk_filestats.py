@@ -269,7 +269,7 @@ class PatternIterator:
                 if filestat.isfile:
                     yield filestat
                 if filestat.isdir:
-                    for filestat in self._iterate_folder(item):
+                    for filestat in self._iterate_folder(item):  # pylint: disable=all # py2.7
                         yield filestat
 
 

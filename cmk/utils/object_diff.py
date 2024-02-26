@@ -54,8 +54,7 @@ def _iter_path_components(
         if isinstance(component, (str, int)):
             yield component
         else:
-            for value in component:
-                yield value
+            yield from component
 
 
 def _diff_path(*components: PATH_COMPONENT | PATH_COMPONENTS) -> DiffPath:

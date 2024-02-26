@@ -304,27 +304,17 @@ class Preformatted {
     }
 }
 
-interface preformat_number {
-    (value: number, symbol: string): Preformatted;
-}
-
-export class NotationFormatter {
+abstract class NotationFormatter {
     symbol: string;
     precision: AutoPrecision | StrictPrecision;
-    preformat_small_number: preformat_number;
-    preformat_large_number: preformat_number;
 
-    constructor(
-        symbol: string,
-        precision: AutoPrecision | StrictPrecision,
-        preformat_small_number: preformat_number,
-        preformat_large_number: preformat_number
-    ) {
+    constructor(symbol: string, precision: AutoPrecision | StrictPrecision) {
         this.symbol = symbol;
         this.precision = precision;
-        this.preformat_small_number = preformat_small_number;
-        this.preformat_large_number = preformat_large_number;
     }
+
+    abstract _preformat_small_number(value: number): Preformatted;
+    abstract _preformat_large_number(value: number): Preformatted;
 
     apply_precision(value: number): number {
         const value_floor = Math.floor(value);
@@ -351,218 +341,213 @@ export class NotationFormatter {
         }
         let preformatted;
         if (value < 1) {
-            preformatted = this.preformat_small_number(value, this.symbol);
+            preformatted = this._preformat_small_number(value);
         } else {
             // value > 1
-            preformatted = this.preformat_large_number(value, this.symbol);
+            preformatted = this._preformat_large_number(value);
         }
         const value_with_precision = this.apply_precision(preformatted.value);
         return sanitize(String(value_with_precision)) + preformatted.suffix;
     }
 }
 
-export function preformat_number(value: number, symbol: string): Preformatted {
-    return new Preformatted(value, " " + symbol);
-}
-
-export function si_preformat_small_number(
-    value: number,
-    symbol: string
-): Preformatted {
-    const exponent = Math.floor(Math.log10(value)) - 1;
-    let factor: number;
-    let prefix: string;
-    if (exponent <= -24) {
-        factor = Math.pow(1000, 8);
-        prefix = "y";
-    } else if (exponent <= -21) {
-        factor = Math.pow(1000, 7);
-        prefix = "z";
-    } else if (exponent <= -18) {
-        factor = Math.pow(1000, 6);
-        prefix = "a";
-    } else if (exponent <= -15) {
-        factor = Math.pow(1000, 5);
-        prefix = "f";
-    } else if (exponent <= -12) {
-        factor = Math.pow(1000, 4);
-        prefix = "p";
-    } else if (exponent <= -9) {
-        factor = Math.pow(1000, 3);
-        prefix = "n";
-    } else if (exponent <= -6) {
-        factor = Math.pow(1000, 2);
-        prefix = "μ";
-    } else if (exponent <= -3) {
-        factor = 1000;
-        prefix = "m";
-    } else {
-        factor = 1;
-        prefix = "";
+export class DecimalFormatter extends NotationFormatter {
+    _preformat_small_number(value: number): Preformatted {
+        return new Preformatted(value, " " + this.symbol);
     }
-    return new Preformatted(value * factor, " " + prefix + symbol);
-}
 
-export function si_preformat_large_number(
-    value: number,
-    symbol: string
-): Preformatted {
-    const exponent = Math.floor(Math.log10(value));
-    let factor: number;
-    let prefix: string;
-    if (exponent >= 24) {
-        factor = Math.pow(1000, 8);
-        prefix = "Y";
-    } else if (exponent >= 21) {
-        factor = Math.pow(1000, 7);
-        prefix = "Z";
-    } else if (exponent >= 18) {
-        factor = Math.pow(1000, 6);
-        prefix = "E";
-    } else if (exponent >= 15) {
-        factor = Math.pow(1000, 5);
-        prefix = "P";
-    } else if (exponent >= 12) {
-        factor = Math.pow(1000, 4);
-        prefix = "T";
-    } else if (exponent >= 9) {
-        factor = Math.pow(1000, 3);
-        prefix = "G";
-    } else if (exponent >= 6) {
-        factor = Math.pow(1000, 2);
-        prefix = "M";
-    } else if (exponent >= 3) {
-        factor = 1000;
-        prefix = "k";
-    } else {
-        factor = 1;
-        prefix = "";
+    _preformat_large_number(value: number): Preformatted {
+        return new Preformatted(value, " " + this.symbol);
     }
-    return new Preformatted(value / factor, " " + prefix + symbol);
 }
 
-export function iec_preformat_large_number(
-    value: number,
-    symbol: string
-): Preformatted {
-    const exponent = Math.floor(Math.log2(value));
-    let factor: number;
-    let prefix: string;
-    if (exponent >= 80) {
-        factor = Math.pow(1024, 8);
-        prefix = "Yi";
-    } else if (exponent >= 70) {
-        factor = Math.pow(1024, 7);
-        prefix = "Zi";
-    } else if (exponent >= 60) {
-        factor = Math.pow(1024, 6);
-        prefix = "Ei";
-    } else if (exponent >= 50) {
-        factor = Math.pow(1024, 5);
-        prefix = "Pi";
-    } else if (exponent >= 40) {
-        factor = Math.pow(1024, 4);
-        prefix = "Ti";
-    } else if (exponent >= 30) {
-        factor = Math.pow(1024, 3);
-        prefix = "Gi";
-    } else if (exponent >= 20) {
-        factor = Math.pow(1024, 2);
-        prefix = "Mi";
-    } else if (exponent >= 10) {
-        factor = 1024;
-        prefix = "Ki";
-    } else {
-        factor = 1;
-        prefix = "";
+export class SIFormatter extends NotationFormatter {
+    _preformat_small_number(value: number): Preformatted {
+        const exponent = Math.floor(Math.log10(value)) - 1;
+        let factor: number;
+        let prefix: string;
+        if (exponent <= -24) {
+            factor = Math.pow(1000, 8);
+            prefix = "y";
+        } else if (exponent <= -21) {
+            factor = Math.pow(1000, 7);
+            prefix = "z";
+        } else if (exponent <= -18) {
+            factor = Math.pow(1000, 6);
+            prefix = "a";
+        } else if (exponent <= -15) {
+            factor = Math.pow(1000, 5);
+            prefix = "f";
+        } else if (exponent <= -12) {
+            factor = Math.pow(1000, 4);
+            prefix = "p";
+        } else if (exponent <= -9) {
+            factor = Math.pow(1000, 3);
+            prefix = "n";
+        } else if (exponent <= -6) {
+            factor = Math.pow(1000, 2);
+            prefix = "μ";
+        } else if (exponent <= -3) {
+            factor = 1000;
+            prefix = "m";
+        } else {
+            factor = 1;
+            prefix = "";
+        }
+        return new Preformatted(value * factor, " " + prefix + this.symbol);
     }
-    return new Preformatted(value / factor, " " + prefix + symbol);
-}
 
-export function standard_scientific_preformat_small_number(
-    value: number,
-    symbol: string
-): Preformatted {
-    const exponent = Math.floor(Math.log10(value));
-    return new Preformatted(
-        value / Math.pow(10, exponent),
-        "e" + exponent + " " + symbol
-    );
-}
-
-export function standard_scientific_preformat_large_number(
-    value: number,
-    symbol: string
-): Preformatted {
-    const exponent = Math.floor(Math.log10(value));
-    return new Preformatted(
-        value / Math.pow(10, exponent),
-        "e+" + exponent + " " + symbol
-    );
-}
-
-export function engineering_scientific_preformat_small_number(
-    value: number,
-    symbol: string
-): Preformatted {
-    const exponent = Math.floor(Math.log10(value) / 3) * 3;
-    return new Preformatted(
-        value / Math.pow(10, exponent),
-        "e" + exponent + " " + symbol
-    );
-}
-
-export function engineering_scientific_preformat_large_number(
-    value: number,
-    symbol: string
-): Preformatted {
-    const exponent = Math.floor(Math.log10(10000) / 3) * 3;
-    return new Preformatted(
-        value / Math.pow(10, exponent),
-        "e+" + exponent + " " + symbol
-    );
-}
-
-export function time_preformat_small_number(
-    value: number,
-    symbol: string
-): Preformatted {
-    const exponent = Math.floor(Math.log10(value)) - 1;
-    let factor: number;
-    if (exponent <= -6) {
-        factor = Math.pow(1000, 2);
-        symbol = "µs";
-    } else if (exponent <= -3) {
-        factor = 1000;
-        symbol = "ms";
-    } else {
-        factor = 1;
-        symbol = "s";
+    _preformat_large_number(value: number): Preformatted {
+        const exponent = Math.floor(Math.log10(value));
+        let factor: number;
+        let prefix: string;
+        if (exponent >= 24) {
+            factor = Math.pow(1000, 8);
+            prefix = "Y";
+        } else if (exponent >= 21) {
+            factor = Math.pow(1000, 7);
+            prefix = "Z";
+        } else if (exponent >= 18) {
+            factor = Math.pow(1000, 6);
+            prefix = "E";
+        } else if (exponent >= 15) {
+            factor = Math.pow(1000, 5);
+            prefix = "P";
+        } else if (exponent >= 12) {
+            factor = Math.pow(1000, 4);
+            prefix = "T";
+        } else if (exponent >= 9) {
+            factor = Math.pow(1000, 3);
+            prefix = "G";
+        } else if (exponent >= 6) {
+            factor = Math.pow(1000, 2);
+            prefix = "M";
+        } else if (exponent >= 3) {
+            factor = 1000;
+            prefix = "k";
+        } else {
+            factor = 1;
+            prefix = "";
+        }
+        return new Preformatted(value / factor, " " + prefix + this.symbol);
     }
-    return new Preformatted(value * factor, " " + symbol);
+}
+
+export class IECFormatter extends NotationFormatter {
+    _preformat_small_number(value: number): Preformatted {
+        return new Preformatted(value, " " + this.symbol);
+    }
+
+    _preformat_large_number(value: number): Preformatted {
+        const exponent = Math.floor(Math.log2(value));
+        let factor: number;
+        let prefix: string;
+        if (exponent >= 80) {
+            factor = Math.pow(1024, 8);
+            prefix = "Yi";
+        } else if (exponent >= 70) {
+            factor = Math.pow(1024, 7);
+            prefix = "Zi";
+        } else if (exponent >= 60) {
+            factor = Math.pow(1024, 6);
+            prefix = "Ei";
+        } else if (exponent >= 50) {
+            factor = Math.pow(1024, 5);
+            prefix = "Pi";
+        } else if (exponent >= 40) {
+            factor = Math.pow(1024, 4);
+            prefix = "Ti";
+        } else if (exponent >= 30) {
+            factor = Math.pow(1024, 3);
+            prefix = "Gi";
+        } else if (exponent >= 20) {
+            factor = Math.pow(1024, 2);
+            prefix = "Mi";
+        } else if (exponent >= 10) {
+            factor = 1024;
+            prefix = "Ki";
+        } else {
+            factor = 1;
+            prefix = "";
+        }
+        return new Preformatted(value / factor, " " + prefix + this.symbol);
+    }
+}
+
+export class StandardScientificFormatter extends NotationFormatter {
+    _preformat_small_number(value: number): Preformatted {
+        const exponent = Math.floor(Math.log10(value));
+        return new Preformatted(
+            value / Math.pow(10, exponent),
+            "e" + exponent + " " + this.symbol
+        );
+    }
+
+    _preformat_large_number(value: number): Preformatted {
+        const exponent = Math.floor(Math.log10(value));
+        return new Preformatted(
+            value / Math.pow(10, exponent),
+            "e+" + exponent + " " + this.symbol
+        );
+    }
+}
+
+export class EngineeringScientificFormatter extends NotationFormatter {
+    _preformat_small_number(value: number): Preformatted {
+        const exponent = Math.floor(Math.log10(value) / 3) * 3;
+        return new Preformatted(
+            value / Math.pow(10, exponent),
+            "e" + exponent + " " + this.symbol
+        );
+    }
+
+    _preformat_large_number(value: number): Preformatted {
+        const exponent = Math.floor(Math.log10(10000) / 3) * 3;
+        return new Preformatted(
+            value / Math.pow(10, exponent),
+            "e+" + exponent + " " + this.symbol
+        );
+    }
 }
 
 const _ONE_DAY = 86400;
 const _ONE_HOUR = 3600;
 const _ONE_MINUTE = 60;
 
-export function time_preformat_large_number(
-    value: number,
-    symbol: string
-): Preformatted {
-    let factor: number;
-    if (value >= _ONE_DAY) {
-        factor = _ONE_DAY;
-        symbol = "d";
-    } else if (value >= _ONE_HOUR) {
-        factor = _ONE_HOUR;
-        symbol = "h";
-    } else if (value >= _ONE_MINUTE) {
-        factor = _ONE_MINUTE;
-        symbol = "min";
-    } else {
-        factor = 1;
-        symbol = "s";
+export class TimeFormatter extends NotationFormatter {
+    _preformat_small_number(value: number): Preformatted {
+        const exponent = Math.floor(Math.log10(value)) - 1;
+        let factor: number;
+        let prefix: string;
+        if (exponent <= -6) {
+            factor = Math.pow(1000, 2);
+            prefix = "µ";
+        } else if (exponent <= -3) {
+            factor = 1000;
+            prefix = "m";
+        } else {
+            factor = 1;
+            prefix = "";
+        }
+        return new Preformatted(value * factor, " " + prefix + this.symbol);
     }
-    return new Preformatted(value / factor, " " + symbol);
+
+    _preformat_large_number(value: number): Preformatted {
+        let factor: number;
+        let symbol: string;
+        if (value >= _ONE_DAY) {
+            factor = _ONE_DAY;
+            symbol = "d";
+        } else if (value >= _ONE_HOUR) {
+            factor = _ONE_HOUR;
+            symbol = "h";
+        } else if (value >= _ONE_MINUTE) {
+            factor = _ONE_MINUTE;
+            symbol = "min";
+        } else {
+            factor = 1;
+            symbol = this.symbol;
+        }
+        return new Preformatted(value / factor, " " + symbol);
+    }
 }

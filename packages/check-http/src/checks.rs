@@ -7,7 +7,7 @@ use regex::Regex;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     tls::TlsInfo,
-    StatusCode, Url, Version,
+    Method, StatusCode, Url, Version,
 };
 use std::time::{Duration, SystemTime};
 use x509_parser::{certificate::X509Certificate, prelude::FromDer};
@@ -61,6 +61,7 @@ impl TextMatcher {
 
 pub fn collect_response_checks(
     url: Url,
+    method: Method,
     response: Result<(ProcessedResponse, Duration), reqwest::Error>,
     params: CheckParameters,
 ) -> Vec<CheckResult> {
@@ -71,6 +72,7 @@ pub fn collect_response_checks(
 
     check_urls(url, response.final_url)
         .into_iter()
+        .chain(check_method(method))
         .chain(check_version(response.version))
         .chain(check_status(response.status, params.status_code))
         .chain(check_redirect(response.status, params.onredirect))
@@ -131,6 +133,13 @@ fn check_reqwest_error(err: reqwest::Error) -> Vec<CheckResult> {
     .into_iter()
     .flatten()
     .collect()
+}
+
+fn check_method(method: Method) -> Vec<Option<CheckResult>> {
+    vec![CheckResult::details(
+        State::Ok,
+        &format!("Method: {}", method),
+    )]
 }
 
 fn check_version(version: Version) -> Vec<Option<CheckResult>> {
@@ -405,6 +414,21 @@ mod test_check_urls {
                 CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),
                 CheckResult::details(State::Ok, "Redirected to: https://foo.bar/baz"),
             ]
+        )
+    }
+}
+
+#[cfg(test)]
+mod test_check_method {
+    use std::vec;
+
+    use super::*;
+    use reqwest::Method;
+
+    #[test]
+    fn test_ok() {
+        assert!(
+            check_method(Method::POST) == vec![CheckResult::details(State::Ok, "Method: POST"),]
         )
     }
 }

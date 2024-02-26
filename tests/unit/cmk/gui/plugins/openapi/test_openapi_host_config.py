@@ -1486,3 +1486,31 @@ def test_openapi_create_host_in_folder_with_umlaut(clients: ClientRegistry) -> N
     )
     response = clients.HostConfig.create(host_name="host1", folder=f"~{folder_name}")
     assert response.status_code == 200
+
+
+@managedtest
+def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="test_host")
+    resp = clients.HostConfig.edit(
+        host_name="test_host", update_attributes={"parents": ["non-existent"]}, expect_ok=False
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: update_attributes"
+    assert (
+        resp.json["fields"]["update_attributes"]["parents"]["0"][0]
+        == "Host not found: 'non-existent'"
+    )
+
+
+@managedtest
+def test_update_host_parent_must_be_list_of_strings(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="test_host")
+    resp = clients.HostConfig.edit(
+        host_name="test_host", update_attributes={"parents": "wrong-type"}, expect_ok=False
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: update_attributes"
+    assert (
+        "Expected data type is list, but your type is str."
+        in resp.json["fields"]["update_attributes"]["parents"]
+    )

@@ -839,7 +839,10 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         return self.valuespec().from_html_vars(varprefix + self.name())
 
     def validate_input(self, value: Any, varprefix: str) -> None:
-        self.valuespec().validate_value(value, varprefix + self.name())
+        vs = self.valuespec()
+        prefix = varprefix + self.name()
+        vs.validate_datatype(value, prefix)
+        vs.validate_value(value, prefix)
 
 
 class ABCHostAttributeFixedText(ABCHostAttributeText, abc.ABC):

@@ -92,13 +92,11 @@ def test_fetcher_memory_obeserver_vm_size():
     assert 0 < _assertion <= threshold
 
 
-def test_fetcher_memory_observer_hard_limit() -> None:
-    ram_size = 10000
-    observer = FetcherMemoryObserver(200, lambda: ram_size)
+@pytest.mark.parametrize("growth_factor", [0.2, 2], ids=["fractional", "integral"])
+def test_fetcher_memory_observer_hard_limit(growth_factor: float) -> None:
+    ram_size = ONE_KiB
+    expected_limit = int(ram_size * growth_factor)
+    observer = FetcherMemoryObserver(int(growth_factor * 100), lambda: ram_size)
+    assert observer.hard_limit() == 0, "Updates itself ONLY at steady state!"
     _change_state(observer, steady=True, log=LOG_MESSAGE)
-
-    ram_size = observer.memory_usage() * 4 + 1000  # simulate hard limit break
-    with pytest.raises(SystemExit) as exit_expected:
-        observer.check_resources(None, False)
-    assert exit_expected.type == SystemExit
-    assert exit_expected.value.code == 14
+    assert observer.hard_limit() == expected_limit

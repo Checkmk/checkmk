@@ -1369,15 +1369,9 @@ class CommandECUpdateEvent(ECCommand):
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
+            events = ",".join([str(entry["event_id"]) for entry in action_rows])
             return (
-                "UPDATE;%s;%s;%s;%s;%s"
-                % (
-                    row["event_id"],
-                    user.id,
-                    ack and 1 or 0,
-                    comment,
-                    contact,
-                ),
+                f"UPDATE;{events};{user.id};{ack and 1 or 0};{comment};{contact}",
                 self.confirm_dialog_options(cmdtag, row, len(action_rows)),
             )
         return None

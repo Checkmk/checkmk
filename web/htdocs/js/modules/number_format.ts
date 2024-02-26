@@ -265,6 +265,8 @@ export function partitionableDomain(
 //console.assert(comp_array(partitionableDomain([25, 2], 5, domainIntervals("binary")), [0, 32, 8]));
 //console.assert(comp_array(partitionableDomain([NaN, 2], 2, domainIntervals("binary")), [0, 2, 2]));
 
+const MAX_DIGITS = 5;
+
 export class AutoPrecision {
     digits: number;
 
@@ -329,7 +331,12 @@ abstract class NotationFormatter {
                 digits = Math.max(exponent + 1, this.precision.digits);
             }
         }
-        return value_floor + parseFloat(fractional_part.toPrecision(digits));
+        return (
+            value_floor +
+            parseFloat(
+                fractional_part.toPrecision(Math.min(digits, MAX_DIGITS))
+            )
+        );
     }
 
     render(value: number): string {

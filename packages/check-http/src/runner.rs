@@ -11,6 +11,7 @@ pub async fn collect_checks(
     request_cfg: RequestConfig,
     check_params: CheckParameters,
 ) -> Vec<CheckResult> {
+    let url = request_cfg.url.clone();
     let response = http::perform_request(client_cfg, request_cfg).await;
-    checks::collect_response_checks(response, check_params)
+    checks::collect_response_checks(url, response, check_params)
 }

@@ -8,7 +8,7 @@ use clap::{Args, Parser, ValueEnum};
 use regex::{Regex, RegexBuilder};
 use reqwest::{
     header::{HeaderName, HeaderValue},
-    Method, StatusCode,
+    Method, StatusCode, Url,
 };
 use std::{str::FromStr, time::Duration};
 
@@ -35,7 +35,7 @@ pub struct Cli {
 
     /// URL to check
     #[arg(short, long)]
-    pub url: String,
+    pub url: Url,
 
     /// URL version to use for the request.
     /// If not set, start with HTTP/1.1 and upgrade to HTTP/2 if supported by the server.

@@ -7,7 +7,7 @@ use regex::Regex;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     tls::TlsInfo,
-    StatusCode, Version,
+    StatusCode, Url, Version,
 };
 use std::time::{Duration, SystemTime};
 use x509_parser::{certificate::X509Certificate, prelude::FromDer};
@@ -60,6 +60,7 @@ impl TextMatcher {
 }
 
 pub fn collect_response_checks(
+    url: Url,
     response: Result<(ProcessedResponse, Duration), reqwest::Error>,
     params: CheckParameters,
 ) -> Vec<CheckResult> {
@@ -70,6 +71,7 @@ pub fn collect_response_checks(
 
     check_status(response.status, response.version, params.status_code)
         .into_iter()
+        .chain(check_urls(url, response.final_url))
         .chain(check_redirect(response.status, params.onredirect))
         .chain(check_headers(&response.headers, params.header_matchers))
         .chain(check_body(
@@ -96,6 +98,23 @@ pub fn collect_response_checks(
         ))
         .flatten()
         .collect()
+}
+
+fn check_urls(url: Url, final_url: Url) -> Vec<Option<CheckResult>> {
+    let url_text = format!("URL to test: {}", url);
+    let mut results = vec![
+        CheckResult::summary(State::Ok, &url_text),
+        CheckResult::details(State::Ok, &url_text),
+    ];
+    // If we end up with a different final_url, we obviously got redirected.
+    // Since we didn't run into an error, the redirect must be OK.
+    if url != final_url {
+        results.push(CheckResult::details(
+            State::Ok,
+            &format!("Redirected to: {}", final_url),
+        ));
+    }
+    results
 }
 
 fn check_reqwest_error(err: reqwest::Error) -> Vec<CheckResult> {
@@ -352,6 +371,40 @@ fn check_certificate(
         Some(" days"),
         &certificate_levels,
     )
+}
+
+#[cfg(test)]
+mod test_check_urls {
+
+    use super::*;
+    use reqwest::Url;
+
+    #[test]
+    fn test_no_redirect() {
+        assert!(
+            check_urls(
+                Url::parse("https://foo.bar").unwrap(),
+                Url::parse("https://foo.bar/").unwrap(),
+            ) == vec![
+                CheckResult::summary(State::Ok, "URL to test: https://foo.bar/"),
+                CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),
+            ]
+        )
+    }
+
+    #[test]
+    fn test_redirect() {
+        assert!(
+            check_urls(
+                Url::parse("https://foo.bar").unwrap(),
+                Url::parse("https://foo.bar/baz").unwrap(),
+            ) == vec![
+                CheckResult::summary(State::Ok, "URL to test: https://foo.bar/"),
+                CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),
+                CheckResult::details(State::Ok, "Redirected to: https://foo.bar/baz"),
+            ]
+        )
+    }
 }
 
 #[cfg(test)]

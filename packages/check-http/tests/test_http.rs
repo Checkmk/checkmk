@@ -27,7 +27,7 @@ async fn test_basic_get() -> AnyhowResult<()> {
         "HTTP/1.1 200 OK\nConnection: close\n\n",
         "GET / HTTP/1.1",
         State::Ok,
-        "HTTP OK - HTTP/1.1 200 OK",
+        "HTTP OK - Version: HTTP/1.1, Status: 200 OK",
     )
     .await
 }
@@ -38,7 +38,7 @@ async fn test_status_4xx() -> AnyhowResult<()> {
         "HTTP/1.1 401 nope\nConnection: close\n\n",
         "GET / HTTP/1.1",
         State::Warn,
-        "HTTP WARNING - HTTP/1.1 401 Unauthorized",
+        "HTTP WARNING - Version: HTTP/1.1, Status: 401 Unauthorized",
     )
     .await
 }

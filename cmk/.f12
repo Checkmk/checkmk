@@ -43,8 +43,13 @@ echo "Copy check files (checks from the CRE are special: remove vanished files).
 TARGET="${ROOT}/share/check_mk/checks/"
 # NOTE: The -a flag is equivalent to -rlptgoD, but we do *not* want -t, as it
 # would screw up our include caching mechanism!
-sudo rsync -rlpgoD --exclude="__pycache__" --delete-after "base/legacy_checks/" "${TARGET}"
-sudo find "${TARGET}" -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
+sudo rsync \
+    -rlpgoD \
+    --exclude="__pycache__" \
+    --exclude ".mypy_cache" \
+    --delete-after "base/legacy_checks/" \
+    "${TARGET}"
+sudo find "${TARGET}" -iname "*.py" -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
 
 echo "Copy files..."
 sudo rsync \
@@ -52,6 +57,7 @@ sudo rsync \
     --exclude="flycheck*" \
     --exclude="base/legacy_checks" \
     --exclude="__pycache__" \
+    --exclude ".mypy_cache" \
     --delete-after \
     -aR \
     "${PYTHON3_PATHS[@]}" \

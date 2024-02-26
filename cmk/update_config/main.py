@@ -204,6 +204,7 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
 
     # Note: Redis has to be disabled first, the other contexts depend on it
     with disable_redis(), gui_context():
+        _initialize_base_environment()
         for count, pre_action in enumerate(pre_update_actions, start=1):
             logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
             pre_action(conflict_mode)

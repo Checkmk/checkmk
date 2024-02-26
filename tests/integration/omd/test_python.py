@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# flake8: noqa
-
 import json
 import os
 import subprocess
@@ -258,3 +256,14 @@ def test_python_preferred_encoding(site: Site) -> None:
         stdout=subprocess.PIPE,
     )
     assert p.communicate()[0].rstrip() == "UTF-8"
+
+
+def test_python_optimized_and_lto_enable(site: Site) -> None:
+    output = site.execute(
+        ["python3", "-c", "import sysconfig; print(sysconfig.get_config_vars('CONFIG_ARGS'));"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    ).communicate()[0]
+    assert "--enable-optimizations" in output
+    assert "--with-lto" in output

@@ -40,11 +40,6 @@ set)
     if [ -h $OMD_ROOT/etc/apache/conf.d/nagios.conf ]; then
         rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
     fi
-    # NOTE: Although we don't ship Icinga anymore, we leave this to make
-    # sure there is no dangling symlink and keep Apache happy.
-    if [ -h $OMD_ROOT/etc/apache/conf.d/icinga.conf ]; then
-        rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
-    fi
     if [ "$2" != "cmc" ]; then
         rm -f $OMD_ROOT/etc/check_mk/conf.d/microcore.mk
         # Re-add links to logs

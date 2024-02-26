@@ -587,8 +587,7 @@ def _describe_alarms(
     kwargs = {"AlarmNames": names} if names else {}
 
     for page in paginator.paginate(**kwargs):
-        for alarm in get_response_content(page, "MetricAlarms"):
-            yield alarm
+        yield from get_response_content(page, "MetricAlarms")
 
 
 # .

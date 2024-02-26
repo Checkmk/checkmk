@@ -27,7 +27,7 @@ $cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\..\packages\cmk-agent
 
 $platforms = "Configuration=Release,Platform=x86", "Configuration=Release,Platform=x64"
 $err = 0
-$StartTime = $(get-date)
+$env:StartTime = $(get-date)
 
 function RunningCount($j_all){
     $running_count = 0
@@ -41,7 +41,9 @@ function RunningCount($j_all){
 	Write-Host "end" -foreground Cyan
         return 0
     }
-    $elapsedTime = $(get-date) - $global:StartTime
+    $t1 = [datetime]$env:StartTime
+    $t2 = [datetime]$(get-date)
+    $elapsedTime = $t2 - $t1
     Write-Host -NoNewLine "`rStill running " $running_count " seconds elapsed: " $elapsedTime.seconds -foreground Cyan
     return $running_count
 }
@@ -115,6 +117,8 @@ $target = "engine"
 foreach($p in $platforms){
     Write-Host "Starting Job $target - $p" -foreground Blue
     $j_s += start-job -scriptblock $msb -argumentlist $sln, "/m:4", "/t:$target", "/p:$p"
+    # for sequential execution
+    # & $Env:msbuild_exe $sln "/m:4" "/t:$target" "/p:$p"
 }
 Write-Host "Jobs waiting... This may take few minutes" -foreground White
 

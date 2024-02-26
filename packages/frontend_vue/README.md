@@ -18,3 +18,23 @@ npm run build
 npm run lint
 npm run format
 ```
+
+### trying out changes in a site
+
+#### f12
+
+f12 is working, but is using the production ready build process and therefore not
+super fast (currently six seconds)
+
+#### vite dev server
+
+To combine both the vite auto hot reload and the site, the proxy feature of the
+vite dev server is used.
+
+* run `./node_modules/.bin/vite dev`
+* surf to `http://localhost:1573/<yoursite>`
+* enable "Inject frontend_vue files via vite client" in "User Interface"
+  in "Experimental Features" in "global settings"
+
+Checkmk should then automatically reload as soon as you change a file of the
+frontend_vue project.

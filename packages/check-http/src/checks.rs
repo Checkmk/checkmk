@@ -69,9 +69,13 @@ pub fn collect_response_checks(
         Err(err) => return check_reqwest_error(err),
     };
 
-    check_status(response.status, response.version, params.status_code)
+    check_urls(url, response.final_url)
         .into_iter()
-        .chain(check_urls(url, response.final_url))
+        .chain(check_status(
+            response.status,
+            response.version,
+            params.status_code,
+        ))
         .chain(check_redirect(response.status, params.onredirect))
         .chain(check_headers(&response.headers, params.header_matchers))
         .chain(check_body(

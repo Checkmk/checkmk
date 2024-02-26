@@ -5,15 +5,18 @@
 
 
 import json
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-import cmk.plugins.netapp.agent_based.netapp_ontap_environment as ontap_env
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
+from cmk.plugins.lib.temperature import TempParamDict
 from cmk.plugins.netapp.agent_based.netapp_ontap_environment import (
+    check_environment_threshold,
     check_netapp_ontap_environment_discrete,
-    check_netapp_ontap_environment_threshold,
     discover_netapp_ontap_environment,
     parse_netapp_ontap_environment,
 )
@@ -142,9 +145,8 @@ def test_check_netapp_ontap_environment_discrete(item: str, expected_result: Che
     assert list(result) == expected_result
 
 
-@pytest.fixture(name="value_store_patch")
-def value_store_fixture(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(ontap_env, "get_value_store", lambda: {})
+NOW_SIMULATED_SECONDS = 0
+FIVE_MIN_AGO_SIMULATED_SECONDS = -300
 
 
 _THRESHOLD_MODELS = [
@@ -184,21 +186,25 @@ _THRESHOLD_MODELS = [
 ]
 
 
-def test_check_netapp_ontap_environment_threshold_voltage(value_store_patch: None) -> None:
+def test_check_environment_threshold_voltage() -> None:
     section = {model.name: model for model in _THRESHOLD_MODELS}
 
     result = list(
-        check_netapp_ontap_environment_threshold(item="voltage_sensor", params={}, section=section)
+        check_environment_threshold(
+            item="voltage_sensor", params={}, section=section, value_store={}
+        )
     )
 
     assert result == [Result(state=State.OK, summary="10.0 v"), Metric("voltage", 10.0)]
 
 
-def test_check_netapp_ontap_environment_threshold_thermal(value_store_patch: None) -> None:
+def test_check_environment_threshold_thermal() -> None:
     section = {model.name: model for model in _THRESHOLD_MODELS}
 
     result = list(
-        check_netapp_ontap_environment_threshold(item="thermal_sensor", params={}, section=section)
+        check_environment_threshold(
+            item="thermal_sensor", params={}, section=section, value_store={}
+        )
     )
 
     assert isinstance(result[0], Metric)
@@ -208,13 +214,109 @@ def test_check_netapp_ontap_environment_threshold_thermal(value_store_patch: Non
     assert result[1].state == State.WARN and result[1].summary.startswith("Temperature: 30 °C")
 
 
-def test_check_netapp_ontap_environment_threshold_fan(value_store_patch: None) -> None:
+def test_check_environment_threshold_fan() -> None:
     section = {model.name: model for model in _THRESHOLD_MODELS}
 
     result = list(
-        check_netapp_ontap_environment_threshold(item="fan_sensor", params={}, section=section)
+        check_environment_threshold(item="fan_sensor", params={}, section=section, value_store={})
     )
 
     assert result[0] == Result(state=State.OK, summary="3000 rpm")
     assert isinstance(result[1], Metric)
     assert result[1].name == "fan" and result[1].value == 3000.0
+
+
+@pytest.mark.parametrize(
+    "sensor_model, expected_result",
+    [
+        pytest.param(
+            EnvironmentThresholdSensorModelFactory.build(
+                name="thermal_sensor",
+                sensor_type="thermal",
+                value=10,
+                value_units="C",
+                threshold_state="normal",
+                warning_high_threshold=20,
+                warning_low_threshold=0,
+                critical_high_threshold=90,
+                critical_low_threshold=0,
+            ),
+            [
+                Metric("temp", 10.0, levels=(20.0, 90.0)),
+                Result(state=State.OK, summary="Temperature: 10 °C"),
+                Result(
+                    state=State.WARN,
+                    summary="Temperature trend: +10.0 °C per 5 min (warn/crit at +5 °C per 5 min/+10 °C per 5 min)",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Time until temperature limit reached: 40 minutes 0 seconds (warn/crit below 4 hours 0 minutes/2 hours 0 minutes)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+            ],
+            id="rate value present",
+        ),
+        pytest.param(
+            EnvironmentThresholdSensorModelFactory.build(
+                name="thermal_sensor",
+                sensor_type="thermal",
+                value=0.0,
+                value_units="C",
+                threshold_state="normal",
+                warning_high_threshold=20,
+                warning_low_threshold=0,
+                critical_high_threshold=90,
+                critical_low_threshold=0,
+            ),
+            [
+                Metric("temp", 0.0, levels=(20.0, 90.0)),
+                Result(state=State.OK, summary="Temperature: 0 °C"),
+                Result(state=State.OK, summary="Temperature trend: +0.0 °C per 5 min"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+            ],
+            id="rate value 0",
+        ),
+    ],
+)
+def test_check_environment_threshold_thermal_trend(
+    sensor_model: EnvironmentThresholdSensorModel,
+    expected_result: CheckResult,
+) -> None:
+    section = {sensor_model.name: sensor_model}
+
+    params = TempParamDict(
+        input_unit="c",
+        output_unit="c",
+        trend_compute={
+            "period": 5,
+            "trend_levels": (5, 10),
+            "trend_levels_lower": (5, 10),
+            "trend_timeleft": (240, 120),
+        },
+    )
+
+    value_store = {
+        "temp.netapp_environment_thermal_thermal_sensor.dev.delta": (
+            FIVE_MIN_AGO_SIMULATED_SECONDS,
+            0.0,
+        ),
+        "temp.netapp_environment_thermal_thermal_sensor.delta": (
+            FIVE_MIN_AGO_SIMULATED_SECONDS,
+            0.0,
+        ),
+    }
+
+    with time_machine.travel(datetime.fromtimestamp(NOW_SIMULATED_SECONDS, tz=ZoneInfo("UTC"))):
+        result = list(
+            check_environment_threshold(
+                item="thermal_sensor", params=params, section=section, value_store=value_store
+            )
+        )
+
+        assert result == expected_result

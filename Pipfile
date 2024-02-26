@@ -24,7 +24,7 @@ fakeredis = {version = "*", extras = ["lua"]}  # used for testing code which use
 fastapi = "*"  # needed to run fake idp for cse tests
 flake8 = "*"
 hypothesis = "*"    # used by unit tests
-hypothesis-jsonschema = "==0.22.1"  # pinned for: AttributeError: module 'jsonschema.exceptions' has no attribute '_RefResolutionError'. Did you mean: 'RefResolutionError'?
+hypothesis-jsonschema = "*"  # used by unit tests
 isort = "*"  # used as a plugin for editors
 jsonschema = "*"
 msrest = "*"

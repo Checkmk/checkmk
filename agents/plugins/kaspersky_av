@@ -14,11 +14,37 @@ CMK_VERSION="2.4.0b1"
 KAV4FS="kav4fs"
 KESL="kesl"
 
+# check that no users other than root that can change the file
+root_owned() {
+    read -r permissions _ owner group _ <<EOF
+$1
+EOF
+
+    group_write_perm=$(echo "$permissions" | cut -c 6)
+    other_write_perm=$(echo "$permissions" | cut -c 9)
+
+    # the file is either owned by root user and root group and other users don't
+    # have write permissions
+    if [ "$owner" = "root" ] && [ "$group" = "root" ] && [ "$other_write_perm" = "-" ]; then
+        true
+        return
+    fi
+
+    # or it's is owned by root and neither the group nor other users have write permissions
+    if [ "$owner" = "root" ] && [ "$group_write_perm" = "-" ] && [ "$other_write_perm" = "-" ]; then
+        true
+        return
+    fi
+
+    false
+}
+
 run() {
     suite="$1"
     control="/opt/kaspersky/$suite/bin/$suite-control"
 
     [ -x "$(command -v "$control")" ] || return
+    root_owned "$(ls -l "$control")" || return
 
     if [ "$suite" = "$KAV4FS" ]; then
         echo "<<<kaspersky_av_updates:sep(58)>>>"

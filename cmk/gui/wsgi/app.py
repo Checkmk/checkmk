@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import typing as t
+import warnings
 
 import werkzeug
 from flask import Flask, redirect
@@ -53,6 +54,16 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     # Config needs a request context to work. :(
     # Until this can work, we need to do it at runtime in `FileBasedSession`.
     # app.config["PERMANENT_SESSION_LIFETIME"] = active_config.session_mgmt["user_idle_timeout"]
+
+    # NOTE: some schemas are generically generated. On default, for duplicate schema names, we
+    # get name+increment which we have deemed fine. We can therefore suppress those warnings.
+    # https://github.com/marshmallow-code/apispec/issues/444
+    warnings.filterwarnings("ignore", message="Multiple schemas resolved to the name")
+    warnings.filterwarnings(
+        "ignore",
+        ".* has already been added to the spec",
+        category=UserWarning,
+    )
 
     # NOTE: The ordering of the blueprints is important, due to routing precedence, i.e. Rule
     # instances which are evaluated later but have the same URL will be ignored. The first Rule

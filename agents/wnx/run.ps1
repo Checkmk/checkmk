@@ -69,20 +69,20 @@ if ($args.Length -eq 0) {
 else {
     for ($i = 0; $i -lt $args.Length; $i++) {
         switch ($args[$i]) {
-            { "-h", "--help" -eq $_ } { Write-Help; return }
-            { "-A", "--all" -eq $_ } { $argAll = $true }
-            { "-c", "--clean" } { $argClean = $true }
-            { "-S", "--setup" } { $argSetup = $true }
-            { "-f", "--format" } { $argFormat = $true }
-            { "-F", "--check-format" } { $argCheckFormat = $true }
-            { "-C", "--controller" } { $argCtl = $true }
-            { "-B", "--build" } { $argBuild = $true }
-            { "-M", "--msi" } { $argMsi = $true }
-            { "-O", "--ohm" } { $argOhm = $true }
-            { "-Q", "--mk-sql" } { $argSql = $true }
-            { "-E", "--extensions" } { $argExt = $true }
-            { "-T". "---test" } { $argTest = $true }
-            { "-D", "--documentation" } { $argDoc = $true }
+            { $("-h", "--help") -contains "$_" } { Write-Help; return }
+            { $("-A", "--all") -contains $_ } { $argAll = $true }
+            { $("-c", "--clean") -contains $_ } { $argClean = $true }
+            { $("-S", "--setup") -contains $_ } { $argSetup = $true }
+            { $("-f", "--format") -contains $_ } { $argFormat = $true }
+            { $("-F", "--check-format") -contains $_ } { $argCheckFormat = $true }
+            { $("-C", "--controller") -contains $_ } { $argCtl = $true }
+            { $("-B", "--build") -contains $_ } { $argBuild = $true }
+            { $("-M", "--msi") -contains $_ } { $argMsi = $true }
+            { $("-O", "--ohm") -contains $_ } { $argOhm = $true }
+            { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
+            { $("-E", "--extensions") -contains $_ } { $argExt = $true }
+            { $("-T". "---test") -contains $_ } { $argTest = $true }
+            { $("-D", "--documentation") -contains $_ } { $argDoc = $true }
             "--detach" { $argDetach = $true }
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
@@ -95,6 +95,10 @@ else {
         }
     }
 }
+if ($argExt) {
+    Write-Host "Cleaning..."
+}
+
 
 if ($argAll) {
     $argCtl = $true
@@ -126,6 +130,17 @@ function Invoke-CheckApp( [String]$title, [String]$cmdline ) {
     }
 }
 
+function Set-Version() {
+    $first_line = Get-Content -Path "include\common\wnx_version.h" -TotalCount 1
+    if ($first_line.Substring(0, 29) -eq "#define CMK_WIN_AGENT_VERSION") {
+        $env:wnx_version = $first_line.Substring(30, $first_line.Length - 30)
+        Write-Host "Used version: $env:wnx_version"
+    }
+    else {
+        Write-Host "wnx_version not found in include\common\wnx_version.h" -ForegroundColor Red
+    }
+}
+
 function Clear-Artifacts( [String]$arte) {
     Write-Host "Cleaning artifacts..."
     $masks = "*.msi", "*.exe", "*.log", "*.yml"
@@ -137,7 +152,10 @@ function Clear-Artifacts( [String]$arte) {
 function Build-Project {
     # Build project
     Write-Host "Building project..."
-    # Equivalent commands to build project
+    $make_exe = where.exe make | Out-String
+    $env:make_exe = $make_exe.trim()
+    Write-Host make is $env:make_exe 
+    & ".\msb.ps1"
 }
 
 # Conditional execution based on arguments
@@ -155,7 +173,7 @@ if ($argAll) {
 # Implement other flags and functionality as needed...
 
 # Example of getting start time
-$startTime = Get-Date
+$mainStartTime = Get-Date
 
 Invoke-CheckApp "choco" "choco -v"
 Invoke-CheckApp "perl" "perl -v"
@@ -167,11 +185,23 @@ if ($argClean) {
     Clear-Artifacts $arte
 }
 
+if ($argBuild) {
+    Write-Host "Building Agent..." -ForegroundColor White
+    $env:msbuild_exe = $msbuild_exe
+    Set-Version
+    Build-Project
+}
+else {
+    Write-Host "Skipping Agent build..." -ForegroundColor Yellow
+}
+
+
+
 
 
 # Example of calculating elapsed time
 $endTime = Get-Date
-$elapsedTime = $endTime - $startTime
+$elapsedTime = $endTime - $mainStartTime
 Write-Host "Elapsed time: $($elapsedTime.Hours):$($elapsedTime.Minutes):$($elapsedTime.Seconds)"
 
 

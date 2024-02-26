@@ -46,11 +46,10 @@ Cache hierarchy
 from __future__ import annotations
 
 import abc
-import copy
 import enum
 import logging
 import os
-from collections.abc import Mapping, Sized
+from collections.abc import Sized
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
@@ -156,22 +155,6 @@ class FileCache(Generic[_TRawData], abc.ABC):
                 self.file_cache_mode == other.file_cache_mode,
             )
         )
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "hostname": str(self.hostname),
-            "path_template": self.path_template,
-            "max_age": self.max_age,
-            "simulation": self.simulation,
-            "use_only_cache": self.use_only_cache,
-            "file_cache_mode": self.file_cache_mode,
-        }
-
-    @classmethod
-    def from_json(cls: type[TFileCache], serialized: Mapping[str, Any]) -> TFileCache:
-        serialized_ = copy.deepcopy(dict(serialized))
-        max_age = MaxAge(*serialized_.pop("max_age"))
-        return cls(max_age=max_age, **serialized_)
 
     @staticmethod
     @abc.abstractmethod

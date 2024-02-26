@@ -67,7 +67,7 @@ def check_netapp_api_environment_discrete(item, _no_params, parsed):
     yield state, f"Sensor state: {sensor_state}, Sensor value: {sensor_value}"
 
 
-def check_netapp_api_environment_threshold(item, _no_params, parsed):
+def check_netapp_api_environment_threshold(item, params, parsed):
     """Check a service giving continuous values and boundaries of said"""
 
     def _perf_key(_key):
@@ -107,7 +107,7 @@ def check_netapp_api_environment_threshold(item, _no_params, parsed):
     if sensor_type == "thermal":
         yield check_temperature(
             _scale(sensor_value, unit),
-            _no_params,
+            params,
             _perf_key(f"netapp_environment_thermal_{sensor_name}"),
             dev_unit=_scale_unit(unit),
             dev_levels=levels[:2],

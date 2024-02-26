@@ -7,7 +7,7 @@ use regex::Regex;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     tls::TlsInfo,
-    StatusCode, Url, Version,
+    Method, StatusCode, Url, Version,
 };
 use std::time::{Duration, SystemTime};
 use x509_parser::{certificate::X509Certificate, prelude::FromDer};
@@ -61,6 +61,7 @@ impl TextMatcher {
 
 pub fn collect_response_checks(
     url: Url,
+    method: Method,
     response: Result<(ProcessedResponse, Duration), reqwest::Error>,
     params: CheckParameters,
 ) -> Vec<CheckResult> {
@@ -69,9 +70,11 @@ pub fn collect_response_checks(
         Err(err) => return check_reqwest_error(err),
     };
 
-    check_status(response.status, response.version, params.status_code)
+    check_urls(url, response.final_url)
         .into_iter()
-        .chain(check_urls(url, response.final_url))
+        .chain(check_method(method))
+        .chain(check_version(response.version))
+        .chain(check_status(response.status, params.status_code))
         .chain(check_redirect(response.status, params.onredirect))
         .chain(check_headers(&response.headers, params.header_matchers))
         .chain(check_body(
@@ -102,10 +105,7 @@ pub fn collect_response_checks(
 
 fn check_urls(url: Url, final_url: Url) -> Vec<Option<CheckResult>> {
     let url_text = format!("URL to test: {}", url);
-    let mut results = vec![
-        CheckResult::summary(State::Ok, &url_text),
-        CheckResult::details(State::Ok, &url_text),
-    ];
+    let mut results = vec![CheckResult::details(State::Ok, &url_text)];
     // If we end up with a different final_url, we obviously got redirected.
     // Since we didn't run into an error, the redirect must be OK.
     if url != final_url {
@@ -135,23 +135,35 @@ fn check_reqwest_error(err: reqwest::Error) -> Vec<CheckResult> {
     .collect()
 }
 
+fn check_method(method: Method) -> Vec<Option<CheckResult>> {
+    vec![CheckResult::details(
+        State::Ok,
+        &format!("Method: {}", method),
+    )]
+}
+
+fn check_version(version: Version) -> Vec<Option<CheckResult>> {
+    vec![
+        CheckResult::summary(State::Ok, &format!("Version: {:?}", version)),
+        CheckResult::details(State::Ok, &format!("Version: {:?}", version)),
+    ]
+}
+
 fn check_status(
     status: StatusCode,
-    version: Version,
     accepted_statuses: Vec<StatusCode>,
 ) -> Vec<Option<CheckResult>> {
-    fn default_statuscode_state(status: StatusCode) -> State {
-        if status.is_client_error() {
-            State::Warn
-        } else if status.is_server_error() {
-            State::Crit
-        } else {
-            State::Ok
-        }
-    }
-
     let (state, status_text) = if accepted_statuses.is_empty() {
-        (default_statuscode_state(status), String::new())
+        (
+            if status.is_client_error() {
+                State::Warn
+            } else if status.is_server_error() {
+                State::Crit
+            } else {
+                State::Ok
+            },
+            String::new(),
+        )
     } else if accepted_statuses.contains(&status) {
         (State::Ok, String::new())
     } else {
@@ -172,7 +184,7 @@ fn check_status(
         )
     };
 
-    let text = format!("{:?} {}{}", version, status, status_text);
+    let text = format!("Status: {}{}", status, status_text);
     vec![
         CheckResult::summary(state.clone(), &text),
         CheckResult::details(state, &text),
@@ -385,10 +397,10 @@ mod test_check_urls {
             check_urls(
                 Url::parse("https://foo.bar").unwrap(),
                 Url::parse("https://foo.bar/").unwrap(),
-            ) == vec![
-                CheckResult::summary(State::Ok, "URL to test: https://foo.bar/"),
-                CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),
-            ]
+            ) == vec![CheckResult::details(
+                State::Ok,
+                "URL to test: https://foo.bar/"
+            ),]
         )
     }
 
@@ -399,10 +411,43 @@ mod test_check_urls {
                 Url::parse("https://foo.bar").unwrap(),
                 Url::parse("https://foo.bar/baz").unwrap(),
             ) == vec![
-                CheckResult::summary(State::Ok, "URL to test: https://foo.bar/"),
                 CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),
                 CheckResult::details(State::Ok, "Redirected to: https://foo.bar/baz"),
             ]
+        )
+    }
+}
+
+#[cfg(test)]
+mod test_check_method {
+    use std::vec;
+
+    use super::*;
+    use reqwest::Method;
+
+    #[test]
+    fn test_ok() {
+        assert!(
+            check_method(Method::POST) == vec![CheckResult::details(State::Ok, "Method: POST"),]
+        )
+    }
+}
+
+#[cfg(test)]
+mod test_check_version {
+    use std::vec;
+
+    use super::*;
+    use reqwest::Version;
+
+    #[test]
+    fn test_ok() {
+        assert!(
+            check_version(Version::HTTP_11)
+                == vec![
+                    CheckResult::summary(State::Ok, "Version: HTTP/1.1"),
+                    CheckResult::details(State::Ok, "Version: HTTP/1.1"),
+                ]
         )
     }
 }
@@ -412,15 +457,15 @@ mod test_check_status {
     use std::vec;
 
     use super::*;
-    use reqwest::{StatusCode, Version};
+    use reqwest::StatusCode;
 
     #[test]
     fn test_success_unchecked() {
         assert!(
-            check_status(StatusCode::OK, Version::HTTP_11, vec![])
+            check_status(StatusCode::OK, vec![])
                 == vec![
-                    CheckResult::summary(State::Ok, "HTTP/1.1 200 OK"),
-                    CheckResult::details(State::Ok, "HTTP/1.1 200 OK"),
+                    CheckResult::summary(State::Ok, "Status: 200 OK"),
+                    CheckResult::details(State::Ok, "Status: 200 OK"),
                 ]
         )
     }
@@ -428,10 +473,10 @@ mod test_check_status {
     #[test]
     fn test_client_error_unchecked() {
         assert!(
-            check_status(StatusCode::EXPECTATION_FAILED, Version::HTTP_11, vec![])
+            check_status(StatusCode::EXPECTATION_FAILED, vec![])
                 == vec![
-                    CheckResult::summary(State::Warn, "HTTP/1.1 417 Expectation Failed"),
-                    CheckResult::details(State::Warn, "HTTP/1.1 417 Expectation Failed"),
+                    CheckResult::summary(State::Warn, "Status: 417 Expectation Failed"),
+                    CheckResult::details(State::Warn, "Status: 417 Expectation Failed"),
                 ]
         )
     }
@@ -439,10 +484,10 @@ mod test_check_status {
     #[test]
     fn test_server_error_unchecked() {
         assert!(
-            check_status(StatusCode::INTERNAL_SERVER_ERROR, Version::HTTP_11, vec![])
+            check_status(StatusCode::INTERNAL_SERVER_ERROR, vec![])
                 == vec![
-                    CheckResult::summary(State::Crit, "HTTP/1.1 500 Internal Server Error"),
-                    CheckResult::details(State::Crit, "HTTP/1.1 500 Internal Server Error"),
+                    CheckResult::summary(State::Crit, "Status: 500 Internal Server Error"),
+                    CheckResult::details(State::Crit, "Status: 500 Internal Server Error"),
                 ]
         )
     }
@@ -450,10 +495,10 @@ mod test_check_status {
     #[test]
     fn test_success_checked_ok() {
         assert!(
-            check_status(StatusCode::OK, Version::HTTP_11, vec![StatusCode::OK])
+            check_status(StatusCode::OK, vec![StatusCode::OK])
                 == vec![
-                    CheckResult::summary(State::Ok, "HTTP/1.1 200 OK"),
-                    CheckResult::details(State::Ok, "HTTP/1.1 200 OK"),
+                    CheckResult::summary(State::Ok, "Status: 200 OK"),
+                    CheckResult::details(State::Ok, "Status: 200 OK"),
                 ]
         )
     }
@@ -461,10 +506,10 @@ mod test_check_status {
     #[test]
     fn test_success_checked_not_ok() {
         assert!(
-            check_status(StatusCode::OK, Version::HTTP_11, vec![StatusCode::IM_USED])
+            check_status(StatusCode::OK, vec![StatusCode::IM_USED])
                 == vec![
-                    CheckResult::summary(State::Crit, "HTTP/1.1 200 OK (expected 226 IM Used)"),
-                    CheckResult::details(State::Crit, "HTTP/1.1 200 OK (expected 226 IM Used)"),
+                    CheckResult::summary(State::Crit, "Status: 200 OK (expected 226 IM Used)"),
+                    CheckResult::details(State::Crit, "Status: 200 OK (expected 226 IM Used)"),
                 ]
         )
     }
@@ -474,11 +519,10 @@ mod test_check_status {
         assert!(
             check_status(
                 StatusCode::OK,
-                Version::HTTP_11,
                 vec![StatusCode::ACCEPTED, StatusCode::IM_USED]
             ) == vec![
-                CheckResult::summary(State::Crit, "HTTP/1.1 200 OK (expected one of [202 226])"),
-                CheckResult::details(State::Crit, "HTTP/1.1 200 OK (expected one of [202 226])"),
+                CheckResult::summary(State::Crit, "Status: 200 OK (expected one of [202 226])"),
+                CheckResult::details(State::Crit, "Status: 200 OK (expected one of [202 226])"),
             ]
         )
     }
@@ -486,14 +530,11 @@ mod test_check_status {
     #[test]
     fn test_client_error_checked_ok() {
         assert!(
-            check_status(
-                StatusCode::IM_A_TEAPOT,
-                Version::HTTP_11,
-                vec![StatusCode::IM_A_TEAPOT]
-            ) == vec![
-                CheckResult::summary(State::Ok, "HTTP/1.1 418 I'm a teapot"),
-                CheckResult::details(State::Ok, "HTTP/1.1 418 I'm a teapot"),
-            ]
+            check_status(StatusCode::IM_A_TEAPOT, vec![StatusCode::IM_A_TEAPOT])
+                == vec![
+                    CheckResult::summary(State::Ok, "Status: 418 I'm a teapot"),
+                    CheckResult::details(State::Ok, "Status: 418 I'm a teapot"),
+                ]
         )
     }
 }

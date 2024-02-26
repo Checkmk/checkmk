@@ -2998,17 +2998,6 @@ def main_update(  # pylint: disable=too-many-branches
         f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Updating site '{site.name}' from version {from_version} to {to_version}...\n\n"
     )
 
-    # etc/icinga/icinga.d/pnp4nagios.cfg was created by the PNP4NAGIOS OMD hook in previous
-    # versions. Since we have removed Icinga 1 the "omd update" command tries to remove the
-    # directory and complains about a non empty directory because of this left over symlink.
-    # The hook could clean it up on it's own, but it would be too late and the warning is
-    # displayed. We want to reduce the confusions about this, so we remove this file in
-    # advance here.
-    # This may be cleaned up one day, e.g. with 1.8 or 1.9. The worst that
-    # would happen is that the users will be asked what to do.
-    if os.path.lexists(site.dir + "/etc/icinga/icinga.d/pnp4nagios.cfg"):
-        os.unlink(site.dir + "/etc/icinga/icinga.d/pnp4nagios.cfg")
-
     # Now apply changes of skeleton files. This can be done
     # in two ways:
     # 1. creating a patch from the old default files to the new

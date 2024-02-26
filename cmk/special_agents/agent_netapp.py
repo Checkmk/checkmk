@@ -1150,6 +1150,7 @@ def process_clustermode(  # pylint: disable=too-many-branches
                     "disk-used",
                     "quota-type",
                     "quota-users.quota-user.quota-user-name",
+                    "vserver",
                 ],
                 config_rename={"quota-users.quota-user.quota-user-name": "quota-users"},
             )

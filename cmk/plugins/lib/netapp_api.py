@@ -77,6 +77,7 @@ class Qtree(NamedTuple):
     disk_used: str
     files_used: str = ""
     file_limit: str = ""
+    vserver: str
 
 
 def parse_netapp_api_multiple_instances(
@@ -679,6 +680,9 @@ def check_netapp_qtree_quota(
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     disk_limit = qtree.disk_limit
+
+
+    yield Result(state=State.OK, summary=f"vServer: {qtree.vserver}")
 
     if not disk_limit.isdigit():
         yield Result(state=State.UNKNOWN, summary="Qtree has no disk limit set")

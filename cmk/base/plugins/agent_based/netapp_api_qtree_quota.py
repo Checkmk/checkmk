@@ -42,6 +42,7 @@ def iter_netapp_api_qtree_quota(
                 disk_used=instance.get("disk-used", ""),
                 files_used=instance.get("files-used", ""),
                 file_limit=instance.get("file-limit", ""),
+                vserver=instance.get('vserver', "")
             )
             yield item, qtree
 

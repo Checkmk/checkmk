@@ -144,18 +144,17 @@ fn check_status(
     status: StatusCode,
     accepted_statuses: Vec<StatusCode>,
 ) -> Vec<Option<CheckResult>> {
-    fn default_statuscode_state(status: StatusCode) -> State {
-        if status.is_client_error() {
-            State::Warn
-        } else if status.is_server_error() {
-            State::Crit
-        } else {
-            State::Ok
-        }
-    }
-
     let (state, status_text) = if accepted_statuses.is_empty() {
-        (default_statuscode_state(status), String::new())
+        (
+            if status.is_client_error() {
+                State::Warn
+            } else if status.is_server_error() {
+                State::Crit
+            } else {
+                State::Ok
+            },
+            String::new(),
+        )
     } else if accepted_statuses.contains(&status) {
         (State::Ok, String::new())
     } else {

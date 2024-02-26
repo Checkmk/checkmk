@@ -8,11 +8,11 @@ use mime::Mime;
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE},
     tls::TlsInfo,
-    Client, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
+    Client, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Url, Version,
 };
 
 pub struct RequestConfig {
-    pub url: String,
+    pub url: Url,
     pub method: Method,
     pub version: Option<Version>,
     pub headers: Vec<(HeaderName, HeaderValue)>,
@@ -29,6 +29,7 @@ pub struct ProcessedResponse {
     pub status: StatusCode,
     pub headers: HeaderMap,
     pub body: Option<ReqwestResult<Body>>,
+    pub final_url: Url,
     pub tls_info: Option<TlsInfo>,
 }
 
@@ -45,6 +46,7 @@ pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<Processed
     let headers = response.headers().to_owned();
     let version = response.version();
     let status = response.status();
+    let final_url = response.url().clone();
     let tls_info = response.extensions_mut().remove::<TlsInfo>();
     let body = if fetch_body {
         Some(process_body(response.bytes().await, &headers))
@@ -57,6 +59,7 @@ pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<Processed
         status,
         headers,
         body,
+        final_url,
         tls_info,
     })
 }

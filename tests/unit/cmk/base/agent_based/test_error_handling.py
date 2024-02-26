@@ -68,7 +68,7 @@ def test_MKGeneralException_returns_3() -> None:
     assert handler.result == (3, "kaputt!\n")
 
 
-@pytest.mark.usefixtures("disable_debug")
+@pytest.mark.usefixtures("disable_debug", "patch_omd_site")
 def test_unhandled_exception_returns_3() -> None:
     handler = _handler()
     with handler:

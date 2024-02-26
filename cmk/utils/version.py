@@ -16,7 +16,6 @@ import enum
 import functools
 import os
 import re
-import subprocess
 import sys
 import time
 from dataclasses import dataclass
@@ -28,6 +27,7 @@ from typing_extensions import assert_never
 
 import cmk.utils.paths
 from cmk.utils.i18n import _
+from cmk.utils.site import get_omd_config
 
 
 class _EditionValue(NamedTuple):
@@ -770,17 +770,4 @@ def _get_os_info() -> str:
 
 
 def _current_monitoring_core() -> str:
-    try:
-        completed_process = subprocess.run(
-            ["omd", "config", "show", "CORE"],
-            close_fds=True,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            encoding="utf-8",
-            check=False,
-        )
-    except FileNotFoundError:
-        # Allow running unit tests on systems without omd installed (e.g. on travis)
-        return "UNKNOWN"
-    return completed_process.stdout.rstrip()
+    return get_omd_config().get("CONFIG_CORE", "UNKNOWN")

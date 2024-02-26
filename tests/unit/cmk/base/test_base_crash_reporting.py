@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
+import pytest
 from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
@@ -36,6 +36,7 @@ def _check_generic_crash_info(crash):
         )
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:
     hostname = HostName("testhost")
     Scenario().apply(monkeypatch)
@@ -62,6 +63,7 @@ def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:
     assert crash.crash_info["exc_value"] == "DING"
 
 
+@pytest.mark.usefixtures("patch_omd_site")
 def test_check_crash_report_save(monkeypatch: MonkeyPatch) -> None:
     hostname = HostName("testhost")
     Scenario().apply(monkeypatch)

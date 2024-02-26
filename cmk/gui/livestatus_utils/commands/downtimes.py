@@ -42,6 +42,8 @@ class DOWNTIME:
     SCHEDULE_SERVICE: LivestatusCommand = "SCHEDULE_SVC_DOWNTIME"
     DELETE_HOST: LivestatusCommand = "DEL_HOST_DOWNTIME"
     DELETE_SERVICE: LivestatusCommand = "DEL_SVC_DOWNTIME"
+    MODIFY_HOST: LivestatusCommand = "MODIFY_HOST_DOWNTIME"
+    MODIFY_SERVICE: LivestatusCommand = "MODIFY_SVC_DOWNTIME"
 
 
 class QueryException(Exception):
@@ -133,6 +135,38 @@ def delete_downtime(
             _del_service_downtime(connection, downtime["id"], downtime["site"])
         else:
             _del_host_downtime(connection, downtime["id"], downtime["site"])
+
+
+def modify_downtimes(
+    connection: MultiSiteConnection,
+    query: QueryExpression,
+    site_id: SiteId | None,
+    end_time: str | None = None,
+    comment: str | None = None,
+    user_id: UserId = UserId.builtin(),
+) -> None:
+    """Update scheduled downtimes"""
+
+    only_sites = None if site_id is None else [site_id]
+    downtimes = Query(
+        [
+            Downtimes.id,
+            Downtimes.is_service,
+        ],
+        query,
+    ).fetchall(connection, True, only_sites)
+
+    for downtime in downtimes:
+        command = DOWNTIME.MODIFY_SERVICE if downtime["is_service"] else DOWNTIME.MODIFY_HOST
+        _modify_downtime(
+            connection,
+            command,
+            downtime["id"],
+            downtime["site"],
+            end_time="" if end_time is None else end_time,
+            comment=comment if comment is not None else "",
+            user_id=user_id,
+        )
 
 
 def schedule_services_downtimes_with_query(
@@ -901,3 +935,31 @@ def _deduplicate(seq):
         result.append(entry)
 
     return result
+
+
+def _modify_downtime(
+    sites: MultiSiteConnection,
+    command: LivestatusCommand,
+    downtime_id: int,
+    site_id: SiteId | None,
+    end_time: str = "",
+    comment: str = "",
+    user_id: UserId = UserId.builtin(),
+) -> None:
+    _user.need_permission("action.downtimes")
+
+    return send_command(
+        sites,
+        command,
+        [
+            downtime_id,
+            "",  # start_time (not used),
+            end_time,  # end_time,
+            "",  # recur_mode (not used),
+            "",  # trigger_id (not used),
+            "",  # duration (not used),
+            user_id,
+            comment.replace("\n", ""),
+        ],
+        site_id,
+    )

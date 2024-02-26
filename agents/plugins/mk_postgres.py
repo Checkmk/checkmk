@@ -517,7 +517,7 @@ class PostgresWin(PostgresBase):
     @classmethod
     def _logical_drives(cls):
         # type: () -> Iterable[str]
-        for drive in cls._parse_wmic_logicaldisk(  # pylint: disable=all # for python2.7
+        for drive in cls._parse_wmic_logicaldisk(  # pylint: disable=use-yield-from # for python2.7
             cls._call_wmic_logicaldisk()
         ):
             yield drive

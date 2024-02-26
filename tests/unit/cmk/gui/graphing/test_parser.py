@@ -262,9 +262,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.DecimalNotation("unit"), metrics.AutoPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.AutoPrecision(2),
+        new cmk.number_format.AutoPrecision(2),
         cmk.number_format.preformat_number,
         cmk.number_format.preformat_number,
     )
@@ -275,9 +275,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.DecimalNotation("unit"), metrics.StrictPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.StrictPrecision(2),
+        new cmk.number_format.StrictPrecision(2),
         cmk.number_format.preformat_number,
         cmk.number_format.preformat_number,
     )
@@ -289,9 +289,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.SINotation("unit"), metrics.AutoPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.AutoPrecision(2),
+        new cmk.number_format.AutoPrecision(2),
         cmk.number_format.si_preformat_small_number,
         cmk.number_format.si_preformat_large_number,
     )
@@ -302,9 +302,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.SINotation("unit"), metrics.StrictPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.StrictPrecision(2),
+        new cmk.number_format.StrictPrecision(2),
         cmk.number_format.si_preformat_small_number,
         cmk.number_format.si_preformat_large_number,
     )
@@ -316,9 +316,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.IECNotation("unit"), metrics.AutoPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.AutoPrecision(2),
+        new cmk.number_format.AutoPrecision(2),
         cmk.number_format.preformat_number,
         cmk.number_format.iec_preformat_large_number,
     )
@@ -329,9 +329,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.IECNotation("unit"), metrics.StrictPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.StrictPrecision(2),
+        new cmk.number_format.StrictPrecision(2),
         cmk.number_format.preformat_number,
         cmk.number_format.iec_preformat_large_number,
     )
@@ -343,9 +343,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.StandardScientificNotation("unit"), metrics.AutoPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.AutoPrecision(2),
+        new cmk.number_format.AutoPrecision(2),
         cmk.number_format.standard_scientific_preformat_small_number,
         cmk.number_format.standard_scientific_preformat_large_number,
     )
@@ -356,9 +356,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.StandardScientificNotation("unit"), metrics.StrictPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.StrictPrecision(2),
+        new cmk.number_format.StrictPrecision(2),
         cmk.number_format.standard_scientific_preformat_small_number,
         cmk.number_format.standard_scientific_preformat_large_number,
     )
@@ -370,9 +370,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.EngineeringScientificNotation("unit"), metrics.AutoPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.AutoPrecision(2),
+        new cmk.number_format.AutoPrecision(2),
         cmk.number_format.engineering_scientific_preformat_small_number,
         cmk.number_format.engineering_scientific_preformat_large_number,
     )
@@ -383,9 +383,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.EngineeringScientificNotation("unit"), metrics.StrictPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "unit",
-        cmk.number_format.StrictPrecision(2),
+        new cmk.number_format.StrictPrecision(2),
         cmk.number_format.engineering_scientific_preformat_small_number,
         cmk.number_format.engineering_scientific_preformat_large_number,
     )
@@ -397,9 +397,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.TimeNotation(), metrics.AutoPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "s",
-        cmk.number_format.AutoPrecision(2),
+        new cmk.number_format.AutoPrecision(2),
         cmk.number_format.time_preformat_small_number,
         cmk.number_format.time_preformat_large_number,
     )
@@ -410,9 +410,9 @@ def test_render_unit_notation(
             metrics.Unit(metrics.TimeNotation(), metrics.StrictPrecision(2)),
             """v => cmk.number_format.render(
     v,
-    cmk.number_format.NotationFormatter(
+    new cmk.number_format.NotationFormatter(
         "s",
-        cmk.number_format.StrictPrecision(2),
+        new cmk.number_format.StrictPrecision(2),
         cmk.number_format.time_preformat_small_number,
         cmk.number_format.time_preformat_large_number,
     )

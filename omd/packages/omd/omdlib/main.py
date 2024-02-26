@@ -3061,10 +3061,6 @@ def main_update(  # pylint: disable=too-many-branches
     # new settings and default values.
     site.load_config(load_defaults(site))
 
-    # Execute some builtin initializations before executing the update-pre-hooks
-    initialize_livestatus_tcp_tls_after_update(site)
-    initialize_site_ca(site)
-
     legacy_agent_ca = cert_dir(Path(site.dir)) / "agents/legacy_ca.pem"
     if legacy_agent_ca.exists():
         # This symlink is broken, as omd cp does not support absolute symlinks
@@ -3125,21 +3121,6 @@ def _update_cmk_core_config(site: SiteContext) -> None:
         subprocess.check_call(["cmk", "-U"], shell=False)
     except subprocess.SubprocessError:
         bail_out("Could not update core configuration. Aborting.")
-
-
-def initialize_livestatus_tcp_tls_after_update(site: SiteContext) -> None:
-    """Keep unencrypted livestatus for old sites
-
-    In case LIVESTATUS_TCP is on prior to the update, don't enable the
-    encryption for compatibility. Only enable it for new sites (by the
-    default setting)."""
-    if site.conf["LIVESTATUS_TCP"] != "on":
-        return  # Livestatus TCP not enabled, no need to set this option
-
-    if "LIVESTATUS_TCP_TLS" in site.read_site_config():
-        return  # Is already set in this site
-
-    config_set_value(site, "LIVESTATUS_TCP_TLS", value="off", save=True)
 
 
 def _create_livestatus_tcp_socket_link(site: SiteContext) -> None:

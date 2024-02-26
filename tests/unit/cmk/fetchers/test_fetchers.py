@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import json
 import os
 import socket
 from collections.abc import Sequence, Sized
 from pathlib import Path
-from typing import Any, Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
+from typing import Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
 from zlib import compress
 
 import pytest
@@ -72,10 +71,6 @@ class SensorReading(NamedTuple):
     unavailable: int
 
 
-def json_identity(data: Any) -> Any:
-    return json.loads(json.dumps(data))
-
-
 def clone_file_cache(file_cache: FileCache) -> FileCache:
     return type(file_cache)(
         HostName(file_cache.hostname),
@@ -102,25 +97,14 @@ class TestFileCache:
     def test_repr(self, file_cache: FileCache) -> None:
         assert isinstance(repr(file_cache), str)
 
-    def test_deserialization(self, file_cache: FileCache) -> None:
-        assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
-
-class TestNoCache:
-    def test_serialization(self) -> None:
-        cache: NoCache = NoCache(HostName("testhost"))
-        assert cache.from_json(cache.to_json()) == cache
-
-
-# This is horrible to type since the AgentFileCache needs the AgentRawData and the
-# SNMPFileCache needs SNMPRawDataElem, this matches here (I think) but the Union types would not
-# help anybody... And mypy cannot handle the conditions so we would need to ignore the errors
-# anyways...
 class TestAgentFileCache_and_SNMPFileCache:
     @pytest.fixture
     def path(self, tmp_path: Path) -> Path:
         return tmp_path / "database"
 
+    # AgentFileCache and SNMPFileCache are different types because of the
+    # generic param.  The union here isn't helpful. See also `raw_data` below.
     @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
     def file_cache(
         self, path: Path, request: pytest.FixtureRequest

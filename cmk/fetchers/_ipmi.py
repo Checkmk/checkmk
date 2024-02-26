@@ -5,11 +5,10 @@
 
 from __future__ import annotations
 
-import copy
 import logging
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import astuple, dataclass
-from typing import Any, Final, Self, TYPE_CHECKING
+from typing import Final, Self, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -142,17 +141,6 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             )
             + ")"
         )
-
-    @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> IPMIFetcher:
-        return cls(**copy.deepcopy(dict(serialized)))
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "address": self.address,
-            "username": self.username,
-            "password": self.password,
-        }
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         self._logger.log(VERBOSE, "Get IPMI data")

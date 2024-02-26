@@ -13,6 +13,8 @@ from cmk.graphing.v1 import metrics
 from ._loader import units_from_api
 from ._type_defs import UnitInfo
 
+_MAX_DIGITS: Final = 5
+
 
 @dataclass(frozen=True)
 class Preformatted:
@@ -46,7 +48,7 @@ class NotationFormatter:
         if isinstance(self.precision, metrics.AutoPrecision):
             if exponent := abs(math.ceil(math.log(fractional_part, 10))):
                 digits = max(exponent + 1, self.precision.digits)
-        return value_floor + round(fractional_part, digits)
+        return value_floor + round(fractional_part, min(digits, _MAX_DIGITS))
 
     def render(self, value: int | float) -> str:
         if value < 0:

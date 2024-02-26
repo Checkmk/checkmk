@@ -8,7 +8,7 @@ use check_http::checks::CheckParameters;
 use check_http::http::{ClientConfig, OnRedirect, RequestConfig};
 use check_http::output::Output;
 use check_http::runner::collect_checks;
-use reqwest::Method;
+use reqwest::{Method, Url};
 
 use std::io::{Read, Write};
 use std::net::TcpListener;
@@ -82,7 +82,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             proxy_auth: None,
         },
         RequestConfig {
-            url: format!("http://{}:{}", LOCALHOST_DNS, port),
+            url: Url::parse(&format!("http://{}:{}", LOCALHOST_DNS, port)).unwrap(),
             method: Method::GET,
             version: None,
             headers: vec![],

@@ -37,12 +37,6 @@ set)
 ServerName $CONFIG_APACHE_TCP_ADDR:$PORT
 Listen $CONFIG_APACHE_TCP_ADDR:$PORT
 EOF
-    # Since werk #14281 these files are not used anymore. Better remove them to
-    # not confuse users. Can be removed with 2.3.
-    if [ -f "$OMD_ROOT/etc/apache/proxy-port.conf" ]; then
-        rm "$OMD_ROOT/etc/apache/proxy-port.conf"
-    fi
-
     if [ "$PORT" != "$2" ]; then
         echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
         echo "$PORT"

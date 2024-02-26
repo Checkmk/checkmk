@@ -67,7 +67,6 @@ from omdlib.skel_permissions import (
 )
 from omdlib.system_apache import (
     delete_apache_hook,
-    has_old_apache_hook_in_site,
     is_apache_hook_up_to_date,
     register_with_system_apache,
     unregister_from_system_apache,
@@ -2957,19 +2956,6 @@ def main_update(  # pylint: disable=too-many-branches
         )
     ):
         bail_out("Aborted.")
-
-    # - 2.1 and before were compatible with the old and new hook configuration
-    # - Checkmk 2.2 enforces the new hook with this condition
-    # TODO: Remove with 2.3
-    if not global_opts.force and has_old_apache_hook_in_site(site):
-        bail_out(
-            "ERROR: You have to update the system apache configuration in order to proceed "
-            "with this update.\n\n"
-            "Previous Checkmk versions were compatible with the old configuration, but this "
-            "version requires\n"
-            f"you to execute 'omd update-apache-config {site.name}' as root user.\n\n"
-            "Have a look at #14281 for further information."
-        )
 
     try:
         hook_up_to_date = is_apache_hook_up_to_date(site)

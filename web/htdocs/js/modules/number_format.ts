@@ -333,9 +333,7 @@ abstract class NotationFormatter {
         }
         return (
             value_floor +
-            parseFloat(
-                fractional_part.toPrecision(Math.min(digits, MAX_DIGITS))
-            )
+            parseFloat(fractional_part.toFixed(Math.min(digits, MAX_DIGITS)))
         );
     }
 

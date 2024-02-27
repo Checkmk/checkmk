@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 
-import pytest
-
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import get_services_with_status
 
@@ -17,7 +15,6 @@ from tests.plugins_integration.checks import (  # pylint: disable=ungrouped-impo
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="CMK-16274: investigate failure of 'update' tests.")
 def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory) -> None:
     """Test performing the following steps:
 

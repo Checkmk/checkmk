@@ -95,7 +95,7 @@ from omdlib.users_and_groups import (
     useradd,
     userdel,
 )
-from omdlib.utils import chdir, delete_user_file
+from omdlib.utils import chdir, delete_user_file, get_editor
 from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
@@ -1866,17 +1866,6 @@ def replace_tags(content: bytes, replacements: Replacements) -> bytes:
     for var, value in replacements.items():
         content = content.replace(var.encode("utf-8"), value.encode("utf-8"))
     return content
-
-
-def get_editor() -> str:
-    editor = getenv("VISUAL", getenv("EDITOR"))
-    if editor is None:
-        editor = "/usr/bin/vi"
-
-    if not os.path.exists(editor):
-        editor = "vi"
-
-    return editor
 
 
 # return "| $PAGER", if a pager is available

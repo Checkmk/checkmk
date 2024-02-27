@@ -7,7 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, contains, OIDEnd, SNMPTree
+from cmk.agent_based.v2 import all_of, contains, OIDEnd, SNMPTree, startswith
 
 DEVICE_TYPE_MAP = {
     "1": "Power",
@@ -65,7 +65,8 @@ def check_quantum_libsmall_status(_no_item, _no_params, parsed):
 
 check_info["quantum_libsmall_status"] = LegacyCheckDefinition(
     detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "linux"), contains(".1.3.6.1.2.1.1.6.0", "library")
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
+        contains(".1.3.6.1.4.1.3697.1.10.10.1.10.0", "Quantum Small Library Product"),
     ),
     fetch=[
         SNMPTree(

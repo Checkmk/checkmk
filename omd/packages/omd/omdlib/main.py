@@ -698,10 +698,10 @@ def merge_update_file(  # pylint: disable=too-many-branches
             )
 
         if choice == "abort":
-            bail_out("Update aborted.")
-        elif choice == "keep":
+            raise MKTerminate("Update aborted.")
+        if choice == "keep":
             break
-        elif choice == "edit":
+        if choice == "edit":
             with subprocess.Popen([editor, user_path]):
                 pass
         elif choice == "diff":
@@ -911,8 +911,8 @@ def _execute_update_file(
                     options,
                 )
                 if choice == "abort":
-                    bail_out("Update aborted.")
-                elif choice == "retry":
+                    raise MKTerminate("Update aborted.")
+                if choice == "retry":
                     todo = True  # Try again
 
 

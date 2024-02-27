@@ -42,3 +42,13 @@ def delete_directory_contents(d: str) -> None:
 
 def omd_base_path() -> str:
     return "/"
+
+
+def get_editor() -> str:
+    alternative = os.environ.get("EDITOR", "/usr/bin/vi")
+    editor = os.environ.get("VISUAL", alternative)
+
+    if not os.path.exists(editor):
+        return "vi"
+
+    return editor

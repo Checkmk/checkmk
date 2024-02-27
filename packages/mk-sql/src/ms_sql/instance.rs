@@ -31,8 +31,6 @@ use std::path::Path;
 
 use tiberius::Row;
 
-use super::defaults;
-
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 
@@ -363,29 +361,22 @@ impl SqlInstance {
         let client = match auth.auth_type() {
             AuthType::SqlServer | AuthType::Windows => {
                 if let Some(credentials) = client::obtain_config_credentials(auth) {
-                    client::create_remote(
-                        conn.hostname(),
-                        self.port()
-                            .map(|p| p.value())
-                            .unwrap_or(defaults::STANDARD_PORT),
-                        credentials,
-                        database,
-                    )
-                    .await?
+                    client::ClientBuilder::new()
+                        .remote(conn.hostname(), self.port(), credentials)
+                        .database(database)
                 } else {
                     anyhow::bail!("Not provided credentials")
                 }
             }
 
             #[cfg(windows)]
-            AuthType::Integrated => {
-                //let s: String = String::from(&self.name);
-                client::create_instance_local(&self.name, conn.sql_browser_port(), database).await?
-            }
+            AuthType::Integrated => client::ClientBuilder::new()
+                .local_instance(&self.name, conn.sql_browser_port())
+                .database(database),
 
             _ => anyhow::bail!("Not supported authorization type"),
         };
-        Ok(client)
+        client.build().await
     }
 
     pub async fn generate_details_entry(&self, client: &mut Client, sep: char) -> String {
@@ -1791,7 +1782,9 @@ pub async fn obtain_instance_builders_by_sql_browser(
     instances: &[&InstanceName],
 ) -> Result<Vec<SqlInstanceBuilder>> {
     for instance in instances {
-        match client::create_instance_local(instance, endpoint.conn().sql_browser_port(), None)
+        match client::ClientBuilder::new()
+            .local_instance(instance, endpoint.conn().sql_browser_port())
+            .build()
             .await
         {
             Ok(mut client) => return Ok(_obtain_instance_builders(&mut client, endpoint).await),

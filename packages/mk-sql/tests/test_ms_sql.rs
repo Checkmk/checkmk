@@ -71,7 +71,9 @@ fn test_section_select_query() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
-    let mut client = client::create_local(mk_sql::ms_sql::defaults::STANDARD_PORT)
+    let mut client = client::ClientBuilder::new()
+        .local(Some(mk_sql::ms_sql::defaults::STANDARD_PORT.into()))
+        .build()
         .await
         .unwrap();
     let properties = instance::SqlInstanceProperties::obtain_by_query(&mut client)
@@ -116,7 +118,10 @@ async fn test_validate_all_instances_local() {
     let names: Vec<InstanceName> = builders.into_iter().map(|i| i.get_name()).collect();
 
     for name in names {
-        let c = client::create_instance_local(&name, None, None).await;
+        let c = client::ClientBuilder::new()
+            .local_instance(&name, None::<u16>)
+            .build()
+            .await;
         match c {
             Ok(mut c) => {
                 assert!(tools::run_get_version(&mut c).await.is_some());

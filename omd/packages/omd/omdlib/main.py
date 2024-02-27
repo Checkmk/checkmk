@@ -3020,11 +3020,11 @@ def main_update(  # pylint: disable=too-many-branches
 
         # Change symbolic link pointing to new version
         create_version_symlink(site, to_version)
-    save_version_meta_data(site, to_version)
+        save_version_meta_data(site, to_version)
 
-    # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
-    # new settings and default values.
-    site.load_config(load_defaults(site))
+        # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce
+        # new settings and default values.
+        site.load_config(load_defaults(site))
 
     # Let hooks of the new(!) version do their work and update configuration.
     config_set_all(site)

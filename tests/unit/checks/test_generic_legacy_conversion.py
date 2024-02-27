@@ -1122,7 +1122,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "oracle_recovery_area",
         "oracle_recovery_status",
         "oracle_sessions",
-        "oracle_sql",
         "oracle_undostat",
         "oracle_version",
         "orion_backup",

@@ -40,21 +40,36 @@ HOST_CONFIG = HostConfig(
             {"timeout": 30},
             [
                 ActiveCheckCommand(
-                    "PING", ["-t", "30", "-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.1"]
+                    service_description="PING",
+                    command_arguments=[
+                        "-t",
+                        "30",
+                        "-w",
+                        "200.00,80%",
+                        "-c",
+                        "500.00,100%",
+                        "0.0.0.1",
+                    ],
                 )
             ],
             id="timeout",
         ),
         pytest.param(
             {"address": "alias"},
-            [ActiveCheckCommand("PING", ["-w", "200.00,80%", "-c", "500.00,100%", "host_alias"])],
+            [
+                ActiveCheckCommand(
+                    service_description="PING",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "host_alias"],
+                )
+            ],
             id="alias",
         ),
         pytest.param(
             {"address": ("indexed_ipv4address", "1")},
             [
                 ActiveCheckCommand(
-                    "PING IPv4/1", ["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.4"]
+                    service_description="PING IPv4/1",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.4"],
                 )
             ],
             id="indexed ipv4 address",
@@ -63,7 +78,8 @@ HOST_CONFIG = HostConfig(
             {"address": ("indexed_ipv6address", "3")},
             [
                 ActiveCheckCommand(
-                    "PING IPv6/3", ["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::243"]
+                    service_description="PING IPv6/3",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::243"],
                 )
             ],
             id="indexed ipv6 address",
@@ -72,8 +88,16 @@ HOST_CONFIG = HostConfig(
             {"address": "all_ipv4addresses"},
             [
                 ActiveCheckCommand(
-                    "PING all IPv4 Addresses",
-                    ["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.2", "0.0.0.4", "0.0.0.5"],
+                    service_description="PING all IPv4 Addresses",
+                    command_arguments=[
+                        "-w",
+                        "200.00,80%",
+                        "-c",
+                        "500.00,100%",
+                        "0.0.0.2",
+                        "0.0.0.4",
+                        "0.0.0.5",
+                    ],
                 )
             ],
             id="all ipv4 addresses",
@@ -82,8 +106,8 @@ HOST_CONFIG = HostConfig(
             {"address": "all_ipv6addresses"},
             [
                 ActiveCheckCommand(
-                    "PING all IPv6 Addresses",
-                    [
+                    service_description="PING all IPv6 Addresses",
+                    command_arguments=[
                         "-w",
                         "200.00,80%",
                         "-c",
@@ -102,7 +126,15 @@ HOST_CONFIG = HostConfig(
             {"address": "additional_ipv4addresses"},
             [
                 ActiveCheckCommand(
-                    "PING", ["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.4", "0.0.0.5"]
+                    service_description="PING",
+                    command_arguments=[
+                        "-w",
+                        "200.00,80%",
+                        "-c",
+                        "500.00,100%",
+                        "0.0.0.4",
+                        "0.0.0.5",
+                    ],
                 )
             ],
             id="additional ipv4 addresses",
@@ -111,8 +143,8 @@ HOST_CONFIG = HostConfig(
             {"address": "additional_ipv6addresses"},
             [
                 ActiveCheckCommand(
-                    "PING",
-                    [
+                    service_description="PING",
+                    command_arguments=[
                         "-w",
                         "200.00,80%",
                         "-c",
@@ -130,7 +162,14 @@ HOST_CONFIG = HostConfig(
             {"address": ("explicit", "my.custom.address")},
             [
                 ActiveCheckCommand(
-                    "PING", ["-w", "200.00,80%", "-c", "500.00,100%", "my.custom.address"]
+                    service_description="PING",
+                    command_arguments=[
+                        "-w",
+                        "200.00,80%",
+                        "-c",
+                        "500.00,100%",
+                        "my.custom.address",
+                    ],
                 )
             ],
             id="explicit address",
@@ -139,7 +178,16 @@ HOST_CONFIG = HostConfig(
             {"timeout": 30, "multiple_services": True},
             [
                 ActiveCheckCommand(
-                    "PING 0.0.0.1", ["-t", "30", "-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.1"]
+                    service_description="PING 0.0.0.1",
+                    command_arguments=[
+                        "-t",
+                        "30",
+                        "-w",
+                        "200.00,80%",
+                        "-c",
+                        "500.00,100%",
+                        "0.0.0.1",
+                    ],
                 )
             ],
             id="timeout multiple services",
@@ -148,7 +196,8 @@ HOST_CONFIG = HostConfig(
             {"address": "alias", "multiple_services": True},
             [
                 ActiveCheckCommand(
-                    "PING host_alias", ["-w", "200.00,80%", "-c", "500.00,100%", "host_alias"]
+                    service_description="PING host_alias",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "host_alias"],
                 )
             ],
             id="alias multiple services",
@@ -157,7 +206,8 @@ HOST_CONFIG = HostConfig(
             {"address": ("indexed_ipv4address", "1"), "multiple_services": True},
             [
                 ActiveCheckCommand(
-                    "PING 0.0.0.4", ["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.4"]
+                    service_description="PING 0.0.0.4",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.4"],
                 )
             ],
             id="indexed ipv4 address multiple services",
@@ -166,7 +216,8 @@ HOST_CONFIG = HostConfig(
             {"address": ("indexed_ipv6address", "3"), "multiple_services": True},
             [
                 ActiveCheckCommand(
-                    "PING fe80::243", ["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::243"]
+                    service_description="PING fe80::243",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::243"],
                 )
             ],
             id="indexed ipv6 address multiple services",
@@ -175,16 +226,16 @@ HOST_CONFIG = HostConfig(
             {"address": "all_ipv4addresses", "multiple_services": True},
             [
                 ActiveCheckCommand(
-                    "PING 0.0.0.2",
-                    ["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.2"],
+                    service_description="PING 0.0.0.2",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.2"],
                 ),
                 ActiveCheckCommand(
-                    "PING 0.0.0.4",
-                    ["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.4"],
+                    service_description="PING 0.0.0.4",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.4"],
                 ),
                 ActiveCheckCommand(
-                    "PING 0.0.0.5",
-                    ["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.5"],
+                    service_description="PING 0.0.0.5",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.5"],
                 ),
             ],
             id="all ipv4 addresses multiple services",
@@ -193,20 +244,20 @@ HOST_CONFIG = HostConfig(
             {"address": "all_ipv6addresses", "multiple_services": True},
             [
                 ActiveCheckCommand(
-                    "PING fe80::240",
-                    ["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::240"],
+                    service_description="PING fe80::240",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::240"],
                 ),
                 ActiveCheckCommand(
-                    "PING fe80::241",
-                    ["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::241"],
+                    service_description="PING fe80::241",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::241"],
                 ),
                 ActiveCheckCommand(
-                    "PING fe80::242",
-                    ["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::242"],
+                    service_description="PING fe80::242",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::242"],
                 ),
                 ActiveCheckCommand(
-                    "PING fe80::243",
-                    ["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::243"],
+                    service_description="PING fe80::243",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::243"],
                 ),
             ],
             id="all ipv4 addresses multiple services",
@@ -215,10 +266,12 @@ HOST_CONFIG = HostConfig(
             {"address": "additional_ipv4addresses", "multiple_services": True},
             [
                 ActiveCheckCommand(
-                    "PING 0.0.0.4", ["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.4"]
+                    service_description="PING 0.0.0.4",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.4"],
                 ),
                 ActiveCheckCommand(
-                    "PING 0.0.0.5", ["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.5"]
+                    service_description="PING 0.0.0.5",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "0.0.0.5"],
                 ),
             ],
             id="additional ipv4 addresses multiple services",
@@ -227,13 +280,16 @@ HOST_CONFIG = HostConfig(
             {"address": "additional_ipv6addresses", "multiple_services": True},
             [
                 ActiveCheckCommand(
-                    "PING fe80::241", ["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::241"]
+                    service_description="PING fe80::241",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::241"],
                 ),
                 ActiveCheckCommand(
-                    "PING fe80::242", ["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::242"]
+                    service_description="PING fe80::242",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::242"],
                 ),
                 ActiveCheckCommand(
-                    "PING fe80::243", ["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::243"]
+                    service_description="PING fe80::243",
+                    command_arguments=["-w", "200.00,80%", "-c", "500.00,100%", "-6", "fe80::243"],
                 ),
             ],
             id="additional ipv6 addresses multiple services",
@@ -242,8 +298,14 @@ HOST_CONFIG = HostConfig(
             {"address": ("explicit", "my.custom.address"), "multiple_services": True},
             [
                 ActiveCheckCommand(
-                    "PING my.custom.address",
-                    ["-w", "200.00,80%", "-c", "500.00,100%", "my.custom.address"],
+                    service_description="PING my.custom.address",
+                    command_arguments=[
+                        "-w",
+                        "200.00,80%",
+                        "-c",
+                        "500.00,100%",
+                        "my.custom.address",
+                    ],
                 )
             ],
             id="explicit address multiple services",

@@ -16,7 +16,10 @@ from cmk.server_side_calls.v1 import (
 )
 
 HOST_CONFIG = HostConfig(
-    "my_host", "my_alias", "resolved_address", NetworkAddressConfig(IPAddressFamily.DUAL_STACK)
+    name="my_host",
+    alias="my_alias",
+    resolved_address="resolved_address",
+    address_config=NetworkAddressConfig(ip_family=IPAddressFamily.DUAL_STACK),
 )
 
 

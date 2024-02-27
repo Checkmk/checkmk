@@ -51,7 +51,7 @@ def _agent_bi_arguments(
     _hostconfig: HostConfig,
     _proxy_config: Mapping[str, HTTPProxy],
 ) -> Iterable[SpecialAgentCommand]:
-    yield SpecialAgentCommand([], repr(params))
+    yield SpecialAgentCommand(command_arguments=[], stdin=repr(params))
 
 
 special_agent_bi = SpecialAgentConfig(

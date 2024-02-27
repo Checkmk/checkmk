@@ -37,7 +37,7 @@ SOME_HOST_CONFIG = HostConfig(
                     command_arguments=(
                         "--host=foo",
                         "--user=bar",
-                        PlainTextSecret("baz", "--secret=%s"),
+                        PlainTextSecret(value="baz", format="--secret=%s"),
                         "--look-for-keys",
                     ),
                 ),
@@ -52,7 +52,7 @@ SOME_HOST_CONFIG = HostConfig(
                     command_arguments=(
                         "--host=foo",
                         "--user=bar",
-                        PlainTextSecret("baz", "--secret=%s"),
+                        PlainTextSecret(value="baz", format="--secret=%s"),
                     ),
                 ),
             ),
@@ -72,7 +72,7 @@ SOME_HOST_CONFIG = HostConfig(
                     command_arguments=(
                         "--host=foo",
                         "--user=bar",
-                        PlainTextSecret("baz", "--secret=%s"),
+                        PlainTextSecret(value="baz", format="--secret=%s"),
                         "--put-local=my/local/put",
                         "--put-remote=my/remote/put",
                         "--get-local=my/local/get",

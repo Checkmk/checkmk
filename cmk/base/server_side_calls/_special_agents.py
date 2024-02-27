@@ -90,7 +90,7 @@ class SpecialAgent:
         self, special_agent: SpecialAgentConfig, params: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
         http_proxies = {
-            id: HTTPProxy(id, proxy["title"], proxy["proxy_url"])
+            id: HTTPProxy(id=id, name=proxy["title"], url=proxy["proxy_url"])
             for id, proxy in self._http_proxies.items()
         }
 

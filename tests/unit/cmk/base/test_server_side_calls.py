@@ -375,8 +375,14 @@ def argument_function_with_exception(*args, **kwargs):
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
                         [
-                            ActiveCheckCommand("First service", ["--arg1", "argument1"]),
-                            ActiveCheckCommand("Second service", ["--arg2", "argument2"]),
+                            ActiveCheckCommand(
+                                service_description="First service",
+                                command_arguments=["--arg1", "argument1"],
+                            ),
+                            ActiveCheckCommand(
+                                service_description="Second service",
+                                command_arguments=["--arg2", "argument2"],
+                            ),
                         ]
                     ),
                 )
@@ -436,8 +442,11 @@ def argument_function_with_exception(*args, **kwargs):
                     commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
-                                "My service",
-                                ["--password", PlainTextSecret("mypassword")],
+                                service_description="My service",
+                                command_arguments=[
+                                    "--password",
+                                    PlainTextSecret(value="mypassword"),
+                                ],
                             ),
                         ]
                     ),
@@ -476,8 +485,11 @@ def argument_function_with_exception(*args, **kwargs):
                     commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
-                                "My service",
-                                ["--password", StoredSecret("stored_password")],
+                                service_description="My service",
+                                command_arguments=[
+                                    "--password",
+                                    StoredSecret(value="stored_password"),
+                                ],
                             ),
                         ]
                     ),
@@ -715,8 +727,11 @@ def test_test_get_active_service_data_crash_with_debug(
                     commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
-                                "My service",
-                                ["--password", StoredSecret("stored_password")],
+                                service_description="My service",
+                                command_arguments=[
+                                    "--password",
+                                    StoredSecret(value="stored_password"),
+                                ],
                             ),
                         ]
                     ),
@@ -886,8 +901,8 @@ def test_get_active_service_data_warnings(
                     commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
-                                "My service",
-                                ["--password", StoredSecret("mypassword")],
+                                service_description="My service",
+                                command_arguments=["--password", StoredSecret(value="mypassword")],
                             ),
                         ]
                     ),
@@ -1278,7 +1293,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
                     commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(
-                                command_arguments=["--password", StoredSecret("mypassword")],
+                                command_arguments=["--password", StoredSecret(value="mypassword")],
                             ),
                         ]
                     ),
@@ -1301,7 +1316,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
                     commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(
-                                command_arguments=["--password", StoredSecret("mypassword")],
+                                command_arguments=["--password", StoredSecret(value="mypassword")],
                             ),
                         ]
                     ),

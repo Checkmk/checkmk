@@ -12,7 +12,7 @@ from ._utils import HostConfig, HTTPProxy, Secret
 _ParsedParameters = TypeVar("_ParsedParameters")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ActiveCheckCommand:
     """
     Defines an active check command
@@ -35,7 +35,7 @@ class ActiveCheckCommand:
         ...         "--user",
         ...         "example-user",
         ...         "--password",
-        ...         StoredSecret("stored_password_id")
+        ...         StoredSecret(value="stored_password_id")
         ...     ]
         ... )
         ActiveCheckCommand(service_description='Example description', command_arguments=['--user', \

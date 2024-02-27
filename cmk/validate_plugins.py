@@ -233,5 +233,5 @@ def main() -> int:
 
     validation_result = validate_plugins()
 
-    sys.stdout.write(validation_result.as_text())
+    sys.stdout.write(f"{validation_result.as_text()}\n")
     return validation_result.state

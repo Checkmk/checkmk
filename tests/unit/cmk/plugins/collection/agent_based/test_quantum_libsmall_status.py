@@ -2,25 +2,32 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.legacy_checks.quantum_libsmall_status import (
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
+from cmk.plugins.collection.agent_based.quantum_libsmall_status import (
+    _Section,
     check_quantum_libsmall_status,
-    inventory_quantum_libsmall_status,
+    discovery_quantum_libsmall_status,
     parse_quantum_libsmall_status,
 )
 
 
 @pytest.mark.parametrize(
-    ["parsed", "expected"],
+    ["section", "expected"],
     [
         pytest.param([], [], id="empty"),
-        pytest.param([("Power", "2")], [(None, None)], id="non-empty"),
+        pytest.param(
+            [("Power", "2")],
+            [Service(item=None, parameters=None)],
+            id="non-empty",
+        ),
     ],
 )
-def test_inventory_quantum_libsmall_status(parsed: list[tuple[str, str]], expected: list) -> None:
-    assert expected == list(inventory_quantum_libsmall_status(parsed))
+def test_discovery_quantum_libsmall_status(section: _Section, expected: DiscoveryResult) -> None:
+    assert expected == list(discovery_quantum_libsmall_status(section))
 
 
 @pytest.mark.parametrize(
@@ -85,30 +92,56 @@ def test_inventory_quantum_libsmall_status(parsed: list[tuple[str, str]], expect
     ],
 )
 def test_parse_quantum_libsmall_status(
-    string_table: list[list[list[str]]], expected: list[tuple[str, str]]
+    string_table: Sequence[StringTable], expected: _Section
 ) -> None:
     assert expected == list(parse_quantum_libsmall_status(string_table))
 
 
 @pytest.mark.parametrize(
-    ["parsed", "expected"],
+    ["section", "expected"],
     [
         pytest.param([], [], id="empty"),
-        pytest.param([("Power", "2")], [(2, "Power: failed")], id="RAS failed"),
-        pytest.param([("Cooling", "3")], [(2, "Cooling: degraded")], id="RAS degraded"),
-        pytest.param([("Connectivity", "4")], [(1, "Connectivity: warning")], id="RAS warning"),
-        pytest.param([("Robotics", "5")], [(0, "Robotics: informational")], id="RAS informational"),
-        pytest.param([("Media", "6")], [(3, "Media: unknown")], id="RAS unknown"),
-        pytest.param([("Drive", "7")], [(3, "Drive: invalid")], id="RAS invalid"),
-        pytest.param([("Drive", "status")], [(3, "Drive: unknown[status]")], id="RAS unknown"),
+        pytest.param(
+            [("Power", "2")], [Result(state=State.CRIT, summary="Power: failed")], id="RAS failed"
+        ),
+        pytest.param(
+            [("Cooling", "3")],
+            [Result(state=State.CRIT, summary="Cooling: degraded")],
+            id="RAS degraded",
+        ),
+        pytest.param(
+            [("Connectivity", "4")],
+            [Result(state=State.WARN, summary="Connectivity: warning")],
+            id="RAS warning",
+        ),
+        pytest.param(
+            [("Robotics", "5")],
+            [Result(state=State.OK, summary="Robotics: informational")],
+            id="RAS informational",
+        ),
+        pytest.param(
+            [("Media", "6")],
+            [Result(state=State.UNKNOWN, summary="Media: unknown")],
+            id="RAS unknown",
+        ),
+        pytest.param(
+            [("Drive", "7")],
+            [Result(state=State.UNKNOWN, summary="Drive: invalid")],
+            id="RAS invalid",
+        ),
+        pytest.param(
+            [("Drive", "status")],
+            [Result(state=State.UNKNOWN, summary="Drive: unknown[status]")],
+            id="RAS unknown",
+        ),
         pytest.param(
             [("Operator action request", "1")],
-            [(2, "Operator action request: yes")],
+            [Result(state=State.CRIT, summary="Operator action request: yes")],
             id="OPNEED yes",
         ),
         pytest.param(
             [("Operator action request", "status")],
-            [(3, "Operator action request: unknown[status]")],
+            [Result(state=State.UNKNOWN, summary="Operator action request: unknown[status]")],
             id="OPNEED unknown",
         ),
         pytest.param(
@@ -123,20 +156,18 @@ def test_parse_quantum_libsmall_status(
                 ("Operator action request", "2"),
             ],
             [
-                (0, "Power: good"),
-                (0, "Cooling: good"),
-                (0, "Control: good"),
-                (0, "Connectivity: good"),
-                (0, "Robotics: good"),
-                (0, "Media: good"),
-                (0, "Drive: good"),
-                (0, "Operator action request: no"),
+                Result(state=State.OK, summary="Power: good"),
+                Result(state=State.OK, summary="Cooling: good"),
+                Result(state=State.OK, summary="Control: good"),
+                Result(state=State.OK, summary="Connectivity: good"),
+                Result(state=State.OK, summary="Robotics: good"),
+                Result(state=State.OK, summary="Media: good"),
+                Result(state=State.OK, summary="Drive: good"),
+                Result(state=State.OK, summary="Operator action request: no"),
             ],
             id="everything ok",
         ),
     ],
 )
-def test_check_quantum_libsmall_status(
-    parsed: list[tuple[str, str]], expected: list[tuple[int, str]]
-) -> None:
-    assert expected == list(check_quantum_libsmall_status(None, {}, parsed))
+def test_check_quantum_libsmall_status(section: _Section, expected: CheckResult) -> None:
+    assert expected == list(check_quantum_libsmall_status(section))

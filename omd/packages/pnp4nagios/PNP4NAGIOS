@@ -21,7 +21,6 @@ choices)
     ;;
 set)
     if [ "$2" == "on" ]; then
-        #mkdir -p $OMD_ROOT/etc/nagios/nagios.d
         if [ -e $OMD_ROOT/etc/nagios/nagios.d ]; then
             ln -sfn ../../pnp4nagios/nagios_npcdmod.cfg $OMD_ROOT/etc/nagios/nagios.d/pnp4nagios.cfg
         fi

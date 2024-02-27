@@ -36,7 +36,7 @@ from cmk.server_side_calls.v1 import (
                 "--cert-server-name",
                 "host",
                 "--api-token",
-                StoredSecret("stored_secret", format="%s"),
+                StoredSecret(value="stored_secret", format="%s"),
                 "1.2.3.4",
             ],
             id="Available timeout and ssl True and stored api token and hostip available",

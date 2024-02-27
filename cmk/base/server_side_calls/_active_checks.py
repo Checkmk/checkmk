@@ -164,7 +164,7 @@ class ActiveCheck:
         self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         http_proxies = {
-            id: HTTPProxy(id, proxy["title"], proxy["proxy_url"])
+            id: HTTPProxy(id=id, name=proxy["title"], url=proxy["proxy_url"])
             for id, proxy in self._http_proxies.items()
         }
 

@@ -31,7 +31,7 @@ class IPAddressFamily(StrEnum):
     """No IP address family"""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NetworkAddressConfig:
     """
     Defines a network configuration of the host
@@ -73,7 +73,7 @@ class NetworkAddressConfig:
         return self.additional_ipv6_addresses
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HostConfig:  # pylint: disable=too-many-instance-attributes
     """
     Defines a host configuration
@@ -141,7 +141,7 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     labels: Mapping[str, str] = field(default_factory=dict)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HTTPProxy:
     """
     Defines a HTTP proxy
@@ -190,7 +190,7 @@ class HTTPProxy:
     url: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class StoredSecret:
     """
     Defines a password stored in the password store
@@ -206,7 +206,7 @@ class StoredSecret:
 
     Example:
 
-        >>> StoredSecret("stored_password_id", format="example-user:%s")
+        >>> StoredSecret(value="stored_password_id", format="example-user:%s")
         StoredSecret(value='stored_password_id', format='example-user:%s')
     """
 
@@ -214,7 +214,7 @@ class StoredSecret:
     format: str = "%s"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PlainTextSecret:
     """
     Defines an explicit password
@@ -226,7 +226,7 @@ class PlainTextSecret:
 
     Example:
 
-        >>> PlainTextSecret("password1234")
+        >>> PlainTextSecret(value="password1234")
         PlainTextSecret(value='password1234', format='%s')
     """
 
@@ -286,9 +286,9 @@ def parse_secret(secret: object, display_format: str = "%s") -> Secret:
 
     match secret_type:
         case "store":
-            return StoredSecret(secret_value, format=display_format)
+            return StoredSecret(value=secret_value, format=display_format)
         case "password":
-            return PlainTextSecret(secret_value, format=display_format)
+            return PlainTextSecret(value=secret_value, format=display_format)
         case _:
             raise ValueError("secret type has as to be either 'store' or 'password'")
 

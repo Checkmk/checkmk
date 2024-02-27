@@ -70,7 +70,7 @@ def test_agent_proxmox_ve_arguments(
 ) -> None:
     # Assemble
     host_config = HostConfigFactory.build(name="testhost")
-    http_proxies = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
+    http_proxies = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
     # Act
     parsed_params = config.parameter_parser(params)
     commands = list(config.commands_function(parsed_params, host_config, http_proxies))

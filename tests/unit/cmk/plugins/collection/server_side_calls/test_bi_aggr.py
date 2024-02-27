@@ -43,7 +43,8 @@ HOST_CONFIG = HostConfig(
                 "optional": {},
             },
             ActiveCheckCommand(
-                "Aggr foo", ["-b", "some/path", "-a", "foo", "--use-automation-user"]
+                service_description="Aggr foo",
+                command_arguments=["-b", "some/path", "-a", "foo", "--use-automation-user"],
             ),
             id="required params",
         ),
@@ -56,7 +57,8 @@ HOST_CONFIG = HostConfig(
                 "optional": {},
             },
             ActiveCheckCommand(
-                "Aggr hostname", ["-b", "some/path", "-a", "hostname", "--use-automation-user"]
+                service_description="Aggr hostname",
+                command_arguments=["-b", "some/path", "-a", "hostname", "--use-automation-user"],
             ),
             id="aggregation name with macro",
         ),

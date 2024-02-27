@@ -20,11 +20,11 @@ def test_parse_version():
                 params,
             ),
             HostConfig(
-                "",
-                "",
-                "address",
-                NetworkAddressConfig(
-                    IPAddressFamily.NO_IP,
+                name="",
+                alias="",
+                resolved_address="address",
+                address_config=NetworkAddressConfig(
+                    ip_family=IPAddressFamily.NO_IP,
                 ),
             ),
             {},
@@ -52,11 +52,11 @@ def test_parse_address():
                 params,
             ),
             HostConfig(
-                "",
-                "",
-                "address",
-                NetworkAddressConfig(
-                    IPAddressFamily.NO_IP,
+                name="",
+                alias="",
+                resolved_address="address",
+                address_config=NetworkAddressConfig(
+                    ip_family=IPAddressFamily.NO_IP,
                 ),
             ),
             {},

@@ -82,6 +82,7 @@ from omdlib.tmpfs import (
     unmount_tmpfs,
 )
 from omdlib.type_defs import CommandOptions, Config, ConfigChoiceHasError, Replacements
+from omdlib.update import ManageUpdate
 from omdlib.users_and_groups import (
     find_processes_of_user,
     group_exists,
@@ -2988,33 +2989,34 @@ def main_update(  # pylint: disable=too-many-branches
     from_skelroot = site.version_skel_dir
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
-    # First walk through skeleton files of new version
-    for relpath in walk_skel(to_skelroot, depth_first=False):
-        _execute_update_file(
-            relpath,
-            site,
-            conflict_mode,
-            from_version,
-            to_version,
-            from_edition,
-            to_edition,
-            old_permissions,
-            new_permissions,
-        )
+    with ManageUpdate(Path(site.dir), Path(from_skelroot), Path(to_skelroot)):
+        # First walk through skeleton files of new version
+        for relpath in walk_skel(to_skelroot, depth_first=False):
+            _execute_update_file(
+                relpath,
+                site,
+                conflict_mode,
+                from_version,
+                to_version,
+                from_edition,
+                to_edition,
+                old_permissions,
+                new_permissions,
+            )
 
-    # Now handle files present in old but not in new skel files
-    for relpath in walk_skel(from_skelroot, depth_first=True, exclude_if_in=to_skelroot):
-        _execute_update_file(
-            relpath,
-            site,
-            conflict_mode,
-            from_version,
-            to_version,
-            from_edition,
-            to_edition,
-            old_permissions,
-            new_permissions,
-        )
+        # Now handle files present in old but not in new skel files
+        for relpath in walk_skel(from_skelroot, depth_first=True, exclude_if_in=to_skelroot):
+            _execute_update_file(
+                relpath,
+                site,
+                conflict_mode,
+                from_version,
+                to_version,
+                from_edition,
+                to_edition,
+                old_permissions,
+                new_permissions,
+            )
 
     # Change symbolic link pointing to new version
     create_version_symlink(site, to_version)

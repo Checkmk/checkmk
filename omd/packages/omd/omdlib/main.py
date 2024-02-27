@@ -3018,8 +3018,8 @@ def main_update(  # pylint: disable=too-many-branches
                 new_permissions,
             )
 
-    # Change symbolic link pointing to new version
-    create_version_symlink(site, to_version)
+        # Change symbolic link pointing to new version
+        create_version_symlink(site, to_version)
     save_version_meta_data(site, to_version)
 
     # Prepare for config_set_all: Refresh the site configuration, because new hooks may introduce

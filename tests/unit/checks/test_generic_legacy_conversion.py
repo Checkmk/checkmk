@@ -1178,7 +1178,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "quanta_fan",
         "quanta_temperature",
         "quanta_voltage",
-        "quantum_libsmall_door",
         "ra32e_power",
         "ra32e_sensors",
         "ra32e_sensors.humidity",

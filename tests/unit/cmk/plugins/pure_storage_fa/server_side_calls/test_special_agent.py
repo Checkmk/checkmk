@@ -85,7 +85,7 @@ def test_commands_function(
             Params.model_validate(params),
             HostConfig(
                 name=hostname,
-                resolved_address=host_ip_address,
+                resolved_ipv4_address=host_ip_address,
                 alias="host",
                 resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),

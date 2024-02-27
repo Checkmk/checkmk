@@ -21,7 +21,7 @@ pytestmark = pytest.mark.checks
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
+    resolved_ipv4_address="0.0.0.1",
     alias="host_alias",
     address_config=NetworkAddressConfig(
         ip_family=IPAddressFamily.IPV4,

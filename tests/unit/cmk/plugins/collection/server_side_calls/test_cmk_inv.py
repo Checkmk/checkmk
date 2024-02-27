@@ -41,7 +41,7 @@ def test_check_cmk_inv_argument_parsing(
             CmkInvParams.model_validate(params),
             HostConfig(
                 name="unittest_name",
-                resolved_address="unittest_address",
+                resolved_ipv4_address="unittest_address",
                 alias="unittest_alias",
                 resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 address_config=NetworkAddressConfig(

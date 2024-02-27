@@ -96,8 +96,6 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     Args:
         name: Host name
         alias: Host alias
-        resolved_address: Will be equal to resolved_ipv4_address or
-            resolved_ipv6_address depending on the resolved IP family.
         resolved_ip_family: Resolved IP address family
         address_config: Address settings defined in the host configuration
         resolved_ipv4_address: If IPv4 address isn't configured in the host config,
@@ -130,7 +128,6 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
 
     name: str
     alias: str
-    resolved_address: str | None
     address_config: NetworkAddressConfig
     resolved_ipv4_address: str | None = None
     resolved_ipv6_address: str | None = None
@@ -139,6 +136,20 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     custom_attributes: Mapping[str, str] = field(default_factory=dict)
     tags: Mapping[str, str] = field(default_factory=dict)
     labels: Mapping[str, str] = field(default_factory=dict)
+
+    # TODO: Nuke this property? It is actually redundant, as can be seen below.
+    # It can be computed from 3 other fields.
+    @property
+    def resolved_address(self) -> str | None:
+        """
+        Will be equal to resolved_ipv4_address or resolved_ipv6_address depending on the field
+        resolved_ip_family.
+        """
+        return (
+            self.resolved_ipv4_address
+            if self.resolved_ip_family == ResolvedIPAddressFamily.IPV4
+            else self.resolved_ipv6_address
+        )
 
 
 @dataclass(frozen=True, kw_only=True)

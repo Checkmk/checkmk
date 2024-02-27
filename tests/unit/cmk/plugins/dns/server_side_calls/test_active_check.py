@@ -134,7 +134,7 @@ def test_commands_function(
             Params.model_validate(params),
             HostConfig(
                 name="check",
-                resolved_address="1.2.3.4",
+                resolved_ipv4_address="1.2.3.4",
                 alias="host",
                 resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),

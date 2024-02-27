@@ -15,7 +15,7 @@ from cmk.server_side_calls.v1 import (
 
 TEST_HOST_CONFIG = HostConfig(
     name="my_host",
-    resolved_address="1.2.3.4",
+    resolved_ipv4_address="1.2.3.4",
     alias="my_alias",
     address_config=NetworkAddressConfig(
         ip_family=IPAddressFamily.IPV4,

@@ -18,7 +18,6 @@ from cmk.server_side_calls.v1 import (
 
 SOME_HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address=None,
     alias="host_alias",
     address_config=NetworkAddressConfig(
         ip_family=IPAddressFamily.IPV4,

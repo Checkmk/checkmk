@@ -10,7 +10,12 @@ from polyfactory.factories import DataclassFactory
 from pytest_mock import MockerFixture
 
 from cmk.plugins.collection.server_side_calls.prometheus import special_agent_prometheus
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, NetworkAddressConfig
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    ResolvedIPAddressFamily,
+)
 from cmk.special_agents.utils.prometheus import extract_connection_args
 
 
@@ -42,7 +47,8 @@ class HostConfigFactory(DataclassFactory):
                 "host_name": "prometheus",
             },
             HostConfigFactory.build(
-                resolved_address="1.2.3.4",
+                resolved_ipv4_address="1.2.3.4",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 name="prometheus",
                 address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
             ),
@@ -74,7 +80,8 @@ class HostConfigFactory(DataclassFactory):
                 "host_name": "prometheus",
             },
             HostConfigFactory.build(
-                resolved_address="1.2.3.4",
+                resolved_ipv4_address="1.2.3.4",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 name="prometheus",
                 address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
             ),
@@ -106,7 +113,8 @@ class HostConfigFactory(DataclassFactory):
                 "host_name": "prometheus",
             },
             HostConfigFactory.build(
-                resolved_address="1.2.3.4",
+                resolved_ipv4_address="1.2.3.4",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 name="prometheus",
                 address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
             ),
@@ -142,7 +150,8 @@ class HostConfigFactory(DataclassFactory):
                 "host_name": "prometheus",
             },
             HostConfigFactory.build(
-                resolved_address="1.2.3.4",
+                resolved_ipv4_address="1.2.3.4",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 name="prometheus",
                 address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
             ),
@@ -178,7 +187,10 @@ class HostConfigFactory(DataclassFactory):
                     }
                 ],
             },
-            HostConfigFactory.build(),
+            HostConfigFactory.build(
+                resolved_ipv4_address="1.2.3.4",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+            ),
             {
                 "api_url": "http://http://192.168.58.2:30000/api/v1/",
                 "auth": ("username", "password"),

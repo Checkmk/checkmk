@@ -9,7 +9,12 @@ import pytest
 from polyfactory.factories import DataclassFactory
 
 from cmk.plugins.elasticsearch.server_side_calls.active_check import active_check_config as config
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, NetworkAddressConfig
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    ResolvedIPAddressFamily,
+)
 
 
 class HostConfigFactory(DataclassFactory):
@@ -27,7 +32,8 @@ class HostConfigFactory(DataclassFactory):
                 "timerange": 1,
             },
             HostConfigFactory.build(
-                resolved_address="test",
+                resolved_ipv4_address="test",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
             ),
             ["-q", "bar", "-t", "1", "-i", "f o o", "-H", "test"],

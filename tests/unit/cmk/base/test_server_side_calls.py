@@ -58,7 +58,7 @@ HOST_ATTRS = {
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
+    resolved_ipv4_address="0.0.0.1",
     alias="host_alias",
     resolved_ip_family=ResolvedIPAddressFamily.IPV4,
     address_config=NetworkAddressConfig(
@@ -76,7 +76,7 @@ HOST_CONFIG = HostConfig(
 
 HOST_CONFIG_WITH_MACROS = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
+    resolved_ipv4_address="0.0.0.1",
     alias="host_alias",
     resolved_ip_family=ResolvedIPAddressFamily.IPV4,
     address_config=NetworkAddressConfig(
@@ -1098,7 +1098,6 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
     assert host_config == HostConfig(
         name="host_name",
         alias="alias",
-        resolved_address="::1",
         resolved_ipv4_address="0.0.0.1",
         resolved_ipv6_address="::1",
         address_config=NetworkAddressConfig(

@@ -214,7 +214,7 @@ def test_aws_argument_parsing(
         params,
         HostConfig(
             name="testhost",
-            resolved_address="unittest_address",
+            resolved_ipv4_address="unittest_address",
             alias="unittest_alias",
             resolved_ip_family=ResolvedIPAddressFamily.IPV4,
             address_config=NetworkAddressConfig(

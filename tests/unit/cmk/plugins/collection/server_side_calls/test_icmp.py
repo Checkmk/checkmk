@@ -13,11 +13,13 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,
     NetworkAddressConfig,
+    ResolvedIPAddressFamily,
 )
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
+    resolved_ipv4_address="0.0.0.1",
+    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
     alias="host_alias",
     address_config=NetworkAddressConfig(
         ip_family=IPAddressFamily.IPV4,

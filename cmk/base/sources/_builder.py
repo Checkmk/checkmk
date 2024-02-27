@@ -161,7 +161,7 @@ class _Builder:
         def make_special_agents() -> Iterable[Source]:
             for agentname, params in self.config_cache.special_agents(self.host_name):
                 host_attrs = self.config_cache.get_host_attributes(self.host_name)
-                legacy_macros = {
+                macros = {
                     "<IP>": self.ipaddress or "",
                     "<HOST>": self.host_name,
                     **self.config_cache.get_host_macros_from_attributes(self.host_name, host_attrs),
@@ -171,7 +171,7 @@ class _Builder:
                     config.special_agent_info,
                     self.host_name,
                     self.ipaddress,
-                    config.get_ssc_host_config(self.host_name, self.config_cache, legacy_macros),
+                    config.get_ssc_host_config(self.host_name, self.config_cache, macros),
                     host_attrs,
                     config.http_proxies,
                     cmk.utils.password_store.load(),

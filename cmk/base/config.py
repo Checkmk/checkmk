@@ -1870,7 +1870,7 @@ def get_resource_macros() -> Mapping[str, str]:
 
 
 def get_ssc_host_config(
-    host_name: HostName, config_cache: ConfigCache, legacy_macros: Mapping[str, object]
+    host_name: HostName, config_cache: ConfigCache, macros: Mapping[str, object]
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
     ip_family = ConfigCache.address_family(host_name)
@@ -1907,54 +1907,24 @@ def get_ssc_host_config(
         else resolved_ipv6_address
     )
 
-    alias = config_cache.alias(host_name)
-    ip_family_macro = (
-        "4" if resolved_ip_family == server_side_calls_api.ResolvedIPAddressFamily.IPV4 else "6"
-    )
-    tags = {str(k): str(v) for k, v in config_cache.tags(host_name).items()}
-    labels = config_cache.labels(host_name)
     custom_attributes = {
         k[1:]: v
         for k, v in config_cache.explicit_host_attributes(host_name).items()
         if k.startswith("_")
     }
 
-    indexed_ipv4_macros = {
-        f"$HOST_IPV4_ADDRESS_{i}$": a for i, a in enumerate(additional_addresses_ipv4, start=1)
-    }
-    indexed_ipv6_macros = {
-        f"$HOST_IPV6_ADDRESS_{i}$": a for i, a in enumerate(additional_addresses_ipv6, start=1)
-    }
-
-    macros = {
-        "$HOST_NAME$": host_name,
-        "$HOST_ALIAS$": alias,
-        "$HOST_ADDRESS$": resolved_address or "",
-        "$HOST_IP_FAMILY$": ip_family_macro,
-        "$HOST_IPV4_ADDRESS$": resolved_ipv4_address or "",
-        "$HOST_IPV6_ADDRESS$": resolved_ipv6_address or "",
-        "$HOST_IPV4_ADDRESSES$": " ".join(additional_addresses_ipv4),
-        "$HOST_IPV6_ADDRESSES$": " ".join(additional_addresses_ipv6),
-        **indexed_ipv4_macros,
-        **indexed_ipv6_macros,
-        **{f"$HOST_TAG_{k}$": v for k, v in tags.items()},
-        **{f"$HOST_LABEL_{k}$": v for k, v in labels.items()},
-        **{f"$HOST_ATTR_{k}$": v for k, v in custom_attributes.items()},
-        **{k: str(v) for k, v in legacy_macros.items()},
-    }
-
     return server_side_calls_api.HostConfig(
         name=host_name,
-        alias=alias,
+        alias=config_cache.alias(host_name),
         resolved_address=resolved_address,
         resolved_ipv4_address=resolved_ipv4_address,
         resolved_ipv6_address=resolved_ipv6_address,
         resolved_ip_family=resolved_ip_family,
         address_config=address_config,
-        macros=macros,
+        macros={k: str(v) for k, v in macros.items()},
         custom_attributes=custom_attributes,
-        tags=tags,
-        labels=labels,
+        tags={str(k): str(v) for k, v in config_cache.tags(host_name).items()},
+        labels=config_cache.labels(host_name),
     )
 
 

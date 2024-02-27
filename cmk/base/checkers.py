@@ -768,7 +768,7 @@ def _final_read_only_check_parameters(
         # For auto-migrated plugins expecting tuples, they will be
         # unwrapped by a decorator of the original check_function.
         wrap_parameters(
-            _inject_prediction_params_recursively(params, injected_p)
+            inject_prediction_params_recursively(params, injected_p)
             if _contains_predictive_levels(params)
             else params,
         )
@@ -789,7 +789,7 @@ def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
     return False
 
 
-def _inject_prediction_params_recursively(
+def inject_prediction_params_recursively(
     params: LegacyCheckParameters | Mapping[str, object],
     injected_p: InjectedParameters,
 ) -> LegacyCheckParameters | Mapping[str, object]:
@@ -802,35 +802,35 @@ def _inject_prediction_params_recursively(
     rid of the recursion).
     """
     match params:
+        case "predictive", {
+            "__reference_metric__": str(metric),
+            "__direction__": "upper" | "lower" as direction,
+        }:
+            return _get_prediction_and_levels(params[1], injected_p, metric, direction)
         case tuple():
-            return tuple(_inject_prediction_params_recursively(v, injected_p) for v in params)
+            return tuple(inject_prediction_params_recursively(v, injected_p) for v in params)
         case list():
-            return list(_inject_prediction_params_recursively(v, injected_p) for v in params)
+            return list(inject_prediction_params_recursively(v, injected_p) for v in params)
         case dict():
             return {
                 k: injected_p.model_dump()
                 if k == "__injected__"
-                else (
-                    _get_prediction_and_levels(v, injected_p)
-                    if isinstance(v, dict) and "__reference_metric__" in v
-                    else _inject_prediction_params_recursively(v, injected_p)
-                )
+                else inject_prediction_params_recursively(v, injected_p)
                 for k, v in params.items()
             }
     return params
 
 
 def _get_prediction_and_levels(
-    params: dict, injected_p: InjectedParameters
+    params: dict, injected_p: InjectedParameters, metric: str, direction: Literal["upper", "lower"]
 ) -> tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]]:
-    metric = params["__reference_metric__"]
     return (
         "predictive",
         (
             metric,
             *lookup_predictive_levels(
                 metric,
-                params["__direction__"],
+                direction,
                 PredictionParameters.model_validate(
                     {k: v for k, v in params.items() if not k.startswith("__")}
                 ),

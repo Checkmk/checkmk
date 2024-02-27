@@ -192,7 +192,7 @@ def test_prediction_injection_legacy() -> None:
             },
         )
     }
-    assert checkers._inject_prediction_params_recursively(p, inject) == {
+    assert checkers.inject_prediction_params_recursively(p, inject) == {
         "pagefile": (
             "predictive",
             {
@@ -220,15 +220,18 @@ def test_prediction_injection() -> None:
         meta_file_path_template="", predictions={_make_hash(params, "upper", metric): prediction}
     )
     p: dict[str, object] = {
-        "levels_upper": {
-            "__reference_metric__": "my_reference_metric",
-            "__direction__": "upper",
-            "period": params.period,
-            "horizon": params.horizon,
-            "levels": params.levels,
-        },
+        "levels_upper": (
+            "predictive",
+            {
+                "__reference_metric__": "my_reference_metric",
+                "__direction__": "upper",
+                "period": params.period,
+                "horizon": params.horizon,
+                "levels": params.levels,
+            },
+        ),
     }
-    assert checkers._inject_prediction_params_recursively(p, inject) == {
+    assert checkers.inject_prediction_params_recursively(p, inject) == {
         "levels_upper": (
             "predictive",
             ("my_reference_metric", *prediction),

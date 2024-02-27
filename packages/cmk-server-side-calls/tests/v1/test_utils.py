@@ -127,7 +127,7 @@ def test_noop_parser() -> None:
         pytest.param(
             HostConfig(
                 name="hostname",
-                resolved_address="0.0.0.1",
+                resolved_ipv4_address="0.0.0.1",
                 alias="host_alias",
                 resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 address_config=NetworkAddressConfig(
@@ -149,7 +149,7 @@ def test_noop_parser() -> None:
         pytest.param(
             HostConfig(
                 name="hostname",
-                resolved_address="0.0.0.1",
+                resolved_ipv4_address="0.0.0.1",
                 alias="host_alias",
                 resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 address_config=NetworkAddressConfig(

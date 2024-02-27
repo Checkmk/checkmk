@@ -1901,12 +1901,6 @@ def get_ssc_host_config(
         if ip_family in (ip_lookup.AddressFamily.IPv6, ip_lookup.AddressFamily.DUAL_STACK)
         else None
     )
-    resolved_address = (
-        resolved_ipv4_address
-        if resolved_ip_family == server_side_calls_api.ResolvedIPAddressFamily.IPV4
-        else resolved_ipv6_address
-    )
-
     custom_attributes = {
         k[1:]: v
         for k, v in config_cache.explicit_host_attributes(host_name).items()
@@ -1916,7 +1910,6 @@ def get_ssc_host_config(
     return server_side_calls_api.HostConfig(
         name=host_name,
         alias=config_cache.alias(host_name),
-        resolved_address=resolved_address,
         resolved_ipv4_address=resolved_ipv4_address,
         resolved_ipv6_address=resolved_ipv6_address,
         resolved_ip_family=resolved_ip_family,

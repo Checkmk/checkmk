@@ -22,7 +22,7 @@ def test_parse_version():
             HostConfig(
                 name="",
                 alias="",
-                resolved_address="address",
+                resolved_ipv6_address="address",  # no IP family set => IPv6
                 address_config=NetworkAddressConfig(
                     ip_family=IPAddressFamily.NO_IP,
                 ),
@@ -54,7 +54,7 @@ def test_parse_address():
             HostConfig(
                 name="",
                 alias="",
-                resolved_address="address",
+                resolved_ipv6_address="address",  # no IP family set => IPv6
                 address_config=NetworkAddressConfig(
                     ip_family=IPAddressFamily.NO_IP,
                 ),

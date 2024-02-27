@@ -32,6 +32,11 @@ class NoFetcher(Fetcher[AgentRawData]):
         super().__init__()
         self.canned: Final = canned
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, NoFetcher):
+            return False
+        return self.canned == other.canned
+
     def open(self) -> None:
         pass
 

@@ -142,6 +142,15 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             + ")"
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, IPMIFetcher):
+            return False
+        return (
+            self.address == other.address
+            and self.username == other.username
+            and self.password == other.password
+        )
+
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         self._logger.log(VERBOSE, "Get IPMI data")
         if self._command is None:

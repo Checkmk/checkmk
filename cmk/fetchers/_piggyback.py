@@ -44,6 +44,15 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
             + ")"
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, PiggybackFetcher):
+            return False
+        return (
+            self.hostname == other.hostname
+            and self.address == other.address
+            and self.time_settings == other.time_settings
+        )
+
     def open(self) -> None:
         for origin in (self.hostname, self.address):
             self._sources.extend(PiggybackFetcher._raw_data(origin, self.time_settings))

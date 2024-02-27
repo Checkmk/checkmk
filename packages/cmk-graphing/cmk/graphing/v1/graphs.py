@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from ._localize import Title
 from ._type_defs import Bound, Quantity
@@ -79,10 +79,10 @@ class Graph:
     name: str
     title: Title
     minimal_range: MinimalRange | None = None
-    compound_lines: Sequence[Quantity] = field(default_factory=list)
-    simple_lines: Sequence[Quantity] = field(default_factory=list)
-    optional: Sequence[str] = field(default_factory=list)
-    conflicting: Sequence[str] = field(default_factory=list)
+    compound_lines: Sequence[Quantity] = ()
+    simple_lines: Sequence[Quantity] = ()
+    optional: Sequence[str] = ()
+    conflicting: Sequence[str] = ()
 
     def __post_init__(self) -> None:
         if not self.name:

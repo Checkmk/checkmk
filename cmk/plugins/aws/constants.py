@@ -338,6 +338,7 @@ AWSEC2InstTypes = [
     "m6i.8xlarge",
     "m6i.large",
     "m6i.xlarge",
+    "m7i.large",
     "mac1.metal",
     "p2.16xlarge",
     "p2.8xlarge",

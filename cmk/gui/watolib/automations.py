@@ -42,6 +42,7 @@ from cmk.gui.background_job import (
     BackgroundStatusSnapshot,
     InitialStatusArgs,
     JobStatusSpec,
+    JobStatusStates,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -631,6 +632,9 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
         auto_logger.debug("Job status: %r", response)
 
         if not response.job_status.is_active:
+            if response.job_status.state == JobStatusStates.EXCEPTION:
+                raise MKAutomationException("\n".join(response.job_status.loginfo["JobException"]))
+
             result = response.result
             auto_logger.debug("Job is not active anymore. Return the result: %s", result)
             break

@@ -34,7 +34,7 @@ def generate_prism_command(
     if "port" in params:
         args.extend(["--port", str(params["port"])])
 
-    yield SpecialAgentCommand(args)
+    yield SpecialAgentCommand(command_arguments=args)
 
 
 special_agent_prism = SpecialAgentConfig(

@@ -46,7 +46,7 @@ def _agent_elasticsearch_arguments(
 
     args.extend(replace_macros(str(h), hostconfig.macros) for h in params["hosts"])  # type: ignore[attr-defined]
 
-    yield SpecialAgentCommand(args)
+    yield SpecialAgentCommand(command_arguments=args)
 
 
 special_agent_elasticsearch = SpecialAgentConfig(

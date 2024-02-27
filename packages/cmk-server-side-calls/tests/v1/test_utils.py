@@ -28,12 +28,12 @@ from cmk.server_side_calls.v1 import (
     [
         pytest.param(
             ("store", "stored_password_id"),
-            StoredSecret("stored_password_id", format="%s"),
+            StoredSecret(value="stored_password_id", format="%s"),
             id="stored password",
         ),
         pytest.param(
             ("password", "password1234"),
-            PlainTextSecret("password1234", format="%s"),
+            PlainTextSecret(value="password1234", format="%s"),
             id="plain-text password",
         ),
     ],
@@ -81,7 +81,7 @@ def test_get_http_proxy(
     proxy: object,
     expected_result: str,
 ) -> None:
-    http_proxies = {"test_proxy": HTTPProxy("test_proxy", "Test", "test.com")}
+    http_proxies = {"test_proxy": HTTPProxy(id="test_proxy", name="Test", url="test.com")}
 
     assert parse_http_proxy(proxy, http_proxies) == expected_result
 
@@ -110,7 +110,7 @@ def test_get_http_proxy_value_error(
     proxy: object,
     expected_error: str,
 ) -> None:
-    http_proxies = {"test_proxy": HTTPProxy("test_proxy", "Test", "test.com")}
+    http_proxies = {"test_proxy": HTTPProxy(id="test_proxy", name="Test", url="test.com")}
 
     with pytest.raises(ValueError, match=expected_error):
         parse_http_proxy(proxy, http_proxies)

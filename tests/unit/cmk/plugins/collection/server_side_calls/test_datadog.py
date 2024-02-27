@@ -28,7 +28,7 @@ HOST_CONFIG = HostConfig(
     resolved_ip_family=ResolvedIPAddressFamily.IPV4,
 )
 
-HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
+HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
 
 
 @pytest.mark.parametrize(

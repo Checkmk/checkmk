@@ -12,7 +12,7 @@ from ._utils import HostConfig, HTTPProxy, Secret
 _ParsedParameters = TypeVar("_ParsedParameters")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class SpecialAgentCommand:
     """
     Defines a special agent command

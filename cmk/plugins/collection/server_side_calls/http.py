@@ -402,7 +402,10 @@ def generate_http_command(
         )
 
     args += _common_args(params, host_config)
-    yield ActiveCheckCommand(_get_http_description(params, host_config), args)
+    yield ActiveCheckCommand(
+        service_description=_get_http_description(params, host_config),
+        command_arguments=args,
+    )
 
 
 active_check_http = ActiveCheckConfig(

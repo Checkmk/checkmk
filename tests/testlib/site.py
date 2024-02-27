@@ -1258,6 +1258,7 @@ class SiteFactory:
         init_livestatus: bool = True,
         prepare_for_tests: bool = True,
         activate_changes: bool = True,
+        auto_restart_httpd: bool = False,
     ) -> Site:
         site = self._site_obj(name)
 
@@ -1272,11 +1273,17 @@ class SiteFactory:
         site.start()
 
         if prepare_for_tests:
-            site.prepare_for_tests()
+            with cse_openid_oauth_provider(
+                f"http://localhost:{site.apache_port}"
+            ) if self.version.is_saas_edition() else nullcontext():
+                site.prepare_for_tests()
 
         if activate_changes:
             # There seem to be still some changes that want to be activated
             site.activate_changes_and_wait_for_core_reload()
+
+        if auto_restart_httpd:
+            restart_httpd()
 
         logger.debug("Created site %s", site.id)
         return site

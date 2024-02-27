@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Literal
 
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
@@ -85,12 +84,12 @@ def _valuespec_specific_values() -> Dictionary:
                         CascadingSingleChoiceElement[tuple[str, object]](
                             name="rsa",
                             title=Title("RSA"),
-                            parameter_form=_get_hashing_algorithm("RSA"),
+                            parameter_form=_hash_algorithm_choice(),
                         ),
                         CascadingSingleChoiceElement[tuple[str, object]](
                             name="ecdsa",
                             title=Title("ECDSA"),
-                            parameter_form=_get_hashing_algorithm("ECDSA"),
+                            parameter_form=_hash_algorithm_choice(),
                         ),
                         CascadingSingleChoiceElement[None](
                             name="ed25519",
@@ -101,21 +100,15 @@ def _valuespec_specific_values() -> Dictionary:
                                 label=Label("SHA-512 (fixed)"),
                             ),
                         ),
-                        CascadingSingleChoiceElement[None](
+                        CascadingSingleChoiceElement[tuple[str, object]](
                             name="rsassa_pss",
                             title=Title("RSASSA-PSS"),
-                            parameter_form=FixedValue[None](
-                                value=None,
-                                title=Title("RSASSA-PSS"),
-                                label=Label(
-                                    "Defined by signature algorithm parameters",
-                                ),
-                            ),
+                            parameter_form=_hash_algorithm_choice(),
                         ),
                         CascadingSingleChoiceElement[tuple[str, object]](
                             name="dsa",
                             title=Title("DSA"),
-                            parameter_form=_get_hashing_algorithm("DSA"),
+                            parameter_form=_hash_algorithm_choice(),
                         ),
                     ],
                 )
@@ -287,7 +280,7 @@ def _form_active_checks_cert() -> Dictionary:
     )
 
 
-def _get_hashing_algorithm(algorithm: Literal["RSA", "ECDSA", "DSA"]) -> CascadingSingleChoice:
+def _hash_algorithm_choice() -> CascadingSingleChoice:
     choices = [
         ("sha224", Title("SHA-224")),
         ("sha256", Title("SHA-256")),
@@ -299,7 +292,7 @@ def _get_hashing_algorithm(algorithm: Literal["RSA", "ECDSA", "DSA"]) -> Cascadi
         ("sha3_512", Title("SHA3-512")),
     ]
     return CascadingSingleChoice(
-        title=Title(algorithm),
+        title=Title("Hashing algorithm"),
         elements=[
             CascadingSingleChoiceElement[str](
                 name=value,

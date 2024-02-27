@@ -3020,8 +3020,8 @@ def main_update(  # pylint: disable=too-many-branches
             link_legacy_agent_ca_v2(site)
             legacy_agent_ca.unlink()
 
-    # Let hooks of the new(!) version do their work and update configuration.
-    config_set_all(site)
+        # Let hooks of the new(!) version do their work and update configuration.
+        config_set_all(site)
 
     # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
     # initialized tmpfs.

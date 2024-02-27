@@ -4,7 +4,7 @@
 
 use derive_more::{Display, From, Into};
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, From)]
 pub struct Port(pub u16);
 
 impl Port {

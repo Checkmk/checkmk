@@ -22,8 +22,6 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib import memory
 
-_MB = 1024**2
-
 # Special memory and page file check for Windows
 
 
@@ -79,9 +77,6 @@ def check_mem_windows_static(
             free_raw = section["%sFree" % prefix]
         except KeyError:
             continue
-        # Metrics for total mem and pagefile are expected in MB
-        yield Metric(f"{metric_prefix}_total", total / _MB)
-
         used_raw = float(total - free_raw)
 
         # We want to use memory.check_element to get the nice standardized output,

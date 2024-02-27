@@ -301,46 +301,10 @@ metric_info["mem_total"] = {
     "unit": "bytes",
 }
 
-metric_info["mem_used_avg"] = {
-    "title": _("Memory Average"),
-    "color": "#80ff40",
-    "unit": "bytes",
-}
-
-metric_info["pagefile_used_avg"] = {
-    "title": _("Commit Charge Average"),
-    "color": "#408f20",
-    "unit": "bytes",
-}
-
-metric_info["mem_free"] = {
-    "title": _("Free RAM"),
-    "color": "#ffffff",
-    "unit": "bytes",
-}
-
-metric_info["mem_used"] = {
-    "color": "#80ff40",
-    "title": _("RAM used"),
-    "unit": "bytes",
-}
-
 metric_info["mem_available"] = {
     "color": "21/a",
     "title": _("Estimated RAM for new processes"),
     "unit": "bytes",
-}
-
-metric_info["pagefile_used"] = {
-    "color": "#408f20",
-    "title": _("Commit Charge"),
-    "unit": "bytes",
-}
-
-metric_info["mem_used_percent"] = {
-    "color": "#80ff40",
-    "title": _("RAM used %"),
-    "unit": "%",
 }
 
 metric_info["cpu_mem_used_percent"] = {
@@ -1565,18 +1529,6 @@ graph_info["ram_swap_used"] = {
     "range": (0, "swap_used:max,mem_used:max,+"),
 }
 
-graph_info["mem_used_percent"] = {
-    "title": _("Used RAM"),
-    "metrics": [
-        ("mem_used_percent", "area"),
-    ],
-    "scalars": [
-        "mem_used_percent:warn",
-        "mem_used_percent:crit",
-    ],
-    "range": (0, 100),
-}
-
 graph_info["cpu_mem_used_percent"] = {
     "title": _("Used CPU Memory"),
     "metrics": [
@@ -1666,6 +1618,7 @@ graph_info["active_and_inactive_memory"] = {
     "conflicting_metrics": ["mem_lnx_active_anon"],
 }
 
+
 graph_info["ram_used"] = {
     "title": _("RAM used"),
     "metrics": [
@@ -1680,18 +1633,6 @@ graph_info["ram_used"] = {
     "range": (0, "mem_used:max"),
 }
 
-graph_info["commit_charge"] = {
-    "title": _("Commit Charge"),
-    "metrics": [
-        ("pagefile_used", "area"),
-    ],
-    "scalars": [
-        ("pagefile_used:max#000000", "Maximum"),
-        ("pagefile_used:warn", "Warning"),
-        ("pagefile_used:crit", "Critical"),
-    ],
-    "range": (0, "pagefile_used:max"),
-}
 
 graph_info["filesystem_writeback"] = {
     "title": _("Filesystem Writeback"),

@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
 
-from cmk.gui.bi.bi_manager import BIManager
+from cmk.gui.bi.bi_manager import BIManager, load_compiled_branch
 from cmk.gui.bi.foldable_tree_renderer import (
     ABCFoldableTreeRenderer,
     FoldableTreeRendererBottomUp,
@@ -443,7 +443,21 @@ class PainterAggrIcons(Painter):
         frozen_info = row["aggr_compiled_aggregation"].frozen_info
         with output_funnel.plugged():
             if frozen_info is not None:
-                html.icon_button(bi_frozen_diff_url, _("This aggregation is frozen"), "bi_freeze")
+                compiled_branch = load_compiled_branch(
+                    frozen_info.based_on_aggregation_id, frozen_info.based_on_branch_title
+                )
+                frozen_elements = row["aggr_compiled_aggregation"].branches[0].required_elements()
+                live_elements = compiled_branch.required_elements()
+                if frozen_elements.symmetric_difference(live_elements):
+                    html.icon_button(
+                        bi_frozen_diff_url,
+                        _("This aggregation is frozen. The live version has changes."),
+                        {"icon": "bi_freeze", "emblem": "warning"},
+                    )
+                else:
+                    html.icon_button(
+                        bi_frozen_diff_url, _("This aggregation is frozen"), "bi_freeze"
+                    )
             html.icon_button(bi_map_url, _("Visualize this aggregation"), "aggr")
             html.icon_button(single_url, _("Show only this aggregation"), "showbi")
             html.icon_button(

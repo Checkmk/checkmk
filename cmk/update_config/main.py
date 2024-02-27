@@ -20,6 +20,7 @@ from typing import Callable
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
+from cmk.utils.paths import check_mk_config_dir
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.redis import disable_redis
 from cmk.utils.version import edition, Edition
@@ -68,6 +69,10 @@ def main(
 
     _load_pre_plugins()
     try:
+        # This has to be done BEFORE initializing the GUI context on start of
+        # the pre update actions
+        _cleanup_precompiled_files(logger)
+
         check_config(logger, arguments.conflict)
     except MKUserError as e:
         sys.stderr.write(
@@ -101,6 +106,12 @@ def main(
             "BEFORE starting the site again."
         )
         return 1
+
+
+def _cleanup_precompiled_files(logger: logging.Logger) -> None:
+    logger.info("Cleanup precompiled host and folder files")
+    for p in Path(check_mk_config_dir, "wato").glob("**/*.pkl"):
+        p.unlink(missing_ok=True)
 
 
 def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:

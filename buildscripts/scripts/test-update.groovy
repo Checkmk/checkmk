@@ -10,6 +10,8 @@ def build_make_target(edition) {
             return prefix + "cee" + suffix;
         case 'cloud':
             return prefix + "cce" + suffix;
+        case 'saas':
+            return prefix + "cse" + suffix;
         default:
             error("The update tests are not yet enabled for edition: " + edition);
     }

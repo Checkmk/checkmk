@@ -41,6 +41,7 @@ SYSTEM_TESTS := \
     test-composition \
     test-update-cee \
     test-update-cce \
+    test-update-cse\
     test-schemathesis-openapi \
     test-plugins \
     test-gui-crawl \
@@ -299,6 +300,9 @@ test-update-cee:
 
 test-update-cce:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cce --log-cli-level=INFO
+
+test-update-cse:
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cse --log-cli-level=INFO
 
 test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)

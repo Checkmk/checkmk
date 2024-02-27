@@ -31,14 +31,14 @@ class NoFetcherError(enum.Enum):
 class NoFetcher(Fetcher[AgentRawData]):
     def __init__(self, /, canned: NoFetcherError) -> None:
         super().__init__()
-        self._canned: Final = canned
+        self.canned: Final = canned
 
     @classmethod
     def _from_json(cls, serialized: Mapping[str, str]) -> NoFetcher:
         return NoFetcher(NoFetcherError[serialized["canned"]])
 
     def to_json(self) -> Mapping[str, str]:
-        return {"canned": self._canned.name}
+        return {"canned": self.canned.name}
 
     def open(self) -> None:
         pass
@@ -47,4 +47,4 @@ class NoFetcher(Fetcher[AgentRawData]):
         pass
 
     def _fetch_from_io(self, mode: Mode) -> NoReturn:
-        raise MKFetcherError(self._canned.value)
+        raise MKFetcherError(self.canned.value)

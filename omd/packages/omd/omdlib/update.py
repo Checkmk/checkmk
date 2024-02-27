@@ -126,6 +126,7 @@ class ManageUpdate:
                 "can be deleted and the update can be retried."
             )
         backup_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+        store(self.site_dir, "version", self.backup_dir)
         return self
 
     def __exit__(
@@ -136,5 +137,6 @@ class ManageUpdate:
     ) -> Literal[False]:
         if exc_type is not None:
             restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+            restore(self.site_dir, "version", self.backup_dir)
         shutil.rmtree(self.backup_dir)
         return False  # Don't suppress the exception

@@ -1353,7 +1353,13 @@ class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
             )
             for topic_menu_topic in mega_menu_registry["monitoring"].topics()
             for topic_menu_item in topic_menu_topic.items
-            if query.lower() in topic_menu_item.title.lower()
+            if any(
+                query.lower() in match_text.lower()
+                for match_text in [
+                    topic_menu_item.title,
+                    *topic_menu_item.megamenu_search_terms,
+                ]
+            )
         ]
 
 

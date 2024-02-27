@@ -252,6 +252,7 @@ class Visual(TypedDict):
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
     packaged: bool
     link_from: LinkFromSpec
+    megamenu_search_terms: NotRequired[Sequence[str]]
 
 
 class VisualLinkSpec(NamedTuple):
@@ -558,7 +559,7 @@ class TopicMenuItem(NamedTuple):
     is_show_more: bool = False
     icon: Icon | None = None
     button_title: str | None = None
-    additional_matches_setup_search: Sequence[str] = ()
+    megamenu_search_terms: Sequence[str] = ()
 
 
 class TopicMenuTopic(NamedTuple):

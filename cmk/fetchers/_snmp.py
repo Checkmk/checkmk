@@ -186,6 +186,17 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         )
         self._backend: SNMPBackend | None = None
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SNMPFetcher):
+            return False
+        return (
+            self.sections == other.sections
+            and self.on_error == other.on_error
+            and self.missing_sys_description == other.missing_sys_description
+            and self.do_status_data_inventory == other.do_status_data_inventory
+            and self.snmp_config == other.snmp_config
+        )
+
     @property
     def disabled_sections(self) -> frozenset[SectionName]:
         return frozenset(name for name, meta in self.sections.items() if meta.disabled)

@@ -45,6 +45,15 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             + ")"
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ProgramFetcher):
+            return False
+        return (
+            self.cmdline == other.cmdline
+            and self.stdin == other.stdin
+            and self.is_cmc == other.is_cmc
+        )
+
     def open(self) -> None:
         self._logger.debug("Calling: %s", self.cmdline)
         if self.stdin:

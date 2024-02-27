@@ -107,6 +107,18 @@ class TCPFetcher(Fetcher[AgentRawData]):
             + ")"
         )
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, TCPFetcher):
+            return False
+        return (
+            self.family == other.family
+            and self.address == other.address
+            and self.timeout == other.timeout
+            and self.host_name == other.host_name
+            and self.encryption_handling == other.encryption_handling
+            and self.pre_shared_secret == other.pre_shared_secret
+        )
+
     def open(self) -> None:
         self._logger.debug(
             "Connecting via TCP to %s:%d (%ss timeout)",

@@ -154,6 +154,7 @@ def make_topic_menu(visuals: Sequence[tuple[str, tuple[str, Visual]]]) -> list[T
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],
                 icon=visual["icon"],
+                megamenu_search_terms=visual.get("megamenu_search_terms", []),
             )
         )
 

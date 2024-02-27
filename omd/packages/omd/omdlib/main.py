@@ -3026,8 +3026,8 @@ def main_update(  # pylint: disable=too-many-branches
         # new settings and default values.
         site.load_config(load_defaults(site))
 
-    # Let hooks of the new(!) version do their work and update configuration.
-    config_set_all(site)
+        # Let hooks of the new(!) version do their work and update configuration.
+        config_set_all(site)
 
     # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
     # initialized tmpfs.

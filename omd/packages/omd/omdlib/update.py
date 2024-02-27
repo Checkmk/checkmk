@@ -106,6 +106,30 @@ def restore_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: 
         restore(site_dir, Path(relpath), backup_dir)
 
 
+HOOK_RELPATHS = [
+    "etc/check_mk/multisite.d/liveproxyd.mk",
+    "etc/apache/apache/listen-port.conf",
+    "etc/mk-livestatus/xinetd.conf",
+    "etc/xinetd.d/mk-livestatus",
+    "etc/apache/conf.d/nagios.conf",
+    "etc/check_mk/conf.d/microcore.mk",
+    "var/log/livestatus.log",
+    "var/log/nagios.log",
+    "etc/init.d/core",
+    "var/check_mk/core/config",
+    ".forward",
+    "etc/mod-gearman/perfdata.conf",
+    "etc/nagios/nagios.d/pnp4nagios.cfg",
+    "etc/apache/conf.d/pnp4nagios.conf",
+    "etc/check_mk/conf.d/pnp4nagios.mk",
+    "etc/apache/conf.d/cookie_auth.conf",
+    "etc/nagvis/conf.d/cookie_auth.ini.php",
+    "etc/pnp4nagios/config.d/cookie_auth.php",
+    "etc/check_mk/multisite.d/mkeventd.mk",
+    "etc/check_mk/conf.d/mkeventd.mk",
+]
+
+
 class ManageUpdate:
     def __init__(self, site_dir: Path, old_skel: Path, new_skel: Path) -> None:
         backup_dir = site_dir / ".update_backup"
@@ -127,6 +151,8 @@ class ManageUpdate:
             )
         backup_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
         store(self.site_dir, "version", self.backup_dir)
+        for relpath in HOOK_RELPATHS:
+            store(self.site_dir, relpath, self.backup_dir)
         return self
 
     def __exit__(
@@ -136,7 +162,9 @@ class ManageUpdate:
         exc_tb: TracebackType | None,
     ) -> Literal[False]:
         if exc_type is not None:
-            restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+            for relpath in HOOK_RELPATHS:
+                restore(self.site_dir, relpath, self.backup_dir)
             restore(self.site_dir, "version", self.backup_dir)
+            restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
         shutil.rmtree(self.backup_dir)
         return False  # Don't suppress the exception

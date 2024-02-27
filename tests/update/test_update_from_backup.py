@@ -73,7 +73,6 @@ def _base_site_demo(site_factory_demo):
     yield from site_factory_demo.get_test_site(site_name, save_results=False)
 
 
-@pytest.mark.skip(reason="CMK-16274: investigate failure of 'update' tests.")
 @pytest.mark.skipif(
     os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
     reason="Test currently failing for missing `php7`. "
@@ -158,7 +157,6 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
         assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg
 
 
-@pytest.mark.skip(reason="CMK-16274: investigate failure of 'update' tests.")
 @pytest.mark.cce
 @skip_if_not_cloud_edition
 def test_update_from_backup_demo(

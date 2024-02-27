@@ -21,7 +21,6 @@ from .conftest import get_site_status, update_site
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(reason="CMK-16274: investigate failure of 'update' tests.")
 @pytest.mark.cee
 def test_update(  # pylint: disable=too-many-branches
     test_setup: tuple[Site, bool],

@@ -30,7 +30,6 @@ def main() {
         "DEBEMAIL='feedback@checkmk.com'",
     ] + (params.DISABLE_CACHE ? [
         "NEXUS_BUILD_CACHE_URL=",
-        "PYTHON_ENABLE_OPTIMIZATIONS=",
         "BAZEL_CACHE_URL=",
         "BAZEL_CACHE_USER=",
         "BAZEL_CACHE_PASSWORD="] : []);

@@ -48,6 +48,7 @@ configure_make(
         "CPPFLAGS='-I/usr/include/ncursesw'",
         "--enable-optimizations",
         "--enable-shared",
+        "--with-lto",
         "DESTDIR=%s" % INSTALL_PREFIX,
     ],
     data = [

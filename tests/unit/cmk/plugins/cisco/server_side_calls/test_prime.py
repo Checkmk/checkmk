@@ -7,15 +7,19 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.testlib import SpecialAgent
-
-from cmk.base.server_side_calls import SpecialAgentInfoFunctionResult
-
-pytestmark = pytest.mark.checks
+from cmk.plugins.cisco.server_side_calls.prime import special_agent_cisco_prime
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    PlainTextSecret,
+    ResolvedIPAddressFamily,
+    Secret,
+)
 
 
 @pytest.mark.parametrize(
-    "params, hostname, ipaddress, args",
+    "params, expected_args",
     [
         (
             {
@@ -25,13 +29,11 @@ pytestmark = pytest.mark.checks
                 "no-cert-check": True,
                 "timeout": 60,
             },
-            "myhost",
-            "127.0.0.1",
             [
                 "--hostname",
-                "127.0.0.1",
+                "ipaddress",
                 "-u",
-                "bla:123",
+                PlainTextSecret(value="123", format="bla:%s"),
                 "--port",
                 "8080",
                 "--no-tls",
@@ -42,8 +44,6 @@ pytestmark = pytest.mark.checks
         ),
         (
             {},
-            "hostname",
-            "ipaddress",
             [
                 "--hostname",
                 "ipaddress",
@@ -53,8 +53,6 @@ pytestmark = pytest.mark.checks
             {
                 "host": "host_name",
             },
-            "hostname",
-            "ipaddress",
             [
                 "--hostname",
                 "hostname",
@@ -62,8 +60,6 @@ pytestmark = pytest.mark.checks
         ),
         (
             {"host": ("custom", {"host": "custom"})},
-            "hostname",
-            "ipaddress",
             [
                 "--hostname",
                 "custom",
@@ -73,10 +69,20 @@ pytestmark = pytest.mark.checks
 )
 def test_cisco_prime_argument_parsing(
     params: Mapping[str, object],
-    hostname: str,
-    ipaddress: str,
-    args: SpecialAgentInfoFunctionResult,
+    expected_args: str | Secret,
 ) -> None:
-    agent = SpecialAgent("agent_cisco_prime")
-    arguments = agent.argument_func(params, hostname, ipaddress)
-    assert arguments == args
+    parsed_params = special_agent_cisco_prime.parameter_parser(params)
+    (command,) = special_agent_cisco_prime.commands_function(
+        parsed_params,
+        HostConfig(
+            name="hostname",
+            resolved_address="ipaddress",
+            alias="alias",
+            resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+            address_config=NetworkAddressConfig(
+                ipv4_address="ipaddress", ip_family=IPAddressFamily.IPV4
+            ),
+        ),
+        {},
+    )
+    assert command.command_arguments == expected_args

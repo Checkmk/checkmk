@@ -110,7 +110,6 @@ UNMIGRATED = {
     "allnet_ip_sensoric",
     "appdynamics",
     "aws_status",
-    "cisco_prime",
     "couchbase",
     "ddn_s2a",
     "emcvnx",

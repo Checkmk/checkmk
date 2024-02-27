@@ -303,7 +303,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 non_blocking_http=True,
             )
             self._process_discovery_results(task, job_interface, response)
-        except Exception:
+        except Exception as e:
             self._num_hosts_failed += len(task.host_names)
             if task.site_id:
                 msg = _("Error during discovery of %s on site %s") % (
@@ -312,7 +312,10 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 )
             else:
                 msg = _("Error during discovery of %s") % (", ".join(task.host_names))
-            self._logger.exception(msg)
+            self._logger.warning(f"{msg}, Error: {e}")
+
+            # only show traceback on debug
+            self._logger.debug("Exception", exc_info=True)
 
         self._num_hosts_processed += len(task.host_names)
 

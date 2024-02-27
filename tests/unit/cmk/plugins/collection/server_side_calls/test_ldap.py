@@ -48,7 +48,7 @@ def test_check_ldap_argument_parsing(
         parsed_params,
         HostConfig(
             name="hostname",
-            resolved_address="ipaddress",
+            resolved_ipv4_address="ipaddress",
             alias="alias",
             resolved_ip_family=ResolvedIPAddressFamily.IPV4,
             address_config=NetworkAddressConfig(

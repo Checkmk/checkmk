@@ -11,7 +11,13 @@ from polyfactory.factories import DataclassFactory
 from cmk.plugins.proxmox_ve.server_side_calls.special_agent import (
     special_agent_proxmox_ve as config,
 )
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, PlainTextSecret, StoredSecret
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    HTTPProxy,
+    PlainTextSecret,
+    ResolvedIPAddressFamily,
+    StoredSecret,
+)
 
 
 class HostConfigFactory(DataclassFactory):
@@ -69,7 +75,11 @@ def test_agent_proxmox_ve_arguments(
     params: Mapping[str, object], expected_result: Sequence[str]
 ) -> None:
     # Assemble
-    host_config = HostConfigFactory.build(name="testhost")
+    host_config = HostConfigFactory.build(
+        name="testhost",
+        resolved_ipv4_address="hurz",
+        resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    )
     http_proxies = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
     # Act
     parsed_params = config.parameter_parser(params)

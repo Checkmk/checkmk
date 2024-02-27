@@ -29,7 +29,6 @@ from cmk.server_side_calls.v1 import (
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
     resolved_ipv4_address="0.0.0.1",
     alias="host_alias",
     resolved_ip_family=ResolvedIPAddressFamily.IPV4,

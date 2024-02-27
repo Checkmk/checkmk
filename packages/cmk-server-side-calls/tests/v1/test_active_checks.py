@@ -58,7 +58,7 @@ active_check_example = ActiveCheckConfig(
 def test_active_check_config() -> None:
     host_config = HostConfig(
         name="hostname",
-        resolved_address="0.0.0.1",
+        resolved_ipv4_address="0.0.0.1",
         alias="host_alias",
         resolved_ip_family=ResolvedIPAddressFamily.IPV4,
         address_config=NetworkAddressConfig(

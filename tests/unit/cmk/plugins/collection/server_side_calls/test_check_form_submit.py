@@ -10,7 +10,12 @@ from polyfactory.factories import DataclassFactory
 
 from cmk.plugins.collection.server_side_calls.check_form_submit import active_check_config as config
 from cmk.plugins.collection.server_side_calls.check_form_submit import UrlParams
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, NetworkAddressConfig
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    ResolvedIPAddressFamily,
+)
 
 
 class HostConfigFactory(DataclassFactory):
@@ -26,7 +31,8 @@ class HostConfigFactory(DataclassFactory):
                 "url_details": UrlParams(),
             },
             HostConfigFactory.build(
-                resolved_address="test",
+                resolved_ipv4_address="test",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
             ),
             [
@@ -40,7 +46,8 @@ class HostConfigFactory(DataclassFactory):
                 "url_details": UrlParams(port=80),
             },
             HostConfigFactory.build(
-                resolved_address="test",
+                resolved_ipv4_address="test",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
                 address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
             ),
             [
@@ -64,7 +71,10 @@ class HostConfigFactory(DataclassFactory):
                     num_succeeded=(1, 0),
                 ),
             },
-            HostConfigFactory.build(),
+            HostConfigFactory.build(
+                resolved_ipv4_address="hurz",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+            ),
             [
                 "12.3.4.51",
                 "some-other-host",
@@ -94,7 +104,10 @@ class HostConfigFactory(DataclassFactory):
                     tls_configuration="no_tls",
                 ),
             },
-            HostConfigFactory.build(),
+            HostConfigFactory.build(
+                resolved_ipv4_address="hurz",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+            ),
             [
                 "some-other-host",
                 "--tls_configuration",
@@ -110,7 +123,10 @@ class HostConfigFactory(DataclassFactory):
                     tls_configuration="tls_no_cert_valid",
                 ),
             },
-            HostConfigFactory.build(),
+            HostConfigFactory.build(
+                resolved_ipv4_address="hurz",
+                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+            ),
             [
                 "some-other-host",
                 "--tls_configuration",

@@ -20,7 +20,12 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd
+from tests.testlib.utils import (
+    current_base_branch_name,
+    current_branch_version,
+    edition_from_env,
+    restart_httpd,
+)
 from tests.testlib.version import CMKVersion, get_min_version, version_gte
 
 from cmk.utils.version import Edition
@@ -79,7 +84,7 @@ class BaseVersions:
     BASE_VERSIONS = [
         CMKVersion(
             CMKVersion.DAILY,
-            Edition.CEE,
+            edition_from_env(fallback=Edition.CEE),
             "2.3.0",
             "2.3.0",
         )
@@ -226,8 +231,7 @@ def _get_site(  # pylint: disable=too-many-branches
 
         else:  # use SiteFactory for non-interactive site creation
             try:
-                site = sf.get_site("central")
-                restart_httpd()
+                site = sf.get_site("central", auto_restart_httpd=True)
             except Exception as e:
                 if f"Version {version.version} could not be installed" in str(e):
                     pytest.skip(

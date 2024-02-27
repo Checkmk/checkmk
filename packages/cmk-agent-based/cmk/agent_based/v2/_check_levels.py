@@ -137,8 +137,8 @@ def _check_levels(
                 value, metric, prediction, p_levels, levels_direction, render_func
             )
 
-        case _other:
-            raise TypeError("Incorrect level parameters")
+        case other:
+            raise TypeError(f"Incorrect level parameters: {other!r}")
 
 
 def _prediction_text(prediction: float | None, render_func: Callable[[float], str]) -> str:

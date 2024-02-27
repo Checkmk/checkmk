@@ -1,0 +1,140 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disallow-any-expr
+
+import enum
+import os
+import shutil
+import sys
+from collections.abc import Iterator
+from pathlib import Path
+from types import TracebackType
+from typing import Literal, Self
+
+
+def store(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
+    source = site_dir / relpath
+    destination = backup_dir / relpath
+    match file_type(source):
+        case ManagedTypes.file:
+            shutil.copy2(source, destination)
+        case ManagedTypes.symlink:
+            destination.symlink_to(source.readlink())
+        case ManagedTypes.directory:
+            destination.mkdir()
+            shutil.copystat(source, destination)
+        case ManagedTypes.missing:
+            pass
+        case ManagedTypes.unknown:
+            raise NotImplementedError()
+
+
+def restore(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
+    source = backup_dir / relpath
+    destination = site_dir / relpath
+    match file_type(source):
+        case ManagedTypes.file:
+            shutil.copy2(source, destination)
+        case ManagedTypes.symlink:
+            destination.unlink(missing_ok=True)
+            destination.symlink_to(source.readlink())
+        case ManagedTypes.directory:
+            destination.mkdir(exist_ok=True)
+            shutil.copystat(source, destination)
+        case ManagedTypes.missing:
+            if destination.is_dir():
+                destination.rmdir()
+            elif destination.is_file() or destination.is_symlink():
+                destination.unlink(missing_ok=True)
+        case ManagedTypes.unknown:
+            raise Exception()
+
+
+class ManagedTypes(enum.Enum):
+    missing = "missing"
+    file = "file"
+    symlink = "symlink"
+    directory = "directory"
+    unknown = "unknown"
+
+
+def file_type(path: Path) -> ManagedTypes:
+    if not path.exists(follow_symlinks=False):
+        return ManagedTypes.missing
+    if path.is_symlink():
+        return ManagedTypes.symlink
+    if path.is_file():
+        return ManagedTypes.file
+    if path.is_dir():
+        return ManagedTypes.directory
+    return ManagedTypes.unknown
+
+
+####
+
+
+def walk_in_DFS_order(path: Path) -> Iterator[Path]:
+    for root, _directories, files in os.walk(path):
+        yield Path(root)
+        for file in files:
+            yield Path(root).joinpath(file)
+
+
+def walk_managed(site_dir: Path, skel: Path) -> Iterator[str]:
+    for path in walk_in_DFS_order(skel):
+        relpath = os.path.relpath(path, start=skel)
+        yield relpath
+
+
+def backup_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
+    for relpath in walk_managed(site_dir, new_skel):
+        if relpath != ".":
+            store(site_dir, Path(relpath), backup_dir)
+    for relpath in walk_managed(site_dir, old_skel):
+        if relpath != "." and not (new_skel / relpath).exists():  # Already backed-up
+            store(site_dir, Path(relpath), backup_dir)
+
+
+def restore_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: Path) -> None:
+    for relpath in walk_managed(site_dir, old_skel):
+        if not (new_skel / relpath).exists():
+            restore(site_dir, Path(relpath), backup_dir)
+    for relpath in reversed(list(walk_managed(site_dir, new_skel))):
+        restore(site_dir, Path(relpath), backup_dir)
+
+
+class ManageUpdate:
+    def __init__(self, site_dir: Path, old_skel: Path, new_skel: Path) -> None:
+        backup_dir = site_dir / ".update_backup"
+        self.backup_dir = backup_dir
+        self.old_skel = old_skel
+        self.new_skel = new_skel
+        self.site_dir = site_dir
+
+    def __enter__(self) -> Self:
+        try:
+            self.backup_dir.mkdir()
+        except FileExistsError:
+            sys.exit(
+                "An unknown error occured before the update could be started. The folder "
+                f"{self.backup_dir} contains data from a failed update attempt. This data should "
+                "have been written back to the site directory and then have been deleted. "
+                "Check whether any files need to be restored from this directory. Then this folder "
+                "can be deleted and the update can be retried."
+            )
+        backup_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> Literal[False]:
+        if exc_type is not None:
+            restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
+        shutil.rmtree(self.backup_dir)
+        return False  # Don't suppress the exception

@@ -69,14 +69,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["mem_used_percent"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["cpu_mem_used_percent"],
         "total": 100.0,
     }

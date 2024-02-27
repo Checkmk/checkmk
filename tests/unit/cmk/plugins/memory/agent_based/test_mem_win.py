@@ -46,7 +46,6 @@ PREDICTED_VALUE_PGF = 100000000000.0
                 },
             ),
             [
-                Metric("mem_total", 131071.421875),
                 Result(
                     state=State.OK,
                     summary="RAM: 81.51% - 104 GiB of 128 GiB",
@@ -57,7 +56,6 @@ PREDICTED_VALUE_PGF = 100000000000.0
                 Metric("mem_used", 112020467712.0),
                 Result(state=State.OK, notice="Free: 23.7 GiB"),
                 Metric("mem_free", 25417879552.0),
-                Metric("pagefile_total", 150527.421875),
                 Result(state=State.OK, summary="Commit charge: 75.43% - 111 GiB of 147 GiB"),
                 Result(state=State.WARN, summary="Used: 75.43% (warn/crit at 70.00%/90.00%)"),
                 Metric("pagefile_used_percent", 75.4296092229873, levels=(70.0, 90.0)),
@@ -85,7 +83,6 @@ PREDICTED_VALUE_PGF = 100000000000.0
                 average=10,
             ),
             [
-                Metric("mem_total", 131071.421875),
                 Result(
                     state=State.OK,
                     summary="RAM: 81.51% - 104 GiB of 128 GiB",
@@ -99,7 +96,6 @@ PREDICTED_VALUE_PGF = 100000000000.0
                 Metric("mem_used_avg", 112020467712.0),
                 Result(state=State.OK, notice="Free (averaged over 10 min): 23.7 GiB"),
                 Metric("mem_free_avg", 25417879552.0),
-                Metric("pagefile_total", 150527.421875),
                 Result(state=State.OK, summary="Commit charge: 75.43% - 111 GiB of 147 GiB"),
                 Metric("pagefile_used_percent", 75.4296092229873, boundaries=(0.0, 100.0)),
                 Metric("pagefile_used", 119057674240.0, boundaries=(0.0, 157839441920.0)),
@@ -146,7 +142,6 @@ PREDICTED_VALUE_PGF = 100000000000.0
                 },
             ),
             [
-                Metric("mem_total", 131071.421875),
                 Result(state=State.OK, summary="RAM: 81.51% - 104 GiB of 128 GiB"),
                 Result(state=State.OK, notice="Used: 81.51%"),
                 Metric("mem_used_percent", 81.50597700132717),
@@ -158,7 +153,6 @@ PREDICTED_VALUE_PGF = 100000000000.0
                 Metric("predict_mem_used", 104857600000.0),
                 Result(state=State.OK, notice="Free: 23.7 GiB"),
                 Metric("mem_free", 25417879552.0),
-                Metric("pagefile_total", 150527.421875),
                 Result(state=State.OK, summary="Commit charge: 75.43% - 111 GiB of 147 GiB"),
                 Result(state=State.OK, notice="Used: 75.43%"),
                 Metric("pagefile_used_percent", 75.4296092229873),
@@ -204,7 +198,6 @@ PREDICTED_VALUE_PGF = 100000000000.0
                 average=60.0,
             ),
             [
-                Metric("mem_total", 131071.421875),
                 Result(state=State.OK, summary="RAM: 81.51% - 104 GiB of 128 GiB"),
                 Metric("mem_used_percent", 81.50597700132717, boundaries=(0.0, 100.0)),
                 Metric("mem_used", 112020467712.0, boundaries=(0.0, 137438347264.0)),
@@ -219,7 +212,6 @@ PREDICTED_VALUE_PGF = 100000000000.0
                 Metric("predict_mem_used", 104857600000.0),
                 Result(state=State.OK, notice="Free (averaged over 60 min): 23.7 GiB"),
                 Metric("mem_free_avg", 25417879552.0),
-                Metric("pagefile_total", 150527.421875),
                 Result(state=State.OK, summary="Commit charge: 75.43% - 111 GiB of 147 GiB"),
                 Metric("pagefile_used_percent", 75.4296092229873, boundaries=(0.0, 100.0)),
                 Metric("pagefile_used", 119057674240.0, boundaries=(0.0, 157839441920.0)),

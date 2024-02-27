@@ -7,7 +7,7 @@ import itertools
 import json
 import sqlite3
 import time
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from logging import Logger
@@ -69,26 +69,6 @@ def configure_sqlite_types() -> None:
     sqlite3.register_adapter(bool, int)
     sqlite3.register_adapter(list, json.dumps)
     sqlite3.register_adapter(tuple, json.dumps)
-
-
-def history_file_to_sqlite(file: Path, connection: sqlite3.Connection) -> None:
-    """
-    Dumps a history file contents into a sqlite database in batches of 10k entries.
-
-    Tested with 50Mb file with 140k entries took about 1.31s
-    No need for connection.commit() for every 10k entries, since it will take about 6min for the same 50Mb file.
-    """
-
-    def __iter(serialized: Iterable[str]) -> Iterator[tuple[str]]:
-        for entries in (line.strip().split("\t") for line in serialized):
-            yield from itertools.batched(entries, 10000)
-
-    with open(file, "r") as f, connection as con:
-        cur = con.cursor()
-        cur.executemany(
-            f"INSERT INTO history ({', '.join(TABLE_COLUMNS)}) VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS)))});",
-            __iter(f),
-        )
 
 
 def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[object]]:
@@ -215,12 +195,20 @@ class SQLiteHistory(History):
                 ),
             )
 
+    def _add_entry(self, entries: Sequence[Sequence[object]]) -> None:
+        with self.conn as connection:
+            cur = connection.cursor()
+            # don't add the first column, it's the line number which is not relevant for sqlite
+            cur.executemany(
+                f"INSERT INTO history ({', '.join(TABLE_COLUMNS)}) VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS)))});",
+                (entry[1:] for entry in entries),
+            )
+
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         sqlite_query, sqlite_arguments = filters_to_sqlite_query(query.filters)
         if query.limit:
             sqlite_query += " LIMIT ?"
             sqlite_arguments += f" {query.limit+1}"
-
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(sqlite_query, sqlite_arguments)

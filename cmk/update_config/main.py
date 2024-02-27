@@ -187,7 +187,12 @@ def _load_plugins(logger: logging.Logger) -> None:
 
 
 def _load_pre_plugins() -> None:
-    for plugin, exc in load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"):
+    for plugin, exc in chain(
+        load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"),
+        []
+        if edition() is Edition.CRE
+        else load_plugins_with_exceptions("cmk.update_config.cee.plugins.pre_actions"),
+    ):
         sys.stderr.write(f"Error in pre action plugin {plugin}: {exc}\n")
         if debug.enabled():
             raise exc

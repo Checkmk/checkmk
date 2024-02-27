@@ -310,10 +310,21 @@ fn check_response_time(
     response_time_levels: Option<UpperLevels<f64>>,
     timeout: Duration,
 ) -> Vec<Option<CheckResult>> {
+    fn render_response_time(val: &f64) -> String {
+        // Format to three digits to get a sense of milliseconds,
+        // but crop unnecessary trailing zeros/decimal point
+        format!(
+            "{} seconds",
+            format!("{:.3}", val)
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+        )
+    }
+
     let mut ret = check_upper_levels(
         "Response time",
         response_time.as_secs_f64(),
-        |secs| format!("{} seconds", secs),
+        render_response_time,
         &response_time_levels,
     );
     ret.push(CheckResult::metric(
@@ -1009,6 +1020,34 @@ mod test_check_response_time {
                     5.,
                     Some('s'),
                     Some(UpperLevels::warn_crit(2., 3.)),
+                    Some(0.),
+                    Some(10.)
+                )
+            ]
+        );
+    }
+
+    #[test]
+    fn test_formatting() {
+        assert!(
+            check_response_time(
+                Duration::new(5, 123_456_789),
+                Some(UpperLevels::warn_crit(2.1, 3.12)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Response time: 5.123 seconds (warn/crit at 2.1 seconds/3.12 seconds)"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Response time: 5.123 seconds (warn/crit at 2.1 seconds/3.12 seconds)"
+                ),
+                CheckResult::metric(
+                    "time",
+                    5.123456789,
+                    Some('s'),
+                    Some(UpperLevels::warn_crit(2.1, 3.12)),
                     Some(0.),
                     Some(10.)
                 )

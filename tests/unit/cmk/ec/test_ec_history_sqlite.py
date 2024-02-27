@@ -7,14 +7,13 @@
 import logging
 import sqlite3
 from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
 from cmk.utils.hostaddress import HostName
 
 import cmk.ec.export as ec
-from cmk.ec.history_sqlite import filters_to_sqlite_query, history_file_to_sqlite, SQLiteHistory
+from cmk.ec.history_sqlite import filters_to_sqlite_query, SQLiteHistory
 from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 
@@ -39,35 +38,6 @@ def fixture_history_sqlite_raw() -> Iterator[sqlite3.Connection]:
 
     con.execute("DROP TABLE IF EXISTS history")
     con.close()
-
-
-def test_history_file_to_sqlite(tmp_path: Path, history_sqlite_raw: sqlite3.Connection) -> None:
-    """History file saved correctly into sqlite inmemory DB."""
-
-    path = tmp_path / "history_to_sqlite_test.log"
-    path.write_text(
-        """1666942211.07616	NEW			1002	1	some text	1666942208.0	1666942208.0		0	heute		OMD	0	6	9	asdf	0	open						host	heute	0	
-1666942292.2998602	DELETE	cmkadmin		5	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	
-1666942292.2999856	DELETE	cmkadmin		6	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	
-1666942292.3000507	DELETE	cmkadmin		7	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	"""
-    )
-
-    history_file_to_sqlite(path, history_sqlite_raw)
-
-    cur = history_sqlite_raw.cursor()
-    cur.execute("SELECT COUNT(*) FROM history;")
-    assert cur.fetchone()[0] == 4
-
-
-def test_history_file_to_sqlite_exceptions(
-    tmp_path: Path, history_sqlite_raw: sqlite3.Connection
-) -> None:
-    """history_file_to_sqlite should raise exceptions."""
-    path = tmp_path / "history_to_sqlite_test.log"
-    path.write_text("malformed file")
-
-    with pytest.raises(sqlite3.ProgrammingError):
-        history_file_to_sqlite(path, history_sqlite_raw)
 
 
 @pytest.mark.parametrize(

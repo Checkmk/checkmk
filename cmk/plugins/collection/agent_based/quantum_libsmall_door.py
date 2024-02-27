@@ -14,6 +14,7 @@ from cmk.agent_based.v2 import (
     Service,
     SimpleSNMPSection,
     SNMPTree,
+    startswith,
     State,
     StringTable,
 )
@@ -45,7 +46,8 @@ snmp_section_quantum_libsmall_status = SimpleSNMPSection(
     name="quantum_libsmall_door",
     parse_function=parse_quantum_libsmall_door,
     detect=all_of(
-        contains(".1.3.6.1.2.1.1.1.0", "linux"), contains(".1.3.6.1.2.1.1.6.0", "library")
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
+        contains(".1.3.6.1.4.1.3697.1.10.10.1.10.0", "Quantum Small Library Product"),
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3697.1.10.10.1.15.2",

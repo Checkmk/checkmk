@@ -112,7 +112,7 @@ def get_wato_menu_items() -> list[TopicMenuTopic]:
                 sort_index=module.sort_index,
                 is_show_more=module.is_show_more,
                 icon=module.icon,
-                additional_matches_setup_search=module.additional_matches_setup_search(),
+                megamenu_search_terms=module.megamenu_search_terms(),
             )
         )
 
@@ -188,7 +188,7 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                 url=topic_menu_item.url,
                 match_texts=[
                     topic_menu_item.title,
-                    *topic_menu_item.additional_matches_setup_search,
+                    *topic_menu_item.megamenu_search_terms,
                 ],
             )
             for topic_menu_topic in self._topic_generator()

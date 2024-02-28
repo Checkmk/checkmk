@@ -16,9 +16,8 @@ def test_compute_api_spec(site: Site) -> None:
     p = site.execute(["cmk-compute-api-spec"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     assert p.wait() == 0
 
-    # TODO: Once all warnings are fixed, ensure the command does not produce any python warnings
-    # output = p.communicate()[0]
-    # assert "warnings.warn" not in output, output
+    output = p.communicate()[0]
+    assert "warnings.warn" not in output, output
 
     assert site.file_exists("var/check_mk/rest_api/spec/doc.spec")
     assert site.file_exists("var/check_mk/rest_api/spec/swagger-ui.spec")

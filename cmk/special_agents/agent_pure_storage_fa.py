@@ -263,7 +263,7 @@ def agent_pure_storage_fa(args: Args) -> int:
     pure_storage_fa = PureStorageFlashArray(
         args.server,
         args.cert_server_name or not args.no_cert_check,
-        args.timeout,
+        int(args.timeout),
     )
 
     try:

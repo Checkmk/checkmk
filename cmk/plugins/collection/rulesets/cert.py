@@ -27,6 +27,8 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
 
+_DAY = 60.0 * 60.0 * 24.0
+
 
 def _valuespec_response_time() -> SimpleLevels[float]:
     return SimpleLevels[float](
@@ -54,6 +56,7 @@ def _valuespec_validity() -> Dictionary:
                     title=Title("Maximum allowed validity"),
                     displayed_magnitudes=[TimeMagnitude.DAY],
                     custom_validate=validators.InRange(min_value=0),
+                    prefill=DefaultValue(90.0 * _DAY),
                 )
             ),
             "self_signed": DictElement[bool](
@@ -202,7 +205,7 @@ def _valuespec_remaining_validity() -> SimpleLevels[float]:
             custom_validate=validators.InRange(min_value=0),
         ),
         level_direction=LevelDirection.LOWER,
-        prefill_fixed_levels=InputHint((0.0, 0.0)),
+        prefill_fixed_levels=DefaultValue((40 * _DAY, 20 * _DAY)),
     )
 
 

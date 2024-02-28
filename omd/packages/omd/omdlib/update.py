@@ -14,6 +14,10 @@ from pathlib import Path
 from types import TracebackType
 from typing import Literal, Self
 
+from omdlib.contexts import SiteContext
+from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
+from omdlib.version_info import VersionInfo
+
 
 def store(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
     source = site_dir / relpath
@@ -131,12 +135,17 @@ HOOK_RELPATHS = [
 
 
 class ManageUpdate:
-    def __init__(self, site_dir: Path, old_skel: Path, new_skel: Path) -> None:
+    def __init__(
+        self, site_name: str, tmp_dir: str, site_dir: Path, old_skel: Path, new_skel: Path
+    ) -> None:
         backup_dir = site_dir / ".update_backup"
         self.backup_dir = backup_dir
         self.old_skel = old_skel
         self.new_skel = new_skel
         self.site_dir = site_dir
+        self.site_name = site_name
+        self.tmp_dir = tmp_dir
+        self.populated_tmpfs = False
 
     def __enter__(self) -> Self:
         try:
@@ -155,6 +164,10 @@ class ManageUpdate:
             store(self.site_dir, relpath, self.backup_dir)
         return self
 
+    def prepare_and_populate_tmpfs(self, version: VersionInfo, site: SiteContext) -> None:
+        prepare_and_populate_tmpfs(version, site, str(self.new_skel))
+        self.populated_tmpfs = True
+
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
@@ -162,6 +175,11 @@ class ManageUpdate:
         exc_tb: TracebackType | None,
     ) -> Literal[False]:
         if exc_type is not None:
+            if self.populated_tmpfs:
+                # Always leave the tmpfs unmounted. We currently are in the context of the new
+                # version (symlink has been restored, but python3 interpreter and dynamic libraries
+                # are pointing to the new context. Thus, we only umount here.
+                unmount_tmpfs_without_save(self.site_name, self.tmp_dir, False, False)
             for relpath in HOOK_RELPATHS:
                 restore(self.site_dir, relpath, self.backup_dir)
             restore(self.site_dir, "version", self.backup_dir)

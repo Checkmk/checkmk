@@ -109,11 +109,7 @@ def mark_tmpfs_initialized(site: SiteContext) -> None:
         f.write("")
 
 
-def unmount_tmpfs(  # pylint: disable=too-many-branches
-    site: SiteContext,
-    output: bool = True,
-    kill: bool = False,
-) -> bool:
+def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) -> bool:
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp
@@ -127,10 +123,18 @@ def unmount_tmpfs(  # pylint: disable=too-many-branches
         save_tmpfs_dump(site)
         if output:
             ok()
+    return unmount_tmpfs_without_save(site.name, site.tmp_dir, output, kill)
 
+
+def unmount_tmpfs_without_save(  # pylint: disable=too-many-branches
+    site_name: str,
+    tmp_dir: str,
+    output: bool,
+    kill: bool,
+) -> bool:
     # Clear directory hierarchy when not using a tmpfs
-    if not tmpfs_mounted(site.name) or _tmpfs_is_managed_by_node(site):
-        tmp = site.tmp_dir
+    if not tmpfs_mounted(site_name) or _tmpfs_is_managed_by_node(site_name, tmp_dir):
+        tmp = tmp_dir
         if os.path.exists(tmp):
             if output:
                 sys.stdout.write("Cleaning up tmp directory...")
@@ -144,20 +148,20 @@ def unmount_tmpfs(  # pylint: disable=too-many-branches
         sys.stdout.write("Unmounting temporary filesystem...")
 
     for _t in range(0, 10):
-        if not tmpfs_mounted(site.name):
+        if not tmpfs_mounted(site_name):
             if output:
                 ok()
             return True
 
-        if _unmount(site):
+        if _unmount(tmp_dir):
             if output:
                 ok()
             return True
 
         if kill:
             if output:
-                sys.stdout.write("Killing processes still using '%s'\n" % site.tmp_dir)
-            subprocess.call(["fuser", "--silent", "-k", site.tmp_dir])
+                sys.stdout.write("Killing processes still using '%s'\n" % tmp_dir)
+            subprocess.call(["fuser", "--silent", "-k", tmp_dir])
 
         if output:
             sys.stdout.write(kill and "K" or ".")
@@ -175,11 +179,11 @@ def fstab_path() -> Path:
     return Path("/etc/fstab")
 
 
-def _unmount(site: SiteContext) -> bool:
-    return subprocess.call(["umount", site.tmp_dir]) == 0
+def _unmount(tmp_dir: str) -> bool:
+    return subprocess.call(["umount", tmp_dir]) == 0
 
 
-def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
+def _tmpfs_is_managed_by_node(site_name: str, tmp_dir: str) -> bool:
     """When running in a container, and the tmpfs is managed by the node, the
     mount is visible, but can not be unmounted. umount exits with 32 in this
     case. Treat this case like there is no tmpfs and only the directory needs
@@ -187,11 +191,11 @@ def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
     if not is_containerized():
         return False
 
-    if not tmpfs_mounted(site.name):
+    if not tmpfs_mounted(site_name):
         return False
 
     return subprocess.call(
-        ["umount", site.tmp_dir], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+        ["umount", tmp_dir], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
     ) in [1, 32]
 
 

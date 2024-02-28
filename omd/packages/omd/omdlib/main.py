@@ -2915,7 +2915,9 @@ def main_update(  # pylint: disable=too-many-branches
     from_skelroot = site.version_skel_dir
     to_skelroot = "/omd/versions/%s/skel" % to_version
 
-    with ManageUpdate(Path(site.dir), Path(from_skelroot), Path(to_skelroot)):
+    with ManageUpdate(
+        site.name, site.tmp_dir, Path(site.dir), Path(from_skelroot), Path(to_skelroot)
+    ) as mu:
         # First walk through skeleton files of new version
         for relpath in walk_skel(to_skelroot, depth_first=False):
             _execute_update_file(
@@ -2955,10 +2957,9 @@ def main_update(  # pylint: disable=too-many-branches
         # Let hooks of the new(!) version do their work and update configuration.
         config_set_all(site)
 
-    # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
-    # initialized tmpfs.
-    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    prepare_and_populate_tmpfs(version_info, site, skelroot)
+        # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
+        # initialized tmpfs.
+        mu.prepare_and_populate_tmpfs(version_info, site)
 
     call_scripts(
         site,

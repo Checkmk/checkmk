@@ -288,17 +288,18 @@ def test_backup_remove(tmp_path: Path) -> None:
     setup_user(site_dir)
     save = [read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)]
 
-    with contextlib.suppress(TBaseException), ManageUpdate(site_dir, old_skel, new_skel):
-        assert save == [
-            read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
-        ]
-        for relpath in reversed(list(walk_managed(site_dir, old_skel))):
-            with contextlib.suppress(OSError):
-                remove(site_dir, relpath)
-        assert save != [
-            read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
-        ]
-        raise TBaseException()
+    with contextlib.suppress(TBaseException):
+        with ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel):
+            assert save == [
+                read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
+            ]
+            for relpath in reversed(list(walk_managed(site_dir, old_skel))):
+                with contextlib.suppress(OSError):
+                    remove(site_dir, relpath)
+            assert save != [
+                read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
+            ]
+            raise TBaseException()
     assert save == [
         read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
     ]
@@ -314,16 +315,17 @@ def test_backup_add(tmp_path: Path) -> None:
     setup_user(site_dir)
     save = [read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)]
 
-    with contextlib.suppress(TBaseException), ManageUpdate(site_dir, old_skel, new_skel):
-        assert save == [
-            read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
-        ]
-        for relpath in walk_managed(site_dir, new_skel):
-            restore(site_dir, relpath, new_skel)
-        assert save != [
-            read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
-        ]
-        raise TBaseException()
+    with contextlib.suppress(TBaseException):
+        with ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel):
+            assert save == [
+                read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
+            ]
+            for relpath in walk_managed(site_dir, new_skel):
+                restore(site_dir, relpath, new_skel)
+            assert save != [
+                read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
+            ]
+            raise TBaseException()
     assert save == [
         read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
     ]
@@ -343,16 +345,17 @@ def test_backup_modify(tmp_path: Path) -> None:
     setup_user(site_dir)
     save = [read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)]
 
-    with contextlib.suppress(TBaseException), ManageUpdate(site_dir, old_skel, new_skel):
-        assert save == [
-            read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
-        ]
-        for relpath in walk_managed(site_dir, new_skel):
-            (site_dir / relpath).chmod(0o754)
-        assert save != [
-            read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
-        ]
-        raise TBaseException()
+    with contextlib.suppress(TBaseException):
+        with ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel):
+            assert save == [
+                read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
+            ]
+            for relpath in walk_managed(site_dir, new_skel):
+                (site_dir / relpath).chmod(0o754)
+            assert save != [
+                read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
+            ]
+            raise TBaseException()
     assert save == [
         read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
     ]
@@ -366,7 +369,8 @@ def test_backup_prepare_next_run(tmp_path: Path) -> None:
     site_dir = tmp_path / "site_dir"
     site_dir.mkdir()
 
-    with ManageUpdate(site_dir, old_skel, new_skel) as mu:
-        backup_dir = mu.backup_dir
-        assert backup_dir.exists()
+    with contextlib.suppress(TBaseException):
+        with ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel) as mu:
+            backup_dir = mu.backup_dir
+            assert backup_dir.exists()
     assert not backup_dir.exists()

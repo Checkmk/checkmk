@@ -53,6 +53,7 @@ mssql:
       failoverpartner: "localhost2" # optional, no default
       port: 1433 # optional, default: 1433
       socket: 'C:\path\to\file' # optional, no default
+      trust_server_certificate: yes # optional, default: yes value is ignored if tls presented
       tls: # optional
         ca: 'C:\path\to\file' # mandatory
         client_certificate: 'C:\path\to\file' # mandatory

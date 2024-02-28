@@ -111,3 +111,17 @@ def test_relative_but_no_absolute_levels(
         if isinstance(element, Metric):
             found_levels[element.name] = element.levels
     assert found_levels == levels
+
+
+def test_parse_missing_thread_info():
+    with pytest.raises(ValueError):
+        # This should not raise: the thread info can be missing on an AIX system:
+        # $ ps -eo thcount | awk '{SUM+=$1} END {print SUM}'
+        #   ps: 0509-001 There is not enough memory available now.
+        #    Try again later or
+        #    follow local problem reporting procedures.
+        parse_cpu(
+            [
+                ["0.88", "0.83", "0.87", "2/", "21050", "8"],
+            ]
+        )

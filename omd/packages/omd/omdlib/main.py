@@ -74,10 +74,8 @@ from omdlib.system_apache import (
 )
 from omdlib.tmpfs import (
     add_to_fstab,
-    mark_tmpfs_initialized,
-    prepare_tmpfs,
+    prepare_and_populate_tmpfs,
     remove_from_fstab,
-    restore_tmpfs_dump,
     save_tmpfs_dump,
     tmpfs_mounted,
     unmount_tmpfs,
@@ -247,7 +245,8 @@ def all_sites() -> Iterable[str]:
 
 
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
-    prepare_and_populate_tmpfs(version_info, site)
+    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
+    prepare_and_populate_tmpfs(version_info, site, skelroot)
     call_init_scripts(site.dir, "start")
     if not (instance_id_file_path := get_instance_id_file_path(Path(site.dir))).exists():
         # Existing sites may not have an instance ID yet. After an update we create a new one.
@@ -318,19 +317,6 @@ def save_version_meta_data(site: SiteContext, version: str) -> None:
 
     with open("%s/version" % site.version_meta_dir, "w") as f:
         f.write("%s\n" % version)
-
-
-def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
-    prepare_tmpfs(version_info, site.name, site.tmp_dir, site.conf["TMPFS"])
-
-    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    if not os.listdir(site.tmp_dir):
-        create_skeleton_files(site.dir, site.replacements, skelroot, site.skel_permissions, "tmp")
-        chown_tree(site.tmp_dir, site.name)
-        mark_tmpfs_initialized(site)
-        restore_tmpfs_dump(site)
-
-    _create_livestatus_tcp_socket_link(site)
 
 
 def try_chown(filename: str, user: str) -> None:
@@ -1680,7 +1666,8 @@ def init_action(
         bail_out("This site is disabled.")
 
     if command in ["start", "restart"]:
-        prepare_and_populate_tmpfs(version_info, site)
+        skelroot = "/omd/versions/%s/skel" % omdlib.__version__
+        prepare_and_populate_tmpfs(version_info, site, skelroot)
 
     if len(args) > 0:
         # restrict to this daemon
@@ -2340,7 +2327,8 @@ def finalize_site_as_user(
     # user. We also could do this at 'omd start', but this might confuse
     # users. They could create files below tmp which would be shadowed
     # by the mount.
-    prepare_and_populate_tmpfs(version_info, site)
+    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
+    prepare_and_populate_tmpfs(version_info, site, skelroot)
 
     # Run all hooks in order to setup things according to the
     # configuration settings
@@ -2969,7 +2957,8 @@ def main_update(  # pylint: disable=too-many-branches
 
     # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
     # initialized tmpfs.
-    prepare_and_populate_tmpfs(version_info, site)
+    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
+    prepare_and_populate_tmpfs(version_info, site, skelroot)
 
     call_scripts(
         site,
@@ -3010,21 +2999,6 @@ def _update_cmk_core_config(site: SiteContext) -> None:
         subprocess.check_call(["cmk", "-U"], shell=False)
     except subprocess.SubprocessError:
         bail_out("Could not update core configuration. Aborting.")
-
-
-def _create_livestatus_tcp_socket_link(site: SiteContext) -> None:
-    """Point the xinetd to the livestatus socket inteded by LIVESTATUS_TCP_TLS"""
-    link_path = site.tmp_dir + "/run/live-tcp"
-    target = "live-tls" if site.conf["LIVESTATUS_TCP_TLS"] == "on" else "live"
-
-    if os.path.lexists(link_path):
-        os.unlink(link_path)
-
-    parent_dir = os.path.dirname(link_path)
-    if not os.path.exists(parent_dir):
-        os.makedirs(parent_dir)
-
-    os.symlink(target, link_path)
 
 
 def _get_edition(

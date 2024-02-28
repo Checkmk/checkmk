@@ -169,8 +169,7 @@ class ActiveCheck:
         }
 
         for param_dict in plugin_params:
-            params = active_check.parameter_parser(param_dict)
-            for service in active_check.commands_function(params, self.host_config, http_proxies):
+            for service in active_check(param_dict, self.host_config, http_proxies):
                 arguments = replace_passwords(
                     self.host_name,
                     self.stored_passwords,

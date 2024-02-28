@@ -43,9 +43,8 @@ def test_check_ldap_argument_parsing(
     params: Mapping[str, str | float], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = active_check_ldap.parameter_parser(params)
-    (command,) = active_check_ldap.commands_function(
-        parsed_params,
+    (command,) = active_check_ldap(
+        params,
         HostConfig(
             name="hostname",
             resolved_ipv4_address="ipaddress",

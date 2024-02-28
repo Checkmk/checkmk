@@ -150,5 +150,4 @@ HOST_CONFIG = HostConfig(
     ],
 )
 def test_3par(params: Mapping[str, object], result: Sequence[SpecialAgentCommand]) -> None:
-    parsed_params = special_agent_three_par.parameter_parser(params)
-    assert list(special_agent_three_par.commands_function(parsed_params, HOST_CONFIG, {})) == result
+    assert list(special_agent_three_par(params, HOST_CONFIG, {})) == result

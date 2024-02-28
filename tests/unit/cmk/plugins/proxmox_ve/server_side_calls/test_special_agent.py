@@ -82,8 +82,7 @@ def test_agent_proxmox_ve_arguments(
     )
     http_proxies = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
     # Act
-    parsed_params = config.parameter_parser(params)
-    commands = list(config.commands_function(parsed_params, host_config, http_proxies))
+    commands = list(config(params, host_config, http_proxies))
     # Assert
     assert len(commands) == 1
     command = commands[0].command_arguments

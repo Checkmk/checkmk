@@ -15,10 +15,8 @@ from cmk.server_side_calls.v1 import (
 def test_parse_version():
     params = {"port": 123, "service": "foobar", "job": "version"}
     assert list(
-        active_check_uniserv.commands_function(
-            active_check_uniserv.parameter_parser(
-                params,
-            ),
+        active_check_uniserv(
+            params,
             HostConfig(
                 name="",
                 alias="",
@@ -47,10 +45,8 @@ def test_parse_address():
         ),
     }
     assert list(
-        active_check_uniserv.commands_function(
-            active_check_uniserv.parameter_parser(
-                params,
-            ),
+        active_check_uniserv(
+            params,
             HostConfig(
                 name="",
                 alias="",

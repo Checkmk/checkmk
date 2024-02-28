@@ -71,9 +71,8 @@ def test_cisco_prime_argument_parsing(
     params: Mapping[str, object],
     expected_args: str | Secret,
 ) -> None:
-    parsed_params = special_agent_cisco_prime.parameter_parser(params)
-    (command,) = special_agent_cisco_prime.commands_function(
-        parsed_params,
+    (command,) = special_agent_cisco_prime(
+        params,
         HostConfig(
             name="hostname",
             resolved_ipv4_address="ipaddress",

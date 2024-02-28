@@ -46,11 +46,4 @@ def test_fritzbox_argument_parsing(
     params: Mapping[str, object], expected: tuple[SpecialAgentCommand]
 ) -> None:
     """Tests if all required arguments are present."""
-    assert (
-        tuple(
-            special_agent_fritzbox.commands_function(
-                special_agent_fritzbox.parameter_parser(params), HOST_CONFIG, {}
-            )
-        )
-        == expected
-    )
+    assert tuple(special_agent_fritzbox(params, HOST_CONFIG, {})) == expected

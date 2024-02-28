@@ -3,12 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.base.config import active_check_info
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    HostConfig,
+    replace_macros,
+)
 
 
 class Parameters(BaseModel):
@@ -71,26 +76,28 @@ def _make_arguments(params: Parameters, host_address: str) -> list[str]:
     ]
 
 
-def _make_service_description(params_raw: Mapping[str, object]) -> str:
-    params = Parameters.model_validate(params_raw)
+def _make_service_description(params: Parameters, macros: Mapping[str, str]) -> str:
     if params.svc_description:
-        return params.svc_description
+        return replace_macros(params.svc_description, macros)
     return f"TCP Port {params.port}"
 
 
-def check_tcp_arguments(params_raw: Mapping[str, object]) -> list[str]:
-    params = Parameters.model_validate(params_raw)
-
+def make_check_tcp_commands(
+    params: Parameters, host_config: HostConfig
+) -> Iterable[ActiveCheckCommand]:
     if params.hostname is None:
-        host_arg = "$HOSTADDRESS$"
+        host_arg = host_config.primary_ip_config.address
     else:
-        host_arg = params.hostname
+        host_arg = replace_macros(params.hostname, host_config.macros)
 
-    return _make_arguments(Parameters.model_validate(params_raw), host_arg)
+    yield ActiveCheckCommand(
+        service_description=_make_service_description(params, host_config.macros),
+        command_arguments=_make_arguments(params, host_arg),
+    )
 
 
-active_check_info["tcp"] = {
-    "command_line": "check_tcp $ARG1$",
-    "argument_function": check_tcp_arguments,
-    "service_description": _make_service_description,
-}
+active_check_tcp = ActiveCheckConfig(
+    name="tcp",
+    parameter_parser=Parameters.model_validate,
+    commands_function=make_check_tcp_commands,
+)

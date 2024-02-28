@@ -69,7 +69,7 @@ export async function activate_tracking(
     if (repeat && repeat.times > 0) {
         repeat.times -= 1;
         await setRepeat(db, repeat);
-        document.location.reload();
+        window.location.reload();
     }
 }
 

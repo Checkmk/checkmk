@@ -7,6 +7,7 @@ import errno
 import logging
 import os
 import tempfile
+import time
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
@@ -23,6 +24,16 @@ from cmk.utils.regex import regex
 from cmk.utils.render import Age
 
 logger = logging.getLogger("cmk.base")
+
+
+def cachefile_age(path: Path) -> float:
+    """Return the time difference between the last modification and now.
+
+    Raises:
+        FileNotFoundError if `path` does not exist.
+
+    """
+    return time.time() - path.stat().st_mtime
 
 
 @dataclass(frozen=True)
@@ -258,7 +269,7 @@ def _get_piggyback_processed_file_info(
     settings: _TimeSettingsMap,
 ) -> PiggybackFileInfo:
     try:
-        file_age = cmk.utils.cachefile_age(piggyback_file_path)
+        file_age = cachefile_age(piggyback_file_path)
     except FileNotFoundError:
         return PiggybackFileInfo(
             source_hostname, piggyback_file_path, False, "Piggyback file is missing", 0
@@ -533,7 +544,7 @@ def _cleanup_old_source_status_files(
 
     for source_state_file in _get_source_state_files():
         try:
-            file_age = cmk.utils.cachefile_age(source_state_file)
+            file_age = cachefile_age(source_state_file)
         except FileNotFoundError:
             continue  # File has been removed, that's OK.
 
@@ -568,7 +579,7 @@ def _cleanup_old_piggybacked_files(
             dst = HostName(piggybacked_host_folder.name)
 
             try:
-                file_age = cmk.utils.cachefile_age(piggybacked_host_source)
+                file_age = cachefile_age(piggybacked_host_source)
             except FileNotFoundError:
                 continue
 

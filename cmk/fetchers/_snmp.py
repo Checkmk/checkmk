@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Final
 
 import cmk.utils.debug
+import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.utils.hostaddress import HostName

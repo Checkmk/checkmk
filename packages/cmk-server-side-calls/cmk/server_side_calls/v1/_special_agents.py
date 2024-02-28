@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import ClassVar, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from ._utils import HostConfig, HTTPProxy, Secret
 
@@ -99,8 +99,6 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):
 
         The first existing file will be used.
     """
-
-    NAME_PREFIX: ClassVar = "special_agent_"
 
     name: str
     parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]

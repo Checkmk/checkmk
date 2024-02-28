@@ -32,6 +32,7 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.password_store
+import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
@@ -1935,6 +1936,7 @@ class AutomationDiagHost(Automation):
     ) -> tuple[int, str]:
         hosts_config = config_cache.hosts_config
         check_interval = config_cache.check_mk_check_interval(host_name)
+        oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
         state, output = 0, ""
         for source in sources.make_sources(
             host_name,
@@ -1950,6 +1952,7 @@ class AutomationDiagHost(Automation):
                 inventory=1.5 * check_interval,
             ),
             snmp_backend_override=None,
+            oid_cache_dir=oid_cache_dir,
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2301,6 +2304,7 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = config.lookup_ip_address(config_cache, hostname)
             check_interval = config_cache.check_mk_check_interval(hostname)
+            oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
             if ty == "agent":
                 for source in sources.make_sources(
                     hostname,
@@ -2316,6 +2320,7 @@ class AutomationGetAgentOutput(Automation):
                         inventory=1.5 * check_interval,
                     ),
                     snmp_backend_override=None,
+                    oid_cache_dir=oid_cache_dir,
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

@@ -6,6 +6,7 @@
 # TODO This module should be freed from base deps.
 
 import dataclasses
+from pathlib import Path
 from typing import Final
 
 from cmk.utils.agentdatatype import AgentRawData
@@ -62,6 +63,7 @@ class SNMPSource(Source[SNMPRawData]):
         on_scan_error: OnError,
         selected_sections: SectionNameCollection,
         backend_override: SNMPBackendEnum | None,
+        oid_cache_dir: Path,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
@@ -71,6 +73,7 @@ class SNMPSource(Source[SNMPRawData]):
         self._on_scan_error: Final = on_scan_error
         self._selected_sections: Final = selected_sections
         self._backend_override: Final = backend_override
+        self._oid_cache_dir: Final = oid_cache_dir
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -94,6 +97,7 @@ class SNMPSource(Source[SNMPRawData]):
             snmp_config=snmp_config,
             on_scan_error=self._on_scan_error,
             selected_sections=self._selected_sections,
+            oid_cache_dir=self._oid_cache_dir,
         )
 
     def file_cache(
@@ -126,6 +130,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         on_scan_error: OnError,
         selected_sections: SectionNameCollection,
         backend_override: SNMPBackendEnum | None,
+        oid_cache_dir: Path,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
@@ -135,6 +140,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self._on_scan_error: Final = on_scan_error
         self._selected_sections: Final = selected_sections
         self._backend_override: Final = backend_override
+        self._oid_cache_dir: Final = oid_cache_dir
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -157,6 +163,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
             snmp_config=snmp_config,
             on_scan_error=self._on_scan_error,
             selected_sections=self._selected_sections,
+            oid_cache_dir=self._oid_cache_dir,
         )
 
     def file_cache(

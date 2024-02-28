@@ -94,6 +94,7 @@ def test_host_config_creates_passing_source_sources(
     hostname,
     tags,
     sources,
+    tmp_path,
 ):
     ts = make_scenario(hostname, tags)
     config_cache = ts.apply(monkeypatch)
@@ -110,5 +111,6 @@ def test_host_config_creates_passing_source_sources(
             file_cache_options=FileCacheOptions(),
             file_cache_max_age=MaxAge.zero(),
             snmp_backend_override=None,
+            oid_cache_dir=tmp_path,
         )
     ] == sources

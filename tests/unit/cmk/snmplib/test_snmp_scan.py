@@ -9,7 +9,6 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from pytest_mock import MockerFixture
 
 from tests.unit.conftest import FixPluginLegacy
 
@@ -163,9 +162,11 @@ def backend() -> Iterator[SNMPBackend]:
 
 
 @pytest.fixture
-def cache_oids(backend):
+def cache_oids(backend, tmp_path):
     # Cache OIDs to avoid actual SNMP I/O.
-    snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
+    snmp_cache.initialize_single_oid_cache(
+        backend.config.hostname, backend.config.ipaddress, cache_dir=tmp_path
+    )
     snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR] = "sys description"
     snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ] = "sys object"
     yield
@@ -218,9 +219,7 @@ def test_snmp_scan_find_plugins__success(backend: SNMPBackend) -> None:
 
 
 @pytest.mark.usefixtures("cache_oids")
-def test_gather_available_raw_section_names_defaults(
-    backend: SNMPBackend, mocker: MockerFixture
-) -> None:
+def test_gather_available_raw_section_names_defaults(backend: SNMPBackend, tmp_path: Path) -> None:
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_DESCR]
     assert snmp_cache.single_oid_cache()[snmp_scan.OID_SYS_OBJ]
 
@@ -229,6 +228,7 @@ def test_gather_available_raw_section_names_defaults(
         on_error=OnError.RAISE,
         missing_sys_description=False,
         backend=backend,
+        oid_cache_dir=tmp_path,
     ) == {
         SectionName("hr_mem"),
         SectionName("snmp_info"),

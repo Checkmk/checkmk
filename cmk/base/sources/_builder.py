@@ -10,6 +10,7 @@
 import logging
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
+from pathlib import Path
 from typing import assert_never, Final
 
 import cmk.utils.password_store
@@ -116,6 +117,7 @@ class _Builder:
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
         snmp_backend_override: SNMPBackendEnum | None,
+        oid_cache_dir: Path,
     ) -> None:
         super().__init__()
         assert not is_cluster
@@ -131,6 +133,7 @@ class _Builder:
         self.max_age_snmp: Final = max_age_snmp
         self.snmp_backend_override: Final = snmp_backend_override
         self._cds: Final = config_cache.computed_datasources(host_name)
+        self._oid_cache_dir: Final = oid_cache_dir
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
@@ -250,6 +253,7 @@ class _Builder:
                     on_scan_error=self.on_scan_error,
                     selected_sections=self.selected_sections,
                     backend_override=self.snmp_backend_override,
+                    oid_cache_dir=self._oid_cache_dir,
                 )
             )
             return
@@ -270,6 +274,7 @@ class _Builder:
                 on_scan_error=self.on_scan_error,
                 selected_sections=self.selected_sections,
                 backend_override=self.snmp_backend_override,
+                oid_cache_dir=self._oid_cache_dir,
             )
         )
 
@@ -298,6 +303,7 @@ class _Builder:
                         on_scan_error=self.on_scan_error,
                         selected_sections=self.selected_sections,
                         backend_override=self.snmp_backend_override,
+                        oid_cache_dir=self._oid_cache_dir,
                     )
                 )
             case "ipmi":
@@ -368,6 +374,7 @@ def make_sources(
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
     snmp_backend_override: SNMPBackendEnum | None,
+    oid_cache_dir: Path,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if is_cluster:
@@ -403,4 +410,5 @@ def make_sources(
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),
         snmp_backend_override=snmp_backend_override,
+        oid_cache_dir=oid_cache_dir,
     ).sources

@@ -539,6 +539,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
 
         ipaddress = config.lookup_ip_address(config_cache, hostname)
         check_interval = config_cache.check_mk_check_interval(hostname)
+        oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
 
         output = []
         # Show errors of problematic data sources
@@ -557,6 +558,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 inventory=1.5 * check_interval,
             ),
             snmp_backend_override=snmp_backend_override,
+            oid_cache_dir=oid_cache_dir,
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:

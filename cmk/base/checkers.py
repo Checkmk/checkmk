@@ -13,6 +13,7 @@ import logging
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import partial
+from pathlib import Path
 from typing import Final, Literal
 
 import livestatus
@@ -289,6 +290,7 @@ class CMKFetcher:
                 for node in self.config_cache.nodes(host_name)
             ]
 
+        oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
         return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
@@ -308,6 +310,7 @@ class CMKFetcher:
                         self.max_cachefile_age or self.config_cache.max_cachefile_age(host_name)
                     ),
                     snmp_backend_override=self.snmp_backend_override,
+                    oid_cache_dir=oid_cache_dir,
                 )
                 for current_host_name, current_ip_address in hosts
             ),

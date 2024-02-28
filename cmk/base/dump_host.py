@@ -5,7 +5,9 @@
 
 import socket
 import time
+from pathlib import Path
 
+import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
@@ -176,6 +178,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         + "\n"
     )
 
+    oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
     agenttypes = [
         dump_source(source)
         for source in sources.make_sources(
@@ -188,6 +191,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             simulation_mode=config.simulation_mode,
             file_cache_max_age=MaxAge.zero(),
             snmp_backend_override=None,
+            oid_cache_dir=oid_cache_dir,
         )
     ]
 

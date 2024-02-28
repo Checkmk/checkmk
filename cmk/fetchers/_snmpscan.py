@@ -6,6 +6,7 @@
 import functools
 import re
 from collections.abc import Callable, Collection, Iterable
+from pathlib import Path
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
@@ -27,6 +28,7 @@ def gather_available_raw_section_names(
     on_error: OnError = OnError.RAISE,
     missing_sys_description: bool,
     backend: SNMPBackend,
+    oid_cache_dir: Path,
 ) -> frozenset[SectionName]:
     if not sections:
         return frozenset()
@@ -37,6 +39,7 @@ def gather_available_raw_section_names(
             on_error=on_error,
             missing_sys_description=missing_sys_description,
             backend=backend,
+            oid_cache_dir=oid_cache_dir,
         )
     except MKTimeout:
         raise
@@ -59,8 +62,11 @@ def _snmp_scan(
     on_error: OnError,
     missing_sys_description: bool,
     backend: SNMPBackend,
+    oid_cache_dir: Path,
 ) -> frozenset[SectionName]:
-    snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
+    snmp_cache.initialize_single_oid_cache(
+        backend.config.hostname, backend.config.ipaddress, cache_dir=oid_cache_dir
+    )
     console.vverbose("  SNMP scan:\n")
 
     if missing_sys_description:
@@ -74,7 +80,9 @@ def _snmp_scan(
         backend=backend,
     )
     _output_snmp_check_plugins("SNMP scan found", found_sections)
-    snmp_cache.write_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
+    snmp_cache.write_single_oid_cache(
+        backend.config.hostname, backend.config.ipaddress, cache_dir=oid_cache_dir
+    )
     return found_sections
 
 

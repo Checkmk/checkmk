@@ -40,7 +40,6 @@ import typing
 from cmk.gui.utils.html import HTML
 
 from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
-from cmk.rulesets.v1._localize import Localizable
 from cmk.rulesets.v1.form_specs import DefaultValue, InputHint, validators
 
 from . import definitions
@@ -64,7 +63,7 @@ from .formspec_plus.validators import ModelT
 
 T = typing.TypeVar("T")
 
-T_L = typing.TypeVar("T_L", bound=Localizable)
+T_L = typing.TypeVar("T_L", Help, Label, Message, Title)
 
 V_c = typing.TypeVar("V_c", bound=definitions.ValueSpec)
 

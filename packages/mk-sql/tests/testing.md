@@ -1,5 +1,7 @@
 # How to get certificates for testing MS SQL Server
 
+## Setup
+
 1. Install certificate
 
     either from real certificate
@@ -26,5 +28,21 @@ In the Protocols for "instance name" Properties dialog box, on the Certificate t
 
 You may use file from p.3 as CA certificate
 
+## Testing on CI and or locally
 
-
+You may use `CI_TEST_MS_SQL_DB_CERT` environment variable to store path to certificate
+Fort example on Windows:
+```batch
+setx CI_TEST_MS_SQL_DB_CERT c:\common\checkmk\certificates\mssql-YOUR-MACHINE-NAME.der
+```
+Testing code is looks like
+```rust 
+        pub const MS_SQL_DB_CERT: &str = "CI_TEST_MS_SQL_DB_CERT";
+        if let Ok(certificate_path) = std::env::var(MS_SQL_DB_CERT) {
+            create_local(1433u16, certificate_path.to_owned().into())
+                .await
+                .unwrap();
+        } else {
+            eprintln!("Error: environment variable {} is absent no testing", MS_SQL_DB_CERT);
+        }
+```

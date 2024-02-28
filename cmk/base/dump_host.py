@@ -181,6 +181,9 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
     stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
     walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+    cas_dir = Path(cmk.utils.paths.agent_cas_dir)
+    ca_store = Path(cmk.utils.paths.agent_cert_store)
+    site_crt = Path(cmk.utils.paths.site_cert_file)
     agenttypes = [
         dump_source(source)
         for source in sources.make_sources(
@@ -196,6 +199,9 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             oid_cache_dir=oid_cache_dir,
             stored_walk_path=stored_walk_path,
             walk_cache_path=walk_cache_path,
+            cas_dir=cas_dir,
+            ca_store=ca_store,
+            site_crt=site_crt,
         )
     ]
 

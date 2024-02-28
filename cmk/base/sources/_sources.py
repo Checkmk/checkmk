@@ -351,12 +351,18 @@ class TCPSource(Source[AgentRawData]):
         ipaddress: HostAddress,
         *,
         max_age: MaxAge,
+        cas_dir: Path,
+        ca_store: Path,
+        site_crt: Path,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
+        self._cas_dir: Final = cas_dir
+        self._ca_store: Final = ca_store
+        self._site_crt: Final = site_crt
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -368,7 +374,13 @@ class TCPSource(Source[AgentRawData]):
         )
 
     def fetcher(self) -> Fetcher[AgentRawData]:
-        return self.config_cache.make_tcp_fetcher(self.host_name, self.ipaddress)
+        return self.config_cache.make_tcp_fetcher(
+            self.host_name,
+            self.ipaddress,
+            cas_dir=self._cas_dir,
+            ca_store=self._ca_store,
+            site_crt=self._site_crt,
+        )
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions

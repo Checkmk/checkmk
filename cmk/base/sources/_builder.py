@@ -120,6 +120,9 @@ class _Builder:
         oid_cache_dir: Path,
         stored_walk_path: Path,
         walk_cache_path: Path,
+        cas_dir: Path,
+        ca_store: Path,
+        site_crt: Path,
     ) -> None:
         super().__init__()
         assert not is_cluster
@@ -138,6 +141,9 @@ class _Builder:
         self._oid_cache_dir: Final = oid_cache_dir
         self._stored_walk_path: Final = stored_walk_path
         self._walk_cache_path: Final = walk_cache_path
+        self.cas_dir: Final = cas_dir
+        self.ca_store: Final = ca_store
+        self.site_crt: Final = site_crt
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
@@ -364,6 +370,9 @@ class _Builder:
                         self.host_name,
                         self.ipaddress,
                         max_age=self.max_age_agent,
+                        cas_dir=self.cas_dir,
+                        ca_store=self.ca_store,
+                        site_crt=self.site_crt,
                     )
                 )
             case _:
@@ -387,6 +396,9 @@ def make_sources(
     oid_cache_dir: Path,
     stored_walk_path: Path,
     walk_cache_path: Path,
+    cas_dir: Path,
+    ca_store: Path,
+    site_crt: Path,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if is_cluster:
@@ -425,4 +437,7 @@ def make_sources(
         oid_cache_dir=oid_cache_dir,
         stored_walk_path=stored_walk_path,
         walk_cache_path=walk_cache_path,
+        cas_dir=cas_dir,
+        ca_store=ca_store,
+        site_crt=site_crt,
     ).sources

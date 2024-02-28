@@ -1939,6 +1939,9 @@ class AutomationDiagHost(Automation):
         oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
         stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+        cas_dir = Path(cmk.utils.paths.agent_cas_dir)
+        ca_store = Path(cmk.utils.paths.agent_cert_store)
+        site_crt = Path(cmk.utils.paths.site_cert_file)
 
         state, output = 0, ""
         for source in sources.make_sources(
@@ -1958,6 +1961,9 @@ class AutomationDiagHost(Automation):
             oid_cache_dir=oid_cache_dir,
             stored_walk_path=stored_walk_path,
             walk_cache_path=walk_cache_path,
+            cas_dir=cas_dir,
+            ca_store=ca_store,
+            site_crt=site_crt,
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -1982,6 +1988,9 @@ class AutomationDiagHost(Automation):
                     host_name=fetcher.host_name,
                     encryption_handling=fetcher.encryption_handling,
                     pre_shared_secret=fetcher.pre_shared_secret,
+                    cas_dir=cas_dir,
+                    ca_store=ca_store,
+                    site_crt=site_crt,
                 )
 
             raw_data = get_raw_data(
@@ -2313,6 +2322,9 @@ class AutomationGetAgentOutput(Automation):
             oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
             stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
             walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+            cas_dir = Path(cmk.utils.paths.agent_cas_dir)
+            ca_store = Path(cmk.utils.paths.agent_cert_store)
+            site_crt = Path(cmk.utils.paths.site_cert_file)
 
             if ty == "agent":
                 for source in sources.make_sources(
@@ -2332,6 +2344,9 @@ class AutomationGetAgentOutput(Automation):
                     oid_cache_dir=oid_cache_dir,
                     stored_walk_path=stored_walk_path,
                     walk_cache_path=walk_cache_path,
+                    cas_dir=cas_dir,
+                    ca_store=ca_store,
+                    site_crt=site_crt,
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

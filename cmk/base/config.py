@@ -2082,7 +2082,15 @@ class ConfigCache:
             oid_cache_dir=oid_cache_dir,
         )
 
-    def make_tcp_fetcher(self, host_name: HostName, ip_address: HostAddress) -> TCPFetcher:
+    def make_tcp_fetcher(
+        self,
+        host_name: HostName,
+        ip_address: HostAddress,
+        *,
+        cas_dir: Path,
+        ca_store: Path,
+        site_crt: Path,
+    ) -> TCPFetcher:
         return TCPFetcher(
             host_name=host_name,
             address=(ip_address, self._agent_port(host_name)),
@@ -2090,6 +2098,9 @@ class ConfigCache:
             timeout=self._tcp_connect_timeout(host_name),
             encryption_handling=self._encryption_handling(host_name),
             pre_shared_secret=self._symmetric_agent_encryption(host_name),
+            cas_dir=cas_dir,
+            ca_store=ca_store,
+            site_crt=site_crt,
         )
 
     def make_agent_parser(

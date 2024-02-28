@@ -1081,33 +1081,26 @@ class ModeEditUser(WatoMode):
                     ntop_username_attribute
                 )
 
-    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
-        # Locking
-        user_attrs["locked"] = html.get_checkbox("locked")
+    def _increment_auth_serial(self, user_attrs: UserSpec) -> None:
+        user_attrs["serial"] = user_attrs.get("serial", 0) + 1
+
+    def _handle_auth_attributes(self, user_attrs: UserSpec) -> None:
         increase_serial = False
 
-        if (
-            self._user_id in self._users
-            and user_attrs["locked"]
-            and self._users[self._user_id]["locked"] != user_attrs["locked"]
-        ):
-            increase_serial = True  # when user is being locked now, increase the auth serial
-
-        # Authentication: Password or Secret
-        auth_method = request.var("authmethod")
-        if auth_method == "secret":
-            secret = request.get_str_input_mandatory("_auth_secret", "")
-            if secret:
+        if request.var("authmethod") == "secret":  # automation secret
+            if secret := request.get_str_input_mandatory("_auth_secret", ""):
                 user_attrs["automation_secret"] = secret
                 user_attrs["password"] = hash_password(Password(secret))
                 increase_serial = True  # password changed, reflect in auth serial
+
                 # automation users cannot set the passwords themselves.
                 user_attrs["last_pw_change"] = int(time.time())
                 user_attrs.pop("enforce_pw_change", None)
+
             elif "automation_secret" not in user_attrs and "password" in user_attrs:
                 del user_attrs["password"]
 
-        else:
+        else:  # password
             password = request.get_validated_type_input(
                 Password, "_password_" + self._pw_suffix(), empty_is_none=True
             )
@@ -1122,11 +1115,11 @@ class ModeEditUser(WatoMode):
             if password2 and password != password2:
                 raise MKUserError("_password2", _("Passwords don't match"))
 
-            # Detect switch back from automation to password
+            # Detect switch from automation to password
             if "automation_secret" in user_attrs:
                 del user_attrs["automation_secret"]
                 if "password" in user_attrs:
-                    del user_attrs["password"]  # which was the encrypted automation password!
+                    del user_attrs["password"]  # which was the hashed automation secret!
 
             if password:
                 verify_password_policy(password)
@@ -1141,7 +1134,22 @@ class ModeEditUser(WatoMode):
 
         # Increase serial (if needed)
         if increase_serial:
-            user_attrs["serial"] = user_attrs.get("serial", 0) + 1
+            self._increment_auth_serial(user_attrs)
+
+    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
+        # Locking
+        user_attrs["locked"] = html.get_checkbox("locked")
+        if (  # toggled for an existing user
+            self._user_id in self._users
+            and self._users[self._user_id]["locked"] != user_attrs["locked"]
+        ):
+            if user_attrs["locked"]:  # user is being locked, increase the auth serial
+                self._increment_auth_serial(user_attrs)
+            else:  # user is being unlocked, reset failed login attempts
+                user_attrs["num_failed_logins"] = 0
+
+        # Authentication: Password or Secret
+        self._handle_auth_attributes(user_attrs)
 
         # Roles
         if edition() != Edition.CSE:

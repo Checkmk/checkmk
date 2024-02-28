@@ -432,3 +432,61 @@ def test_migrate_to_upper_int_levels(
 ) -> None:
     with expected_raises:
         assert expected_value == migrate_to_upper_integer_levels(input_value)
+
+
+def test_migrate_to_upper_integer_levels_scaled() -> None:
+    assert migrate_to_lower_integer_levels((50, 60), 0.1) == ("fixed", (5, 6))
+
+
+def test_migrate_to_upper_integer_levels_scaled_predictive_absolute() -> None:
+    assert migrate_to_upper_integer_levels(
+        {"horizon": 90, "levels_upper": ("absolute", (1.0, 2.0)), "period": "wday"}, 1024**3
+    ) == (
+        "predictive",
+        {
+            "horizon": 90,
+            "period": "wday",
+            "levels": ("absolute", (1024**3, 2 * 1024**3)),
+            "bound": None,
+        },
+    )
+
+
+def test_migrate_to_upper_integer_levels_scaled_predictive_relative() -> None:
+    assert migrate_to_upper_integer_levels(
+        {
+            "horizon": 90,
+            "period": "wday",
+            "levels_upper": ("relative", (10.0, 20.0)),
+            "levels_upper_min": (1, 2),
+        },
+        1024**3,
+    ) == (
+        "predictive",
+        {
+            "horizon": 90,
+            "levels": ("relative", (10.0, 20.0)),
+            "period": "wday",
+            "bound": (1024**3, 2 * 1024**3),
+        },
+    )
+
+
+def test_migrate_to_upper_integer_levels_scaled_predictive_stdev() -> None:
+    assert migrate_to_upper_integer_levels(
+        {
+            "horizon": 90,
+            "period": "wday",
+            "levels_upper": ("stdev", (2.0, 4.0)),
+            "levels_upper_min": (1, 2),
+        },
+        1024**3,
+    ) == (
+        "predictive",
+        {
+            "horizon": 90,
+            "levels": ("stdev", (2.0, 4.0)),
+            "period": "wday",
+            "bound": (1024**3, 2 * 1024**3),
+        },
+    )

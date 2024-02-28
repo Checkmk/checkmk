@@ -11,11 +11,11 @@ _NumberT = TypeVar("_NumberT", int, float)
 
 
 def _extract_bound(
-    model: object, ntype: type[_NumberT], level_dir: LevelDirection | None
+    model: object, scale: float, ntype: type[_NumberT], level_dir: LevelDirection | None
 ) -> tuple[_NumberT, _NumberT] | None:
     match (model, level_dir):
         case ({"levels_upper_min": (warn, crit)}, LevelDirection.UPPER):
-            return ntype(warn), ntype(crit)
+            return ntype(warn * scale), ntype(crit * scale)
         case _:
             return None
 
@@ -24,6 +24,7 @@ def _extract_levels(
     raw_levels: tuple[Literal["absolute"], tuple[int, int] | tuple[float, float]]
     | tuple[Literal["relative"], tuple[float, float]]
     | tuple[Literal["stdev"], tuple[float, float]],
+    scale: float,
     ntype: type[_NumberT],
 ) -> (
     tuple[Literal["absolute"], tuple[_NumberT, _NumberT]]
@@ -32,7 +33,7 @@ def _extract_levels(
 ):
     match raw_levels:
         case ("absolute", (int(warn), int(crit)) | (float(warn), float(crit))):
-            return "absolute", (ntype(warn), ntype(crit))
+            return "absolute", (ntype(warn * scale), ntype(crit * scale))
         case ("relative", (float(warn), float(crit))):
             return "relative", (warn, crit)
         case ("stdev", (float(warn), float(crit))):
@@ -42,7 +43,7 @@ def _extract_levels(
 
 
 def _parse_to_predictive_levels(
-    model: object, ntype: type[_NumberT], level_dir: LevelDirection
+    model: object, scale: float, ntype: type[_NumberT], level_dir: LevelDirection
 ) -> _PredictiveLevelsT[_NumberT] | None:
     match model:
         # already migrated
@@ -66,8 +67,8 @@ def _parse_to_predictive_levels(
             return _PredictiveLevelsT[_NumberT](
                 period=p,
                 horizon=h,
-                levels=_extract_levels(raw_levels, ntype),
-                bound=_extract_bound(model, ntype, level_dir),
+                levels=_extract_levels(raw_levels, scale, ntype),
+                bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate lower predictive levels
         case {
@@ -80,8 +81,8 @@ def _parse_to_predictive_levels(
             return _PredictiveLevelsT[_NumberT](
                 period=p,
                 horizon=h,
-                levels=_extract_levels(raw_levels, ntype),
-                bound=_extract_bound(model, ntype, level_dir),
+                levels=_extract_levels(raw_levels, scale, ntype),
+                bound=_extract_bound(model, scale, ntype, level_dir),
             )
         # migrate not configured predictive levels
         case {
@@ -97,7 +98,7 @@ def _parse_to_predictive_levels(
 
 
 def _migrate_to_levels(
-    model: object, ntype: type[_NumberT], level_dir: LevelDirection
+    model: object, scale: float, ntype: type[_NumberT], level_dir: LevelDirection
 ) -> LevelsConfigModel[_NumberT]:
     match model:
         case None | (None, None) | ("no_levels", None):
@@ -107,10 +108,12 @@ def _migrate_to_levels(
             int(warn),
             int(crit),
         ) | (float(warn), float(crit)):
-            return "fixed", (ntype(warn), ntype(crit))
+            return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
         case ("predictive", val_dict) | val_dict if isinstance(val_dict, dict):
-            if (pred_levels := _parse_to_predictive_levels(val_dict, ntype, level_dir)) is None:
+            if (
+                pred_levels := _parse_to_predictive_levels(val_dict, scale, ntype, level_dir)
+            ) is None:
                 return "no_levels", None
             return "predictive", pred_levels
 
@@ -121,7 +124,7 @@ def _migrate_to_levels(
             )
 
 
-def migrate_to_upper_integer_levels(model: object) -> LevelsConfigModel[int]:
+def migrate_to_upper_integer_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[int]:
     """
     Transform a previous levels configuration (Tuple, SimpleLevels, Levels or PredictiveLevels)
     representing upper (warn, crit) levels to an integer-based model of the `Levels` FormSpec.
@@ -129,22 +132,26 @@ def migrate_to_upper_integer_levels(model: object) -> LevelsConfigModel[int]:
 
     Args:
         model: Old value presented to the consumers to be migrated
+        scale: Factor to scale the levels with.
+            For example, a scale of 1000 would convert milliseconds to seconds.
     """
-    return _migrate_to_levels(model, int, LevelDirection.UPPER)
+    return _migrate_to_levels(model, scale, int, LevelDirection.UPPER)
 
 
-def migrate_to_upper_float_levels(model: object) -> LevelsConfigModel[float]:
+def migrate_to_upper_float_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[float]:
     """
     Transform a previous levels configuration (Tuple, SimpleLevels, Levels or PredictiveLevels)
     representing upper (warn, crit) levels to a float-based model of the `Levels` FormSpec
 
     Args:
         model: Old value presented to the consumers to be migrated
+        scale: Factor to scale the levels with.
+            For example, a scale of 1000 would convert milliseconds to seconds.
     """
-    return _migrate_to_levels(model, float, LevelDirection.UPPER)
+    return _migrate_to_levels(model, scale, float, LevelDirection.UPPER)
 
 
-def migrate_to_lower_integer_levels(model: object) -> LevelsConfigModel[int]:
+def migrate_to_lower_integer_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[int]:
     """
     Transform a previous levels configuration (Tuple, SimpleLevels, Levels or PredictiveLevels)
     representing lower (warn, crit) levels to an integer-based model of the `Levels` FormSpec.
@@ -152,23 +159,27 @@ def migrate_to_lower_integer_levels(model: object) -> LevelsConfigModel[int]:
 
     Args:
         model: Old value presented to the consumers to be migrated
+        scale: Factor to scale the levels with.
+            For example, a scale of 1000 would convert milliseconds to seconds.
     """
-    return _migrate_to_levels(model, int, LevelDirection.LOWER)
+    return _migrate_to_levels(model, scale, int, LevelDirection.LOWER)
 
 
-def migrate_to_lower_float_levels(model: object) -> LevelsConfigModel[float]:
+def migrate_to_lower_float_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[float]:
     """
     Transform a previous levels configuration (Tuple, SimpleLevels, Levels or PredictiveLevels)
     representing lower (warn, crit) levels to a float-based model of the `Levels` FormSpec
 
     Args:
         model: Old value presented to the consumers to be migrated
+        scale: Factor to scale the levels with.
+            For example, a scale of 1000 would convert milliseconds to seconds.
     """
-    return _migrate_to_levels(model, float, LevelDirection.LOWER)
+    return _migrate_to_levels(model, scale, float, LevelDirection.LOWER)
 
 
 def _migrate_to_simple_levels(
-    model: object, ntype: type[_NumberT]
+    model: object, scale: float, ntype: type[_NumberT]
 ) -> SimpleLevelsConfigModel[_NumberT]:
     match model:
         case None | (None, None) | ("no_levels", None):
@@ -178,7 +189,7 @@ def _migrate_to_simple_levels(
             int(warn),
             int(crit),
         ) | (float(warn), float(crit)):
-            return "fixed", (ntype(warn), ntype(crit))
+            return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
         case ("predictive", val_dict) | val_dict if isinstance(val_dict, dict):
             raise TypeError(
@@ -190,7 +201,9 @@ def _migrate_to_simple_levels(
             raise TypeError(f"Could not migrate {model!r} to SimpleLevelsConfigModel.")
 
 
-def migrate_to_integer_simple_levels(model: object) -> SimpleLevelsConfigModel[int]:
+def migrate_to_integer_simple_levels(
+    model: object, scale: float = 1.0
+) -> SimpleLevelsConfigModel[int]:
     """
     Transform a previous levels configuration (Tuple or SimpleLevels)
     representing (warn, crit) levels to an integer-based model of the `SimpleLevels` FormSpec.
@@ -198,11 +211,15 @@ def migrate_to_integer_simple_levels(model: object) -> SimpleLevelsConfigModel[i
 
     Args:
         model: Old value presented to the consumers to be migrated
+        scale: Factor to scale the levels with.
+            For example, a scale of 1000 would convert milliseconds to seconds.
     """
-    return _migrate_to_simple_levels(model, int)
+    return _migrate_to_simple_levels(model, scale, int)
 
 
-def migrate_to_float_simple_levels(model: object) -> SimpleLevelsConfigModel[float]:
+def migrate_to_float_simple_levels(
+    model: object, scale: float = 1.0
+) -> SimpleLevelsConfigModel[float]:
     """
     Transform a previous levels configuration (Tuple or SimpleLevels)
     representing (warn, crit) levels to a float-based model of the `SimpleLevels` FormSpec
@@ -210,4 +227,4 @@ def migrate_to_float_simple_levels(model: object) -> SimpleLevelsConfigModel[flo
     Args:
         model: Old value presented to the consumers to be migrated
     """
-    return _migrate_to_simple_levels(model, float)
+    return _migrate_to_simple_levels(model, scale, float)

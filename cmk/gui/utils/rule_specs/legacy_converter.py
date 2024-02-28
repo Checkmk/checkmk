@@ -225,6 +225,29 @@ def _convert_to_legacy_rulespec_group(
     raise ValueError(topic_to_convert)
 
 
+def _convert_to_legacy_match_type(
+    to_convert: ruleset_api_v1.rule_specs.ActiveCheck
+    | ruleset_api_v1.rule_specs.AgentConfig
+    | ruleset_api_v1.rule_specs.AgentAccess
+    | ruleset_api_v1.rule_specs.Host
+    | ruleset_api_v1.rule_specs.NotificationParameters
+    | ruleset_api_v1.rule_specs.InventoryParameters
+    | ruleset_api_v1.rule_specs.DiscoveryParameters
+    | ruleset_api_v1.rule_specs.Service
+    | ruleset_api_v1.rule_specs.SNMP
+    | ruleset_api_v1.rule_specs.SpecialAgent,
+) -> Literal["dict", "all", "first"]:
+    match to_convert:
+        case ruleset_api_v1.rule_specs.ActiveCheck():
+            return "all"
+        case ruleset_api_v1.rule_specs.SpecialAgent():
+            return "first"
+        case ruleset_api_v1.rule_specs.InventoryParameters():
+            return "dict"
+        case other:
+            return "dict" if other.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
+
+
 def _convert_to_legacy_host_rule_spec_rulespec(
     to_convert: ruleset_api_v1.rule_specs.ActiveCheck
     | ruleset_api_v1.rule_specs.AgentConfig
@@ -246,9 +269,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
-        match_type="dict"
-        if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE
-        else "all",
+        match_type=_convert_to_legacy_match_type(to_convert),
     )
 
 

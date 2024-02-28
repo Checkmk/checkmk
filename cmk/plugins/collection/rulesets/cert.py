@@ -25,7 +25,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeSpan,
     validators,
 )
-from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
+from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 _DAY = 60.0 * 60.0 * 24.0
 
@@ -314,7 +314,6 @@ def _hash_algorithm_choice() -> CascadingSingleChoice:
 rule_spec_cert = ActiveCheck(
     title=Title("Check certificates"),
     topic=Topic.NETWORKING,
-    eval_type=EvalType.ALL,
     name="cert",
     parameter_form=_form_active_checks_cert,
 )

@@ -10,6 +10,7 @@ from __future__ import annotations
 import abc
 import functools
 import re
+import warnings
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal, NotRequired
 
@@ -19,6 +20,7 @@ from typing_extensions import TypedDict
 from livestatus import SiteId
 
 import cmk.utils.plugin_registry
+from cmk.utils import deprecation_warnings
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
@@ -808,6 +810,11 @@ def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> lis
         if custom_attr["topic"] in host_attribute_topic_registry:
             continue
 
+        # The topic not being in the registry means that is most likely an unconverted one.
+        warnings.warn(
+            "Use of free-text topics in custom attributes deprecated.",
+            deprecation_warnings.DeprecatedSince20Warning,
+        )
         custom_attr["topic"] = (
             _transform_attribute_topic_title_to_id(custom_attr["topic"]) or "custom_attributes"
         )

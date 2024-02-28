@@ -17,7 +17,6 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
 from cmk.fetchers import Fetcher, NoFetcher, NoFetcherError, ProgramFetcher
-from cmk.fetchers.config import make_file_cache_path_template
 from cmk.fetchers.filecache import (
     AgentFileCache,
     FileCache,
@@ -255,12 +254,14 @@ class ProgramSource(Source[AgentRawData]):
         ipaddress: HostAddress | None,
         *,
         max_age: MaxAge,
+        file_cache_path: Path,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
+        self._file_cache_path: Final = file_cache_path
         # `make_program_commandline()` may raise LookupError if no datasource
         # is configured.
         self._cmdline: Final = self.config_cache.make_program_commandline(host_name, ipaddress)
@@ -284,9 +285,7 @@ class ProgramSource(Source[AgentRawData]):
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
             self.host_name,
-            path_template=make_file_cache_path_template(
-                fetcher_type=self.fetcher_type,
-            ),
+            path_template=os.path.join(self._file_cache_path, "{hostname}"),
             max_age=self._max_age,
             simulation=simulation,
             use_only_cache=file_cache_options.use_only_cache,
@@ -359,6 +358,7 @@ class TCPSource(Source[AgentRawData]):
         ipaddress: HostAddress,
         *,
         max_age: MaxAge,
+        file_cache_path: Path,
         cas_dir: Path,
         ca_store: Path,
         site_crt: Path,
@@ -368,6 +368,7 @@ class TCPSource(Source[AgentRawData]):
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
+        self._file_cache_path: Final = file_cache_path
         self._cas_dir: Final = cas_dir
         self._ca_store: Final = ca_store
         self._site_crt: Final = site_crt
@@ -395,9 +396,7 @@ class TCPSource(Source[AgentRawData]):
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
             self.host_name,
-            path_template=make_file_cache_path_template(
-                fetcher_type=self.fetcher_type,
-            ),
+            path_template=os.path.join(self._file_cache_path, "{hostname}"),
             max_age=self._max_age,
             simulation=simulation,
             use_only_cache=(

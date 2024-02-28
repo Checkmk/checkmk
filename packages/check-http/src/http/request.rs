@@ -33,6 +33,7 @@ pub struct ProcessedResponse {
     pub tls_info: Option<TlsInfo>,
 }
 
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct Body {
     pub text: String,
     pub length: usize,

@@ -70,6 +70,8 @@ pub fn collect_response_checks(
         Err(err) => return check_reqwest_error(err),
     };
 
+    let (body, body_check_results) = check_body(response.body);
+
     check_urls(url, response.final_url)
         .into_iter()
         .chain(check_method(method))
@@ -77,11 +79,9 @@ pub fn collect_response_checks(
         .chain(check_status(response.status, params.status_code))
         .chain(check_redirect(response.status, params.onredirect))
         .chain(check_headers(&response.headers, params.header_matchers))
-        .chain(check_body(
-            response.body,
-            params.page_size,
-            params.body_matchers,
-        ))
+        .chain(body_check_results)
+        .chain(check_page_size(body.as_ref(), params.page_size))
+        .chain(check_body_matching(body.as_ref(), params.body_matchers))
         .chain(check_response_time(
             response_time,
             params.response_time_levels,
@@ -241,27 +241,29 @@ fn latin1_to_string(bytes: &[u8]) -> String {
 
 fn check_body<T: std::error::Error>(
     body: Option<Result<Body, T>>,
-    page_size_limits: Option<Bounds<usize>>,
-    body_matchers: Vec<TextMatcher>,
-) -> Vec<Option<CheckResult>> {
+) -> (Option<Body>, Vec<Option<CheckResult>>) {
     let Some(body) = body else {
         // We assume that a None-Body means that we didn't fetch it at all
         // and we don't want to perform checks on it.
-        return vec![];
+        return (None, vec![]);
     };
 
     let Ok(body) = body else {
-        return notice(State::Crit, "Error fetching the response body");
+        return (
+            None,
+            notice(State::Crit, "Error fetching the response body"),
+        );
     };
 
-    check_page_size(body.length, page_size_limits)
-        .into_iter()
-        .chain(check_body_matching(&body.text, body_matchers))
-        .collect()
+    (Some(body), vec![])
 }
 
-fn check_body_matching(body_text: &str, matcher: Vec<TextMatcher>) -> Vec<Option<CheckResult>> {
-    if matcher.iter().any(|m| !m.match_on(body_text)) {
+fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Option<CheckResult>> {
+    let Some(body) = body else {
+        return vec![];
+    };
+
+    if matcher.iter().any(|m| !m.match_on(&body.text)) {
         notice(State::Warn, "String validation failed on response body")
     } else {
         vec![]
@@ -269,12 +271,16 @@ fn check_body_matching(body_text: &str, matcher: Vec<TextMatcher>) -> Vec<Option
 }
 
 fn check_page_size(
-    page_size: usize,
+    body: Option<&Body>,
     page_size_limits: Option<Bounds<usize>>,
 ) -> Vec<Option<CheckResult>> {
+    let Some(body) = body else {
+        return vec![];
+    };
+
     let state = page_size_limits
         .as_ref()
-        .and_then(|bounds| bounds.evaluate(&page_size, State::Warn))
+        .and_then(|bounds| bounds.evaluate(&body.length, State::Warn))
         .unwrap_or(State::Ok);
 
     let bounds_info = if let State::Warn = state {
@@ -292,11 +298,11 @@ fn check_page_size(
 
     let mut res = notice(
         state,
-        &format!("Page size: {} Bytes{}", page_size, bounds_info),
+        &format!("Page size: {} Bytes{}", body.length, bounds_info),
     );
     res.push(CheckResult::metric(
         "size",
-        page_size as f64,
+        body.length as f64,
         Some('B'),
         None,
         Some(0.),
@@ -404,11 +410,12 @@ mod test_check_urls {
 
     #[test]
     fn test_no_redirect() {
-        assert!(
+        assert_eq!(
             check_urls(
                 Url::parse("https://foo.bar").unwrap(),
                 Url::parse("https://foo.bar/").unwrap(),
-            ) == vec![CheckResult::details(
+            ),
+            vec![CheckResult::details(
                 State::Ok,
                 "URL to test: https://foo.bar/"
             ),]
@@ -417,11 +424,12 @@ mod test_check_urls {
 
     #[test]
     fn test_redirect() {
-        assert!(
+        assert_eq!(
             check_urls(
                 Url::parse("https://foo.bar").unwrap(),
                 Url::parse("https://foo.bar/baz").unwrap(),
-            ) == vec![
+            ),
+            vec![
                 CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),
                 CheckResult::details(State::Ok, "Redirected to: https://foo.bar/baz"),
             ]
@@ -438,8 +446,9 @@ mod test_check_method {
 
     #[test]
     fn test_ok() {
-        assert!(
-            check_method(Method::POST) == vec![CheckResult::details(State::Ok, "Method: POST"),]
+        assert_eq!(
+            check_method(Method::POST),
+            vec![CheckResult::details(State::Ok, "Method: POST"),]
         )
     }
 }
@@ -453,12 +462,12 @@ mod test_check_version {
 
     #[test]
     fn test_ok() {
-        assert!(
-            check_version(Version::HTTP_11)
-                == vec![
-                    CheckResult::summary(State::Ok, "Version: HTTP/1.1"),
-                    CheckResult::details(State::Ok, "Version: HTTP/1.1"),
-                ]
+        assert_eq!(
+            check_version(Version::HTTP_11),
+            vec![
+                CheckResult::summary(State::Ok, "Version: HTTP/1.1"),
+                CheckResult::details(State::Ok, "Version: HTTP/1.1"),
+            ]
         )
     }
 }
@@ -472,66 +481,67 @@ mod test_check_status {
 
     #[test]
     fn test_success_unchecked() {
-        assert!(
-            check_status(StatusCode::OK, vec![])
-                == vec![
-                    CheckResult::summary(State::Ok, "Status: 200 OK"),
-                    CheckResult::details(State::Ok, "Status: 200 OK"),
-                ]
+        assert_eq!(
+            check_status(StatusCode::OK, vec![]),
+            vec![
+                CheckResult::summary(State::Ok, "Status: 200 OK"),
+                CheckResult::details(State::Ok, "Status: 200 OK"),
+            ]
         )
     }
 
     #[test]
     fn test_client_error_unchecked() {
-        assert!(
-            check_status(StatusCode::EXPECTATION_FAILED, vec![])
-                == vec![
-                    CheckResult::summary(State::Warn, "Status: 417 Expectation Failed"),
-                    CheckResult::details(State::Warn, "Status: 417 Expectation Failed"),
-                ]
+        assert_eq!(
+            check_status(StatusCode::EXPECTATION_FAILED, vec![]),
+            vec![
+                CheckResult::summary(State::Warn, "Status: 417 Expectation Failed"),
+                CheckResult::details(State::Warn, "Status: 417 Expectation Failed"),
+            ]
         )
     }
 
     #[test]
     fn test_server_error_unchecked() {
-        assert!(
-            check_status(StatusCode::INTERNAL_SERVER_ERROR, vec![])
-                == vec![
-                    CheckResult::summary(State::Crit, "Status: 500 Internal Server Error"),
-                    CheckResult::details(State::Crit, "Status: 500 Internal Server Error"),
-                ]
+        assert_eq!(
+            check_status(StatusCode::INTERNAL_SERVER_ERROR, vec![]),
+            vec![
+                CheckResult::summary(State::Crit, "Status: 500 Internal Server Error"),
+                CheckResult::details(State::Crit, "Status: 500 Internal Server Error"),
+            ]
         )
     }
 
     #[test]
     fn test_success_checked_ok() {
-        assert!(
-            check_status(StatusCode::OK, vec![StatusCode::OK])
-                == vec![
-                    CheckResult::summary(State::Ok, "Status: 200 OK"),
-                    CheckResult::details(State::Ok, "Status: 200 OK"),
-                ]
+        assert_eq!(
+            check_status(StatusCode::OK, vec![StatusCode::OK]),
+            vec![
+                CheckResult::summary(State::Ok, "Status: 200 OK"),
+                CheckResult::details(State::Ok, "Status: 200 OK"),
+            ]
         )
     }
 
     #[test]
     fn test_success_checked_not_ok() {
-        assert!(
-            check_status(StatusCode::OK, vec![StatusCode::IM_USED])
-                == vec![
-                    CheckResult::summary(State::Crit, "Status: 200 OK (expected 226 IM Used)"),
-                    CheckResult::details(State::Crit, "Status: 200 OK (expected 226 IM Used)"),
-                ]
+        assert_eq!(
+            check_status(StatusCode::OK, vec![StatusCode::IM_USED]),
+            vec![
+                CheckResult::summary(State::Crit, "Status: 200 OK (expected 226 IM Used)"),
+                CheckResult::details(State::Crit, "Status: 200 OK (expected 226 IM Used)"),
+            ]
         )
     }
 
     #[test]
     fn test_success_checked_multiple_not_ok() {
-        assert!(
+        assert_eq!(
             check_status(
                 StatusCode::OK,
                 vec![StatusCode::ACCEPTED, StatusCode::IM_USED]
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(State::Crit, "Status: 200 OK (expected one of [202 226])"),
                 CheckResult::details(State::Crit, "Status: 200 OK (expected one of [202 226])"),
             ]
@@ -540,12 +550,12 @@ mod test_check_status {
 
     #[test]
     fn test_client_error_checked_ok() {
-        assert!(
-            check_status(StatusCode::IM_A_TEAPOT, vec![StatusCode::IM_A_TEAPOT])
-                == vec![
-                    CheckResult::summary(State::Ok, "Status: 418 I'm a teapot"),
-                    CheckResult::details(State::Ok, "Status: 418 I'm a teapot"),
-                ]
+        assert_eq!(
+            check_status(StatusCode::IM_A_TEAPOT, vec![StatusCode::IM_A_TEAPOT]),
+            vec![
+                CheckResult::summary(State::Ok, "Status: 418 I'm a teapot"),
+                CheckResult::details(State::Ok, "Status: 418 I'm a teapot"),
+            ]
         )
     }
 }
@@ -557,40 +567,40 @@ mod test_check_redirect {
 
     #[test]
     fn test_no_redirect() {
-        assert!(check_redirect(StatusCode::OK, OnRedirect::Critical) == vec![]);
+        assert!(check_redirect(StatusCode::OK, OnRedirect::Critical).is_empty());
     }
 
     #[test]
     fn test_redirect_ok() {
-        assert!(check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Ok) == vec![]);
+        assert!(check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Ok).is_empty());
     }
 
     #[test]
     fn test_redirect_warn() {
-        assert!(
-            check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Warning)
-                == vec![
-                    CheckResult::summary(State::Warn, "Detected redirect"),
-                    CheckResult::details(State::Warn, "Detected redirect"),
-                ]
+        assert_eq!(
+            check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Warning),
+            vec![
+                CheckResult::summary(State::Warn, "Detected redirect"),
+                CheckResult::details(State::Warn, "Detected redirect"),
+            ]
         );
     }
 
     #[test]
     fn test_redirect_crit() {
-        assert!(
-            check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Critical)
-                == vec![
-                    CheckResult::summary(State::Crit, "Detected redirect"),
-                    CheckResult::details(State::Crit, "Detected redirect"),
-                ]
+        assert_eq!(
+            check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Critical),
+            vec![
+                CheckResult::summary(State::Crit, "Detected redirect"),
+                CheckResult::details(State::Crit, "Detected redirect"),
+            ]
         );
     }
 
     #[test]
     fn test_redirect_not_handled() {
         // This can happen when hitting "max_redirs", but is handled by check_reqwest_error
-        assert!(check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Follow) == vec![]);
+        assert!(check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Follow).is_empty());
     }
 }
 
@@ -604,45 +614,43 @@ mod test_check_headers {
 
     #[test]
     fn test_no_search_strings() {
-        assert!(
-            check_headers(
-                &(&HashMap::from([
-                    ("key1".to_string(), "value1".to_string()),
-                    ("key2".to_string(), "value2".to_string()),
-                ]))
-                    .try_into()
-                    .unwrap(),
-                vec![]
-            ) == vec![]
+        assert!(check_headers(
+            &(&HashMap::from([
+                ("key1".to_string(), "value1".to_string()),
+                ("key2".to_string(), "value2".to_string()),
+            ]))
+                .try_into()
+                .unwrap(),
+            vec![]
         )
+        .is_empty())
     }
 
     #[test]
     fn test_strings_found() {
-        assert!(
-            check_headers(
-                &(&HashMap::from([
-                    ("some_key1".to_string(), "some_value1".to_string()),
-                    ("some_key2".to_string(), "some_value2".to_string()),
-                    ("some_key3".to_string(), "some_value3".to_string()),
-                ]))
-                    .try_into()
-                    .unwrap(),
-                vec![
-                    (
-                        ("some_key1".to_string().into()),
-                        "value1".to_string().into()
-                    ),
-                    (String::new().into(), "value".to_string().into()),
-                    ("some_key3".to_string().into(), String::new().into()),
-                ]
-            ) == vec![]
+        assert!(check_headers(
+            &(&HashMap::from([
+                ("some_key1".to_string(), "some_value1".to_string()),
+                ("some_key2".to_string(), "some_value2".to_string()),
+                ("some_key3".to_string(), "some_value3".to_string()),
+            ]))
+                .try_into()
+                .unwrap(),
+            vec![
+                (
+                    ("some_key1".to_string().into()),
+                    "value1".to_string().into()
+                ),
+                (String::new().into(), "value".to_string().into()),
+                ("some_key3".to_string().into(), String::new().into()),
+            ]
         )
+        .is_empty())
     }
 
     #[test]
     fn test_strings_not_found() {
-        assert!(
+        assert_eq!(
             check_headers(
                 &(&HashMap::from([
                     ("some_key1".to_string(), "some_value1".to_string()),
@@ -652,7 +660,8 @@ mod test_check_headers {
                     .try_into()
                     .unwrap(),
                 vec![("key1".to_string().into(), "value2".to_string().into()),]
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(
                     State::Crit,
                     "Specified strings not found in response headers"
@@ -667,7 +676,7 @@ mod test_check_headers {
 
     #[test]
     fn test_impossible_non_latin1() {
-        assert!(
+        assert_eq!(
             check_headers(
                 &(&HashMap::from([("some_key1".to_string(), "ßome_value1".to_string()),]))
                     .try_into()
@@ -676,7 +685,8 @@ mod test_check_headers {
                     "some_key1".to_string().into(),
                     "ßome_value1".to_string().into()
                 ),]
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(
                     State::Crit,
                     "Specified strings not found in response headers"
@@ -696,12 +706,11 @@ mod test_check_headers {
             HeaderName::from_str("some_key").unwrap(),
             HeaderValue::from_bytes(b"\xF6\xE4\xFC").unwrap(),
         );
-        assert!(
-            check_headers(
-                &header_map,
-                vec![("some_key".to_string().into(), "öäü".to_string().into()),]
-            ) == vec![]
+        assert!(check_headers(
+            &header_map,
+            vec![("some_key".to_string().into(), "öäü".to_string().into()),]
         )
+        .is_empty())
     }
 }
 
@@ -724,34 +733,37 @@ mod test_check_body {
 
     #[test]
     fn test_no_body() {
-        assert!(check_body::<DummyError>(None, None, vec![],) == vec![])
+        assert_eq!(check_body::<DummyError>(None), (None, vec![]));
     }
 
     #[test]
     fn test_error_body() {
-        assert!(
-            check_body(Some(Err(DummyError {})), None, vec![])
-                == vec![
+        assert_eq!(
+            check_body(Some(Err(DummyError {}))),
+            (
+                None,
+                vec![
                     CheckResult::summary(State::Crit, "Error fetching the response body"),
                     CheckResult::details(State::Crit, "Error fetching the response body"),
                 ]
+            )
         );
     }
 
     #[test]
     fn test_all_ok() {
-        assert!(
-            check_body::<DummyError>(
-                Some(Ok(Body {
+        assert_eq!(
+            check_body::<DummyError>(Some(Ok(Body {
+                text: "foobär".to_string(),
+                length: 7
+            }))),
+            (
+                Some(Body {
                     text: "foobär".to_string(),
                     length: 7
-                })),
-                Some(Bounds::lower_upper(3, 10)),
-                vec!["foo".to_string().into()],
-            ) == vec![
-                CheckResult::details(State::Ok, "Page size: 7 Bytes"),
-                CheckResult::metric("size", 7., Some('B'), None, Some(0.), None)
-            ]
+                }),
+                vec![]
+            )
         );
     }
 }
@@ -759,52 +771,71 @@ mod test_check_body {
 #[cfg(test)]
 mod test_check_page_size {
     use super::*;
+    use crate::http::Body;
 
     #[test]
     fn test_size_lower_out_of_bounds() {
-        assert!(
-            check_page_size(42, Some(Bounds::lower(56)),)
-                == vec![
-                    CheckResult::summary(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
-                    CheckResult::details(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
-                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
-                ]
+        assert_eq!(
+            check_page_size(
+                Some(&Body {
+                    text: String::new(),
+                    length: 42,
+                }),
+                Some(Bounds::lower(56)),
+            ),
+            vec![
+                CheckResult::summary(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                CheckResult::details(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+            ]
         );
     }
 
     #[test]
     fn test_size_lower_and_higher_too_low() {
-        assert!(
-            check_page_size(42, Some(Bounds::lower_upper(56, 100)),)
-                == vec![
-                    CheckResult::summary(
-                        State::Warn,
-                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                    ),
-                    CheckResult::details(
-                        State::Warn,
-                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                    ),
-                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
-                ]
+        assert_eq!(
+            check_page_size(
+                Some(&Body {
+                    text: String::new(),
+                    length: 42,
+                }),
+                Some(Bounds::lower_upper(56, 100)),
+            ),
+            vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                ),
+                CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+            ]
         );
     }
 
     #[test]
     fn test_size_lower_and_higher_too_high() {
-        assert!(
-            check_page_size(142, Some(Bounds::lower_upper(56, 100)),)
-                == vec![
-                    CheckResult::summary(
-                        State::Warn,
-                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                    ),
-                    CheckResult::details(
-                        State::Warn,
-                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                    ),
-                    CheckResult::metric("size", 142., Some('B'), None, Some(0.), None)
-                ]
+        assert_eq!(
+            check_page_size(
+                Some(&Body {
+                    text: String::new(),
+                    length: 142,
+                }),
+                Some(Bounds::lower_upper(56, 100)),
+            ),
+            vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                ),
+                CheckResult::metric("size", 142., Some('B'), None, Some(0.), None)
+            ]
         );
     }
 }
@@ -813,44 +844,54 @@ mod test_check_page_size {
 mod test_check_body_matching {
     use super::*;
 
+    fn test_body(test_string: &str) -> Option<Body> {
+        Some(Body {
+            text: test_string.to_owned(),
+            length: 0,
+        })
+    }
+
     #[test]
     fn test_no_matcher() {
-        assert!(check_body_matching("foobar", vec![]) == vec![]);
+        assert!(check_body_matching(test_body("foobar").as_ref(), vec![]).is_empty());
     }
 
     #[test]
     fn test_string_ok() {
-        assert!(check_body_matching("foobar", vec!["bar".to_string().into()]) == vec![]);
+        assert!(
+            check_body_matching(test_body("foobar").as_ref(), vec!["bar".to_string().into()])
+                .is_empty()
+        );
     }
 
     #[test]
     fn test_string_not_found() {
-        assert!(
-            check_body_matching("foobär", vec!["bar".to_string().into()])
-                == vec![
-                    CheckResult::summary(State::Warn, "String validation failed on response body"),
-                    CheckResult::details(State::Warn, "String validation failed on response body"),
-                ]
+        assert_eq!(
+            check_body_matching(test_body("foobär").as_ref(), vec!["bar".to_string().into()]),
+            vec![
+                CheckResult::summary(State::Warn, "String validation failed on response body"),
+                CheckResult::details(State::Warn, "String validation failed on response body"),
+            ]
         );
     }
 
     #[test]
     fn test_regex_ok() {
-        assert!(
-            check_body_matching(
-                "foobar",
-                vec![TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true)]
-            ) == vec![]
-        );
+        assert!(check_body_matching(
+            test_body("foobar").as_ref(),
+            vec![TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true)]
+        )
+        .is_empty());
     }
 
     #[test]
     fn test_regex_not_ok() {
-        assert!(
+        assert_eq!(
             check_body_matching(
-                "foobar",
+                test_body("foobar").as_ref(),
                 vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true)]
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(State::Warn, "String validation failed on response body"),
                 CheckResult::details(State::Warn, "String validation failed on response body"),
             ]
@@ -859,31 +900,30 @@ mod test_check_body_matching {
 
     #[test]
     fn test_regex_inverse_ok() {
-        assert!(
-            check_body_matching(
-                "foobar",
-                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false)]
-            ) == vec![]
-        );
+        assert!(check_body_matching(
+            test_body("foobar").as_ref(),
+            vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false)]
+        )
+        .is_empty());
     }
 
     #[test]
     fn test_multiple_matchers_ok() {
-        assert!(
-            check_body_matching(
-                "foobar",
-                vec!["bar".to_string().into(), "foo".to_string().into()]
-            ) == vec![]
-        );
+        assert!(check_body_matching(
+            test_body("foobar").as_ref(),
+            vec!["bar".to_string().into(), "foo".to_string().into()]
+        )
+        .is_empty());
     }
 
     #[test]
     fn test_multiple_matchers_not_ok() {
-        assert!(
+        assert_eq!(
             check_body_matching(
-                "foobar",
+                test_body("foobar").as_ref(),
                 vec!["bar".to_string().into(), "baz".to_string().into()]
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(State::Warn, "String validation failed on response body"),
                 CheckResult::details(State::Warn, "String validation failed on response body"),
             ]
@@ -898,23 +938,24 @@ mod test_check_response_time {
 
     #[test]
     fn test_unbounded() {
-        assert!(
-            check_response_time(Duration::new(5, 0), None, Duration::from_secs(10))
-                == vec![
-                    CheckResult::details(State::Ok, "Response time: 5 seconds"),
-                    CheckResult::metric("time", 5., Some('s'), None, Some(0.), Some(10.))
-                ]
+        assert_eq!(
+            check_response_time(Duration::new(5, 0), None, Duration::from_secs(10)),
+            vec![
+                CheckResult::details(State::Ok, "Response time: 5 seconds"),
+                CheckResult::metric("time", 5., Some('s'), None, Some(0.), Some(10.))
+            ]
         );
     }
 
     #[test]
     fn test_warn_within_bounds() {
-        assert!(
+        assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
                 Some(UpperLevels::warn(6.)),
                 Duration::from_secs(10)
-            ) == vec![
+            ),
+            vec![
                 CheckResult::details(State::Ok, "Response time: 5 seconds"),
                 CheckResult::metric(
                     "time",
@@ -930,12 +971,13 @@ mod test_check_response_time {
 
     #[test]
     fn test_warn_is_warn() {
-        assert!(
+        assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
                 Some(UpperLevels::warn(4.)),
                 Duration::from_secs(10)
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(State::Warn, "Response time: 5 seconds (warn at 4 seconds)"),
                 CheckResult::details(State::Warn, "Response time: 5 seconds (warn at 4 seconds)"),
                 CheckResult::metric(
@@ -952,12 +994,13 @@ mod test_check_response_time {
 
     #[test]
     fn test_warncrit_within_bounds() {
-        assert!(
+        assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
                 Some(UpperLevels::warn_crit(6., 7.)),
                 Duration::from_secs(10)
-            ) == vec![
+            ),
+            vec![
                 CheckResult::details(State::Ok, "Response time: 5 seconds"),
                 CheckResult::metric(
                     "time",
@@ -973,12 +1016,13 @@ mod test_check_response_time {
 
     #[test]
     fn test_warncrit_is_warn() {
-        assert!(
+        assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
                 Some(UpperLevels::warn_crit(4., 6.)),
                 Duration::from_secs(10)
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(
                     State::Warn,
                     "Response time: 5 seconds (warn/crit at 4 seconds/6 seconds)"
@@ -1001,12 +1045,13 @@ mod test_check_response_time {
 
     #[test]
     fn test_warncrit_is_crit() {
-        assert!(
+        assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
                 Some(UpperLevels::warn_crit(2., 3.)),
                 Duration::from_secs(10)
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(
                     State::Crit,
                     "Response time: 5 seconds (warn/crit at 2 seconds/3 seconds)"
@@ -1029,12 +1074,13 @@ mod test_check_response_time {
 
     #[test]
     fn test_formatting() {
-        assert!(
+        assert_eq!(
             check_response_time(
                 Duration::new(5, 123_456_789),
                 Some(UpperLevels::warn_crit(2.1, 3.12)),
                 Duration::from_secs(10)
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(
                     State::Crit,
                     "Response time: 5.123 seconds (warn/crit at 2.1 seconds/3.12 seconds)"
@@ -1077,23 +1123,23 @@ mod test_check_document_age {
 
     #[test]
     fn test_no_levels() {
-        assert!(
-            check_page_age(
-                system_time(UNIX_TIME_2023_11_16),
-                Some(&header_date("We don't care")),
-                None,
-            ) == vec![]
-        );
+        assert!(check_page_age(
+            system_time(UNIX_TIME_2023_11_16),
+            Some(&header_date("We don't care")),
+            None,
+        )
+        .is_empty());
     }
 
     #[test]
     fn test_missing_header_value() {
-        assert!(
+        assert_eq!(
             check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 None,
                 Some(UpperLevels::warn(THIRTYSIX_HOURS)),
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(State::Crit, "Can't determine page age"),
                 CheckResult::details(State::Crit, "Can't determine page age")
             ]
@@ -1102,12 +1148,13 @@ mod test_check_document_age {
 
     #[test]
     fn test_erroneous_date() {
-        assert!(
+        assert_eq!(
             check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 Some(&header_date("Something wrong")),
                 Some(UpperLevels::warn(THIRTYSIX_HOURS)),
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(State::Crit, "Can't decode page age"),
                 CheckResult::details(State::Crit, "Can't decode page age")
             ]
@@ -1116,12 +1163,13 @@ mod test_check_document_age {
 
     #[test]
     fn test_date_in_future() {
-        assert!(
+        assert_eq!(
             check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 Some(&header_date(DATE_2023_11_17)),
                 Some(UpperLevels::warn(THIRTYSIX_HOURS)),
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(State::Crit, "Can't decode page age"),
                 CheckResult::details(State::Crit, "Can't decode page age")
             ]
@@ -1130,23 +1178,25 @@ mod test_check_document_age {
 
     #[test]
     fn test_ok() {
-        assert!(
+        assert_eq!(
             check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 Some(&header_date(DATE_2023_11_15)),
                 Some(UpperLevels::warn(THIRTYSIX_HOURS)),
-            ) == vec![CheckResult::details(State::Ok, "Page age: 86400 seconds")]
+            ),
+            vec![CheckResult::details(State::Ok, "Page age: 86400 seconds")]
         );
     }
 
     #[test]
     fn test_warn() {
-        assert!(
+        assert_eq!(
             check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 Some(&header_date(DATE_2023_11_15)),
                 Some(UpperLevels::warn(TWELVE_HOURS)),
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(
                     State::Warn,
                     "Page age: 86400 seconds (warn at 43200 seconds)"

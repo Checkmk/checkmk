@@ -19,6 +19,7 @@ from cmk.server_side_calls.v1 import (
 def generate_prism_command(
     params: Mapping[str, object], host_config: HostConfig, _http_proxy: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
+    assert isinstance(params["password"], tuple)  # We're lazy with the parsing...
     if not host_config.resolved_address:
         raise ValueError("No IP address available")
 

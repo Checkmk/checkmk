@@ -6,6 +6,7 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
+from typing import Literal
 
 
 class ResolvedIPAddressFamily(StrEnum):
@@ -247,7 +248,12 @@ class PlainTextSecret:
 Secret = StoredSecret | PlainTextSecret
 
 
-def parse_secret(secret: object, display_format: str = "%s") -> Secret:
+# NOTE: This is basically a parser for the values originating from our IndividualOrStoredPassword
+# ValueSpec, it's highly questionable if this really belongs into the API.
+def parse_secret(
+    secret: tuple[Literal["store", "password"], str],
+    display_format: str = "%s",
+) -> Secret:
     """
     Parses a secret/password configuration into an instance of one of the two
     appropriate classes
@@ -286,19 +292,11 @@ def parse_secret(secret: object, display_format: str = "%s") -> Secret:
         ...     args = ["--auth", secret]
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
-    if not isinstance(secret, tuple):
-        raise ValueError("secret object has to be a tuple")
-
-    secret_type, secret_value = secret
-
-    if not isinstance(secret_value, str):
-        raise ValueError("secret value has to be a string")
-
-    match secret_type:
+    match secret[0]:
         case "store":
-            return StoredSecret(value=secret_value, format=display_format)
+            return StoredSecret(value=secret[1], format=display_format)
         case "password":
-            return PlainTextSecret(value=secret_value, format=display_format)
+            return PlainTextSecret(value=secret[1], format=display_format)
         case _:
             raise ValueError("secret type has as to be either 'store' or 'password'")
 

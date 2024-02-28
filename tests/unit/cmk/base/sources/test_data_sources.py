@@ -113,5 +113,6 @@ def test_host_config_creates_passing_source_sources(
             snmp_backend_override=None,
             oid_cache_dir=tmp_path,
             stored_walk_path=tmp_path,
+            walk_cache_path=tmp_path,
         )
     ] == sources

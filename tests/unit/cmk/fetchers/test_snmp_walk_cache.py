@@ -6,16 +6,14 @@
 from collections.abc import Iterable, MutableMapping
 from pathlib import Path
 
-from cmk.utils.hostaddress import HostName
-
 from cmk.snmplib import SNMPRowInfo
 
 from cmk.fetchers._snmp import WalkCache
 
 
 class MockWalkCache(WalkCache):
-    def __init__(self, mockdata: MutableMapping[str, SNMPRowInfo]) -> None:
-        super().__init__(HostName("testhost"))
+    def __init__(self, mockdata: MutableMapping[str, SNMPRowInfo], path: Path) -> None:
+        super().__init__(path)
         self.mock_stored_on_fs = mockdata
 
     def _read_row(self, path: Path) -> SNMPRowInfo:
@@ -35,10 +33,10 @@ class TestWalkCache:
             WalkCache._oid2name(fetchoid, context_hash)
         )
 
-    def test_cache_keeps_stored_data(self) -> None:
+    def test_cache_keeps_stored_data(self, tmp_path: Path) -> None:
         fetchoid, context_hash = ".1.2.3", "12c3d4a"
         path = f"OID{fetchoid}-{context_hash}"
-        cache = MockWalkCache({path: [("23", b"43")]})
+        cache = MockWalkCache({path: [("23", b"43")]}, tmp_path)
 
         assert not cache
 

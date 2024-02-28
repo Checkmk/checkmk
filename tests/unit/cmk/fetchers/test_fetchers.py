@@ -374,6 +374,7 @@ class TestSNMPFetcherDeserialization:
             section_store_path="/tmp/db",
             oid_cache_dir=tmp_path,
             stored_walk_path=tmp_path,
+            walk_cache_path=tmp_path,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
@@ -453,6 +454,7 @@ class TestSNMPFetcherFetch:
             section_store_path="/tmp/db",
             oid_cache_dir=tmp_path,
             stored_walk_path=tmp_path,
+            walk_cache_path=tmp_path,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
@@ -677,6 +679,7 @@ class TestSNMPFetcherFetchCache:
             section_store_path="/tmp/db",
             stored_walk_path=tmp_path,
             oid_cache_dir=tmp_path,
+            walk_cache_path=tmp_path,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),

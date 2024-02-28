@@ -1938,6 +1938,8 @@ class AutomationDiagHost(Automation):
         check_interval = config_cache.check_mk_check_interval(host_name)
         oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
         stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
+        walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+
         state, output = 0, ""
         for source in sources.make_sources(
             host_name,
@@ -1955,6 +1957,7 @@ class AutomationDiagHost(Automation):
             snmp_backend_override=None,
             oid_cache_dir=oid_cache_dir,
             stored_walk_path=stored_walk_path,
+            walk_cache_path=walk_cache_path,
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2309,6 +2312,8 @@ class AutomationGetAgentOutput(Automation):
             check_interval = config_cache.check_mk_check_interval(hostname)
             oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
             stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
+            walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+
             if ty == "agent":
                 for source in sources.make_sources(
                     hostname,
@@ -2326,6 +2331,7 @@ class AutomationGetAgentOutput(Automation):
                     snmp_backend_override=None,
                     oid_cache_dir=oid_cache_dir,
                     stored_walk_path=stored_walk_path,
+                    walk_cache_path=walk_cache_path,
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

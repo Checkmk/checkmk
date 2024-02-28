@@ -20,7 +20,7 @@ from cmk.server_side_calls.v1 import (
 
 
 class CiscoPrimeParams(BaseModel):
-    basicauth: tuple[str, tuple[Literal["password", "secret"], str]] | None = None
+    basicauth: tuple[str, tuple[Literal["password", "store"], str]] | None = None
     port: int | None = None
     no_tls: bool = Field(alias="no-tls", default=False)
     no_cert_check: bool = Field(alias="no-cert-check", default=False)

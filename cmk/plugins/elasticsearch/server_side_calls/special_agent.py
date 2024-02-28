@@ -11,7 +11,7 @@
 # }
 
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
@@ -28,23 +28,28 @@ from cmk.server_side_calls.v1 import (
 def _agent_elasticsearch_arguments(
     params: Mapping[str, object], hostconfig: HostConfig, proxy_config: Mapping[str, HTTPProxy]
 ) -> Iterable[SpecialAgentCommand]:
+    # We're lazy with the parsing, so we need a few asserts and str()s below to please mypy.
+    assert isinstance(params["infos"], Sequence)  # of Literal["cluster_health", "nodes", "stats"]
+    assert isinstance(params["hosts"], Sequence)  # of str
+
     args: list[str | Secret] = [
         "-P",
         str(params["protocol"]),
         "-m",
-        *(str(i) for i in params["infos"]),  # type: ignore[attr-defined]
+        *(str(i) for i in params["infos"]),
     ]
 
     if "user" in params:
         args.extend(["-u", str(params["user"])])
     if "password" in params:
-        args.extend(["-s", parse_secret(params["password"])])  # type: ignore[misc]
+        assert isinstance(params["password"], tuple)
+        args.extend(["-s", parse_secret(params["password"])])
     if "port" in params:
         args.extend(["-p", str(params["port"])])
     if params.get("no-cert-check", False):
         args.append("--no-cert-check")
 
-    args.extend(replace_macros(str(h), hostconfig.macros) for h in params["hosts"])  # type: ignore[attr-defined]
+    args.extend(replace_macros(str(h), hostconfig.macros) for h in params["hosts"])
 
     yield SpecialAgentCommand(command_arguments=args)
 

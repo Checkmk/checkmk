@@ -114,6 +114,7 @@ fn make_configs(
         RequestInformation {
             request_url: args.url,
             method,
+            user_agent,
             onredirect,
             timeout: args.timeout,
         },

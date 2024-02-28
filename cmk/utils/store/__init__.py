@@ -128,7 +128,9 @@ def load_mk_file(
         acquire_lock(path)
 
     try:
-        exec(path.read_bytes(), globals(), default)  # nosec B102 # BNS:aee528
+        exec(
+            compile(path.read_bytes(), path, "exec"), globals(), default
+        )  # nosec B102 # BNS:aee528
     except FileNotFoundError:
         pass
     except (MKTerminate, MKTimeout):

@@ -87,26 +87,35 @@ def get_cmk_version(branch_name, branch_version, version) {
 }
 /* groovylint-enable DuplicateListLiteral */
 
-def configured_or_overridden_distros(edition, distros, use_case="daily") {
-    def distro_list = (distros ?: "").replaceAll(',', ' ').split(' ').grep();
-    if(distro_list) {
-        return distro_list;
+def get_distros(Map args) {
+    def override_distros = args.override.trim() ?: "";
+
+    /// retrieve all available distros if provided distro-list is 'all',
+    /// respect provided arguments otherwise
+    def edition = override_distros == "all" ? "all" : args.edition.trim() ?: "all";
+    def use_case = override_distros == "all" ? "all" : args.use_case.trim() ?: "daily";
+
+    /// return requested list if provided
+    if(override_distros && override_distros != "all") {
+        return override_distros.replaceAll(',', ' ').split(' ').grep();
     }
-    docker_image_from_alias("IMAGE_TESTING").inside() {
+
+    /// read distros from edition.yml otherwise.
+    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
         dir("${checkout_dir}") {
-            return sh(script: """scripts/run-pipenv run \
+            return cmd_output("""scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \
                   --editions_file "${checkout_dir}/editions.yml" \
                   use_cases \
                   --edition "${edition}" \
                   --use_case "${use_case}"
-            """, returnStdout: true).trim().split();
+            """).split().grep();
         }
     }
 }
 
 def get_internal_distros_pattern() {
-    docker_image_from_alias("IMAGE_TESTING").inside() {
+    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
         dir("${checkout_dir}") {
             return sh(script: """scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \

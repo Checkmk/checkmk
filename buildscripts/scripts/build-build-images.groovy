@@ -24,8 +24,8 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def all_distros = versioning.configured_or_overridden_distros("enterprise", "", "release");
-    def distros = versioning.configured_or_overridden_distros("enterprise", OVERRIDE_DISTROS);
+    def all_distros = versioning.get_distros(override: "all")
+    def distros = versioning.get_distros(edition: "all", use_case: "all", override: OVERRIDE_DISTROS);
 
     def vers_tag = versioning.get_docker_tag(scm, checkout_dir);
     def branch_name = versioning.safe_branch_name(scm);

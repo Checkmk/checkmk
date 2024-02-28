@@ -262,9 +262,9 @@ def distros_for_use_case(edition_distros: dict, edition: str, use_case: str) -> 
         set(
             distro
             for _edition, use_cases in edition_distros.items()
-            if _edition == edition
+            if edition in (_edition, "all")
             for _use_case, distros in use_cases.items()
-            if _use_case == use_case
+            if use_case in (_use_case, "all")
             for distro in flatten(distros)
         )
     )
@@ -272,8 +272,8 @@ def distros_for_use_case(edition_distros: dict, edition: str, use_case: str) -> 
 
 def print_distros_for_use_case(args: argparse.Namespace, loaded_yaml: dict) -> None:
     edition_distros = loaded_yaml["editions"]
-    edition = args.edition
-    use_case = args.use_case
+    edition = args.edition or "all"
+    use_case = args.use_case or "all"
     print(" ".join(distros_for_use_case(edition_distros, edition, use_case)))
 
 
@@ -301,6 +301,13 @@ def test_distro_lists():
         "sles-15sp5",
         "ubuntu-20.04", "ubuntu-22.04", "ubuntu-23.10",
     ]
+    assert distros_for_use_case(edition_distros, "all", "all") == [
+        "almalinux-9", "centos-8",
+        "cma-3", "cma-4",
+        "debian-10", "debian-11", "debian-12",
+        "sles-12sp5", "sles-15sp3", "sles-15sp4", "sles-15sp5",
+        "ubuntu-20.04", "ubuntu-22.04", "ubuntu-23.10",
+    ]
     # fmt: on
 
 
@@ -310,6 +317,11 @@ def parse_arguments() -> Args:
     parser.add_argument("--editions_file", required=True)
 
     subparsers = parser.add_subparsers(required=True, dest="command")
+
+    use_cases = subparsers.add_parser("all", help="a help")
+    use_cases.set_defaults(func=print_distros_for_use_case)
+    use_cases.add_argument("--edition", default="all")
+    use_cases.add_argument("--use_case", default="all")
 
     use_cases = subparsers.add_parser("use_cases", help="a help")
     use_cases.set_defaults(func=print_distros_for_use_case)

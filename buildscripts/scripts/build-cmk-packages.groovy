@@ -64,7 +64,8 @@ def main() {
             "",
         ]);
 
-    def distros = versioning.configured_or_overridden_distros(edition, OVERRIDE_DISTROS, use_case);
+    def all_distros = versioning.get_distros(override: "all");
+    def distros = versioning.get_distros(edition: edition, use_case: use_case, override: OVERRIDE_DISTROS);
 
     def deploy_to_website = !params.SKIP_DEPLOY_TO_WEBSITE && !jenkins_base_folder.startsWith("Testing");
 
@@ -87,6 +88,7 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |distros:.................. │${distros}│
+        |all_distros:.............. │${all_distros}│
         |deploy_to_website:........ │${deploy_to_website}│
         |branch_name:.............. │${branch_name}│
         |cmk_version:.............. │${cmk_version}│
@@ -385,10 +387,9 @@ def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
     }
 }
 
-def try_plot_cache_hits(bazel_log_prefix) {
+def try_plot_cache_hits(bazel_log_prefix, distros) {
     try {
-        all_distros = versioning.configured_or_overridden_distros(edition, false, "release")
-        all_distros.each { distro ->
+        distros.each { distro ->
             try {
                 print("Unstashing for distro ${distro}...")
                 unstash(name: "${bazel_log_prefix}${distro}")
@@ -400,7 +401,7 @@ def try_plot_cache_hits(bazel_log_prefix) {
 
         plot csvFileName: 'bazel_cache_hits.csv',
             csvSeries:
-                all_distros.collect {[file: "${bazel_log_prefix}cache_hits_${it}.csv"]},
+                distros.collect {[file: "${bazel_log_prefix}cache_hits_${it}.csv"]},
             description: 'Bazel Remote Cache Analysis',
             group: 'Bazel Cache',
             numBuilds: '30',

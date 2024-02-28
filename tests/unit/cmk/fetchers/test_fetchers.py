@@ -365,13 +365,14 @@ class TestSNMPPluginStore:
 
 class TestSNMPFetcherDeserialization:
     @pytest.fixture
-    def fetcher(self) -> SNMPFetcher:
+    def fetcher(self, tmp_path: Path) -> SNMPFetcher:
         return SNMPFetcher(
             sections={},
             on_error=OnError.RAISE,
             missing_sys_description=False,
             do_status_data_inventory=False,
             section_store_path="/tmp/db",
+            oid_cache_dir=tmp_path,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
@@ -442,13 +443,14 @@ class TestSNMPFetcherFetch:
         )
 
     @pytest.fixture
-    def fetcher(self) -> SNMPFetcher:
+    def fetcher(self, tmp_path: Path) -> SNMPFetcher:
         return SNMPFetcher(
             sections={},
             on_error=OnError.RAISE,
             missing_sys_description=False,
             do_status_data_inventory=False,
             section_store_path="/tmp/db",
+            oid_cache_dir=tmp_path,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
@@ -664,13 +666,14 @@ class TestSNMPFetcherFetch:
 
 class TestSNMPFetcherFetchCache:
     @pytest.fixture
-    def fetcher(self, monkeypatch: MonkeyPatch) -> SNMPFetcher:
+    def fetcher(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SNMPFetcher:
         fetcher = SNMPFetcher(
             sections={},
             on_error=OnError.RAISE,
             missing_sys_description=False,
             do_status_data_inventory=False,
             section_store_path="/tmp/db",
+            oid_cache_dir=tmp_path,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),

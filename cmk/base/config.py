@@ -2055,6 +2055,7 @@ class ConfigCache:
         on_scan_error: OnError,
         selected_sections: SectionNameCollection,
         snmp_config: SNMPHostConfig,
+        oid_cache_dir: Path,
     ) -> SNMPFetcher:
         return SNMPFetcher(
             sections=self._make_snmp_sections(
@@ -2072,6 +2073,7 @@ class ConfigCache:
                 host_name, fetcher_type=FetcherType.SNMP, ident="snmp"
             ),
             snmp_config=snmp_config,
+            oid_cache_dir=oid_cache_dir,
         )
 
     def make_tcp_fetcher(self, host_name: HostName, ip_address: HostAddress) -> TCPFetcher:

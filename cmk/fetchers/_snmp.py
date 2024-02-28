@@ -172,6 +172,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         missing_sys_description: bool,
         do_status_data_inventory: bool,
         section_store_path: Path | str,
+        oid_cache_dir: Path | str,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__()
@@ -179,6 +180,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
+        self.oid_cache_dir: Final = Path(oid_cache_dir)
         self.snmp_config: Final = snmp_config
         self._logger: Final = logging.getLogger("cmk.helper.snmp")
         self._section_store = SectionStore[SNMPRawDataElem](
@@ -195,6 +197,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             and self.on_error == other.on_error
             and self.missing_sys_description == other.missing_sys_description
             and self.do_status_data_inventory == other.do_status_data_inventory
+            and self.oid_cache_dir == other.oid_cache_dir
             and self.snmp_config == other.snmp_config
         )
 
@@ -245,6 +248,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             on_error=self.on_error,
             missing_sys_description=self.missing_sys_description,
             backend=backend,
+            oid_cache_dir=self.oid_cache_dir,
         )
 
     def _get_selection(self, mode: Mode) -> frozenset[SectionName]:

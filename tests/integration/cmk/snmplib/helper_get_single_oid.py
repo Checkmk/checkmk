@@ -7,6 +7,7 @@ import ast
 import logging
 import sys
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 import cmk.utils.debug
@@ -39,7 +40,9 @@ backend_type = SNMPBackendEnum.deserialize(params[1])
 config = SNMPHostConfig.deserialize(params[2])
 cmk.utils.paths.snmpwalks_dir = params[3]
 
-snmp_cache.initialize_single_oid_cache(HostName("abc"), None)
+snmp_cache.initialize_single_oid_cache(
+    HostName("abc"), None, cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir)
+)
 
 backend: type[SNMPBackend]
 match backend_type:

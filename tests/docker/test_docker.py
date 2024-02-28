@@ -70,7 +70,7 @@ def test_needed_packages(checkmk: docker.models.containers.Container) -> None:
     assert checkmk.exec_run(["logrotate", "--version"])[0] == 0
 
 
-def test_start_cmkadmin_passsword(client: docker.DockerClient) -> None:
+def test_start_cmkadmin_password(client: docker.DockerClient) -> None:
     with start_checkmk(
         client,
         environment={

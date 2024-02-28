@@ -123,7 +123,10 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
         query_columns.add(adjusted_column_name)
         query_conditions.append(sqlite_filter)
         query_arguments.append(f.argument)
-    return f'SELECT * FROM history WHERE {" AND ".join(query_conditions)};', query_arguments
+    return (
+        f'SELECT * FROM history {"WHERE" if query_arguments else ""} {" AND ".join(query_conditions)};',
+        query_arguments,
+    )
 
 
 @dataclass

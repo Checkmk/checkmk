@@ -119,6 +119,7 @@ class _Builder:
         snmp_backend_override: SNMPBackendEnum | None,
         oid_cache_dir: Path,
         stored_walk_path: Path,
+        walk_cache_path: Path,
     ) -> None:
         super().__init__()
         assert not is_cluster
@@ -136,6 +137,7 @@ class _Builder:
         self._cds: Final = config_cache.computed_datasources(host_name)
         self._oid_cache_dir: Final = oid_cache_dir
         self._stored_walk_path: Final = stored_walk_path
+        self._walk_cache_path: Final = walk_cache_path
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
@@ -257,6 +259,7 @@ class _Builder:
                     backend_override=self.snmp_backend_override,
                     oid_cache_dir=self._oid_cache_dir,
                     stored_walk_path=self._stored_walk_path,
+                    walk_cache_path=self._walk_cache_path,
                 )
             )
             return
@@ -279,6 +282,7 @@ class _Builder:
                 backend_override=self.snmp_backend_override,
                 oid_cache_dir=self._oid_cache_dir,
                 stored_walk_path=self._stored_walk_path,
+                walk_cache_path=self._walk_cache_path,
             )
         )
 
@@ -309,6 +313,7 @@ class _Builder:
                         backend_override=self.snmp_backend_override,
                         oid_cache_dir=self._oid_cache_dir,
                         stored_walk_path=self._stored_walk_path,
+                        walk_cache_path=self._walk_cache_path,
                     )
                 )
             case "ipmi":
@@ -381,6 +386,7 @@ def make_sources(
     snmp_backend_override: SNMPBackendEnum | None,
     oid_cache_dir: Path,
     stored_walk_path: Path,
+    walk_cache_path: Path,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if is_cluster:
@@ -418,4 +424,5 @@ def make_sources(
         snmp_backend_override=snmp_backend_override,
         oid_cache_dir=oid_cache_dir,
         stored_walk_path=stored_walk_path,
+        walk_cache_path=walk_cache_path,
     ).sources

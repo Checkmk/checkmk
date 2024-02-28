@@ -11,10 +11,8 @@ from pathlib import Path
 from typing import Any, Final
 
 import cmk.utils.debug
-import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
 
@@ -51,9 +49,9 @@ class WalkCache(
 
     __slots__ = ("_store", "_path")
 
-    def __init__(self, host_name: HostName) -> None:
+    def __init__(self, walk_cache: Path) -> None:
         self._store: dict[tuple[str, str, bool], SNMPRowInfo] = {}
-        self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
+        self._path = walk_cache
 
     def _read_row(self, path: Path) -> SNMPRowInfo:
         return store.load_object_from_file(path, default=None)
@@ -174,6 +172,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         section_store_path: Path | str,
         oid_cache_dir: Path | str,
         stored_walk_path: Path | str,
+        walk_cache_path: Path | str,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__()
@@ -183,6 +182,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.oid_cache_dir: Final = Path(oid_cache_dir)
         self.stored_walk_path: Final = Path(stored_walk_path)
+        self.walk_cache_path: Final = Path(walk_cache_path)
         self.snmp_config: Final = snmp_config
         self._logger: Final = logging.getLogger("cmk.helper.snmp")
         self._section_store = SectionStore[SNMPRawDataElem](
@@ -201,6 +201,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             and self.do_status_data_inventory == other.do_status_data_inventory
             and self.oid_cache_dir == other.oid_cache_dir
             and self.stored_walk_path == other.stored_walk_path
+            and self.walk_cache_path == other.walk_cache_path
             and self.snmp_config == other.snmp_config
         )
 
@@ -231,6 +232,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     f"do_status_data_inventory={self.do_status_data_inventory!r}",
                     f"section_store_path={self.section_store_path!r}",
                     f"stored_walk_path={self.stored_walk_path!r}",
+                    f"walk_cache_path={self.walk_cache_path!r}",
                     f"snmp_config={self.snmp_config!r}",
                 )
             )
@@ -324,7 +326,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             # Nothing to discover? That can't be right.
             raise MKFetcherError("Got no data")
 
-        walk_cache = WalkCache(self._backend.hostname)
+        walk_cache = WalkCache(self.walk_cache_path / str(self._backend.hostname))
         if mode is Mode.CHECKING:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
             walk_cache.load()

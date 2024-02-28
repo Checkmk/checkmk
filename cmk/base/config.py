@@ -2059,6 +2059,7 @@ class ConfigCache:
         snmp_config: SNMPHostConfig,
         oid_cache_dir: Path,
         stored_walk_path: Path,
+        walk_cache_path: Path,
     ) -> SNMPFetcher:
         return SNMPFetcher(
             sections=self._make_snmp_sections(
@@ -2077,6 +2078,7 @@ class ConfigCache:
             ),
             snmp_config=snmp_config,
             stored_walk_path=stored_walk_path,
+            walk_cache_path=walk_cache_path,
             oid_cache_dir=oid_cache_dir,
         )
 

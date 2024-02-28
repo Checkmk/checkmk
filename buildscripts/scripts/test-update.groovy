@@ -29,7 +29,7 @@ def main() {
         "EDITION",
     ]);
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, "daily_update_tests");
+    def distros = versioning.get_distros(edition: EDITION, use_case: "daily_update_tests", override: OVERRIDE_DISTROS);
     def make_target = build_make_target(EDITION);
 
     testing_helper.run_make_targets(

@@ -12,9 +12,10 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
-    Integer,
     Password,
     String,
+    TimeMagnitude,
+    TimeSpan,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import EvalType, SpecialAgent, Topic
@@ -85,10 +86,13 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                 required=True,
             ),
             "timeout": DictElement(
-                parameter_form=Integer(
+                parameter_form=TimeSpan(
                     title=Title("Timeout"),
-                    prefill=DefaultValue(5),
+                    displayed_magnitudes=[
+                        TimeMagnitude.SECOND,
+                    ],
                     custom_validate=validators.InRange(min_value=1),
+                    prefill=DefaultValue(5.0),
                 ),
                 required=True,
             ),

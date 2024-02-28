@@ -87,7 +87,7 @@ pub fn collect_response_checks(
             params.response_time_levels,
             params.timeout,
         ))
-        .chain(check_document_age(
+        .chain(check_page_age(
             SystemTime::now(),
             response
                 .headers
@@ -338,34 +338,34 @@ fn check_response_time(
     ret
 }
 
-fn check_document_age(
+fn check_page_age(
     now: SystemTime,
     age_header: Option<&HeaderValue>,
-    document_age_levels: Option<UpperLevels<u64>>,
+    page_age_levels: Option<UpperLevels<u64>>,
 ) -> Vec<Option<CheckResult>> {
-    if document_age_levels.is_none() {
+    if page_age_levels.is_none() {
         return vec![];
     };
 
     let Some(age) = age_header else {
-        return notice(State::Crit, "Can't determine document age");
+        return notice(State::Crit, "Can't determine page age");
     };
-    let document_age_error = "Can't decode document age";
+    let page_age_error = "Can't decode page age";
     let Ok(age) = age.to_str() else {
-        return notice(State::Crit, document_age_error);
+        return notice(State::Crit, page_age_error);
     };
     let Ok(age) = parse_http_date(age) else {
-        return notice(State::Crit, document_age_error);
+        return notice(State::Crit, page_age_error);
     };
     let Ok(age) = now.duration_since(age) else {
-        return notice(State::Crit, document_age_error);
+        return notice(State::Crit, page_age_error);
     };
 
     check_upper_levels(
-        "Document age",
+        "Page age",
         age.as_secs(),
         |secs| format!("{} seconds", secs),
-        &document_age_levels,
+        &page_age_levels,
     )
 }
 
@@ -1078,7 +1078,7 @@ mod test_check_document_age {
     #[test]
     fn test_no_levels() {
         assert!(
-            check_document_age(
+            check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 Some(&header_date("We don't care")),
                 None,
@@ -1089,13 +1089,13 @@ mod test_check_document_age {
     #[test]
     fn test_missing_header_value() {
         assert!(
-            check_document_age(
+            check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 None,
                 Some(UpperLevels::warn(THIRTYSIX_HOURS)),
             ) == vec![
-                CheckResult::summary(State::Crit, "Can't determine document age"),
-                CheckResult::details(State::Crit, "Can't determine document age")
+                CheckResult::summary(State::Crit, "Can't determine page age"),
+                CheckResult::details(State::Crit, "Can't determine page age")
             ]
         );
     }
@@ -1103,13 +1103,13 @@ mod test_check_document_age {
     #[test]
     fn test_erroneous_date() {
         assert!(
-            check_document_age(
+            check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 Some(&header_date("Something wrong")),
                 Some(UpperLevels::warn(THIRTYSIX_HOURS)),
             ) == vec![
-                CheckResult::summary(State::Crit, "Can't decode document age"),
-                CheckResult::details(State::Crit, "Can't decode document age")
+                CheckResult::summary(State::Crit, "Can't decode page age"),
+                CheckResult::details(State::Crit, "Can't decode page age")
             ]
         );
     }
@@ -1117,13 +1117,13 @@ mod test_check_document_age {
     #[test]
     fn test_date_in_future() {
         assert!(
-            check_document_age(
+            check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 Some(&header_date(DATE_2023_11_17)),
                 Some(UpperLevels::warn(THIRTYSIX_HOURS)),
             ) == vec![
-                CheckResult::summary(State::Crit, "Can't decode document age"),
-                CheckResult::details(State::Crit, "Can't decode document age")
+                CheckResult::summary(State::Crit, "Can't decode page age"),
+                CheckResult::details(State::Crit, "Can't decode page age")
             ]
         );
     }
@@ -1131,32 +1131,29 @@ mod test_check_document_age {
     #[test]
     fn test_ok() {
         assert!(
-            check_document_age(
+            check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 Some(&header_date(DATE_2023_11_15)),
                 Some(UpperLevels::warn(THIRTYSIX_HOURS)),
-            ) == vec![CheckResult::details(
-                State::Ok,
-                "Document age: 86400 seconds"
-            )]
+            ) == vec![CheckResult::details(State::Ok, "Page age: 86400 seconds")]
         );
     }
 
     #[test]
     fn test_warn() {
         assert!(
-            check_document_age(
+            check_page_age(
                 system_time(UNIX_TIME_2023_11_16),
                 Some(&header_date(DATE_2023_11_15)),
                 Some(UpperLevels::warn(TWELVE_HOURS)),
             ) == vec![
                 CheckResult::summary(
                     State::Warn,
-                    "Document age: 86400 seconds (warn at 43200 seconds)"
+                    "Page age: 86400 seconds (warn at 43200 seconds)"
                 ),
                 CheckResult::details(
                     State::Warn,
-                    "Document age: 86400 seconds (warn at 43200 seconds)"
+                    "Page age: 86400 seconds (warn at 43200 seconds)"
                 )
             ]
         );

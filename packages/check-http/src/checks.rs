@@ -21,6 +21,7 @@ use crate::http::{Body, OnRedirect, ProcessedResponse};
 pub struct RequestInformation {
     pub request_url: Url,
     pub method: Method,
+    pub user_agent: String,
     pub onredirect: OnRedirect,
     pub timeout: Duration,
 }
@@ -106,6 +107,7 @@ pub fn collect_response_checks(
             response.tls_info,
             params.certificate_levels,
         ))
+        .chain(check_user_agent(request_information.user_agent))
         .flatten()
         .collect()
 }
@@ -407,6 +409,13 @@ fn check_certificate(
         |days| format!("{} days", days),
         &certificate_levels,
     )
+}
+
+fn check_user_agent(user_agent: String) -> Vec<Option<CheckResult>> {
+    vec![CheckResult::details(
+        State::Ok,
+        &format!("User agent: {}", user_agent),
+    )]
 }
 
 #[cfg(test)]
@@ -1214,5 +1223,20 @@ mod test_check_document_age {
                 )
             ]
         );
+    }
+}
+
+#[cfg(test)]
+mod test_check_user_agent {
+    use std::vec;
+
+    use super::*;
+
+    #[test]
+    fn test_ok() {
+        assert!(
+            check_user_agent("Agent Smith".to_string())
+                == vec![CheckResult::details(State::Ok, "User agent: Agent Smith"),]
+        )
     }
 }

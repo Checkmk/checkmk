@@ -109,6 +109,7 @@ fn make_standard_configs(
         RequestInformation {
             request_url: url,
             method: Method::GET,
+            user_agent: "test_http".to_string(),
             onredirect: OnRedirect::Follow,
             timeout: Duration::from_secs(1),
         },

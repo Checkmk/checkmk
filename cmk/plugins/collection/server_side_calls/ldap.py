@@ -14,6 +14,7 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_secret,
+    replace_macros,
     Secret,
 )
 
@@ -31,8 +32,9 @@ class LDAPParams(BaseModel):
     ssl: bool = False
 
 
-def check_ldap_desc(params: LDAPParams) -> str:
-    if (name := params.name).startswith("^"):
+def check_ldap_desc(params: LDAPParams, macros: Mapping[str, str]) -> str:
+    name = replace_macros(params.name, macros)
+    if name.startswith("^"):
         return name[1:]
     return f"LDAP {name}"
 
@@ -43,13 +45,13 @@ def generate_ldap_commands(
     args: list[str | Secret] = []
 
     if params.hostname is not None:
-        args += ["-H", params.hostname]
+        args += ["-H", replace_macros(params.hostname, host_config.macros)]
     else:
         if host_config.resolved_address is None:
             raise ValueError("No hostname or IP address provided")
         args += ["-H", host_config.resolved_address]
 
-    args += ["-b", params.base_dn]
+    args += ["-b", replace_macros(params.base_dn, host_config.macros)]
 
     if params.response_time is not None:
         warn, crit = params.response_time
@@ -78,7 +80,9 @@ def generate_ldap_commands(
     if params.ssl:
         args.append("--ssl")
 
-    yield ActiveCheckCommand(service_description=check_ldap_desc(params), command_arguments=args)
+    yield ActiveCheckCommand(
+        service_description=check_ldap_desc(params, host_config.macros), command_arguments=args
+    )
 
 
 active_check_ldap = ActiveCheckConfig(

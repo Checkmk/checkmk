@@ -212,17 +212,6 @@ fn check_headers(
         return vec![];
     };
 
-    if match_on_headers(headers, &matchers) {
-        vec![]
-    } else {
-        notice(
-            State::Crit,
-            "Specified strings not found in response headers",
-        )
-    }
-}
-
-fn match_on_headers(headers: &HeaderMap, matchers: &[(TextMatcher, TextMatcher)]) -> bool {
     let headers_as_strings: Vec<(&str, String)> = headers
         .iter()
         // The header name (coming from reqwest) is guaranteed to be ASCII, so we can have it as string.
@@ -231,10 +220,28 @@ fn match_on_headers(headers: &HeaderMap, matchers: &[(TextMatcher, TextMatcher)]
         .map(|(hk, hv)| (hk.as_str(), latin1_to_string(hv.as_bytes())))
         .collect();
 
-    matchers.iter().all(|(key_matcher, value_matcher)| {
-        headers_as_strings.iter().any(|(header_key, header_value)| {
-            key_matcher.match_on(header_key) && value_matcher.match_on(header_value)
+    matchers
+        .iter()
+        .flat_map(|(name_matcher, value_matcher)| {
+            if !match_on_headers(&headers_as_strings, name_matcher, value_matcher) {
+                notice(
+                    State::Crit,
+                    "Specified strings not found in response headers",
+                )
+            } else {
+                vec![]
+            }
         })
+        .collect::<Vec<_>>()
+}
+
+fn match_on_headers(
+    string_headers: &[(&str, String)],
+    name_matcher: &TextMatcher,
+    value_matcher: &TextMatcher,
+) -> bool {
+    string_headers.iter().any(|(header_key, header_value)| {
+        name_matcher.match_on(header_key) && value_matcher.match_on(header_value)
     })
 }
 
@@ -268,11 +275,16 @@ fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Op
         return vec![];
     };
 
-    if matcher.iter().any(|m| !m.match_on(&body.text)) {
-        notice(State::Warn, "String validation failed on response body")
-    } else {
-        vec![]
-    }
+    matcher
+        .iter()
+        .flat_map(|m| {
+            if !m.match_on(&body.text) {
+                notice(State::Warn, "String validation failed on response body")
+            } else {
+                vec![]
+            }
+        })
+        .collect::<Vec<_>>()
 }
 
 fn check_page_size(
@@ -659,6 +671,22 @@ mod test_check_headers {
                     State::Crit,
                     "Specified strings not found in response headers"
                 ),
+                CheckResult::summary(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+                CheckResult::summary(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
             ]
         )
     }
@@ -953,6 +981,24 @@ mod test_check_body_matching {
                 vec![TextMatcher::Contains("bar".to_string())]
             ),
             vec![
+                CheckResult::summary(State::Warn, "String validation failed on response body"),
+                CheckResult::details(State::Warn, "String validation failed on response body"),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_multiple_strings_not_found() {
+        assert!(
+            check_body_matching(
+                test_body("foobär").as_ref(),
+                vec![
+                    TextMatcher::Contains("bar".to_string()),
+                    TextMatcher::Contains("baz".to_string())
+                ]
+            ) == vec![
+                CheckResult::summary(State::Warn, "String validation failed on response body"),
+                CheckResult::details(State::Warn, "String validation failed on response body"),
                 CheckResult::summary(State::Warn, "String validation failed on response body"),
                 CheckResult::details(State::Warn, "String validation failed on response body"),
             ]

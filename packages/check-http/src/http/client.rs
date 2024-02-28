@@ -10,6 +10,7 @@ use reqwest::{
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
 
+#[derive(Clone)]
 pub enum OnRedirect {
     Ok,
     Warning,

@@ -18,13 +18,18 @@ use crate::checking_types::{
 };
 use crate::http::{Body, OnRedirect, ProcessedResponse};
 
-pub struct CheckParameters {
+pub struct RequestInformation {
+    pub request_url: Url,
+    pub method: Method,
     pub onredirect: OnRedirect,
+    pub timeout: Duration,
+}
+
+pub struct CheckParameters {
     pub status_code: Vec<StatusCode>,
     pub page_size: Option<Bounds<usize>>,
     pub response_time_levels: Option<UpperLevels<f64>>,
     pub document_age_levels: Option<UpperLevels<u64>>,
-    pub timeout: Duration,
     pub body_matchers: Vec<TextMatcher>,
     pub header_matchers: Vec<(TextMatcher, TextMatcher)>,
     pub certificate_levels: Option<LowerLevels<u64>>,
@@ -60,9 +65,8 @@ impl TextMatcher {
 }
 
 pub fn collect_response_checks(
-    url: Url,
-    method: Method,
     response: Result<(ProcessedResponse, Duration), reqwest::Error>,
+    request_information: RequestInformation,
     params: CheckParameters,
 ) -> Vec<CheckResult> {
     let (response, response_time) = match response {
@@ -72,12 +76,15 @@ pub fn collect_response_checks(
 
     let (body, body_check_results) = check_body(response.body);
 
-    check_urls(url, response.final_url)
+    check_urls(request_information.request_url, response.final_url)
         .into_iter()
-        .chain(check_method(method))
+        .chain(check_method(request_information.method))
         .chain(check_version(response.version))
         .chain(check_status(response.status, params.status_code))
-        .chain(check_redirect(response.status, params.onredirect))
+        .chain(check_redirect(
+            response.status,
+            request_information.onredirect,
+        ))
         .chain(check_headers(&response.headers, params.header_matchers))
         .chain(body_check_results)
         .chain(check_page_size(body.as_ref(), params.page_size))
@@ -85,7 +92,7 @@ pub fn collect_response_checks(
         .chain(check_response_time(
             response_time,
             params.response_time_levels,
-            params.timeout,
+            request_information.timeout,
         ))
         .chain(check_page_age(
             SystemTime::now(),

@@ -13,7 +13,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.gui.graphing import (
     get_first_matching_perfometer,
     MetricometerRendererLegacyLogarithmic,
-    perfometer_info,
     PerfometerSpec,
     renderer_registry,
 )
@@ -140,14 +139,20 @@ def test_get_first_matching_perfometer(
 
 
 @pytest.mark.parametrize(
-    "translated_metrics, perfometer_index",
+    "translated_metrics, perfometer",
     [
         pytest.param(
             {
                 "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
                 "failed_notifications": {"value": 0, "unit": "", "color": "#456789"},
             },
-            -2,
+            {
+                "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
+                "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
+                "segments": ["delivered_notifications,failed_notifications,+,100,+"],
+                "total": 100.0,
+                "type": "linear",
+            },
             id="second to last",
         ),
         pytest.param(
@@ -155,7 +160,18 @@ def test_get_first_matching_perfometer(
                 "delivered_notifications": {"value": 0, "unit": "", "color": "#123456"},
                 "failed_notifications": {"value": 1, "unit": "", "color": "#456789"},
             },
-            -1,
+            {
+                "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
+                "label": (
+                    "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
+                    "%",
+                ),
+                "segments": [
+                    "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*"
+                ],
+                "total": 100.0,
+                "type": "linear",
+            },
             id="very last perfometer",
         ),
         pytest.param(
@@ -164,7 +180,18 @@ def test_get_first_matching_perfometer(
                 "uncommitted": {"value": 4, "unit": "", "color": "#123456"},
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
             },
-            60,
+            {
+                "condition": "fs_used,uncommitted,+,fs_size,<",
+                "label": ("fs_used(%)", "%"),
+                "segments": [
+                    "fs_used",
+                    "uncommitted",
+                    "fs_size,fs_used,-,uncommitted,-#e3fff9",
+                    "0.1#559090",
+                ],
+                "total": "fs_size",
+                "type": "linear",
+            },
             id="filesystem check without overcommittment",
         ),
         pytest.param(
@@ -174,7 +201,18 @@ def test_get_first_matching_perfometer(
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
                 "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
             },
-            60,
+            {
+                "condition": "fs_used,uncommitted,+,fs_size,<",
+                "label": ("fs_used(%)", "%"),
+                "segments": [
+                    "fs_used",
+                    "uncommitted",
+                    "fs_size,fs_used,-,uncommitted,-#e3fff9",
+                    "0.1#559090",
+                ],
+                "total": "fs_size",
+                "type": "linear",
+            },
             id="filesystem check without overcommittment (+overprovisioned)",
         ),
         pytest.param(
@@ -184,15 +222,26 @@ def test_get_first_matching_perfometer(
                 "fs_size": {"value": 15, "unit": "", "color": "#123456"},
                 "overprovisioned": {"value": 7, "unit": "", "color": "#123456"},
             },
-            61,
+            {
+                "condition": "fs_used,uncommitted,+,fs_size,>=",
+                "label": ("fs_used,fs_used,uncommitted,+,/,100,*", "%"),
+                "segments": [
+                    "fs_used",
+                    "fs_size,fs_used,-#e3fff9",
+                    "0.1#559090",
+                    "overprovisioned,fs_size,-#ffa000",
+                ],
+                "total": "overprovisioned",
+                "type": "linear",
+            },
             id="filesystem check with overcommittment",
         ),
     ],
 )
 def test_get_first_matching_legacy_perfometer(
-    translated_metrics: Mapping[str, TranslatedMetric], perfometer_index: int
+    translated_metrics: Mapping[str, TranslatedMetric], perfometer: dict
 ) -> None:
-    assert get_first_matching_perfometer(translated_metrics) == perfometer_info[perfometer_index]
+    assert get_first_matching_perfometer(translated_metrics) == perfometer
 
 
 def test_registered_renderers() -> None:

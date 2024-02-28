@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from collections.abc import Iterable, Mapping
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -25,7 +25,7 @@ class Operation(BaseModel):
 class SFTPParameters(BaseModel):
     host: str
     user: str
-    secret: object
+    secret: tuple[Literal["store", "password"], str]
     description: str | None = None
     port: int | None = None
     timeout: int | None = None

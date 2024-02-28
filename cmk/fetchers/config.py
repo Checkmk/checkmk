@@ -6,7 +6,7 @@
 import os
 import os.path
 from pathlib import Path
-from typing import assert_never, Final
+from typing import assert_never
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
@@ -33,26 +33,24 @@ def make_persisted_section_dir(
 def make_file_cache_path_template(
     *,
     fetcher_type: FetcherType,
-    ident: str,
 ) -> str:
     # We create a *template* and not a path, so string manipulation
     # is the right thing to do.
-    base_dir: Final = str(cmk.utils.paths.data_source_cache_dir)
     match fetcher_type:
         case FetcherType.NONE:
-            return os.devnull
+            raise NotImplementedError()
         case FetcherType.PIGGYBACK:
-            return os.path.join(base_dir, ident, "{hostname}")
+            raise NotImplementedError()
         case FetcherType.SNMP:
-            return os.path.join(base_dir, ident, "{mode}", "{hostname}")
+            raise NotImplementedError()
         case FetcherType.IPMI:
-            return os.path.join(base_dir, ident, "{hostname}")
+            raise NotImplementedError()
         case FetcherType.SPECIAL_AGENT:
-            return os.path.join(base_dir, ident, "{hostname}")
+            raise NotImplementedError()
         case FetcherType.PROGRAM:
             return os.path.join(cmk.utils.paths.tcp_cache_dir, "{hostname}")
         case FetcherType.PUSH_AGENT:
-            return os.path.join(base_dir, ident, "{hostname}", "agent_output")
+            raise NotImplementedError()
         case FetcherType.TCP:
             return os.path.join(cmk.utils.paths.tcp_cache_dir, "{hostname}")
         case _:

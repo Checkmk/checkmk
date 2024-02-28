@@ -18,7 +18,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeSpan,
     validators,
 )
-from cmk.rulesets.v1.rule_specs import EvalType, SpecialAgent, Topic
+from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
 def _migrate(value: object) -> Mapping[str, int | tuple[str | None] | tuple[str, str]]:
@@ -104,7 +104,6 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
 rule_spec_pure_storage_fa = SpecialAgent(
     topic=Topic.STORAGE,
     name="pure_storage_fa",
-    eval_type=EvalType.MERGE,
     title=Title("Pure Storage FlashArray"),
     parameter_form=_form_spec_special_agents_pure_storage_fa,
 )

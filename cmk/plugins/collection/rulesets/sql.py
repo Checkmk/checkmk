@@ -176,7 +176,6 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
 rule_spec_sql = rule_specs.ActiveCheck(
     title=Title("Check SQL Database"),
     topic=rule_specs.Topic.DATABASES,
-    eval_type=rule_specs.EvalType.ALL,
     name="sql",
     parameter_form=_form_active_checks_sql,
 )

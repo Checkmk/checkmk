@@ -370,7 +370,7 @@ def create_skeleton_file(
 
 
 def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
-    prepare_tmpfs(version_info, site)
+    prepare_tmpfs(version_info, site.name, site.tmp_dir, site.conf["TMPFS"])
 
     if not os.listdir(site.tmp_dir):
         create_skeleton_files(site, "tmp")

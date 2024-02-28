@@ -79,8 +79,7 @@ def test_active_check_config() -> None:
         "password": ("password", "password1234"),
     }
 
-    parsed_params = special_agent_example.parameter_parser(params)
-    commands = list(special_agent_example.commands_function(parsed_params, host_config, {}))
+    commands = list(special_agent_example(params, host_config, {}))
 
     assert len(commands) == 1
     assert commands[0] == SpecialAgentCommand(

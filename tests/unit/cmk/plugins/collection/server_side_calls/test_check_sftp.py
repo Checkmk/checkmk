@@ -88,11 +88,4 @@ def test_check_sftp_argument_parsing(
     expected_args: tuple[ActiveCheckCommand],
 ) -> None:
     """Tests if all required arguments are present."""
-    assert (
-        tuple(
-            active_check_sftp.commands_function(
-                active_check_sftp.parameter_parser(params), SOME_HOST_CONFIG, {}
-            )
-        )
-        == expected_args
-    )
+    assert tuple(active_check_sftp(params, SOME_HOST_CONFIG, {})) == expected_args

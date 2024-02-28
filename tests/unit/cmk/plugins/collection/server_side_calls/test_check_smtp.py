@@ -95,9 +95,7 @@ def test_check_smtp_argument_parsing(
     expected_args: Sequence[str | Secret],
 ) -> None:
     """Tests if all required arguments are present."""
-    (cmd,) = active_check_smtp.commands_function(
-        active_check_smtp.parameter_parser(params), TEST_HOST_CONFIG, {}
-    )
+    (cmd,) = active_check_smtp(params, TEST_HOST_CONFIG, {})
     assert cmd.service_description == expected_name
     assert cmd.command_arguments == expected_args
 
@@ -109,8 +107,4 @@ def test_invalid_family_config() -> None:
     }
 
     with pytest.raises(ValueError, match="IPv6 address is not available"):
-        list(
-            active_check_smtp.commands_function(
-                active_check_smtp.parameter_parser(params), TEST_HOST_CONFIG, {}
-            )
-        )
+        list(active_check_smtp(params, TEST_HOST_CONFIG, {}))

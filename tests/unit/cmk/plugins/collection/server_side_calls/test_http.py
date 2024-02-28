@@ -14,6 +14,7 @@ from cmk.plugins.collection.server_side_calls.http import (
     Family,
     HostSettings,
     HTTPParams,
+    parse_http_params,
     ProxyHost,
     ProxySettings,
     URLMode,
@@ -484,8 +485,7 @@ def test_check_http_argument_parsing(
     expected_args: Sequence[object],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = active_check_http.parameter_parser(params)
-    commands = list(active_check_http.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(active_check_http(params, HOST_CONFIG, {}))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args
@@ -533,8 +533,7 @@ def test_check_http_service_description(
     params: Mapping[str, Any],
     expected_description: str,
 ) -> None:
-    parsed_params = active_check_http.parameter_parser(params)
-    commands = list(active_check_http.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(active_check_http(params, HOST_CONFIG, {}))
 
     assert len(commands) == 1
     assert commands[0].service_description == expected_description
@@ -609,7 +608,7 @@ def test_check_http_service_description(
     ],
 )
 def test_parse_http_params(params: Mapping[str, object], expected_result: HTTPParams) -> None:
-    assert active_check_http.parameter_parser(params) == expected_result
+    assert parse_http_params(params) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -696,5 +695,4 @@ def test_invalid_config(
     params: Mapping[str, Any], exception: Type[Exception], error_message: str
 ) -> None:
     with pytest.raises(exception, match=error_message):
-        parsed_params = active_check_http.parameter_parser(params)
-        list(active_check_http.commands_function(parsed_params, HOST_CONFIG, {}))
+        list(active_check_http(params, HOST_CONFIG, {}))

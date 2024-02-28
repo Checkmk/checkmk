@@ -142,6 +142,5 @@ def test_check_form_submit_argument_parsing(
     expected_args: Sequence[object],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = config.parameter_parser(params)
-    commands = list(config.commands_function(parsed_params, host_config, {}))
+    commands = list(config(params, host_config, {}))
     assert commands[0].command_arguments == expected_args

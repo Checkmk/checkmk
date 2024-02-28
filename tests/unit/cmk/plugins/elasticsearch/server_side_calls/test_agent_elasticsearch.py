@@ -30,11 +30,11 @@ def test_agent_elasticsearch_arguments_cert_check() -> None:
         "protocol": "https",
         "infos": ["cluster_health", "nodestats", "stats"],
     }
-    (cmd,) = special_agent_elasticsearch.commands_function(params, TEST_HOST_CONFIG, {})
+    (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG, {})
     assert "--no-cert-check" not in cmd.command_arguments
 
     params["no-cert-check"] = True
-    (cmd,) = special_agent_elasticsearch.commands_function(params, TEST_HOST_CONFIG, {})
+    (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG, {})
     assert "--no-cert-check" in cmd.command_arguments
 
 
@@ -46,7 +46,7 @@ def test_agent_elasticsearch_arguments_password_store() -> None:
         "user": "user",
         "password": ("password", "pass"),
     }
-    (cmd,) = special_agent_elasticsearch.commands_function(params, TEST_HOST_CONFIG, {})
+    (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG, {})
     assert cmd.command_arguments == [
         "-P",
         "https",

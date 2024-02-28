@@ -213,8 +213,7 @@ def test_extract_connection_args(
             "something_else": "123",
         },
     )
-    params = special_agent_prometheus.parameter_parser(config)
-    command = list(special_agent_prometheus.commands_function(params, host_config, {}))[0]
+    command = list(special_agent_prometheus(config, host_config, {}))[0]
     assert isinstance(command.stdin, str)
     agent_config = ast.literal_eval(command.stdin)
     assert extract_connection_args(agent_config) == expected_result

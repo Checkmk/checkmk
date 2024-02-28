@@ -107,6 +107,5 @@ def test_check_disk_smb_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = active_check_config.parameter_parser(params)
-    commands = list(active_check_config.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(active_check_config(params, HOST_CONFIG, {}))
     assert commands[0].command_arguments == expected_args

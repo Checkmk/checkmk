@@ -94,10 +94,7 @@ class SpecialAgent:
             for id, proxy in self._http_proxies.items()
         }
 
-        parsed_params = special_agent.parameter_parser(params)
-        for command in special_agent.commands_function(
-            parsed_params, self.host_config, http_proxies
-        ):
+        for command in special_agent(params, self.host_config, http_proxies):
             path = self._make_source_path(special_agent.name)
             args = replace_passwords(
                 self.host_name, self.stored_passwords, command.command_arguments

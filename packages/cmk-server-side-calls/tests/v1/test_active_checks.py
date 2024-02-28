@@ -79,8 +79,7 @@ def test_active_check_config() -> None:
         "password": ("store", "stored_password_id"),
     }
 
-    parsed_params = active_check_example.parameter_parser(params)
-    commands = list(active_check_example.commands_function(parsed_params, host_config, {}))
+    commands = list(active_check_example(params, host_config, {}))
 
     assert len(commands) == 1
     assert commands[0] == ActiveCheckCommand(

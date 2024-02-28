@@ -42,8 +42,7 @@ class SpecialAgentCommand:
     stdin: str | None = None
 
 
-@dataclass(frozen=True, kw_only=True)
-class SpecialAgentConfig(Generic[_ParsedParameters]):
+class SpecialAgentConfig(Generic[_ParsedParameters]):  # pylint: disable=too-few-public-methods
     """
     Defines a special agent
 
@@ -100,8 +99,27 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):
         The first existing file will be used.
     """
 
-    name: str
-    parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]
-    commands_function: Callable[
-        [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[SpecialAgentCommand]
-    ]
+    def __init__(
+        self,
+        *,
+        name: str,
+        parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters],
+        commands_function: Callable[
+            [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[SpecialAgentCommand]
+        ],
+    ):
+        self.name = name
+        self._parameter_parser = parameter_parser
+        self._commands_function = commands_function
+
+    def __call__(
+        self,
+        parameters: Mapping[str, object],
+        host_config: HostConfig,
+        http_proxies: Mapping[str, HTTPProxy],
+    ) -> Iterable[SpecialAgentCommand]:
+        yield from self._commands_function(
+            self._parameter_parser(parameters),
+            host_config,
+            http_proxies,
+        )

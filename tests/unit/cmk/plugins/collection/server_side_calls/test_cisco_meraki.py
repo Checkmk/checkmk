@@ -192,8 +192,4 @@ def test_aws_argument_parsing(
     expected_args: Sequence[SpecialAgentCommand],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = special_agent_cisco_meraki.parameter_parser(params)
-    assert (
-        list(special_agent_cisco_meraki.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
-        == expected_args
-    )
+    assert list(special_agent_cisco_meraki(params, HOST_CONFIG, HTTP_PROXIES)) == expected_args

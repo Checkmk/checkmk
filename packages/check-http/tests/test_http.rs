@@ -4,7 +4,7 @@
 
 use anyhow::Result as AnyhowResult;
 use check_http::checking_types::State;
-use check_http::checks::CheckParameters;
+use check_http::checks::{CheckParameters, RequestInformation};
 use check_http::http::{ClientConfig, OnRedirect, RequestConfig};
 use check_http::output::Output;
 use check_http::runner::collect_checks;
@@ -50,9 +50,14 @@ async fn check_http_output(
     expected_summary_start: &str,
 ) -> AnyhowResult<()> {
     let (port, listener) = tcp_listener("0.0.0.0");
-    let (client_cfg, request_cfg, check_params) = make_standard_configs(port);
+    let (client_cfg, request_cfg, request_information, check_params) = make_standard_configs(port);
 
-    let check_http_thread = tokio::spawn(collect_checks(client_cfg, request_cfg, check_params));
+    let check_http_thread = tokio::spawn(collect_checks(
+        client_cfg,
+        request_cfg,
+        request_information,
+        check_params,
+    ));
 
     let check_http_payload = process_http(listener, http_response)?;
 
@@ -65,7 +70,15 @@ async fn check_http_output(
     Ok(())
 }
 
-fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParameters) {
+fn make_standard_configs(
+    port: u16,
+) -> (
+    ClientConfig,
+    RequestConfig,
+    RequestInformation,
+    CheckParameters,
+) {
+    let url = Url::parse(&format!("http://{}:{}", LOCALHOST_DNS, port)).unwrap();
     (
         ClientConfig {
             version: None,
@@ -82,7 +95,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             proxy_auth: None,
         },
         RequestConfig {
-            url: Url::parse(&format!("http://{}:{}", LOCALHOST_DNS, port)).unwrap(),
+            url: url.clone(),
             method: Method::GET,
             version: None,
             headers: vec![],
@@ -93,13 +106,17 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             without_body: false,
             token_auth: None,
         },
-        CheckParameters {
+        RequestInformation {
+            request_url: url,
+            method: Method::GET,
             onredirect: OnRedirect::Follow,
+            timeout: Duration::from_secs(1),
+        },
+        CheckParameters {
             status_code: vec![],
             page_size: None,
             response_time_levels: None,
             document_age_levels: None,
-            timeout: Duration::from_secs(1),
             body_matchers: vec![],
             header_matchers: vec![],
             certificate_levels: None,

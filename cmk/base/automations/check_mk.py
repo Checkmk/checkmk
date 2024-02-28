@@ -1940,6 +1940,7 @@ class AutomationDiagHost(Automation):
         stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
         file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
+        tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
         cas_dir = Path(cmk.utils.paths.agent_cas_dir)
         ca_store = Path(cmk.utils.paths.agent_cert_store)
         site_crt = Path(cmk.utils.paths.site_cert_file)
@@ -1963,6 +1964,7 @@ class AutomationDiagHost(Automation):
             stored_walk_path=stored_walk_path,
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
+            tcp_cache_path=tcp_cache_path,
             cas_dir=cas_dir,
             ca_store=ca_store,
             site_crt=site_crt,
@@ -2326,6 +2328,7 @@ class AutomationGetAgentOutput(Automation):
             walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
             section_cache_path = Path(var_dir)
             file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
+            tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
             cas_dir = Path(cmk.utils.paths.agent_cas_dir)
             ca_store = Path(cmk.utils.paths.agent_cert_store)
             site_crt = Path(cmk.utils.paths.site_cert_file)
@@ -2349,6 +2352,7 @@ class AutomationGetAgentOutput(Automation):
                     stored_walk_path=stored_walk_path,
                     walk_cache_path=walk_cache_path,
                     file_cache_path=file_cache_path,
+                    tcp_cache_path=tcp_cache_path,
                     cas_dir=cas_dir,
                     ca_store=ca_store,
                     site_crt=site_crt,

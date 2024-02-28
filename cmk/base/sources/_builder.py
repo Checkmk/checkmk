@@ -126,6 +126,7 @@ class _Builder:
         stored_walk_path: Path,
         walk_cache_path: Path,
         file_cache_path: Path,
+        tcp_cache_path: Path,
         cas_dir: Path,
         ca_store: Path,
         site_crt: Path,
@@ -148,6 +149,7 @@ class _Builder:
         self._stored_walk_path: Final = stored_walk_path
         self._walk_cache_path: Final = walk_cache_path
         self._file_cache_path: Final = file_cache_path
+        self._tcp_cache_path: Final = tcp_cache_path
         self.cas_dir: Final = cas_dir
         self.ca_store: Final = ca_store
         self.site_crt: Final = site_crt
@@ -357,6 +359,7 @@ class _Builder:
                     self.host_name,
                     self.ipaddress,
                     max_age=self.max_age_agent,
+                    file_cache_path=self._tcp_cache_path,
                 )
             )
             return
@@ -386,6 +389,7 @@ class _Builder:
                         self.host_name,
                         self.ipaddress,
                         max_age=self.max_age_agent,
+                        file_cache_path=self._tcp_cache_path,
                         cas_dir=self.cas_dir,
                         ca_store=self.ca_store,
                         site_crt=self.site_crt,
@@ -413,6 +417,7 @@ def make_sources(
     stored_walk_path: Path,
     walk_cache_path: Path,
     file_cache_path: Path,
+    tcp_cache_path: Path,
     cas_dir: Path,
     ca_store: Path,
     site_crt: Path,
@@ -455,6 +460,7 @@ def make_sources(
         stored_walk_path=stored_walk_path,
         walk_cache_path=walk_cache_path,
         file_cache_path=file_cache_path,
+        tcp_cache_path=tcp_cache_path,
         cas_dir=cas_dir,
         ca_store=ca_store,
         site_crt=site_crt,

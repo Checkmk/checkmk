@@ -49,13 +49,12 @@ import abc
 import enum
 import logging
 import os
+import time
 from collections.abc import Sized
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 
-import cmk.utils
-import cmk.utils.paths
 import cmk.utils.store as _store
 from cmk.utils.exceptions import MKFetcherError, MKGeneralException, MKTimeout
 from cmk.utils.hostaddress import HostName
@@ -210,7 +209,7 @@ class FileCache(Generic[_TRawData], abc.ABC):
 
         path = self._make_path(self.path_template, hostname=self.hostname, mode=mode)
         try:
-            cachefile_age = cmk.utils.cachefile_age(path)
+            cachefile_age = time.time() - path.stat().st_mtime
         except FileNotFoundError:
             self._logger.debug("Not using cache (does not exist)")
             return None

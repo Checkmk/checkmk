@@ -1937,6 +1937,7 @@ class AutomationDiagHost(Automation):
         hosts_config = config_cache.hosts_config
         check_interval = config_cache.check_mk_check_interval(host_name)
         oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
+        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         state, output = 0, ""
         for source in sources.make_sources(
             host_name,
@@ -1953,6 +1954,7 @@ class AutomationDiagHost(Automation):
             ),
             snmp_backend_override=None,
             oid_cache_dir=oid_cache_dir,
+            stored_walk_path=stored_walk_path,
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2124,6 +2126,7 @@ class AutomationDiagHost(Automation):
             snmp_backend=snmp_config.snmp_backend,
         )
 
+        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         data = get_snmp_table(
             section_name=None,
             tree=BackendSNMPTree(
@@ -2131,7 +2134,7 @@ class AutomationDiagHost(Automation):
                 oids=[BackendOIDSpec(c, "string", False) for c in "1456"],
             ),
             walk_cache={},
-            backend=make_snmp_backend(snmp_config, log.logger),
+            backend=make_snmp_backend(snmp_config, log.logger, stored_walk_path=stored_walk_path),
         )
 
         if data:
@@ -2305,6 +2308,7 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = config.lookup_ip_address(config_cache, hostname)
             check_interval = config_cache.check_mk_check_interval(hostname)
             oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
+            stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
             if ty == "agent":
                 for source in sources.make_sources(
                     hostname,
@@ -2321,6 +2325,7 @@ class AutomationGetAgentOutput(Automation):
                     ),
                     snmp_backend_override=None,
                     oid_cache_dir=oid_cache_dir,
+                    stored_walk_path=stored_walk_path,
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:
@@ -2367,7 +2372,9 @@ class AutomationGetAgentOutput(Automation):
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
                 snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
-                backend = make_snmp_backend(snmp_config, log.logger, use_cache=False)
+                backend = make_snmp_backend(
+                    snmp_config, log.logger, use_cache=False, stored_walk_path=stored_walk_path
+                )
 
                 lines = []
                 for walk_oid in oids_to_walk():

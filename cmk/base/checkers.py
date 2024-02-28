@@ -291,6 +291,7 @@ class CMKFetcher:
             ]
 
         oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
+        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
@@ -311,6 +312,7 @@ class CMKFetcher:
                     ),
                     snmp_backend_override=self.snmp_backend_override,
                     oid_cache_dir=oid_cache_dir,
+                    stored_walk_path=stored_walk_path,
                 )
                 for current_host_name, current_ip_address in hosts
             ),

@@ -5,6 +5,7 @@
 
 import dataclasses
 import logging
+from pathlib import Path
 
 import pytest
 
@@ -44,23 +45,32 @@ def fixture_snmp_config() -> SNMPHostConfig:
     )
 
 
-def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig) -> None:
-    assert isinstance(make_backend(snmp_config, logging.getLogger()), ClassicSNMPBackend)
+def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig, tmp_path: Path) -> None:
+    assert isinstance(
+        make_backend(snmp_config, logging.getLogger(), stored_walk_path=tmp_path),
+        ClassicSNMPBackend,
+    )
 
 
-def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig) -> None:
+def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig, tmp_path: Path) -> None:
     snmp_config = dataclasses.replace(snmp_config, snmp_backend=SNMPBackendEnum.INLINE)
     if InlineSNMPBackend is not None:
-        assert isinstance(make_backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
+        assert isinstance(
+            make_backend(snmp_config, logging.getLogger(), stored_walk_path=tmp_path),
+            InlineSNMPBackend,
+        )
 
 
-def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig) -> None:
+def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig, tmp_path: Path) -> None:
     with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
         snmp_config = dataclasses.replace(snmp_config, snmp_backend="bla")  # type: ignore[arg-type]
         if InlineSNMPBackend is not None:
-            assert isinstance(make_backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
+            assert isinstance(
+                make_backend(snmp_config, logging.getLogger(), stored_walk_path=tmp_path),
+                InlineSNMPBackend,
+            )
         else:
             assert isinstance(
-                make_backend(snmp_config, logging.getLogger()),
+                make_backend(snmp_config, logging.getLogger(), stored_walk_path=tmp_path),
                 ClassicSNMPBackend,
             )

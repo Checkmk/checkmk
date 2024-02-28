@@ -7,7 +7,9 @@ import ast
 import logging
 import sys
 from collections.abc import Mapping
-from typing import Any
+from functools import partial
+from pathlib import Path
+from typing import Any, Callable
 
 import cmk.utils.paths
 from cmk.utils.sectionname import SectionName
@@ -41,14 +43,16 @@ backend_type = SNMPBackendEnum.deserialize(params[1])
 config = SNMPHostConfig.deserialize(params[2])
 cmk.utils.paths.snmpwalks_dir = params[3]
 
-backend: type[SNMPBackend]
+backend: Callable[[SNMPHostConfig, logging.Logger], SNMPBackend]
 match backend_type:
     case SNMPBackendEnum.INLINE:
         backend = InlineSNMPBackend
     case SNMPBackendEnum.CLASSIC:
         backend = ClassicSNMPBackend
     case SNMPBackendEnum.STORED_WALK:
-        backend = StoredWalkSNMPBackend
+        backend = partial(
+            StoredWalkSNMPBackend, path=Path(cmk.utils.paths.snmpwalks_dir) / config.hostname
+        )
     case _:
         raise ValueError(backend_type)
 

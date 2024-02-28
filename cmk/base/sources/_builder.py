@@ -118,6 +118,7 @@ class _Builder:
         max_age_snmp: MaxAge,
         snmp_backend_override: SNMPBackendEnum | None,
         oid_cache_dir: Path,
+        stored_walk_path: Path,
     ) -> None:
         super().__init__()
         assert not is_cluster
@@ -134,6 +135,7 @@ class _Builder:
         self.snmp_backend_override: Final = snmp_backend_override
         self._cds: Final = config_cache.computed_datasources(host_name)
         self._oid_cache_dir: Final = oid_cache_dir
+        self._stored_walk_path: Final = stored_walk_path
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
@@ -254,6 +256,7 @@ class _Builder:
                     selected_sections=self.selected_sections,
                     backend_override=self.snmp_backend_override,
                     oid_cache_dir=self._oid_cache_dir,
+                    stored_walk_path=self._stored_walk_path,
                 )
             )
             return
@@ -275,6 +278,7 @@ class _Builder:
                 selected_sections=self.selected_sections,
                 backend_override=self.snmp_backend_override,
                 oid_cache_dir=self._oid_cache_dir,
+                stored_walk_path=self._stored_walk_path,
             )
         )
 
@@ -304,6 +308,7 @@ class _Builder:
                         selected_sections=self.selected_sections,
                         backend_override=self.snmp_backend_override,
                         oid_cache_dir=self._oid_cache_dir,
+                        stored_walk_path=self._stored_walk_path,
                     )
                 )
             case "ipmi":
@@ -375,6 +380,7 @@ def make_sources(
     file_cache_max_age: MaxAge,
     snmp_backend_override: SNMPBackendEnum | None,
     oid_cache_dir: Path,
+    stored_walk_path: Path,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if is_cluster:
@@ -411,4 +417,5 @@ def make_sources(
         max_age_snmp=max_age_snmp(),
         snmp_backend_override=snmp_backend_override,
         oid_cache_dir=oid_cache_dir,
+        stored_walk_path=stored_walk_path,
     ).sources

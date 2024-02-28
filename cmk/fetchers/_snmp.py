@@ -173,6 +173,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         do_status_data_inventory: bool,
         section_store_path: Path | str,
         oid_cache_dir: Path | str,
+        stored_walk_path: Path | str,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__()
@@ -181,6 +182,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.oid_cache_dir: Final = Path(oid_cache_dir)
+        self.stored_walk_path: Final = Path(stored_walk_path)
         self.snmp_config: Final = snmp_config
         self._logger: Final = logging.getLogger("cmk.helper.snmp")
         self._section_store = SectionStore[SNMPRawDataElem](
@@ -198,6 +200,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             and self.missing_sys_description == other.missing_sys_description
             and self.do_status_data_inventory == other.do_status_data_inventory
             and self.oid_cache_dir == other.oid_cache_dir
+            and self.stored_walk_path == other.stored_walk_path
             and self.snmp_config == other.snmp_config
         )
 
@@ -227,6 +230,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     f"missing_sys_description={self.missing_sys_description!r}",
                     f"do_status_data_inventory={self.do_status_data_inventory!r}",
                     f"section_store_path={self.section_store_path!r}",
+                    f"stored_walk_path={self.stored_walk_path!r}",
                     f"snmp_config={self.snmp_config!r}",
                 )
             )
@@ -234,7 +238,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         )
 
     def open(self) -> None:
-        self._backend = make_backend(self.snmp_config, self._logger)
+        self._backend = make_backend(
+            self.snmp_config, self._logger, stored_walk_path=self.stored_walk_path
+        )
 
     def close(self) -> None:
         self._backend = None

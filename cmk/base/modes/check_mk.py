@@ -540,6 +540,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         ipaddress = config.lookup_ip_address(config_cache, hostname)
         check_interval = config_cache.check_mk_check_interval(hostname)
         oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
+        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
 
         output = []
         # Show errors of problematic data sources
@@ -559,6 +560,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             ),
             snmp_backend_override=snmp_backend_override,
             oid_cache_dir=oid_cache_dir,
+            stored_walk_path=stored_walk_path,
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -1014,6 +1016,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         raise MKBailOut("Please specify host names to walk on.")
 
     config_cache = config.get_config_cache()
+    stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
 
     for hostname in (HostName(hn) for hn in hostnames):
         ipaddress = config.lookup_ip_address(config_cache, hostname)
@@ -1023,7 +1026,12 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
         if snmp_backend_override is not None:
             snmp_config = dataclasses.replace(snmp_config, snmp_backend=snmp_backend_override)
-        _do_snmpwalk(options, backend=snmp_factory.make_backend(snmp_config, log.logger))
+        _do_snmpwalk(
+            options,
+            backend=snmp_factory.make_backend(
+                snmp_config, log.logger, stored_walk_path=stored_walk_path
+            ),
+        )
 
 
 modes.register(
@@ -1099,6 +1107,7 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
         )
 
     assert hostnames
+    stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
     for hostname in (HostName(hn) for hn in hostnames):
         ipaddress = config.lookup_ip_address(config_cache, hostname)
         if not ipaddress:
@@ -1108,7 +1117,9 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
         if snmp_backend_override is not None:
             snmp_config = dataclasses.replace(snmp_config, snmp_backend=snmp_backend_override)
 
-        backend = snmp_factory.make_backend(snmp_config, log.logger)
+        backend = snmp_factory.make_backend(
+            snmp_config, log.logger, stored_walk_path=stored_walk_path
+        )
         value = get_single_oid(oid, single_oid_cache={}, backend=backend)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
 

@@ -45,7 +45,7 @@ def parse_cpu(string_table: StringTable) -> Section | None:
         num_cpus=num_cpus,
         load=Load(float(row[0]), float(row[1]), float(row[2])),
         threads=Threads(
-            count=int(row[3].split("/")[1]),
+            count=Threads.resilient_parse_count(row[3]),
             max=int(string_table[1][0]) if len(string_table) > 1 else None,
         ),
     )

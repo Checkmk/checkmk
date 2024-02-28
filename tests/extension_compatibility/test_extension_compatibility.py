@@ -21,7 +21,7 @@ from tests.testlib.site import Site
 
 from cmk.utils.version import __version__, parse_check_mk_version
 
-NUMBER_OF_EXTENSIONS_TO_COVER = 150
+NUMBER_OF_EXTENSIONS_TO_COVER = 120
 
 
 CURRENTLY_UNDER_TEST = {
@@ -164,6 +164,7 @@ CURRENTLY_UNDER_TEST = {
     "https://exchange.checkmk.com/api/packages/download/559/nextcloud-1.2.2.mkp",
     "https://exchange.checkmk.com/api/packages/download/560/dell_os10_chassis-1.0.mkp",
     "https://exchange.checkmk.com/api/packages/download/571/openvpn_clients-0.4.1.mkp",
+    "https://exchange.checkmk.com/api/packages/download/576/hpe_oneview-1.7.5.mkp",
     "https://exchange.checkmk.com/api/packages/download/590/pure-1.4.7.mkp",
     "https://exchange.checkmk.com/api/packages/download/595/arista-1.0.4.mkp",
     "https://exchange.checkmk.com/api/packages/download/5/agent_ntnx-4.0.mkp",

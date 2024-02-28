@@ -22,8 +22,15 @@ class ProcessorType(Enum):
 
 @dataclass(frozen=True)
 class Threads:
-    count: int
+    count: int | None = None
     max: int | None = None
+
+    @staticmethod
+    def resilient_parse_count(raw: str) -> int | None:
+        try:
+            return int(raw.split("/")[1])
+        except ValueError:
+            return None
 
 
 @dataclass

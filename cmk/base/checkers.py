@@ -156,6 +156,7 @@ class CMKParser:
         """Parse fetched data."""
         console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
         output: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
+        section_cache_path = Path(cmk.utils.paths.var_dir)
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
         for source, raw_data in fetched:
@@ -166,6 +167,7 @@ class CMKParser:
                     checking_sections=self.config_cache.make_checking_sections(
                         source.hostname, selected_sections=NO_SELECTION
                     ),
+                    section_cache_path=section_cache_path,
                     keep_outdated=self.keep_outdated,
                     logger=self.logger,
                 ),

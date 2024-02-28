@@ -2074,7 +2074,10 @@ class ConfigCache:
                 host_name
             ).status_data_inventory,
             section_store_path=make_persisted_section_dir(
-                host_name, fetcher_type=FetcherType.SNMP, ident="snmp"
+                host_name,
+                fetcher_type=FetcherType.SNMP,
+                ident="snmp",
+                section_cache_path=Path(cmk.utils.paths.var_dir),
             ),
             snmp_config=snmp_config,
             stored_walk_path=stored_walk_path,
@@ -3257,7 +3260,10 @@ class ConfigCache:
             return True
 
         return make_persisted_section_dir(
-            fetcher_type=FetcherType.PIGGYBACK, host_name=host_name, ident="piggyback"
+            fetcher_type=FetcherType.PIGGYBACK,
+            host_name=host_name,
+            ident="piggyback",
+            section_cache_path=Path(cmk.utils.paths.var_dir),
         ).exists()
 
     def _piggybacked_host_files(self, host_name: HostName) -> list[tuple[str | None, str, int]]:

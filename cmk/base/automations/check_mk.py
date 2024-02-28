@@ -2322,6 +2322,7 @@ class AutomationGetAgentOutput(Automation):
             oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
             stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
             walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+            section_cache_path = Path(var_dir)
             cas_dir = Path(cmk.utils.paths.agent_cas_dir)
             ca_store = Path(cmk.utils.paths.agent_cert_store)
             site_crt = Path(cmk.utils.paths.site_cert_file)
@@ -2366,6 +2367,7 @@ class AutomationGetAgentOutput(Automation):
                             checking_sections=config_cache.make_checking_sections(
                                 hostname, selected_sections=NO_SELECTION
                             ),
+                            section_cache_path=section_cache_path,
                             keep_outdated=file_cache_options.keep_outdated,
                             logger=logging.getLogger("cmk.base.checking"),
                         ),

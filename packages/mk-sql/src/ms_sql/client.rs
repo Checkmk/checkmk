@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::{self, ms_sql::AuthType, ms_sql::Endpoint};
-use crate::types::{HostName, Port};
+use crate::types::{CertPath, HostName, Port};
 use anyhow::Result;
 
 #[cfg(windows)]
@@ -43,12 +43,23 @@ enum ClientConnection<'a> {
     Local(Local),
 }
 
-#[derive(Default)]
 pub struct ClientBuilder<'a> {
     client_connection: Option<ClientConnection<'a>>,
 
     database: Option<String>,
-    certificate: Option<String>,
+    certificate: Option<CertPath>,
+    trust_server_certificate: bool,
+}
+
+impl<'a> Default for ClientBuilder<'a> {
+    fn default() -> Self {
+        Self {
+            client_connection: None,
+            database: None,
+            certificate: None,
+            trust_server_certificate: config::defines::defaults::TRUST_SERVER_CERTIFICATE,
+        }
+    }
 }
 
 impl<'a> ClientBuilder<'a> {
@@ -97,39 +108,77 @@ impl<'a> ClientBuilder<'a> {
         self
     }
 
-    pub fn certificate<S: Into<String>>(mut self, certificate: Option<S>) -> Self {
+    pub fn certificate<C: Into<CertPath>>(mut self, certificate: Option<C>) -> Self {
         self.certificate = certificate.map(|c| c.into());
         self
     }
 
-    pub async fn build(self) -> Result<Client> {
-        match self.client_connection {
+    pub fn trust_server_certificate(mut self, trust: bool) -> Self {
+        self.trust_server_certificate = trust;
+        self
+    }
+
+    pub fn make_config(&self) -> Result<Config> {
+        let mut config = Config::new();
+
+        match &self.client_connection {
             Some(ClientConnection::Remote(r)) => {
-                let port = r.port.map(|p| p.value()).unwrap_or(defaults::STANDARD_PORT);
-                create_remote(
-                    &r.host,
-                    port,
-                    r.credentials,
-                    self.database,
-                    self.certificate,
-                )
-                .await
+                let port = r.port.as_ref().map(|p| p.value());
+                config.host(&r.host);
+                config.port(port.unwrap_or(defaults::STANDARD_PORT));
+                if let Some(db) = &self.database {
+                    config.database(db);
+                }
+                config.authentication(match r.credentials {
+                    Credentials::SqlServer { user, password } => {
+                        AuthMethod::sql_server(user, password)
+                    }
+                    #[cfg(windows)]
+                    Credentials::Windows { user, password } => AuthMethod::windows(user, password),
+                    #[cfg(unix)]
+                    Credentials::Windows {
+                        user: _,
+                        password: _,
+                    } => anyhow::bail!("not supported"),
+                });
             }
             #[cfg(windows)]
             Some(ClientConnection::LocalInstance(i)) => {
-                create_instance_local(
-                    &i.instance_name,
-                    i.browser_port.map(|p| p.value()),
-                    self.database,
-                    self.certificate,
-                )
-                .await
+                let port = i.browser_port.as_ref().map(|p| p.value());
+                config.host("localhost");
+                config.port(port.unwrap_or(defaults::SQL_BROWSER_PORT));
+                config.authentication(AuthMethod::Integrated);
+                if let Some(db) = &self.database {
+                    config.database(db);
+                }
+                config.instance_name(&i.instance_name);
             }
             #[cfg(windows)]
             Some(ClientConnection::Local(l)) => {
-                let port = l.port.map(|p| p.value()).unwrap_or(defaults::STANDARD_PORT);
-                create_local(port, self.certificate).await
+                let port = l.port.as_ref().map(|p| p.value());
+                config.port(port.unwrap_or(defaults::STANDARD_PORT));
+                config.authentication(AuthMethod::Integrated);
             }
+            _ => anyhow::bail!("No client connection provided"),
+        }
+        if let Some(certificate) = &self.certificate {
+            config.trust_cert_ca(certificate);
+        } else if self.trust_server_certificate {
+            config.trust_cert();
+        }
+        Ok(config)
+    }
+
+    pub async fn build(self) -> Result<Client> {
+        let tiberius_config = self.make_config()?;
+        match self.client_connection {
+            Some(ClientConnection::Remote(_)) => create_remote(tiberius_config).await,
+            #[cfg(windows)]
+            Some(ClientConnection::LocalInstance(_)) => {
+                create_instance_local(tiberius_config).await
+            }
+            #[cfg(windows)]
+            Some(ClientConnection::Local(_)) => connect_via_tcp(tiberius_config).await,
             _ => anyhow::bail!("No client connection provided"),
         }
     }
@@ -162,6 +211,8 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
                     conn.timeout(),
                     ClientBuilder::new()
                         .remote(conn.hostname(), Some(port), credentials)
+                        .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
+                        .trust_server_certificate(conn.trust_server_certificate())
                         .build(),
                 )
                 .await
@@ -174,10 +225,11 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
         #[cfg(windows)]
         AuthType::Integrated => tokio::time::timeout(
             conn.timeout(),
-            create_local(
-                port.value(),
-                conn.tls().map(|t| t.client_certificate().to_owned()),
-            ),
+            ClientBuilder::new()
+                .local(Some(port))
+                .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
+                .trust_server_certificate(conn.trust_server_certificate())
+                .build(),
         )
         .await
         .map_err(map_elapsed_to_anyhow)?,
@@ -211,23 +263,10 @@ pub fn obtain_config_credentials(auth: &config::ms_sql::Authentication) -> Optio
 /// * `port` - Port of MS SQL server
 /// * `credentials` - defines connection type and credentials itself
 /// * `instance_name` - name of the instance to connect to
-async fn create_remote(
-    host: &HostName,
-    port: u16,
-    credentials: Credentials<'_>,
-    database: Option<String>,
-    certificate: Option<String>,
-) -> Result<Client> {
-    match _create_remote_client(
-        host,
-        port,
-        &credentials,
-        tiberius::EncryptionLevel::Required,
-        &database,
-        &certificate,
-    )
-    .await
-    {
+async fn create_remote(tiberius_config: Config) -> Result<Client> {
+    let mut config = tiberius_config.clone();
+    config.encryption(tiberius::EncryptionLevel::Required);
+    match connect_via_tcp(config).await {
         Ok(client) => Ok(client),
         #[cfg(unix)]
         Err(err) => {
@@ -235,15 +274,9 @@ async fn create_remote(
                 "Encryption is not supported by the host, err is {}. Trying without encryption...",
                 err
             );
-            Ok(_create_remote_client(
-                host,
-                port,
-                &credentials,
-                tiberius::EncryptionLevel::NotSupported,
-                &database,
-                &certificate,
-            )
-            .await?)
+            let mut config = tiberius_config.clone();
+            config.encryption(tiberius::EncryptionLevel::NotSupported);
+            Ok(connect_via_tcp(config).await?)
         }
         #[cfg(windows)]
         Err(err) => {
@@ -256,56 +289,6 @@ async fn create_remote(
     }
 }
 
-pub async fn _create_remote_client(
-    host: &HostName,
-    port: u16,
-    credentials: &Credentials<'_>,
-    encryption: tiberius::EncryptionLevel,
-    database: &Option<String>,
-    certificate: &Option<String>,
-) -> Result<Client> {
-    let mut config = Config::new();
-
-    config.host(host);
-    config.port(port);
-    config.encryption(encryption);
-    if let Some(db) = database {
-        config.database(db);
-    }
-    config.authentication(match credentials {
-        Credentials::SqlServer { user, password } => AuthMethod::sql_server(user, password),
-        #[cfg(windows)]
-        Credentials::Windows { user, password } => AuthMethod::windows(user, password),
-        #[cfg(unix)]
-        Credentials::Windows {
-            user: _,
-            password: _,
-        } => anyhow::bail!("not supported"),
-    });
-    if let Some(certificate) = certificate {
-        config.trust_cert_ca(certificate);
-    } else {
-        config.trust_cert(); // on production, it is not a good idea to do this
-    }
-
-    connect_via_tcp(config).await
-}
-
-/// Check `local` (Integrated) connection to MS SQL
-#[cfg(windows)]
-async fn create_local(port: u16, ca: Option<String>) -> Result<Client> {
-    let mut config = Config::new();
-
-    config.port(port);
-    config.authentication(AuthMethod::Integrated);
-    if let Some(certificate) = ca {
-        config.trust_cert_ca(certificate);
-    } else {
-        config.trust_cert(); // on production, it is not a good idea to do this
-    }
-    connect_via_tcp(config).await
-}
-
 /// Create `local` connection to MS SQL `instance`
 ///
 /// # Arguments
@@ -313,28 +296,7 @@ async fn create_local(port: u16, ca: Option<String>) -> Result<Client> {
 /// * `instance_name` - name of the instance to connect to
 /// * `port` - Port of MS SQL server BROWSER,  1434 - default
 #[cfg(windows)]
-async fn create_instance_local(
-    instance_name: &InstanceName,
-    sql_browser_port: Option<u16>,
-    database: Option<String>,
-    ca: Option<String>,
-) -> anyhow::Result<Client> {
-    let mut config = Config::new();
-
-    config.host("localhost");
-    config.port(sql_browser_port.unwrap_or(defaults::SQL_BROWSER_PORT));
-    config.authentication(AuthMethod::Integrated);
-    if let Some(db) = database {
-        config.database(db);
-    }
-    config.instance_name(instance_name);
-
-    if let Some(certificate) = ca {
-        config.trust_cert_ca(certificate);
-    } else {
-        config.trust_cert(); // on production, it is not a good idea to do this
-    }
-
+async fn create_instance_local(config: Config) -> anyhow::Result<Client> {
     log::info!("Connection to addr {}", config.get_addr());
     // This will create a new `TcpStream` from `async-std`, connected to the
     // right port of the named instance.
@@ -449,7 +411,11 @@ mssql:
     async fn test_local_with_cert() {
         pub const MS_SQL_DB_CERT: &str = "CI_TEST_MS_SQL_DB_CERT";
         if let Ok(certificate_path) = std::env::var(MS_SQL_DB_CERT) {
-            create_local(1433u16, certificate_path.to_owned().into())
+            ClientBuilder::new()
+                .local(Some(1433u16.into()))
+                .certificate(Some(certificate_path))
+                .trust_server_certificate(false)
+                .build()
                 .await
                 .unwrap();
         } else {

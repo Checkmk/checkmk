@@ -24,6 +24,7 @@ pub mod keys {
     pub const TIMEOUT: &str = "timeout";
     pub const CA: &str = "ca";
     pub const CLIENT_CERTIFICATE: &str = "client_certificate";
+    pub const TRUST_SERVER_CERTIFICATE: &str = "trust_server_certificate";
 
     pub const SECTIONS: &str = "sections";
     pub const CACHE_AGE: &str = "cache_age";
@@ -96,5 +97,6 @@ pub mod defaults {
 
     pub const DISCOVERY_DETECT: bool = true;
 
+    pub const TRUST_SERVER_CERTIFICATE: bool = true;
     pub const DEFAULT_SEP: char = ' ';
 }

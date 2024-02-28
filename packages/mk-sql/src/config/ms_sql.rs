@@ -5,7 +5,9 @@
 use super::defines::{defaults, keys, values};
 use super::section::{Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
-use crate::types::{HostName, InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port};
+use crate::types::{
+    CertPath, HostName, InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port,
+};
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -343,6 +345,7 @@ pub struct Connection {
     fail_over_partner: Option<String>,
     port: Port,
     socket: Option<PathBuf>,
+    trust_server_certificate: bool,
     tls: Option<ConnectionTls>,
     timeout: u64,
 }
@@ -366,6 +369,10 @@ impl Connection {
                     defaults::CONNECTION_PORT
                 })),
                 socket: conn.get_pathbuf(keys::SOCKET),
+                trust_server_certificate: conn.get_bool(
+                    keys::TRUST_SERVER_CERTIFICATE,
+                    defaults::TRUST_SERVER_CERTIFICATE,
+                ),
                 tls: ConnectionTls::from_yaml(conn)?,
                 timeout: conn.get_int::<u64>(keys::TIMEOUT).unwrap_or_else(|| {
                     log::debug!("no timeout specified, using default");
@@ -389,6 +396,9 @@ impl Connection {
     }
     pub fn socket(&self) -> Option<&PathBuf> {
         self.socket.as_ref()
+    }
+    pub fn trust_server_certificate(&self) -> bool {
+        self.trust_server_certificate
     }
     pub fn tls(&self) -> Option<&ConnectionTls> {
         self.tls.as_ref()
@@ -417,6 +427,7 @@ impl Default for Connection {
             fail_over_partner: None,
             port: Port(defaults::CONNECTION_PORT),
             socket: None,
+            trust_server_certificate: defaults::TRUST_SERVER_CERTIFICATE,
             tls: None,
             timeout: defaults::CONNECTION_TIMEOUT,
         }
@@ -426,7 +437,7 @@ impl Default for Connection {
 #[derive(PartialEq, Debug, Clone)]
 pub struct ConnectionTls {
     ca: PathBuf,
-    client_certificate: String,
+    client_certificate: CertPath,
 }
 
 impl ConnectionTls {
@@ -439,13 +450,14 @@ impl ConnectionTls {
             ca: tls.get_pathbuf(keys::CA).context("Bad/Missing CA")?,
             client_certificate: tls
                 .get_string(keys::CLIENT_CERTIFICATE)
+                .map(|s| s.into())
                 .context("bad/Missing CLIENT_CERTIFICATE")?,
         }))
     }
     pub fn ca(&self) -> &Path {
         &self.ca
     }
-    pub fn client_certificate(&self) -> &String {
+    pub fn client_certificate(&self) -> &CertPath {
         &self.client_certificate
     }
 }
@@ -720,6 +732,7 @@ mssql:
       failoverpartner: "localhost2" # optional
       port: 1433 # optional(default: 1433)
       socket: 'C:\path\to\file' # optional
+      trust_server_certificate: no
       tls: # optional
         ca: 'C:\path\to\file' # mandatory
         client_certificate: 'C:\path\to\file' # mandatory
@@ -818,6 +831,7 @@ connection:
   failoverpartner: "bob"
   port: 9999
   socket: 'C:\path\to\file_socket'
+  trust_server_certificate: no
   tls:
     ca: 'C:\path\to\file_ca'
     client_certificate: 'C:\path\to\file_client'
@@ -986,12 +1000,13 @@ authentication:
         assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
         assert_eq!(c.port(), Port(9999));
         assert_eq!(c.socket(), Some(&PathBuf::from(r"C:\path\to\file_socket")));
+        assert!(!c.trust_server_certificate());
         assert_eq!(c.timeout(), Duration::from_secs(341));
         let tls = c.tls().unwrap();
         assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
         assert_eq!(
             tls.client_certificate(),
-            &r"C:\path\to\file_client".to_owned()
+            &r"C:\path\to\file_client".to_owned().into()
         );
     }
 
@@ -1011,7 +1026,7 @@ authentication:
         assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
         assert_eq!(
             tls.client_certificate(),
-            &r"C:\path\to\file_client".to_owned()
+            &r"C:\path\to\file_client".to_owned().into()
         );
     }
 
@@ -1219,6 +1234,7 @@ connection:
         assert_eq!(c.conn().hostname(), &"localhost".to_string().into());
         assert_eq!(c.conn().fail_over_partner().unwrap(), "localhost2");
         assert_eq!(c.conn().port(), Port(defaults::CONNECTION_PORT));
+        assert!(!c.conn().trust_server_certificate());
         assert_eq!(
             c.conn().socket().unwrap(),
             &PathBuf::from(r"C:\path\to\file")
@@ -1227,7 +1243,7 @@ connection:
         assert_eq!(c.conn().tls().unwrap().ca(), Path::new(r"C:\path\to\file"));
         assert_eq!(
             c.conn().tls().unwrap().client_certificate(),
-            &r"C:\path\to\file".to_owned()
+            &r"C:\path\to\file".to_owned().into()
         );
         assert_eq!(
             c.conn().timeout(),

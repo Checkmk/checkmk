@@ -132,7 +132,7 @@ fn make_configs(
             body_matchers: args
                 .body_string
                 .into_iter()
-                .map(Into::into)
+                .map(TextMatcher::Contains)
                 .chain(
                     args.body_regex
                         .into_iter()
@@ -142,7 +142,7 @@ fn make_configs(
             header_matchers: args
                 .header_strings
                 .into_iter()
-                .map(|(name, value)| (name.into(), value.into()))
+                .map(|(name, value)| (TextMatcher::Exact(name), TextMatcher::Exact(value)))
                 .chain(
                     args.header_regexes
                         .into_iter()

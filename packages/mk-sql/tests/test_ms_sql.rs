@@ -73,6 +73,7 @@ fn test_section_select_query() {
 async fn test_local_connection() {
     let mut client = client::ClientBuilder::new()
         .local(Some(mk_sql::ms_sql::defaults::STANDARD_PORT.into()))
+        .certificate(std::env::var(tools::MS_SQL_DB_CERT).ok())
         .build()
         .await
         .unwrap();
@@ -94,16 +95,36 @@ fn is_instance_good(i: &SqlInstance) -> bool {
 }
 
 #[cfg(windows)]
+fn make_default_endpoint() -> Endpoint {
+    let ms_sql = Config::from_string(&format!(
+        r#"---
+mssql:
+  main:
+    authentication:
+      username: u
+      type: integrated
+    connection:
+      hostname: your_host
+      {}
+"#,
+        tools::make_tls_block()
+    ))
+    .unwrap()
+    .unwrap();
+    Endpoint::new(ms_sql.auth(), ms_sql.conn())
+}
+
+#[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_obtain_all_instances_from_registry_local() {
-    let builders = instance::obtain_instance_builders(&Endpoint::default(), &[])
+    let endpoint = make_default_endpoint();
+    let builders = instance::obtain_instance_builders(&endpoint, &[])
         .await
         .unwrap();
     let all: Vec<SqlInstance> = to_instances(builders);
     assert!(all.iter().all(is_instance_good), "{:?}", all);
     assert_eq!(all.len(), expected_instances().len());
     let names: HashSet<InstanceName> = all.into_iter().map(|i| i.name).collect();
-
     assert_eq!(names, expected_instances(), "During connecting to `local`");
 }
 
@@ -112,7 +133,8 @@ async fn test_obtain_all_instances_from_registry_local() {
 async fn test_validate_all_instances_local() {
     let l = tools::LogMe::new("test_validate_all_instances_local").start(log::Level::Debug);
     log::info!("{:#?}", l.dir());
-    let builders = instance::obtain_instance_builders(&Endpoint::default(), &[])
+    let endpoint = make_default_endpoint();
+    let builders = instance::obtain_instance_builders(&endpoint, &[])
         .await
         .unwrap();
     let names: Vec<InstanceName> = builders.into_iter().map(|i| i.get_name()).collect();
@@ -738,10 +760,12 @@ mssql:
       type: integrated
     connection:
       hostname: localhost
+      {}
     discovery:
       detect: {}
 {instances}
 "#,
+        tools::make_tls_block(),
         if detect { "yes" } else { "no" }
     )
 }
@@ -771,8 +795,24 @@ fn make_remote_instances_config_sub_string(user: &str, pwd: &str, host: &str) ->
 }
 
 #[cfg(windows)]
+fn make_tls_block_instance() -> String {
+    if let Ok(certificate_path) = std::env::var(tools::MS_SQL_DB_CERT) {
+        format!(
+            r#"tls:
+            ca: {}
+            client_certificate: {}
+"#,
+            certificate_path, certificate_path
+        )
+    } else {
+        String::new()
+    }
+}
+
+#[cfg(windows)]
 fn make_local_custom_instances_config_sub_string() -> String {
-    r#"
+    format!(
+        r#"
     instances:
       - sid: MSSQLSERVER
         authentication:
@@ -781,6 +821,7 @@ fn make_local_custom_instances_config_sub_string() -> String {
         connection:
           hostname: localhost
           port: 1433
+          {}
       - sid: WEIRD
         authentication:
           username: user
@@ -788,7 +829,9 @@ fn make_local_custom_instances_config_sub_string() -> String {
         connection:
           hostname: localhost
         port: 1433
-"#
+"#,
+        make_tls_block_instance()
+    )
     .to_string()
 }
 
@@ -1076,7 +1119,8 @@ fn create_config_contents() -> Vec<(String, String)> {
     let mut result: Vec<(String, String)> = Vec::new();
     #[cfg(windows)]
     {
-        let content_local = r#"
+        let content_local = format!(
+            r#"
 ---
 mssql:
   main:
@@ -1085,7 +1129,10 @@ mssql:
        type: "integrated"
     connection:
        hostname: "localhost"
-"#;
+       {}
+"#,
+            tools::make_tls_block()
+        );
         result.push(("local".to_owned(), content_local.to_string()));
     }
 

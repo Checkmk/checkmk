@@ -36,6 +36,7 @@ pub fn get_good_results(output: &Output) -> Result<(String, i32)> {
     Ok((stdout?, output.status.code().unwrap()))
 }
 
+pub const MS_SQL_DB_CERT: &str = "CI_TEST_MS_SQL_DB_CERT";
 pub const SQL_DB_ENDPOINT: &str = "CI_TEST_SQL_DB_ENDPOINT";
 const SQL_DB_ENDPOINT_SPLITTER: char = ':';
 pub struct SqlDbEndpoint {
@@ -133,7 +134,8 @@ mssql:
 
 pub fn create_local_config() -> NamedTempFile {
     let mut l = NamedTempFile::new().unwrap();
-    let config = r#"
+    let config = format!(
+        r#"
 ---
 mssql:
   main:
@@ -142,7 +144,10 @@ mssql:
        type: "integrated"
     connection:
        hostname: "localhost"
-"#;
+       {}
+"#,
+        make_tls_block()
+    );
     l.write_all(config.as_bytes()).unwrap();
     l
 }
@@ -250,4 +255,18 @@ fn custom_format(
         record.module_path().unwrap_or("<unnamed>"),
         &record.args()
     )
+}
+
+pub fn make_tls_block() -> String {
+    if let Ok(certificate_path) = std::env::var(MS_SQL_DB_CERT) {
+        format!(
+            r#"tls:
+        ca: {}
+        client_certificate: {}
+"#,
+            certificate_path, certificate_path
+        )
+    } else {
+        String::new()
+    }
 }

@@ -426,7 +426,7 @@ impl Default for Connection {
 #[derive(PartialEq, Debug, Clone)]
 pub struct ConnectionTls {
     ca: PathBuf,
-    client_certificate: PathBuf,
+    client_certificate: String,
 }
 
 impl ConnectionTls {
@@ -438,14 +438,14 @@ impl ConnectionTls {
         Ok(Some(Self {
             ca: tls.get_pathbuf(keys::CA).context("Bad/Missing CA")?,
             client_certificate: tls
-                .get_pathbuf(keys::CLIENT_CERTIFICATE)
+                .get_string(keys::CLIENT_CERTIFICATE)
                 .context("bad/Missing CLIENT_CERTIFICATE")?,
         }))
     }
     pub fn ca(&self) -> &Path {
         &self.ca
     }
-    pub fn client_certificate(&self) -> &Path {
+    pub fn client_certificate(&self) -> &String {
         &self.client_certificate
     }
 }
@@ -991,7 +991,7 @@ authentication:
         assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
         assert_eq!(
             tls.client_certificate(),
-            PathBuf::from(r"C:\path\to\file_client")
+            &r"C:\path\to\file_client".to_owned()
         );
     }
 
@@ -1011,7 +1011,7 @@ authentication:
         assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
         assert_eq!(
             tls.client_certificate(),
-            PathBuf::from(r"C:\path\to\file_client")
+            &r"C:\path\to\file_client".to_owned()
         );
     }
 
@@ -1227,7 +1227,7 @@ connection:
         assert_eq!(c.conn().tls().unwrap().ca(), Path::new(r"C:\path\to\file"));
         assert_eq!(
             c.conn().tls().unwrap().client_certificate(),
-            Path::new(r"C:\path\to\file")
+            &r"C:\path\to\file".to_owned()
         );
         assert_eq!(
             c.conn().timeout(),

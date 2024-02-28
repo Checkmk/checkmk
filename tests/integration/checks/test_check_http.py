@@ -21,14 +21,22 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="check_http", scope="function")
 def _check_http(site: Site) -> Iterator[tuple[str, dict[str, ServiceInfo]]]:
     hostname = HostName("http-0")
-    site.openapi.create_host(hostname, attributes={"ipaddress": site.http_address, "site": site.id})
+    site.openapi.create_host(
+        hostname,
+        attributes={
+            "ipaddress": site.http_address,
+            "site": site.id,
+            "tag_agent": "no-agent",
+            "tag_address_family": "ip-v4-only",
+        },
+    )
     site.activate_changes_and_wait_for_core_reload()
     try:
         rule_id = site.openapi.create_rule(
             ruleset_name="active_checks:http",
             value={
                 "name": "check_http",
-                "host": {"address": ("direct", "localhost")},
+                "host": {"address": ("direct", site.http_address), "port": site.apache_port},
                 "mode": ("url", {}),
             },
             folder="/",
@@ -63,7 +71,15 @@ def _check_https(site: Site, tmp_path: Path) -> Iterator[tuple[str, dict[str, Se
     port: int = httpss.run()
 
     hostname = HostName("https-0")
-    site.openapi.create_host(hostname, attributes={"ipaddress": site.http_address, "site": site.id})
+    site.openapi.create_host(
+        hostname,
+        attributes={
+            "ipaddress": site.http_address,
+            "site": site.id,
+            "tag_agent": "no-agent",
+            "tag_address_family": "ip-v4-only",
+        },
+    )
     site.activate_changes_and_wait_for_core_reload()
     try:
         rule_id = site.openapi.create_rule(

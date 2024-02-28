@@ -41,13 +41,14 @@ def _get_levels(params: Params, level_name) -> Optional[Tuple[float, float]]:
 def check_cpu_threads(params: Params, section: Section) -> CheckResult:
     if not (threads := section.threads):
         return
-    yield from check_levels(
-        threads.count,
-        metric_name="threads",
-        levels_upper=_get_levels(params, "levels"),
-        render_func="{:}".format,
-    )
-    if threads.max is not None:
+    if threads.count is not None:
+        yield from check_levels(
+            threads.count,
+            metric_name="threads",
+            levels_upper=_get_levels(params, "levels"),
+            render_func="{:}".format,
+        )
+    if threads.max is not None and threads.count is not None:
         thread_usage = 100.0 * threads.count / threads.max
         yield from check_levels(
             thread_usage,

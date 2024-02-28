@@ -1,0 +1,19 @@
+Title: Crash on missing thread count on AIX
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1709129579
+Edition: cre
+Level: 1
+Version: 2.1.0p41
+
+You're affected if you want to monitor your CPU and the cpu check crashes with something like:
+
+C+:
+  File "/omd/sites/YOURSITE/lib/python3/cmk/base/plugins/agent_based/cpu.py", line 48, in parse_cpu
+    count=int(row[3].split("/")[1]),
+ValueError (invalid literal for int() with base 10: '')
+C-:
+
+We saw this happening on AIX system when the ps information cannot be obtained due to low memory.
+The parsing is now more resilient against such missing data.

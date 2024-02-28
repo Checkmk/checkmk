@@ -118,6 +118,11 @@ def test_history_file_to_sqlite_exceptions(
             ],
             ("SELECT * FROM history WHERE who LIKE '%?%' AND owner LIKE '%?%';", ["admin", "user"]),
         ),
+        pytest.param(
+            [],
+            ("SELECT * FROM history  ;", []),
+            id="empty argument",
+        ),
     ],
 )
 def test_filters_to_sqlite_query(

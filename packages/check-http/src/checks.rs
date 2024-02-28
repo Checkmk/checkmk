@@ -37,25 +37,21 @@ pub struct CheckParameters {
 }
 
 pub enum TextMatcher {
-    Plain(String),
+    Exact(String),
+    Contains(String),
     Regex { regex: Regex, expectation: bool },
 }
 
 impl TextMatcher {
     pub fn match_on(&self, text: &str) -> bool {
         match self {
-            Self::Plain(string) => text.contains(string),
+            Self::Contains(string) => text.contains(string),
+            Self::Exact(string) => text == string,
             Self::Regex {
                 regex,
                 expectation: expect_match,
             } => &regex.is_match(text) == expect_match,
         }
-    }
-}
-
-impl From<String> for TextMatcher {
-    fn from(value: String) -> Self {
-        Self::Plain(value)
     }
 }
 
@@ -629,42 +625,6 @@ mod test_check_headers {
     use std::str::FromStr;
 
     #[test]
-    fn test_no_search_strings() {
-        assert!(check_headers(
-            &(&HashMap::from([
-                ("key1".to_string(), "value1".to_string()),
-                ("key2".to_string(), "value2".to_string()),
-            ]))
-                .try_into()
-                .unwrap(),
-            vec![]
-        )
-        .is_empty())
-    }
-
-    #[test]
-    fn test_strings_found() {
-        assert!(check_headers(
-            &(&HashMap::from([
-                ("some_key1".to_string(), "some_value1".to_string()),
-                ("some_key2".to_string(), "some_value2".to_string()),
-                ("some_key3".to_string(), "some_value3".to_string()),
-            ]))
-                .try_into()
-                .unwrap(),
-            vec![
-                (
-                    ("some_key1".to_string().into()),
-                    "value1".to_string().into()
-                ),
-                (String::new().into(), "value".to_string().into()),
-                ("some_key3".to_string().into(), String::new().into()),
-            ]
-        )
-        .is_empty())
-    }
-
-    #[test]
     fn test_strings_not_found() {
         assert_eq!(
             check_headers(
@@ -675,9 +635,110 @@ mod test_check_headers {
                 ]))
                     .try_into()
                     .unwrap(),
-                vec![("key1".to_string().into(), "value2".to_string().into()),]
+                vec![
+                    (
+                        TextMatcher::Exact("some_key1".to_string()),
+                        TextMatcher::Exact("value1".to_string())
+                    ),
+                    (
+                        TextMatcher::Exact(String::new()),
+                        TextMatcher::Exact("value".to_string())
+                    ),
+                    (
+                        TextMatcher::Exact("some_key3".to_string()),
+                        TextMatcher::Exact(String::new())
+                    ),
+                ]
             ),
             vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+            ]
+        )
+    }
+
+    #[test]
+    fn test_strings_not_all_found() {
+        assert_eq!(
+            check_headers(
+                &(&HashMap::from([
+                    ("some_key1".to_string(), "some_value1".to_string()),
+                    ("some_key2".to_string(), "some_value2".to_string()),
+                    ("some_key3".to_string(), "some_value3".to_string()),
+                ]))
+                    .try_into()
+                    .unwrap(),
+                vec![
+                    (
+                        TextMatcher::Exact("some_key1".to_string()),
+                        TextMatcher::Exact("some_value1".to_string())
+                    ),
+                    (
+                        TextMatcher::Exact(String::new()),
+                        TextMatcher::Exact("value".to_string())
+                    ),
+                ]
+            ),
+            vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+            ]
+        )
+    }
+
+    #[test]
+    fn test_strings_all_found() {
+        assert!(
+            check_headers(
+                &(&HashMap::from([
+                    ("some_key1".to_string(), "some_value1".to_string()),
+                    ("some_key2".to_string(), "some_value2".to_string()),
+                    ("some_key3".to_string(), "some_value3".to_string()),
+                ]))
+                    .try_into()
+                    .unwrap(),
+                vec![
+                    (
+                        TextMatcher::Exact("some_key1".to_string()),
+                        TextMatcher::Exact("some_value1".to_string())
+                    ),
+                    (
+                        TextMatcher::Exact("some_key3".to_string()),
+                        TextMatcher::Exact("some_value3".to_string())
+                    ),
+                ]
+            ) == vec![]
+        )
+    }
+
+    #[test]
+    fn test_strings_mixed_not_found() {
+        assert!(
+            check_headers(
+                &(&HashMap::from([
+                    ("some_key1".to_string(), "some_value1".to_string()),
+                    ("some_key2".to_string(), "some_value2".to_string()),
+                    ("some_key3".to_string(), "some_value3".to_string()),
+                ]))
+                    .try_into()
+                    .unwrap(),
+                vec![(
+                    TextMatcher::Exact("some_key1".to_string()),
+                    TextMatcher::Exact("some_value2".to_string())
+                ),]
+            ) == vec![
                 CheckResult::summary(
                     State::Crit,
                     "Specified strings not found in response headers"
@@ -698,8 +759,8 @@ mod test_check_headers {
                     .try_into()
                     .unwrap(),
                 vec![(
-                    "some_key1".to_string().into(),
-                    "ßome_value1".to_string().into()
+                    TextMatcher::Exact("some_key1".to_string()),
+                    TextMatcher::Exact("ßome_value1".to_string())
                 ),]
             ),
             vec![
@@ -724,7 +785,10 @@ mod test_check_headers {
         );
         assert!(check_headers(
             &header_map,
-            vec![("some_key".to_string().into(), "öäü".to_string().into()),]
+            vec![(
+                TextMatcher::Exact("some_key".to_string()),
+                TextMatcher::Exact("öäü".to_string())
+            ),]
         )
         .is_empty())
     }
@@ -874,16 +938,20 @@ mod test_check_body_matching {
 
     #[test]
     fn test_string_ok() {
-        assert!(
-            check_body_matching(test_body("foobar").as_ref(), vec!["bar".to_string().into()])
-                .is_empty()
-        );
+        assert!(check_body_matching(
+            test_body("foobar").as_ref(),
+            vec![TextMatcher::Contains("bar".to_string())]
+        )
+        .is_empty());
     }
 
     #[test]
     fn test_string_not_found() {
         assert_eq!(
-            check_body_matching(test_body("foobär").as_ref(), vec!["bar".to_string().into()]),
+            check_body_matching(
+                test_body("foobär").as_ref(),
+                vec![TextMatcher::Contains("bar".to_string())]
+            ),
             vec![
                 CheckResult::summary(State::Warn, "String validation failed on response body"),
                 CheckResult::details(State::Warn, "String validation failed on response body"),
@@ -927,7 +995,10 @@ mod test_check_body_matching {
     fn test_multiple_matchers_ok() {
         assert!(check_body_matching(
             test_body("foobar").as_ref(),
-            vec!["bar".to_string().into(), "foo".to_string().into()]
+            vec![
+                TextMatcher::Contains("bar".to_string()),
+                TextMatcher::Contains("foo".to_string())
+            ]
         )
         .is_empty());
     }
@@ -937,7 +1008,10 @@ mod test_check_body_matching {
         assert_eq!(
             check_body_matching(
                 test_body("foobar").as_ref(),
-                vec!["bar".to_string().into(), "baz".to_string().into()]
+                vec![
+                    TextMatcher::Contains("bar".to_string()),
+                    TextMatcher::Contains("baz".to_string())
+                ]
             ),
             vec![
                 CheckResult::summary(State::Warn, "String validation failed on response body"),

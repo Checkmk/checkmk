@@ -83,6 +83,7 @@ from cmk.gui.watolib.config_domains import (
 )
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.config_variable_groups import (
+    ConfigVariableGroupDeveloperTools,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
@@ -143,6 +144,8 @@ def register(
     config_variable_registry.register(ConfigVariableQuicksearchDropdownLimit)
     config_variable_registry.register(ConfigVariableQuicksearchSearchOrder)
     config_variable_registry.register(ConfigVariableExperimentalFeatures)
+    config_variable_registry.register(ConfigVariableInjectJsProfiling)
+    config_variable_registry.register(ConfigVariableLoadFrontendVue)
     config_variable_registry.register(ConfigVariableTableRowLimit)
     config_variable_registry.register(ConfigVariableStartURL)
     config_variable_registry.register(ConfigVariablePageHeading)
@@ -818,7 +821,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
 
 class ConfigVariableExperimentalFeatures(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupUserInterface
+        return ConfigVariableGroupDeveloperTools
 
     def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
@@ -841,29 +844,49 @@ class ConfigVariableExperimentalFeatures(ConfigVariable):
                         ],
                     ),
                 ),
-                (
-                    "inject_js_profiling_code",
-                    Checkbox(
-                        title=_("Inject JavaScript profiling code"),
-                        default_value=False,
-                    ),
-                ),
-                (
-                    "load_frontend_vue",
-                    DropdownChoice(
-                        title=_("Inject frontend_vue files via vite client"),
-                        help=_(
-                            "If you activate this and you don't have the vite dev server running "
-                            "you may not be able to deactivate this option via UI, so be careful!"
-                        ),
-                        choices=[
-                            ("static_files", "Load JavaScript from shipped, static files"),
-                            ("inject", "Inject vite client to enable auto hot reloading"),
-                        ],
-                    ),
-                ),
             ],
             optional_keys=False,
+        )
+
+
+class ConfigVariableInjectJsProfiling(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupDeveloperTools
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "inject_js_profiling_code"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Inject JavaScript profiling code"),
+            default_value=False,
+        )
+
+
+class ConfigVariableLoadFrontendVue(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupDeveloperTools
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "load_frontend_vue"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Inject frontend_vue files via vite client"),
+            help=_(
+                "If you change this to 'inject' and there is no vite dev server running "
+                "you may not be able to deactivate this option via UI, so be careful!"
+            ),
+            choices=[
+                ("static_files", "Load JavaScript from shipped, static files"),
+                ("inject", "Inject vite client to enable auto hot reloading"),
+            ],
         )
 
 

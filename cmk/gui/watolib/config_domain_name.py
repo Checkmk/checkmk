@@ -263,6 +263,10 @@ class ConfigVariableGroup:
         """Returns a list of configuration variable classes that belong to this group"""
         return [v for v in config_variable_registry.values() if v().group() == self.__class__]
 
+    def warning(self) -> str | None:
+        """Return a string if you want to show a warning at the top of this group"""
+        return None
+
 
 class ConfigVariableGroupRegistry(cmk.utils.plugin_registry.Registry[type[ConfigVariableGroup]]):
     def plugin_name(self, instance):

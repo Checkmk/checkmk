@@ -42,6 +42,7 @@ from cmk.gui.graphing._perfometer import (
     LogarithmicPerfometerSpec,
 )
 from cmk.gui.graphing._utils import (
+    graph_info,
     graph_templates_internal,
     GraphTemplate,
     ScalarDefinition,
@@ -523,7 +524,8 @@ def test_non_trivial_perfometer_declarations() -> None:
 
 def test_non_trivial_graph_declarations() -> None:
     non_trivial_graphs = []
-    for ident, template in graph_templates_internal().items():
+    for ident, raw_template in graph_info.items():
+        template = GraphTemplate.from_template(ident, raw_template)
         expressions = [m.expression for m in template.metrics] + [
             s.expression for s in template.scalars
         ]

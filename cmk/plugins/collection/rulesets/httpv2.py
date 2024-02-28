@@ -31,7 +31,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeSpan,
     validators,
 )
-from cmk.rulesets.v1.rule_specs import ActiveCheck, EvalType, Topic
+from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 _DAY = 24.0 * 3600.0
 
@@ -680,7 +680,6 @@ def _form_active_checks_httpv2() -> Dictionary:
 rule_spec_httpv2 = ActiveCheck(
     title=Title("Check HTTP web service"),
     topic=Topic.NETWORKING,
-    eval_type=EvalType.ALL,
     name="httpv2",
     parameter_form=_form_active_checks_httpv2,
 )

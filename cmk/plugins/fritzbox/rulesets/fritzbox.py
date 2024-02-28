@@ -39,5 +39,4 @@ rule_spec_fritzbox = rule_specs.SpecialAgent(
     title=Title("Fritz!Box Devices"),
     topic=rule_specs.Topic.NETWORKING,
     parameter_form=_formspec_fritzbox,
-    eval_type=rule_specs.EvalType.MERGE,
 )

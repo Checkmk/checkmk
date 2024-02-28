@@ -231,7 +231,6 @@ class ActiveCheck:
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
         name: Identifier of the rule spec
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
         help_text: Description to help the user with the configuration
@@ -240,7 +239,6 @@ class ActiveCheck:
     title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
-    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None
@@ -283,7 +281,6 @@ class SpecialAgent:
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
         name: Identifier of the rule spec
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
         help_text: Description to help the user with the configuration
@@ -292,7 +289,6 @@ class SpecialAgent:
     title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
-    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None
@@ -387,7 +383,6 @@ class InventoryParameters:
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
         name: Identifier of the rule spec
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
         help_text: Description to help the user with the configuration
@@ -396,7 +391,6 @@ class InventoryParameters:
     title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
-    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None

@@ -10,7 +10,7 @@ use std::fmt::{Display, Formatter, Result as FormatResult};
 // * warn/lower and crit/upper
 // So we're modelling exactly this.
 
-#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct UpperLevels<T> {
     pub warn: T,
     pub crit: Option<T>,
@@ -115,7 +115,7 @@ where
         }
     }
 }
-
+#[cfg_attr(test, derive(Debug))]
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum State {
     Ok,
@@ -146,7 +146,7 @@ impl From<State> for i32 {
     }
 }
 
-#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct Metric {
     pub name: String,
     pub value: f64,
@@ -183,7 +183,7 @@ impl Display for Metric {
     }
 }
 
-#[cfg_attr(test, derive(Eq, PartialEq))]
+#[cfg_attr(test, derive(Eq, PartialEq, Debug))]
 pub struct CheckItem {
     pub state: State,
     text: String,
@@ -218,7 +218,7 @@ impl CheckItem {
     }
 }
 
-#[cfg_attr(test, derive(PartialEq))]
+#[cfg_attr(test, derive(PartialEq, Debug))]
 pub enum CheckResult {
     Summary(CheckItem),
     Details(CheckItem),

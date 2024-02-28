@@ -750,7 +750,7 @@ class _MockSock:
 
 class TestTCPFetcher:
     @pytest.fixture
-    def fetcher(self) -> TCPFetcher:
+    def fetcher(self, tmp_path: Path) -> TCPFetcher:
         return TCPFetcher(
             family=socket.AF_INET,
             address=(HostAddress("1.2.3.4"), 6556),
@@ -758,12 +758,15 @@ class TestTCPFetcher:
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
+            cas_dir=tmp_path,
+            ca_store=tmp_path,
+            site_crt=tmp_path,
         )
 
     def test_repr(self, fetcher: TCPFetcher) -> None:
         assert isinstance(repr(fetcher), str)
 
-    def test_with_cached_does_not_open(self) -> None:
+    def test_with_cached_does_not_open(self, tmp_path: Path) -> None:
         file_cache = StubFileCache[AgentRawData](
             HostName("hostname"),
             path_template=os.devnull,
@@ -780,10 +783,13 @@ class TestTCPFetcher:
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
+            cas_dir=tmp_path,
+            ca_store=tmp_path,
+            site_crt=tmp_path,
         ) as fetcher:
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK(b"cached_section")
 
-    def test_open_exception_becomes_fetcher_error(self) -> None:
+    def test_open_exception_becomes_fetcher_error(self, tmp_path: Path) -> None:
         file_cache = StubFileCache[AgentRawData](
             HostName("hostname"),
             path_template=os.devnull,
@@ -799,6 +805,9 @@ class TestTCPFetcher:
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
+            cas_dir=tmp_path,
+            ca_store=tmp_path,
+            site_crt=tmp_path,
         ) as fetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
@@ -824,7 +833,7 @@ class TestTCPFetcher:
             )
         )
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
-        monkeypatch.setattr(tcp, "wrap_tls", lambda *args: mock_sock)
+        monkeypatch.setattr(tcp, "wrap_tls", lambda *args, **kw: mock_sock)
 
         assert fetcher._get_agent_data("server") == mock_data
 

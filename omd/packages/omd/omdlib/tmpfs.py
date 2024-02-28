@@ -40,35 +40,35 @@ def tmpfs_mounted(sitename: str) -> bool:
     return False
 
 
-def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
-    if tmpfs_mounted(site.name):
+def prepare_tmpfs(version_info: VersionInfo, site_name: str, tmp_dir: str, tmpfs_hook: str) -> None:
+    if tmpfs_mounted(site_name):
         sys.stdout.write("Temporary filesystem already mounted\n")
         return  # Fine: Mounted
 
-    if site.conf["TMPFS"] != "on":
-        sys.stdout.write("Preparing tmp directory %s..." % site.tmp_dir)
+    if tmpfs_hook != "on":
+        sys.stdout.write("Preparing tmp directory %s..." % tmp_dir)
         sys.stdout.flush()
 
-        if os.path.exists(site.tmp_dir):
+        if os.path.exists(tmp_dir):
             return
 
         try:
-            os.mkdir(site.tmp_dir)
-            os.chmod(site.tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
+            os.mkdir(tmp_dir)
+            os.chmod(tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
         except OSError as e:
             if e.errno != errno.EEXIST:  # File exists
                 raise
         return
 
-    sys.stdout.write("Creating temporary filesystem %s..." % site.tmp_dir)
+    sys.stdout.write("Creating temporary filesystem %s..." % tmp_dir)
     sys.stdout.flush()
-    if not os.path.exists(site.tmp_dir):
-        os.mkdir(site.tmp_dir)
-        os.chmod(site.tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
+    if not os.path.exists(tmp_dir):
+        os.mkdir(tmp_dir)
+        os.chmod(tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
 
     mount_options = shlex.split(version_info.MOUNT_OPTIONS)
     completed_process = subprocess.run(
-        ["mount"] + mount_options + [site.tmp_dir],
+        ["mount"] + mount_options + [tmp_dir],
         shell=False,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,

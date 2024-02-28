@@ -486,6 +486,13 @@ SECTION_NVME = {
     },
 }
 
+# attributes not relevant for the smart check
+SECTION_WITH_TEMPERATURE_ONLY = {
+    "/dev/nvme0n1": {
+        "Temperature": 39,
+    }
+}
+
 
 @pytest.mark.parametrize(
     "string_table, section", [(STRING_TABLE_SD, SECTION_SD), (STRING_TABLE_NVME, SECTION_NVME)]
@@ -526,6 +533,11 @@ def test_parse_smart(string_table: StringTable, section: smart.Section) -> None:
                 ),
             ],
             id="NVME",
+        ),
+        pytest.param(
+            SECTION_WITH_TEMPERATURE_ONLY,
+            [],
+            id="No service discovered",
         ),
     ],
 )

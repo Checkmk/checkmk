@@ -117,8 +117,10 @@ def main() {
         conditional_stage('upload images', publish_images) {
             docker.withRegistry(DOCKER_REGISTRY, "nexus") {
                 images.each { distro, image ->
-                    image.push();
-                    image.push("${branch_name}-latest");
+                    if (image) {
+                        image.push();
+                        image.push("${branch_name}-latest");
+                    }
                 }
             }
         }

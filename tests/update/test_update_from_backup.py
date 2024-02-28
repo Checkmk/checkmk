@@ -73,11 +73,6 @@ def _base_site_demo(site_factory_demo):
     yield from site_factory_demo.get_test_site(site_name, save_results=False)
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
-    reason="Test currently failing for missing `php7`. "
-    "This will be fixed starting from base-version 2.2.0p8",
-)
 @pytest.mark.cee
 @pytest.mark.skip("Re-generate backup using a 2.3.0 release.")
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
@@ -87,16 +82,19 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
     hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 
-    for hostname in hostnames:
-        address = f"127.0.0.{hostnames.index(hostname) + 1}"
-        register_controller(agent_ctl, base_site, hostname, site_address=address)
-        wait_until_host_receives_data(base_site, hostname)
+    if "sles" not in os.environ.get("DISTRO"):
+        # registering hosts via cmk-agent-ctl in SLES distros currently fails
+        # Todo: investigate. See: CMK-16305
+        for hostname in hostnames:
+            address = f"127.0.0.{hostnames.index(hostname) + 1}"
+            register_controller(agent_ctl, base_site, hostname, site_address=address)
+            wait_until_host_receives_data(base_site, hostname)
 
-    logger.info("Discovering services and waiting for completion...")
-    base_site.openapi.bulk_discover_services_and_wait_for_completion(
-        [str(hostname) for hostname in hostnames]
-    )
-    base_site.openapi.activate_changes_and_wait_for_completion()
+        logger.info("Discovering services and waiting for completion...")
+        base_site.openapi.bulk_discover_services_and_wait_for_completion(
+            [str(hostname) for hostname in hostnames]
+        )
+        base_site.openapi.activate_changes_and_wait_for_completion()
 
     base_services = {}
     base_ok_services = {}

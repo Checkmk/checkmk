@@ -61,6 +61,7 @@ from omdlib.dialog import (
 )
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.skel_permissions import (
+    get_skel_permissions,
     load_skel_permissions_from,
     Permissions,
     skel_permissions_file_path,
@@ -98,9 +99,13 @@ from omdlib.users_and_groups import (
 )
 from omdlib.utils import (
     chdir,
+    chown_tree,
+    create_skeleton_file,
+    create_skeleton_files,
     delete_user_file,
     get_editor,
     get_site_distributed_setup,
+    replace_tags,
     SiteDistributedSetup,
 )
 from omdlib.version_info import VersionInfo
@@ -258,15 +263,6 @@ def stop_site(site: SiteContext) -> None:
     call_init_scripts(site.dir, "stop")
 
 
-def get_skel_permissions(skel_path: str, perms: Permissions, relpath: str) -> int:
-    try:
-        return perms[relpath]
-    except KeyError:
-        if os.path.isdir(f"{skel_path}/{relpath}"):
-            return 0o750
-        return 0o640
-
-
 def get_file_permissions(path: str) -> int:
     try:
         return os.stat(path).st_mode & 0o7777
@@ -299,25 +295,6 @@ def set_admin_password(site: SiteContext, pw: Password) -> None:
         f.write("cmkadmin:%s\n" % hash_password(pw))
 
 
-def create_skeleton_files(site: SiteContext, directory: str) -> None:
-    replacements = site.replacements
-    # Hack: exclude tmp if dir is '.'
-    exclude_tmp = directory == "."
-    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    with chdir(skelroot):  # make relative paths
-        for dirpath, dirnames, filenames in os.walk(directory):
-            dirpath = dirpath.removeprefix("./")
-            for entry in dirnames + filenames:
-                if exclude_tmp:
-                    if dirpath == "." and entry == "tmp":
-                        continue
-                    if dirpath == "tmp" or dirpath.startswith("tmp/"):
-                        continue
-                create_skeleton_file(
-                    skelroot, site.dir, dirpath + "/" + entry, replacements, site.skel_permissions
-                )
-
-
 def save_version_meta_data(site: SiteContext, version: str) -> None:
     """Make meta information from the version available in the site directory
 
@@ -343,51 +320,17 @@ def save_version_meta_data(site: SiteContext, version: str) -> None:
         f.write("%s\n" % version)
 
 
-def create_skeleton_file(
-    skelbase: str,
-    userbase: str,
-    relpath: str,
-    replacements: Replacements,
-    permissions: Permissions,
-) -> None:
-    skel_path = Path(skelbase, relpath)
-    user_path = Path(userbase, relpath)
-
-    # Remove old version, if existing (needed during update)
-    if user_path.exists():
-        delete_user_file(str(user_path))
-
-    # Create directories, symlinks and files
-    if skel_path.is_symlink():
-        user_path.symlink_to(skel_path.readlink())
-    elif skel_path.is_dir():
-        user_path.mkdir(parents=True)
-    else:
-        user_path.write_bytes(replace_tags(skel_path.read_bytes(), replacements))
-
-    if not skel_path.is_symlink():
-        user_path.chmod(get_skel_permissions(skelbase, permissions, relpath.removeprefix("./")))
-
-
 def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
     prepare_tmpfs(version_info, site.name, site.tmp_dir, site.conf["TMPFS"])
 
+    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     if not os.listdir(site.tmp_dir):
-        create_skeleton_files(site, "tmp")
+        create_skeleton_files(site.dir, site.replacements, skelroot, site.skel_permissions, "tmp")
         chown_tree(site.tmp_dir, site.name)
         mark_tmpfs_initialized(site)
         restore_tmpfs_dump(site)
 
     _create_livestatus_tcp_socket_link(site)
-
-
-def chown_tree(directory: str, user: str) -> None:
-    uid = pwd.getpwnam(user).pw_uid
-    gid = pwd.getpwnam(user).pw_gid
-    os.chown(directory, uid, gid)
-    for dirpath, dirnames, filenames in os.walk(directory):
-        for entry in dirnames + filenames:
-            os.lchown(dirpath + "/" + entry, uid, gid)
 
 
 def try_chown(filename: str, user: str) -> None:
@@ -1869,12 +1812,6 @@ def hostname() -> str:
     return completed_process.stdout.strip()
 
 
-def replace_tags(content: bytes, replacements: Replacements) -> bytes:
-    for var, value in replacements.items():
-        content = content.replace(var.encode("utf-8"), value.encode("utf-8"))
-    return content
-
-
 # return "| $PAGER", if a pager is available
 def pipe_pager() -> str:
     pager = getenv("PAGER")
@@ -2329,7 +2266,8 @@ def init_site(
         os.symlink("version/" + d, site.dir + "/" + d)
 
     # Create skeleton files of non-tmp directories
-    create_skeleton_files(site, ".")
+    skelroot = "/omd/versions/%s/skel" % omdlib.__version__
+    create_skeleton_files(site.dir, site.replacements, skelroot, site.skel_permissions, ".")
 
     # Save the skeleton files used to initialize this site
     save_version_meta_data(site, omdlib.__version__)

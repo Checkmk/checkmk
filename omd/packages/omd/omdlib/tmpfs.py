@@ -17,7 +17,12 @@ from pathlib import Path
 
 from omdlib.console import ok
 from omdlib.contexts import SiteContext
-from omdlib.utils import delete_directory_contents, is_containerized
+from omdlib.utils import (
+    chown_tree,
+    create_skeleton_files,
+    delete_directory_contents,
+    is_containerized,
+)
 from omdlib.version_info import VersionInfo
 
 import cmk.utils.tty as tty
@@ -268,3 +273,30 @@ def restore_tmpfs_dump(site: SiteContext) -> None:
 
 def _tmpfs_dump_path(site: SiteContext) -> Path:
     return Path(site.dir, "var", "omd", "tmpfs-dump.tar")
+
+
+def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, skelroot: str) -> None:
+    prepare_tmpfs(version_info, site.name, site.tmp_dir, site.conf["TMPFS"])
+
+    if not os.listdir(site.tmp_dir):
+        create_skeleton_files(site.dir, site.replacements, skelroot, site.skel_permissions, "tmp")
+        chown_tree(site.tmp_dir, site.name)
+        mark_tmpfs_initialized(site)
+        restore_tmpfs_dump(site)
+
+    _create_livestatus_tcp_socket_link(site)
+
+
+def _create_livestatus_tcp_socket_link(site: SiteContext) -> None:
+    """Point the xinetd to the livestatus socket inteded by LIVESTATUS_TCP_TLS"""
+    link_path = site.tmp_dir + "/run/live-tcp"
+    target = "live-tls" if site.conf["LIVESTATUS_TCP_TLS"] == "on" else "live"
+
+    if os.path.lexists(link_path):
+        os.unlink(link_path)
+
+    parent_dir = os.path.dirname(link_path)
+    if not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
+
+    os.symlink(target, link_path)

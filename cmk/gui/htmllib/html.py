@@ -89,13 +89,9 @@ def get_render_mode() -> ExperimentalRenderMode:
 
 
 def inject_js_profiling_code():
-    return active_config.experimental_features.get(
+    return active_config.inject_js_profiling_code or html.request.has_var(
         "inject_js_profiling_code"
-    ) or html.request.has_var("inject_js_profiling_code")
-
-
-def enable_frontend_vue_auto_hot_reload() -> bool:
-    return active_config.experimental_features.get("load_frontend_vue") == "inject"
+    )
 
 
 EncType = typing.Literal[
@@ -268,7 +264,7 @@ class HTMLGenerator(HTMLWriter):
 
         # Load all scripts
         for js in javascripts:
-            if js == "vue" and enable_frontend_vue_auto_hot_reload():
+            if js == "vue" and active_config.load_frontend_vue == "inject":
                 # those two files are injected by the vite dev server in `./packages/frontend_vue`
                 self.javascript_file("/frontend_vue_ahr/@vite/client", type_="module")
                 self.javascript_file("/frontend_vue_ahr/src/main.ts", type_="module")

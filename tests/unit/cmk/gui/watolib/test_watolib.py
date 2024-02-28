@@ -204,6 +204,8 @@ def test_registered_configvars() -> None:
         "default_language",
         "default_temperature_unit",
         "experimental_features",
+        "inject_js_profiling_code",
+        "load_frontend_vue",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
@@ -300,6 +302,7 @@ def test_registered_configvar_groups() -> None:
         "User interface",
         "User management",
         "Support",
+        "Developer Tools",
     ]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:

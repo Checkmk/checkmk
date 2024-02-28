@@ -212,6 +212,8 @@ class ABCGlobalSettingsMode(WatoMode):
                 if not header_is_painted:
                     # always open headers when searching
                     forms.header(group.title(), isopen=bool(search) or self._show_only_modified)
+                    if warning := group.warning():
+                        forms.warning_message(warning)
                     header_is_painted = True
 
                 default_value = self._default_values[varname]

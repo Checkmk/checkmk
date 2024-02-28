@@ -618,5 +618,9 @@ class CREConfig:
     # new in 2.1
     config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
 
+    # Development tools
+
+    inject_js_profiling_code: bool = False
+    load_frontend_vue: Literal["static_files", "inject"] = "static_files"
     # Experimental feature flags
     experimental_features: dict[str, Any] = field(default_factory=dict)

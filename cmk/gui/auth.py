@@ -9,12 +9,14 @@ import base64
 import hmac
 import re
 import uuid
+import warnings
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
 import cmk.utils.paths
+from cmk.utils import deprecation_warnings
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.secrets import AutomationUserSecret, Secret, SiteInternalSecret
@@ -333,7 +335,7 @@ def _check_auth_by_automation_credentials_in_request_values() -> UserId | None:
 
     This is deprecated with Werk #16223 and should be removed with Checkmk 2.5
     The config option will be introduced with Checkmk 2.3, in 2.4 the default
-    will change and then we're going to finally remove this
+    will change, and then we're going to finally remove this
 
     Raises:
         MKAuthException: whenever an illegal username is detected.
@@ -344,12 +346,22 @@ def _check_auth_by_automation_credentials_in_request_values() -> UserId | None:
     if (username := request.values.get("_username")) and (
         password := request.values.get("_secret")
     ):
+        warnings.warn(
+            "Request authentication deprecated. See https://checkmk.com/werk/16223/ "
+            f"User: {username!r}.",
+            category=deprecation_warnings.DeprecatedSince23Warning,
+        )
+        # NOTE
+        # For now, we don't use logging.captureWarnings to log all warnings into the "py.warnings"
+        # logger. We should be doing it, but this needs some consideration. Also, probably not all
+        # warnings should be logged that way. For the meantime, we do both here.
+        logger.warning(
+            "Deprecated automation user login method was used for %s. See Werk #16223",
+            username,
+        )
+
         user_id = _try_user_id(username)
         if _verify_automation_login(user_id, password):
-            logger.warning(
-                "Deprecated automation user login method was used for %s. See Werk #16223",
-                username,
-            )
             return user_id
 
     return None

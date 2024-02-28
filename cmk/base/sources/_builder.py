@@ -66,6 +66,7 @@ def make_parser(
     *,
     # Always from NO_SELECTION.
     checking_sections: frozenset[SectionName],
+    section_cache_path: Path,
     keep_outdated: bool,
     logger: logging.Logger,
 ) -> Parser:
@@ -78,6 +79,7 @@ def make_parser(
                     source.hostname,
                     fetcher_type=source.fetcher_type,
                     ident=source.ident,
+                    section_cache_path=section_cache_path,
                 ),
                 logger=logger,
             ),
@@ -93,7 +95,10 @@ def make_parser(
         hostname,
         SectionStore[Sequence[AgentRawDataSectionElem]](
             make_persisted_section_dir(
-                source.hostname, fetcher_type=source.fetcher_type, ident=source.ident
+                source.hostname,
+                fetcher_type=source.fetcher_type,
+                ident=source.ident,
+                section_cache_path=section_cache_path,
             ),
             logger=logger,
         ),

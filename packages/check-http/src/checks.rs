@@ -59,6 +59,16 @@ impl TextMatcher {
     pub fn from_regex(regex: Regex, expectation: bool) -> Self {
         Self::Regex { regex, expectation }
     }
+
+    pub fn inner(&self) -> &str {
+        match self {
+            Self::Contains(string) | Self::Exact(string) => string.as_str(),
+            Self::Regex {
+                regex,
+                expectation: _,
+            } => regex.as_str(),
+        }
+    }
 }
 
 pub fn collect_response_checks(
@@ -223,13 +233,47 @@ fn check_headers(
     matchers
         .iter()
         .flat_map(|(name_matcher, value_matcher)| {
-            if !match_on_headers(&headers_as_strings, name_matcher, value_matcher) {
-                notice(
-                    State::Crit,
-                    "Specified strings not found in response headers",
-                )
+            let (match_text, predicate) = match name_matcher {
+                // We expect name and value matchers to be of the same variant,
+                // so we can match on name_matcher only.
+                TextMatcher::Regex {
+                    regex: _,
+                    expectation,
+                } => (
+                    if *expectation {
+                        "Expected regex in HTTP headers"
+                    } else {
+                        "Not expected regex in HTTP headers"
+                    },
+                    "matched",
+                ),
+                TextMatcher::Contains(_) | TextMatcher::Exact(_) => {
+                    ("Expected HTTP header", "found")
+                }
+            };
+
+            if match_on_headers(&headers_as_strings, name_matcher, value_matcher) {
+                vec![CheckResult::details(
+                    State::Ok,
+                    &format!(
+                        "{}: {}:{} ({})",
+                        match_text,
+                        name_matcher.inner(),
+                        value_matcher.inner(),
+                        predicate
+                    ),
+                )]
             } else {
-                vec![]
+                notice(
+                    State::Warn,
+                    &format!(
+                        "{}: {}:{} (not {})",
+                        match_text,
+                        name_matcher.inner(),
+                        value_matcher.inner(),
+                        predicate
+                    ),
+                )
             }
         })
         .collect::<Vec<_>>()
@@ -278,10 +322,33 @@ fn check_body_matching(body: Option<&Body>, matcher: Vec<TextMatcher>) -> Vec<Op
     matcher
         .iter()
         .flat_map(|m| {
-            if !m.match_on(&body.text) {
-                notice(State::Warn, "String validation failed on response body")
+            let (match_text, predicate) = match m {
+                TextMatcher::Regex {
+                    regex: _,
+                    expectation,
+                } => (
+                    if *expectation {
+                        "Expected regex in body"
+                    } else {
+                        "Not expected regex in body"
+                    },
+                    "matched",
+                ),
+                TextMatcher::Contains(_) | TextMatcher::Exact(_) => {
+                    ("Expected string in body", "found")
+                }
+            };
+
+            if m.match_on(&body.text) {
+                vec![CheckResult::details(
+                    State::Ok,
+                    &format!("{}: {} ({})", match_text, m.inner(), predicate),
+                )]
             } else {
-                vec![]
+                notice(
+                    State::Warn,
+                    &format!("{}: {} (not {})", match_text, m.inner(), predicate),
+                )
             }
         })
         .collect::<Vec<_>>()
@@ -664,29 +731,17 @@ mod test_check_headers {
             ),
             vec![
                 CheckResult::summary(
-                    State::Crit,
-                    "Specified strings not found in response headers"
+                    State::Warn,
+                    "Expected HTTP header: some_key1:value1 (not found)"
                 ),
                 CheckResult::details(
-                    State::Crit,
-                    "Specified strings not found in response headers"
+                    State::Warn,
+                    "Expected HTTP header: some_key1:value1 (not found)"
                 ),
-                CheckResult::summary(
-                    State::Crit,
-                    "Specified strings not found in response headers"
-                ),
-                CheckResult::details(
-                    State::Crit,
-                    "Specified strings not found in response headers"
-                ),
-                CheckResult::summary(
-                    State::Crit,
-                    "Specified strings not found in response headers"
-                ),
-                CheckResult::details(
-                    State::Crit,
-                    "Specified strings not found in response headers"
-                ),
+                CheckResult::summary(State::Warn, "Expected HTTP header: :value (not found)"),
+                CheckResult::details(State::Warn, "Expected HTTP header: :value (not found)"),
+                CheckResult::summary(State::Warn, "Expected HTTP header: some_key3: (not found)"),
+                CheckResult::details(State::Warn, "Expected HTTP header: some_key3: (not found)"),
             ]
         )
     }
@@ -714,21 +769,19 @@ mod test_check_headers {
                 ]
             ),
             vec![
-                CheckResult::summary(
-                    State::Crit,
-                    "Specified strings not found in response headers"
-                ),
                 CheckResult::details(
-                    State::Crit,
-                    "Specified strings not found in response headers"
+                    State::Ok,
+                    "Expected HTTP header: some_key1:some_value1 (found)"
                 ),
+                CheckResult::summary(State::Warn, "Expected HTTP header: :value (not found)"),
+                CheckResult::details(State::Warn, "Expected HTTP header: :value (not found)"),
             ]
         )
     }
 
     #[test]
     fn test_strings_all_found() {
-        assert!(
+        assert_eq!(
             check_headers(
                 &(&HashMap::from([
                     ("some_key1".to_string(), "some_value1".to_string()),
@@ -747,13 +800,23 @@ mod test_check_headers {
                         TextMatcher::Exact("some_value3".to_string())
                     ),
                 ]
-            ) == vec![]
+            ),
+            vec![
+                CheckResult::details(
+                    State::Ok,
+                    "Expected HTTP header: some_key1:some_value1 (found)"
+                ),
+                CheckResult::details(
+                    State::Ok,
+                    "Expected HTTP header: some_key3:some_value3 (found)"
+                ),
+            ]
         )
     }
 
     #[test]
     fn test_strings_mixed_not_found() {
-        assert!(
+        assert_eq!(
             check_headers(
                 &(&HashMap::from([
                     ("some_key1".to_string(), "some_value1".to_string()),
@@ -766,14 +829,15 @@ mod test_check_headers {
                     TextMatcher::Exact("some_key1".to_string()),
                     TextMatcher::Exact("some_value2".to_string())
                 ),]
-            ) == vec![
+            ),
+            vec![
                 CheckResult::summary(
-                    State::Crit,
-                    "Specified strings not found in response headers"
+                    State::Warn,
+                    "Expected HTTP header: some_key1:some_value2 (not found)"
                 ),
                 CheckResult::details(
-                    State::Crit,
-                    "Specified strings not found in response headers"
+                    State::Warn,
+                    "Expected HTTP header: some_key1:some_value2 (not found)"
                 ),
             ]
         )
@@ -793,12 +857,12 @@ mod test_check_headers {
             ),
             vec![
                 CheckResult::summary(
-                    State::Crit,
-                    "Specified strings not found in response headers"
+                    State::Warn,
+                    "Expected HTTP header: some_key1:ßome_value1 (not found)"
                 ),
                 CheckResult::details(
-                    State::Crit,
-                    "Specified strings not found in response headers"
+                    State::Warn,
+                    "Expected HTTP header: some_key1:ßome_value1 (not found)"
                 ),
             ]
         )
@@ -811,14 +875,58 @@ mod test_check_headers {
             HeaderName::from_str("some_key").unwrap(),
             HeaderValue::from_bytes(b"\xF6\xE4\xFC").unwrap(),
         );
-        assert!(check_headers(
-            &header_map,
-            vec![(
-                TextMatcher::Exact("some_key".to_string()),
-                TextMatcher::Exact("öäü".to_string())
-            ),]
+        assert_eq!(
+            check_headers(
+                &header_map,
+                vec![(
+                    TextMatcher::Exact("some_key".to_string()),
+                    TextMatcher::Exact("öäü".to_string())
+                ),]
+            ),
+            vec![CheckResult::details(
+                State::Ok,
+                "Expected HTTP header: some_key:öäü (found)"
+            )]
         )
-        .is_empty())
+    }
+
+    #[test]
+    fn test_regex() {
+        assert_eq!(
+            check_headers(
+                &(&HashMap::from([
+                    ("some_key1".to_string(), "some_value1".to_string()),
+                    ("some_key2".to_string(), "some_value2".to_string()),
+                    ("some_key3".to_string(), "some_value3".to_string()),
+                ]))
+                    .try_into()
+                    .unwrap(),
+                vec![
+                    (
+                        TextMatcher::from_regex(Regex::new("s.*y[0-9]").unwrap(), true),
+                        TextMatcher::from_regex(Regex::new("s[a-z]+_*value1").unwrap(), true)
+                    ),
+                    (
+                        TextMatcher::from_regex(Regex::new("foobar").unwrap(), true),
+                        TextMatcher::from_regex(Regex::new("baz").unwrap(), true)
+                    ),
+                ]
+            ),
+            vec![
+                CheckResult::details(
+                    State::Ok,
+                    "Expected regex in HTTP headers: s.*y[0-9]:s[a-z]+_*value1 (matched)"
+                ),
+                CheckResult::summary(
+                    State::Warn,
+                    "Expected regex in HTTP headers: foobar:baz (not matched)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Expected regex in HTTP headers: foobar:baz (not matched)"
+                ),
+            ]
+        )
     }
 }
 
@@ -966,11 +1074,16 @@ mod test_check_body_matching {
 
     #[test]
     fn test_string_ok() {
-        assert!(check_body_matching(
-            test_body("foobar").as_ref(),
-            vec![TextMatcher::Contains("bar".to_string())]
-        )
-        .is_empty());
+        assert_eq!(
+            check_body_matching(
+                test_body("foobar").as_ref(),
+                vec![TextMatcher::Contains("bar".to_string())]
+            ),
+            vec![CheckResult::details(
+                State::Ok,
+                "Expected string in body: bar (found)"
+            ),]
+        );
     }
 
     #[test]
@@ -981,37 +1094,43 @@ mod test_check_body_matching {
                 vec![TextMatcher::Contains("bar".to_string())]
             ),
             vec![
-                CheckResult::summary(State::Warn, "String validation failed on response body"),
-                CheckResult::details(State::Warn, "String validation failed on response body"),
+                CheckResult::summary(State::Warn, "Expected string in body: bar (not found)"),
+                CheckResult::details(State::Warn, "Expected string in body: bar (not found)"),
             ]
         );
     }
 
     #[test]
     fn test_multiple_strings_not_found() {
-        assert!(
+        assert_eq!(
             check_body_matching(
                 test_body("foobär").as_ref(),
                 vec![
                     TextMatcher::Contains("bar".to_string()),
                     TextMatcher::Contains("baz".to_string())
                 ]
-            ) == vec![
-                CheckResult::summary(State::Warn, "String validation failed on response body"),
-                CheckResult::details(State::Warn, "String validation failed on response body"),
-                CheckResult::summary(State::Warn, "String validation failed on response body"),
-                CheckResult::details(State::Warn, "String validation failed on response body"),
+            ),
+            vec![
+                CheckResult::summary(State::Warn, "Expected string in body: bar (not found)"),
+                CheckResult::details(State::Warn, "Expected string in body: bar (not found)"),
+                CheckResult::summary(State::Warn, "Expected string in body: baz (not found)"),
+                CheckResult::details(State::Warn, "Expected string in body: baz (not found)"),
             ]
         );
     }
 
     #[test]
     fn test_regex_ok() {
-        assert!(check_body_matching(
-            test_body("foobar").as_ref(),
-            vec![TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true)]
-        )
-        .is_empty());
+        assert_eq!(
+            check_body_matching(
+                test_body("foobar").as_ref(),
+                vec![TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true)]
+            ),
+            vec![CheckResult::details(
+                State::Ok,
+                "Expected regex in body: f.*r (matched)"
+            ),]
+        );
     }
 
     #[test]
@@ -1022,46 +1141,39 @@ mod test_check_body_matching {
                 vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true)]
             ),
             vec![
-                CheckResult::summary(State::Warn, "String validation failed on response body"),
-                CheckResult::details(State::Warn, "String validation failed on response body"),
+                CheckResult::summary(State::Warn, "Expected regex in body: f.*z (not matched)"),
+                CheckResult::details(State::Warn, "Expected regex in body: f.*z (not matched)"),
             ]
         );
     }
 
     #[test]
     fn test_regex_inverse_ok() {
-        assert!(check_body_matching(
-            test_body("foobar").as_ref(),
-            vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false)]
-        )
-        .is_empty());
+        assert_eq!(
+            check_body_matching(
+                test_body("foobar").as_ref(),
+                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false)]
+            ),
+            vec![CheckResult::details(
+                State::Ok,
+                "Not expected regex in body: f.*z (matched)"
+            ),]
+        );
     }
 
     #[test]
     fn test_multiple_matchers_ok() {
-        assert!(check_body_matching(
-            test_body("foobar").as_ref(),
-            vec![
-                TextMatcher::Contains("bar".to_string()),
-                TextMatcher::Contains("foo".to_string())
-            ]
-        )
-        .is_empty());
-    }
-
-    #[test]
-    fn test_multiple_matchers_not_ok() {
         assert_eq!(
             check_body_matching(
                 test_body("foobar").as_ref(),
                 vec![
                     TextMatcher::Contains("bar".to_string()),
-                    TextMatcher::Contains("baz".to_string())
+                    TextMatcher::Contains("foo".to_string())
                 ]
             ),
             vec![
-                CheckResult::summary(State::Warn, "String validation failed on response body"),
-                CheckResult::details(State::Warn, "String validation failed on response body"),
+                CheckResult::details(State::Ok, "Expected string in body: bar (found)"),
+                CheckResult::details(State::Ok, "Expected string in body: foo (found)"),
             ]
         );
     }
@@ -1354,9 +1466,9 @@ mod test_check_user_agent {
 
     #[test]
     fn test_ok() {
-        assert!(
-            check_user_agent("Agent Smith".to_string())
-                == vec![CheckResult::details(State::Ok, "User agent: Agent Smith"),]
+        assert_eq!(
+            check_user_agent("Agent Smith".to_string()),
+            vec![CheckResult::details(State::Ok, "User agent: Agent Smith"),]
         )
     }
 }

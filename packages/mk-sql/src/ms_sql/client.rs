@@ -97,8 +97,8 @@ impl<'a> ClientBuilder<'a> {
         self
     }
 
-    pub fn certificate<S: Into<String>>(mut self, certificate: S) -> Self {
-        self.certificate = Some(certificate.into());
+    pub fn certificate<S: Into<String>>(mut self, certificate: Option<S>) -> Self {
+        self.certificate = certificate.map(|c| c.into());
         self
     }
 
@@ -106,7 +106,14 @@ impl<'a> ClientBuilder<'a> {
         match self.client_connection {
             Some(ClientConnection::Remote(r)) => {
                 let port = r.port.map(|p| p.value()).unwrap_or(defaults::STANDARD_PORT);
-                create_remote(&r.host, port, r.credentials, self.database).await
+                create_remote(
+                    &r.host,
+                    port,
+                    r.credentials,
+                    self.database,
+                    self.certificate,
+                )
+                .await
             }
             #[cfg(windows)]
             Some(ClientConnection::LocalInstance(i)) => {
@@ -153,7 +160,9 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
             if let Some(credentials) = obtain_config_credentials(auth) {
                 tokio::time::timeout(
                     conn.timeout(),
-                    create_remote(conn.hostname(), port.value(), credentials, None),
+                    ClientBuilder::new()
+                        .remote(conn.hostname(), Some(port), credentials)
+                        .build(),
                 )
                 .await
                 .map_err(map_elapsed_to_anyhow)?
@@ -163,11 +172,15 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
         }
 
         #[cfg(windows)]
-        AuthType::Integrated => {
-            tokio::time::timeout(conn.timeout(), create_local(port.value(), None))
-                .await
-                .map_err(map_elapsed_to_anyhow)?
-        }
+        AuthType::Integrated => tokio::time::timeout(
+            conn.timeout(),
+            create_local(
+                port.value(),
+                conn.tls().map(|t| t.client_certificate().to_owned()),
+            ),
+        )
+        .await
+        .map_err(map_elapsed_to_anyhow)?,
 
         _ => anyhow::bail!("Not supported authorization type"),
     };
@@ -203,6 +216,7 @@ async fn create_remote(
     port: u16,
     credentials: Credentials<'_>,
     database: Option<String>,
+    certificate: Option<String>,
 ) -> Result<Client> {
     match _create_remote_client(
         host,
@@ -210,6 +224,7 @@ async fn create_remote(
         &credentials,
         tiberius::EncryptionLevel::Required,
         &database,
+        &certificate,
     )
     .await
     {
@@ -226,6 +241,7 @@ async fn create_remote(
                 &credentials,
                 tiberius::EncryptionLevel::NotSupported,
                 &database,
+                &certificate,
             )
             .await?)
         }
@@ -246,6 +262,7 @@ pub async fn _create_remote_client(
     credentials: &Credentials<'_>,
     encryption: tiberius::EncryptionLevel,
     database: &Option<String>,
+    certificate: &Option<String>,
 ) -> Result<Client> {
     let mut config = Config::new();
 
@@ -265,7 +282,11 @@ pub async fn _create_remote_client(
             password: _,
         } => anyhow::bail!("not supported"),
     });
-    config.trust_cert(); // on production, it is not a good idea to do this
+    if let Some(certificate) = certificate {
+        config.trust_cert_ca(certificate);
+    } else {
+        config.trust_cert(); // on production, it is not a good idea to do this
+    }
 
     connect_via_tcp(config).await
 }
@@ -421,6 +442,19 @@ mssql:
         assert!(
             obtain_config_credentials(make_config_with_auth_type("sql_server").auth()).is_some()
         );
+    }
+
+    #[cfg(windows)]
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_local_with_cert() {
+        pub const MS_SQL_DB_CERT: &str = "CI_TEST_MS_SQL_DB_CERT";
+        if let Ok(certificate_path) = std::env::var(MS_SQL_DB_CERT) {
+            create_local(1433u16, certificate_path.to_owned().into())
+                .await
+                .unwrap();
+        } else {
+            eprintln!("Error: environment variable {} is absent", MS_SQL_DB_CERT);
+        }
     }
 
     #[test]

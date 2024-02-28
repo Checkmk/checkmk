@@ -114,6 +114,7 @@ def test_host_config_creates_passing_source_sources(
             oid_cache_dir=tmp_path,
             stored_walk_path=tmp_path,
             walk_cache_path=tmp_path,
+            file_cache_path=tmp_path,
             cas_dir=tmp_path,
             ca_store=tmp_path,
             site_crt=tmp_path,

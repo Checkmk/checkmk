@@ -6,6 +6,7 @@
 # TODO This module should be freed from base deps.
 
 import dataclasses
+import os.path
 from pathlib import Path
 from typing import Final
 
@@ -66,6 +67,7 @@ class SNMPSource(Source[SNMPRawData]):
         oid_cache_dir: Path,
         stored_walk_path: Path,
         walk_cache_path: Path,
+        file_cache_path: Path,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
@@ -78,6 +80,7 @@ class SNMPSource(Source[SNMPRawData]):
         self._oid_cache_dir: Final = oid_cache_dir
         self._stored_walk_path: Final = stored_walk_path
         self._walk_cache_path: Final = walk_cache_path
+        self._file_cache_path: Final = file_cache_path
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -111,9 +114,8 @@ class SNMPSource(Source[SNMPRawData]):
     ) -> FileCache[SNMPRawData]:
         return SNMPFileCache(
             self.host_name,
-            path_template=make_file_cache_path_template(
-                fetcher_type=self.fetcher_type,
-                ident=self.source_info().ident,
+            path_template=os.path.join(
+                self._file_cache_path, self.source_info().ident, "{mode}", "{hostname}"
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -139,6 +141,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         oid_cache_dir: Path,
         stored_walk_path: Path,
         walk_cache_path: Path,
+        file_cache_path: Path,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
@@ -151,6 +154,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self._oid_cache_dir: Final = oid_cache_dir
         self._stored_walk_path: Final = stored_walk_path
         self._walk_cache_path: Final = walk_cache_path
+        self._file_cache_path: Final = file_cache_path
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -183,8 +187,8 @@ class MgmtSNMPSource(Source[SNMPRawData]):
     ) -> FileCache[SNMPRawData]:
         return SNMPFileCache(
             self.host_name,
-            path_template=make_file_cache_path_template(
-                fetcher_type=self.fetcher_type, ident=self.source_info().ident
+            path_template=os.path.join(
+                self._file_cache_path, self.source_info().ident, "{mode}", "{hostname}"
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -204,12 +208,14 @@ class IPMISource(Source[AgentRawData]):
         ipaddress: HostAddress,
         *,
         max_age: MaxAge,
+        file_cache_path: Path,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
+        self._file_cache_path: Final = file_cache_path
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -228,8 +234,8 @@ class IPMISource(Source[AgentRawData]):
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
             self.host_name,
-            path_template=make_file_cache_path_template(
-                fetcher_type=self.fetcher_type, ident=self.source_info().ident
+            path_template=os.path.join(
+                self._file_cache_path, self.source_info().ident, "{hostname}"
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -279,7 +285,7 @@ class ProgramSource(Source[AgentRawData]):
         return AgentFileCache(
             self.host_name,
             path_template=make_file_cache_path_template(
-                fetcher_type=self.fetcher_type, ident=self.source_info().ident
+                fetcher_type=self.fetcher_type,
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -298,11 +304,13 @@ class PushAgentSource(Source[AgentRawData]):
         ipaddress: HostAddress | None,
         *,
         max_age: MaxAge,
+        file_cache_path: Path,
     ) -> None:
         super().__init__()
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
+        self._file_cache_path: Final = file_cache_path
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -321,8 +329,8 @@ class PushAgentSource(Source[AgentRawData]):
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
             self.host_name,
-            path_template=make_file_cache_path_template(
-                fetcher_type=self.fetcher_type, ident=self.source_info().ident
+            path_template=os.path.join(
+                self._file_cache_path, self.source_info().ident, "{hostname}", "agent_output"
             ),
             max_age=(
                 MaxAge.unlimited()
@@ -388,7 +396,7 @@ class TCPSource(Source[AgentRawData]):
         return AgentFileCache(
             self.host_name,
             path_template=make_file_cache_path_template(
-                fetcher_type=self.fetcher_type, ident=self.source_info().ident
+                fetcher_type=self.fetcher_type,
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -413,6 +421,7 @@ class SpecialAgentSource(Source[AgentRawData]):
         agent_name: str,
         stdin: str | None,
         cmdline: str,
+        file_cache_path: Path,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
@@ -422,6 +431,7 @@ class SpecialAgentSource(Source[AgentRawData]):
         self._agent_name: Final = agent_name
         self._stdin: Final = stdin
         self._cmdline: Final = cmdline
+        self._file_cache_path: Final = file_cache_path
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -444,8 +454,8 @@ class SpecialAgentSource(Source[AgentRawData]):
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
             self.host_name,
-            path_template=make_file_cache_path_template(
-                fetcher_type=self.fetcher_type, ident=self.source_info().ident
+            path_template=os.path.join(
+                self._file_cache_path, self.source_info().ident, "{hostname}"
             ),
             max_age=self._max_age,
             simulation=simulation,

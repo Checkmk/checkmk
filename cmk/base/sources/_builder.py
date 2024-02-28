@@ -125,6 +125,7 @@ class _Builder:
         oid_cache_dir: Path,
         stored_walk_path: Path,
         walk_cache_path: Path,
+        file_cache_path: Path,
         cas_dir: Path,
         ca_store: Path,
         site_crt: Path,
@@ -146,6 +147,7 @@ class _Builder:
         self._oid_cache_dir: Final = oid_cache_dir
         self._stored_walk_path: Final = stored_walk_path
         self._walk_cache_path: Final = walk_cache_path
+        self._file_cache_path: Final = file_cache_path
         self.cas_dir: Final = cas_dir
         self.ca_store: Final = ca_store
         self.site_crt: Final = site_crt
@@ -203,6 +205,7 @@ class _Builder:
                         agent_name=agentname,
                         cmdline=agent_data.cmdline,
                         stdin=agent_data.stdin,
+                        file_cache_path=self._file_cache_path,
                     )
 
         special_agents = tuple(make_special_agents())
@@ -271,6 +274,7 @@ class _Builder:
                     oid_cache_dir=self._oid_cache_dir,
                     stored_walk_path=self._stored_walk_path,
                     walk_cache_path=self._walk_cache_path,
+                    file_cache_path=self._file_cache_path,
                 )
             )
             return
@@ -294,6 +298,7 @@ class _Builder:
                 oid_cache_dir=self._oid_cache_dir,
                 stored_walk_path=self._stored_walk_path,
                 walk_cache_path=self._walk_cache_path,
+                file_cache_path=self._file_cache_path,
             )
         )
 
@@ -325,12 +330,17 @@ class _Builder:
                         oid_cache_dir=self._oid_cache_dir,
                         stored_walk_path=self._stored_walk_path,
                         walk_cache_path=self._walk_cache_path,
+                        file_cache_path=self._file_cache_path,
                     )
                 )
             case "ipmi":
                 self._add(
                     IPMISource(
-                        self.config_cache, self.host_name, ip_address, max_age=self.max_age_agent
+                        self.config_cache,
+                        self.host_name,
+                        ip_address,
+                        max_age=self.max_age_agent,
+                        file_cache_path=self._file_cache_path,
                     )
                 )
             case _:
@@ -361,6 +371,7 @@ class _Builder:
                         self.host_name,
                         self.ipaddress,
                         max_age=MaxAge(interval, interval, interval),
+                        file_cache_path=self._file_cache_path,
                     )
                 )
             case HostAgentConnectionMode.PULL:
@@ -401,6 +412,7 @@ def make_sources(
     oid_cache_dir: Path,
     stored_walk_path: Path,
     walk_cache_path: Path,
+    file_cache_path: Path,
     cas_dir: Path,
     ca_store: Path,
     site_crt: Path,
@@ -442,6 +454,7 @@ def make_sources(
         oid_cache_dir=oid_cache_dir,
         stored_walk_path=stored_walk_path,
         walk_cache_path=walk_cache_path,
+        file_cache_path=file_cache_path,
         cas_dir=cas_dir,
         ca_store=ca_store,
         site_crt=site_crt,

@@ -35,6 +35,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.nodevis import frontend_texts
 from cmk.gui.nodevis.filters import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.nodevis.type_defs import (
     FrontendConfiguration,
@@ -222,7 +223,10 @@ class ABCTopologyPage(Page):
         )
         result = _compute_topology_response(topology_configuration)
         html.javascript(
-            f"{self._instance_name} = new cmk.nodevis.TopologyVisualization({json.dumps(div_id)},{json.dumps(topology_configuration.type)});"
+            f"{self._instance_name} = new cmk.nodevis.TopologyVisualization({json.dumps(div_id)},"
+            f"{json.dumps(topology_configuration.type)},"
+            f"{json.dumps(frontend_texts.get_texts())}"
+            f");"
         )
 
         html.javascript(f"{self._instance_name}.show_topology({json.dumps(result)})")

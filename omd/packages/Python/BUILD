@@ -1,5 +1,3 @@
-exports_files([
-    "sitecustomize.py",
-    "pip",
-    "run_python_in_bazel.sh",
-])
+exports_files(["sitecustomize.py"])
+
+exports_files(["pip"])

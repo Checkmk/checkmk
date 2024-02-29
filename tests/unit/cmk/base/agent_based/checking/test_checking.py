@@ -13,13 +13,24 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.utils.type_defs import HostName, LegacyCheckParameters
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    ExitSpec,
+    HostName,
+    LegacyCheckParameters,
+    ServiceName,
+)
 
 from cmk.checkers import HostKey, SourceType
+from cmk.checkers.check_table import ConfiguredService
 from cmk.checkers.checkresults import ServiceCheckResult
 
 import cmk.base.agent_based.checking._checking as checking
 import cmk.base.config as config
+from cmk.base.agent_based.checking._checking import _AggregatedResult as AggregatedResult
+from cmk.base.agent_based.checking._checking import (
+    _check_plugins_missing_data as check_plugins_missing_data,
+)
 from cmk.base.api.agent_based.checking_classes import consume_check_results, Metric, Result, State
 
 
@@ -313,3 +324,108 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     ] == checking._get_clustered_service_node_keys(
         config_cache, cluster, SourceType.HOST, "Test Unclustered"
     )
+
+
+def make_aggregated_result(*, name: str, data_received: bool) -> AggregatedResult:
+    return AggregatedResult(
+        service=ConfiguredService(
+            check_plugin_name=CheckPluginName(name),
+            item=None,
+            description=ServiceName("ut_service_name"),
+            parameters=TimespecificParameters(),
+            discovered_parameters={},
+            service_labels={},
+        ),
+        submit=False,
+        data_received=data_received,
+        result=ServiceCheckResult(0),
+        cache_info=None,
+    )
+
+
+def test_missing_data_single() -> None:
+    # we want to map a specific service with a certain service name to be OK, although data is
+    # missing:
+    # create rule "Status of the Checkmk service"
+    # check "State if specific check plugins receive no monitoring data"
+    # specify regex "not$" and "OK"
+
+    assert [
+        (r.state, r.summary)
+        for r in check_plugins_missing_data(
+            [
+                make_aggregated_result(name="not", data_received=False),
+                # we need an additional service, otherwise we will go the "Missing monitoring data for all
+                # plugins" special case ( see below)
+                make_aggregated_result(name="data_received", data_received=True),
+            ],
+            ExitSpec(specific_missing_sections=[("not$", 0)]),
+            # this is a bug: we miss data for a single plugin (not), mapped this plugin to be
+            # ok, but in summary we return a warning:
+        )
+    ] == [
+        # TODO: here is a bug: we explicitly map the only missing plugin to OK, so we expect two 0 here.
+        (1, "Missing monitoring data for plugins: "),
+        (0, "not"),
+    ]
+
+
+def test_missing_data_all() -> None:
+    assert [
+        (r.state, r.summary)
+        for r in check_plugins_missing_data(
+            [
+                make_aggregated_result(name="unknown", data_received=False),
+            ],
+            ExitSpec(),
+        )
+    ] == [
+        (1, "Missing monitoring data for all plugins"),
+    ]
+
+
+def _get_aggregated_results() -> list[AggregatedResult]:
+    return [
+        make_aggregated_result(name="not_1", data_received=False),
+        make_aggregated_result(name="not_2", data_received=False),
+        make_aggregated_result(name="not_3", data_received=False),
+        make_aggregated_result(name="data_received", data_received=True),
+    ]
+
+
+def test_missing_data_default_config() -> None:
+    assert [
+        (r.state, r.summary)
+        for r in check_plugins_missing_data(
+            _get_aggregated_results(),
+            ExitSpec(),
+        )
+    ] == [
+        (1, "Missing monitoring data for plugins: not_1, not_2, not_3"),
+    ]
+
+
+def test_missing_data_regex() -> None:
+    assert [
+        (r.state, r.summary)
+        for r in check_plugins_missing_data(
+            _get_aggregated_results(),
+            ExitSpec(specific_missing_sections=[("not_2$", 3)]),
+        )
+    ] == [
+        (1, "Missing monitoring data for plugins: not_1, not_3"),
+        (3, "not_2"),
+    ]
+
+
+def test_missing_data_regex_and_default() -> None:
+    assert [
+        (r.state, r.summary)
+        for r in check_plugins_missing_data(
+            _get_aggregated_results(),
+            ExitSpec(specific_missing_sections=[("not_2$", 3)], missing_sections=0),
+        )
+    ] == [
+        (0, "Missing monitoring data for plugins: not_1, not_3"),
+        (3, "not_2"),
+    ]

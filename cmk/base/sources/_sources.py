@@ -48,6 +48,9 @@ __all__ = [
     "MissingSourceSource",
 ]
 
+# Singleton
+_NO_CACHE: Final[FileCache] = NoCache()
+
 
 class SNMPSource(Source[SNMPRawData]):
     fetcher_type: Final = FetcherType.SNMP
@@ -112,9 +115,8 @@ class SNMPSource(Source[SNMPRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[SNMPRawData]:
         return SNMPFileCache(
-            self.host_name,
             path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, "{mode}", "{hostname}"
+                self._file_cache_path, self.source_info().ident, "{mode}", str(self.host_name)
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -185,9 +187,8 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[SNMPRawData]:
         return SNMPFileCache(
-            self.host_name,
             path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, "{mode}", "{hostname}"
+                self._file_cache_path, self.source_info().ident, "{mode}", str(self.host_name)
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -232,9 +233,8 @@ class IPMISource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            self.host_name,
             path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, "{hostname}"
+                self._file_cache_path, self.source_info().ident, str(self.host_name)
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -284,8 +284,7 @@ class ProgramSource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            self.host_name,
-            path_template=os.path.join(self._file_cache_path, "{hostname}"),
+            path_template=os.path.join(self._file_cache_path, str(self.host_name)),
             max_age=self._max_age,
             simulation=simulation,
             use_only_cache=file_cache_options.use_only_cache,
@@ -327,9 +326,8 @@ class PushAgentSource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            self.host_name,
             path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, "{hostname}", "agent_output"
+                self._file_cache_path, self.source_info().ident, str(self.host_name), "agent_output"
             ),
             max_age=(
                 MaxAge.unlimited()
@@ -395,8 +393,7 @@ class TCPSource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            self.host_name,
-            path_template=os.path.join(self._file_cache_path, "{hostname}"),
+            path_template=os.path.join(self._file_cache_path, str(self.host_name)),
             max_age=self._max_age,
             simulation=simulation,
             use_only_cache=(
@@ -452,9 +449,8 @@ class SpecialAgentSource(Source[AgentRawData]):
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
         return AgentFileCache(
-            self.host_name,
             path_template=os.path.join(
-                self._file_cache_path, self.source_info().ident, "{hostname}"
+                self._file_cache_path, self.source_info().ident, str(self.host_name)
             ),
             max_age=self._max_age,
             simulation=simulation,
@@ -493,7 +489,7 @@ class PiggybackSource(Source[AgentRawData]):
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
     ) -> FileCache[AgentRawData]:
-        return NoCache(self.host_name)
+        return _NO_CACHE
 
 
 class MissingIPSource(Source):
@@ -519,7 +515,7 @@ class MissingIPSource(Source):
         return NoFetcher(NoFetcherError.MISSING_IP)
 
     def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:
-        return NoCache(self.host_name)
+        return _NO_CACHE
 
 
 class MissingSourceSource(Source):
@@ -545,4 +541,4 @@ class MissingSourceSource(Source):
         return NoFetcher(NoFetcherError.NO_FETCHER)
 
     def file_cache(self, *, simulation: bool, file_cache_options: FileCacheOptions) -> FileCache:
-        return NoCache(self.host_name)
+        return _NO_CACHE

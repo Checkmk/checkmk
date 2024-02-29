@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import Literal
 
 import pytest
 
@@ -38,13 +39,15 @@ from cmk.server_side_calls.v1 import (
         ),
     ],
 )
-def test_get_secret_from_params(secret: object, expected_result: Secret) -> None:
+def test_get_secret_from_params(
+    secret: tuple[Literal["store", "password"], str], expected_result: Secret
+) -> None:
     assert parse_secret(secret) == expected_result
 
 
 def test_get_secret_from_params_invalid_type() -> None:
     with pytest.raises(ValueError, match="secret type has as to be either 'store' or 'password'"):
-        parse_secret(("invalid", "password1234"))
+        parse_secret(("invalid", "password1234"))  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(

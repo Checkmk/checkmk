@@ -79,6 +79,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     visual: dict[str, Any] = {
         "link_from": {},
         "context": {},
+        "megamenu_search_terms": [],
     }
 
     mode = request.get_str_input_mandatory("mode", "edit")
@@ -242,7 +243,10 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
 
             old_visual = visual
             # TODO: Currently not editable, but keep settings
-            visual = {"link_from": old_visual["link_from"]}
+            visual = {
+                "link_from": old_visual["link_from"],
+                "megamenu_search_terms": old_visual["megamenu_search_terms"],
+            }
 
             # Important for saving
             visual["packaged"] = False

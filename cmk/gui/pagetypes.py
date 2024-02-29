@@ -2009,6 +2009,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
             "public": self._["public"],
             "packaged": False,
             "link_from": {},
+            "megamenu_search_terms": [],
         }
 
 

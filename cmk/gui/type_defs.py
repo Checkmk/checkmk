@@ -252,7 +252,7 @@ class Visual(TypedDict):
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
     packaged: bool
     link_from: LinkFromSpec
-    megamenu_search_terms: NotRequired[Sequence[str]]
+    megamenu_search_terms: Sequence[str]
 
 
 class VisualLinkSpec(NamedTuple):

@@ -1691,6 +1691,7 @@ def mkeventd_view(d):
         "user_sortable": "on",
         "link_from": {},
         "add_context_to_title": True,
+        "megamenu_search_terms": [],
     }
     x.update(d)
     return x
@@ -2208,6 +2209,7 @@ EC_EVENT_MOBILE: ViewSpec = {
     "sort_index": 99,
     "is_show_more": False,
     "packaged": False,
+    "megamenu_search_terms": [],
 }
 
 EC_EVENTS_MOBILE: ViewSpec = {
@@ -2295,4 +2297,5 @@ EC_EVENTS_MOBILE: ViewSpec = {
     "sort_index": 99,
     "is_show_more": False,
     "packaged": False,
+    "megamenu_search_terms": [],
 }

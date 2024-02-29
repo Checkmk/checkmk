@@ -7,7 +7,7 @@ import dataclasses
 import math
 import time
 from collections.abc import Generator, Iterator, MutableMapping, Sequence
-from typing import Any, Literal
+from typing import Any
 
 from typing_extensions import TypedDict
 
@@ -41,23 +41,6 @@ class TempParamDict(TypedDict, total=False):
 
 
 TempParamType = None | TwoLevelsType | FourLevelsType | TempParamDict
-
-
-@dataclasses.dataclass(frozen=True, kw_only=True)
-class CheckTempKwargs:
-    """
-    dev_unit (str): The unit. May be one of 'c', 'f' or 'k'.
-    dev_levels (tuple[float, float] or None): The upper levels (warn, crit)
-    dev_levels_lower (tuple[float, float] or None): The lower levels (warn, crit)
-    dev_status (StatusType or None): The status according to the device itself.
-    dev_status_name (str or None): The device's own name for the status.
-    """
-
-    dev_unit: Literal["k", "f", "c"]
-    dev_levels: tuple[float, float] | None
-    dev_levels_lower: tuple[float, float] | None
-    dev_status: StatusType | None
-    dev_status_name: str | None
 
 
 def fahrenheit_to_celsius(tempf, relative=False):
@@ -299,15 +282,15 @@ def check_temperature(  # pylint: disable=too-many-branches
     computations are done in Celsius.
 
     Args:
-        reading (Number): The numeric temperature value itself.
-        params (dict): A dictionary giving the user's configuration. See below.
-        unique_name (str): The name under which to track performance data for trend computation.
+        reading: The numeric temperature value itself.
+        params: A dictionary giving the user's configuration. See below.
+        unique_name: The name under which to track performance data for trend computation.
         value_store: The Value Store to used for trend computation
-        dev_unit (str): The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
-        dev_levels (Optional[LevelsType]): The upper levels (warn, crit)
-        dev_levels_lower (Optional[LevelsType]): The lower levels (warn, crit)
-        dev_status (Optional[StatusType]): The status according to the device itself.
-        dev_status_name (Optional[str]): The device's own name for the status.
+        dev_unit: The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
+        dev_levels: The upper levels (warn, crit)
+        dev_levels_lower: The lower levels (warn, crit)
+        dev_status: The status according to the device itself.
+        dev_status_name: The device's own name for the status.
 
     Configuration:
         The parameter "params" may contain user configurable settings with the following keys:
@@ -537,8 +520,15 @@ def _make_preferred_result(
     )
 
 
-def check_temperature_list(
-    sensorlist: Sequence[tuple[str, float, CheckTempKwargs]],
+@dataclasses.dataclass(frozen=True)
+class TemperatureSensor:
+    id: str
+    temp: float
+    result: Result
+
+
+def aggregate_temperature_results(
+    sensorlist: Sequence[TemperatureSensor],
     params: TempParamDict,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
@@ -548,14 +538,9 @@ def check_temperature_list(
     computations are done in Celsius.
 
     Args:
-        sensorlist (List[tuple[str, float, CheckTempKwargs]]): A list of tuple containing the sensor ID,
-        the temperature value, and the single sensor's arguments (See CheckTempKwargs).
-        params (dict): A dictionary giving the user's configuration. See below.
+        sensorlist: A sequence of sensors containing the sensor ID, the temperature value, and the single sensor's result.
+        params: A dictionary giving the user's configuration.
         value_store: The Value Store to used for trend computation
-
-    Configuration:
-        see check_temperature docstring
-
     """
 
     if not sensorlist:
@@ -567,34 +552,21 @@ def check_temperature_list(
     output_unit = params.get("output_unit", "c")
     unitsym = temp_unitsym[output_unit]
 
-    tempmax = max(temp for _item, temp, _kwargs in sensorlist)
+    tempmax = max(s.temp for s in sensorlist)
     yield Result(state=State.OK, summary=f"Highest: {render_temp(tempmax, output_unit)} {unitsym}")
     yield Metric("temp", tempmax)
 
-    tempavg = sum(temp for _item, temp, _kwargs in sensorlist) / float(sensor_count)
+    tempavg = sum(s.temp for s in sensorlist) / float(sensor_count)
     yield Result(state=State.OK, summary=f"Average: {render_temp(tempavg, output_unit)} {unitsym}")
 
-    tempmin = min(temp for _item, temp, _kwargs in sensorlist)
+    tempmin = min(s.temp for s in sensorlist)
     yield Result(state=State.OK, summary=f"Lowest: {render_temp(tempmin, output_unit)} {unitsym}")
 
-    for sub_item, temperature, kwargs in sensorlist:
-        sub_result = check_temperature(
-            temperature,
-            params,
-            unique_name=sub_item,
-            value_store=value_store,
-            dev_unit=kwargs.dev_unit,
-            dev_levels=kwargs.dev_levels,
-            dev_levels_lower=kwargs.dev_levels_lower,
-            dev_status=kwargs.dev_status,
-            dev_status_name=kwargs.dev_status_name,
-        ).reading
-
-        if sub_result.state != State.OK:
-            yield Result(
-                state=sub_result.state,
-                summary=f"{sub_item}: {sub_result.summary}",
-            )
+    yield from (
+        Result(state=s.result.state, summary=f"{s.id}: {s.result.summary}")
+        for s in sensorlist
+        if s.result.state != State.OK
+    )
 
     if "trend_compute" in params and "period" in params["trend_compute"]:
         usr_crit, usr_crit_lower = None, None

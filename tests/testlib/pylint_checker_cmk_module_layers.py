@@ -647,6 +647,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
     ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
     ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
+    ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
     ModulePath("omd/packages/enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),

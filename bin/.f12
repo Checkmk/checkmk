@@ -21,6 +21,7 @@ sudo install -m 755 \
     cmk-compute-api-spec \
     cmk-update-license-usage \
     cmk-passwd \
+    cmk-trigger-api-spec-job \
     post-rename-site \
     init-redis \
     "$ROOT"/bin/

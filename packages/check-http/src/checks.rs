@@ -92,15 +92,12 @@ pub fn collect_response_checks(
             response.status,
             request_information.onredirect,
         ))
-        .chain(check_headers(&response.headers, params.header_matchers))
-        .chain(body_check_results)
-        .chain(check_page_size(body.as_ref(), params.page_size))
-        .chain(check_body_matching(body.as_ref(), params.body_matchers))
         .chain(check_response_time(
             response_time,
             params.response_time_levels,
             request_information.timeout,
         ))
+        .chain(body_check_results)
         .chain(check_page_age(
             SystemTime::now(),
             response
@@ -109,11 +106,14 @@ pub fn collect_response_checks(
                 .or(response.headers.get("date")),
             params.document_age_levels,
         ))
+        .chain(check_page_size(body.as_ref(), params.page_size))
         .chain(check_certificate(
             response.tls_info,
             params.certificate_levels,
         ))
         .chain(check_user_agent(request_information.user_agent))
+        .chain(check_headers(&response.headers, params.header_matchers))
+        .chain(check_body_matching(body.as_ref(), params.body_matchers))
         .flatten()
         .collect()
 }

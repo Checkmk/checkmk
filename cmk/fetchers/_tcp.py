@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 from typing import Final
 
-import cmk.utils.debug
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.certs import write_cert_store
@@ -44,8 +43,6 @@ def recvall(sock: socket.socket, flags: int = 0) -> bytes:
                 break
             buffer += data
     except OSError as e:
-        if cmk.utils.debug.enabled():
-            raise
         raise MKFetcherError("Communication failed: %s" % e)
 
     return bytes(buffer)
@@ -152,9 +149,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
             self._socket.settimeout(None)
         except OSError as e:
             self._close_socket()
-
-            if cmk.utils.debug.enabled():
-                raise
             raise MKFetcherError("Communication failed: %s" % e)
 
     def close(self) -> None:

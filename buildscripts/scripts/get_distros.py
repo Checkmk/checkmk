@@ -3,19 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import argparse
-import os
 import sys
 import urllib.parse
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import NamedTuple
 
 import docker  # type: ignore
 import requests
 import yaml
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 
 from tests.testlib.utils import get_cmk_download_credentials_file
 from tests.testlib.version import ABCPackageManager, code_name
@@ -247,7 +247,7 @@ def print_internal_distros(arguments: argparse.Namespace, loaded_yaml: dict) -> 
     if arguments.as_codename:
         if diff := distros - loaded_yaml["distro_to_codename"].keys():
             raise Exception(
-                f"{args.editions_file} is missing the distro code for the following distros: "
+                f"{arguments.editions_file} is missing the distro code for the following distros: "
                 f"{diff}. Please add the corresponding distro code."
             )
         distros = [loaded_yaml["distro_to_codename"][d] for d in distros]
@@ -258,8 +258,12 @@ def print_internal_distros(arguments: argparse.Namespace, loaded_yaml: dict) -> 
     print(" ".join(distros))
 
 
+def distros_for_use_case(loaded_yaml: dict, edition: str, use_case: str) -> Iterable[str]:
+    return sorted(flatten_list(loaded_yaml["editions"][edition][use_case]))
+
+
 def print_distros_for_use_case(arguments: argparse.Namespace, loaded_yaml: dict) -> None:
-    print(" ".join(flatten_list(loaded_yaml["editions"][arguments.edition][arguments.use_case])))
+    print(" ".join(distros_for_use_case(loaded_yaml, arguments.edition, arguments.use_case)))
 
 
 COMMANDS_TO_FUNCTION: Mapping[str, Callable[[argparse.Namespace, dict], None]] = {
@@ -273,6 +277,27 @@ def flatten_list(list_to_flatten: list[list[str] | str]) -> list[str]:
     # This is a workaround the fact that yaml cannot "extend" a predefined node which is a list:
     # https://stackoverflow.com/questions/19502522/extend-an-array-in-yaml
     return [h for elem in list_to_flatten for h in (elem if isinstance(elem, list) else [elem])]
+
+
+def test_distro_lists():
+    with open(Path(__file__).parent.parent.parent / "editions.yml") as editions_file:
+        loaded_yaml = yaml.load(editions_file, Loader=yaml.FullLoader)
+    # fmt: off
+    assert distros_for_use_case(loaded_yaml, "enterprise", "release") == [
+        "almalinux-9", "centos-8",
+        "cma-3", "cma-4",
+        "debian-10", "debian-11", "debian-12",
+        "sles-12sp5", "sles-15sp3", "sles-15sp4", "sles-15sp5",
+        "ubuntu-20.04", "ubuntu-22.04",
+    ]
+    assert distros_for_use_case(loaded_yaml, "enterprise", "daily") == [
+        "almalinux-9", "centos-8",
+        "cma-4",
+        "debian-12",
+        "sles-15sp5",
+        "ubuntu-20.04", "ubuntu-22.04", "ubuntu-23.10",
+    ]
+    # fmt: on
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -293,6 +318,11 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-args = parse_arguments()
-with open(args.editions_file) as editions_file:
-    COMMANDS_TO_FUNCTION[args.command](args, yaml.load(editions_file, Loader=yaml.FullLoader))
+def main() -> None:
+    args = parse_arguments()
+    with open(args.editions_file) as editions_file:
+        COMMANDS_TO_FUNCTION[args.command](args, yaml.load(editions_file, Loader=yaml.FullLoader))
+
+
+if __name__ == "__main__":
+    main()

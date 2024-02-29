@@ -16,6 +16,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     HTTPUrl,
     ListOf,
+    Migrate,
     NetworkPort,
     RegExp,
     TextInput,
@@ -23,6 +24,26 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword
 
 from cmk.plugins.aws import constants as aws_constants  # pylint: disable=cmk-module-layer-violation
+
+
+def prometheus_connection() -> Migrate[TextInput]:
+    valuespec = TextInput(
+        title=_("URL server address"),
+        help=_("Specify a URL to connect to your server. Do not include the protocol."),
+        allow_empty=False,
+    )
+
+    def migrate(value: object) -> str:
+        match value:
+            case ("url_custom", {"url_address": str(v)}):
+                return v
+            case str(v):
+                return v
+        raise MKUserError(
+            None, _("The options IP Address and Host name have been removed - Werk #14573.")
+        )
+
+    return Migrate(valuespec=valuespec, migrate=migrate)  # type: ignore[arg-type]
 
 
 def api_request_authentication() -> DictionaryEntry:

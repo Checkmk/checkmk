@@ -5,23 +5,13 @@
 
 from collections.abc import Iterator, Mapping
 
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    noop_parser,
-    SpecialAgentCommand,
-    SpecialAgentConfig,
-)
+from cmk.server_side_calls.v1 import noop_parser, SpecialAgentCommand, SpecialAgentConfig
 
 
 def commands_function_alertmanager(
-    params: Mapping[str, object], host_config: HostConfig, _http_proxies: object
+    params: Mapping[str, object], _host_config: object, _http_proxies: object
 ) -> Iterator[SpecialAgentCommand]:
-    alertmanager_params = {
-        **params,
-        "host_address": host_config.primary_ip_config.address,
-        "host_name": host_config.name,
-    }
-    yield SpecialAgentCommand(command_arguments=[], stdin=repr(alertmanager_params))
+    yield SpecialAgentCommand(command_arguments=[], stdin=repr(params))
 
 
 special_agent_alertmanager = SpecialAgentConfig(

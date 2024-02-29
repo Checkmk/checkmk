@@ -2961,6 +2961,12 @@ def main_update(  # pylint: disable=too-many-branches
         # initialized tmpfs.
         mu.prepare_and_populate_tmpfs(version_info, site)
 
+        process = subprocess.run(
+            ["cmk-update-config", "--conflict", conflict_mode, "--dry-run"], check=False
+        )
+        if process.returncode != 0:
+            sys.exit(process.returncode)
+
     call_scripts(
         site,
         "update-pre-hooks",

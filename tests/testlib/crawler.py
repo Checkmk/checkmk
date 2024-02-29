@@ -143,7 +143,9 @@ def try_find_frame_named_main(page: playwright.async_api.Page) -> playwright.asy
 
 
 class Crawler:
-    def __init__(self, test_site: Site, report_file: str | None, max_urls: int = 0) -> None:
+    def __init__(
+        self, test_site: Site, report_file: str | None, max_urls: int | None = None
+    ) -> None:
         self.duration = 0.0
         self.results: dict[str, CrawlResult] = {}
         self.site = test_site

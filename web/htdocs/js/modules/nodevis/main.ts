@@ -22,6 +22,7 @@ import {
 } from "nodevis/node_utils";
 import {SearchNodes} from "nodevis/search";
 import * as texts from "nodevis/texts";
+import {TranslationKey} from "nodevis/texts";
 import {TopologyForceConfig} from "nodevis/topology";
 import {
     BackendResponse,
@@ -51,11 +52,17 @@ export class NodeVisualization {
     _div_selection: d3SelectionDiv;
     _world: NodevisWorld;
 
-    constructor(div_id: string, datasource: DatasourceType) {
+    constructor(
+        div_id: string,
+        datasource: DatasourceType,
+        translations: Record<TranslationKey, string> | null = null
+    ) {
         this._div_id = div_id;
         this._div_selection = d3
             .select<HTMLDivElement, null>("#" + this._div_id)
             .append("div");
+
+        if (translations) texts.set_translations(translations);
         this._world = this._create_world(datasource);
         this._world.datasource_manager.schedule(true);
     }
@@ -213,8 +220,12 @@ export class TopologyVisualization extends NodeVisualization {
     _frontend_configuration: TopologyFrontendConfig | null = null;
     _livesearch: LiveSearch;
 
-    constructor(div_id: string, topology_type: string) {
-        super(div_id, "topology");
+    constructor(
+        div_id: string,
+        topology_type: string,
+        translations: Record<TranslationKey, string>
+    ) {
+        super(div_id, "topology", translations);
         this._topology_type = topology_type;
         this._topology_datasource =
             this._world.datasource_manager.get_datasource(

@@ -5,8 +5,10 @@
  */
 
 export function get(key: keyof typeof default_lookup): string {
-    return default_lookup[key] || "MISSING TRANSLATION";
+    return translations[key] || default_lookup[key] || "MISSING TRANSLATION";
 }
+
+let translations: Record<string, string> = {};
 
 const default_lookup = {
     default: "Default",
@@ -46,7 +48,6 @@ const default_lookup = {
     only_problems: "Only problems",
     show_services: "Show services",
     global_default: "Global default",
-    services_remove_explicit_setting: "Services: Remove explicit setting",
     services: "Services",
     merge_data: "Merge nodes with equal ID",
     set_root_node: "Replace hierarchical root with this node",
@@ -71,3 +72,9 @@ const default_lookup = {
 };
 
 export type TranslationKey = keyof typeof default_lookup;
+
+export function set_translations(
+    new_translations: Record<TranslationKey, string>
+) {
+    translations = new_translations;
+}

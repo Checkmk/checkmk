@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
-from typing import Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel
 
@@ -16,7 +16,7 @@ from cmk.server_side_calls.v1 import (
     parse_http_proxy,
 )
 
-_DAY = 24 * 3600
+_DAY: Final[int] = 24 * 3600
 
 
 class HttpVersion(StrEnum):
@@ -122,10 +122,6 @@ ProxySpec = (
 
 PasswordSpec = tuple[PasswordType, str]
 
-IntLevels = (
-    tuple[Literal[LevelsType.NO_LEVELS], None] | tuple[Literal[LevelsType.FIXED], tuple[int, int]]
-)
-
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
     | tuple[Literal[LevelsType.FIXED], tuple[float, float]]
@@ -225,7 +221,7 @@ class HttpSettings(BaseModel):
     server_response: ServerResponse | None = None
     cert: (
         tuple[Literal[Validation.NO_VALIDATION], None]
-        | tuple[Literal[Validation.VALIDATE], IntLevels]
+        | tuple[Literal[Validation.VALIDATE], FloatLevels]
         | None
     ) = None
     document: Document | None = None
@@ -486,7 +482,7 @@ def _status_code_args(response_codes: ServerResponse) -> Iterator[str]:
 def _cert_args(
     cert_validation: (
         tuple[Literal[Validation.NO_VALIDATION], None]
-        | tuple[Literal[Validation.VALIDATE], IntLevels]
+        | tuple[Literal[Validation.VALIDATE], FloatLevels]
     )
 ) -> Iterator[str]:
     match cert_validation:

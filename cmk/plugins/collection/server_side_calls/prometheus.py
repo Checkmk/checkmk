@@ -3,21 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, Literal
+from typing import Iterable, Literal
 
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
-
-
-class ConnectionElements(BaseModel):
-    port: int | None = None
-    path_prefix: str | None = None
-    base_prefix: str | None = None
-
-
-class UrlCustom(BaseModel):
-    url_address: str
 
 
 class BasicAuthentication(BaseModel):
@@ -74,9 +64,7 @@ class PromQLCheck(BaseModel):
 
 
 class PrometheusParams(BaseModel):
-    connection: tuple[Literal["ip_address"], ConnectionElements] | tuple[
-        Literal["host_name"], ConnectionElements
-    ] | tuple[Literal["url_custom"], UrlCustom]
+    connection: str
     verify_cert: bool | None = Field(default=None, alias="verify-cert")
     auth_basic: tuple[Literal["auth_login"], BasicAuthentication] | tuple[
         Literal["auth_token"], TokenAuthentication
@@ -94,10 +82,7 @@ def generate_prometheus_command(
     host_config: HostConfig,
     _http_proxies: object,
 ) -> Iterable[SpecialAgentCommand]:
-    prometheus_params: dict[str, Any] = {
-        "host_address": host_config.primary_ip_config.address,
-        "host_name": host_config.name,
-    }
+    prometheus_params: dict[str, object] = {}
     if params.verify_cert is not None:
         prometheus_params["verify-cert"] = params.verify_cert
     prometheus_params.update(params.model_dump(exclude=set("verify_cert"), exclude_none=True))

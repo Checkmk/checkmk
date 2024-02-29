@@ -6,63 +6,23 @@
 Common functions used in Prometheus related Special agents
 """
 
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Required, TypedDict
 
 from cmk.utils import password_store
 
 from cmk.special_agents.v0_unstable.request_helper import create_api_connect_session, parse_api_url
 
 
-class ConnectionSetting(TypedDict, total=False):
-    url_address: str
-    port: int
-    path_prefix: str
-    base_prefix: str
-
-
 class ConnectionConfig(TypedDict):
-    # The correct typing causes mypy to crash, but it would be:
-    # class URLSetting(TypedDict):
-    #     url_address: str
-    #
-    #
-    # class HostSetting(TypedDict):
-    #     port: int
-    #     path_prefix: str
-    #     base_prefix: str
-    #
-    #
-    # URLConnection = tuple[Literal["url_custom"], URLSetting]
-    # HostConnection = tuple[Literal["ip_address", "host_name"], HostSetting]
-    # connection: URLConnection | HostConnection
-    connection: tuple[Literal["url_custom", "ip_address", "host_name"], ConnectionSetting]
-    host_address: str | None
-    host_name: str | None
+    connection: Required[str]
+    protocol: Required[str]
 
 
 def _get_api_url(config: ConnectionConfig) -> str:
-    match config["connection"]:
-        case "url_custom", settings:
-            address = settings["url_address"]
-        case "ip_address", settings:
-            address = config["host_address"]
-        case "host_name", settings:
-            address = config["host_name"]
-
-    port = settings.get("port")
-    path_prefix = settings.get("path_prefix")
-    base_prefix = settings.get("base_prefix")
-    protocol = config.get("protocol")
-
     return parse_api_url(
-        server_address=address,
+        server_address=config["connection"],
         api_path="api/v1/",
-        protocol=protocol,
-        port=port,
-        url_prefix=base_prefix,
-        path_prefix=path_prefix,
+        protocol=config["protocol"],
     )
 
 

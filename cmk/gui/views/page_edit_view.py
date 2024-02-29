@@ -949,6 +949,7 @@ def _dummy_view_spec() -> ViewSpec:
             "add_context_to_title": True,
             "is_show_more": False,
             "packaged": False,
+            "megamenu_search_terms": [],
         }
     )
 

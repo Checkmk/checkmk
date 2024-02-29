@@ -345,6 +345,7 @@ def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
             "public": False,
             "link_from": {},
             "packaged": False,
+            "megamenu_search_terms": [],
         }
     )
 

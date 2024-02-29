@@ -618,8 +618,15 @@ def _coalesce_schemas(
     return rv
 
 
+def _patch_regex(fields: dict[str, Field]) -> dict[str, Field]:
+    for _, value in fields.items():
+        if "pattern" in value.metadata and value.metadata["pattern"].endswith(r"\Z"):
+            value.metadata["pattern"] = value.metadata["pattern"][:-2] + "$"
+    return fields
+
+
 def _to_named_schema(fields_: dict[str, Field]) -> type[Schema]:
-    attrs: dict[str, Any] = fields_.copy()
+    attrs: dict[str, Any] = _patch_regex(fields_.copy())
     attrs["Meta"] = type(
         "GeneratedMeta",
         (Schema.Meta,),

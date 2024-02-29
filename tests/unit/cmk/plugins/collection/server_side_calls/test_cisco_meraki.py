@@ -9,13 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.plugins.collection.server_side_calls.cisco_meraki import special_agent_cisco_meraki
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    IPv4Config,
-    PlainTextSecret,
-    SpecialAgentCommand,
-)
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, Secret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(
     name="testhost",
@@ -30,13 +24,13 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
     [
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
             },
             [
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                     ]
                 )
             ],
@@ -44,7 +38,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
                 "proxy": (
                     "url",
                     "abc:8567",
@@ -54,7 +48,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--proxy",
                         "abc:8567",
                     ]
@@ -64,7 +58,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
                 "proxy": (
                     "environment",
                     "environment",
@@ -74,7 +68,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--proxy",
                         "FROM_ENVIRONMENT",
                     ]
@@ -84,7 +78,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
                 "proxy": (
                     "no_proxy",
                     None,
@@ -94,7 +88,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--proxy",
                         "NO_PROXY",
                     ]
@@ -104,7 +98,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
                 "proxy": (
                     "global",
                     "my_proxy",
@@ -114,7 +108,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--proxy",
                         "proxy.com",
                     ]
@@ -124,7 +118,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
                 "proxy": (
                     "global",
                     "test_proxy",
@@ -134,7 +128,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--proxy",
                         "FROM_ENVIRONMENT",
                     ]
@@ -144,14 +138,14 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
                 "sections": ["sec1", "sec2"],
             },
             [
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--sections",
                         "sec1",
                         "sec2",
@@ -162,14 +156,14 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         ),
         pytest.param(
             {
-                "api_key": ("password", "my-api-key"),
+                "api_key": Secret(0),
                 "orgs": ["org1", "org2"],
             },
             [
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        PlainTextSecret(value="my-api-key"),
+                        Secret(0),
                         "--orgs",
                         "org1",
                         "org2",

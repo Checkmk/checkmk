@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.prism.server_side_calls.special_agent import generate_prism_command
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 HOST_CONFIG = HostConfig(
     name="host name",
@@ -20,40 +20,40 @@ HOST_CONFIG = HostConfig(
     ["params", "expected_args"],
     [
         pytest.param(
-            {"username": "", "password": ("password", "")},
+            {"username": "", "password": Secret(12)},
             [
                 "--server",
                 "address",
                 "--username",
                 "",
                 "--password",
-                PlainTextSecret(value="", format="%s"),
+                Secret(12, "%s"),
             ],
             id="explicit password and no port",
         ),
         pytest.param(
-            {"username": "userid", "password": ("password", "password"), "port": 9440},
+            {"username": "userid", "password": Secret(23), "port": 9440},
             [
                 "--server",
                 "address",
                 "--username",
                 "userid",
                 "--password",
-                PlainTextSecret(value="password", format="%s"),
+                Secret(23, format="%s"),
                 "--port",
                 "9440",
             ],
             id="explicit password and port",
         ),
         pytest.param(
-            {"username": "userid", "password": ("store", "prism"), "port": 9440},
+            {"username": "userid", "password": Secret(42), "port": 9440},
             [
                 "--server",
                 "address",
                 "--username",
                 "userid",
                 "--password",
-                StoredSecret(value="prism", format="%s"),
+                Secret(42),
                 "--port",
                 "9440",
             ],

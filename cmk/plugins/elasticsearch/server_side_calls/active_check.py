@@ -12,7 +12,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    parse_secret,
     replace_macros,
     Secret,
 )
@@ -23,7 +22,7 @@ class Params(BaseModel):
     hostname: str | None = None
     protocol: Literal["http", "https"] | None = None
     user: str | None = None
-    password: tuple[Literal["password", "store"], str] | None = None
+    password: Secret | None = None
     port: int | None = None
     index: list[str] | None = None
     pattern: str
@@ -42,7 +41,7 @@ def commands_function(
     if params.user is not None:
         args += ["-u", params.user]
     if params.password is not None:
-        args += ["-s", parse_secret(params.password)]
+        args += ["-s", params.password]
     if params.port is not None:
         args += ["-p", str(params.port)]
     if params.index:

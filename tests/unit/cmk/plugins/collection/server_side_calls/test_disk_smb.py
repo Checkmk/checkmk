@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.disk_smb import active_check_config
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 pytestmark = pytest.mark.checks
 
@@ -41,7 +41,7 @@ HOST_CONFIG = HostConfig(
                 "share": "foo",
                 "levels": (85.0, 95.0),
                 "host": ("define_host", "test_host"),
-                "auth": ("user_1", ("store", "password_id_1")),
+                "auth": ("user_1", Secret(1)),
                 "ip_address": "100.100.10.1",
             },
             [
@@ -54,7 +54,7 @@ HOST_CONFIG = HostConfig(
                 "-u",
                 "user_1",
                 "-p",
-                StoredSecret(value="password_id_1", format="%s"),
+                Secret(1),
                 "-a",
                 "100.100.10.1",
             ],
@@ -66,7 +66,7 @@ HOST_CONFIG = HostConfig(
                 "host": ("define_host", "host_str"),
                 "port": 123,
                 "workgroup": "_workgroup",
-                "auth": ("user_1", ("password", "shhhhh")),
+                "auth": ("user_1", Secret(1)),
                 "ip_address": "168.1.4.23",
             },
             [
@@ -83,7 +83,7 @@ HOST_CONFIG = HostConfig(
                 "-u",
                 "user_1",
                 "-p",
-                PlainTextSecret(value="shhhhh", format="%s"),
+                Secret(1),
                 "-a",
                 "168.1.4.23",
             ],

@@ -10,13 +10,7 @@ import pytest
 from cmk.plugins.proxmox_ve.server_side_calls.special_agent import (
     special_agent_proxmox_ve as config,
 )
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    IPv4Config,
-    PlainTextSecret,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, Secret
 
 
 @pytest.mark.parametrize(
@@ -25,7 +19,7 @@ from cmk.server_side_calls.v1 import (
         pytest.param(
             {
                 "username": "user",
-                "password": ("password", "passwd"),
+                "password": Secret(23),
                 "port": "443",
                 "no-cert-check": True,
                 "timeout": "30",
@@ -35,7 +29,7 @@ from cmk.server_side_calls.v1 import (
                 "-u",
                 "user",
                 "-p",
-                PlainTextSecret(value="passwd"),
+                Secret(23),
                 "--port",
                 "443",
                 "--no-cert-check",
@@ -46,23 +40,6 @@ from cmk.server_side_calls.v1 import (
                 "testhost",
             ],
             id="explicit_password",
-        ),
-        pytest.param(
-            {
-                "username": "user",
-                "password": ("store", "passwd"),
-                "timeout": "40",
-            },
-            [
-                "-u",
-                "user",
-                "-p",
-                StoredSecret(value="passwd"),
-                "--timeout",
-                "40",
-                "testhost",
-            ],
-            id="password_from_store",
         ),
     ],
 )

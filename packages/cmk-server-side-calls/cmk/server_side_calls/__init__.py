@@ -23,12 +23,10 @@ Special agent
 
 
     >>> from collections.abc import Iterator, Mapping, Sequence
-    >>> from typing import Literal
     ...
     >>> from pydantic import BaseModel
     ...
     >>> from cmk.server_side_calls.v1 import (
-    ...     parse_secret,
     ...     HostConfig,
     ...     HTTPProxy,
     ...     Secret,
@@ -40,7 +38,7 @@ Special agent
     >>> class ExampleParams(BaseModel):
     ...     protocol: str
     ...     user: str
-    ...     password: tuple[Literal["store", "password"], str]
+    ...     password: Secret
     ...
     ...
     >>> def generate_example_commands(
@@ -54,7 +52,7 @@ Special agent
     ...         "-u",
     ...         params.user,
     ...         "-s",
-    ...         parse_secret(params.password),
+    ...        params.password,
     ...     ]
     ...
     ...     yield SpecialAgentCommand(command_arguments=args)
@@ -76,14 +74,12 @@ Active check
 
 
     >>> from collections.abc import Iterator, Mapping, Sequence
-    >>> from typing import Literal
     ...
     >>> from pydantic import BaseModel
     ...
     >>> from cmk.server_side_calls.v1 import (
     ...     ActiveCheckCommand,
     ...     ActiveCheckConfig,
-    ...     parse_secret,
     ...     HostConfig,
     ...     HTTPProxy,
     ...     Secret,
@@ -93,7 +89,7 @@ Active check
     >>> class ExampleParams(BaseModel):
     ...     protocol: str
     ...     user: str
-    ...     password: tuple[Literal["store", "password"], str]
+    ...     password: Secret
     ...
     ...
     >>> def generate_example_commands(
@@ -107,7 +103,7 @@ Active check
     ...         "-u",
     ...         params.user,
     ...         "-s",
-    ...         parse_secret(params.password),
+    ...         params.password,
     ...     ]
     ...
     ...     yield ActiveCheckCommand(service_description="Example", command_arguments=args)

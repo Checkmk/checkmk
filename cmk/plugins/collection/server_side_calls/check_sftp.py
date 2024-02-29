@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import Literal
 
 from pydantic import BaseModel
 
@@ -13,7 +12,7 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
-    parse_secret,
+    Secret,
 )
 
 
@@ -25,7 +24,7 @@ class Operation(BaseModel):
 class SFTPParameters(BaseModel):
     host: str
     user: str
-    secret: tuple[Literal["store", "password"], str]
+    secret: Secret
     description: str | None = None
     port: int | None = None
     timeout: int | None = None
@@ -42,29 +41,27 @@ def _make_option(name: str, value: str | int | None) -> tuple[str, ...]:
 def _commands_check_sftp(
     params: SFTPParameters, host_config: HostConfig, proxies: Mapping[str, HTTPProxy]
 ) -> Iterable[ActiveCheckCommand]:
-    args = (
-        f"--host={params.host}",
-        f"--user={params.user}",
-        parse_secret(params.secret, "--secret=%s"),
-        *_make_option("port", params.port),
-        *_make_option("timeout", params.timeout),
-        *_make_option("get-timestamp", params.timestamp),
-        *(
-            (f"--put-local={params.put.local}", f"--put-remote={params.put.remote}")
-            if params.put
-            else ()
-        ),
-        *(
-            (f"--get-local={params.get.local}", f"--get-remote={params.get.remote}")
-            if params.get
-            else ()
-        ),
-        *(("--look-for-keys",) if params.look_for_keys else ()),
-    )
-
     yield ActiveCheckCommand(
         service_description=params.description or f"SFTP {params.host}",
-        command_arguments=args,
+        command_arguments=(
+            f"--host={params.host}",
+            f"--user={params.user}",
+            params.secret.with_format("--secret=%s"),
+            *_make_option("port", params.port),
+            *_make_option("timeout", params.timeout),
+            *_make_option("get-timestamp", params.timestamp),
+            *(
+                (f"--put-local={params.put.local}", f"--put-remote={params.put.remote}")
+                if params.put
+                else ()
+            ),
+            *(
+                (f"--get-local={params.get.local}", f"--get-remote={params.get.remote}")
+                if params.get
+                else ()
+            ),
+            *(("--look-for-keys",) if params.look_for_keys else ()),
+        ),
     )
 
 

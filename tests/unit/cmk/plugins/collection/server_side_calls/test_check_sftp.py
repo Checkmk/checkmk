@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.collection.server_side_calls.check_sftp import active_check_sftp
-from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config, PlainTextSecret
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config, Secret
 
 SOME_HOST_CONFIG = HostConfig(
     name="hostname",
@@ -20,14 +20,14 @@ SOME_HOST_CONFIG = HostConfig(
     "params,expected_args",
     [
         pytest.param(
-            {"host": "foo", "user": "bar", "secret": ("password", "baz"), "look_for_keys": True},
+            {"host": "foo", "user": "bar", "secret": Secret(0), "look_for_keys": True},
             (
                 ActiveCheckCommand(
                     service_description="SFTP foo",
                     command_arguments=(
                         "--host=foo",
                         "--user=bar",
-                        PlainTextSecret(value="baz", format="--secret=%s"),
+                        Secret(0, "--secret=%s"),
                         "--look-for-keys",
                     ),
                 ),
@@ -35,14 +35,14 @@ SOME_HOST_CONFIG = HostConfig(
             id="look for keys",
         ),
         pytest.param(
-            {"host": "foo", "user": "bar", "secret": ("password", "baz")},
+            {"host": "foo", "user": "bar", "secret": Secret(0)},
             (
                 ActiveCheckCommand(
                     service_description="SFTP foo",
                     command_arguments=(
                         "--host=foo",
                         "--user=bar",
-                        PlainTextSecret(value="baz", format="--secret=%s"),
+                        Secret(0, "--secret=%s"),
                     ),
                 ),
             ),
@@ -52,7 +52,7 @@ SOME_HOST_CONFIG = HostConfig(
             {
                 "host": "foo",
                 "user": "bar",
-                "secret": ("password", "baz"),
+                "secret": Secret(0),
                 "get": {"remote": "my/remote/get", "local": "my/local/get"},
                 "put": {"remote": "my/remote/put", "local": "my/local/put"},
             },
@@ -62,7 +62,7 @@ SOME_HOST_CONFIG = HostConfig(
                     command_arguments=(
                         "--host=foo",
                         "--user=bar",
-                        PlainTextSecret(value="baz", format="--secret=%s"),
+                        Secret(0, "--secret=%s"),
                         "--put-local=my/local/put",
                         "--put-remote=my/remote/put",
                         "--get-local=my/local/get",

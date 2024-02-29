@@ -17,7 +17,6 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     noop_parser,
-    parse_secret,
     replace_macros,
     Secret,
     SpecialAgentCommand,
@@ -42,8 +41,8 @@ def _agent_elasticsearch_arguments(
     if "user" in params:
         args.extend(["-u", str(params["user"])])
     if "password" in params:
-        assert isinstance(params["password"], tuple)
-        args.extend(["-s", parse_secret(params["password"])])
+        assert isinstance(secret := params["password"], Secret)
+        args.extend(["-s", secret])
     if "port" in params:
         args.extend(["-p", str(params["port"])])
     if params.get("no-cert-check", False):

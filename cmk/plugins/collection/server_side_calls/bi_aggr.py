@@ -13,18 +13,15 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
-    parse_secret,
     replace_macros,
     Secret,
 )
-
-from .utils import SecretType
 
 
 class Credentials(BaseModel):
     automation: bool = False
     user: str | None = None
-    password: tuple[SecretType, str] | None = None
+    password: Secret | None = None
 
 
 class OptionalParams(BaseModel):
@@ -74,7 +71,7 @@ def check_bi_aggr_services(
             "-u",
             params.credentials.user,
             "-s",
-            parse_secret(params.credentials.password),
+            params.credentials.password,
         ]
     opt_params = params.optional
     if opt_params and opt_params.auth_mode:

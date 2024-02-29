@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.mobileiron import special_agent_mobileiron
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, Secret, StoredSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 HOST_CONFIG = HostConfig(
     name="mobileironhostname",
@@ -22,7 +22,7 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "username": "mobileironuser",
-                "password": ("password", "mobileironpassword"),
+                "password": Secret(23),
                 "proxy": (
                     "url",
                     "abc:8567",
@@ -37,7 +37,7 @@ HOST_CONFIG = HostConfig(
                 "-u",
                 "mobileironuser",
                 "-p",
-                PlainTextSecret(value="mobileironpassword", format="%s"),
+                Secret(23),
                 "--partition",
                 "10",
                 "--hostname",
@@ -53,27 +53,6 @@ HOST_CONFIG = HostConfig(
                 "somefield",
             ],
             id="explicit_password",
-        ),
-        pytest.param(
-            {
-                "username": "mobileironuser",
-                "password": ("store", "mobileironpassword"),
-                "key-fields": ("somefield",),
-                "partition": ["10", "20"],
-            },
-            [
-                "-u",
-                "mobileironuser",
-                "-p",
-                StoredSecret(value="mobileironpassword", format="%s"),
-                "--partition",
-                "10,20",
-                "--hostname",
-                "mobileironhostname",
-                "--key-fields",
-                "somefield",
-            ],
-            id="password_from_store",
         ),
     ],
 )

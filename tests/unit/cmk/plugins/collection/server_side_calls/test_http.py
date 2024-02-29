@@ -19,14 +19,7 @@ from cmk.plugins.collection.server_side_calls.http import (
     ProxySettings,
     URLMode,
 )
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    IPv4Config,
-    IPv6Config,
-    PlainTextSecret,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, IPv4Config, IPv6Config, Secret
 
 HOST_CONFIG = HostConfig(
     name="hostname",
@@ -101,7 +94,7 @@ HOST_CONFIG = HostConfig(
                             "address": "163.172.86.64",
                             "auth": (
                                 "user",
-                                ("password", "pwd"),
+                                Secret(0),
                             ),
                         },
                     ),
@@ -118,7 +111,7 @@ HOST_CONFIG = HostConfig(
                 "CONNECT",
                 "--sni",
                 "-b",
-                PlainTextSecret(value="pwd", format="user:%s"),
+                Secret(0, "user:%s"),
                 "-I",
                 "163.172.86.64",
                 "-H",
@@ -213,7 +206,7 @@ HOST_CONFIG = HostConfig(
                             "port": 23,
                             "auth": (
                                 "user",
-                                ("store", "check_http"),
+                                Secret(1),
                             ),
                         },
                     ),
@@ -229,7 +222,7 @@ HOST_CONFIG = HostConfig(
                 "CONNECT",
                 "--sni",
                 "-b",
-                StoredSecret(value="check_http", format="user:%s"),
+                Secret(1, "user:%s"),
                 "-p",
                 "23",
                 "-I",
@@ -400,7 +393,7 @@ HOST_CONFIG = HostConfig(
                         "timeout": 10,
                         "user_agent": "user",
                         "add_headers": ["line1", "line2"],
-                        "auth": ("user", ("password", "password")),
+                        "auth": ("user", Secret(42)),
                         "onredirect": "warning",
                         "expect_response_header": "Product | Checkmk",
                         "expect_response": ["Checkmk"],
@@ -433,7 +426,7 @@ HOST_CONFIG = HostConfig(
                 "-k",
                 "line2",
                 "-a",
-                PlainTextSecret(value="password", format="user:%s"),
+                Secret(42, "user:%s"),
                 "--onredirect=warning",
                 "-e",
                 "Checkmk",
@@ -560,7 +553,7 @@ def test_check_http_service_description(
                         "timeout": 10,
                         "user_agent": "user",
                         "add_headers": ["line1", "line2"],
-                        "auth": ("user", ("password", "password")),
+                        "auth": ("user", Secret(123)),
                         "onredirect": "warning",
                         "expect_response_header": "Product | Checkmk",
                         "expect_response": ["Checkmk"],
@@ -589,7 +582,7 @@ def test_check_http_service_description(
                     timeout=10,
                     user_agent="user",
                     add_headers=["line1", "line2"],
-                    auth=("user", ("password", "password")),
+                    auth=("user", Secret(123)),
                     onredirect="warning",
                     expect_response_header="Product | Checkmk",
                     expect_response=["Checkmk"],

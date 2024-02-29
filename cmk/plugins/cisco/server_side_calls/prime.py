@@ -5,22 +5,21 @@
 
 
 from collections.abc import Iterator, Mapping
-from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
-    parse_secret,
     replace_macros,
+    Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
 
 
 class CiscoPrimeParams(BaseModel):
-    basicauth: tuple[str, tuple[Literal["password", "store"], str]] | None = None
+    basicauth: tuple[str, Secret] | None = None
     port: int | None = None
     no_tls: bool = Field(alias="no-tls", default=False)
     no_cert_check: bool = Field(alias="no-cert-check", default=False)
@@ -39,24 +38,24 @@ def generate_cisco_prime_command(
         case _:
             host = host_config.primary_ip_config.address
 
+    if params.basicauth:
+        auth: tuple[str | Secret, ...] = (
+            "-u",
+            params.basicauth[1].with_format(f"{params.basicauth[0]}:%s"),
+        )
+    else:
+        auth = ()
+
     yield SpecialAgentCommand(
-        command_arguments=[
-            elem
-            for chunk in (
-                ("--hostname", host),
-                (
-                    "-u",
-                    parse_secret(params.basicauth[1], display_format=f"{params.basicauth[0]}:%s"),
-                )
-                if params.basicauth
-                else (),
-                ("--port", str(params.port)) if params.port is not None else (),
-                ("--no-tls",) if params.no_tls else (),
-                ("--no-cert-check",) if params.no_cert_check else (),
-                ("--timeout", str(params.timeout)) if params.timeout is not None else (),
-            )
-            for elem in chunk
-        ]
+        command_arguments=(
+            "--hostname",
+            host,
+            *auth,
+            *(("--port", str(params.port)) if params.port is not None else ()),
+            *(("--no-tls",) if params.no_tls else ()),
+            *(("--no-cert-check",) if params.no_cert_check else ()),
+            *(("--timeout", str(params.timeout)) if params.timeout is not None else ()),
+        )
     )
 
 

@@ -5,7 +5,7 @@
 
 
 from cmk.plugins.elasticsearch.server_side_calls.special_agent import special_agent_elasticsearch
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 TEST_HOST_CONFIG = HostConfig(
     name="my_host",
@@ -33,7 +33,7 @@ def test_agent_elasticsearch_arguments_password_store() -> None:
         "protocol": "https",
         "infos": ["cluster_health", "nodestats", "stats"],
         "user": "user",
-        "password": ("password", "pass"),
+        "password": Secret(0),
     }
     (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG, {})
     assert cmd.command_arguments == [
@@ -46,7 +46,7 @@ def test_agent_elasticsearch_arguments_password_store() -> None:
         "-u",
         "user",
         "-s",
-        PlainTextSecret(value="pass"),
+        Secret(0),
         "--",
         "testhost",
     ]

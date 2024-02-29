@@ -5,14 +5,14 @@
 
 import shlex
 from collections.abc import Mapping, Sequence
-from typing import Callable, Iterable, Protocol
+from typing import Callable, Iterable, Literal, Protocol
 
 import cmk.utils.config_warnings as config_warnings
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.servicename import ServiceName
 
-from cmk.server_side_calls.v1 import PlainTextSecret, Secret, StoredSecret
+from cmk.server_side_calls.v1 import Secret
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
@@ -121,29 +121,34 @@ def replace_passwords(
     host_name: str,
     stored_passwords: Mapping[str, str],
     arguments: Sequence[str | Secret],
+    surrogated_secrets: Mapping[int, tuple[Literal["store", "password"], str]],
 ) -> str:
     passwords: list[tuple[str, str, str]] = []
     formatted: list[str] = []
 
     for arg in arguments:
-        if isinstance(arg, PlainTextSecret):
-            formatted.append(shlex.quote(arg.format % arg.value))
+        if isinstance(arg, str):
+            formatted.append(shlex.quote(arg))
+            continue
 
-        elif isinstance(arg, StoredSecret):
-            try:
-                password = stored_passwords[arg.value]
-            except KeyError:
-                config_warnings.warn(
-                    f'The stored password "{arg.value}" used by host "{host_name}"'
-                    " does not exist."
-                )
-                password = "%%%"
+        secret_type, secret_value = surrogated_secrets[arg.id]
 
-            pw_start_index = str(arg.format.index("%s"))
-            formatted.append(shlex.quote(arg.format % ("*" * len(password))))
-            passwords.append((str(len(formatted)), pw_start_index, arg.value))
-        else:
-            formatted.append(shlex.quote(str(arg)))
+        match secret_type:
+            case "password":
+                formatted.append(shlex.quote(arg.format % secret_value))
+            case "store":
+                try:
+                    password = stored_passwords[secret_value]
+                except KeyError:
+                    config_warnings.warn(
+                        f'The stored password "{secret_value}" used by host "{host_name}"'
+                        " does not exist."
+                    )
+                    password = "%%%"
+
+                pw_start_index = str(arg.format.index("%s"))
+                formatted.append(shlex.quote(arg.format % ("*" * len(password))))
+                passwords.append((str(len(formatted)), pw_start_index, secret_value))
 
     if passwords:
         pw = ",".join(["@".join(p) for p in passwords])

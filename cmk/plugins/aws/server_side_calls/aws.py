@@ -15,7 +15,6 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     noop_parser,
-    parse_secret,
     replace_macros,
     Secret,
     SpecialAgentCommand,
@@ -81,7 +80,7 @@ def _proxy_args(details: Mapping[str, Any], host_config: HostConfig) -> Sequence
             "--proxy-user",
             proxy_user,
             "--proxy-password",
-            parse_secret(proxy_pwd),
+            proxy_pwd,
         ]
     return proxy_args
 
@@ -93,7 +92,7 @@ def agent_aws_arguments(  # pylint: disable=too-many-branches
         "--access-key-id",
         params["access_key_id"],
         "--secret-access-key",
-        parse_secret(params["secret_access_key"]),
+        params["secret_access_key"],  # this is a `Secret`
         *(_proxy_args(params["proxy_details"], host_config) if "proxy_details" in params else []),
     ]
 

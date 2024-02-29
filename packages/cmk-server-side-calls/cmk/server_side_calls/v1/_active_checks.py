@@ -27,7 +27,7 @@ class ActiveCheckCommand:
         command_arguments: Arguments that are passed to the active checks command-line interface
 
     Example:
-        >>> from cmk.server_side_calls.v1 import StoredSecret
+        >>> from cmk.server_side_calls.v1 import Secret
 
         >>> ActiveCheckCommand(
         ...     service_description="Example description",
@@ -35,11 +35,11 @@ class ActiveCheckCommand:
         ...         "--user",
         ...         "example-user",
         ...         "--password",
-        ...         StoredSecret(value="stored_password_id")
+        ...         Secret(0)
         ...     ]
         ... )
         ActiveCheckCommand(service_description='Example description', command_arguments=['--user', \
-'example-user', '--password', StoredSecret(value='stored_password_id', format='%s')])
+'example-user', '--password', Secret(id=0, format='%s')])
     """
 
     service_description: str

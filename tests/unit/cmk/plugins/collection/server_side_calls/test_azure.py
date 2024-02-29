@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.plugins.collection.server_side_calls.azure import special_agent_azure
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 HOST_CONFIG = HostConfig(
     name="host",
@@ -26,7 +26,7 @@ HOST_CONFIG = HostConfig(
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
-                "secret": ("password", "vurystrong"),
+                "secret": Secret(0),
                 "config": {},
                 "services": ["users_count", "Microsoft.DBforMySQL/servers"],
                 "import_tags": "all_tags",
@@ -37,7 +37,7 @@ HOST_CONFIG = HostConfig(
                 "--client",
                 "blueberry",
                 "--secret",
-                PlainTextSecret(value="vurystrong", format="%s"),
+                Secret(0),
                 "--authority",
                 "china",
                 "--subscription",
@@ -54,7 +54,7 @@ HOST_CONFIG = HostConfig(
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
-                "secret": ("password", "vurystrong"),
+                "secret": Secret(0),
                 "config": {},
                 "services": ["users_count", "Microsoft.DBforMySQL/servers"],
             },
@@ -64,7 +64,7 @@ HOST_CONFIG = HostConfig(
                 "--client",
                 "blueberry",
                 "--secret",
-                PlainTextSecret(value="vurystrong", format="%s"),
+                Secret(0),
                 "--authority",
                 "china",
                 "--subscription",
@@ -82,7 +82,7 @@ HOST_CONFIG = HostConfig(
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
-                "secret": ("password", "vurystrong"),
+                "secret": Secret(0),
                 "config": {},
                 "services": ["users_count", "Microsoft.DBforMySQL/servers"],
                 "import_tags": ("filter_tags", "some_pattern_.*"),
@@ -93,7 +93,7 @@ HOST_CONFIG = HostConfig(
                 "--client",
                 "blueberry",
                 "--secret",
-                PlainTextSecret(value="vurystrong", format="%s"),
+                Secret(0),
                 "--authority",
                 "china",
                 "--subscription",
@@ -112,7 +112,7 @@ HOST_CONFIG = HostConfig(
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
-                "secret": ("store", "azure"),
+                "secret": Secret(0),
                 "config": {
                     "explicit": [{"group_name": "my_res_group"}],
                     "tag_based": [("my_tag", "exists")],
@@ -126,7 +126,7 @@ HOST_CONFIG = HostConfig(
                 "--client",
                 "blueberry",
                 "--secret",
-                StoredSecret(value="azure", format="%s"),
+                Secret(0),
                 "--authority",
                 "global",
                 "--subscription",
@@ -144,7 +144,7 @@ HOST_CONFIG = HostConfig(
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
-                "secret": ("store", "azure"),
+                "secret": Secret(0),
                 "services": [],
                 "config": {
                     "explicit": [{"group_name": "my_res_group", "resources": ["res1", "res2"]}],
@@ -160,7 +160,7 @@ HOST_CONFIG = HostConfig(
                 "--client",
                 "blueberry",
                 "--secret",
-                StoredSecret(value="azure", format="%s"),
+                Secret(0),
                 "--authority",
                 "global",
                 "--subscription",

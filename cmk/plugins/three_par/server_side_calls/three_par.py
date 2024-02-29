@@ -5,14 +5,12 @@
 
 
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Literal
 
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
-    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -21,7 +19,7 @@ from cmk.server_side_calls.v1 import (
 
 class ThreeParParams(BaseModel):
     user: str
-    password: tuple[Literal["store", "password"], str]
+    password: Secret
     port: int
     verify_cert: bool = False
     values: Sequence[str] = []
@@ -34,7 +32,7 @@ def generate_three_par_command(
         "--user",
         params.user,
         "--password",
-        parse_secret(params.password),
+        params.password,
         "--port",
         str(params.port),
     ]

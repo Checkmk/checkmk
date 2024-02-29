@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.plugins.collection.server_side_calls.datadog import special_agent_datadog
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, PlainTextSecret
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, Secret
 
 HOST_CONFIG = HostConfig(
     name="testhost",
@@ -25,14 +25,8 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         pytest.param(
             {
                 "instance": {
-                    "api_key": (
-                        "password",
-                        "12345",
-                    ),
-                    "app_key": (
-                        "password",
-                        "powerg",
-                    ),
+                    "api_key": Secret(1),
+                    "app_key": Secret(2),
                     "api_host": "api.datadoghq.eu",
                 },
                 "proxy": (
@@ -74,8 +68,8 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
             },
             [
                 "testhost",
-                PlainTextSecret(value="12345", format="%s"),
-                PlainTextSecret(value="powerg", format="%s"),
+                Secret(1),
+                Secret(2),
                 "api.datadoghq.eu",
                 "--proxy",
                 "abc:8567",
@@ -122,14 +116,8 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         pytest.param(
             {
                 "instance": {
-                    "api_key": (
-                        "password",
-                        "12345",
-                    ),
-                    "app_key": (
-                        "password",
-                        "powerg",
-                    ),
+                    "api_key": Secret(1),
+                    "app_key": Secret(2),
                     "api_host": "api.datadoghq.eu",
                 },
                 "monitors": {},
@@ -143,8 +131,8 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
             },
             [
                 "testhost",
-                PlainTextSecret(value="12345", format="%s"),
-                PlainTextSecret(value="powerg", format="%s"),
+                Secret(1),
+                Secret(2),
                 "api.datadoghq.eu",
                 "--monitor_tags",
                 "--monitor_monitor_tags",
@@ -167,21 +155,15 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         pytest.param(
             {
                 "instance": {
-                    "api_key": (
-                        "password",
-                        "12345",
-                    ),
-                    "app_key": (
-                        "password",
-                        "powerg",
-                    ),
+                    "api_key": Secret(1),
+                    "app_key": Secret(2),
                     "api_host": "api.datadoghq.eu",
                 },
             },
             [
                 "testhost",
-                PlainTextSecret(value="12345", format="%s"),
-                PlainTextSecret(value="powerg", format="%s"),
+                Secret(1),
+                Secret(2),
                 "api.datadoghq.eu",
                 "--sections",
             ],

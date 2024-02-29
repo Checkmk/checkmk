@@ -14,7 +14,6 @@ from cmk.server_side_calls.v1 import (
     HTTPProxy,
     noop_parser,
     parse_http_proxy,
-    parse_secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -64,7 +63,7 @@ def generate_kube_command(  # pylint: disable=too-many-branches
 ) -> Iterator[SpecialAgentCommand]:
     args = ["--cluster", params["cluster-name"]]
     args.extend(["--kubernetes-cluster-hostname", host_config.name])
-    args.extend(["--token", parse_secret(params["token"])])
+    args.extend(["--token", params["token"]])  # this is a `Secret`
 
     args.append("--monitored-objects")
     args.extend(params["monitored-objects"])

@@ -7,14 +7,14 @@
 import pytest
 
 from cmk.plugins.collection.server_side_calls.sql import active_check_sql
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, StoredSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 MINIMAL_CONFIG = {
     "description": "foo",
     "dbms": "postgres",
     "name": "bar",
     "user": "hans",
-    "password": ("store", "wurst"),
+    "password": Secret(0),
     "sql": "",
 }
 
@@ -39,7 +39,7 @@ def test_check_sql_simple_ok_case() -> None:
         "--dbms=postgres",
         "--name=bar",
         "--user=hans",
-        StoredSecret(value="wurst", format="--password=%s"),
+        Secret(0, format="--password=%s"),
         "--metrics=my_metric_name",
         "--text=my_additional_text",
         "",
@@ -92,7 +92,7 @@ def test_check_sql_port_macro_replaced() -> None:
         "--dbms=postgres",
         "--name=bar",
         "--user=hans",
-        StoredSecret(value="wurst", format="--password=%s"),
+        Secret(0, format="--password=%s"),
         "--port=5432",
         "",
     ]

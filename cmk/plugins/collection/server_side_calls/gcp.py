@@ -6,15 +6,14 @@
 
 import datetime
 from collections.abc import Iterator, Mapping
-from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
-    parse_secret,
     replace_macros,
+    Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -31,7 +30,7 @@ class GCPCost(BaseModel):
 
 class Params(BaseModel):
     project: str
-    credentials: tuple[Literal["password", "store"], str]
+    credentials: Secret
     cost: GCPCost | None = None
     piggyback: PiggyBackServices = Field(default_factory=PiggyBackServices)
     services: list[str] = Field(default_factory=list)
@@ -43,11 +42,11 @@ def agent_gcp_arguments(
     _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     today = datetime.date.today()
-    args = [
+    args: list[str | Secret] = [
         "--project",
         params.project,
         "--credentials",
-        parse_secret(params.credentials),
+        params.credentials,
         "--date",
         today.isoformat(),
     ]

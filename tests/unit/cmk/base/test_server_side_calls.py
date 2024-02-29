@@ -41,10 +41,8 @@ from cmk.server_side_calls.v1 import (
     IPAddressFamily,
     IPv4Config,
     IPv6Config,
-    PlainTextSecret,
     SpecialAgentCommand,
     SpecialAgentConfig,
-    StoredSecret,
 )
 
 HOST_ATTRS = {
@@ -413,7 +411,10 @@ def argument_function_with_exception(*args, **kwargs):
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "password": ("password", "myp4ssw0rd")}],
+                ),
             ],
             {},
             {
@@ -424,13 +425,13 @@ def argument_function_with_exception(*args, **kwargs):
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    commands_function=lambda *_: (
+                    commands_function=lambda p, *_: (
                         [
                             ActiveCheckCommand(
                                 service_description="My service",
                                 command_arguments=[
                                     "--password",
-                                    PlainTextSecret(value="mypassword"),
+                                    p["password"],
                                 ],
                             ),
                         ]
@@ -446,17 +447,23 @@ def argument_function_with_exception(*args, **kwargs):
                     plugin_name="my_active_check",
                     description="My service",
                     command="check_mk_active-my_active_check",
-                    command_display="check_mk_active-my_active_check!--password mypassword",
-                    command_line="check_my_active_check --password mypassword",
-                    params={"description": "My active check", "param1": "param1"},
-                    expanded_args="--password mypassword",
+                    command_display="check_mk_active-my_active_check!--password myp4ssw0rd",
+                    command_line="check_my_active_check --password myp4ssw0rd",
+                    params={
+                        "description": "My active check",
+                        "password": ("password", "myp4ssw0rd"),
+                    },
+                    expanded_args="--password myp4ssw0rd",
                 ),
             ],
             id="one_service_password",
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "password": ("store", "stored_password")}],
+                ),
             ],
             {},
             {
@@ -467,13 +474,12 @@ def argument_function_with_exception(*args, **kwargs):
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    commands_function=lambda *_: (
+                    commands_function=lambda p, *_: (
                         [
                             ActiveCheckCommand(
                                 service_description="My service",
                                 command_arguments=[
-                                    "--password",
-                                    StoredSecret(value="stored_password"),
+                                    p["password"].with_format("--secret=%s"),
                                 ],
                             ),
                         ]
@@ -489,10 +495,13 @@ def argument_function_with_exception(*args, **kwargs):
                     plugin_name="my_active_check",
                     description="My service",
                     command="check_mk_active-my_active_check",
-                    command_display="check_mk_active-my_active_check!--pwstore=2@0@stored_password --password '**********'",
-                    command_line="check_my_active_check --pwstore=2@0@stored_password --password '**********'",
-                    params={"description": "My active check", "param1": "param1"},
-                    expanded_args="--pwstore=2@0@stored_password --password '**********'",
+                    command_display="check_mk_active-my_active_check!--pwstore=1@9@stored_password '--secret=**********'",
+                    command_line="check_my_active_check --pwstore=1@9@stored_password '--secret=**********'",
+                    params={
+                        "description": "My active check",
+                        "password": ("store", "stored_password"),
+                    },
+                    expanded_args="--pwstore=1@9@stored_password '--secret=**********'",
                 ),
             ],
             id="one_service_password_store",
@@ -698,7 +707,10 @@ def test_test_get_active_service_data_crash_with_debug(
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "password": ("store", "stored_password")}],
+                ),
             ],
             {},
             {
@@ -709,13 +721,13 @@ def test_test_get_active_service_data_crash_with_debug(
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    commands_function=lambda *_: (
+                    commands_function=lambda p, *_: (
                         [
                             ActiveCheckCommand(
                                 service_description="My service",
                                 command_arguments=[
                                     "--password",
-                                    StoredSecret(value="stored_password"),
+                                    p["password"],
                                 ],
                             ),
                         ]
@@ -742,7 +754,10 @@ def test_test_get_active_service_data_crash_with_debug(
                     command_line="check_my_active_check "
                     "--pwstore=2@0@stored_password --password "
                     "'***'",
-                    params={"description": "My active check", "param1": "param1"},
+                    params={
+                        "description": "My active check",
+                        "password": ("store", "stored_password"),
+                    },
                     expanded_args="--pwstore=2@0@stored_password --password " "'***'",
                 ),
             ],
@@ -872,7 +887,10 @@ def test_get_active_service_data_warnings(
         ),
         pytest.param(
             [
-                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+                (
+                    "my_active_check",
+                    [{"description": "My active check", "password": ("password", "myp4ssw0rd")}],
+                ),
             ],
             {},
             {
@@ -883,11 +901,11 @@ def test_get_active_service_data_warnings(
                 ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    commands_function=lambda *_: (
+                    commands_function=lambda p, *_: (
                         [
                             ActiveCheckCommand(
                                 service_description="My service",
-                                command_arguments=["--password", StoredSecret(value="mypassword")],
+                                command_arguments=["--password", p["password"]],
                             ),
                         ]
                     ),
@@ -907,7 +925,10 @@ def test_get_active_service_data_warnings(
                 ActiveServiceDescription(
                     plugin_name="my_active_check",
                     description="My service",
-                    params={"description": "My active check", "param1": "param1"},
+                    params={
+                        "description": "My active check",
+                        "password": ("password", "myp4ssw0rd"),
+                    },
                 ),
             ],
             id="one_service",
@@ -1184,6 +1205,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
     (
         "plugins",
         "legacy_plugins",
+        "parameters",
         "host_attrs",
         "host_config",
         "stored_passwords",
@@ -1194,6 +1216,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             {},
             {"test_agent": lambda a, b, c: "arg0 arg;1"},
             {},
+            {},
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 arg;1", None)],
@@ -1203,6 +1226,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             {},
             {"test_agent": lambda a, b, c: ["arg0", "arg;1"]},
             {},
+            {},
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
@@ -1211,6 +1235,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {"test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(["arg0"], None)},
+            {},
             {},
             HOST_CONFIG,
             {},
@@ -1225,6 +1250,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            {},
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
@@ -1237,6 +1263,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                     ["list0", "list1"], None
                 )
             },
+            {},
             {},
             HOST_CONFIG,
             {},
@@ -1251,6 +1278,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            {},
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", "stdin_blob")],
@@ -1264,6 +1292,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            {},
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path list0 list1", "stdin_blob")],
@@ -1272,6 +1301,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {"test_agent": lambda a, b, c: ["-h", "$HOSTNAME$", "-a", "<IP>"]},
+            {},
             {},
             HOST_CONFIG_WITH_MACROS,
             {},
@@ -1295,6 +1325,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            {},
             HOST_ATTRS,
             HOST_CONFIG,
             {},
@@ -1317,6 +1348,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            {},
             HOST_ATTRS,
             HOST_CONFIG,
             {},
@@ -1333,16 +1365,17 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                 ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
-                    commands_function=lambda *_: (
+                    commands_function=lambda p, *_: (
                         [
                             SpecialAgentCommand(
-                                command_arguments=["--password", StoredSecret(value="mypassword")],
+                                command_arguments=["--password", p["password"]],
                             ),
                         ]
                     ),
                 )
             },
             {},
+            {"password": ("store", "mypassword")},
             HOST_ATTRS,
             HOST_CONFIG,
             {},
@@ -1356,16 +1389,17 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                 ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
-                    commands_function=lambda *_: (
+                    commands_function=lambda p, *_: (
                         [
                             SpecialAgentCommand(
-                                command_arguments=["--password", StoredSecret(value="mypassword")],
+                                command_arguments=["--password", p["password"]],
                             ),
                         ]
                     ),
                 )
             },
             {},
+            {"password": ("store", "mypassword")},
             HOST_ATTRS,
             HOST_CONFIG,
             {"mypassword": "123456"},
@@ -1393,6 +1427,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                 )
             },
             {},
+            {},
             HOST_ATTRS,
             HOST_CONFIG,
             {"mypassword": "123456"},
@@ -1404,6 +1439,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_iter_special_agent_commands(
     plugins: Mapping[PluginLocation, SpecialAgentConfig],
     legacy_plugins: Mapping[str, InfoFunc],
+    parameters: Mapping[str, object],
     host_attrs: Mapping[str, str],
     host_config: HostConfig,
     stored_passwords: Mapping[str, str],
@@ -1422,7 +1458,7 @@ def test_iter_special_agent_commands(
         http_proxies={},
         stored_passwords=stored_passwords,
     )
-    commands = list(special_agent.iter_special_agent_commands("test_agent", {}))
+    commands = list(special_agent.iter_special_agent_commands("test_agent", parameters))
     assert commands == expected_result
 
 

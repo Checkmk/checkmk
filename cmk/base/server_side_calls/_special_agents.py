@@ -22,6 +22,7 @@ from ._commons import (
     replace_passwords,
     SpecialAgentInfoFunctionResult,
 )
+from ._config_processing import process_configuration_into_parameters
 
 
 @dataclass(frozen=True)
@@ -87,18 +88,21 @@ class SpecialAgent:
         yield SpecialAgentCommandLine(cmdline, stdin)
 
     def _iter_commands(
-        self, special_agent: SpecialAgentConfig, params: Mapping[str, object]
+        self, special_agent: SpecialAgentConfig, conf_dict: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
         http_proxies = {
             id: HTTPProxy(id=id, name=proxy["title"], url=proxy["proxy_url"])
             for id, proxy in self._http_proxies.items()
         }
 
+        params, surrogated_secrets = process_configuration_into_parameters(conf_dict)
+
         for command in special_agent(params, self.host_config, http_proxies):
-            path = self._make_source_path(special_agent.name)
             args = replace_passwords(
-                self.host_name, self.stored_passwords, command.command_arguments
+                self.host_name, self.stored_passwords, command.command_arguments, surrogated_secrets
             )
+            # there's a test that currently prevents us from moving this out of the loop
+            path = self._make_source_path(special_agent.name)
             yield SpecialAgentCommandLine(f"{path} {args}", command.stdin)
 
     def iter_special_agent_commands(

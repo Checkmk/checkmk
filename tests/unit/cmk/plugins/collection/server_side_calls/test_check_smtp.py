@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.check_smtp import active_check_smtp
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, StoredSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 TEST_HOST_CONFIG = HostConfig(
     name="my_host",
@@ -32,7 +32,7 @@ TEST_HOST_CONFIG = HostConfig(
                 "fqdn": "at.home.world",
                 "cert_days": (42, 23),
                 "starttls": True,
-                "auth": ("me", ("store", "my_stored_secret")),
+                "auth": ("me", Secret(42)),
                 "response_time": (23.0, 42.0),
                 "timeout": 110,
             },
@@ -64,7 +64,7 @@ TEST_HOST_CONFIG = HostConfig(
                 "-U",
                 "me",
                 "-P",
-                StoredSecret(value="my_stored_secret", format="%s"),
+                Secret(42),
                 "-S",
                 "-F",
                 "at.home.world",

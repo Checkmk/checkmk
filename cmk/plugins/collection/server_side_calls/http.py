@@ -7,7 +7,7 @@
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 from pydantic import BaseModel
 
@@ -17,12 +17,9 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
-    parse_secret,
     replace_macros,
     Secret,
 )
-
-from .utils import SecretType
 
 
 class Mode(Enum):
@@ -81,12 +78,12 @@ class ProxySettings:
     auth: Secret | None
 
     @classmethod
-    def from_params(cls, params: Mapping[str, Any]) -> "ProxySettings":
-        auth: tuple[str, tuple[SecretType, str]] | None = params.get("auth")
+    def from_params(cls, params: Mapping[str, Any]) -> Self:
+        auth: tuple[str, Secret] | None = params.get("auth")
         return cls(
             address=params["address"],
             port=params.get("port"),
-            auth=parse_secret(auth[1], display_format="%s:%%s" % auth[0]) if auth else None,
+            auth=auth[1].with_format(f"{auth[0]}:%s") if auth else None,
         )
 
 
@@ -151,7 +148,7 @@ class URLMode(BaseModel):
     timeout: int | None = None
     user_agent: str | None = None
     add_headers: Sequence[str] = []
-    auth: tuple[str, tuple[SecretType, str]] | None = None
+    auth: tuple[str, Secret] | None = None
     onredirect: Literal["ok", "warning", "critical", "follow", "sticky", "stickyport"] | None = None
     expect_response_header: str | None = None
     expect_response: Sequence[str] | None = None
@@ -283,7 +280,7 @@ def _url_args(  # pylint: disable=too-many-branches
         username, password = settings.auth
         args += [
             "-a",
-            parse_secret(password, display_format="%s:%%s" % username),
+            password.with_format(f"{username}:%s"),
         ]
 
     if settings.onredirect is not None:

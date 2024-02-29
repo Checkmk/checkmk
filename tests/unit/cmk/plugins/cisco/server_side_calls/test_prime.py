@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.plugins.cisco.server_side_calls.prime import special_agent_cisco_prime
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, Secret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 
 @pytest.mark.parametrize(
@@ -16,53 +16,53 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, Se
     [
         (
             {
-                "basicauth": ("bla", ("password", "123")),
+                "basicauth": ("bla", Secret(123)),
                 "port": 8080,
                 "no-tls": True,
                 "no-cert-check": True,
                 "timeout": 60,
             },
-            [
+            (
                 "--hostname",
                 "ipaddress",
                 "-u",
-                PlainTextSecret(value="123", format="bla:%s"),
+                Secret(123, "bla:%s"),
                 "--port",
                 "8080",
                 "--no-tls",
                 "--no-cert-check",
                 "--timeout",
                 "60",
-            ],
+            ),
         ),
         (
             {},
-            [
+            (
                 "--hostname",
                 "ipaddress",
-            ],
+            ),
         ),
         (
             {
                 "host": "host_name",
             },
-            [
+            (
                 "--hostname",
                 "hostname",
-            ],
+            ),
         ),
         (
             {"host": ("custom", {"host": "custom"})},
-            [
+            (
                 "--hostname",
                 "custom",
-            ],
+            ),
         ),
     ],
 )
 def test_cisco_prime_argument_parsing(
     params: Mapping[str, object],
-    expected_args: str | Secret,
+    expected_args: Sequence[str | Secret],
 ) -> None:
     (command,) = special_agent_cisco_prime(
         params,

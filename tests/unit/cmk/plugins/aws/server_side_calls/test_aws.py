@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.plugins.aws.server_side_calls.aws import generate_aws_commands
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 
 @pytest.mark.parametrize(
@@ -18,12 +18,12 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, St
         pytest.param(
             {
                 "access_key_id": "strawberry",
-                "secret_access_key": ("password", "strawberry098"),
+                "secret_access_key": Secret(1),
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_port": 22,
                     "proxy_user": "banana",
-                    "proxy_password": ("password", "banana123"),
+                    "proxy_password": Secret(2),
                 },
                 "access": {},
                 "global_services": {
@@ -46,7 +46,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, St
                 "--access-key-id",
                 "strawberry",
                 "--secret-access-key",
-                PlainTextSecret(value="strawberry098"),
+                Secret(1),
                 "--proxy-host",
                 "1.1.1",
                 "--proxy-port",
@@ -54,7 +54,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, St
                 "--proxy-user",
                 "banana",
                 "--proxy-password",
-                PlainTextSecret(value="banana123"),
+                Secret(2),
                 "--global-services",
                 "ce",
                 "--services",
@@ -72,11 +72,11 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, St
         pytest.param(
             {
                 "access_key_id": "strawberry",
-                "secret_access_key": ("store", "strawberry098"),
+                "secret_access_key": Secret(1),
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_user": "banana",
-                    "proxy_password": ("store", "banana123"),
+                    "proxy_password": Secret(2),
                 },
                 "access": {},
                 "global_services": {},
@@ -88,13 +88,13 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, St
                 "--access-key-id",
                 "strawberry",
                 "--secret-access-key",
-                StoredSecret(value="strawberry098", format="%s"),
+                Secret(1),
                 "--proxy-host",
                 "1.1.1",
                 "--proxy-user",
                 "banana",
                 "--proxy-password",
-                StoredSecret(value="banana123", format="%s"),
+                Secret(2),
                 "--hostname",
                 "testhost",
                 "--piggyback-naming-convention",
@@ -147,14 +147,14 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, St
                 "regions": ["ut_region_1"],
                 # mandatory params:
                 "access_key_id": "ut_access_key_id",
-                "secret_access_key": ("store", "ut_secret_access_key_store"),
+                "secret_access_key": Secret(42),
                 "piggyback_naming_convention": "ut_piggyback_naming_convention",
             },
             [
                 "--access-key-id",
                 "ut_access_key_id",
                 "--secret-access-key",
-                StoredSecret(value="ut_secret_access_key_store", format="%s"),
+                Secret(42),
                 "--global-service-region",
                 "ut_global_service_region",
                 "--assume-role",

@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.mail.server_side_calls.mailboxes import active_check_mailboxes
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 HOST_CONFIG = HostConfig(
     name="host",
@@ -31,7 +31,7 @@ HOST_CONFIG = HostConfig(
                             "disable_tls": True,
                             "port": 143,
                         },
-                        "auth": ("basic", ("hans", ("password", "wurst"))),
+                        "auth": ("basic", ("hans", Secret(0))),
                     },
                 ),
             },
@@ -40,7 +40,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=foo",
                 "--fetch-port=143",
                 "--fetch-username=hans",
-                PlainTextSecret(value="wurst", format="--fetch-password=%s"),
+                Secret(0, "--fetch-password=%s"),
             ],
         ),
         (
@@ -51,7 +51,7 @@ HOST_CONFIG = HostConfig(
                     {
                         "server": "foo",
                         "connection": {},
-                        "auth": ("basic", ("hans", ("password", "wurst"))),
+                        "auth": ("basic", ("hans", Secret(1))),
                     },
                 ),
             },
@@ -60,7 +60,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=foo",
                 "--fetch-tls",
                 "--fetch-username=hans",
-                PlainTextSecret(value="wurst", format="--fetch-password=%s"),
+                Secret(1, "--fetch-password=%s"),
             ],
         ),
         (
@@ -73,7 +73,7 @@ HOST_CONFIG = HostConfig(
                         "connection": {},
                         "auth": (
                             "oauth2",
-                            ("client_id", ("password", "client_secret"), "tenant_id"),
+                            ("client_id", Secret(0), "tenant_id"),
                         ),
                     },
                 ),
@@ -83,7 +83,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=foo",
                 "--fetch-tls",
                 "--fetch-client-id=client_id",
-                PlainTextSecret(value="client_secret", format="--fetch-client-secret=%s"),
+                Secret(0, "--fetch-client-secret=%s"),
                 "--fetch-tenant-id=tenant_id",
             ],
         ),
@@ -99,7 +99,7 @@ HOST_CONFIG = HostConfig(
                             "disable_cert_validation": True,
                             "port": 10,
                         },
-                        "auth": ("basic", ("user", ("store", "password_1"))),
+                        "auth": ("basic", ("user", Secret(1))),
                     },
                 ),
                 "connect_timeout": 10,
@@ -115,7 +115,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-disable-cert-validation",
                 "--fetch-port=10",
                 "--fetch-username=user",
-                StoredSecret(value="password_1", format="--fetch-password=%s"),
+                Secret(1, "--fetch-password=%s"),
                 "--connect-timeout=10",
                 "--retrieve-max=100",
                 "--warn-age-oldest=0",

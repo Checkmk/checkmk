@@ -12,13 +12,12 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_http_proxy,
-    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType, SecretType
+from .utils import ProxyType
 
 
 class Explicit(BaseModel):
@@ -36,7 +35,7 @@ class AzureParams(BaseModel):
     subscription: str | None = None
     tenant: str
     client: str
-    secret: tuple[SecretType, str]
+    secret: Secret
     proxy: tuple[ProxyType, str | None] | None = None
     services: Sequence[str]
     config: Config
@@ -54,10 +53,10 @@ def generate_azure_command(  # pylint: disable=too-many-branches
         "--client",
         params.client,
         "--secret",
-        parse_secret(params.secret),
+        params.secret,
+        "--authority",
+        params.authority,
     ]
-
-    args += ["--authority", params.authority]
 
     if params.subscription:
         args += ["--subscription", params.subscription]

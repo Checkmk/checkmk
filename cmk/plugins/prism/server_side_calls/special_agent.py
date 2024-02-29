@@ -9,7 +9,6 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     noop_parser,
-    parse_secret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -19,7 +18,7 @@ from cmk.server_side_calls.v1 import (
 def generate_prism_command(
     params: Mapping[str, object], host_config: HostConfig, _http_proxy: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
-    assert isinstance(params["password"], tuple)  # We're lazy with the parsing...
+    assert isinstance(secret := params["password"], Secret)
 
     args: list[str | Secret] = [
         "--server",
@@ -27,7 +26,7 @@ def generate_prism_command(
         "--username",
         str(params["username"]),
         "--password",
-        parse_secret(params["password"]),
+        secret,
     ]
 
     if "port" in params:

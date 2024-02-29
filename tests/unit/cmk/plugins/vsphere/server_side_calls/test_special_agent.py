@@ -8,14 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.vsphere.server_side_calls.special_agent import commands_function, Params
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPv4Config,
-    PlainTextSecret,
-    Secret,
-    SpecialAgentCommand,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 
 @pytest.mark.parametrize(
@@ -27,7 +20,7 @@ from cmk.server_side_calls.v1 import (
                 "direct": True,
                 "skip_placeholder_vms": True,
                 "ssl": False,
-                "secret": ("password", "secret"),
+                "secret": Secret(123),
                 "spaces": "cut",
                 "user": "username",
                 "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
@@ -38,7 +31,7 @@ from cmk.server_side_calls.v1 import (
                 "-u",
                 "username",
                 "-s",
-                PlainTextSecret(value="secret", format="%s"),
+                Secret(123),
                 "-i",
                 "hostsystem,virtualmachine,datastore,counters",
                 "--spaces",
@@ -61,7 +54,7 @@ from cmk.server_side_calls.v1 import (
                 "vm_piggyname": "alias",
                 "skip_placeholder_vms": True,
                 "ssl": False,
-                "secret": ("store", "stored_secret"),
+                "secret": Secret(42),
                 "spaces": "cut",
                 "user": "username",
                 "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
@@ -72,7 +65,7 @@ from cmk.server_side_calls.v1 import (
                 "-u",
                 "username",
                 "-s",
-                StoredSecret(value="stored_secret", format="%s"),
+                Secret(42),
                 "-i",
                 "hostsystem,virtualmachine,datastore,counters",
                 "--spaces",

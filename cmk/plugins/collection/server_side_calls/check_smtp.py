@@ -14,7 +14,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     IPAddressFamily,
-    parse_secret,
     replace_macros,
     Secret,
 )
@@ -32,7 +31,7 @@ class Parameters(BaseModel):
     fqdn: str | None = None
     cert_days: tuple[int, int] | None = None
     starttls: bool = False
-    auth: tuple[str, tuple[Literal["password", "store"], str]] | None = None
+    auth: tuple[str, Secret] | None = None
     response_time: tuple[float, float] | None = None
     timeout: int | None = None
 
@@ -81,7 +80,7 @@ def check_smtp_arguments(  # pylint: disable=too-many-branches
 
     if params.auth:
         username, password = params.auth
-        args.extend(("-A", "LOGIN", "-U", username, "-P", parse_secret(password)))
+        args.extend(("-A", "LOGIN", "-U", username, "-P", password))
 
     if params.starttls:
         args.append("-S")

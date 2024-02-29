@@ -9,14 +9,7 @@ import pytest
 from cmk.plugins.pure_storage_fa.server_side_calls.special_agent import (
     special_agent_pure_storage_fa,
 )
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPv4Config,
-    PlainTextSecret,
-    Secret,
-    SpecialAgentCommand,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 
 @pytest.mark.parametrize(
@@ -26,7 +19,7 @@ from cmk.server_side_calls.v1 import (
             {
                 "timeout": 1,
                 "ssl": ("hostname", None),
-                "api_token": ("store", "stored_secret"),
+                "api_token": Secret(23),
             },
             "1.2.3.4",
             "host",
@@ -36,7 +29,7 @@ from cmk.server_side_calls.v1 import (
                 "--cert-server-name",
                 "host",
                 "--api-token",
-                StoredSecret(value="stored_secret", format="%s"),
+                Secret(23),
                 "1.2.3.4",
             ],
             id="Available timeout and ssl True and stored api token and hostip available",
@@ -44,7 +37,7 @@ from cmk.server_side_calls.v1 import (
         pytest.param(
             {
                 "ssl": ("custom_hostname", "something_else"),
-                "api_token": ("password", "api_token"),
+                "api_token": Secret(23),
             },
             "1.2.3.4",
             "host",
@@ -52,7 +45,7 @@ from cmk.server_side_calls.v1 import (
                 "--cert-server-name",
                 "something_else",
                 "--api-token",
-                PlainTextSecret(value="api_token", format="%s"),
+                Secret(23),
                 "1.2.3.4",
             ],
             id="No timeout and ssl custom and hostip available",

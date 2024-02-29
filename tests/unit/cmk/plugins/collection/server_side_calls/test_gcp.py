@@ -10,7 +10,7 @@ import pytest
 import time_machine
 
 from cmk.plugins.collection.server_side_calls.gcp import special_agent_gcp
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 pytestmark = pytest.mark.checks
 
@@ -27,14 +27,14 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "project": "test",
-                "credentials": ("password", "a_very_important_secret"),
+                "credentials": Secret(0),
                 "services": ["gcs", "run"],
             },
             [
                 "--project",
                 "test",
                 "--credentials",
-                PlainTextSecret(value="a_very_important_secret", format="%s"),
+                Secret(0),
                 "--date",
                 "2022-01-12",
                 "--services",
@@ -48,7 +48,7 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "project": "test",
-                "credentials": ("password", "a_very_important_secret"),
+                "credentials": Secret(0),
                 "cost": {"tableid": "checkmk"},
                 "services": [],
             },
@@ -56,7 +56,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                PlainTextSecret(value="a_very_important_secret", format="%s"),
+                Secret(0),
                 "--date",
                 "2022-01-12",
                 "--cost_table",
@@ -69,7 +69,7 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "project": "test",
-                "credentials": ("store", "password_id_1"),
+                "credentials": Secret(0),
                 "cost": {"tableid": "checkmk"},
                 "services": ["gcs"],
             },
@@ -77,7 +77,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                StoredSecret(value="password_id_1", format="%s"),
+                Secret(0),
                 "--date",
                 "2022-01-12",
                 "--cost_table",
@@ -92,7 +92,7 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "project": "test",
-                "credentials": ("store", "password_id_2"),
+                "credentials": Secret(2),
                 "services": [],
                 "piggyback": {"prefix": "custom-prefix", "piggyback_services": ["gce"]},
             },
@@ -100,7 +100,7 @@ HOST_CONFIG = HostConfig(
                 "--project",
                 "test",
                 "--credentials",
-                StoredSecret(value="password_id_2", format="%s"),
+                Secret(2),
                 "--date",
                 "2022-01-12",
                 "--services",

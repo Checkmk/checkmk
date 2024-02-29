@@ -12,19 +12,18 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_http_proxy,
-    parse_secret,
     replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType, SecretType
+from .utils import ProxyType
 
 
 class MobileIronParams(BaseModel):
     username: str
-    password: tuple[SecretType, str]
+    password: Secret
     proxy: tuple[ProxyType, str | None] | None = None
     partition: Sequence[str]
     key_fields: tuple[str] | tuple[str, str] = Field(..., alias="key-fields")
@@ -41,7 +40,7 @@ def generate_mobileiron_command(
         "-u",
         params.username,
         "-p",
-        parse_secret(params.password),
+        params.password,
         "--partition",
         ",".join(partitions),
         "--hostname",

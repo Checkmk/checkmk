@@ -12,19 +12,18 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_http_proxy,
-    parse_secret,
     replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType, SecretType
+from .utils import ProxyType
 
 
 class Instance(BaseModel):
-    api_key: tuple[SecretType, str]
-    app_key: tuple[SecretType, str]
+    api_key: Secret
+    app_key: Secret
     api_host: str
 
 
@@ -69,8 +68,8 @@ def generate_datadog_command(
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret] = [
         host_config.name,
-        parse_secret(params.instance.api_key),
-        parse_secret(params.instance.app_key),
+        params.instance.api_key,
+        params.instance.app_key,
         replace_macros(params.instance.api_host, host_config.macros),
     ]
 

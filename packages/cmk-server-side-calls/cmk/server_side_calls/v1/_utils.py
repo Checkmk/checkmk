@@ -7,7 +7,7 @@ from abc import abstractmethod
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
-from typing import Final, Literal, TypeVar
+from typing import Final, Literal, NamedTuple, Self, TypeVar
 
 
 class IPAddressFamily(Enum):
@@ -225,104 +225,39 @@ class HTTPProxy:
     url: str
 
 
-@dataclass(frozen=True, kw_only=True)
-class StoredSecret:
+class Secret(NamedTuple):
+    # it seems that NamedTuple is the most reasonable way to create a pydantic compatible class
+    # without adding a dependency on pydantic
     """
-    Defines a password stored in the password store
+    Surrogate for a secret defined by the user
 
-    In order to avoid showing passwords in plain text in agent configuration and active
-    check commands, store the password in the password store and use a StoredSecret object
-    to represent an argument that contains a stored password.
-
-    Args:
-        value: Id of the password from the password store
-        format: printf-style format of the created argument. Should be used if active check
-                or special agent require a secret argument in a particular format
+    This is a surrogate for a secret defined in the setup.
+    You, the developer if the plugin, can use it to define the place and formatting
+    of the secrets usage.
 
     Example:
 
-        >>> StoredSecret(value="stored_password_id", format="example-user:%s")
-        StoredSecret(value='stored_password_id', format='example-user:%s')
-    """
+        >>> my_secret = Secret(id=42)  # don't create it, it is passed by the backend
+        >>> argv = ["--basicauth",  my_secret.with_format("my_username:%s")]
 
-    value: str
+    """
+    id: int
     format: str = "%s"
 
+    def with_format(self, /, template: str) -> Self:
+        """
+        Returns a new Secret with a different format
 
-@dataclass(frozen=True, kw_only=True)
-class PlainTextSecret:
-    """
-    Defines an explicit password
+        Args:
+            template: The new formatting template
+        """
+        try:
+            # we don't have this validation upon creation, but at least prevent errors here.
+            _ = template % "test"
+        except TypeError as e:
+            raise ValueError(f"Invalid formatting template: {template}") from e
 
-    Args:
-        value: The password
-        format: printf-style format of the created argument. Should be used if
-                active check or special agent require a secret argument in a particular format
-
-    Example:
-
-        >>> PlainTextSecret(value="password1234")
-        PlainTextSecret(value='password1234', format='%s')
-    """
-
-    value: str
-    format: str = "%s"
-
-
-Secret = StoredSecret | PlainTextSecret
-
-
-# NOTE: This is basically a parser for the values originating from our IndividualOrStoredPassword
-# ValueSpec, it's highly questionable if this really belongs into the API.
-def parse_secret(
-    secret: tuple[Literal["store", "password"], str],
-    display_format: str = "%s",
-) -> Secret:
-    """
-    Parses a secret/password configuration into an instance of one of the two
-    appropriate classes
-
-
-    Args:
-        secret_type: Type of the secret
-        secret_value: Value of the secret. Can either be an id of the secret from
-                the password store or an explicit value.
-        display_format: Format of the argument containing the secret
-
-    Returns:
-        The class of the returned instance depends on the value of `secret_type`
-
-    Example:
-
-        >>> from collections.abc import Iterable, Mapping
-
-        >>> from cmk.server_side_calls.v1 import (
-        ...     SpecialAgentCommand,
-        ...     HostConfig,
-        ...     HTTPProxy,
-        ...     parse_secret,
-        ... )
-
-
-        >>> def generate_example_commands(
-        ...     params: Mapping[str, object],
-        ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
-        ... ) -> Iterable[SpecialAgentCommand]:
-        ...     secret = parse_secret(
-        ...         ("store", "stored_secret_id"),
-        ...         display_format="example-user:%s",
-        ...     )
-        ...     args = ["--auth", secret]
-        ...     yield SpecialAgentCommand(command_arguments=args)
-    """
-    match secret[0]:
-        case "store":
-            return StoredSecret(value=secret[1], format=display_format)
-        case "password":
-            return PlainTextSecret(value=secret[1], format=display_format)
-        case _:
-            raise ValueError("secret type has as to be either 'store' or 'password'")
+        return self.__class__(self.id, template)
 
 
 def parse_http_proxy(

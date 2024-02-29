@@ -16,7 +16,7 @@ import sys
 from collections.abc import Sequence
 from itertools import chain
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Literal
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
@@ -66,14 +66,36 @@ def main(
         tty.yellow,
         tty.normal,
     )
+    exit_code = main_check_config(logger, arguments.conflict)
+    if exit_code != 0:
+        return exit_code
+    return main_update_config(logger, arguments.conflict)
 
+
+def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
+    update_state = UpdateState.load(Path(paths.var_dir))
+    _load_plugins(logger)
+
+    try:
+        return update_config(logger, update_state)
+    except Exception:
+        if debug.enabled():
+            raise
+        logger.exception(
+            'ERROR: Please repair this and run "cmk-update-config" '
+            "BEFORE starting the site again."
+        )
+        return 1
+
+
+def main_check_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
     _load_pre_plugins()
     try:
         # This has to be done BEFORE initializing the GUI context on start of
         # the pre update actions
         _cleanup_precompiled_files(logger)
 
-        check_config(logger, arguments.conflict)
+        check_config(logger, conflict)
     except MKUserError as e:
         sys.stderr.write(
             f"\nUpdate aborted: {e}.\n"
@@ -92,20 +114,7 @@ def main(
             "BEFORE starting the site again."
         )
         return 1
-
-    update_state = UpdateState.load(Path(paths.var_dir))
-    _load_plugins(logger)
-
-    try:
-        return update_config(logger, update_state)
-    except Exception:
-        if debug.enabled():
-            raise
-        logger.exception(
-            'ERROR: Please repair this and run "cmk-update-config" '
-            "BEFORE starting the site again."
-        )
-        return 1
+    return 0
 
 
 def _cleanup_precompiled_files(logger: logging.Logger) -> None:
@@ -228,7 +237,7 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
     logger.info(f"Done ({tty.green}success{tty.normal})\n")
 
 
-def update_config(logger: logging.Logger, update_state: UpdateState) -> int:
+def update_config(logger: logging.Logger, update_state: UpdateState) -> Literal[0, 1]:
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")

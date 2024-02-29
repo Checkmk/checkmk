@@ -3034,14 +3034,6 @@ def main_update(  # pylint: disable=too-many-branches
         },
     )
 
-    # We previously executed "cmk -U" multiple times in the hooks CORE, MKEVENTD, PNP4NAGIOS to
-    # update the core configuration. To only execute it once, we do it here.
-    #
-    # Please note that this is explicitly done AFTER update-pre-hooks, because that executes
-    # "cmk-update-config" which updates e.g. the autochecks from previous versions to make it
-    # loadable by the code of the NEW version
-    _update_cmk_core_config(site)
-
     save_site_conf(site)
 
     call_scripts(site, "post-update", open_pty=is_tty)

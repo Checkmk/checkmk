@@ -1,6 +1,5 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
-load("@bazel_tools//tools/python:toolchain.bzl", "py_runtime_pair")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -12,10 +11,6 @@ filegroup(
         include = ["**/*"],
         exclude = ["*.bazel"],
     ),
-)
-
-config_setting(
-    name = "py_interpreter_setting",
 )
 
 out_binaries = [
@@ -107,28 +102,4 @@ configure_make(
         pyMajMin = PYTHON_MAJOR_DOT_MINOR,
     ),
     deps = ["@openssl"],
-)
-
-# Python toolchain definiton
-# Wrapper script finds python runtime and exports library path
-py_runtime(
-    name = "py3_runtime",
-    files = [
-        ":python",
-        "@freetds",
-        "@openssl",
-    ],
-    interpreter = "@omd_packages//omd/packages/Python:run_python_in_bazel.sh",
-    python_version = "PY3",
-)
-
-py_runtime_pair(
-    name = "runtime_pair",
-    py3_runtime = ":py3_runtime",
-)
-
-toolchain(
-    name = "python_toolchain",
-    toolchain = ":runtime_pair",
-    toolchain_type = "@rules_python//python:toolchain_type",
 )

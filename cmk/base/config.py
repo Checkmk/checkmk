@@ -565,7 +565,9 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
 
 
 def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
-    exec(file_to_load.read_text(), into_dict, into_dict)  # nosec B102 # BNS:aee528
+    exec(
+        compile(file_to_load.read_text(), file_to_load, "exec"), into_dict, into_dict
+    )  # nosec B102 # BNS:aee528
 
 
 def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:

@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.kube import special_agent_kube
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, PlainTextSecret
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, Secret
 
 HOST_CONFIG = HostConfig(
     name="host",
@@ -24,7 +24,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         (
             {
                 "cluster-name": "cluster",
-                "token": ("password", "cluster"),
+                "token": Secret(123),
                 "kubernetes-api-server": {
                     "endpoint_v2": "https://11.211.3.32",
                     "verify-cert": False,
@@ -47,7 +47,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 "--kubernetes-cluster-hostname",
                 "host",
                 "--token",
-                PlainTextSecret(value="cluster", format="%s"),
+                Secret(123),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -74,7 +74,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         (
             {
                 "cluster-name": "cluster",
-                "token": ("password", "cluster"),
+                "token": Secret(123),
                 "kubernetes-api-server": {
                     "endpoint_v2": "http://11.211.3.32:8080",
                     "verify-cert": False,
@@ -95,7 +95,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 "--kubernetes-cluster-hostname",
                 "host",
                 "--token",
-                PlainTextSecret(value="cluster", format="%s"),
+                Secret(123),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -115,7 +115,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         (
             {
                 "cluster-name": "cluster",
-                "token": ("password", "randomtoken"),
+                "token": Secret(123),
                 "kubernetes-api-server": {
                     "endpoint_v2": "http://localhost:8080",
                     "verify-cert": False,
@@ -136,7 +136,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 "--kubernetes-cluster-hostname",
                 "host",
                 "--token",
-                PlainTextSecret(value="randomtoken", format="%s"),
+                Secret(123),
                 "--monitored-objects",
                 "pods",
                 "namespaces",
@@ -167,7 +167,7 @@ def test_parse_arguments(params: Mapping[str, object], expected_args: Sequence[s
 def test_parse_arguments_with_no_cluster_endpoint() -> None:
     params = {
         "cluster-name": "cluster",
-        "token": ("password", "token"),
+        "token": Secret(0),
         "kubernetes-api-server": {
             "endpoint_v2": "https://127.0.0.1",
             "verify-cert": False,
@@ -184,7 +184,7 @@ def test_parse_arguments_with_no_cluster_endpoint() -> None:
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        PlainTextSecret(value="token", format="%s"),
+        Secret(0),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -201,7 +201,7 @@ def test_cronjob_pvcs_piggyback_option() -> None:
     """Test the cronjob and pvc piggyback option"""
     params = {
         "cluster-name": "cluster",
-        "token": ("password", "token"),
+        "token": Secret(0),
         "kubernetes-api-server": {
             "endpoint_v2": "https://11.211.3.32",
             "verify-cert": False,
@@ -218,7 +218,7 @@ def test_cronjob_pvcs_piggyback_option() -> None:
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        PlainTextSecret(value="token", format="%s"),
+        Secret(0),
         "--monitored-objects",
         "pods",
         "cronjobs_pods",
@@ -237,7 +237,7 @@ def test_cluster_resource_aggregation() -> None:
     """Test the cluster-resource-aggregation option"""
     params = {
         "cluster-name": "cluster",
-        "token": ("password", "token"),
+        "token": Secret(0),
         "kubernetes-api-server": {
             "endpoint_v2": "https://11.211.3.32",
             "verify-cert": False,
@@ -258,7 +258,7 @@ def test_cluster_resource_aggregation() -> None:
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        PlainTextSecret(value="token", format="%s"),
+        Secret(0),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -272,7 +272,7 @@ def test_cluster_resource_aggregation() -> None:
 
     params = {
         "cluster-name": "cluster",
-        "token": ("password", "token"),
+        "token": Secret(0),
         "kubernetes-api-server": {
             "endpoint_v2": "https://11.211.3.32",
             "verify-cert": False,
@@ -290,7 +290,7 @@ def test_cluster_resource_aggregation() -> None:
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        PlainTextSecret(value="token", format="%s"),
+        Secret(0),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-include-all-nodes",
@@ -301,7 +301,7 @@ def test_cluster_resource_aggregation() -> None:
     ]
     params = {
         "cluster-name": "cluster",
-        "token": ("password", "token"),
+        "token": Secret(0),
         "kubernetes-api-server": {
             "endpoint_v2": "https://11.211.3.32",
             "verify-cert": False,
@@ -318,7 +318,7 @@ def test_cluster_resource_aggregation() -> None:
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        PlainTextSecret(value="token", format="%s"),
+        Secret(0),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -340,7 +340,7 @@ def test_host_labels_annotation_selection() -> None:
     # Explicit no filtering
     params = {
         "cluster-name": "cluster",
-        "token": ("password", "token"),
+        "token": Secret(0),
         "kubernetes-api-server": {
             "endpoint_v2": "https://11.211.3.32",
             "verify-cert": False,
@@ -358,7 +358,7 @@ def test_host_labels_annotation_selection() -> None:
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        PlainTextSecret(value="token", format="%s"),
+        Secret(0),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -374,7 +374,7 @@ def test_host_labels_annotation_selection() -> None:
     # Explicit filtering
     params = {
         "cluster-name": "cluster",
-        "token": ("password", "token"),
+        "token": Secret(0),
         "kubernetes-api-server": {
             "endpoint_v2": "https://11.211.3.32",
             "verify-cert": False,
@@ -395,7 +395,7 @@ def test_host_labels_annotation_selection() -> None:
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        PlainTextSecret(value="token", format="%s"),
+        Secret(0),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -413,7 +413,7 @@ def test_host_labels_annotation_selection() -> None:
 def test_parse_namespace_patterns() -> None:
     params = {
         "cluster-name": "cluster",
-        "token": ("password", "token"),
+        "token": Secret(0),
         "kubernetes-api-server": {
             "endpoint_v2": "https://11.211.3.32",
             "verify-cert": False,
@@ -431,7 +431,7 @@ def test_parse_namespace_patterns() -> None:
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        PlainTextSecret(value="token", format="%s"),
+        Secret(0),
         "--monitored-objects",
         "pods",
         "--namespace-include-patterns",
@@ -454,7 +454,7 @@ def test_parse_namespace_patterns() -> None:
         (
             {
                 "cluster-name": "test",
-                "token": ("password", "token"),
+                "token": Secret(0),
                 "kubernetes-api-server": {
                     "endpoint_v2": "https://127.0.0.1",
                     "verify-cert": False,
@@ -472,7 +472,7 @@ def test_parse_namespace_patterns() -> None:
                 "--kubernetes-cluster-hostname",
                 "host",
                 "--token",
-                PlainTextSecret(value="token", format="%s"),
+                Secret(0),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -487,7 +487,7 @@ def test_parse_namespace_patterns() -> None:
         (
             {
                 "cluster-name": "test",
-                "token": ("password", "token"),
+                "token": Secret(0),
                 "kubernetes-api-server": {
                     "endpoint_v2": "http://127.0.0.1:8080",
                     "verify-cert": False,
@@ -505,7 +505,7 @@ def test_parse_namespace_patterns() -> None:
                 "--kubernetes-cluster-hostname",
                 "host",
                 "--token",
-                PlainTextSecret(value="token", format="%s"),
+                Secret(0),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -520,7 +520,7 @@ def test_parse_namespace_patterns() -> None:
         (
             {
                 "cluster-name": "test",
-                "token": ("password", "randomtoken"),
+                "token": Secret(0),
                 "kubernetes-api-server": {
                     "endpoint_v2": "http://localhost:8080",
                     "verify-cert": True,
@@ -538,7 +538,7 @@ def test_parse_namespace_patterns() -> None:
                 "--kubernetes-cluster-hostname",
                 "host",
                 "--token",
-                PlainTextSecret(value="randomtoken", format="%s"),
+                Secret(0),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -569,7 +569,7 @@ def test_client_configuration_host(
         (
             {
                 "cluster-name": "cluster",
-                "token": ("password", "cluster"),
+                "token": Secret(0),
                 "kubernetes-api-server": {
                     "endpoint_v2": "https://11.211.3.32",
                     "verify-cert": False,
@@ -582,7 +582,7 @@ def test_client_configuration_host(
         (
             {
                 "cluster-name": "cluster",
-                "token": ("password", "cluster"),
+                "token": Secret(0),
                 "kubernetes-api-server": {
                     "endpoint_v2": "http://11.211.3.32:8080",
                     "verify-cert": False,
@@ -595,7 +595,7 @@ def test_client_configuration_host(
         (
             {
                 "cluster-name": "cluster",
-                "token": ("password", "randomtoken"),
+                "token": Secret(0),
                 "kubernetes-api-server": {
                     "endpoint_v2": "http://localhost:8001",
                     "verify-cert": False,
@@ -608,7 +608,7 @@ def test_client_configuration_host(
         (
             {
                 "cluster-name": "cluster",
-                "token": ("password", "randomtoken"),
+                "token": Secret(0),
                 "kubernetes-api-server": {
                     "endpoint_v2": "http://localhost:8001",
                     "verify-cert": False,

@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.mail.server_side_calls.mail import active_check_mail
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 HOST_CONFIG = HostConfig(
     name="host",
@@ -28,7 +28,7 @@ HOST_CONFIG = HostConfig(
                     "IMAP",
                     {
                         "connection": {"disable_tls": False, "port": 143},
-                        "auth": ("basic", ("foo", ("password", "bar"))),
+                        "auth": ("basic", ("foo", Secret(1))),
                     },
                 ),
                 "connect_timeout": 15,
@@ -39,7 +39,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-tls",
                 "--fetch-port=143",
                 "--fetch-username=foo",
-                PlainTextSecret(value="bar", format="--fetch-password=%s"),
+                Secret(1, "--fetch-password=%s"),
                 "--connect-timeout=15",
             ],
             id="imap",
@@ -51,7 +51,7 @@ HOST_CONFIG = HostConfig(
                     "EWS",
                     {
                         "connection": {"disable_tls": True, "port": 143},
-                        "auth": ("basic", ("foo", ("password", "bar"))),
+                        "auth": ("basic", ("foo", Secret(1))),
                     },
                 ),
                 "connect_timeout": 15,
@@ -61,7 +61,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=127.0.0.1",
                 "--fetch-port=143",
                 "--fetch-username=foo",
-                PlainTextSecret(value="bar", format="--fetch-password=%s"),
+                Secret(1, "--fetch-password=%s"),
                 "--connect-timeout=15",
             ],
             id="ews_no_tls",
@@ -76,7 +76,7 @@ HOST_CONFIG = HostConfig(
                         "connection": {"disable_tls": True, "port": 143},
                         "auth": (
                             "oauth2",
-                            ("client_id", ("password", "client_secret"), "tenant_id"),
+                            ("client_id", Secret(1), "tenant_id"),
                         ),
                         "email_address": "foo@bar.com",
                     },
@@ -88,7 +88,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=host",
                 "--fetch-port=143",
                 "--fetch-client-id=client_id",
-                PlainTextSecret(value="client_secret", format="--fetch-client-secret=%s"),
+                Secret(1, "--fetch-client-secret=%s"),
                 "--fetch-tenant-id=tenant_id",
                 "--fetch-email-address=foo@bar.com",
                 "--connect-timeout=15",
@@ -102,7 +102,7 @@ HOST_CONFIG = HostConfig(
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                        "auth": ("basic", ("me@gmx.de", Secret(1))),
                         "connection": {"disable_tls": True, "port": 123},
                     },
                 ),
@@ -118,7 +118,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=imap.gmx.de",
                 "--fetch-port=123",
                 "--fetch-username=me@gmx.de",
-                PlainTextSecret(value="p4ssw0rd", format="--fetch-password=%s"),
+                Secret(1, "--fetch-password=%s"),
                 "--forward-ec",
                 "--forward-facility=2",
                 "--forward-host=me.too@checkmk.com",
@@ -133,7 +133,7 @@ HOST_CONFIG = HostConfig(
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                        "auth": ("basic", ("me@gmx.de", Secret(1))),
                         "connection": {"disable_tls": True, "port": 123},
                     },
                 ),
@@ -152,7 +152,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=imap.gmx.de",
                 "--fetch-port=123",
                 "--fetch-username=me@gmx.de",
-                PlainTextSecret(value="p4ssw0rd", format="--fetch-password=%s"),
+                Secret(1, "--fetch-password=%s"),
                 "--forward-ec",
                 "--forward-method=my_method",
                 "--match-subject=subject",

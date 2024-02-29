@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Mapping
-from typing import Literal
 
 from pydantic import BaseModel
 
@@ -13,7 +12,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
-    parse_secret,
     replace_macros,
     Secret,
 )
@@ -26,7 +24,7 @@ class LDAPParams(BaseModel):
     response_time: tuple[int, int] | None = None
     timeout: int | None = None
     attribute: str | None = None
-    authentication: tuple[str, tuple[Literal["password", "store"], str]] | None = None
+    authentication: tuple[str, Secret] | None = None
     port: int | None = None
     version: str | None = None
     ssl: bool = False
@@ -63,7 +61,7 @@ def generate_ldap_commands(
 
     if params.authentication is not None:
         binddn, password = params.authentication
-        args += ["-D", binddn, "-P", parse_secret(password)]
+        args += ["-D", binddn, "-P", password]
 
     if params.port is not None:
         args += ["-p", str(params.port)]

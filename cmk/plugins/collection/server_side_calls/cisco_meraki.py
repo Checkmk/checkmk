@@ -12,18 +12,17 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_http_proxy,
-    parse_secret,
     replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType, SecretType
+from .utils import ProxyType
 
 
 class Params(BaseModel):
-    api_key: tuple[SecretType, str]
+    api_key: Secret
     proxy: tuple[ProxyType, str | None] | None = None
     sections: Sequence[str] | None = None
     orgs: Sequence[str] | None = None
@@ -36,7 +35,7 @@ def agent_cisco_meraki_arguments(
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret] = [
         host_config.name,
-        parse_secret(params.api_key),
+        params.api_key,
     ]
 
     if params.proxy is not None:

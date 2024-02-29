@@ -13,7 +13,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
-    parse_secret,
     replace_macros,
     Secret,
 )
@@ -25,7 +24,7 @@ class Params(BaseModel):
     levels: tuple[float, float]
     workgroup: str | None = None
     port: int | None = None
-    auth: tuple[str, tuple[Literal["password", "store"], str]] | None = None
+    auth: tuple[str, Secret] | None = None
     ip_address: str | None = None
 
 
@@ -54,12 +53,7 @@ def check_disk_smb_arguments(
 
     if params.auth is not None:
         username, pw = params.auth
-        args += [
-            "-u",
-            username,
-            "-p",
-            parse_secret(pw),
-        ]
+        args += ["-u", username, "-p", pw]
 
     if params.ip_address is not None:
         args += ["-a", replace_macros(params.ip_address, host_config.macros)]

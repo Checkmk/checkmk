@@ -11,27 +11,20 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
-    parse_secret,
     replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
 
-from .utils import SecretType
-
 
 class JenkinsParams(BaseModel):
     user: str
-    password: tuple[SecretType, str]
+    password: Secret
     protocol: str
     instance: str
     port: int | None = None
     sections: Sequence[str] = []
-
-
-def parse_jenkins_params(raw_params: Mapping[str, object]) -> JenkinsParams:
-    return JenkinsParams.model_validate(raw_params)
 
 
 def agent_jenkins_config(
@@ -45,7 +38,7 @@ def agent_jenkins_config(
         "-u",
         params.user,
         "-s",
-        parse_secret(params.password),
+        params.password,
     ]
 
     if params.sections:
@@ -60,5 +53,7 @@ def agent_jenkins_config(
 
 
 special_agent_jenkins = SpecialAgentConfig(
-    name="jenkins", parameter_parser=parse_jenkins_params, commands_function=agent_jenkins_config
+    name="jenkins",
+    parameter_parser=JenkinsParams.model_validate,
+    commands_function=agent_jenkins_config,
 )

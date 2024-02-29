@@ -12,8 +12,8 @@ from pydantic import BaseModel, Field
 from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
-    parse_secret,
     replace_macros,
+    Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -37,7 +37,7 @@ class HostnameSpaces(Enum):
 
 class Params(BaseModel, frozen=True):
     user: str
-    secret: tuple[Literal["password", "store"], str]
+    secret: Secret
     direct: bool
     ssl: bool | str
     tcp_port: int | None = Field(None, ge=1, le=65535)
@@ -56,12 +56,12 @@ def commands_function(
     host_config: HostConfig,
     _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
-    command_arguments = [
+    command_arguments: list[str | Secret] = [
         host_config.primary_ip_config.address,
         "-u",
         params.user,
         "-s",
-        parse_secret(params.secret),
+        params.secret,
         "-i",
         ",".join(params.infos),
         "--spaces",

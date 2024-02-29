@@ -14,7 +14,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
-    parse_secret,
     replace_macros,
     Secret,
 )
@@ -27,7 +26,7 @@ class SQLParams(BaseModel):
     name: str
     dbms: str
     user: str
-    password: tuple[Literal["store", "password"], str]
+    password: Secret
     sql: str
     host: str | None = None
     port: PortSpec | None = None
@@ -51,7 +50,7 @@ def generate_sql_command(
     args.append(f"--dbms={params.dbms}")
     args.append(f"--name={replace_macros(params.name, host_config.macros)}")
     args.append(f"--user={params.user}")
-    args.append(parse_secret(params.password, display_format="--password=%s"))
+    args.append(params.password.with_format("--password=%s"))
 
     match params.port:
         case "explicit", int(value):

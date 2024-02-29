@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Mapping
-from typing import Literal
 
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    parse_secret,
     replace_macros,
     Secret,
     SpecialAgentCommand,
@@ -21,7 +19,7 @@ from cmk.server_side_calls.v1 import (
 class Params(BaseModel, frozen=True):
     timeout: int | None = None
     ssl: tuple[str, str | None] = ("hostname", None)
-    api_token: tuple[Literal["password", "store"], str]
+    api_token: Secret
 
 
 def commands_function(
@@ -42,7 +40,7 @@ def commands_function(
         ssl_server = replace_macros(str(ssl_config_value), host_config.macros)
         command_arguments += ["--cert-server-name", ssl_server]
 
-    command_arguments += ["--api-token", parse_secret(params.api_token)]
+    command_arguments += ["--api-token", params.api_token]
 
     yield SpecialAgentCommand(
         command_arguments=[*command_arguments, host_config.primary_ip_config.address]

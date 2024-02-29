@@ -12,7 +12,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
-    parse_secret,
     replace_macros,
     Secret,
 )
@@ -30,9 +29,9 @@ class ConnectionParams(BaseModel):
 class SendParams(BaseModel):
     server: str | None = None
     connection: ConnectionParams
-    auth: tuple[str, tuple[str, str]] | tuple[str, tuple[str, tuple[str, str]]] | tuple[
-        str, tuple[str, tuple[str, str], str]
-    ] | None = None
+    auth: (
+        tuple[str, Secret] | tuple[str, tuple[str, Secret]] | tuple[str, tuple[str, Secret, str]]
+    ) | None = None
     email_address: str | None = None
 
 
@@ -66,7 +65,7 @@ def generate_mail_loop_command(  # pylint: disable=too-many-branches
         if send_params.auth is not None:
             username, password = BasicAuth.model_validate({"auth": send_params.auth}).auth
             args.append(f"--send-username={username}")
-            args.append(parse_secret(password, display_format="--send-password=%s"))
+            args.append(password.with_format("--send-password=%s"))
     elif send_protocol == "EWS":
         if not connection_params.disable_tls:
             args.append("--send-tls")
@@ -82,16 +81,13 @@ def generate_mail_loop_command(  # pylint: disable=too-many-branches
             username, password = BasicAuth.model_validate({"auth": auth_data}).auth
             args += [
                 f"--send-username={username}",
-                parse_secret(password, display_format="--send-password=%s"),
+                password.with_format("--send-password=%s"),
             ]
         else:
             client_id, client_secret, tenant_id = OAuth.model_validate({"auth": auth_data}).auth
             args += [
                 f"--send-client-id={client_id}",
-                parse_secret(
-                    client_secret,
-                    display_format="--send-client-secret=%s",
-                ),
+                client_secret.with_format("--send-client-secret=%s"),
                 f"--send-tenant-id={tenant_id}",
             ]
 

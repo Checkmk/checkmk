@@ -3,16 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping, Sequence
-from typing import Literal
+from collections.abc import Iterator, Mapping
 
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
-    parse_secret,
-    PlainTextSecret,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -22,7 +19,7 @@ from cmk.server_side_calls.v1 import (
 class ExampleParams(BaseModel):
     protocol: str
     user: str
-    password: tuple[Literal["store", "password"], str]
+    password: Secret
 
 
 def parse_example_params(params: Mapping[str, object]) -> ExampleParams:
@@ -34,15 +31,16 @@ def generate_example_commands(
     _host_config: HostConfig,
     _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
-    args: Sequence[str | Secret] = [
-        "-p",
-        params.protocol,
-        "-u",
-        params.user,
-        "-s",
-        parse_secret(params.password),
-    ]
-    yield SpecialAgentCommand(command_arguments=args)
+    yield SpecialAgentCommand(
+        command_arguments=(
+            "-p",
+            params.protocol,
+            "-u",
+            params.user,
+            "-s",
+            params.password,
+        )
+    )
 
 
 special_agent_example = SpecialAgentConfig(
@@ -58,19 +56,19 @@ def test_active_check_config() -> None:
     params = {
         "protocol": "HTTP",
         "user": "example_user",
-        "password": ("password", "password1234"),
+        "password": Secret(42),
     }
 
     commands = list(special_agent_example(params, host_config, {}))
 
     assert len(commands) == 1
     assert commands[0] == SpecialAgentCommand(
-        command_arguments=[
+        command_arguments=(
             "-p",
             "HTTP",
             "-u",
             "example_user",
             "-s",
-            PlainTextSecret(value="password1234", format="%s"),
-        ],
+            Secret(42),
+        ),
     )

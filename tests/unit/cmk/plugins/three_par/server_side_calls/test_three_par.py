@@ -8,13 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.three_par.server_side_calls.three_par import special_agent_three_par
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPv4Config,
-    PlainTextSecret,
-    SpecialAgentCommand,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(
     name="host",
@@ -28,7 +22,7 @@ HOST_CONFIG = HostConfig(
         (
             {
                 "user": "user",
-                "password": ("password", "d1ng"),
+                "password": Secret(42),
                 "port": 8080,
                 "verify_cert": False,
                 "values": ["x", "y"],
@@ -39,7 +33,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        PlainTextSecret(value="d1ng"),
+                        Secret(42),
                         "--port",
                         "8080",
                         "--no-cert-check",
@@ -53,7 +47,7 @@ HOST_CONFIG = HostConfig(
         (
             {
                 "user": "user",
-                "password": ("password", "d1ng"),
+                "password": Secret(42),
                 "port": 1234,
                 "values": ["x", "y"],
             },
@@ -63,7 +57,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        PlainTextSecret(value="d1ng"),
+                        Secret(42),
                         "--port",
                         "1234",
                         "--no-cert-check",
@@ -77,7 +71,7 @@ HOST_CONFIG = HostConfig(
         (
             {
                 "user": "user",
-                "password": ("password", "d1ng"),
+                "password": Secret(42),
                 "port": 8090,
                 "verify_cert": True,
                 "values": ["x", "y"],
@@ -88,7 +82,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        PlainTextSecret(value="d1ng"),
+                        Secret(42),
                         "--port",
                         "8090",
                         "--values",
@@ -101,7 +95,7 @@ HOST_CONFIG = HostConfig(
         (
             {
                 "user": "user",
-                "password": ("password", "d1ng"),
+                "password": Secret(42),
                 "port": 500,
                 "verify_cert": True,
             },
@@ -111,7 +105,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        PlainTextSecret(value="d1ng"),
+                        Secret(42),
                         "--port",
                         "500",
                         "address",
@@ -122,7 +116,7 @@ HOST_CONFIG = HostConfig(
         (
             {
                 "user": "user",
-                "password": ("store", "pw-id"),
+                "password": Secret(23),
                 "port": 8079,
                 "verify_cert": True,
             },
@@ -132,7 +126,7 @@ HOST_CONFIG = HostConfig(
                         "--user",
                         "user",
                         "--password",
-                        StoredSecret(value="pw-id", format="%s"),
+                        Secret(23),
                         "--port",
                         "8079",
                         "address",

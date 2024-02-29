@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Literal
-
 import pytest
 
 from cmk.server_side_calls.v1 import (
@@ -16,38 +14,8 @@ from cmk.server_side_calls.v1 import (
     IPv6Config,
     noop_parser,
     parse_http_proxy,
-    parse_secret,
-    PlainTextSecret,
     replace_macros,
-    Secret,
-    StoredSecret,
 )
-
-
-@pytest.mark.parametrize(
-    "secret, expected_result",
-    [
-        pytest.param(
-            ("store", "stored_password_id"),
-            StoredSecret(value="stored_password_id", format="%s"),
-            id="stored password",
-        ),
-        pytest.param(
-            ("password", "password1234"),
-            PlainTextSecret(value="password1234", format="%s"),
-            id="plain-text password",
-        ),
-    ],
-)
-def test_get_secret_from_params(
-    secret: tuple[Literal["store", "password"], str], expected_result: Secret
-) -> None:
-    assert parse_secret(secret) == expected_result
-
-
-def test_get_secret_from_params_invalid_type() -> None:
-    with pytest.raises(ValueError, match="secret type has as to be either 'store' or 'password'"):
-        parse_secret(("invalid", "password1234"))  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(

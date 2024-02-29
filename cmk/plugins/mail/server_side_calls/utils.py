@@ -3,21 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import HostConfig, parse_secret, replace_macros, Secret
-
-SecretType = Literal["store", "password"]
+from cmk.server_side_calls.v1 import HostConfig, replace_macros, Secret
 
 
 class BasicAuth(BaseModel):
-    auth: tuple[str, tuple[SecretType, str]]
+    auth: tuple[str, Secret]
 
 
 class OAuth(BaseModel):
-    auth: tuple[str, tuple[SecretType, str], str]
+    auth: tuple[str, Secret, str]
 
 
 class Connection(BaseModel):
@@ -29,7 +26,7 @@ class Connection(BaseModel):
 class FetchParams(BaseModel):
     server: str | None = None
     connection: Connection
-    auth: tuple[str, tuple[str, tuple[str, str]]] | tuple[str, tuple[str, tuple[str, str], str]]
+    auth: tuple[str, tuple[str, Secret]] | tuple[str, tuple[str, Secret, str]]
     email_address: str | None = None
 
 
@@ -71,14 +68,14 @@ def get_general_mail_arguments(
         username, password = BasicAuth.model_validate({"auth": auth_data}).auth
         args += [
             f"--fetch-username={username}",
-            parse_secret(password, display_format="--fetch-password=%s"),
+            password.with_format("--fetch-password=%s"),
         ]
 
     else:
         client_id, client_secret, tenant_id = OAuth.model_validate({"auth": auth_data}).auth
         args += [
             f"--fetch-client-id={client_id}",
-            parse_secret(client_secret, "--fetch-client-secret=%s"),
+            client_secret.with_format("--fetch-client-secret=%s"),
             f"--fetch-tenant-id={tenant_id}",
         ]
 

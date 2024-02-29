@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.jenkins import special_agent_jenkins
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, SpecialAgentCommand
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(
     name="hostname",
@@ -22,7 +22,7 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "user": "username",
-                "password": ("password", "passwd"),
+                "password": Secret(0),
                 "instance": "test",
                 "protocol": "https",
             },
@@ -34,7 +34,7 @@ HOST_CONFIG = HostConfig(
                         "-u",
                         "username",
                         "-s",
-                        PlainTextSecret(value="passwd", format="%s"),
+                        Secret(0),
                         "test",
                     ]
                 )
@@ -44,7 +44,7 @@ HOST_CONFIG = HostConfig(
         pytest.param(
             {
                 "user": "username",
-                "password": ("password", "passwd"),
+                "password": Secret(0),
                 "instance": "test",
                 "protocol": "https",
                 "port": 442,
@@ -58,7 +58,7 @@ HOST_CONFIG = HostConfig(
                         "-u",
                         "username",
                         "-s",
-                        PlainTextSecret(value="passwd", format="%s"),
+                        Secret(0),
                         "-m",
                         "instance jobs nodes queue",
                         "-p",

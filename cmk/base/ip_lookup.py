@@ -10,7 +10,7 @@ import socket
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, assert_never, Literal, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -57,21 +57,16 @@ class IPLookupConfig(NamedTuple):
     is_dyndns_host: bool
 
 
-def fallback_ip_for(family: socket.AddressFamily | AddressFamily) -> HostAddress:
-    if isinstance(family, socket.AddressFamily):
-        family = AddressFamily.from_socket(family)
+def fallback_ip_for(
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+) -> HostAddress:
     match family:
-        case AddressFamily.IPv4:
+        case socket.AddressFamily.AF_INET:
             return HostAddress("0.0.0.0")
-        case AddressFamily.IPv6:
+        case socket.AddressFamily.AF_INET6:
             return HostAddress("::")
-        case _:
-            # TODO(ml): [IPv6] This ignores `default_address_family()`
-            # and falls back to IPv6, where IPv4 is the default almost
-            # everywhere else.  Using "0.0.0.0" or "::" only makes sense
-            # for a server anyway, so the users of this function are
-            # most likely misconfigured.
-            return HostAddress("::")
+        case other:
+            assert_never(other)
 
 
 def enforce_fake_dns(address: HostAddress) -> None:

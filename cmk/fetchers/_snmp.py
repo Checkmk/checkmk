@@ -10,7 +10,6 @@ from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapp
 from pathlib import Path
 from typing import Any, Final
 
-import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.utils.log import console
@@ -105,8 +104,6 @@ class WalkCache(
                 raise
             except Exception:
                 console.vverbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
-                if cmk.utils.debug.enabled():
-                    raise
                 continue
 
             if read_walk is not None:

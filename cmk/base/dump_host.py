@@ -6,6 +6,7 @@
 import socket
 import time
 from pathlib import Path
+from typing import Literal
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -258,7 +259,7 @@ def _ip_address_for_dump_host(
     hosts_config: Hosts,
     host_name: HostName,
     *,
-    family: socket.AddressFamily,
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress | None:
     try:
         return config.lookup_ip_address(config_cache, host_name, family=family)

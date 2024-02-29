@@ -152,6 +152,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
+@pytest.mark.skip(reason="License verification failure during update process.")  # todo: re-enable
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:

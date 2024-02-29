@@ -124,7 +124,7 @@ class ActiveCheckConfig(
         host_config: HostConfig,
         http_proxies: Mapping[str, HTTPProxy],
     ) -> Iterable[ActiveCheckCommand]:
-        yield from self._commands_function(
+        return self._commands_function(
             self._parameter_parser(parameters),
             host_config,
             http_proxies,

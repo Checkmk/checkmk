@@ -411,7 +411,7 @@ def walk_skel(
     ignored_files = [
         # We have removed the unused htpasswd skel file, but we don't want to ask users if they wish
         # to delete their existing htpasswd.
-        "skel/etc/htpasswd",
+        "etc/htpasswd",
     ]
 
     with chdir(root):

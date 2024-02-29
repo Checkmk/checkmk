@@ -192,6 +192,10 @@ RUN /opt/install-pipenv.sh
 COPY scripts/UBUNTU_20.04.mk /opt/
 COPY scripts/install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh
+# Set symlinks again in order to fix /usr/bin/as
+# which might break during install-cmk-dependencies.sh.
+# More context is in /opt/install-gnu-toolchain.sh.
+RUN /opt/install-gnu-toolchain.sh link-only
 
 COPY scripts/install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh

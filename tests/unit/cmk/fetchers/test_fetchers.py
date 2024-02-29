@@ -73,7 +73,6 @@ class SensorReading(NamedTuple):
 
 def clone_file_cache(file_cache: FileCache) -> FileCache:
     return type(file_cache)(
-        HostName(file_cache.hostname),
         path_template=file_cache.path_template,
         max_age=file_cache.max_age,
         simulation=file_cache.simulation,
@@ -86,7 +85,6 @@ class TestFileCache:
     @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
     def file_cache(self, request: pytest.FixtureRequest) -> FileCache:
         return request.param(
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.zero(),
             simulation=True,
@@ -110,7 +108,6 @@ class TestAgentFileCache_and_SNMPFileCache:
         self, path: Path, request: pytest.FixtureRequest
     ) -> AgentFileCache | SNMPFileCache:
         return request.param(
-            HostName("hostname"),
             path_template=str(path),
             max_age=MaxAge(checking=0, discovery=999, inventory=0),
             simulation=False,
@@ -244,7 +241,6 @@ class TestIPMIFetcher:
         monkeypatch.setattr(IPMIFetcher, "open", open_)
 
         file_cache = StubFileCache[AgentRawData](
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -263,7 +259,6 @@ class TestIPMIFetcher:
         monkeypatch.setattr(IPMIFetcher, "open", open_)
 
         file_cache = StubFileCache[AgentRawData](
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -490,7 +485,6 @@ class TestSNMPFetcherFetch:
         )
 
         file_cache = SNMPFileCache(
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -538,7 +532,6 @@ class TestSNMPFetcherFetch:
             else [],
         )
         file_cache = SNMPFileCache(
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -557,7 +550,6 @@ class TestSNMPFetcherFetch:
             lambda *_, **__: {SectionName("pam")},
         )
         file_cache = SNMPFileCache(
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -593,7 +585,6 @@ class TestSNMPFetcherFetch:
             lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
         )
         file_cache = SNMPFileCache(
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -615,7 +606,6 @@ class TestSNMPFetcherFetch:
             lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
         )
         file_cache = SNMPFileCache(
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -637,7 +627,6 @@ class TestSNMPFetcherFetch:
             lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
         )
         file_cache = SNMPFileCache(
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -658,7 +647,6 @@ class TestSNMPFetcherFetch:
             lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
         )
         file_cache = SNMPFileCache(
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -705,7 +693,6 @@ class TestSNMPFetcherFetchCache:
 
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher: SNMPFetcher) -> None:
         file_cache = StubFileCache[SNMPRawData](
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -768,7 +755,6 @@ class TestTCPFetcher:
 
     def test_with_cached_does_not_open(self, tmp_path: Path) -> None:
         file_cache = StubFileCache[AgentRawData](
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -791,7 +777,6 @@ class TestTCPFetcher:
 
     def test_open_exception_becomes_fetcher_error(self, tmp_path: Path) -> None:
         file_cache = StubFileCache[AgentRawData](
-            HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=True,
@@ -855,7 +840,6 @@ class TestFetcherCaching:
 
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher: Fetcher[AgentRawData]) -> None:
         file_cache = StubFileCache[AgentRawData](
-            HostName(""),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -869,7 +853,6 @@ class TestFetcherCaching:
 
     def test_fetch_reading_cache_in_inventory_mode(self, fetcher: Fetcher[AgentRawData]) -> None:
         file_cache = StubFileCache[AgentRawData](
-            HostName(""),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,

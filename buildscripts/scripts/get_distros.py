@@ -5,7 +5,8 @@
 import argparse
 import sys
 import urllib.parse
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from argparse import Namespace as Args
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -137,22 +138,24 @@ def edition_to_registry(ed: str, registries: list[Registry]) -> Registry:
     raise RuntimeError(f"Cannot determine registry for edition: {ed}!")
 
 
-def build_source_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> Iterator[str]:
+def build_source_artifacts(args: Args, loaded_yaml: dict) -> Iterator[str]:
     for edition in loaded_yaml["editions"]:
-        file_name = f"check-mk-{edition}-{arguments.version}.{Edition.from_long_edition(edition).short}.tar.gz"
+        file_name = (
+            f"check-mk-{edition}-{args.version}.{Edition.from_long_edition(edition).short}.tar.gz"
+        )
         yield file_name
         yield hash_file(file_name)
 
 
-def build_docker_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> Iterator[str]:
+def build_docker_artifacts(args: Args, loaded_yaml: dict) -> Iterator[str]:
     for edition in loaded_yaml["editions"]:
-        file_name = f"check-mk-{edition}-docker-{arguments.version}.tar.gz"
+        file_name = f"check-mk-{edition}-docker-{args.version}.tar.gz"
         yield file_name
         yield hash_file(file_name)
 
 
 def build_docker_image_name_and_registry(
-    arguments: argparse.Namespace, loaded_yaml: dict, registries: list[Registry]
+    args: Args, loaded_yaml: dict, registries: list[Registry]
 ) -> Iterator[tuple[DockerImage, str, Registry]]:
     def build_folder(ed: str) -> str:
         # TODO: Merge with build-cmk-container.py
@@ -167,21 +170,17 @@ def build_docker_image_name_and_registry(
     for edition in loaded_yaml["editions"]:
         registry = edition_to_registry(edition, registries)
         yield (
-            DockerImage(
-                tag=arguments.version, image_name=f"{build_folder(edition)}/check-mk-{edition}"
-            ),
+            DockerImage(tag=args.version, image_name=f"{build_folder(edition)}/check-mk-{edition}"),
             edition,
             registry,
         )
 
 
-def build_package_artifacts(
-    arguments: argparse.Namespace, loaded_yaml: dict
-) -> Iterator[tuple[str, bool]]:
+def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        for distro in flatten_list(loaded_yaml["editions"][edition]["release"]):
+        for distro in flatten(loaded_yaml["editions"][edition]["release"]):
             package_name = ABCPackageManager.factory(code_name(distro)).package_name(
-                Edition.from_long_edition(edition), version=arguments.version
+                Edition.from_long_edition(edition), version=args.version
             )
             internal_only = distro in loaded_yaml["internal_distros"]
             yield package_name, internal_only
@@ -204,7 +203,7 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
     return True
 
 
-def assert_build_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> None:
+def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     credentials = get_credentials()
     registries = [
         Registry(
@@ -214,27 +213,27 @@ def assert_build_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> 
             editions=["raw", "cloud"],
         ),
     ]
-    for artifact_name in build_source_artifacts(arguments, loaded_yaml):
+    for artifact_name in build_source_artifacts(args, loaded_yaml):
         assert file_exists_on_download_server(
-            artifact_name, arguments.version, credentials
+            artifact_name, args.version, credentials
         ), f"{artifact_name} should be available on download server!"
 
-    for artifact_name, internal_only in build_package_artifacts(arguments, loaded_yaml):
+    for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
         assert (
-            file_exists_on_download_server(artifact_name, arguments.version, credentials)
+            file_exists_on_download_server(artifact_name, args.version, credentials)
             != internal_only
         ), (
             f"{artifact_name} should {'not' if internal_only else ''} "
             f"be available on download server!"
         )
 
-    for artifact_name in build_docker_artifacts(arguments, loaded_yaml):
+    for artifact_name in build_docker_artifacts(args, loaded_yaml):
         assert file_exists_on_download_server(
-            artifact_name, arguments.version, credentials
+            artifact_name, args.version, credentials
         ), f"{artifact_name} should be available on download server!"
 
     for image_name, edition, registry in build_docker_image_name_and_registry(
-        arguments, loaded_yaml, registries
+        args, loaded_yaml, registries
     ):
         assert registry.image_exists(image_name, edition), f"{image_name} not found!"
 
@@ -242,55 +241,60 @@ def assert_build_artifacts(arguments: argparse.Namespace, loaded_yaml: dict) -> 
     # TODO
 
 
-def print_internal_distros(arguments: argparse.Namespace, loaded_yaml: dict) -> None:
-    distros = flatten_list(loaded_yaml["internal_distros"])
-    if arguments.as_codename:
+def print_internal_distros(args: Args, loaded_yaml: dict) -> None:
+    distros = flatten(loaded_yaml["internal_distros"])
+    if args.as_codename:
         if diff := distros - loaded_yaml["distro_to_codename"].keys():
             raise Exception(
-                f"{arguments.editions_file} is missing the distro code for the following distros: "
+                f"{args.editions_file} is missing the distro code for the following distros: "
                 f"{diff}. Please add the corresponding distro code."
             )
         distros = [loaded_yaml["distro_to_codename"][d] for d in distros]
-    if arguments.as_rsync_exclude_pattern:
+    if args.as_rsync_exclude_pattern:
         print("{" + ",".join([f"'*{d}*'" for d in distros]) + "}")
         return
 
-    print(" ".join(distros))
+    print(" ".join(sorted(set(distros))))
 
 
-def distros_for_use_case(loaded_yaml: dict, edition: str, use_case: str) -> Iterable[str]:
-    return sorted(flatten_list(loaded_yaml["editions"][edition][use_case]))
+def distros_for_use_case(edition_distros: dict, edition: str, use_case: str) -> Iterable[str]:
+    return sorted(
+        set(
+            distro
+            for _edition, use_cases in edition_distros.items()
+            if _edition == edition
+            for _use_case, distros in use_cases.items()
+            if _use_case == use_case
+            for distro in flatten(distros)
+        )
+    )
 
 
-def print_distros_for_use_case(arguments: argparse.Namespace, loaded_yaml: dict) -> None:
-    print(" ".join(distros_for_use_case(loaded_yaml, arguments.edition, arguments.use_case)))
+def print_distros_for_use_case(args: argparse.Namespace, loaded_yaml: dict) -> None:
+    edition_distros = loaded_yaml["editions"]
+    edition = args.edition
+    use_case = args.use_case
+    print(" ".join(distros_for_use_case(edition_distros, edition, use_case)))
 
 
-COMMANDS_TO_FUNCTION: Mapping[str, Callable[[argparse.Namespace, dict], None]] = {
-    "internal_distros": print_internal_distros,
-    "use_cases": print_distros_for_use_case,
-    "assert_build_artifacts": assert_build_artifacts,
-}
-
-
-def flatten_list(list_to_flatten: list[list[str] | str]) -> list[str]:
+def flatten(list_to_flatten: Iterable[Iterable[str] | str]) -> Iterable[str]:
     # This is a workaround the fact that yaml cannot "extend" a predefined node which is a list:
     # https://stackoverflow.com/questions/19502522/extend-an-array-in-yaml
-    return [h for elem in list_to_flatten for h in (elem if isinstance(elem, list) else [elem])]
+    return [h for elem in list_to_flatten for h in ([elem] if isinstance(elem, str) else elem)]
 
 
 def test_distro_lists():
     with open(Path(__file__).parent.parent.parent / "editions.yml") as editions_file:
-        loaded_yaml = yaml.load(editions_file, Loader=yaml.FullLoader)
+        edition_distros = yaml.load(editions_file, Loader=yaml.FullLoader)["editions"]
     # fmt: off
-    assert distros_for_use_case(loaded_yaml, "enterprise", "release") == [
+    assert distros_for_use_case(edition_distros, "enterprise", "release") == [
         "almalinux-9", "centos-8",
         "cma-3", "cma-4",
         "debian-10", "debian-11", "debian-12",
         "sles-12sp5", "sles-15sp3", "sles-15sp4", "sles-15sp5",
         "ubuntu-20.04", "ubuntu-22.04",
     ]
-    assert distros_for_use_case(loaded_yaml, "enterprise", "daily") == [
+    assert distros_for_use_case(edition_distros, "enterprise", "daily") == [
         "almalinux-9", "centos-8",
         "cma-4",
         "debian-12",
@@ -300,28 +304,34 @@ def test_distro_lists():
     # fmt: on
 
 
-def parse_arguments() -> argparse.Namespace:
+def parse_arguments() -> Args:
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--editions_file", required=True)
+
     subparsers = parser.add_subparsers(required=True, dest="command")
+
     use_cases = subparsers.add_parser("use_cases", help="a help")
+    use_cases.set_defaults(func=print_distros_for_use_case)
     use_cases.add_argument("--edition", required=True)
     use_cases.add_argument("--use_case", required=True)
 
     internal_distros = subparsers.add_parser("internal_distros")
+    internal_distros.set_defaults(func=print_internal_distros)
     internal_distros.add_argument("--as-codename", default=False, action="store_true")
     internal_distros.add_argument("--as-rsync-exclude-pattern", default=False, action="store_true")
 
     sub_assert_build_artifacts = subparsers.add_parser("assert_build_artifacts")
+    sub_assert_build_artifacts.set_defaults(func=assert_build_artifacts)
     sub_assert_build_artifacts.add_argument("--version", required=True, default=False)
+
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_arguments()
     with open(args.editions_file) as editions_file:
-        COMMANDS_TO_FUNCTION[args.command](args, yaml.load(editions_file, Loader=yaml.FullLoader))
+        args.func(args, yaml.load(editions_file, Loader=yaml.FullLoader))
 
 
 if __name__ == "__main__":

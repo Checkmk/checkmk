@@ -118,7 +118,7 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):  # pylint: disable=too-few
         host_config: HostConfig,
         http_proxies: Mapping[str, HTTPProxy],
     ) -> Iterable[SpecialAgentCommand]:
-        yield from self._commands_function(
+        return self._commands_function(
             self._parameter_parser(parameters),
             host_config,
             http_proxies,

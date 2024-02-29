@@ -67,7 +67,7 @@ def main(
         tty.normal,
     )
     exit_code = main_check_config(logger, arguments.conflict)
-    if exit_code != 0:
+    if exit_code != 0 or arguments.dry_run:
         return exit_code
     return main_update_config(logger, arguments.conflict)
 
@@ -143,6 +143,11 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
             f"With '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
             f"If you choose '{ConflictMode.ABORT}', the update will be aborted if interaction is needed."
         ),
+    )
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Executes `Verifying Checkmk configuration` only.",
     )
     return p.parse_args(args)
 

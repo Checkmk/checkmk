@@ -152,12 +152,12 @@ test_packages() {
     for i in $(dpkg -L binutils | grep '/bin/'); do
         this_version=$($i --version)
         if [[ "$this_version" == *"Binutils)"* ]]; then
-            echo "$this_version" | grep -q "$BINUTILS_VERSION" >/dev/null 2>&1 || (
-                echo "Invalid version: $(i)"
+            echo "$this_version" | grep -q "${BINUTILS_VERSION}" >/dev/null 2>&1 || (
+                echo "Invalid version: ${i}: ${this_version}!=${BINUTILS_VERSION}"
                 exit 1
             )
         else
-            echo "$i not of interest"
+            echo "${i} not of interest"
             # e.g. /usr/bin/dwp would report "GNU dwp (GNU Binutils for Ubuntu) 2.34"
         fi
     done

@@ -354,6 +354,7 @@ def _register_builtin_views():
                 "sort_index": 99,
                 "is_show_more": False,
                 "packaged": False,
+                "megamenu_search_terms": [],
             },
             "bi_map_hover_service": {
                 "browser_reload": 0,
@@ -398,6 +399,7 @@ def _register_builtin_views():
                 "sort_index": 99,
                 "is_show_more": False,
                 "packaged": False,
+                "megamenu_search_terms": [],
             },
         }
     )

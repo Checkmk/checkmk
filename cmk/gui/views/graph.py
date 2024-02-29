@@ -109,6 +109,7 @@ _GRAPH_VIEWS = {
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
+            "megamenu_search_terms": [],
         }
     ),
     "host_graphs": ViewSpec(
@@ -150,6 +151,7 @@ _GRAPH_VIEWS = {
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
+            "megamenu_search_terms": [],
         }
     ),
 }

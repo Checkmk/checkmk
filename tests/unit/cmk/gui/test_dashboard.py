@@ -143,6 +143,7 @@ TEST_DASHBOARD = DashboardConfig(
         "add_context_to_title": True,
         "is_show_more": False,
         "packaged": False,
+        "megamenu_search_terms": [],
     }
 )
 

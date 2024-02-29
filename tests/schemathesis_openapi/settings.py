@@ -13,9 +13,6 @@ allow_redirects = False
 # generic issues that affect testing as a whole and should always be suppressed
 suppressed_issues = {
     "CMK-11886",  # no real fix possible
-    "UNDEFINED-HTTP400",  # see CMK-11924
-    "UNDEFINED-HTTP404",  # see CMK-11924
-    "UNDEFINED-HTTP500",  # ignore this; an ISE is always a problem anyway!
     "INVALID-JSON",
 }
 if "TEST_OPENAPI_SUPPRESS" in environ:

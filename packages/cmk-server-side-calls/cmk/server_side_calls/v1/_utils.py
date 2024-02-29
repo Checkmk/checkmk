@@ -250,7 +250,10 @@ Secret = StoredSecret | PlainTextSecret
 
 # NOTE: This is basically a parser for the values originating from our IndividualOrStoredPassword
 # ValueSpec, it's highly questionable if this really belongs into the API.
-def parse_secret(secret: tuple[Literal["store", "password"], str], display_format: str = "%s") -> Secret:
+def parse_secret(
+    secret: tuple[Literal["store", "password"], str],
+    display_format: str = "%s",
+) -> Secret:
     """
     Parses a secret/password configuration into an instance of one of the two
     appropriate classes

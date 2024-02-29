@@ -28,7 +28,6 @@ def build_python_module(name, srcs, outs, cmd, **kwargs):
         srcs = srcs,
         outs = outs,
         cmd = cmd,
-        toolchains = ["@rules_python//python:current_py_toolchain"],
         **kwargs
     )
 
@@ -43,6 +42,12 @@ build_cmd = """
     # We pick one containing 'external' and cut the path after the keyword.
     EXT_DEPS_PATH=$$(echo $(SRCS) | sed 's/.*\\s\\(.*external\\).*\\s.*/\\1/')
 
+    # This is where the Python Modules should be found
+    export LD_LIBRARY_PATH="$$PWD/$$EXT_DEPS_PATH/python/python/lib/:$$PWD/$$EXT_DEPS_PATH/openssl/openssl/lib/"
+
+    # Python binary supplied by bazel build process
+    export PYTHON_EXECUTABLE=$$PWD/$$EXT_DEPS_PATH/python/python/bin/python3
+
     # Workaround for git execution issue
     mkdir -p $$TMPDIR/workdir/$(OUTS)
     install -m 755 "$(execpath @omd_packages//omd/packages/omd:use_system_openssl)" "$$TMPDIR/workdir/$(OUTS)/git"
@@ -50,6 +55,8 @@ build_cmd = """
 
     # Build directory
     mkdir -p $$HOME/$(OUTS)
+
+    export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
 
     # Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package
     # Keep in sync with scripts/run-pipenv
@@ -62,6 +69,9 @@ build_cmd = """
     # Therefore we need to give it some pointers. Here is the logic to find the openssl libaries to link against.
     # https://github.com/sfackler/rust-openssl/blob/10cee24f49cd3f37da1dbf663ba67bca6728db1f/openssl-sys/build/find_normal.rs#L8
     # TODO: we should ideally adjust the PKG_CONFIG_PATH to add the openssl pkgconfig files
+
+    export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib"
+    export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include"
 
     if [[ "{requirements}" = -r* || "{requirements}" = git+* ]]; then
         REQUIREMENTS="{requirements}"
@@ -87,9 +97,10 @@ build_cmd = """
     export CC="$$(which gcc)"
 
     # install requirements
-    export LDFLAGS="$${{LDFLAGS:-""}} -Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
+    export CFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
+    export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freedts/freedts/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
     {git_ssl_no_verify}\\
-    $(PYTHON3) -m pip install \\
+    $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
       --verbose \\
       --no-binary=":all:" \\

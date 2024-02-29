@@ -182,7 +182,12 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	grep -Rl 'check_mk.make: do-not-deploy' $(CHECK_MK_INSTALL_DIR)/lib/python3/ | xargs rm
 
 	# After installing all python modules, ensure they are compiled
-	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk
+	# compile pyc files explicitly selecting `checked-hash` invalidation mode
+	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall \
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s "$(CHECK_MK_INSTALL_DIR)/lib/python3" \
+	    "$(CHECK_MK_INSTALL_DIR)/lib/python3/cmk"
 
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib

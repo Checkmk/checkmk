@@ -466,6 +466,35 @@ def test_services_split(
             ),
             id="parse a socket instead of a service",
         ),
+        pytest.param(
+            [
+                "[list-unit-files]",
+                "[status]",
+                "cockpit.socket",
+                "disabled",
+                "[all]",
+                "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+                "cockpit.socket loaded active listening",
+            ],
+            Section(
+                sockets={
+                    "cockpit": UnitEntry(
+                        name="cockpit",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="listening",
+                        description="",
+                        enabled_status="unknown",
+                        time_since_change=None,
+                    )
+                },
+                services={},
+            ),
+            id="missing description",
+            marks=pytest.mark.skip(
+                reason="Parse will crash - description can be missing with old agents"
+            ),
+        ),
     ],
 )
 def test_parse_systemd_units(pre_string_table: Sequence[str], section: Section) -> None:

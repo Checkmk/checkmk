@@ -124,8 +124,15 @@ class WrappedEndpoint:
 Version = str
 
 
+def _patch_regex(data: dict[str, fields.Field]) -> dict[str, fields.Field]:
+    for _, value in data.items():
+        if "pattern" in value.metadata and value.metadata["pattern"].endswith(r"\Z"):
+            value.metadata["pattern"] = value.metadata["pattern"][:-2] + "$"
+    return data
+
+
 def to_named_schema(fields_: dict[str, fields.Field]) -> type[Schema]:
-    attrs: dict[str, Any] = fields_.copy()
+    attrs: dict[str, Any] = _patch_regex(fields_.copy())
     attrs["Meta"] = type(
         "GeneratedMeta",
         (Schema.Meta,),

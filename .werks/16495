@@ -1,0 +1,11 @@
+Title: check_mailboxes: fix check of multiple mailboxes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1709557446
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+When selecting to check multiple mailboxes, the software always checked only the last specified mailbox.
+This werk fixes this behaviour.

@@ -23,6 +23,7 @@ IMPORTS = (
     (".agent_based_api.v1", "cmk.agent_based.v2"),
     ("cmk.base.plugins.agent_based.utils", ".utils"),
     ("check_levels", "check_levels_fixed as check_levels"),
+    ("cmk.agent_based.v2.type_defs", "cmk.agent_based.v2"),
 )
 
 

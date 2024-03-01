@@ -26,7 +26,7 @@ class Params(BaseModel, frozen=True):
 def commands_function(
     params: Params, host_config: HostConfig, _http_proxies: object
 ) -> Iterator[ActiveCheckCommand]:
-    command_arguments = ["-H", host_config.resolved_address or host_config.name]
+    command_arguments = ["-H", host_config.primary_ip_config.address]
 
     if params.timeout is not None:
         command_arguments += ["-t", str(params.timeout)]

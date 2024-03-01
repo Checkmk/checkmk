@@ -13,9 +13,9 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
+    IPAddressFamily,
     parse_secret,
     replace_macros,
-    ResolvedIPAddressFamily,
     Secret,
 )
 
@@ -38,22 +38,19 @@ class Parameters(BaseModel):
 
 
 def _get_ip_option(params: Parameters, host_config: HostConfig) -> tuple[str, Literal["-6", "-4"]]:
-    resolved_family = host_config.resolved_ip_family
-
     # Use the address family of the monitored host by default
-    address_family = params.address_family or (
-        "ipv6" if resolved_family is ResolvedIPAddressFamily.IPV6 else "ipv4"
+    used_family = params.address_family or (
+        "ipv6" if host_config.primary_ip_config.family is IPAddressFamily.IPV6 else "ipv4"
     )
 
-    if address_family == "ipv6":
-        if host_config.resolved_ipv6_address is None:
-            raise ValueError("IPv6 address is not available")
-        return host_config.resolved_ipv6_address, "-6"
+    if used_family == "ipv6":
+        if (ipv6 := host_config.ipv6_config) is None:
+            raise ValueError("IPv6 is not configured for host")
+        return ipv6.address, "-6"
 
-    if host_config.resolved_ipv4_address is None:
-        raise ValueError("IPv4 address is not available")
-
-    return host_config.resolved_ipv4_address, "-4"
+    if (ipv4 := host_config.ipv4_config) is None:
+        raise ValueError("IPv4 is not configured for host")
+    return ipv4.address, "-4"
 
 
 def check_smtp_arguments(  # pylint: disable=too-many-branches

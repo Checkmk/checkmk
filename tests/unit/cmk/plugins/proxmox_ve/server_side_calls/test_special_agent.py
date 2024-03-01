@@ -6,7 +6,6 @@
 from collections.abc import Mapping, Sequence
 
 import pytest
-from polyfactory.factories import DataclassFactory
 
 from cmk.plugins.proxmox_ve.server_side_calls.special_agent import (
     special_agent_proxmox_ve as config,
@@ -14,14 +13,10 @@ from cmk.plugins.proxmox_ve.server_side_calls.special_agent import (
 from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
+    IPv4Config,
     PlainTextSecret,
-    ResolvedIPAddressFamily,
     StoredSecret,
 )
-
-
-class HostConfigFactory(DataclassFactory):
-    __model__ = HostConfig
 
 
 @pytest.mark.parametrize(
@@ -75,10 +70,9 @@ def test_agent_proxmox_ve_arguments(
     params: Mapping[str, object], expected_result: Sequence[str]
 ) -> None:
     # Assemble
-    host_config = HostConfigFactory.build(
+    host_config = HostConfig(
         name="testhost",
-        resolved_ipv4_address="hurz",
-        resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+        ipv4_config=IPv4Config(address="hurz"),
     )
     http_proxies = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
     # Act

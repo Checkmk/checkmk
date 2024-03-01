@@ -35,11 +35,7 @@ def check_disk_smb_arguments(
     def _get_address(host_config: HostConfig, params: Params) -> str:
         if params.host != "use_parent_host":
             return replace_macros(params.host[1], host_config.macros)
-
-        if host_config.resolved_address:
-            return host_config.resolved_address
-
-        raise ValueError("No IP address available")
+        return host_config.primary_ip_config.address
 
     args: list[str | Secret] = [
         replace_macros(params.share, host_config.macros),

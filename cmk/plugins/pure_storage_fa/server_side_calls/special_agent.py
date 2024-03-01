@@ -45,7 +45,7 @@ def commands_function(
     command_arguments += ["--api-token", parse_secret(params.api_token)]
 
     yield SpecialAgentCommand(
-        command_arguments=[*command_arguments, host_config.resolved_address or host_config.name]
+        command_arguments=[*command_arguments, host_config.primary_ip_config.address]
     )
 
 

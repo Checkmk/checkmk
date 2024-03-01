@@ -40,10 +40,7 @@ class GeneralMailParams(BaseModel):
 
 def get_host_address(server: str | None, host_config: HostConfig) -> str:
     if server is None:
-        if host_config.resolved_address:
-            return host_config.resolved_address
-        raise ValueError("No IP address available")
-
+        return host_config.primary_ip_config.address
     return replace_macros(server, host_config.macros)
 
 

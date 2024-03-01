@@ -9,14 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.plugins.aws.server_side_calls.aws import generate_aws_commands
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
 
 
 @pytest.mark.parametrize(
@@ -214,12 +207,7 @@ def test_aws_argument_parsing(
         params,
         HostConfig(
             name="testhost",
-            resolved_ipv4_address="unittest_address",
-            alias="unittest_alias",
-            resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-            address_config=NetworkAddressConfig(
-                ipv4_address="unittest_address", ip_family=IPAddressFamily.IPV4
-            ),
+            ipv4_config=IPv4Config(address="unittest_address"),
         ),
         {},
     )

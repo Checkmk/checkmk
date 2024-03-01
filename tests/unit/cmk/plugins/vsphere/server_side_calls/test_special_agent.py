@@ -10,10 +10,8 @@ import pytest
 from cmk.plugins.vsphere.server_side_calls.special_agent import commands_function, Params
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
+    IPv4Config,
     PlainTextSecret,
-    ResolvedIPAddressFamily,
     Secret,
     SpecialAgentCommand,
     StoredSecret,
@@ -102,10 +100,7 @@ def test_commands_function(
             Params.model_validate(params),
             HostConfig(
                 name="host",
-                resolved_ipv4_address="1.2.3.4",
-                alias="host",
-                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+                ipv4_config=IPv4Config(address="1.2.3.4"),
             ),
             {},
         )

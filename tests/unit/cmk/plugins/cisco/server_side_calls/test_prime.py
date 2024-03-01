@@ -8,14 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.cisco.server_side_calls.prime import special_agent_cisco_prime
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    Secret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, Secret
 
 
 @pytest.mark.parametrize(
@@ -75,12 +68,7 @@ def test_cisco_prime_argument_parsing(
         params,
         HostConfig(
             name="hostname",
-            resolved_ipv4_address="ipaddress",
-            alias="alias",
-            resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-            address_config=NetworkAddressConfig(
-                ipv4_address="ipaddress", ip_family=IPAddressFamily.IPV4
-            ),
+            ipv4_config=IPv4Config(address="ipaddress"),
         ),
         {},
     )

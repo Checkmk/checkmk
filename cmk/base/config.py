@@ -1292,23 +1292,6 @@ def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
     )
 
 
-def resolve_address_family(
-    config_cache: ConfigCache, host_name: HostName, config_address_family: AddressFamily
-) -> socket.AddressFamily | None:
-    if config_address_family is AddressFamily.NO_IP:
-        return None
-
-    if config_address_family is AddressFamily.IPv6:
-        return socket.AF_INET6
-
-    if config_address_family is AddressFamily.DUAL_STACK:
-        rules = config_cache.ruleset_matcher.get_host_values(host_name, primary_address_family)
-        if rules and rules[0] == "ipv6":
-            return socket.AF_INET6
-
-    return socket.AF_INET
-
-
 # .
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |
@@ -1831,30 +1814,16 @@ def lookup_ip_address(
     )
 
 
-def _get_ssc_ip_family(ip_family: ip_lookup.AddressFamily) -> server_side_calls_api.IPAddressFamily:
+def _get_ssc_ip_family(
+    ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+) -> server_side_calls_api.IPAddressFamily:
     match ip_family:
-        case ip_lookup.AddressFamily.NO_IP:
-            return server_side_calls_api.IPAddressFamily.NO_IP
-        case ip_lookup.AddressFamily.IPv4:
+        case socket.AddressFamily.AF_INET:
             return server_side_calls_api.IPAddressFamily.IPV4
-        case ip_lookup.AddressFamily.IPv6:
+        case socket.AddressFamily.AF_INET6:
             return server_side_calls_api.IPAddressFamily.IPV6
-        case ip_lookup.AddressFamily.DUAL_STACK:
-            return server_side_calls_api.IPAddressFamily.DUAL_STACK
-        case _:
-            assert_never(ip_family)
-
-
-def _get_ssc_resolved_ip_family(
-    ip_family: socket.AddressFamily | None,
-) -> server_side_calls_api.ResolvedIPAddressFamily | None:
-    match ip_family:
-        case socket.AF_INET:
-            return server_side_calls_api.ResolvedIPAddressFamily.IPV4
-        case socket.AF_INET6:
-            return server_side_calls_api.ResolvedIPAddressFamily.IPV6
-
-    return None
+        case other:
+            assert_never(other)
 
 
 def get_resource_macros() -> Mapping[str, str]:
@@ -1876,51 +1845,29 @@ def get_ssc_host_config(
     host_name: HostName, config_cache: ConfigCache, macros: Mapping[str, object]
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
-    ip_family = ConfigCache.address_family(host_name)
-    ipv4address = ipaddresses.get(host_name)
-    ipv6address = ipv6addresses.get(host_name)
-
-    additional_addresses = config_cache.additional_ipaddresses(host_name)
-    additional_addresses_ipv4, additional_addresses_ipv6 = additional_addresses
-
-    address_config = server_side_calls_api.NetworkAddressConfig(
-        ip_family=_get_ssc_ip_family(ip_family),
-        ipv4_address=str(ipv4address) if ipv4address else None,
-        ipv6_address=str(ipv6address) if ipv6address else None,
-        additional_ipv4_addresses=additional_addresses_ipv4,
-        additional_ipv6_addresses=additional_addresses_ipv6,
+    primary_family = config_cache.default_address_family(host_name)
+    hosts_ip_stack = config_cache.address_family(host_name)
+    additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
+        host_name
     )
-
-    resolved_ip_family = _get_ssc_resolved_ip_family(
-        resolve_address_family(config_cache, host_name, ip_family)
-    )
-    resolved_ipv4_address = (
-        ip_address_of(config_cache, host_name, socket.AF_INET)
-        if ip_family in (ip_lookup.AddressFamily.IPv4, ip_lookup.AddressFamily.DUAL_STACK)
-        else None
-    )
-    resolved_ipv6_address = (
-        ip_address_of(config_cache, host_name, socket.AF_INET6)
-        if ip_family in (ip_lookup.AddressFamily.IPv6, ip_lookup.AddressFamily.DUAL_STACK)
-        else None
-    )
-    custom_attributes = {
-        k[1:]: v
-        for k, v in config_cache.explicit_host_attributes(host_name).items()
-        if k.startswith("_")
-    }
 
     return server_side_calls_api.HostConfig(
         name=host_name,
         alias=config_cache.alias(host_name),
-        resolved_ipv4_address=resolved_ipv4_address,
-        resolved_ipv6_address=resolved_ipv6_address,
-        resolved_ip_family=resolved_ip_family,
-        address_config=address_config,
+        ipv4_config=server_side_calls_api.IPv4Config(
+            address=ip_address_of(config_cache, host_name, socket.AF_INET),
+            additional_addresses=additional_addresses_ipv4,
+        )
+        if ip_lookup.AddressFamily.IPv4 in hosts_ip_stack
+        else None,
+        ipv6_config=server_side_calls_api.IPv6Config(
+            address=ip_address_of(config_cache, host_name, socket.AF_INET6),
+            additional_addresses=additional_addresses_ipv6,
+        )
+        if ip_lookup.AddressFamily.IPv6 in hosts_ip_stack
+        else None,
+        primary_family=_get_ssc_ip_family(primary_family),
         macros={k: str(v) for k, v in macros.items()},
-        custom_attributes=custom_attributes,
-        tags={str(k): str(v) for k, v in config_cache.tags(host_name).items()},
-        labels=config_cache.labels(host_name),
     )
 
 
@@ -3262,10 +3209,16 @@ class ConfigCache:
             return AddressFamily.IPv6
         return AddressFamily.IPv4
 
-    def default_address_family(self, hostname: HostName | HostAddress) -> socket.AddressFamily:
+    def default_address_family(
+        self, hostname: HostName | HostAddress
+    ) -> Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]:
         def primary_ip_address_family_of() -> socket.AddressFamily:
             rules = self.ruleset_matcher.get_host_values(hostname, primary_address_family)
-            return socket.AF_INET6 if rules and rules[0] == "ipv6" else socket.AF_INET
+            return (
+                socket.AddressFamily.AF_INET6
+                if rules and rules[0] == "ipv6"
+                else socket.AddressFamily.AF_INET
+            )
 
         def is_ipv6_primary() -> bool:
             # Whether or not the given host is configured to be monitored primarily via IPv6
@@ -3274,7 +3227,7 @@ class ConfigCache:
                 and primary_ip_address_family_of() is socket.AF_INET6
             )
 
-        return socket.AF_INET6 if is_ipv6_primary() else socket.AF_INET
+        return socket.AddressFamily.AF_INET6 if is_ipv6_primary() else socket.AddressFamily.AF_INET
 
     def _has_piggyback_data(self, host_name: HostName) -> bool:
         time_settings: list[tuple[str | None, str, int]] = self._piggybacked_host_files(host_name)

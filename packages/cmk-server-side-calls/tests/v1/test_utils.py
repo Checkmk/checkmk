@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+
 from typing import Literal
 
 import pytest
@@ -12,13 +12,13 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
-    NetworkAddressConfig,
+    IPv4Config,
+    IPv6Config,
     noop_parser,
     parse_http_proxy,
     parse_secret,
     PlainTextSecret,
     replace_macros,
-    ResolvedIPAddressFamily,
     Secret,
     StoredSecret,
 )
@@ -124,60 +124,33 @@ def test_noop_parser() -> None:
     assert noop_parser(params) == params
 
 
-@pytest.mark.parametrize(
-    "host_config, expected_all_ipv4, expected_all_ipv6",
-    [
-        pytest.param(
-            HostConfig(
-                name="hostname",
-                resolved_ipv4_address="0.0.0.1",
-                alias="host_alias",
-                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-                address_config=NetworkAddressConfig(
-                    ip_family=IPAddressFamily.DUAL_STACK,
-                    ipv4_address="0.0.0.2",
-                    ipv6_address="fe80::240",
-                    additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-                    additional_ipv6_addresses=[
-                        "fe80::241",
-                        "fe80::242",
-                        "fe80::243",
-                    ],
-                ),
-            ),
-            ["0.0.0.2", "0.0.0.4", "0.0.0.5"],
-            ["fe80::240", "fe80::241", "fe80::242", "fe80::243"],
-            id="ipv4address and ipv6address present",
-        ),
-        pytest.param(
-            HostConfig(
-                name="hostname",
-                resolved_ipv4_address="0.0.0.1",
-                alias="host_alias",
-                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-                address_config=NetworkAddressConfig(
-                    ip_family=IPAddressFamily.DUAL_STACK,
-                    ipv4_address=None,
-                    ipv6_address=None,
-                    additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-                    additional_ipv6_addresses=[
-                        "fe80::241",
-                        "fe80::242",
-                        "fe80::243",
-                    ],
-                ),
-            ),
-            ["0.0.0.4", "0.0.0.5"],
-            ["fe80::241", "fe80::242", "fe80::243"],
-            id="ipv4address and ipv6address not present",
-        ),
-    ],
-)
-def test_host_config_properties(
-    host_config: HostConfig, expected_all_ipv4: Sequence[str], expected_all_ipv6: Sequence[str]
-) -> None:
-    assert host_config.address_config.all_ipv4_addresses == expected_all_ipv4
-    assert host_config.address_config.all_ipv6_addresses == expected_all_ipv6
+class TestIPConfig:
+    def test_ipv4_family(self) -> None:
+        assert IPv4Config(address="1.2.3.4").family is IPAddressFamily.IPV4
+
+    def test_ipv6_family(self) -> None:
+        assert IPv6Config(address="fe80::240").family is IPAddressFamily.IPV6
+
+    def test_ipv4_raises(self) -> None:
+        with pytest.raises(RuntimeError):
+            _ = IPv4Config(address=None).address
+
+    def test_ipv6_raises(self) -> None:
+        with pytest.raises(RuntimeError):
+            _ = IPv6Config(address=None).address
+
+
+class TestHostConfig:
+    def test_alias(self) -> None:
+        assert HostConfig(name="my_name").alias is "my_name"
+
+    def test_primary_raises(self) -> None:
+        with pytest.raises(ValueError):
+            _ = HostConfig(name="my_name").primary_ip_config
+
+    def test_host_config_eq(self) -> None:
+        assert HostConfig(name="my_name", alias="my_alias") != HostConfig(name="my_name")
+        assert HostConfig(name="my_name") == HostConfig(name="my_name")
 
 
 @pytest.mark.parametrize(

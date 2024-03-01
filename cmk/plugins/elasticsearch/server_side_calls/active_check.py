@@ -55,10 +55,8 @@ def commands_function(
 
     if params.hostname is not None:
         args += ["-H", replace_macros(params.hostname, host_config.macros)]
-    elif host_config.resolved_address:
-        args += ["-H", host_config.resolved_address]
     else:
-        raise ValueError("No IP address available")
+        args += ["-H", host_config.primary_ip_config.address]
 
     item = replace_macros(params.svc_item, host_config.macros)
     yield ActiveCheckCommand(

@@ -12,15 +12,10 @@ from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentCommand,
 def fritzbox_arguments(
     params: AgentConfigParams, host_config: HostConfig, proxies: Mapping[str, HTTPProxy]
 ) -> Iterable[SpecialAgentCommand]:
-    if (
-        host_config.resolved_address is None
-    ):  # TODO: should it really be optional? we always have a host name.
-        raise TypeError(host_config.resolved_address)
-
     yield SpecialAgentCommand(
         command_arguments=(
             *(() if params.timeout is None else ("--timeout", str(int(params.timeout)))),
-            host_config.resolved_address,
+            host_config.primary_ip_config.address,
         )
     )
 

@@ -3,78 +3,82 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from abc import abstractmethod
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
-from enum import StrEnum
-from typing import Literal, TypeVar
+from dataclasses import dataclass
+from enum import auto, Enum
+from typing import Final, Literal, TypeVar
 
 
-class ResolvedIPAddressFamily(StrEnum):
-    """Defines a resolved IP address family"""
+class IPAddressFamily(Enum):
+    """Defines an IP address family"""
 
-    IPV4 = "ipv4"
-    """IPv4 address family"""
-    IPV6 = "ipv6"
-    """IPv6 address family"""
+    IPV4 = auto()
+    IPV6 = auto()
 
 
-class IPAddressFamily(StrEnum):
-    """Defines an IP address family from the host configuration"""
-
-    IPV4 = "ipv4"
-    """IPv4 address family"""
-    IPV6 = "ipv6"
-    """IPv6 address family"""
-    DUAL_STACK = "dual_stack"
-    """Dual stack address family"""
-    NO_IP = "no_ip"
-    """No IP address family"""
-
-
-@dataclass(frozen=True, kw_only=True)
-class NetworkAddressConfig:
+class IPConfig:
     """
-    Defines a network configuration of the host
-
-    All arguments are exactly defined as in the host configuration, no resolution of IP addresses
-    or family has been done.
-
-    Args:
-        ip_family: IP family of the host
-        ipv4_address: IPv4 address. Will be None if not defined in the configuration
-        ipv6_address: IPv6 address. Will be None if not defined in the configuration
-        additional_ipv4_addresses: Additional IPv4 addresses
-        additional_ipv6_addresses: Additional IPv6 addresses
-
+    Defines an IP configuration of the host
     """
 
-    ip_family: IPAddressFamily
-    ipv4_address: str | None = None
-    ipv6_address: str | None = None
-    additional_ipv4_addresses: Sequence[str] = field(default_factory=list)
-    additional_ipv6_addresses: Sequence[str] = field(default_factory=list)
+    def __init__(self, *, address: str | None, additional_addresses: Sequence[str] = ()):
+        self._address = address
+        self.additional_addresses: Final = additional_addresses
 
     @property
-    def all_ipv4_addresses(self) -> Sequence[str]:
-        """
-        Sequence containing the IPv4 address and the additional IPv4 addresses
-        """
-        if self.ipv4_address:
-            return [self.ipv4_address, *self.additional_ipv4_addresses]
-        return self.additional_ipv4_addresses
+    @abstractmethod
+    def family(self) -> IPAddressFamily:
+        ...
 
     @property
-    def all_ipv6_addresses(self) -> Sequence[str]:
+    def address(self) -> str:
+        """The host address (ip address or host name)
+
+        Raises a RuntimeError if the lookup failed.
+        The exact nature of the problem is reported during config generation.
         """
-        Sequence containing the IPv6 address and the additional IPv6 addresses
-        """
-        if self.ipv6_address:
-            return [self.ipv6_address, *self.additional_ipv6_addresses]
-        return self.additional_ipv6_addresses
+        if not self._address:
+            raise RuntimeError("Host address lookup failed")
+        return self._address
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"address={self._address!r}, "
+            f"additional_addresses={self.additional_addresses!r})"
+        )
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, self.__class__):
+            return NotImplemented
+        return (
+            self._address == __value._address
+            and self.additional_addresses == __value.additional_addresses
+        )
 
 
-@dataclass(frozen=True, kw_only=True)
-class HostConfig:  # pylint: disable=too-many-instance-attributes
+class IPv4Config(IPConfig):
+    """
+    Defines an IPv4 configuration of the host
+    """
+
+    @property
+    def family(self) -> Literal[IPAddressFamily.IPV4]:
+        return IPAddressFamily.IPV4
+
+
+class IPv6Config(IPConfig):
+    """
+    Defines an IPv6 configuration of the host
+    """
+
+    @property
+    def family(self) -> Literal[IPAddressFamily.IPV6]:
+        return IPAddressFamily.IPV6
+
+
+class HostConfig:
     """
     Defines a host configuration
 
@@ -96,18 +100,10 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     Args:
         name: Host name
         alias: Host alias
-        resolved_ip_family: Resolved IP address family
-        address_config: Address settings defined in the host configuration
-        resolved_ipv4_address: If IPv4 address isn't configured in the host config,
-            it will be resolved from the host name. Present if host has IPv4 or dual-stack
-            family configured.
-        resolved_ipv6_address: If IPv6 address isn't configured in the host config,
-            it will be resolved from the host name. Present if host has IPv6 or dual-stack
-            family configured.
+        ipv4_config: The IPv4 network configuration of the host.
+        ipv6_config: The IPv6 network configuration of the host.
+        primary_family: Primary IP address family
         macros: Macro mapping that are being replaced for the host
-        custom_attributes: Custom attributes of the host
-        tags: Tags of the host
-        labels: Labels of the host
 
 
     Example:
@@ -126,29 +122,57 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
 
-    name: str
-    alias: str
-    address_config: NetworkAddressConfig
-    resolved_ipv4_address: str | None = None
-    resolved_ipv6_address: str | None = None
-    resolved_ip_family: ResolvedIPAddressFamily | None = None
-    macros: Mapping[str, str] = field(default_factory=dict)
-    custom_attributes: Mapping[str, str] = field(default_factory=dict)
-    tags: Mapping[str, str] = field(default_factory=dict)
-    labels: Mapping[str, str] = field(default_factory=dict)
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        alias: str = "",
+        ipv4_config: IPv4Config | None = None,
+        ipv6_config: IPv6Config | None = None,
+        primary_family: IPAddressFamily = IPAddressFamily.IPV4,
+        macros: Mapping[str, str] | None = None,
+    ):
+        if not name:
+            raise ValueError("Host name has to be a non-empty string")
 
-    # TODO: Nuke this property? It is actually redundant, as can be seen below.
-    # It can be computed from 3 other fields.
+        self.name: Final = name
+        self.alias: Final = alias or name
+        self.ipv4_config: Final = ipv4_config
+        self.ipv6_config: Final = ipv6_config
+        self._primary_family: Final = primary_family
+        self._primary_ip_config: Final = (
+            self.ipv4_config if primary_family == IPAddressFamily.IPV4 else self.ipv6_config
+        )
+        self.macros: Final = macros or {}
+
     @property
-    def resolved_address(self) -> str | None:
-        """
-        Will be equal to resolved_ipv4_address or resolved_ipv6_address depending on the field
-        resolved_ip_family.
-        """
+    def primary_ip_config(self) -> IPConfig:
+        """Points to the primary address config"""
+        if self._primary_ip_config is None:
+            raise ValueError("Host has no IP stack configured")
+        return self._primary_ip_config
+
+    def __repr__(self) -> str:
         return (
-            self.resolved_ipv4_address
-            if self.resolved_ip_family == ResolvedIPAddressFamily.IPV4
-            else self.resolved_ipv6_address
+            f"{self.__class__.__name__}("
+            f"name={self.name!r}, "
+            f"alias={self.alias!r}, "
+            f"ipv4_config={self.ipv4_config!r}, "
+            f"ipv6_config={self.ipv6_config!r}, "
+            f"primary_family={self._primary_family!r}, "
+            f"macros={self.macros!r})"
+        )
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, self.__class__):
+            return NotImplemented
+        return (
+            self.name == __value.name
+            and self.alias == __value.alias
+            and self.ipv4_config == __value.ipv4_config
+            and self.ipv6_config == __value.ipv6_config
+            and self._primary_family == __value._primary_family
+            and self.macros == __value.macros
         )
 
 

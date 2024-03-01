@@ -10,22 +10,15 @@ import pytest
 from cmk.plugins.three_par.server_side_calls.three_par import special_agent_three_par
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
+    IPv4Config,
     PlainTextSecret,
-    ResolvedIPAddressFamily,
     SpecialAgentCommand,
     StoredSecret,
 )
 
 HOST_CONFIG = HostConfig(
     name="host",
-    resolved_ipv4_address="address",
-    alias="alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="address"),
 )
 
 

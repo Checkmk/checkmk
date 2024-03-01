@@ -12,8 +12,8 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
+    IPAddressFamily,
     replace_macros,
-    ResolvedIPAddressFamily,
 )
 
 
@@ -33,16 +33,13 @@ def filter_routers(
 def generate_traceroute_command(
     params: TracerouteParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveCheckCommand]:
-    if not host_config.resolved_address:
-        raise ValueError("No IP address configured")
-
-    args = [host_config.resolved_address]
+    args = [host_config.primary_ip_config.address]
 
     if params.dns:
         args.append("--use_dns")
 
     host_ip_family = (
-        "ipv6" if host_config.resolved_ip_family == ResolvedIPAddressFamily.IPV6 else "ipv4"
+        "ipv6" if host_config.primary_ip_config.family == IPAddressFamily.IPV6 else "ipv4"
     )
 
     args.extend(

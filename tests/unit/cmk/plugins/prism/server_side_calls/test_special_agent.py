@@ -8,21 +8,11 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.prism.server_side_calls.special_agent import generate_prism_command
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
 
 HOST_CONFIG = HostConfig(
     name="host name",
-    resolved_ipv4_address="address",
-    alias="host",
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-    address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+    ipv4_config=IPv4Config(address="address"),
 )
 
 

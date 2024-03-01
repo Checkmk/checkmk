@@ -12,7 +12,6 @@ from typing import NamedTuple
 import pytest
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
@@ -38,9 +37,9 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     IPAddressFamily,
-    NetworkAddressConfig,
+    IPv4Config,
+    IPv6Config,
     PlainTextSecret,
-    ResolvedIPAddressFamily,
     SpecialAgentCommand,
     SpecialAgentConfig,
     StoredSecret,
@@ -58,38 +57,30 @@ HOST_ATTRS = {
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_ipv4_address="0.0.0.1",
     alias="host_alias",
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.DUAL_STACK,
-        ipv4_address="0.0.0.2",
-        ipv6_address="fe80::240",
-        additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-        additional_ipv6_addresses=[
-            "fe80::241",
-            "fe80::242",
-            "fe80::243",
-        ],
+    ipv4_config=IPv4Config(
+        address="0.0.0.1",
+        additional_addresses=["0.0.0.4", "0.0.0.5"],
     ),
+    ipv6_config=IPv6Config(
+        address="fe80::240",
+        additional_addresses=["fe80::241", "fe80::242", "fe80::243"],
+    ),
+    primary_family=IPAddressFamily.IPV4,
 )
 
 HOST_CONFIG_WITH_MACROS = HostConfig(
     name="hostname",
-    resolved_ipv4_address="0.0.0.1",
     alias="host_alias",
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.DUAL_STACK,
-        ipv4_address="0.0.0.2",
-        ipv6_address="fe80::240",
-        additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-        additional_ipv6_addresses=[
-            "fe80::241",
-            "fe80::242",
-            "fe80::243",
-        ],
+    ipv4_config=IPv4Config(
+        address="0.0.0.1",
+        additional_addresses=["0.0.0.4", "0.0.0.5"],
     ),
+    ipv6_config=IPv6Config(
+        address="fe80::240",
+        additional_addresses=["fe80::241", "fe80::242", "fe80::243"],
+    ),
+    primary_family=IPAddressFamily.IPV4,
     macros={
         "$HOSTNAME$": "test_host",
         "$HOSTADDRESS$": "0.0.0.0",
@@ -111,38 +102,30 @@ def _with_file(path: Path) -> Iterator[None]:
             path.unlink(missing_ok=True)
 
 
-class ConfigCacheMock:
-    def __init__(
-        self,
-        alias: str,
-        additional_ipaddresses: tuple[Sequence[str], Sequence[str]],
-        tags: Mapping[str, str],
-        labels: Mapping[str, str],
-    ):
-        self._tags = tags
-        self._labels = labels
-        self._alias = alias
-        self._additional_ipaddresses = additional_ipaddresses
+def make_config_cache_mock(
+    *,
+    additional_ipaddresses: tuple[Sequence[str], Sequence[str]],
+    ip_stack: ip_lookup.AddressFamily,
+    family: socket.AddressFamily,
+) -> object:
+    class ConfigCacheMock:
+        @staticmethod
+        def address_family(host_name: str) -> ip_lookup.AddressFamily:
+            return ip_stack
 
-    @staticmethod
-    def address_family(host_name: str) -> ip_lookup.AddressFamily:
-        host_family_mapping = {"host_name": ip_lookup.AddressFamily.DUAL_STACK}
-        return host_family_mapping[host_name]
+        @staticmethod
+        def default_address_family(host_name: str) -> socket.AddressFamily:
+            return family
 
-    def additional_ipaddresses(self, _host_name: str) -> tuple[Sequence[str], Sequence[str]]:
-        return self._additional_ipaddresses
+        @staticmethod
+        def additional_ipaddresses(host_name: str) -> tuple[Sequence[str], Sequence[str]]:
+            return additional_ipaddresses
 
-    def explicit_host_attributes(self, _host_name: str) -> Mapping[str, str]:
-        return {"_attr1": "value1"}
+        @staticmethod
+        def alias(host_name: str) -> str:
+            return "host alias"
 
-    def alias(self, _host_name: str) -> str:
-        return self._alias
-
-    def labels(self, _host_name: str) -> Mapping[str, str]:
-        return self._labels
-
-    def tags(self, _host_name: str) -> Mapping[str, str]:
-        return self._tags
+    return ConfigCacheMock()
 
 
 class SpecialAgentLegacyConfiguration(NamedTuple):
@@ -1069,54 +1052,129 @@ def mock_ip_address_of(
     return HostAddress("::1")
 
 
-def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
-    config_cache = ConfigCacheMock(
-        "alias",
-        ([], [HostAddress("fe80::241"), HostAddress("fe80::242"), HostAddress("fe80::243")]),
-        {"tag1": "value1", "tag2": "value2"},
-        {"label1": "value1", "label2": "value2"},
+def test_get_host_config_macros_stringified(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([], []),
+        ip_stack=ip_lookup.AddressFamily.NO_IP,
+        family=socket.AddressFamily.AF_INET,
     )
 
-    monkeypatch.setattr(base_config, "ConfigCache", ConfigCacheMock)
-    monkeypatch.setattr(base_config, "ipaddresses", {"host_name": ""})
-    monkeypatch.setattr(base_config, "ipv6addresses", {"host_name": HostAddress("::1")})
-    monkeypatch.setattr(base_config, "resolve_address_family", lambda *args: socket.AF_INET6)
-    monkeypatch.setattr(cmk_version, "edition", lambda: cmk_version.Edition.CEE)
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+        {"$HOST_EC_SL$": 30},
+    )
+
+    assert host_config == HostConfig(
+        name="host_name",
+        alias="host alias",
+        macros={"$HOST_EC_SL$": "30"},
+    )
+
+
+def test_get_host_config_no_ip(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([HostAddress("ignore.v4.noip")], [HostAddress("ignore.v6.noip")]),
+        ip_stack=ip_lookup.AddressFamily.NO_IP,
+        family=socket.AddressFamily.AF_INET6,
+    )
+
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+        {},
+    )
+
+    assert host_config == HostConfig(
+        name="host_name",
+        alias="host alias",
+        primary_family=IPAddressFamily.IPV6,
+        macros={},
+    )
+
+
+def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([HostAddress("1.2.3.4")], [HostAddress("ignore.v6.noip")]),
+        ip_stack=ip_lookup.AddressFamily.IPv4,
+        family=socket.AddressFamily.AF_INET,
+    )
+
     monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
 
     host_config = base_config.get_ssc_host_config(
         HostName("host_name"),
         config_cache,  # type: ignore[arg-type]
-        {
-            "$HOSTNAME$": "test_host",
-            "$HOSTADDRESS$": "0.0.0.0",
-            "HOSTALIAS": "test alias",
-            "$HOST_EC_SL$": 30,
-        },
+        {},
     )
 
     assert host_config == HostConfig(
         name="host_name",
-        alias="alias",
-        resolved_ipv4_address="0.0.0.1",
-        resolved_ipv6_address="::1",
-        address_config=NetworkAddressConfig(
-            ip_family=IPAddressFamily.DUAL_STACK,
-            ipv4_address=None,
-            ipv6_address="::1",
-            additional_ipv4_addresses=[],
-            additional_ipv6_addresses=["fe80::241", "fe80::242", "fe80::243"],
+        alias="host alias",
+        ipv4_config=IPv4Config(
+            address="0.0.0.1",
+            additional_addresses=["1.2.3.4"],
         ),
-        resolved_ip_family=ResolvedIPAddressFamily.IPV6,
-        custom_attributes={"attr1": "value1"},
-        tags={"tag1": "value1", "tag2": "value2"},
-        labels={"label1": "value1", "label2": "value2"},
-        macros={
-            "$HOSTADDRESS$": "0.0.0.0",
-            "$HOSTNAME$": "test_host",
-            "HOSTALIAS": "test alias",
-            "$HOST_EC_SL$": "30",
-        },
+        primary_family=IPAddressFamily.IPV4,
+        macros={},
+    )
+
+
+def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([HostAddress("ignore.v4.ipv6")], [HostAddress("::42")]),
+        ip_stack=ip_lookup.AddressFamily.IPv6,
+        family=socket.AddressFamily.AF_INET6,
+    )
+
+    monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
+
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+        {},
+    )
+
+    assert host_config == HostConfig(
+        name="host_name",
+        alias="host alias",
+        ipv6_config=IPv6Config(
+            address="::1",
+            additional_addresses=["::42"],
+        ),
+        primary_family=IPAddressFamily.IPV6,
+        macros={},
+    )
+
+
+def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([HostAddress("2.3.4.2")], [HostAddress("::42")]),
+        ip_stack=ip_lookup.AddressFamily.DUAL_STACK,
+        family=socket.AddressFamily.AF_INET6,
+    )
+
+    monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
+
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+        {},
+    )
+
+    assert host_config == HostConfig(
+        name="host_name",
+        alias="host alias",
+        ipv4_config=IPv4Config(
+            address="0.0.0.1",
+            additional_addresses=["2.3.4.2"],
+        ),
+        ipv6_config=IPv6Config(
+            address="::1",
+            additional_addresses=["::42"],
+        ),
+        primary_family=IPAddressFamily.IPV6,
+        macros={},
     )
 
 

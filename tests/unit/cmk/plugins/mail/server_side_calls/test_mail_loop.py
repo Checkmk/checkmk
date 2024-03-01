@@ -214,8 +214,7 @@ def test_check_mail_loop_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str], expected_desc: str
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = active_check_mail_loop.parameter_parser(params)
-    commands = list(active_check_mail_loop.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(active_check_mail_loop(params, HOST_CONFIG, {}))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args

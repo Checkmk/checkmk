@@ -205,10 +205,7 @@ def test_datadog_argument_parsing(
     params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    parsed_params = special_agent_datadog.parameter_parser(params)
-    commands = list(
-        special_agent_datadog.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES)
-    )
+    commands = list(special_agent_datadog(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_result

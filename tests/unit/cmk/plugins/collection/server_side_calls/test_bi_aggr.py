@@ -69,9 +69,5 @@ def test_check_bi_aggr_argument_parsing(
     expected_service: ActiveCheckCommand,
 ) -> None:
     """Tests if all required arguments are present."""
-    services = list(
-        active_check_bi_aggr.commands_function(
-            active_check_bi_aggr.parameter_parser(params), HOST_CONFIG, {}
-        )
-    )
+    services = list(active_check_bi_aggr(params, HOST_CONFIG, {}))
     assert services == [expected_service]

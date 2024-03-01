@@ -90,5 +90,4 @@ def test_check_ftp_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[ActiveCheckCommand]
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = active_check_ftp.parameter_parser(params)
-    assert list(active_check_ftp.commands_function(parsed_params, HOST_CONFIG, {})) == expected_args
+    assert list(active_check_ftp(params, HOST_CONFIG, {})) == expected_args

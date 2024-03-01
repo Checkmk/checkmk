@@ -199,8 +199,7 @@ def test_azure_argument_parsing(
     expected_args: Sequence[Any],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = special_agent_azure.parameter_parser(params)
-    commands = list(special_agent_azure.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(special_agent_azure(params, HOST_CONFIG, {}))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args

@@ -318,11 +318,5 @@ def test_generate_icmp_services(
     params: Mapping[str, object],
     expected_result: Sequence[ActiveCheckCommand],
 ) -> None:
-    services = list(
-        active_check_icmp.commands_function(
-            active_check_icmp.parameter_parser(params),
-            HOST_CONFIG,
-            {},
-        )
-    )
+    services = list(active_check_icmp(params, HOST_CONFIG, {}))
     assert services == expected_result

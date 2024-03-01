@@ -95,8 +95,7 @@ def test_agent_mobileiron_arguments(
     expected_args: Sequence[str | Secret],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = special_agent_mobileiron.parameter_parser(params)
-    commands = list(special_agent_mobileiron.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(special_agent_mobileiron(params, HOST_CONFIG, {}))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args

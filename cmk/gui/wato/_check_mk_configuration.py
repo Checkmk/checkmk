@@ -4352,6 +4352,15 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                     valuespec=CascadingDropdown(
                         title=_("Parameters"),
                         sorted=False,
+                        default_value=(
+                            "custom",
+                            {
+                                "add_new_services": False,
+                                "remove_vanished_services": False,
+                                "update_changed_service_labels": False,
+                                "update_host_labels": True,
+                            },
+                        ),
                         choices=[
                             (
                                 "update_everything",

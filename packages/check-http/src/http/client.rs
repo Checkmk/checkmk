@@ -5,10 +5,13 @@
 use reqwest::{
     redirect::{Action, Attempt, Policy},
     tls::Version as TlsVersion,
-    Client, Proxy, Result as ReqwestResult, Version,
+    Client, Proxy, Result as ReqwestResult, Url, Version,
 };
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
+use std::{
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    sync::{Arc, Mutex},
+};
 
 #[derive(Clone)]
 pub enum OnRedirect {
@@ -41,7 +44,7 @@ pub struct ClientConfig {
     pub proxy_auth: Option<(String, String)>,
 }
 
-pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
+pub fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> ReqwestResult<Client> {
     let client = reqwest::Client::builder();
 
     let client = if cfg.ignore_proxy_env {
@@ -99,7 +102,12 @@ pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
     client
         .timeout(cfg.timeout)
         .user_agent(cfg.user_agent)
-        .redirect(get_policy(cfg.onredirect, cfg.max_redirs, cfg.force_ip))
+        .redirect(get_policy(
+            cfg.onredirect,
+            cfg.max_redirs,
+            cfg.force_ip,
+            record_redirect,
+        ))
         .tls_info(cfg.collect_tls_info)
         .build()
 }
@@ -119,9 +127,17 @@ fn get_proxy(
     }
 }
 
-fn get_policy(onredirect: OnRedirect, max_redirs: usize, force_ip: Option<ForceIP>) -> Policy {
+fn get_policy(
+    onredirect: OnRedirect,
+    max_redirs: usize,
+    force_ip: Option<ForceIP>,
+    record_redirect: Arc<Mutex<Option<Url>>>,
+) -> Policy {
     match onredirect {
-        OnRedirect::Ok | OnRedirect::Warning | OnRedirect::Critical => Policy::none(),
+        OnRedirect::Ok | OnRedirect::Warning | OnRedirect::Critical => Policy::custom(move |att| {
+            *record_redirect.lock().unwrap() = Some(att.url().to_owned());
+            att.stop()
+        }),
         OnRedirect::Follow => Policy::limited(max_redirs),
         OnRedirect::Sticky => {
             Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, false))

@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use std::sync::{Arc, Mutex};
+
 use bytes::Bytes;
 use encoding_rs::{Encoding, UTF_8};
 use mime::Mime;
@@ -30,16 +32,20 @@ pub struct ProcessedResponse {
     pub headers: HeaderMap,
     pub body: Option<ReqwestResult<Body>>,
     pub final_url: Url,
+    pub redirect_target: Option<Url>,
     pub tls_info: Option<TlsInfo>,
 }
-
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct Body {
     pub text: String,
     pub length: usize,
 }
 
-pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<ProcessedResponse> {
+pub async fn send(
+    client: Client,
+    cfg: RequestConfig,
+    record_redirect: Arc<Mutex<Option<Url>>>,
+) -> ReqwestResult<ProcessedResponse> {
     let fetch_body = !cfg.without_body;
 
     let mut response = prepare_request(client, cfg).send().await?;
@@ -48,6 +54,7 @@ pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<Processed
     let version = response.version();
     let status = response.status();
     let final_url = response.url().clone();
+    let redirect_target = record_redirect.lock().unwrap().to_owned();
     let tls_info = response.extensions_mut().remove::<TlsInfo>();
     let body = if fetch_body {
         Some(process_body(response.bytes().await, &headers))
@@ -61,6 +68,7 @@ pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<Processed
         headers,
         body,
         final_url,
+        redirect_target,
         tls_info,
     })
 }

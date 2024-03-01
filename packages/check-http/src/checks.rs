@@ -85,13 +85,14 @@ pub fn collect_response_checks(
 
     check_urls(request_information.request_url, response.final_url)
         .into_iter()
-        .chain(check_method(request_information.method))
-        .chain(check_version(response.version))
-        .chain(check_status(response.status, params.status_code))
         .chain(check_redirect(
             response.status,
             request_information.onredirect,
+            response.redirect_target,
         ))
+        .chain(check_method(request_information.method))
+        .chain(check_version(response.version))
+        .chain(check_status(response.status, params.status_code))
         .chain(check_response_time(
             response_time,
             params.response_time_levels,
@@ -206,10 +207,23 @@ fn check_status(
     ]
 }
 
-fn check_redirect(status: StatusCode, onredirect: OnRedirect) -> Vec<Option<CheckResult>> {
-    match (status.is_redirection(), onredirect) {
-        (true, OnRedirect::Warning) => notice(State::Warn, "Detected redirect"),
-        (true, OnRedirect::Critical) => notice(State::Crit, "Detected redirect"),
+fn check_redirect(
+    status: StatusCode,
+    onredirect: OnRedirect,
+    redirect_target: Option<Url>,
+) -> Vec<Option<CheckResult>> {
+    if !status.is_redirection() {
+        return vec![];
+    };
+    // The only possibility for status.is_redirection() to become true is that
+    // we configured OnRedirect::Ok/Warning/Crit. Otherwise, we would have
+    // followed the redirect or ran into an error.
+    let text = format!("Detected redirect to: {}", redirect_target.unwrap());
+    match onredirect {
+        OnRedirect::Ok => vec![CheckResult::details(State::Ok, &text)],
+        OnRedirect::Warning => notice(State::Warn, &text),
+        OnRedirect::Critical => notice(State::Crit, &text),
+        // Won't happen, see comment above
         _ => vec![],
     }
 }
@@ -658,21 +672,40 @@ mod test_check_redirect {
 
     #[test]
     fn test_no_redirect() {
-        assert!(check_redirect(StatusCode::OK, OnRedirect::Critical).is_empty());
+        assert!(check_redirect(
+            StatusCode::OK,
+            OnRedirect::Critical,
+            Some(Url::parse("https://foo.bar").unwrap())
+        )
+        .is_empty());
     }
 
     #[test]
     fn test_redirect_ok() {
-        assert!(check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Ok).is_empty());
+        assert_eq!(
+            check_redirect(
+                StatusCode::MOVED_PERMANENTLY,
+                OnRedirect::Ok,
+                Some(Url::parse("https://foo.bar").unwrap())
+            ),
+            vec![CheckResult::details(
+                State::Ok,
+                "Detected redirect to: https://foo.bar/"
+            )]
+        );
     }
 
     #[test]
     fn test_redirect_warn() {
         assert_eq!(
-            check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Warning),
+            check_redirect(
+                StatusCode::MOVED_PERMANENTLY,
+                OnRedirect::Warning,
+                Some(Url::parse("https://foo.bar").unwrap())
+            ),
             vec![
-                CheckResult::summary(State::Warn, "Detected redirect"),
-                CheckResult::details(State::Warn, "Detected redirect"),
+                CheckResult::summary(State::Warn, "Detected redirect to: https://foo.bar/"),
+                CheckResult::details(State::Warn, "Detected redirect to: https://foo.bar/"),
             ]
         );
     }
@@ -680,10 +713,14 @@ mod test_check_redirect {
     #[test]
     fn test_redirect_crit() {
         assert_eq!(
-            check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Critical),
+            check_redirect(
+                StatusCode::MOVED_PERMANENTLY,
+                OnRedirect::Critical,
+                Some(Url::parse("https://foo.bar").unwrap())
+            ),
             vec![
-                CheckResult::summary(State::Crit, "Detected redirect"),
-                CheckResult::details(State::Crit, "Detected redirect"),
+                CheckResult::summary(State::Crit, "Detected redirect to: https://foo.bar/"),
+                CheckResult::details(State::Crit, "Detected redirect to: https://foo.bar/"),
             ]
         );
     }
@@ -691,7 +728,12 @@ mod test_check_redirect {
     #[test]
     fn test_redirect_not_handled() {
         // This can happen when hitting "max_redirs", but is handled by check_reqwest_error
-        assert!(check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Follow).is_empty());
+        assert!(check_redirect(
+            StatusCode::MOVED_PERMANENTLY,
+            OnRedirect::Follow,
+            Some(Url::parse("https://foo.bar").unwrap())
+        )
+        .is_empty());
     }
 }
 

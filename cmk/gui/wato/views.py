@@ -8,7 +8,7 @@ from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.http import request
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row
@@ -42,7 +42,7 @@ class PainterHostFilename(Painter):
 
 # TODO: Extremely bad idea ahead! The return type depends on a combination of
 # the values of how and with_links. :-P
-def get_wato_folder(row: dict, how: str, with_links: bool = True) -> str | HTML:
+def get_wato_folder(row: Row, how: str, with_links: bool = True, *, request: Request) -> str | HTML:
     filename = row["host_filename"]
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
@@ -76,8 +76,8 @@ def get_wato_folder(row: dict, how: str, with_links: bool = True) -> str | HTML:
     return HTML(" / ").join(title_path[depth:])
 
 
-def paint_wato_folder(row, how):
-    return "", get_wato_folder(row, how)
+def paint_wato_folder(row: Row, how: str, *, request: Request) -> CellSpec:
+    return "", get_wato_folder(row, how, request=request)
 
 
 class PainterWatoFolderAbs(Painter):
@@ -100,7 +100,7 @@ class PainterWatoFolderAbs(Painter):
         return "wato_folder_abs"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_wato_folder(row, "abs")
+        return paint_wato_folder(row, "abs", request=self.request)
 
 
 class PainterWatoFolderRel(Painter):
@@ -123,7 +123,7 @@ class PainterWatoFolderRel(Painter):
         return "wato_folder_rel"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_wato_folder(row, "rel")
+        return paint_wato_folder(row, "rel", request=self.request)
 
 
 class PainterWatoFolderPlain(Painter):
@@ -146,19 +146,23 @@ class PainterWatoFolderPlain(Painter):
         return "wato_folder_plain"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_wato_folder(row, "plain")
+        return paint_wato_folder(row, "plain", request=self.request)
 
 
-def cmp_wato_folder(r1: Row, r2: Row, how: str) -> int:
-    return (_get_wato_folder_text(r1, how) > _get_wato_folder_text(r2, how)) - (
-        _get_wato_folder_text(r1, how) < _get_wato_folder_text(r2, how)
+def cmp_wato_folder(r1: Row, r2: Row, how: str, *, request: Request) -> int:
+    return (
+        _get_wato_folder_text(r1, how, request=request)
+        > _get_wato_folder_text(r2, how, request=request)
+    ) - (
+        _get_wato_folder_text(r1, how, request=request)
+        < _get_wato_folder_text(r2, how, request=request)
     )
 
 
 # NOTE: The funny str() call is only necessary because of the broken typing of
 # get_wato_folder().
-def _get_wato_folder_text(r: Row, how: str) -> str:
-    return str(get_wato_folder(r, how, False))
+def _get_wato_folder_text(r: Row, how: str, *, request: Request) -> str:
+    return str(get_wato_folder(r, how, False, request=request))
 
 
 class SorterWatoFolderAbs(Sorter):
@@ -175,7 +179,7 @@ class SorterWatoFolderAbs(Sorter):
         return ["host_filename"]
 
     def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_wato_folder(r1, r2, "abs")
+        return cmp_wato_folder(r1, r2, "abs", request=self.request)
 
 
 class SorterWatoFolderRel(Sorter):
@@ -192,7 +196,7 @@ class SorterWatoFolderRel(Sorter):
         return ["host_filename"]
 
     def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_wato_folder(r1, r2, "rel")
+        return cmp_wato_folder(r1, r2, "rel", request=self.request)
 
 
 class SorterWatoFolderPlain(Sorter):
@@ -209,4 +213,4 @@ class SorterWatoFolderPlain(Sorter):
         return ["host_filename"]
 
     def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_wato_folder(r1, r2, "plain")
+        return cmp_wato_folder(r1, r2, "plain", request=self.request)

@@ -127,7 +127,7 @@ fn check_urls(url: Url, final_url: Url) -> Vec<Option<CheckResult>> {
     if url != final_url {
         results.push(CheckResult::details(
             State::Ok,
-            &format!("Redirected to: {}", final_url),
+            &format!("Followed redirect to: {}", final_url),
         ));
     }
     results
@@ -216,17 +216,14 @@ fn check_redirect(
         return vec![];
     };
     let text = redirect_target
-        .map(|url| format!("Detected redirect to: {}", url))
-        .unwrap_or("Detected redirect".to_string());
+        .map(|url| format!("Stopped on redirect to: {}", url))
+        .unwrap_or("Stopped on redirect".to_string());
     match onredirect {
         OnRedirect::Ok => vec![CheckResult::details(State::Ok, &text)],
         OnRedirect::Warning => notice(State::Warn, &text),
         OnRedirect::Critical => notice(State::Crit, &text),
-        OnRedirect::Sticky => notice(State::Warn, &format!("{} (stopped on changed IP)", text)),
-        OnRedirect::Stickyport => notice(
-            State::Warn,
-            &format!("{} (stopped on changed IP/port)", text),
-        ),
+        OnRedirect::Sticky => notice(State::Warn, &format!("{} (changed IP)", text)),
+        OnRedirect::Stickyport => notice(State::Warn, &format!("{} (changed IP/port)", text)),
         // The only possibility for status.is_redirection() to become true is that
         // we configured one of the above policies. Otherwise, we would have
         // followed the redirect or ran into an error.
@@ -543,7 +540,7 @@ mod test_check_urls {
             ),
             vec![
                 CheckResult::details(State::Ok, "URL to test: https://foo.bar/"),
-                CheckResult::details(State::Ok, "Redirected to: https://foo.bar/baz"),
+                CheckResult::details(State::Ok, "Followed redirect to: https://foo.bar/baz"),
             ]
         )
     }
@@ -697,7 +694,7 @@ mod test_check_redirect {
             ),
             vec![CheckResult::details(
                 State::Ok,
-                "Detected redirect to: https://foo.bar/"
+                "Stopped on redirect to: https://foo.bar/"
             )]
         );
     }
@@ -711,8 +708,8 @@ mod test_check_redirect {
                 Some(Url::parse("https://foo.bar").unwrap())
             ),
             vec![
-                CheckResult::summary(State::Warn, "Detected redirect to: https://foo.bar/"),
-                CheckResult::details(State::Warn, "Detected redirect to: https://foo.bar/"),
+                CheckResult::summary(State::Warn, "Stopped on redirect to: https://foo.bar/"),
+                CheckResult::details(State::Warn, "Stopped on redirect to: https://foo.bar/"),
             ]
         );
     }
@@ -726,8 +723,50 @@ mod test_check_redirect {
                 Some(Url::parse("https://foo.bar").unwrap())
             ),
             vec![
-                CheckResult::summary(State::Crit, "Detected redirect to: https://foo.bar/"),
-                CheckResult::details(State::Crit, "Detected redirect to: https://foo.bar/"),
+                CheckResult::summary(State::Crit, "Stopped on redirect to: https://foo.bar/"),
+                CheckResult::details(State::Crit, "Stopped on redirect to: https://foo.bar/"),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_redirect_sticky() {
+        assert_eq!(
+            check_redirect(
+                StatusCode::MOVED_PERMANENTLY,
+                OnRedirect::Sticky,
+                Some(Url::parse("https://foo.bar").unwrap())
+            ),
+            vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Stopped on redirect to: https://foo.bar/ (changed IP)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Stopped on redirect to: https://foo.bar/ (changed IP)"
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_redirect_stickyport() {
+        assert_eq!(
+            check_redirect(
+                StatusCode::MOVED_PERMANENTLY,
+                OnRedirect::Stickyport,
+                Some(Url::parse("https://foo.bar").unwrap())
+            ),
+            vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Stopped on redirect to: https://foo.bar/ (changed IP/port)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Stopped on redirect to: https://foo.bar/ (changed IP/port)"
+                ),
             ]
         );
     }

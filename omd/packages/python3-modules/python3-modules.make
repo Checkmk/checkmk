@@ -40,6 +40,7 @@ $(PYTHON3_MODULES_INSTALL): $(PYTHON3_MODULES_INTERMEDIATE_INSTALL)
 	    -f \
 	    --invalidation-mode=checked-hash \
 	    -s "$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)/" \
+	    -o 0 -o 1 -o 2 -j0 \
 	    "$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)/"
 	$(RSYNC) --times $(PYTHON3_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 

@@ -235,8 +235,15 @@ def main() {
     }
 
     shout("packages");
-    def package_builds = distros.collectEntries { distro ->
+    def package_builds = all_distros.collectEntries { distro ->
         [("distro ${distro}") : {
+            if (! (distro in distros)) {
+                conditional_stage("${distro} initialize workspace", false) {
+                }
+                conditional_stage("${distro} build package", false) {
+                }
+                return;
+            }
             // The following node call allocates a new workspace for each
             // DISTRO.
             //
@@ -289,12 +296,11 @@ def main() {
                                     versioning.print_image_tag();
                                     build_package(distro_package_type(distro), distro_dir, omd_env_vars);
                                 }
-                            }
-                            sh("""echo ==== ${distro} =====
-                            ps wauxw
-                            """)
 
-                            stage("Parse bazel execution logs") {
+                                sh("""echo ==== ${distro} =====
+                                ps wauxw
+                                """)
+
                                 try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix)
                             }
                         }

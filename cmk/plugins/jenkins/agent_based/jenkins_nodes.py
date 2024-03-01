@@ -7,8 +7,20 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import Any, Final
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    ServiceLabel,
+    State,
+)
+
+from .lib import render_integer
 
 _MAP_NODE_STATES: Final = {
     True: "yes",
@@ -34,7 +46,7 @@ def parse_jenkins_nodes(string_table) -> Section:  # type: ignore[no-untyped-def
     return parsed
 
 
-register.agent_section(
+agent_section_jenkins_nodes = AgentSection(
     name="jenkins_nodes",
     parse_function=parse_jenkins_nodes,
 )
@@ -43,12 +55,11 @@ register.agent_section(
 def discover_jenkins_nodes(section: Section) -> DiscoveryResult:
     for item, values in section.items():
         for line in values:
-            label_data = line.get("assignedLabels")
-            if label_data is None:
+            if (label_data := line.get("assignedLabels")) is None:
                 continue
 
             service_labels = [
-                ServiceLabel("cmk/jenkins_node_label_%s" % label_name, "yes")
+                ServiceLabel(f"cmk/jenkins_node_label_{label_name}", "yes")
                 for label in label_data
                 if (label_name := label.get("name")) is not None and label_name != item
             ]
@@ -94,16 +105,14 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                 yield Result(state=State.OK, summary=f"{infotext}: {data}")
 
         exec_key = "numExecutors"
-        exec_data = node.get(exec_key)
-
-        if exec_data is not None:
+        if (exec_data := node.get(exec_key)) is not None:
             exec_name = "jenkins_%s" % exec_key.lower()
 
             yield from check_levels(
                 exec_data,
                 metric_name="jenkins_num_executors",
                 levels_lower=params.get(exec_name),
-                render_func=lambda x: str(int(x)),
+                render_func=render_integer,
                 label="Total number of executors",
             )
 
@@ -132,38 +141,34 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                 executors,
                 metric_name="jenkins_%s_executors" % key[0:4],
                 levels_upper=params.get(executor_name),
-                render_func=lambda x: str(int(x)),
+                render_func=render_integer,
                 label=infotext,
             )
 
         # get labels for each node
-        labels_data = node.get("assignedLabels")
-        label_collection = ""
-        if labels_data is not None:
-            for labels in labels_data:
-                label_name = labels.get("name")
-                if label_name is not None and label_name != item:
-                    label_collection += " %s" % label_name
+        label_collection = [
+            label_name
+            for labels in (node.get("assignedLabels") or [])
+            if (label_name := labels.get("name")) is not None and label_name != item
+        ]
 
         mode = "Unknown"
         mode_state = State.UNKNOWN
-        mode_infotext = "Mode: "
         try:
             mode = node["assignedLabels"][0]["nodes"][0]["mode"]
             mode_state = State.OK
         except (KeyError, ValueError):
             pass
 
-        mode_infotext += "%s " % mode.title()
+        mode_infotext = f"Mode: {mode.title()} "
 
         if mode == "EXCLUSIVE" and label_collection:
-            mode_infotext += "(Labels:%s)" % label_collection
+            mode_infotext += f"(Labels: {' '.join(label_collection)})"
 
-        if params.get("jenkins_mode") is not None:
-            mode_expected = params["jenkins_mode"]
+        if (mode_expected := params.get("jenkins_mode")) is not None:
             if mode_expected != mode:
                 mode_state = State.CRIT
-                mode_infotext += " (expected: %s)" % mode_expected.title()
+                mode_infotext += f" (expected: {mode_expected.title()})"
 
         yield Result(state=mode_state, summary=mode_infotext)
 
@@ -204,25 +209,20 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
                 mon_data, "hudson.node_monitors.TemporarySpaceMonitor", value="size"
             )
         ) is not None:
-            levels_lower = (
-                None
-                if (levels := params.get("jenkins_temp")) is None
-                else (levels[0] * 1024**2, levels[1] * 1024**2)
-            )
             yield from check_levels(
                 size,
                 metric_name="jenkins_temp",
-                levels_lower=levels_lower,
+                levels_lower=params.get("jenkins_temp"),
                 label="Free temp space",
                 render_func=render.bytes,
             )
 
 
-register.check_plugin(
+check_plugin_jenkins_nodes = CheckPlugin(
     name="jenkins_nodes",
     service_name="Jenkins Node %s",
     discovery_function=discover_jenkins_nodes,
     check_function=check_jenkins_nodes,
-    check_default_parameters={"jenkins_offline": 2},
+    check_default_parameters={"jenkins_offline": State.CRIT.value},
     check_ruleset_name="jenkins_nodes",
 )

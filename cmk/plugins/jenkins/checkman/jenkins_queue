@@ -9,5 +9,7 @@ description:
  tasks. The long output lists all jobs with its associated details (eg. "ID",
  "Stuck", "Blocked", "In queue since", "Why kept").
 
+ Needs the integration "Jenkins" to be configured.
+
 discovery:
  One service is create for each queue ({"Jenkins Queue"}).

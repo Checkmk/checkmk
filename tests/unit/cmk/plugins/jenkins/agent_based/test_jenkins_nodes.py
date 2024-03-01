@@ -5,8 +5,9 @@
 
 import pytest
 
-import cmk.base.plugins.agent_based.jenkins_nodes as jn
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+
+import cmk.plugins.jenkins.agent_based.jenkins_nodes as jn
 
 
 @pytest.fixture(scope="module", name="section")
@@ -33,7 +34,9 @@ def test_discovery(section: jn.Section) -> None:
 
 
 def test_check_windows_item(section: jn.Section) -> None:
-    assert list(jn.check_jenkins_nodes("Windows", {"jenkins_offline": 2}, section)) == [
+    assert list(
+        jn.check_jenkins_nodes("Windows", {"jenkins_offline": State.CRIT.value}, section)
+    ) == [
         Result(state=State.OK, summary="Description: Name: Myname, Ip-Address: 1.1.1.1"),
         Result(state=State.OK, summary="Is JNLP agent: yes"),
         Result(state=State.OK, summary="Is idle: yes"),
@@ -55,7 +58,9 @@ def test_check_windows_item(section: jn.Section) -> None:
 
 
 def test_check_master_item(section: jn.Section) -> None:
-    assert list(jn.check_jenkins_nodes("master", {"jenkins_offline": 2}, section)) == [
+    assert list(
+        jn.check_jenkins_nodes("master", {"jenkins_offline": State.CRIT.value}, section)
+    ) == [
         Result(state=State.OK, summary="Description: The Master Jenkins Node"),
         Result(state=State.OK, summary="Is JNLP agent: no"),
         Result(state=State.OK, summary="Is idle: no"),
@@ -81,9 +86,9 @@ def test_check_foo_item(section: jn.Section) -> None:
         jn.check_jenkins_nodes(
             "foo",
             {
-                "jenkins_offline": 2,
-                "avg_response_time": (1.0, 2.0),
-                "jenkins_clock": (3.0, 4.0),
+                "jenkins_offline": State.CRIT.value,
+                "avg_response_time": ("fixed", (1.0, 2.0)),
+                "jenkins_clock": ("fixed", (3.0, 4.0)),
             },
             section,
         )

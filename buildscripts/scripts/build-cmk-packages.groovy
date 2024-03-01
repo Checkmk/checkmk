@@ -238,10 +238,12 @@ def main() {
     def package_builds = all_distros.collectEntries { distro ->
         [("distro ${distro}") : {
             if (! (distro in distros)) {
-                conditional_stage("${distro} initialize workspace", false) {
-                }
-                conditional_stage("${distro} build package", false) {
-                }
+                conditional_stage("${distro} initialize workspace", false) {}
+                conditional_stage("${distro} build package", false) {}
+                conditional_stage("${distro} sign package", false) {}
+                conditional_stage("${distro} test package", false) {}
+                conditional_stage("${distro} copy package", false) {}
+                conditional_stage("${distro} upload package", false) {}
                 return;
             }
             // The following node call allocates a new workspace for each

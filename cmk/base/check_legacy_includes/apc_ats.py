@@ -62,7 +62,7 @@ class Status(NamedTuple):
     def parse_powersources(raw: list[Optional[int]]) -> Sequence[PowerSource]:
         return [
             PowerSource(name=voltage, status=PowerSupplyStatus(value))
-            for voltage, value in zip(["5V", "24V"], raw)
+            for voltage, value in zip(["5V", "24V", "3.3V", "1.0V"], raw)
             if value is not None
         ]
 

@@ -17,9 +17,11 @@ from cmk.base.check_legacy_includes.apc_ats import (
     Status,
 )
 
-STRING_TABLE_1 = [["2", "2", "2", "2", "2", "2"]]
-STRING_TABLE_2 = [["1", "2", "1", "2", "1", "2"]]
-STRING_TABLE_exceeded_output_current = [["2", "2", "2", "1", "2", "2"]]
+STRING_TABLE_1 = [["2", "2", "2", "2", "2", "2", "", ""]]
+STRING_TABLE_2 = [["1", "2", "1", "2", "1", "2", "", ""]]
+STRING_TABLE_exceeded_output_current = [["2", "2", "2", "1", "2", "2", "", ""]]
+STRING_TABLE_no_5V = [["2", "2", "1", "2", "", "2", "2", "2"]]
+STRING_TABLE_no_5V_all_crit = [["2", "2", "1", "2", "", "1", "1", "1"]]
 CHECK = "apc_ats_status"
 
 
@@ -49,6 +51,20 @@ CHECK = "apc_ats_status"
                 powersources=[
                     PowerSource(name="5V", status=PowerSupplyStatus.Failure),
                     PowerSource(name="24V", status=PowerSupplyStatus.OK),
+                ],
+            ),
+        ),
+        (
+            STRING_TABLE_no_5V,
+            Status(
+                com_status=CommunictionStatus.Established,
+                selected_source=Source.B,
+                redundancy=RedunandancyStatus.Lost,
+                overcurrent=OverCurrentStatus.OK,
+                powersources=[
+                    PowerSource(name="24V", status=PowerSupplyStatus.OK),
+                    PowerSource(name="3.3V", status=PowerSupplyStatus.OK),
+                    PowerSource(name="1.0V", status=PowerSupplyStatus.OK),
                 ],
             ),
         ),
@@ -110,6 +126,25 @@ def test_apc_ats_status_discovery(info, expected):
                 "threshold(!!)",
             ),
             id="Crit due to exceeded output current",
+        ),
+        pytest.param(
+            STRING_TABLE_no_5V,
+            {"power_source": 2},
+            (
+                2,
+                "Power source B selected, redundancy lost(!!)",
+            ),
+            id="No 5V power supply",
+        ),
+        pytest.param(
+            STRING_TABLE_no_5V_all_crit,
+            {"power_source": 2},
+            (
+                2,
+                "Power source B selected, redundancy lost(!!), 24V power supply failed(!!), "
+                "3.3V power supply failed(!!), 1.0V power supply failed(!!)",
+            ),
+            id="No 5V power supply, all other power supplies are critical",
         ),
     ],
 )

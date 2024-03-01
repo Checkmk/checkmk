@@ -279,12 +279,12 @@ def start_checkmk(
             assert "cmkadmin with password:" not in output
 
         assert "STARTING SITE" in output
-
-        status_rc, status_output = c.exec_run(["omd", "status"], user=site_id)
-        assert status_rc == 0, f"Status is {status_rc}. Output: {status_output.decode('utf-8')}"
-    except:
-        logger.error(c.logs().decode("utf-8"))
+    except TimeoutError:
+        logger.error("TIMEOUT while starting Checkmk. Log output: %s", c.logs().decode("utf-8"))
         raise
+
+    status_rc, status_output = c.exec_run(["omd", "status"], user=site_id)
+    assert status_rc == 0, f"Status is {status_rc}. Output: {status_output.decode('utf-8')}"
 
     # reload() to make sure all attributes are set (e.g. NetworkSettings)
     c.reload()

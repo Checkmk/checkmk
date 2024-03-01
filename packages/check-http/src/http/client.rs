@@ -139,12 +139,24 @@ fn get_policy(
             att.stop()
         }),
         OnRedirect::Follow => Policy::limited(max_redirs),
-        OnRedirect::Sticky => {
-            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, false))
-        }
-        OnRedirect::Stickyport => {
-            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, true))
-        }
+        OnRedirect::Sticky => Policy::custom(move |att| {
+            policy_sticky(
+                att,
+                force_ip.clone(),
+                max_redirs,
+                false,
+                record_redirect.clone(),
+            )
+        }),
+        OnRedirect::Stickyport => Policy::custom(move |att| {
+            policy_sticky(
+                att,
+                force_ip.clone(),
+                max_redirs,
+                true,
+                record_redirect.clone(),
+            )
+        }),
     }
 }
 
@@ -153,6 +165,7 @@ fn policy_sticky(
     force_ip: Option<ForceIP>,
     max_redirs: usize,
     sticky_port: bool,
+    record_redirect: Arc<Mutex<Option<Url>>>,
 ) -> Action {
     if attempt.previous().len() > max_redirs {
         return attempt.error("too many redirects");
@@ -174,14 +187,16 @@ fn policy_sticky(
             if contains_unchanged_ip(&previous_socket_addr, &socket_addr) {
                 attempt.follow()
             } else {
-                attempt.error("Detected changed IP")
+                *record_redirect.lock().unwrap() = Some(attempt.url().to_owned());
+                attempt.stop()
             }
         }
         true => {
             if contains_unchanged_addr(&previous_socket_addr, &socket_addr) {
                 attempt.follow()
             } else {
-                attempt.error("Detected changed IP/port")
+                *record_redirect.lock().unwrap() = Some(attempt.url().to_owned());
+                attempt.stop()
             }
         }
     }

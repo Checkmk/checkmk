@@ -7,7 +7,13 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from cmk.plugins.collection.server_side_calls.traceroute import active_check_traceroute
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    NetworkAddressConfig,
+    ResolvedIPAddressFamily,
+)
 
 
 @pytest.mark.parametrize(
@@ -21,7 +27,7 @@ from tests.testlib import ActiveCheck
                 "address_family": "ipv4",
             },
             [
-                "$HOSTADDRESS$",
+                "ipaddress",
                 "--use_dns",
                 "--probe_method=icmp",
                 "--ip_address_family=ipv4",
@@ -45,7 +51,7 @@ from tests.testlib import ActiveCheck
                 "address_family": "ipv4",
             },
             [
-                "$HOSTADDRESS$",
+                "ipaddress",
                 "--probe_method=udp",
                 "--ip_address_family=ipv4",
                 "--routers_missing_warn",
@@ -69,7 +75,7 @@ from tests.testlib import ActiveCheck
                 "address_family": "ipv6",
             },
             [
-                "$HOSTADDRESS$",
+                "ipaddress",
                 "--use_dns",
                 "--probe_method=udp",
                 "--ip_address_family=ipv6",
@@ -86,4 +92,17 @@ from tests.testlib import ActiveCheck
 def test_check_traceroute_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
-    assert ActiveCheck("check_traceroute").run_argument_function(params) == expected_args
+    (command,) = active_check_traceroute(
+        params,
+        HostConfig(
+            name="hostname",
+            resolved_ipv4_address="ipaddress",
+            alias="alias",
+            resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+            address_config=NetworkAddressConfig(
+                ipv4_address="ipaddress", ip_family=IPAddressFamily.IPV4
+            ),
+        ),
+        {},
+    )
+    assert command.command_arguments == expected_args

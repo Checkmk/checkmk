@@ -22,8 +22,10 @@ All types are now directly imported from the `v2` module.
 `check_levels` signature changed
 ********************************
 
-The new func:`check_levels` function accepts is designed to work well
-with the `Levels` element from the new `rulesets API v1`.
+The new :func:`check_levels` function is designed to work well with the
+levels elements from the new `rulesets API v1`.
+These can be found in :mod:`cmk.rulesets.v1.form_specs`.
+
 The types of the arguments have been added to the API and can be found in
 :mod:`cmk.agent_based.v2`.
 

@@ -143,16 +143,16 @@ def try_find_frame_named_main(page: playwright.async_api.Page) -> playwright.asy
 
 
 class Crawler:
-    def __init__(
-        self, test_site: Site, report_file: str | None, max_urls: int | None = None
-    ) -> None:
+    def __init__(self, test_site: Site, report_file: str | None, max_urls: int = 0) -> None:
         self.duration = 0.0
         self.results: dict[str, CrawlResult] = {}
         self.site = test_site
         self.report_file = Path(report_file or self.site.result_dir() + "/crawl.xml")
         self.requests_session = requests.Session()
 
-        self._todos = deque([Url(self.site.internal_url)], maxlen=max_urls)
+        # override value using environment-variable
+        maxlen = int(os.environ.get("GUI_CRAWLER_URL_LIMIT", "0")) or max_urls
+        self._todos = deque([Url(self.site.internal_url)], maxlen=None if maxlen <= 0 else maxlen)
 
     async def crawl(self, max_tasks: int) -> None:
         async with async_playwright() as pw:

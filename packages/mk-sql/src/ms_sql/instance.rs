@@ -14,7 +14,7 @@ use crate::config::{
 };
 use crate::emit;
 use crate::ms_sql::query::{
-    obtain_computer_name, run_custom_query, run_known_query, Answer, Column,
+    obtain_computer_name, obtain_instance_name, run_custom_query, run_known_query, Answer, Column,
 };
 use crate::ms_sql::sqls;
 use crate::setup::Env;
@@ -1808,9 +1808,27 @@ async fn _obtain_instance_builders(
     client: &mut Client,
     endpoint: &Endpoint,
 ) -> Vec<SqlInstanceBuilder> {
-    let builders = try_find_instances_in_registry(client).await;
+    let mut builders = try_find_instances_in_registry(client).await;
     if builders.is_empty() {
-        return vec![];
+        log::warn!("No instances found in registry, this means you have porblem with permissions");
+        log::warn!("Trying to add current instance");
+        match obtain_instance_name(client).await {
+            Ok(Some(name)) => {
+                let mut builder = SqlInstanceBuilder::new()
+                    .name(name)
+                    .port(Some(endpoint.conn().port()));
+                if let Ok(properties) = SqlInstanceProperties::obtain_by_query(client).await {
+                    builder = builder
+                        .version(&properties.version)
+                        .edition(&properties.edition);
+                }
+                builders = vec![builder];
+            }
+            _ => {
+                log::error!("Can't add current instance");
+                return vec![];
+            }
+        };
     }
     let computer_name = obtain_computer_name(client).await.unwrap_or_default();
     builders

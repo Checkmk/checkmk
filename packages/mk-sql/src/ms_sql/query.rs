@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::types::ComputerName;
+use crate::types::{ComputerName, InstanceName};
 
 use super::sqls::find_known_query;
 use super::{client::Client, sqls};
@@ -146,6 +146,21 @@ pub async fn obtain_computer_name(client: &mut Client) -> Result<Option<Computer
     let rows = run_known_query(client, sqls::Id::ComputerName).await?;
     if rows.is_empty() || rows[0].is_empty() {
         log::warn!("Computer name not found with query computer_name");
+        return Ok(None);
+    }
+    let row = &rows[0];
+    Ok(row[0]
+        .try_get::<&str, usize>(0)
+        .ok()
+        .flatten()
+        .map(str::to_string)
+        .map(|s| s.into()))
+}
+
+pub async fn obtain_instance_name(client: &mut Client) -> Result<Option<InstanceName>> {
+    let rows = run_custom_query(client, "select @@ServiceName").await?;
+    if rows.is_empty() || rows[0].is_empty() {
+        log::warn!("Instance name not found with query");
         return Ok(None);
     }
     let row = &rows[0];

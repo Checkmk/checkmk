@@ -58,5 +58,6 @@ def test_agent_elasticsearch_arguments_password_store() -> None:
         "user",
         "-s",
         PlainTextSecret(value="pass"),
+        "--",
         "testhost",
     ]

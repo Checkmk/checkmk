@@ -215,16 +215,23 @@ fn check_redirect(
     if !status.is_redirection() {
         return vec![];
     };
-    // The only possibility for status.is_redirection() to become true is that
-    // we configured OnRedirect::Ok/Warning/Crit. Otherwise, we would have
-    // followed the redirect or ran into an error.
-    let text = format!("Detected redirect to: {}", redirect_target.unwrap());
+    let text = redirect_target
+        .map(|url| format!("Detected redirect to: {}", url))
+        .unwrap_or("Detected redirect".to_string());
     match onredirect {
         OnRedirect::Ok => vec![CheckResult::details(State::Ok, &text)],
         OnRedirect::Warning => notice(State::Warn, &text),
         OnRedirect::Critical => notice(State::Crit, &text),
-        // Won't happen, see comment above
-        _ => vec![],
+        OnRedirect::Sticky => notice(State::Warn, &format!("{} (stopped on changed IP)", text)),
+        OnRedirect::Stickyport => notice(
+            State::Warn,
+            &format!("{} (stopped on changed IP/port)", text),
+        ),
+        // The only possibility for status.is_redirection() to become true is that
+        // we configured one of the above policies. Otherwise, we would have
+        // followed the redirect or ran into an error.
+        // Hence, this will never match.
+        OnRedirect::Follow => vec![],
     }
 }
 

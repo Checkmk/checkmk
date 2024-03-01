@@ -55,7 +55,7 @@ def check_apc_ats_status(_no_item, params, info):
     # atsCurrentOK(2) indicates that the output current is below the output current threshold.
     if overcurrent == 1:
         state = 2
-        messages.append("exceedet ouput current threshold(!!)")
+        messages.append("exceeded ouput current threshold(!!)")
 
     # 5Volt power supply
     if ps5 != 2:

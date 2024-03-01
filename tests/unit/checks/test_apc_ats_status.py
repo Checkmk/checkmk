@@ -60,7 +60,7 @@ def test_apc_ats_status_discovery(info, expected):
             {"power_source": 2},
             (
                 2,
-                "Power source B selected, Device fully redundant, exceedet ouput current "
+                "Power source B selected, Device fully redundant, exceeded ouput current "
                 "threshold(!!)",
             ),
             id="Crit due to exceeded output current",

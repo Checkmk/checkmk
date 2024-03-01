@@ -96,6 +96,10 @@ struct Args {
     #[arg(short, long, default_value_t = 443)]
     port: u16,
 
+    /// Verbose output
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
+
     /// Set timeout in seconds
     #[arg(long, default_value_t = 10)]
     timeout: u64,
@@ -182,12 +186,30 @@ struct Args {
     allow_self_signed: bool,
 }
 
+fn verbose(verbosity: u8, level: u8, header: &str, text: &str) {
+    if verbosity >= level {
+        eprintln!("{}{}", header, text)
+    }
+}
+
+fn to_pem(der: &[u8]) -> Vec<u8> {
+    openssl::x509::X509::from_der(der)
+        .unwrap()
+        .to_pem()
+        .unwrap()
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // We ran into https://github.com/sfackler/rust-openssl/issues/575
     // without openssl_probe.
     openssl_probe::init_ssl_cert_env_vars();
 
     let args = Args::parse();
+
+    let info = |text: &str| verbose(args.verbose, 1, "INFO: ", text);
+    let debug = |text: &str| verbose(args.verbose, 2, "DEBUG: ", text);
+
+    info("start check-cert");
 
     let not_after = parse_levels(LevelsStrategy::Lower, args.not_after, Duration::days);
     let response_time = parse_levels(
@@ -196,12 +218,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Duration::milliseconds,
     );
 
+    info("load trust store...");
     let Ok(trust_store) = (match args.ca_store {
         Some(ca_store) => truststore::load_store(&ca_store),
         None => truststore::system(),
     }) else {
         check::abort("Failed to load trust store")
     };
+    info(&format!("loaded {} certificates", trust_store.len()));
 
     let signature_algorithm = match args
         .signature_algorithm
@@ -212,6 +236,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => check::abort(format!("{}", err)),
     };
 
+    info("contact host...");
     let start = Instant::now();
     let chain = match fetcher::fetch_server_cert(
         &args.url,
@@ -224,17 +249,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(err) => check::abort(format!("{:?}", err)),
     };
     let elapsed = start.elapsed();
+    info(&format!(
+        "received chain of {} certificates from host",
+        chain.len()
+    ));
 
     if chain.is_empty() {
         check::abort("Empty or invalid certificate chain on host")
     }
 
+    info("check certificate...");
+    debug(&format!(
+        "\n{}",
+        std::str::from_utf8(&to_pem(&chain[0])).expect("valid utf8")
+    ));
+    info(" 1/3 - check fetching process");
     let mut collection = fetcher_check::check(
         elapsed,
         FetcherChecks::builder()
             .response_time(Some(response_time))
             .build(),
     );
+    info(" 2/3 - verify certificate with trust store");
     collection.join(&mut verification::check(
         &chain,
         VerifChecks::builder()
@@ -242,6 +278,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .allow_self_signed(args.allow_self_signed)
             .build(),
     ));
+    info(" 3/3 - check certificate");
     collection.join(&mut certificate::check(
         &chain[0],
         CertChecks::builder()
@@ -262,6 +299,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .max_validity(args.max_validity.map(|x| Duration::days(x.into())))
             .build(),
     ));
+    info("check certificate... done");
 
     println!("{}", collection);
     std::process::exit(check::exit_code(&collection))

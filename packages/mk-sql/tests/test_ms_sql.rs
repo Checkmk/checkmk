@@ -1173,6 +1173,38 @@ async fn test_check_config_exec_piggyback_remote() {
     assert!(!output.is_empty());
 }
 
+#[cfg(windows)]
+fn create_localhost_remote_config(endpoint: SqlDbEndpoint) -> String {
+    format!(
+        r#"
+---
+mssql:
+  main:
+    authentication:
+      username: {}
+      password: {}
+      type: sql_server
+    #connection:
+    #  hostname: localhost
+    #  trust_server_certificate: true
+ "#,
+        endpoint.user, endpoint.pwd
+    )
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_check_special() {
+    let dir = tools::create_temp_process_dir();
+    let content = create_localhost_remote_config(tools::get_remote_sql_from_env_var().unwrap());
+    tools::create_file_with_content(dir.path(), "mk-sql.yml", &content);
+    let check_config = CheckConfig::load_file(&dir.path().join("mk-sql.yml")).unwrap();
+    let output = check_config.exec(&Env::default()).await.unwrap();
+    assert!(!output.is_empty());
+    assert!(output.contains("MSSQL_MSSQLSERVER|state|1"));
+    assert!(output.contains("MSSQL_MSSQLSERVER|config|16"));
+}
+
 fn create_remote_config_with_piggyback(endpoint: SqlDbEndpoint) -> String {
     format!(
         r#"

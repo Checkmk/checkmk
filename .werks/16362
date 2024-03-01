@@ -1,0 +1,23 @@
+Title: Update Python version for Windows agent
+Class: security
+Compatible: compat
+Component: checks
+Date: 1709283564
+Edition: cee
+Level: 1
+Version: 2.2.0p24
+
+When agent plugins are configured for a windows agent the baked package for windows contains a Python version.
+This version is updated from 3.11.7 to 3.11.8.
+
+This contains an update from openssl 3.0.11 to 3.0.13 and a fix for:
+
+* CVE-2024-0727
+* CVE-2023-6237
+* CVE-2023-6129
+* CVE-2023-5678
+* CVE-2023-5363
+
+To our knowledge none of these vulnerabilities were exploitable in this setup.
+
+We rate this with a CVSS of 0 (None) (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N). This CVSS is primarily meant to please automatic scanners.

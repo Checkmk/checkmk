@@ -5,7 +5,7 @@
 include ../../../../defines.make
 # commandline
 PY_VER             ?= $(PYTHON_MAJOR_DOT_MINOR)
-PY_SUBVER          ?= 7
+PY_SUBVER          ?= 8
 
 INTEGRATION_TIMESTAMP   := results\integration.timestamp
 

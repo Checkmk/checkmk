@@ -232,6 +232,9 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def show_in_folder(self):
         return False
 
+    def depends_on_tags(self):
+        return ["ip-v4"]
+
     def valuespec(self) -> ValueSpec:
         return ListOf(
             valuespec=HostAddress(
@@ -278,6 +281,9 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
 
     def show_in_folder(self):
         return False
+
+    def depends_on_tags(self):
+        return ["ip-v6"]
 
     def valuespec(self) -> ValueSpec:
         return ListOf(

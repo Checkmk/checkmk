@@ -1,0 +1,21 @@
+Title: Agent updates failing on Solaris 10
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1709282638
+Edition: cee
+Level: 1
+Version: 2.2.0p24
+
+On some Solaris 10 systems, an agent update did crash with error message
+
+C+:
+/var/sadm/pkg/check-mk-agent/install/postremove: syntax error at line 19: `(' unexpected
+pkgrm: ERROR: postremove script did not complete successfully
+C-:
+
+If you ran into this error, to make the update perform again, please delete the file
+<code>/var/sadm/pkg/check-mk-agent/install/postremove</code> on affected systems.
+
+Technical background:\
+The postremove script used the subshell evaluation syntax <code>$(...)</code> that is incompatible to the standard <code>bin/sh</code> shell found on some Solaris 10 systems.

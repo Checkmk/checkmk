@@ -22,11 +22,13 @@ from cmk.utils.structured_data import (
 import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.config import active_config
-from cmk.gui.http import request
+from cmk.gui.display_options import display_options
+from cmk.gui.http import request, response
 from cmk.gui.inventory.filters import FilterInvtableVersion
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
 from cmk.gui.painter.v0.base import JoinCell
+from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.utils.theme import theme
@@ -955,6 +957,7 @@ def test_registered_sorter_cmp() -> None:
             request=request,
             painter_options=PainterOptions.get_instance(),
             theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
         ).cmp({}, {}, None)
         == 0
     )

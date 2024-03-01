@@ -18,11 +18,13 @@ import cmk.gui.plugins.views
 import cmk.gui.views
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, RowTable
+from cmk.gui.display_options import display_options
 from cmk.gui.exporter import exporter_registry
-from cmk.gui.http import request
+from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import base as painter_base
 from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
+from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import painter_option_registry, PainterOptions
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
 from cmk.gui.utils.theme import theme
@@ -328,6 +330,7 @@ def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> No
             request=request,
             painter_options=PainterOptions.get_instance(),
             theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
         )
         for painter_class in painter_registry.values()
     ]
@@ -374,6 +377,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         request=request,
         painter_options=PainterOptions.get_instance(),
         theme=theme,
+        url_renderer=RenderLink(request, response, display_options),
     )
     dummy_cell = Cell(ColumnSpec(name=painter.ident), None)
     assert isinstance(painter, Painter)

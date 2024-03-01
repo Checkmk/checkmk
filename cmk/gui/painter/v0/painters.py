@@ -20,14 +20,13 @@ import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, Config
-from cmk.gui.display_options import display_options
 from cmk.gui.graphing._color import render_color_icon
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import get_extended_metric_info, registered_metrics
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, response
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import (
     paint_age,
@@ -665,8 +664,7 @@ class PainterSvcLongPluginOutput(Painter):
             .get(row["site"], {})
             .get("max_long_output_size", 0)
         ) and long_output_len > max_long_output_size:
-            renderer = RenderLink(self.request, response, display_options)
-            setting_link_tag = renderer.link_from_filename(
+            setting_link_tag = self.url_renderer.link_from_filename(
                 "wato.py",
                 html_text="(%s)" % _("Increase limit"),
                 query_args=[
@@ -913,8 +911,7 @@ class PainterSvcNotesURL(Painter):
             return None, HTML()
 
         url = replace_action_url_macros(raw_url, "service", row)
-        renderer = RenderLink(self.request, response, display_options)
-        content = renderer.link_direct(url, html_text=url, target="_blank")
+        content = self.url_renderer.link_direct(url, html_text=url, target="_blank")
         return None, content
 
 
@@ -1574,10 +1571,9 @@ class PainterSvcGroupMemberlist(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         links = []
-        renderer = RenderLink(self.request, response, display_options)
 
         for group in row["service_groups"]:
-            link = renderer.link_from_filename(
+            link = self.url_renderer.link_from_filename(
                 "view.py",
                 html_text=group,
                 query_args=[
@@ -2122,9 +2118,8 @@ class PainterHostNotesURL(Painter):
         if not raw_url:
             return None, HTML()
 
-        renderer = RenderLink(self.request, response, display_options)
         url = replace_action_url_macros(raw_url, "host", row)
-        content = renderer.link_direct(url, html_text=url, target="_blank")
+        content = self.url_renderer.link_direct(url, html_text=url, target="_blank")
         return None, content
 
 
@@ -3124,8 +3119,9 @@ class PainterHostServices(Painter):
 
         row["host_services_with_state_filtered"] = filtered_services
 
-        renderer = RenderLink(self.request, response, display_options)
-        return _paint_service_list(row, "host_services_with_state_filtered", renderer=renderer)
+        return _paint_service_list(
+            row, "host_services_with_state_filtered", renderer=self.url_renderer
+        )
 
 
 class PainterHostParents(Painter):
@@ -3197,10 +3193,9 @@ class PainterHostGroupMemberlist(Painter):
         return False  # This painter adds individual links for the single hosts
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        renderer = RenderLink(self.request, response, display_options)
         links = []
         for group in row["host_groups"]:
-            link = renderer.link_from_filename(
+            link = self.url_renderer.link_from_filename(
                 "view.py",
                 html_text=group,
                 query_args=[
@@ -3470,8 +3465,9 @@ class PainterServiceDiscoveryState(Painter):
         return ["discovery_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        renderer = RenderLink(self.request, response, display_options)
-        return _paint_discovery_output("discovery_state", row, renderer=renderer, theme=self.theme)
+        return _paint_discovery_output(
+            "discovery_state", row, renderer=self.url_renderer, theme=self.theme
+        )
 
 
 class PainterServiceDiscoveryCheck(Painter):
@@ -3490,8 +3486,9 @@ class PainterServiceDiscoveryCheck(Painter):
         return ["discovery_state", "discovery_check", "discovery_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        renderer = RenderLink(self.request, response, display_options)
-        return _paint_discovery_output("discovery_check", row, renderer=renderer, theme=self.theme)
+        return _paint_discovery_output(
+            "discovery_check", row, renderer=self.url_renderer, theme=self.theme
+        )
 
 
 class PainterServiceDiscoveryService(Painter):
@@ -3510,9 +3507,8 @@ class PainterServiceDiscoveryService(Painter):
         return ["discovery_state", "discovery_check", "discovery_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        renderer = RenderLink(self.request, response, display_options)
         return _paint_discovery_output(
-            "discovery_service", row, renderer=renderer, theme=self.theme
+            "discovery_service", row, renderer=self.url_renderer, theme=self.theme
         )
 
 
@@ -3539,10 +3535,9 @@ class PainterHostgroupHosts(Painter):
         return ["hostgroup_members_with_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        renderer = RenderLink(self.request, response, display_options)
         divs = []
         for host, state, checked in row["hostgroup_members_with_state"]:
-            link = renderer.link_from_filename(
+            link = self.url_renderer.link_from_filename(
                 "view.py",
                 html_text=host,
                 query_args=[
@@ -3838,8 +3833,9 @@ class PainterSgServices(Painter):
         return ["servicegroup_members_with_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        renderer = RenderLink(self.request, response, display_options)
-        return _paint_service_list(row, "servicegroup_members_with_state", renderer=renderer)
+        return _paint_service_list(
+            row, "servicegroup_members_with_state", renderer=self.url_renderer
+        )
 
 
 class PainterSgNumServices(Painter):
@@ -4686,13 +4682,12 @@ class PainterLogContactName(Painter):
         return ["log_contact_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        renderer = RenderLink(self.request, response, display_options)
-        target_view_name = renderer.get_filename(
+        target_view_name = self.url_renderer.get_filename(
             filename="contactnotifications",
             mobile_filename="mobile_contactnotifications",
         )
         links = [
-            renderer.link_from_filename(
+            self.url_renderer.link_from_filename(
                 "view.py",
                 html_text=contact,
                 query_args=[
@@ -5339,8 +5334,7 @@ class PainterHostDockerNode(Painter):
             return "", ""
 
         node = output.split()[-1]
-        renderer = RenderLink(self.request, response, display_options)
-        content = renderer.link_from_filename(
+        content = self.url_renderer.link_from_filename(
             "view.py",
             query_args=[
                 ("view_name", "host"),
@@ -5524,8 +5518,7 @@ class _PainterHostKubernetes(Painter):
         if (object_name := labels.get(f"cmk/kubernetes/{self._kubernetes_object_type}")) is None:
             return "", ""
 
-        renderer = RenderLink(self.request, response, display_options)
-        content = renderer.link_from_filename(
+        content = self.url_renderer.link_from_filename(
             "dashboard.py", html_text=object_name, query_args=links
         )
         return "", content

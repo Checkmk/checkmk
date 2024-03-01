@@ -6,13 +6,15 @@
 from collections.abc import Iterable, Sequence
 
 from cmk.gui.config import active_config
-from cmk.gui.http import request
+from cmk.gui.display_options import display_options
+from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import painter_exists, painter_registry
+from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, SorterName, SorterSpec
+from cmk.gui.utils.theme import theme
 
-from ..utils.theme import theme
 from .sorter import ParameterizedSorter, sorter_registry
 
 
@@ -126,6 +128,7 @@ def _get_sorter_name_of_painter(
         request=request,
         painter_options=PainterOptions.get_instance(),
         theme=theme,
+        url_renderer=RenderLink(request, response, display_options),
     )
     if painter.sorter:
         return painter.sorter

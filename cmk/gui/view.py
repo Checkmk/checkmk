@@ -17,11 +17,12 @@ from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.painter.v0.base import Cell, JoinCell, painter_exists
+from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
@@ -148,6 +149,7 @@ class View:
                         request=request,
                         painter_options=PainterOptions.get_instance(),
                         theme=theme,
+                        url_renderer=RenderLink(request, response, display_options),
                     ),
                     negate=entry.negate,
                     join_key=entry.join_key,

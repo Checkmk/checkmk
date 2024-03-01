@@ -342,7 +342,7 @@ def main() {
     parallel package_builds;
 
     stage("Plot cache hits") {
-        try_plot_cache_hits(bazel_log_prefix);
+        try_plot_cache_hits(bazel_log_prefix, distros);
     }
 
     conditional_stage('Upload', !jenkins_base_folder.startsWith("Testing")) {

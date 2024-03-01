@@ -132,6 +132,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
+from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
 
 from cmk.server_side_calls import v1 as server_side_calls_api
 
@@ -2761,6 +2762,29 @@ class ConfigCache:
             return self.__special_agents[host_name]
 
         return self.__special_agents.setdefault(host_name, special_agents_impl())
+
+    def special_agent_command_lines(
+        self, host_name: HostName, ip_address: HostAddress | None
+    ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
+        for agentname, params in self.special_agents(host_name):
+            host_attrs = self.get_host_attributes(host_name)
+            macros = {
+                "<IP>": ip_address or "",
+                "<HOST>": host_name,
+                **self.get_host_macros_from_attributes(host_name, host_attrs),
+            }
+            special_agent = SpecialAgent(
+                load_special_agents()[1],
+                special_agent_info,
+                host_name,
+                ip_address,
+                get_ssc_host_config(host_name, self, macros),
+                host_attrs,
+                http_proxies,
+                password_store.load(),
+            )
+            for agent_data in special_agent.iter_special_agent_commands(agentname, params):
+                yield agentname, agent_data
 
     def hostgroups(self, host_name: HostName) -> Sequence[str]:
         """Returns the list of hostgroups of this host

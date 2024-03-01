@@ -57,7 +57,7 @@ def commands_function(
     _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     command_arguments = [
-        host_config.resolved_address or host_config.name,
+        host_config.primary_ip_config.address,
         "-u",
         params.user,
         "-s",

@@ -40,10 +40,8 @@ def check_by_ssh_command(
     settings = params[1]
     if "hostname" in settings:
         args += ["-H", replace_macros(settings["hostname"], host_config.macros)]
-    elif host_config.resolved_address:
-        args += ["-H", host_config.resolved_address]
     else:
-        raise ValueError("No IP address available")
+        args += ["-H", host_config.primary_ip_config.address]
 
     args += ["-C", "%s" % replace_macros(params[0], host_config.macros)]
     if "port" in settings:

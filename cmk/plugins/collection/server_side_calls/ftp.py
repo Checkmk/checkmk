@@ -25,10 +25,7 @@ class FTPParams(BaseModel):
 def generate_ftp_command(
     params: FTPParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveCheckCommand]:
-    if not host_config.resolved_address:
-        raise ValueError("No IP address available")
-
-    args = ["-H", host_config.resolved_address]
+    args = ["-H", host_config.primary_ip_config.address]
 
     if params.port:
         args += ["-p", str(params.port)]

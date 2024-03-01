@@ -8,13 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.dns.server_side_calls.active_check import commands_function, Params
-from cmk.server_side_calls.v1 import (
-    ActiveCheckCommand,
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
 
 
 @pytest.mark.parametrize(
@@ -134,10 +128,7 @@ def test_commands_function(
             Params.model_validate(params),
             HostConfig(
                 name="check",
-                resolved_ipv4_address="1.2.3.4",
-                alias="host",
-                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+                ipv4_config=IPv4Config(address="1.2.3.4"),
             ),
             {},
         )

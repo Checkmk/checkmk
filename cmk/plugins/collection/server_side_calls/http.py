@@ -16,9 +16,9 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
+    IPAddressFamily,
     parse_secret,
     replace_macros,
-    ResolvedIPAddressFamily,
     Secret,
 )
 
@@ -55,25 +55,23 @@ class HostSettings:
         if self.family is not None:
             return self.family
 
-        family = (
-            "ipv6" if host_config.resolved_ip_family == ResolvedIPAddressFamily.IPV6 else "ipv4"
-        )
+        family = "ipv6" if host_config.primary_ip_config.family == IPAddressFamily.IPV6 else "ipv4"
         return Family(family)
 
     def get_fallback_address(self, host_config: HostConfig) -> str:
         family = self.get_ip_address_family(host_config)
 
         if family is Family.enforce_ipv4:
-            if host_config.resolved_ipv4_address is None:
-                raise ValueError("IPv4 address is not available")
-            return host_config.resolved_ipv4_address
+            if host_config.ipv4_config is None:
+                raise ValueError("IPv4 is not configured for host")
+            return host_config.ipv4_config.address
 
         if family is Family.enforce_ipv6:
-            if host_config.resolved_ipv6_address is None:
-                raise ValueError("IPv6 address is not available")
-            return host_config.resolved_ipv6_address
+            if host_config.ipv6_config is None:
+                raise ValueError("IPv6 is not configured for host")
+            return host_config.ipv6_config.address
 
-        return host_config.resolved_address or ""
+        return host_config.primary_ip_config.address
 
 
 @dataclass(frozen=True)

@@ -22,28 +22,28 @@ from cmk.plugins.collection.server_side_calls.http import (
 from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,
-    NetworkAddressConfig,
+    IPv4Config,
+    IPv6Config,
     PlainTextSecret,
-    ResolvedIPAddressFamily,
     StoredSecret,
 )
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_ipv4_address="0.0.0.1",
     alias="host_alias",
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-    address_config=NetworkAddressConfig(
-        ipv4_address="0.0.0.2",
-        ipv6_address="fe80::240",
-        additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-        additional_ipv6_addresses=[
+    ipv4_config=IPv4Config(
+        address="0.0.0.1",
+        additional_addresses=["0.0.0.4", "0.0.0.5"],
+    ),
+    ipv6_config=IPv6Config(
+        address="fe80::240",
+        additional_addresses=[
             "fe80::241",
             "fe80::242",
             "fe80::243",
         ],
-        ip_family=IPAddressFamily.DUAL_STACK,
     ),
+    primary_family=IPAddressFamily.IPV4,
     macros={"$HOSTNAME$": "hostname"},
 )
 
@@ -652,6 +652,18 @@ def test_proxy_host_virtual_host(
     assert proxy_host.virtual_host(True, HOST_CONFIG) == expected_address
 
 
+HOST_CONFIG_NO_V6 = HostConfig(
+    name="hostname",
+    alias="host_alias",
+    ipv4_config=IPv4Config(
+        address="0.0.0.1",
+        additional_addresses=["0.0.0.4", "0.0.0.5"],
+    ),
+    primary_family=IPAddressFamily.IPV4,
+    macros={"$HOSTNAME$": "hostname"},
+)
+
+
 @pytest.mark.parametrize(
     "params,exception,error_message",
     [
@@ -664,7 +676,7 @@ def test_proxy_host_virtual_host(
                 "mode": ("url", {}),
             },
             ValueError,
-            "IPv6 address is not available",
+            "IPv6",
             id="missing address for enforced family",
         ),
         pytest.param(
@@ -695,4 +707,4 @@ def test_invalid_config(
     params: Mapping[str, Any], exception: Type[Exception], error_message: str
 ) -> None:
     with pytest.raises(exception, match=error_message):
-        list(active_check_http(params, HOST_CONFIG, {}))
+        list(active_check_http(params, HOST_CONFIG_NO_V6, {}))

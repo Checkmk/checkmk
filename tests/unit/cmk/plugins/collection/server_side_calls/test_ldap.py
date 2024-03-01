@@ -8,12 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.ldap import active_check_ldap
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
 
 @pytest.mark.parametrize(
@@ -47,12 +42,7 @@ def test_check_ldap_argument_parsing(
         params,
         HostConfig(
             name="hostname",
-            resolved_ipv4_address="ipaddress",
-            alias="alias",
-            resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-            address_config=NetworkAddressConfig(
-                ipv4_address="ipaddress", ip_family=IPAddressFamily.IPV4
-            ),
+            ipv4_config=IPv4Config(address="ipaddress"),
         ),
         {},
     )

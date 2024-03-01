@@ -2,9 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
 from ipaddress import IPv4Address, IPv6Address
-from typing import Iterator, Mapping, NamedTuple, Sequence, Tuple
+from typing import assert_never, NamedTuple
 
 from pydantic import BaseModel
 
@@ -13,8 +14,10 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
+    IPAddressFamily,
+    IPv4Config,
+    IPv6Config,
     replace_macros,
-    ResolvedIPAddressFamily,
 )
 
 
@@ -44,12 +47,12 @@ class ICMPParams(BaseModel):
 
 
 class AddressCmdArgs(NamedTuple):
-    ip_family: ResolvedIPAddressFamily | None
+    ip_family: IPAddressFamily | None
     address_args: Sequence[str | IPv4Address | IPv6Address]
 
     def to_list(self) -> list[str]:
         addresses = [str(a) for a in self.address_args]
-        if self.ip_family == ResolvedIPAddressFamily.IPV6:
+        if self.ip_family == IPAddressFamily.IPV6:
             return ["-6", *addresses]
         return addresses
 
@@ -89,46 +92,64 @@ def get_common_arguments(params: ICMPParams) -> list[str]:
     return args
 
 
+def _all_addresses(ip_config: IPv4Config | IPv6Config | None) -> Sequence[str]:
+    if ip_config is None:
+        return []
+    try:
+        return [ip_config.address, *ip_config.additional_addresses]
+    except RuntimeError:
+        return ip_config.additional_addresses
+
+
 def get_address_arguments(params: ICMPParams, host_config: HostConfig) -> AddressCmdArgs:
-    address_config = host_config.address_config
     match params.address:
         case AddressType.ADDRESS:
-            if not host_config.resolved_address:
-                raise ValueError("No IP address available")
-            return AddressCmdArgs(host_config.resolved_ip_family, [host_config.resolved_address])
+            return AddressCmdArgs(
+                host_config.primary_ip_config.family, [host_config.primary_ip_config.address]
+            )
         case AddressType.ALIAS:
-            return AddressCmdArgs(host_config.resolved_ip_family, [host_config.alias])
+            return AddressCmdArgs(host_config.primary_ip_config.family, [host_config.alias])
         case AddressType.ALL_IP4vADDRESSES:
-            return AddressCmdArgs(ResolvedIPAddressFamily.IPV4, address_config.all_ipv4_addresses)
+            return AddressCmdArgs(IPAddressFamily.IPV4, _all_addresses(host_config.ipv4_config))
         case AddressType.ALL_IP6vADDRESSES:
-            return AddressCmdArgs(ResolvedIPAddressFamily.IPV6, address_config.all_ipv6_addresses)
+            return AddressCmdArgs(IPAddressFamily.IPV6, _all_addresses(host_config.ipv6_config))
         case AddressType.ADDITIONAL_IP4vADDRESSES:
             return AddressCmdArgs(
-                ResolvedIPAddressFamily.IPV4, address_config.additional_ipv4_addresses
+                IPAddressFamily.IPV4,
+                () if not (ipv4 := host_config.ipv4_config) else ipv4.additional_addresses,
             )
         case AddressType.ADDITIONAL_IP6vADDRESSES:
             return AddressCmdArgs(
-                ResolvedIPAddressFamily.IPV6, address_config.additional_ipv6_addresses
+                IPAddressFamily.IPV6,
+                () if not (ipv6 := host_config.ipv6_config) else ipv6.additional_addresses,
             )
+        case AddressType.INDEXED_IPv4ADDRESS:
+            if (ipv4 := host_config.ipv4_config) is None:
+                raise ValueError("Host has no IPv4 addresses")
+            try:
+                return AddressCmdArgs(
+                    IPAddressFamily.IPV4, [ipv4.additional_addresses[params.address_index]]  # type: ignore[index]
+                )
+            except (TypeError, IndexError) as exc:
+                raise ValueError(f"Invalid address index: {params.address_index!r}") from exc
 
-    if (
-        params.address == AddressType.INDEXED_IPv4ADDRESS
-        and params.address_index is not None
-        and params.address_index <= len(address_config.additional_ipv4_addresses)
-    ):
-        ipv4address = address_config.additional_ipv4_addresses[params.address_index - 1]
-        return AddressCmdArgs(ResolvedIPAddressFamily.IPV4, [ipv4address])
-    if (
-        params.address == AddressType.INDEXED_IPv6ADDRESS
-        and params.address_index is not None
-        and params.address_index <= len(address_config.additional_ipv6_addresses)
-    ):
-        ipv6address = address_config.additional_ipv6_addresses[params.address_index - 1]
-        return AddressCmdArgs(ResolvedIPAddressFamily.IPV6, [ipv6address])
-    if params.address == AddressType.EXPLICIT and params.explicit_address:
-        return AddressCmdArgs(ResolvedIPAddressFamily.IPV4, [params.explicit_address])
+        case AddressType.INDEXED_IPv6ADDRESS:
+            if (ipv6 := host_config.ipv6_config) is None:
+                raise ValueError("Host has no IPv6 addresses")
+            try:
+                return AddressCmdArgs(
+                    IPAddressFamily.IPV6, [ipv6.additional_addresses[params.address_index]]  # type: ignore[index]
+                )
+            except (TypeError, IndexError) as exc:
+                raise ValueError(f"Invalid address index: {params.address_index!r}") from exc
 
-    raise ValueError("Invalid address parameters")
+        case AddressType.EXPLICIT:
+            if not params.explicit_address:
+                raise ValueError("Explicit address is required")
+            return AddressCmdArgs(IPAddressFamily.IPV4, [params.explicit_address])
+
+        case other:
+            assert_never(other)
 
 
 def get_icmp_description_all_ips(params: ICMPParams, host_config: HostConfig) -> str:
@@ -145,7 +166,7 @@ def get_icmp_description_all_ips(params: ICMPParams, host_config: HostConfig) ->
 
 def generate_single_address_services(
     address_args: AddressCmdArgs,
-) -> Iterator[Tuple[str, AddressCmdArgs]]:
+) -> Iterator[tuple[str, AddressCmdArgs]]:
     for address in address_args.address_args:
         yield str(address), AddressCmdArgs(address_args.ip_family, [address])
 

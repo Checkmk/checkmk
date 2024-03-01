@@ -47,9 +47,7 @@ def generate_ldap_commands(
     if params.hostname is not None:
         args += ["-H", replace_macros(params.hostname, host_config.macros)]
     else:
-        if host_config.resolved_address is None:
-            raise ValueError("No hostname or IP address provided")
-        args += ["-H", host_config.resolved_address]
+        args += ["-H", host_config.primary_ip_config.address]
 
     args += ["-b", replace_macros(params.base_dn, host_config.macros)]
 

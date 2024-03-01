@@ -31,14 +31,13 @@ class CiscoPrimeParams(BaseModel):
 def generate_cisco_prime_command(
     params: CiscoPrimeParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
-    if params.host == "host_name":
-        host = host_config.name
-    elif isinstance(params.host, tuple) and params.host[0] == "custom":
-        host = replace_macros(params.host[1]["host"], host_config.macros)
-    else:
-        if host_config.resolved_address is None:
-            raise ValueError(f"IP address for host '{host_config.name}' is not set")
-        host = host_config.resolved_address
+    match params.host:
+        case "host_name":
+            host = host_config.name
+        case ("custom", {"host": str(custom_host_name)}):
+            host = replace_macros(custom_host_name, host_config.macros)
+        case _:
+            host = host_config.primary_ip_config.address
 
     yield SpecialAgentCommand(
         command_arguments=[

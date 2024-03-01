@@ -8,24 +8,11 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.jenkins import special_agent_jenkins
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    SpecialAgentCommand,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_ipv4_address="0.0.0.1",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-        ipv4_address="0.0.0.1",
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="0.0.0.1"),
 )
 
 

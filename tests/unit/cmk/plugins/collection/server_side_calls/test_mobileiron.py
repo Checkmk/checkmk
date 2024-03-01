@@ -8,24 +8,11 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.mobileiron import special_agent_mobileiron
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    Secret,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, Secret, StoredSecret
 
 HOST_CONFIG = HostConfig(
     name="mobileironhostname",
-    resolved_ipv4_address="11.211.3.32",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="11.211.3.32"),
 )
 
 

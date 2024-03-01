@@ -40,9 +40,7 @@ def commands_function(
     command_arguments = ["-H", hostname]
 
     if params.server is None:
-        if not host_config.resolved_address:
-            raise ValueError("No IP address available")
-        command_arguments += ["-s", host_config.resolved_address]
+        command_arguments += ["-s", host_config.primary_ip_config.address]
     elif params.server and params.server != "default DNS server":
         command_arguments += ["-s", replace_macros(params.server, host_config.macros)]
 

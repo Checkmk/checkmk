@@ -25,12 +25,12 @@ class NetappOntapParams(BaseModel):
     no_cert_check: bool = Field(default=False, alias="no-cert-check")
 
 
-def generate_netapp_ontap_command(  # pylint: disable=too-many-branches
+def generate_netapp_ontap_command(
     params: NetappOntapParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret]
 
-    args = ["--hostname", host_config.address_config.ipv4_address or host_config.name]
+    args = ["--hostname", host_config.primary_ip_config.address]
     args += ["--username", params.username]
     args += ["--password", parse_secret(params.password)]
 

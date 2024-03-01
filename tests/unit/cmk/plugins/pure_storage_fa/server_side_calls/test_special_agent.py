@@ -6,13 +6,13 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.pure_storage_fa.server_side_calls.special_agent import commands_function, Params
+from cmk.plugins.pure_storage_fa.server_side_calls.special_agent import (
+    special_agent_pure_storage_fa,
+)
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
+    IPv4Config,
     PlainTextSecret,
-    ResolvedIPAddressFamily,
     Secret,
     SpecialAgentCommand,
     StoredSecret,
@@ -43,21 +43,6 @@ from cmk.server_side_calls.v1 import (
         ),
         pytest.param(
             {
-                "ssl": ("deactivated", None),
-                "api_token": ("password", "api_token"),
-            },
-            "",
-            "host",
-            [
-                "--no-cert-check",
-                "--api-token",
-                PlainTextSecret(value="api_token", format="%s"),
-                "host",
-            ],
-            id="No timeout and ssl False and no hostip",
-        ),
-        pytest.param(
-            {
                 "ssl": ("custom_hostname", "something_else"),
                 "api_token": ("password", "api_token"),
             },
@@ -81,14 +66,12 @@ def test_commands_function(
     expected_arguments: Sequence[str | Secret],
 ) -> None:
     assert list(
-        commands_function(
-            Params.model_validate(params),
+        special_agent_pure_storage_fa(
+            params,
             HostConfig(
                 name=hostname,
-                resolved_ipv4_address=host_ip_address,
                 alias="host",
-                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+                ipv4_config=IPv4Config(address=host_ip_address),
             ),
             {},
         )

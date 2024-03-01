@@ -44,10 +44,7 @@ def generate_three_par_command(
     if params.values:
         args += ["--values", ",".join(params.values)]
 
-    if host_config.resolved_address is None:
-        raise ValueError("No IP address available")
-
-    args.append(host_config.resolved_address)
+    args.append(host_config.primary_ip_config.address)
 
     yield SpecialAgentCommand(command_arguments=args)
 

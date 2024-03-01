@@ -422,15 +422,6 @@ STAGES:
       TEXT_ON_SKIP: 'No check-http files changed'
       RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
 
-    - NAME: 'Package mk-sql'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_MK_SQL_FILES
-      SEC_VAR_LIST:
-        - 'CI_TEST_SQL_DB_ENDPOINT'
-      DIR: 'packages/mk-sql'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/mk-sql.txt"
-      TEXT_ON_SKIP: 'No mk-sql files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
-
     # NOTE: This has to come *before* the neb & cmc packages, as they depend on
     # livestatus. Their run scripts rebuild livestatus, "eating away" compiler
     # invocations, leading to IWYU/clang-tidy/... not being called on enough
@@ -480,19 +471,19 @@ STAGES:
       TEXT_ON_SKIP: 'No cmk-graphing files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-graphing.txt"
 
-    - NAME: 'Package cmk-mkp-tool'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_MKP_TOOL_FILES
-      DIR: 'packages/cmk-mkp-tool'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
-      TEXT_ON_SKIP: 'No cmk-mkp-tool files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
-
     - NAME: 'Package cmk-livestatus-client'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_LIVESTATUS_CLIENT_FILES
       DIR: 'packages/cmk-livestatus-client'
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-livestatus-client.txt"
       TEXT_ON_SKIP: 'No cmk-livestatus-client files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
+
+    - NAME: 'Package cmk-mkp-tool'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_MKP_TOOL_FILES
+      DIR: 'packages/cmk-mkp-tool'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
+      TEXT_ON_SKIP: 'No cmk-mkp-tool files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
 
     - NAME: 'Package cmk-rulesets'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_RULESETS_FILES
@@ -515,6 +506,22 @@ STAGES:
       TEXT_ON_SKIP: 'No cmk-werks package files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
 
+    - NAME: 'Package frontend_vue'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FRONTEND_VUE_FILES,CHANGED_NPM_NODE_SETUP
+      DIR: 'packages/frontend_vue'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/frontend_vue.txt"
+      TEXT_ON_SKIP: 'No frontend_vue files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/frontend_vue.txt"
+
+    - NAME: 'Package mk-sql'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_MK_SQL_FILES
+      SEC_VAR_LIST:
+        - 'CI_TEST_SQL_DB_ENDPOINT'
+      DIR: 'packages/mk-sql'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/mk-sql.txt"
+      TEXT_ON_SKIP: 'No mk-sql files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
+
     - NAME: 'Package neb'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/neb'
@@ -530,10 +537,3 @@ STAGES:
       TEXT_ON_SKIP: 'No unixcat files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
-
-    - NAME: 'Package frontend_vue'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FRONTEND_VUE_FILES,CHANGED_NPM_NODE_SETUP
-      DIR: 'packages/frontend_vue'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/frontend_vue.txt"
-      TEXT_ON_SKIP: 'No frontend_vue files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/frontend_vue.txt"

@@ -199,8 +199,8 @@ def _start_oracle(
         output = oracle.logs().decode("utf-8")
 
         assert done_msg in output
-    except:
-        logger.error(oracle.logs().decode("utf-8"))
+    except TimeoutError:
+        logger.error("TIMEOUT while starting Oracle. Log output: %s", oracle.logs().decode("utf-8"))
         raise
 
     logger.info("Force listener registration")

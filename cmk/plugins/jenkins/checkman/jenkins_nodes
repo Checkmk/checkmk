@@ -10,7 +10,9 @@ description:
  (normal/exclusive), offline state and the average node response time. It also
  outputs the free temp space.
 
- Needs the datasource "Check state of Jenkins jobs and builds" to be configured.
+ For offline nodes the amount of configured executors will be shown but other metrics will not be available.
+
+ Needs the integration "Jenkins" to be configured.
 
 item:
  The display name of the node

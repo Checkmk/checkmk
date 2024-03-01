@@ -6,13 +6,12 @@
 import argparse
 import json
 import sys
-from typing import NamedTuple
+from typing import NamedTuple, Sequence
 
 import requests
 
-from cmk.utils.password_store import replace_passwords
-
-from cmk.special_agents.v0_unstable.misc import vcrtrace
+from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
 class Section(NamedTuple):
@@ -21,13 +20,43 @@ class Section(NamedTuple):
     uri: str
 
 
-def main(argv=None):
-    if argv is None:
-        replace_passwords()
-        argv = sys.argv[1:]
+def main() -> int:
+    """Main entry point to be used"""
+    return special_agent_main(parse_arguments, agent_jenkins_main)
 
-    args = parse_arguments(argv)
 
+def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
+    sections = ["instance", "jobs", "nodes", "queue"]
+
+    parser = create_default_argument_parser(description=__doc__)
+
+    parser.add_argument("-u", "--user", default=None, help="Username for jenkins login")
+    parser.add_argument("-s", "--password", default=None, help="Password for jenkins login")
+    parser.add_argument(
+        "-P",
+        "--proto",
+        default="https",
+        help="Use 'http' or 'https' for connection to jenkins (default=https)",
+    )
+    parser.add_argument(
+        "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
+    )
+    parser.add_argument(
+        "-m",
+        "--sections",
+        default=sections,
+        help="Comma separated list of data to query. Possible values: %s (default: all)"
+        % ",".join(sections),
+    )
+
+    parser.add_argument(
+        "hostname", metavar="HOSTNAME", help="Name of the jenkins instance to query."
+    )
+
+    return parser.parse_args(argv)
+
+
+def agent_jenkins_main(args: Args) -> int:
     # Add new queries here
     sections = [
         Section(
@@ -111,43 +140,6 @@ def handle_request(args, sections):
     # if labels:
     #    sys.stdout.write("<<<labels:sep(0)>>>\n")
     #    sys.stdout.write("%s\n" % json.dumps(labels))
-
-
-def parse_arguments(argv):
-    sections = ["instance", "jobs", "nodes", "queue"]
-
-    parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
-    )
-
-    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
-    parser.add_argument("-u", "--user", default=None, help="Username for jenkins login")
-    parser.add_argument("-s", "--password", default=None, help="Password for jenkins login")
-    parser.add_argument(
-        "-P",
-        "--proto",
-        default="https",
-        help="Use 'http' or 'https' for connection to jenkins (default=https)",
-    )
-    parser.add_argument(
-        "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
-    )
-    parser.add_argument(
-        "-m",
-        "--sections",
-        default=sections,
-        help="Comma separated list of data to query. Possible values: %s (default: all)"
-        % ",".join(sections),
-    )
-    parser.add_argument(
-        "--debug", action="store_true", help="Debug mode: let Python exceptions come through"
-    )
-
-    parser.add_argument(
-        "hostname", metavar="HOSTNAME", help="Name of the jenkins instance to query."
-    )
-
-    return parser.parse_args(argv)
 
 
 if __name__ == "__main__":

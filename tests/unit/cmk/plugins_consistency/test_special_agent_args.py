@@ -13,6 +13,7 @@ from cmk.base.server_side_calls import load_special_agents
 
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
+from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.special_agents import (
     agent_activemq,
     agent_alertmanager,
@@ -29,7 +30,6 @@ from cmk.special_agents import (
     agent_graylog,
     agent_hivemanager_ng,
     agent_innovaphone,
-    agent_jenkins,
     agent_jira,
     agent_kube,
     agent_mobileiron,

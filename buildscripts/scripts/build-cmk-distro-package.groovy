@@ -91,6 +91,10 @@ def main() {
                     sh("make .ran-webpack");
                 }
 
+                dir("${checkout_dir}") {
+                    sh("make .venv");
+                }
+
                 stage("Fetch agent binaries") {
                     // shout("Fetch agent binaries");
 

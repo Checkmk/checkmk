@@ -325,7 +325,7 @@ class CREConfig:
             "mode": (
                 "custom",
                 {
-                    "add_new_services": True,
+                    "add_new_services": False,
                     "remove_vanished_services": False,
                     "update_host_labels": True,
                 },

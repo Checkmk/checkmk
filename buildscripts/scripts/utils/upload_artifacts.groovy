@@ -107,12 +107,10 @@ def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_po
 }
 
 def create_hash(FILE_PATH) {
-    stage("Create file hash") {
-        sh("""
-            cd \$(dirname ${FILE_PATH});
-            sha256sum -- \$(basename ${FILE_PATH}) > "\$(basename ${FILE_PATH})${hashfile_extension}";
-        """);
-    }
+    sh("""
+        cd \$(dirname ${FILE_PATH});
+        sha256sum -- \$(basename ${FILE_PATH}) > "\$(basename ${FILE_PATH})${hashfile_extension}";
+    """);
 }
 
 def execute_cmd_on_archive_server(cmd) {

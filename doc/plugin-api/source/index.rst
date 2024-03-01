@@ -20,7 +20,7 @@ The shipped plugins are located under the ``cmk/plugins`` folder, while local th
 As a general rule, code `should` reside below ``cmk`` if and only if it is supplied by Checkmk (but that's not always the case yet).
 
 Below the top-level folder, plugins are organized in families, e.g. all plugins concerning cisco devices will be found under the folder named ``cisco``.
-Plugins belonging to the same family can share code, regardless of the e plugin group.
+Plugins belonging to the same family can share code, regardless of the plugin group.
 For example a `server-side call` plugin can share code with the `agent based` plugins if they belong to the same family.
 
 Below the family folder, plugins are categorized into plugin groups:

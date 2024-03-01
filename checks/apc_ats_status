@@ -84,7 +84,11 @@ check_info["apc_ats_status"] = {
     "check_function": check_apc_ats_status,
     "inventory_function": inventory_apc_ats_status,
     "service_description": "ATS Status",
-    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.318.1.3.11" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0")
+    in [
+        ".1.3.6.1.4.1.318.1.3.11",
+        ".1.3.6.1.4.1.318.1.3.32",
+    ],
     "snmp_info": (
         ".1.3.6.1.4.1.318.1.1.8.5.1",
         [
@@ -94,6 +98,8 @@ check_info["apc_ats_status"] = {
             "4.0",  # atsStatusOverCurrentState
             "5.0",  # atsStatus5VPowerSupply
             "6.0",  # atsStatus24VPowerSupply
+            "17.0",  # atsStatus3dot3VPowerSupply
+            "18.0",  # atsStatus1dot0VPowerSupply
         ],
     ),
 }

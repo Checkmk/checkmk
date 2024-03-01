@@ -622,4 +622,4 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
             return  # Success. Stop waiting...
         time.sleep(interval)
 
-    raise Exception("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
+    raise TimeoutError("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))

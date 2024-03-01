@@ -20,12 +20,10 @@ def generate_prism_command(
     params: Mapping[str, object], host_config: HostConfig, _http_proxy: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
     assert isinstance(params["password"], tuple)  # We're lazy with the parsing...
-    if not host_config.resolved_address:
-        raise ValueError("No IP address available")
 
     args: list[str | Secret] = [
         "--server",
-        host_config.resolved_address,
+        host_config.primary_ip_config.address,
         "--username",
         str(params["username"]),
         "--password",

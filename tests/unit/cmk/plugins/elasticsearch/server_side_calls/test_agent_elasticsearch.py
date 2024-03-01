@@ -5,22 +5,11 @@
 
 
 from cmk.plugins.elasticsearch.server_side_calls.special_agent import special_agent_elasticsearch
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret
 
 TEST_HOST_CONFIG = HostConfig(
     name="my_host",
-    resolved_ipv4_address="1.2.3.4",
-    alias="my_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="1.2.3.4"),
 )
 
 

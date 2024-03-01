@@ -40,10 +40,8 @@ def commands_function(
 
     if details.hosts:
         args += [*[replace_macros(h, host_config.macros) for h in details.hosts]]
-    elif host_config.resolved_address:
-        args += [host_config.resolved_address]
     else:
-        raise ValueError("No IP address available")
+        args += [host_config.primary_ip_config.address]
 
     if details.port:
         args += ["--port", str(details.port)]

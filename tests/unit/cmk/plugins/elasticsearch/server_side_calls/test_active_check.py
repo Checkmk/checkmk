@@ -6,19 +6,9 @@
 from collections.abc import Mapping, Sequence
 
 import pytest
-from polyfactory.factories import DataclassFactory
 
 from cmk.plugins.elasticsearch.server_side_calls.active_check import active_check_config as config
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    ResolvedIPAddressFamily,
-)
-
-
-class HostConfigFactory(DataclassFactory):
-    __model__ = HostConfig
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
 
 @pytest.mark.parametrize(
@@ -31,11 +21,7 @@ class HostConfigFactory(DataclassFactory):
                 "pattern": "bar",
                 "timerange": 1,
             },
-            HostConfigFactory.build(
-                resolved_ipv4_address="test",
-                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
-            ),
+            HostConfig(name="test", ipv4_config=IPv4Config(address="test")),
             ["-q", "bar", "-t", "1", "-i", "f o o", "-H", "test"],
             "Elasticsearch Query stuff",
         )

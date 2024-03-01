@@ -4,12 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.plugins.collection.server_side_calls.check_uniserv import active_check_uniserv
-from cmk.server_side_calls.v1 import (
-    ActiveCheckCommand,
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-)
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
 
 
 def test_parse_version():
@@ -17,14 +12,7 @@ def test_parse_version():
     assert list(
         active_check_uniserv(
             params,
-            HostConfig(
-                name="",
-                alias="",
-                resolved_ipv6_address="address",  # no IP family set => IPv6
-                address_config=NetworkAddressConfig(
-                    ip_family=IPAddressFamily.NO_IP,
-                ),
-            ),
+            HostConfig(name="test", ipv4_config=IPv4Config(address="address")),
             {},
         )
     ) == [
@@ -47,14 +35,7 @@ def test_parse_address():
     assert list(
         active_check_uniserv(
             params,
-            HostConfig(
-                name="",
-                alias="",
-                resolved_ipv6_address="address",  # no IP family set => IPv6
-                address_config=NetworkAddressConfig(
-                    ip_family=IPAddressFamily.NO_IP,
-                ),
-            ),
+            HostConfig(name="test", ipv4_config=IPv4Config(address="address")),
             {},
         )
     ) == [

@@ -8,20 +8,11 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.collection.server_side_calls.check_sftp import active_check_sftp
-from cmk.server_side_calls.v1 import (
-    ActiveCheckCommand,
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-)
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config, PlainTextSecret
 
 SOME_HOST_CONFIG = HostConfig(
     name="hostname",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-    ),
+    ipv4_config=IPv4Config(address=None),
 )
 
 

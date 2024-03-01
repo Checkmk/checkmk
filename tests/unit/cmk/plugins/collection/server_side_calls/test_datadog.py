@@ -9,23 +9,11 @@ from typing import Any
 import pytest
 
 from cmk.plugins.collection.server_side_calls.datadog import special_agent_datadog
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, PlainTextSecret
 
 HOST_CONFIG = HostConfig(
     name="testhost",
-    resolved_ipv4_address="0.0.0.1",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="0.0.0.1"),
 )
 
 HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}

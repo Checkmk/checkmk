@@ -31,7 +31,7 @@ def commands_check_uniserv(
     _proxies: Mapping[str, HTTPProxy],
 ) -> Iterable[ActiveCheckCommand]:
     args: list[str] = [
-        host_config.resolved_address or host_config.name,
+        host_config.primary_ip_config.address,
         str(params.port),
         params.service,
     ]

@@ -95,7 +95,7 @@ def generate_prometheus_command(
     _http_proxies: object,
 ) -> Iterable[SpecialAgentCommand]:
     prometheus_params: dict[str, Any] = {
-        "host_address": host_config.resolved_address,
+        "host_address": host_config.primary_ip_config.address,
         "host_name": host_config.name,
     }
     if params.verify_cert is not None:

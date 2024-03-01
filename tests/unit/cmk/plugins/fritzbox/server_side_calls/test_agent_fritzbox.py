@@ -8,18 +8,11 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.fritzbox.server_side_calls.agent_call import special_agent_fritzbox
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    SpecialAgentCommand,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(
     name="my_host",
-    alias="my_alias",
-    resolved_ipv6_address="resolved_address",
-    address_config=NetworkAddressConfig(ip_family=IPAddressFamily.DUAL_STACK),
+    ipv4_config=IPv4Config(address="resolved_address"),
 )
 
 

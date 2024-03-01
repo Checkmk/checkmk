@@ -8,21 +8,11 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.kube import special_agent_kube
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, PlainTextSecret
 
 HOST_CONFIG = HostConfig(
     name="host",
-    resolved_ipv4_address="11.211.3.32",
-    alias="host_alias",
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-    address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+    ipv4_config=IPv4Config(address="11.211.3.32"),
 )
 
 HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}

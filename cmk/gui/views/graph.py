@@ -19,7 +19,7 @@ from cmk.gui.graphing._html_render import (
     render_graphs_from_specification_html,
 )
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
-from cmk.gui.http import Request, response
+from cmk.gui.http import Request, response, Response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter.v0.base import Cell, Painter
@@ -163,6 +163,7 @@ def paint_time_graph_cmk(  # pylint: disable=redefined-outer-name
     *,
     user: LoggedInUser,
     request: Request,
+    response: Response,
     painter_options: PainterOptions,
     show_time_range_previews: bool | None = None,
     require_historic_metrics: bool = True,
@@ -325,6 +326,7 @@ class PainterServiceGraphs(Painter):
             cell,
             user=self.user,
             request=self.request,
+            response=response,
             painter_options=self._painter_options,
             show_time_range_previews=True,
         )
@@ -369,6 +371,7 @@ class PainterHostGraphs(Painter):
             cell,
             user=self.user,
             request=self.request,
+            response=response,
             painter_options=self._painter_options,
             show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
@@ -446,6 +449,7 @@ class PainterSvcPnpgraph(Painter):
             cell,
             user=self.user,
             request=self.request,
+            response=response,
             painter_options=self._painter_options,
         )
 
@@ -492,6 +496,7 @@ class PainterHostPnpgraph(Painter):
             cell,
             user=self.user,
             request=self.request,
+            response=response,
             painter_options=self._painter_options,
         )
 

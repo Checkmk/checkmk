@@ -19,7 +19,7 @@ from cmk.utils.statename import short_host_state_name, short_service_state_name
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.graphing._color import render_color_icon
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import get_extended_metric_info, registered_metrics
@@ -333,7 +333,7 @@ class PainterOptionTimestampFormat(PainterOption):
     def valuespec(self) -> DropdownChoice:
         return DropdownChoice(
             title=_("Time stamp format"),
-            default_value=active_config.default_ts_format,
+            default_value=self.config.default_ts_format,
             encode_value=False,
             choices=[
                 ("mixed", _("Mixed")),

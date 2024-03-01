@@ -6,7 +6,7 @@
 from ._active_checks import ActiveCheck, ActiveServiceData
 from ._commons import SpecialAgentInfoFunctionResult
 from ._loading import load_active_checks, load_special_agents
-from ._special_agents import SpecialAgent
+from ._special_agents import SpecialAgent, SpecialAgentCommandLine
 
 __all__ = [
     "ActiveCheck",
@@ -14,5 +14,6 @@ __all__ = [
     "load_active_checks",
     "load_special_agents",
     "SpecialAgent",
+    "SpecialAgentCommandLine",
     "SpecialAgentInfoFunctionResult",
 ]

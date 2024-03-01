@@ -8,10 +8,55 @@ import pytest
 
 from tests.testlib import Check
 
+from cmk.base.check_legacy_includes.apc_ats import (
+    CommunictionStatus,
+    OverCurrentStatus,
+    PowerSource,
+    PowerSupplyStatus,
+    RedunandancyStatus,
+    Source,
+    Status,
+)
+
 STRING_TABLE_1 = [["2", "2", "2", "2", "2", "2"]]
 STRING_TABLE_2 = [["1", "2", "1", "2", "1", "2"]]
 STRING_TABLE_exceeded_output_current = [["2", "2", "2", "1", "2", "2"]]
 CHECK = "apc_ats_status"
+
+
+@pytest.mark.parametrize(
+    "info,expected",
+    [
+        (
+            STRING_TABLE_1,
+            Status(
+                CommunictionStatus.Established,
+                Source.B,
+                RedunandancyStatus.Redundant,
+                OverCurrentStatus.OK,
+                [
+                    PowerSource(name="5V", status=PowerSupplyStatus.OK),
+                    PowerSource(name="24V", status=PowerSupplyStatus.OK),
+                ],
+            ),
+        ),
+        (
+            STRING_TABLE_2,
+            Status(
+                com_status=CommunictionStatus.NeverDiscovered,
+                selected_source=Source.B,
+                redundancy=RedunandancyStatus.Lost,
+                overcurrent=OverCurrentStatus.OK,
+                powersources=[
+                    PowerSource(name="5V", status=PowerSupplyStatus.Failure),
+                    PowerSource(name="24V", status=PowerSupplyStatus.OK),
+                ],
+            ),
+        ),
+    ],
+)
+def test_parse_apc_ats_status(info, expected):
+    assert Check(CHECK).run_parse(info) == expected
 
 
 @pytest.mark.parametrize(
@@ -22,7 +67,8 @@ CHECK = "apc_ats_status"
     ],
 )
 def test_apc_ats_status_discovery(info, expected):
-    assert list(Check(CHECK).run_discovery(info)) == expected
+    check = Check(CHECK)
+    assert list(check.run_discovery(check.run_parse(info))) == expected
 
 
 @pytest.mark.parametrize(
@@ -69,4 +115,5 @@ def test_apc_ats_status_discovery(info, expected):
     ],
 )
 def test_apc_ats_status_check(info, source, expected):
-    assert Check(CHECK).run_check("no_item", source, info) == expected
+    check = Check(CHECK)
+    assert check.run_check("no_item", source, check.run_parse(info)) == expected

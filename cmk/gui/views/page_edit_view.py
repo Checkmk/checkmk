@@ -19,12 +19,17 @@ from cmk.utils.structured_data import SDPath
 from cmk.utils.user import UserId
 
 from cmk.gui import visuals
+from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKInternalError, MKUserError
-from cmk.gui.http import request
+from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
+from cmk.gui.painter.v0.helpers import RenderLink
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -39,6 +44,7 @@ from cmk.gui.type_defs import (
     VisualTypeName,
 )
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoice,
@@ -60,10 +66,6 @@ from cmk.gui.views.inventory import DISPLAY_HINTS, DisplayHints
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 
-from ..config import active_config
-from ..logged_in import user
-from ..painter_options import PainterOptions
-from ..utils.theme import theme
 from .layout import layout_registry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from .store import get_all_views
@@ -1029,6 +1031,7 @@ def _allowed_for_datasource(
             request=request,
             painter_options=PainterOptions.get_instance(),
             theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
         )
         if any(column in plugin.columns for column in unsupported_columns):
             continue

@@ -9,8 +9,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.gui.config import active_config
-from cmk.gui.http import request
+from cmk.gui.display_options import display_options
+from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
+from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.theme import theme
@@ -45,6 +47,7 @@ def test_cmp_of_missing_values(sort_values: Sequence[float | None]) -> None:
         request=request,
         painter_options=PainterOptions.get_instance(),
         theme=theme,
+        url_renderer=RenderLink(request, response, display_options),
     )
 
     def wrapped(r1: Row, r2: Row) -> int:

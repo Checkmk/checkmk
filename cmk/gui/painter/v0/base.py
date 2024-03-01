@@ -19,13 +19,15 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui import visuals
+from cmk.gui.config import active_config, Config
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, Request
+from cmk.gui.http import request, Request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -47,11 +49,10 @@ from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
-from ...config import active_config, Config
-from ...painter_options import PainterOptions
 from ..v1.painter_lib import experimental_painter_registry, Formatters
 from ..v1.painter_lib import Painter as V1Painter
 from ..v1.painter_lib import PainterConfiguration
+from .helpers import RenderLink
 
 ExportCellContent = str | dict[str, Any]
 PDFCellContent = str | tuple[Literal["icon"], str]
@@ -83,12 +84,14 @@ class Painter(abc.ABC):
         request: Request,
         painter_options: PainterOptions,
         theme: Theme,
+        url_renderer: RenderLink,
     ):
         self.user = user
         self.config = config
         self.request = request
         self._painter_options = painter_options
         self.theme = theme
+        self.url_renderer = url_renderer
 
     def to_v1_painter(self) -> V1Painter[object]:
         """Convert an instance of an old painter to a v1 Painter."""
@@ -310,6 +313,7 @@ class PainterRegistry(Registry[type[Painter]]):
             request=request,
             painter_options=PainterOptions.get_instance(),
             theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
         ).ident
 
 
@@ -451,6 +455,7 @@ class Cell:
                 request=request,
                 painter_options=painter_options_inst,
                 theme=theme,
+                url_renderer=RenderLink(request, response, display_options),
             )
         except KeyError:
             return painter_registry[self.painter_name()](
@@ -459,6 +464,7 @@ class Cell:
                 request=request,
                 painter_options=painter_options_inst,
                 theme=theme,
+                url_renderer=RenderLink(request, response, display_options),
             )
 
     def painter_name(self) -> PainterName:
@@ -528,6 +534,7 @@ class Cell:
             request=request,
             painter_options=PainterOptions.get_instance(),
             theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
         )
 
     def paint_as_header(self) -> None:
@@ -796,6 +803,7 @@ class PainterAdapter(Painter):
         request: Request,
         painter_options: PainterOptions,
         theme: Theme,
+        url_renderer: RenderLink,
     ):
         super().__init__(
             user=user,
@@ -803,6 +811,7 @@ class PainterAdapter(Painter):
             request=request,
             painter_options=painter_options,
             theme=theme,
+            url_renderer=url_renderer,
         )
         self._painter = painter
 

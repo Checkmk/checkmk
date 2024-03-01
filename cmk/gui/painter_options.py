@@ -33,6 +33,10 @@ def register(painter_option_registry_: PainterOptionRegistry) -> None:
 
 
 class PainterOption(abc.ABC):
+    def __init__(self):
+        self.request = request
+        self.config = active_config
+
     @property
     @abc.abstractmethod
     def ident(self) -> str:
@@ -219,7 +223,7 @@ class PainterOptionRefresh(PainterOption):
     @property
     def valuespec(self) -> ValueSpec:
         choices = [
-            (x, {0: _("off")}.get(x, str(x) + "s")) for x in active_config.view_option_refreshes
+            (x, {0: _("off")}.get(x, str(x) + "s")) for x in self.config.view_option_refreshes
         ]
         return DropdownChoice(
             title=_("Refresh interval"),
@@ -236,7 +240,7 @@ class PainterOptionNumColumns(PainterOption):
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
             title=_("Entries per row"),
-            choices=[(x, str(x)) for x in active_config.view_option_columns],
+            choices=[(x, str(x)) for x in self.config.view_option_columns],
         )
 
 

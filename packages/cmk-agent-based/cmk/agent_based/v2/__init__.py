@@ -25,7 +25,7 @@ All types are now directly imported from the `v2` module.
 The new func:`check_levels` function accepts is designed to work well
 with the `Levels` element from the new `rulesets API v1`.
 The types of the arguments have been added to the API and can be found in
-:mod:`cmk.agent_based.v2.type_defs`.
+:mod:`cmk.agent_based.v2`.
 
 
 Registration is replaced by a discovery approach

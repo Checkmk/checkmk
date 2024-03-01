@@ -70,3 +70,10 @@ def _parse_int(value: str) -> Optional[int]:
     with suppress(ValueError):
         return int(value)
     return None
+
+
+def is_apc_ats(oid):
+    return oid(".1.3.6.1.2.1.1.2.0") in [
+        ".1.3.6.1.4.1.318.1.3.11",
+        ".1.3.6.1.4.1.318.1.3.32",
+    ]

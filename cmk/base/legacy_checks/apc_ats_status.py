@@ -7,6 +7,7 @@ from typing import Any, Iterable, Optional
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.apc_ats import (
     CommunictionStatus,
+    DETECT,
     OverCurrentStatus,
     PowerSupplyStatus,
     RedunandancyStatus,
@@ -15,7 +16,7 @@ from cmk.base.check_legacy_includes.apc_ats import (
 )
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import contains, SNMPTree, StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 
 
 def parse_apc_ats_status(info: StringTable) -> Optional[Status]:
@@ -84,10 +85,10 @@ def check_apc_ats_status(_no_item: Any, params: dict, parsed: Status) -> Iterabl
 
 check_info["apc_ats_status"] = LegacyCheckDefinition(
     parse_function=parse_apc_ats_status,
-    detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
+    detect=DETECT,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.1",
-        oids=["1.0", "2.0", "3.0", "4.0", "5.0", "6.0"],
+        oids=["1.0", "2.0", "3.0", "4.0", "5.0", "6.0", "17.0", "18.0"],
     ),
     service_name="ATS Status",
     discovery_function=inventory_apc_ats_status,

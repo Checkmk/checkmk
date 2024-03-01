@@ -17,7 +17,7 @@ description:
  - the current ouput power exceeded the maximum limit for swiching
  to the alternate power source
 
- - the 5V or 24V supply fails
+ - the 1V, 3.3V, 5V or 24V (if available) supply fails
 
  This check uses the PowerNet-MIB.
 

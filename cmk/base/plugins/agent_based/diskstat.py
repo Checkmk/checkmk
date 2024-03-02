@@ -270,7 +270,8 @@ def diskstat_extract_name_info(
                     or name.startswith("usb-")
                 ):
                     disk = line[1][6:]
-                    name_info[disk] = name
+                    if disk not in name_info:
+                        name_info[disk] = name
     return timestamp, info_plain, name_info
 
 

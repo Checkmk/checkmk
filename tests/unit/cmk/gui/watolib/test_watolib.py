@@ -194,7 +194,6 @@ def test_registered_configvars() -> None:
         "wato_icon_categories",
         "wato_max_snapshots",
         "wato_pprint_config",
-        "wato_upload_insecure_snapshots",
         "wato_use_git",
         "graph_timeranges",
         "agent_controller_certificates",

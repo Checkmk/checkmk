@@ -116,7 +116,6 @@ def test_default_config_from_plugins() -> None:
         "wato_enabled",
         "wato_hide_filenames",
         "wato_hide_hosttags",
-        "wato_upload_insecure_snapshots",
         "wato_hide_varnames",
         "wato_hide_help_in_lists",
         "wato_max_snapshots",

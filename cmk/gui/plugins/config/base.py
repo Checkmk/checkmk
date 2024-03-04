@@ -532,7 +532,6 @@ class CREConfig:
     wato_enabled: bool = True
     wato_hide_filenames: bool = True
     wato_hide_hosttags: bool = False
-    wato_upload_insecure_snapshots: bool = False
     wato_hide_varnames: bool = True
     wato_hide_help_in_lists: bool = True
     wato_max_snapshots: int = 50

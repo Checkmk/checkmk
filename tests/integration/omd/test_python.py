@@ -5,6 +5,7 @@
 
 import json
 import os
+import re
 import subprocess
 from collections.abc import Iterable
 from pathlib import Path
@@ -259,3 +260,31 @@ def test_python_optimized_and_lto_enable(site: Site) -> None:
     ).communicate()[0]
     assert "--enable-optimizations" in output
     assert "--with-lto" in output
+
+
+def test_all_cmk_gui_dependencies_are_loaded_from_byte_code(site: Site) -> None:
+    imported_from = import_cmk_gui_and_get_import_code_object_sources(site)
+    from_byte_code = [f for f in imported_from if f.endswith(".pyc")]
+    from_source = [f for f in imported_from if not f.endswith(".pyc")]
+    assert len(from_byte_code) > 700
+    assert not from_source, f"Found {len(from_source)} modules loaded from source: {from_source!r}"
+
+
+def import_cmk_gui_and_get_import_code_object_sources(site: Site) -> list[str]:
+    imported_from = []
+    for l in (
+        site.execute(
+            ["python3", "-v", "lib/python3/cmk/gui/wsgi/applications/checkmk.py"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
+        .communicate()[0]
+        .splitlines()
+    ):
+        # Process these lines:
+        # "# code object from '/omd/sites/beta/lib/python3.12/json/__pycache__/encoder.cpython-312.pyc'"
+        # "# code object from /omd/sites/beta/lib/python3.12/site-packages/werkzeug/sansio/http.py"
+        if match := re.match("^# code object from '?([^']+)'?$", l):
+            imported_from.append(match.group(1))
+    return imported_from

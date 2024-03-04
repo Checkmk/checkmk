@@ -188,23 +188,15 @@ def test_03_pip_interpreter_version(site: Site, pip_cmd: PipCommand) -> None:
     assert version.startswith("pip 23.2.1")
 
 
-@pytest.mark.skip(
-    reason="CMK-15485 Re-enable when ibm_db is 3.12 ready"
-    "https://github.com/ibmdb/python-ibmdb/issues/890"
-    "or replace with"
-)
 def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
-    # Choose here a package which needs to be compiled from source to ensure that
-    # the Python headers are found. Switch back to ibm_db when it is 3.12 ready:
-    # https://github.com/ibmdb/python-ibmdb/issues/890
-    package_name = "psutil"
+    # ibm_db must be compiled from source, so choosing this also ensures that the Python headers
+    # can be found by pip
+    package_name = "ibm_db"
 
     # We're testing this only for one supported pip command as building from source just takes too long
     pip_cmd = PipCommand(["pip3"], False)
 
-    assert_install_package(
-        pip_cmd.command + ["install", '--nobinary=":all:"', package_name], package_name, site
-    )
+    assert_install_package(pip_cmd.command + ["install", package_name], package_name, site)
     assert_local_package_install_path(site, package_name, _local_package_installation_path(site))
     assert_uninstall_and_purge_cache(pip_cmd, package_name, site)
 

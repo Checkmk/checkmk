@@ -271,7 +271,7 @@ class HTMLGenerator(HTMLWriter):
             if js == "vue" and enable_frontend_vue_auto_hot_reload():
                 # those two files are injected by the vite dev server in `./packages/frontend_vue`
                 self.javascript_file("/frontend_vue_ahr/@vite/client", type_="module")
-                self.javascript_file("/frontend_vue_ahr/src/ahr.ts", type_="module")
+                self.javascript_file("/frontend_vue_ahr/src/main.ts", type_="module")
             else:
                 js_filepath = f"js/{js}_min.js"
                 if current_app.debug:

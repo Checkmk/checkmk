@@ -13,7 +13,6 @@ code into the packages subfolder.
 
 ```sh
 npm install
-npm run dev
 npm run build
 npm run lint
 npm run format
@@ -31,8 +30,9 @@ super fast (currently six seconds)
 To combine both the vite auto hot reload and the site, the proxy feature of the
 vite dev server is used.
 
-* run `./node_modules/.bin/vite dev`
-* surf to `http://localhost:1573/<yoursite>`
+* run `npm run dev`
+* surf to `http://localhost:5173/<yoursite>/checkmk/` (tailing slash is
+  important, otherwise checkmk will redirect to a url without the port)
 * enable "Inject frontend_vue files via vite client" in "User Interface"
   in "Experimental Features" in "global settings"
 

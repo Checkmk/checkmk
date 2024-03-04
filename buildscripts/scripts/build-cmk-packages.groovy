@@ -267,6 +267,7 @@ def main() {
                                 sh("rm -rf ${distro_dir}");
                                 sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
                             }
+
                             stage("${distro} build package") {
                                 withCredentials([
                                     usernamePassword(

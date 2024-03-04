@@ -92,21 +92,21 @@ def configured_or_overridden_distros(edition, distros, use_case="daily") {
     if(distro_list) {
         return distro_list;
     }
-    docker_image_from_alias("IMAGE_TESTING").inside() {
+    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
         dir("${checkout_dir}") {
-            return sh(script: """scripts/run-pipenv run \
+            return cmd_output("""scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \
                   --editions_file "${checkout_dir}/editions.yml" \
                   use_cases \
                   --edition "${edition}" \
                   --use_case "${use_case}"
-            """, returnStdout: true).trim().split();
+            """).split().grep();
         }
     }
 }
 
 def get_internal_distros_pattern() {
-    docker_image_from_alias("IMAGE_TESTING").inside() {
+    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
         dir("${checkout_dir}") {
             return sh(script: """scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \

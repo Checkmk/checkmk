@@ -155,31 +155,31 @@ class Crawler:
         self._todos = deque([Url(self.site.internal_url)], maxlen=max_urls)
 
     async def crawl(self, max_tasks: int) -> None:
-        browser, storage_state = await self.create_browser_and_storage_state()
-        # makes sure authentication cookies is also available in the "requests" session.
-        for cookie_dict in storage_state["cookies"]:
-            self.requests_session.cookies.set(  # type: ignore[no-untyped-call]
-                name=cookie_dict["name"],
-                value=cookie_dict["value"],
-            )
+        async with async_playwright() as pw:
+            browser = await pw.chromium.launch()
+            storage_state = await self.access_storage_state(browser)
+            # makes sure authentication cookies is also available in the "requests" session.
+            for cookie_dict in storage_state["cookies"]:
+                self.requests_session.cookies.set(  # type: ignore[no-untyped-call]
+                    name=cookie_dict["name"],
+                    value=cookie_dict["value"],
+                )
 
-        with Progress() as progress:
-            tasks: set = set()
-            while tasks or self._todos:
-                while self._todos and len(tasks) < max_tasks:
-                    url = self._todos.popleft()
-                    logger.debug("Checking URL %s", url.url)
-                    tasks.add(asyncio.create_task(self.visit_url(browser, storage_state, url)))
-                done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-                progress.done(done=sum(1 for t in done if t.result()))
-                self.duration = progress.duration
+            with Progress() as progress:
+                tasks: set = set()
+                while tasks or self._todos:
+                    while self._todos and len(tasks) < max_tasks:
+                        url = self._todos.popleft()
+                        logger.debug("Checking URL %s", url.url)
+                        tasks.add(asyncio.create_task(self.visit_url(browser, storage_state, url)))
+                    done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                    progress.done(done=sum(1 for t in done if t.result()))
+                    self.duration = progress.duration
+            await browser.close()
 
-    async def create_browser_and_storage_state(
-        self,
-    ) -> tuple[playwright.async_api.Browser, playwright.async_api.StorageState]:
-        pw = await async_playwright().start()
-        browser = await pw.chromium.launch()
-
+    async def access_storage_state(
+        self, browser: playwright.async_api.Browser
+    ) -> playwright.async_api.StorageState:
         context = await browser.new_context()
         page = await context.new_page()
 
@@ -201,7 +201,7 @@ class Crawler:
         storage_state = await context.storage_state()
         await context.close()
 
-        return browser, storage_state
+        return storage_state
 
     def _ensure_result(self, url: Url) -> None:
         if url.url not in self.results:

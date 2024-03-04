@@ -3,6 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""Deprecation Warnings
+
+This module defines a set of deprecation warning classes for Checkmk. These warnings are used to
+inform developers about features that are deprecated and will be removed in future releases of
+Checkmk.
+
+Marking the code like this allows us to keep track of deprecation and not miss any scheduled
+removal, due to being reminded by the warnings.
+
+Example usage:
+    warnings.warn("Don't use foo anymore. Use baz instead.", DeprecatedSince22Warning)
+
+When used like this, the warning will show up in each pytest run when the relevant section of code
+is triggered. It won't show up in user's log files.
+
+Note:
+    The policy for removal is typically two releases after the feature's initial deprecation,
+    although internal changes can sometimes allow for earlier removal.
+
+"""
+
 
 class CMKDeprecationWarning(DeprecationWarning):
     """A deprecation warning.
@@ -38,11 +59,6 @@ class CMKDeprecationWarning(DeprecationWarning):
         else:
             msg.append(".")
         return "".join(msg)
-
-
-# NOTE
-# We usually schedule removal for 2 releases after the initial deprecation. As such, the
-# warnings below are set in that manner, even if the release has already passed.
 
 
 class DeprecatedSince16Warning(CMKDeprecationWarning):

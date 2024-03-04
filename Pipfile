@@ -134,7 +134,7 @@ oauthlib = "==3.2.2"
 requests-oauthlib = "==1.3.1"
 jira = "==3.6.0"  # needed by jira
 msal = "==1.26.0"  # needed by agent_azure
-pillow = "~=10.0"
+pillow = "~=10.0"  # TODO(kb): unpin (temporary pinned)
 python-ldap = "==3.4.3"  # needed by GUI (User sync), python-active-directory
 dicttoxml = "==1.7.16"  # needed by GUI (API XML format)
 cython = "==0.29.34"  # needed by numpy, change also in omd/packages/python3-modules/build-python3-modules.bzl
@@ -170,7 +170,7 @@ redis = "==4.5.4"  # needed by GUI (caching)
 fido2 = "*"  # used for GUI 2fa webauthn
 tenacity = "==8.2.2"  # needed by opsgenie-sdk
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
-protobuf = "==3.20.1"  # For development, Runtime modules are shipped by omd/packages/protobuf
+protobuf = "==4.25.3"  # For development, Runtime modules are shipped by omd/packages/protobuf
 cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
 cmk-graphing = {editable = true, path = "./packages/cmk-graphing"}

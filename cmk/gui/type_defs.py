@@ -302,7 +302,7 @@ class PainterParameters(TypedDict, total=False):
     color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
     # From historic metric painters
     rrd_consolidation: Literal["average", "min", "max"]
-    time_range: tuple[str, int]
+    time_range: tuple[str | int, int] | Literal["report"]
     # From graph painters
     graph_render_options: GraphRenderOptionsVS
     set_default_time_range: int

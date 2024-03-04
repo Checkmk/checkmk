@@ -366,7 +366,7 @@ def _vars_help() -> HTML:
     _help_list = [(f"CMK_{macro_name}", description) for macro_name, description in MACROS_AND_VARS]
 
     _help_rows = [
-        html.render_tr(html.render_td(key) + html.render_td(str(value)))
+        HTMLWriter.render_tr(HTMLWriter.render_td(key) + HTMLWriter.render_td(str(value)))
         for key, value in _help_list
     ]
 
@@ -375,7 +375,7 @@ def _vars_help() -> HTML:
         + _("This information is available as environment variables")
         + HTMLWriter.render_br()
         + HTMLWriter.render_br()
-        + html.render_table(HTML().join(_help_rows), class_="help")
+        + HTMLWriter.render_table(HTML().join(_help_rows), class_="help")
     )
 
 

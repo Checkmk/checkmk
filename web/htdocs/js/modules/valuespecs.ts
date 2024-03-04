@@ -1247,6 +1247,8 @@ function select2_vs_autocomplete(
                     allowClear: true,
                     placeholder: placeholder_title,
                     ajax: select2_ajax_vs_autocomplete(elem, autocompleter),
+                    templateResult: forms.format_select2_item,
+                    templateSelection: forms.format_select2_item,
                 })
                 .on("select2:open", () => {
                     if (

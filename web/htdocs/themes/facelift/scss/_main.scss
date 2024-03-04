@@ -1058,6 +1058,13 @@ table.modifydowntimes > tbody > tr {
   border: none;
 }
 
+@mixin ellipsis-text-overflow {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .select2-container--default {
   .select2-results {
     color: $font-color-black;
@@ -1084,6 +1091,7 @@ table.modifydowntimes > tbody > tr {
   .select2-results__option {
     color: $font-color;
     background-color: $input-background-color;
+    @include ellipsis-text-overflow;
   }
 
   .select2-results__option[aria-selected="true"] {
@@ -1292,13 +1300,6 @@ div.foldable div.success {
 
 input.hidden_submit {
   display: none;
-}
-
-@mixin ellipsis-text-overflow {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .underline {

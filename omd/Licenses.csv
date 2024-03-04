@@ -191,12 +191,7 @@ Kubernetes Logo,,CC-BY-4.0,https://creativecommons.org/licenses/by/4.0/,web/htdo
 JavaScript and CSS,,,,,
 ColorPicker,,MIT,https://opensource.org/licenses/MIT,"web/htdocs/js/colorpicker.js
 web/htdocs/js/colorpicker_min.js",
-jQuery Mobile Framework JS,1.0 ,MIT,https://opensource.org/licenses/MIT,"web/htdocs/jquery/jquery.mobile-1.0.js
-web/htdocs/jquery/jquery.mobile-1.0.min.js",Dual licensed under the MIT or GPL Version 2 licenses.
-jQuery Mobile Framework CSS,1.0 ,MIT,https://opensource.org/licenses/MIT,"web/htdocs/jquery/jquery.mobile-1.0.css
-web/htdocs/jquery/jquery.mobile-1.0.min.css",Dual licensed under the MIT or GPL Version 2 licenses.
-jQuery Mobile Framework CSS,1.0 ,MIT,https://opensource.org/licenses/MIT,"web/htdocs/jquery/jquery.mobile.structure-1.0.css
-web/htdocs/jquery/jquery.mobile.structure-1.0.min.css",Dual licensed under the MIT or GPL Version 2 licenses.
+jquery.mobile,1.4.5,MIT,https://opensource.org/licenses/MIT,"web/htdocs/jquery/",Dual licensed under the MIT or GPL Version 2 licenses.
 redoc.standalone,2.0.0-rc.44,MIT,https://opensource.org/licenses/MIT,web/htdocs/openapi/redoc.standalone.js,
 ,,,,,
 JavaScript dependencies,,,,,

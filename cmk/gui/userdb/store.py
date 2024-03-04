@@ -616,6 +616,7 @@ def _convert_start_url(value: str) -> str:
     return value
 
 
+@request_memoize()
 def load_user(user_id: UserId) -> UserSpec:
     """Loads of a single user profile
 

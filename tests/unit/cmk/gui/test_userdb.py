@@ -196,18 +196,24 @@ def test_on_failed_login_with_locking(
 ) -> None:
     now = datetime.now()
     with set_config(lock_on_logon_failures=3):
+        # load_user returns a cached version of the user profile due to request_memoize
+        # to get reliable data we need to clear the cache
+        userdb.load_user.cache_clear()  # type: ignore[attr-defined]
         assert active_config.lock_on_logon_failures == 3
         assert _load_failed_logins(user_id) == 0
         assert not userdb.user_locked(user_id)
 
+        userdb.load_user.cache_clear()  # type: ignore[attr-defined]
         userdb.on_failed_login(user_id, now)
         assert _load_failed_logins(user_id) == 1
         assert not userdb.user_locked(user_id)
 
+        userdb.load_user.cache_clear()  # type: ignore[attr-defined]
         userdb.on_failed_login(user_id, now)
         assert _load_failed_logins(user_id) == 2
         assert not userdb.user_locked(user_id)
 
+        userdb.load_user.cache_clear()  # type: ignore[attr-defined]
         userdb.on_failed_login(user_id, now)
         assert _load_failed_logins(user_id) == 3
         assert userdb.user_locked(user_id)

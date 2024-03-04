@@ -175,7 +175,6 @@ def register(
     config_variable_registry.register(ConfigVariableWATOActivateChangesCommentMode)
     config_variable_registry.register(ConfigVariableWATOActivationMethod)
     config_variable_registry.register(ConfigVariableWATOHideFilenames)
-    config_variable_registry.register(ConfigVariableWATOUploadInsecureSnapshots)
     config_variable_registry.register(ConfigVariableWATOHideHosttags)
     config_variable_registry.register(ConfigVariableWATOHideVarnames)
     config_variable_registry.register(ConfigVariableHideHelpInLists)
@@ -2264,29 +2263,6 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
                 "are not shown. They will automatically be derived from the name of the folder "
                 "when a new folder is being created. Disable this option if you want to see and "
                 "set the filenames manually."
-            ),
-        )
-
-
-class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
-
-    def ident(self) -> str:
-        return "wato_upload_insecure_snapshots"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Allow upload of insecure Setup snapshots"),
-            label=_("upload insecure snapshots"),
-            help=_(
-                "When enabled, insecure snapshots are allowed. Please keep in mind that the upload "
-                "of unverified snapshots represents a security risk, since the content of a snapshot is executed "
-                "during runtime. Any manipulations in the content - either willingly or unwillingly (XSS attack) "
-                "- pose a serious security risk."
             ),
         )
 

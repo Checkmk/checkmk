@@ -149,10 +149,13 @@ class Crawler:
         self.site = test_site
         self.report_file = Path(report_file or self.site.result_dir() + "/crawl.xml")
         self.requests_session = requests.Session()
+        self._find_more_urls: bool = True
 
         # override value using environment-variable
         maxlen = int(os.environ.get("GUI_CRAWLER_URL_LIMIT", "0")) or max_urls
-        self._todos = deque([Url(self.site.internal_url)], maxlen=None if maxlen <= 0 else maxlen)
+        # limit minimum value to 0.
+        self._max_urls = max(0, maxlen)
+        self._todos = deque([Url(self.site.internal_url)])
 
     async def crawl(self, max_tasks: int) -> None:
         async with async_playwright() as pw:
@@ -164,10 +167,13 @@ class Crawler:
                     name=cookie_dict["name"],
                     value=cookie_dict["value"],
                 )
-
+            # special-case
+            search_limited_urls: bool = self._max_urls > 0
+            if search_limited_urls and self._max_urls < max_tasks:
+                max_tasks = self._max_urls
             with Progress() as progress:
                 tasks: set = set()
-                while tasks or self._todos:
+                while tasks or self._todos and self._find_more_urls:
                     try:
                         url = self._todos.popleft()
                     except IndexError:
@@ -182,6 +188,8 @@ class Crawler:
                         )
                     done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                     progress.done(done=sum(1 for t in done if t.result()))
+                    if search_limited_urls:
+                        self._find_more_urls = progress.done_total < self._max_urls
                     self.duration = progress.duration
             await browser.close()
 

@@ -418,6 +418,18 @@ mssql:
                 .build()
                 .await
                 .unwrap();
+            assert!(ClientBuilder::new()
+                .local(Some(1433u16.into()))
+                .trust_server_certificate(false)
+                .build()
+                .await
+                .is_err());
+            assert!(ClientBuilder::new()
+                .local(Some(1433u16.into()))
+                .trust_server_certificate(true)
+                .build()
+                .await
+                .is_ok());
         } else {
             eprintln!("Error: environment variable {} is absent", MS_SQL_DB_CERT);
         }

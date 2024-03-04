@@ -284,7 +284,7 @@ class PainterParameters(TypedDict, total=False):
     color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
     # From historic metric painters
     rrd_consolidation: Literal["average", "min", "max"]
-    time_range: tuple[str, int]
+    time_range: tuple[str | int, int] | Literal["report"]
 
 
 def _make_default_painter_parameters() -> PainterParameters:

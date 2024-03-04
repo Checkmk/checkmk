@@ -385,7 +385,7 @@ fn check_page_size(
         &format!("Page size: {} Bytes{}", body.length, bounds_info),
     );
     res.push(CheckResult::metric(
-        "size",
+        "response_size",
         body.length as f64,
         Some('B'),
         None,
@@ -418,7 +418,7 @@ fn check_response_time(
         &response_time_levels,
     );
     ret.push(CheckResult::metric(
-        "time",
+        "response_time",
         response_time.as_secs_f64(),
         Some('s'),
         response_time_levels,
@@ -1002,7 +1002,7 @@ mod test_check_page_size {
             vec![
                 CheckResult::summary(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
                 CheckResult::details(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
-                CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+                CheckResult::metric("response_size", 42., Some('B'), None, Some(0.), None)
             ]
         );
     }
@@ -1026,7 +1026,7 @@ mod test_check_page_size {
                     State::Warn,
                     "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
                 ),
-                CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+                CheckResult::metric("response_size", 42., Some('B'), None, Some(0.), None)
             ]
         );
     }
@@ -1050,7 +1050,7 @@ mod test_check_page_size {
                     State::Warn,
                     "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
                 ),
-                CheckResult::metric("size", 142., Some('B'), None, Some(0.), None)
+                CheckResult::metric("response_size", 142., Some('B'), None, Some(0.), None)
             ]
         );
     }
@@ -1190,7 +1190,7 @@ mod test_check_response_time {
             check_response_time(Duration::new(5, 0), None, Duration::from_secs(10)),
             vec![
                 CheckResult::details(State::Ok, "Response time: 5 seconds"),
-                CheckResult::metric("time", 5., Some('s'), None, Some(0.), Some(10.))
+                CheckResult::metric("response_time", 5., Some('s'), None, Some(0.), Some(10.))
             ]
         );
     }
@@ -1206,7 +1206,7 @@ mod test_check_response_time {
             vec![
                 CheckResult::details(State::Ok, "Response time: 5 seconds"),
                 CheckResult::metric(
-                    "time",
+                    "response_time",
                     5.,
                     Some('s'),
                     Some(UpperLevels::warn(6.)),
@@ -1229,7 +1229,7 @@ mod test_check_response_time {
                 CheckResult::summary(State::Warn, "Response time: 5 seconds (warn at 4 seconds)"),
                 CheckResult::details(State::Warn, "Response time: 5 seconds (warn at 4 seconds)"),
                 CheckResult::metric(
-                    "time",
+                    "response_time",
                     5.,
                     Some('s'),
                     Some(UpperLevels::warn(4.)),
@@ -1251,7 +1251,7 @@ mod test_check_response_time {
             vec![
                 CheckResult::details(State::Ok, "Response time: 5 seconds"),
                 CheckResult::metric(
-                    "time",
+                    "response_time",
                     5.,
                     Some('s'),
                     Some(UpperLevels::warn_crit(6., 7.)),
@@ -1280,7 +1280,7 @@ mod test_check_response_time {
                     "Response time: 5 seconds (warn/crit at 4 seconds/6 seconds)"
                 ),
                 CheckResult::metric(
-                    "time",
+                    "response_time",
                     5.,
                     Some('s'),
                     Some(UpperLevels::warn_crit(4., 6.)),
@@ -1309,7 +1309,7 @@ mod test_check_response_time {
                     "Response time: 5 seconds (warn/crit at 2 seconds/3 seconds)"
                 ),
                 CheckResult::metric(
-                    "time",
+                    "response_time",
                     5.,
                     Some('s'),
                     Some(UpperLevels::warn_crit(2., 3.)),
@@ -1338,7 +1338,7 @@ mod test_check_response_time {
                     "Response time: 5.123 seconds (warn/crit at 2.1 seconds/3.12 seconds)"
                 ),
                 CheckResult::metric(
-                    "time",
+                    "response_time",
                     5.123456789,
                     Some('s'),
                     Some(UpperLevels::warn_crit(2.1, 3.12)),

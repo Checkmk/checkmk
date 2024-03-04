@@ -177,19 +177,3 @@ def fix_response(  # pylint: disable=too-many-branches
                 response.reason,
                 ticket_id,
             )
-
-
-def problem_response(status: str, description: str) -> dict[str, Any]:
-    if status in ("204", "302"):
-        content = {}
-    else:
-        content = {
-            "application/problem+json": {"schema": {"$ref": "#/components/schemas/ApiError"}}
-        }
-
-    return {
-        status: {
-            "description": description,
-            "content": content,
-        }
-    }

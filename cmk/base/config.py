@@ -382,7 +382,9 @@ _failed_ip_lookups: list[HostName] = []
 
 
 def ip_address_of(
-    config_cache: ConfigCache, host_name: HostName, family: socket.AddressFamily | AddressFamily
+    config_cache: ConfigCache,
+    host_name: HostName,
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress | None:
     try:
         return lookup_ip_address(config_cache, host_name, family=family)
@@ -1855,13 +1857,13 @@ def get_ssc_host_config(
         name=host_name,
         alias=config_cache.alias(host_name),
         ipv4_config=server_side_calls_api.IPv4Config(
-            address=ip_address_of(config_cache, host_name, socket.AF_INET),
+            address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET),
             additional_addresses=additional_addresses_ipv4,
         )
         if ip_lookup.AddressFamily.IPv4 in hosts_ip_stack
         else None,
         ipv6_config=server_side_calls_api.IPv6Config(
-            address=ip_address_of(config_cache, host_name, socket.AF_INET6),
+            address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET6),
             additional_addresses=additional_addresses_ipv6,
         )
         if ip_lookup.AddressFamily.IPv6 in hosts_ip_stack
@@ -3499,7 +3501,7 @@ class ConfigCache:
         # Now lookup configured IP addresses
         v4address: str | None = None
         if AddressFamily.IPv4 in family:
-            v4address = ip_address_of(self, hostname, socket.AF_INET)
+            v4address = ip_address_of(self, hostname, socket.AddressFamily.AF_INET)
 
         if v4address is None:
             v4address = ""
@@ -3507,7 +3509,7 @@ class ConfigCache:
 
         v6address: str | None = None
         if AddressFamily.IPv6 in family:
-            v6address = ip_address_of(self, hostname, socket.AF_INET6)
+            v6address = ip_address_of(self, hostname, socket.AddressFamily.AF_INET6)
         if v6address is None:
             v6address = ""
         attrs["_ADDRESS_6"] = v6address
@@ -3552,7 +3554,9 @@ class ConfigCache:
         }
         node_ips_4 = []
         if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
-            family = socket.AF_INET
+            family: Literal[
+                socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6
+            ] = socket.AddressFamily.AF_INET
             for h in sorted_nodes:
                 addr = ip_address_of(self, h, family)
                 if addr is not None:
@@ -3562,7 +3566,7 @@ class ConfigCache:
 
         node_ips_6 = []
         if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
-            family = socket.AF_INET6
+            family = socket.AddressFamily.AF_INET6
             for h in sorted_nodes:
                 addr = ip_address_of(self, h, family)
                 if addr is not None:

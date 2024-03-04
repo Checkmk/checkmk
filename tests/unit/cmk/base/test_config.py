@@ -340,35 +340,53 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
         }[(host, family)],
     )
 
-    assert config_cache.default_address_family(localhost) is socket.AF_INET
+    assert config_cache.default_address_family(localhost) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(localhost) is AddressFamily.IPv4
-    assert ip_address_of(config_cache, localhost, socket.AF_INET) == "127.0.0.1"
-    assert ip_address_of(config_cache, localhost, socket.AF_INET6) == "::1"
+    assert ip_address_of(config_cache, localhost, socket.AddressFamily.AF_INET) == "127.0.0.1"
+    assert ip_address_of(config_cache, localhost, socket.AddressFamily.AF_INET6) == "::1"
 
-    assert config_cache.default_address_family(no_ip) is socket.AF_INET
+    assert config_cache.default_address_family(no_ip) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(no_ip) is AddressFamily.NO_IP
-    assert ip_address_of(config_cache, no_ip, socket.AF_INET) is None
-    assert ip_address_of(config_cache, no_ip, socket.AF_INET6) is None
+    assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET) is None
+    assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET6) is None
 
-    assert config_cache.default_address_family(dual_stack) is socket.AF_INET
+    assert config_cache.default_address_family(dual_stack) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(dual_stack) is AddressFamily.DUAL_STACK
-    assert ip_address_of(config_cache, dual_stack, socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
-    assert ip_address_of(config_cache, dual_stack, socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
+    assert (
+        ip_address_of(config_cache, dual_stack, socket.AddressFamily.AF_INET)
+        == _FALLBACK_ADDRESS_IPV4
+    )
+    assert (
+        ip_address_of(config_cache, dual_stack, socket.AddressFamily.AF_INET6)
+        == _FALLBACK_ADDRESS_IPV6
+    )
 
-    assert config_cache.default_address_family(cluster) is socket.AF_INET
+    assert config_cache.default_address_family(cluster) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(cluster) is AddressFamily.IPv4  # That's strange
-    assert ip_address_of(config_cache, cluster, socket.AF_INET) == ""
-    assert ip_address_of(config_cache, cluster, socket.AF_INET6) == ""
+    assert ip_address_of(config_cache, cluster, socket.AddressFamily.AF_INET) == ""
+    assert ip_address_of(config_cache, cluster, socket.AddressFamily.AF_INET6) == ""
 
-    assert config_cache.default_address_family(bad_host) is socket.AF_INET
+    assert config_cache.default_address_family(bad_host) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(bad_host) is AddressFamily.IPv4  # That's strange
-    assert ip_address_of(config_cache, bad_host, socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
-    assert ip_address_of(config_cache, bad_host, socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
+    assert (
+        ip_address_of(config_cache, bad_host, socket.AddressFamily.AF_INET)
+        == _FALLBACK_ADDRESS_IPV4
+    )
+    assert (
+        ip_address_of(config_cache, bad_host, socket.AddressFamily.AF_INET6)
+        == _FALLBACK_ADDRESS_IPV6
+    )
 
-    assert config_cache.default_address_family(undiscoverable) is socket.AF_INET
+    assert config_cache.default_address_family(undiscoverable) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(undiscoverable) is AddressFamily.IPv4  # That's strange
-    assert ip_address_of(config_cache, undiscoverable, socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
-    assert ip_address_of(config_cache, undiscoverable, socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
+    assert (
+        ip_address_of(config_cache, undiscoverable, socket.AddressFamily.AF_INET)
+        == _FALLBACK_ADDRESS_IPV4
+    )
+    assert (
+        ip_address_of(config_cache, undiscoverable, socket.AddressFamily.AF_INET6)
+        == _FALLBACK_ADDRESS_IPV6
+    )
 
 
 @pytest.mark.parametrize(

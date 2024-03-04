@@ -2316,8 +2316,8 @@ size_t GetCommitCharge(uint32_t pid) noexcept {
         ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid)};
 
     if (!h) {
-        XLOG::l("Can't open process with pid [{}], error [{}]", pid,
-                ::GetLastError());
+        XLOG::t.i("Can't open process with pid [{}], error [{}]", pid,
+                  ::GetLastError());
         return 0;
     }
 

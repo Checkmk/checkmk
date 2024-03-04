@@ -432,7 +432,7 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
     "filehandles-3.2.mkp": _ImportErrors(
         gui_errors={
             "wato/filehandles: (unicode error) 'unicodeescape' codec can't decode bytes "
-            "in position 51-52: malformed \\N character escape (<string>, line 128)",
+            "in position 51-52: malformed \\N character escape (filehandles.py, line 128)",
         }
     ),
     "lvm-2.1.mkp": _ImportErrors(

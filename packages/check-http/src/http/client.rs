@@ -44,7 +44,22 @@ pub struct ClientConfig {
     pub proxy_auth: Option<(String, String)>,
 }
 
-pub fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> ReqwestResult<Client> {
+pub struct ClientAdapter {
+    pub client: Client,
+    pub redirect_recorder: Arc<Mutex<Option<Url>>>,
+}
+
+impl ClientAdapter {
+    pub fn new(cfg: ClientConfig) -> ReqwestResult<Self> {
+        let redirect_recorder = Arc::new(Mutex::<Option<Url>>::new(None));
+        Ok(Self {
+            client: build(cfg, redirect_recorder.clone())?,
+            redirect_recorder,
+        })
+    }
+}
+
+fn build(cfg: ClientConfig, record_redirect: Arc<Mutex<Option<Url>>>) -> ReqwestResult<Client> {
     let client = reqwest::Client::builder();
 
     let client = if cfg.ignore_proxy_env {
@@ -182,23 +197,17 @@ fn policy_sticky(
     let previous_socket_addr = filter_socket_addrs(previous_socket_addrs, force_ip.clone());
     let socket_addr = filter_socket_addrs(socket_addrs, force_ip);
 
-    match sticky_port {
-        false => {
-            if contains_unchanged_ip(&previous_socket_addr, &socket_addr) {
-                attempt.follow()
-            } else {
-                *record_redirect.lock().unwrap() = Some(attempt.url().to_owned());
-                attempt.stop()
-            }
-        }
-        true => {
-            if contains_unchanged_addr(&previous_socket_addr, &socket_addr) {
-                attempt.follow()
-            } else {
-                *record_redirect.lock().unwrap() = Some(attempt.url().to_owned());
-                attempt.stop()
-            }
-        }
+    let contains = if sticky_port {
+        contains_unchanged_addr
+    } else {
+        contains_unchanged_ip
+    };
+
+    if contains(&previous_socket_addr, &socket_addr) {
+        attempt.follow()
+    } else {
+        *record_redirect.lock().unwrap() = Some(attempt.url().to_owned());
+        attempt.stop()
     }
 }
 

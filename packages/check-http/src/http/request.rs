@@ -2,8 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use std::sync::{Arc, Mutex};
-
 use bytes::Bytes;
 use encoding_rs::{Encoding, UTF_8};
 use mime::Mime;
@@ -12,6 +10,8 @@ use reqwest::{
     tls::TlsInfo,
     Client, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Url, Version,
 };
+
+use super::client::ClientAdapter;
 
 pub struct RequestConfig {
     pub url: Url,
@@ -42,19 +42,18 @@ pub struct Body {
 }
 
 pub async fn send(
-    client: Client,
+    client_adapter: ClientAdapter,
     cfg: RequestConfig,
-    record_redirect: Arc<Mutex<Option<Url>>>,
 ) -> ReqwestResult<ProcessedResponse> {
     let fetch_body = !cfg.without_body;
 
-    let mut response = prepare_request(client, cfg).send().await?;
+    let mut response = prepare_request(client_adapter.client, cfg).send().await?;
 
     let headers = response.headers().to_owned();
     let version = response.version();
     let status = response.status();
     let final_url = response.url().clone();
-    let redirect_target = record_redirect.lock().unwrap().to_owned();
+    let redirect_target = client_adapter.redirect_recorder.lock().unwrap().to_owned();
     let tls_info = response.extensions_mut().remove::<TlsInfo>();
     let body = if fetch_body {
         Some(process_body(response.bytes().await, &headers))

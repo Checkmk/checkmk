@@ -17,6 +17,15 @@ fi
 
 # audit=false disables metrics
 NODE_OPTIONS="--dns-result-order=ipv4first" npm ci --audit=false
+
+pushd ../../
+# install dependencies from root folder, sadly we currently depend on them, as
+# some config files are inherited from the git root, but we are missing the
+# dependencies to fulfill them. this is a hack. we should remove the config
+# files and package.json from the git root.
+NODE_OPTIONS="--dns-result-order=ipv4first" npm ci --audit=false
+popd
+
 # use the following commands when code base is cleaned up
 # ./node_modules/.bin/prettier --check src/
 # ./node_modules/.bin/eslint . --ignore-path .gitignore

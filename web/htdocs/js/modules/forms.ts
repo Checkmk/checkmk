@@ -66,6 +66,20 @@ export function enable_dynamic_form_elements(
 let g_previous_timeout_id: number | null = null;
 let g_ajax_obj: XMLHttpRequest | null;
 
+interface select2DropdownItem {
+    text: string;
+
+    id?: string;
+    selected?: boolean;
+    disabled?: boolean;
+    title?: string;
+}
+
+// Add a title to select2 entries, i.e. the dropdown results and selection
+export function format_select2_item(item: select2DropdownItem) {
+    return $("<span title=" + item.text + ">" + item.text + "</span>");
+}
+
 export function enable_select2_dropdowns(
     container: JQuery<Document> | HTMLElement | HTMLDocument | null
 ) {
@@ -82,6 +96,8 @@ export function enable_select2_dropdowns(
     elements.select2({
         dropdownAutoWidth: true,
         minimumResultsForSearch: 5,
+        templateResult: format_select2_item,
+        templateSelection: format_select2_item,
     });
     initialize_autocompleters(container);
 

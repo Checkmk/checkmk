@@ -286,20 +286,13 @@ def asset_and_piggy_back_sections_fixture() -> (
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
 
-    def test_labeler(asset: agent_gcp.Asset) -> agent_gcp.HostLabelSection:
-        return agent_gcp.HostLabelSection(
-            labels={
-                f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()
-            }
-        )
-
     piggy_back_section = agent_gcp.PiggyBackService(
         name="testing",
         asset_type="foo",
         asset_label="id",
         metric_label="id",
         name_label="id",
-        labeler=test_labeler,
+        labeler=agent_gcp.default_labeler,
         services=[
             agent_gcp.Service(
                 name="uptime",

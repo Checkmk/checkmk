@@ -13,17 +13,18 @@ from functools import cache
 from types import TracebackType
 from typing import Any, assert_never, Protocol
 
+import google.protobuf.duration_pb2 as duration  # to satisfy pylint with `duration.Duration`
 from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
-from google.cloud.monitoring_v3 import Aggregation as gAggregation
+from google.cloud.monitoring_v3.types import Aggregation as GoogleAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 from google.oauth2 import service_account  # type: ignore[import-untyped]
 from googleapiclient.discovery import build, Resource  # type: ignore[import]
 from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import]
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
-Aligner = gAggregation.Aligner
-Reducer = gAggregation.Reducer
+Aligner = GoogleAggregation.Aligner
+Reducer = GoogleAggregation.Reducer
 
 from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
@@ -41,6 +42,7 @@ from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default
 class Asset:
     asset: asset_v1.Asset
 
+    # TODO(rs): replace static with normal: def serialize(self) -> str:
     @staticmethod
     def serialize(obj: "Asset") -> str:
         return json.dumps(asset_v1.Asset.to_dict(obj.asset))
@@ -138,12 +140,13 @@ class Aggregation:
     alignment_period: int = 60
     group_by_fields: Sequence[str] = field(default_factory=list)
 
-    def to_obj(self, default_groupby: str) -> monitoring_v3.Aggregation:
+    def to_obj(self, default_groupby: str) -> GoogleAggregation:
         groupbyfields = [default_groupby]
         groupbyfields.extend(self.group_by_fields)
-        return monitoring_v3.Aggregation(
+        # TODO(rs): code below is breaking typing, fixit, please
+        return GoogleAggregation(
             {
-                "alignment_period": {"seconds": self.alignment_period},
+                "alignment_period": duration.Duration(seconds=self.alignment_period),
                 "group_by_fields": groupbyfields,
                 "per_series_aligner": self.per_series_aligner,
                 "cross_series_reducer": self.cross_series_reducer,
@@ -224,12 +227,13 @@ class PiggyBackService:
 @dataclass(frozen=True)
 class Result:
     ts: TimeSeries
-    aggregation: gAggregation
+    aggregation: GoogleAggregation
 
+    # TODO(rs): replace static with normal: def serialize(self) -> str:
     @staticmethod
     def serialize(obj: "Result") -> str:
         aggregation = {
-            "alignment_period": {"seconds": int(obj.aggregation.alignment_period.total_seconds())},
+            "alignment_period": {"seconds": int(obj.aggregation.alignment_period.seconds)},
             "group_by_fields": list(obj.aggregation.group_by_fields),
             "per_series_aligner": obj.aggregation.per_series_aligner.value,
             "cross_series_reducer": obj.aggregation.cross_series_reducer.value,
@@ -240,7 +244,14 @@ class Result:
     def deserialize(cls, data: str) -> "Result":
         deserialized = json.loads(data)
         ts = TimeSeries.from_json(json.dumps(deserialized["ts"]))
-        aggregation = monitoring_v3.Aggregation(deserialized["aggregation"])
+        raw_aggregation = deserialized["aggregation"]
+
+        aggregation = GoogleAggregation(
+            alignment_period=duration.Duration(seconds=60),
+            group_by_fields=raw_aggregation["group_by_fields"],
+            per_series_aligner=raw_aggregation["per_series_aligner"],
+            cross_series_reducer=raw_aggregation["cross_series_reducer"],
+        )
         return cls(ts=ts, aggregation=aggregation)
 
 
@@ -461,6 +472,7 @@ def piggy_back(
     for host in [a for a in assets if a.asset.asset_type == service.asset_type]:
         label = host.asset.resource.data[service.asset_label]
         name = f"{prefix}_{host.asset.resource.data[service.name_label]}"
+        assert isinstance(label, str)  # hint for mypy
         filter_by = ResourceFilter(label=service.metric_label, value=label)
         sections = run_metrics(client, services=service.services, filter_by=filter_by)
         yield PiggyBackSection(
@@ -1045,15 +1057,17 @@ HTTP_LOADBALANCER = Service(
 
 def default_labeler(asset: Asset) -> HostLabelSection:
     if "labels" in asset.asset.resource.data:
-        return HostLabelSection(
-            labels={
-                f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()
-            }
-        )
+        labels = asset.asset.resource.data["labels"]
+        if isinstance(labels, Mapping):
+            return HostLabelSection(labels={f"cmk/gcp/labels/{k}": v for k, v in labels.items()})
+        # data are malformed, we have to break
+        raise RuntimeError(f"Invalid data type asset.asset.resource.data: '{type(labels)}'")
+
     return HostLabelSection(labels={})
 
 
 def gce_labeler(asset: Asset) -> HostLabelSection:
+    # TODO(rs): replace creative code below with something we could understand and statically test
     return HostLabelSection(labels={**default_labeler(asset).labels, "cmk/gcp/gce": "instance"})
 
 

@@ -619,6 +619,12 @@ class SidebarRenderer:
             html.div(_("Admin"))
         html.close_div()
 
+    def _show_onboarding(self) -> None:
+        html.write_html(HTML('<script type="module" src="onboarding/search.js"></script>'))
+        html.write_html(HTML('<link rel="stylesheet" href="onboarding/search.css">'))
+        html.open_div(id_="searchApp")
+        html.close_div()
+
     def _show_sidebar_head(self):
         html.open_div(id_="side_header")
         html.open_a(
@@ -633,6 +639,7 @@ class SidebarRenderer:
         MainMenuRenderer().show()
 
         if cmk_version.edition() is cmk_version.Edition.CSE:
+            self._show_onboarding()
             self._show_saas_link()
 
         html.open_div(

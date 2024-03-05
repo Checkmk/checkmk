@@ -19,6 +19,9 @@ msgstr ""
 "20)) ? 1 : 2;\n"
 "X-Generator: Weblate 4.17\n"
 
+msgid "\n"
+msgstr ""
+
 #, python-format
 msgid " %s, outage duration %s"
 msgstr " %s, durata întreruperii %s."
@@ -68,6 +71,10 @@ msgstr "Niveluri inferioare"
 
 msgid " (packaged)"
 msgstr " (ambalat)"
+
+#, fuzzy
+msgid " (required)"
+msgstr "este necesară"
 
 #, fuzzy
 msgid " (upper levels)"
@@ -305,10 +312,6 @@ msgstr "% din numărul maxim de conexiuni"
 #, no-python-format
 msgid "% of maximum idle connections"
 msgstr "% din numărul maxim de conexiuni inactive"
-
-#, fuzzy, no-python-format
-msgid "% of overall suite timeout"
-msgstr "Timeout total de interogare"
 
 #, no-python-format
 msgid "% of port speed"
@@ -1003,20 +1006,12 @@ msgstr "... (%d mai mult)"
 msgid ".Net/CLR Memory"
 msgstr "Memorie .Net/CLR"
 
-#, fuzzy
-msgid "/d"
-msgstr "B/d"
-
 msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
 msgstr ""
 "/etc/cma/backup.conf are permisiuni greșite. Refuză să citească fișierul"
 
 msgid "/m"
 msgstr "/m"
-
-#, fuzzy
-msgid "/op"
-msgstr "Top"
 
 msgid "/s"
 msgstr "/s"
@@ -1983,8 +1978,12 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "<u>Info</u>: Downtime also applies to services."
+msgid "<u>Info</u>: Downtime also applies to all services of the hosts."
 msgstr "Întreruperi de serviciu"
+
+#, fuzzy
+msgid "<u>Info</u>: Downtime does not apply to host."
+msgstr "Timpii de întrerupere a gazdei"
 
 msgid "??"
 msgstr "??"
@@ -2636,6 +2635,10 @@ msgstr "Etichete AWS"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "Costurile și utilizarea AWS/CE"
+
+#, fuzzy
+msgid "AWS/CE Total Reservation Utilization"
+msgstr "Utilizarea totală a memoriei"
 
 msgid "AWS/CloudFront"
 msgstr "AWS/CloudFront"
@@ -3432,7 +3435,8 @@ msgstr "Solicitări active de flotă Spot"
 msgid "Active TCP Sessions"
 msgstr "Sesiuni TCP active"
 
-msgid "Active TLS Connections"
+#, fuzzy
+msgid "Active TLS connections"
 msgstr "Conexiuni TLS active"
 
 msgid "Active UDP sessions"
@@ -3517,6 +3521,10 @@ msgstr "Cioburi active"
 
 msgid "Active shards in percent"
 msgstr "Fragmente active în procente"
+
+#, fuzzy
+msgid "Active spot fleet requests"
+msgstr "Solicitări active de flotă Spot"
 
 msgid "Active time range"
 msgstr "Interval de timp activ"
@@ -3866,6 +3874,10 @@ msgstr "Adăugați o nouă constantă"
 
 msgid "Add new element"
 msgstr "Adaungă un nou element"
+
+#, fuzzy
+msgid "Add new endpoint"
+msgstr "Adăugați o nouă măsurătoare"
 
 #, fuzzy
 msgid "Add new entry"
@@ -5982,10 +5994,6 @@ msgstr "Cantitatea de fișiere din spool-ul de notificare"
 msgid "Amount of mails in queues"
 msgstr "Cantitatea de mailuri în cozi"
 
-#, fuzzy
-msgid "Amount of substance"
-msgstr "Cantitatea de date prelucrate"
-
 msgid ""
 "Amount of time that the application of redo data on the standby database "
 "lags behind the primary database"
@@ -6380,6 +6388,26 @@ msgstr "Numele pool-ului de aplicații"
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Echilibrarea încărcării aplicațiilor și a rețelei (ELBv2)"
 
+#, fuzzy
+msgid "Application load balancer certificates"
+msgstr "Certificatele de echilibrare a încărcăturii aplicației"
+
+#, fuzzy
+msgid "Application load balancer listeners"
+msgstr "Ascultatori de echilibrare a încărcăturii aplicației"
+
+#, fuzzy
+msgid "Application load balancer rules"
+msgstr "Reguli de echilibrare a încărcăturii aplicației"
+
+#, fuzzy
+msgid "Application load balancer target groups"
+msgstr "Grupuri țintă de echilibrare a încărcării aplicațiilor"
+
+#, fuzzy
+msgid "Application load balancers"
+msgstr "Balansatoare de încărcare a aplicațiilor"
+
 msgid "Application name"
 msgstr "Numele aplicației"
 
@@ -6541,6 +6569,10 @@ msgid "Archive an event"
 msgstr "Arhivați un eveniment"
 
 #, fuzzy
+msgid "Archive audit log"
+msgstr "A șters jurnalul de audit."
+
+#, fuzzy
 msgid "Archive current audit log"
 msgstr "Obțineți jurnalele de audit la distanță"
 
@@ -6559,6 +6591,17 @@ msgstr "Arhiva"
 
 msgid "Archive messages that do not match any rule"
 msgstr "Arhivați mesajele care nu corespund niciunei reguli"
+
+#, fuzzy
+msgid ""
+"Archive the entries of the audit log. To be able to archive the audit log a "
+"user needs the generic Setup permission \"Make changes, perform actions\", "
+"the \"View audit log\" and this permission."
+msgstr ""
+"Ștergeți înregistrările din jurnalul de audit. Pentru a putea șterge "
+"jurnalul de audit, un utilizator are nevoie de permisiunea generică Setup "
+"\"Make changes, perform actions\", de permisiunea \"View audit log\" și de "
+"această permisiune."
 
 msgid "Archive this event"
 msgstr "Arhivați acest eveniment"
@@ -7075,6 +7118,15 @@ msgstr "Extinderea automată va fi ignorată"
 msgid "Autoextensible"
 msgstr "Autoextensibil"
 
+msgid "Automated environment setup (via RCC)"
+msgstr ""
+
+#, fuzzy, python-format
+msgid ""
+"Automated environment setup (via RCC, %s because Robotmk Core MKP is "
+"installed)"
+msgstr "Utilizați SSL pentru conexiune."
+
 msgid "Automatic"
 msgstr "Automat"
 
@@ -7398,7 +7450,8 @@ msgstr "Latența medie a cererilor GetItem reușite"
 msgid "Average latency of successful PutItem requests"
 msgstr "Latența medie a cererilor PutItem reușite"
 
-msgid "Average latency of successful Query requests"
+#, fuzzy
+msgid "Average latency of successful query requests"
 msgstr "Latența medie a cererilor de interogare reușite"
 
 msgid "Average latency used by Azure Storage to process a successful request"
@@ -8078,7 +8131,8 @@ msgstr "Bicicleta"
 msgid "Billable time"
 msgstr "Timp facturabil"
 
-msgid "Bin Log Disk Usage"
+#, fuzzy
+msgid "Bin log disk usage"
 msgstr "Jurnal de pubelă Utilizare disc"
 
 msgid "Binaries"
@@ -8218,10 +8272,6 @@ msgstr "Cutii"
 
 msgid "Boxes (omit root)"
 msgstr "Cutii (omiteți rădăcina)"
-
-#, fuzzy
-msgid "Bq"
-msgstr "B"
 
 msgid "Breakdown"
 msgstr "Descompunere"
@@ -8420,7 +8470,8 @@ msgstr "Umplerea"
 msgid "Bulking not allowed"
 msgstr "Nu este permisă creșterea în volum"
 
-msgid "Burst Balance"
+#, fuzzy
+msgid "Burst balance"
 msgstr "Echilibru de explozie"
 
 msgid "Bus"
@@ -8928,6 +8979,23 @@ msgid ""
 msgstr ""
 
 msgid ""
+"By default, Robot Framework will execute <i>every</i> test.<br>But sometimes "
+"tests are interdependent - in the event of a failed login, for example, it "
+"is impossible to successfully complete the subsequent tests.<br>If this "
+"option is active, Robot Framework will <b>immediately stop</b> the suite "
+"execution if a test fails. <br>The results of subsequent tests (which would "
+"have failed) will then not be passed to Checkmk; depending on the discovery "
+"settings,their results will either be <b>missing</b> (if within a suite "
+"result) or the services generated for them will <b>go stale</b>.<br> <br>  "
+"<b>Important note</b>: this is where Robotmk deviates from Robot Framework "
+"behavior. The HTML log will still contain the omitted tests and show them as "
+"<tt>FAIL</tt> (even though they were not executed).<br>See also \"<a href="
+"\"http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
+"html#stopping-when-first-test-case-fails\">How to stop a suite when the "
+"first test fails</a>\". "
+msgstr ""
+
+msgid ""
 "By default, Robotmk executes all suites in the user context of the Checkmk "
 "agent, which does not have access to the desktop of the Windows computer. To "
 "run tests on Windows GUI applications, you can specify the name of a user "
@@ -9182,6 +9250,18 @@ msgstr ""
 "să consultați <a target=_blank href='%s'>documentația online</a> pentru "
 "detalii."
 
+#, fuzzy
+msgid "Bypass Proxy for certain hosts"
+msgstr "Toate graficele pentru o anumită gazdă."
+
+msgid ""
+"Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
+"adresses which should not be accessed through the given proxy. <br>The proxy "
+"setting is used for access to the internet, where RCC needs to download the "
+"installation files from. (In order to access a page through a proxy inside "
+"of the test suite, use the libraries capabilities)"
+msgstr ""
+
 msgid "Byte Count"
 msgstr "Număr de octeți"
 
@@ -9208,10 +9288,6 @@ msgstr "Byte pierdute"
 
 msgid "Bytes per day"
 msgstr "Bytes pe zi"
-
-#, fuzzy
-msgid "Bytes per operation"
-msgstr "Citire de octeți pe operațiune"
 
 msgid "Bytes per second"
 msgstr "Byte pe secundă"
@@ -9330,9 +9406,6 @@ msgstr "CPU"
 msgid "CPU Architecture"
 msgstr "Arhitectura CPU"
 
-msgid "CPU Credit Balance"
-msgstr "Sold de credit CPU"
-
 msgid "CPU Load - %(load1:max@count) CPU Cores"
 msgstr "Încărcare CPU - %(load1:max@count) Cores CPU"
 
@@ -9362,6 +9435,10 @@ msgstr "Utilizarea CPU a clusterelor"
 
 msgid "CPU averaging"
 msgstr "Calcularea mediei CPU"
+
+#, fuzzy
+msgid "CPU credit balance"
+msgstr "Sold de credit CPU"
 
 msgid "CPU credits"
 msgstr "Credite CPU"
@@ -9710,6 +9787,10 @@ msgstr "Apelarea cârligelor finale"
 msgid "Can be used until version:"
 msgstr "Poate fi utilizat până la versiunea:"
 
+#, python-format
+msgid "Can maximally be %d characters long."
+msgstr ""
+
 msgid "Can not clone a cluster host as regular host"
 msgstr "Nu se poate clona o gazdă cluster ca gazdă obișnuită"
 
@@ -10002,10 +10083,6 @@ msgstr "Nu se poate scrie fișierul de configurare \"%s\": %s."
 msgid "Cannot write file \"%s\": %s"
 msgstr "Nu se poate scrie fișierul \"%s\": %s."
 
-#, fuzzy
-msgid "Capacitance"
-msgstr "Utilizarea capacității"
-
 msgid "Capacity filled"
 msgstr "Capacitate umplută"
 
@@ -10070,10 +10147,6 @@ msgstr "Catalog"
 msgid "Catalog of check plugins"
 msgstr "Catalog de plugin-uri de verificare"
 
-#, fuzzy
-msgid "Catalytic activity"
-msgstr "Activare automată"
-
 msgid "Categories"
 msgstr "Categorii"
 
@@ -10135,11 +10208,12 @@ msgid "Certificate for encrypted authentication request responses (PEM)"
 msgstr ""
 "Certificat pentru răspunsurile criptate la cererile de autentificare (PEM)"
 
-msgid "Certificate is expired"
-msgstr "Certificatul a expirat"
-
 msgid "Certificate is not signed by trusted authority"
 msgstr "Certificatul nu este semnat de o autoritate de încredere"
+
+#, fuzzy
+msgid "Certificate signature algorithm"
+msgstr "Algoritm de semnătură"
 
 #, fuzzy
 msgid "Certificate subject alternative name"
@@ -10519,6 +10593,10 @@ msgid "Check and display only"
 msgstr "Doar verificare și afișare"
 
 #, fuzzy
+msgid "Check certificate"
+msgstr "Certificat CA"
+
+#, fuzzy
 msgid "Check certificate validity"
 msgstr "Valabilitatea certificatului site-ului"
 
@@ -10543,6 +10621,14 @@ msgstr "Verificați utilizarea memoriei containerelor"
 
 msgid "Check current routing"
 msgstr "Verificarea rutei actuale"
+
+#, fuzzy
+msgid "Check document age"
+msgstr "Verificați pagina de manual"
+
+#, fuzzy
+msgid "Check document size"
+msgstr "Dimensiunea medie a documentului"
 
 msgid "Check event state in Event Console"
 msgstr "Verificați starea evenimentului în Consola de evenimente"
@@ -11564,9 +11650,6 @@ msgstr "Curățare atunci când spațiul pe disc este sub"
 msgid "Clear & Delete"
 msgstr "Ștergeți & Ștergeți"
 
-msgid "Clear audit log"
-msgstr "Ștergeți jurnalul de audit"
-
 msgid "Clear failed notifications"
 msgstr "Ștergeți notificările eșuate"
 
@@ -11578,16 +11661,6 @@ msgstr "Ștergeți jurnalele"
 
 msgid "Clear logs by deleting all stored messages"
 msgstr "Ștergeți jurnalele prin ștergerea tuturor mesajelor stocate"
-
-msgid ""
-"Clear the entries of the audit log. To be able to clear the audit log a user "
-"needs the generic Setup permission \"Make changes, perform actions\", the "
-"\"View audit log\" and this permission."
-msgstr ""
-"Ștergeți înregistrările din jurnalul de audit. Pentru a putea șterge "
-"jurnalul de audit, un utilizator are nevoie de permisiunea generică Setup "
-"\"Make changes, perform actions\", de permisiunea \"View audit log\" și de "
-"această permisiune."
 
 msgid "Click for instant reload."
 msgstr "Faceți clic pentru reîncărcare instantanee."
@@ -11908,10 +11981,12 @@ msgstr "La nivel de cluster"
 msgid "Cnt."
 msgstr "Cnt."
 
-msgid "Code Size"
+#, fuzzy
+msgid "Code size"
 msgstr "Cod Dimensiune"
 
-msgid "Code Size in percent"
+#, fuzzy
+msgid "Code size in percent"
 msgstr "Dimensiunea codului în procente"
 
 msgid "Code verifier not found. Cache value is None."
@@ -12320,6 +12395,10 @@ msgstr "Opțiuni de calcul"
 #, python-format
 msgid "Computation result: %s - %s"
 msgstr "Rezultatul calculului: %s - %s"
+
+#, fuzzy
+msgid "Compute REST API specification"
+msgstr "Specificația SLA"
 
 msgid "Compute average over last "
 msgstr "Calculați media pe ultima "
@@ -13146,15 +13225,15 @@ msgstr "Funcții de consolidare"
 msgid "Constant value %.2f"
 msgstr "Valoare constantă %.2f"
 
-#, fuzzy
-msgid "Consumed Load Balancer Capacity unit=Units"
-msgstr "Unități de capacitate de echilibrare a încărcăturii consumate"
-
 msgid "Consumed capacity"
 msgstr "Capacitate consumată"
 
 msgid "Consumed host memory"
 msgstr "Memorie gazdă consumată"
+
+#, fuzzy
+msgid "Consumed load balancer capacity units"
+msgstr "Unități de capacitate de echilibrare a încărcăturii consumate"
 
 msgid "Consumer Count is the size of connected consumers to a queue"
 msgstr ""
@@ -15545,10 +15624,6 @@ msgstr "Decibel"
 msgid "Decibel-millivolt"
 msgstr "Decibel-millivolt"
 
-#, fuzzy
-msgid "Decibel-milliwatt"
-msgstr "Decibel-milliwati"
-
 msgid "Decibel-milliwatts"
 msgstr "Decibel-milliwati"
 
@@ -15570,6 +15645,9 @@ msgstr "Trafic decodificat"
 
 msgid "Decoder utilization"
 msgstr "Utilizarea decodorului"
+
+msgid "Decryption of SNMPv3 password failed."
+msgstr ""
 
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Liste albe/negre dedicate pentru servicii noi și dispărute"
@@ -15883,10 +15961,6 @@ msgid ""
 msgstr ""
 "Definiți ce stare de monitorizare corespunde fiecărei stări de intrare. "
 "Acest lucru se aplică pentru fiecare intrare în parte."
-
-#, fuzzy
-msgid "Defined by signature algorithm parameters"
-msgstr "Parametrii impliciți"
 
 msgid "Defines what information to query."
 msgstr "Definește ce informații trebuie interogate."
@@ -18380,10 +18454,6 @@ msgid "Docsis Upstream Channels"
 msgstr "Canale în amonte Docsis"
 
 #, fuzzy
-msgid "Document"
-msgstr "Comentariu"
-
-#, fuzzy
 msgid "Document body"
 msgstr "Numărul de documente delta"
 
@@ -18402,6 +18472,10 @@ msgstr "Fișiere de documentare"
 msgid "Documents fragmentation"
 msgstr "Fragmentarea documentelor"
 
+#, fuzzy, python-format
+msgid "Does not end with %s"
+msgstr "Nu se termină cu \"%s\"."
+
 #, python-format
 msgid "Does not ends with \"%s\"."
 msgstr "Nu se termină cu \"%s\"."
@@ -18411,9 +18485,6 @@ msgstr "Nu există"
 
 msgid "Does not match any service"
 msgstr "Nu se potrivește cu niciun serviciu"
-
-msgid "Dollar"
-msgstr ""
 
 msgid "Domain (only used for european accounts)"
 msgstr "Domeniu (utilizat numai pentru conturile europene)"
@@ -18507,9 +18578,6 @@ msgstr "Nu folosiți ghilimele"
 
 msgid "Don't wait for document body"
 msgstr "Nu așteptați corpul documentului"
-
-msgid "Dose equivalent"
-msgstr ""
 
 msgid "DotNet (.Net) runtime memory levels"
 msgstr "Nivelurile de memorie în timpul execuției DotNet (.Net)"
@@ -18866,9 +18934,6 @@ msgstr ""
 msgid "ECDSA"
 msgstr ""
 
-msgid "ED25519"
-msgstr ""
-
 msgid "EMC Data Domain MTree state"
 msgstr "Starea EMC Data Domain MTree"
 
@@ -19086,6 +19151,9 @@ msgstr ""
 "instalării unui addon, apar noi permisiuni, rolul utilizatorului va primi "
 "sau nu aceste noi permisiuni în funcție de setările implicite ale rolului "
 "încorporat pe care se bazează."
+
+msgid "Ed25519"
+msgstr ""
 
 msgid "Edit"
 msgstr "Editați"
@@ -19540,6 +19608,10 @@ msgstr "Serviciul de containere elastice (ECS)"
 msgid "Elastic IP Addresses"
 msgstr "Adrese IP elastice"
 
+#, fuzzy
+msgid "Elastic IP addresses"
+msgstr "Adrese IP elastice"
+
 msgid "Elasticsearch"
 msgstr "Elasticsearch"
 
@@ -19561,20 +19633,8 @@ msgstr "Noduri Elasticsearch"
 msgid "Elbow"
 msgstr "Cotul"
 
-#, fuzzy
-msgid "Electric charge"
-msgstr "Curent electric"
-
-#, fuzzy
-msgid "Electric potential"
-msgstr "Putere electrică"
-
 msgid "Electrical Apparent Power"
 msgstr "Puterea electrică aparentă"
-
-#, fuzzy
-msgid "Electrical Current"
-msgstr "Curent electric"
 
 msgid "Electrical Current (Amperage)"
 msgstr "Curent electric (amperaj)"
@@ -19596,10 +19656,6 @@ msgstr "Tensiune electrică (tensiune)"
 
 msgid "Electrical apparent power"
 msgstr "Puterea aparentă electrică"
-
-#, fuzzy
-msgid "Electrical conductance"
-msgstr "Tensiune electrică"
 
 msgid "Electrical current"
 msgstr "Curent electric"
@@ -19810,6 +19866,9 @@ msgstr "Activați jurnalizarea eșecurilor de logare"
 
 msgid "Enable login via GET requests"
 msgstr "Activați autentificarea prin cereri GET"
+
+msgid "Enable metrics for high-level keywords"
+msgstr ""
 
 msgid "Enable notification logging"
 msgstr "Activați jurnalizarea notificărilor"
@@ -20056,10 +20115,6 @@ msgstr "Cheile private criptate nu sunt acceptate"
 msgid "Encryption"
 msgstr "Criptare"
 
-#, fuzzy
-msgid "Encryption algorithm"
-msgstr "Criptare"
-
 #, python-format
 msgid "Encryption for %s is only used if it is enabled on the remote site"
 msgstr ""
@@ -20104,8 +20159,8 @@ msgid "Endpoint"
 msgstr "Punct final"
 
 #, fuzzy
-msgid "Endpoints"
-msgstr "Punct final"
+msgid "Endpoints to monitor"
+msgstr "Regiuni de monitorizat"
 
 msgid "Enforce IPv4"
 msgstr "Aplică IPv4"
@@ -21017,6 +21072,10 @@ msgstr "Executarea ca MQM"
 msgid "Execute as another user"
 msgstr "Executarea ca alt utilizator"
 
+#, fuzzy
+msgid "Execute as specific user"
+msgstr "Programarea execuției"
+
 #, python-format
 msgid "Execute custom action '%s'?"
 msgstr "Executarea acțiunii personalizate '%s'?"
@@ -21095,6 +21154,9 @@ msgstr "Cod de ieșire"
 msgid "Exit code (hex value)"
 msgstr "Cod de ieșire (valoare hexagonală)"
 
+msgid "Exit on failure (<tt>--exitonfailure</tt>)"
+msgstr ""
+
 msgid "Expand"
 msgstr "Extindeți"
 
@@ -21139,10 +21201,6 @@ msgstr "Răspunsuri DNS așteptate"
 
 msgid "Expected String"
 msgstr "Șirul așteptat"
-
-#, fuzzy, python-format
-msgid "Expected a tuple, got %s"
-msgstr "Trasee active preconizate"
 
 msgid "Expected active paths"
 msgstr "Trasee active preconizate"
@@ -21408,9 +21466,6 @@ msgstr ""
 msgid "Extremes only"
 msgstr "Doar extreme"
 
-msgid "F"
-msgstr ""
-
 msgid "F5 BigIP configuration sync status"
 msgstr "Starea de sincronizare a configurației F5 BigIP"
 
@@ -21457,6 +21512,10 @@ msgid "FGPA utilization"
 msgstr "Utilizarea FGPA"
 
 msgid "FIFO Topics"
+msgstr "Subiecte FIFO"
+
+#, fuzzy
+msgid "FIFO topics"
 msgstr "Subiecte FIFO"
 
 msgid "FIN_WAIT1"
@@ -21517,10 +21576,12 @@ msgstr "Solicitări eșuate de obținere a locațiilor"
 msgid "Failed Notifications"
 msgstr "Notificări eșuate"
 
-msgid "Failed TLS Client Handshake"
+#, fuzzy
+msgid "Failed TLS client handshake"
 msgstr "TLS Client Handshake eșuat"
 
-msgid "Failed TLS Target Handshake"
+#, fuzzy
+msgid "Failed TLS target handshake"
 msgstr "TLS eșuat TLS Target Handshake"
 
 msgid "Failed calls caused by unexpected interaction from gateway"
@@ -21660,6 +21721,10 @@ msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
 
 msgid "Failed to find matching certificate in chain"
 msgstr "Nu a reușit să găsească certificatul corespunzător în lanț"
+
+#, fuzzy, python-format
+msgid "Failed to generate REST API specification: %s"
+msgstr "Nu s-a reușit să se obțină certificatul peer (%s)"
 
 #, python-format
 msgid "Failed to get changes from sites: %s."
@@ -22793,10 +22858,6 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Interzis să vezi tot copacul"
 
-#, fuzzy
-msgid "Force"
-msgstr "forță"
-
 msgid "Force agent to run in single thread"
 msgstr "Forțați agentul să ruleze într-un singur fir de execuție"
 
@@ -23373,12 +23434,6 @@ msgstr "Variabilele GET/POST ale acestei pagini"
 msgid "GI resource"
 msgstr "Resurse IG"
 
-msgid "GOST R 34.10-2001"
-msgstr ""
-
-msgid "GOST R 34.10-2012"
-msgstr ""
-
 msgid "GPU utilization"
 msgstr "Utilizare GPU"
 
@@ -23447,12 +23502,6 @@ msgstr "Permisiuni generale"
 msgid "General Properties"
 msgstr "Proprietăți generale"
 
-msgid "General Purpose SSD (gp2) space"
-msgstr "Spațiu SSD de uz general (gp2)"
-
-msgid "General Purpose SSD (gp3) space"
-msgstr "Spațiu SSD cu scop general (gp3)"
-
 msgid "General Settings"
 msgstr "Setări generale"
 
@@ -23477,8 +23526,20 @@ msgstr "Mesaje generale"
 msgid "General properties"
 msgstr "Proprietăți generale"
 
+#, fuzzy
+msgid "General purpose SSD (gp2) space"
+msgstr "Spațiu SSD de uz general (gp2)"
+
+#, fuzzy
+msgid "General purpose SSD (gp3) space"
+msgstr "Spațiu SSD cu scop general (gp3)"
+
 msgid "Generate"
 msgstr "Generați"
+
+#, fuzzy
+msgid "Generate REST API specification"
+msgstr "Specificația SLA"
 
 #, fuzzy
 msgid "Generate backup codes"
@@ -23517,6 +23578,10 @@ msgstr ""
 
 msgid "Generate this report"
 msgstr "Generarea acestui raport"
+
+#, fuzzy
+msgid "Generating REST API specification"
+msgstr "specificația cartușului"
 
 msgid "Generating report..."
 msgstr "Generarea de rapoarte..."
@@ -24033,14 +24098,6 @@ msgstr "Sisteme de operare invitate"
 msgid "Guest user"
 msgstr "Utilizator invitat"
 
-#, fuzzy
-msgid "Gy"
-msgstr "y"
-
-#, fuzzy
-msgid "H"
-msgstr "HA"
-
 msgid "H.Down"
 msgstr "H.Down"
 
@@ -24151,9 +24208,6 @@ msgstr "Eroare HTTP - %d: %s."
 msgid "HTTP Errors"
 msgstr "Erori HTTP"
 
-msgid "HTTP Fixed Responses"
-msgstr "Răspunsuri fixe HTTP"
-
 msgid "HTTP Method"
 msgstr "Metoda HTTP"
 
@@ -24167,17 +24221,15 @@ msgstr "Parametrii HTTP"
 msgid "HTTP Proxy"
 msgstr "Proxy HTTP"
 
-msgid "HTTP Redirects"
-msgstr "Redirecționări HTTP"
-
-msgid "HTTP Redirects URL Limit Exceeded"
-msgstr "Limita URL-urilor de redirecționare HTTP a fost depășită"
-
 msgid "HTTP Timings"
 msgstr "Programări HTTP"
 
 msgid "HTTP accelerator statistics"
 msgstr "Statistici privind acceleratorul HTTP"
+
+#, fuzzy
+msgid "HTTP fixed responses"
+msgstr "Răspunsuri fixe HTTP"
 
 #, fuzzy
 msgid "HTTP method"
@@ -24189,6 +24241,14 @@ msgstr "Proxies HTTP"
 msgid "HTTP proxy"
 msgstr "Proxy HTTP"
 
+#, fuzzy
+msgid "HTTP redirects"
+msgstr "Redirecționări HTTP"
+
+#, fuzzy
+msgid "HTTP redirects URL limit exceeded"
+msgstr "Limita URL-urilor de redirecționare HTTP a fost depășită"
+
 msgid "HTTP request header variable"
 msgstr "Variabila antetului de cerere HTTP"
 
@@ -24198,6 +24258,10 @@ msgstr "Solicitări HTTP pe secundă"
 #, fuzzy
 msgid "HTTP version"
 msgstr "Versiunea LDAP"
+
+#, fuzzy
+msgid "HTTP web service endpoints to monitor"
+msgstr "Servicii de monitorizare a BPC"
 
 msgid "HTTP, TCP, Email, ..."
 msgstr "HTTP, TCP, e-mail, ..."
@@ -24399,16 +24463,9 @@ msgstr "Trebuie să conțină calea către fișierul cu cheia de certificare."
 msgid "Hash"
 msgstr "Hash"
 
-msgid "Hashing algorithm included in encryption"
-msgstr ""
-
 #, fuzzy
-msgid "Headed execution as specific user"
-msgstr "Programarea execuției"
-
-#, fuzzy
-msgid "Header"
-msgstr "Rubrica"
+msgid "Hashing algorithm"
+msgstr "Algoritm de semnătură"
 
 #, fuzzy
 msgid "Header name pattern"
@@ -24474,9 +24531,6 @@ msgstr "Clustere de bătăi ale inimii"
 
 msgid "Heartbeat tools missing or not installed"
 msgstr "Instrumentele Heartbeat lipsesc sau nu sunt instalate"
-
-msgid "Heat"
-msgstr ""
 
 msgid "Height"
 msgstr "Înălțime"
@@ -26497,6 +26551,14 @@ msgstr ""
 msgid "How to handle redirect"
 msgstr "Cum să gestionați redirecționarea"
 
+#, fuzzy
+msgid "How to handle redirects"
+msgstr "Cum să gestionați redirecționarea"
+
+#, fuzzy
+msgid "How to handle the document"
+msgstr "Cum să gestionați redirecționarea"
+
 msgid ""
 "However, if that is not feasable, you can configure the legacy mode (which "
 "may or <b>may not</b> include encryption) to be OK using this setting. Note "
@@ -26892,12 +26954,6 @@ msgstr "IPv6"
 msgid "IPv6 Address"
 msgstr "Adresa IPv6"
 
-msgid "IPv6 Processed Bytes"
-msgstr "Byte procesate IPv6"
-
-msgid "IPv6 Requests"
-msgstr "Solicitări IPv6"
-
 msgid "IPv6 Subnet"
 msgstr "Subrețea IPv6"
 
@@ -26906,6 +26962,14 @@ msgstr "Adresa IPv6"
 
 msgid "IPv6 only"
 msgstr "Numai IPv6"
+
+#, fuzzy
+msgid "IPv6 processed bytes"
+msgstr "Byte procesate IPv6"
+
+#, fuzzy
+msgid "IPv6 requests"
+msgstr "Solicitări IPv6"
 
 msgid "ISC DHCP-Daemon (Linux)"
 msgstr "ISC DHCP-Daemon (Linux)"
@@ -26960,7 +27024,8 @@ msgstr "Inactivitate"
 msgid "Idle Timeout"
 msgstr "Timpul de așteptare în inactivitate"
 
-msgid "Idle clean up of worker"
+#, fuzzy
+msgid "Idle cleanup of worker"
 msgstr "Curățarea în gol a lucrătorului"
 
 msgid "Idle connections"
@@ -27369,7 +27434,7 @@ msgstr ""
 "a fost configurată pentru sunete. Din vizualizările livrate împreună cu "
 "Multisite, toate vizualizările de probleme au sunetele activate."
 
-msgid "If state changes OR core restarts OR on recovery (OK/UP)"
+msgid "If state changes OR on recovery (OK/UP)"
 msgstr ""
 
 msgid ""
@@ -27756,6 +27821,11 @@ msgstr ""
 "Dacă activați monitorizarea stării operaționale (<tt>ifOperStatus</tt>), "
 "verificarea va deveni critică dacă starea curentă a interfeței nu corespunde "
 "uneia dintre stările așteptate."
+
+msgid ""
+"If you activate this and you don't have the vite dev server running you may "
+"not be able to deactivate this option via UI, so be careful!"
+msgstr ""
 
 msgid ""
 "If you activate this option, a name of a stored procedure is used instead of "
@@ -28751,10 +28821,6 @@ msgstr "Ignoră tipurile de așteptare"
 msgid "Ignored autostart services"
 msgstr "Servicii de autopornire ignorate"
 
-#, fuzzy
-msgid "Illuminance"
-msgstr "Instanța InfluxDB"
-
 msgid "Image"
 msgstr "Imagine"
 
@@ -28775,10 +28841,6 @@ msgstr "Controale programate imediat"
 
 msgid "Impact"
 msgstr "Impact"
-
-#, fuzzy
-msgid "Impedance"
-msgstr "Aspectul articolului"
 
 msgid "Import"
 msgstr "Import"
@@ -29572,18 +29634,18 @@ msgid "Individual program call instead of agent access"
 msgstr "Apelarea individuală a programului în loc de accesarea agentului"
 
 #, fuzzy
-msgid "Individual settings"
-msgstr "Subiect individual"
+msgid "Individual settings for this endpoint"
+msgstr "Acreditările individuale ale utilizatorilor de automatizare"
+
+#, fuzzy
+msgid "Individual settings to use for this endpoint"
+msgstr "Acreditările individuale ale utilizatorilor de automatizare"
 
 msgid "Individual states per data source"
 msgstr "State individuale pentru fiecare sursă de date"
 
 msgid "Individual topic"
 msgstr "Subiect individual"
-
-#, fuzzy
-msgid "Inductance"
-msgstr "Instanța"
 
 msgid "Ineffective"
 msgstr "Ineficace"
@@ -29638,10 +29700,6 @@ msgstr "Informații"
 
 msgid "Info:"
 msgstr "Informații:"
-
-#, fuzzy
-msgid "Info: Downtime does not apply to host."
-msgstr "Timpii de întrerupere a gazdei"
 
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
@@ -29718,6 +29776,9 @@ msgid "Initiator"
 msgstr "Inițiator"
 
 msgid "Inject JavaScript profiling code"
+msgstr ""
+
+msgid "Inject frontend_vue files via vite client"
 msgstr ""
 
 msgid "Inline SNMP"
@@ -30361,9 +30422,6 @@ msgstr "Regulă invalidă <tt>%s</tt>"
 msgid "Invalid sidebar element %s"
 msgstr "Element de bară laterală nevalabil %s"
 
-msgid "Invalid signature"
-msgstr "Semnătură invalidă"
-
 msgid "Invalid signature of response"
 msgstr "Semnătură invalidă a răspunsului"
 
@@ -30757,14 +30815,6 @@ msgstr "Elementul {diff_path} cu valoarea {val_t1} eliminat."
 msgid "Item {diff_path} with value {val_t2} added."
 msgstr "S-a adăugat elementul {diff_path} cu valoarea {val_t2}."
 
-#, python-brace-format
-msgid "Item {val_t1} removed."
-msgstr "Element {val_t1} eliminat."
-
-#, python-brace-format
-msgid "Item {val_t2} added."
-msgstr "Element {val_t2} adăugat."
-
 msgid "Items"
 msgstr "Articole"
 
@@ -30773,9 +30823,6 @@ msgstr "Iterator age"
 
 msgid "IvantiNeurons for MDM (formerly MobileIron Cloud)"
 msgstr "IvantiNeurons pentru MDM (fostul MobileIron Cloud)"
-
-msgid "J"
-msgstr ""
 
 msgid "JIRA URL"
 msgstr "JIRA URL"
@@ -30955,10 +31002,6 @@ msgstr "Trebuie doar să eliminați etichetele afectate din reguli."
 
 msgid "Just show the availability (i.e. OK/UP)"
 msgstr "Afișați doar disponibilitatea (de exemplu, OK/UP)"
-
-#, fuzzy
-msgid "K"
-msgstr "OK"
 
 msgid "KByte"
 msgstr "KByte"
@@ -31219,7 +31262,8 @@ msgstr "LDAP [%s]: A fost eliminat utilizatorul %s."
 msgid "LDAP attribute to be used as indicator"
 msgstr "Atributul LDAP care urmează să fie utilizat ca indicator"
 
-msgid "LDAP attribute to search, The default is <tt>(objectclass=*)</tt>."
+#, fuzzy
+msgid "LDAP attribute to search, the default is <tt>(objectclass=*)</tt>."
 msgstr ""
 "Atributul LDAP de căutat, valoarea implicită este <tt>(objectclass=*)</tt>."
 
@@ -31630,10 +31674,6 @@ msgstr "Rularea moștenirii"
 
 msgid "Legal"
 msgstr "Legal"
-
-#, fuzzy
-msgid "Length"
-msgstr "Lungime maximă"
 
 msgid "Length of Z1 messenger mail queue"
 msgstr "Lungimea cozii de așteptare a mesagerului Z1"
@@ -32437,9 +32477,6 @@ msgstr "Durata de viață rămasă"
 msgid "Limit"
 msgstr "Limitați"
 
-msgid "Limit Path Levels for Service Names"
-msgstr "Limitarea nivelurilor de traseu pentru denumirile de servicii"
-
 msgid "Limit amount of current events"
 msgstr "Limitarea cantității de evenimente curente"
 
@@ -32477,6 +32514,10 @@ msgstr "Obiecte limită"
 
 msgid "Limit of meta data"
 msgstr "Limita de meta-date"
+
+#, fuzzy
+msgid "Limit path levels for service names"
+msgstr "Limitarea nivelurilor de traseu pentru denumirile de servicii"
 
 msgid "Limit processed data"
 msgstr "Limitarea datelor prelucrate"
@@ -32737,6 +32778,10 @@ msgstr ""
 "Enumerați aici toate răspunsurile așteptate permise. Dacă se solicită o "
 "adresă IP, atunci răspunsul va fi nume de gazdă care se termină cu un punct."
 
+#, python-format
+msgid "List can maximally be %d elements long."
+msgstr ""
+
 msgid "List crash reports of all sites"
 msgstr "Lista rapoartelor de accident ale tuturor siturilor"
 
@@ -32745,6 +32790,10 @@ msgstr "Listează în schimb interfețele grupate"
 
 msgid "List grouped interfaces separately"
 msgstr "Listarea separată a interfețelor grupate"
+
+#, fuzzy, python-format
+msgid "List needs to be at least %d elements long."
+msgstr "Trebuie să selectați cel puțin un element."
 
 #, python-format
 msgid "List of %s"
@@ -32840,10 +32889,6 @@ msgid ""
 "different states."
 msgstr ""
 "Listează membrii unui grup de gazde cu numărul de servicii în diferite stări."
-
-#, fuzzy
-msgid "Liter per second"
-msgstr "Litri pe secundă"
 
 msgid "Liters per second"
 msgstr "Litri pe secundă"
@@ -32963,6 +33008,10 @@ msgid "Load balancers"
 msgstr "Balansatoare de sarcină"
 
 msgid "Load balancers Target Groups"
+msgstr "Balansatoare de sarcină Grupuri țintă"
+
+#, fuzzy
+msgid "Load balancers target groups"
 msgstr "Balansatoare de sarcină Grupuri țintă"
 
 #, fuzzy
@@ -33735,6 +33784,10 @@ msgstr "Niveluri mai mici pentru perioada de expirare rămasă a licențelor"
 msgid "Lower levels for requests utilization"
 msgstr "Niveluri inferioare de utilizare a cererilor"
 
+#, fuzzy
+msgid "Lower levels for reservation utilization"
+msgstr "Niveluri inferioare de utilizare a cererilor"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
 "Niveluri inferioare pentru viteza ventilatorului unui dispozitiv hardware"
@@ -33769,12 +33822,6 @@ msgstr "Nivel de avertizare mai scăzut"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Cel mai mic: Nici o notificare, actualizarea numărului de legitimație"
-
-msgid "Luminous flux"
-msgstr ""
-
-msgid "Luminous intensity"
-msgstr ""
 
 msgid "MAC Address"
 msgstr "Adresa MAC"
@@ -34034,14 +34081,6 @@ msgstr ""
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr ""
 "Factorul magic (adaptare automată a nivelului pentru spațiile de masă mari)"
-
-#, fuzzy
-msgid "Magnetic flux"
-msgstr "Spațiul volumelor magnetice"
-
-#, fuzzy
-msgid "Magnetic flux density"
-msgstr "Spațiul volumelor magnetice"
 
 msgid "Magnetic volumes space"
 msgstr "Spațiul volumelor magnetice"
@@ -34588,9 +34627,6 @@ msgstr "Marcați controlerul care se distinge în prezent ca fiind cel preferat"
 msgid "Mark the nodes of the resources as preferred one"
 msgstr "Marcați nodurile din resurse ca fiind cele preferate"
 
-msgid "Mass"
-msgstr ""
-
 msgid "Master Event Console"
 msgstr "Consola principală de evenimente"
 
@@ -34833,6 +34869,10 @@ msgstr "Max Perm utilizat"
 msgid "Max age of the oldest snapshot"
 msgstr "Vârsta maximă a celui mai vechi instantaneu"
 
+#, fuzzy
+msgid "Max allowed connections"
+msgstr "Numarul maxim de conexiuni paralele"
+
 msgid "Max file descriptors"
 msgstr "Descriptori de fișier maxim"
 
@@ -34899,6 +34939,10 @@ msgstr "Vechimea maxima pentru cel mai vechi fisier"
 
 msgid "Maximal cooling capacity"
 msgstr "Capacitate maximă de răcire"
+
+#, fuzzy
+msgid "Maximal count of connections to the SQL server"
+msgstr "Numărul maxim de conexiuni sau de ascultători"
 
 msgid "Maximal file count"
 msgstr "Numarul maxim de fisiere"
@@ -35098,7 +35142,8 @@ msgstr "Latența maximă a cererilor GetItem reușite"
 msgid "Maximum latency of successful PutItem requests"
 msgstr "Latența maximă a cererilor PutItem reușite"
 
-msgid "Maximum latency of successful Query requests"
+#, fuzzy
+msgid "Maximum latency of successful query requests"
 msgstr "Latența maximă a cererilor de interogare reușite"
 
 msgid "Maximum levels if using magic factor"
@@ -35460,9 +35505,6 @@ msgstr "Dimensiunea memoriei (percentila 95)"
 msgid "Memory Size (99th percentile)"
 msgstr "Dimensiunea memoriei (percentila 99)"
 
-msgid "Memory Size in percent"
-msgstr "Dimensiunea memoriei în procente"
-
 msgid "Memory Usage"
 msgstr "Utilizarea memoriei"
 
@@ -35539,6 +35581,14 @@ msgstr "Resurse de memorie: Spațiul de nume"
 
 msgid "Memory resources: StatefulSet"
 msgstr "Resurse de memorie: StatefulSet"
+
+#, fuzzy
+msgid "Memory size"
+msgstr "Dimensiunea memoriei"
+
+#, fuzzy
+msgid "Memory size in percent"
+msgstr "Dimensiunea memoriei în procente"
 
 msgid "Memory that cannot be swapped out"
 msgstr "Memorie care nu poate fi schimbată"
@@ -36018,9 +36068,6 @@ msgstr "Lipsește ID-ul jobului."
 msgid "Missing key \"metric\" in logarithmic perfometer: %r"
 msgstr "Lipsește cheia \"metric\" în perfometrul logaritmic: %r."
 
-msgid "Missing mandatory \"host\" parameter"
-msgstr "Lipsește parametrul \"host\" obligatoriu"
-
 #, python-format
 msgid "Missing needed %s parameter."
 msgstr "Lipsește parametrul necesar %s."
@@ -36350,6 +36397,11 @@ msgstr ""
 
 msgid "Monitor iOS devices"
 msgstr "Monitorizați dispozitivele iOS"
+
+msgid ""
+"Monitor if your VMs are properly protected by the disaster recovery software "
+"Zerto (compatible with Zerto v9.x)."
+msgstr ""
 
 msgid "Monitor menu entries"
 msgstr "Monitorizarea intrărilor din meniu"
@@ -36845,10 +36897,6 @@ msgstr "MySQL Slave"
 msgid "MySQL database sizes"
 msgstr "Dimensiunile bazei de date MySQL"
 
-#, fuzzy
-msgid "N"
-msgstr "N#"
-
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
 msgstr "N * 100%, deoarece fiecare nucleu contribuie cu 100% la sarcină maximă"
@@ -37295,6 +37343,10 @@ msgstr ""
 msgid "Needed for changing a contact when updating an event"
 msgstr "Necesar pentru modificarea unui contact la actualizarea unui eveniment"
 
+#, fuzzy, python-format
+msgid "Needs to be at least %d characters long."
+msgstr "Trebuie să furnizați cel puțin %d caractere."
+
 msgid ""
 "Negate match: Execute this rule if the upper conditions are <b>not</b> "
 "fulfilled."
@@ -37458,6 +37510,18 @@ msgstr "Interfețe de rețea: vizualizare în ultima zi"
 msgid "Network interfaces: last hour view"
 msgstr "Interfețe de rețea: vizualizarea ultimei ore"
 
+#, fuzzy
+msgid "Network load balancer listeners"
+msgstr "Ascultatori de echilibrare a încărcării rețelei"
+
+#, fuzzy
+msgid "Network load balancer target groups"
+msgstr "Grupuri țintă de echilibrare a încărcăturii de rețea"
+
+#, fuzzy
+msgid "Network load balancers"
+msgstr "Balansatoare de sarcină în rețea"
+
 msgid "Network monitoring"
 msgstr "Monitorizarea rețelei"
 
@@ -37526,16 +37590,14 @@ msgstr "Nou"
 msgid "New Action"
 msgstr "Acțiune nouă"
 
-msgid "New Connections"
-msgstr "Noi conexiuni"
-
 msgid "New Password"
 msgstr "Parolă nouă"
 
 msgid "New Password Confirmation"
 msgstr "Confirmare parolă nouă"
 
-msgid "New TLS Connections"
+#, fuzzy
+msgid "New TLS connections"
 msgstr "Noi conexiuni TLS"
 
 msgid ""
@@ -37907,9 +37969,6 @@ msgstr "Nu există gazde/servicii corespunzătoare."
 msgid "No matching metrics found"
 msgstr "Nu s-au găsit metrici corespunzătoare"
 
-msgid "No matching request ID found"
-msgstr "Nu s-a găsit niciun ID de cerere corespunzător"
-
 msgid "No metrics in this graph yet."
 msgstr "Nu există încă metrici în acest grafic."
 
@@ -38100,10 +38159,18 @@ msgstr "Numele nodului"
 msgid "Node Path Matching"
 msgstr "Potrivirea căii nodurilor"
 
+#, fuzzy
+msgid "Node Processor"
+msgstr "Procesor"
+
 msgid "Node Stats"
 msgstr "Statisticile nodurilor"
 
 msgid "Node Status"
+msgstr "Starea nodului"
+
+#, fuzzy
+msgid "Node System"
 msgstr "Starea nodului"
 
 msgid "Node name"
@@ -38854,9 +38921,6 @@ msgstr "Numărul de servicii ale gazdei"
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Numărul de tranzacții pe minut pe un server Lotus Domino"
 
-msgid "Number of Web ACLs"
-msgstr "Numărul de ACL-uri Web"
-
 msgid "Number of accepted connection requests"
 msgstr "Numărul de cereri de conectare acceptate"
 
@@ -39081,6 +39145,10 @@ msgstr "Numărul de jumbo chunks per shard pe colecție"
 msgid "Number of kernel events per second"
 msgstr "Numărul de evenimente de kernel pe secundă"
 
+#, fuzzy
+msgid "Number of levels:"
+msgstr "Numărul de servicii"
+
 msgid "Number of lock requests per second that required the caller to wait."
 msgstr ""
 "Numărul de solicitări de blocare pe secundă care au necesitat o așteptare "
@@ -39234,6 +39302,10 @@ msgstr "Numărul de grupuri de reguli"
 
 msgid "Number of running containers"
 msgstr "Numărul de containere care rulează"
+
+#, fuzzy
+msgid "Number of runs:"
+msgstr "Numărul de bucăți"
 
 msgid "Number of search results"
 msgstr "Numărul de rezultate ale căutării"
@@ -39403,6 +39475,10 @@ msgstr "Numărul de seifuri"
 
 msgid "Number of warnings"
 msgstr "Numărul de avertismente"
+
+#, fuzzy
+msgid "Number of web ACLs"
+msgstr "Numărul de ACL-uri Web"
 
 msgid "Number of write IOPS"
 msgstr "Numărul de IOPS de scriere"
@@ -39778,10 +39854,6 @@ msgstr "Setare veche: \"%s\". Alegeți asta în noul set de reguli."
 msgid "Older events"
 msgstr "Evenimente mai vechi"
 
-msgid "Oldest Replication Slot Lag Size"
-msgstr ""
-"Cea mai veche dimensiune a decalajului de replicare a fantei de replicare"
-
 msgid "Oldest age"
 msgstr "Cea mai veche vârstă"
 
@@ -39799,6 +39871,11 @@ msgstr "Cel mai vechi mai întâi"
 
 msgid "Oldest message age"
 msgstr "Vârsta celui mai vechi mesaj"
+
+#, fuzzy
+msgid "Oldest replication slot lag size"
+msgstr ""
+"Cea mai veche dimensiune a decalajului de replicare a fantei de replicare"
 
 msgid "Omit ICMP payload"
 msgstr "Omiterea încărcăturii utile ICMP"
@@ -39822,11 +39899,11 @@ msgstr "În așteptare"
 msgid "On all sites"
 msgstr "Pe toate site-urile"
 
-msgid "On core restart OR recovery (OK/UP)"
-msgstr ""
-
 msgid "On down host"
 msgstr "Pe jos gazdă"
+
+msgid "On recovery (OK/UP)"
+msgstr ""
 
 msgid "On selected MIBs"
 msgstr "La MIB-urile selectate"
@@ -41434,10 +41511,6 @@ msgstr "Partiții (XEN)"
 msgid "Parts per Million"
 msgstr "Părți per milion"
 
-#, fuzzy
-msgid "Parts per million"
-msgstr "Părți per milion"
-
 msgid "Pascal"
 msgstr "Pascal"
 
@@ -41530,6 +41603,10 @@ msgstr "Calea către sapgenpse"
 
 msgid "Path to temporary directory (will be created)"
 msgstr "Cale de acces la directorul temporar (va fi creat)"
+
+#, fuzzy
+msgid "Path to test suite"
+msgstr "Calea către fișierul .env"
 
 msgid "Path to unix socket"
 msgstr "Calea către socket-ul unix"
@@ -41717,10 +41794,6 @@ msgstr ""
 msgid "Per entry"
 msgstr "Pe intrare"
 
-#, fuzzy
-msgid "Per second"
-msgstr "pe secundă"
-
 msgid "Per topic"
 msgstr "Pe subiect"
 
@@ -41879,10 +41952,6 @@ msgstr "Procentul din totalul RAM"
 
 msgid "Percentage of total service problems"
 msgstr "Procent din totalul problemelor de serviciu"
-
-#, fuzzy
-msgid "Percentage per meter"
-msgstr "Procent pe metru"
 
 msgid "Percentage used"
 msgstr "Procentul utilizat"
@@ -42353,9 +42422,6 @@ msgstr "Comunicarea în text simplu este activată pentru %s."
 msgid "Plaintext"
 msgstr "Plaintext"
 
-msgid "Plane angle"
-msgstr ""
-
 msgid "Platform Firmware level"
 msgstr "Platforma Nivelul firmware-ului"
 
@@ -42389,6 +42455,10 @@ msgid "Please add at least one child node."
 msgstr "Vă rugăm să adăugați cel puțin un nod copil."
 
 msgid "Please add at least one column to your view."
+msgstr "Vă rugăm să adăugați cel puțin o coloană la vizualizarea dvs."
+
+#, fuzzy
+msgid "Please add at least one endpoint to monitor"
 msgstr "Vă rugăm să adăugați cel puțin o coloană la vizualizarea dvs."
 
 msgid ""
@@ -43677,7 +43747,8 @@ msgstr "Procesarea mesajelor de jurnal preexistente"
 msgid "Process stored SNMP walks with agent simulator"
 msgstr "Procesarea plimbărilor SNMP stocate cu simulatorul de agent"
 
-msgid "Processed Bytes"
+#, fuzzy
+msgid "Processed bytes"
 msgstr "Byte procesate"
 
 msgid "Processes"
@@ -44243,6 +44314,11 @@ msgstr ""
 msgid "RCC profile configuration"
 msgstr "Configurație la distanță"
 
+msgid ""
+"RCC profile configuration: RCC profiles can define settings for this "
+"specific RCC environment, for example Proxy settings. <br>"
+msgstr ""
+
 msgid "RCU"
 msgstr "RCU"
 
@@ -44260,6 +44336,10 @@ msgstr "REST API interactiv GUI"
 
 msgid "REST API introduction"
 msgstr "Introducere REST API"
+
+#, fuzzy
+msgid "REST API specification successfully generated"
+msgstr "Gazdă creată cu succes"
 
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST API: Utilizați HTTP ETags pentru blocarea optimistă"
@@ -44359,7 +44439,7 @@ msgstr "Reglarea RRDCached"
 msgid "RSA"
 msgstr "RA"
 
-msgid "RSASSA_PSS"
+msgid "RSASSA-PSS"
 msgstr ""
 
 #, python-format
@@ -44432,14 +44512,6 @@ msgstr "RabbitMQ vhosts"
 
 msgid "Radial layout"
 msgstr "Dispunere radială"
-
-#, fuzzy
-msgid "Radioactive activity"
-msgstr "activ / activ"
-
-#, fuzzy
-msgid "Radioactive dose"
-msgstr "gazde inactive"
 
 msgid "Raid controllers from Areca"
 msgstr "Controlere Raid de la Areca"
@@ -44537,9 +44609,6 @@ msgstr "Media execuțiilor de citire (ms)"
 msgid "Read Average RTT (ms)"
 msgstr "RTT mediu de citire (ms)"
 
-msgid "Read Capacity"
-msgstr "Capacitatea de citire"
-
 msgid "Read Capacity Units"
 msgstr "Unități de capacitate de citire"
 
@@ -44581,10 +44650,6 @@ msgstr "Citire de octeți pe operațiune"
 
 msgid "Read capacity"
 msgstr "Capacitatea de citire"
-
-#, fuzzy
-msgid "Read capacity unit"
-msgstr "Unități de capacitate de citire"
 
 msgid "Read hits"
 msgstr "Citiți hiturile"
@@ -44833,10 +44898,6 @@ msgstr "Secretele redactate au fost schimbate."
 
 msgid "Redirect URL (has to be https)"
 msgstr "URL de redirecționare (trebuie să fie https)"
-
-#, fuzzy
-msgid "Redirects"
-msgstr "Redirecționări HTTP"
 
 msgid "Redis clients"
 msgstr "Clienți Redis"
@@ -45164,11 +45225,12 @@ msgstr "Expresie regulată de așteptat în conținut"
 msgid "Regular heartbeat"
 msgstr "Bătăi regulate ale inimii"
 
-msgid "Rejected Connections"
-msgstr "Conexiuni respinse"
-
 msgid "Rejected connection requests"
 msgstr "Cereri de conectare respinse"
+
+#, fuzzy
+msgid "Rejected connections"
+msgstr "Conexiuni respinse"
 
 msgid "Rejected sessions"
 msgstr "Sesiuni respinse"
@@ -45436,6 +45498,10 @@ msgid "Remove this element"
 msgstr "Eliminați acest element"
 
 #, fuzzy
+msgid "Remove this endpoint"
+msgstr "Mutați această intrare"
+
+#, fuzzy
 msgid "Remove this entry"
 msgstr "Mutați această intrare"
 
@@ -45654,10 +45720,6 @@ msgstr "Repetați acest timp de oprire"
 msgid "Repeats every %s"
 msgstr "se repetă la fiecare 20'th rând"
 
-#, python-brace-format
-msgid "Repetition change for item {diff_path}."
-msgstr "Schimbarea repetiției pentru elementul {diff_path}."
-
 msgid ""
 "Replace the application (syslog tag) with this text. If you have bracketed "
 "groups in the text to match, then you can use the placeholders <tt>\\1</tt>, "
@@ -45707,11 +45769,12 @@ msgstr "Refaceți această notificare, trimiteți-o din nou!"
 msgid "Replayed notification number %d"
 msgstr "Număr de notificare reprodus %d"
 
-msgid "Replica Lag"
-msgstr "Replica Lag"
-
 msgid "Replica available state"
 msgstr "Replică stare disponibilă"
+
+#, fuzzy
+msgid "Replica lag"
+msgstr "Replica Lag"
 
 msgid "Replica ready state"
 msgstr "Starea de pregătire a replicilor"
@@ -45742,9 +45805,6 @@ msgstr "Lag de replicare"
 
 msgid "Replication Partner"
 msgstr "Partener de replicare"
-
-msgid "Replication Slot Disk Usage"
-msgstr "Slot de replicare Utilizare disc"
 
 msgid "Replication States"
 msgstr "Stări de replicare"
@@ -45787,6 +45847,10 @@ msgstr ""
 "aplicarea acelei operațiuni de pe oplog pe secundar.Cu această configurație, "
 "check_mk va alerta dacă decalajul de replicare depășește un prag pe o "
 "perioadă de timp extinsă."
+
+#, fuzzy
+msgid "Replication slot disk usage"
+msgstr "Slot de replicare Utilizare disc"
 
 msgid "Replication synchronization"
 msgstr "Sincronizarea replicării"
@@ -46549,16 +46613,9 @@ msgstr "Cadrul robotului: %s"
 msgid "Robot Framework re-executions"
 msgstr "Cadrul robotului: %s"
 
-#, fuzzy
-msgid "Robot Framework target"
-msgstr "Cadrul robotului: %s"
-
 #, python-format
 msgid "Robot Framework: %s"
 msgstr "Cadrul robotului: %s"
-
-msgid "Robot Framework: Last error log"
-msgstr "Cadrul robotului: Ultimul jurnal de erori"
 
 msgid "Robot Framework: Last log"
 msgstr "Cadrul robotului: Ultimul jurnal"
@@ -46663,9 +46720,6 @@ msgstr "Regula %d în %s"
 msgid "Rule %d in Folder %s is affected"
 msgstr "Regula %d din Dosarul %s este afectată"
 
-msgid "Rule Evaluations"
-msgstr "Evaluări ale regulilor"
-
 msgid "Rule ID"
 msgstr "ID-ul regulii"
 
@@ -46699,6 +46753,10 @@ msgstr "Editor de reguli"
 
 msgid "Rule efficiency"
 msgstr "Eficiența regulilor"
+
+#, fuzzy
+msgid "Rule evaluations"
+msgstr "Evaluări ale regulilor"
 
 msgid "Rule groups"
 msgstr "Grupuri de reguli"
@@ -47002,10 +47060,6 @@ msgstr "Rx"
 msgid "Rx power level"
 msgstr "Nivelul de putere Rx"
 
-#, fuzzy
-msgid "S"
-msgstr "S."
-
 msgid "S."
 msgstr "S."
 
@@ -47075,10 +47129,12 @@ msgstr "Necorespundere șablon SDM"
 msgid "SDR cache recreate"
 msgstr "Recreează memoria cache SDR"
 
-msgid "SELECT Object Returned"
+#, fuzzy
+msgid "SELECT object returned"
 msgstr "SELECT Obiect returnat"
 
-msgid "SELECT Object Scanned"
+#, fuzzy
+msgid "SELECT object scanned"
 msgstr "SELECT Obiect scanat"
 
 msgid "SELinux information"
@@ -47099,29 +47155,40 @@ msgstr "SHA-2 (SHA-384)"
 msgid "SHA-2 (SHA-512)"
 msgstr "SHA-2 (SHA-512)"
 
-msgid "SHA224"
+#, fuzzy
+msgid "SHA-224"
+msgstr "SHA-2 (SHA-224)"
+
+#, fuzzy
+msgid "SHA-256"
+msgstr "AES-256"
+
+#, fuzzy
+msgid "SHA-384"
+msgstr "SHA-2 (SHA-384)"
+
+#, fuzzy
+msgid "SHA-512"
+msgstr "SHA-2 (SHA-512)"
+
+msgid "SHA-512 (fixed)"
 msgstr ""
 
-msgid "SHA256"
-msgstr ""
+#, fuzzy
+msgid "SHA3-224"
+msgstr "SHA-2 (SHA-224)"
 
-msgid "SHA384"
-msgstr ""
+#, fuzzy
+msgid "SHA3-256"
+msgstr "AES-256"
 
-msgid "SHA3_224"
-msgstr ""
+#, fuzzy
+msgid "SHA3-384"
+msgstr "SHA-2 (SHA-384)"
 
-msgid "SHA3_256"
-msgstr ""
-
-msgid "SHA3_384"
-msgstr ""
-
-msgid "SHA3_512"
-msgstr ""
-
-msgid "SHA512"
-msgstr ""
+#, fuzzy
+msgid "SHA3-512"
+msgstr "SHA-2 (SHA-512)"
 
 msgid "SID"
 msgstr "SID"
@@ -47745,6 +47812,10 @@ msgstr "Căutarea de norme eficiente"
 msgid "Search for enabled rules"
 msgstr "Căutați reguli activate"
 
+#, fuzzy
+msgid "Search for header"
+msgstr "Căutați reguli activate"
+
 #, python-format
 msgid "Search for hosts below %s"
 msgstr "Căutați gazde sub %s"
@@ -47769,6 +47840,10 @@ msgstr "Căutați seturi de reguli care au reguli configurate"
 msgid "Search for services and display their graphs"
 msgstr "Căutați servicii și afișați graficele acestora"
 
+#, fuzzy
+msgid "Search for strings"
+msgstr "Cautare"
+
 msgid "Search history"
 msgstr "Istoric de căutare"
 
@@ -47780,6 +47855,10 @@ msgstr "Căutare în Monitorizare"
 
 msgid "Search in Setup"
 msgstr "Căutare în configurare"
+
+#, fuzzy
+msgid "Search in body"
+msgstr "Indice de căutare"
 
 msgid "Search in this folder"
 msgstr "Căutați în acest dosar"
@@ -47923,10 +48002,6 @@ msgstr "Secunde înainte de expirarea conexiunii"
 
 msgid "Seconds of operation"
 msgstr "Secunde de funcționare"
-
-#, fuzzy
-msgid "Seconds per second"
-msgstr "secunde pe secundă"
 
 msgid "Seconds since service"
 msgstr "Secunde de la service"
@@ -49275,6 +49350,10 @@ msgstr "Setarea manuală a rezultatelor verificării la %s?"
 msgid "Set field delimiter"
 msgstr "Setați delimitatorul de câmp"
 
+#, fuzzy
+msgid "Set fixed limits"
+msgstr "Setați delimitatorul de câmp"
+
 msgid ""
 "Set global variables. Only scalar variables with string values are "
 "supported, and name is given without <tt>${}</tt>. (See <tt>--variablefile</"
@@ -49527,6 +49606,13 @@ msgstr ""
 "Setați starea de monitorizare a sarcinilor care nu sunt activate (de "
 "exemplu, pentru că au fost dezactivate după ce au fost descoperite)."
 
+msgid ""
+"Set the name of the top level suite. By default the name is created based on "
+"the executed file or directory.<br>This sets the name of a fresh discovered "
+"Robot service; an already existing service will hide away and will be found "
+"by the discovery under a new name."
+msgstr ""
+
 msgid "Set the organization of the InfluxDB server."
 msgstr "Setați organizarea serverului InfluxDB."
 
@@ -49735,6 +49821,9 @@ msgstr ""
 
 msgid "Setup"
 msgstr "Configurare"
+
+msgid "Setup (formerly Wato)"
+msgstr ""
 
 msgid ""
 "Setup can repair things for you. It can rename tags in folders, host and "
@@ -51012,10 +51101,6 @@ msgstr "Solaris: PKG (.pkg)"
 msgid "Solaris: TGZ (.tar.gz)"
 msgstr "Solaris: TGZ (.tar.gz)"
 
-#, fuzzy
-msgid "Solid angle"
-msgstr "Single"
-
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
 "incompatible extension packages."
@@ -52192,12 +52277,25 @@ msgstr "Solicitări pentru flotele spot Capacitatea țintă totală"
 msgid "Spot Instance Requests"
 msgstr "Cereri de instanță la fața locului"
 
+#, fuzzy
+msgid "Spot fleet requests total target capacity"
+msgstr "Solicitări pentru flotele spot Capacitatea țintă totală"
+
+#, fuzzy
+msgid "Spot instance requests"
+msgstr "Cereri de instanță la fața locului"
+
 msgid "Spread over"
 msgstr "Se întinde peste"
 
-#, python-format
-msgid "Spreading: %s minutes"
-msgstr "Întindere: %s minute"
+#, fuzzy, python-format
+msgid "Spread should be a positive number: %s"
+msgstr "Vă rugăm să introduceți un număr pozitiv de minute."
+
+msgid ""
+"Spreading distributes checks evenly over the specified period. This helps to "
+"avoid short-term peaks in CPU usage and therefore, performance problems."
+msgstr ""
 
 msgid "Sproc Latency"
 msgstr "Latență Sproc"
@@ -52243,8 +52341,12 @@ msgid "Standard deviation of roundtrip times in ms"
 msgstr "Abaterea standard a timpilor de parcurs dus-întors în ms"
 
 #, fuzzy
-msgid "Standard settings"
+msgid "Standard settings for all endpoints"
 msgstr "Setări SLA"
+
+#, fuzzy
+msgid "Standard topics"
+msgstr "Teme standard"
 
 msgid "Standby"
 msgstr "Standby"
@@ -52358,7 +52460,8 @@ msgstr "Începând cu intrarea"
 
 #, python-format
 msgid ""
-"Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours."
+"Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours "
+"and %d %s."
 msgstr ""
 
 msgid "Startup overhead in shared pool"
@@ -53455,10 +53558,6 @@ msgstr ""
 "Șir de caractere care se trimite serverului pentru a iniția o închidere "
 "curată a conexiunii"
 
-#, fuzzy
-msgid "String validation"
-msgstr "Acțiune invalidă"
-
 msgid "Strings to expect in response"
 msgstr "Șiruri de caractere de așteptat în răspuns"
 
@@ -53712,10 +53811,6 @@ msgstr "Suspendat"
 
 msgid "Suspending"
 msgstr "Suspendarea"
-
-#, fuzzy
-msgid "Sv"
-msgstr "Salveaza"
 
 msgid "Swap"
 msgstr "Schimbați"
@@ -54062,15 +54157,8 @@ msgstr "Rezumatul socket-urilor Systemd"
 msgid "Systems larger than"
 msgstr "Sisteme mai mari de"
 
-#, fuzzy
-msgid "T"
-msgstr "TX"
-
 msgid "TCP"
 msgstr "TCP"
-
-msgid "TCP Client Resets"
-msgstr "Resetarea clienților TCP"
 
 msgid "TCP Connect"
 msgstr "Conectare TCP"
@@ -54082,7 +54170,8 @@ msgstr "Stări de conexiune TCP"
 msgid "TCP Connection Timeout (<a href=\"%s\">Rules</a>)"
 msgstr "Timpul de expirare a conexiunii TCP (<a href=\"%s\">Reguli</a>)"
 
-msgid "TCP ELB Resets"
+#, fuzzy
+msgid "TCP ELB resets"
 msgstr "Resetarea TCP ELB"
 
 msgid "TCP Flags Distribution"
@@ -54112,11 +54201,12 @@ msgstr "Portul TCP la care să se conecteze"
 msgid "TCP SYN"
 msgstr "TCP SYN"
 
-msgid "TCP Target Resets"
-msgstr "Resetarea țintei TCP"
-
 msgid "TCP address to connect to"
 msgstr "Adresa TCP la care să se conecteze"
+
+#, fuzzy
+msgid "TCP client resets"
+msgstr "Resetarea clienților TCP"
 
 msgid "TCP connect"
 msgstr "Conectare TCP"
@@ -54148,6 +54238,10 @@ msgstr "Numar port TCP pentru conexiune. Deobicei 139 sau 445."
 msgid "TCP port of Carbon line receiver"
 msgstr "Portul TCP al receptorului liniei Carbon"
 
+#, fuzzy
+msgid "TCP target resets"
+msgstr "Resetarea țintei TCP"
+
 msgid "TCP timeouts"
 msgstr "Timpi de așteptare TCP"
 
@@ -54163,7 +54257,8 @@ msgstr "TLS"
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLS Autentificarea fără TLS nu este posibilă"
 
-msgid "TLS Processed Bytes"
+#, fuzzy
+msgid "TLS processed bytes"
 msgstr "Byte procesate TLS"
 
 #, fuzzy
@@ -55034,6 +55129,10 @@ msgstr "DN-ul de bază al grupului nu este configurat, nu se preia niciun grup."
 
 msgid "The Hostname of the MongoDB Server."
 msgstr "Numele de gazdă al serverului MongoDB."
+
+#, fuzzy, python-format
+msgid "The ID %s is already used by another connection."
+msgstr "Acest id este deja utilizat de o altă conexiune."
 
 msgid "The ID is already used by another role"
 msgstr "ID-ul este deja utilizat de un alt rol"
@@ -56568,6 +56667,10 @@ msgstr "Grupurile de contacte permise de dosar's sunt <b>%s</b>."
 
 #, python-format
 msgid "The following %s could not be found: %s"
+msgstr "Următorul %s nu a putut fi găsit: %s."
+
+#, fuzzy, python-format
+msgid "The following characters are forbidden: %s"
 msgstr "Următorul %s nu a putut fi găsit: %s."
 
 msgid ""
@@ -59819,6 +59922,10 @@ msgstr "În prezent, această agregare a ieșit din perioada de funcționare."
 msgid "This aggregation is frozen"
 msgstr "Această agregare este înghețată"
 
+#, fuzzy
+msgid "This aggregation is frozen. The live version has changes."
+msgstr "Această agregare este activată în prezent."
+
 #, python-format
 msgid ""
 "This alert handler allows the remote execution of scripts and programs on "
@@ -62526,11 +62633,6 @@ msgstr ""
 "Această regulă selectează agentul UCS Bladecenter în locul agentului Checkmk "
 "normal, care colectează datele prin intermediul UCS Bladecenter Web API"
 
-msgid "This rule selects the Zerto special agent for an existing Checkmk host"
-msgstr ""
-"Această regulă selectează agentul special Zerto pentru o gazdă Checkmk "
-"existentă"
-
 msgid "This rule selects the special agent for Salesforce."
 msgstr "Această regulă selectează agentul special pentru Salesforce."
 
@@ -63842,11 +63944,12 @@ msgstr "Clapete de accelerație"
 msgid "Throughput"
 msgstr "Randament"
 
-msgid "Throughput Optimized HDD space"
-msgstr "Performanță Optimizarea spațiului HDD"
-
 msgid "Throughput levels"
 msgstr "Niveluri de randament"
+
+#, fuzzy
+msgid "Throughput optimized HDD space"
+msgstr "Performanță Optimizarea spațiului HDD"
 
 msgid "Thursday"
 msgstr "Joi"
@@ -64596,6 +64699,10 @@ msgstr "Traficul aplicațiilor de top: vizualizare în ultima zi"
 msgid "Top application traffic: last hour view"
 msgstr "Traficul aplicațiilor de top: vizualizarea ultimei ore"
 
+#, fuzzy, python-format
+msgid "Top level suite name (%s)"
+msgstr "Denumire de securitate"
+
 #, fuzzy
 msgid "Top list"
 msgstr "Vorbitori de top"
@@ -65037,10 +65144,23 @@ msgstr "Total pagini tipărite"
 msgid "Total query timeout"
 msgstr "Timeout total de interogare"
 
+#, fuzzy
+msgid "Total reservation utilization"
+msgstr "Utilizarea totală a memoriei"
+
 msgid "Total restarts"
 msgstr "Total reporniri"
 
-msgid "Total running On-Demand Instances"
+#, fuzzy
+msgid "Total running On-Demand F instances vCPUs"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running On-Demand G instances vCPUs"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running On-Demand Inf instances vCPUs"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
@@ -65048,1683 +65168,1700 @@ msgid "Total running On-Demand Instances of type z1d"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand a1.2xlarge Instances"
+msgid "Total running On-Demand P instances vCPUs"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand a1.4xlarge Instances"
+msgid ""
+"Total running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs"
+msgstr "Funcționare la cerere Instanțe standard (A, C, D, H, I, M, R, T, Z)"
+
+#, fuzzy
+msgid "Total running On-Demand X instances vCPUs"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running On-Demand a1.2xlarge instances"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running On-Demand a1.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand a1.large Instances"
+msgid "Total running On-Demand a1.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand a1.medium Instances"
+msgid "Total running On-Demand a1.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand a1.metal Instances"
+msgid "Total running On-Demand a1.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand a1.xlarge Instances"
+msgid "Total running On-Demand a1.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c1.medium Instances"
+msgid "Total running On-Demand c1.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c1.xlarge Instances"
+msgid "Total running On-Demand c1.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c3.2xlarge Instances"
+msgid "Total running On-Demand c3.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c3.4xlarge Instances"
+msgid "Total running On-Demand c3.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c3.8xlarge Instances"
+msgid "Total running On-Demand c3.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c3.large Instances"
+msgid "Total running On-Demand c3.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c3.xlarge Instances"
+msgid "Total running On-Demand c3.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c4.2xlarge Instances"
+msgid "Total running On-Demand c4.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c4.4xlarge Instances"
+msgid "Total running On-Demand c4.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c4.8xlarge Instances"
+msgid "Total running On-Demand c4.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c4.large Instances"
+msgid "Total running On-Demand c4.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c4.xlarge Instances"
+msgid "Total running On-Demand c4.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5.12xlarge Instances"
+msgid "Total running On-Demand c5.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5.18xlarge Instances"
+msgid "Total running On-Demand c5.18xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5.24xlarge Instances"
+msgid "Total running On-Demand c5.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5.2xlarge Instances"
+msgid "Total running On-Demand c5.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5.4xlarge Instances"
+msgid "Total running On-Demand c5.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5.9xlarge Instances"
+msgid "Total running On-Demand c5.9xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5.large Instances"
+msgid "Total running On-Demand c5.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5.metal Instances"
+msgid "Total running On-Demand c5.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5.xlarge Instances"
+msgid "Total running On-Demand c5.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5a.12xlarge Instances"
+msgid "Total running On-Demand c5a.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5a.16xlarge Instances"
+msgid "Total running On-Demand c5a.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5a.24xlarge Instances"
+msgid "Total running On-Demand c5a.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5a.2xlarge Instances"
+msgid "Total running On-Demand c5a.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5a.4xlarge Instances"
+msgid "Total running On-Demand c5a.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5a.8xlarge Instances"
+msgid "Total running On-Demand c5a.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5a.large Instances"
+msgid "Total running On-Demand c5a.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5a.xlarge Instances"
+msgid "Total running On-Demand c5a.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5ad.12xlarge Instances"
+msgid "Total running On-Demand c5ad.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5ad.16xlarge Instances"
+msgid "Total running On-Demand c5ad.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5ad.24xlarge Instances"
+msgid "Total running On-Demand c5ad.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5ad.2xlarge Instances"
+msgid "Total running On-Demand c5ad.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5ad.4xlarge Instances"
+msgid "Total running On-Demand c5ad.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5ad.8xlarge Instances"
+msgid "Total running On-Demand c5ad.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5ad.large Instances"
+msgid "Total running On-Demand c5ad.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5ad.xlarge Instances"
+msgid "Total running On-Demand c5ad.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5d.12xlarge Instances"
+msgid "Total running On-Demand c5d.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5d.18xlarge Instances"
+msgid "Total running On-Demand c5d.18xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5d.24xlarge Instances"
+msgid "Total running On-Demand c5d.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5d.2xlarge Instances"
+msgid "Total running On-Demand c5d.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5d.4xlarge Instances"
+msgid "Total running On-Demand c5d.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5d.9xlarge Instances"
+msgid "Total running On-Demand c5d.9xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5d.large Instances"
+msgid "Total running On-Demand c5d.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5d.metal Instances"
+msgid "Total running On-Demand c5d.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5d.xlarge Instances"
+msgid "Total running On-Demand c5d.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5n.18xlarge Instances"
+msgid "Total running On-Demand c5n.18xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5n.2xlarge Instances"
+msgid "Total running On-Demand c5n.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5n.4xlarge Instances"
+msgid "Total running On-Demand c5n.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5n.9xlarge Instances"
+msgid "Total running On-Demand c5n.9xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5n.large Instances"
+msgid "Total running On-Demand c5n.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5n.metal Instances"
+msgid "Total running On-Demand c5n.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c5n.xlarge Instances"
+msgid "Total running On-Demand c5n.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6g.12xlarge Instances"
+msgid "Total running On-Demand c6g.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6g.16xlarge Instances"
+msgid "Total running On-Demand c6g.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6g.2xlarge Instances"
+msgid "Total running On-Demand c6g.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6g.4xlarge Instances"
+msgid "Total running On-Demand c6g.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6g.8xlarge Instances"
+msgid "Total running On-Demand c6g.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6g.large Instances"
+msgid "Total running On-Demand c6g.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6g.medium Instances"
+msgid "Total running On-Demand c6g.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6g.metal Instances"
+msgid "Total running On-Demand c6g.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6g.xlarge Instances"
+msgid "Total running On-Demand c6g.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gd.12xlarge Instances"
+msgid "Total running On-Demand c6gd.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gd.16xlarge Instances"
+msgid "Total running On-Demand c6gd.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gd.2xlarge Instances"
+msgid "Total running On-Demand c6gd.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gd.4xlarge Instances"
+msgid "Total running On-Demand c6gd.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gd.8xlarge Instances"
+msgid "Total running On-Demand c6gd.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gd.large Instances"
+msgid "Total running On-Demand c6gd.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gd.medium Instances"
+msgid "Total running On-Demand c6gd.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gd.metal Instances"
+msgid "Total running On-Demand c6gd.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gd.xlarge Instances"
+msgid "Total running On-Demand c6gd.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gn.12xlarge Instances"
+msgid "Total running On-Demand c6gn.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gn.16xlarge Instances"
+msgid "Total running On-Demand c6gn.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gn.2xlarge Instances"
+msgid "Total running On-Demand c6gn.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gn.4xlarge Instances"
+msgid "Total running On-Demand c6gn.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gn.8xlarge Instances"
+msgid "Total running On-Demand c6gn.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gn.large Instances"
+msgid "Total running On-Demand c6gn.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gn.medium Instances"
+msgid "Total running On-Demand c6gn.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand c6gn.xlarge Instances"
+msgid "Total running On-Demand c6gn.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand cc1.4xlarge Instances"
+msgid "Total running On-Demand cc1.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand cc2.8xlarge Instances"
+msgid "Total running On-Demand cc2.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand cg1.4xlarge Instances"
+msgid "Total running On-Demand cg1.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand cr1.8xlarge Instances"
+msgid "Total running On-Demand cr1.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d2.2xlarge Instances"
+msgid "Total running On-Demand d2.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d2.4xlarge Instances"
+msgid "Total running On-Demand d2.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d2.8xlarge Instances"
+msgid "Total running On-Demand d2.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d2.xlarge Instances"
+msgid "Total running On-Demand d2.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3.2xlarge Instances"
+msgid "Total running On-Demand d3.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3.4xlarge Instances"
+msgid "Total running On-Demand d3.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3.8xlarge Instances"
+msgid "Total running On-Demand d3.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3.xlarge Instances"
+msgid "Total running On-Demand d3.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3en.12xlarge Instances"
+msgid "Total running On-Demand d3en.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3en.2xlarge Instances"
+msgid "Total running On-Demand d3en.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3en.4xlarge Instances"
+msgid "Total running On-Demand d3en.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3en.6xlarge Instances"
+msgid "Total running On-Demand d3en.6xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3en.8xlarge Instances"
+msgid "Total running On-Demand d3en.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand d3en.xlarge Instances"
+msgid "Total running On-Demand d3en.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand f1.16xlarge Instances"
+msgid "Total running On-Demand f1.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand f1.2xlarge Instances"
+msgid "Total running On-Demand f1.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand f1.4xlarge Instances"
+msgid "Total running On-Demand f1.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g2.2xlarge Instances"
+msgid "Total running On-Demand g2.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g2.8xlarge Instances"
+msgid "Total running On-Demand g2.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g3.16xlarge Instances"
+msgid "Total running On-Demand g3.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g3.4xlarge Instances"
+msgid "Total running On-Demand g3.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g3.8xlarge Instances"
+msgid "Total running On-Demand g3.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g3s.xlarge Instances"
+msgid "Total running On-Demand g3s.xlarge instances"
 msgstr "Totalul instanțelor On-Demand %s care rulează la cerere"
 
 #, fuzzy
-msgid "Total running On-Demand g4ad.16xlarge Instances"
+msgid "Total running On-Demand g4ad.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4ad.2xlarge Instances"
+msgid "Total running On-Demand g4ad.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4ad.4xlarge Instances"
+msgid "Total running On-Demand g4ad.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4ad.8xlarge Instances"
+msgid "Total running On-Demand g4ad.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4ad.xlarge Instances"
+msgid "Total running On-Demand g4ad.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4dn.12xlarge Instances"
+msgid "Total running On-Demand g4dn.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4dn.16xlarge Instances"
+msgid "Total running On-Demand g4dn.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4dn.2xlarge Instances"
+msgid "Total running On-Demand g4dn.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4dn.4xlarge Instances"
+msgid "Total running On-Demand g4dn.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4dn.8xlarge Instances"
+msgid "Total running On-Demand g4dn.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4dn.metal Instances"
+msgid "Total running On-Demand g4dn.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand g4dn.xlarge Instances"
+msgid "Total running On-Demand g4dn.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand h1.16xlarge Instances"
+msgid "Total running On-Demand h1.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand h1.2xlarge Instances"
+msgid "Total running On-Demand h1.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand h1.4xlarge Instances"
+msgid "Total running On-Demand h1.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand h1.8xlarge Instances"
+msgid "Total running On-Demand h1.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand hi1.4xlarge Instances"
+msgid "Total running On-Demand hi1.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand hs1.8xlarge Instances"
+msgid "Total running On-Demand hs1.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand %s care rulează la cerere"
 
 #, fuzzy
-msgid "Total running On-Demand i2.2xlarge Instances"
+msgid "Total running On-Demand i2.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i2.4xlarge Instances"
+msgid "Total running On-Demand i2.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i2.8xlarge Instances"
+msgid "Total running On-Demand i2.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i2.xlarge Instances"
+msgid "Total running On-Demand i2.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3.16xlarge Instances"
+msgid "Total running On-Demand i3.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3.2xlarge Instances"
+msgid "Total running On-Demand i3.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3.4xlarge Instances"
+msgid "Total running On-Demand i3.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3.8xlarge Instances"
+msgid "Total running On-Demand i3.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3.large Instances"
+msgid "Total running On-Demand i3.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3.metal Instances"
+msgid "Total running On-Demand i3.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3.xlarge Instances"
+msgid "Total running On-Demand i3.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3en.12xlarge Instances"
+msgid "Total running On-Demand i3en.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3en.24xlarge Instances"
+msgid "Total running On-Demand i3en.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3en.2xlarge Instances"
+msgid "Total running On-Demand i3en.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3en.3xlarge Instances"
+msgid "Total running On-Demand i3en.3xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3en.6xlarge Instances"
+msgid "Total running On-Demand i3en.6xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3en.large Instances"
+msgid "Total running On-Demand i3en.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3en.metal Instances"
+msgid "Total running On-Demand i3en.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand i3en.xlarge Instances"
+msgid "Total running On-Demand i3en.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand inf1.24xlarge Instances"
+msgid "Total running On-Demand inf1.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand inf1.2xlarge Instances"
+msgid "Total running On-Demand inf1.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand inf1.6xlarge Instances"
+msgid "Total running On-Demand inf1.6xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand inf1.xlarge Instances"
+msgid "Total running On-Demand inf1.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m1.large Instances"
+msgid "Total running On-Demand instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m1.medium Instances"
+msgid "Total running On-Demand m1.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m1.small Instances"
+msgid "Total running On-Demand m1.medium instances"
+msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+msgid "Total running On-Demand m1.small instances"
 msgstr "Totalul instanțelor On-Demand %s care rulează la cerere"
 
 #, fuzzy
-msgid "Total running On-Demand m1.xlarge Instances"
+msgid "Total running On-Demand m1.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m2.2xlarge Instances"
+msgid "Total running On-Demand m2.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m2.4xlarge Instances"
+msgid "Total running On-Demand m2.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m2.xlarge Instances"
+msgid "Total running On-Demand m2.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m3.2xlarge Instances"
+msgid "Total running On-Demand m3.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m3.large Instances"
+msgid "Total running On-Demand m3.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m3.medium Instances"
+msgid "Total running On-Demand m3.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m3.xlarge Instances"
+msgid "Total running On-Demand m3.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m4.10xlarge Instances"
+msgid "Total running On-Demand m4.10xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m4.16xlarge Instances"
+msgid "Total running On-Demand m4.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m4.2xlarge Instances"
+msgid "Total running On-Demand m4.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m4.4xlarge Instances"
+msgid "Total running On-Demand m4.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m4.large Instances"
+msgid "Total running On-Demand m4.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m4.xlarge Instances"
+msgid "Total running On-Demand m4.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5.12xlarge Instances"
+msgid "Total running On-Demand m5.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5.16xlarge Instances"
+msgid "Total running On-Demand m5.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5.24xlarge Instances"
+msgid "Total running On-Demand m5.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5.2xlarge Instances"
+msgid "Total running On-Demand m5.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5.4xlarge Instances"
+msgid "Total running On-Demand m5.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5.8xlarge Instances"
+msgid "Total running On-Demand m5.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5.large Instances"
+msgid "Total running On-Demand m5.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5.metal Instances"
+msgid "Total running On-Demand m5.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5.xlarge Instances"
+msgid "Total running On-Demand m5.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5a.12xlarge Instances"
+msgid "Total running On-Demand m5a.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5a.16xlarge Instances"
+msgid "Total running On-Demand m5a.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5a.24xlarge Instances"
+msgid "Total running On-Demand m5a.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5a.2xlarge Instances"
+msgid "Total running On-Demand m5a.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5a.4xlarge Instances"
+msgid "Total running On-Demand m5a.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5a.8xlarge Instances"
+msgid "Total running On-Demand m5a.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5a.large Instances"
+msgid "Total running On-Demand m5a.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5a.xlarge Instances"
+msgid "Total running On-Demand m5a.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5ad.12xlarge Instances"
+msgid "Total running On-Demand m5ad.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5ad.16xlarge Instances"
+msgid "Total running On-Demand m5ad.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5ad.24xlarge Instances"
+msgid "Total running On-Demand m5ad.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5ad.2xlarge Instances"
+msgid "Total running On-Demand m5ad.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5ad.4xlarge Instances"
+msgid "Total running On-Demand m5ad.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5ad.8xlarge Instances"
+msgid "Total running On-Demand m5ad.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5ad.large Instances"
+msgid "Total running On-Demand m5ad.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5ad.xlarge Instances"
+msgid "Total running On-Demand m5ad.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5d.12xlarge Instances"
+msgid "Total running On-Demand m5d.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5d.16xlarge Instances"
+msgid "Total running On-Demand m5d.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5d.24xlarge Instances"
+msgid "Total running On-Demand m5d.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5d.2xlarge Instances"
+msgid "Total running On-Demand m5d.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5d.4xlarge Instances"
+msgid "Total running On-Demand m5d.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5d.8xlarge Instances"
+msgid "Total running On-Demand m5d.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5d.large Instances"
+msgid "Total running On-Demand m5d.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5d.metal Instances"
+msgid "Total running On-Demand m5d.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5d.xlarge Instances"
+msgid "Total running On-Demand m5d.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5dn.12xlarge Instances"
+msgid "Total running On-Demand m5dn.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5dn.16xlarge Instances"
+msgid "Total running On-Demand m5dn.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5dn.24xlarge Instances"
+msgid "Total running On-Demand m5dn.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5dn.2xlarge Instances"
+msgid "Total running On-Demand m5dn.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5dn.4xlarge Instances"
+msgid "Total running On-Demand m5dn.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5dn.8xlarge Instances"
+msgid "Total running On-Demand m5dn.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5dn.large Instances"
+msgid "Total running On-Demand m5dn.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5dn.metal Instances"
+msgid "Total running On-Demand m5dn.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5dn.xlarge Instances"
+msgid "Total running On-Demand m5dn.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5n.12xlarge Instances"
+msgid "Total running On-Demand m5n.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5n.16xlarge Instances"
+msgid "Total running On-Demand m5n.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5n.24xlarge Instances"
+msgid "Total running On-Demand m5n.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5n.2xlarge Instances"
+msgid "Total running On-Demand m5n.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5n.4xlarge Instances"
+msgid "Total running On-Demand m5n.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5n.8xlarge Instances"
+msgid "Total running On-Demand m5n.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5n.large Instances"
+msgid "Total running On-Demand m5n.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5n.metal Instances"
+msgid "Total running On-Demand m5n.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5n.xlarge Instances"
+msgid "Total running On-Demand m5n.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5zn.12xlarge Instances"
+msgid "Total running On-Demand m5zn.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5zn.2xlarge Instances"
+msgid "Total running On-Demand m5zn.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5zn.3xlarge Instances"
+msgid "Total running On-Demand m5zn.3xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5zn.6xlarge Instances"
+msgid "Total running On-Demand m5zn.6xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5zn.large Instances"
+msgid "Total running On-Demand m5zn.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5zn.metal Instances"
+msgid "Total running On-Demand m5zn.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m5zn.xlarge Instances"
+msgid "Total running On-Demand m5zn.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6g.12xlarge Instances"
+msgid "Total running On-Demand m6g.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6g.16xlarge Instances"
+msgid "Total running On-Demand m6g.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6g.2xlarge Instances"
+msgid "Total running On-Demand m6g.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6g.4xlarge Instances"
+msgid "Total running On-Demand m6g.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6g.8xlarge Instances"
+msgid "Total running On-Demand m6g.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6g.large Instances"
+msgid "Total running On-Demand m6g.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6g.medium Instances"
+msgid "Total running On-Demand m6g.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6g.metal Instances"
+msgid "Total running On-Demand m6g.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6g.xlarge Instances"
+msgid "Total running On-Demand m6g.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6gd.12xlarge Instances"
+msgid "Total running On-Demand m6gd.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6gd.16xlarge Instances"
+msgid "Total running On-Demand m6gd.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6gd.2xlarge Instances"
+msgid "Total running On-Demand m6gd.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6gd.4xlarge Instances"
+msgid "Total running On-Demand m6gd.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6gd.8xlarge Instances"
+msgid "Total running On-Demand m6gd.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6gd.large Instances"
+msgid "Total running On-Demand m6gd.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6gd.medium Instances"
+msgid "Total running On-Demand m6gd.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6gd.metal Instances"
+msgid "Total running On-Demand m6gd.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6gd.xlarge Instances"
+msgid "Total running On-Demand m6gd.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6i.12xlarge Instances"
+msgid "Total running On-Demand m6i.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6i.16xlarge Instances"
+msgid "Total running On-Demand m6i.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6i.24xlarge Instances"
+msgid "Total running On-Demand m6i.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6i.2xlarge Instances"
+msgid "Total running On-Demand m6i.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6i.32xlarge Instances"
+msgid "Total running On-Demand m6i.32xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6i.4xlarge Instances"
+msgid "Total running On-Demand m6i.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6i.8xlarge Instances"
+msgid "Total running On-Demand m6i.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6i.large Instances"
+msgid "Total running On-Demand m6i.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand m6i.xlarge Instances"
+msgid "Total running On-Demand m6i.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand mac1.metal Instances"
+msgid "Total running On-Demand mac1.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand p2.16xlarge Instances"
+msgid "Total running On-Demand p2.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand p2.8xlarge Instances"
+msgid "Total running On-Demand p2.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand p2.xlarge Instances"
+msgid "Total running On-Demand p2.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand p3.16xlarge Instances"
+msgid "Total running On-Demand p3.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand p3.2xlarge Instances"
+msgid "Total running On-Demand p3.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand p3.8xlarge Instances"
+msgid "Total running On-Demand p3.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand p3dn.24xlarge Instances"
+msgid "Total running On-Demand p3dn.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand p4d.24xlarge Instances"
+msgid "Total running On-Demand p4d.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r3.2xlarge Instances"
+msgid "Total running On-Demand r3.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r3.4xlarge Instances"
+msgid "Total running On-Demand r3.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r3.8xlarge Instances"
+msgid "Total running On-Demand r3.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r3.large Instances"
+msgid "Total running On-Demand r3.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r3.xlarge Instances"
+msgid "Total running On-Demand r3.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r4.16xlarge Instances"
+msgid "Total running On-Demand r4.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r4.2xlarge Instances"
+msgid "Total running On-Demand r4.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r4.4xlarge Instances"
+msgid "Total running On-Demand r4.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r4.8xlarge Instances"
+msgid "Total running On-Demand r4.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r4.large Instances"
+msgid "Total running On-Demand r4.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r4.xlarge Instances"
+msgid "Total running On-Demand r4.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5.12xlarge Instances"
+msgid "Total running On-Demand r5.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5.16xlarge Instances"
+msgid "Total running On-Demand r5.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5.24xlarge Instances"
+msgid "Total running On-Demand r5.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5.2xlarge Instances"
+msgid "Total running On-Demand r5.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5.4xlarge Instances"
+msgid "Total running On-Demand r5.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5.8xlarge Instances"
+msgid "Total running On-Demand r5.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5.large Instances"
+msgid "Total running On-Demand r5.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5.metal Instances"
+msgid "Total running On-Demand r5.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5.xlarge Instances"
+msgid "Total running On-Demand r5.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5a.12xlarge Instances"
+msgid "Total running On-Demand r5a.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5a.16xlarge Instances"
+msgid "Total running On-Demand r5a.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5a.24xlarge Instances"
+msgid "Total running On-Demand r5a.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5a.2xlarge Instances"
+msgid "Total running On-Demand r5a.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5a.4xlarge Instances"
+msgid "Total running On-Demand r5a.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5a.8xlarge Instances"
+msgid "Total running On-Demand r5a.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5a.large Instances"
+msgid "Total running On-Demand r5a.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5a.xlarge Instances"
+msgid "Total running On-Demand r5a.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5ad.12xlarge Instances"
+msgid "Total running On-Demand r5ad.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5ad.16xlarge Instances"
+msgid "Total running On-Demand r5ad.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5ad.24xlarge Instances"
+msgid "Total running On-Demand r5ad.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5ad.2xlarge Instances"
+msgid "Total running On-Demand r5ad.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5ad.4xlarge Instances"
+msgid "Total running On-Demand r5ad.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5ad.8xlarge Instances"
+msgid "Total running On-Demand r5ad.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5ad.large Instances"
+msgid "Total running On-Demand r5ad.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5ad.xlarge Instances"
+msgid "Total running On-Demand r5ad.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5b.12xlarge Instances"
+msgid "Total running On-Demand r5b.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5b.16xlarge Instances"
+msgid "Total running On-Demand r5b.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5b.24xlarge Instances"
+msgid "Total running On-Demand r5b.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5b.2xlarge Instances"
+msgid "Total running On-Demand r5b.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5b.4xlarge Instances"
+msgid "Total running On-Demand r5b.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5b.8xlarge Instances"
+msgid "Total running On-Demand r5b.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5b.large Instances"
+msgid "Total running On-Demand r5b.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5b.metal Instances"
+msgid "Total running On-Demand r5b.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5b.xlarge Instances"
+msgid "Total running On-Demand r5b.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5d.12xlarge Instances"
+msgid "Total running On-Demand r5d.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5d.16xlarge Instances"
+msgid "Total running On-Demand r5d.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5d.24xlarge Instances"
+msgid "Total running On-Demand r5d.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5d.2xlarge Instances"
+msgid "Total running On-Demand r5d.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5d.4xlarge Instances"
+msgid "Total running On-Demand r5d.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5d.8xlarge Instances"
+msgid "Total running On-Demand r5d.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5d.large Instances"
+msgid "Total running On-Demand r5d.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5d.metal Instances"
+msgid "Total running On-Demand r5d.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5d.xlarge Instances"
+msgid "Total running On-Demand r5d.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5dn.12xlarge Instances"
+msgid "Total running On-Demand r5dn.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5dn.16xlarge Instances"
+msgid "Total running On-Demand r5dn.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5dn.24xlarge Instances"
+msgid "Total running On-Demand r5dn.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5dn.2xlarge Instances"
+msgid "Total running On-Demand r5dn.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5dn.4xlarge Instances"
+msgid "Total running On-Demand r5dn.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5dn.8xlarge Instances"
+msgid "Total running On-Demand r5dn.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5dn.large Instances"
+msgid "Total running On-Demand r5dn.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5dn.metal Instances"
+msgid "Total running On-Demand r5dn.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5dn.xlarge Instances"
+msgid "Total running On-Demand r5dn.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5n.12xlarge Instances"
+msgid "Total running On-Demand r5n.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5n.16xlarge Instances"
+msgid "Total running On-Demand r5n.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5n.24xlarge Instances"
+msgid "Total running On-Demand r5n.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5n.2xlarge Instances"
+msgid "Total running On-Demand r5n.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5n.4xlarge Instances"
+msgid "Total running On-Demand r5n.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5n.8xlarge Instances"
+msgid "Total running On-Demand r5n.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5n.large Instances"
+msgid "Total running On-Demand r5n.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5n.metal Instances"
+msgid "Total running On-Demand r5n.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r5n.xlarge Instances"
+msgid "Total running On-Demand r5n.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6g.12xlarge Instances"
+msgid "Total running On-Demand r6g.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6g.16xlarge Instances"
+msgid "Total running On-Demand r6g.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6g.2xlarge Instances"
+msgid "Total running On-Demand r6g.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6g.4xlarge Instances"
+msgid "Total running On-Demand r6g.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6g.8xlarge Instances"
+msgid "Total running On-Demand r6g.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6g.large Instances"
+msgid "Total running On-Demand r6g.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6g.medium Instances"
+msgid "Total running On-Demand r6g.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6g.metal Instances"
+msgid "Total running On-Demand r6g.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6g.xlarge Instances"
+msgid "Total running On-Demand r6g.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6gd.12xlarge Instances"
+msgid "Total running On-Demand r6gd.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6gd.16xlarge Instances"
+msgid "Total running On-Demand r6gd.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6gd.2xlarge Instances"
+msgid "Total running On-Demand r6gd.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6gd.4xlarge Instances"
+msgid "Total running On-Demand r6gd.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6gd.8xlarge Instances"
+msgid "Total running On-Demand r6gd.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6gd.large Instances"
+msgid "Total running On-Demand r6gd.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6gd.medium Instances"
+msgid "Total running On-Demand r6gd.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6gd.metal Instances"
+msgid "Total running On-Demand r6gd.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand r6gd.xlarge Instances"
+msgid "Total running On-Demand r6gd.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t1.micro Instances"
+msgid "Total running On-Demand t1.micro instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t2.2xlarge Instances"
+msgid "Total running On-Demand t2.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t2.large Instances"
+msgid "Total running On-Demand t2.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t2.medium Instances"
+msgid "Total running On-Demand t2.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t2.micro Instances"
+msgid "Total running On-Demand t2.micro instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t2.nano Instances"
+msgid "Total running On-Demand t2.nano instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t2.small Instances"
+msgid "Total running On-Demand t2.small instances"
 msgstr "Totalul instanțelor On-Demand %s care rulează la cerere"
 
 #, fuzzy
-msgid "Total running On-Demand t2.xlarge Instances"
+msgid "Total running On-Demand t2.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3.2xlarge Instances"
+msgid "Total running On-Demand t3.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3.large Instances"
+msgid "Total running On-Demand t3.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3.medium Instances"
+msgid "Total running On-Demand t3.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3.micro Instances"
+msgid "Total running On-Demand t3.micro instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3.nano Instances"
+msgid "Total running On-Demand t3.nano instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3.small Instances"
+msgid "Total running On-Demand t3.small instances"
 msgstr "Totalul instanțelor On-Demand %s care rulează la cerere"
 
 #, fuzzy
-msgid "Total running On-Demand t3.xlarge Instances"
+msgid "Total running On-Demand t3.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3a.2xlarge Instances"
+msgid "Total running On-Demand t3a.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3a.large Instances"
+msgid "Total running On-Demand t3a.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3a.medium Instances"
+msgid "Total running On-Demand t3a.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3a.micro Instances"
+msgid "Total running On-Demand t3a.micro instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3a.nano Instances"
+msgid "Total running On-Demand t3a.nano instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t3a.small Instances"
+msgid "Total running On-Demand t3a.small instances"
 msgstr "Totalul instanțelor On-Demand %s care rulează la cerere"
 
 #, fuzzy
-msgid "Total running On-Demand t3a.xlarge Instances"
+msgid "Total running On-Demand t3a.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t4g.2xlarge Instances"
+msgid "Total running On-Demand t4g.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t4g.large Instances"
+msgid "Total running On-Demand t4g.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t4g.medium Instances"
+msgid "Total running On-Demand t4g.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t4g.micro Instances"
+msgid "Total running On-Demand t4g.micro instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t4g.nano Instances"
+msgid "Total running On-Demand t4g.nano instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand t4g.small Instances"
+msgid "Total running On-Demand t4g.small instances"
 msgstr "Totalul instanțelor On-Demand %s care rulează la cerere"
 
 #, fuzzy
-msgid "Total running On-Demand t4g.xlarge Instances"
+msgid "Total running On-Demand t4g.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand u-12tb1.112xlarge Instances"
+msgid "Total running On-Demand u-12tb1.112xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand u-12tb1.metal Instances"
+msgid "Total running On-Demand u-12tb1.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand u-18tb1.metal Instances"
+msgid "Total running On-Demand u-18tb1.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand u-24tb1.metal Instances"
+msgid "Total running On-Demand u-24tb1.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand u-6tb1.112xlarge Instances"
+msgid "Total running On-Demand u-6tb1.112xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand u-6tb1.56xlarge Instances"
+msgid "Total running On-Demand u-6tb1.56xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand u-6tb1.metal Instances"
+msgid "Total running On-Demand u-6tb1.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand u-9tb1.112xlarge Instances"
+msgid "Total running On-Demand u-9tb1.112xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand u-9tb1.metal Instances"
+msgid "Total running On-Demand u-9tb1.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand vt1.24xlarge Instances"
+msgid "Total running On-Demand vt1.24xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand vt1.3xlarge Instances"
+msgid "Total running On-Demand vt1.3xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand vt1.6xlarge Instances"
+msgid "Total running On-Demand vt1.6xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x1.16xlarge Instances"
+msgid "Total running On-Demand x1.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x1.32xlarge Instances"
+msgid "Total running On-Demand x1.32xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x1e.16xlarge Instances"
+msgid "Total running On-Demand x1e.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x1e.2xlarge Instances"
+msgid "Total running On-Demand x1e.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x1e.32xlarge Instances"
+msgid "Total running On-Demand x1e.32xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x1e.4xlarge Instances"
+msgid "Total running On-Demand x1e.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x1e.8xlarge Instances"
+msgid "Total running On-Demand x1e.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x1e.xlarge Instances"
+msgid "Total running On-Demand x1e.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x2gd.12xlarge Instances"
+msgid "Total running On-Demand x2gd.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x2gd.16xlarge Instances"
+msgid "Total running On-Demand x2gd.16xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x2gd.2xlarge Instances"
+msgid "Total running On-Demand x2gd.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x2gd.4xlarge Instances"
+msgid "Total running On-Demand x2gd.4xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x2gd.8xlarge Instances"
+msgid "Total running On-Demand x2gd.8xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x2gd.large Instances"
+msgid "Total running On-Demand x2gd.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x2gd.medium Instances"
+msgid "Total running On-Demand x2gd.medium instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x2gd.metal Instances"
+msgid "Total running On-Demand x2gd.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand x2gd.xlarge Instances"
+msgid "Total running On-Demand x2gd.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand z1d.12xlarge Instances"
+msgid "Total running On-Demand z1d.12xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand z1d.2xlarge Instances"
+msgid "Total running On-Demand z1d.2xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand z1d.3xlarge Instances"
+msgid "Total running On-Demand z1d.3xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand z1d.6xlarge Instances"
+msgid "Total running On-Demand z1d.6xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand z1d.large Instances"
+msgid "Total running On-Demand z1d.large instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand z1d.metal Instances"
+msgid "Total running On-Demand z1d.metal instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
-msgid "Total running On-Demand z1d.xlarge Instances"
+msgid "Total running On-Demand z1d.xlarge instances"
 msgstr "Totalul instanțelor On-Demand care rulează"
 
 #, fuzzy
@@ -67061,7 +67198,9 @@ msgstr "Total sloturi"
 msgid "Total subscribed capacity"
 msgstr "Capacitatea totală subscrisă"
 
-msgid "Total suite runtime (including re-executions)"
+#, no-python-format
+msgid ""
+"Total suite runtime including re-executions (in % of overall suite timeout)"
 msgstr ""
 
 msgid "Total swap space"
@@ -67072,32 +67211,6 @@ msgstr "Debit total pe secundă"
 
 msgid "Total timeout of check"
 msgstr "Timeout total al verificării"
-
-#, fuzzy
-msgid "Total title=Localizable('Running On-Demand F instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
-
-#, fuzzy
-msgid "Total title=Localizable('Running On-Demand G instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
-
-#, fuzzy
-msgid "Total title=Localizable('Running On-Demand Inf instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
-
-#, fuzzy
-msgid "Total title=Localizable('Running On-Demand P instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
-
-#, fuzzy
-msgid ""
-"Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, "
-"Z) instances') vCPUs"
-msgstr "Funcționare la cerere Instanțe standard (A, C, D, H, I, M, R, T, Z)"
-
-#, fuzzy
-msgid "Total title=Localizable('Running On-Demand X instances') vCPUs"
-msgstr "Totalul instanțelor On-Demand care rulează"
 
 msgid "Total usable RAM"
 msgstr "Total RAM utilizabil"
@@ -67142,11 +67255,12 @@ msgstr "Trafic trimis"
 msgid "Transaction Logs"
 msgstr "Jurnal de tranzacții"
 
-msgid "Transaction Logs Disk Usage"
-msgstr "Jurnalele de tranzacții Utilizarea discului"
-
 msgid "Transaction count"
 msgstr "Numărul de tranzacții"
+
+#, fuzzy
+msgid "Transaction logs disk usage"
+msgstr "Jurnalele de tranzacții Utilizarea discului"
 
 msgid "Transactionlog"
 msgstr "Jurnal de tranzacții"
@@ -68235,10 +68349,6 @@ msgstr "Actualizarea unui eveniment: modificarea comentariului"
 msgid "Update an event: change contact"
 msgstr "Actualizați un eveniment: schimbați contactul"
 
-#, fuzzy
-msgid "Update changed service labels"
-msgstr "Potriviți etichetele de serviciu"
-
 msgid "Update core config"
 msgstr "Actualizarea configurației de bază"
 
@@ -68444,6 +68554,10 @@ msgstr "Nivelurile superioare ale vitezei ventilatorului"
 msgid "Upper level for GC run rate"
 msgstr "Nivelul superior pentru rata de alergare a GC"
 
+#, fuzzy
+msgid "Upper level for GC runs"
+msgstr "Nivelul superior pentru rata de alergare a GC"
+
 msgid "Upper level for blocked tasks"
 msgstr "Nivelul superior pentru sarcini blocate"
 
@@ -68485,10 +68599,6 @@ msgstr "Nivelul superior pentru coada de execuție în timp de execuție"
 
 msgid "Upper level for stuck tasks"
 msgstr "Nivelul superior pentru sarcini blocate"
-
-#, fuzzy
-msgid "Upper level for total number of GC runs"
-msgstr "Nivelul superior pentru numărul total de cozi"
 
 msgid "Upper level for total number of channels"
 msgstr "Nivelul superior pentru numărul total de canale"
@@ -69198,15 +69308,6 @@ msgstr "Utilizați Livestatus Proxy Daemon"
 
 msgid "Use Piggyback"
 msgstr "Utilizați Piggyback"
-
-#, fuzzy
-msgid "Use RCC for isolated execution"
-msgstr "Utilizați SSL pentru conexiune."
-
-#, fuzzy, python-format
-msgid ""
-"Use RCC for isolated execution (%s because Robotmk Core MKP is installed)"
-msgstr "Utilizați SSL pentru conexiune."
 
 msgid "Use Reporting"
 msgstr "Utilizare Raportare"
@@ -70116,6 +70217,10 @@ msgstr ""
 msgid "User Name"
 msgstr "Nume utilizator"
 
+#, fuzzy
+msgid "User agent"
+msgstr "Agent utilizator"
+
 msgid "User and password"
 msgstr "Utilizator și parolă"
 
@@ -70508,6 +70613,10 @@ msgstr "Descoperirea cotelor VNX și a sistemelor de fișiere"
 msgid "VPC Elastic IP Addresses"
 msgstr "Adrese IP elastice VPC"
 
+#, fuzzy
+msgid "VPC elastic IP addresses"
+msgstr "Adrese IP elastice VPC"
+
 msgid "VPC security groups"
 msgstr "Grupuri de securitate VPC"
 
@@ -70584,6 +70693,26 @@ msgstr "Valoarea trebuie să fie un șir de caractere"
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr "Valoarea lui {diff_path} s-a schimbat de la {val_t1} la {val_t2}."
 
+#, fuzzy, python-format
+msgid "Value should be greater than %s"
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
+#, fuzzy, python-format
+msgid "Value should be less than %s"
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
+#, fuzzy
+msgid "Value should be positive"
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
+#, fuzzy, python-format
+msgid "Value should maximally be %s"
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
+#, fuzzy, python-format
+msgid "Value should minimally be %s"
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
 msgid "Values"
 msgstr "Valori"
 
@@ -70638,6 +70767,10 @@ msgstr "Variabilă"
 
 msgid "Variables set in the site user's environment"
 msgstr "Variabilele setate în mediul utilizatorului site-ului"
+
+#, fuzzy
+msgid "Variant"
+msgstr "Variabilă"
 
 msgid "Various"
 msgstr "Diverse"
@@ -71459,13 +71592,6 @@ msgstr "Spațiu irosit de tabele și indici"
 
 msgid "Watch the total size of the log file"
 msgstr "Urmăriți dimensiunea totală a fișierului jurnal"
-
-msgid "Wato"
-msgstr "Wato"
-
-#, fuzzy
-msgid "Wb"
-msgstr "Web"
 
 #, python-format
 msgid ""
@@ -73320,9 +73446,6 @@ msgstr "Scriere RTT mediu (ms)"
 msgid "Write Avg exe (ms)"
 msgstr "Scrieți exe mediu (ms)"
 
-msgid "Write Capacity"
-msgstr "Capacitate de scriere"
-
 msgid "Write Capacity Units"
 msgstr "Unități de capacitate de scriere"
 
@@ -73371,10 +73494,6 @@ msgstr "Utilizarea cache-ului de scriere"
 msgid "Write capacity"
 msgstr "Capacitate de scriere"
 
-#, fuzzy
-msgid "Write capacity unit"
-msgstr "Unități de capacitate de scriere"
-
 msgid "Write latency"
 msgstr "Latență de scriere"
 
@@ -73386,6 +73505,10 @@ msgstr "Scrieți o ieșire lungă de servicii în istoricul de monitorizare"
 
 msgid "Write operations"
 msgstr "Operațiuni de scriere"
+
+#, fuzzy
+msgid "Write retransmission"
+msgstr "Retransmisii de scriere"
 
 msgid "Write size /s"
 msgstr "Dimensiunea de scriere /s"
@@ -75789,10 +75912,6 @@ msgstr "cazul"
 msgid "cases"
 msgstr "cazuri"
 
-#, fuzzy
-msgid "cd"
-msgstr "d"
-
 msgid "check plugins"
 msgstr "verificați plugin-urile"
 
@@ -75807,6 +75926,14 @@ msgstr "clienți"
 
 msgid "closed"
 msgstr "închisă"
+
+#, fuzzy
+msgid "cmk/kubernetes/object"
+msgstr "Numărul de noduri Kubernetes"
+
+#, python-brace-format
+msgid "cmk/kubernetes/{self._kubernetes_object_type}"
+msgstr ""
 
 msgid "cmk_site_statistics (core PIDs)"
 msgstr "cmk_site_statistics (PID-uri de bază)"
@@ -76528,15 +76655,8 @@ msgstr "locuri de muncă"
 msgid "kW"
 msgstr "kW"
 
-#, fuzzy
-msgid "kat"
-msgstr "la"
-
 msgid "kernel counter"
 msgstr "contor kernel"
-
-msgid "kg"
-msgstr ""
 
 msgid "l/s"
 msgstr "l/s"
@@ -76561,10 +76681,6 @@ msgstr "execuție moștenită"
 
 msgid "license details"
 msgstr "detalii despre licență"
-
-#, fuzzy
-msgid "lm"
-msgstr "m"
 
 msgid "local connect"
 msgstr "conexiune locală"
@@ -76676,8 +76792,12 @@ msgstr "minim"
 msgid "mins"
 msgstr "minute"
 
+#, fuzzy
 msgid "minute"
-msgstr "minut"
+msgid_plural "minutes"
+msgstr[0] "minut"
+msgstr[1] "minut"
+msgstr[2] "minut"
 
 #, fuzzy
 msgid "minute of the hour"
@@ -76704,9 +76824,6 @@ msgstr ""
 
 msgid "mm"
 msgstr "mm"
-
-msgid "mol"
-msgstr ""
 
 msgid "monitor"
 msgstr "monitor"
@@ -76871,6 +76988,10 @@ msgstr "Integrarea ntopng este disponibilă doar în CEE"
 msgid "ntopng username to acquire data for"
 msgstr "nume de utilizator ntopng pentru a achiziționa date pentru"
 
+#, fuzzy
+msgid "number of processes"
+msgstr "Numărul de procese"
+
 msgid "objects"
 msgstr "obiecte"
 
@@ -76994,9 +77115,6 @@ msgstr "parolă:"
 msgid "path echo"
 msgstr "calea eco"
 
-msgid "path levels"
-msgstr "niveluri de traseu"
-
 msgid "pending"
 msgstr "în așteptare"
 
@@ -77075,10 +77193,6 @@ msgstr "pt"
 
 msgid "purchase a license"
 msgstr "achiziționați o licență"
-
-#, fuzzy
-msgid "rad"
-msgstr "și"
 
 msgid "radial"
 msgstr "radial"
@@ -77186,10 +77300,6 @@ msgstr "rulează ca sarcină de fundal"
 
 msgid "running"
 msgstr "pornit"
-
-#, fuzzy
-msgid "runs"
-msgstr "GC rulează"
 
 msgid "s"
 msgstr "s"
@@ -77301,10 +77411,6 @@ msgstr "socket-ul așteaptă după închidere orice pachet rămas în rețea"
 
 msgid "specify manually ->"
 msgstr "specificați manual ->"
-
-#, fuzzy
-msgid "sr"
-msgstr "s"
 
 msgid "status entries"
 msgstr "intrări de stare"
@@ -77654,8 +77760,397 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
-msgid "Ω"
-msgstr ""
+#, fuzzy
+#~| msgid "Match service labels"
+#~ msgid "Update changed service labels"
+#~ msgstr "Potriviți etichetele de serviciu"
+
+#, fuzzy
+#~| msgid "Default parameters"
+#~ msgid "Defined by signature algorithm parameters"
+#~ msgstr "Parametrii impliciți"
+
+#, fuzzy
+#~| msgid "Processes"
+#~ msgid "Processes:"
+#~ msgstr "Procese"
+
+#, fuzzy
+#~| msgid "Proxy host"
+#~ msgid "Proxy bypass"
+#~ msgstr "Gazdă proxy"
+
+#, fuzzy, no-python-format
+#~| msgid "Total query timeout"
+#~ msgid "% of overall suite timeout"
+#~ msgstr "Timeout total de interogare"
+
+#~ msgid "Certificate is expired"
+#~ msgstr "Certificatul a expirat"
+
+#, fuzzy
+#~| msgid "Connection timeout"
+#~ msgid "Connection Timeout"
+#~ msgstr "Timeout de conectare"
+
+#, fuzzy
+#~| msgid "Encryption"
+#~ msgid "Encryption algorithm"
+#~ msgstr "Criptare"
+
+#, fuzzy
+#~| msgid "Individual topic"
+#~ msgid "Individual settings"
+#~ msgstr "Subiect individual"
+
+#~ msgid "Invalid signature"
+#~ msgstr "Semnătură invalidă"
+
+#~ msgid "No matching request ID found"
+#~ msgstr "Nu s-a găsit niciun ID de cerere corespunzător"
+
+#~ msgid "Robot Framework: Last error log"
+#~ msgstr "Cadrul robotului: Ultimul jurnal de erori"
+
+#, fuzzy
+#~| msgid "SLA settings"
+#~ msgid "Standard settings"
+#~ msgstr "Setări SLA"
+
+#, fuzzy
+#~| msgid "Upper level for total number of queues"
+#~ msgid "Upper level for total number of GC runs"
+#~ msgstr "Nivelul superior pentru numărul total de cozi"
+
+#~ msgid "path levels"
+#~ msgstr "niveluri de traseu"
+
+#, fuzzy
+#~| msgid "GC runs"
+#~ msgid "runs"
+#~ msgstr "GC rulează"
+
+#, fuzzy
+#~| msgid "Comment"
+#~ msgid "Document"
+#~ msgstr "Comentariu"
+
+#, fuzzy
+#~| msgid "Endpoint"
+#~ msgid "Endpoints"
+#~ msgstr "Punct final"
+
+#, fuzzy
+#~| msgid "Heading"
+#~ msgid "Header"
+#~ msgstr "Rubrica"
+
+#, fuzzy
+#~| msgid "HTTP Redirects"
+#~ msgid "Redirects"
+#~ msgstr "Redirecționări HTTP"
+
+#, fuzzy
+#~| msgid "Invalid action"
+#~ msgid "String validation"
+#~ msgstr "Acțiune invalidă"
+
+#~ msgid ""
+#~ "This rule selects the Zerto special agent for an existing Checkmk host"
+#~ msgstr ""
+#~ "Această regulă selectează agentul special Zerto pentru o gazdă Checkmk "
+#~ "existentă"
+
+#, python-brace-format
+#~ msgid "Item {val_t1} removed."
+#~ msgstr "Element {val_t1} eliminat."
+
+#, python-brace-format
+#~ msgid "Item {val_t2} added."
+#~ msgstr "Element {val_t2} adăugat."
+
+#~ msgid "Missing mandatory \"host\" parameter"
+#~ msgstr "Lipsește parametrul \"host\" obligatoriu"
+
+#, python-brace-format
+#~ msgid "Repetition change for item {diff_path}."
+#~ msgstr "Schimbarea repetiției pentru elementul {diff_path}."
+
+#, fuzzy
+#~| msgid "B/d"
+#~ msgid "/d"
+#~ msgstr "B/d"
+
+#, fuzzy
+#~| msgid "Top"
+#~ msgid "/op"
+#~ msgstr "Top"
+
+#, fuzzy
+#~| msgid "Amount of data processed"
+#~ msgid "Amount of substance"
+#~ msgstr "Cantitatea de date prelucrate"
+
+#, fuzzy
+#~| msgid "B"
+#~ msgid "Bq"
+#~ msgstr "B"
+
+#, fuzzy
+#~| msgid "Read bytes per operation"
+#~ msgid "Bytes per operation"
+#~ msgstr "Citire de octeți pe operațiune"
+
+#, fuzzy
+#~| msgid "Capacity usage"
+#~ msgid "Capacitance"
+#~ msgstr "Utilizarea capacității"
+
+#, fuzzy
+#~| msgid "Automatic activation"
+#~ msgid "Catalytic activity"
+#~ msgstr "Activare automată"
+
+#, fuzzy
+#~| msgid "Decibel-milliwatts"
+#~ msgid "Decibel-milliwatt"
+#~ msgstr "Decibel-milliwati"
+
+#, fuzzy
+#~| msgid "Electrical current"
+#~ msgid "Electric charge"
+#~ msgstr "Curent electric"
+
+#, fuzzy
+#~| msgid "Electrical power"
+#~ msgid "Electric potential"
+#~ msgstr "Putere electrică"
+
+#, fuzzy
+#~| msgid "Electrical current"
+#~ msgid "Electrical Current"
+#~ msgstr "Curent electric"
+
+#, fuzzy
+#~| msgid "Electrical voltage"
+#~ msgid "Electrical conductance"
+#~ msgstr "Tensiune electrică"
+
+#, fuzzy, python-format
+#~| msgid "Expected active paths"
+#~ msgid "Expected a tuple, got %s"
+#~ msgstr "Trasee active preconizate"
+
+#, fuzzy
+#~| msgid "force"
+#~ msgid "Force"
+#~ msgstr "forță"
+
+#, fuzzy
+#~| msgid "y"
+#~ msgid "Gy"
+#~ msgstr "y"
+
+#, fuzzy
+#~| msgid "HA"
+#~ msgid "H"
+#~ msgstr "HA"
+
+#, fuzzy
+#~| msgid "InfluxDB instance"
+#~ msgid "Illuminance"
+#~ msgstr "Instanța InfluxDB"
+
+#, fuzzy
+#~| msgid "Item appearance"
+#~ msgid "Impedance"
+#~ msgstr "Aspectul articolului"
+
+#, fuzzy
+#~| msgid "Instance"
+#~ msgid "Inductance"
+#~ msgstr "Instanța"
+
+#, fuzzy
+#~| msgid "OK"
+#~ msgid "K"
+#~ msgstr "OK"
+
+#, fuzzy
+#~| msgid "Max Length"
+#~ msgid "Length"
+#~ msgstr "Lungime maximă"
+
+#, fuzzy
+#~| msgid "Liters per second"
+#~ msgid "Liter per second"
+#~ msgstr "Litri pe secundă"
+
+#, fuzzy
+#~| msgid "Magnetic volumes space"
+#~ msgid "Magnetic flux"
+#~ msgstr "Spațiul volumelor magnetice"
+
+#, fuzzy
+#~| msgid "Magnetic volumes space"
+#~ msgid "Magnetic flux density"
+#~ msgstr "Spațiul volumelor magnetice"
+
+#, fuzzy
+#~| msgid "N#"
+#~ msgid "N"
+#~ msgstr "N#"
+
+#, fuzzy
+#~| msgid "Parts per Million"
+#~ msgid "Parts per million"
+#~ msgstr "Părți per milion"
+
+#, fuzzy
+#~| msgid "per second"
+#~ msgid "Per second"
+#~ msgstr "pe secundă"
+
+#, fuzzy
+#~| msgid "Percent Per Meter"
+#~ msgid "Percentage per meter"
+#~ msgstr "Procent pe metru"
+
+#, fuzzy
+#~| msgid "active / active"
+#~ msgid "Radioactive activity"
+#~ msgstr "activ / activ"
+
+#, fuzzy
+#~| msgid "inactive hosts"
+#~ msgid "Radioactive dose"
+#~ msgstr "gazde inactive"
+
+#, fuzzy
+#~| msgid "Read Capacity Units"
+#~ msgid "Read capacity unit"
+#~ msgstr "Unități de capacitate de citire"
+
+#, fuzzy
+#~| msgid "Robot Framework: %s"
+#~ msgid "Robot Framework target"
+#~ msgstr "Cadrul robotului: %s"
+
+#, fuzzy
+#~| msgid "S."
+#~ msgid "S"
+#~ msgstr "S."
+
+#, fuzzy
+#~| msgid "seconds per second"
+#~ msgid "Seconds per second"
+#~ msgstr "secunde pe secundă"
+
+#, fuzzy
+#~| msgid "Single"
+#~ msgid "Solid angle"
+#~ msgstr "Single"
+
+#, fuzzy
+#~| msgid "Save"
+#~ msgid "Sv"
+#~ msgstr "Salveaza"
+
+#, fuzzy
+#~| msgid "TX"
+#~ msgid "T"
+#~ msgstr "TX"
+
+#, fuzzy
+#~| msgid "Use SSL for the connection."
+#~ msgid "Use RCC for isolated execution"
+#~ msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~| msgid "Web"
+#~ msgid "Wb"
+#~ msgstr "Web"
+
+#, fuzzy
+#~| msgid "Write Capacity Units"
+#~ msgid "Write capacity unit"
+#~ msgstr "Unități de capacitate de scriere"
+
+#, fuzzy
+#~| msgid "d"
+#~ msgid "cd"
+#~ msgstr "d"
+
+#, fuzzy
+#~| msgid "at"
+#~ msgid "kat"
+#~ msgstr "la"
+
+#, fuzzy
+#~| msgid "m"
+#~ msgid "lm"
+#~ msgstr "m"
+
+#, fuzzy
+#~| msgid "and"
+#~ msgid "rad"
+#~ msgstr "și"
+
+#, fuzzy
+#~| msgid "s"
+#~ msgid "sr"
+#~ msgstr "s"
+
+#~ msgid "Clear audit log"
+#~ msgstr "Ștergeți jurnalul de audit"
+
+#~ msgid "New Connections"
+#~ msgstr "Noi conexiuni"
+
+#~ msgid "Read Capacity"
+#~ msgstr "Capacitatea de citire"
+
+#, fuzzy
+#~| msgid "Total running On-Demand Instances"
+#~ msgid "Total title=Localizable('Running On-Demand F instances') vCPUs"
+#~ msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+#~| msgid "Total running On-Demand Instances"
+#~ msgid "Total title=Localizable('Running On-Demand G instances') vCPUs"
+#~ msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+#~| msgid "Total running On-Demand Instances"
+#~ msgid "Total title=Localizable('Running On-Demand Inf instances') vCPUs"
+#~ msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+#~| msgid "Total running On-Demand Instances"
+#~ msgid "Total title=Localizable('Running On-Demand P instances') vCPUs"
+#~ msgstr "Totalul instanțelor On-Demand care rulează"
+
+#, fuzzy
+#~| msgid "Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances"
+#~ msgid ""
+#~ "Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, "
+#~ "T, Z) instances') vCPUs"
+#~ msgstr "Funcționare la cerere Instanțe standard (A, C, D, H, I, M, R, T, Z)"
+
+#, fuzzy
+#~| msgid "Total running On-Demand Instances"
+#~ msgid "Total title=Localizable('Running On-Demand X instances') vCPUs"
+#~ msgstr "Totalul instanțelor On-Demand care rulează"
+
+#~ msgid "Wato"
+#~ msgstr "Wato"
+
+#~ msgid "Write Capacity"
+#~ msgstr "Capacitate de scriere"
+
+#, python-format
+#~ msgid "Spreading: %s minutes"
+#~ msgstr "Întindere: %s minute"
 
 #~ msgid "Average check latency"
 #~ msgstr "Latența medie de verificare"
@@ -78248,9 +78743,6 @@ msgstr ""
 #~ msgid "From now for"
 #~ msgstr "De acum înainte pentru"
 
-#~ msgid "Please enter a positive number of minutes."
-#~ msgstr "Vă rugăm să introduceți un număr pozitiv de minute."
-
 #~ msgid "Repeat this downtime on a regular basis every"
 #~ msgstr "Repetați acest timp de nefuncționare în mod regulat în fiecare"
 
@@ -78361,9 +78853,6 @@ msgstr ""
 #~| msgid "The timeout %s is not a valid integer number."
 #~ msgid "The plugin '%s' is not a valid notification plugin."
 #~ msgstr "Timpul de așteptare %s nu este un număr întreg valid."
-
-#~ msgid "Path to .env file"
-#~ msgstr "Calea către fișierul .env"
 
 #, python-format
 #~ msgid ""
@@ -81016,10 +81505,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Search for permissions: "
 #~ msgstr "Optiuni tabel"
-
-#, fuzzy
-#~ msgid "Search for settings:"
-#~ msgstr "Cautare"
 
 #, fuzzy
 #~ msgid "Search in packs"

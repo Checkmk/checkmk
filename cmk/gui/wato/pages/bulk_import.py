@@ -15,13 +15,14 @@ from pathlib import Path
 from typing import Any
 
 import cmk.utils.store as store
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.pages
 import cmk.gui.watolib.bakery as bakery
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -250,7 +251,7 @@ class ModeBulkImport(WatoMode):
                 imported_hosts.append(host_name)
                 selected.append("_c_%s" % host_name)
                 num_succeeded += 1
-            except Exception as e:
+            except (MKUserError, MKAuthException, MKGeneralException) as e:
                 fail_messages.append(
                     _("Failed to create a host from line %d: %s") % (csv_reader.line_num, e)
                 )

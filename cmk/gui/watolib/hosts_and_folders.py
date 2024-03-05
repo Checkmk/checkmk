@@ -2334,6 +2334,18 @@ class Folder(FolderProtocol):
         self,
         entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
+        """Create many hosts at once.
+
+        Below are the expected Exceptions this function will throw (indirectly). Any other
+        Exception is due to an error.
+
+        Raises:
+            - MKAuthException: When the user doesn't have the rights to see a (or any) host.
+            - MKAuthException: When the user isn't in the contact group specified.
+            - MKUserError: When the host is already there.
+            - MKGeneralException: When something happened during permission check.
+
+        """
         # 1. Check preconditions
         self.prepare_create_hosts()
 

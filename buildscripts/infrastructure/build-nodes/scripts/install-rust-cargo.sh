@@ -73,10 +73,10 @@ build_package() {
 
     # Install additional targets for all versions
     for target in $ADDITIONAL_TARGETS; do
-        "${CARGO_HOME}"/bin/rustup target add $target --toolchain $DEFAULT_TOOLCHAIN_VERSION
+        "${CARGO_HOME}/bin/rustup" target add "${target}" --toolchain $DEFAULT_TOOLCHAIN_VERSION
 
         for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do
-            "${CARGO_HOME}"/bin/rustup target add $target --toolchain $toolchain_version
+            "${CARGO_HOME}/bin/rustup" target add "${target}" --toolchain "${toolchain_version}"
         done
     done
     "${CARGO_HOME}"/bin/rustup default $DEFAULT_TOOLCHAIN_VERSION

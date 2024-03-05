@@ -187,7 +187,10 @@ class EngineeringScientificFormatter(NotationFormatter):
         return Preformatted(value / pow(10, exponent), f"e{exponent} {self.symbol}")
 
     def _preformat_large_number(self, value: int | float) -> Preformatted:
-        exponent = math.floor(math.log(value, 10) / 3) * 3
+        if value % 10 == 0:
+            exponent = math.floor(math.ceil(math.log(value, 10)) / 3) * 3
+        else:
+            exponent = math.floor(math.log(value, 10) / 3) * 3
         return Preformatted(value / pow(10, exponent), f"e+{exponent} {self.symbol}")
 
 

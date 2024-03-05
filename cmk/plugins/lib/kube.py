@@ -364,7 +364,7 @@ class NodeCondition(BaseModel, extra="forbid"):
 
 
 class NodeConditions(Section):
-    """section: kube_node_conditions_v1"""
+    """section: kube_node_conditions_v2"""
 
     conditions: Sequence[NodeCondition]
 

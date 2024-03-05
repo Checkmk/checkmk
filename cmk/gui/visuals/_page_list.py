@@ -28,7 +28,6 @@ from cmk.gui.pagetypes import customize_page_menu
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, VisualName, VisualTypeName
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
-from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -44,7 +43,14 @@ from cmk.gui.visuals.type import visual_type_registry
 from cmk.mkp_tool import PackageName
 
 from ._breadcrumb import visual_page_breadcrumb
-from ._store import available, get_installed_packages, local_file_exists, save, TVisual
+from ._store import (
+    available,
+    get_installed_packages,
+    local_file_exists,
+    published_to_user,
+    save,
+    TVisual,
+)
 
 
 # TODO: This code has been copied to a new live into htdocs/pagetypes.py
@@ -247,7 +253,7 @@ def page_list(  # pylint: disable=too-many-branches
                 else:
                     ownertxt = owner
                 table.cell(_("Owner"), ownertxt)
-                table.cell(_("Public"), visual["public"] and _("yes") or _("no"))
+                table.cell(_("Public"), published_to_user(visual) and _("yes") or _("no"))
                 table.cell(_("Hidden"), visual["hidden"] and _("yes") or _("no"))
 
                 if render_custom_columns:
@@ -399,11 +405,9 @@ def _partition_visuals(
             builtin_visuals.append((owner, visual_name, visual))
         elif owner == user.id:
             my_visuals.append((owner, visual_name, visual))
-        elif (
-            visual["public"]
-            and owner != UserId.builtin()
-            and user_may(owner, "general.publish_%s" % what)
-        ) or user.may("general.edit_foreign_%s" % what):
+        elif (published_to_user(visual) and owner != UserId.builtin()) or user.may(
+            "general.edit_foreign_%s" % what
+        ):
             foreign_visuals.append((owner, visual_name, visual))
 
     return [

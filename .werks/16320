@@ -1,0 +1,18 @@
+Title: Publish permission handling
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1709641954
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+Werk 13498 introduced the possibility to set publish permissions independently
+of each other.
+
+Still, the permission "Publish views" (e.g. for publishing views) was needed
+to see the published views.
+
+This has been fixed.
+
+Note: Please check your publish configuration in views, dashboards, etc.

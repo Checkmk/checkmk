@@ -613,7 +613,7 @@ def _get_packaged_visuals(
 
 def declare_visual_permission(what: VisualTypeName, name: str, visual: T) -> None:
     permname = PermissionName(f"{what[:-1]}.{name}")
-    if visual["public"] and permname not in permission_registry:
+    if _published_to_user(visual) and permname not in permission_registry:
         declare_permission(
             permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
         )
@@ -676,20 +676,6 @@ def available(  # pylint: disable=too-many-branches
     visuals = {}
     permprefix = what[:-1]
 
-    def published_to_user(visual: T) -> bool:
-        if visual["public"] is True:
-            return True
-
-        if isinstance(visual["public"], tuple):
-            if visual["public"][0] == "contact_groups":
-                user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
-                return bool(user_groups.intersection(visual["public"][1]))
-            if visual["public"][0] == "sites":
-                user_sites = set(user.authorized_sites().keys())
-                return bool(user_sites.intersection(visual["public"][1]))
-
-        return False
-
     def restricted_visual(visualname: VisualName) -> bool:
         permname = f"{permprefix}.{visualname}"
         return permname in permission_registry and not user.may(permname)
@@ -709,7 +695,7 @@ def available(  # pylint: disable=too-many-branches
         # Honor original permissions for the current user
         if (
             n not in visuals
-            and published_to_user(visual)
+            and _published_to_user(visual)
             and user_may(u, "general.force_" + what)
             and user.may("general.see_user_" + what)
             and not restricted_visual(n)
@@ -727,12 +713,7 @@ def available(  # pylint: disable=too-many-branches
     if user.may("general.see_user_" + what):
         for (u, n), visual in all_visuals.items():
             # Is there a builtin visual with the same name? If yes, honor permissions.
-            if (
-                n not in visuals
-                and published_to_user(visual)
-                and user_may(u, "general.publish_" + what)
-                and not restricted_visual(n)
-            ):
+            if n not in visuals and _published_to_user(visual) and not restricted_visual(n):
                 visuals[n] = visual
 
     # 5. packaged visuals
@@ -744,6 +725,21 @@ def available(  # pylint: disable=too-many-branches
                 visuals[n] = visual
 
     return visuals
+
+
+def _published_to_user(visual: T) -> bool:
+    if visual["public"] is True:
+        return True
+
+    if isinstance(visual["public"], tuple):
+        if visual["public"][0] == "contact_groups":
+            user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
+            return bool(user_groups.intersection(visual["public"][1]))
+        if visual["public"][0] == "sites":
+            user_sites = set(user.authorized_sites().keys())
+            return bool(user_sites.intersection(visual["public"][1]))
+
+    return False
 
 
 def get_permissioned_visual(
@@ -988,7 +984,7 @@ def page_list(  # pylint: disable=too-many-branches
                 else:
                     ownertxt = owner
                 table.cell(_("Owner"), ownertxt)
-                table.cell(_("Public"), visual["public"] and _("yes") or _("no"))
+                table.cell(_("Public"), _published_to_user(visual) and _("yes") or _("no"))
                 table.cell(_("Hidden"), visual["hidden"] and _("yes") or _("no"))
 
                 if render_custom_columns:
@@ -1161,15 +1157,13 @@ def _partition_visuals(
             packaged_visuals.append((owner, visual_name, visual))
             continue
 
-        if visual["public"] and owner == UserId.builtin():
+        if _published_to_user(visual) and owner == UserId.builtin():
             builtin_visuals.append((owner, visual_name, visual))
         elif owner == user.id:
             my_visuals.append((owner, visual_name, visual))
-        elif (
-            visual["public"]
-            and owner != UserId.builtin()
-            and user_may(owner, "general.publish_%s" % what)
-        ) or user.may("general.edit_foreign_%s" % what):
+        elif (_published_to_user(visual) and owner != UserId.builtin()) or user.may(
+            "general.edit_foreign_%s" % what
+        ):
             foreign_visuals.append((owner, visual_name, visual))
 
     return [

@@ -25,7 +25,7 @@ $cmk_agent_ctl_dir = (Get-Item -Path ".\").FullName + "\..\..\packages\cmk-agent
 
 $platforms = "Configuration=Release,Platform=x86", "Configuration=Release,Platform=x64"
 $err = 0
-$env:StartTime = $(get-date)
+$env:StartTime = "$(get-date)"
 
 function RunningCount($j_all) {
     $running_count = 0
@@ -41,8 +41,8 @@ function RunningCount($j_all) {
     }
     $t1 = [datetime]$env:StartTime
     $t2 = [datetime]$(get-date)
-    $elapsedTime = $t2 - $t1
-    Write-Host -NoNewLine "`rStill running " $running_count " seconds elapsed: " $elapsedTime.seconds -foreground Cyan
+    $elapsedTime = [int]($t2 - $t1).TotalSeconds
+    Write-Host -NoNewLine "`r Still running " $running_count " seconds elapsed: " $elapsedTime "....."-foreground Cyan
     return $running_count
 }
 

@@ -14,6 +14,7 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_http_proxy,
+    replace_macros,
 )
 
 _DAY: Final[int] = 24 * 3600
@@ -282,6 +283,7 @@ def generate_http_services(
     for endpoint in params:
         protocol = "HTTPS" if endpoint.url.startswith("https://") else "HTTP"
         prefix = f"{protocol} " if endpoint.service_name.prefix is ServicePrefix.AUTO else ""
+        endpoint.url = replace_macros(endpoint.url, host_config.macros)
         yield ActiveCheckCommand(
             service_description=f"{prefix}{endpoint.service_name.name}",
             command_arguments=list(_command_arguments(endpoint, http_proxies)),

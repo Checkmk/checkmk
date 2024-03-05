@@ -8,7 +8,13 @@ from typing import List, Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, HTTPProxy
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    HostConfig,
+    HTTPProxy,
+    replace_macros,
+)
 
 
 class LevelsType(StrEnum):
@@ -108,6 +114,7 @@ def generate_cert_services(
     params: Sequence[CertEndpoint], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveCheckCommand]:
     for endpoint in params:
+        endpoint.address = replace_macros(endpoint.address, host_config.macros)
         yield ActiveCheckCommand(
             service_description=f"Cert {endpoint.address}",
             command_arguments=list(_command_arguments(endpoint)),

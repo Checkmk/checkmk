@@ -231,12 +231,20 @@ class ModeBulkImport(WatoMode):
         selected = []
         imported_hosts = []
         folder = folder_from_request()
-
+        hostname_valuespec = Hostname()
+        attribute_names = []
         for row_num, row in enumerate(csv_reader):
+            if row_num == 0:
+                attribute_names = [request.var(f"attribute_{index}") for index in range(len(row))]
             if not row:
                 continue  # skip empty lines
 
-            host_name, attributes = self._get_host_info_from_row(row, row_num)
+            host_name, attributes = self._get_host_info_from_row(
+                row,
+                row_num,
+                hostname_valuespec=hostname_valuespec,
+                attribute_names=attribute_names,
+            )
             try:
                 folder.create_hosts([(host_name, attributes, None)])
                 imported_hosts.append(host_name)
@@ -284,16 +292,16 @@ class ModeBulkImport(WatoMode):
     def _delete_csv_file(self) -> None:
         self._file_path().unlink()
 
-    def _get_host_info_from_row(self, row, row_num):
+    def _get_host_info_from_row(self, row, row_num, *, hostname_valuespec, attribute_names):
         host_name = None
         attributes: dict[str, str] = {}
         for col_num, value in enumerate(row):
             if not value:
                 continue
 
-            attribute = request.var("attribute_%d" % col_num)
+            attribute = attribute_names[col_num]
             if attribute == "host_name":
-                Hostname().validate_value(value, "host")
+                hostname_valuespec.validate_value(value, "host")
                 host_name = value
 
             elif attribute and attribute != "-":

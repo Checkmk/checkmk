@@ -94,7 +94,7 @@ def _check_conditions(params: Params, section: NodeConditions) -> Iterator[Resul
 
 
 register.agent_section(
-    name="kube_node_conditions_v1",
+    name="kube_node_conditions_v2",
     parsed_section_name="kube_node_conditions",
     parse_function=parse,
 )

@@ -43,7 +43,7 @@ def api_nodes_api_sections() -> set[str]:
         "kube_memory_resources_v1",
         "kube_allocatable_cpu_resource_v1",
         "kube_allocatable_memory_resource_v1",
-        "kube_node_conditions_v1",
+        "kube_node_conditions_v2",
     }
 
 

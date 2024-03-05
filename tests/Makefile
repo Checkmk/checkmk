@@ -9,16 +9,6 @@ FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
-PYTEST_DOC_TEST_OPTS := \
-    --import-mode=importlib \
-    -o pythonpath=. \
-    --doctest-modules \
-    ../cmk \
-    ../omd/packages/omd
-PYTEST_UNIT_TEST_OPTS = \
-    -T unit \
-    $(PYTEST_DOC_TEST_OPTS) \
-    unit
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 BLACK  := $(SCRIPTS)/run-black
@@ -396,27 +386,51 @@ test-cycles-docker:
 
 test-unit: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=../pyproject.toml \
+		--import-mode=importlib \
+		--doctest-modules \
+		--override-ini="pythonpath=." \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		-- \
+		../cmk \
+		../omd/packages/omd \
+		unit
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
 test-unit-slow: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=../pyproject.toml \
+		--import-mode=importlib \
+		--doctest-modules \
+		--override-ini="pythonpath=." \
 		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		-- \
+		../cmk \
+		../omd/packages/omd \
+		unit
 
 test-unit-slow-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit-slow
 
 test-unit-resilience: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=../pyproject.toml \
+		--import-mode=importlib \
+		--doctest-modules \
+		--override-ini="pythonpath=." \
 		--count=2 \
 		--random-order-bucket=global \
 	        -m "not non_resilient" \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		-- \
+		../cmk \
+		../omd/packages/omd \
+		unit
 
 test-unit-resilience-docker:
 	../scripts/run-in-docker.sh make test-unit-resilience
@@ -426,12 +440,21 @@ test-agent-plugin-docker:
 
 test-unit-coverage-html: prepare-protobuf-files
 	TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=../pyproject.toml \
+		--import-mode=importlib \
+		--doctest-modules \
+		--override-ini="pythonpath=." \
 		--cov=cmk \
 		--cov-report=html \
 		--cov-config=.coveragerc_unit \
 		--no-cov-on-fail \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		-- \
+		../cmk \
+		../omd/packages/omd \
+		unit
+
 
 test-unit-shell:
 	./unit-shell/runner.sh

@@ -814,6 +814,21 @@ metric_info["time_transfer"] = {
     "color": "41/a",
 }
 
+# time_http_headers/time_http_body come from check_httpv2 and correspond
+# to time_headers/time_transfer from the old check_http.
+# We keep the old metrics as long as the old check_http is still in use.
+metric_info["time_http_headers"] = {
+    "title": _("Time to fetch HTTP headers"),
+    "unit": "s",
+    "color": "15/a",
+}
+
+metric_info["time_http_body"] = {
+    "title": _("Time to fetch page content"),
+    "unit": "s",
+    "color": "41/a",
+}
+
 metric_info["ap_devices_total"] = {
     "title": _("Total devices"),
     "unit": "count",

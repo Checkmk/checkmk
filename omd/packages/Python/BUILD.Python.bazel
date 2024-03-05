@@ -84,7 +84,7 @@ configure_make(
 
         # Fix shebang of scripts
 	cd $bin_dir && \
-    ln -s python{pyMaj} python && \
+        ln -s python{pyMaj} python && \
 	sed -i 's|^#!'$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
 
         # Fix pip3 configuration by using own wrapper script
@@ -96,6 +96,10 @@ configure_make(
         # https://github.com/pypa/pip/issues/5599
         install -m 644 $EXT_BUILD_ROOT/omd/packages/Python/pip $bin_dir/pip{pyMaj};
         install -m 644 $EXT_BUILD_ROOT/omd/packages/Python/pip $bin_dir/pip{pyMajMin};
+
+        # Tests are not needed in final package
+        rm -rf $INSTALLDIR/lib/python{pyMajMin}/test ; \
+
     """.format(
         installPrefix = INSTALL_PREFIX,
         pyMaj = PYTHON_VERSION_MAJOR,

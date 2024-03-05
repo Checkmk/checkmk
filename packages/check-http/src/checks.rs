@@ -72,11 +72,11 @@ impl TextMatcher {
 }
 
 pub fn collect_response_checks(
-    response: Result<(ProcessedResponse, Duration), reqwest::Error>,
+    response: Result<ProcessedResponse, reqwest::Error>,
     request_information: RequestInformation,
     params: CheckParameters,
 ) -> Vec<CheckResult> {
-    let (response, response_time) = match response {
+    let response = match response {
         Ok(resp) => resp,
         Err(err) => return check_reqwest_error(err),
     };
@@ -94,7 +94,8 @@ pub fn collect_response_checks(
         .chain(check_version(response.version))
         .chain(check_status(response.status, params.status_code))
         .chain(check_response_time(
-            response_time,
+            response.time_headers,
+            response.time_body,
             params.response_time_levels,
             request_information.timeout,
         ))
@@ -414,7 +415,8 @@ fn check_page_size(
 }
 
 fn check_response_time(
-    response_time: Duration,
+    time_header: Duration,
+    time_body: Duration,
     response_time_levels: Option<UpperLevels<f64>>,
     timeout: Duration,
 ) -> Vec<Option<CheckResult>> {
@@ -428,6 +430,8 @@ fn check_response_time(
                 .trim_end_matches('.')
         )
     }
+
+    let response_time = time_header + time_body;
 
     let mut ret = check_upper_levels(
         "Response time",
@@ -1275,7 +1279,12 @@ mod test_check_response_time {
     #[test]
     fn test_unbounded() {
         assert_eq!(
-            check_response_time(Duration::new(5, 0), None, Duration::from_secs(10)),
+            check_response_time(
+                Duration::new(1, 0),
+                Duration::new(4, 0),
+                None,
+                Duration::from_secs(10)
+            ),
             vec![
                 CheckResult::details(State::Ok, "Response time: 5 seconds"),
                 CheckResult::metric("response_time", 5., Some('s'), None, Some(0.), Some(10.))
@@ -1287,7 +1296,8 @@ mod test_check_response_time {
     fn test_warn_within_bounds() {
         assert_eq!(
             check_response_time(
-                Duration::new(5, 0),
+                Duration::new(1, 0),
+                Duration::new(4, 0),
                 Some(UpperLevels::warn(6.)),
                 Duration::from_secs(10)
             ),
@@ -1309,7 +1319,8 @@ mod test_check_response_time {
     fn test_warn_is_warn() {
         assert_eq!(
             check_response_time(
-                Duration::new(5, 0),
+                Duration::new(1, 0),
+                Duration::new(4, 0),
                 Some(UpperLevels::warn(4.)),
                 Duration::from_secs(10)
             ),
@@ -1332,7 +1343,8 @@ mod test_check_response_time {
     fn test_warncrit_within_bounds() {
         assert_eq!(
             check_response_time(
-                Duration::new(5, 0),
+                Duration::new(1, 0),
+                Duration::new(4, 0),
                 Some(UpperLevels::warn_crit(6., 7.)),
                 Duration::from_secs(10)
             ),
@@ -1354,7 +1366,8 @@ mod test_check_response_time {
     fn test_warncrit_is_warn() {
         assert_eq!(
             check_response_time(
-                Duration::new(5, 0),
+                Duration::new(1, 0),
+                Duration::new(4, 0),
                 Some(UpperLevels::warn_crit(4., 6.)),
                 Duration::from_secs(10)
             ),
@@ -1383,7 +1396,8 @@ mod test_check_response_time {
     fn test_warncrit_is_crit() {
         assert_eq!(
             check_response_time(
-                Duration::new(5, 0),
+                Duration::new(1, 0),
+                Duration::new(4, 0),
                 Some(UpperLevels::warn_crit(2., 3.)),
                 Duration::from_secs(10)
             ),
@@ -1412,7 +1426,8 @@ mod test_check_response_time {
     fn test_formatting() {
         assert_eq!(
             check_response_time(
-                Duration::new(5, 123_456_789),
+                Duration::new(1, 100_000_000),
+                Duration::new(4, 23_456_789),
                 Some(UpperLevels::warn_crit(2.1, 3.12)),
                 Duration::from_secs(10)
             ),

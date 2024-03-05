@@ -47,6 +47,9 @@ class UnitInfo(TypedDict):
     valuespec: NotRequired[Type[ValueSpec]]
     conversion: NotRequired[Callable[[float], float]]
     perfometer_render: NotRequired[Callable[[float], str]]
+    formatter_ident: NotRequired[
+        Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]
+    ]
 
 
 class ScalarBounds(TypedDict, total=False):

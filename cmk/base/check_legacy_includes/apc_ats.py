@@ -6,6 +6,8 @@ import enum
 from contextlib import suppress
 from typing import NamedTuple, Optional, Sequence
 
+from cmk.agent_based.v2 import any_of, equals
+
 
 class CommunictionStatus(enum.Enum):
     NeverDiscovered = 1
@@ -69,3 +71,9 @@ def _parse_int(value: str) -> Optional[int]:
     with suppress(ValueError):
         return int(value)
     return None
+
+
+DETECT = any_of(
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
+    equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.32"),
+)

@@ -57,7 +57,7 @@ responses = "*"  # used for unit tests
 ruff = "*"
 schemathesis = "*"  # used for openapi tests
 semver = "*"
-sphinx = "==6.2.1"  # used for the plugin API documentation, pinned for now  see https://github.com/kivy/kivy/issues/8230)
+sphinx = "*"  # used for the plugin API documentation
 sphinx-autodoc-typehints = "*"  # used for the plugin API documentation
 sphinx-rtd-theme = "*"  # used for the plugin API documentation
 sphinxcontrib-plantuml = "*"  # used for the API and architecture

@@ -107,9 +107,7 @@ def _request_user_input_on_invalid_rule(
         f"Folder: {folder.path() or 'main'}\n"
         f"Rule nr: {index + 1}\n"
         f"Exception: {exception}\n\n"
-        "You can abort the update process (A) and "
-        "try to fix the incompatibilities with a downgrade "
-        "to the version you came from or continue (c) the update.\n\n"
+        "You can abort the update process (A) or continue (c) the update.\n\n"
         "Abort update? [A/c]\n"
     )
 

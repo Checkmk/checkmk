@@ -68,8 +68,6 @@ LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea
 class VerticalAxis(TypedDict):
     range: tuple[float, float]
     real_range: tuple[float, float]
-    label_distance: float
-    sub_distance: float
     axis_label: str | None
     labels: list[VerticalAxisLabel]
     max_label_length: int
@@ -592,8 +590,6 @@ def _compute_graph_v_axis(
     v_axis = VerticalAxis(
         range=(v_axis_min_max.min_value, v_axis_min_max.max_value),
         real_range=v_axis_min_max.real_range,
-        label_distance=label_distance,
-        sub_distance=sub_distance,
         axis_label=None,
         labels=rendered_labels,
         max_label_length=max_label_length,

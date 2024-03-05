@@ -98,10 +98,7 @@ def main_check_config(logger: logging.Logger, conflict: ConflictMode) -> Literal
         check_config(logger, conflict)
     except MKUserError as e:
         sys.stderr.write(
-            f"\nUpdate aborted: {e}.\n"
-            "The Checkmk configuration has not been modified.\n\n"
-            "You can downgrade to your previous version again using "
-            "'omd update' and start the site again.\n"
+            f"\nUpdate aborted: {e}.\n" "The Checkmk configuration has not been modified.\n"
         )
         return 1
     except Exception as e:

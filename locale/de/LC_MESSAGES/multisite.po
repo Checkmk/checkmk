@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-02-12 16:35+0000\n"
+"PO-Revision-Date: 2024-03-05 00:12+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -17,6 +17,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Weblate 5.0.2\n"
+
+msgid "\n"
+msgstr "\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -66,6 +69,9 @@ msgstr " (Untergrenzen)"
 
 msgid " (packaged)"
 msgstr " (packetiert)"
+
+msgid " (required)"
+msgstr " ist erforderlich"
 
 msgid " (upper levels)"
 msgstr " (Obergrenzen)"
@@ -304,10 +310,6 @@ msgstr "% der maximalen Verbindungen"
 #, no-python-format
 msgid "% of maximum idle connections"
 msgstr "% der maximal inaktiven Verbindungen"
-
-#, no-python-format
-msgid "% of overall suite timeout"
-msgstr "% des Gesamt-Timeouts der Suite"
 
 #, no-python-format
 msgid "% of port speed"
@@ -1000,9 +1002,6 @@ msgstr "... (%d mehr)"
 msgid ".Net/CLR Memory"
 msgstr ".Net/CLR-Speicher"
 
-msgid "/d"
-msgstr "/t"
-
 msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
 msgstr ""
 "/etc/cma/backup.conf hat falsche Berechtigungen. Das Lesen der Datei wird "
@@ -1010,9 +1009,6 @@ msgstr ""
 
 msgid "/m"
 msgstr "/m"
-
-msgid "/op"
-msgstr "/op"
 
 msgid "/s"
 msgstr "/s"
@@ -1992,8 +1988,11 @@ msgstr ""
 "i> ein Ordner ist, ist der Dateipfad für <tt>robot.yaml</tt> relativ zum "
 "Inhalt dieses Ordners."
 
-msgid "<u>Info</u>: Downtime also applies to services."
-msgstr "<u>Info</u>: Wartungszeit gilt auch für Services."
+msgid "<u>Info</u>: Downtime also applies to all services of the hosts."
+msgstr "<u>Info</u>: Wartungszeit gilt auch für alle Services des Hosts."
+
+msgid "<u>Info</u>: Downtime does not apply to host."
+msgstr "<u>Info</u>: Wartungszeit gilt nicht für den Host."
 
 msgid "??"
 msgstr "??"
@@ -2057,7 +2056,7 @@ msgstr ""
 
 msgid "A combination of the instance, database and (logical) file name."
 msgstr ""
-"Eine Kombination aus Instanz, Datanbank und dem (logischen) Dateinamen."
+"Eine Kombination aus Instanz, Datenbank und dem (logischen) Dateinamen."
 
 msgid ""
 "A compact dashboard which lists your unhandled host and service problems."
@@ -2637,6 +2636,9 @@ msgstr "AWS-Tags"
 
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CE Kosten und Nutzung"
+
+msgid "AWS/CE Total Reservation Utilization"
+msgstr "AWS/CE Gesamte Reservierungsauslastung"
 
 msgid "AWS/CloudFront"
 msgstr "AWS/CloudFront"
@@ -3419,7 +3421,7 @@ msgstr "Aktive Spot-Fleet-Anfragen"
 msgid "Active TCP Sessions"
 msgstr "Aktive TCP-Sitzungen"
 
-msgid "Active TLS Connections"
+msgid "Active TLS connections"
 msgstr "Aktive TLS-Verbindungen"
 
 msgid "Active UDP sessions"
@@ -3504,6 +3506,9 @@ msgstr "Aktive Shards"
 
 msgid "Active shards in percent"
 msgstr "Aktive Shards in Prozent"
+
+msgid "Active spot fleet requests"
+msgstr "Aktive Spot-Fleet-Anfragen"
 
 msgid "Active time range"
 msgstr "Aktiver Zeitraum"
@@ -3680,7 +3685,7 @@ msgid "Add comment?"
 msgstr "Kommentar hinzufügen?"
 
 msgid "Add comments"
-msgstr "Kommentare ergänzen"
+msgstr "Kommentare hinzufügen"
 
 msgid "Add comments to hosts or services, and remove comments"
 msgstr "Kommentare bei Hosts oder Services hinzufügen bzw. löschen"
@@ -3849,6 +3854,9 @@ msgstr "Neue Konstante hinzufügen"
 
 msgid "Add new element"
 msgstr "Element hinzufügen"
+
+msgid "Add new endpoint"
+msgstr "Neuen Endpunkt hinzufügen"
 
 msgid "Add new entry"
 msgstr "Neuen Eintrag hinzufügen"
@@ -5254,13 +5262,13 @@ msgid "All historic events of hosts or services (alerts, downtimes, etc.)"
 msgstr "Alle Ereignisse von Hosts oder Services (Alarme, Wartungszeiten, etc.)"
 
 msgid "All historic scheduled downtimes of a certain host"
-msgstr "Alle historischen Wartungszeiten eines bestimmten Hosts"
+msgstr "Alle historischen geplanten Wartungszeiten eines bestimmten Hosts"
 
 msgid "All historic scheduled downtimes of a certain service"
-msgstr "Alle historischen Wartungszeiten eines bestimmten Services"
+msgstr "Alle historischen geplanten Wartungszeiten eines bestimmten Services"
 
 msgid "All historic scheduled downtimes of hosts and services"
-msgstr "Alle historischen Wartungszeiten von Hosts und Services"
+msgstr "Alle historischen geplanten Wartungszeiten von Hosts und Services"
 
 msgid "All host- and service comments"
 msgstr "Alle Host- und Service-Kommentare"
@@ -5269,7 +5277,7 @@ msgid "All host- and service-downtimes"
 msgstr "Alle Host- und Service-Wartungszeiten"
 
 msgid "All host- and service-downtimes (including ids)"
-msgstr "Alle Host- und Servicewartungszeiten (einschließlich IDs)"
+msgstr "Alle Host- und Service-Wartungszeiten (einschließlich IDs)"
 
 msgid "All hosts"
 msgstr "Alle Hosts"
@@ -5913,9 +5921,6 @@ msgstr "Anzahl der Dateien im Benachrichtigungsspooler"
 msgid "Amount of mails in queues"
 msgstr "Anzahl von Mails in den Mailqueues"
 
-msgid "Amount of substance"
-msgstr "Stoffmenge"
-
 msgid ""
 "Amount of time that the application of redo data on the standby database "
 "lags behind the primary database"
@@ -6022,7 +6027,7 @@ msgid ""
 "issue to the Checkmk team to help fixing this issue. Please use the form "
 "below for reporting."
 msgstr ""
-"Beim verarbeiten Ihrer Anfrage ist ein interner Fehler aufgetreten. Sie "
+"Beim Verarbeiten Ihrer Anfrage ist ein interner Fehler aufgetreten. Sie "
 "können dem Checkmk-Team helfen, indem Sie einen Fehlerbericht senden. Bitte "
 "benutzen Sie das Formular unten."
 
@@ -6298,6 +6303,21 @@ msgstr "Name des Anwendungspools"
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Anwendungs- und Netzwerklastausgleich (ELBv2)"
 
+msgid "Application load balancer certificates"
+msgstr "Application Load Balancer Zertifikate"
+
+msgid "Application load balancer listeners"
+msgstr "Application Load Balancer Listener"
+
+msgid "Application load balancer rules"
+msgstr "Application Load Balancer Regeln"
+
+msgid "Application load balancer target groups"
+msgstr "Application Load Balancer Zielgruppen"
+
+msgid "Application load balancers"
+msgstr "Application Load Balancer"
+
 msgid "Application name"
 msgstr "Name der Anwendung"
 
@@ -6453,6 +6473,9 @@ msgstr ""
 msgid "Archive an event"
 msgstr "Ein Ereignis archivieren"
 
+msgid "Archive audit log"
+msgstr "Archiv Audit-Log"
+
 msgid "Archive current audit log"
 msgstr "Aktuelles Audit-Log archivieren"
 
@@ -6470,6 +6493,16 @@ msgstr "Archiv-Log"
 
 msgid "Archive messages that do not match any rule"
 msgstr "Meldungen archivieren, bei denen keine Regel greift"
+
+msgid ""
+"Archive the entries of the audit log. To be able to archive the audit log a "
+"user needs the generic Setup permission \"Make changes, perform actions\", "
+"the \"View audit log\" and this permission."
+msgstr ""
+"Archivieren Sie die Einträge des Audit-Logs. Um das Audit-Log archivieren zu "
+"können, benötigt ein Benutzer die allgemeine Setup-Berechtigung \"Änderungen "
+"vornehmen, Aktionen durchführen\", die Berechtigung \"Audit-Log ansehen\" "
+"und diese Berechtigung."
 
 msgid "Archive this event"
 msgstr "Diesen Event archivieren"
@@ -6895,7 +6928,7 @@ msgid "Author"
 msgstr "Autor"
 
 msgid "Author comment (regex)"
-msgstr "Kommentar des Authors (regex)"
+msgstr "Kommentar des Autors (regex)"
 
 #, python-format
 msgid "Author: %s"
@@ -6966,6 +6999,17 @@ msgstr "Autoextend wird ignoriert"
 
 msgid "Autoextensible"
 msgstr "Automatisch erweiterbar"
+
+msgid "Automated environment setup (via RCC)"
+msgstr "Automatisierte Einrichtung der Umgebung (über RCC)"
+
+#, python-format
+msgid ""
+"Automated environment setup (via RCC, %s because Robotmk Core MKP is "
+"installed)"
+msgstr ""
+"Automatisierte Einrichtung der Umgebung (über RCC, %s, da Robotmk Kern MKP "
+"installiert ist)"
 
 msgid "Automatic"
 msgstr "Automatisch"
@@ -7265,9 +7309,8 @@ msgstr "Durchschnittliche Fetcher-Latenz"
 msgid "Average flush time"
 msgstr "Durchschnittliche Flush-Zeit"
 
-#, fuzzy
 msgid "Average helper latency"
-msgstr "Durchschnittliche Checker-Latenz"
+msgstr "Durchschnittliche Helper-Latenz"
 
 msgid "Average interval"
 msgstr "Durchschnittsintervall"
@@ -7287,7 +7330,7 @@ msgstr "Durchschnittliche Latenz erfolgreicher GetItem-Anfragen"
 msgid "Average latency of successful PutItem requests"
 msgstr "Durchschnittliche Latenz erfolgreicher PutItem-Anfragen"
 
-msgid "Average latency of successful Query requests"
+msgid "Average latency of successful query requests"
 msgstr "Durchschnittliche Latenz erfolgreicher Query-Anfragen"
 
 msgid "Average latency used by Azure Storage to process a successful request"
@@ -7956,7 +7999,7 @@ msgstr "Rad"
 msgid "Billable time"
 msgstr "Abrechenbare Zeit"
 
-msgid "Bin Log Disk Usage"
+msgid "Bin log disk usage"
 msgstr "Verwendung der Bin-Log-Festplatte"
 
 msgid "Binaries"
@@ -8092,9 +8135,6 @@ msgstr "Kästen"
 
 msgid "Boxes (omit root)"
 msgstr "Kästen (root auslassen)"
-
-msgid "Bq"
-msgstr "Bq"
 
 msgid "Breakdown"
 msgstr "Aufschlüsselung"
@@ -8287,7 +8327,7 @@ msgstr "Zusammenfassung"
 msgid "Bulking not allowed"
 msgstr "Bulking nicht erlaubt"
 
-msgid "Burst Balance"
+msgid "Burst balance"
 msgstr "Burst-Balance"
 
 msgid "Bus"
@@ -8796,6 +8836,38 @@ msgstr ""
 "den Import von Azure-Tags ganz deaktivieren."
 
 msgid ""
+"By default, Robot Framework will execute <i>every</i> test.<br>But sometimes "
+"tests are interdependent - in the event of a failed login, for example, it "
+"is impossible to successfully complete the subsequent tests.<br>If this "
+"option is active, Robot Framework will <b>immediately stop</b> the suite "
+"execution if a test fails. <br>The results of subsequent tests (which would "
+"have failed) will then not be passed to Checkmk; depending on the discovery "
+"settings,their results will either be <b>missing</b> (if within a suite "
+"result) or the services generated for them will <b>go stale</b>.<br> <br>  "
+"<b>Important note</b>: this is where Robotmk deviates from Robot Framework "
+"behavior. The HTML log will still contain the omitted tests and show them as "
+"<tt>FAIL</tt> (even though they were not executed).<br>See also \"<a href="
+"\"http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
+"html#stopping-when-first-test-case-fails\">How to stop a suite when the "
+"first test fails</a>\". "
+msgstr ""
+"Standardmäßig führt Robot Framework <i>jeden</i> Test aus.<br>Aber manchmal "
+"sind Tests voneinander abhängig - im Falle einer fehlgeschlagenen Anmeldung "
+"ist es zum Beispiel unmöglich, die nachfolgenden Tests erfolgreich "
+"abzuschließen.<br>Wenn diese Option aktiviert ist, hält Robot Framework die "
+"Ausführung der Suite <b>sofort</b> an, wenn ein Test fehlschlägt. <br>Die "
+"Ergebnisse nachfolgender Tests (die fehlgeschlagen wären) werden dann nicht "
+"an Checkmk weitergeleitet; je nach den Erkennungseinstellungen <b>fehlen</b> "
+"entweder ihre Ergebnisse (wenn sie Teil eines Suite-Ergebnisses sind) oder "
+"die für sie generierten Dienste werden <b>veraltet (stale)</b>.<br> <br>  "
+"<b>Wichtiger Hinweis</b>: An dieser Stelle weicht Robotmk vom Verhalten des "
+"Robot Frameworks ab. Das HTML-Protokoll enthält weiterhin die ausgelassenen "
+"Tests und zeigt sie als <tt>FAIL</tt> an (auch wenn sie nicht ausgeführt "
+"wurden).<br>Siehe auch \"<a href=\"http://robotframework.org/robotframework/"
+"latest/RobotFrameworkUserGuide.html#stopping-when-first-test-case-fails\""
+">Anhalten einer Suite, wenn der erste Test fehlschlägt</a>\". "
+
+msgid ""
 "By default, Robotmk executes all suites in the user context of the Checkmk "
 "agent, which does not have access to the desktop of the Windows computer. To "
 "run tests on Windows GUI applications, you can specify the name of a user "
@@ -9045,6 +9117,23 @@ msgstr ""
 "der entfernten Instanz festlegen. Details finden Sie hier: <a target=_blank "
 "href='%s'>Online Dokumentation</a>."
 
+msgid "Bypass Proxy for certain hosts"
+msgstr "Umgehung des Proxys für bestimmte Hosts"
+
+msgid ""
+"Bypass Proxy for certain hosts: Specifies a list of destination hosts/"
+"adresses which should not be accessed through the given proxy. <br>The proxy "
+"setting is used for access to the internet, where RCC needs to download the "
+"installation files from. (In order to access a page through a proxy inside "
+"of the test suite, use the libraries capabilities)"
+msgstr ""
+"Umgehung des Proxys für bestimmte Hosts: Spezifiziert eine Liste von "
+"Zielhosts/-adressen, auf die nicht über den angegebenen Proxy zugegriffen "
+"werden soll. <br>Die Proxy-Einstellung wird für den Zugriff auf das Internet "
+"verwendet, von dem RCC die Installationsdateien herunterladen muss. (Um eine "
+"Seite über einen Proxy innerhalb der Test-Suite aufzurufen, verwenden Sie "
+"die Bibliotheksfunktionen)"
+
 msgid "Byte Count"
 msgstr "Byte Anzahl"
 
@@ -9071,9 +9160,6 @@ msgstr "Bytes verworfen"
 
 msgid "Bytes per day"
 msgstr "Bits pro Tag"
-
-msgid "Bytes per operation"
-msgstr "Bytes pro Operation"
 
 msgid "Bytes per second"
 msgstr "Bits pro Sekunde"
@@ -9192,9 +9278,6 @@ msgstr "CPU"
 msgid "CPU Architecture"
 msgstr "CPU-Architektur"
 
-msgid "CPU Credit Balance"
-msgstr "CPU Credit Saldo"
-
 msgid "CPU Load - %(load1:max@count) CPU Cores"
 msgstr "CPU-Last - %(load1:max@count) CPU-Kerne"
 
@@ -9224,6 +9307,9 @@ msgstr "CPU-Auslastung von Clustern"
 
 msgid "CPU averaging"
 msgstr "Durchschnittsbildung über CPU-Auslastung"
+
+msgid "CPU credit balance"
+msgstr "CPU-Guthaben"
 
 msgid "CPU credits"
 msgstr "CPU Credits"
@@ -9565,6 +9651,10 @@ msgstr "Rufe finale Hooks auf"
 msgid "Can be used until version:"
 msgstr "Kann bis zur Version verwendet werden:"
 
+#, python-format
+msgid "Can maximally be %d characters long."
+msgstr "Kann maximal %d Zeichen lang sein."
+
 msgid "Can not clone a cluster host as regular host"
 msgstr "Ein Cluster-Host kann nicht als regulärer Host geklont werden"
 
@@ -9869,9 +9959,6 @@ msgstr "Kann Konfigurationsdatei \"%s\" nicht schreiben: %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kann Datei \"%s\" nicht schreiben: %s"
 
-msgid "Capacitance"
-msgstr "Kapazität"
-
 msgid "Capacity filled"
 msgstr "Gefüllte Papiermenge"
 
@@ -9936,9 +10023,6 @@ msgstr "Katalog"
 msgid "Catalog of check plugins"
 msgstr "Katalog der Checkplugins"
 
-msgid "Catalytic activity"
-msgstr "Katalytische Aktivität"
-
 msgid "Categories"
 msgstr "Kategorien"
 
@@ -9986,9 +10070,8 @@ msgstr "Überprüfung von Zertifikaten"
 msgid "Certificate Key File"
 msgstr "Zertifikatsschlüsseldatei"
 
-#, fuzzy
 msgid "Certificate and key file"
-msgstr "Zertifikatsschlüsseldatei"
+msgstr "Zertifikat- und Schlüsseldatei"
 
 msgid "Certificate chain"
 msgstr "Zertifikatskette"
@@ -10000,11 +10083,11 @@ msgid "Certificate for encrypted authentication request responses (PEM)"
 msgstr ""
 "Zertifikat für verschlüsselte Antworten auf Authentifizierungsanfragen (PEM)"
 
-msgid "Certificate is expired"
-msgstr "Zertifikat ist abgelaufen"
-
 msgid "Certificate is not signed by trusted authority"
 msgstr "Zertifikat ist nicht von der \"Trusted authority\" unterzeichnet"
+
+msgid "Certificate signature algorithm"
+msgstr "Signatur-Algorithmus des Zertifikats"
 
 msgid "Certificate subject alternative name"
 msgstr "Alternativer Name des Zertifikatsgegenstands"
@@ -10052,7 +10135,7 @@ msgid "Change downtime comment"
 msgstr "Wartungszeit-Kommentar ändern"
 
 msgid "Change downtime end"
-msgstr "Wartungszeitende ändern"
+msgstr "Ende der Wartungszeit ändern"
 
 msgid "Change downtime start"
 msgstr "Wartungszeitbeginn ändern"
@@ -10365,6 +10448,9 @@ msgstr "Prüfen und WARN"
 msgid "Check and display only"
 msgstr "Prüfen und nur anzeigen"
 
+msgid "Check certificate"
+msgstr "Prüfe Zertifikat"
+
 msgid "Check certificate validity"
 msgstr "Prüfe Zertifikatsgültigkeit"
 
@@ -10388,6 +10474,12 @@ msgstr "Überwache die Speichernutzung der Container"
 
 msgid "Check current routing"
 msgstr "Check aktuelles Routing"
+
+msgid "Check document age"
+msgstr "Prüfe Alter des Dokuments"
+
+msgid "Check document size"
+msgstr "Prüfe Größe des Dokuments"
 
 msgid "Check event state in Event Console"
 msgstr "Prüfe Ereignisstatus in Event Console"
@@ -11337,7 +11429,7 @@ msgid "Citrix Netscaler DNS counter rates"
 msgstr "Citrix Netscaler DNS Zählerraten"
 
 msgid "Citrix Netscaler Loadbalancer TCP Connections"
-msgstr "Citrix Netscaler Loadbalancer TCP-Verbindungen"
+msgstr "Citrix Netscaler Load Balancer TCP-Verbindungen"
 
 msgid "Citrix Netscaler SSL certificates"
 msgstr "Citrix Netscaler SSL Zertifikate"
@@ -11400,9 +11492,6 @@ msgstr "Aufräumen, wenn der freie Speicherplatz geringer ist als"
 msgid "Clear & Delete"
 msgstr "Leeren & Löschen"
 
-msgid "Clear audit log"
-msgstr "Audit-Log leeren"
-
 msgid "Clear failed notifications"
 msgstr "Fehlgeschlagene Benachrichtigungen löschen"
 
@@ -11414,15 +11503,6 @@ msgstr "Leere Logdateien"
 
 msgid "Clear logs by deleting all stored messages"
 msgstr "Log-Datei durch Löschen aller gespeicherten Nachrichten bereinigen"
-
-msgid ""
-"Clear the entries of the audit log. To be able to clear the audit log a user "
-"needs the generic Setup permission \"Make changes, perform actions\", the "
-"\"View audit log\" and this permission."
-msgstr ""
-"Die Einträge des Audit-Log löschen. Um das Audit-Log leeren zu können, muss "
-"ein Nutzer die Berechtigung „Änderungen vornehmen, Aktionen ausführen“, "
-"„Audit-Log einsehen“ sowie diese Berechtigung haben."
 
 msgid "Click for instant reload."
 msgstr "Klicken Sie zum sofortigen Reload."
@@ -11742,10 +11822,10 @@ msgstr "Geclustert"
 msgid "Cnt."
 msgstr "Zln."
 
-msgid "Code Size"
+msgid "Code size"
 msgstr "Code-Größe"
 
-msgid "Code Size in percent"
+msgid "Code size in percent"
 msgstr "Code-Größe in Prozent"
 
 msgid "Code verifier not found. Cache value is None."
@@ -12148,6 +12228,9 @@ msgstr "Berechnungsoptionen"
 #, python-format
 msgid "Computation result: %s - %s"
 msgstr "Berechnungsergebnis: %s - %s"
+
+msgid "Compute REST API specification"
+msgstr "Verarbeite REST-API Spezifikation"
 
 msgid "Compute average over last "
 msgstr "Durchschnitt erzeugen über die letzten "
@@ -12973,14 +13056,14 @@ msgstr "Konsolidierungsfunktionen"
 msgid "Constant value %.2f"
 msgstr "Konstanter Wert: %.2f"
 
-msgid "Consumed Load Balancer Capacity unit=Units"
-msgstr "Verbrauchte Load Balancer Kapazität Einheit=Einheiten"
-
 msgid "Consumed capacity"
 msgstr "Verbrauchte Kapazität"
 
 msgid "Consumed host memory"
 msgstr "Benutzer Speicher auf dem Host"
+
+msgid "Consumed load balancer capacity units"
+msgstr "Verbrauchte Load Balancer Kapazitätseinheiten"
 
 msgid "Consumer Count is the size of connected consumers to a queue"
 msgstr ""
@@ -13537,7 +13620,7 @@ msgstr "Zähler-Level"
 msgid ""
 "Counter rates of DNS parameters for Citrix Netscaler Loadbalancer Appliances"
 msgstr ""
-"Zählerraten für DNS-Parameter für Citrix Netscaler Loadbalancer Appliances"
+"Zählerraten für DNS-Parameter für Citrix Netscaler Load Balancer Appliances"
 
 msgid "Counter-object name or number"
 msgstr "Zählerobjektname oder -nummer"
@@ -15260,7 +15343,7 @@ msgid "Deactivated"
 msgstr "Deaktiviert"
 
 msgid "Dead letter errors"
-msgstr "Dead letter errors"
+msgstr "Dead Letter-Fehler"
 
 msgid "Dead paths"
 msgstr "Tote Pfade"
@@ -15342,9 +15425,6 @@ msgstr "Dezibel"
 msgid "Decibel-millivolt"
 msgstr "Dezibel-Millivolt"
 
-msgid "Decibel-milliwatt"
-msgstr "Dezibel Milliwatt"
-
 msgid "Decibel-milliwatts"
 msgstr "Dezibel Milliwatt"
 
@@ -15366,6 +15446,9 @@ msgstr "Dekodierter Datenverkehr"
 
 msgid "Decoder utilization"
 msgstr "Auslastung des Decoders"
+
+msgid "Decryption of SNMPv3 password failed."
+msgstr "Entschlüsselung des SNMPv3 Passworts ist fehlgeschlagen."
 
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Dedizierte White- und Blacklist für neue und verschwundene Services"
@@ -15664,9 +15747,6 @@ msgid ""
 msgstr ""
 "Legt fest, welcher Monitoring-Zustand welchem Eingangszustand entspricht. "
 "Dies gilt für jeden einzelnen Eingang."
-
-msgid "Defined by signature algorithm parameters"
-msgstr "Definiert durch die Parameter des Signaturalgorithmus"
 
 msgid "Defines what information to query."
 msgstr "Definiert abzurufende Informationen."
@@ -16306,7 +16386,7 @@ msgid "Deploy Remote Desktop Licenses plugin"
 msgstr "Remote Desktop Lizenzen Plugin ausrollen"
 
 msgid "Deploy Robotmk Scheduler and Agent Plugin"
-msgstr ""
+msgstr "Verteile Robotmk Scheduler und Agentenplugin"
 
 msgid "Deploy SMART plugin"
 msgstr "Das SMART Plugin ausrollen"
@@ -18147,9 +18227,6 @@ msgstr "DOCSIS ausgehende Kanäle"
 msgid "Docsis Upstream Channels"
 msgstr "DOCSIS eingehende Kanäle"
 
-msgid "Document"
-msgstr "Dokument"
-
 msgid "Document body"
 msgstr "Dokumentkörper"
 
@@ -18169,6 +18246,10 @@ msgid "Documents fragmentation"
 msgstr "Dokumentation Fragmentation"
 
 #, python-format
+msgid "Does not end with %s"
+msgstr "Endet nicht mit %s"
+
+#, python-format
 msgid "Does not ends with \"%s\"."
 msgstr "Endet nicht mit \"%s\"."
 
@@ -18177,9 +18258,6 @@ msgstr "Existiert nicht"
 
 msgid "Does not match any service"
 msgstr "Passt zu keinem Service"
-
-msgid "Dollar"
-msgstr "Dollar"
 
 msgid "Domain (only used for european accounts)"
 msgstr "Domain (nur für europäische Konten verwendet)"
@@ -18271,9 +18349,6 @@ msgstr "Keine Anführungszeichen verwenden"
 
 msgid "Don't wait for document body"
 msgstr "Warte nicht auf Text"
-
-msgid "Dose equivalent"
-msgstr "Entsprechende Dosis"
 
 msgid "DotNet (.Net) runtime memory levels"
 msgstr "DotNet (.Net) Runtime Speicher-Level"
@@ -18627,9 +18702,6 @@ msgstr "z.B. 'project = my_project and result = \"waiting for something\"'"
 msgid "ECDSA"
 msgstr "ECDSA"
 
-msgid "ED25519"
-msgstr "ED25519"
-
 msgid "EMC Data Domain MTree state"
 msgstr "EMC Data Domain MTree-Status"
 
@@ -18849,6 +18921,9 @@ msgstr ""
 "neue Berechtigungen hinzukommen, erhält die Benutzerrolle diese neuen "
 "Berechtigungen oder erhält sie nicht, je nach den Standardeinstellungen der "
 "mitgelieferten Rolle, auf der sie beruht."
+
+msgid "Ed25519"
+msgstr "Ed25519"
 
 msgid "Edit"
 msgstr "Bearbeiten"
@@ -19308,6 +19383,9 @@ msgstr "Elastic Container Service (ECS)"
 msgid "Elastic IP Addresses"
 msgstr "Elastic IP-Adressen"
 
+msgid "Elastic IP addresses"
+msgstr "Elastic IP-Adressen"
+
 msgid "Elasticsearch"
 msgstr "Elasticsearch"
 
@@ -19329,17 +19407,8 @@ msgstr "Elasticsearch Nodes"
 msgid "Elbow"
 msgstr "Winkel"
 
-msgid "Electric charge"
-msgstr "Elektrische Ladung"
-
-msgid "Electric potential"
-msgstr "Elektrische Spannung"
-
 msgid "Electrical Apparent Power"
 msgstr "Elektrische Scheinleistung"
-
-msgid "Electrical Current"
-msgstr "Elektrischer Widerstand"
 
 msgid "Electrical Current (Amperage)"
 msgstr "Elektrischer Widerstand (Amperezahl)"
@@ -19361,9 +19430,6 @@ msgstr "Elektrische Spannung"
 
 msgid "Electrical apparent power"
 msgstr "Elektrische Scheinleistung"
-
-msgid "Electrical conductance"
-msgstr "Elektrische Leitfähigkeit"
 
 msgid "Electrical current"
 msgstr "Elektrischer Widerstand"
@@ -19568,6 +19634,9 @@ msgstr "Protokollierung von Anmeldefehlern einschalten"
 
 msgid "Enable login via GET requests"
 msgstr "Anmeldung über GET-Anfragen aktivieren"
+
+msgid "Enable metrics for high-level keywords"
+msgstr "Aktiviere Metriken für übergeordnete Schlüsselwörter"
 
 msgid "Enable notification logging"
 msgstr "Protokollierung der Alarme einschalten"
@@ -19812,9 +19881,6 @@ msgstr "Verschlüsselte private Schlüssel werden nicht unterstützt"
 msgid "Encryption"
 msgstr "Verschlüsselung"
 
-msgid "Encryption algorithm"
-msgstr "Verschlüsselungsalgorithmus"
-
 #, python-format
 msgid "Encryption for %s is only used if it is enabled on the remote site"
 msgstr ""
@@ -19857,8 +19923,8 @@ msgstr "Endet präventiv"
 msgid "Endpoint"
 msgstr "Endpunkt"
 
-msgid "Endpoints"
-msgstr "Endpoints"
+msgid "Endpoints to monitor"
+msgstr "Zu überwachende Endpunkte"
 
 msgid "Enforce IPv4"
 msgstr "IPv4 erzwingen"
@@ -20675,7 +20741,7 @@ msgid "Exclude reserved space"
 msgstr "Reserviertern Speicher ausschließen"
 
 msgid "Exclude scheduled downtimes"
-msgstr "geplante Wartungszeiten ausnehmen"
+msgstr "Geplante Wartungszeiten ausnehmen"
 
 msgid "Exclude service groups"
 msgstr "Servicegruppen ausschließen"
@@ -20757,6 +20823,9 @@ msgstr "Als MQM ausführen"
 msgid "Execute as another user"
 msgstr "Als anderer Benutzer ausführen"
 
+msgid "Execute as specific user"
+msgstr "Als bestimmter Benutzer ausführen"
+
 #, python-format
 msgid "Execute custom action '%s'?"
 msgstr "Benutzerdefinierte Aktion '%s' ausführen?"
@@ -20833,6 +20902,9 @@ msgstr "Exit-Code"
 msgid "Exit code (hex value)"
 msgstr "Exit-Code (Hex-Wert)"
 
+msgid "Exit on failure (<tt>--exitonfailure</tt>)"
+msgstr "Beenden bei Fehler (<tt>--exitonfailure</tt>)"
+
 msgid "Expand"
 msgstr "Erweitern"
 
@@ -20879,10 +20951,6 @@ msgstr "Erwartete DNS-Antworten"
 
 msgid "Expected String"
 msgstr "Erwartete Zeichenkette"
-
-#, python-format
-msgid "Expected a tuple, got %s"
-msgstr "Erwartete ein Tupel, erhielt %s"
 
 msgid "Expected active paths"
 msgstr "Erwartete aktive Pfade"
@@ -21146,23 +21214,20 @@ msgstr ""
 msgid "Extremes only"
 msgstr "Nur Extreme"
 
-msgid "F"
-msgstr "F"
-
 msgid "F5 BigIP configuration sync status"
 msgstr "F5 BigIP-Konfigurations-Synchronisationsstatus"
 
 msgid "F5 Loadbalancer Connections"
-msgstr "F5 Loadbalancer Verbindungen"
+msgstr "F5 Load Balancer Verbindungen"
 
 msgid "F5 Loadbalancer Pools"
-msgstr "F5 Loadbalancer-Pools"
+msgstr "F5 Load Balancer-Pools"
 
 msgid "F5 Loadbalancer Source NAT"
-msgstr "F5 Loadbalancer Source NAT"
+msgstr "F5 Load Balancer Source NAT"
 
 msgid "F5 Loadbalancer VServer"
-msgstr "F5 Loadbalancer VServer"
+msgstr "F5 Load Balancer VServer"
 
 msgid "FAN speed of Hardware devices"
 msgstr "Lüftergeschwindigkeit von Hardwaregeräten"
@@ -21195,6 +21260,9 @@ msgid "FGPA utilization"
 msgstr "FPGA-Auslastung"
 
 msgid "FIFO Topics"
+msgstr "FIFO-Themen"
+
+msgid "FIFO topics"
 msgstr "FIFO-Themen"
 
 msgid "FIN_WAIT1"
@@ -21254,10 +21322,10 @@ msgstr "Fehlgeschlagene Standordanfragen"
 msgid "Failed Notifications"
 msgstr "Fehlgeschlagene Alarmierungen"
 
-msgid "Failed TLS Client Handshake"
+msgid "Failed TLS client handshake"
 msgstr "Fehlgeschlagener TLS-Client Handshake"
 
-msgid "Failed TLS Target Handshake"
+msgid "Failed TLS target handshake"
 msgstr "Fehlgeschlagener TLS-Ziel-Handshake"
 
 msgid "Failed calls caused by unexpected interaction from gateway"
@@ -21395,6 +21463,10 @@ msgstr "Peer-Zertifikat konnte nicht abgerufen werden (%s)"
 
 msgid "Failed to find matching certificate in chain"
 msgstr "Das passende Zertifikat konnte in der Kette nicht gefunden werden"
+
+#, python-format
+msgid "Failed to generate REST API specification: %s"
+msgstr "Fehlgeschlagene Erzeugung der REST-API Spezifikation: %s"
 
 #, python-format
 msgid "Failed to get changes from sites: %s."
@@ -22521,9 +22593,6 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Verbiete, den ganzen Baum zu sehen"
 
-msgid "Force"
-msgstr "Stärke"
-
 msgid "Force agent to run in single thread"
 msgstr "Den Agenten in einem einzigen Thread ausführen"
 
@@ -23097,12 +23166,6 @@ msgstr "GET/POST-Variablen auf dieser Seite"
 msgid "GI resource"
 msgstr "GI Ressource"
 
-msgid "GOST R 34.10-2001"
-msgstr "GOST R 34.10-2001"
-
-msgid "GOST R 34.10-2012"
-msgstr "GOST R 34.10-2012"
-
 msgid "GPU utilization"
 msgstr "GPU-Auslastung"
 
@@ -23169,12 +23232,6 @@ msgstr "Globale Berechtigungen"
 msgid "General Properties"
 msgstr "Generelle Eigenschaften"
 
-msgid "General Purpose SSD (gp2) space"
-msgstr "Speicherplatz für General Purpose SSD (gp2)"
-
-msgid "General Purpose SSD (gp3) space"
-msgstr "Gesamtspeicherplatz für General Purpose SSD (gp3)"
-
 msgid "General Settings"
 msgstr "Globale Einstellungen"
 
@@ -23199,8 +23256,17 @@ msgstr "Generelle Meldungen"
 msgid "General properties"
 msgstr "Generelle Eigenschaften"
 
+msgid "General purpose SSD (gp2) space"
+msgstr "Platz für General Purpose SSD (gp2)"
+
+msgid "General purpose SSD (gp3) space"
+msgstr "Gesamtplatz für General Purpose SSD (gp3)"
+
 msgid "Generate"
 msgstr "Erzeugen"
+
+msgid "Generate REST API specification"
+msgstr "Erzeuge REST-API Spezifikation"
 
 msgid "Generate backup codes"
 msgstr "Backup-Codes erzeugen"
@@ -23211,9 +23277,8 @@ msgstr "Parallele Erzeugung der Kernkonfiguration"
 msgid "Generate event"
 msgstr "Erzeuge ein Ereignis"
 
-#, fuzzy
 msgid "Generate key"
-msgstr "Erzeugen"
+msgstr "Schlüssel erzeugen"
 
 msgid "Generate report in background job"
 msgstr "Erstelle Report in Hintergrund-Prozess"
@@ -23238,6 +23303,9 @@ msgstr ""
 
 msgid "Generate this report"
 msgstr "Diesen Bericht erstellen"
+
+msgid "Generating REST API specification"
+msgstr "REST-API Spezifikation wird erzeugt"
 
 msgid "Generating report..."
 msgstr "Erstelle Report..."
@@ -23752,12 +23820,6 @@ msgstr "Gast-Betriebssysteme"
 msgid "Guest user"
 msgstr "Gastbenutzer"
 
-msgid "Gy"
-msgstr "Gy"
-
-msgid "H"
-msgstr "H"
-
 msgid "H.Down"
 msgstr "H.Unten"
 
@@ -23861,9 +23923,6 @@ msgstr "HTTP Fehler - %d: %s"
 msgid "HTTP Errors"
 msgstr "HTTP Fehler"
 
-msgid "HTTP Fixed Responses"
-msgstr "Festgelegte HTTP-Antworten"
-
 msgid "HTTP Method"
 msgstr "HTTP Methode"
 
@@ -23876,17 +23935,14 @@ msgstr "HTTP-Parameter"
 msgid "HTTP Proxy"
 msgstr "HTTP-Proxy"
 
-msgid "HTTP Redirects"
-msgstr "HTTP-Umleitungen"
-
-msgid "HTTP Redirects URL Limit Exceeded"
-msgstr "Überschrittenes URL-Limit von HTTP-Umleitungen"
-
 msgid "HTTP Timings"
 msgstr "HTTP Zeiten"
 
 msgid "HTTP accelerator statistics"
 msgstr "HTTP Geschwindigkeitsstatistiken"
+
+msgid "HTTP fixed responses"
+msgstr "Festgelegte HTTP-Antworten"
 
 msgid "HTTP method"
 msgstr "HTTP Methode"
@@ -23897,6 +23953,12 @@ msgstr "HTTP-Proxies"
 msgid "HTTP proxy"
 msgstr "HTTP-Proxy"
 
+msgid "HTTP redirects"
+msgstr "HTTP-Umleitungen"
+
+msgid "HTTP redirects URL limit exceeded"
+msgstr "URL-Limit von HTTP-Umleitungen ist überschritten"
+
 msgid "HTTP request header variable"
 msgstr "HTTP-Request-Header-Variable"
 
@@ -23905,6 +23967,9 @@ msgstr "HTTP-Anfragen pro Sekunde"
 
 msgid "HTTP version"
 msgstr "HTTP-Version"
+
+msgid "HTTP web service endpoints to monitor"
+msgstr "Zu überwachende HTTP Webdienst-Endpunkte"
 
 msgid "HTTP, TCP, Email, ..."
 msgstr "HTTP, TCP, Email, ..."
@@ -24100,14 +24165,8 @@ msgstr "Muss den Pfad zum Cert Key File enthalten."
 msgid "Hash"
 msgstr "Hash"
 
-msgid "Hashing algorithm included in encryption"
-msgstr "Hashing-Algorithmus in der Verschlüsselung enthalten"
-
-msgid "Headed execution as specific user"
-msgstr "Ausführung mit Kopf als bestimmter Benutzer"
-
-msgid "Header"
-msgstr "Header"
+msgid "Hashing algorithm"
+msgstr "Hashing-Algorithmus"
 
 msgid "Header name pattern"
 msgstr "Muster der Header-Namen"
@@ -24172,9 +24231,6 @@ msgstr "Heartbeat-Cluster"
 msgid "Heartbeat tools missing or not installed"
 msgstr "Gast-Tools fehlen oder sind nicht installiert"
 
-msgid "Heat"
-msgstr "Wärme"
-
 msgid "Height"
 msgstr "Höhe"
 
@@ -24184,9 +24240,8 @@ msgstr "Hilfe"
 msgid "Help Text"
 msgstr "Hilfe-Text"
 
-#, fuzzy
 msgid "Helper usage"
-msgstr "CMK Helper Verbrauch"
+msgstr "Helper-Verbrauch"
 
 msgid "Helvetica"
 msgstr "Helvetica"
@@ -25013,6 +25068,9 @@ msgid ""
 "Here you can upload an existing certificate and private key. The key must be "
 "an RSA key and it must be password protected."
 msgstr ""
+"Hier können Sie ein vorhandenes Zertifikat und einen privaten Schlüssel "
+"hochladen. Der Schlüssel muss ein RSA-Schlüssel sein und mit einem Passwort "
+"geschützt sein."
 
 msgid ""
 "Here you get feedback about recent agent rollouts. If you e.g. restrict a "
@@ -25199,7 +25257,7 @@ msgid "History of notifications"
 msgstr "Historie der Alarme"
 
 msgid "History of scheduled downtimes"
-msgstr "Historie der Wartungszeiten"
+msgstr "Historie der geplanten Wartungszeiten"
 
 msgid "Hits"
 msgstr "Zugriffe"
@@ -25214,7 +25272,7 @@ msgid "Homepage / Download - URL of this package"
 msgstr "Homepage / Download-URL dieses Pakets"
 
 msgid "Honor scheduled downtimes"
-msgstr "geplante Wartungszeiten berücksichtigen"
+msgstr "Geplante Wartungszeiten berücksichtigen"
 
 #, python-format
 msgid "Hop %d Packet loss"
@@ -25283,7 +25341,7 @@ msgid "Host Auxiliary Tags"
 msgstr "Hilfsmerkmale eines Hosts"
 
 msgid "Host Check Command"
-msgstr "Kommando zum Check von Hosts"
+msgstr "Host-Checkbefehl"
 
 msgid "Host Contact"
 msgstr "Hostkontakt"
@@ -25418,10 +25476,10 @@ msgid "Host attributes to set"
 msgstr "Zu setzende Host-Attribute"
 
 msgid "Host check command"
-msgstr "Hostcheckbefehl"
+msgstr "Host-Checkbefehl"
 
 msgid "Host check command expanded"
-msgstr "Hostcheckbefehl erweitert"
+msgstr "Host-Checkbefehl erweitert"
 
 msgid "Host check duration"
 msgstr "Hostausführungscheck"
@@ -26180,6 +26238,12 @@ msgstr ""
 msgid "How to handle redirect"
 msgstr "Wie Umleitung behandeln"
 
+msgid "How to handle redirects"
+msgstr "Umgang mit Weiterleitungen"
+
+msgid "How to handle the document"
+msgstr "Umgang mit dem Dokument"
+
 msgid ""
 "However, if that is not feasable, you can configure the legacy mode (which "
 "may or <b>may not</b> include encryption) to be OK using this setting. Note "
@@ -26570,12 +26634,6 @@ msgstr "IPv6"
 msgid "IPv6 Address"
 msgstr "IPv6-Adresse"
 
-msgid "IPv6 Processed Bytes"
-msgstr "Verarbeitete Bytes via IPv6"
-
-msgid "IPv6 Requests"
-msgstr "IPv6-Anfragen"
-
 msgid "IPv6 Subnet"
 msgstr "IPv6-Subnetz"
 
@@ -26584,6 +26642,12 @@ msgstr "IPv6-Adresse"
 
 msgid "IPv6 only"
 msgstr "Nur IPv6"
+
+msgid "IPv6 processed bytes"
+msgstr "Via IPv6 verarbeitete Bytes"
+
+msgid "IPv6 requests"
+msgstr "IPv6-Anfragen"
 
 msgid "ISC DHCP-Daemon (Linux)"
 msgstr "ISC DHCP-Daemon (Linux)"
@@ -26639,8 +26703,8 @@ msgstr "untätig"
 msgid "Idle Timeout"
 msgstr "Inaktivitäts-Timeout"
 
-msgid "Idle clean up of worker"
-msgstr "Idle clean up der Worker-Prozesse"
+msgid "Idle cleanup of worker"
+msgstr "Leerlaufbereinigung der Worker-Prozesse"
 
 msgid "Idle connections"
 msgstr "Inaktive Verbindungen"
@@ -27047,10 +27111,8 @@ msgstr ""
 "Multisite Statusansicht alarmiert - wenn die Ansicht für Klänge konfiguriert "
 "ist. Bei allen mitgelieferten Ansichten sind Klänge aktiviert."
 
-msgid "If state changes OR core restarts OR on recovery (OK/UP)"
-msgstr ""
-"Wenn sich der Status ändert ODER der Kern neu startet ODER im Recovery-Fall "
-"(OK/UP)"
+msgid "If state changes OR on recovery (OK/UP)"
+msgstr "Wenn sich der Status ändert ODER beim Recovery (OK/UP)"
 
 msgid ""
 "If that user does not have the permission <i>See all events</i> then this "
@@ -27430,6 +27492,14 @@ msgstr ""
 "Wenn Sie das Überwachen des Betriebszustands (<tt>ifOperStatus</tt>) "
 "einschalten, wart der Check oder wird kritisch, wenn der aktuelle Status der "
 "Schnittstelle nicht einem der erwarteten Status entspricht."
+
+msgid ""
+"If you activate this and you don't have the vite dev server running you may "
+"not be able to deactivate this option via UI, so be careful!"
+msgstr ""
+"Wenn Sie diese Option aktivieren und der vite Entwicklungsserver nicht "
+"läuft, können Sie diese Option möglicherweise nicht über die "
+"Benutzeroberfläche deaktivieren, seien Sie also vorsichtig!"
 
 msgid ""
 "If you activate this option, a name of a stored procedure is used instead of "
@@ -28415,9 +28485,6 @@ msgstr "Ignoriere den Wait-Typen"
 msgid "Ignored autostart services"
 msgstr "Ignorierte Dienste trotz Autostart"
 
-msgid "Illuminance"
-msgstr "Beleuchtungsstärke"
-
 msgid "Image"
 msgstr "Bild"
 
@@ -28438,9 +28505,6 @@ msgstr "Sofort eingeplante Checks"
 
 msgid "Impact"
 msgstr "Auswirkung"
-
-msgid "Impedance"
-msgstr "Widerstand"
 
 msgid "Import"
 msgstr "Importieren"
@@ -29221,17 +29285,17 @@ msgstr ""
 msgid "Individual program call instead of agent access"
 msgstr "Programmaufruf (kein Zugriff auf Agenten)"
 
-msgid "Individual settings"
-msgstr "Individuelle Einstellungen"
+msgid "Individual settings for this endpoint"
+msgstr "Individuelle Einstellungen für diesen Endpunkt"
+
+msgid "Individual settings to use for this endpoint"
+msgstr "Zu verwendende individuelle Einstellungen für diesen Endpunkt"
 
 msgid "Individual states per data source"
 msgstr "Einzelne Zustände pro Datenquelle"
 
 msgid "Individual topic"
 msgstr "Eigenes Thema"
-
-msgid "Inductance"
-msgstr "Induktivität"
 
 msgid "Ineffective"
 msgstr "Unwirksame Regeln"
@@ -29280,9 +29344,6 @@ msgstr "Info"
 
 msgid "Info:"
 msgstr "Info:"
-
-msgid "Info: Downtime does not apply to host."
-msgstr "Info: Wartungszeit gilt nicht für den Host."
 
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
@@ -29358,6 +29419,9 @@ msgstr "Urheber"
 
 msgid "Inject JavaScript profiling code"
 msgstr "JavaScript-Profiling-Code einbinden"
+
+msgid "Inject frontend_vue files via vite client"
+msgstr "Einfügen von frontend_vue-Dateien über den vite-Client"
 
 msgid "Inline SNMP"
 msgstr "Inline-SNMP"
@@ -29993,9 +30057,6 @@ msgstr "Ungültige Regel <tt>%s</tt>"
 msgid "Invalid sidebar element %s"
 msgstr "Ungültiges Seitenleistenelement: %s"
 
-msgid "Invalid signature"
-msgstr "Ungültige Signatur"
-
 msgid "Invalid signature of response"
 msgstr "Ungültige Signatur der Antwort"
 
@@ -30385,14 +30446,6 @@ msgstr "Element {diff_path} mit Wert {val_t1} entfernt."
 msgid "Item {diff_path} with value {val_t2} added."
 msgstr "Element {diff_path} mit Wert {val_t2} hinzugefügt."
 
-#, python-brace-format
-msgid "Item {val_t1} removed."
-msgstr "Element {val_t1} entfernt."
-
-#, python-brace-format
-msgid "Item {val_t2} added."
-msgstr "Element {val_t2} hinzugefügt."
-
 msgid "Items"
 msgstr "Items"
 
@@ -30401,9 +30454,6 @@ msgstr "Alter des Iterators"
 
 msgid "IvantiNeurons for MDM (formerly MobileIron Cloud)"
 msgstr "IvantiNeurons für MDM (vormals MobileIron Cloud)"
-
-msgid "J"
-msgstr "J"
 
 msgid "JIRA URL"
 msgstr "JIRA URL"
@@ -30583,9 +30633,6 @@ msgstr "Nur betroffene Merkmale von Regeln entfernen."
 
 msgid "Just show the availability (i.e. OK/UP)"
 msgstr "Nur die Verfügbarkeit zeigen (d.h. OK/UP)"
-
-msgid "K"
-msgstr "K"
 
 msgid "KByte"
 msgstr "KByte"
@@ -30847,8 +30894,8 @@ msgstr "LDAP [%s]: Benutzer %s entfernt"
 msgid "LDAP attribute to be used as indicator"
 msgstr "LDAP Attribut, das als Indikator fungiert"
 
-msgid "LDAP attribute to search, The default is <tt>(objectclass=*)</tt>."
-msgstr "LDAP Attribut für Suche. Standard: <tt>(objectclass=*)</tt>."
+msgid "LDAP attribute to search, the default is <tt>(objectclass=*)</tt>."
+msgstr "LDAP Attribut für Suche, der Standard lautet <tt>(objectclass=*)</tt>."
 
 msgid "LDAP attribute to sync"
 msgstr "LDAP Attribut für Synchronisation"
@@ -31252,9 +31299,6 @@ msgstr "Veralteter Lauf"
 
 msgid "Legal"
 msgstr "Legal"
-
-msgid "Length"
-msgstr "Länge"
 
 msgid "Length of Z1 messenger mail queue"
 msgstr "Länge der Z1-Messenger-Mail-Warteschlange"
@@ -32048,9 +32092,6 @@ msgstr "Verbleibende Lebenszeit"
 msgid "Limit"
 msgstr "Limit"
 
-msgid "Limit Path Levels for Service Names"
-msgstr "Begrenze die Pfadlänge in Service-Namen"
-
 msgid "Limit amount of current events"
 msgstr "Anzahl aktueller Ereignisse begrenzen"
 
@@ -32088,6 +32129,9 @@ msgstr "Objekte begrenzen"
 
 msgid "Limit of meta data"
 msgstr "Limitierung von Metadaten"
+
+msgid "Limit path levels for service names"
+msgstr "Begrenze die Pfad-Level für Service-Namen"
 
 msgid "Limit processed data"
 msgstr "Datenmenge begrenzen"
@@ -32342,6 +32386,10 @@ msgstr ""
 "Adresse abgefragt wird, sind die Antworten Hostnamen, die auf einen Punkt "
 "enden."
 
+#, python-format
+msgid "List can maximally be %d elements long."
+msgstr "Die Liste kann maximal %d Elemente lang sein."
+
 msgid "List crash reports of all sites"
 msgstr "Liste der Absturzberichte aller Instanzen"
 
@@ -32350,6 +32398,10 @@ msgstr "Liste gruppierte Schnittstellen stattdessen"
 
 msgid "List grouped interfaces separately"
 msgstr "Liste gruppierte Schnittstellen separat"
+
+#, python-format
+msgid "List needs to be at least %d elements long."
+msgstr "Die Liste muss mindestens %d Elemente lang sein."
 
 #, python-format
 msgid "List of %s"
@@ -32408,7 +32460,7 @@ msgid "Lists all downtimes for services."
 msgstr "Listet alle Wartungszeiten für Services auf."
 
 msgid "Lists all host downtimes."
-msgstr "Lists alle Wartungszeiten für Host auf."
+msgstr "Listet alle Wartungszeiten des Hosts auf."
 
 msgid "Lists all services in state PENDING."
 msgstr "Listet alle Services im Zustand PENDING."
@@ -32447,9 +32499,6 @@ msgid ""
 msgstr ""
 "Listet die Mitglieder einer Host-Gruppe mit der Anzahl der Services in den "
 "verschiedenen Zuständen auf."
-
-msgid "Liter per second"
-msgstr "Liter pro Sekunde"
 
 msgid "Liters per second"
 msgstr "Liter pro Sekunde"
@@ -32558,16 +32607,19 @@ msgid "Load balancer latency"
 msgstr "Load Balancer-Latenz"
 
 msgid "Load balancer listeners"
-msgstr "Loadbalancer-Listener"
+msgstr "Load Balancer-Listener"
 
 msgid "Load balancer registered instances"
-msgstr "Registrierte Instanzen des Loadbalancers"
+msgstr "Registrierte Instanzen des Load Balancers"
 
 msgid "Load balancers"
-msgstr "Loadbalancer"
+msgstr "Load Balancer"
 
 msgid "Load balancers Target Groups"
-msgstr "Zielgruppen von Loadbalancers"
+msgstr "Zielgruppen von Load Balancern"
+
+msgid "Load balancers target groups"
+msgstr "Zielgruppen von Load Balancern"
 
 msgid "Load environment variables from file"
 msgstr "Umgebungsvariablen aus der Datei laden"
@@ -33321,6 +33373,9 @@ msgstr "Untergrenzen für verbleibende Zeit bis zum Lizenzablauf"
 msgid "Lower levels for requests utilization"
 msgstr "Untergrenzen für die Nutzung von Anfragen"
 
+msgid "Lower levels for reservation utilization"
+msgstr "Untergrenzen für die Reservierungsauslastung"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Untergrenzen für Lüfterdrehzahl von Hardwaregerät"
 
@@ -33350,12 +33405,6 @@ msgstr "Untere Warngrenze"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Am niedrigsten: kein Alarm, Hinweiszahl erhöhen"
-
-msgid "Luminous flux"
-msgstr "Lichtstrom"
-
-msgid "Luminous intensity"
-msgstr "Lichtstärke"
 
 msgid "MAC Address"
 msgstr "MAC-Adresse"
@@ -33613,12 +33662,6 @@ msgstr "Magic Factor (automatische Level-Anpassung für große Dateisysteme)"
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr "Magic Factor (automatische Level-Anpassung für große Tablespaces)"
 
-msgid "Magnetic flux"
-msgstr "Magnetfluss"
-
-msgid "Magnetic flux density"
-msgstr "Magnetische Flussdichte"
-
 msgid "Magnetic volumes space"
 msgstr "Magnetischer Datenträgerplatz"
 
@@ -33765,7 +33808,7 @@ msgid "Make backups of your whole site and restore previous backups."
 msgstr "Sichern Sie Ihre Instanzen und stellen diese wieder her."
 
 msgid "Make changes, perform actions"
-msgstr "Änderungen/Aktionen ausführen"
+msgstr "Änderungen vornehmen, Aktionen durchführen"
 
 msgid "Make check CRITICAL"
 msgstr "Setze Check auf CRIT"
@@ -34144,9 +34187,6 @@ msgstr ""
 "Diejenigen Knoten als bevorzugt markieren, auf denen die Ressourcen gerade "
 "liegen"
 
-msgid "Mass"
-msgstr "Masse"
-
 msgid "Master Event Console"
 msgstr "Master Event Console"
 
@@ -34381,6 +34421,9 @@ msgstr "Max Perm used"
 msgid "Max age of the oldest snapshot"
 msgstr "Höchstalter des ältesten Snapshot"
 
+msgid "Max allowed connections"
+msgstr "Maximal erlaubte Anzahl an Verbindungen"
+
 msgid "Max file descriptors"
 msgstr "Maximale Dateideskriptoren"
 
@@ -34446,6 +34489,9 @@ msgstr "Maximales Alter der ältesten Datei"
 
 msgid "Maximal cooling capacity"
 msgstr "Maximale Kühlleistung"
+
+msgid "Maximal count of connections to the SQL server"
+msgstr "Maximale Anzahl von Verbindungen zum SQL-Server"
 
 msgid "Maximal file count"
 msgstr "Maximale Dateianzahl"
@@ -34642,7 +34688,7 @@ msgstr "Maximale Latenzzeit für erfolgreiche GetItem-Anfragen"
 msgid "Maximum latency of successful PutItem requests"
 msgstr "Maximale Latenzzeit für erfolgreiche PutItem-Anfragen"
 
-msgid "Maximum latency of successful Query requests"
+msgid "Maximum latency of successful query requests"
 msgstr "Maximale Latenzzeit erfolgreicher Query-Anfragen"
 
 msgid "Maximum levels if using magic factor"
@@ -35004,9 +35050,6 @@ msgstr "Speichergröße (95te Percentile)"
 msgid "Memory Size (99th percentile)"
 msgstr "Speichergröße (99te Percentile)"
 
-msgid "Memory Size in percent"
-msgstr "Speichergröße in Prozent"
-
 msgid "Memory Usage"
 msgstr "Speicherauslastung"
 
@@ -35083,6 +35126,12 @@ msgstr "Speicherressourcen: Namespace"
 
 msgid "Memory resources: StatefulSet"
 msgstr "Speicherressourcen: StatefulSet"
+
+msgid "Memory size"
+msgstr "Speichergröße"
+
+msgid "Memory size in percent"
+msgstr "Speichergröße in Prozent"
 
 msgid "Memory that cannot be swapped out"
 msgstr "Nichtsauslagerbarer Speicher"
@@ -35562,9 +35611,6 @@ msgstr "Fehlende Job-ID."
 msgid "Missing key \"metric\" in logarithmic perfometer: %r"
 msgstr "Fehlender Schlüssel \"metric\" in logarithmischem Perfometer: %r"
 
-msgid "Missing mandatory \"host\" parameter"
-msgstr "Fehlender obligatorischer Parameter \"host\""
-
 #, python-format
 msgid "Missing needed %s parameter."
 msgstr "Fehlender benötigter %s Parameter."
@@ -35887,6 +35933,13 @@ msgstr "Hosts auf ungecheckte Services hin überwachen (Checkmk Discovery)"
 
 msgid "Monitor iOS devices"
 msgstr "Überwache iOS-Geräte"
+
+msgid ""
+"Monitor if your VMs are properly protected by the disaster recovery software "
+"Zerto (compatible with Zerto v9.x)."
+msgstr ""
+"Überwachen Sie, ob Ihre VMs ordnungsgemäß durch die Disaster Recovery "
+"Software Zerto geschützt sind (kompatibel mit Zerto v9.x)."
 
 msgid "Monitor menu entries"
 msgstr "Menü-Einträge überwachen"
@@ -36367,9 +36420,6 @@ msgstr "MySQL Slave"
 msgid "MySQL database sizes"
 msgstr "MySQL-Datenbankgrößen"
 
-msgid "N"
-msgstr "N"
-
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
 msgstr "N * 100%, da jeder Kern mit 100% bei Volllast beiträgt"
@@ -36742,6 +36792,16 @@ msgid ""
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
 "html#argument-files\">About argument files</a>)"
 msgstr ""
+"Dateien, die <b>zusätzliche Befehlszeilenargumente</b> für Robot Framework "
+"enthalten. Die Pfade sind relativ zum <i>Basisverzeichnis der Test-Suiten</"
+"i>. Argumentdateien ermöglichen es, alle oder einige Befehlszeilenoptionen "
+"und -argumente in einer externen Datei abzulegen, aus der sie dann gelesen "
+"werden. Dies ist nützlich für exotischere RF-Parameter, die von Robotmk "
+"nicht nativ unterstützt werden, oder für problematische Zeichen. Die hier "
+"angegebenen Argumente werden zusammen mit möglichen anderen "
+"Befehlszeilenoptionen verwendet. (Siehe auch <a href=\"https://robotframework"
+".org/robotframework/latest/RobotFrameworkUserGuide.html#argument-files\""
+">About argument files</a>)"
 
 msgid ""
 "Names of IPMI sensors that should be ignored during discovery. The pattern "
@@ -36811,6 +36871,10 @@ msgstr "Benötigt um Kommentar zu ändern wenn Ereignis-Update"
 
 msgid "Needed for changing a contact when updating an event"
 msgstr "Benötigt um einen Kontakt zu ändern wenn Ereignis-Update"
+
+#, python-format
+msgid "Needs to be at least %d characters long."
+msgstr "Muss mindestens %d Zeichen lang sein."
 
 msgid ""
 "Negate match: Execute this rule if the upper conditions are <b>not</b> "
@@ -36928,13 +36992,13 @@ msgid "Network IO"
 msgstr "Netzwerk IO"
 
 msgid "Network Load Balancer Listeners"
-msgstr "Listener von Netzwork-Loadbalancer"
+msgstr "Listener von Netzwerk-Load Balancer"
 
 msgid "Network Load Balancer Target Groups"
-msgstr "Zielgruppen von Netzwerk-Loadbalancer"
+msgstr "Zielgruppen des Netzwerk-Load Balancers"
 
 msgid "Network Load balancers"
-msgstr "Netzwerk-Loadbalancers"
+msgstr "Netzwerk-Load Balancer"
 
 msgid "Network Scan"
 msgstr "Netzwerk-Scan"
@@ -36971,6 +37035,15 @@ msgstr "Netzwerkschnittstellen: Ansicht über den vergangenen Tag"
 
 msgid "Network interfaces: last hour view"
 msgstr "Netzwerkschnittstellen: Ansicht über die letzte Stunde"
+
+msgid "Network load balancer listeners"
+msgstr "Listener der Netzwork-Load Balancer"
+
+msgid "Network load balancer target groups"
+msgstr "Zielgruppen von Netzwerk-Load Balancern"
+
+msgid "Network load balancers"
+msgstr "Netzwerk-Load Balancer"
 
 msgid "Network monitoring"
 msgstr "Netzwerk-Überwachung"
@@ -37037,16 +37110,13 @@ msgstr "Neu"
 msgid "New Action"
 msgstr "Neue Aktione"
 
-msgid "New Connections"
-msgstr "Neue Verbindungen"
-
 msgid "New Password"
 msgstr "Neues Passwort"
 
 msgid "New Password Confirmation"
 msgstr "Neues Passwort bestätigen"
 
-msgid "New TLS Connections"
+msgid "New TLS connections"
 msgstr "Neue TLS-Verbindungen"
 
 msgid ""
@@ -37375,11 +37445,12 @@ msgstr "Noch keine Lizenzprüfung durchgeführt"
 msgid "No logging"
 msgstr "Kein Loggen"
 
-#, fuzzy
 msgid ""
 "No logs are available. If available, more information will be shown in the "
 "service description."
-msgstr "Der Name, der in der Servicebeschreibung verwendet wird"
+msgstr ""
+"Es sind keine Protokolle verfügbar. Falls vorhanden, werden weitere "
+"Informationen in der Service-Beschreibung angezeigt."
 
 msgid "No logs found for this host."
 msgstr "Keine Logdateien für diesen Host gefunden."
@@ -37412,9 +37483,6 @@ msgstr "Keine passenden Hosts/Services gefunden."
 
 msgid "No matching metrics found"
 msgstr "Keine passenden Metriken gefunden"
-
-msgid "No matching request ID found"
-msgstr "Keine passende Anfrage-ID gefunden"
 
 msgid "No metrics in this graph yet."
 msgstr "Der Graph enthält noch keine Metriken."
@@ -37600,11 +37668,17 @@ msgstr "Name des Knotens"
 msgid "Node Path Matching"
 msgstr "Angabe des Node-Pfads"
 
+msgid "Node Processor"
+msgstr "Knoten-Prozessor"
+
 msgid "Node Stats"
 msgstr "Node-Statistiken"
 
 msgid "Node Status"
 msgstr "Node-Status"
+
+msgid "Node System"
+msgstr "Knoten-System"
 
 msgid "Node name"
 msgstr "Name des Knotens"
@@ -38349,9 +38423,6 @@ msgstr "Anzahl der Services des Hosts"
 msgid "Number of Transactions per Minute on a Lotus Domino Server"
 msgstr "Anzahl Transaktionen pro Minute auf einem Lotus Domino Server"
 
-msgid "Number of Web ACLs"
-msgstr "Anzahl von Web-ACLs"
-
 msgid "Number of accepted connection requests"
 msgstr "Anzahl der akzeptierten Verbindungsanfragen"
 
@@ -38576,6 +38647,9 @@ msgstr "Anzahl der Jumbo Chunks pro Shard pro Kollektion"
 msgid "Number of kernel events per second"
 msgstr "Anzahl von Kernel-Ereignissen pro Sekunde"
 
+msgid "Number of levels:"
+msgstr "Anzahl von Levels:"
+
 msgid "Number of lock requests per second that required the caller to wait."
 msgstr "Anzahl von Sperr-Anfragen pro Sek. die zu Wartezeit führten."
 
@@ -38724,6 +38798,9 @@ msgstr "Anzahl der Regelgruppen"
 
 msgid "Number of running containers"
 msgstr "Anzahl der laufenden Container"
+
+msgid "Number of runs:"
+msgstr "Anzahl von Durchläufen:"
 
 msgid "Number of search results"
 msgstr "Anzahl der Suchergebnisse"
@@ -38892,6 +38969,9 @@ msgstr "Anzahl der Tresore"
 
 msgid "Number of warnings"
 msgstr "Anzahl von Warnings"
+
+msgid "Number of web ACLs"
+msgstr "Anzahl von Web-ACLs"
 
 msgid "Number of write IOPS"
 msgstr "Anzahl der Schreib-IOPS"
@@ -39265,9 +39345,6 @@ msgstr ""
 msgid "Older events"
 msgstr "Ältere Ereignisse"
 
-msgid "Oldest Replication Slot Lag Size"
-msgstr "Älteste Replikation Slot Lag Größe"
-
 msgid "Oldest age"
 msgstr "Ältestes Alter"
 
@@ -39285,6 +39362,9 @@ msgstr "Älteste zuerst"
 
 msgid "Oldest message age"
 msgstr "Älteste Nachricht Alter"
+
+msgid "Oldest replication slot lag size"
+msgstr "Älteste Replikation Slot Lag Größe"
 
 msgid "Omit ICMP payload"
 msgstr "ICMP-Payload weglassen"
@@ -39308,11 +39388,11 @@ msgstr "In Wartestellung"
 msgid "On all sites"
 msgstr "Auf allen Instanzen"
 
-msgid "On core restart OR recovery (OK/UP)"
-msgstr "Bei Neustart des Kerns ODER Recovery (OK/UP)"
-
 msgid "On down host"
 msgstr "Bei Host DOWN"
+
+msgid "On recovery (OK/UP)"
+msgstr "Beim Recovery (OK/UP)"
 
 msgid "On selected MIBs"
 msgstr "Bei ausgewählten MIBs"
@@ -39515,6 +39595,13 @@ msgid ""
 "suite names separated by a dot. For example, <tt>X.Y</tt> selects a suite "
 "<tt>Y</tt> only if its parent is <tt>X</tt>."
 msgstr ""
+"Nur ausgewählte Sub Suites ausführen. Wird diese Option mit <tt>--test</tt>, "
+"<tt>--include</tt> oder <tt>--exclude</tt> ausgeführt, werden nur Tests in "
+"übereinstimmenden Suites und nur solche, bei denen andere Filterkriterien "
+"greifen, ausgewählt. Bei Name kann es sich um ein einfaches Muster handeln, "
+"ähnlich wie bei <tt>--test</tt>, und es kann durch einen Punkt getrennte "
+"Namen von übergeordneten Paketen enthalten. Zum Beispiel wählt <tt>X.Y</tt> "
+"eine Suite <tt>Y</tt> nur aus, wenn der Parent <tt>X</tt> ist."
 
 msgid "Only fetch specific OIDs"
 msgstr "Nur bestimmte OIDs holen"
@@ -40907,9 +40994,6 @@ msgstr "Partitionen (XEN)"
 msgid "Parts per Million"
 msgstr "Millionstel"
 
-msgid "Parts per million"
-msgstr "Teile je Million"
-
 msgid "Pascal"
 msgstr "Pascal"
 
@@ -41001,6 +41085,9 @@ msgstr "Pfad zu sapgenpse"
 
 msgid "Path to temporary directory (will be created)"
 msgstr "Verzeichnis für temporäre Dateien (wird erzeugt)"
+
+msgid "Path to test suite"
+msgstr "Pfad zur Test-Suite"
 
 msgid "Path to unix socket"
 msgstr "Pfad zur Unix-Buchse"
@@ -41187,9 +41274,6 @@ msgstr ""
 msgid "Per entry"
 msgstr "Pro Eintrag"
 
-msgid "Per second"
-msgstr "Pro Sekunde"
-
 msgid "Per topic"
 msgstr "Pro Thema"
 
@@ -41342,9 +41426,6 @@ msgstr "Prozentsatz vom gesamten RAM"
 
 msgid "Percentage of total service problems"
 msgstr "Prozentualer Anteil der gesamten Serviceprobleme"
-
-msgid "Percentage per meter"
-msgstr "Prozent pro Meter"
 
 msgid "Percentage used"
 msgstr "Prozentuale Nutzung"
@@ -41814,9 +41895,6 @@ msgstr "Kommunikation im Klartext ist für %s aktiviert"
 msgid "Plaintext"
 msgstr "Klartext"
 
-msgid "Plane angle"
-msgstr "Höhenwinkel"
-
 msgid "Platform Firmware level"
 msgstr "Plattform Firmware-Ebene"
 
@@ -41850,6 +41928,9 @@ msgstr "Bitte fügen Sie mindestens einen untergeordneten Knoten hinzu."
 
 msgid "Please add at least one column to your view."
 msgstr "Bitte mindestens eine Spalte zur Ansicht hinzufügen."
+
+msgid "Please add at least one endpoint to monitor"
+msgstr "Bitte mindestens einen Endpunkt für die Überwachung hinzufügen"
 
 msgid ""
 "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
@@ -43117,7 +43198,7 @@ msgstr "Bereits existierende Mitteilungen verarbeiten"
 msgid "Process stored SNMP walks with agent simulator"
 msgstr "Verarbeite gespeicherte SNMP Walks mit dem Agent-Simulator"
 
-msgid "Processed Bytes"
+msgid "Processed bytes"
 msgstr "Verarbeitete Bytes"
 
 msgid "Processes"
@@ -43694,6 +43775,13 @@ msgstr ""
 msgid "RCC profile configuration"
 msgstr "RCC-Profil-Konfiguration"
 
+msgid ""
+"RCC profile configuration: RCC profiles can define settings for this "
+"specific RCC environment, for example Proxy settings. <br>"
+msgstr ""
+"RCC-Profil-Konfiguration: RCC-Profile können Einstellungen für diese "
+"spezielle RCC-Umgebung festlegen, z. B. Proxy-Einstellungen. <br>"
+
 msgid "RCU"
 msgstr "RCU"
 
@@ -43711,6 +43799,9 @@ msgstr "REST API interaktive Ansicht"
 
 msgid "REST API introduction"
 msgstr "Einführung in die REST API"
+
+msgid "REST API specification successfully generated"
+msgstr "REST-API Spezifikation erfolgreich erstellt"
 
 msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr "REST-API: Nutze HTTP ETags für optimistische Sperrung"
@@ -43808,7 +43899,7 @@ msgstr "RRDCached-Tuning"
 msgid "RSA"
 msgstr "RSA"
 
-msgid "RSASSA_PSS"
+msgid "RSASSA-PSS"
 msgstr "RSASSA_PSS"
 
 #, python-format
@@ -43881,12 +43972,6 @@ msgstr "RabbitMQ vhosts"
 
 msgid "Radial layout"
 msgstr "Radiallayout"
-
-msgid "Radioactive activity"
-msgstr "Radioaktive Aktivität"
-
-msgid "Radioactive dose"
-msgstr "Radioaktive Dosis"
 
 msgid "Raid controllers from Areca"
 msgstr "Raid controller von Areca"
@@ -43981,9 +44066,6 @@ msgstr "Lesen der Ausführungen im Durchnitt (ms)"
 msgid "Read Average RTT (ms)"
 msgstr "Mittelwert von RTT lesen (ms)"
 
-msgid "Read Capacity"
-msgstr "Lese-Kapazität"
-
 msgid "Read Capacity Units"
 msgstr "Lesekapazitätseinheiten"
 
@@ -44025,9 +44107,6 @@ msgstr "Lese Bytes pro Operation"
 
 msgid "Read capacity"
 msgstr "Lesekapazitätseinheiten"
-
-msgid "Read capacity unit"
-msgstr "Lesekapazitätseinheit"
 
 msgid "Read hits"
 msgstr "Lesetreffer"
@@ -44279,9 +44358,6 @@ msgstr "Geschwärzte Passwörter geändert."
 
 msgid "Redirect URL (has to be https)"
 msgstr "URL für die Umleitung (muss HTTPS verwenden)"
-
-msgid "Redirects"
-msgstr "Umleitungen"
 
 msgid "Redis clients"
 msgstr "Redis-Clients"
@@ -44597,11 +44673,11 @@ msgstr "Zu erwartende reguläre Ausdrücke"
 msgid "Regular heartbeat"
 msgstr "Regelmäßiges Lebenszeichen"
 
-msgid "Rejected Connections"
-msgstr "Abgelehnte Verbindungen"
-
 msgid "Rejected connection requests"
 msgstr "Abgelehnte Verbindungsanfragen"
+
+msgid "Rejected connections"
+msgstr "Abgelehnte Verbindungen"
 
 msgid "Rejected sessions"
 msgstr "Zurückgewiesene Sitzungen"
@@ -44863,6 +44939,9 @@ msgstr "Entfernen Sie %s aus dem Modul für Erweiterungspakete"
 msgid "Remove this element"
 msgstr "Dieses Element entfernen"
 
+msgid "Remove this endpoint"
+msgstr "Entferne diesen Endpunkt"
+
 msgid "Remove this entry"
 msgstr "Diesen Eintrag entfernen"
 
@@ -45064,7 +45143,7 @@ msgid "Rendering mode for valuespecs and tables"
 msgstr "Rendering-Modus für Valuespecs und Tabellen"
 
 msgid "Repeat"
-msgstr "Wiederhole"
+msgstr "Wiederholen"
 
 msgid "Repeat query and allow more results."
 msgstr "Wiederhole Abfrage - mehr Ergebnisse zulassen."
@@ -45077,11 +45156,7 @@ msgstr "Diese Wartungszeit wiederholen"
 
 #, python-format
 msgid "Repeats every %s"
-msgstr "Wiederhole alle %s"
-
-#, python-brace-format
-msgid "Repetition change for item {diff_path}."
-msgstr "Wiederholung Änderung des Items {diff_path}."
+msgstr "Wird alle %s wiederholt"
 
 msgid ""
 "Replace the application (syslog tag) with this text. If you have bracketed "
@@ -45129,11 +45204,11 @@ msgstr "Diesen Alarm erneut zustellen!"
 msgid "Replayed notification number %d"
 msgstr "Nummer der wiederholten Benachrichtigungen %d"
 
-msgid "Replica Lag"
-msgstr "Replikationsverzögerung"
-
 msgid "Replica available state"
 msgstr "Verfügbarkeitsstatus des Replikats"
+
+msgid "Replica lag"
+msgstr "Replikationsverzögerung"
 
 msgid "Replica ready state"
 msgstr "Bereitschaftsstatus der Replik"
@@ -45164,9 +45239,6 @@ msgstr "Replikationsverzögerung"
 
 msgid "Replication Partner"
 msgstr "Replikations Partner"
-
-msgid "Replication Slot Disk Usage"
-msgstr "Verwendung des Replikations-Slots für die Festplatte"
 
 msgid "Replication States"
 msgstr "Zustand der Replikation"
@@ -45208,6 +45280,9 @@ msgstr ""
 "Anwendung der Operation des Oplog. Mit dieser Konfiguration wird Checkmk "
 "warnen, wenn der Replikationslag über einen längeren Zeitraum einen "
 "Grenzwert überschreitet."
+
+msgid "Replication slot disk usage"
+msgstr "Replikations-Slot Festplattenauslastung"
 
 msgid "Replication synchronization"
 msgstr "Replikations-Synchronisation"
@@ -45949,15 +46024,9 @@ msgstr "Robot-Framework Parameter"
 msgid "Robot Framework re-executions"
 msgstr "Erneute Robot-Framework Ausführungen"
 
-msgid "Robot Framework target"
-msgstr "Robot-Framework Ziel"
-
 #, python-format
 msgid "Robot Framework: %s"
 msgstr "Robot-Framework: %s"
-
-msgid "Robot Framework: Last error log"
-msgstr "Robot-Framework: Letztes Fehlerprotokoll"
 
 msgid "Robot Framework: Last log"
 msgstr "Robot-Framework: Letztes Protokoll"
@@ -46058,9 +46127,6 @@ msgstr "Regel %d in %s"
 msgid "Rule %d in Folder %s is affected"
 msgstr "Regel %d im Ordner %s ist betroffen"
 
-msgid "Rule Evaluations"
-msgstr "Regelauswertungen"
-
 msgid "Rule ID"
 msgstr "Regel ID"
 
@@ -46094,6 +46160,9 @@ msgstr "Regel-Editor"
 
 msgid "Rule efficiency"
 msgstr "Regeleffizienz"
+
+msgid "Rule evaluations"
+msgstr "Regelauswertungen"
 
 msgid "Rule groups"
 msgstr "Regelgruppen"
@@ -46394,9 +46463,6 @@ msgstr "Rx"
 msgid "Rx power level"
 msgstr "Rx-Leistungspegel"
 
-msgid "S"
-msgstr "S"
-
 msgid "S."
 msgstr "s."
 
@@ -46466,10 +46532,10 @@ msgstr "Diskrepanz von SDM-Templates"
 msgid "SDR cache recreate"
 msgstr "Erneuere SDR-Cache"
 
-msgid "SELECT Object Returned"
+msgid "SELECT object returned"
 msgstr "SELECT Objekt zurückgegeben"
 
-msgid "SELECT Object Scanned"
+msgid "SELECT object scanned"
 msgstr "SELECT Objekt gescannt"
 
 msgid "SELinux information"
@@ -46490,29 +46556,32 @@ msgstr "SHA-2 (SHA-384)"
 msgid "SHA-2 (SHA-512)"
 msgstr "SHA-2 (SHA-512)"
 
-msgid "SHA224"
-msgstr "SHA224"
+msgid "SHA-224"
+msgstr "SHA-224"
 
-msgid "SHA256"
-msgstr "SHA256"
+msgid "SHA-256"
+msgstr "SHA-256"
 
-msgid "SHA384"
-msgstr "SHA384"
+msgid "SHA-384"
+msgstr "SHA-384"
 
-msgid "SHA3_224"
-msgstr "SHA3_224"
+msgid "SHA-512"
+msgstr "SHA-512"
 
-msgid "SHA3_256"
-msgstr "SHA3_256"
+msgid "SHA-512 (fixed)"
+msgstr "SHA-512 (fixiert)"
 
-msgid "SHA3_384"
-msgstr "SHA3_384"
+msgid "SHA3-224"
+msgstr "SHA3-224"
 
-msgid "SHA3_512"
-msgstr "SHA3_512"
+msgid "SHA3-256"
+msgstr "SHA3-256"
 
-msgid "SHA512"
-msgstr "SHA512"
+msgid "SHA3-384"
+msgstr "SHA3-384"
+
+msgid "SHA3-512"
+msgstr "SHA3-512"
 
 msgid "SID"
 msgstr "SID"
@@ -46959,14 +47028,14 @@ msgid "Schedule an immediate downtime"
 msgstr "Sofortige Wartungszeit festlegen"
 
 msgid "Schedule and remove downtimes on hosts and services"
-msgstr "Wartungszeiten von Hosts und Services ansetzen/entfernen"
+msgstr "Wartungszeiten von Hosts und Services planen oder entfernen"
 
 #, python-format
 msgid "Schedule downtime for %d %s"
 msgstr "Ausfallzeit für %d %s einplanen"
 
 msgid "Schedule downtime on host"
-msgstr "Wartungszeit auf Host ansetzen"
+msgstr "Wartungszeit für Host festlegen"
 
 msgid "Schedule downtime on service"
 msgstr "Wartungszeit für Service festlegen"
@@ -46975,7 +47044,7 @@ msgid "Schedule downtime?"
 msgstr "Wartungszeit planen?"
 
 msgid "Schedule downtimes"
-msgstr "Wartungszeiten ansetzen"
+msgstr "Wartungszeiten planen"
 
 msgid "Schedule execution"
 msgstr "Geplante Ausführung"
@@ -46987,7 +47056,7 @@ msgid "Scheduled Checkmk Report $TITLE$.\n"
 msgstr "Geplanter Checkmk-Report $TITLE$.\n"
 
 msgid "Scheduled Downtimes"
-msgstr "Angesetzte Wartungszeiten"
+msgstr "Geplante Wartungszeiten"
 
 msgid "Scheduled Jobs"
 msgstr "Geplante Jobs"
@@ -47122,6 +47191,9 @@ msgstr "Effektive Regeln suchen"
 msgid "Search for enabled rules"
 msgstr "Aktivierte Regeln suchen"
 
+msgid "Search for header"
+msgstr "Suche nach Header"
+
 #, python-format
 msgid "Search for hosts below %s"
 msgstr "Suche nach Hosts unterhalb von %s"
@@ -47146,6 +47218,9 @@ msgstr "Nach genutzten Regelsätzen suchen"
 msgid "Search for services and display their graphs"
 msgstr "Nach Services suchen und deren Graphen anzeigen"
 
+msgid "Search for strings"
+msgstr "Suche nach Zeichenketten"
+
 msgid "Search history"
 msgstr "Suchverlauf"
 
@@ -47157,6 +47232,9 @@ msgstr "Suche in Überwachen"
 
 msgid "Search in Setup"
 msgstr "Suche in Setup"
+
+msgid "Search in body"
+msgstr "Suche im Body"
 
 msgid "Search in this folder"
 msgstr "In diesem Ordner suchen"
@@ -47299,9 +47377,6 @@ msgstr "Wartezeit in Sekunden bis Verbindungsaus"
 
 msgid "Seconds of operation"
 msgstr "Betriebszeit in Sekunden"
-
-msgid "Seconds per second"
-msgstr "Sekunden pro Sekunde"
 
 msgid "Seconds since service"
 msgstr "Sekunden seid Dienstbeginn"
@@ -48630,6 +48705,9 @@ msgstr "Gefälschtes (fake) Prüfergebnis auf '%s' setzen?"
 msgid "Set field delimiter"
 msgstr "Setze Trennzeichen"
 
+msgid "Set fixed limits"
+msgstr "Feste Limits setzen"
+
 msgid ""
 "Set global variables. Only scalar variables with string values are "
 "supported, and name is given without <tt>${}</tt>. (See <tt>--variablefile</"
@@ -48883,6 +48961,18 @@ msgstr ""
 "Setze den Monitoring-Status von Aufgaben, die nicht aktiviert sind (z.B. "
 "weil sie nach der Erkennung deaktiviert wurden)."
 
+msgid ""
+"Set the name of the top level suite. By default the name is created based on "
+"the executed file or directory.<br>This sets the name of a fresh discovered "
+"Robot service; an already existing service will hide away and will be found "
+"by the discovery under a new name."
+msgstr ""
+"Legen Sie den Namen der Top-Level-Suite fest. Standardmäßig wird der Name "
+"auf der Grundlage der ausgeführten Datei oder des ausgeführten "
+"Verzeichnisses erstellt.<br>Damit wird der Name eines neu entdeckten Robot-"
+"Services festgelegt; ein bereits vorhandener Service wird versteckt und von "
+"der Erkennung unter einem neuen Namen gefunden."
+
 msgid "Set the organization of the InfluxDB server."
 msgstr "Legen Sie die Organisation des InfluxDB-Servers fest."
 
@@ -49098,6 +49188,9 @@ msgstr ""
 
 msgid "Setup"
 msgstr "Setup"
+
+msgid "Setup (formerly Wato)"
+msgstr "Setup (vormals Wato)"
 
 msgid ""
 "Setup can repair things for you. It can rename tags in folders, host and "
@@ -50354,9 +50447,6 @@ msgstr "Solaris: PKG (.pkg)"
 msgid "Solaris: TGZ (.tar.gz)"
 msgstr "Solaris: TGZ (.tar.gz)"
 
-msgid "Solid angle"
-msgstr "Raumwinkel"
-
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
 "incompatible extension packages."
@@ -51522,12 +51612,26 @@ msgstr "Gesamtzielkapazität der Spot-Fleetanfragen"
 msgid "Spot Instance Requests"
 msgstr "Spot-Instanzanfragen"
 
+msgid "Spot fleet requests total target capacity"
+msgstr "Gesamtzielkapazität der Spot Fleet-Anfragen"
+
+msgid "Spot instance requests"
+msgstr "Spot-Instanzanfragen"
+
 msgid "Spread over"
 msgstr "Verteilt über"
 
 #, python-format
-msgid "Spreading: %s minutes"
-msgstr "Streuung: %s Minuten"
+msgid "Spread should be a positive number: %s"
+msgstr "Die Spanne sollte eine positive Zahl sein: %s"
+
+msgid ""
+"Spreading distributes checks evenly over the specified period. This helps to "
+"avoid short-term peaks in CPU usage and therefore, performance problems."
+msgstr ""
+"Durch die Streuung werden die Prüfungen gleichmäßig über den angegebenen "
+"Zeitraum verteilt. Dies hilft, kurzfristige Spitzen in der CPU-Auslastung "
+"und damit Leistungsprobleme zu vermeiden."
 
 msgid "Sproc Latency"
 msgstr "Verarbeitungsdauer"
@@ -51571,8 +51675,11 @@ msgstr "Differenz der Standardabweichung"
 msgid "Standard deviation of roundtrip times in ms"
 msgstr "Standardabweichung der Antwortzeit in Milisekunden"
 
-msgid "Standard settings"
-msgstr "Standard-Einstellungen"
+msgid "Standard settings for all endpoints"
+msgstr "Standardeinstellungen für alle Endpunkte"
+
+msgid "Standard topics"
+msgstr "Standardthemen"
 
 msgid "Standby"
 msgstr "Standby"
@@ -51685,10 +51792,11 @@ msgstr "Beginnend beim Eintrage"
 
 #, python-format
 msgid ""
-"Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours."
+"Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours "
+"and %d %s."
 msgstr ""
 "Startet, wenn der Host/Dienst auf DOWN/UNREACH mit einer maximalen Dauer von "
-"%d Stunden geht."
+"%d Stunden und %d %s geht."
 
 msgid "Startup overhead in shared pool"
 msgstr "Anfänglicher Überschuss im gemeinsamen Pool"
@@ -52759,9 +52867,6 @@ msgstr "Zu sendende Zeichenkette"
 msgid "String to send server to initiate a clean close of the connection"
 msgstr "Zeichenkette die Server sendet um Verbindung sauber zu beenden"
 
-msgid "String validation"
-msgstr "Zeichenkettenvalidierung"
-
 msgid "Strings to expect in response"
 msgstr "Erwartete Zeichenketten in Antwort"
 
@@ -53013,9 +53118,6 @@ msgstr "Angehalten"
 msgid "Suspending"
 msgstr "Anhalten"
 
-msgid "Sv"
-msgstr "Sv"
-
 msgid "Swap"
 msgstr "Swap"
 
@@ -53103,7 +53205,7 @@ msgid "Switched to %s mode"
 msgstr "In %s Modus umgeschaltet"
 
 msgid "Switches, load balancers, storage, UPSes, environmental sensors, etc. "
-msgstr "Switche, Loadbalancer, Storage, USVen, Umgebungssensoren, etc. "
+msgstr "Switche, Load Balancer, Storage, USVen, Umgebungssensoren, etc. "
 
 msgid "Switchover"
 msgstr "Switchover"
@@ -53189,20 +53291,22 @@ msgid "Synology Updates"
 msgstr "Updates für Synology"
 
 msgid "Synthetic Monitoring"
-msgstr ""
+msgstr "Synthetisches Monitoring"
 
 #, python-format
 msgid ""
 "Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
 "subscription). You are currently monitoring %d %s on this site."
 msgstr ""
+"Synthetisches Monitoring ist ein Add-on. Testen Sie es kostenlos mit bis zu "
+"%d Tests (pro Subskription). Sie überwachen derzeit %d %s auf dieser Instanz."
 
 #, python-format
 msgid "Synthetic monitoring (licensed tests: %s)"
-msgstr ""
+msgstr "Synthetisches Monitoring (lizenzierte Tests: %s)"
 
 msgid "Synthetic tests"
-msgstr ""
+msgstr "Synthetische Tests"
 
 msgid "Syslog Facility"
 msgstr "Syslog Facility"
@@ -53351,14 +53455,8 @@ msgstr "Zusammenfassung der Systemd-Buchsen"
 msgid "Systems larger than"
 msgstr "Systeme größer als"
 
-msgid "T"
-msgstr "T"
-
 msgid "TCP"
 msgstr "TCP"
-
-msgid "TCP Client Resets"
-msgstr "TCP-Client-Resets"
 
 msgid "TCP Connect"
 msgstr "TCP Verbindung"
@@ -53370,7 +53468,7 @@ msgstr "TCP-Verbindungsstatus"
 msgid "TCP Connection Timeout (<a href=\"%s\">Rules</a>)"
 msgstr "TCP-Verbindungs-Timeout (<a href=\"%s\">Rules</a>)"
 
-msgid "TCP ELB Resets"
+msgid "TCP ELB resets"
 msgstr "TCP-ELB-Resets"
 
 msgid "TCP Flags Distribution"
@@ -53400,11 +53498,11 @@ msgstr "verbinden zu TCP Port"
 msgid "TCP SYN"
 msgstr "TCP SYN"
 
-msgid "TCP Target Resets"
-msgstr "TCP-Ziel-Resets"
-
 msgid "TCP address to connect to"
 msgstr "TCP-Adresse zum Verbinden"
+
+msgid "TCP client resets"
+msgstr "TCP-Client-Resets"
 
 msgid "TCP connect"
 msgstr "TCP Connect"
@@ -53437,6 +53535,9 @@ msgstr ""
 msgid "TCP port of Carbon line receiver"
 msgstr "TCP-Port für den Empfang durch Carbone"
 
+msgid "TCP target resets"
+msgstr "TCP-Ziel-Resets"
+
 msgid "TCP timeouts"
 msgstr "TCP-Zeitüberschreitungen"
 
@@ -53452,8 +53553,8 @@ msgstr "TLS"
 msgid "TLS Authentication without TLS is not possible"
 msgstr "TLS-Authentifizierung ohne TLS ist nicht möglich"
 
-msgid "TLS Processed Bytes"
-msgstr "Verarbeitete Bytes via TLS"
+msgid "TLS processed bytes"
+msgstr "Verarbeitete Bytes über TLS"
 
 msgid "TLS version"
 msgstr "TLS-Version"
@@ -54313,6 +54414,10 @@ msgstr ""
 
 msgid "The Hostname of the MongoDB Server."
 msgstr "Der Hostname des MongoDB-Servers."
+
+#, python-format
+msgid "The ID %s is already used by another connection."
+msgstr "Diese ID %s wird bereits von einer anderen Verbindung verwendet."
 
 msgid "The ID is already used by another role"
 msgstr "ID wird bereits von anderer Rolle verwendet"
@@ -55829,6 +55934,10 @@ msgstr "Die erlaubten Kontaktgruppen des Ordners sind: <b>%s</b>."
 #, python-format
 msgid "The following %s could not be found: %s"
 msgstr "Der folgende %s konnte nicht gefunden werden: %s"
+
+#, python-format
+msgid "The following characters are forbidden: %s"
+msgstr "Die folgenden Zeichen sind verboten: %s"
 
 msgid ""
 "The following files located in the local hierarchy of your site are involved "
@@ -59077,6 +59186,9 @@ msgstr "Diese Aggregation ist aktuell deaktiviert."
 msgid "This aggregation is frozen"
 msgstr "Diese Aggregation ist eingefroren"
 
+msgid "This aggregation is frozen. The live version has changes."
+msgstr "Diese Aggregation ist eingefroren. Die Live-Version hat Änderungen."
+
 #, python-format
 msgid ""
 "This alert handler allows the remote execution of scripts and programs on "
@@ -61740,11 +61852,6 @@ msgstr ""
 "Checkmk-Agenten. Dadurch wird der Host via der UCS Bladecenter Web API "
 "überwacht"
 
-msgid "This rule selects the Zerto special agent for an existing Checkmk host"
-msgstr ""
-"Diese Regel wählt den Zerto-Spezialagenten für einen vorhandenen Checkmk-"
-"Host aus"
-
 msgid "This rule selects the special agent for Salesforce."
 msgstr "Mit dieser Regel wählen Sie den Spezialagenten Salesforce aus."
 
@@ -61753,7 +61860,7 @@ msgid ""
 "This rule set allows you to create downtimes for %s that are repeated on a "
 "regular base."
 msgstr ""
-"Dieser Regelsatz erlaubt das setzen von Downtimes für %s, die sich "
+"Dieser Regelsatz erlaubt das Setzen von Wartungszeiten für %s, die sich "
 "regelmäßig wiederholen."
 
 msgid ""
@@ -63038,11 +63145,11 @@ msgstr "Drosselungen"
 msgid "Throughput"
 msgstr "Durchsatz"
 
-msgid "Throughput Optimized HDD space"
-msgstr "Optimierter Durchsatz-Festplattenspeicher"
-
 msgid "Throughput levels"
 msgstr "Level für den Durchsatz"
+
+msgid "Throughput optimized HDD space"
+msgstr "Durchsatzoptimierter HDD-Speicherplatz"
 
 msgid "Thursday"
 msgstr "Donnerstag"
@@ -63782,6 +63889,10 @@ msgstr "Top-Anwendungs-Traffic: Ansicht des letzten Tages"
 msgid "Top application traffic: last hour view"
 msgstr "Top-Anwendungs-Traffic: Ansicht der letzten Stunde"
 
+#, python-format
+msgid "Top level suite name (%s)"
+msgstr "Name der obersten Ebene der Suite (%s)"
+
 msgid "Top list"
 msgstr "Top-Liste"
 
@@ -64220,1273 +64331,1297 @@ msgstr "Gesamte gedruckte Seiten"
 msgid "Total query timeout"
 msgstr "Gesamttimeout für Anfragen"
 
+msgid "Total reservation utilization"
+msgstr "Gesamte Reservierungsauslastung"
+
 msgid "Total restarts"
 msgstr "Neustarts insgesamt"
 
-msgid "Total running On-Demand Instances"
-msgstr "Insgesamt laufende On-Demand-Instanzen"
+msgid "Total running On-Demand F instances vCPUs"
+msgstr "Insgesamt laufende On-Demand F-Instanzen vCPUs"
+
+msgid "Total running On-Demand G instances vCPUs"
+msgstr "Insgesamt laufende On-Demand G-Instanzen vCPUs"
+
+msgid "Total running On-Demand Inf instances vCPUs"
+msgstr "Insgesamt laufende On-Demand Inf-Instanzen vCPUs"
 
 msgid "Total running On-Demand Instances of type z1d"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ z1d"
 
-msgid "Total running On-Demand a1.2xlarge Instances"
+msgid "Total running On-Demand P instances vCPUs"
+msgstr "Insgesamt laufende On-Demand P-Instanzen vCPUs"
+
+msgid ""
+"Total running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs"
+msgstr ""
+"Insgesamt laufende On-Demand Standard-Instanzen (A, C, D, H, I, M, R, T, Z) "
+"vCPUs"
+
+msgid "Total running On-Demand X instances vCPUs"
+msgstr "Insgesamt laufende On-Demand X-Instanzen vCPUs"
+
+msgid "Total running On-Demand a1.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand a1.2xlarge-Instanzen"
 
-msgid "Total running On-Demand a1.4xlarge Instances"
+msgid "Total running On-Demand a1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand a1.4xlarge-Instanzen"
 
-msgid "Total running On-Demand a1.large Instances"
+msgid "Total running On-Demand a1.large instances"
 msgstr "Insgesamt laufende On-Demand a1.large-Instanzen"
 
-msgid "Total running On-Demand a1.medium Instances"
+msgid "Total running On-Demand a1.medium instances"
 msgstr "Insgesamt laufende On-Demand a1.medium-Instanzen"
 
-msgid "Total running On-Demand a1.metal Instances"
+msgid "Total running On-Demand a1.metal instances"
 msgstr "Insgesamt laufende On-Demand a1.metal-Instanzen"
 
-msgid "Total running On-Demand a1.xlarge Instances"
+msgid "Total running On-Demand a1.xlarge instances"
 msgstr "Insgesamt laufende On-Demand a1.xlarge-Instanzen"
 
-msgid "Total running On-Demand c1.medium Instances"
+msgid "Total running On-Demand c1.medium instances"
 msgstr "Insgesamt laufende On-Demand c1.medium-Instanzen"
 
-msgid "Total running On-Demand c1.xlarge Instances"
+msgid "Total running On-Demand c1.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c1.xlarge-Instanzen"
 
-msgid "Total running On-Demand c3.2xlarge Instances"
+msgid "Total running On-Demand c3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c3.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c3.4xlarge Instances"
+msgid "Total running On-Demand c3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c3.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c3.8xlarge Instances"
+msgid "Total running On-Demand c3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c3.8xlarge-Instanzen"
 
-msgid "Total running On-Demand c3.large Instances"
+msgid "Total running On-Demand c3.large instances"
 msgstr "Insgesamt laufende On-Demand c3.large-Instanzen"
 
-msgid "Total running On-Demand c3.xlarge Instances"
+msgid "Total running On-Demand c3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c3.xlarge-Instanzen"
 
-msgid "Total running On-Demand c4.2xlarge Instances"
+msgid "Total running On-Demand c4.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c4.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c4.4xlarge Instances"
+msgid "Total running On-Demand c4.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c4.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c4.8xlarge Instances"
+msgid "Total running On-Demand c4.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c4.8xlarge-Instanzen"
 
-msgid "Total running On-Demand c4.large Instances"
+msgid "Total running On-Demand c4.large instances"
 msgstr "Insgesamt laufende On-Demand c4.large-Instanzen"
 
-msgid "Total running On-Demand c4.xlarge Instances"
+msgid "Total running On-Demand c4.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c4.xlarge-Instanzen"
 
-msgid "Total running On-Demand c5.12xlarge Instances"
+msgid "Total running On-Demand c5.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.12xlarge-Instanzen"
 
-msgid "Total running On-Demand c5.18xlarge Instances"
+msgid "Total running On-Demand c5.18xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.18xlarge-Instanzen"
 
-msgid "Total running On-Demand c5.24xlarge Instances"
+msgid "Total running On-Demand c5.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.24xlarge-Instanzen"
 
-msgid "Total running On-Demand c5.2xlarge Instances"
+msgid "Total running On-Demand c5.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c5.4xlarge Instances"
+msgid "Total running On-Demand c5.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c5.9xlarge Instances"
+msgid "Total running On-Demand c5.9xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.9xlarge-Instanzen"
 
-msgid "Total running On-Demand c5.large Instances"
+msgid "Total running On-Demand c5.large instances"
 msgstr "Insgesamt laufende On-Demand c5.large-Instanzen"
 
-msgid "Total running On-Demand c5.metal Instances"
+msgid "Total running On-Demand c5.metal instances"
 msgstr "Insgesamt laufende On-Demand c5.metal-Instanzen"
 
-msgid "Total running On-Demand c5.xlarge Instances"
+msgid "Total running On-Demand c5.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.xlarge-Instanzen"
 
-msgid "Total running On-Demand c5a.12xlarge Instances"
+msgid "Total running On-Demand c5a.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.12xlarge-Instanzen"
 
-msgid "Total running On-Demand c5a.16xlarge Instances"
+msgid "Total running On-Demand c5a.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.16xlarge-Instanzen"
 
-msgid "Total running On-Demand c5a.24xlarge Instances"
+msgid "Total running On-Demand c5a.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.24xlarge-Instanzen"
 
-msgid "Total running On-Demand c5a.2xlarge Instances"
+msgid "Total running On-Demand c5a.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c5a.4xlarge Instances"
+msgid "Total running On-Demand c5a.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c5a.8xlarge Instances"
+msgid "Total running On-Demand c5a.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.8xlarge-Instanzen"
 
-msgid "Total running On-Demand c5a.large Instances"
+msgid "Total running On-Demand c5a.large instances"
 msgstr "Insgesamt laufende On-Demand c5a.large-Instanzen"
 
-msgid "Total running On-Demand c5a.xlarge Instances"
+msgid "Total running On-Demand c5a.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.xlarge-Instanzen"
 
-msgid "Total running On-Demand c5ad.12xlarge Instances"
+msgid "Total running On-Demand c5ad.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.12xlarge-Instanzen"
 
-msgid "Total running On-Demand c5ad.16xlarge Instances"
+msgid "Total running On-Demand c5ad.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.16xlarge-Instanzen"
 
-msgid "Total running On-Demand c5ad.24xlarge Instances"
+msgid "Total running On-Demand c5ad.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.24xlarge-Instanzen"
 
-msgid "Total running On-Demand c5ad.2xlarge Instances"
+msgid "Total running On-Demand c5ad.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c5ad.4xlarge Instances"
+msgid "Total running On-Demand c5ad.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c5ad.8xlarge Instances"
+msgid "Total running On-Demand c5ad.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.8xlarge-Instanzen"
 
-msgid "Total running On-Demand c5ad.large Instances"
+msgid "Total running On-Demand c5ad.large instances"
 msgstr "Insgesamt laufende On-Demand c5ad.large-Instanzen"
 
-msgid "Total running On-Demand c5ad.xlarge Instances"
+msgid "Total running On-Demand c5ad.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.xlarge-Instanzen"
 
-msgid "Total running On-Demand c5d.12xlarge Instances"
+msgid "Total running On-Demand c5d.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.12xlarge-Instanzen"
 
-msgid "Total running On-Demand c5d.18xlarge Instances"
+msgid "Total running On-Demand c5d.18xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.18xlarge-Instanzen"
 
-msgid "Total running On-Demand c5d.24xlarge Instances"
+msgid "Total running On-Demand c5d.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.24xlarge-Instanzen"
 
-msgid "Total running On-Demand c5d.2xlarge Instances"
+msgid "Total running On-Demand c5d.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c5d.4xlarge Instances"
+msgid "Total running On-Demand c5d.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c5d.9xlarge Instances"
+msgid "Total running On-Demand c5d.9xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.9xlarge-Instanzen"
 
-msgid "Total running On-Demand c5d.large Instances"
+msgid "Total running On-Demand c5d.large instances"
 msgstr "Insgesamt laufende On-Demand c5d.large-Instanzen"
 
-msgid "Total running On-Demand c5d.metal Instances"
+msgid "Total running On-Demand c5d.metal instances"
 msgstr "Insgesamt laufende On-Demand c5d.metal-Instanzen"
 
-msgid "Total running On-Demand c5d.xlarge Instances"
+msgid "Total running On-Demand c5d.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.xlarge-Instanzen"
 
-msgid "Total running On-Demand c5n.18xlarge Instances"
+msgid "Total running On-Demand c5n.18xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.18xlarge-Instanzen"
 
-msgid "Total running On-Demand c5n.2xlarge Instances"
+msgid "Total running On-Demand c5n.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c5n.4xlarge Instances"
+msgid "Total running On-Demand c5n.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c5n.9xlarge Instances"
+msgid "Total running On-Demand c5n.9xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.9xlarge-Instanzen"
 
-msgid "Total running On-Demand c5n.large Instances"
+msgid "Total running On-Demand c5n.large instances"
 msgstr "Insgesamt laufende On-Demand c5n.large-Instanzen"
 
-msgid "Total running On-Demand c5n.metal Instances"
+msgid "Total running On-Demand c5n.metal instances"
 msgstr "Insgesamt laufende On-Demand c5n.metal-Instanzen"
 
-msgid "Total running On-Demand c5n.xlarge Instances"
+msgid "Total running On-Demand c5n.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.xlarge-Instanzen"
 
-msgid "Total running On-Demand c6g.12xlarge Instances"
+msgid "Total running On-Demand c6g.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.12xlarge-Instanzen"
 
-msgid "Total running On-Demand c6g.16xlarge Instances"
+msgid "Total running On-Demand c6g.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.16xlarge-Instanzen"
 
-msgid "Total running On-Demand c6g.2xlarge Instances"
+msgid "Total running On-Demand c6g.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c6g.4xlarge Instances"
+msgid "Total running On-Demand c6g.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c6g.8xlarge Instances"
+msgid "Total running On-Demand c6g.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.8xlarge-Instanzen"
 
-msgid "Total running On-Demand c6g.large Instances"
+msgid "Total running On-Demand c6g.large instances"
 msgstr "Insgesamt laufende On-Demand c6g.large-Instanzen"
 
-msgid "Total running On-Demand c6g.medium Instances"
+msgid "Total running On-Demand c6g.medium instances"
 msgstr "Insgesamt laufende On-Demand c6g.medium-Instanzen"
 
-msgid "Total running On-Demand c6g.metal Instances"
+msgid "Total running On-Demand c6g.metal instances"
 msgstr "Insgesamt laufende On-Demand c6g.metal-Instanzen"
 
-msgid "Total running On-Demand c6g.xlarge Instances"
+msgid "Total running On-Demand c6g.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gd.12xlarge Instances"
+msgid "Total running On-Demand c6gd.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.12xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gd.16xlarge Instances"
+msgid "Total running On-Demand c6gd.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.16xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gd.2xlarge Instances"
+msgid "Total running On-Demand c6gd.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gd.4xlarge Instances"
+msgid "Total running On-Demand c6gd.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gd.8xlarge Instances"
+msgid "Total running On-Demand c6gd.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.8xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gd.large Instances"
+msgid "Total running On-Demand c6gd.large instances"
 msgstr "Insgesamt laufende On-Demand c6gd.large-Instanzen"
 
-msgid "Total running On-Demand c6gd.medium Instances"
+msgid "Total running On-Demand c6gd.medium instances"
 msgstr "Insgesamt laufende On-Demand c6gd.medium-Instanzen"
 
-msgid "Total running On-Demand c6gd.metal Instances"
+msgid "Total running On-Demand c6gd.metal instances"
 msgstr "Insgesamt laufende On-Demand c6gd.metal-Instanzen"
 
-msgid "Total running On-Demand c6gd.xlarge Instances"
+msgid "Total running On-Demand c6gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gn.12xlarge Instances"
+msgid "Total running On-Demand c6gn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.12xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gn.16xlarge Instances"
+msgid "Total running On-Demand c6gn.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.16xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gn.2xlarge Instances"
+msgid "Total running On-Demand c6gn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.2xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gn.4xlarge Instances"
+msgid "Total running On-Demand c6gn.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.4xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gn.8xlarge Instances"
+msgid "Total running On-Demand c6gn.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.8xlarge-Instanzen"
 
-msgid "Total running On-Demand c6gn.large Instances"
+msgid "Total running On-Demand c6gn.large instances"
 msgstr "Insgesamt laufende On-Demand c6gn.large-Instanzen"
 
-msgid "Total running On-Demand c6gn.medium Instances"
+msgid "Total running On-Demand c6gn.medium instances"
 msgstr "Insgesamt laufende On-Demand c6gn.medium-Instanzen"
 
-msgid "Total running On-Demand c6gn.xlarge Instances"
+msgid "Total running On-Demand c6gn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.xlarge-Instanzen"
 
-msgid "Total running On-Demand cc1.4xlarge Instances"
+msgid "Total running On-Demand cc1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand cc1.4xlarge-Instanzen"
 
-msgid "Total running On-Demand cc2.8xlarge Instances"
+msgid "Total running On-Demand cc2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand cc2.8xlarge-Instanzen"
 
-msgid "Total running On-Demand cg1.4xlarge Instances"
+msgid "Total running On-Demand cg1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand cg1.4xlarge-Instanzen"
 
-msgid "Total running On-Demand cr1.8xlarge Instances"
+msgid "Total running On-Demand cr1.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand cr1.8xlarge-Instanzen"
 
-msgid "Total running On-Demand d2.2xlarge Instances"
+msgid "Total running On-Demand d2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand d2.2xlarge-Instanzen"
 
-msgid "Total running On-Demand d2.4xlarge Instances"
+msgid "Total running On-Demand d2.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand d2.4xlarge-Instanzen"
 
-msgid "Total running On-Demand d2.8xlarge Instances"
+msgid "Total running On-Demand d2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand d2.8xlarge-Instanzen"
 
-msgid "Total running On-Demand d2.xlarge Instances"
+msgid "Total running On-Demand d2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand d2.xlarge-Instanzen"
 
-msgid "Total running On-Demand d3.2xlarge Instances"
+msgid "Total running On-Demand d3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3.2xlarge-Instanzen"
 
-msgid "Total running On-Demand d3.4xlarge Instances"
+msgid "Total running On-Demand d3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3.4xlarge-Instanzen"
 
-msgid "Total running On-Demand d3.8xlarge Instances"
+msgid "Total running On-Demand d3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3.8xlarge-Instanzen"
 
-msgid "Total running On-Demand d3.xlarge Instances"
+msgid "Total running On-Demand d3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3.xlarge-Instanzen"
 
-msgid "Total running On-Demand d3en.12xlarge Instances"
+msgid "Total running On-Demand d3en.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.12xlarge-Instanzen"
 
-msgid "Total running On-Demand d3en.2xlarge Instances"
+msgid "Total running On-Demand d3en.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.2xlarge-Instanzen"
 
-msgid "Total running On-Demand d3en.4xlarge Instances"
+msgid "Total running On-Demand d3en.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.4xlarge-Instanzen"
 
-msgid "Total running On-Demand d3en.6xlarge Instances"
+msgid "Total running On-Demand d3en.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.6xlarge-Instanzen"
 
-msgid "Total running On-Demand d3en.8xlarge Instances"
+msgid "Total running On-Demand d3en.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.8xlarge-Instanzen"
 
-msgid "Total running On-Demand d3en.xlarge Instances"
+msgid "Total running On-Demand d3en.xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.xlarge-Instanzen"
 
-msgid "Total running On-Demand f1.16xlarge Instances"
+msgid "Total running On-Demand f1.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand f1.16xlarge-Instanzen"
 
-msgid "Total running On-Demand f1.2xlarge Instances"
+msgid "Total running On-Demand f1.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand f1.2xlarge-Instanzen"
 
-msgid "Total running On-Demand f1.4xlarge Instances"
+msgid "Total running On-Demand f1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand f1.4xlarge-Instanzen"
 
-msgid "Total running On-Demand g2.2xlarge Instances"
+msgid "Total running On-Demand g2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand g2.2xlarge-Instanzen"
 
-msgid "Total running On-Demand g2.8xlarge Instances"
+msgid "Total running On-Demand g2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand g2.8xlarge-Instanzen"
 
-msgid "Total running On-Demand g3.16xlarge Instances"
+msgid "Total running On-Demand g3.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand g3.16xlarge-Instanzen"
 
-msgid "Total running On-Demand g3.4xlarge Instances"
+msgid "Total running On-Demand g3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand g3.4xlarge-Instanzen"
 
-msgid "Total running On-Demand g3.8xlarge Instances"
+msgid "Total running On-Demand g3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand g3.8xlarge-Instanzen"
 
-msgid "Total running On-Demand g3s.xlarge Instances"
+msgid "Total running On-Demand g3s.xlarge instances"
 msgstr "Insgesamt laufende On-Demand g3s.xlarge-Instanzen"
 
-msgid "Total running On-Demand g4ad.16xlarge Instances"
+msgid "Total running On-Demand g4ad.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.16xlarge-Instanzen"
 
-msgid "Total running On-Demand g4ad.2xlarge Instances"
+msgid "Total running On-Demand g4ad.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.2xlarge-Instanzen"
 
-msgid "Total running On-Demand g4ad.4xlarge Instances"
+msgid "Total running On-Demand g4ad.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.4xlarge-Instanzen"
 
-msgid "Total running On-Demand g4ad.8xlarge Instances"
+msgid "Total running On-Demand g4ad.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.8xlarge-Instanzen"
 
-msgid "Total running On-Demand g4ad.xlarge Instances"
+msgid "Total running On-Demand g4ad.xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.xlarge-Instanzen"
 
-msgid "Total running On-Demand g4dn.12xlarge Instances"
+msgid "Total running On-Demand g4dn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.12xlarge-Instanzen"
 
-msgid "Total running On-Demand g4dn.16xlarge Instances"
+msgid "Total running On-Demand g4dn.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.16xlarge-Instanzen"
 
-msgid "Total running On-Demand g4dn.2xlarge Instances"
+msgid "Total running On-Demand g4dn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.2xlarge-Instanzen"
 
-msgid "Total running On-Demand g4dn.4xlarge Instances"
+msgid "Total running On-Demand g4dn.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.4xlarge-Instanzen"
 
-msgid "Total running On-Demand g4dn.8xlarge Instances"
+msgid "Total running On-Demand g4dn.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.8xlarge-Instanzen"
 
-msgid "Total running On-Demand g4dn.metal Instances"
+msgid "Total running On-Demand g4dn.metal instances"
 msgstr "Insgesamt laufende On-Demand g4dn.metal-Instanzen"
 
-msgid "Total running On-Demand g4dn.xlarge Instances"
+msgid "Total running On-Demand g4dn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.xlarge-Instanzen"
 
-msgid "Total running On-Demand h1.16xlarge Instances"
+msgid "Total running On-Demand h1.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand h1.16xlarge-Instanzen"
 
-msgid "Total running On-Demand h1.2xlarge Instances"
+msgid "Total running On-Demand h1.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand h1.2xlarge-Instanzen"
 
-msgid "Total running On-Demand h1.4xlarge Instances"
+msgid "Total running On-Demand h1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand h1.4xlarge-Instanzen"
 
-msgid "Total running On-Demand h1.8xlarge Instances"
+msgid "Total running On-Demand h1.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand h1.8xlarge-Instanzen"
 
-msgid "Total running On-Demand hi1.4xlarge Instances"
+msgid "Total running On-Demand hi1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand hi1.4xlarge-Instanzen"
 
-msgid "Total running On-Demand hs1.8xlarge Instances"
+msgid "Total running On-Demand hs1.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand hs1.8xlarge-Instanzen"
 
-msgid "Total running On-Demand i2.2xlarge Instances"
+msgid "Total running On-Demand i2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand i2.2xlarge-Instanzen"
 
-msgid "Total running On-Demand i2.4xlarge Instances"
+msgid "Total running On-Demand i2.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand i2.4xlarge-Instanzen"
 
-msgid "Total running On-Demand i2.8xlarge Instances"
+msgid "Total running On-Demand i2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand i2.8xlarge-Instanzen"
 
-msgid "Total running On-Demand i2.xlarge Instances"
+msgid "Total running On-Demand i2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand i2.xlarge-Instanzen"
 
-msgid "Total running On-Demand i3.16xlarge Instances"
+msgid "Total running On-Demand i3.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.16xlarge-Instanzen"
 
-msgid "Total running On-Demand i3.2xlarge Instances"
+msgid "Total running On-Demand i3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.2xlarge-Instanzen"
 
-msgid "Total running On-Demand i3.4xlarge Instances"
+msgid "Total running On-Demand i3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.4xlarge-Instanzen"
 
-msgid "Total running On-Demand i3.8xlarge Instances"
+msgid "Total running On-Demand i3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.8xlarge-Instanzen"
 
-msgid "Total running On-Demand i3.large Instances"
+msgid "Total running On-Demand i3.large instances"
 msgstr "Insgesamt laufende On-Demand i3.large-Instanzen"
 
-msgid "Total running On-Demand i3.metal Instances"
+msgid "Total running On-Demand i3.metal instances"
 msgstr "Insgesamt laufende On-Demand i3.metal-Instanzen"
 
-msgid "Total running On-Demand i3.xlarge Instances"
+msgid "Total running On-Demand i3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.xlarge-Instanzen"
 
-msgid "Total running On-Demand i3en.12xlarge Instances"
+msgid "Total running On-Demand i3en.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.12xlarge-Instanzen"
 
-msgid "Total running On-Demand i3en.24xlarge Instances"
+msgid "Total running On-Demand i3en.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.24xlarge-Instanzen"
 
-msgid "Total running On-Demand i3en.2xlarge Instances"
+msgid "Total running On-Demand i3en.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.2xlarge-Instanzen"
 
-msgid "Total running On-Demand i3en.3xlarge Instances"
+msgid "Total running On-Demand i3en.3xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.3xlarge-Instanzen"
 
-msgid "Total running On-Demand i3en.6xlarge Instances"
+msgid "Total running On-Demand i3en.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.6xlarge-Instanzen"
 
-msgid "Total running On-Demand i3en.large Instances"
+msgid "Total running On-Demand i3en.large instances"
 msgstr "Insgesamt laufende On-Demand i3en.large-Instanzen"
 
-msgid "Total running On-Demand i3en.metal Instances"
+msgid "Total running On-Demand i3en.metal instances"
 msgstr "Insgesamt laufende On-Demand i3en.metal-Instanzen"
 
-msgid "Total running On-Demand i3en.xlarge Instances"
+msgid "Total running On-Demand i3en.xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.xlarge-Instanzen"
 
-msgid "Total running On-Demand inf1.24xlarge Instances"
+msgid "Total running On-Demand inf1.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand inf1.24xlarge-Instanzen"
 
-msgid "Total running On-Demand inf1.2xlarge Instances"
+msgid "Total running On-Demand inf1.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand inf1.2xlarge-Instanzen"
 
-msgid "Total running On-Demand inf1.6xlarge Instances"
+msgid "Total running On-Demand inf1.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand inf1.6xlarge-Instanzen"
 
-msgid "Total running On-Demand inf1.xlarge Instances"
+msgid "Total running On-Demand inf1.xlarge instances"
 msgstr "Insgesamt laufende On-Demand inf1.xlarge-Instanzen"
 
-msgid "Total running On-Demand m1.large Instances"
+msgid "Total running On-Demand instances"
+msgstr "Insgesamt laufende On-Demand-Instanzen"
+
+msgid "Total running On-Demand m1.large instances"
 msgstr "Insgesamt laufende On-Demand m1.large-Instanzen"
 
-msgid "Total running On-Demand m1.medium Instances"
+msgid "Total running On-Demand m1.medium instances"
 msgstr "Insgesamt laufende On-Demand m1.medium-Instanzen"
 
-msgid "Total running On-Demand m1.small Instances"
+msgid "Total running On-Demand m1.small instances"
 msgstr "Insgesamt laufende On-Demand m1.small-Instanzen"
 
-msgid "Total running On-Demand m1.xlarge Instances"
+msgid "Total running On-Demand m1.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m1.xlarge-Instanzen"
 
-msgid "Total running On-Demand m2.2xlarge Instances"
+msgid "Total running On-Demand m2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m2.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m2.4xlarge Instances"
+msgid "Total running On-Demand m2.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m2.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m2.xlarge Instances"
+msgid "Total running On-Demand m2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m2.xlarge-Instanzen"
 
-msgid "Total running On-Demand m3.2xlarge Instances"
+msgid "Total running On-Demand m3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m3.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m3.large Instances"
+msgid "Total running On-Demand m3.large instances"
 msgstr "Insgesamt laufende On-Demand m3.large-Instanzen"
 
-msgid "Total running On-Demand m3.medium Instances"
+msgid "Total running On-Demand m3.medium instances"
 msgstr "Insgesamt laufende On-Demand m3.medium-Instanzen"
 
-msgid "Total running On-Demand m3.xlarge Instances"
+msgid "Total running On-Demand m3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m3.xlarge-Instanzen"
 
-msgid "Total running On-Demand m4.10xlarge Instances"
+msgid "Total running On-Demand m4.10xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.10xlarge-Instanzen"
 
-msgid "Total running On-Demand m4.16xlarge Instances"
+msgid "Total running On-Demand m4.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m4.2xlarge Instances"
+msgid "Total running On-Demand m4.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m4.4xlarge Instances"
+msgid "Total running On-Demand m4.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m4.large Instances"
+msgid "Total running On-Demand m4.large instances"
 msgstr "Insgesamt laufende On-Demand m4.large-Instanzen"
 
-msgid "Total running On-Demand m4.xlarge Instances"
+msgid "Total running On-Demand m4.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.xlarge-Instanzen"
 
-msgid "Total running On-Demand m5.12xlarge Instances"
+msgid "Total running On-Demand m5.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m5.16xlarge Instances"
+msgid "Total running On-Demand m5.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m5.24xlarge Instances"
+msgid "Total running On-Demand m5.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.24xlarge-Instanzen"
 
-msgid "Total running On-Demand m5.2xlarge Instances"
+msgid "Total running On-Demand m5.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m5.4xlarge Instances"
+msgid "Total running On-Demand m5.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m5.8xlarge Instances"
+msgid "Total running On-Demand m5.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.8xlarge-Instanzen"
 
-msgid "Total running On-Demand m5.large Instances"
+msgid "Total running On-Demand m5.large instances"
 msgstr "Insgesamt laufende On-Demand m5.large-Instanzen"
 
-msgid "Total running On-Demand m5.metal Instances"
+msgid "Total running On-Demand m5.metal instances"
 msgstr "Insgesamt laufende On-Demand m5.metal-Instanzen"
 
-msgid "Total running On-Demand m5.xlarge Instances"
+msgid "Total running On-Demand m5.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.xlarge-Instanzen"
 
-msgid "Total running On-Demand m5a.12xlarge Instances"
+msgid "Total running On-Demand m5a.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m5a.16xlarge Instances"
+msgid "Total running On-Demand m5a.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m5a.24xlarge Instances"
+msgid "Total running On-Demand m5a.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.24xlarge-Instanzen"
 
-msgid "Total running On-Demand m5a.2xlarge Instances"
+msgid "Total running On-Demand m5a.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m5a.4xlarge Instances"
+msgid "Total running On-Demand m5a.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m5a.8xlarge Instances"
+msgid "Total running On-Demand m5a.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.8xlarge-Instanzen"
 
-msgid "Total running On-Demand m5a.large Instances"
+msgid "Total running On-Demand m5a.large instances"
 msgstr "Insgesamt laufende On-Demand m5a.large-Instanzen"
 
-msgid "Total running On-Demand m5a.xlarge Instances"
+msgid "Total running On-Demand m5a.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.xlarge-Instanzen"
 
-msgid "Total running On-Demand m5ad.12xlarge Instances"
+msgid "Total running On-Demand m5ad.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m5ad.16xlarge Instances"
+msgid "Total running On-Demand m5ad.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m5ad.24xlarge Instances"
+msgid "Total running On-Demand m5ad.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.24xlarge-Instanzen"
 
-msgid "Total running On-Demand m5ad.2xlarge Instances"
+msgid "Total running On-Demand m5ad.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m5ad.4xlarge Instances"
+msgid "Total running On-Demand m5ad.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m5ad.8xlarge Instances"
+msgid "Total running On-Demand m5ad.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.8xlarge-Instanzen"
 
-msgid "Total running On-Demand m5ad.large Instances"
+msgid "Total running On-Demand m5ad.large instances"
 msgstr "Insgesamt laufende On-Demand m5ad.large-Instanzen"
 
-msgid "Total running On-Demand m5ad.xlarge Instances"
+msgid "Total running On-Demand m5ad.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.xlarge-Instanzen"
 
-msgid "Total running On-Demand m5d.12xlarge Instances"
+msgid "Total running On-Demand m5d.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m5d.16xlarge Instances"
+msgid "Total running On-Demand m5d.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m5d.24xlarge Instances"
+msgid "Total running On-Demand m5d.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.24xlarge-Instanzen"
 
-msgid "Total running On-Demand m5d.2xlarge Instances"
+msgid "Total running On-Demand m5d.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m5d.4xlarge Instances"
+msgid "Total running On-Demand m5d.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m5d.8xlarge Instances"
+msgid "Total running On-Demand m5d.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.8xlarge-Instanzen"
 
-msgid "Total running On-Demand m5d.large Instances"
+msgid "Total running On-Demand m5d.large instances"
 msgstr "Insgesamt laufende On-Demand m5d.large-Instanzen"
 
-msgid "Total running On-Demand m5d.metal Instances"
+msgid "Total running On-Demand m5d.metal instances"
 msgstr "Insgesamt laufende On-Demand m5d.metal-Instanzen"
 
-msgid "Total running On-Demand m5d.xlarge Instances"
+msgid "Total running On-Demand m5d.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.xlarge-Instanzen"
 
-msgid "Total running On-Demand m5dn.12xlarge Instances"
+msgid "Total running On-Demand m5dn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m5dn.16xlarge Instances"
+msgid "Total running On-Demand m5dn.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m5dn.24xlarge Instances"
+msgid "Total running On-Demand m5dn.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.24xlarge-Instanzen"
 
-msgid "Total running On-Demand m5dn.2xlarge Instances"
+msgid "Total running On-Demand m5dn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m5dn.4xlarge Instances"
+msgid "Total running On-Demand m5dn.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m5dn.8xlarge Instances"
+msgid "Total running On-Demand m5dn.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.8xlarge-Instanzen"
 
-msgid "Total running On-Demand m5dn.large Instances"
+msgid "Total running On-Demand m5dn.large instances"
 msgstr "Insgesamt laufende On-Demand m5dn.large-Instanzen"
 
-msgid "Total running On-Demand m5dn.metal Instances"
+msgid "Total running On-Demand m5dn.metal instances"
 msgstr "Insgesamt laufende On-Demand m5dn.metal-Instanzen"
 
-msgid "Total running On-Demand m5dn.xlarge Instances"
+msgid "Total running On-Demand m5dn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.xlarge-Instanzen"
 
-msgid "Total running On-Demand m5n.12xlarge Instances"
+msgid "Total running On-Demand m5n.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m5n.16xlarge Instances"
+msgid "Total running On-Demand m5n.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m5n.24xlarge Instances"
+msgid "Total running On-Demand m5n.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.24xlarge-Instanzen"
 
-msgid "Total running On-Demand m5n.2xlarge Instances"
+msgid "Total running On-Demand m5n.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m5n.4xlarge Instances"
+msgid "Total running On-Demand m5n.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m5n.8xlarge Instances"
+msgid "Total running On-Demand m5n.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.8xlarge-Instanzen"
 
-msgid "Total running On-Demand m5n.large Instances"
+msgid "Total running On-Demand m5n.large instances"
 msgstr "Insgesamt laufende On-Demand m5n.large-Instanzen"
 
-msgid "Total running On-Demand m5n.metal Instances"
+msgid "Total running On-Demand m5n.metal instances"
 msgstr "Insgesamt laufende On-Demand m5n.metal-Instanzen"
 
-msgid "Total running On-Demand m5n.xlarge Instances"
+msgid "Total running On-Demand m5n.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.xlarge-Instanzen"
 
-msgid "Total running On-Demand m5zn.12xlarge Instances"
+msgid "Total running On-Demand m5zn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m5zn.2xlarge Instances"
+msgid "Total running On-Demand m5zn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m5zn.3xlarge Instances"
+msgid "Total running On-Demand m5zn.3xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.3xlarge-Instanzen"
 
-msgid "Total running On-Demand m5zn.6xlarge Instances"
+msgid "Total running On-Demand m5zn.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.6xlarge-Instanzen"
 
-msgid "Total running On-Demand m5zn.large Instances"
+msgid "Total running On-Demand m5zn.large instances"
 msgstr "Insgesamt laufende On-Demand m5zn.large-Instanzen"
 
-msgid "Total running On-Demand m5zn.metal Instances"
+msgid "Total running On-Demand m5zn.metal instances"
 msgstr "Insgesamt laufende On-Demand m5zn.metal-Instanzen"
 
-msgid "Total running On-Demand m5zn.xlarge Instances"
+msgid "Total running On-Demand m5zn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.xlarge-Instanzen"
 
-msgid "Total running On-Demand m6g.12xlarge Instances"
+msgid "Total running On-Demand m6g.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m6g.16xlarge Instances"
+msgid "Total running On-Demand m6g.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m6g.2xlarge Instances"
+msgid "Total running On-Demand m6g.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m6g.4xlarge Instances"
+msgid "Total running On-Demand m6g.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m6g.8xlarge Instances"
+msgid "Total running On-Demand m6g.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.8xlarge-Instanzen"
 
-msgid "Total running On-Demand m6g.large Instances"
+msgid "Total running On-Demand m6g.large instances"
 msgstr "Insgesamt laufende On-Demand m6g.large-Instanzen"
 
-msgid "Total running On-Demand m6g.medium Instances"
+msgid "Total running On-Demand m6g.medium instances"
 msgstr "Insgesamt laufende On-Demand m6g.medium-Instanzen"
 
-msgid "Total running On-Demand m6g.metal Instances"
+msgid "Total running On-Demand m6g.metal instances"
 msgstr "Insgesamt laufende On-Demand m6g.metal-Instanzen"
 
-msgid "Total running On-Demand m6g.xlarge Instances"
+msgid "Total running On-Demand m6g.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.xlarge-Instanzen"
 
-msgid "Total running On-Demand m6gd.12xlarge Instances"
+msgid "Total running On-Demand m6gd.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m6gd.16xlarge Instances"
+msgid "Total running On-Demand m6gd.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m6gd.2xlarge Instances"
+msgid "Total running On-Demand m6gd.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m6gd.4xlarge Instances"
+msgid "Total running On-Demand m6gd.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m6gd.8xlarge Instances"
+msgid "Total running On-Demand m6gd.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.8xlarge-Instanzen"
 
-msgid "Total running On-Demand m6gd.large Instances"
+msgid "Total running On-Demand m6gd.large instances"
 msgstr "Insgesamt laufende On-Demand m6gd.large-Instanzen"
 
-msgid "Total running On-Demand m6gd.medium Instances"
+msgid "Total running On-Demand m6gd.medium instances"
 msgstr "Insgesamt laufende On-Demand m6gd.medium-Instanzen"
 
-msgid "Total running On-Demand m6gd.metal Instances"
+msgid "Total running On-Demand m6gd.metal instances"
 msgstr "Insgesamt laufende On-Demand m6gd.metal-Instanzen"
 
-msgid "Total running On-Demand m6gd.xlarge Instances"
+msgid "Total running On-Demand m6gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.xlarge-Instanzen"
 
-msgid "Total running On-Demand m6i.12xlarge Instances"
+msgid "Total running On-Demand m6i.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.12xlarge-Instanzen"
 
-msgid "Total running On-Demand m6i.16xlarge Instances"
+msgid "Total running On-Demand m6i.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.16xlarge-Instanzen"
 
-msgid "Total running On-Demand m6i.24xlarge Instances"
+msgid "Total running On-Demand m6i.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.24xlarge-Instanzen"
 
-msgid "Total running On-Demand m6i.2xlarge Instances"
+msgid "Total running On-Demand m6i.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.2xlarge-Instanzen"
 
-msgid "Total running On-Demand m6i.32xlarge Instances"
+msgid "Total running On-Demand m6i.32xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.32xlarge-Instanzen"
 
-msgid "Total running On-Demand m6i.4xlarge Instances"
+msgid "Total running On-Demand m6i.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.4xlarge-Instanzen"
 
-msgid "Total running On-Demand m6i.8xlarge Instances"
+msgid "Total running On-Demand m6i.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.8xlarge-Instanzen"
 
-msgid "Total running On-Demand m6i.large Instances"
+msgid "Total running On-Demand m6i.large instances"
 msgstr "Insgesamt laufende On-Demand m6i.large-Instanzen"
 
-msgid "Total running On-Demand m6i.xlarge Instances"
+msgid "Total running On-Demand m6i.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.xlarge-Instanzen"
 
-msgid "Total running On-Demand mac1.metal Instances"
+msgid "Total running On-Demand mac1.metal instances"
 msgstr "Insgesamt laufende On-Demand mac1.metal-Instanzen"
 
-msgid "Total running On-Demand p2.16xlarge Instances"
+msgid "Total running On-Demand p2.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand p2.16xlarge-Instanzen"
 
-msgid "Total running On-Demand p2.8xlarge Instances"
+msgid "Total running On-Demand p2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand p2.8xlarge-Instanzen"
 
-msgid "Total running On-Demand p2.xlarge Instances"
+msgid "Total running On-Demand p2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand p2.xlarge-Instanzen"
 
-msgid "Total running On-Demand p3.16xlarge Instances"
+msgid "Total running On-Demand p3.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand p3.16xlarge-Instanzen"
 
-msgid "Total running On-Demand p3.2xlarge Instances"
+msgid "Total running On-Demand p3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand p3.2xlarge-Instanzen"
 
-msgid "Total running On-Demand p3.8xlarge Instances"
+msgid "Total running On-Demand p3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand p3.8xlarge-Instanzen"
 
-msgid "Total running On-Demand p3dn.24xlarge Instances"
+msgid "Total running On-Demand p3dn.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand p3dn.24xlarge-Instanzen"
 
-msgid "Total running On-Demand p4d.24xlarge Instances"
+msgid "Total running On-Demand p4d.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand p4d.24xlarge-Instanzen"
 
-msgid "Total running On-Demand r3.2xlarge Instances"
+msgid "Total running On-Demand r3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r3.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r3.4xlarge Instances"
+msgid "Total running On-Demand r3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r3.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r3.8xlarge Instances"
+msgid "Total running On-Demand r3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r3.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r3.large Instances"
+msgid "Total running On-Demand r3.large instances"
 msgstr "Insgesamt laufende On-Demand r3.large-Instanzen"
 
-msgid "Total running On-Demand r3.xlarge Instances"
+msgid "Total running On-Demand r3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r3.xlarge -Instanzen"
 
-msgid "Total running On-Demand r4.16xlarge Instances"
+msgid "Total running On-Demand r4.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.16xlarge-Instanzen"
 
-msgid "Total running On-Demand r4.2xlarge Instances"
+msgid "Total running On-Demand r4.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r4.4xlarge Instances"
+msgid "Total running On-Demand r4.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r4.8xlarge Instances"
+msgid "Total running On-Demand r4.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r4.large Instances"
+msgid "Total running On-Demand r4.large instances"
 msgstr "Insgesamt laufende On-Demand r4.large-Instanzen"
 
-msgid "Total running On-Demand r4.xlarge Instances"
+msgid "Total running On-Demand r4.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.xlarge-Instanzen"
 
-msgid "Total running On-Demand r5.12xlarge Instances"
+msgid "Total running On-Demand r5.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.12xlarge-Instanzen"
 
-msgid "Total running On-Demand r5.16xlarge Instances"
+msgid "Total running On-Demand r5.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.16xlarge-Instanzen"
 
-msgid "Total running On-Demand r5.24xlarge Instances"
+msgid "Total running On-Demand r5.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.24xlarge-Instanzen"
 
-msgid "Total running On-Demand r5.2xlarge Instances"
+msgid "Total running On-Demand r5.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r5.4xlarge Instances"
+msgid "Total running On-Demand r5.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r5.8xlarge Instances"
+msgid "Total running On-Demand r5.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r5.large Instances"
+msgid "Total running On-Demand r5.large instances"
 msgstr "Insgesamt laufende On-Demand r5.large-Instanzen"
 
-msgid "Total running On-Demand r5.metal Instances"
+msgid "Total running On-Demand r5.metal instances"
 msgstr "Insgesamt laufende On-Demand r5.metal-Instanzen"
 
-msgid "Total running On-Demand r5.xlarge Instances"
+msgid "Total running On-Demand r5.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.xlarge-Instanzen"
 
-msgid "Total running On-Demand r5a.12xlarge Instances"
+msgid "Total running On-Demand r5a.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.12xlarge-Instanzen"
 
-msgid "Total running On-Demand r5a.16xlarge Instances"
+msgid "Total running On-Demand r5a.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.16xlarge-Instanzen"
 
-msgid "Total running On-Demand r5a.24xlarge Instances"
+msgid "Total running On-Demand r5a.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.24xlarge-Instanzen"
 
-msgid "Total running On-Demand r5a.2xlarge Instances"
+msgid "Total running On-Demand r5a.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r5a.4xlarge Instances"
+msgid "Total running On-Demand r5a.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r5a.8xlarge Instances"
+msgid "Total running On-Demand r5a.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r5a.large Instances"
+msgid "Total running On-Demand r5a.large instances"
 msgstr "Insgesamt laufende On-Demand r5a.large-Instanzen"
 
-msgid "Total running On-Demand r5a.xlarge Instances"
+msgid "Total running On-Demand r5a.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.xlarge-Instanzen"
 
-msgid "Total running On-Demand r5ad.12xlarge Instances"
+msgid "Total running On-Demand r5ad.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.12xlarge-Instanzen"
 
-msgid "Total running On-Demand r5ad.16xlarge Instances"
+msgid "Total running On-Demand r5ad.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.16xlarge-Instanzen"
 
-msgid "Total running On-Demand r5ad.24xlarge Instances"
+msgid "Total running On-Demand r5ad.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.24xlarge-Instanzen"
 
-msgid "Total running On-Demand r5ad.2xlarge Instances"
+msgid "Total running On-Demand r5ad.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r5ad.4xlarge Instances"
+msgid "Total running On-Demand r5ad.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r5ad.8xlarge Instances"
+msgid "Total running On-Demand r5ad.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r5ad.large Instances"
+msgid "Total running On-Demand r5ad.large instances"
 msgstr "Insgesamt laufende On-Demand r5ad.large-Instanzen"
 
-msgid "Total running On-Demand r5ad.xlarge Instances"
+msgid "Total running On-Demand r5ad.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.xlarge-Instanzen"
 
-msgid "Total running On-Demand r5b.12xlarge Instances"
+msgid "Total running On-Demand r5b.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.12xlarge-Instanzen"
 
-msgid "Total running On-Demand r5b.16xlarge Instances"
+msgid "Total running On-Demand r5b.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.16xlarge-Instanzen"
 
-msgid "Total running On-Demand r5b.24xlarge Instances"
+msgid "Total running On-Demand r5b.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.24xlarge-Instanzen"
 
-msgid "Total running On-Demand r5b.2xlarge Instances"
+msgid "Total running On-Demand r5b.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r5b.4xlarge Instances"
+msgid "Total running On-Demand r5b.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r5b.8xlarge Instances"
+msgid "Total running On-Demand r5b.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r5b.large Instances"
+msgid "Total running On-Demand r5b.large instances"
 msgstr "Insgesamt laufende On-Demand r5b.large-Instanzen"
 
-msgid "Total running On-Demand r5b.metal Instances"
+msgid "Total running On-Demand r5b.metal instances"
 msgstr "Insgesamt laufende On-Demand r5b.metal-Instanzen"
 
-msgid "Total running On-Demand r5b.xlarge Instances"
+msgid "Total running On-Demand r5b.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.xlarge-Instanzen"
 
-msgid "Total running On-Demand r5d.12xlarge Instances"
+msgid "Total running On-Demand r5d.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.12xlarge-Instanzen"
 
-msgid "Total running On-Demand r5d.16xlarge Instances"
+msgid "Total running On-Demand r5d.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.16xlarge-Instanzen"
 
-msgid "Total running On-Demand r5d.24xlarge Instances"
+msgid "Total running On-Demand r5d.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.24xlarge-Instanzen"
 
-msgid "Total running On-Demand r5d.2xlarge Instances"
+msgid "Total running On-Demand r5d.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r5d.4xlarge Instances"
+msgid "Total running On-Demand r5d.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r5d.8xlarge Instances"
+msgid "Total running On-Demand r5d.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r5d.large Instances"
+msgid "Total running On-Demand r5d.large instances"
 msgstr "Insgesamt laufende On-Demand r5d.large-Instanzen"
 
-msgid "Total running On-Demand r5d.metal Instances"
+msgid "Total running On-Demand r5d.metal instances"
 msgstr "Insgesamt laufende On-Demand r5d.metal-Instanzen"
 
-msgid "Total running On-Demand r5d.xlarge Instances"
+msgid "Total running On-Demand r5d.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.xlarge-Instanzen"
 
-msgid "Total running On-Demand r5dn.12xlarge Instances"
+msgid "Total running On-Demand r5dn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.12xlarge-Instanzen"
 
-msgid "Total running On-Demand r5dn.16xlarge Instances"
+msgid "Total running On-Demand r5dn.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.16xlarge-Instanzen"
 
-msgid "Total running On-Demand r5dn.24xlarge Instances"
+msgid "Total running On-Demand r5dn.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.24xlarge-Instanzen"
 
-msgid "Total running On-Demand r5dn.2xlarge Instances"
+msgid "Total running On-Demand r5dn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r5dn.4xlarge Instances"
+msgid "Total running On-Demand r5dn.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r5dn.8xlarge Instances"
+msgid "Total running On-Demand r5dn.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r5dn.large Instances"
+msgid "Total running On-Demand r5dn.large instances"
 msgstr "Insgesamt laufende On-Demand r5dn.large-Instanzen"
 
-msgid "Total running On-Demand r5dn.metal Instances"
+msgid "Total running On-Demand r5dn.metal instances"
 msgstr "Insgesamt laufende On-Demand r5dn.metal-Instanzen"
 
-msgid "Total running On-Demand r5dn.xlarge Instances"
+msgid "Total running On-Demand r5dn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.xlarge-Instanzen"
 
-msgid "Total running On-Demand r5n.12xlarge Instances"
+msgid "Total running On-Demand r5n.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.12xlarge-Instanzen"
 
-msgid "Total running On-Demand r5n.16xlarge Instances"
+msgid "Total running On-Demand r5n.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.16xlarge-Instanzen"
 
-msgid "Total running On-Demand r5n.24xlarge Instances"
+msgid "Total running On-Demand r5n.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.24xlarge-Instanzen"
 
-msgid "Total running On-Demand r5n.2xlarge Instances"
+msgid "Total running On-Demand r5n.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r5n.4xlarge Instances"
+msgid "Total running On-Demand r5n.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r5n.8xlarge Instances"
+msgid "Total running On-Demand r5n.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r5n.large Instances"
+msgid "Total running On-Demand r5n.large instances"
 msgstr "Insgesamt laufende On-Demand r5n.large-Instanzen"
 
-msgid "Total running On-Demand r5n.metal Instances"
+msgid "Total running On-Demand r5n.metal instances"
 msgstr "Insgesamt laufende On-Demand r5n.metal-Instanzen"
 
-msgid "Total running On-Demand r5n.xlarge Instances"
+msgid "Total running On-Demand r5n.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.xlarge-Instanzen"
 
-msgid "Total running On-Demand r6g.12xlarge Instances"
+msgid "Total running On-Demand r6g.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.12xlarge-Instanzen"
 
-msgid "Total running On-Demand r6g.16xlarge Instances"
+msgid "Total running On-Demand r6g.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.16xlarge -Instanzen"
 
-msgid "Total running On-Demand r6g.2xlarge Instances"
+msgid "Total running On-Demand r6g.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r6g.4xlarge Instances"
+msgid "Total running On-Demand r6g.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r6g.8xlarge Instances"
+msgid "Total running On-Demand r6g.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r6g.large Instances"
+msgid "Total running On-Demand r6g.large instances"
 msgstr "Insgesamt laufende On-Demand r6g.large-Instanzen"
 
-msgid "Total running On-Demand r6g.medium Instances"
+msgid "Total running On-Demand r6g.medium instances"
 msgstr "Insgesamt laufende On-Demand r6g.medium-Instanzen"
 
-msgid "Total running On-Demand r6g.metal Instances"
+msgid "Total running On-Demand r6g.metal instances"
 msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
 
-msgid "Total running On-Demand r6g.xlarge Instances"
+msgid "Total running On-Demand r6g.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.xlarge-Instanzen"
 
-msgid "Total running On-Demand r6gd.12xlarge Instances"
+msgid "Total running On-Demand r6gd.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.12xlarge-Instanzen"
 
-msgid "Total running On-Demand r6gd.16xlarge Instances"
+msgid "Total running On-Demand r6gd.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.16xlarge-Instanzen"
 
-msgid "Total running On-Demand r6gd.2xlarge Instances"
+msgid "Total running On-Demand r6gd.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.2xlarge-Instanzen"
 
-msgid "Total running On-Demand r6gd.4xlarge Instances"
+msgid "Total running On-Demand r6gd.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.4xlarge-Instanzen"
 
-msgid "Total running On-Demand r6gd.8xlarge Instances"
+msgid "Total running On-Demand r6gd.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.8xlarge-Instanzen"
 
-msgid "Total running On-Demand r6gd.large Instances"
+msgid "Total running On-Demand r6gd.large instances"
 msgstr "Insgesamt laufende On-Demand r6gd.large-Instanzen"
 
-msgid "Total running On-Demand r6gd.medium Instances"
+msgid "Total running On-Demand r6gd.medium instances"
 msgstr "Insgesamt laufende On-Demand r6gd.medium-Instanzen"
 
-msgid "Total running On-Demand r6gd.metal Instances"
+msgid "Total running On-Demand r6gd.metal instances"
 msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
 
-msgid "Total running On-Demand r6gd.xlarge Instances"
+msgid "Total running On-Demand r6gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.xlarge-Instanzen"
 
-msgid "Total running On-Demand t1.micro Instances"
+msgid "Total running On-Demand t1.micro instances"
 msgstr "Insgesamt laufende On-Demand t1.micro-Instanzen"
 
-msgid "Total running On-Demand t2.2xlarge Instances"
+msgid "Total running On-Demand t2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand t2.2xlarge-Instanzen"
 
-msgid "Total running On-Demand t2.large Instances"
+msgid "Total running On-Demand t2.large instances"
 msgstr "Insgesamt laufende On-Demand t2.large-Instanzen"
 
-msgid "Total running On-Demand t2.medium Instances"
+msgid "Total running On-Demand t2.medium instances"
 msgstr "Insgesamt laufende On-Demand t2.medium-Instanzen"
 
-msgid "Total running On-Demand t2.micro Instances"
+msgid "Total running On-Demand t2.micro instances"
 msgstr "Insgesamt laufende On-Demand t2.micro-Instanzen"
 
-msgid "Total running On-Demand t2.nano Instances"
+msgid "Total running On-Demand t2.nano instances"
 msgstr "Insgesamt laufende On-Demand t2.nano-Instanzen"
 
-msgid "Total running On-Demand t2.small Instances"
+msgid "Total running On-Demand t2.small instances"
 msgstr "Insgesamt laufende On-Demand t2.small-Instanzen"
 
-msgid "Total running On-Demand t2.xlarge Instances"
+msgid "Total running On-Demand t2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand t2.xlarge -Instanzen"
 
-msgid "Total running On-Demand t3.2xlarge Instances"
+msgid "Total running On-Demand t3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand t3.2xlarge-Instanzen"
 
-msgid "Total running On-Demand t3.large Instances"
+msgid "Total running On-Demand t3.large instances"
 msgstr "Insgesamt laufende On-Demand t3.large-Instanzen"
 
-msgid "Total running On-Demand t3.medium Instances"
+msgid "Total running On-Demand t3.medium instances"
 msgstr "Insgesamt laufende On-Demand t3.medium-Instanzen"
 
-msgid "Total running On-Demand t3.micro Instances"
+msgid "Total running On-Demand t3.micro instances"
 msgstr "Insgesamt laufende On-Demand t3.micro-Instanzen"
 
-msgid "Total running On-Demand t3.nano Instances"
+msgid "Total running On-Demand t3.nano instances"
 msgstr "Insgesamt laufende On-Demand t3.nano-Instanzen"
 
-msgid "Total running On-Demand t3.small Instances"
+msgid "Total running On-Demand t3.small instances"
 msgstr "Insgesamt laufende On-Demand t3.small-Instanzen"
 
-msgid "Total running On-Demand t3.xlarge Instances"
+msgid "Total running On-Demand t3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand t3.xlarge-Instanzen"
 
-msgid "Total running On-Demand t3a.2xlarge Instances"
+msgid "Total running On-Demand t3a.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand t3a.2xlarge-Instanzen"
 
-msgid "Total running On-Demand t3a.large Instances"
+msgid "Total running On-Demand t3a.large instances"
 msgstr "Insgesamt laufende On-Demand t3a.large-Instanzen"
 
-msgid "Total running On-Demand t3a.medium Instances"
+msgid "Total running On-Demand t3a.medium instances"
 msgstr "Insgesamt laufende On-Demand t3a.medium-Instanzen"
 
-msgid "Total running On-Demand t3a.micro Instances"
+msgid "Total running On-Demand t3a.micro instances"
 msgstr "Insgesamt laufende On-Demand t3a.micro-Instanzen"
 
-msgid "Total running On-Demand t3a.nano Instances"
+msgid "Total running On-Demand t3a.nano instances"
 msgstr "Insgesamt laufende On-Demand t3a.nano-Instanzen"
 
-msgid "Total running On-Demand t3a.small Instances"
+msgid "Total running On-Demand t3a.small instances"
 msgstr "Insgesamt laufende On-Demand t3a.small-Instanzen"
 
-msgid "Total running On-Demand t3a.xlarge Instances"
+msgid "Total running On-Demand t3a.xlarge instances"
 msgstr "Insgesamt laufende On-Demand t3a.xlarge-Instanzen"
 
-msgid "Total running On-Demand t4g.2xlarge Instances"
+msgid "Total running On-Demand t4g.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand t4g.2xlarge-Instanzen"
 
-msgid "Total running On-Demand t4g.large Instances"
+msgid "Total running On-Demand t4g.large instances"
 msgstr "Insgesamt laufende On-Demand t4g.large-Instanzen"
 
-msgid "Total running On-Demand t4g.medium Instances"
+msgid "Total running On-Demand t4g.medium instances"
 msgstr "Insgesamt laufende On-Demand t4g.medium-Instanzen"
 
-msgid "Total running On-Demand t4g.micro Instances"
+msgid "Total running On-Demand t4g.micro instances"
 msgstr "Insgesamt laufende On-Demand t4g.micro-Instanzen"
 
-msgid "Total running On-Demand t4g.nano Instances"
+msgid "Total running On-Demand t4g.nano instances"
 msgstr "Insgesamt laufende On-Demand t4g.nano-Instanzen"
 
-msgid "Total running On-Demand t4g.small Instances"
+msgid "Total running On-Demand t4g.small instances"
 msgstr "Insgesamt laufende On-Demand t4g.small-Instanzen"
 
-msgid "Total running On-Demand t4g.xlarge Instances"
+msgid "Total running On-Demand t4g.xlarge instances"
 msgstr "Insgesamt laufende On-Demand t4g.xlarge-Instanzen"
 
-msgid "Total running On-Demand u-12tb1.112xlarge Instances"
+msgid "Total running On-Demand u-12tb1.112xlarge instances"
 msgstr "Insgesamt laufende On-Demand u-12tb1.112xlarge-Instanzen"
 
-msgid "Total running On-Demand u-12tb1.metal Instances"
+msgid "Total running On-Demand u-12tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-12tb1.metal-Instanzen"
 
-msgid "Total running On-Demand u-18tb1.metal Instances"
+msgid "Total running On-Demand u-18tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-18tb1.metal-Instanzen"
 
-msgid "Total running On-Demand u-24tb1.metal Instances"
+msgid "Total running On-Demand u-24tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-24tb1.metal-Instanzen"
 
-msgid "Total running On-Demand u-6tb1.112xlarge Instances"
+msgid "Total running On-Demand u-6tb1.112xlarge instances"
 msgstr "Insgesamt laufende On-Demand u-6tb1.112xlarge-Instanzen"
 
-msgid "Total running On-Demand u-6tb1.56xlarge Instances"
+msgid "Total running On-Demand u-6tb1.56xlarge instances"
 msgstr "Insgesamt laufende On-Demand u-6tb1.56xlarge-Instanzen"
 
-msgid "Total running On-Demand u-6tb1.metal Instances"
+msgid "Total running On-Demand u-6tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-6tb1.metal-Instanzen"
 
-msgid "Total running On-Demand u-9tb1.112xlarge Instances"
+msgid "Total running On-Demand u-9tb1.112xlarge instances"
 msgstr "Insgesamt laufende On-Demand u-9tb1.112xlarge-Instanzen"
 
-msgid "Total running On-Demand u-9tb1.metal Instances"
+msgid "Total running On-Demand u-9tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-9tb1.metal-Instanzen"
 
-msgid "Total running On-Demand vt1.24xlarge Instances"
+msgid "Total running On-Demand vt1.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand vt1.24xlarge-Instanzen"
 
-msgid "Total running On-Demand vt1.3xlarge Instances"
+msgid "Total running On-Demand vt1.3xlarge instances"
 msgstr "Insgesamt laufende On-Demand vt1.3xlarge-Instanzen"
 
-msgid "Total running On-Demand vt1.6xlarge Instances"
+msgid "Total running On-Demand vt1.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand vt1.6xlarge-Instanzen"
 
-msgid "Total running On-Demand x1.16xlarge Instances"
+msgid "Total running On-Demand x1.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1.16xlarge-Instanzen"
 
-msgid "Total running On-Demand x1.32xlarge Instances"
+msgid "Total running On-Demand x1.32xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1.32xlarge-Instanzen"
 
-msgid "Total running On-Demand x1e.16xlarge Instances"
+msgid "Total running On-Demand x1e.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.16xlarge-Instanzen"
 
-msgid "Total running On-Demand x1e.2xlarge Instances"
+msgid "Total running On-Demand x1e.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.2xlarge-Instanzen"
 
-msgid "Total running On-Demand x1e.32xlarge Instances"
+msgid "Total running On-Demand x1e.32xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.32xlarge-Instanzen"
 
-msgid "Total running On-Demand x1e.4xlarge Instances"
+msgid "Total running On-Demand x1e.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.4xlarge-Instanzen"
 
-msgid "Total running On-Demand x1e.8xlarge Instances"
+msgid "Total running On-Demand x1e.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.8xlarge-Instanzen"
 
-msgid "Total running On-Demand x1e.xlarge Instances"
+msgid "Total running On-Demand x1e.xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.xlarge-Instanzen"
 
-msgid "Total running On-Demand x2gd.12xlarge Instances"
+msgid "Total running On-Demand x2gd.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.12xlarge-Instanzen"
 
-msgid "Total running On-Demand x2gd.16xlarge Instances"
+msgid "Total running On-Demand x2gd.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.16xlarge-Instanzen"
 
-msgid "Total running On-Demand x2gd.2xlarge Instances"
+msgid "Total running On-Demand x2gd.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.2xlarge-Instanzen"
 
-msgid "Total running On-Demand x2gd.4xlarge Instances"
+msgid "Total running On-Demand x2gd.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.4xlarge-Instanzen"
 
-msgid "Total running On-Demand x2gd.8xlarge Instances"
+msgid "Total running On-Demand x2gd.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.8xlarge-Instanzen"
 
-msgid "Total running On-Demand x2gd.large Instances"
+msgid "Total running On-Demand x2gd.large instances"
 msgstr "Insgesamt laufende On-Demand x2gd.large-Instanzen"
 
-msgid "Total running On-Demand x2gd.medium Instances"
+msgid "Total running On-Demand x2gd.medium instances"
 msgstr "Insgesamt laufende On-Demand x2gd.medium-Instanzen"
 
-msgid "Total running On-Demand x2gd.metal Instances"
+msgid "Total running On-Demand x2gd.metal instances"
 msgstr "Insgesamt laufende On-Demand x2gd.metal-Instanzen"
 
-msgid "Total running On-Demand x2gd.xlarge Instances"
+msgid "Total running On-Demand x2gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.xlarge-Instanzen"
 
-msgid "Total running On-Demand z1d.12xlarge Instances"
+msgid "Total running On-Demand z1d.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.12xlarge-Instanzen"
 
-msgid "Total running On-Demand z1d.2xlarge Instances"
+msgid "Total running On-Demand z1d.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.2xlarge-Instanzen"
 
-msgid "Total running On-Demand z1d.3xlarge Instances"
+msgid "Total running On-Demand z1d.3xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.3xlarge-Instanzen"
 
-msgid "Total running On-Demand z1d.6xlarge Instances"
+msgid "Total running On-Demand z1d.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.6xlarge-Instanzen"
 
-msgid "Total running On-Demand z1d.large Instances"
+msgid "Total running On-Demand z1d.large instances"
 msgstr "Insgesamt laufende On-Demand z1d.large-Instanzen"
 
-msgid "Total running On-Demand z1d.metal Instances"
+msgid "Total running On-Demand z1d.metal instances"
 msgstr "Insgesamt laufende On-Demand z1d.metal-Instanzen"
 
-msgid "Total running On-Demand z1d.xlarge Instances"
+msgid "Total running On-Demand z1d.xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.xlarge-Instanzen"
 
 msgid "Total running on-demand instances"
@@ -65747,8 +65882,12 @@ msgstr "Gesamte Slots"
 msgid "Total subscribed capacity"
 msgstr "Gesamte unterzeichnete Kapazität"
 
-msgid "Total suite runtime (including re-executions)"
-msgstr "Gesamtlaufzeit der Suite (inklusive Wiederausführungen)"
+#, no-python-format
+msgid ""
+"Total suite runtime including re-executions (in % of overall suite timeout)"
+msgstr ""
+"Gesamtlaufzeit der Suite einschließlich Wiederholungen (in % der "
+"Gesamtlaufzeit der Suite)"
 
 msgid "Total swap space"
 msgstr "Gesamter Auslagerungsspeicher"
@@ -65758,28 +65897,6 @@ msgstr "Gesamter Durchatz pro Sekunde"
 
 msgid "Total timeout of check"
 msgstr "gesamter Timeout bei Check"
-
-msgid "Total title=Localizable('Running On-Demand F instances') vCPUs"
-msgstr "Total title=Localizable('Running On-Demand F instances') vCPUs"
-
-msgid "Total title=Localizable('Running On-Demand G instances') vCPUs"
-msgstr "Total title=Localizable('Running On-Demand G instances') vCPUs"
-
-msgid "Total title=Localizable('Running On-Demand Inf instances') vCPUs"
-msgstr "Total title=Localizable('Running On-Demand Inf instances') vCPUs"
-
-msgid "Total title=Localizable('Running On-Demand P instances') vCPUs"
-msgstr "Total title=Localizable('Running On-Demand P instances') vCPUs"
-
-msgid ""
-"Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, "
-"Z) instances') vCPUs"
-msgstr ""
-"Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, T, "
-"Z) instances') vCPUs"
-
-msgid "Total title=Localizable('Running On-Demand X instances') vCPUs"
-msgstr "Total title=Localizable('Running On-Demand X instances') vCPUs"
 
 msgid "Total usable RAM"
 msgstr "Gesamter verfügbarer Arbeitsspeicher"
@@ -65823,11 +65940,11 @@ msgstr "Ausgangsverkehr"
 msgid "Transaction Logs"
 msgstr "Transaktionslogs"
 
-msgid "Transaction Logs Disk Usage"
-msgstr "Transaktionsprotokolle der Festplattennutzung"
-
 msgid "Transaction count"
 msgstr "Anzahl der Transaktionen"
+
+msgid "Transaction logs disk usage"
+msgstr "Transaktionsprotokolle der Festplattenauslastung"
 
 msgid "Transactionlog"
 msgstr "Transaktionslog"
@@ -66916,9 +67033,6 @@ msgstr "Ereignis aktualisieren: Kommentar ändern"
 msgid "Update an event: change contact"
 msgstr "Ereignis aktualisieren: Kontakt ändern"
 
-msgid "Update changed service labels"
-msgstr "Geänderte Service-Labels aktualisieren"
-
 msgid "Update core config"
 msgstr "Konfiguration des Kerns aktualisieren"
 
@@ -67050,6 +67164,9 @@ msgid ""
 "Upload either the file or the file content. A \"combined PEM\" format, "
 "containing both the encrypted key and the certificate, is expected."
 msgstr ""
+"Laden Sie entweder die Datei oder den Dateiinhalt hoch. Es wird ein "
+"\"kombiniertes PEM\"-Format erwartet, das sowohl den verschlüsselten "
+"Schlüssel als auch das Zertifikat enthält."
 
 msgid "Upload extension package"
 msgstr "Laden Sie Erweiterungspakete hoch"
@@ -67126,6 +67243,9 @@ msgstr "Obergrenzen für Lüftergeschwindigkeit"
 msgid "Upper level for GC run rate"
 msgstr "Obergrenze für GC-Run-Rate"
 
+msgid "Upper level for GC runs"
+msgstr "Obergrenze für GC-Runs"
+
 msgid "Upper level for blocked tasks"
 msgstr "Obergrenze für blockierte Aufgaben"
 
@@ -67164,9 +67284,6 @@ msgstr "Obergrenze für Laufzeit-Laufwarteschlange"
 
 msgid "Upper level for stuck tasks"
 msgstr "Obergrenze für festgefahrene Aufgaben"
-
-msgid "Upper level for total number of GC runs"
-msgstr "Obergrenze für die Gesamtzahl der GC-Läufe"
 
 msgid "Upper level for total number of channels"
 msgstr "Obergrenze für die Gesamtzahl der Kanäle"
@@ -67311,7 +67428,7 @@ msgid "Upper levels for IVE swap utilization"
 msgstr "Obergrenzen für die IVE Swap-Nutzung"
 
 msgid "Upper levels for Load Balancers"
-msgstr "Obergrenzen für Load Balancers"
+msgstr "Obergrenzen für Load Balancer"
 
 msgid "Upper levels for Notification Delivery Rate"
 msgstr "Obergrenzen für Zustellungsrate der Benachrichtigungen"
@@ -67441,7 +67558,7 @@ msgid "Upper levels for limits utilization"
 msgstr "Obergrenzen für die Limits-Auslastung"
 
 msgid "Upper levels for load balancer capacity units"
-msgstr "Obergrenzen für Kapazitätseinheiten von Loadbalancer"
+msgstr "Obergrenzen für Kapazitätseinheiten des Load Balancers"
 
 msgid "Upper levels for mail latency"
 msgstr "Obergrenzen für die Mail-Latenzzeit"
@@ -67845,16 +67962,6 @@ msgstr "Livestatus-Proxy-Daemon verwenden"
 
 msgid "Use Piggyback"
 msgstr "Piggyback-Modus verwenden"
-
-msgid "Use RCC for isolated execution"
-msgstr "RCC für isolierte Ausführung verwenden"
-
-#, python-format
-msgid ""
-"Use RCC for isolated execution (%s because Robotmk Core MKP is installed)"
-msgstr ""
-"RCC für isolierte Ausführung verwenden (%s, da Robotmk-Kern MKP installiert "
-"ist)"
 
 msgid "Use Reporting"
 msgstr "Reporting verwenden"
@@ -68751,10 +68858,13 @@ msgid "User ID for web login"
 msgstr "Benutzername für Weblogin"
 
 msgid "User ID for web login (if login required)"
-msgstr "Benutzerkennung für die Webanmeldung (falls erforderlich)"
+msgstr "Benutzerkennung für die Webanmeldung (falls Login erforderlich)"
 
 msgid "User Name"
 msgstr "Benutzername"
+
+msgid "User agent"
+msgstr "Benutzer-Agent"
 
 msgid "User and password"
 msgstr "Username und Passwort"
@@ -69139,6 +69249,9 @@ msgstr "VNX-Quoten und Erkennung von Dateisystemen"
 msgid "VPC Elastic IP Addresses"
 msgstr "VPC Elastic IP-Adressen"
 
+msgid "VPC elastic IP addresses"
+msgstr "VPC elastische IP-Adressen"
+
 msgid "VPC security groups"
 msgstr "VPC-Sicherheitsgruppen"
 
@@ -69215,6 +69328,25 @@ msgstr "Wert muss ein String sein"
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr "Wert von {diff_path} wurde von {val_t1} auf {val_t2} geändert."
 
+#, python-format
+msgid "Value should be greater than %s"
+msgstr "Wert sollte größer als %s sein"
+
+#, python-format
+msgid "Value should be less than %s"
+msgstr "Wert sollte kleiner als %s sein"
+
+msgid "Value should be positive"
+msgstr "Wert sollte positiv sein"
+
+#, python-format
+msgid "Value should maximally be %s"
+msgstr "Wert sollte maximal %s sein"
+
+#, python-format
+msgid "Value should minimally be %s"
+msgstr "Wert sollte mindestens %s sein"
+
 msgid "Values"
 msgstr "Werte"
 
@@ -69265,6 +69397,9 @@ msgstr "Variablen (%s)"
 
 msgid "Variables set in the site user's environment"
 msgstr "Variablen festgelegt in der Instanz der Umgebung des Nutzers"
+
+msgid "Variant"
+msgstr "Variante"
 
 msgid "Various"
 msgstr "Verschiedene"
@@ -70078,12 +70213,6 @@ msgstr "Verschwendeter Platz in Tabelle und Indexen"
 msgid "Watch the total size of the log file"
 msgstr "Gesamtgröße der Logdatei überwachen"
 
-msgid "Wato"
-msgstr "Wato"
-
-msgid "Wb"
-msgstr "Wb"
-
 #, python-format
 msgid ""
 "We are sorry, but you lack the permission for this operation. If you do not "
@@ -70119,7 +70248,7 @@ msgid "Web"
 msgstr "web"
 
 msgid "Web ACL Requests"
-msgstr "Web ACL Requests"
+msgstr "Web ACL Anfragen"
 
 msgid "Web ACL capacity units (WCUs)"
 msgstr "Web-ACL Kapazitätseinheiten (WCUs)"
@@ -70242,7 +70371,7 @@ msgid ""
 "being displayed and various debug information in other places is also "
 "available."
 msgstr ""
-"Wenn Mutlisite im Debug-Modus betrieben wird, dann werden interne Python "
+"Wenn Multisite im Debug-Modus betrieben wird, dann werden interne Python "
 "Fehlermeldungen angezeigt. Zusätzliche Debug-Informationen stehen auch zur "
 "Verfügung."
 
@@ -71478,6 +71607,12 @@ msgid ""
 "configure Python and all of its library packages on the target hosts. RCC "
 "environments are only built when the scheduler is started."
 msgstr ""
+"Mit Hilfe des <a href=https://github.com/robocorp/rcc>rcc binary</a> kann "
+"der Robotmk Scheduler die Python-Umgebungen generieren, die für die "
+"Ausführung von Robot Framework Suites erforderlich sind. Dadurch entfällt "
+"die Notwendigkeit, Python und alle dazugehörigen Bibliothekspakete auf den "
+"Zielhosts zu installieren und zu konfigurieren. Die RCC-Umgebungen werden "
+"nur erstellt, wenn der Scheduler gestartet wird."
 
 msgid ""
 "With the master switch you can immediately turn on or off the agent updates. "
@@ -71913,9 +72048,6 @@ msgstr "Schreibe Avg RTT (ms)"
 msgid "Write Avg exe (ms)"
 msgstr "Schreibe Avg exe (ms)"
 
-msgid "Write Capacity"
-msgstr "Schreibkapazität"
-
 msgid "Write Capacity Units"
 msgstr "Schreibkapazität Units"
 
@@ -71964,9 +72096,6 @@ msgstr "Schreibepufferauslastung"
 msgid "Write capacity"
 msgstr "Schreibkapazitätseinheiten"
 
-msgid "Write capacity unit"
-msgstr "Einheit der Schreibkapazität"
-
 msgid "Write latency"
 msgstr "Schreibelatenz"
 
@@ -71978,6 +72107,9 @@ msgstr "Mehrzeiligen Ausgabe von Services in Monitoring-Historie schreiben"
 
 msgid "Write operations"
 msgstr "Schreibzugriffe"
+
+msgid "Write retransmission"
+msgstr "Schreibe erneute Übertragung"
 
 msgid "Write size /s"
 msgstr "Schreibegröße /s"
@@ -74381,9 +74513,6 @@ msgstr "Fall"
 msgid "cases"
 msgstr "Fälle"
 
-msgid "cd"
-msgstr "cd"
-
 msgid "check plugins"
 msgstr "Checkplugins"
 
@@ -74398,6 +74527,13 @@ msgstr "Clients"
 
 msgid "closed"
 msgstr "geschlossen"
+
+msgid "cmk/kubernetes/object"
+msgstr "cmk/kubernetes/object"
+
+#, python-brace-format
+msgid "cmk/kubernetes/{self._kubernetes_object_type}"
+msgstr "cmk/kubernetes/{self._kubernetes_object_type}"
 
 msgid "cmk_site_statistics (core PIDs)"
 msgstr "cmk_site_statistics (core PIDs)"
@@ -75109,14 +75245,8 @@ msgstr "Aufträge"
 msgid "kW"
 msgstr "kW"
 
-msgid "kat"
-msgstr "kat"
-
 msgid "kernel counter"
 msgstr "Kernel Zähler"
-
-msgid "kg"
-msgstr "kg"
 
 msgid "l/s"
 msgstr "l/s"
@@ -75141,9 +75271,6 @@ msgstr "veralteter Lauf"
 
 msgid "license details"
 msgstr "Lizenzdetails"
-
-msgid "lm"
-msgstr "lm"
 
 msgid "local connect"
 msgstr "lokale Verbindung"
@@ -75255,7 +75382,9 @@ msgid "mins"
 msgstr "min"
 
 msgid "minute"
-msgstr "Minute"
+msgid_plural "minutes"
+msgstr[0] "Minute"
+msgstr[1] "Minuten"
 
 msgid "minute of the hour"
 msgstr "Minute der Stunde"
@@ -75280,9 +75409,6 @@ msgstr ""
 
 msgid "mm"
 msgstr "mm"
-
-msgid "mol"
-msgstr "mol"
 
 msgid "monitor"
 msgstr "überwachen"
@@ -75442,6 +75568,9 @@ msgstr "Die ntopng Integration ist nur in der Enterprise Edition verfügbar"
 msgid "ntopng username to acquire data for"
 msgstr "ntopng-Benutzername, für den Daten geholt werden sollen"
 
+msgid "number of processes"
+msgstr "Anzahl der Prozesse"
+
 msgid "objects"
 msgstr "Objekte"
 
@@ -75566,9 +75695,6 @@ msgstr "Passwort:"
 msgid "path echo"
 msgstr "Pfad Echo"
 
-msgid "path levels"
-msgstr "Ebenen in der Pfad-Hierarchie"
-
 msgid "pending"
 msgstr "anstehend"
 
@@ -75647,9 +75773,6 @@ msgstr "Pt"
 
 msgid "purchase a license"
 msgstr "eine Lizenz kaufen"
-
-msgid "rad"
-msgstr "rad"
 
 msgid "radial"
 msgstr "radial"
@@ -75755,9 +75878,6 @@ msgstr "starte als Hintergrund-Prozess"
 
 msgid "running"
 msgstr "Läuft"
-
-msgid "runs"
-msgstr "läuft"
 
 msgid "s"
 msgstr "s"
@@ -75865,9 +75985,6 @@ msgstr "Anschluss wartet auf weitere Pakete aus dem Netzwerk"
 
 msgid "specify manually ->"
 msgstr "Manuell festlegen ->"
-
-msgid "sr"
-msgstr "sr"
 
 msgid "status entries"
 msgstr "Statuseinträge"
@@ -76212,8 +76329,328 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
-msgid "Ω"
-msgstr "Ω"
+#~ msgid "Update changed service labels"
+#~ msgstr "Geänderte Service-Labels aktualisieren"
+
+#~ msgid "Defined by signature algorithm parameters"
+#~ msgstr "Definiert durch die Parameter des Signaturalgorithmus"
+
+#~ msgid "Processes:"
+#~ msgstr "Prozesse:"
+
+#, fuzzy
+#~| msgid "Proxy host"
+#~ msgid "Proxy bypass"
+#~ msgstr "Proxy Host"
+
+#~ msgid "Hashing algorithm included in encryption"
+#~ msgstr "Hashing-Algorithmus in der Verschlüsselung enthalten"
+
+#~ msgid "SHA224"
+#~ msgstr "SHA224"
+
+#~ msgid "SHA256"
+#~ msgstr "SHA256"
+
+#~ msgid "SHA384"
+#~ msgstr "SHA384"
+
+#~ msgid "SHA512"
+#~ msgstr "SHA512"
+
+#, no-python-format
+#~ msgid "% of overall suite timeout"
+#~ msgstr "% des Gesamt-Timeouts der Suite"
+
+#~ msgid "Certificate is expired"
+#~ msgstr "Zertifikat ist abgelaufen"
+
+#, fuzzy
+#~| msgid "Connection timeout"
+#~ msgid "Connection Timeout"
+#~ msgstr "Verbindungstimeout"
+
+#~ msgid "Encryption algorithm"
+#~ msgstr "Verschlüsselungsalgorithmus"
+
+#~ msgid "GOST R 34.10-2001"
+#~ msgstr "GOST R 34.10-2001"
+
+#~ msgid "GOST R 34.10-2012"
+#~ msgstr "GOST R 34.10-2012"
+
+#~ msgid "Individual settings"
+#~ msgstr "Individuelle Einstellungen"
+
+#~ msgid "Invalid signature"
+#~ msgstr "Ungültige Signatur"
+
+#~ msgid "No matching request ID found"
+#~ msgstr "Keine passende Anfrage-ID gefunden"
+
+#~ msgid "Robot Framework: Last error log"
+#~ msgstr "Robot-Framework: Letztes Fehlerprotokoll"
+
+#~ msgid "Standard settings"
+#~ msgstr "Standard-Einstellungen"
+
+#~ msgid "Upper level for total number of GC runs"
+#~ msgstr "Obergrenze für die Gesamtzahl der GC-Läufe"
+
+#~ msgid "path levels"
+#~ msgstr "Ebenen in der Pfad-Hierarchie"
+
+#~ msgid "runs"
+#~ msgstr "läuft"
+
+#~ msgid "Document"
+#~ msgstr "Dokument"
+
+#~ msgid "Endpoints"
+#~ msgstr "Endpoints"
+
+#~ msgid "Header"
+#~ msgstr "Header"
+
+#~ msgid "Redirects"
+#~ msgstr "Umleitungen"
+
+#~ msgid "String validation"
+#~ msgstr "Zeichenkettenvalidierung"
+
+#~ msgid ""
+#~ "This rule selects the Zerto special agent for an existing Checkmk host"
+#~ msgstr ""
+#~ "Diese Regel wählt den Zerto-Spezialagenten für einen vorhandenen Checkmk-"
+#~ "Host aus"
+
+#, python-brace-format
+#~ msgid "Item {val_t1} removed."
+#~ msgstr "Element {val_t1} entfernt."
+
+#, python-brace-format
+#~ msgid "Item {val_t2} added."
+#~ msgstr "Element {val_t2} hinzugefügt."
+
+#~ msgid "Missing mandatory \"host\" parameter"
+#~ msgstr "Fehlender obligatorischer Parameter \"host\""
+
+#, python-brace-format
+#~ msgid "Repetition change for item {diff_path}."
+#~ msgstr "Wiederholung Änderung des Items {diff_path}."
+
+#~ msgid "/d"
+#~ msgstr "/t"
+
+#~ msgid "/op"
+#~ msgstr "/op"
+
+#~ msgid "Amount of substance"
+#~ msgstr "Stoffmenge"
+
+#~ msgid "Bq"
+#~ msgstr "Bq"
+
+#~ msgid "Bytes per operation"
+#~ msgstr "Bytes pro Operation"
+
+#~ msgid "Capacitance"
+#~ msgstr "Kapazität"
+
+#~ msgid "Catalytic activity"
+#~ msgstr "Katalytische Aktivität"
+
+#~ msgid "Decibel-milliwatt"
+#~ msgstr "Dezibel Milliwatt"
+
+#~ msgid "Dollar"
+#~ msgstr "Dollar"
+
+#~ msgid "Dose equivalent"
+#~ msgstr "Entsprechende Dosis"
+
+#~ msgid "Electric charge"
+#~ msgstr "Elektrische Ladung"
+
+#~ msgid "Electric potential"
+#~ msgstr "Elektrische Spannung"
+
+#~ msgid "Electrical Current"
+#~ msgstr "Elektrischer Widerstand"
+
+#~ msgid "Electrical conductance"
+#~ msgstr "Elektrische Leitfähigkeit"
+
+#, python-format
+#~ msgid "Expected a tuple, got %s"
+#~ msgstr "Erwartete ein Tupel, erhielt %s"
+
+#~ msgid "F"
+#~ msgstr "F"
+
+#~ msgid "Force"
+#~ msgstr "Stärke"
+
+#~ msgid "Gy"
+#~ msgstr "Gy"
+
+#~ msgid "H"
+#~ msgstr "H"
+
+#~ msgid "Heat"
+#~ msgstr "Wärme"
+
+#~ msgid "Illuminance"
+#~ msgstr "Beleuchtungsstärke"
+
+#~ msgid "Impedance"
+#~ msgstr "Widerstand"
+
+#~ msgid "Inductance"
+#~ msgstr "Induktivität"
+
+#~ msgid "J"
+#~ msgstr "J"
+
+#~ msgid "K"
+#~ msgstr "K"
+
+#~ msgid "Length"
+#~ msgstr "Länge"
+
+#~ msgid "Liter per second"
+#~ msgstr "Liter pro Sekunde"
+
+#~ msgid "Luminous flux"
+#~ msgstr "Lichtstrom"
+
+#~ msgid "Luminous intensity"
+#~ msgstr "Lichtstärke"
+
+#~ msgid "Magnetic flux"
+#~ msgstr "Magnetfluss"
+
+#~ msgid "Magnetic flux density"
+#~ msgstr "Magnetische Flussdichte"
+
+#~ msgid "Mass"
+#~ msgstr "Masse"
+
+#~ msgid "N"
+#~ msgstr "N"
+
+#~ msgid "Parts per million"
+#~ msgstr "Teile je Million"
+
+#~ msgid "Per second"
+#~ msgstr "Pro Sekunde"
+
+#~ msgid "Percentage per meter"
+#~ msgstr "Prozent pro Meter"
+
+#~ msgid "Plane angle"
+#~ msgstr "Höhenwinkel"
+
+#~ msgid "Radioactive activity"
+#~ msgstr "Radioaktive Aktivität"
+
+#~ msgid "Radioactive dose"
+#~ msgstr "Radioaktive Dosis"
+
+#~ msgid "Read capacity unit"
+#~ msgstr "Lesekapazitätseinheit"
+
+#~ msgid "Robot Framework target"
+#~ msgstr "Robot-Framework Ziel"
+
+#~ msgid "S"
+#~ msgstr "S"
+
+#~ msgid "Seconds per second"
+#~ msgstr "Sekunden pro Sekunde"
+
+#~ msgid "Solid angle"
+#~ msgstr "Raumwinkel"
+
+#~ msgid "Sv"
+#~ msgstr "Sv"
+
+#~ msgid "T"
+#~ msgstr "T"
+
+#~ msgid "Use RCC for isolated execution"
+#~ msgstr "RCC für isolierte Ausführung verwenden"
+
+#~ msgid "Wb"
+#~ msgstr "Wb"
+
+#~ msgid "Write capacity unit"
+#~ msgstr "Einheit der Schreibkapazität"
+
+#~ msgid "cd"
+#~ msgstr "cd"
+
+#~ msgid "kat"
+#~ msgstr "kat"
+
+#~ msgid "kg"
+#~ msgstr "kg"
+
+#~ msgid "lm"
+#~ msgstr "lm"
+
+#~ msgid "mol"
+#~ msgstr "mol"
+
+#~ msgid "rad"
+#~ msgstr "rad"
+
+#~ msgid "sr"
+#~ msgstr "sr"
+
+#~ msgid "Ω"
+#~ msgstr "Ω"
+
+#~ msgid "Clear audit log"
+#~ msgstr "Audit-Log leeren"
+
+#~ msgid "New Connections"
+#~ msgstr "Neue Verbindungen"
+
+#~ msgid "Read Capacity"
+#~ msgstr "Lese-Kapazität"
+
+#~ msgid "Total title=Localizable('Running On-Demand F instances') vCPUs"
+#~ msgstr "Total title=Localizable('Running On-Demand F instances') vCPUs"
+
+#~ msgid "Total title=Localizable('Running On-Demand G instances') vCPUs"
+#~ msgstr "Total title=Localizable('Running On-Demand G instances') vCPUs"
+
+#~ msgid "Total title=Localizable('Running On-Demand Inf instances') vCPUs"
+#~ msgstr "Total title=Localizable('Running On-Demand Inf instances') vCPUs"
+
+#~ msgid "Total title=Localizable('Running On-Demand P instances') vCPUs"
+#~ msgstr "Total title=Localizable('Running On-Demand P instances') vCPUs"
+
+#~ msgid ""
+#~ "Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, "
+#~ "T, Z) instances') vCPUs"
+#~ msgstr ""
+#~ "Total title=Localizable('Running On-Demand Standard (A, C, D, H, I, M, R, "
+#~ "T, Z) instances') vCPUs"
+
+#~ msgid "Total title=Localizable('Running On-Demand X instances') vCPUs"
+#~ msgstr "Total title=Localizable('Running On-Demand X instances') vCPUs"
+
+#~ msgid "Wato"
+#~ msgstr "Wato"
+
+#~ msgid "Write Capacity"
+#~ msgstr "Schreibkapazität"
+
+#, python-format
+#~ msgid "Spreading: %s minutes"
+#~ msgstr "Streuung: %s Minuten"
 
 #~ msgid "Average check latency"
 #~ msgstr "Durchschnittliche Check-Latenz"
@@ -76783,9 +77220,6 @@ msgstr "Ω"
 #~ msgid "From now for"
 #~ msgstr "Ab sofort für"
 
-#~ msgid "Please enter a positive number of minutes."
-#~ msgstr "Bitte für Minuten eine positive Zahl eingeben."
-
 #~ msgid "Repeat this downtime on a regular basis every"
 #~ msgstr "Wiederhole diese Wartungszeit regelmäßig jede"
 
@@ -76888,9 +77322,6 @@ msgstr "Ω"
 #, python-format
 #~ msgid "The plugin '%s' is not a valid notification plugin."
 #~ msgstr "Das Plugin '%s' ist kein gültiges Benachrichtigungs-Plugin."
-
-#~ msgid "Path to .env file"
-#~ msgstr "Pfad zur .env-Datei"
 
 #, python-format
 #~ msgid ""
@@ -83906,9 +84337,6 @@ msgstr "Ω"
 #~ msgid "Search for permissions: "
 #~ msgstr "Suche nach Berechtigungen:"
 
-#~ msgid "Search for settings:"
-#~ msgstr "Suche nach Einstellungen:"
-
 #~ msgid "Search in packs"
 #~ msgstr "Suche in den Paketen"
 
@@ -86919,9 +87347,6 @@ msgstr "Ω"
 #~ msgid "The log is empty. No host has been created or changed yet."
 #~ msgstr "Logdatei ist leer: Kein Host wurde bisher angelegt/geändert."
 
-#~ msgid "The new configuration has successfully been activated."
-#~ msgstr "Konfiguration erfolgreich aktiviert."
-
 #~ msgid ""
 #~ "There are some changes made by your colleagues that you will synchronize "
 #~ "if you proceed:"
@@ -86937,9 +87362,6 @@ msgstr "Ω"
 
 #~ msgid "<i>not a contact</i>"
 #~ msgstr "<i>kein Kontakt</i>"
-
-#~ msgid "Failed to create SSH key pair: %s"
-#~ msgstr "Fehler beim Erzeugen des SSH-Schlüsselpaars: %s"
 
 #~ msgid ""
 #~ "There are no logfile patterns defined. You may create logfile patterns "
@@ -87811,9 +88233,6 @@ msgstr "Ω"
 #~ "Die Zahl der noch freien Einträge im DHCP Pool ist gleich der Zahl der IP-"
 #~ "Adressen, die noch per DHCP im Netzwerk vergeben werden können."
 
-#~ msgid "The following cluster definitions: %s"
-#~ msgstr "Die folgenden Cluster-Definitionen: %s"
-
 #~ msgid "The parents of the following hosts: %s"
 #~ msgstr "Die Parenthosts der folgenden Hosts: %s"
 
@@ -88255,9 +88674,6 @@ msgstr "Ω"
 
 #~ msgid "Printer supply some remaining status"
 #~ msgstr "Drucker: verbleibender Stauts"
-
-#~ msgid "Reporting - Default settings for all reports"
-#~ msgstr "Berichte - Standardeinstellungen für alle Berichte"
 
 #~ msgid "Service output for logwatch"
 #~ msgstr "Serviceausgabe für logwatch"

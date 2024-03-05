@@ -841,32 +841,6 @@ check_metrics["check_mk-adva_fsp_if"] = {
 check_metrics["check_mk-allnet_ip_sensoric_tension"] = {
     "tension": {"name": "voltage_percent"},
 }
-check_metrics["check_mk-apache_status"] = {
-    "Uptime": {"name": "uptime"},
-    "IdleWorkers": {"name": "idle_workers"},
-    "BusyWorkers": {"name": "busy_workers"},
-    "IdleServers": {"name": "idle_servers"},
-    "BusyServers": {"name": "busy_servers"},
-    "OpenSlots": {"name": "open_slots"},
-    "TotalSlots": {"name": "total_slots"},
-    "CPULoad": {"name": "load1"},
-    "ReqPerSec": {"name": "requests_per_second"},
-    "BytesPerSec": {"name": "direkt_io"},
-    "ConnsTotal": {"name": "connections"},
-    "ConnsAsyncWriting": {"name": "connections_async_writing"},
-    "ConnsAsyncKeepAlive": {"name": "connections_async_keepalive"},
-    "ConnsAsyncClosing": {"name": "connections_async_closing"},
-    "State_StartingUp": {"name": "apache_state_startingup"},
-    "State_Waiting": {"name": "apache_state_waiting"},
-    "State_Logging": {"name": "apache_state_logging"},
-    "State_DNS": {"name": "apache_state_dns"},
-    "State_SendingReply": {"name": "apache_state_sending_reply"},
-    "State_ReadingRequest": {"name": "apache_state_reading_request"},
-    "State_Closing": {"name": "apache_state_closing"},
-    "State_IdleCleanup": {"name": "apache_state_idle_cleanup"},
-    "State_Finishing": {"name": "apache_state_finishing"},
-    "State_Keepalive": {"name": "apache_state_keep_alive"},
-}
 check_metrics["check_mk-ups_socomec_out_voltage"] = {
     "out_voltage": {"name": "voltage"},
 }

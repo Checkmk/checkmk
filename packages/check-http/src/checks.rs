@@ -416,7 +416,7 @@ fn check_page_size(
 
 fn check_response_time(
     time_header: Duration,
-    time_body: Duration,
+    time_body: Option<Duration>,
     response_time_levels: Option<UpperLevels<f64>>,
     timeout: Duration,
 ) -> Vec<Option<CheckResult>> {
@@ -431,7 +431,11 @@ fn check_response_time(
         )
     }
 
-    let response_time = time_header + time_body;
+    let response_time = if let Some(time_body) = time_body {
+        time_header + time_body
+    } else {
+        time_header
+    };
 
     let mut ret = check_upper_levels(
         "Response time",
@@ -447,6 +451,24 @@ fn check_response_time(
         Some(0.),
         Some(timeout.as_secs_f64()),
     ));
+    ret.push(CheckResult::metric(
+        "time_http_headers",
+        time_header.as_secs_f64(),
+        Some('s'),
+        None,
+        None,
+        None,
+    ));
+    if let Some(time_body) = time_body {
+        ret.push(CheckResult::metric(
+            "time_http_body",
+            time_body.as_secs_f64(),
+            Some('s'),
+            None,
+            None,
+            None,
+        ))
+    };
     ret
 }
 
@@ -1281,13 +1303,15 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(1, 0),
-                Duration::new(4, 0),
+                Some(Duration::new(4, 0)),
                 None,
                 Duration::from_secs(10)
             ),
             vec![
                 CheckResult::details(State::Ok, "Response time: 5 seconds"),
-                CheckResult::metric("response_time", 5., Some('s'), None, Some(0.), Some(10.))
+                CheckResult::metric("response_time", 5., Some('s'), None, Some(0.), Some(10.)),
+                CheckResult::metric("time_http_headers", 1., Some('s'), None, None, None),
+                CheckResult::metric("time_http_body", 4., Some('s'), None, None, None),
             ]
         );
     }
@@ -1297,7 +1321,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(1, 0),
-                Duration::new(4, 0),
+                Some(Duration::new(4, 0)),
                 Some(UpperLevels::warn(6.)),
                 Duration::from_secs(10)
             ),
@@ -1310,7 +1334,9 @@ mod test_check_response_time {
                     Some(UpperLevels::warn(6.)),
                     Some(0.),
                     Some(10.)
-                )
+                ),
+                CheckResult::metric("time_http_headers", 1., Some('s'), None, None, None),
+                CheckResult::metric("time_http_body", 4., Some('s'), None, None, None),
             ]
         );
     }
@@ -1320,7 +1346,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(1, 0),
-                Duration::new(4, 0),
+                Some(Duration::new(4, 0)),
                 Some(UpperLevels::warn(4.)),
                 Duration::from_secs(10)
             ),
@@ -1334,7 +1360,9 @@ mod test_check_response_time {
                     Some(UpperLevels::warn(4.)),
                     Some(0.),
                     Some(10.)
-                )
+                ),
+                CheckResult::metric("time_http_headers", 1., Some('s'), None, None, None),
+                CheckResult::metric("time_http_body", 4., Some('s'), None, None, None),
             ]
         );
     }
@@ -1344,7 +1372,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(1, 0),
-                Duration::new(4, 0),
+                Some(Duration::new(4, 0)),
                 Some(UpperLevels::warn_crit(6., 7.)),
                 Duration::from_secs(10)
             ),
@@ -1357,7 +1385,9 @@ mod test_check_response_time {
                     Some(UpperLevels::warn_crit(6., 7.)),
                     Some(0.),
                     Some(10.)
-                )
+                ),
+                CheckResult::metric("time_http_headers", 1., Some('s'), None, None, None),
+                CheckResult::metric("time_http_body", 4., Some('s'), None, None, None),
             ]
         );
     }
@@ -1367,7 +1397,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(1, 0),
-                Duration::new(4, 0),
+                Some(Duration::new(4, 0)),
                 Some(UpperLevels::warn_crit(4., 6.)),
                 Duration::from_secs(10)
             ),
@@ -1387,7 +1417,9 @@ mod test_check_response_time {
                     Some(UpperLevels::warn_crit(4., 6.)),
                     Some(0.),
                     Some(10.)
-                )
+                ),
+                CheckResult::metric("time_http_headers", 1., Some('s'), None, None, None),
+                CheckResult::metric("time_http_body", 4., Some('s'), None, None, None),
             ]
         );
     }
@@ -1397,7 +1429,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(1, 0),
-                Duration::new(4, 0),
+                Some(Duration::new(4, 0)),
                 Some(UpperLevels::warn_crit(2., 3.)),
                 Duration::from_secs(10)
             ),
@@ -1417,7 +1449,40 @@ mod test_check_response_time {
                     Some(UpperLevels::warn_crit(2., 3.)),
                     Some(0.),
                     Some(10.)
-                )
+                ),
+                CheckResult::metric("time_http_headers", 1., Some('s'), None, None, None),
+                CheckResult::metric("time_http_body", 4., Some('s'), None, None, None),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_no_body() {
+        assert_eq!(
+            check_response_time(
+                Duration::new(5, 0),
+                None,
+                Some(UpperLevels::warn_crit(2., 3.)),
+                Duration::from_secs(10)
+            ),
+            vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Response time: 5 seconds (warn/crit at 2 seconds/3 seconds)"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Response time: 5 seconds (warn/crit at 2 seconds/3 seconds)"
+                ),
+                CheckResult::metric(
+                    "response_time",
+                    5.,
+                    Some('s'),
+                    Some(UpperLevels::warn_crit(2., 3.)),
+                    Some(0.),
+                    Some(10.)
+                ),
+                CheckResult::metric("time_http_headers", 5., Some('s'), None, None, None),
             ]
         );
     }
@@ -1427,7 +1492,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(1, 100_000_000),
-                Duration::new(4, 23_456_789),
+                Some(Duration::new(4, 23_456_789)),
                 Some(UpperLevels::warn_crit(2.1, 3.12)),
                 Duration::from_secs(10)
             ),
@@ -1447,7 +1512,9 @@ mod test_check_response_time {
                     Some(UpperLevels::warn_crit(2.1, 3.12)),
                     Some(0.),
                     Some(10.)
-                )
+                ),
+                CheckResult::metric("time_http_headers", 1.1, Some('s'), None, None, None),
+                CheckResult::metric("time_http_body", 4.023456789, Some('s'), None, None, None),
             ]
         );
     }

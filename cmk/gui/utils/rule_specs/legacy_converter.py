@@ -1385,8 +1385,36 @@ def _convert_to_legacy_levels(
     return legacy_valuespecs.CascadingDropdown(
         title=_localize_optional(to_convert.title, localizer),
         choices=choices,
-        default_value=(_LevelDynamicChoice.FIXED.value, prefill_value),
+        default_value=_make_levels_default_value(to_convert, prefill_value),
     )
+
+
+def _make_levels_default_value(
+    to_convert: ruleset_api_v1.form_specs.Levels[_NumberT]
+    | ruleset_api_v1.form_specs.SimpleLevels[_NumberT],
+    prefill_fixed: tuple[_NumberT, _NumberT],
+) -> tuple[str, None | tuple[_NumberT, _NumberT] | dict[str, Any]]:
+    if to_convert.prefill_levels_type.value is ruleset_api_v1.form_specs.LevelsType.NONE:
+        return _LevelDynamicChoice.NO_LEVELS.value, None
+
+    if to_convert.prefill_levels_type.value is ruleset_api_v1.form_specs.LevelsType.FIXED:
+        return _LevelDynamicChoice.FIXED.value, prefill_fixed
+
+    if isinstance(to_convert, ruleset_api_v1.form_specs.Levels):
+        return (
+            _LevelDynamicChoice.PREDICTIVE.value,
+            {
+                "period": "wday",
+                "horizon": 90,
+                "levels": (
+                    _PredictiveLevelDefinition.ABSOLUTE.value,
+                    to_convert.predictive.prefill_abs_diff.value,
+                ),
+                "bound": None,
+            },
+        )
+
+    raise NotImplementedError()  # should never happen.
 
 
 def _convert_to_legacy_http_proxy(

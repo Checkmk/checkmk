@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use std::time::{Duration, Instant};
+
 use bytes::Bytes;
 use encoding_rs::{Encoding, UTF_8};
 use mime::Mime;
@@ -34,6 +36,8 @@ pub struct ProcessedResponse {
     pub final_url: Url,
     pub redirect_target: Option<Url>,
     pub tls_info: Option<TlsInfo>,
+    pub time_headers: Duration,
+    pub time_body: Duration,
 }
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct Body {
@@ -47,7 +51,9 @@ pub async fn send(
 ) -> ReqwestResult<ProcessedResponse> {
     let fetch_body = !cfg.without_body;
 
+    let start = Instant::now();
     let mut response = prepare_request(client_adapter.client, cfg).send().await?;
+    let time_headers = start.elapsed();
 
     let headers = response.headers().to_owned();
     let version = response.version();
@@ -55,8 +61,13 @@ pub async fn send(
     let final_url = response.url().clone();
     let redirect_target = client_adapter.redirect_recorder.lock().unwrap().to_owned();
     let tls_info = response.extensions_mut().remove::<TlsInfo>();
+
+    let start = Instant::now();
+    let raw_body = response.bytes().await;
+    let time_body = start.elapsed();
+
     let body = if fetch_body {
-        Some(process_body(response.bytes().await, &headers))
+        Some(process_body(raw_body, &headers))
     } else {
         None
     };
@@ -69,6 +80,8 @@ pub async fn send(
         final_url,
         redirect_target,
         tls_info,
+        time_headers,
+        time_body,
     })
 }
 

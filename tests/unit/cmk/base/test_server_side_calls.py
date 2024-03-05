@@ -1052,7 +1052,7 @@ def mock_ip_address_of(
     return HostAddress("::1")
 
 
-def test_get_host_config_macros_stringified(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_get_host_config_macros_stringified() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([], []),
         ip_stack=ip_lookup.AddressFamily.NO_IP,
@@ -1072,7 +1072,7 @@ def test_get_host_config_macros_stringified(monkeypatch: pytest.MonkeyPatch) -> 
     )
 
 
-def test_get_host_config_no_ip(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_get_host_config_no_ip() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("ignore.v4.noip")], [HostAddress("ignore.v6.noip")]),
         ip_stack=ip_lookup.AddressFamily.NO_IP,

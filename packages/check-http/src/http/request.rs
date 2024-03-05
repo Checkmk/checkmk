@@ -37,7 +37,7 @@ pub struct ProcessedResponse {
     pub redirect_target: Option<Url>,
     pub tls_info: Option<TlsInfo>,
     pub time_headers: Duration,
-    pub time_body: Duration,
+    pub time_body: Option<Duration>,
 }
 #[cfg_attr(test, derive(PartialEq, Debug))]
 pub struct Body {
@@ -62,14 +62,13 @@ pub async fn send(
     let redirect_target = client_adapter.redirect_recorder.lock().unwrap().to_owned();
     let tls_info = response.extensions_mut().remove::<TlsInfo>();
 
-    let start = Instant::now();
-    let raw_body = response.bytes().await;
-    let time_body = start.elapsed();
-
-    let body = if fetch_body {
-        Some(process_body(raw_body, &headers))
+    let (body, time_body) = if fetch_body {
+        let start = Instant::now();
+        let raw_body = response.bytes().await;
+        let time_body = start.elapsed();
+        (Some(process_body(raw_body, &headers)), Some(time_body))
     } else {
-        None
+        (None, None)
     };
 
     Ok(ProcessedResponse {

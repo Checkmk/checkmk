@@ -478,36 +478,19 @@ def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesVal
 #   '----------------------------------------------------------------------'
 
 
-# Compute the displayed vertical range and the labelling
-# and scale of the vertical axis.
-# If mirrored == True, then the graph uses the negative
-# v-region for displaying positive values - so show the labels
-# without a - sign.
-#
-# height -> Graph area height in ex
-def _compute_graph_v_axis(
-    graph_recipe: GraphRecipe,
-    graph_data_range: GraphDataRange,
+class _VAxisMinMax(NamedTuple):
+    real_range: tuple[float, float]
+    distance: float
+    min_value: float
+    max_value: float
+
+
+def _render_legacy_labels(
     height_ex: SizeEx,
-    layouted_curves: Sequence[LayoutedCurve],
+    v_axis_min_max: _VAxisMinMax,
+    unit: UnitInfo,
     mirrored: bool,
-) -> VerticalAxis:
-    unit = get_unit_info(graph_recipe.unit)
-
-    # Calculate the the value range
-    # real_range -> physical range, without extra margin or zooming
-    #               tuple of (min_value, max_value)
-    # distance   -> amount of values visible in vaxis (max_value - min_value)
-    # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
-    # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
-    v_axis_min_max = _compute_v_axis_min_max(
-        graph_recipe.explicit_vertical_range,
-        _get_min_max_from_curves(layouted_curves),
-        graph_data_range.vertical_range,
-        mirrored,
-        height_ex,
-    )
-
+) -> tuple[list[VerticalAxisLabel], int, str | None]:
     # Guestimate a useful number of vertical labels
     # max(2, ...)               -> show at least two labels
     # height_ex - 2             -> add some overall spacing
@@ -578,12 +561,50 @@ def _compute_graph_v_axis(
 
     # Adds "labels", "max_label_length" and updates "axis_label" in case
     # of units which use a graph global unit
-    rendered_labels, max_label_length, graph_unit = _create_vertical_axis_labels(
+    return _create_vertical_axis_labels(
         v_axis_min_max.min_value,
         v_axis_min_max.max_value,
         unit,
         label_distance,
         sub_distance,
+        mirrored,
+    )
+
+
+# Compute the displayed vertical range and the labelling
+# and scale of the vertical axis.
+# If mirrored == True, then the graph uses the negative
+# v-region for displaying positive values - so show the labels
+# without a - sign.
+#
+# height -> Graph area height in ex
+def _compute_graph_v_axis(
+    graph_recipe: GraphRecipe,
+    graph_data_range: GraphDataRange,
+    height_ex: SizeEx,
+    layouted_curves: Sequence[LayoutedCurve],
+    mirrored: bool,
+) -> VerticalAxis:
+    unit = get_unit_info(graph_recipe.unit)
+
+    # Calculate the the value range
+    # real_range -> physical range, without extra margin or zooming
+    #               tuple of (min_value, max_value)
+    # distance   -> amount of values visible in vaxis (max_value - min_value)
+    # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
+    # max_value  -> value of highest v axis label (taking extra margin and zooming into account)
+    v_axis_min_max = _compute_v_axis_min_max(
+        graph_recipe.explicit_vertical_range,
+        _get_min_max_from_curves(layouted_curves),
+        graph_data_range.vertical_range,
+        mirrored,
+        height_ex,
+    )
+
+    rendered_labels, max_label_length, graph_unit = _render_legacy_labels(
+        height_ex,
+        v_axis_min_max,
+        unit,
         mirrored,
     )
 
@@ -627,13 +648,6 @@ def _compute_min_max(
         max_values.append(lc_max_value)
 
     return min(min_values), max(max_values)
-
-
-class _VAxisMinMax(NamedTuple):
-    real_range: tuple[float, float]
-    distance: float
-    min_value: float
-    max_value: float
 
 
 def _compute_v_axis_min_max(

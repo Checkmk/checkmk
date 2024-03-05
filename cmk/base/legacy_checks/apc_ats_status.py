@@ -2,40 +2,55 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Iterable, Optional
 
-
-from cmk.base.check_api import LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.apc_ats import (
+    CommunictionStatus,
+    OverCurrentStatus,
+    PowerSupplyStatus,
+    RedunandancyStatus,
+    Source,
+    Status,
+)
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import contains, SNMPTree, StringTable
 
 
-def inventory_apc_ats_status(info):
+def parse_apc_ats_status(info: StringTable) -> Optional[Status]:
     if len(info) == 1:
-        yield None, {"power_source": int(info[0][1])}
+        return Status.from_raw(info[0])
+    return None
 
 
-def check_apc_ats_status(_no_item, params, info):
+def inventory_apc_ats_status(parsed: Status) -> Iterable[tuple[None, dict]]:
+    if parsed and parsed.selected_source:
+        yield None, {"power_source": parsed.selected_source.value}
+
+
+def check_apc_ats_status(_no_item: Any, params: dict, parsed: Status) -> Iterable:
     source = params["power_source"]
-    comstatus, selected_source, redundancy, overcurrent, ps5, ps24 = map(saveint, info[0])
     state = 0
     messages = []
 
     # current source of power
-    sources = {1: "A", 2: "B"}
-    if source != selected_source:
+    source_parsed = Source(source)
+    if source_parsed != parsed.selected_source:
         state = 2
+        assert parsed.selected_source is not None
         messages.append(
-            f"Power source Changed from {sources[source]} to {sources[selected_source]}(!!)"
+            "Power source Changed from %s to %s(!!)"
+            % (source_parsed.name, parsed.selected_source.name)
         )
     else:
-        messages.append("Power source %s selected" % sources[source])
+        messages.append("Power source %s selected" % source_parsed.name)
 
     # current communication status of the Automatic Transfer Switch.
-    if comstatus == 1:
+    if parsed.com_status == CommunictionStatus.NeverDiscovered:
         state = max(1, state)
         messages.append("Communication Status: never Discovered(!)")
-    elif comstatus == 3:
+    elif parsed.com_status == CommunictionStatus.Lost:
         state = 2
         messages.append("Communication Status: lost(!!)")
 
@@ -43,7 +58,7 @@ def check_apc_ats_status(_no_item, params, info):
     # Lost(1) indicates that the ATS is unable to switch over to the alternate power source
     # if the current source fails. Redundant(2) indicates that the ATS will switch
     # over to the alternate power source if the current source fails.
-    if redundancy != 2:
+    if parsed.redundancy == RedunandancyStatus.Lost:
         state = 2
         messages.append("redundancy lost(!!)")
     else:
@@ -53,25 +68,18 @@ def check_apc_ats_status(_no_item, params, info):
     # exceeded the output current threshold and will not allow a switch
     # over to the alternate power source if the current source fails.
     # atsCurrentOK(2) indicates that the output current is below the output current threshold.
-    if overcurrent == 1:
+    if parsed.overcurrent == OverCurrentStatus.Exceeded:
         state = 2
         messages.append("exceeded ouput current threshold(!!)")
 
-    # 5Volt power supply
-    if ps5 != 2:
-        state = 2
-        messages.append("5V power supply failed(!!)")
-
-    # 24Volt power supply
-    if ps24 != 2:
-        state = 2
-        messages.append("24V power suppy failed(!!)")
+    for powersource in parsed.powersources:
+        if powersource is None:
+            continue
+        if powersource.status != PowerSupplyStatus.OK:
+            state = 2
+            messages.append(f"{powersource.name} power supply failed(!!)")
 
     return state, ", ".join(messages)
-
-
-def parse_apc_ats_status(string_table: StringTable) -> StringTable:
-    return string_table
 
 
 check_info["apc_ats_status"] = LegacyCheckDefinition(

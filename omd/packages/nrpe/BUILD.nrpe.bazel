@@ -19,6 +19,9 @@ configure_make(
     # non .in header files from external/PACKAGE to bazel-out/*/*.build_tmpdir
     # without "configure_in_place = True"
     configure_in_place = True,
+    configure_options = [
+        "--with-ssl=$EXT_BUILD_DEPS/openssl",
+    ],
     lib_source = ":all_srcs",
     out_bin_dir = "lib/nagios/plugins",
     out_binaries = [

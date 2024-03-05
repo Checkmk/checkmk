@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import assert_never, Literal, NamedTuple, TypeVar
+from typing import assert_never, Final, Literal, NamedTuple, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
@@ -22,9 +22,21 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
+from cmk.graphing.v1.metrics import AutoPrecision
+
 from ._color import fade_color, parse_color, render_color
 from ._graph_specification import GraphDataRange, GraphMetric, GraphRecipe, HorizontalRule
 from ._loader import get_unit_info
+from ._parser import (
+    DecimalFormatter,
+    EngineeringScientificFormatter,
+    IECFormatter,
+    Label,
+    NumLabelRange,
+    SIFormatter,
+    StandardScientificFormatter,
+    TimeFormatter,
+)
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point
 from ._type_defs import LineType, RRDData, UnitInfo
@@ -69,7 +81,7 @@ class VerticalAxis(TypedDict):
     range: tuple[float, float]
     real_range: tuple[float, float]
     axis_label: str | None
-    labels: list[VerticalAxisLabel]
+    labels: Sequence[VerticalAxisLabel]
     max_label_length: int
 
 
@@ -478,6 +490,87 @@ def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesVal
 #   '----------------------------------------------------------------------'
 
 
+_MAX_NUM_LABELS: Final = 8
+
+
+def _compute_num_labels(min_y: float, max_y: float) -> tuple[NumLabelRange, NumLabelRange]:
+    min_num_labels = round(_MAX_NUM_LABELS * abs(min_y) / (abs(min_y) + abs(max_y)))
+    if min_num_labels == 0:
+        return NumLabelRange(1, 2), NumLabelRange(1, 6)
+    if min_num_labels == _MAX_NUM_LABELS:
+        return NumLabelRange(1, 6), NumLabelRange(1, 2)
+    return NumLabelRange(1, min_num_labels), NumLabelRange(1, _MAX_NUM_LABELS - min_num_labels)
+
+
+def _make_formatter(
+    formatter_ident: Literal[
+        "Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"
+    ],
+    symbol: str,
+) -> (
+    DecimalFormatter
+    | SIFormatter
+    | IECFormatter
+    | StandardScientificFormatter
+    | EngineeringScientificFormatter
+    | TimeFormatter
+):
+    precision = AutoPrecision(2)
+    match formatter_ident:
+        case "Decimal":
+            return DecimalFormatter(symbol, precision)
+        case "SI":
+            return SIFormatter(symbol, precision)
+        case "IEC":
+            return IECFormatter(symbol, precision)
+        case "StandardScientific":
+            return StandardScientificFormatter(symbol, precision)
+        case "EngineeringScientific":
+            return EngineeringScientificFormatter(symbol, precision)
+        case "Time":
+            return TimeFormatter(symbol, precision)
+
+
+def _render_labels_from_api(
+    formatter: (
+        DecimalFormatter
+        | SIFormatter
+        | IECFormatter
+        | StandardScientificFormatter
+        | EngineeringScientificFormatter
+        | TimeFormatter
+    ),
+    mirrored: bool,
+    *,
+    min_y: float,
+    max_y: float,
+) -> Sequence[VerticalAxisLabel]:
+    match min_y >= 0, max_y >= 0:
+        case True, True:
+            labels = list(formatter.render_y_labels(max_y, NumLabelRange(4, _MAX_NUM_LABELS)))
+        case True, False:
+            raise ValueError((min_y, max_y))
+        case False, True:
+            min_y_num_label_range, max_y_num_label_range = _compute_num_labels(min_y, max_y)
+            labels = [
+                Label(-1 * l.position, l.text if mirrored else f"-{l.text}")
+                for l in formatter.render_y_labels(abs(min_y), min_y_num_label_range)
+            ] + list(formatter.render_y_labels(max_y, max_y_num_label_range))
+        case False, False:
+            labels = [
+                Label(-1 * l.position, l.text)
+                for l in formatter.render_y_labels(abs(max_y), NumLabelRange(4, _MAX_NUM_LABELS))
+            ]
+
+    return sorted(
+        [
+            VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
+            for label in [Label(0, "0")] + list(labels)
+        ],
+        key=lambda v: v.position,
+    )
+
+
 class _VAxisMinMax(NamedTuple):
     real_range: tuple[float, float]
     distance: float
@@ -490,7 +583,7 @@ def _render_legacy_labels(
     v_axis_min_max: _VAxisMinMax,
     unit: UnitInfo,
     mirrored: bool,
-) -> tuple[list[VerticalAxisLabel], int, str | None]:
+) -> tuple[Sequence[VerticalAxisLabel], int, str | None]:
     # Guestimate a useful number of vertical labels
     # max(2, ...)               -> show at least two labels
     # height_ex - 2             -> add some overall spacing
@@ -601,12 +694,22 @@ def _compute_graph_v_axis(
         height_ex,
     )
 
-    rendered_labels, max_label_length, graph_unit = _render_legacy_labels(
-        height_ex,
-        v_axis_min_max,
-        unit,
-        mirrored,
-    )
+    if formatter_ident := unit.get("formatter_ident"):
+        rendered_labels = _render_labels_from_api(
+            _make_formatter(formatter_ident, unit["symbol"]),
+            mirrored,
+            min_y=v_axis_min_max.real_range[0],
+            max_y=v_axis_min_max.real_range[1],
+        )
+        max_label_length = max(len(l.text) for l in rendered_labels)
+        graph_unit = None
+    else:
+        rendered_labels, max_label_length, graph_unit = _render_legacy_labels(
+            height_ex,
+            v_axis_min_max,
+            unit,
+            mirrored,
+        )
 
     v_axis = VerticalAxis(
         range=(v_axis_min_max.min_value, v_axis_min_max.max_value),

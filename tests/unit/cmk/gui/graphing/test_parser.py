@@ -3,9 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+from typing import Literal
+
 import pytest
 
-from cmk.gui.graphing._parser import parse_or_add_unit
+from cmk.gui.graphing._parser import (
+    DecimalFormatter,
+    EngineeringScientificFormatter,
+    IECFormatter,
+    Label,
+    NumLabelRange,
+    parse_or_add_unit,
+    SIFormatter,
+    StandardScientificFormatter,
+    TimeFormatter,
+)
 
 from cmk.graphing.v1 import metrics
 
@@ -375,3 +388,193 @@ def test_render_unit_notation(
 )
 def test_js_render_unit_notation(unit: metrics.Unit, expected: str) -> None:
     assert parse_or_add_unit(unit)["js_render"] == expected
+
+
+@pytest.mark.parametrize(
+    "formatter, max_y, expected_ident, expected_labels",
+    [
+        pytest.param(
+            DecimalFormatter("u", metrics.AutoPrecision(2)),
+            0.00123,
+            "Decimal",
+            [
+                Label(0.0002, "0.0002 u"),
+                Label(0.0004, "0.0004 u"),
+                Label(0.0006000000000000001, "0.0006 u"),
+                Label(0.0008, "0.0008 u"),
+                Label(0.001, "0.001 u"),
+                Label(0.0012000000000000001, "0.001 u"),
+            ],
+            id="decimal-small",
+        ),
+        pytest.param(
+            DecimalFormatter("u", metrics.AutoPrecision(2)),
+            123456.789,
+            "Decimal",
+            [
+                Label(20000, "20000 u"),
+                Label(40000, "40000 u"),
+                Label(60000, "60000 u"),
+                Label(80000, "80000 u"),
+                Label(100000, "100000 u"),
+                Label(120000, "120000 u"),
+            ],
+            id="decimal-large",
+        ),
+        pytest.param(
+            SIFormatter("u", metrics.AutoPrecision(2)),
+            0.00123,
+            "SI",
+            [
+                Label(0.0002, "0.2 mu"),
+                Label(0.0004, "0.4 mu"),
+                Label(0.0006000000000000001, "0.6 mu"),
+                Label(0.0008, "0.8 mu"),
+                Label(0.001, "1 mu"),
+                Label(0.0012000000000000001, "1.2 mu"),
+            ],
+            id="si-small",
+        ),
+        pytest.param(
+            SIFormatter("u", metrics.AutoPrecision(2)),
+            123456.789,
+            "SI",
+            [
+                Label(20000, "20 ku"),
+                Label(40000, "40 ku"),
+                Label(60000, "60 ku"),
+                Label(80000, "80 ku"),
+                Label(100000, "100 ku"),
+                Label(120000, "120 ku"),
+            ],
+            id="si-large",
+        ),
+        pytest.param(
+            IECFormatter("u", metrics.AutoPrecision(2)),
+            0.00123,
+            "IEC",
+            [
+                Label(0.0002, "0.0002 u"),
+                Label(0.0004, "0.0004 u"),
+                Label(0.0006000000000000001, "0.0006 u"),
+                Label(0.0008, "0.0008 u"),
+                Label(0.001, "0.001 u"),
+                Label(0.0012000000000000001, "0.001 u"),
+            ],
+            id="iec-small",
+        ),
+        pytest.param(
+            IECFormatter("u", metrics.AutoPrecision(2)),
+            123456.789,
+            "IEC",
+            [
+                Label(16384, "16 Kiu"),
+                Label(32768, "32 Kiu"),
+                Label(49152, "48 Kiu"),
+                Label(65536, "64 Kiu"),
+                Label(81920, "80 Kiu"),
+                Label(98304, "96 Kiu"),
+                Label(114688, "112 Kiu"),
+            ],
+            id="iec-large",
+        ),
+        pytest.param(
+            StandardScientificFormatter("u", metrics.AutoPrecision(2)),
+            0.00123,
+            "StandardScientific",
+            [
+                Label(0.0002, "2e-4 u"),
+                Label(0.0004, "4e-4 u"),
+                Label(0.0006000000000000001, "6e-4 u"),
+                Label(0.0008, "8e-4 u"),
+                Label(0.001, "1e-3 u"),
+                Label(0.0012000000000000001, "1.2e-3 u"),
+            ],
+            id="std-sci-small",
+        ),
+        pytest.param(
+            StandardScientificFormatter("u", metrics.AutoPrecision(2)),
+            123456.789,
+            "StandardScientific",
+            [
+                Label(20000, "2e+4 u"),
+                Label(40000, "4e+4 u"),
+                Label(60000, "6e+4 u"),
+                Label(80000, "8e+4 u"),
+                Label(100000, "1e+5 u"),
+                Label(120000, "1.2e+5 u"),
+            ],
+            id="std-sci-large",
+        ),
+        pytest.param(
+            EngineeringScientificFormatter("u", metrics.AutoPrecision(2)),
+            0.00123,
+            "EngineeringScientific",
+            [
+                Label(0.0002, "200e-6 u"),
+                Label(0.0004, "400e-6 u"),
+                Label(0.0006000000000000001, "600e-6 u"),
+                Label(0.0008, "800e-6 u"),
+                Label(0.001, "1e-3 u"),
+                Label(0.0012000000000000001, "1.2e-3 u"),
+            ],
+            id="eng-sci-small",
+        ),
+        pytest.param(
+            EngineeringScientificFormatter("u", metrics.AutoPrecision(2)),
+            123456.789,
+            "EngineeringScientific",
+            [
+                Label(20000, "20e+3 u"),
+                Label(40000, "40e+3 u"),
+                Label(60000, "60e+3 u"),
+                Label(80000, "80e+3 u"),
+                Label(100000, "100e+3 u"),
+                Label(120000, "120e+3 u"),
+            ],
+            id="eng-sci-large",
+        ),
+        pytest.param(
+            TimeFormatter("s", metrics.AutoPrecision(2)),
+            0.00123,
+            "Time",
+            [
+                Label(0.0002, "0.2 ms"),
+                Label(0.0004, "0.4 ms"),
+                Label(0.0006000000000000001, "0.6 ms"),
+                Label(0.0008, "0.8 ms"),
+                Label(0.001, "1 ms"),
+                Label(0.0012000000000000001, "1.2 ms"),
+            ],
+            id="time-small",
+        ),
+        pytest.param(
+            TimeFormatter("s", metrics.AutoPrecision(2)),
+            123456.789,
+            "Time",
+            [
+                Label(28800, "8 h"),
+                Label(57600, "16 h"),
+                Label(86400, "1 d"),
+                Label(115200, "1.33 d"),
+            ],
+            id="time-large",
+        ),
+    ],
+)
+def test_render_y_labels(
+    formatter: (
+        SIFormatter
+        | IECFormatter
+        | StandardScientificFormatter
+        | EngineeringScientificFormatter
+        | TimeFormatter
+    ),
+    max_y: int | float,
+    expected_ident: Literal[
+        "Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"
+    ],
+    expected_labels: Sequence[Label],
+) -> None:
+    assert formatter.ident() == expected_ident
+    assert formatter.render_y_labels(max_y, NumLabelRange(4, 8)) == expected_labels

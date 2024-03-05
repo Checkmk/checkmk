@@ -5,8 +5,9 @@
 
 import abc
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, Literal
 
 from cmk.graphing.v1 import metrics
 
@@ -27,9 +28,27 @@ def _sanitize(value: str) -> str:
 
 
 @dataclass(frozen=True)
+class NumLabelRange:
+    left: int
+    right: int
+
+
+@dataclass(frozen=True)
+class Label:
+    position: int | float
+    text: str
+
+
+@dataclass(frozen=True)
 class NotationFormatter:
     symbol: str
     precision: metrics.AutoPrecision | metrics.StrictPrecision
+
+    @abc.abstractmethod
+    def ident(
+        self,
+    ) -> Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]:
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def _preformat_small_number(self, value: int | float) -> Preformatted:
@@ -62,16 +81,67 @@ class NotationFormatter:
         value_with_precision = self._apply_precision(preformatted.value)
         return f"{_sanitize(str(value_with_precision))}{preformatted.suffix}".strip()
 
+    @abc.abstractmethod
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        raise NotImplementedError()
+
+    def render_y_labels(
+        self, max_y: int | float, num_label_range: NumLabelRange
+    ) -> Sequence[Label]:
+        assert max_y >= 0
+        if max_y == 0:
+            return []
+
+        if max_y < 1:
+            atoms = self._compute_small_y_label_atoms(max_y)
+        else:  # max_y >= 1
+            max_y = math.ceil(max_y)
+            atoms = self._compute_large_y_label_atoms(max_y)
+
+        if possible_atoms := [
+            (a, int(q))
+            for a in atoms
+            if num_label_range.left <= (q := max_y // a) <= num_label_range.right
+        ]:
+            # Take the entry with the smallest amount of labels.
+            atom, quotient = min(possible_atoms, key=lambda t: t[1])
+        else:
+            atom = max_y / num_label_range.right
+            quotient = int(max_y / atom)
+
+        return [Label(atom * i, self.render(atom * i)) for i in range(1, quotient + 1)]
+
+
+_BASIC_DECIMAL_ATOMS: Final = [1, 2, 5, 10, 20, 50]
+
 
 class DecimalFormatter(NotationFormatter):
+    def ident(self) -> Literal["Decimal"]:
+        return "Decimal"
+
     def _preformat_small_number(self, value: int | float) -> Preformatted:
         return Preformatted(value, f" {self.symbol}")
 
     def _preformat_large_number(self, value: int | float) -> Preformatted:
         return Preformatted(value, f" {self.symbol}")
 
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
 
 class SIFormatter(NotationFormatter):
+    def ident(self) -> Literal["SI"]:
+        return "SI"
+
     def _preformat_small_number(self, value: int | float) -> Preformatted:
         exponent = math.floor(math.log(value, 10)) - 1
         if exponent <= -24:
@@ -134,8 +204,19 @@ class SIFormatter(NotationFormatter):
             prefix = ""
         return Preformatted(value / factor, f" {prefix}{self.symbol}")
 
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
 
 class IECFormatter(NotationFormatter):
+    def ident(self) -> Literal["IEC"]:
+        return "IEC"
+
     def _preformat_small_number(self, value: int | float) -> Preformatted:
         return Preformatted(value, f" {self.symbol}")
 
@@ -170,8 +251,19 @@ class IECFormatter(NotationFormatter):
             prefix = ""
         return Preformatted(value / factor, f" {prefix}{self.symbol}")
 
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        exponent = math.floor(math.log(max_y, 2))
+        return [pow(2, e) for e in range(1, exponent + 1)]
+
 
 class StandardScientificFormatter(NotationFormatter):
+    def ident(self) -> Literal["StandardScientific"]:
+        return "StandardScientific"
+
     def _preformat_small_number(self, value: int | float) -> Preformatted:
         exponent = math.floor(math.log(value, 10))
         return Preformatted(value / pow(10, exponent), f"e{exponent} {self.symbol}")
@@ -180,8 +272,19 @@ class StandardScientificFormatter(NotationFormatter):
         exponent = math.floor(math.log(value, 10))
         return Preformatted(value / pow(10, exponent), f"e+{exponent} {self.symbol}")
 
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
 
 class EngineeringScientificFormatter(NotationFormatter):
+    def ident(self) -> Literal["EngineeringScientific"]:
+        return "EngineeringScientific"
+
     def _preformat_small_number(self, value: int | float) -> Preformatted:
         exponent = math.floor(math.log(value, 10) / 3) * 3
         return Preformatted(value / pow(10, exponent), f"e{exponent} {self.symbol}")
@@ -190,13 +293,51 @@ class EngineeringScientificFormatter(NotationFormatter):
         exponent = math.floor(round(math.log(value, 10)) // 3) * 3
         return Preformatted(value / pow(10, exponent), f"e+{exponent} {self.symbol}")
 
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
 
 _ONE_DAY: Final = 86400
 _ONE_HOUR: Final = 3600
 _ONE_MINUTE: Final = 60
+_BASIC_TIME_ATOMS: Final = [
+    1,
+    2,
+    5,
+    10,
+    20,
+    30,
+    _ONE_MINUTE,
+    2 * _ONE_MINUTE,
+    5 * _ONE_MINUTE,
+    10 * _ONE_MINUTE,
+    20 * _ONE_MINUTE,
+    30 * _ONE_MINUTE,
+    _ONE_HOUR,
+    2 * _ONE_HOUR,
+    4 * _ONE_HOUR,
+    6 * _ONE_HOUR,
+    8 * _ONE_HOUR,
+    12 * _ONE_HOUR,
+    _ONE_DAY,
+    2 * _ONE_DAY,
+    5 * _ONE_DAY,
+    10 * _ONE_DAY,
+    20 * _ONE_DAY,
+    50 * _ONE_DAY,
+    100 * _ONE_DAY,
+]
 
 
 class TimeFormatter(NotationFormatter):
+    def ident(self) -> Literal["Time"]:
+        return "Time"
+
     def _preformat_small_number(self, value: int | float) -> Preformatted:
         exponent = math.floor(math.log(value, 10)) - 1
         if exponent <= -6:
@@ -224,6 +365,21 @@ class TimeFormatter(NotationFormatter):
             factor = 1
             symbol = self.symbol
         return Preformatted(value / factor, f" {symbol}")
+
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log(max_y, 10)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        if max_y >= _ONE_DAY:
+            return (
+                _BASIC_TIME_ATOMS[15:19] if int(max_y // _ONE_DAY) < 2 else _BASIC_TIME_ATOMS[15:]
+            )
+        if max_y >= _ONE_HOUR:
+            return _BASIC_TIME_ATOMS[9:18]
+        if max_y >= _ONE_MINUTE:
+            return _BASIC_TIME_ATOMS[3:12]
+        return _BASIC_DECIMAL_ATOMS[:6]
 
 
 def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
@@ -266,6 +422,7 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
     "{unit.notation.symbol}",
     new cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
 ).render(v)""",
+            formatter_ident=formatter.ident(),
         )
     )
 

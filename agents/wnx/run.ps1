@@ -20,7 +20,10 @@ $argSignFile = $null
 $argSignSecret = $null
 
 $msbuild_exe = "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
-$arte = "$pwd\..\..\artefacts"
+$arte = "$pwd/../../artefacts"
+$build_dir = "$pwd/build"
+$ohm_dir = "$build_dir/ohm/"
+
 if ("$env:arg_var_value" -eq "") {
     $env:arg_val_name = $env:arg_var_value
 }
@@ -81,7 +84,7 @@ else {
             { $("-O", "--ohm") -contains $_ } { $argOhm = $true }
             { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
-            { $("-T". "---test") -contains $_ } { $argTest = $true }
+            { $("-T", "--test") -contains $_ } { $argTest = $true }
             { $("-D", "--documentation") -contains $_ } { $argDoc = $true }
             "--detach" { $argDetach = $true }
             "--var" {
@@ -94,9 +97,6 @@ else {
             }
         }
     }
-}
-if ($argExt) {
-    Write-Host "Cleaning..."
 }
 
 
@@ -130,14 +130,14 @@ function Invoke-CheckApp( [String]$title, [String]$cmdline ) {
     }
 }
 
-function Set-Version() {
+function Get-Version {
     $first_line = Get-Content -Path "include\common\wnx_version.h" -TotalCount 1
     if ($first_line.Substring(0, 29) -eq "#define CMK_WIN_AGENT_VERSION") {
-        $env:wnx_version = $first_line.Substring(30, $first_line.Length - 30)
-        Write-Host "Used version: $env:wnx_version"
+        return $first_line.Substring(30, $first_line.Length - 30)
     }
     else {
         Write-Host "wnx_version not found in include\common\wnx_version.h" -ForegroundColor Red
+        exit 12
     }
 }
 
@@ -149,24 +149,122 @@ function Clear-Artifacts( [String]$arte) {
     }
 }
 
-function Build-Project {
-    # Build project
-    Write-Host "Building project..."
+function Build-Agent {
+    Write-Host "Building agent..." -ForegroundColor White
     $make_exe = where.exe make | Out-String
     $env:make_exe = $make_exe.trim()
     Write-Host make is $env:make_exe 
-    & ".\msb.ps1"
+    try {
+        Write-Host "Start build" -ForegroundColor White
+        & "$PSScriptRoot\parallel.ps1"
+        if ($lastexitcode -ne 0) {
+            Write-Host "Error building 2: " $lastexitcode -ForegroundColor Red
+            Exit 55
+        }
+    }
+    catch {
+        Write-Host "Error building 1: " $result -ForegroundColor Red
+        Exit 55
+    }
+
+    Write-Host "Success building agent" -ForegroundColor Green
 }
 
-# Conditional execution based on arguments
-if ($argAll) {
-    # If --all is specified, set all relevant flags to true
-    $argSetup = $true
-    $argBuild = $true
-    $argTest = $true
-    $argMsi = $true
-    $argOhm = $true
-    $argExt = $true
+function Build-Controller {
+    Write-Host "Building controller..." -ForegroundColor White
+    $cwd = Get-Location
+    Set-Location "../../packages/mk-sql"
+    & ./run.cmd --all
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error building controller: " $LASTEXITCODE -foreground Red
+    }
+    else {
+        Write-Host "Success building controller" -foreground Green
+    }
+    Set-Location $cwd
+}
+
+function Build-Ext {
+    Write-Host "Building Ext..." -ForegroundColor White
+    $cwd = Get-Location
+    Set-Location "extensions\robotmk_ext"
+    & ../../scripts/cargo_build_robotmk.cmd
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error building Ext: " $LASTEXITCODE -foreground Red
+    }
+    else {
+        Write-Host "Success building Ext" -foreground Green
+    }
+    Set-Location $cwd
+}
+
+function Build-OHM {
+    Write-Host "Building OHM..." -ForegroundColor White
+
+    Write-Host "Building OHM" -Foreground White
+    Write-Host $ohm_dir
+    & $msbuild_exe .\ohm\ohm.sln "/p:OutDir=$ohm_dir;TargetFrameworkVersion=v4.6;Configuration=Release"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error building OHM: " $LASTEXITCODE -foreground Red
+        exit 44
+    }
+    else {
+        Write-Host "Success building OHM" -foreground Green
+        try {
+            Copy-Item "$ohm_dir/OpenHardwareMonitorLib.dll" $arte -Force    
+            Copy-Item "$ohm_dir/OpenHardwareMonitorCLI.exe" $arte -Force
+        }
+        catch {
+            Write-Host "Error copy files '$_'" -foreground Red
+            exit 43
+        }
+    }
+}
+
+function Build-MSI {
+    Write-Host "Building MSI..." -ForegroundColor White
+    Remove-Item "$build_dir/install/Release/check_mk_service.msi" -Force
+
+    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error building MSI: " $LASTEXITCODE -foreground Red
+        exit 42
+    }
+    else {
+        Write-Host "Success building MSI" -foreground Green
+    }
+}
+
+function Set-MSI-Version {
+    $version = Get-Version
+    $version_base = $version.substring(1, $version.length - 2)
+    Write-Host "Setting MSI version: $version_base" -ForegroundColor White
+    Change-MsiProperties $build_dir\install\Release\check_mk_service.msi $version_base    
+    # deprecated
+    # & echo cscript.exe //nologo scripts\WiRunSQL.vbs $build_dir\install\Release\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='$version_base' WHERE `Property`.`Property`='ProductVersion'"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error setting version MSI: " $LASTEXITCODE -foreground Red
+        exit 42
+    }
+    else {
+        Write-Host "Success setting version MSI" -foreground Green
+    }
+}
+
+function Start-Unit-Tests {
+    Write-Host "Running unit tests..." -ForegroundColor White
+
+    & net stop WinRing0_1_2_0
+    Copy-Item $build_dir/watest/Win32/Release/watest32.exe $arte -Force
+    Copy-Item $build_dir/watest/x64/Release/watest64.exe $arte -Force
+    & ./call_unit_tests.cmd -*_Simulation:*Component:*ComponentExt:*Flaky
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Error in unit tests " $LASTEXITCODE -foreground Red
+        exit 42
+    }
+    else {
+        Write-Host "Success unittests" -foreground Green
+    }
 }
 
 
@@ -178,7 +276,7 @@ $mainStartTime = Get-Date
 Invoke-CheckApp "choco" "choco -v"
 Invoke-CheckApp "perl" "perl -v"
 Invoke-CheckApp "make" "make -v"
-Invoke-CheckApp "msvc" "&""$msbuild_exe"" --version"
+Invoke-CheckApp "msvc" "& ""$msbuild_exe"" --version"
 Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 
 if ($argClean) {
@@ -186,16 +284,50 @@ if ($argClean) {
 }
 
 if ($argBuild) {
-    Write-Host "Building Agent..." -ForegroundColor White
     $env:msbuild_exe = $msbuild_exe
-    Set-Version
-    Build-Project
+    $env:wnx_version = Get-Version
+    Write-Host "Used version: $env:wnx_version"
+    Build-Agent
 }
 else {
     Write-Host "Skipping Agent build..." -ForegroundColor Yellow
 }
 
+if ($argCtl) {
+    Build-Controller
+}
+else {
+    Write-Host "Skipping controller build..." -ForegroundColor Yellow
+}
 
+if ($argOhm) {
+    Build-Ohm
+}
+else {
+    Write-Host "Skipping OHM build..." -ForegroundColor Yellow
+}
+
+if ($argExt) {
+    Build-Ext
+}
+else {
+    Write-Host "Skipping Ext build..." -ForegroundColor Yellow
+}
+
+if ($argMsi) {
+    Build-MSI
+    Set-Msi-Version
+}
+else {
+    Write-Host "Skipping Ext build..." -ForegroundColor Yellow
+}
+
+if ($argTest) {
+    Start-Unit-Tests
+}
+else {
+    Write-Host "Skipping Unit testing..." -ForegroundColor Yellow
+}
 
 
 

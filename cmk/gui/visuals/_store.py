@@ -377,7 +377,7 @@ def _get_local_path(visual_type: VisualTypeName) -> Path:
 
 def declare_visual_permission(what: VisualTypeName, name: str, visual: TVisual) -> None:
     permname = PermissionName(f"{what[:-1]}.{name}")
-    if visual["public"] and permname not in permission_registry:
+    if published_to_user(visual) and permname not in permission_registry:
         declare_permission(
             permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
         )
@@ -445,20 +445,6 @@ def available(  # pylint: disable=too-many-branches
     visuals = {}
     permprefix = what[:-1]
 
-    def published_to_user(visual: TVisual) -> bool:
-        if visual["public"] is True:
-            return True
-
-        if isinstance(visual["public"], tuple):
-            if visual["public"][0] == "contact_groups":
-                user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
-                return bool(user_groups.intersection(visual["public"][1]))
-            if visual["public"][0] == "sites":
-                user_sites = set(user.authorized_sites().keys())
-                return bool(user_sites.intersection(visual["public"][1]))
-
-        return False
-
     def restricted_visual(visualname: VisualName) -> bool:
         permname = f"{permprefix}.{visualname}"
         return permname in permission_registry and not user.may(permname)
@@ -513,6 +499,21 @@ def available(  # pylint: disable=too-many-branches
                 visuals[n] = visual
 
     return visuals
+
+
+def published_to_user(visual: TVisual) -> bool:
+    if visual["public"] is True:
+        return True
+
+    if isinstance(visual["public"], tuple):
+        if visual["public"][0] == "contact_groups":
+            user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
+            return bool(user_groups.intersection(visual["public"][1]))
+        if visual["public"][0] == "sites":
+            user_sites = set(user.authorized_sites().keys())
+            return bool(user_sites.intersection(visual["public"][1]))
+
+    return False
 
 
 def get_permissioned_visual(

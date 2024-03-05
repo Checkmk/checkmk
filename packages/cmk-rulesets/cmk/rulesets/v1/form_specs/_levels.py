@@ -86,6 +86,14 @@ LevelsConfigModel = (
 )
 
 
+class LevelsType(enum.Enum):
+    """Type of levels configuration"""
+
+    NONE = enum.auto()
+    FIXED = enum.auto()
+    PREDICTIVE = enum.auto()
+
+
 @dataclass(frozen=True, kw_only=True)
 class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
     """Specifies a form for configuring levels without predictive levels.
@@ -133,8 +141,12 @@ class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
     level_direction: LevelDirection
     """Specifies the type of bound the levels represents. This is used only to adjust the
     labels and error messages in the UI."""
+    prefill_levels_type: DefaultValue[Literal[LevelsType.NONE, LevelsType.FIXED]] = DefaultValue(
+        LevelsType.FIXED
+    )
+    """Pre-selected type of the levels (no levels or fixed levels)."""
     prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]
-    """Value to pre-populate the form fields with."""
+    """Value to pre-populate the form field for fixed levels with."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -184,6 +196,8 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
     level_direction: LevelDirection
     """Specifies the type of bound the levels represents. This is used only to adjust the
     labels and error messages in the UI."""
+    prefill_levels_type: DefaultValue[LevelsType] = DefaultValue(LevelsType.FIXED)
+    """Pre-selected type of the levels (no levels, fixed levels or predictive levels)."""
     prefill_fixed_levels: Prefill[tuple[_NumberT, _NumberT]]
     """Value to pre-populate the form fields with."""
     predictive: PredictiveLevels[_NumberT]

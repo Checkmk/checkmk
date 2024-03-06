@@ -29,7 +29,7 @@ import threading
 import time
 import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from logging import getLogger, Logger
+from logging import DEBUG, getLogger, Logger
 from pathlib import Path
 from types import FrameType
 from typing import Any, assert_never, Literal, TypedDict
@@ -54,7 +54,7 @@ from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
 from .helpers import ECLock, parse_bytes_into_syslog_messages
-from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
+from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, TimedHistory
 from .history_file import FileHistory
 from .history_mongo import MongoDBHistory
 from .history_sqlite import SQLiteHistory, SQLiteSettings
@@ -165,11 +165,11 @@ def create_history(
 ) -> History:
     match config["archive_mode"]:
         case "file":
-            return FileHistory(settings, config, logger, event_columns, history_columns)
+            h: History = FileHistory(settings, config, logger, event_columns, history_columns)
         case "mongodb":
-            return MongoDBHistory(settings, config, logger, event_columns, history_columns)
+            h = MongoDBHistory(settings, config, logger, event_columns, history_columns)
         case "sqlite":
-            return SQLiteHistory(
+            h = SQLiteHistory(
                 SQLiteSettings.from_settings(
                     settings=settings,
                     database=Path(settings.paths.history_dir.value / "history.sqlite"),
@@ -181,6 +181,7 @@ def create_history(
             )
         case _ as default:
             assert_never(default)
+    return TimedHistory(h) if logger.isEnabledFor(DEBUG) else h
 
 
 def allowed_ip(

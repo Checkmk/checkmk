@@ -84,12 +84,6 @@ class ConflictMode(enum.StrEnum):
     ABORT = "abort"
 
 
-NEED_USER_INPUT_MODES: Final[Sequence] = [
-    ConflictMode.INSTALL,
-    ConflictMode.KEEP_OLD,
-    ConflictMode.ASK,
-]
-
 USER_INPUT_CONTINUE: Final[Sequence] = ["c", "continue"]
 USER_INPUT_DISABLE: Final[Sequence] = ["d", "disable"]
 
@@ -104,8 +98,8 @@ def disable_incomp_mkp(
     path_config: PathConfig,
     path: Path,
 ) -> bool:
-    if (
-        conflict_mode in NEED_USER_INPUT_MODES
+    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
+        conflict_mode is ConflictMode.ASK
         and _request_user_input_on_incompatible_file(path, module_name, package_id, error).lower()
         in USER_INPUT_DISABLE
     ):
@@ -159,9 +153,9 @@ def continue_on_incomp_local_file(
 
 
 def continue_per_users_choice(conflict_mode: ConflictMode, propt_text: str) -> bool:
-    return (
-        conflict_mode in NEED_USER_INPUT_MODES and prompt(propt_text).lower() in USER_INPUT_CONTINUE
-    )
+    if conflict_mode is ConflictMode.ASK:
+        return prompt(propt_text).lower() in USER_INPUT_CONTINUE
+    return False
 
 
 def get_installer_and_package_map(

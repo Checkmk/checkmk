@@ -343,9 +343,6 @@ def test_container_agent(checkmk: docker.models.containers.Container) -> None:
 
 
 @pytest.mark.skipif(
-    version_from_env().is_saas_edition(), reason="Temporily disabled due to CMK-14454"
-)
-@pytest.mark.skipif(
     not git_tag_exists(old_version),
     reason="Skipping as long as we have the first 2.3 release",
 )

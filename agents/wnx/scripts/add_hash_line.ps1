@@ -11,6 +11,8 @@
 $file_to_hash = $args[0]
 $out_file = $args[1]
 
+Write-Host "$file_to_hash is hashed to $out_file"
+
 $file_to_hash_name = Get-ChildItem -Path $file_to_hash | Select-Object Name -ExpandProperty Name
 Add-Content -Path $out_file -Value ($file_to_hash_name + " ") -NoNewLine
 Get-FileHash $file_to_hash -Algorithm SHA256 | Select-Object Hash -ExpandProperty Hash | Add-Content -Path $out_file

@@ -7,9 +7,8 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
-
-pytestmark = pytest.mark.checks
+from cmk.plugins.collection.server_side_calls.sql import active_check_sql
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, StoredSecret
 
 
 @pytest.mark.parametrize(
@@ -21,17 +20,17 @@ pytestmark = pytest.mark.checks
                 "dbms": "postgres",
                 "name": "bar",
                 "user": "hans",
-                "password": "wurst",
+                "password": ("store", "wurst"),
                 "sql": (""),
                 "perfdata": "my_metric_name",
                 "text": "my_additional_text",
             },
             [
-                "--hostname=$HOSTADDRESS$",
+                "--hostname=ipaddress",
                 "--dbms=postgres",
                 "--name=bar",
                 "--user=hans",
-                "--password=wurst",
+                StoredSecret(value="wurst", format="--password=%s"),
                 "--metrics=my_metric_name",
                 "--text=my_additional_text",
                 "",
@@ -43,5 +42,12 @@ def test_check_sql_argument_parsing(
     params: Mapping[str, str | tuple[str]], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    active_check = ActiveCheck("check_sql")
-    assert active_check.run_argument_function(params) == expected_args
+    (command,) = active_check_sql(
+        params,
+        HostConfig(
+            name="hostname",
+            ipv4_config=IPv4Config(address="ipaddress"),
+        ),
+        {},
+    )
+    assert command.command_arguments == expected_args

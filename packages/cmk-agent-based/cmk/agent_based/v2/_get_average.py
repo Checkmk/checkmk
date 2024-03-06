@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import MutableMapping
-from typing import Any, cast
 
 
-def get_average(  # type: ignore[misc]
-    value_store: MutableMapping[str, Any],
+def get_average(
+    value_store: MutableMapping[str, object],
     key: str,
     time: float,
     value: float,
@@ -54,9 +53,6 @@ def get_average(  # type: ignore[misc]
         The computed average
 
     """
-    # Cast to avoid lots of mypy suppressions. It better reflects the tuth anyway.
-    value_store = cast(MutableMapping[str, object], value_store)
-
     match value_store.get(key, ()):
         case (
             float() | int() as start_time,

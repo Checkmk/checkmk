@@ -385,41 +385,41 @@ test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
 test-unit: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
-		--config-file=../pyproject.toml \
+		--config-file=pyproject.toml \
 		--import-mode=importlib \
 		--doctest-modules \
 		--override-ini="pythonpath=." \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		-- \
-		../cmk \
-		../omd/packages/omd \
-		unit
+		cmk \
+		omd/packages/omd \
+		tests/unit
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
 test-unit-slow: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
-		--config-file=../pyproject.toml \
+		--config-file=pyproject.toml \
 		--import-mode=importlib \
 		--doctest-modules \
 		--override-ini="pythonpath=." \
 		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
 		-- \
-		../cmk \
-		../omd/packages/omd \
-		unit
+		cmk \
+		omd/packages/omd \
+		tests/unit
 
 test-unit-slow-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit-slow
 
 test-unit-resilience: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
-		--config-file=../pyproject.toml \
+		--config-file=pyproject.toml \
 		--import-mode=importlib \
 		--doctest-modules \
 		--override-ini="pythonpath=." \
@@ -428,9 +428,9 @@ test-unit-resilience: prepare-protobuf-files
 	        -m "not non_resilient" \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		-- \
-		../cmk \
-		../omd/packages/omd \
-		unit
+		cmk \
+		omd/packages/omd \
+		tests/unit
 
 test-unit-resilience-docker:
 	../scripts/run-in-docker.sh make test-unit-resilience
@@ -439,21 +439,21 @@ test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
 test-unit-coverage-html: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
-		--config-file=../pyproject.toml \
+		--config-file=pyproject.toml \
 		--import-mode=importlib \
 		--doctest-modules \
 		--override-ini="pythonpath=." \
 		--cov=cmk \
 		--cov-report=html \
-		--cov-config=.coveragerc_unit \
+		--cov-config="tests/.coveragerc_unit" \
 		--no-cov-on-fail \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		-- \
-		../cmk \
-		../omd/packages/omd \
-		unit
+		cmk \
+		omd/packages/omd \
+		tests/unit
 
 
 test-unit-shell:

@@ -1496,8 +1496,9 @@ class CommandECCustomAction(ECCommand):
     ) -> CommandActionResult:
         for action_id, _title in action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
+                events = ",".join([str(entry["event_id"]) for entry in action_rows])
                 return (
-                    "ACTION;{};{};{}".format(row["event_id"], user.id, action_id),
+                    f"ACTION;{events};{user.id};{action_id}",
                     self.confirm_dialog_options(cmdtag, row, len(action_rows)),
                 )
         return None

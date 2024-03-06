@@ -2313,37 +2313,38 @@ class StatusServer(ECServerThread):
             self._event_status.reset_counters(None)
 
     def handle_command_action(self, arguments: list[str]) -> None:
-        event_id, user, action_id = arguments
-        event: Event | None = self._event_status.event(int(event_id))
-        if user and event is not None:
-            event["owner"] = user
+        event_ids, user, action_id = arguments
+        for event_id in event_ids.split(","):
+            event: Event | None = self._event_status.event(int(event_id))
+            if user and event is not None:
+                event["owner"] = user
 
-        # TODO: De-duplicate code from do_event_actions()
-        if action_id == "@NOTIFY" and event is not None:
-            do_notify(
-                self._event_server.host_config, self._logger, event, user, is_cancelling=False
-            )
-        else:
-            # TODO: This locking doesn't make sense: We use the config outside of the lock below, too.
-            with self._lock_configuration:
-                actions = self._config["action"]
-                if action_id not in actions:
-                    raise MKClientError(
-                        f"The action '{action_id}' is not defined. After adding new commands please "
-                        "make sure that you activate the changes in the Event Console."
-                    )
-                action = actions[action_id]
-            if event:
-                do_event_action(
-                    self._history,
-                    self.settings,
-                    self._config,
-                    self._logger,
-                    self._event_columns,
-                    action,
-                    event,
-                    user,
+            # TODO: De-duplicate code from do_event_actions()
+            if action_id == "@NOTIFY" and event is not None:
+                do_notify(
+                    self._event_server.host_config, self._logger, event, user, is_cancelling=False
                 )
+            else:
+                # TODO: This locking doesn't make sense: We use the config outside of the lock below, too.
+                with self._lock_configuration:
+                    actions = self._config["action"]
+                    if action_id not in actions:
+                        raise MKClientError(
+                            f"The action '{action_id}' is not defined. After adding new commands please "
+                            "make sure that you activate the changes in the Event Console."
+                        )
+                    action = actions[action_id]
+                if event:
+                    do_event_action(
+                        self._history,
+                        self.settings,
+                        self._config,
+                        self._logger,
+                        self._event_columns,
+                        action,
+                        event,
+                        user,
+                    )
 
     def handle_command_switchmode(self, arguments: list[str]) -> None:
         new_mode = arguments[0]

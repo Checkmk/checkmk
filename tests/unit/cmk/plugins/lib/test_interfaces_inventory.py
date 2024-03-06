@@ -252,7 +252,6 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                 Attributes(
                     path=["networking"],
                     inventory_attributes={
-                        "available_ethernet_ports": 0,
                         "total_ethernet_ports": 0,
                         "total_interfaces": 5,
                     },

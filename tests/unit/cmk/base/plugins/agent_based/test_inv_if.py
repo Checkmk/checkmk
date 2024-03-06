@@ -365,7 +365,7 @@ SECTION_INV_IF = SectionInvIf(
             alias="",
             type="6",
             speed=0,
-            oper_status=2,
+            oper_status=None,
             phys_address="74:DA:88:58:16:11",
             admin_status=None,
             last_change=0.0,
@@ -748,7 +748,7 @@ def test_parse_inv_if() -> None:
                         "6",
                         "0",
                         "0",
-                        "2",
+                        "",  # empty e.g. on some Cisco devices.
                         "",
                         [116, 218, 136, 88, 22, 17],
                         "0",
@@ -1306,16 +1306,14 @@ def test_inventory_if() -> None:
                     inventory_columns={
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
-                        "oper_status": 2,
                         "port_type": 6,
-                        "available": True,
                     },
                     status_columns={"last_change": 1593648000},
                 ),
                 Attributes(
                     path=["networking"],
                     inventory_attributes={
-                        "available_ethernet_ports": 20,
+                        "available_ethernet_ports": 19,
                         "total_ethernet_ports": 31,
                         "total_interfaces": 32,
                     },

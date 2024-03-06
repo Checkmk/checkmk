@@ -1158,7 +1158,6 @@ def test_inventory_lnx_if_empty() -> None:
         Attributes(
             path=["networking"],
             inventory_attributes={
-                "available_ethernet_ports": 0,
                 "total_ethernet_ports": 0,
                 "total_interfaces": 0,
             },

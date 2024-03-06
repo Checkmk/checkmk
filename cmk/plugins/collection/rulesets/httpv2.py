@@ -39,6 +39,9 @@ _DAY = 24.0 * 3600.0
 def _valuespec_response() -> Dictionary:
     return Dictionary(
         title=Title("Status code"),
+        help_text=Help(
+            "You may set expected status codes that should be returned by the request. The service will be WARN if the actual status code does not match any of the expected ones."
+        ),
         elements={
             "expected": DictElement(
                 parameter_form=List(
@@ -66,6 +69,9 @@ def _valuespec_document() -> Dictionary:
             "document_body": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("Document body"),
+                    help_text=Help(
+                        "As an alternative to fetch the complete document including the actual web site or application (document body), you may also choose to fetch only the header. Please note, that in this case still the HTTP methods GET or POST will be used by default and not HEAD."
+                    ),
                     prefill=DefaultValue("fetch"),
                     elements=[
                         SingleChoiceElement(
@@ -77,13 +83,15 @@ def _valuespec_document() -> Dictionary:
                             title=Title("Get header only"),
                         ),
                     ],
-                    help_text=Help("Note: this still does an HTTP GET or POST, not a HEAD."),
                 ),
                 required=True,
             ),
             "max_age": DictElement(
                 parameter_form=TimeSpan(
                     title=Title("Check document age"),
+                    help_text=Help(
+                        "Many web services provide a date for the document and the difference to now is the age of the document. The age may be monitored by this option. You will get a WARN if the document is older than the configured threshold."
+                    ),
                     displayed_magnitudes=[
                         TimeMagnitude.SECOND,
                         TimeMagnitude.MINUTE,
@@ -91,13 +99,15 @@ def _valuespec_document() -> Dictionary:
                         TimeMagnitude.DAY,
                     ],
                     label=Label("Warn, if the age is older than"),
-                    help_text=Help("Warn, if the age of the page is older than this"),
                     prefill=DefaultValue(_DAY),
                 ),
             ),
             "page_size": DictElement(
                 parameter_form=Dictionary(
                     title=Title("Check document size"),
+                    help_text=Help(
+                        "Choose this option if you need to have the provided document within a specific range of size. You will get a WARN if the size of the actual document is above or below the thresholds."
+                    ),
                     elements={
                         "min": DictElement(
                             parameter_form=DataSize(
@@ -283,14 +293,23 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
 
 
 header_dict_elements = {
-    "header_name": DictElement(parameter_form=String(label=Label("Name")), required=True),
-    "header_value": DictElement(parameter_form=String(label=Label("Value")), required=True),
+    "header_name": DictElement(
+        parameter_form=String(label=Label("Name"), prefill=InputHint("Accept-Language")),
+        required=True,
+    ),
+    "header_value": DictElement(
+        parameter_form=String(label=Label("Value"), prefill=InputHint("en-US,en;q=0.5")),
+        required=True,
+    ),
 }
 
 
 def _valuespec_connection() -> Dictionary:
     return Dictionary(
         title=Title("Connection details"),
+        help_text=Help(
+            "Options in this group define how the connection to the web server is established."
+        ),
         elements={
             # Not yet implemented
             #    "virtual_host": DictElement(
@@ -303,6 +322,13 @@ def _valuespec_connection() -> Dictionary:
             "http_versions": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("HTTP version"),
+                    help_text=Help(
+                        "You may enforce a specific version if you need to test the compatibility "
+                        "with one or another version. Please note that the "
+                        "connection will fail if the web server does not support the required "
+                        "HTTP version."
+                    ),
+                    prefill=DefaultValue("auto"),
                     elements=[
                         SingleChoiceElement(
                             name="auto",
@@ -319,6 +345,12 @@ def _valuespec_connection() -> Dictionary:
             "tls_versions": DictElement(
                 parameter_form=Dictionary(
                     title=Title("TLS version"),
+                    help_text=Help(
+                        "You may choose to enforce the usage of a specific TLS version. "
+                        "Either by pinning to exactly the selected version, or by also allowing "
+                        "higher versions. Please note Checkmk does not support SSLv3 or SSLv2 "
+                        "anymore as they are known to be insecure."
+                    ),
                     elements={
                         "min_version": DictElement(
                             parameter_form=SingleChoice(
@@ -405,6 +437,11 @@ def _valuespec_connection() -> Dictionary:
             "redirects": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("How to handle redirects"),
+                    help_text=Help(
+                        "The check will follow redirects on default. By activating this option, "
+                        "you can enforce a specific behavior or set a specific state in case "
+                        "of a redirect."
+                    ),
                     elements=[
                         SingleChoiceElement(
                             name="ok",
@@ -438,19 +475,34 @@ def _valuespec_connection() -> Dictionary:
                 parameter_form=TimeSpan(
                     title=Title("Connection timeout"),
                     displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
+                    help_text=Help(
+                        "The result will be treated as connection failure if the threshold gets "
+                        "reached and leads to a CRIT on the service."
+                    ),
                     prefill=DefaultValue(10),
                 ),
             ),
             "user_agent": DictElement(
                 parameter_form=String(
                     title=Title("User agent"),
+                    help_text=Help(
+                        "To make the querying source transparent for the requested web server, the "
+                        "user agent header field will be used. The default is set to "
+                        "checkmk/check_http, but you may use your own. The entry needs to be a "
+                        "valid string for a header value."
+                    ),
                     prefill=DefaultValue("checkmk/check_http"),
-                    help_text=Help('String to be sent in http header as "User Agent"'),
                 ),
             ),
             "add_headers": DictElement(
                 parameter_form=List(
                     title=Title("Additional header lines"),
+                    help_text=Help(
+                        "These additional header lines will be used in the request. You may use "
+                        "any header lines that follow the conventions for header entries. Please "
+                        "note that you don't need a colon to separate key and value as you have "
+                        "a dedicated input field for each."
+                    ),
                     element_template=Dictionary(elements=header_dict_elements),
                 ),
             ),
@@ -489,7 +541,10 @@ def _valuespec_connection() -> Dictionary:
                                 title=Title("Token based authentication"),
                                 elements={
                                     "header": DictElement(
-                                        parameter_form=String(title=Title("API key header")),
+                                        parameter_form=String(
+                                            title=Title("API key header"),
+                                            prefill=InputHint("Authorization"),
+                                        ),
                                         required=True,
                                     ),
                                     "token": DictElement(
@@ -513,6 +568,12 @@ def _valuespec_content() -> Dictionary:
             "header": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Title("Search for header"),
+                    help_text=Help(
+                        "The provided header key and value need to be exact as in the "
+                        "actual header of the response. Please note that the service will "
+                        "get WARN if any, the key or the value, is not matching. If looking"
+                        "for a regular expression the first match will considered as success."
+                    ),
                     prefill=DefaultValue("string"),
                     elements=[
                         CascadingSingleChoiceElement(
@@ -534,6 +595,11 @@ def _valuespec_content() -> Dictionary:
             "body": DictElement(
                 parameter_form=CascadingSingleChoice(
                     title=Title("Search in body"),
+                    help_text=Help(
+                        "The provided string to look for needs to be exact as in the raw document "
+                        "body. This includes html markups in between user facing strings. This is "
+                        "also true if looking through a regular expression."
+                    ),
                     prefill=DefaultValue("string"),
                     elements=[
                         CascadingSingleChoiceElement(
@@ -562,6 +628,10 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
             if is_standard
             else Title("Individual settings to use for this endpoint")
         ),
+        help_text=Help(
+            "Standard settings are used for all endpoints unless overwritten by the "
+            "individual settings of an endpoint."
+        ),
         elements={
             "connection": DictElement(parameter_form=_valuespec_connection()),
             "response_time": DictElement[SimpleLevelsConfigModel[float]](
@@ -571,7 +641,9 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                         displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MILLISECOND],
                     ),
                     level_direction=LevelDirection.UPPER,
-                    help_text=Help("Maximum time the request may take."),
+                    help_text=Help(
+                        "This options sets a maximum time the request may take. The request will be canceled after the set time expired."
+                    ),
                     prefill_fixed_levels=DefaultValue((0.1, 0.2)),
                 ),
             ),
@@ -616,6 +688,11 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
 def _valuespec_endpoints() -> List:
     return List(
         title=Title("HTTP web service endpoints to monitor"),
+        help_text=Help(
+            "Each endpoint will result in its own service. If not specified or explicitly "
+            "overwritten below the endpoint, all standard settings will be used. You need "
+            "to specify at least one endpoint to monitor."
+        ),
         add_element_label=Label("Add new endpoint"),
         custom_validate=validators.DisallowEmpty(),
         element_template=Dictionary(
@@ -627,6 +704,9 @@ def _valuespec_endpoints() -> List:
                             "prefix": DictElement(
                                 parameter_form=SingleChoice(
                                     title=Title("Prefix"),
+                                    help_text=Help(
+                                        "The prefix is automatically to each service to be able to organize them. The prefix is static and will be HTTP for unencrypted endpoints and HTTPS if TLS encryption is used. Alternatively, you may choose to not use the prefix option."
+                                    ),
                                     elements=[
                                         SingleChoiceElement(
                                             name="auto",
@@ -643,7 +723,10 @@ def _valuespec_endpoints() -> List:
                             ),
                             "name": DictElement(
                                 parameter_form=String(
-                                    title=Title("Name"),
+                                    title=Title("Suffix"),
+                                    help_text=Help(
+                                        "The suffix is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
+                                    ),
                                     custom_validate=validators.DisallowEmpty(),
                                     prefill=InputHint("My HTTP service"),
                                 ),
@@ -656,6 +739,9 @@ def _valuespec_endpoints() -> List:
                 "url": DictElement(
                     parameter_form=String(
                         title=Title("URL"),
+                        help_text=Help(
+                            "The URL to monitor. This URL should include the protocol (HTTP or HTTPS), the full address and, if needed, also the port the endpoint should not be monitoring using a standard port (80 or 443). Please note, that authentication must not added here as it exposes sensible information. Please add a potential authentication in the connection details."
+                        ),
                         prefill=InputHint("https://subdomain.domain.tld:port/path/to/filename"),
                     ),
                     required=True,

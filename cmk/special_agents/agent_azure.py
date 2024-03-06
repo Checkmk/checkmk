@@ -1128,10 +1128,11 @@ def get_inbound_nat_rules(
             ip_config_id = inbound_nat_rule["properties"]["backendIPConfiguration"]["id"]
             nic_config = get_network_interface_config(mgmt_client, ip_config_id)
 
-            nat_rule_data["backend_ip_config"] = {
-                "name": nic_config["name"],
-                **filter_keys(nic_config["properties"], nic_config_keys),
-            }
+            if "name" in nic_config and "properties" in nic_config:
+                nat_rule_data["backend_ip_config"] = {
+                    "name": nic_config["name"],
+                    **filter_keys(nic_config["properties"], nic_config_keys),
+                }
 
         inbound_nat_rules.append(nat_rule_data)
 
@@ -1146,18 +1147,19 @@ def get_backend_address_pools(
 
     for backend_pool in load_balancer["properties"]["backendAddressPools"]:
         backend_addresses = []
-        for backend_address in backend_pool["properties"]["loadBalancerBackendAddresses"]:
+        for backend_address in backend_pool["properties"].get("loadBalancerBackendAddresses", []):
             if "networkInterfaceIPConfiguration" in backend_address.get("properties"):
                 ip_config_id = backend_address["properties"]["networkInterfaceIPConfiguration"][
                     "id"
                 ]
                 nic_config = get_network_interface_config(mgmt_client, ip_config_id)
 
-                backend_address_data = {
-                    "name": nic_config["name"],
-                    **filter_keys(nic_config["properties"], backend_address_keys),
-                }
-                backend_addresses.append(backend_address_data)
+                if "name" in nic_config and "properties" in nic_config:
+                    backend_address_data = {
+                        "name": nic_config["name"],
+                        **filter_keys(nic_config["properties"], backend_address_keys),
+                    }
+                    backend_addresses.append(backend_address_data)
 
         backend_pools.append(
             {"id": backend_pool["id"], "name": backend_pool["name"], "addresses": backend_addresses}
@@ -1180,7 +1182,7 @@ def process_load_balancer(mgmt_client: MgmtApiClient, resource: AzureResource) -
     outbound_rule_keys = ("protocol", "idleTimeoutInMinutes", "backendAddressPool")
     outbound_rules = [
         {"name": r["name"], **filter_keys(r["properties"], outbound_rule_keys)}
-        for r in load_balancer["properties"]["outboundRules"]
+        for r in load_balancer["properties"].get("outboundRules", [])
     ]
     resource.info["properties"]["outbound_rules"] = outbound_rules
 

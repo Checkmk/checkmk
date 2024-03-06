@@ -342,6 +342,7 @@ CEE_UNUSED_PACKAGES = [
     "pymssql",
     "pymysql",
     "pyrsistent",
+    "redfish",  # used by optional MKP
     "requests-kerberos",
     "s3transfer",
     "setuptools-scm",

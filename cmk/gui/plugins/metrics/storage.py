@@ -403,18 +403,6 @@ metric_info["mem_lnx_slab"] = {
     "unit": "bytes",
 }
 
-metric_info["mem_lnx_sreclaimable"] = {
-    "title": _("Reclaimable memory"),
-    "color": "23/a",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_sunreclaim"] = {
-    "title": _("Unreclaimable memory"),
-    "color": "24/a",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_pending"] = {
     "title": _("Pending memory"),
     "color": "25/a",

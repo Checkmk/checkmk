@@ -160,7 +160,7 @@ def get_average(  # type: ignore[misc]
         The computed average
 
     """
-    # Cast to avoid lots of mypy suppressions. It better reflects the tuth anyway.
+    # Cast to avoid lots of mypy suppressions. It better reflects the truth anyway.
     value_store = cast(MutableMapping[str, object], value_store)
 
     match value_store.get(key, ()):

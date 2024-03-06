@@ -114,15 +114,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "uptime",
-        "half_value": 2592000.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "age",
         "half_value": 2592000.0,
         "exponent": 2,

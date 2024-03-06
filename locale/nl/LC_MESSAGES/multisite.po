@@ -2879,8 +2879,16 @@ msgstr "Absoluut aantal inactieve verbindingen"
 msgid "Absolute number of incoming connections"
 msgstr "Absoluut aantal inkomende verbindingen"
 
+#, fuzzy
+msgid "Absolute used commit charge"
+msgstr "Absoluut beschikbaar geheugen"
+
 msgid "Absolute used leases levels"
 msgstr "Absolute gebruikte leasingniveaus"
+
+#, fuzzy
+msgid "Absolute used memory"
+msgstr "Absoluut vrij geheugen"
 
 msgid "Absolute value"
 msgstr "Absolute waarde"
@@ -4090,6 +4098,9 @@ msgstr "Voeg deze metriek toe aan een aangepaste grafiek..."
 msgid "Add this metric to dedicated graph"
 msgstr "Voeg deze metriek toe aan specifieke grafiek"
 
+msgid "Add this node to existing root nodes"
+msgstr ""
+
 msgid "Add time period"
 msgstr "Tijdsperiode toevoegen"
 
@@ -4386,6 +4397,10 @@ msgstr "Adva Optisch Transport Laservermogen"
 
 #, fuzzy
 msgid "Advanced condition simulation"
+msgstr "Beschikbare opties"
+
+#, fuzzy
+msgid "Advanced configuration options"
 msgstr "Beschikbare opties"
 
 #, fuzzy
@@ -5604,6 +5619,10 @@ msgstr "Toegang toestaan via TCP"
 
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr "Sta alle gebruikers toe om te verwijzen naar regels in dit pakket"
+
+#, fuzzy
+msgid "Allow growing here"
+msgstr "Mobileiron versies"
 
 #, fuzzy
 msgid "Allow higher versions"
@@ -7134,6 +7153,10 @@ msgid "Automatically create monitoring agents"
 msgstr "Automatisch aanmaken van bewakingsagenten"
 
 msgid "Automatically delete hosts without piggyback data"
+msgstr "Automatisch hosts verwijderen zonder piggyback data"
+
+#, fuzzy
+msgid "Automatically detects changes in the formular and fetches new data"
 msgstr "Automatisch hosts verwijderen zonder piggyback data"
 
 msgid "Automatically discover LDAP server"
@@ -10230,6 +10253,13 @@ msgstr "Wijzig wachtwoord bij volgende login of toegang"
 msgid "Change state"
 msgstr "Verander van toestand"
 
+msgid "Change structure of all nodes to"
+msgstr ""
+
+#, fuzzy
+msgid "Change structure of this node to"
+msgstr "Update status van deze host"
+
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
 "Verander het standaard gebruikersinterface thema van uw Checkmk installatie"
@@ -12152,23 +12182,34 @@ msgstr "Opmerkingen van de gastheer"
 msgid "Comments of service"
 msgstr "Commentaar van de dienst"
 
-msgid "Commit Charge"
-msgstr "Vastleggen Last"
-
-msgid "Commit Charge Average"
-msgstr "Vastleggingskrediet Gemiddelde"
-
 msgid "Commit Limit"
 msgstr "Vastleggingslimiet"
 
-msgid "Commit charge Levels"
-msgstr "Vastleggingsniveaus"
+#, fuzzy
+msgid "Commit charge"
+msgstr "Vastleggen Last"
+
+#, fuzzy
+msgid "Commit charge (averaged)"
+msgstr "Vastleggingskrediet Gemiddelde"
 
 msgid "Commit charge in percent (relative to commit limit)"
 msgstr "Vastleggingskost in procent (in verhouding tot de vastleggingslimiet)"
 
+#, fuzzy
+msgid "Commit charge levels"
+msgstr "Vastleggingsniveaus"
+
 msgid "Commit limit"
 msgstr "Vastleggingslimiet"
+
+#, fuzzy
+msgid "Commitable memory"
+msgstr "Vastgelegd geheugen"
+
+#, fuzzy
+msgid "Commitable memory (averaged)"
+msgstr "Gemiddeld virtueel geheugen"
 
 msgid "Commits"
 msgstr "Vastleggingen"
@@ -12215,6 +12256,10 @@ msgstr ""
 "over op CRIT. Merk op dat dit alleen werkt als de controle niet als "
 "handmatige controle wordt uitgevoerd. Als u deze optie kiest voor handmatige "
 "controles, gaat de dienst altijd naar UNKN."
+
+#, fuzzy
+msgid "Compare to"
+msgstr "Downtime geschiedenis"
 
 msgid ""
 "Compares the maximum number of connections that have been in use "
@@ -13326,6 +13371,10 @@ msgstr "Ga door"
 msgid "Continue counting when event is <b>acknowledged</b>"
 msgstr "Doorgaan met tellen wanneer gebeurtenis <b>erkend</b> is"
 
+#, fuzzy
+msgid "Continue growth here"
+msgstr "Zoek verder"
+
 msgid "Continue search"
 msgstr "Zoek verder"
 
@@ -13396,6 +13445,10 @@ msgstr "Koelapparaat"
 
 msgid "Cooling period after failed connect/heartbeat"
 msgstr "Afkoelingsperiode na mislukte verbinding/heartbeat"
+
+#, fuzzy
+msgid "Coordinates"
+msgstr "Admin Staten"
 
 msgid "Copied rules from master"
 msgstr "Gekopieerde regels van master"
@@ -15214,6 +15267,10 @@ msgstr "Gegevensoverdracht"
 
 msgid "Data transfer cache size"
 msgstr "Gegevensoverdracht cache grootte"
+
+#, fuzzy
+msgid "Data transfer rate"
+msgstr "Gegevensoverdracht"
 
 msgid "Data type"
 msgstr "Gegevenstype"
@@ -17819,6 +17876,10 @@ msgstr "Inventarisatie hardware/software"
 msgid "Do inventory and service configuration on existing hosts."
 msgstr "Inventarisatie en dienstconfiguratie op bestaande hosts."
 
+#, fuzzy
+msgid "Do no longer continue here"
+msgstr "Docker node container niveaus"
+
 msgid "Do not activate changes"
 msgstr "Veranderingen niet activeren"
 
@@ -20000,6 +20061,9 @@ msgstr ""
 
 msgid "End"
 msgstr "Einde"
+
+msgid "End growing here"
+msgstr ""
 
 msgid "End-Time"
 msgstr "Eindtijd"
@@ -22285,6 +22349,10 @@ msgstr "Eerste pagina"
 msgid "First time the downtime starts"
 msgstr "De eerste keer dat de uitval begint"
 
+#, fuzzy
+msgid "Fit to screen"
+msgstr "Verzonden gegevens"
+
 msgid "Fix affected folders, hosts and rules."
 msgstr "Herstel getroffen mappen, hosts en regels."
 
@@ -22345,6 +22413,9 @@ msgstr "Gebruik Flash-ruimte"
 
 msgid "Flashback"
 msgstr "Flashback"
+
+msgid "Flat"
+msgstr ""
 
 msgid "Flex. Duration"
 msgstr "Flex. Duur"
@@ -22982,11 +23053,12 @@ msgstr "Gratis DHCP huurcontracten"
 msgid "Free Pods: Cluster"
 msgstr "Gratis Pods: Cluster"
 
-msgid "Free RAM"
-msgstr "Gratis RAM"
-
 msgid "Free SGA memory available"
 msgstr "Vrij SGA-geheugen beschikbaar"
+
+#, fuzzy
+msgid "Free floating style"
+msgstr "Standaard lijnstijl"
 
 msgid "Free leases levels"
 msgstr "Gratis leases niveaus"
@@ -23127,6 +23199,10 @@ msgstr "Bevroren"
 
 msgid "Fujitsu storage CA port discovery"
 msgstr "Fujitsu opslag CA poort ontdekking"
+
+#, fuzzy
+msgid "Full"
+msgstr "Volledige naam"
 
 msgid "Full - Including RRA configuration"
 msgstr "Volledig - inclusief RRA-configuratie"
@@ -23466,9 +23542,6 @@ msgstr "Bestand van SFTP-server halen"
 msgid "Get header only"
 msgstr ""
 
-msgid "GiB"
-msgstr "GiB"
-
 #, no-python-format
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -23500,6 +23573,10 @@ msgstr "Global"
 
 msgid "Global Settings"
 msgstr "Globale instellingen"
+
+#, fuzzy
+msgid "Global default"
+msgstr "Is standaard"
 
 msgid "Global memory bound"
 msgstr "Globaal geheugen gebonden"
@@ -25273,6 +25350,10 @@ msgstr ""
 msgid "Hidden"
 msgstr "Verborgen"
 
+#, fuzzy
+msgid "Hide"
+msgstr "Plaats %s"
+
 msgid "Hide Checkmk version"
 msgstr "Verberg Checkmk versie"
 
@@ -25332,6 +25413,10 @@ msgstr "Verberg gebruikersregels"
 
 msgid "Hierarchical layout"
 msgstr "Hiërarchische indeling"
+
+#, fuzzy
+msgid "Hierarchy"
+msgstr "hiërarchie"
 
 msgid "High"
 msgstr "High"
@@ -27585,6 +27670,16 @@ msgstr ""
 "gedistribueerde omgeving moet u de analyse rechtstreeks op de externe sites "
 "uitvoeren - tenzij u een centrale spooling gebruikt."
 
+#, fuzzy
+msgid ""
+"If this parameter is set, all measured values will be averaged over the "
+"specified time interval before levels are being applied. By default, "
+"averaging is turned off. "
+msgstr ""
+"Als deze parameter is ingesteld, worden alle gemeten waarden gemiddeld over "
+"het gespecificeerde tijdsinterval voordat er niveaus worden toegepast. "
+"Standaard is middeling uitgeschakeld. "
+
 msgid ""
 "If this parameter is set, all measured values will be averaged over the "
 "specified time interval before levels are being applied. Per default, "
@@ -27593,15 +27688,6 @@ msgstr ""
 "Als deze parameter is ingesteld, worden alle gemeten waarden gemiddeld over "
 "het gespecificeerde tijdsinterval voordat er niveaus worden toegepast. "
 "Standaard is middeling uitgeschakeld."
-
-msgid ""
-"If this parameter is set, all measured values will be averaged over the "
-"specified time interval before levels are being applied. Per default, "
-"averaging is turned off. "
-msgstr ""
-"Als deze parameter is ingesteld, worden alle gemeten waarden gemiddeld over "
-"het gespecificeerde tijdsinterval voordat er niveaus worden toegepast. "
-"Standaard is middeling uitgeschakeld. "
 
 msgid ""
 "If this parameter is set, all throughputs will be averaged over the "
@@ -32399,6 +32485,10 @@ msgid "Line spacing"
 msgstr "Regelafstand"
 
 #, fuzzy
+msgid "Line style"
+msgstr "Staat van de vergunning"
+
+#, fuzzy
 msgid "Line-based matching"
 msgstr "Hostnaam matching"
 
@@ -32716,6 +32806,10 @@ msgstr ""
 "Live monitor van de prestatiestatistieken van de Checkmk Micro Core. "
 "Opmerking: deze snapin werkt alleen als <b>alle</b> van uw sites de Checkmk "
 "Cores draaien"
+
+#, fuzzy
+msgid "Live search active"
+msgstr "actief / actief"
 
 msgid "Liveproxy Daemon"
 msgstr "Liveproxy Daemon"
@@ -34627,6 +34721,10 @@ msgid "Matching is inverted in this rule"
 msgstr "Matching is omgekeerd in deze regel"
 
 #, fuzzy
+msgid "Matching nodes"
+msgstr "Alle knooppunten komen overeen"
+
+#, fuzzy
 msgid "Matching: "
 msgstr "Passend bij"
 
@@ -35266,12 +35364,6 @@ msgstr "Geheugen"
 msgid "Memory (RAM)"
 msgstr "Geheugen (RAM)"
 
-msgid "Memory Average"
-msgstr "Geheugen Gemiddelde"
-
-msgid "Memory Levels"
-msgstr "Geheugenniveaus"
-
 msgid "Memory Pages"
 msgstr "Geheugenpagina's"
 
@@ -35447,6 +35539,9 @@ msgstr "Samenvoegen zelfs als er een erkende gebeurtenis is"
 
 msgid "Merge if there is an open un-acknowledged event"
 msgstr "Samenvoegen als er een open, niet-erkende gebeurtenis is"
+
+msgid "Merge nodes with equal ID"
+msgstr ""
 
 msgid "Merge with open event"
 msgstr "Samenvoegen met open gebeurtenis"
@@ -35852,6 +35947,10 @@ msgstr "Ontbrekende hostnaam"
 #, fuzzy
 msgid "Missing identity provider information in metadata"
 msgstr "Time-out verbinding instellen"
+
+#, fuzzy
+msgid "Missing in reference"
+msgstr "Ontbrekende gebruikersnaam"
 
 msgid "Missing job ID."
 msgstr "Ontbrekende job ID."
@@ -36491,6 +36590,10 @@ msgstr "Koppelpunt voor blokapparaten (brtfs)"
 
 msgid "Mountpoints to never ignore"
 msgstr "Mountpoints om nooit te negeren"
+
+#, fuzzy
+msgid "Mouse position"
+msgstr "Montagemogelijkheden"
 
 msgid "Move"
 msgstr "Verplaats"
@@ -38025,6 +38128,9 @@ msgstr "Niet-kritieke voorvallen"
 
 msgid "Noncritical events"
 msgstr "Niet-kritieke gebeurtenissen"
+
+msgid "None"
+msgstr ""
 
 msgid "None (linear)"
 msgstr "Geen (lineair)"
@@ -39911,6 +40017,10 @@ msgstr "Alleen in geval van een probleem"
 msgid "Only in case of a problem or if inodes are below 50%"
 msgstr "Alleen in geval van een probleem of als de inodes minder dan 50% zijn"
 
+#, fuzzy
+msgid "Only in reference"
+msgstr "Controleer plugin API referentie"
+
 msgid "Only include hosts that failed on previous discovery"
 msgstr "Neem alleen hosts op die bij de vorige ontdekking gefaald hebben"
 
@@ -39954,6 +40064,10 @@ msgstr "Slechts procent"
 
 msgid "Only ping this device"
 msgstr "Alleen dit apparaat pingen"
+
+#, fuzzy
+msgid "Only problems"
+msgstr "Toon alleen problemen"
 
 msgid "Only process mails with matching subject"
 msgstr "Verwerk alleen mails met overeenkomend onderwerp"
@@ -41103,6 +41217,10 @@ msgstr "Palo Alto State"
 
 msgid "Palo Alto Users"
 msgstr "Palo Alto Gebruikers"
+
+#, fuzzy
+msgid "Panning"
+msgstr "Lopend"
 
 msgid "Paper margins"
 msgstr "Papiermarges"
@@ -43141,14 +43259,6 @@ msgstr "Voorgedefinieerde zoekopdrachten"
 msgid "Predicted average for 15 minute CPU load"
 msgstr "Voorspeld gemiddelde voor 15 minuten CPU belasting"
 
-#, fuzzy
-msgid "Predicteve levels for commit charge"
-msgstr "Absolute niveaus voor vastgelegde heapruimte"
-
-#, fuzzy
-msgid "Predicteve levels for usage"
-msgstr "Bovenste niveaus voor gebruik"
-
 msgid "Prediction"
 msgstr "Voorspelling"
 
@@ -44027,6 +44137,10 @@ msgstr "RAID: overzichtstoestand"
 msgid "RAM"
 msgstr "RAM"
 
+#, fuzzy
+msgid "RAM (averaged)"
+msgstr "gemiddelde"
+
 msgid "RAM + Swap"
 msgstr "RAM + Wissel"
 
@@ -44036,14 +44150,22 @@ msgstr "RAM + Swap overzicht"
 msgid "RAM + Swap used"
 msgstr "RAM + Swap gebruikt"
 
+#, fuzzy
+msgid "RAM free"
+msgstr "% vrij"
+
+msgid "RAM free (averaged)"
+msgstr ""
+
 msgid "RAM installed"
 msgstr "RAM geïnstalleerd"
 
 msgid "RAM used"
 msgstr "Gebruikte RAM"
 
-msgid "RAM used %"
-msgstr "RAM gebruikt %"
+#, fuzzy
+msgid "RAM used (averaged)"
+msgstr "Lees gemiddelde exe"
 
 msgid ""
 "RCC compatible suites can be started with <a href=\"https://robocorp.com/"
@@ -44673,6 +44795,9 @@ msgstr "Schakel deze test opnieuw in"
 msgid "Refer to:"
 msgstr "Verwijzen naar:"
 
+msgid "Reference"
+msgstr "Referentie"
+
 msgid "Reference size for magic factor"
 msgstr "Referentiegrootte voor magische factor"
 
@@ -45221,6 +45346,10 @@ msgstr "<b>verwijder alle geplande downtimes</b> van "
 msgid "Remove service"
 msgstr "Service verwijderen"
 
+#, fuzzy
+msgid "Remove style"
+msgstr "Verwijder alle"
+
 msgid "Remove tag"
 msgstr "Tag verwijderen"
 
@@ -45452,6 +45581,9 @@ msgstr "Herhaal deze downtime"
 #, fuzzy, python-format
 msgid "Repeats every %s"
 msgstr "herhaal elke 20ste rij"
+
+msgid "Replace hierarchical root with this node"
+msgstr ""
 
 msgid ""
 "Replace the application (syslog tag) with this text. If you have bracketed "
@@ -45755,6 +45887,10 @@ msgstr "Vraag metriek"
 msgid "Request rate"
 msgstr "Aanvraag tarief"
 
+#, fuzzy
+msgid "Request transfer rate"
+msgstr "Aanvraag tarief"
+
 msgid "Request wait time"
 msgstr "Aanvraag wachttijd"
 
@@ -45904,6 +46040,14 @@ msgstr ""
 
 msgid "Reset to default"
 msgstr "Terugzetten naar standaard"
+
+#, fuzzy
+msgid "Reset to default layout"
+msgstr "Standaard lay-out gebruiken"
+
+#, fuzzy
+msgid "Reset zoom"
+msgstr "Reset"
 
 #, python-format
 msgid "Resets the commands '%s', '%s' and '%s' to the default state"
@@ -47305,6 +47449,10 @@ msgstr "Opslaan en testen"
 msgid "Save & view folder"
 msgstr "Map opslaan en bekijken"
 
+#, fuzzy
+msgid "Save as new layout for this aggregation"
+msgstr "Maak een kopie van deze aggregatie"
+
 msgid "Save filters & go to designer"
 msgstr "Bewaar filters & ga naar ontwerper"
 
@@ -48119,6 +48267,10 @@ msgstr "Geselecteerde secties zullen niet worden uitgevoerd door de agent."
 
 msgid "Selected state"
 msgstr "Geselecteerde staat"
+
+#, fuzzy
+msgid "Selected style configuration"
+msgstr "Configuratie toestand toevoegen"
 
 #, python-format
 msgid ""
@@ -49806,6 +49958,10 @@ msgstr "Toon grafiektitel op grafiekgebied"
 msgid "Show graphs for the first"
 msgstr "Toon grafieken voor de eerste"
 
+#, fuzzy
+msgid "Show gravity configuration"
+msgstr "Configuratie van de dienst"
+
 msgid "Show header with highlighted background"
 msgstr "Toon koptekst met gemarkeerde achtergrond"
 
@@ -49958,6 +50114,10 @@ msgstr "Beschrijving van de dienst"
 
 msgid "Show service status"
 msgstr "Toon dienst status"
+
+#, fuzzy
+msgid "Show services"
+msgstr "Schaduwdiensten"
 
 #, python-format
 msgid "Show services of host %s"
@@ -53022,6 +53182,9 @@ msgstr ""
 msgid "Stop foreign background jobs"
 msgstr "Stop buitenlandse achtergrondbanen"
 
+msgid "Stop growing here"
+msgstr ""
+
 msgid "Stop job"
 msgstr "Stop job"
 
@@ -53631,12 +53794,6 @@ msgstr "Synology Updates"
 #, fuzzy
 msgid "Synthetic Monitoring"
 msgstr "Zoeken in Toezicht"
-
-#, python-format
-msgid ""
-"Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
-"subscription). You are currently monitoring %d %s on this site."
-msgstr ""
 
 #, python-format
 msgid "Synthetic monitoring (licensed tests: %s)"
@@ -63784,6 +63941,13 @@ msgstr "Tijd om te waarschuwen wanneer de PVC-status in de wachtstand staat"
 msgid "Time to connect"
 msgstr "Tijd om aan te sluiten"
 
+msgid "Time to fetch HTTP headers"
+msgstr ""
+
+#, fuzzy
+msgid "Time to fetch page content"
+msgstr "Time-out na laatste agent contact"
+
 msgid "Time to first byte"
 msgstr "Tijd tot eerste byte"
 
@@ -64350,6 +64514,10 @@ msgstr ""
 msgid "Total Provisioned IOPS SSD (io2) space"
 msgstr "Totaal voorziene IOPS SSD (io2) ruimte"
 
+#, fuzzy
+msgid "Total RAM"
+msgstr "Totaal bruikbare RAM"
+
 msgid "Total RAM + Swap installed"
 msgstr "Totaal RAM + Swap geïnstalleerd"
 
@@ -64425,6 +64593,10 @@ msgstr "Totaal cache gebruik"
 #, fuzzy, python-format
 msgid "Total comments: %d"
 msgstr "Totaal documenten"
+
+#, fuzzy
+msgid "Total commitable memory"
+msgstr "Absoluut beschikbaar geheugen"
 
 msgid "Total containers"
 msgstr "Totaal containers"
@@ -67714,6 +67886,10 @@ msgstr "Onbekende entiteiten"
 msgid "Unknown group: %s"
 msgstr "Onbekende groep: %s"
 
+#, fuzzy
+msgid "Unknown host"
+msgstr "Onbekende paden"
+
 #, python-format
 msgid "Unknown match type: %s"
 msgstr "Onbekend type overeenkomst: %s"
@@ -67728,6 +67904,10 @@ msgstr "Onbekende paden"
 #, fuzzy, python-format
 msgid "Unknown rendering mode %s"
 msgstr "Onbekend metriek type %s"
+
+#, fuzzy
+msgid "Unknown service"
+msgstr "Onbekende gebruiker"
 
 #, python-format
 msgid "Unknown site %s"
@@ -69594,9 +69774,6 @@ msgstr "Gebruikte CPU-tijd"
 msgid "Used DHCP leases"
 msgstr "Gebruikte DHCP leases"
 
-msgid "Used RAM"
-msgstr "Gebruikt RAM"
-
 msgid "Used SNAT ports"
 msgstr "Gebruikte SNAT-poorten"
 
@@ -70554,6 +70731,10 @@ msgstr "Bekijk de regelgebaseerde effectieve parameters van deze host"
 
 msgid "View timeline"
 msgstr "Bekijk tijdlijn"
+
+#, fuzzy
+msgid "Viewport information"
+msgstr "Informatie over de gastheer"
 
 msgid "Views"
 msgstr "Bekeken"
@@ -75110,6 +75291,9 @@ msgstr "Zertificon Mail wachtrijen"
 msgid "Zerto"
 msgstr "Zerto"
 
+msgid "Zoom"
+msgstr ""
+
 msgid "Zorp connections"
 msgstr "Zorp connecties"
 
@@ -75931,6 +76115,10 @@ msgstr "host is up maar heeft diensten in waarschuwingsstatus"
 
 msgid "host tags"
 msgstr "hostlabels"
+
+#, fuzzy
+msgid "hostname"
+msgstr "Vhost naam"
 
 msgid "hostname will be ignored when agent_hash is given."
 msgstr "hostname zal worden genegeerd wanneer agent_hash is gegeven."
@@ -76852,6 +77040,10 @@ msgstr[1] "services"
 msgid "service in %s state"
 msgstr "service in %s state"
 
+#, fuzzy
+msgid "service name"
+msgstr "Naam van de dienst"
+
 msgid "services"
 msgstr "diensten"
 
@@ -77252,6 +77444,34 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Free RAM"
+#~ msgstr "Gratis RAM"
+
+#~ msgid "GiB"
+#~ msgstr "GiB"
+
+#~ msgid "Memory Average"
+#~ msgstr "Geheugen Gemiddelde"
+
+#~ msgid "Memory Levels"
+#~ msgstr "Geheugenniveaus"
+
+#, fuzzy
+#~| msgid "Absolute levels for committed heap space"
+#~ msgid "Predicteve levels for commit charge"
+#~ msgstr "Absolute niveaus voor vastgelegde heapruimte"
+
+#, fuzzy
+#~| msgid "Upper levels for usage"
+#~ msgid "Predicteve levels for usage"
+#~ msgstr "Bovenste niveaus voor gebruik"
+
+#~ msgid "RAM used %"
+#~ msgstr "RAM gebruikt %"
+
+#~ msgid "Used RAM"
+#~ msgstr "Gebruikt RAM"
 
 #, fuzzy
 #~| msgid "Match service labels"
@@ -77850,9 +78070,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #, python-format
 #~ msgid "Current value: %.2f"
 #~ msgstr "Huidige waarde: %.2f"
-
-#~ msgid "Reference"
-#~ msgstr "Referentie"
 
 #, fuzzy
 #~| msgid "Current setting"
@@ -79008,9 +79225,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #~ msgid "Missing password"
 #~ msgstr "Ontbrekend wachtwoord"
 
-#~ msgid "Missing username"
-#~ msgstr "Ontbrekende gebruikersnaam"
-
 #~ msgid ""
 #~ "In order to monitor S3 request metrics you have to enable request metric "
 #~ "monitoring in the AWS/S3 console. This is a paid feature"
@@ -79547,11 +79761,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Deselect all checkboxes"
 #~ msgstr "Deselecteer alle selectievakjes"
-
-#, fuzzy, python-format
-#~| msgid "Site %s"
-#~ msgid "Hide %s"
-#~ msgstr "Plaats %s"
 
 #, fuzzy
 #~| msgid "Invalid check parameter"
@@ -80255,9 +80464,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Save & go to service configuration"
 #~ msgstr "Opslaan en naar service configuratie gaan"
-
-#~ msgid "Service configuration"
-#~ msgstr "Configuratie van de dienst"
 
 #~ msgid "Instance Alias Name"
 #~ msgstr "Instance Alias Naam"

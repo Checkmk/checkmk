@@ -1,0 +1,13 @@
+Title: Kill forked processes by mk_oracle under AIX
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1709728993
+Edition: cre
+Level: 1
+Version: 2.1.0p41
+
+The agent plugin <code>mk_oracle</code> creates forked processes, e.g. from <code>sqlplus</code>. 
+In order to reliable clean up stale processes, we kill now the whole process chain under AIX
+which corresponds to the stored <code>PID</code>.
+We introduce this only for <code>AIX</code> now as we have customers which are affected under that OS.

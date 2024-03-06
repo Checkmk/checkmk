@@ -12,6 +12,7 @@ use reqwest::{
     tls::TlsInfo,
     Client, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Url, Version,
 };
+use tracing::{event, span, Level};
 
 use super::client::ClientAdapter;
 
@@ -49,6 +50,9 @@ pub async fn send(
     client_adapter: ClientAdapter,
     cfg: RequestConfig,
 ) -> ReqwestResult<ProcessedResponse> {
+    let span = span!(Level::INFO, "send_request");
+    let _guard = span.enter();
+
     let fetch_body = !cfg.without_body;
 
     let start = Instant::now();
@@ -62,6 +66,8 @@ pub async fn send(
     let redirect_target = client_adapter.redirect_recorder.lock().unwrap().to_owned();
     let tls_info = response.extensions_mut().remove::<TlsInfo>();
 
+    event!(target: "debug_headers", Level::INFO, "HTTP headers: \n{:?}", headers);
+
     let (body, time_body) = if fetch_body {
         let start = Instant::now();
         let raw_body = response.bytes().await;
@@ -70,6 +76,10 @@ pub async fn send(
     } else {
         (None, None)
     };
+
+    if let Some(Ok(body)) = body.as_ref() {
+        event!(target: "debug_content", Level::INFO, "Page content: \n{}", body.text);
+    }
 
     Ok(ProcessedResponse {
         version,

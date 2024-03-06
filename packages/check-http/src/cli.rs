@@ -11,6 +11,7 @@ use reqwest::{
     Method, StatusCode, Url,
 };
 use std::{str::FromStr, time::Duration};
+use tracing_subscriber::filter::LevelFilter;
 
 #[derive(Parser, Debug)]
 #[command(about = "check_http")]
@@ -188,6 +189,37 @@ pub struct Cli {
     /// Not relevant for HTTP connections without TLS.
     #[arg(long, conflicts_with = "tls_version")]
     pub min_tls_version: Option<TlsVersion>,
+
+    /// Print HTTP headers to stderr.
+    #[arg(short, long, default_value_t = false)]
+    pub debug_headers: bool,
+
+    /// Print page content to stderr.
+    /// Note: Avoid setting --without-body.
+    #[arg(short, long, default_value_t = false)]
+    pub debug_content: bool,
+
+    /// Enable verbosity output to stderr.
+    /// Specify up to three times for INFO/DEBUG/TRACE log output.
+    /// Additionally, since check_httpv2 is written in Rust, you can also control the output
+    /// by passing the environment variable RUST_LOG.
+    /// Since this is a Rust-specific feature, please have a look at the documentation of the
+    /// tracing/tracing_subscriber Rust crate for details.
+    /// Note: RUST_LOG and the verbosity flag work additive. I.e., "-vvv" will already print
+    /// *all* available logging/tracing information to stderr.
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
+}
+
+impl Cli {
+    pub fn logging_level(&self) -> LevelFilter {
+        match self.verbose {
+            3.. => LevelFilter::TRACE,
+            2.. => LevelFilter::DEBUG,
+            1 => LevelFilter::INFO,
+            _ => LevelFilter::OFF,
+        }
+    }
 }
 
 type PageSizeLimits = (usize, Option<usize>);

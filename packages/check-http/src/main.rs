@@ -10,6 +10,12 @@ use check_http::runner::collect_checks;
 use clap::Parser;
 use cli::Cli;
 use reqwest::{tls::Version as TlsVersion, Method, Version};
+use tracing_subscriber::{
+    self,
+    filter::{EnvFilter, FilterFn, LevelFilter},
+    fmt,
+    prelude::*,
+};
 
 mod cli;
 mod pwstore;
@@ -19,12 +25,57 @@ const DEFAULT_USER_AGENT: &str = "Checkmk/check_http";
 #[tokio::main]
 async fn main() {
     let args = Cli::parse();
+
+    init_tracing(args.logging_level(), args.debug_headers, args.debug_content);
+
     let (client_cfg, request_cfg, request_information, check_params) = make_configs(args);
     let output = Output::from_check_results(
         collect_checks(client_cfg, request_cfg, request_information, check_params).await,
     );
     println!("{}", output);
     std::process::exit(output.worst_state.into());
+}
+
+fn init_tracing(logging_level: LevelFilter, debug_headers: bool, debug_content: bool) {
+    // General tracing/logging.
+    // The directives from env and the logging_level are additive, so the RUST_LOG env var
+    // and the verbosity flag can be used together.
+    let env_filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::OFF.into())
+        .from_env_lossy()
+        .add_directive(logging_level.into());
+
+    // We want to completely filter out the headers and content debug events here...
+    let exclude_headers_and_content =
+        FilterFn::new(|metadata| !matches!(metadata.target(), "debug_headers" | "debug_content"));
+
+    // ...and handle them in a separate layer with different formatting
+    let headers_or_content_layer = if !debug_headers && !debug_content {
+        None
+    } else {
+        let include_headers_or_content = FilterFn::new(move |metadata| {
+            (debug_headers && metadata.target() == "debug_headers")
+                || (debug_content && metadata.target() == "debug_content")
+        });
+        Some(
+            fmt::layer()
+                .with_writer(std::io::stderr)
+                .with_level(false)
+                .with_target(false)
+                .without_time()
+                .with_filter(include_headers_or_content),
+        )
+    };
+
+    tracing_subscriber::registry()
+        .with(
+            fmt::layer()
+                .with_writer(std::io::stderr)
+                .with_filter(env_filter)
+                .with_filter(exclude_headers_and_content),
+        )
+        .with(headers_or_content_layer)
+        .init();
 }
 
 fn make_configs(

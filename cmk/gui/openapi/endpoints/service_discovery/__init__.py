@@ -29,7 +29,7 @@ from cmk.gui.openapi.endpoints.host_config.request_schemas import EXISTING_HOST_
 from cmk.gui.openapi.endpoints.service_discovery.response_schemas import (
     DiscoveryBackgroundJobStatusObject,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import (
     collection_href,
     domain_object,
@@ -41,6 +41,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.site_config import site_is_local
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
     MKAutomationException,

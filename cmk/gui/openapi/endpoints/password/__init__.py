@@ -8,7 +8,6 @@ Passwords intended for authentication of certain checks can be stored in the Che
 password store. You can use in a rule a password stored in the password store without knowing or
 entering the password.
 """
-
 from collections.abc import Mapping
 from typing import Any, cast
 
@@ -20,10 +19,11 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
 from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollection, PasswordObject
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.passwords import (
     load_password,
     load_password_to_modify,

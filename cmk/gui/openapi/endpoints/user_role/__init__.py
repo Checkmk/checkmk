@@ -41,11 +41,12 @@ from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.user_role.request_schemas import CreateUserRole, EditUserRole
 from cmk.gui.openapi.endpoints.user_role.response_schemas import UserRoleCollection, UserRoleObject
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.type_defs import UserRole
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.userroles import RoleID

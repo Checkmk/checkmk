@@ -36,7 +36,6 @@ from cmk.gui.openapi.permission_tracking import (
     enable_permission_tracking,
     is_permission_tracking_enabled,
 )
-from cmk.gui.openapi.restful_objects import permissions
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.parameters import CONTENT_TYPE
 from cmk.gui.openapi.restful_objects.params import path_parameters, to_openapi, to_schema
@@ -64,6 +63,7 @@ from cmk.gui.openapi.utils import (
     RestAPIResponseException,
     RestAPIWatoDisabledException,
 )
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )

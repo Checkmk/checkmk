@@ -23,7 +23,6 @@ from cmk.utils.site import omd_site
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.fields import Field
-from cmk.gui.openapi.restful_objects import permissions
 from cmk.gui.openapi.restful_objects.api_error import api_default_error_schema
 from cmk.gui.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
@@ -55,6 +54,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils import get_failed_plugins
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.script_helpers import gui_context
 
 Ident = tuple[str, str]

@@ -956,7 +956,7 @@ class TextInput(ValueSpec[str]):
         html.text_input(
             varprefix,
             default_value="%s" % value if value is not None else "",
-            size=self._size,
+            size=self._get_size(),
             try_max_width=self._try_max_width,
             read_only=self._read_only,
             cssclass=self._cssclass,
@@ -965,6 +965,18 @@ class TextInput(ValueSpec[str]):
             oninput=self._oninput if self._oninput else None,
             placeholder=self._placeholder,
         )
+
+    def _get_size(self) -> int | Literal["max"]:
+        """
+        2.3: This is needed to make sure that the new rulespec API can
+        handle the input size. There is no size parameter in the new API.
+        If no placeholder is set, the old default size of 25 is used.
+        """
+        if self._size == "max":
+            return self._size
+        if self._placeholder and self._size <= (placeholder_size := len(self._placeholder)):
+            return placeholder_size
+        return self._size
 
     def mask(self, value: str) -> str:
         return value

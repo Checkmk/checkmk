@@ -550,7 +550,7 @@ export function toggle_sidebar_snapin(
     ajax.call_ajax(url + (closed ? "open" : "closed"), {method: "POST"});
 }
 
-// TODO move to managed/web/htdocs/js
+// TODO this is managed code, should be moved to separate package
 export function switch_customer(customer_id: string, switch_state: string) {
     ajax.call_ajax(
         "switch_customer.py?_customer_switch=" +

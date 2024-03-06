@@ -4,8 +4,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 /* See target "cmkupstream-misc" in ~/git/cma/Makefile as well as
-       target "web/htdocs/themes/facelift/cma_facelift.css" in
-   ~/git/check_mk/Makefile for the css building process */
+       css targets in the Makefile for the css building process */
 @import "scss/_variables_common.scss";
 @import "scss/_variables.scss";
 @import "scss/_main.scss";

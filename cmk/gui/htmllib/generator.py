@@ -48,7 +48,7 @@ from .tag_rendering import (
 FinalJavaScript = typing.Callable[[], str] | str
 
 
-# See web/htdocs/js/index.ts:callable_functions
+# See packages/cmk-frontend/src/js/index.ts:callable_functions
 KnownTSFunction = typing.Literal[
     "render_qr_code",
     "render_stats_table",

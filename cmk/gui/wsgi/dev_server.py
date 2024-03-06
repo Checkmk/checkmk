@@ -255,6 +255,12 @@ def main() -> None:
         # the first access as far as possible, after the environment variable has been set.
         from cmk.utils import paths, store
 
+        # TODO: this is broken: with moving web/htdocs to ./packages/cmk-frontend we no longer have
+        # a htdocs folder, but the checkmk code assumes a htdocs folder in the web dir. a quick fix
+        # could be to create a temporary folder and symlink ./packages/cmk-frontend/dist as htdocs
+        # into the temporary folder. this temporary folder could then be used as path to web_dir.
+        # a better fix would be to introduce a htdocs_dir that could be set to
+        # ./packages/cmk-frontend/dist
         paths.web_dir = git_absolute("web")
         paths.local_web_dir = pathlib.Path(git_absolute("web"))
         paths.htpasswd_file = os.path.expanduser("~/.cmk-htpasswd")

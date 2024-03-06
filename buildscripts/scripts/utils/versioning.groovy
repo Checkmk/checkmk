@@ -22,9 +22,9 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"],\
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cee,cce}"]], \
 "enterprise": [\
     "paths_to_be_removed": [\
         "managed", \
@@ -36,9 +36,9 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/{cme,cce}"]], \
 "managed": [\
     "paths_to_be_removed": [\
         "saas", \
@@ -53,17 +53,17 @@ def REPO_PATCH_RULES = [\
         "saas", \
         "cse", \
         "cse.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
 "saas": [\
     "paths_to_be_removed": [\
         "managed", \
         "cme", \
         "cme.py", \
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
-        "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
+        "packages/cmk-frontend/src/themes/{facelift,modern-dark}/scss/cme"]], \
 ];
 /* groovylint-enable DuplicateListLiteral */
 
@@ -183,11 +183,11 @@ def patch_themes(EDITION) {
             // Workaround since scss does not support conditional includes
             THEME_LIST.each { THEME ->
                 sh """
-                    echo '@mixin graphs_cee {\n}' > web/htdocs/themes/${THEME}/scss/cee/_graphs_cee.scss
-                    echo '@mixin reporting {\n}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
-                    echo '@mixin ntop {\n}' > web/htdocs/themes/${THEME}/scss/cee/_ntop.scss
-                    echo '@mixin license_usage {\n}' > web/htdocs/themes/${THEME}/scss/cee/_license_usage.scss
-                    echo '@mixin robotmk {\n}' > web/htdocs/themes/${THEME}/scss/cee/_robotmk.scss
+                    echo '@mixin graphs_cee {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_graphs_cee.scss
+                    echo '@mixin reporting {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_reporting.scss
+                    echo '@mixin ntop {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_ntop.scss
+                    echo '@mixin license_usage {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_license_usage.scss
+                    echo '@mixin robotmk {\n}' > packages/cmk-frontend/src/themes/${THEME}/scss/cee/_robotmk.scss
                 """
             }
             break

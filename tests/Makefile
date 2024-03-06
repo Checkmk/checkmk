@@ -50,7 +50,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker
 	test-docker test-docker-docker test-format-python test-format-python-docker \
-	test-format-shell test-format-js test-format-js-docker test-format-css test-format-css-docker \
+	test-format-shell \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
@@ -77,8 +77,6 @@ help:
 	@echo "test-bandit                         - Run bandit (security) tests"
 	@echo "test-bandit-docker                  - Run bandit (security) tests in docker"
 	@echo "test-bandit-nosec-markers           - Check if all bandit #nosec markers are annotated properly"
-	@echo "test-build-js                       - Run NPM build"
-	@echo "test-build-js-docker                - Run NPM build in docker"
 	@echo "test-code-quality                   - Run code quality tests locally"
 	@echo "test-code-quality-docker            - Run code quality tests in container"
 	@echo "test-cycles                         - Run cycles check"
@@ -87,10 +85,6 @@ help:
 	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-format-bazel                   - Run the Bazel formatting"
 	@echo "test-format-bazel-docker            - Run the Bazel formatting in docker"
-	@echo "test-format-css                     - Run the CSS formatting"
-	@echo "test-format-css-docker              - Run the CSS formatting in docker"
-	@echo "test-format-js                      - Run the JavaScript formatting"
-	@echo "test-format-js-docker               - Run the JavaScript formatting in docker"
 	@echo "test-format-python                  - Run formatting tests"
 	@echo "test-format-python-docker           - Run formatting tests in docker"
 	@echo "test-format-shell                   - Run the shell formatting"
@@ -102,8 +96,6 @@ help:
 	@echo "test-lint-bazel-docker              - Run the Bazel linting in docker"
 	@echo "test-lint-groovy                    - Run the Groovy linting"
 	@echo "test-lint-groovy-docker             - Run the Groovy linting in docker"
-	@echo "test-lint-js                        - Run the JavaScript linting"
-	@echo "test-lint-js-docker                 - Run the JavaScript linting in docker"
 	@echo "test-mypy                           - Run mypy"
 	@echo "test-mypy-docker                    - Run mypy in docker"
 	@echo "test-mypy-raw                       - Run mypy with raw edition config"
@@ -220,36 +212,6 @@ test-format-python-docker:
 test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
-test-format-js:
-	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{web/htdocs/js/**/,}*.{j,t}s"
-
-test-typescript-types:
-	cd ..; scripts/npm-ci && scripts/check-typescript-types.sh
-
-test-lint-js:
-	cd ..; scripts/npm-ci && scripts/check-js-lint.sh
-
-test-build-js:
-	cd ..; scripts/npm-ci && ENTERPRISE=yes MANAGED=no npm run build
-
-test-lint-js-docker:
-	../scripts/run-in-docker.sh make --quiet test-lint-js
-
-test-build-js-docker:
-	../scripts/run-in-docker.sh make --quiet test-build-js
-
-test-format-js-docker:
-	../scripts/run-in-docker.sh make --quiet test-format-js
-
-test-typescript-types-docker:
-	../scripts/run-in-docker.sh make --quiet test-typescript-types
-
-test-format-css:
-	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "web/htdocs/themes/**/*.scss"
-
-test-format-css-docker:
-	../scripts/run-in-docker.sh make --quiet test-format-css
-
 test-lint-bazel:
 	../scripts/run-buildifier --lint=warn --mode=check
 
@@ -263,7 +225,7 @@ test-format-bazel-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-bazel
 
 test-lint-groovy:
-	cd ..; scripts/npm-ci && scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
+	cd ..; scripts/run-groovy-lint --loglevel warning --failon error $(GROOVYLINT_OUTPUT_ARGS)
 
 test-lint-groovy-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-groovy

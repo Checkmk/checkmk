@@ -1,0 +1,205 @@
+#!/usr/bin/env python3
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import argparse
+import os
+import subprocess
+from pathlib import Path
+
+
+def run_setup(*, package_root: Path, install_from_private_repository: bool) -> None:
+    npm_ls_returncode = subprocess.call(
+        ["npm", "ls", "--all"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        cwd=package_root,
+    )
+    if npm_ls_returncode == 0:
+        # all dependencies already installed
+        return
+
+    env = {
+        "NODE_OPTIONS": "--dns-result-order=ipv4first",
+    }
+
+    ci_params = []
+    if os.environ.get("CI") == "true":
+        ci_params = [
+            "--unsafe-perm",  # allow execution as root
+        ]
+
+    if install_from_private_repository:
+        artifacts_base = "https://artifacts.lan.tribe29.com"
+        env["NPM_CONFIG_REGISTRY"] = f"{artifacts_base}/repository/npm-proxy/"
+        env["SASS_BINARY_SITE"] = f"{artifacts_base}/repository/archives/"
+
+    subprocess.check_call(
+        [
+            "npm",
+            "ci",
+            "--yes",
+            "--audit=false",  # disable metrics
+            *ci_params,
+        ],
+        env=env,
+        cwd=package_root,
+    )
+
+
+def run_all(*, package_root: Path) -> None:
+    run_tsc(package_root=package_root)
+    run_test(package_root=package_root)
+    run_eslint(package_root=package_root, xml=False)
+    run_prettier(package_root=package_root, css=True, ts=True, fix=False)
+    run_build(package_root=package_root)
+
+
+def run_tsc(*, package_root: Path) -> None:
+    subprocess.check_call(
+        ["npm", "run", "test-tsc"],
+        cwd=package_root,
+    )
+
+
+def run_test(*, package_root: Path) -> None:
+    subprocess.check_call(
+        ["python3", "scripts/test_scss_content.py"],
+        cwd=package_root,
+    )
+
+
+def run_build(*, package_root: Path) -> None:
+    subprocess.check_call(
+        ["npm", "run", "build"],
+        cwd=package_root,
+    )
+
+
+def run_prettier(*, package_root: Path, css: bool, ts: bool, fix: bool) -> None:
+    # this currently duplicates "npm run prettier", as we need two different
+    # entrypoints for css and js to support the current used ci jobs
+    # TODO: we should remove the distinction between css and js, and remove
+    # this code and use "npm run prettier" instead.
+    glob = "{src/**/,}*.{js,ts,scss}"
+
+    if css and not ts:
+        glob = "{src/**/,}*.scss"
+    else:
+        glob = "{src/**/,}*.{js,ts}"
+
+    check_or_write = ["--check"]
+    if fix:
+        check_or_write = ["--write"]
+
+    subprocess.check_call(
+        [
+            "./node_modules/.bin/prettier",
+            *check_or_write,
+            "--no-color",
+            "--ignore-path",
+            "./.prettierignore",
+            "--loglevel",
+            "warn",
+            glob,
+        ],
+        cwd=package_root,
+    )
+
+
+def run_eslint(*, package_root: Path, xml: bool) -> None:
+    xml_args = []
+    if xml:
+        xml_args = ["--format", "checkstyle"]
+
+    subprocess.check_call(
+        ["npm", "run", "test-eslint", *xml_args],
+        cwd=package_root,
+    )
+
+
+def main():
+    package_root = Path(__file__).parent
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--no-setup", action="store_true")
+    parser.add_argument("--public-artifacts", action="store_true")
+    parser.add_argument("--package-root", default=str(package_root))
+    parser.set_defaults(entrypoint=lambda args: parser.print_usage())
+    subparsers = parser.add_subparsers()
+
+    parser_all = subparsers.add_parser("all")
+    parser_all.set_defaults(
+        entrypoint=lambda args: run_all(
+            package_root=args.package_root,
+        )
+    )
+
+    parser_setup = subparsers.add_parser("setup")
+    parser_setup.set_defaults(
+        entrypoint=lambda args: run_setup(
+            package_root=args.package_root,
+            install_from_private_repository=not args.public_artifacts,
+        )
+    )
+
+    parser_prettier = subparsers.add_parser("prettier")
+    parser_prettier.add_argument("--css", help="run prettier only for css", action="store_true")
+    parser_prettier.add_argument("--ts", help="run prettier only for ts/js", action="store_true")
+    parser_prettier.add_argument("--fix", action="store_true")
+    parser_prettier.set_defaults(
+        entrypoint=lambda args: run_prettier(
+            package_root=args.package_root,
+            css=args.css,
+            ts=args.ts,
+            fix=args.fix,
+        )
+    )
+
+    parser_tsc = subparsers.add_parser("tsc")
+    parser_tsc.set_defaults(
+        entrypoint=lambda args: run_tsc(
+            package_root=args.package_root,
+        )
+    )
+
+    parser_eslint = subparsers.add_parser("eslint")
+    parser_eslint.add_argument("--xml", action="store_true")
+    parser_eslint.set_defaults(
+        entrypoint=lambda args: run_eslint(
+            package_root=args.package_root,
+            xml=args.xml,
+        )
+    )
+
+    parser_test = subparsers.add_parser("test")
+    parser_test.set_defaults(
+        entrypoint=lambda args: run_test(
+            package_root=args.package_root,
+        )
+    )
+
+    parser_build = subparsers.add_parser("build")
+    parser_build.set_defaults(
+        entrypoint=lambda args: run_build(
+            package_root=args.package_root,
+        )
+    )
+
+    args = parser.parse_args()
+
+    if args.entrypoint == run_setup and args.no_setup:  # pylint: disable=comparison-with-callable
+        raise ValueError("can not use `--no-setup` with setup sub command.")
+
+    if not args.no_setup:
+        run_setup(
+            package_root=args.package_root,
+            install_from_private_repository=not args.public_artifacts,
+        )
+
+    args.entrypoint(args)
+
+
+if __name__ == "__main__":
+    main()

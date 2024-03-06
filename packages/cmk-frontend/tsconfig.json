@@ -25,20 +25,20 @@
         "paths": {
             "*": [
                 "*",
-                "web/*",
-                "web/htdocs/js/modules/*",
-                "web/htdocs/js/modules/*",
-                "web/htdocs/js/modules/figures/*",
-                "web/htdocs/js/modules/node_visualization/*",
-                "web/htdocs/js/modules/cee/*",
-                "web/htdocs/js/modules/cee/figures/*",
-                "web/htdocs/js/modules/cee/license_usage/*",
-                "web/htdocs/js/modules/cee/ntop/*"
+                "src/*",
+                "src/js/modules/*",
+                "src/js/modules/*",
+                "src/js/modules/figures/*",
+                "src/js/modules/node_visualization/*",
+                "src/js/modules/cee/*",
+                "src/js/modules/cee/figures/*",
+                "src/js/modules/cee/license_usage/*",
+                "src/js/modules/cee/ntop/*"
             ]
         }
     },
     "include": [
-        "./web/**/*"
+        "./src/**/*"
     ],
     "exclude": [
         "node_modules"

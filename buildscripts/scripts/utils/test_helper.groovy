@@ -85,12 +85,12 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 )
             ));
             break;
-        case "CSSFORMAT":
-            parserId = 'css-format';
+        case "PRETTIER":
+            parserId = 'prettier';
             update_custom_parser([
                 id: parserId, // ID
                 name: 'CSS Format', // Name shown on left side menu
-                regex: '^\\[warn\\]\\s(.*\\.(?:sc|c)ss)$', // RegEx
+                regex: '^\\[warn\\]\\s(.*\\.(?:scss|css|ts|js))$', // RegEx
                 mapping: 'return builder.setFileName(matcher.group(1)).buildOptional()', // Mapping script
                 example: "[warn] web/htdocs/themes/facelift/scss/_bi.scss",  // example log message
                 //       |      |          1                             |
@@ -208,23 +208,6 @@ def analyse_issues(result_check_type, result_check_file_pattern, as_stage=true) 
                 mapping: 'return builder.setFileName(matcher.group(2)).setCategory(matcher.group(1)).setMessage(matcher.group(3)).setLineStart(Integer.parseInt(matcher.group(4))).setColumnStart(Integer.parseInt(matcher.group(5))).buildOptional()', // Mapping script
                 example: "SyntaxError: web/htdocs/js/modules/dashboard.ts: Missing semicolon. (65:30)",  // example log message
                 //       |     1     |                    2              |         3        | 4  |5 |
-            ]);
-            issues.add(scanForIssues(
-                tool: groovyScript(
-                    parserId: parserId,
-                    pattern: "${result_check_file_pattern}"
-                )
-            ));
-            break;
-        case "TSJSFORMAT":
-            parserId = 'js-format';
-            update_custom_parser([
-                id: parserId, // ID
-                name: 'TS/JS Format', // Name shown on left side menu
-                regex: '^\\[warn\\]\\s(.*\\.(?:j|t)s)$', // RegEx
-                mapping: 'return builder.setFileName(matcher.group(2)).buildOptional()', // Mapping script
-                example: "[warn] web/htdocs/js/modules/cbor_ext.js",  // example log message
-                //        |  1  |             2                   |
             ]);
             issues.add(scanForIssues(
                 tool: groovyScript(

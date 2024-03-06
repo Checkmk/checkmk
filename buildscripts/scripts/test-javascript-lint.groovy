@@ -8,11 +8,8 @@ def main() {
     dir("${checkout_dir}") {
         test_jenkins_helper.execute_test([
             name: "test-javascript-lint",
-            cmd: """
-                truncate -s-1 scripts/check-js-lint.sh
-                echo " --format checkstyle > eslint.xml" >> scripts/check-js-lint.sh
-                make -C tests test-lint-js-docker
-            """,
+            cmd: "./scripts/run-in-docker.sh ./packages/cmk-frontend/run check-eslint --xml",
+            output_file: "eslint.xml",
         ]);
 
         test_jenkins_helper.analyse_issues("ESLINT", "eslint.xml");

@@ -8,7 +8,7 @@ def main() {
     dir("${checkout_dir}") {
         test_jenkins_helper.execute_test([
             name: "test-typescript-types",
-            cmd: "make -C tests test-typescript-types-docker",
+            cmd: "./scripts/run-in-docker.sh ./packages/cmk-frontend/run tsc",
             output_file: "js-types.txt",
         ]);
 

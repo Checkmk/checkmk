@@ -39,13 +39,13 @@ $(CHECK_MK_CHANGELOG_PATH): $(CHECK_MK_WERKS_PATH) $(PACKAGE_PYTHON3_MODULES_PYT
 # influence each other. Need to be cleaned up later
 .NOTPARALLEL: $(SOURCE_BUILT_AGENTS)
 
-$(SOURCE_BUILT_AGENTS) $(JAVASCRIPT_MINI) $(THEME_RESOURCES):
+$(SOURCE_BUILT_AGENTS):
 ifneq ($(CI),)
 	@echo "ERROR: Should have been built by source stage (top level: 'make dist')" ; exit 1
 endif
 	$(MAKE) -C $(REPO_PATH) $@
 
-$(CHECK_MK_BUILD): $(CHECK_MK_WERKS_PATH) $(CHECK_MK_CHANGELOG_PATH) $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+$(CHECK_MK_BUILD): $(CHECK_MK_WERKS_PATH) $(CHECK_MK_CHANGELOG_PATH)
 	$(MKDIR) $(CHECK_MK_BUILD_DIR)
 	$(MAKE) -C $(REPO_PATH)/locale mo
 	$(MAKE) -C $(REPO_PATH)/bin
@@ -92,19 +92,16 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	install -m 755 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
 	chmod 644 $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/README
 
-	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
-	tar -c -C $(REPO_PATH)/web \
+	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs
+	tar -c -C $(REPO_PATH)/packages/cmk-frontend/dist \
 	    $(CHECK_MK_TAROPTS) \
-	    app \
-	    htdocs/openapi \
-	    htdocs/css \
-	    htdocs/images \
-	    htdocs/jquery \
-	    $(patsubst $(REPO_PATH)/web/%,%,$(JAVASCRIPT_MINI)) \
-	    $(patsubst $(REPO_PATH)/web/%,%.map,$(JAVASCRIPT_MINI)) \
-	    htdocs/sounds \
-	    $(patsubst $(REPO_PATH)/web/%,%,$(THEME_RESOURCES)) | \
-	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
+	    . | \
+	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs
+
+	tar -c -C $(REPO_PATH)/packages/cmk-frontend-vue/dist/assets/ \
+	    $(CHECK_MK_TAROPTS) \
+	    vue_min.js* | \
+	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/js/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk

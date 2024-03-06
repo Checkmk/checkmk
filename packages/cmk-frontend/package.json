@@ -2,10 +2,14 @@
   "name": "check_mk",
   "version": "1.0.0",
   "description": "Check_MK - Your complete IT monitoring solution",
-  "main": "web/htdocs/js/index.js",
+  "main": "src/js/index.js",
   "directories": {
     "doc": "doc",
     "test": "tests"
+  },
+  "engines" : {
+    "npm" : ">=10.0.0 <11.0.0",
+    "node" : ">=18.0.0 <19.0.0"
   },
   "browserslist": [
     "last 2 version",
@@ -14,7 +18,11 @@
     "not op_mini all"
   ],
   "scripts": {
-    "build": "webpack"
+    "build": "ENTERPRISE=yes MANAGED=no webpack",
+    "build-watch": "WEBPACK_MODE=quick ENTERPRISE=yes MANAGED=no npx webpack --mode development --watch",
+    "test-eslint": "eslint --max-warnings 0 --no-color './src/js/**/*.{j,t}s'",
+    "test-tsc": "tsc",
+    "test-prettier": "prettier  --check --no-color --ignore-path ./.prettierignore --loglevel warn '{src/**/,}*.{js,ts,scss}'"
   },
   "repository": {
     "type": "git",
@@ -25,10 +33,10 @@
   "jest": {
     "testEnvironment": "jsdom",
     "modulePaths": [
-      "<rootDir>/web/htdocs/js/modules"
+      "<rootDir>/src/js/modules"
     ],
     "setupFiles": [
-      "<rootDir>/web/htdocs/js/tests/globals.mock.js",
+      "<rootDir>/src/js/tests/globals.mock.js",
       "fake-indexeddb/auto"
     ],
     "verbose": true
@@ -64,6 +72,7 @@
     "babel-loader": "^8.2.3",
     "browserslist": "^4.21.4",
     "caniuse-lite": "^1.0.30001423",
+    "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^6.5.1",
     "cssnano": "^5.0.12",
     "eslint": "^8.3.0",

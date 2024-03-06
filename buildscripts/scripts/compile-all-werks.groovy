@@ -58,13 +58,13 @@ def main() {
                 try {
                     /* groovylint-disable LineLength */
                     sh(script: """
-                        ./scripts/npm-ci
+                        (cd packages/cmk-frontend && ./run setup)
                         echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' > validate-werks.html
                         # still no need for jq!
                         python3 -c 'import json; print("\\n".join(("\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("all_werks.json")).items())))' >> validate-werks.html
                         echo '</body></html>' >> validate-werks.html
                         java \
-                            -jar node_modules/vnu-jar/build/dist/vnu.jar \
+                            -jar packages/cmk-frontend/node_modules/vnu-jar/build/dist/vnu.jar \
                             --filterpattern 'The .tt. element is obsolete\\. Use CSS instead\\.' \
                             --stdout \
                             --format gnu \

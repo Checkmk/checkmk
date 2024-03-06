@@ -6,6 +6,7 @@ const path = require("path");
 const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
 const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
+const CopyPlugin = require("copy-webpack-plugin");
 
 class WarningsToErrors {
     apply(compiler) {
@@ -41,34 +42,33 @@ module.exports = {
         ],
     },
     entry: {
-        main: "./web/htdocs/js/index.ts",
-        mobile: "./web/htdocs/js/mobile.ts",
-        tracking_entry: "./web/htdocs/js/tracking_entry.ts",
-        side: "./web/htdocs/js/side_index.ts",
-        facelift: "./web/htdocs/themes/facelift/theme.scss",
-        modern_dark: "./web/htdocs/themes/modern-dark/theme.scss",
-        cma: "./web/htdocs/themes/facelift/cma_facelift.scss",
+        main: "./src/js/index.ts",
+        mobile: "./src/js/mobile.ts",
+        tracking_entry: "./src/js/tracking_entry.ts",
+        side: "./src/js/side_index.ts",
+        facelift: "./src/themes/facelift/theme.scss",
+        modern_dark: "./src/themes/modern-dark/theme.scss",
+        // cma: "./src/themes/facelift/cma_facelift.scss", TODO: fork this into cma repo, see CMK-16648
     },
     output: {
-        path: path.resolve(__dirname, "web/htdocs/js"),
-        filename: "[name]_min.js",
-        publicPath: "js",
+        filename: "js/[name]_min.js",
         // Keep this until we have cleaned up our JS files to work as modules and changed all call sites
         // from HTML code to work with the modules. Until then we need to keep the old behaviour of loading
         // all JS code in the global namespace
         libraryTarget: "window",
         libraryExport: "cmk_export",
+        clean: true,
     },
     resolve: {
         modules: [
             "node_modules",
-            path.resolve(__dirname, "web/htdocs/js/modules"),
-            path.resolve(__dirname, "web/htdocs/js/modules/figures"),
-            path.resolve(__dirname, "web/htdocs/js/modules/nodevis"),
-            path.resolve(__dirname, "web/htdocs/js/modules/cee"),
-            path.resolve(__dirname, "web/htdocs/js/modules/cee/figures"),
-            path.resolve(__dirname, "web/htdocs/js/modules/cee/ntop"),
-            path.resolve(__dirname, "web/htdocs/js/modules/cee/license_usage"),
+            path.resolve(__dirname, "src/js/modules"),
+            path.resolve(__dirname, "src/js/modules/figures"),
+            path.resolve(__dirname, "src/js/modules/nodevis"),
+            path.resolve(__dirname, "src/js/modules/cee"),
+            path.resolve(__dirname, "src/js/modules/cee/figures"),
+            path.resolve(__dirname, "src/js/modules/cee/ntop"),
+            path.resolve(__dirname, "src/js/modules/cee/license_usage"),
         ],
         // added this because otherwise it won't find any imported ts files inside of a js file
         extensions: [".ts", ".js"],
@@ -84,7 +84,7 @@ module.exports = {
                         loader: "file-loader",
                         options: {
                             regExp: /\/([a-z0-9_-]+)\/([a-z0-9_-]+)\.scss$/,
-                            name: "../themes/[1]/[2].css",
+                            name: "themes/[1]/[2].css",
                         },
                     },
                     // 4. Extract CSS definitions from JS wrapped CSS
@@ -130,6 +130,19 @@ module.exports = {
         new RemoveEmptyScriptsPlugin(),
         new webpack.EnvironmentPlugin(["ENTERPRISE"]),
         new WarningsToErrors(),
+        new CopyPlugin({
+            patterns: [
+                {from: "src/images", to: "images"},
+                {from: "src/openapi", to: "openapi", globOptions: {ignore: ["**/.f12"]}},
+                {from: "src/jquery", to: "jquery"},
+                {from: "src/css", to: "css"},
+                {from: "src/sounds", to: "sounds"},
+                {from: "src/themes/facelift/images", to: "themes/facelift/images"},
+                {from: "src/themes/facelift/theme.json", to: "themes/facelift/theme.json"},
+                {from: "src/themes/modern-dark/images", to: "themes/modern-dark/images"},
+                {from: "src/themes/modern-dark/theme.json", to: "themes/modern-dark/theme.json"},
+            ],
+        }),
     ],
 };
 
@@ -137,8 +150,8 @@ let babel_loader = {
     // Do not try to execute babel on all node_modules. But some d3 stuff seems to need it's help.
     exclude: /node_modules/,
     include: [
-        path.resolve(__dirname, "web/htdocs/js"),
-        path.resolve(__dirname, "enterprise/web/htdocs/js"),
+        path.resolve(__dirname, "src/js"),
+        path.resolve(__dirname, "enterprise/src/js"),
         path.resolve(__dirname, "node_modules/d3"),
         path.resolve(__dirname, "node_modules/d3-flextree"),
         path.resolve(__dirname, "node_modules/d3-sankey"),

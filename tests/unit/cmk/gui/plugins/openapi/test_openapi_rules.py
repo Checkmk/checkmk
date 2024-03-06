@@ -193,7 +193,7 @@ def test_openapi_create_rule_failure(clients: ClientRegistry) -> None:
             "documentation_url": "http://example.com/",
             "disabled": False,
         },
-        value_raw="{}",
+        value_raw='"my_group"',
         conditions={},
         expect_ok=False,
     )
@@ -691,3 +691,28 @@ def test_create_rule_no_properties(clients: ClientRegistry) -> None:
     )
 
     clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_openapi_create_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
+    clients.Rule.create(
+        ruleset="checkgroup_parameters:memory_linux",
+        folder="/",
+        conditions={},
+        value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
+        expect_ok=False,
+    )
+
+
+def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
+    clients.Rule.edit(
+        rule_id=resp.json["id"],
+        value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
+        expect_ok=False,
+    )

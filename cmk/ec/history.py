@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
+import time
 from abc import ABC, abstractmethod
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
+from contextlib import contextmanager
 from logging import Logger
 from pathlib import Path
 from typing import Any, Literal
@@ -49,6 +51,38 @@ class History(ABC):
     @abstractmethod
     def housekeeping(self) -> None:
         ...
+
+
+class TimedHistory(History):
+    def __init__(self, history: History) -> None:
+        self._history = history
+        self._logger = Logger("cmk.mkeventd")
+
+    @contextmanager
+    def _timing(self, method_name: str) -> Iterator[None]:
+        tic = time.time()
+        try:
+            yield
+        finally:
+            self._logger.debug(
+                "method call %s took: %s ms", method_name, (time.time() - tic) * 1000
+            )
+
+    def flush(self) -> None:
+        with self._timing("flush"):
+            self._history.flush()
+
+    def housekeeping(self) -> None:
+        with self._timing("housekeeping"):
+            self._history.housekeeping()
+
+    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
+        with self._timing("add"):
+            self._history.add(event, what, who, addinfo)
+
+    def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
+        with self._timing("get"):
+            return self._history.get(query)
 
 
 def _log_event(

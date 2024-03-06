@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-import os
 import re
 import subprocess
 from collections import defaultdict
@@ -173,7 +172,7 @@ def _werks_in_git_tag(tag: str) -> list[str]:
     # Populate the map of all tags a werk is in
     for werk_file in werks_in_tag:
         try:
-            werk_id = int(os.path.basename(werk_file))
+            werk_id = int(Path(werk_file).stem)
         except ValueError:
             continue
         _werk_to_git_tag[werk_id].append(tag)

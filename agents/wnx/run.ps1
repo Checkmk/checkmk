@@ -54,7 +54,8 @@ function Write-Help() {
     Write-Host "Available arguments:"
     Write-Host "  -?, -h, --help       display help and exit"
     Write-Host "  -A, --all            shortcut to -S -B -E -C -T -M:  setup, build, ctl, ohm, unit, msi, extensions"
-    Write-Host "  -c, --clean          clean artifacts"
+    Write-Host "  -c, --clean          clean literally all, use with care"
+    Write-Host "  --clean-artifacts    clean artifacts"
     Write-Host "  -S, --setup          check setup"
     Write-Host "  -C, --ctl            build controller"
     Write-Host "  -D, --documentation  create documentation"
@@ -85,7 +86,7 @@ else {
         switch ($args[$i]) {
             { $("-h", "--help") -contains "$_" } { Write-Help; return }
             { $("-A", "--all") -contains $_ } { $argAll = $true }
-            { $("-c", "--clean") -contains $_ } { $argClean = $true }
+            { $("-c", "--clean") -contains $_ } { $argClean = $true; $argCleanArtifacts = $true }
             { $("-S", "--setup") -contains $_ } { $argSetup = $true }
             { $("-f", "--format") -contains $_ } { $argFormat = $true }
             { $("-F", "--check-format") -contains $_ } { $argCheckFormat = $true }
@@ -97,6 +98,7 @@ else {
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
             { $("-T", "--test") -contains $_ } { $argTest = $true }
             { $("-D", "--documentation") -contains $_ } { $argDoc = $true }
+            "--clean-artifacts" { $argCleanArtifacts = $true }
             "--detach" { $argDetach = $true }
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
@@ -150,18 +152,6 @@ function Get-Version {
     Write-Error "wnx_version not found in include\common\wnx_version.h" -ErrorAction Stop
 }
 
-function Clear-Artifacts( [String]$arte) {
-    if ($argClean -ne $true) {
-        return
-    }
-
-    Write-Host "Cleaning artifacts..."
-    $masks = "*.msi", "*.exe", "*.log", "*.yml"
-    foreach ($mask in $masks) {
-        Remove-Item -Path "$arte\$mask" -Force -ErrorAction SilentlyContinue
-    }
-}
-
 function Build-Agent {
     if ($argBuild -ne $true) {
         Write-Host "Skipping Agent build..." -ForegroundColor Yellow
@@ -183,7 +173,7 @@ function Build-Agent {
     Write-Host "Success building agent" -ForegroundColor Green
 }
 
-function Build-Package([bool]$exec, [System.IO.FileInfo]$dir, [string]$name) {
+function Build-Package([bool]$exec, [System.IO.FileInfo]$dir, [string]$name, [string]$cmd) {
     if ($exec -ne $true) {
         Write-Host "Skipping $name build..." -ForegroundColor Yellow
         return
@@ -192,7 +182,7 @@ function Build-Package([bool]$exec, [System.IO.FileInfo]$dir, [string]$name) {
     Write-Host "Building $name..." -ForegroundColor White
     $cwd = Get-Location
     Set-Location "../../packages/$dir"
-    & ./run.cmd --all
+    & ./run.cmd $cmd
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Error building $name, error code is $LASTEXITCODE" -ErrorAction Stop
     }
@@ -217,7 +207,7 @@ function Build-Ext {
     Set-Location $cwd
 }
 
-function Build-OHM {
+function Build-OHM() {
     if ($argOhm -ne $true) {
         Write-Host "Skipping OHM build..." -ForegroundColor Yellow
         return
@@ -240,7 +230,7 @@ function Build-MSI {
         return
     }
     Write-Host "Building MSI..." -ForegroundColor White
-    Remove-Item "$build_dir/install/Release/check_mk_service.msi" -Force
+    Remove-Item "$build_dir/install/Release/check_mk_service.msi" -Force -ErrorAction SilentlyContinue
 
     & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86"
     if ($LASTEXITCODE -ne 0) {
@@ -436,6 +426,33 @@ function Start-MsiSigning {
     powershell Write-Host "MSI signing succeeded" -Foreground Green
 }
 
+function Clear-Artifacts() {
+    if ($argCleanArtifacts -ne $true) {
+        return
+    }
+    Write-Host "Cleaning artifacts..."
+    $masks = "*.msi", "*.exe", "*.log", "*.yml"
+    foreach ($mask in $masks) {
+        Remove-Item -Path "$arte\$mask" -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Clear-All() {
+    if ($argClean -ne $true) {
+        return
+    }
+
+    Write-Host "Cleaning packages..."
+    Build-Package $true "cmk-agent-ctl" "Controller" "--clean"
+    Build-Package $true "mk-sql" "MK-SQL" "--clean"
+
+    Clear-Artifacts
+
+    Write-Host "Cleaning $build_dir..."
+    Remove-Item -Path "$build_dir" -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+
 # Implement other flags and functionality as needed...
 
 Invoke-CheckApp "choco" "choco -v"
@@ -446,7 +463,8 @@ Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 
 try {
     $mainStartTime = Get-Date
-    Clear-Artifacts $arte
+    Clear-Artifacts
+    Clear-All
     Build-Agent
     Build-Package $argCtl "cmk-agent-ctl" "Controller"
     Build-Package $argSql "mk-sql" "MK-SQL"

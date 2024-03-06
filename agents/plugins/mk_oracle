@@ -2483,7 +2483,16 @@ run_cached() {
                 echo "<<<checkmk_cached_plugins:sep(124)>>>"
                 pid="${cfile##*.new.}"
                 printf "timeout|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
-                kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
+
+                # Workaround for AIX to kill child processes
+                if [ "$OS_TYPE" = 'AIX' ] && [ -x "$(command -v proctree 2>/dev/null)" ]; then
+                    # shellcheck disable=SC2016
+                    pidlist="$(proctree "$pid" 2>/dev/null | $AWK '{ printf $1" "}')"
+                fi
+                pidlist="${pidlist:-"${pid}"}"
+                # shellcheck disable=SC2086
+                kill -9 ${pidlist} >/dev/null 2>&1 && sleep 2 # TODO: what about child processes under non-AIX systems?
+
                 if [ -n "$(ps -o args= -p "${pid}")" ]; then
                     printf "killfailed|%s|%s|%s\n" "${NAME}" "${CREATION_TIMEOUT}" "${pid}"
                 else

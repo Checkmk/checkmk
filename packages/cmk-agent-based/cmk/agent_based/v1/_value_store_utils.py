@@ -20,8 +20,6 @@ class GetRateError(IgnoreResultsError):
     """
 
 
-# TODO(mk): Name of function must be fixed on smth like _update_value_and_calc_rate
-# TODO(mk): Split function into two parts update_value and calc_rate
 def get_rate(  # type: ignore[misc]
     value_store: MutableMapping[str, Any],
     key: str,

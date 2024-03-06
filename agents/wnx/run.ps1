@@ -331,7 +331,8 @@ function Start-BinarySigning {
         Write-Error "Build Failed, error code is $LASTEXITCODE" -ErrorAction Stop
     }
 
-    if (Invoke-Attach -ne $True) {
+    $attached = Invoke-Attach
+    if ($attached -ne $True) {
         Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
         return
     }

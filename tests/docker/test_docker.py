@@ -653,7 +653,6 @@ def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerCl
     assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
-@pytest.mark.skipif(build_version().is_saas_edition(), reason="Temporily disabled due to CMK-14454")
 def test_update(
     request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:

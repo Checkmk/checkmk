@@ -199,7 +199,7 @@ def test_openapi_create_rule_failure(rule_client: RulesTestClient) -> None:
             "documentation_url": "http://example.com/",
             "disabled": False,
         },
-        value_raw="{}",
+        value_raw='"my_group"',
         conditions={},
         expect_ok=False,
     )
@@ -680,3 +680,28 @@ def test_openapi_edit_rule(rule_client: RulesTestClient) -> None:
     assert updated_rule["extensions"]["folder"] == created_rule["extensions"]["folder"]
     assert updated_rule["extensions"]["folder_index"] == created_rule["extensions"]["folder_index"]
     assert updated_rule["extensions"]["value_raw"] == new_raw_value
+
+
+def test_openapi_create_rule_reject_incompatible_value_raw(rule_client: RulesTestClient) -> None:
+    rule_client.create(
+        ruleset="checkgroup_parameters:memory_linux",
+        folder="/",
+        conditions={},
+        value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
+        expect_ok=False,
+    )
+
+
+def test_openapi_edit_rule_reject_incompatible_value_raw(rule_client: RulesTestClient) -> None:
+    resp = rule_client.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={},
+        value_raw='{"name": "check_localhost", "host": {"address": "localhost"}, "mode": ("url", {})}',
+    )
+
+    rule_client.edit(
+        rule_id=resp.json["id"],
+        value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
+        expect_ok=False,
+    )

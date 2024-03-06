@@ -200,6 +200,7 @@ recurring_ical_events = "==2.0.2"  # used for parsing recurring events in icalen
 typing-extensions = "*"
 xmltodict = "==0.13.0" # used for parsing robotmk test results
 netapp-ontap = "==9.14.1.0"  # used by netapp special agent
+redfish = "~= 3.2.2"  # used for management board monitoring via Redfish, used by optional MKP
 
 [requires]
 python_version = "3.12"

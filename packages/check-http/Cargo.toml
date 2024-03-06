@@ -22,7 +22,7 @@ reqwest = { version = "*", features = [
     "json",
     "rustls-tls",
     "native-tls-alpn",
-    "socks"
+    "socks",
 ] }
 scrypt = { version = "*", default-features = false, features = ["std"] }
 tokio = { version = "*", features = ["full"] }
@@ -31,3 +31,10 @@ mime = { version = "*" }
 encoding_rs = { version = "*" }
 regex = { version = "*" }
 x509-parser = { version = "*" }
+tracing = { version = "*" }
+tracing-subscriber = { version = "*", features = [
+    "tracing-log",
+    "env-filter",
+    "registry",
+] }
+log = { version = "*" }

@@ -2,13 +2,17 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime
 import os
 import ssl
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from ipaddress import IPv4Address
 from multiprocessing import Process
-from pathlib import Path
 
-from OpenSSL import crypto
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 
 
 class RedirectHandler(SimpleHTTPRequestHandler):
@@ -66,33 +70,49 @@ class HTTPSDummy:
             except OSError:
                 attempt += 1
 
-        raise Exception("No port available for HTTP Server")
+        raise Exception("Failed to bind port for HTTP server")
 
     def create_self_signed_cert(self) -> None:
-        # create a key pair
-        k = crypto.PKey()
-        k.generate_key(crypto.TYPE_RSA, 2048)
+        # Generate our key
+        key = rsa.generate_private_key(65537, 2048)
+        # Write our key to disk for safe keeping
+        with open(self.key_file, "wb") as f:
+            f.write(
+                key.private_bytes(
+                    encoding=serialization.Encoding.PEM,
+                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=serialization.NoEncryption(),
+                )
+            )
 
         # create a self-signed cert
-        cert = crypto.X509()
-        cert.get_subject().CN = self.dns_name
-        cert.set_serial_number(1000)
-        cert.gmtime_adj_notBefore(0)
-        cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
-        cert.set_issuer(cert.get_subject())
-        cert.set_pubkey(k)
-        san_list = [
-            "DNS:" + self.dns_name,
-            "IP:" + self.address,
-        ]
-        cert.add_extensions(
-            [crypto.X509Extension(b"subjectAltName", False, ", ".join(san_list).encode("utf-8"))]
+        subject = issuer = x509.Name(
+            [
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Checkmk"),
+                x509.NameAttribute(NameOID.COMMON_NAME, self.dns_name),
+            ]
         )
-        cert.sign(k, "sha256")
-
-        # save to files
-        Path(self.cert_file).write_bytes(crypto.dump_certificate(crypto.FILETYPE_PEM, cert))
-        Path(self.key_file).write_bytes(crypto.dump_privatekey(crypto.FILETYPE_PEM, k))
+        csr = (
+            x509.CertificateBuilder()
+            .subject_name(subject)
+            .issuer_name(issuer)
+            .public_key(key.public_key())
+            .serial_number(x509.random_serial_number())
+            .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
+            .not_valid_after(  # Our certificate will be valid for 10 days
+                datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=10)
+            )
+            .add_extension(
+                x509.SubjectAlternativeName(
+                    [x509.DNSName(self.dns_name), x509.IPAddress(IPv4Address(self.address))]
+                ),
+                critical=False,
+            )
+            .sign(key, hashes.SHA256())
+        )
+        # Write our CSR out to disk.
+        with open(self.cert_file, "wb") as f:
+            f.write(csr.public_bytes(serialization.Encoding.PEM))
 
     def start_server(self) -> None:
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

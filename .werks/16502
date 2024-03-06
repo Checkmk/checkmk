@@ -1,0 +1,9 @@
+Title: dcd: resolve log error in case of discovery timeouts
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1709716462
+Edition: cee
+Level: 1
+Version: 2.1.0p41
+

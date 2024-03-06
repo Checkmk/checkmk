@@ -446,12 +446,19 @@ impl ConnectionTls {
         if tls.is_badvalue() {
             return Ok(None);
         }
+        let ca = tls.get_pathbuf(keys::CA).context("Bad/Missing CA")?;
+        let client_certificate = tls
+            .get_string(keys::CLIENT_CERTIFICATE)
+            .map(|s| s.into())
+            .context("bad/Missing CLIENT_CERTIFICATE")?;
+        log::info!(
+            "Using ca '{}' client certificate: '{}'",
+            ca.display(),
+            client_certificate,
+        );
         Ok(Some(Self {
-            ca: tls.get_pathbuf(keys::CA).context("Bad/Missing CA")?,
-            client_certificate: tls
-                .get_string(keys::CLIENT_CERTIFICATE)
-                .map(|s| s.into())
-                .context("bad/Missing CLIENT_CERTIFICATE")?,
+            ca,
+            client_certificate,
         }))
     }
     pub fn ca(&self) -> &Path {

@@ -6,12 +6,10 @@
 import json
 import os
 import subprocess
-from collections.abc import Iterable
 from pathlib import Path
 from subprocess import check_output
 from typing import NamedTuple, NewType
 
-import pkg_resources as pkg
 import pytest
 from pipfile import Pipfile  # type: ignore[import]
 from semver import VersionInfo
@@ -84,47 +82,6 @@ def assert_uninstall_and_purge_cache(pip_cmd: PipCommand, package_name: str, sit
 
 def _load_pipfile_data() -> dict:
     return Pipfile.load(filename=str(repo_path() / "Pipfile")).data
-
-
-def _get_import_names_from_dist_name(dist_name: str) -> list[ImportName]:
-    metadata_dir = pkg.get_distribution(dist_name).egg_info
-    with open("{}/{}".format(metadata_dir, "top_level.txt")) as top_level:
-        import_names = top_level.read().rstrip().split("\n")
-        # Skip the private modules (starting with an underscore)
-        return [
-            ImportName(name.replace("/", ".")) for name in import_names if not name.startswith("_")
-        ]
-
-
-def _get_import_names_from_pipfile() -> Iterable[ImportName]:
-    # TODO: There are packages which are currently missing the top_level.txt,
-    # so we need to hardcode the import names for those packages.
-    # We couldn't find a better way to get from Pipfile package name to import name.
-    # What we've tried:
-    # * pip show <package_name> -> use the "Name" attribute
-    # --> fails e.g already for "docstring_parser" (Name: docstring-parser)
-    # --> pip show is really slow
-    # * listing *all* import names explicit
-    # --> huge maintenance effort...
-    packagename_to_importname = {
-        "black": "black",
-        "docstring-parser": "docstring_parser",
-        "idna": "idna",
-        "jsonschema": "jsonschema",
-        "pyparsing": "pyparsing",
-        "uvicorn": "uvicorn",
-        "more-itertools": "more_itertools",
-        "ordered-set": "ordered_set",
-        "openapi-spec-validator": "openapi_spec_validator",
-        "pysaml2": "saml2",
-        "pysmi_lextudio": "pysmi-lextudio",
-    }
-
-    for dist_name in _load_pipfile_data()["default"].keys():
-        if dist_name in packagename_to_importname:
-            yield ImportName(packagename_to_importname[dist_name])
-            continue
-        yield from _get_import_names_from_dist_name(dist_name)
 
 
 def test_01_python_interpreter_exists(site: Site) -> None:
@@ -218,20 +175,6 @@ def test_05_pip_user_can_install_wheel_packages(site: Site, pip_cmd: PipCommand)
     assert_install_package(command, package_name, site)
     assert_local_package_install_path(site, package_name, _local_package_installation_path(site))
     assert_uninstall_and_purge_cache(pip_cmd, package_name, site)
-
-
-@pytest.mark.skip(
-    """
-   Test relies on deprectated top_level.txt mechanism and yields too many false positives.
-   TODO: We need a general rework of this test.
-   """
-)
-def test_import_python_packages_which_are_defined_in_pipfile(site: Site) -> None:
-    for import_name in _get_import_names_from_pipfile():
-        module_file = import_module_and_get_file_path(site, import_name)
-        # Skip namespace modules, they don't have __file__
-        if module_file:
-            assert module_file.startswith(site.root)
 
 
 def import_module_and_get_file_path(site: Site, import_name: str) -> str:

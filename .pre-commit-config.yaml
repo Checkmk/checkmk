@@ -39,6 +39,11 @@ repos:
                 )
     - repo: local
       hooks:
+          - id: check-cmk-namespace
+            name: Check cmk namespace package
+            language: script
+            entry: scripts/check-cmk-namespace
+            types: [file, python]
           - id: remove-stale-imports
             name: Remove stale imports
             language: script

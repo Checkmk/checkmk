@@ -28,13 +28,13 @@ class LoadBalancerBackendAddress(BaseModel):
     name: str
     privateIPAddress: str
     privateIPAllocationMethod: str
-    primary: bool
+    primary: bool = False
 
 
 class LoadBalancerBackendPool(BaseModel):
     id: str
     name: str
-    addresses: Sequence[LoadBalancerBackendAddress]
+    addresses: Sequence[LoadBalancerBackendAddress] = []
 
 
 class OutboundRule(BaseModel):
@@ -49,8 +49,8 @@ class LoadBalancer(BaseModel):
     name: str
     frontend_ip_configs: Mapping[str, FrontendIpConfiguration]
     inbound_nat_rules: Sequence[InboundNatRule]
-    backend_pools: Mapping[str, LoadBalancerBackendPool]
-    outbound_rules: Sequence[OutboundRule]
+    backend_pools: Mapping[str, LoadBalancerBackendPool] = {}
+    outbound_rules: Sequence[OutboundRule] = []
 
 
 Section = Mapping[str, LoadBalancer]

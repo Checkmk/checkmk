@@ -1893,7 +1893,12 @@ class CommandScheduleDowntimes(Command):
             )
 
         return additions + HTMLWriter.render_p(
-            _("<u>Info</u>: Downtime also applies to all services of the hosts.")
+            _("<u>Info</u>: Downtime also applies to all services of the %s.")
+            % ungettext(
+                "host",
+                "hosts",
+                len_action_rows,
+            )
             if cmdtag == "HOST"
             else _("<u>Info</u>: Downtime does not apply to host.")
         )

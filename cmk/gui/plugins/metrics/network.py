@@ -175,12 +175,6 @@ metric_info["hops"] = {
     "color": "51/a",
 }
 
-metric_info["uptime"] = {
-    "title": _("Uptime"),
-    "unit": "s",
-    "color": "#80f000",
-}
-
 metric_info["time_difference"] = {
     "title": _("Time difference"),
     "unit": "s",

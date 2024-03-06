@@ -64,7 +64,7 @@ def inventory_docker_node_images(section: Section) -> InventoryResult:
                 "repotags": ", ".join(image.get("RepoTags", fallback_repotag)),
                 "repodigests": repodigests,
                 "creation": image["Created"],
-                "size": image["VirtualSize"],
+                "size": image.get("VirtualSize", image.get("Size")),
                 "labels": docker.format_labels(image.get("Config", {}).get("Labels") or {}),
             },
             status_columns={

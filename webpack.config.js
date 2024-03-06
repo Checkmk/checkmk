@@ -6,7 +6,6 @@ const path = require("path");
 const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
 const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
-const {VueLoaderPlugin} = require("vue-loader");
 
 class WarningsToErrors {
     apply(compiler) {
@@ -125,17 +124,12 @@ module.exports = {
                     },
                 ],
             },
-            {
-                test: /\.vue$/,
-                use: [{loader: "vue-loader"}],
-            },
         ],
     },
     plugins: [
         new RemoveEmptyScriptsPlugin(),
         new webpack.EnvironmentPlugin(["ENTERPRISE"]),
         new WarningsToErrors(),
-        new VueLoaderPlugin(),
     ],
 };
 
@@ -161,10 +155,6 @@ let babel_loader = {
                 "@babel/plugin-transform-parameters",
                 "@babel/proposal-class-properties",
                 "@babel/proposal-object-rest-spread",
-                // @babel/transform-typescript is required because babel is unable
-                // to identify/process typescript generated from *.vue files
-                // An alternative approach would be the preset babel-preset-typescript-vue
-                "@babel/plugin-transform-typescript",
             ],
         },
     },

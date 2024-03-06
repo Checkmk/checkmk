@@ -1617,7 +1617,7 @@ class SiteFactory:
             site = self.get_site(
                 name,
                 init_livestatus=init_livestatus,
-                prepare_for_tests=not self.version.is_saas_edition(),
+                prepare_for_tests=True,
             )
         site.start()
         if auto_restart_httpd:
@@ -1630,9 +1630,6 @@ class SiteFactory:
         with cse_openid_oauth_provider(
             f"http://localhost:{site.apache_port}"
         ) if self.version.is_saas_edition() else nullcontext():
-            if self.version.is_saas_edition():
-                site.prepare_for_tests()
-                site.activate_changes_and_wait_for_core_reload()
             try:
                 yield site
             finally:

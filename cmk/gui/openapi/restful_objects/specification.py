@@ -253,6 +253,83 @@ scripts works with the other method.
 
 
 
+# Queries through the REST API
+
+Given that Livestatus handles commands asynchronously, the Rest API  is only responsible for the
+preparation and dispatch of these commands, without confirming their execution. To ensure the
+commands sent to Livestatus are executed as intended, users must verify this on their own.
+
+The following script is an example of how to create a host downtime and check that it has indeed been created:
+
+
+    #!/usr/bin/env python3
+    import requests
+    import pprint
+    import time
+    from datetime import datetime, timedelta
+
+    # Checkmk server details
+    SERVER = "localhost"
+    SITE_NAME = "central"
+    USERNAME = "automation"
+    PASSWORD = "test123"
+    PROTOCOL = "http"
+    API_URL = f"{PROTOCOL}://{SERVER}/{SITE_NAME}/check_mk/api/1.0"
+
+    session = requests.Session()
+    session.headers["Authorization"] = f"Bearer {USERNAME} {PASSWORD}"
+    session.headers["Accept"] = "application/json"
+
+    # Target host and downtime details
+    target_host = "host01"
+    downtime_start = (datetime.now() + timedelta(hours=1)).replace(microsecond=0).isoformat() + "Z"
+    downtime_end = (datetime.now() + timedelta(hours=2)).replace(microsecond=0).isoformat() + "Z"
+    comment = "Security updates #1234"
+
+    # Send create downtime command
+    resp = session.post(
+        f"{API_URL}/domain-types/downtime/collections/host",
+        headers={
+            "Content-Type": "application/json",
+        },
+        json={
+            "start_time": downtime_start,
+            "end_time": downtime_end,
+            "comment": comment,
+            "downtime_type": "host",
+            "host_name": target_host,
+        },
+    )
+    if resp.status_code != 204:
+        raise RuntimeError(pprint.pformat(resp.json()))
+
+    # Check if downtime was created. Retry up to 5 times at 5 seconds intervals
+    found = False
+    for retry in range(5):
+        result = session.get(
+            f"{API_URL}/domain-types/downtime/collections/all",
+            params={
+                "host_name": target_host,
+                "downtime_type": "host",
+                "site_id": SITE_NAME,
+                "query": '{"op": "and", "expr": [{"op": "=", "left": "comment", "right": "'
+                + comment
+                + '"}, {"op": "=", "left": "type", "right": "2"}]}',
+            },
+        )
+        if (result.status_code == 200) and (len(result.json()["value"]) > 0):
+            found = True
+            break
+
+        time.sleep(5)
+        print(f"Retrying ({retry+1}) after 5 seconds...")
+
+    if not found:
+        raise RuntimeError("Downtime not found.")
+
+    print("Downtime successfully created.")
+
+
 # Compatibility
 
 ## HTTP client compatibility
@@ -344,6 +421,14 @@ _SECURITY_SCHEMES = {
         "If authentication succeeds, `cookieAuth` will be skipped.",
     },
 }
+
+LIVESTATUS_GENERIC_EXPLANATION = (
+    "The REST API exclusively manages the preparation and dispatch of commands to Livestatus. "
+    "These commands are processed in an asynchronous manner, and the REST API does not validate "
+    "the successful execution of commands on Livestatus. To investigate any failures in Livestatus, "
+    "one should refer to the corresponding log. Also you can refer to [Queries through the REST API](#section/Queries-through-the-REST-API) "
+    "section for further information."
+)
 
 
 class OpenAPIInfoDict(TypedDict, total=True):

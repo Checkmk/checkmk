@@ -18,16 +18,20 @@ if (-not (Test-Administrator)) {
     exit 1
 }
 
+Write-Host "check port"
 &$usbip port
 if ($LastExitCode -eq 3) {
     Write-Host "No chance"
     exit 1
 }
+Write-Host "try to detach"
 
 &$usbip detach -p 00
 if ($LastExitCode -eq 0) {
-    Write-Host "Should not happen"
+    Write-Host "Should not happen: connection has been established"
 }
+
+Write-Host "starting: $usbip attach -r $addr -b $port"
 
 $sleep = 10
 for ($i = 0; $i -lt 3; $i++) {

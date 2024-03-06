@@ -57,6 +57,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
+	test-unit-omdlib \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
 	test-unit-neb test-unit-core
 
@@ -384,6 +385,18 @@ test-cycles:
 test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
+test-unit-omdlib:
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--import-mode=importlib \
+		--doctest-modules \
+		--override-ini="pythonpath=. omd/packages/omd/" \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		-- \
+		omd/packages/omd/ \
+		tests/unit/omdlib/
+
 test-unit: prepare-protobuf-files
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
@@ -392,9 +405,9 @@ test-unit: prepare-protobuf-files
 		--doctest-modules \
 		--override-ini="pythonpath=." \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		--ignore=tests/unit/omdlib/ \
 		-- \
 		cmk \
-		omd/packages/omd \
 		tests/unit
 
 test-unit-docker:
@@ -408,9 +421,9 @@ test-unit-slow: prepare-protobuf-files
 		--doctest-modules \
 		--override-ini="pythonpath=." \
 		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
+		--ignore=tests/unit/omdlib/ \
 		-- \
 		cmk \
-		omd/packages/omd \
 		tests/unit
 
 test-unit-slow-docker:
@@ -427,9 +440,9 @@ test-unit-resilience: prepare-protobuf-files
 		--random-order-bucket=global \
 	        -m "not non_resilient" \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		--ignore=tests/unit/omdlib/ \
 		-- \
 		cmk \
-		omd/packages/omd \
 		tests/unit
 
 test-unit-resilience-docker:
@@ -450,9 +463,9 @@ test-unit-coverage-html: prepare-protobuf-files
 		--cov-config="tests/.coveragerc_unit" \
 		--no-cov-on-fail \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		--ignore=tests/unit/omdlib/ \
 		-- \
 		cmk \
-		omd/packages/omd \
 		tests/unit
 
 

@@ -16,7 +16,6 @@ import pytest
 from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
-from tests.unit.cmk.gui.openapi.test_openapi_rules import _create_rule
 
 from cmk.utils import paths, version
 from cmk.utils.user import UserId
@@ -1011,7 +1010,13 @@ def test_openapi_delete_folder_with_rules(clients: ClientRegistry) -> None:
         title="new_folder",
     )
 
-    _create_rule(clients, folder="~new_folder", value_raw="{'levels': (10.0, 5.0)}")
+    clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="~new_folder",
+        conditions={},
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )
+
     no_force_delete_result = clients.Folder.delete(
         folder_name="~new_folder", mode="abort_on_nonempty", expect_ok=False
     )

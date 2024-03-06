@@ -391,7 +391,9 @@ def edit_rule(param):
 
 def _validate_value(ruleset: Ruleset, value: Any) -> None:
     try:
-        ruleset.valuespec().validate_value(value, "")
+        valuespec = ruleset.valuespec()
+        valuespec.validate_datatype(value, "")
+        valuespec.validate_value(value, "")
 
     except exceptions.MKUserError as exc:
         if exc.varname is None:

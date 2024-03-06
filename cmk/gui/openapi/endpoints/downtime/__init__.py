@@ -56,6 +56,7 @@ from cmk.gui.openapi.endpoints.downtime.request_schemas import (
 from cmk.gui.openapi.endpoints.downtime.response_schemas import DowntimeCollection, DowntimeObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.specification import LIVESTATUS_GENERIC_EXPLANATION
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 
@@ -147,6 +148,10 @@ class DowntimeParameter(BaseSchema):
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
+    status_descriptions={
+        204: "Create host related downtimes commands have been sent to Livestatus. "
+        + LIVESTATUS_GENERIC_EXPLANATION
+    },
 )
 def create_host_related_downtime(params: Mapping[str, Any]) -> Response:
     """Create a host related scheduled downtime"""
@@ -236,6 +241,10 @@ def _with_defaulted_timezone(
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
+    status_descriptions={
+        204: "Create service related downtimes commands have been sent to Livestatus. "
+        + LIVESTATUS_GENERIC_EXPLANATION
+    },
 )
 def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
     """Create a service related scheduled downtime"""
@@ -451,6 +460,10 @@ def show_downtime(params: Mapping[str, Any]) -> Response:
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
+    status_descriptions={
+        204: "Delete downtimes commands have been sent to Livestatus. "
+        + LIVESTATUS_GENERIC_EXPLANATION
+    },
 )
 def delete_downtime(params: Mapping[str, Any]) -> Response:
     """Delete a scheduled downtime"""
@@ -475,6 +488,10 @@ def delete_downtime(params: Mapping[str, Any]) -> Response:
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
+    status_descriptions={
+        204: "Update downtimes commands have been sent to Livestatus. "
+        + LIVESTATUS_GENERIC_EXPLANATION
+    },
 )
 def modify_host_downtime(params: Mapping[str, Any]) -> Response:
     """Modify a scheduled downtime"""

@@ -30,9 +30,10 @@ from cmk.gui.openapi.endpoints.host_tag_group.response_schemas import (
     ConcreteHostTagGroup,
     HostTagGroupCollection,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.host_attributes import undeclare_host_tag_attribute
 from cmk.gui.watolib.tags import (
     change_host_tags,

@@ -290,7 +290,7 @@ def test_permission_exception(clients: ClientRegistry) -> None:
     def validate(*args, **kwargs):
         return False
 
-    with mock.patch("cmk.gui.openapi.restful_objects.permissions.BasePerm.validate", validate):
+    with mock.patch("cmk.gui.utils.permission_verification.BasePerm.validate", validate):
         resp = clients.AuxTag.get(aux_tag_id="ping", expect_ok=False)
 
     resp.assert_status_code(500)

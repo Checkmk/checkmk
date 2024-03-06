@@ -29,11 +29,12 @@ from cmk.gui.openapi.endpoints.host_internal.response_schemas import (
     ConnectionMode,
     HostConfigSchemaInternal,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import Host
 
 permission_registry.register(

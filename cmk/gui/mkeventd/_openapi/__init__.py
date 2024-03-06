@@ -42,10 +42,11 @@ from cmk.gui.livestatus_utils.commands.event_console import (
     update_and_acknowledge,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 
 from .common_fields import ApplicationField, EventIDField, HostNameField, PhaseField, StateField
 from .request_schemas import (

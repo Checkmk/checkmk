@@ -48,10 +48,11 @@ from cmk.gui.openapi.endpoints.utils import (
     update_groups,
     updated_group_details,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 
 PERMISSIONS = permissions.Perm("wato.groups")

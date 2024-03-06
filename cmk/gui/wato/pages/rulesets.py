@@ -61,7 +61,13 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri, makeuri_contextless
+from cmk.gui.utils.urls import (
+    doc_reference_url,
+    DocReference,
+    make_confirm_delete_link,
+    makeuri,
+    makeuri_contextless,
+)
 from cmk.gui.validation.visitors.vue_formspec_visitor import (
     parse_and_validate_form_spec,
     render_form_spec,
@@ -2366,12 +2372,39 @@ class VSExplicitConditions(Transform):
             encode_value=False,
         )
 
+    def _label_condition_help_text(self) -> HTML:
+        return (
+            _("Note that:")
+            + html.render_ul(
+                html.render_li(HTML(_('"not" is the abbreviation for "and not",')))
+                + html.render_li(
+                    HTML(
+                        _(
+                            'the operators are processed in the priority: "not", "and", "or" - according '
+                            "to the Boolean algebra standards."
+                        )
+                    )
+                )
+            )
+            + HTML(
+                _("For more help have a look at the %s.")
+                % html.render_a(
+                    _("documentation"),
+                    # TODO: change this doc reference from "labels#views" to "labels#conditions" once
+                    #       the corresponding article is updated to the new label group conditions
+                    href=doc_reference_url(DocReference.LABELS_IN_VIEWS),
+                    target="blank",
+                )
+            )
+        )
+
     def _vs_host_label_condition(self) -> LabelGroups:
         return LabelGroups(
             show_empty_group_by_default=False,
             add_label=_("Add to condition"),
             title=_("Host labels"),
-            help=_("Rule only applies to hosts matching the label conditions."),
+            help=_("Rule only applies to hosts matching the label conditions. ")
+            + self._label_condition_help_text(),
         )
 
     def _vs_service_label_condition(self) -> LabelGroups:
@@ -2379,7 +2412,8 @@ class VSExplicitConditions(Transform):
             show_empty_group_by_default=False,
             add_label=_("Add to condition"),
             title=_("Service labels"),
-            help=_("Use this condition to select services based on the configured service labels."),
+            help=_("Use this condition to select services based on the configured service labels. ")
+            + self._label_condition_help_text(),
         )
 
     def _vs_host_tag_condition(self) -> DictHostTagCondition:

@@ -2810,8 +2810,16 @@ msgstr "アイドル接続の絶対数"
 msgid "Absolute number of incoming connections"
 msgstr "着信接続の絶対数"
 
+#, fuzzy
+msgid "Absolute used commit charge"
+msgstr "絶対コミット可能メモリ"
+
 msgid "Absolute used leases levels"
 msgstr "絶対使用済みリースレベル"
+
+#, fuzzy
+msgid "Absolute used memory"
+msgstr "絶対空きメモリ"
 
 msgid "Absolute value"
 msgstr "絶対値"
@@ -3995,6 +4003,9 @@ msgstr "このメトリックをカスタムグラフに追加します..."
 msgid "Add this metric to dedicated graph"
 msgstr "このメトリックを専用グラフに追加します"
 
+msgid "Add this node to existing root nodes"
+msgstr ""
+
 msgid "Add time period"
 msgstr "期間を追加する"
 
@@ -4277,6 +4288,10 @@ msgstr "Adva Optical Transport Laser Power"
 
 #, fuzzy
 msgid "Advanced condition simulation"
+msgstr "利用可能なオプション"
+
+#, fuzzy
+msgid "Advanced configuration options"
 msgstr "利用可能なオプション"
 
 #, fuzzy
@@ -5456,6 +5471,10 @@ msgstr "TCP経由のアクセスを許可する"
 
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr "すべてのユーザーがこのパックに含まれるルールを参照することを許可する"
+
+#, fuzzy
+msgid "Allow growing here"
+msgstr "Mobileiron バージョン"
 
 #, fuzzy
 msgid "Allow higher versions"
@@ -6944,6 +6963,10 @@ msgid "Automatically create monitoring agents"
 msgstr "監視エージェントを自動的に作成する"
 
 msgid "Automatically delete hosts without piggyback data"
+msgstr "ピギーバックデータなしでホストを自動的に削除します"
+
+#, fuzzy
+msgid "Automatically detects changes in the formular and fetches new data"
 msgstr "ピギーバックデータなしでホストを自動的に削除します"
 
 msgid "Automatically discover LDAP server"
@@ -9963,6 +9986,13 @@ msgstr "次回のログインまたはアクセス時にパスワードを変更
 msgid "Change state"
 msgstr "状態の変更"
 
+msgid "Change structure of all nodes to"
+msgstr ""
+
+#, fuzzy
+msgid "Change structure of this node to"
+msgstr "このホストのステータスを更新します"
+
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
 "Checkmkインストールのデフォルトのユーザーインターフェイステーマを変更します"
@@ -11840,23 +11870,34 @@ msgstr "ホストのコメント"
 msgid "Comments of service"
 msgstr "サービスのコメント"
 
-msgid "Commit Charge"
-msgstr "コミットチャージ"
-
-msgid "Commit Charge Average"
-msgstr "コミットチャージ平均"
-
 msgid "Commit Limit"
 msgstr "コミット制限"
 
-msgid "Commit charge Levels"
-msgstr "コミットチャージレベル"
+#, fuzzy
+msgid "Commit charge"
+msgstr "コミットチャージ"
+
+#, fuzzy
+msgid "Commit charge (averaged)"
+msgstr "コミットチャージ平均"
 
 msgid "Commit charge in percent (relative to commit limit)"
 msgstr "パーセント単位のコミットチャージ(コミット制限に対して)"
 
+#, fuzzy
+msgid "Commit charge levels"
+msgstr "コミットチャージレベル"
+
 msgid "Commit limit"
 msgstr "コミット制限"
+
+#, fuzzy
+msgid "Commitable memory"
+msgstr "コミットされたメモリ"
+
+#, fuzzy
+msgid "Commitable memory (averaged)"
+msgstr "仮想メモリの平均化"
 
 msgid "Commits"
 msgstr "コミット"
@@ -11902,6 +11943,10 @@ msgstr ""
 "場合、サービスはCRITに移動します。これは、チェックが手動チェックとして実行さ"
 "れない場合にのみ機能することに注意してください。手動チェックでこのオプション"
 "を選択した場合、サービスは常にUNKNに送られます。"
+
+#, fuzzy
+msgid "Compare to"
+msgstr "ダウンタイム履歴"
 
 msgid ""
 "Compares the maximum number of connections that have been in use "
@@ -12963,6 +13008,10 @@ msgstr "継続する"
 msgid "Continue counting when event is <b>acknowledged</b>"
 msgstr "イベントが<b>確認済み</b>になったときにカウントを続行します"
 
+#, fuzzy
+msgid "Continue growth here"
+msgstr "検索を続ける"
+
 msgid "Continue search"
 msgstr "検索を続ける"
 
@@ -13029,6 +13078,10 @@ msgstr "冷却装置"
 
 msgid "Cooling period after failed connect/heartbeat"
 msgstr "接続/ハートビートに失敗した後の冷却期間"
+
+#, fuzzy
+msgid "Coordinates"
+msgstr "管理状態"
 
 msgid "Copied rules from master"
 msgstr "マスターからコピーされたルール"
@@ -14828,6 +14881,10 @@ msgstr "データ転送"
 
 msgid "Data transfer cache size"
 msgstr "データ転送キャッシュサイズ"
+
+#, fuzzy
+msgid "Data transfer rate"
+msgstr "データ転送"
 
 msgid "Data type"
 msgstr "データ・タイプ"
@@ -17390,6 +17447,10 @@ msgstr "ハードウェア/ソフトウェアのインベントリを行う"
 msgid "Do inventory and service configuration on existing hosts."
 msgstr "既存ホストのインベントリとサービス設定を行う。"
 
+#, fuzzy
+msgid "Do no longer continue here"
+msgstr "Dockerノードコンテナレベル"
+
 msgid "Do not activate changes"
 msgstr "変更をアクティブにしないでください"
 
@@ -19538,6 +19599,9 @@ msgstr "%s の暗号化は、リモート サイトで有効になっている�
 
 msgid "End"
 msgstr "終わり"
+
+msgid "End growing here"
+msgstr ""
 
 msgid "End-Time"
 msgstr "終了時間"
@@ -21799,6 +21863,10 @@ msgstr "1ページ目"
 msgid "First time the downtime starts"
 msgstr "最初のダウンタイム開始"
 
+#, fuzzy
+msgid "Fit to screen"
+msgstr "送信データ"
+
 msgid "Fix affected folders, hosts and rules."
 msgstr "影響を受けるフォルダ、ホスト、およびルールを修正します。"
 
@@ -21859,6 +21927,9 @@ msgstr "フラッシュスペースの使用量"
 
 msgid "Flashback"
 msgstr "フラッシュバック"
+
+msgid "Flat"
+msgstr ""
 
 msgid "Flex. Duration"
 msgstr "フレックスデュレーション"
@@ -22477,11 +22548,12 @@ msgstr "フリーDHCPース"
 msgid "Free Pods: Cluster"
 msgstr "空きPods: クラスター"
 
-msgid "Free RAM"
-msgstr "空きRAM"
-
 msgid "Free SGA memory available"
 msgstr "利用可能な空きSGAメモリ"
+
+#, fuzzy
+msgid "Free floating style"
+msgstr "デフォルトの線種"
 
 msgid "Free leases levels"
 msgstr "無料リースレベル"
@@ -22615,6 +22687,10 @@ msgstr "フローズン"
 
 msgid "Fujitsu storage CA port discovery"
 msgstr "FujitsuストレージCAポートの発見"
+
+#, fuzzy
+msgid "Full"
+msgstr "フルネーム"
 
 msgid "Full - Including RRA configuration"
 msgstr "フル - RRA構成を含む"
@@ -22954,9 +23030,6 @@ msgstr "SFTPサーバーからファイルを取得する"
 msgid "Get header only"
 msgstr ""
 
-msgid "GiB"
-msgstr "GiB"
-
 #, no-python-format
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -22986,6 +23059,10 @@ msgstr "グローバル"
 
 msgid "Global Settings"
 msgstr "グローバル設定"
+
+#, fuzzy
+msgid "Global default"
+msgstr "デフォルトです"
 
 msgid "Global memory bound"
 msgstr "グローバルメモリバウンド"
@@ -24718,6 +24795,10 @@ msgstr ""
 msgid "Hidden"
 msgstr "隠し"
 
+#, fuzzy
+msgid "Hide"
+msgstr "サイト %s"
+
 msgid "Hide Checkmk version"
 msgstr "Checkmkバージョンを非表示"
 
@@ -24777,6 +24858,10 @@ msgstr "ユーザールールを非表示にする"
 
 msgid "Hierarchical layout"
 msgstr "階層レイアウト"
+
+#, fuzzy
+msgid "Hierarchy"
+msgstr "階層"
 
 msgid "High"
 msgstr "高い"
@@ -26963,6 +27048,16 @@ msgstr ""
 "る場合は、中央スプーリングを使用しない限り、リモートサイトで直接分析を行う必"
 "要があります。"
 
+#, fuzzy
+msgid ""
+"If this parameter is set, all measured values will be averaged over the "
+"specified time interval before levels are being applied. By default, "
+"averaging is turned off. "
+msgstr ""
+"このパラメータが設定されている場合、レベルが適用される前に、すべての測定値が"
+"指定された時間間隔で平均化されます。デフォルトでは、平均化はオフになっていま"
+"す。 "
+
 msgid ""
 "If this parameter is set, all measured values will be averaged over the "
 "specified time interval before levels are being applied. Per default, "
@@ -26971,15 +27066,6 @@ msgstr ""
 "このパラメータが設定されている場合、レベルが適用される前に、すべての測定値が"
 "指定された時間間隔で平均化されます。デフォルトでは、平均化はオフになっていま"
 "す。"
-
-msgid ""
-"If this parameter is set, all measured values will be averaged over the "
-"specified time interval before levels are being applied. Per default, "
-"averaging is turned off. "
-msgstr ""
-"このパラメータが設定されている場合、レベルが適用される前に、すべての測定値が"
-"指定された時間間隔で平均化されます。デフォルトでは、平均化はオフになっていま"
-"す。 "
 
 msgid ""
 "If this parameter is set, all throughputs will be averaged over the "
@@ -31647,6 +31733,10 @@ msgid "Line spacing"
 msgstr "行間隔"
 
 #, fuzzy
+msgid "Line style"
+msgstr "ライセンスの状態"
+
+#, fuzzy
 msgid "Line-based matching"
 msgstr "ホスト名の一致"
 
@@ -31958,6 +32048,10 @@ msgid ""
 msgstr ""
 "Checkmkマイクロコアのパフォーマンス統計のライブモニター。注意:このスナップイ"
 "ンは、<b>すべての</b>サイトでCheckmkコアが実行されている場合にのみ機能します"
+
+#, fuzzy
+msgid "Live search active"
+msgstr "アクティブ/アクティブ"
 
 msgid "Liveproxy Daemon"
 msgstr "Liveproxyデーモン"
@@ -33830,6 +33924,10 @@ msgid "Matching is inverted in this rule"
 msgstr "このルールではマッチングが逆になります"
 
 #, fuzzy
+msgid "Matching nodes"
+msgstr "すべてのノードに一致"
+
+#, fuzzy
 msgid "Matching: "
 msgstr "マッチング"
 
@@ -34458,12 +34556,6 @@ msgstr "記憶"
 msgid "Memory (RAM)"
 msgstr "メモリ(RAM)"
 
-msgid "Memory Average"
-msgstr "メモリ平均"
-
-msgid "Memory Levels"
-msgstr "メモリレベル"
-
 msgid "Memory Pages"
 msgstr "メモリページ"
 
@@ -34637,6 +34729,9 @@ msgstr "確認済みのイベントがある場合でもマージ"
 
 msgid "Merge if there is an open un-acknowledged event"
 msgstr "未確認の未確認イベントがある場合はマージします"
+
+msgid "Merge nodes with equal ID"
+msgstr ""
 
 msgid "Merge with open event"
 msgstr "オープンイベントとマージ"
@@ -35034,6 +35129,10 @@ msgstr "ホスト名がありません"
 
 msgid "Missing identity provider information in metadata"
 msgstr "メタデータにIDプロバイダ情報がありません"
+
+#, fuzzy
+msgid "Missing in reference"
+msgstr "ユーザー名の欠落"
 
 msgid "Missing job ID."
 msgstr "ジョブIDがありません。"
@@ -35665,6 +35764,10 @@ msgstr "ブロックデバイス用マウントポイント(brtfs)"
 
 msgid "Mountpoints to never ignore"
 msgstr "決して無視しないマウントポイント"
+
+#, fuzzy
+msgid "Mouse position"
+msgstr "マウントオプション"
 
 msgid "Move"
 msgstr "移動"
@@ -37181,6 +37284,9 @@ msgstr "重要でないイベント率"
 
 msgid "Noncritical events"
 msgstr "クリティカルでないイベント"
+
+msgid "None"
+msgstr ""
 
 msgid "None (linear)"
 msgstr "なし（リニア）"
@@ -39017,6 +39123,10 @@ msgstr "問題が発生した場合のみ"
 msgid "Only in case of a problem or if inodes are below 50%"
 msgstr "問題が発生した場合、またはiノードが50%未満の場合のみ"
 
+#, fuzzy
+msgid "Only in reference"
+msgstr "プラグインAPIリファレンスの確認"
+
 msgid "Only include hosts that failed on previous discovery"
 msgstr "以前の検出で失敗したホストのみを含める"
 
@@ -39061,6 +39171,10 @@ msgstr "パーセントのみ"
 
 msgid "Only ping this device"
 msgstr "このデバイスにのみpingを実行します"
+
+#, fuzzy
+msgid "Only problems"
+msgstr "問題のみを表示する"
 
 msgid "Only process mails with matching subject"
 msgstr "件名が一致するメールのみを処理します"
@@ -40178,6 +40292,10 @@ msgstr "Palo Altoの状態"
 
 msgid "Palo Alto Users"
 msgstr "Palo Alto ユーザー"
+
+#, fuzzy
+msgid "Panning"
+msgstr "ランニング"
 
 msgid "Paper margins"
 msgstr "紙の余白"
@@ -42174,14 +42292,6 @@ msgstr "事前定義された検索"
 msgid "Predicted average for 15 minute CPU load"
 msgstr "CPU負荷の15分間の予測平均"
 
-#, fuzzy
-msgid "Predicteve levels for commit charge"
-msgstr "コミットされたヒープスペースの絶対レベル"
-
-#, fuzzy
-msgid "Predicteve levels for usage"
-msgstr "使用量の上位レベル"
-
 msgid "Prediction"
 msgstr "予測"
 
@@ -43053,6 +43163,10 @@ msgstr "RAID: 要約状態"
 msgid "RAM"
 msgstr "RAM"
 
+#, fuzzy
+msgid "RAM (averaged)"
+msgstr "平均"
+
 msgid "RAM + Swap"
 msgstr "RAM +スワップ"
 
@@ -43062,14 +43176,22 @@ msgstr "RAM + Swapの概要"
 msgid "RAM + Swap used"
 msgstr "RAM +スワップ使用"
 
+#, fuzzy
+msgid "RAM free"
+msgstr "% フリー"
+
+msgid "RAM free (averaged)"
+msgstr ""
+
 msgid "RAM installed"
 msgstr "インストールされたRAM"
 
 msgid "RAM used"
 msgstr "使用されるRAM"
 
-msgid "RAM used %"
-msgstr "RAM使用%"
+#, fuzzy
+msgid "RAM used (averaged)"
+msgstr "平均的なexeファイルを読む"
 
 msgid ""
 "RCC compatible suites can be started with <a href=\"https://robocorp.com/"
@@ -43695,6 +43817,9 @@ msgstr "このテストを再度有効にする"
 msgid "Refer to:"
 msgstr "参照する:"
 
+msgid "Reference"
+msgstr "参照"
+
 msgid "Reference size for magic factor"
 msgstr "マジックファクターの基準サイズ"
 
@@ -44233,6 +44358,10 @@ msgstr "全ての予定されたダウンタイムを削除しますか?"
 msgid "Remove service"
 msgstr "サービスを削除する"
 
+#, fuzzy
+msgid "Remove style"
+msgstr "すべて削除する"
+
 msgid "Remove tag"
 msgstr "タグを削除します"
 
@@ -44466,6 +44595,9 @@ msgstr "このダウンタイムを繰り返す"
 #, python-format
 msgid "Repeats every %s"
 msgstr "%sを常に繰り返す"
+
+msgid "Replace hierarchical root with this node"
+msgstr ""
 
 msgid ""
 "Replace the application (syslog tag) with this text. If you have bracketed "
@@ -44778,6 +44910,10 @@ msgstr "メトリックを要求する"
 msgid "Request rate"
 msgstr "リクエストレート"
 
+#, fuzzy
+msgid "Request transfer rate"
+msgstr "リクエストレート"
+
 msgid "Request wait time"
 msgstr "待ち時間をリクエストする"
 
@@ -44923,6 +45059,14 @@ msgstr "ルールパック %s のルールをMKP経由で提供されたもの�
 
 msgid "Reset to default"
 msgstr "デフォルトにリセット"
+
+#, fuzzy
+msgid "Reset to default layout"
+msgstr "デフォルトのレイアウトを使用する"
+
+#, fuzzy
+msgid "Reset zoom"
+msgstr "リセット"
 
 #, python-format
 msgid "Resets the commands '%s', '%s' and '%s' to the default state"
@@ -46313,6 +46457,10 @@ msgstr "保存してテストする"
 msgid "Save & view folder"
 msgstr "保存してフォルダを確認"
 
+#, fuzzy
+msgid "Save as new layout for this aggregation"
+msgstr "この集計のコピーを作成します"
+
 msgid "Save filters & go to designer"
 msgstr "フィルタを保存してデザイナーに移動"
 
@@ -47104,6 +47252,10 @@ msgstr "選択したセクションはエージェントによって実行され
 
 msgid "Selected state"
 msgstr "選択した状態"
+
+#, fuzzy
+msgid "Selected style configuration"
+msgstr "状態構成を追加する"
 
 #, python-format
 msgid ""
@@ -48752,6 +48904,10 @@ msgstr "グラフ領域にグラフのタイトルを表示する"
 msgid "Show graphs for the first"
 msgstr "最初のグラフを表示する"
 
+#, fuzzy
+msgid "Show gravity configuration"
+msgstr "サービス構成"
+
 msgid "Show header with highlighted background"
 msgstr "背景が強調表示されたヘッダーを表示する"
 
@@ -48903,6 +49059,10 @@ msgstr "サービスの説明"
 
 msgid "Show service status"
 msgstr "サービスステータスを表示する"
+
+#, fuzzy
+msgid "Show services"
+msgstr "シャドウサービス"
 
 #, python-format
 msgid "Show services of host %s"
@@ -51880,6 +52040,9 @@ msgstr "新しいイベントの作成を停止し、オーバーフローイベ
 msgid "Stop foreign background jobs"
 msgstr "他の人のバックグラウンドジョブ停止"
 
+msgid "Stop growing here"
+msgstr ""
+
 msgid "Stop job"
 msgstr "ジョブを停止"
 
@@ -52478,12 +52641,6 @@ msgstr "Synologyの更新"
 #, fuzzy
 msgid "Synthetic Monitoring"
 msgstr "モニタリングで検索"
-
-#, python-format
-msgid ""
-"Synthetic Monitoring is an add-on. Try it for free with up to %d tests (per "
-"subscription). You are currently monitoring %d %s on this site."
-msgstr ""
 
 #, python-format
 msgid "Synthetic monitoring (licensed tests: %s)"
@@ -62117,6 +62274,13 @@ msgstr "PVCが保留状態の時に警告を発報するまでの時間"
 msgid "Time to connect"
 msgstr "接続する時間"
 
+msgid "Time to fetch HTTP headers"
+msgstr ""
+
+#, fuzzy
+msgid "Time to fetch page content"
+msgstr "最後のエージェント連絡後のタイムアウト"
+
 msgid "Time to first byte"
 msgstr "最初のバイトまでの時間"
 
@@ -62674,6 +62838,10 @@ msgstr "1秒ごとの総プロビジョニングIOPS SSD (io2) IO動作"
 msgid "Total Provisioned IOPS SSD (io2) space"
 msgstr "総プロビジョニングIOPS SSD (io2) スペース"
 
+#, fuzzy
+msgid "Total RAM"
+msgstr "使用可能なRAMの合計"
+
 msgid "Total RAM + Swap installed"
 msgstr "合計RAM +インストールされたスワップ"
 
@@ -62748,6 +62916,10 @@ msgstr "キャッシュの合計使用量"
 #, python-format
 msgid "Total comments: %d"
 msgstr "トータルコメント :%d"
+
+#, fuzzy
+msgid "Total commitable memory"
+msgstr "絶対コミット可能メモリ"
 
 msgid "Total containers"
 msgstr "コンテナ合計"
@@ -66023,6 +66195,10 @@ msgstr "不明なエンティティ"
 msgid "Unknown group: %s"
 msgstr "不明なグループ: %s"
 
+#, fuzzy
+msgid "Unknown host"
+msgstr "不明なパス"
+
 #, python-format
 msgid "Unknown match type: %s"
 msgstr "不明な一致タイプ:%s"
@@ -66037,6 +66213,10 @@ msgstr "不明なパス"
 #, fuzzy, python-format
 msgid "Unknown rendering mode %s"
 msgstr "不明なメトリックのタイプ %s"
+
+#, fuzzy
+msgid "Unknown service"
+msgstr "不明なユーザー"
 
 #, python-format
 msgid "Unknown site %s"
@@ -67839,9 +68019,6 @@ msgstr "使用CPU時間"
 msgid "Used DHCP leases"
 msgstr "使用されたDHCPリース"
 
-msgid "Used RAM"
-msgstr "使用済みRAM"
-
 msgid "Used SNAT ports"
 msgstr "使用されるSNATポート"
 
@@ -68783,6 +68960,10 @@ msgstr "このホストのルールベースの有効パラメータを表示す
 
 msgid "View timeline"
 msgstr "タイムライン表示"
+
+#, fuzzy
+msgid "Viewport information"
+msgstr "ホスト情報"
 
 msgid "Views"
 msgstr "ビュー"
@@ -73115,6 +73296,9 @@ msgstr "Zertificon メールキュー"
 msgid "Zerto"
 msgstr "Zerto"
 
+msgid "Zoom"
+msgstr ""
+
 msgid "Zorp connections"
 msgstr "Zorp接続"
 
@@ -73927,6 +74111,10 @@ msgstr "ホストは稼働していますが、サービスは警告状態にあ
 
 msgid "host tags"
 msgstr "ホストタグ"
+
+#, fuzzy
+msgid "hostname"
+msgstr "バーチャルホスト名"
 
 msgid "hostname will be ignored when agent_hash is given."
 msgstr "agent_hashが指定されている場合、ホスト名は無視されます。"
@@ -74833,6 +75021,10 @@ msgstr[0] "サービス"
 msgid "service in %s state"
 msgstr "%s 状態のサービス"
 
+#, fuzzy
+msgid "service name"
+msgstr "サービス名"
+
 msgid "services"
 msgstr "サービス"
 
@@ -75232,6 +75424,34 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Free RAM"
+#~ msgstr "空きRAM"
+
+#~ msgid "GiB"
+#~ msgstr "GiB"
+
+#~ msgid "Memory Average"
+#~ msgstr "メモリ平均"
+
+#~ msgid "Memory Levels"
+#~ msgstr "メモリレベル"
+
+#, fuzzy
+#~| msgid "Absolute levels for committed heap space"
+#~ msgid "Predicteve levels for commit charge"
+#~ msgstr "コミットされたヒープスペースの絶対レベル"
+
+#, fuzzy
+#~| msgid "Upper levels for usage"
+#~ msgid "Predicteve levels for usage"
+#~ msgstr "使用量の上位レベル"
+
+#~ msgid "RAM used %"
+#~ msgstr "RAM使用%"
+
+#~ msgid "Used RAM"
+#~ msgstr "使用済みRAM"
 
 #, fuzzy
 #~| msgid "Match service labels"
@@ -75847,9 +76067,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #, python-format
 #~ msgid "Current value: %.2f"
 #~ msgstr "現在の値: %.2f"
-
-#~ msgid "Reference"
-#~ msgstr "参照"
 
 #, fuzzy
 #~| msgid "Current setting"
@@ -76968,9 +77185,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ msgid "Missing password"
 #~ msgstr "パスワード欠落"
 
-#~ msgid "Missing username"
-#~ msgstr "ユーザー名の欠落"
-
 #~ msgid ""
 #~ "In order to monitor S3 request metrics you have to enable request metric "
 #~ "monitoring in the AWS/S3 console. This is a paid feature"
@@ -77422,11 +77636,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Deselect all checkboxes"
 #~ msgstr "すべてのチェックボックスの選択を解除します"
-
-#, fuzzy, python-format
-#~| msgid "Site %s"
-#~ msgid "Hide %s"
-#~ msgstr "サイト %s"
 
 #, fuzzy
 #~| msgid "Invalid check parameter"
@@ -78017,9 +78226,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Save & go to service configuration"
 #~ msgstr "保存してサービス設定に移動"
-
-#~ msgid "Service configuration"
-#~ msgstr "サービス構成"
 
 #~ msgid "Instance Alias Name"
 #~ msgstr "インスタンスエイリアス名"

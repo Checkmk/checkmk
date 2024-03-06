@@ -1171,6 +1171,7 @@ export function init_messages_and_werks(
 interface AjaxSidebarGetMessages {
     popup_messages: {id: string; text: string}[];
     hint_messages: {
+        type: string;
         title: string;
         text: string;
         count: number;
@@ -1198,7 +1199,9 @@ function handle_update_messages(_data: any, response_text: string) {
         mark_message_read(msg.id, messages_text, messages_count);
     });
 
-    remove_mega_menu_hints();
+    if (result.popup_messages.length != 0) {
+        remove_mega_menu_hints();
+    }
 }
 
 function remove_mega_menu_hints() {

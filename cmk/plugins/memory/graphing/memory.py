@@ -22,6 +22,61 @@ PERCENT = Unit(DecimalNotation("%"))
 
 BYTES = Unit(IECNotation("B"), StrictPrecision(2))
 
+metric_file_huge_pages = Metric(
+    name="file_huge_pages",
+    title=Title("File huge pages"),
+    unit=BYTES,
+    color=Color.PURPLE,
+)
+
+metric_file_pmd_mapped = Metric(
+    name="file_pmd_mapped",
+    title=Title("Page cache mapped into userspace with huge pages"),
+    unit=BYTES,
+    color=Color.PURPLE,
+)
+
+metric_percpu = Metric(
+    name="percpu",
+    title=Title("Memory allocated to percpu"),
+    unit=BYTES,
+    color=Color.PURPLE,
+)
+
+metric_shmem_huge_pages = Metric(
+    name="shmem_huge_pages",
+    title=Title("Shared memory and tmpfs allocated with huge pages"),
+    unit=BYTES,
+    color=Color.PURPLE,
+)
+
+metric_shmem_pmd_mapped = Metric(
+    name="shmem_pmd_mapped",
+    title=Title("Shared memory mapped into userspace with huge pages"),
+    unit=BYTES,
+    color=Color.PURPLE,
+)
+
+metric_kreclaimable = Metric(
+    name="kreclaimable",
+    title=Title("Reclaimable kernel allocations"),
+    unit=BYTES,
+    color=Color.PURPLE,
+)
+
+metric_sreclaimable = Metric(
+    name="sreclaimable",
+    title=Title("Reclaimable slab"),
+    unit=BYTES,
+    color=Color.PURPLE,
+)
+
+metric_sunreclaim = Metric(
+    name="sunreclaim",
+    title=Title("Unreclaimable slab"),
+    unit=BYTES,
+    color=Color.PURPLE,
+)
 
 metric_mem_used_percent = Metric(
     name="mem_used_percent",

@@ -25,6 +25,7 @@ import pytest
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
     check_output,
+    cse_create_onboarding_dummies,
     cse_openid_oauth_provider,
     current_base_branch_name,
     current_branch_version,
@@ -1271,6 +1272,9 @@ class SiteFactory:
             return site
 
         site.start()
+
+        if self.version.is_saas_edition():
+            cse_create_onboarding_dummies(site.root)
 
         if prepare_for_tests:
             with cse_openid_oauth_provider(

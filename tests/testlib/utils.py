@@ -605,6 +605,16 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
             execute(["rm", global_config])
 
 
+def cse_create_onboarding_dummies(root: str) -> None:
+    onboarding_dir = os.path.join(root, "share/check_mk/web/htdocs/onboarding")
+    if os.path.exists(onboarding_dir):
+        return
+    LOGGER.warning("SaaS edition onboarding files not found; creating dummy files...")
+    makedirs(onboarding_dir)
+    write_file(f"{onboarding_dir}/search.css", "/* cse dummy file */")
+    write_file(f"{onboarding_dir}/search.js", "/* cse dummy file */")
+
+
 def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:
     start = time.time()
     while time.time() - start < timeout:

@@ -4,20 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Endpoint permission system
 
-It is currently only active for the REST API endpoints, but could be extended to the GUI endpoints
+The endpoint permission system, currently active for REST API endpoints and potentially extendable
+to GUI endpoints, performs the following:
 
-It does the following things:
+ 1. Verifies declared permissions against the central permission registry.
+ 2. Upon endpoint execution, checks if the declared permission (or a part of it) is triggered.
+     * see `cmk.gui.openapi.restful_objects.decorators.Endpoint.wrap_with_validation`
+ 3. Ensures permission checked during endpoint processing are declared for the running endpoint.
+     * see `cmk.gui.utils.logged_in:LoggedInUser.may`
 
- * when a permission is DECLARED on an endpoint:
-   1. it ensures that the permission is actually known to the central permission_registry
-   2. if an endpoint is executed:
-       * it checks if the declared permission (or just some branch of it) is triggered.
-       * see `cmk.gui.openapi.restful_objects.decorators.Endpoint.wrap_with_validation`
-   3. if a permission is checked by the code which is executed during endpoint processing:
-       * it ensures that this permission is DECLARED on the currently running endpoint
-       * see `cmk.gui.utils.logged_in:LoggedInUser.may`
-
-By this, we can make sure we always some understanding of the permissions required and used.
+With this, we can ensure we always have some understanding of the required and used permissions.
 
 """
 from __future__ import annotations

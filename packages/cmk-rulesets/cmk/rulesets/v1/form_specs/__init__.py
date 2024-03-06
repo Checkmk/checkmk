@@ -36,7 +36,6 @@ from ._composed import (
     List,
     MultipleChoice,
     MultipleChoiceElement,
-    TupleDoNotUseWillbeRemoved,
 )
 from ._levels import (
     LevelDirection,
@@ -119,6 +118,5 @@ __all__ = [
     "TimePeriod",
     "TimeSpan",
     "TimeMagnitude",
-    "TupleDoNotUseWillbeRemoved",
     "validators",
 ]

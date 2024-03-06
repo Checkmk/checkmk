@@ -12,11 +12,6 @@ from .._localize import Label, Message, Title
 from ._base import DefaultValue, FormSpec, InputHint, ModelT
 
 
-@dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
-class TupleDoNotUseWillbeRemoved(FormSpec[tuple[object, ...]]):
-    elements: Sequence[FormSpec[Any]]
-
-
 @dataclass(frozen=True, kw_only=True)
 class CascadingSingleChoiceElement(Generic[ModelT]):
     """Specifies an element of a single choice cascading form.
@@ -84,7 +79,7 @@ class DictElement(Generic[ModelT]):
     """Configuration specification of this entry."""
     required: bool = False
     """Whether the user has to configure the value in question.
-     
+
     If set to False, it may be omitted and values will be inherited from more general rules
     or the default configuration.
     """

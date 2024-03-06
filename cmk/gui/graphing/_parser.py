@@ -54,13 +54,13 @@ class NotationFormatter:
         if value < 0:
             return f"-{self.render(abs(value))}"
         if value in (0, 1):
-            return f"{value} {self.symbol}".strip()
+            return f"{_sanitize(str(value))} {self.symbol}".strip()
         if value < 1:
             preformatted = self._preformat_small_number(value)
         else:  # value > 1
             preformatted = self._preformat_large_number(value)
         value_with_precision = self._apply_precision(preformatted.value)
-        return f"{_sanitize(str(value_with_precision))}{preformatted.suffix}"
+        return f"{_sanitize(str(value_with_precision))}{preformatted.suffix}".strip()
 
 
 class DecimalFormatter(NotationFormatter):

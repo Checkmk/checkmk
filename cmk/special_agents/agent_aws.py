@@ -7207,7 +7207,12 @@ def _create_session(
 
 
 def _sts_assume_role(
-    access_key_id: str, secret_access_key: str, role_arn: str, external_id: str, region: str
+    access_key_id: str,
+    secret_access_key: str,
+    role_arn: str,
+    external_id: str,
+    region: str,
+    config: botocore.config.Config | None,
 ) -> boto3.session.Session:
     """
     Returns a session using a set of temporary security credentials that
@@ -7221,7 +7226,7 @@ def _sts_assume_role(
     """
     try:
         session = _create_session(access_key_id, secret_access_key, region)
-        sts_client = session.client("sts")
+        sts_client = session.client("sts", config=config)
         if external_id:
             assumed_role_object = sts_client.assume_role(
                 RoleArn=role_arn, RoleSessionName="AssumeRoleSession", ExternalId=external_id
@@ -7383,17 +7388,24 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
     return aws_config
 
 
-def _create_session_from_args(args: Args, region: str) -> boto3.session.Session:
+def _create_session_from_args(
+    args: Args, region: str, config: botocore.config.Config | None
+) -> boto3.session.Session:
     if args.assume_role:
         return _sts_assume_role(
-            args.access_key_id, args.secret_access_key, args.role_arn, args.external_id, region
+            args.access_key_id,
+            args.secret_access_key,
+            args.role_arn,
+            args.external_id,
+            region,
+            config,
         )
     return _create_session(args.access_key_id, args.secret_access_key, region)
 
 
-def _get_account_id(args: Args) -> str:
-    session = _create_session_from_args(args, args.global_service_region)
-    account_id = session.client("sts").get_caller_identity()["Account"]
+def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
+    session = _create_session_from_args(args, args.global_service_region, config)
+    account_id = session.client("sts", config=config).get_caller_identity()["Account"]
     return account_id
 
 
@@ -7429,7 +7441,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
         )
 
     try:
-        account_id = _get_account_id(args)
+        account_id = _get_account_id(args, proxy_config)
     except AwsAccessError as ae:
         # can not access AWS, retreat
         sys.stdout.write("<<<aws_exceptions>>>\n")
@@ -7450,7 +7462,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
 
         for region in aws_regions:
             try:
-                session = _create_session_from_args(args, region)
+                session = _create_session_from_args(args, region, proxy_config)
                 sections = aws_sections(
                     hostname, session, account_id, debug=args.debug, config=proxy_config
                 )

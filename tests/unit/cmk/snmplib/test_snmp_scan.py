@@ -18,7 +18,7 @@ from cmk.utils.log import logger
 from cmk.utils.paths import snmp_scan_cache_dir
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 
 import cmk.fetchers._snmpcache as snmp_cache
 import cmk.fetchers._snmpscan as snmp_scan
@@ -128,8 +128,8 @@ SNMPConfig = SNMPHostConfig(
     ipaddress=HostAddress("1.2.3.4"),
     credentials="",
     port=42,
-    is_bulkwalk_host=False,
-    is_snmpv2or3_without_bulkwalk_host=False,
+    bulkwalk_enabled=True,
+    snmp_version=SNMPVersion.V2C,
     bulk_walk_size_of=0,
     timing={},
     oid_range_limits={},

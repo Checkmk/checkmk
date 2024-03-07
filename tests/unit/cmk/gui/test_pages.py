@@ -243,22 +243,6 @@ def test_registered_pages() -> None:
     assert len(differences) == 0
 
 
-def test_pages_register(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
-
-    @cmk.gui.pages.register("123handler")
-    def page_handler():  # pylint: disable=unused-variable
-        sys.stdout.write("123")
-
-    handler = cmk.gui.pages.get_page_handler("123handler")
-    assert callable(handler)
-
-    handler()
-    assert capsys.readouterr()[0] == "123"
-
-
 @pytest.mark.usefixtures("monkeypatch")
 def test_page_registry_register_page(capsys: pytest.CaptureFixture[str]) -> None:
     page_registry = cmk.gui.pages.PageRegistry()

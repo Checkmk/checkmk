@@ -1369,7 +1369,7 @@ class CommandECUpdateEvent(ECCommand):
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
-            events = ",".join([str(entry["event_id"]) for entry in action_rows])
+            events = ",".join(str(entry["event_id"]) for entry in action_rows)
             return (
                 f"UPDATE;{events};{user.id};{ack and 1 or 0};{comment};{contact}",
                 self.confirm_dialog_options(cmdtag, row, len(action_rows)),
@@ -1440,7 +1440,7 @@ class CommandECChangeState(ECCommand):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_mkeventd_changestate"):
-            events = ",".join([str(entry["event_id"]) for entry in action_rows])
+            events = ",".join(str(entry["event_id"]) for entry in action_rows)
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return (
                 f"CHANGESTATE;{events};{user.id};{state}",
@@ -1496,7 +1496,7 @@ class CommandECCustomAction(ECCommand):
     ) -> CommandActionResult:
         for action_id, _title in action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
-                events = ",".join([str(entry["event_id"]) for entry in action_rows])
+                events = ",".join(str(entry["event_id"]) for entry in action_rows)
                 return (
                     f"ACTION;{events};{user.id};{action_id}",
                     self.confirm_dialog_options(cmdtag, row, len(action_rows)),
@@ -1544,7 +1544,7 @@ class CommandECArchiveEvent(ECCommand):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_delete_event"):
-            events = ",".join([str(entry["event_id"]) for entry in action_rows])
+            events = ",".join(str(entry["event_id"]) for entry in action_rows)
             command = f"DELETE;{events};{user.id}"
             return command, self.confirm_dialog_options(cmdtag, row, len(action_rows))
         return None

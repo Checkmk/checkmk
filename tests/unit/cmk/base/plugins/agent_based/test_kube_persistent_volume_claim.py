@@ -133,7 +133,7 @@ def test_pvc_with_persistent_volume(bound_pvc: PersistentVolumeClaim) -> None:
         timestamp=60,
     )
 
-    details = " ".join([r.details for r in check_result if isinstance(r, Result)])
+    details = " ".join(r.details for r in check_result if isinstance(r, Result))
     assert "Status" in details
     assert "StorageClass" in details
     assert "Access Modes" in details

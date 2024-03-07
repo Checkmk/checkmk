@@ -2166,7 +2166,7 @@ class StatusServer(ECServerThread):
 
         if query.output_format == "plain":
             for row in response:
-                client_socket.sendall(b"\t".join([quote_tab(c) for c in row]) + b"\n")
+                client_socket.sendall(b"\t".join(quote_tab(c) for c in row) + b"\n")
 
         elif query.output_format == "json":
             client_socket.sendall((json.dumps(list(response)) + "\n").encode("utf-8"))

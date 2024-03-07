@@ -291,7 +291,17 @@ def _page_index() -> None:
     mobile_html_foot()
 
 
-def page_view() -> None:
+class PageMobileView(Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "mobile_view"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        _page_view()
+        return None
+
+
+def _page_view() -> None:
     view_name = request.var("view_name")
     if not view_name:
         return _page_index()

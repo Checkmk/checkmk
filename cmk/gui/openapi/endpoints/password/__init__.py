@@ -27,6 +27,7 @@ from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.passwords import (
@@ -159,7 +160,7 @@ def show_password(params: Mapping[str, Any]) -> Response:
             title=f'Password "{ident}" is not known.',
             detail="The password you asked for is not known. Please check for eventual misspellings.",
         )
-    password_details = passwords[ident]
+    password_details: Password = passwords[ident]
     return _serve_password(ident, password_details)
 
 
@@ -183,12 +184,13 @@ def list_passwords(params: Mapping[str, Any]) -> Response:
     )
 
 
-def _serve_password(ident, password_details) -> Response:  # type: ignore[no-untyped-def]
+def _serve_password(ident: str, password_details: Password) -> Response:
     response = serve_json(serialize_password(ident, complement_customer(password_details)))
-    return constructors.response_with_etag_created_from_dict(response, password_details)
+    password_as_dict = cast(dict[str, Any], password_details)
+    return constructors.response_with_etag_created_from_dict(response, password_as_dict)
 
 
-def serialize_password(ident, details):
+def serialize_password(ident: str, details: Password) -> DomainObject:
     if details["owned_by"] is None:
         details["owned_by"] = "admin"
     return constructors.domain_object(

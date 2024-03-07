@@ -143,11 +143,7 @@ def _get_long_output(member_name, member_optime_date, replication_lag_sec, name)
     log.append("source: %s" % member_name)
     log.append(
         "syncedTo: %s (UTC)"
-        % (
-            datetime.datetime.fromtimestamp(member_optime_date / 1000.0).strftime(
-                "%Y-%m-%d %H:%M:%S"
-            )
-        )
+        % (datetime.datetime.fromtimestamp(member_optime_date).strftime("%Y-%m-%d %H:%M:%S"))
     )
     log.append(
         "member (%s) is %ds (%dh) behind %s"
@@ -195,7 +191,7 @@ def _calculate_replication_lag(start_operation_time, secondary_operation_time):
     :param secondary_operation_time:
     :return: replication lag in seconds
     """
-    return (start_operation_time - secondary_operation_time) / 1000.0
+    return start_operation_time - secondary_operation_time
 
 
 check_info["mongodb_replica_set"] = LegacyCheckDefinition(

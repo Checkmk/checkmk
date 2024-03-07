@@ -153,25 +153,6 @@ class PageRegistry(cmk.utils.plugin_registry.Registry[type[Page]]):
 page_registry = PageRegistry()
 
 
-# TODO: Refactor all call sites to sub classes of Page() and change the
-# registration to page_registry.register("path")
-def register(path: str) -> Callable[[PageHandlerFunc], PageHandlerFunc]:
-    """Register a function to be called when the given URL is called.
-
-    In case you need to register some callable like staticmethods or
-    classmethods, you will have to use register_page_handler() directly
-    because this decorator can not deal with them.
-
-    It is essentially a decorator that calls register_page_handler().
-    """
-
-    def wrap(wrapped_callable: PageHandlerFunc) -> PageHandlerFunc:
-        cls = page_registry.register_page_handler(path, wrapped_callable)
-        return lambda: cls().handle_page()
-
-    return wrap
-
-
 def get_page_handler(name: str, dflt: PageHandlerFunc | None = None) -> PageHandlerFunc | None:
     """Returns either the page handler registered for the given name or None
 

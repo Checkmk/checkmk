@@ -62,6 +62,6 @@ def test_check_mongodb_replica_set(
             Result(
                 state=State.OK,
                 summary="6 additional details available",
-                details="source: mvgenmongodb02:27017\nsyncedTo: 1970-01-20 04:55:49 (UTC)\nmember (mvgenmongodb02:27017) is 0s (0h) behind primary (mvgenmongodb01:27017)\nsource: mvgenmongodb03:27017\nsyncedTo: 1970-01-20 04:55:49 (UTC)\nmember (mvgenmongodb03:27017) is 0s (0h) behind primary (mvgenmongodb01:27017)",
+                details="source: mvgenmongodb02:27017\nsyncedTo: 2022-08-01 10:28:52 (UTC)\nmember (mvgenmongodb02:27017) is 1s (0h) behind primary (mvgenmongodb01:27017)\nsource: mvgenmongodb03:27017\nsyncedTo: 2022-08-01 10:28:53 (UTC)\nmember (mvgenmongodb03:27017) is 0s (0h) behind primary (mvgenmongodb01:27017)",
             )
         ]

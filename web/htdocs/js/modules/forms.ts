@@ -77,7 +77,10 @@ interface select2DropdownItem {
 
 // Add a title to select2 entries, i.e. the dropdown results and selection
 export function format_select2_item(item: select2DropdownItem) {
-    return $("<span title=" + item.text + ">" + item.text + "</span>");
+    const span = document.createElement("span");
+    span.setAttribute("title", item.text);
+    span.appendChild(document.createTextNode(item.text));
+    return $(span);
 }
 
 export function enable_select2_dropdowns(

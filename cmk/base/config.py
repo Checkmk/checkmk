@@ -86,6 +86,7 @@ from cmk.snmplib import (  # these are required in the modules' namespace to loa
     SNMPCredentials,
     SNMPHostConfig,
     SNMPTiming,
+    SNMPVersion,
 )
 
 from cmk.fetchers import (
@@ -2119,28 +2120,45 @@ class ConfigCache:
                 case _:
                     assert_never(policy)
 
+        def _snmp_version(v2_enabled: bool, credentials: SNMPCredentials) -> SNMPVersion:
+            """Guess SNMP version from credentials :-("""
+            if isinstance(credentials, tuple):
+                return SNMPVersion.V3
+            if v2_enabled:
+                return SNMPVersion.V2C
+            return SNMPVersion.V1
+
+        credentials = (
+            self._snmp_credentials(host_name)
+            if source_type is SourceType.HOST
+            else self.management_credentials(host_name, "snmp")
+        )
+
         return self.__snmp_config.setdefault(
             (host_name, ip_address, source_type),
             SNMPHostConfig(
                 is_ipv6_primary=self.default_address_family(host_name) is socket.AF_INET6,
                 hostname=host_name,
                 ipaddress=ip_address,
-                credentials=(
-                    self._snmp_credentials(host_name)
-                    if source_type is SourceType.HOST
-                    else self.management_credentials(host_name, "snmp")
-                ),
+                credentials=credentials,
                 port=self._snmp_port(host_name),
-                is_bulkwalk_host=(
+                snmp_version=_snmp_version(
                     self.ruleset_matcher.get_host_bool_value(
                         host_name,
+                        # This is the ruleset "Enable SNMPv2c",
+                        # (Which enables SNMP version 2, implying the *possibility* to use bulkwalk.)
+                        # Very poor naming of the variable.
                         bulkwalk_hosts
                         if source_type is SourceType.HOST
                         else management_bulkwalk_hosts,
-                    )
+                    ),
+                    credentials,
                 ),
-                is_snmpv2or3_without_bulkwalk_host=self.ruleset_matcher.get_host_bool_value(
-                    host_name, snmpv2c_hosts
+                bulkwalk_enabled=not self.ruleset_matcher.get_host_bool_value(
+                    host_name,
+                    # This is the ruleset "Disable bulk walks".
+                    # Very poor naming of the variable.
+                    snmpv2c_hosts,
                 ),
                 bulk_walk_size_of=self._bulk_walk_size(host_name),
                 timing=self._snmp_timing(host_name),

@@ -471,7 +471,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
         site.schedule_check(host_name, "Check_MK", 0, 60)
         pending_checks = site.openapi.get_host_services(host_name, pending=True)
         if idx > 0 and len(pending_checks) == 0:
-            continue
+            break
 
     if pending_checks:
         logger.info(

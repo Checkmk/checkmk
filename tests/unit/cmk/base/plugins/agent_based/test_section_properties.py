@@ -37,7 +37,7 @@ def test_detect_spec_dedup(
     assert offenders == {
         ("alcatel_timetra_chassis", "alcatel_timetra_cpu"),
         ("apc_netbotz_fluid", "apc_netbotz_smoke"),
-        ("apc_netbotz_other_sensors", "apc_netbotz_sensors"),
+        ("apc_netbotz_other_sensors", "apc_netbotz_v2_sensors"),
         ("apc_sts_inputs", "apc_sts_source"),
         ("artec_documents", "artec_temp"),
         ("bdt_tape_info", "bdt_tape_status"),

@@ -3,15 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import List
 
-# mypy: disable-error-code="var-annotated"
+from cmk.plugins.lib.humidity import check_humidity
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.humidity import check_humidity
-from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import SNMPTree, startswith
+from .agent_based_api.v1 import (
+    get_value_store,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.636159851 nbAlinkEnc_0_4_TEMP
 # .1.3.6.1.4.1.5528.100.4.1.1.1.1.882181375 nbAlinkEnc_2_1_TEMP
@@ -88,64 +96,51 @@ from cmk.agent_based.v2 import SNMPTree, startswith
 # .1.3.6.1.4.1.5528.100.4.1.3.1.7.2428087247 5.700000
 # .1.3.6.1.4.1.5528.100.4.1.3.1.7.3329736831 7.800000
 
-#   .--temperature---------------------------------------------------------.
-#   |      _                                      _                        |
-#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
-#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
-#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
-#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
-#   |                       |_|                                            |
-#   +----------------------------------------------------------------------+
-#   |                               main check                             |
-#   '----------------------------------------------------------------------'
 
-# Suggested by customer
+@dataclass(frozen=True)
+class SensorData:
+    reading: float
+    label: str
 
 
-def parse_apc_netbotz_sensors(string_table):
-    parsed = {}
+Section = Mapping[str, Mapping[str, SensorData]]
+
+
+def parse_apc_netbotz_sensors(string_table: List[StringTable]) -> Section:
+    parsed: dict[str, dict[str, SensorData]] = {}
     for item_type, block in zip(("temp", "humidity", "dewpoint"), string_table):
         for item_name, reading_str, label, plugged_in_state in block:
             if not plugged_in_state:
                 continue
             parsed.setdefault(item_type, {}).setdefault(
-                item_name, {"reading": float(reading_str) / 10, "label": label}
+                item_name, SensorData(reading=float(reading_str) / 10, label=label)
             )
     return parsed
 
 
-def inventory_apc_netbotz_sensors_temp(parsed, what):
-    return [(item, {}) for item in parsed.get(what, [])]
+def discover_apc_netbotz_sensors(section: Section, sensor_type: str) -> DiscoveryResult:
+    for item in section.get(sensor_type, []):
+        yield Service(item=item)
 
 
-def check_apc_netbotz_sensors_temp(item, params, parsed, what):
-    if item in parsed.get(what, []):
-        data = parsed[what][item]
-        state, infotext, perf = check_temperature(
-            data["reading"], params, f"apc_netbotz_sensors_{what}_{item}"
+def check_apc_netbotz_sensors(
+    item: str, params: TempParamType, section: Section, sensor_type: str
+) -> CheckResult:
+    if item in section.get(sensor_type, []):
+        data = section[sensor_type][item]
+        yield Result(state=State.OK, summary=f"[{data.label}]")
+        yield from check_temperature(
+            data.reading,
+            params,
+            unique_name=f"apc_netbotz_sensors_{sensor_type}_{item}",
+            value_store=get_value_store(),
         )
-        return state, "[{}] {}".format(data["label"], infotext), perf
-    return None
 
 
-_OIDS = [
-    "1",  # NETBOTZV2-MIB::*SensorId
-    "2",  # NETBOTZV2-MIB::*SensorValue
-    "4",  # NETBOTZV2-MIB::*SensorLabel
-    "7",  # NETBOTZV2-MIB::*ValueStr; empty if sensor is not plugged in
-]
-
-
-def discover_apc_netbotz_sensors(parsed):
-    return inventory_apc_netbotz_sensors_temp(parsed, "temp")
-
-
-def check_apc_netbotz_sensors(item, params, parsed):
-    return check_apc_netbotz_sensors_temp(item, params, parsed, "temp")
-
-
-check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
+register.snmp_section(
+    name="apc_netbotz_v2_sensors",
+    parse_function=parse_apc_netbotz_sensors,
+    parsed_section_name="apc_netbotz_sensors",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.5528.100.4.1.1.1",
@@ -160,24 +155,41 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
             oids=["1", "2", "4", "7"],
         ),
     ],
-    parse_function=parse_apc_netbotz_sensors,
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
+)
+
+#   .--temperature---------------------------------------------------------.
+#   |      _                                      _                        |
+#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   '----------------------------------------------------------------------'
+
+
+def discover_apc_netbotz_sensors_temp(section: Section) -> DiscoveryResult:
+    yield from discover_apc_netbotz_sensors(section, "temp")
+
+
+def check_apc_netbotz_sensors_temp(
+    item: str, params: TempParamType, section: Section
+) -> CheckResult:
+    yield from check_apc_netbotz_sensors(item, params, section, "temp")
+
+
+register.check_plugin(
+    name="apc_netbotz_sensors",
+    sections=["apc_netbotz_sensors"],
     service_name="Temperature %s",
-    discovery_function=discover_apc_netbotz_sensors,
-    check_function=check_apc_netbotz_sensors,
+    discovery_function=discover_apc_netbotz_sensors_temp,
+    check_function=check_apc_netbotz_sensors_temp,
     check_ruleset_name="temperature",
-    check_default_parameters={
+    check_default_parameters={  # suggested by customer
         "levels": (30.0, 35.0),
         "levels_lower": (25.0, 20.0),
     },
 )
-
-
-def discover_apc_netbotz_sensors_dewpoint(parsed):
-    return inventory_apc_netbotz_sensors_temp(parsed, "dewpoint")
-
-
-def check_apc_netbotz_sensors_dewpoint(item, params, info):
-    return check_apc_netbotz_sensors_temp(item, params, info, "dewpoint")
 
 
 # .
@@ -190,15 +202,25 @@ def check_apc_netbotz_sensors_dewpoint(item, params, info):
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
-# Suggested by customer
 
-check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
-    service_name="Dew point %s",
+def discover_apc_netbotz_sensors_dewpoint(section: Section) -> DiscoveryResult:
+    yield from discover_apc_netbotz_sensors(section, "dewpoint")
+
+
+def check_apc_netbotz_sensors_dewpoint(
+    item: str, params: TempParamType, section: Section
+) -> CheckResult:
+    yield from check_apc_netbotz_sensors(item, params, section, "dewpoint")
+
+
+register.check_plugin(
+    name="apc_netbotz_sensors_dewpoint",
     sections=["apc_netbotz_sensors"],
+    service_name="Dew point %s",
     discovery_function=discover_apc_netbotz_sensors_dewpoint,
     check_function=check_apc_netbotz_sensors_dewpoint,
     check_ruleset_name="temperature",
-    check_default_parameters={
+    check_default_parameters={  # suggested by customer
         "levels": (18.0, 25.0),
         "levels_lower": (-4.0, -6.0),
     },
@@ -215,25 +237,27 @@ check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_apc_netbotz_sensors_humidity(parsed):
-    return [(item, {}) for item in parsed.get("humidity", [])]
+def discover_apc_netbotz_sensors_humidity(section: Section) -> DiscoveryResult:
+    yield from discover_apc_netbotz_sensors(section, "humidity")
 
 
-def check_apc_netbotz_sensors_humidity(item, params, parsed):
-    if item in parsed.get("humidity", []):
-        data = parsed["humidity"][item]
-        state, infotext, perf = check_humidity(data["reading"], params)
-        return state, "[{}] {}".format(data["label"], infotext), perf
-    return None
+def check_apc_netbotz_sensors_humidity(
+    item: str, params: Mapping[str, object], section: Section
+) -> CheckResult:
+    if item in section.get("humidity", []):
+        data = section["humidity"][item]
+        yield Result(state=State.OK, summary=f"[{data.label}]")
+        yield from check_humidity(data.reading, params)
 
 
-check_info["apc_netbotz_sensors.humidity"] = LegacyCheckDefinition(
-    service_name="Humidity %s",
+register.check_plugin(
+    name="apc_netbotz_sensors_humidity",
     sections=["apc_netbotz_sensors"],
-    discovery_function=inventory_apc_netbotz_sensors_humidity,
+    service_name="Humidity %s",
+    discovery_function=discover_apc_netbotz_sensors_humidity,
     check_function=check_apc_netbotz_sensors_humidity,
     check_ruleset_name="humidity",
-    check_default_parameters={
+    check_default_parameters={  # suggested by customer
         "levels": (60.0, 65.0),
         "levels_lower": (35.0, 30.0),
     },

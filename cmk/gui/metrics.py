@@ -234,10 +234,14 @@ def page_host_service_graph_popup() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def page_graph_dashlet() -> None:
-    """Registered as `graph_dashlet`."""
-    host_service_graph_dashlet_cmk(
-        parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
-        GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
-        graph_display_id=request.get_str_input_mandatory("id"),
-    )
+class PageGraphDashlet(cmk.gui.pages.Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "graph_dashlet"
+
+    def page(self) -> cmk.gui.pages.PageResult:
+        return host_service_graph_dashlet_cmk(
+            parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
+            GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
+            graph_display_id=request.get_str_input_mandatory("id"),
+        )

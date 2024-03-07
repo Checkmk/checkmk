@@ -7,7 +7,8 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
-from . import handler, pages
+from . import handler
+from . import pages as backup_pages
 from .wato import MainModuleBackup
 
 
@@ -16,6 +17,6 @@ def backup_register(
     mode_registry: ModeRegistry,
     main_module_registry: MainModuleRegistry,
 ) -> None:
-    pages.register(page_registry, mode_registry)
+    backup_pages.register(page_registry, mode_registry)
     main_module_registry.register(MainModuleBackup)
     handler.register()

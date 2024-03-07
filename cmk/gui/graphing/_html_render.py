@@ -942,23 +942,34 @@ def estimate_graph_step_for_html(
 #   '----------------------------------------------------------------------'
 
 
-def ajax_graph_hover() -> None:
-    """Registered as `ajax_graph_hover`."""
-    response.set_content_type("application/json")
-    try:
-        context_var = request.get_str_input_mandatory("context")
-        context = json.loads(context_var)
-        hover_time = request.get_integer_input_mandatory("hover_time")
-        response_data = __render_ajax_graph_hover(context, hover_time)
-        response.set_data(json.dumps(response_data))
-    except Exception as e:
-        logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
-        if active_config.debug:
-            raise
-        response.set_data("ERROR: %s" % e)
+# NOTE
+# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
+# while these functions do not have that. In order to preserve the functionality of the JS side
+# of things, we keep it.
+# TODO: Migrate this to a real AjaxPage
+class AjaxGraphHover(cmk.gui.pages.Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "ajax_graph_hover"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        """Registered as `ajax_graph_hover`."""
+        response.set_content_type("application/json")
+        try:
+            context_var = request.get_str_input_mandatory("context")
+            context = json.loads(context_var)
+            hover_time = request.get_integer_input_mandatory("hover_time")
+            response_data = _render_ajax_graph_hover(context, hover_time)
+            response.set_data(json.dumps(response_data))
+        except Exception as e:
+            logger.error("Ajax call ajax_graph_hover.py failed: %s\n%s", e, traceback.format_exc())
+            if active_config.debug:
+                raise
+            response.set_data("ERROR: %s" % e)
+        return None
 
 
-def __render_ajax_graph_hover(
+def _render_ajax_graph_hover(
     context: Mapping[str, Any],
     hover_time: int,
 ) -> dict[str, object]:

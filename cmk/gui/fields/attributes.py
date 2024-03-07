@@ -445,7 +445,7 @@ class TranslateNames(BaseSchema):
 
 class NetworkScan(BaseSchema):
     """
-
+    >>> from pprint import pprint
     >>> schema = NetworkScan()
     >>> settings = {
     ...     'exclude_ranges': [('ip_list', ['192.168.0.2']),
@@ -465,17 +465,29 @@ class NetworkScan(BaseSchema):
     ...         'drop_domain': True,
     ...         'mapping': [('example.com', 'www.example.com')],
     ...         'regex': [('.*', 'mehrfacheregulaere')]}}
-    >>> result = schema.dump(settings)
-    >>> assert len(result['addresses']) == 4
-    >>> assert len(result['exclude_addresses']) == 2
-    >>> assert len(result['time_allowed'][0]) == 2
-    >>> assert len(result['translate_names']) == 4
-
-    >>> import unittest
-    >>> test_case = unittest.TestCase()
-    >>> test_case.maxDiff = None
-    >>> test_case.assertDictEqual(settings, schema.load(result))
-
+    >>> pprint(dumped := schema.dump(settings))
+    {'addresses': [{'from_address': '192.168.0.10',
+                    'to_address': '192.168.0.244',
+                    'type': 'address_range'},
+                   {'network': '172.10.9.0/24', 'type': 'network_range'},
+                   {'regexp_list': ['192.168.[01].*'], 'type': 'exclude_by_regexp'},
+                   {'addresses': ['192.168.0.2'], 'type': 'explicit_addresses'}],
+     'exclude_addresses': [{'addresses': ['192.168.0.2'],
+                            'type': 'explicit_addresses'},
+                           {'regexp_list': ['192.168.[02].*'],
+                            'type': 'exclude_by_regexp'}],
+     'max_parallel_pings': 100,
+     'scan_interval': 86400,
+     'set_ip_address': True,
+     'time_allowed': [{'end': '23:59:00', 'start': '12:00:00'}],
+     'translate_names': {'convert_case': 'lower',
+                         'drop_domain': True,
+                         'hostname_replacement': [{'hostname': 'example.com',
+                                                   'replace_with': 'www.example.com'}],
+                         'regexp_rewrites': [{'replace_with': 'mehrfacheregulaere',
+                                              'search': '.*'}]}}
+    >>> settings == schema.load(dumped)
+    True
     """
 
     ip_ranges = List(

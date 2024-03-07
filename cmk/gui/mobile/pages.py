@@ -2,8 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils
@@ -21,6 +19,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
+from cmk.gui.pages import Page, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Rows, VisualContext
@@ -230,7 +229,17 @@ def page_login() -> None:
     mobile_html_foot()
 
 
-def page_index() -> None:
+class PageMobileIndex(Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "mobile"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        _page_index()
+        return None
+
+
+def _page_index() -> None:
     title = _("Checkmk Mobile")
     mobile_html_head(title)
     jqm_page_header(
@@ -285,7 +294,7 @@ def page_index() -> None:
 def page_view() -> None:
     view_name = request.var("view_name")
     if not view_name:
-        return page_index()
+        return _page_index()
 
     view_spec = get_permitted_views().get(view_name)
     if not view_spec:

@@ -1,0 +1,14 @@
+Title: Make LDAP connection test errors more explicit
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1709829281
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+The LDAP connection test does not give enough information
+about which DN configured results in an error.
+
+This werk adds identifying information for the DN to the
+error message to make it easier to identify the problem.

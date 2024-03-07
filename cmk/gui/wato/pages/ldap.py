@@ -40,6 +40,7 @@ from cmk.gui.userdb.ldap_connector import (
     LDAPAttributePluginGroupsToRoles,
     LDAPUserConnector,
 )
+from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
@@ -1034,7 +1035,10 @@ class ModeEditLDAPConnection(WatoMode):
                     dn = group_spec[0]
 
                 if dn.lower() not in ldap_groups:
-                    return False, _("Could not find the group specified for role %s") % role_id
+                    return False, _('Could not find the group "%s" specified for role %s') % (
+                        strip_tags(dn),
+                        role_id,
+                    )
 
                 num_groups += 1
         return True, _("Found all %d groups.") % num_groups

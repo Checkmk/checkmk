@@ -12,7 +12,7 @@ from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.paths import tmp_dir
 from cmk.utils.timeperiod import timeperiod_active
 
-from cmk.snmplib import SNMPBackendEnum
+from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 
 from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
@@ -57,20 +57,18 @@ def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
         if snmp_config.snmp_backend is SNMPBackendEnum.STORED_WALK:
             return "SNMP (use stored walk)"
 
-        if snmp_config.is_snmpv3_host:
+        if snmp_config.snmp_version is SNMPVersion.V3:
             credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
         else:
             credentials_text = "Community: %r" % snmp_config.credentials
 
-        if snmp_config.is_snmpv3_host or snmp_config.is_bulkwalk_host:
-            bulk = "yes"
-        else:
-            bulk = "no"
+        bulk = "yes" if snmp_config.use_bulkwalk else "no"
 
-        return "%s (%s, Bulk walk: %s, Port: %d, Backend: %s)" % (
+        return "%s%s (%s, Bulkwalk: %s, Port: %d, Backend: %s)" % (
             "SNMP"
             if source.source_info().source_type is SourceType.HOST
             else "Management board - SNMP",
+            snmp_config.snmp_version.name.lower(),
             credentials_text,
             bulk,
             snmp_config.port,

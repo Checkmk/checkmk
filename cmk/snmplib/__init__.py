@@ -30,6 +30,7 @@ from ._typedefs import SNMPHostConfig as SNMPHostConfig
 from ._typedefs import SNMPRawValue as SNMPRawValue
 from ._typedefs import SNMPRowInfo as SNMPRowInfo
 from ._typedefs import SNMPTiming as SNMPTiming
+from ._typedefs import SNMPVersion as SNMPVersion
 from ._typedefs import SpecialColumn as SpecialColumn
 from ._walk import oids_to_walk as oids_to_walk
 from ._walk import SNMPRowInfoForStoredWalk as SNMPRowInfoForStoredWalk

@@ -226,6 +226,12 @@ def test_parse_or_add_unit(
             id="engineering-scientific-large-power-of-ten-2",
         ),
         pytest.param(
+            metrics.EngineeringScientificNotation("unit"),
+            120000.0,
+            "120e+3 unit",
+            id="engineering-scientific-large-power-of-ten-2",
+        ),
+        pytest.param(
             metrics.TimeNotation(),
             0.0000123456789,
             "12.35 µs",

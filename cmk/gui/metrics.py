@@ -48,6 +48,7 @@ from cmk.gui.graphing._utils import (
 )
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.pages import PageResult
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -212,13 +213,18 @@ def translate_perf_data_from_performance_data_livestatus_column(
 
 
 # This page is called for the popup of the graph icon of hosts/services.
-def page_host_service_graph_popup() -> None:
-    """Registered as `host_service_graph_popup`."""
-    host_service_graph_popup_cmk(
-        SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
-        request.get_validated_type_input_mandatory(HostName, "host_name"),
-        ServiceName(request.get_str_input_mandatory("service")),
-    )
+class PageHostServiceGraphPopup(cmk.gui.pages.Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "host_service_graph_popup"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        host_service_graph_popup_cmk(
+            SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
+            request.get_validated_type_input_mandatory(HostName, "host_name"),
+            ServiceName(request.get_str_input_mandatory("service")),
+        )
+        return None  # for mypy
 
 
 # .

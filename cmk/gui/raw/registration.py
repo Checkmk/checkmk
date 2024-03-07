@@ -11,7 +11,7 @@ import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
 from cmk.gui.i18n import _
-from cmk.gui.metrics import page_host_service_graph_popup, PageGraphDashlet
+from cmk.gui.metrics import PageGraphDashlet, PageHostServiceGraphPopup
 from cmk.gui.openapi.endpoints import host_config
 from cmk.gui.painter.v0 import painters
 from cmk.gui.painter.v0.base import Cell, painter_registry
@@ -28,8 +28,8 @@ def painter_downtime_recurring_renderer(row: Row, cell: Cell) -> CellSpec:
 
 def register_pages() -> None:
     cmk.gui.pages.page_registry.register(PageGraphDashlet)
+    cmk.gui.pages.page_registry.register(PageHostServiceGraphPopup)
     for path, callback in (
-        ("host_service_graph_popup", page_host_service_graph_popup),
         ("noauth:ajax_graph_images", graph_images.ajax_graph_images_for_notifications),
         ("ajax_graph", html_render.ajax_graph),
         ("ajax_render_graph_content", html_render.ajax_render_graph_content),

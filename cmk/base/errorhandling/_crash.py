@@ -15,6 +15,7 @@ import cmk.utils.encoding
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
+from cmk.utils.piggyback import get_source_hostnames
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
@@ -153,11 +154,20 @@ def _read_snmp_info(hostname: str) -> bytes | None:
     return None
 
 
-def _read_agent_output(hostname: str) -> AgentRawData | None:
+def _read_agent_output(hostname: HostName) -> AgentRawData | None:
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
-    try:
-        with cache_path.open(mode="rb") as f:
-            return AgentRawData(f.read())
-    except OSError:
-        pass
+    piggyback_cache_path = Path(cmk.utils.paths.piggyback_dir, hostname)
+    cache_paths = [cache_path] + [
+        piggyback_cache_path / source_hostname for source_hostname in get_source_hostnames(hostname)
+    ]
+    agent_outputs = []
+    for cache_path in cache_paths:
+        try:
+            with cache_path.open(mode="rb") as f:
+                agent_outputs.append(f.read())
+        except OSError:
+            pass
+
+    if agent_outputs:
+        return AgentRawData(b"\n".join(agent_outputs))
     return None

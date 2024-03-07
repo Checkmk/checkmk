@@ -173,16 +173,15 @@ def requested_file_name(
 
     Examples:
 
-        >>> from unittest.mock import Mock
-        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py"))
+        >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py"}))
         'foo_bar'
 
-        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/"), on_error="raise")
+        >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py/"}), on_error="raise")
         Traceback (most recent call last):
         ...
         cmk.gui.exceptions.MKNotFound: Not found
 
-        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/foo"), on_error="raise")
+        >>> requested_file_name(Request({"PATH_INFO": "/dev/check_mk/foo_bar.py/foo"}), on_error="raise")
         Traceback (most recent call last):
         ...
         cmk.gui.exceptions.MKNotFound: Not found

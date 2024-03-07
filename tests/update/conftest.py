@@ -20,12 +20,7 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import (
-    current_base_branch_name,
-    current_branch_version,
-    edition_from_env,
-    restart_httpd,
-)
+from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd
 from tests.testlib.version import CMKVersion, get_min_version, version_gte
 
 from cmk.utils.version import Edition
@@ -68,26 +63,14 @@ class BaseVersions:
     with open(Path(__file__).parent.resolve() / "base_versions.json", "r") as f:
         BASE_VERSIONS_STR = json.load(f)
 
-    # Todo: currently there is no release in previous branch (2.3.0).
-    #   Temporary using daily build.
-    #   Re-adapt code below once a release is available.
-    # BASE_VERSIONS = [
-    #     CMKVersion(
-    #         base_version_str,
-    #         Edition.CEE,
-    #         current_base_branch_name(),
-    #         current_branch_version(),
-    #     )
-    #     for base_version_str in BASE_VERSIONS_STR
-    # ]
-
     BASE_VERSIONS = [
         CMKVersion(
-            CMKVersion.DAILY,
-            edition_from_env(fallback=Edition.CEE),
-            "2.3.0",
-            "2.3.0",
+            base_version_str,
+            Edition.CEE,
+            current_base_branch_name(),
+            current_branch_version(),
         )
+        for base_version_str in BASE_VERSIONS_STR
     ]
 
 

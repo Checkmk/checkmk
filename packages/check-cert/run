@@ -40,6 +40,10 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
+    # HACK: Add command line option for this and use this instead of the OPENSSL_DIR magic below.
+    FEATURES=""
+    test -z "${OPENSSL_DIR+x}" && FEATURES="vendored"
+
     if ! OPTIONS=$(getopt --options 'ecFbUuCaAfDh' --long 'setup-environment,clean,check-format,build,build-unit-tests,unit-tests,clippy,all,build-all,format,documentation,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
@@ -121,7 +125,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION
+    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION FEATURES
 }
 
 # TODO: This needs some serious massaging, some stuff probably don't even belong
@@ -157,23 +161,16 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    release="--release"
-    test -z "${OPENSSL_DIR+x}" && release="$release --features vendored"
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && cargo clean
     test ${RUN_CHECK_FORMAT} = yes && cargo fmt -- --check
     # TODO: Re-evaluate usage of --all-targets below
-    # shellcheck disable=SC2086  # word splitting
-    test ${RUN_BUILD} = yes && cargo build $release --all-targets
-    # shellcheck disable=SC2086  # word splitting
-    test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test $release --all-targets --no-run
-    # shellcheck disable=SC2086  # word splitting
-    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test $release --all-targets
-    # shellcheck disable=SC2086  # word splitting
-    test ${RUN_CLIPPY} = yes && cargo clippy $release --all-targets -- --deny warnings
+    test ${RUN_BUILD} = yes && cargo build --release ${FEATURES:+"--features=$FEATURES"} --all-targets
+    test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test --release ${FEATURES:+"--features=$FEATURES"} --all-targets --no-run
+    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --release ${FEATURES:+"--features=$FEATURES"} --all-targets
+    test ${RUN_CLIPPY} = yes && cargo clippy --release ${FEATURES:+"--features=$FEATURES"} --all-targets -- --deny warnings
     test ${RUN_FORMAT} = yes && cargo fmt
-    # shellcheck disable=SC2086  # word splitting
-    test ${RUN_DOCUMENTATION} = yes && cargo doc $release --lib --bin --examples
+    test ${RUN_DOCUMENTATION} = yes && cargo doc --release ${FEATURES:+"--features=$FEATURES"} --lib --bin --examples
     true
 }
 

@@ -1,0 +1,9 @@
+Title: Fix metric scaling of 'rta' for Nagios plugin integration 'check_ping'
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1709824147
+Edition: cre
+Level: 1
+Version: 2.1.0p41
+

@@ -329,6 +329,15 @@ def split_unit(value_text: str) -> Tuple[Optional[float], Optional[str]]:
     return None, unit_name
 
 
+def _parse_check_command(check_command: str) -> str:
+    # This function handles very special and known cases.
+    parts = check_command.split("!", 1)
+    if parts[0] == "check-mk-custom" and len(parts) >= 2:
+        if parts[1].startswith("check_ping") or parts[1].startswith("./check_ping"):
+            return "check_ping"
+    return parts[0]
+
+
 def parse_perf_data(
     perf_data_string: str, check_command: Optional[str] = None
 ) -> Tuple[Perfdata, str]:
@@ -337,7 +346,7 @@ def parse_perf_data(
     if check_command is None:
         check_command = ""
     elif hasattr(check_command, "split"):
-        check_command = check_command.split("!")[0]
+        check_command = _parse_check_command(check_command)
 
     # Split the perf data string into parts. Preserve quoted strings!
     parts = _split_perf_data(perf_data_string)

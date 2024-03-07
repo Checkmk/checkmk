@@ -482,3 +482,27 @@ def test_lookup_metric_translations_for_check_command(
         )
         == expected_result
     )
+
+
+@pytest.mark.parametrize(
+    "check_command, expected",
+    [
+        pytest.param(
+            "check-mk-custom!foobar",
+            "check-mk-custom",
+            id="custom-foobar",
+        ),
+        pytest.param(
+            "check-mk-custom!check_ping",
+            "check_ping",
+            id="custom-check_ping",
+        ),
+        pytest.param(
+            "check-mk-custom!./check_ping",
+            "check_ping",
+            id="custom-check_ping-2",
+        ),
+    ],
+)
+def test__parse_check_command(check_command: str, expected: str) -> None:
+    assert utils._parse_check_command(check_command) == expected

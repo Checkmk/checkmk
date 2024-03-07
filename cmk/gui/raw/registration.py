@@ -29,10 +29,10 @@ def painter_downtime_recurring_renderer(row: Row, cell: Cell) -> CellSpec:
 def register_pages() -> None:
     cmk.gui.pages.page_registry.register(PageGraphDashlet)
     cmk.gui.pages.page_registry.register(PageHostServiceGraphPopup)
+    cmk.gui.pages.page_registry.register(html_render.AjaxRenderGraphContent)
     for path, callback in (
         ("noauth:ajax_graph_images", graph_images.ajax_graph_images_for_notifications),
         ("ajax_graph", html_render.ajax_graph),
-        ("ajax_render_graph_content", html_render.ajax_render_graph_content),
         ("ajax_graph_hover", html_render.ajax_graph_hover),
     ):
         cmk.gui.pages.register(path)(callback)

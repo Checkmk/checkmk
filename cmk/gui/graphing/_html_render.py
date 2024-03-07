@@ -27,6 +27,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.html import HTML
@@ -797,29 +798,21 @@ def _render_graph_container_html(
     return output
 
 
-# Called from javascript code via JSON to initially render a graph
-def ajax_render_graph_content() -> None:
-    """Registered as `ajax_render_graph_content`."""
-    response.set_content_type("application/json")
-    try:
-        api_request = request.get_request()
-        resp = {
-            "result_code": 0,
-            "result": _render_graph_content_html(
-                GraphRecipe.model_validate(api_request["graph_recipe"]),
-                GraphDataRange.model_validate(api_request["graph_data_range"]),
-                GraphRenderConfig.model_validate(api_request["graph_render_config"]),
-                graph_display_id=api_request["graph_display_id"],
-            ),
-        }
-    except Exception:
-        logger.exception("could not render graph")
-        resp = {
-            "result_code": 1,
-            "result": _("Unhandled exception: %s") % traceback.format_exc(),
-        }
+class AjaxRenderGraphContent(AjaxPage):
+    @classmethod
+    def ident(cls) -> str:
+        return "ajax_render_graph_content"
 
-    response.set_data(json.dumps(resp))
+    def page(self) -> PageResult:
+        # Called from javascript code via JSON to initially render a graph
+        """Registered as `ajax_render_graph_content`."""
+        api_request = request.get_request()
+        return _render_graph_content_html(
+            GraphRecipe.model_validate(api_request["graph_recipe"]),
+            GraphDataRange.model_validate(api_request["graph_data_range"]),
+            GraphRenderConfig.model_validate(api_request["graph_render_config"]),
+            graph_display_id=api_request["graph_display_id"],
+        )
 
 
 def _render_graph_content_html(

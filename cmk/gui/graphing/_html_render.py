@@ -566,19 +566,30 @@ def _graph_margin_ex(
     )
 
 
-def ajax_graph() -> None:
-    """Registered as `ajax_graph`."""
-    response.set_content_type("application/json")
-    try:
-        context_var = request.get_str_input_mandatory("context")
-        context = json.loads(context_var)
-        response_data = _render_ajax_graph(context)
-        response.set_data(json.dumps(response_data))
-    except Exception as e:
-        logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
-        if active_config.debug:
-            raise
-        response.set_data("ERROR: %s" % e)
+# NOTE
+# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
+# while these functions do not have that. In order to preserve the functionality of the JS side
+# of things, we keep it.
+# TODO: Migrate this to a real AjaxPage
+class AjaxGraph(cmk.gui.pages.Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "ajax_graph"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        """Registered as `ajax_graph`."""
+        response.set_content_type("application/json")
+        try:
+            context_var = request.get_str_input_mandatory("context")
+            context = json.loads(context_var)
+            response_data = _render_ajax_graph(context)
+            response.set_data(json.dumps(response_data))
+        except Exception as e:
+            logger.error("Ajax call ajax_graph.py failed: %s\n%s", e, traceback.format_exc())
+            if active_config.debug:
+                raise
+            response.set_data("ERROR: %s" % e)
+        return None
 
 
 def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:

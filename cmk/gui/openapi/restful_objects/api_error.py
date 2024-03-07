@@ -72,5 +72,13 @@ def api_default_error_schema(status_code: ErrorStatusCodeInt, description: str) 
                 description="Additional information about the error.",
                 required=False,
             ),
-        }
+        },
+        name=f"Api{status_code}DefaultError",
+    )
+
+
+def api_custom_error_schema(status_code: ErrorStatusCodeInt, description: str) -> type[ApiError]:
+    return api_default_error_schema(status_code, description).from_dict(
+        {},
+        name=f"Api{status_code}CustomError",
     )

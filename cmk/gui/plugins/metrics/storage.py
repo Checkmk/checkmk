@@ -295,12 +295,6 @@ metric_info["database_reclaimable"] = {
     "color": "45/a",
 }
 
-metric_info["mem_total"] = {
-    "title": _("RAM installed"),
-    "color": "#f0f0f0",
-    "unit": "bytes",
-}
-
 metric_info["mem_available"] = {
     "color": "21/a",
     "title": _("Estimated RAM for new processes"),
@@ -337,34 +331,16 @@ metric_info["trend_hoursleft"] = {
     "color": "#94b65a",
 }
 
-metric_info["swap_total"] = {
-    "title": _("Swap installed"),
-    "color": "#e0e0e0",
-    "unit": "bytes",
-}
-
 metric_info["swap_free"] = {
     "title": _("Free swap space"),
     "unit": "bytes",
     "color": "#eeeeee",
 }
 
-metric_info["swap_used"] = {
-    "title": _("Swap used"),
-    "color": "#408f20",
-    "unit": "bytes",
-}
-
 metric_info["swap_used_percent"] = {
     "color": "#408f20",
     "title": _("Swap used"),
     "unit": "%",
-}
-
-metric_info["swap_cached"] = {
-    "title": _("Swap cached"),
-    "color": "#5bebc9",
-    "unit": "bytes",
 }
 
 metric_info["caches"] = {

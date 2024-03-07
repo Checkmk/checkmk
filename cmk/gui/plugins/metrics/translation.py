@@ -263,12 +263,6 @@ check_metrics["check_mk-mem_linux"] = {
     "cached": {
         "name": "mem_lnx_cached",
     },
-    "buffers": {
-        "name": "mem_lnx_buffers",
-    },
-    "slab": {
-        "name": "mem_lnx_slab",
-    },
     "active_anon": {
         "name": "mem_lnx_active_anon",
     },

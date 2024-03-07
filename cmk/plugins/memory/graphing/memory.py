@@ -92,6 +92,13 @@ metric_mem_used_percent_avg = Metric(
     color=Color.LIGHT_BLUE,
 )
 
+metric_mem_total = Metric(
+    name="mem_total",
+    title=Title("RAM installed"),
+    unit=BYTES,
+    color=Color.DARK_BLUE,
+)
+
 metric_mem_used = Metric(
     name="mem_used",
     title=Title("RAM used"),
@@ -160,6 +167,41 @@ metric_pagefile_free_avg = Metric(
     title=Title("Commitable memory (averaged)"),
     unit=BYTES,
     color=Color.LIGHT_GREEN,
+)
+
+metric_swap_total = Metric(
+    name="swap_total",
+    title=Title("Swap installed"),
+    unit=BYTES,
+    color=Color.LIGHT_PINK,
+)
+
+metric_swap_used = Metric(
+    name="swap_used",
+    title=Title("Swap used"),
+    unit=BYTES,
+    color=Color.DARK_GREEN,
+)
+
+metric_swap_cached = Metric(
+    name="swap_cached",
+    title=Title("Swap cached"),
+    unit=BYTES,
+    color=Color.LIGHT_CYAN,
+)
+
+metric_buffers = Metric(
+    name="buffers",
+    title=Title("Buffered memory"),
+    unit=BYTES,
+    color=Color.LIGHT_CYAN,
+)
+
+metric_slab = Metric(
+    name="slab",
+    title=Title("Slab (Various smaller caches)"),
+    unit=BYTES,
+    color=Color.LIGHT_PURPLE,
 )
 
 graph_mem_percent = Graph(
@@ -262,4 +304,10 @@ perfometer_pagefile_used_percent = Perfometer(
     name="pagefile_used_percent",
     focus_range=FocusRange(Closed(0), Closed(100)),
     segments=("pagefile_used_percent",),
+)
+
+perfometer_mem_used = Perfometer(
+    name="mem_used",
+    focus_range=FocusRange(Closed(0), Closed("mem_total")),
+    segments=["mem_used"],
 )

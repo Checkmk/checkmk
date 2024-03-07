@@ -13,6 +13,7 @@ import argparse
 import logging
 import subprocess
 import sys
+import traceback
 from collections.abc import Sequence
 from itertools import chain
 from pathlib import Path
@@ -96,19 +97,12 @@ def main_check_config(logger: logging.Logger, conflict: ConflictMode) -> Literal
         _cleanup_precompiled_files(logger)
 
         check_config(logger, conflict)
-    except MKUserError as e:
-        sys.stderr.write(
-            f"\nUpdate aborted: {e}.\n" "The Checkmk configuration has not been modified.\n"
-        )
-        return 1
     except Exception as e:
-        if debug.enabled():
-            raise
+        if not isinstance(e, MKUserError):
+            traceback.print_exc()
         sys.stderr.write(
-            "Unknown error on pre update action.\n"
-            f"Error: {e}\n\n"
-            "Please repair this and run 'cmk-update-config' "
-            "BEFORE starting the site again."
+            f"\nUpdate aborted with Error: {e}.\nYour site has not been modified.\n"
+            "The update can be retried after the error has been fixed.\n"
         )
         return 1
     return 0

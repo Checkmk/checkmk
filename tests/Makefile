@@ -402,10 +402,10 @@ test-unit-doctests: prepare-protobuf-files
 	# confuse our tooling.  Let's help by removing those caches as indicated
 	# in the error message.
 	find ../cmk/ -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
+	# The `consider_namespace_packages` option requires pytest >= 8.1
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
 		--config-file=pyproject.toml \
-		--import-mode=importlib \
 		--doctest-modules \
 		--override-ini="pythonpath=." \
 		--override-ini="consider_namespace_packages=true" \

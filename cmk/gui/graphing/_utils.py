@@ -559,7 +559,7 @@ check_metrics: dict[str, dict[MetricName, CheckMetricEntry]] = {}
 graph_info = AutomaticDict("manual_graph_template")
 
 
-def _parse_check_command(
+def _parse_check_command_from_api(
     check_command: translations.PassiveCheck
     | translations.ActiveCheck
     | translations.HostCheckCommand
@@ -629,7 +629,7 @@ def add_graphing_plugins(
 
         elif isinstance(plugin, translations.Translation):
             for check_command in plugin.check_commands:
-                check_metrics[_parse_check_command(check_command)] = {
+                check_metrics[_parse_check_command_from_api(check_command)] = {
                     MetricName(old_name): _parse_translation(translation)
                     for old_name, translation in plugin.translations.items()
                 }
@@ -736,6 +736,15 @@ def _compute_lookup_metric_name(metric_name: str) -> str:
     return metric_name
 
 
+def _parse_check_command(check_command: str) -> str:
+    # This function handles very special and known cases.
+    parts = check_command.split("!", 1)
+    if parts[0] == "check-mk-custom" and len(parts) >= 2:
+        if parts[1].startswith("check_ping") or parts[1].startswith("./check_ping"):
+            return "check_ping"
+    return parts[0]
+
+
 def parse_perf_data(
     perf_data_string: str, check_command: str | None = None, *, config: Config
 ) -> tuple[Perfdata, str]:
@@ -744,7 +753,7 @@ def parse_perf_data(
     if check_command is None:
         check_command = ""
     elif hasattr(check_command, "split"):
-        check_command = check_command.split("!")[0]
+        check_command = _parse_check_command(check_command)
 
     # Split the perf data string into parts. Preserve quoted strings!
     parts = _split_perf_data(perf_data_string)

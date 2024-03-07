@@ -11,14 +11,6 @@ from cmk import fields
 
 
 class PasswordExtension(BaseSchema):
-    ident = fields.String(
-        example="pass",
-        description="The unique identifier for the password",
-    )
-    title = fields.String(
-        example="Kubernetes login",
-        description="The name of your password for easy recognition.",
-    )
     comment = fields.String(
         example="Kommentar",
         description="An optional comment to explain the purpose of this password.",

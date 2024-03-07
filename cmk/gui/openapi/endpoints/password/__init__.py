@@ -5,8 +5,13 @@
 """Passwords
 
 Passwords intended for authentication of certain checks can be stored in the Checkmk
-password store. You can use in a rule a password stored in the password store without knowing or
-entering the password.
+password store. You can use a stored password in a rule without knowing or entering
+the password.
+
+These endpoints provide a way to manage stored passwords via the REST-API in the
+same way the user interface does. This includes being able to create, update and delete
+stored passwords. You are also able to fetch a list of passwrods or individual passwords,
+however, the password itself is not returned for security reasons.
 """
 from collections.abc import Mapping
 from typing import Any, cast

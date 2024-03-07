@@ -188,18 +188,12 @@ def _serve_password(ident, password_details):
 def serialize_password(ident, details):
     if details["owned_by"] is None:
         details["owned_by"] = "admin"
+
     return constructors.domain_object(
         domain_type="password",
         identifier=ident,
         title=details["title"],
-        members={
-            "title": constructors.object_property(
-                name="title",
-                value=details["title"],
-                prop_format="string",
-                base=constructors.object_href("password", ident),
-            )
-        },
+        members={},
         extensions={
             k: v
             for k, v in complement_customer(details).items()

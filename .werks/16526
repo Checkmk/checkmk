@@ -1,0 +1,17 @@
+Title: password: the response schema now matches what is returned
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1709803120
+Edition: cre
+Level: 1
+Version: 2.2.0p31
+
+This werk addresses an issue with the REST-API password endpoint
+response. The response schema listed the title and the ident as
+fields that should be returned but we were not returning them as
+part of the password object. These have now been removed from the
+schema.
+
+Also, the members field was returning invalid information and
+hence has been removed.

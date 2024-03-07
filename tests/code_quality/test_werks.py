@@ -115,7 +115,7 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
             # print "No tag found in git: %s. Assuming version was not released yet." % tag_name
             continue
 
-        if not _werk_exists_in_git_tag(tag_name, ".werks/%d" % werk_id):
+        if not _werk_exists_in_git_tag(tag_name, werk_id):
             werk_tags = sorted(
                 _tags_containing_werk(werk_id),
                 key=lambda t: cmk_version.Version.from_str(t[1:]),
@@ -147,8 +147,10 @@ def _git_tag_exists(tag: str) -> bool:
     )
 
 
-def _werk_exists_in_git_tag(tag: str, rel_path: str) -> bool:
-    return rel_path in _werks_in_git_tag(tag)
+def _werk_exists_in_git_tag(tag: str, werk_id: int) -> bool:
+    return f".werks/{werk_id}" in _werks_in_git_tag(
+        tag
+    ) or f".werks/{werk_id}.md" in _werks_in_git_tag(tag)
 
 
 def _tags_containing_werk(werk_id: int) -> list[str]:

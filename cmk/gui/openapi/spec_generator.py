@@ -2,7 +2,7 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 import hashlib
 import http.client
 from collections.abc import Iterator, Sequence
@@ -23,7 +23,10 @@ from cmk.utils.site import omd_site
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.fields import Field
-from cmk.gui.openapi.restful_objects.api_error import api_default_error_schema
+from cmk.gui.openapi.restful_objects.api_error import (
+    api_custom_error_schema,
+    api_default_error_schema,
+)
 from cmk.gui.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
@@ -132,6 +135,79 @@ def _operation_dicts(spec: APISpec, endpoint: Endpoint) -> Iterator[tuple[str, O
         yield endpoint.path, _to_operation_dict(spec, endpoint)
 
 
+class DefaultStatusCodeDescription(enum.Enum):
+    Code406 = "The requests accept headers can not be satisfied."
+    Code401 = "The user is not authorized to do this request."
+    Code403 = "Configuration via Setup is disabled."
+    Code404 = "The requested object has not be found."
+    Code422 = "The request could not be processed."
+    Code423 = "The resource is currently locked."
+    Code405 = "Method not allowed: This request is only allowed with other HTTP methods."
+    Code409 = "The request is in conflict with the stored resource."
+    Code415 = "The submitted content-type is not supported."
+    Code302 = (
+        "Either the resource has moved or has not yet completed. "
+        "Please see this resource for further information."
+    )
+    Code400 = "Parameter or validation failure."
+    Code412 = "The value of the If-Match header doesn't match the object's ETag."
+    Code428 = "The required If-Match header is missing."
+    Code200 = "The operation was done successfully."
+    Code204 = "Operation done successfully. No further output."
+
+
+DEFAULT_STATUS_CODE_SCHEMAS = {
+    (406, DefaultStatusCodeDescription.Code406): api_default_error_schema(
+        406,
+        DefaultStatusCodeDescription.Code406.value,
+    ),
+    (401, DefaultStatusCodeDescription.Code401): api_default_error_schema(
+        401,
+        DefaultStatusCodeDescription.Code401.value,
+    ),
+    (403, DefaultStatusCodeDescription.Code403): api_default_error_schema(
+        403,
+        DefaultStatusCodeDescription.Code403.value,
+    ),
+    (404, DefaultStatusCodeDescription.Code404): api_default_error_schema(
+        404,
+        DefaultStatusCodeDescription.Code404.value,
+    ),
+    (422, DefaultStatusCodeDescription.Code422): api_default_error_schema(
+        422,
+        DefaultStatusCodeDescription.Code422.value,
+    ),
+    (423, DefaultStatusCodeDescription.Code423): api_default_error_schema(
+        423,
+        DefaultStatusCodeDescription.Code423.value,
+    ),
+    (405, DefaultStatusCodeDescription.Code405): api_default_error_schema(
+        405,
+        DefaultStatusCodeDescription.Code405.value,
+    ),
+    (409, DefaultStatusCodeDescription.Code409): api_default_error_schema(
+        409,
+        DefaultStatusCodeDescription.Code409.value,
+    ),
+    (415, DefaultStatusCodeDescription.Code415): api_default_error_schema(
+        415,
+        DefaultStatusCodeDescription.Code415.value,
+    ),
+    (400, DefaultStatusCodeDescription.Code400): api_default_error_schema(
+        400,
+        DefaultStatusCodeDescription.Code400.value,
+    ),
+    (412, DefaultStatusCodeDescription.Code412): api_default_error_schema(
+        412,
+        DefaultStatusCodeDescription.Code412.value,
+    ),
+    (428, DefaultStatusCodeDescription.Code428): api_default_error_schema(
+        428,
+        DefaultStatusCodeDescription.Code428.value,
+    ),
+}
+
+
 def _to_operation_dict(  # pylint: disable=too-many-branches
     spec: APISpec,
     endpoint: Endpoint,
@@ -156,70 +232,55 @@ def _to_operation_dict(  # pylint: disable=too-many-branches
     responses: ResponseType = {}
 
     responses["406"] = _error_response_path_item(
-        endpoint, 406, "The requests accept headers can not be satisfied."
+        endpoint, 406, DefaultStatusCodeDescription.Code406
     )
 
     if 401 in endpoint.expected_status_codes:
         responses["401"] = _error_response_path_item(
-            endpoint, 401, "The user is not authorized to do this request."
+            endpoint, 401, DefaultStatusCodeDescription.Code401
         )
 
-    if endpoint.tag_group == "Setup":
+    if 403 in endpoint.expected_status_codes:
         responses["403"] = _error_response_path_item(
-            endpoint, 403, "Configuration via Setup is disabled."
-        )
-    if endpoint.tag_group == "Checkmk Internal" and 403 in endpoint.expected_status_codes:
-        responses["403"] = _error_response_path_item(
-            endpoint,
-            403,
-            "You have insufficient permissions for this operation.",
+            endpoint, 403, DefaultStatusCodeDescription.Code403
         )
 
     if 404 in endpoint.expected_status_codes:
         responses["404"] = _error_response_path_item(
-            endpoint, 404, "The requested object has not been found."
+            endpoint, 404, DefaultStatusCodeDescription.Code404
         )
 
     if 422 in endpoint.expected_status_codes:
         responses["422"] = _error_response_path_item(
-            endpoint, 422, "The request could not be processed."
+            endpoint, 422, DefaultStatusCodeDescription.Code422
         )
 
     if 423 in endpoint.expected_status_codes:
         responses["423"] = _error_response_path_item(
-            endpoint, 423, "This resource is currently locked."
+            endpoint, 423, DefaultStatusCodeDescription.Code423
         )
 
     if 405 in endpoint.expected_status_codes:
         responses["405"] = _error_response_path_item(
-            endpoint,
-            405,
-            "Method not allowed: This request is only allowed with other HTTP methods",
+            endpoint, 405, DefaultStatusCodeDescription.Code405
         )
 
     if 409 in endpoint.expected_status_codes:
         responses["409"] = _error_response_path_item(
-            endpoint,
-            409,
-            "The request is in conflict with the stored resource.",
+            endpoint, 409, DefaultStatusCodeDescription.Code409
         )
 
     if 415 in endpoint.expected_status_codes:
         responses["415"] = _error_response_path_item(
-            endpoint, 415, "The submitted content-type is not supported."
+            endpoint, 415, DefaultStatusCodeDescription.Code415
         )
 
     if 302 in endpoint.expected_status_codes:
-        responses["302"] = _path_item(
-            endpoint,
-            302,
-            "Either the resource has moved or has not yet completed. Please see this "
-            "resource for further information.",
-        )
+        responses["302"] = _path_item(endpoint, 302, DefaultStatusCodeDescription.Code302.value)
 
     if 400 in endpoint.expected_status_codes:
         responses["400"] = _error_response_path_item(
-            endpoint, 400, "Parameter or validation failure."
+            endpoint, 400, DefaultStatusCodeDescription.Code400
         )
 
     # We don't(!) support any endpoint without an output schema.
@@ -244,26 +305,22 @@ def _to_operation_dict(  # pylint: disable=too-many-branches
         responses["200"] = _path_item(
             endpoint,
             200,
-            "The operation was done successfully.",
+            DefaultStatusCodeDescription.Code200.value,
             content=content,
             headers=response_headers,
         )
 
     if 204 in endpoint.expected_status_codes:
-        responses["204"] = _path_item(
-            endpoint, 204, "Operation done successfully. No further output."
-        )
+        responses["204"] = _path_item(endpoint, 204, DefaultStatusCodeDescription.Code204.value)
 
     if 412 in endpoint.expected_status_codes:
         responses["412"] = _error_response_path_item(
-            endpoint,
-            412,
-            "The value of the If-Match header doesn't match the object's ETag.",
+            endpoint, 412, DefaultStatusCodeDescription.Code412
         )
 
     if 428 in endpoint.expected_status_codes:
         responses["428"] = _error_response_path_item(
-            endpoint, 428, "The required If-Match header is missing."
+            endpoint, 428, DefaultStatusCodeDescription.Code428
         )
 
     docstring_name = _docstring_name(module_obj.__doc__)
@@ -582,14 +639,15 @@ def _path_item(
 def _error_response_path_item(
     endpoint: Endpoint,
     status_code: ErrorStatusCodeInt,
-    description: str,
+    default_description: DefaultStatusCodeDescription,
 ) -> PathItem:
+    description = default_description.value
+    schema = DEFAULT_STATUS_CODE_SCHEMAS.get((status_code, default_description))
     if status_code in endpoint.status_descriptions:
         description = endpoint.status_descriptions[status_code]
+        schema = api_custom_error_schema(status_code, description)
 
-    error_schema = endpoint.error_schemas.get(
-        status_code, api_default_error_schema(status_code, description)
-    )
+    error_schema = endpoint.error_schemas.get(status_code, schema)
     response: PathItem = {
         "description": f"{http.client.responses[status_code]}: {description}",
         "content": {"application/problem+json": {"schema": error_schema}},

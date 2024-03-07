@@ -32,10 +32,7 @@ def register_pages() -> None:
     cmk.gui.pages.page_registry.register(html_render.AjaxRenderGraphContent)
     cmk.gui.pages.page_registry.register(html_render.AjaxGraphHover)
     cmk.gui.pages.page_registry.register(html_render.AjaxGraph)
-    for path, callback in (
-        ("noauth:ajax_graph_images", graph_images.ajax_graph_images_for_notifications),
-    ):
-        cmk.gui.pages.register(path)(callback)
+    cmk.gui.pages.page_registry.register(graph_images.AjaxGraphImagesForNotifications)
 
 
 def register_painters() -> None:

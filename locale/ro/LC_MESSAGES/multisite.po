@@ -1977,8 +1977,8 @@ msgid ""
 "the file path for <tt>robot.yaml</tt> is relative to that folder's content."
 msgstr ""
 
-#, fuzzy
-msgid "<u>Info</u>: Downtime also applies to all services of the hosts."
+#, fuzzy, python-format
+msgid "<u>Info</u>: Downtime also applies to all services of the %s."
 msgstr "Întreruperi de serviciu"
 
 #, fuzzy
@@ -17021,6 +17021,9 @@ msgstr ""
 msgid "Determined by discovery"
 msgstr "Determinată prin descoperire"
 
+msgid "Determines how to treat invalid certificate"
+msgstr ""
+
 msgid "Developer resources"
 msgstr "Resurse pentru dezvoltatori"
 
@@ -18437,6 +18440,10 @@ msgstr "Nu transferați contextul"
 
 msgid "Do not translate SNMP traps"
 msgstr "Nu traduceți capcanele SNMP"
+
+#, fuzzy
+msgid "Do not trust"
+msgstr "Nu grupați"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "Nu utilizați prefixul 'aws:' pentru cheie."
@@ -48787,6 +48794,10 @@ msgstr "Numele serverului"
 msgid "Server OS"
 msgstr "Sistemul de operare al serverului"
 
+#, fuzzy
+msgid "Server certificate policy"
+msgstr "Valabilitatea certificatului site-ului"
+
 msgid "Server connections"
 msgstr "Conexiuni de server"
 
@@ -67571,6 +67582,10 @@ msgstr ""
 
 msgid "Trunk"
 msgstr "Trunchi"
+
+#, fuzzy
+msgid "Trust"
+msgstr "De încredere"
 
 msgid "Trust system wide configured CAs"
 msgstr "Încredere în CA configurate la nivel de sistem"

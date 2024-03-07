@@ -44,6 +44,3 @@ fi
 if [ -z "$ONLY_COPY" ]; then
     sudo omd reload "$SITE" apache
 fi
-
-# Gecache PNP-Schablonen entfernen
-sudo rm -f "$ROOT/var/check_mk/pnp_template_cache/"*

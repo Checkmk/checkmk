@@ -380,7 +380,7 @@ def test_update(client: docker.DockerClient, version: CMKVersion) -> None:
             volumes_from=c_orig.id,
         ) as c_new:
             # 5. verify result
-            c_new.exec_run(["omd", "version"], user="cmk")[1].endswith(
+            c_new.exec_run(["omd", "version"], user="cmk")[1].decode("utf-8").endswith(
                 "%s\n" % version.omd_version()
             )
             assert (

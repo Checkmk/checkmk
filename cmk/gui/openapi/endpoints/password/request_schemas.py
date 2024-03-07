@@ -13,18 +13,18 @@ from cmk import fields
 class InputPassword(BaseSchema):
     ident = gui_fields.PasswordIdent(
         example="pass",
-        description="An unique identifier for the password",
+        description="The unique identifier for the password",
         should_exist=False,
     )
     title = fields.String(
         required=True,
         example="Kubernetes login",
-        description="A title for the password",
+        description="The name of your password for easy recognition.",
     )
     comment = fields.String(
         required=False,
         example="Kommentar",
-        description="A comment for the password",
+        description="An optional comment to explain the purpose of this password.",
         load_default="",
     )
 
@@ -53,10 +53,10 @@ class InputPassword(BaseSchema):
     shared = fields.List(
         gui_fields.PasswordShare(
             example="all",
-            description="By default only the members of the owner contact group are permitted to use a a configured password. It is possible to share a password with other groups of users to make them able to use a password in checks.",
+            description="By default only the members of the owner contact group are permitted to use a configured password. It is possible to share a password with other groups of users to make them able to use a password in checks.",
         ),
         example=["all"],
-        description="The list of members to share the password with",
+        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         required=False,
         attribute="shared_with",
         load_default=list,
@@ -72,13 +72,13 @@ class UpdatePassword(BaseSchema):
     title = fields.String(
         required=False,
         example="Kubernetes login",
-        description="A title for the password",
+        description="The name of your password for easy recognition.",
     )
 
     comment = fields.String(
         required=False,
         example="Kommentar",
-        description="A comment for the password",
+        description="An optional comment to explain the purpose of this password.",
     )
 
     documentation_url = fields.String(
@@ -109,7 +109,7 @@ class UpdatePassword(BaseSchema):
             "It is possible to share a password with other groups of users to make them able to use a password in checks.",
         ),
         example=["all"],
-        description="The list of members to share the password with",
+        description="Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
         required=False,
         attribute="shared_with",
     )

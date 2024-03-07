@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-03-05 00:12+0000\n"
+"PO-Revision-Date: 2024-03-07 15:58+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -1988,8 +1988,9 @@ msgstr ""
 "i> ein Ordner ist, ist der Dateipfad für <tt>robot.yaml</tt> relativ zum "
 "Inhalt dieses Ordners."
 
-msgid "<u>Info</u>: Downtime also applies to all services of the hosts."
-msgstr "<u>Info</u>: Wartungszeit gilt auch für alle Services des Hosts."
+#, python-format
+msgid "<u>Info</u>: Downtime also applies to all services of the %s."
+msgstr "<u>Info</u>: Wartungszeit gilt auch für alle Services von %s."
 
 msgid "<u>Info</u>: Downtime does not apply to host."
 msgstr "<u>Info</u>: Wartungszeit gilt nicht für den Host."
@@ -2899,16 +2900,14 @@ msgstr "Gesamtzahl von inaktiven Verbindungen"
 msgid "Absolute number of incoming connections"
 msgstr "Gesamtzahl von eingehenden Verbindungen"
 
-#, fuzzy
 msgid "Absolute used commit charge"
-msgstr "Absoluter commitbarer Speicherplatz"
+msgstr ""
 
 msgid "Absolute used leases levels"
 msgstr "Absolute Level für benutzte Leases"
 
-#, fuzzy
 msgid "Absolute used memory"
-msgstr "Absoluter freier Speicherplatz"
+msgstr "Absoluter genutzter Speicherplatz"
 
 msgid "Absolute value"
 msgstr "Absoluter Wert"
@@ -4097,7 +4096,7 @@ msgid "Add this metric to dedicated graph"
 msgstr "Diese Metrik zu einem dedizerten Graphen hinzufügen"
 
 msgid "Add this node to existing root nodes"
-msgstr ""
+msgstr "Füge diesen Knoten zu bestehenden Hauptknoten hinzu"
 
 msgid "Add time period"
 msgstr "Zeitperiode hinzufügen"
@@ -4388,9 +4387,8 @@ msgstr "Adva Optical Transport Laser Leistung"
 msgid "Advanced condition simulation"
 msgstr "Erweiterte Simulation der Bedingungen"
 
-#, fuzzy
 msgid "Advanced configuration options"
-msgstr "Erweiterte Simulation der Bedingungen"
+msgstr "Erweiterte Konfigurationsmöglichkeiten"
 
 msgid "Advanced options"
 msgstr "Erweiterte Optionen"
@@ -5596,9 +5594,8 @@ msgstr "Zugriff über TCP erlauben"
 msgid "Allow all users to refer to rules contained in this pack"
 msgstr "Benutzern erlauben, die Regeln aus diesem Paket zu referenzieren"
 
-#, fuzzy
 msgid "Allow growing here"
-msgstr "Höhere Versionen zulassen"
+msgstr "Hier Wachsen erlauben"
 
 msgid "Allow higher versions"
 msgstr "Höhere Versionen zulassen"
@@ -7096,9 +7093,8 @@ msgstr "Monitoring-Agenten automatisch erzeugen"
 msgid "Automatically delete hosts without piggyback data"
 msgstr "Automatisches Löschen von Hosts ohne Piggyback-Daten"
 
-#, fuzzy
 msgid "Automatically detects changes in the formular and fetches new data"
-msgstr "Automatisches Löschen von Hosts ohne Piggyback-Daten"
+msgstr "Erkennt automatisch Änderungen im Formular und holt sich neue Daten"
 
 msgid "Automatically discover LDAP server"
 msgstr "LDAP-Server automatisch ermitteln"
@@ -10201,13 +10197,11 @@ msgstr "Passwort bei der nächsten Anmeldung oder Zugriff ändern"
 msgid "Change state"
 msgstr "Zustand ändern"
 
-#, fuzzy
 msgid "Change structure of all nodes to"
-msgstr "Attribute von Ordner %s geändert"
+msgstr "Struktur aller Knoten ändern zu"
 
-#, fuzzy
 msgid "Change structure of this node to"
-msgstr "Attribute von Ordner %s geändert"
+msgstr "Struktur dieses Knotens ändern zu"
 
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
@@ -12111,31 +12105,26 @@ msgstr "Kommentare von Service"
 msgid "Commit Limit"
 msgstr "Commit-Limit"
 
-#, fuzzy
 msgid "Commit charge"
-msgstr "Commit-Charge"
+msgstr ""
 
-#, fuzzy
 msgid "Commit charge (averaged)"
-msgstr "durchschnittlicher Commit Charge"
+msgstr ""
 
 msgid "Commit charge in percent (relative to commit limit)"
 msgstr "Commit-Belastung in Prozent (bezogen auf Commit-Limit)"
 
-#, fuzzy
 msgid "Commit charge levels"
-msgstr "Commit-Charge Level"
+msgstr ""
 
 msgid "Commit limit"
 msgstr "Commit-Limit"
 
-#, fuzzy
 msgid "Commitable memory"
-msgstr "Zugesicherter Speicher"
+msgstr "Aktivierbarer Speicher"
 
-#, fuzzy
 msgid "Commitable memory (averaged)"
-msgstr "Mittelung des virtuellen Speichers"
+msgstr "Aktivierbarer Speicher (gemittelt)"
 
 msgid "Commits"
 msgstr "Eingaben"
@@ -12181,9 +12170,8 @@ msgstr ""
 "nicht als manueller Check ausgeführt wird. Wählen Sie diese Option für "
 "manuelle Checks aus, so wird der Service immer auf UNKN gehen."
 
-#, fuzzy
 msgid "Compare to"
-msgstr "History vergleichen"
+msgstr "Vergleichen mit"
 
 msgid ""
 "Compares the maximum number of connections that have been in use "
@@ -13285,9 +13273,8 @@ msgstr "Fortsetzen"
 msgid "Continue counting when event is <b>acknowledged</b>"
 msgstr "Setze Zählen fort sobald Ereignis <b>quittiert</b> ist"
 
-#, fuzzy
 msgid "Continue growth here"
-msgstr "Suche verfeinern"
+msgstr "Wachstum hier fortsetzen"
 
 msgid "Continue search"
 msgstr "Suche verfeinern"
@@ -13357,9 +13344,8 @@ msgstr "Kühleinrichtung"
 msgid "Cooling period after failed connect/heartbeat"
 msgstr "Wartezeit nach fehlgeschlagenem Verbindungsversuch"
 
-#, fuzzy
 msgid "Coordinates"
-msgstr "Verwaltungszustände"
+msgstr "Koordinaten"
 
 msgid "Copied rules from master"
 msgstr "Regeln vom Master kopiert"
@@ -15169,9 +15155,8 @@ msgstr "Datenübertragung"
 msgid "Data transfer cache size"
 msgstr "Cachegröße der Datenübertragung"
 
-#, fuzzy
 msgid "Data transfer rate"
-msgstr "Datenübertragung"
+msgstr "Datenübertragungsrate"
 
 msgid "Data type"
 msgstr "Datentyp"
@@ -16809,6 +16794,9 @@ msgstr ""
 msgid "Determined by discovery"
 msgstr "Bei der Serviceerkennung festgelegt"
 
+msgid "Determines how to treat invalid certificate"
+msgstr "Legt fest, wie ein ungültiges Zertifikat zu behandeln ist"
+
 msgid "Developer resources"
 msgstr "Ressourcen für Entwickler"
 
@@ -17781,9 +17769,8 @@ msgid "Do inventory and service configuration on existing hosts."
 msgstr ""
 "Inventarisierung und Service-Konfiguration auf existierenden Hosts ausführen."
 
-#, fuzzy
 msgid "Do no longer continue here"
-msgstr "Docker Node Container Level"
+msgstr "Hier nicht mehr fortfahren"
 
 msgid "Do not activate changes"
 msgstr "Änderungen nicht aktivieren"
@@ -18214,6 +18201,9 @@ msgstr "Kontext nicht übermitteln"
 
 msgid "Do not translate SNMP traps"
 msgstr "SNMP-Traps nicht übersetzen"
+
+msgid "Do not trust"
+msgstr "Nicht vertrauen"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "Verwenden Sie kein 'aws:'-Präfix für den Schlüssel."
@@ -19952,9 +19942,8 @@ msgstr ""
 msgid "End"
 msgstr "Ende"
 
-#, fuzzy
 msgid "End growing here"
-msgstr ", läuft nirgends"
+msgstr "Hier Wachsen beenden"
 
 msgid "End-Time"
 msgstr "End-Zeit"
@@ -22233,9 +22222,8 @@ msgstr "Erste Seite"
 msgid "First time the downtime starts"
 msgstr "Erster Startzeitpunkt der Wartungszeit"
 
-#, fuzzy
 msgid "Fit to screen"
-msgstr "Zu sendende Daten"
+msgstr "An den Bildschirm anpassen"
 
 msgid "Fix affected folders, hosts and rules."
 msgstr "Repariere betroffene Ordner/Hosts/Regeln."
@@ -22295,7 +22283,7 @@ msgid "Flashback"
 msgstr "Flashback"
 
 msgid "Flat"
-msgstr ""
+msgstr "Flach"
 
 msgid "Flex. Duration"
 msgstr "Flexible Dauer"
@@ -22937,9 +22925,8 @@ msgstr "Freie Pods: Cluster"
 msgid "Free SGA memory available"
 msgstr "Freier SGA-Speicher vorhanden"
 
-#, fuzzy
 msgid "Free floating style"
-msgstr "Matrixlayout"
+msgstr ""
 
 msgid "Free leases levels"
 msgstr "Level für freie Leases"
@@ -23078,9 +23065,8 @@ msgstr "Eingefroren"
 msgid "Fujitsu storage CA port discovery"
 msgstr "Port-Erkennung der Fujitsu-Speicher-CA"
 
-#, fuzzy
 msgid "Full"
-msgstr "Vollständiger Name"
+msgstr "Voll"
 
 msgid "Full - Including RRA configuration"
 msgstr "Voll - Einschließlich RRA-Konfiguration"
@@ -23448,9 +23434,8 @@ msgstr "Global"
 msgid "Global Settings"
 msgstr "Globale Einstellungen"
 
-#, fuzzy
 msgid "Global default"
-msgstr "Standard"
+msgstr "Globaler Standard"
 
 msgid "Global memory bound"
 msgstr "Globaler, gebundener Speicher"
@@ -25216,9 +25201,8 @@ msgstr ""
 msgid "Hidden"
 msgstr "Versteckt"
 
-#, fuzzy
 msgid "Hide"
-msgstr "Blende %s aus"
+msgstr "Verbergen"
 
 msgid "Hide Checkmk version"
 msgstr "Die Checkmk-Version verbergen"
@@ -25279,7 +25263,6 @@ msgstr "Benutzerregeln zu"
 msgid "Hierarchical layout"
 msgstr "Hierarchisches Layout"
 
-#, fuzzy
 msgid "Hierarchy"
 msgstr "Hierarchie"
 
@@ -27510,7 +27493,6 @@ msgstr ""
 "Remote-Instanzen durchführen - es sei denn, Sie verwenden ein zentrales "
 "Spooling."
 
-#, fuzzy
 msgid ""
 "If this parameter is set, all measured values will be averaged over the "
 "specified time interval before levels are being applied. By default, "
@@ -32289,9 +32271,8 @@ msgstr "Zeilennummer in Logdatei"
 msgid "Line spacing"
 msgstr "Zeilenabstand"
 
-#, fuzzy
 msgid "Line style"
-msgstr "Lizenzstatus"
+msgstr ""
 
 msgid "Line-based matching"
 msgstr "Zeilenbasierter Abgleich"
@@ -32613,9 +32594,8 @@ msgstr ""
 "Dieses Snapin funktioniert nur, wenn <b>alle</b> Instanzen den Checkmk-Kern "
 "verwenden"
 
-#, fuzzy
 msgid "Live search active"
-msgstr "aktiv / aktiv"
+msgstr "Livesuche aktiv"
 
 msgid "Liveproxy Daemon"
 msgstr "Livestatus-Proxy-Daeamon"
@@ -34487,9 +34467,8 @@ msgstr "Kriterien zur Übereinstimmung"
 msgid "Matching is inverted in this rule"
 msgstr "Das Matchen in dieser Regel ist invertiert"
 
-#, fuzzy
 msgid "Matching nodes"
-msgstr "Alle Nodes"
+msgstr "Übereinstimmende Knoten"
 
 msgid "Matching: "
 msgstr "Übereinstimmend: "
@@ -35295,7 +35274,7 @@ msgid "Merge if there is an open un-acknowledged event"
 msgstr "Verbinde wenn es ein offenes nicht quittiertes Ereignis gibt"
 
 msgid "Merge nodes with equal ID"
-msgstr ""
+msgstr "Knoten mit gleicher ID zusammenführen"
 
 msgid "Merge with open event"
 msgstr "Verbinde mit offenem Ereignis"
@@ -35701,9 +35680,8 @@ msgstr "Fehlender Hostname"
 msgid "Missing identity provider information in metadata"
 msgstr "Fehlende Identitätsanbieter-Informationen in den Metadaten"
 
-#, fuzzy
 msgid "Missing in reference"
-msgstr "Fehlender Benutzername"
+msgstr "In der Referenz fehlend"
 
 msgid "Missing job ID."
 msgstr "Fehlende Job-ID."
@@ -36341,9 +36319,8 @@ msgstr "Mount-Punkt für Blockgeräte (brtfs)"
 msgid "Mountpoints to never ignore"
 msgstr "Mountpoints, die nie ignoriert werden sollen"
 
-#, fuzzy
 msgid "Mouse position"
-msgstr "Mehr Optionen"
+msgstr "Mausposition"
 
 msgid "Move"
 msgstr "Verschieben"
@@ -37865,7 +37842,7 @@ msgid "Noncritical events"
 msgstr "Nicht kritische Ereignisse"
 
 msgid "None"
-msgstr ""
+msgstr "Keine"
 
 msgid "None (linear)"
 msgstr "Keine (linear)"
@@ -39740,9 +39717,8 @@ msgstr "Nur im Falle eines Problems"
 msgid "Only in case of a problem or if inodes are below 50%"
 msgstr "Nur bei einem Problem oder wenn die freien Inodes unter 50% sind"
 
-#, fuzzy
 msgid "Only in reference"
-msgstr "Plugin-API Referenzen"
+msgstr "Nur in der Referenz"
 
 msgid "Only include hosts that failed on previous discovery"
 msgstr ""
@@ -39789,9 +39765,8 @@ msgstr "Nur Prozent"
 msgid "Only ping this device"
 msgstr "Nur per Ping prüfen"
 
-#, fuzzy
 msgid "Only problems"
-msgstr "Nur Probleme anzeigen"
+msgstr "Nur Probleme"
 
 msgid "Only process mails with matching subject"
 msgstr "Nur Emails mit passendem Betreff verarbeiten"
@@ -40936,9 +40911,8 @@ msgstr "Palo Alto Status"
 msgid "Palo Alto Users"
 msgstr "Palo Alto Benutzer"
 
-#, fuzzy
 msgid "Panning"
-msgstr "Läuft"
+msgstr ""
 
 msgid "Paper margins"
 msgstr "Seitenränder"
@@ -43854,9 +43828,8 @@ msgstr "RAID: Sammelstatus"
 msgid "RAM"
 msgstr "RAM"
 
-#, fuzzy
 msgid "RAM (averaged)"
-msgstr "Durchschnitt"
+msgstr "RAM (gemittelt)"
 
 msgid "RAM + Swap"
 msgstr "RAM + Swap"
@@ -43867,12 +43840,11 @@ msgstr "RAM + Swap Übersicht"
 msgid "RAM + Swap used"
 msgstr "RAM + Swap belegt"
 
-#, fuzzy
 msgid "RAM free"
-msgstr "% frei"
+msgstr "RAM frei"
 
 msgid "RAM free (averaged)"
-msgstr ""
+msgstr "RAM frei (gemittelt)"
 
 msgid "RAM installed"
 msgstr "installierter RAM"
@@ -43880,9 +43852,8 @@ msgstr "installierter RAM"
 msgid "RAM used"
 msgstr "benutzter RAM"
 
-#, fuzzy
 msgid "RAM used (averaged)"
-msgstr "Durchschnittliche Leseausführungszeit (EXE)"
+msgstr "benutzter RAM (gemittelt)"
 
 msgid ""
 "RCC compatible suites can be started with <a href=\"https://robocorp.com/"
@@ -45055,9 +45026,8 @@ msgstr "Geplante Wartungszeiten entfernen?"
 msgid "Remove service"
 msgstr "Entfernter Service"
 
-#, fuzzy
 msgid "Remove style"
-msgstr "Entferne alles"
+msgstr "Stil entfernen"
 
 msgid "Remove tag"
 msgstr "Tag entfernen"
@@ -45292,7 +45262,7 @@ msgid "Repeats every %s"
 msgstr "Wird alle %s wiederholt"
 
 msgid "Replace hierarchical root with this node"
-msgstr ""
+msgstr "Hierarchische Wurzel durch diesen Knoten ersetzen"
 
 msgid ""
 "Replace the application (syslog tag) with this text. If you have bracketed "
@@ -45584,9 +45554,8 @@ msgstr "Anforderungsmetriken"
 msgid "Request rate"
 msgstr "Anfragerate"
 
-#, fuzzy
 msgid "Request transfer rate"
-msgstr "Anfragerate"
+msgstr "Übertragungsrate abfragen"
 
 msgid "Request wait time"
 msgstr "Request-Wartezeite"
@@ -45735,13 +45704,11 @@ msgstr ""
 msgid "Reset to default"
 msgstr "Auf Standard zurücksetzen"
 
-#, fuzzy
 msgid "Reset to default layout"
-msgstr "Standardlayout verwenden"
+msgstr "Auf Standardlayout zurücksetzen"
 
-#, fuzzy
 msgid "Reset zoom"
-msgstr "Zurücksetzen"
+msgstr "Zoom zurücksetzen"
 
 #, python-format
 msgid "Resets the commands '%s', '%s' and '%s' to the default state"
@@ -47127,9 +47094,8 @@ msgstr "Speichern & testen"
 msgid "Save & view folder"
 msgstr "Speichern & Ordner anzeigen"
 
-#, fuzzy
 msgid "Save as new layout for this aggregation"
-msgstr "Erstellen Sie eine Kopie dieser Aggregation"
+msgstr "Als neues Layout für diese Aggregation speichern"
 
 msgid "Save filters & go to designer"
 msgstr "Filter speichern & zum Designer gehen"
@@ -47950,9 +47916,8 @@ msgstr "Ausgewählte Sektionen werden nicht vom Agenten ausgeführt."
 msgid "Selected state"
 msgstr "Ausgewählter Zustand"
 
-#, fuzzy
 msgid "Selected style configuration"
-msgstr "Neue Statuskonfiguriation hinzufügen"
+msgstr "Gewählte Stilkonfiguration"
 
 #, python-format
 msgid ""
@@ -48175,6 +48140,9 @@ msgstr "Servername"
 
 msgid "Server OS"
 msgstr "Betriebssystem des Servers"
+
+msgid "Server certificate policy"
+msgstr "Server-Zertifikatsrichtlinie"
 
 msgid "Server connections"
 msgstr "Server-Verbindungen"
@@ -49646,9 +49614,8 @@ msgstr "Zeige Graphen-Titel eingebettet im Graphen"
 msgid "Show graphs for the first"
 msgstr "Graphen anzeigen für den ersten"
 
-#, fuzzy
 msgid "Show gravity configuration"
-msgstr "Servicekonfiguration"
+msgstr "Schwerkraftkonfiguration anzeigen"
 
 msgid "Show header with highlighted background"
 msgstr "Zeige die Header mit hervorhebendem Hintergrund"
@@ -49800,9 +49767,8 @@ msgstr "Service-Beschreibung anzeigen"
 msgid "Show service status"
 msgstr "Service-Status anzeigen"
 
-#, fuzzy
 msgid "Show services"
-msgstr "Schatten-Services"
+msgstr "Services anzeigen"
 
 #, python-format
 msgid "Show services of host %s"
@@ -52861,7 +52827,7 @@ msgid "Stop foreign background jobs"
 msgstr "Hintergrund-Prozesse anderer Benutzer stoppen"
 
 msgid "Stop growing here"
-msgstr ""
+msgstr "Hier aufhören zu wachsen"
 
 msgid "Stop job"
 msgstr "Job stoppen"
@@ -63588,11 +63554,10 @@ msgid "Time to connect"
 msgstr "Zeit zum Verbinden"
 
 msgid "Time to fetch HTTP headers"
-msgstr ""
+msgstr "Zeit zum Abrufen von HTTP-Headern"
 
-#, fuzzy
 msgid "Time to fetch page content"
-msgstr "Timeout nach letztem Kontakt zum Agenten"
+msgstr "Zeit zum Abrufen des Seiteninhalts"
 
 msgid "Time to first byte"
 msgstr "Zeit bis zum ersten Byte"
@@ -64165,9 +64130,8 @@ msgstr "Insgesamt bereitgestellte IOPS SSD (io2) IO-Vorgänge pro Sekunde"
 msgid "Total Provisioned IOPS SSD (io2) space"
 msgstr "Insgesamt bereitgestellter IOPS SSD (io2)-Speicherplatz"
 
-#, fuzzy
 msgid "Total RAM"
-msgstr "Gesamter verfügbarer Arbeitsspeicher"
+msgstr "Gesamter RAM"
 
 msgid "Total RAM + Swap installed"
 msgstr "Gesamtes RAM + installierter Swapspeicher"
@@ -64245,9 +64209,8 @@ msgstr "Gesamte Cachenutzung"
 msgid "Total comments: %d"
 msgstr "Kommentare insgesamt: %d"
 
-#, fuzzy
 msgid "Total commitable memory"
-msgstr "Absoluter commitbarer Speicherplatz"
+msgstr "Absoluter aktivierbarer Speicherplatz"
 
 msgid "Total containers"
 msgstr "Container insgesamt"
@@ -66255,6 +66218,9 @@ msgstr ""
 msgid "Trunk"
 msgstr "Rumpf"
 
+msgid "Trust"
+msgstr "Vertrauen"
+
 msgid "Trust system wide configured CAs"
 msgstr "Systemweit konfigurierten CAs vertrauen"
 
@@ -67037,9 +67003,8 @@ msgstr "Unbekannte Entitäten"
 msgid "Unknown group: %s"
 msgstr "Unbekannte Gruppe: %s"
 
-#, fuzzy
 msgid "Unknown host"
-msgstr "Unbekannte Pfade"
+msgstr "Unbekannter Host"
 
 #, python-format
 msgid "Unknown match type: %s"
@@ -67056,9 +67021,8 @@ msgstr "Unbekannte Pfade"
 msgid "Unknown rendering mode %s"
 msgstr "Unbekannter Rendering-Modus %s"
 
-#, fuzzy
 msgid "Unknown service"
-msgstr "Unbekannter Benutzer"
+msgstr "Unbekannter Service"
 
 #, python-format
 msgid "Unknown site %s"
@@ -69856,9 +69820,8 @@ msgstr "Regelbasierte effektive Parameter dieses Hosts anzeigen"
 msgid "View timeline"
 msgstr "Zeitleiste anzeigen"
 
-#, fuzzy
 msgid "Viewport information"
-msgstr "Host-Informationen"
+msgstr "Viewport-Informationen"
 
 msgid "Views"
 msgstr "Ansichten"
@@ -74409,7 +74372,7 @@ msgid "Zerto"
 msgstr "Zerto"
 
 msgid "Zoom"
-msgstr ""
+msgstr "Vergrößerung"
 
 msgid "Zorp connections"
 msgstr "Zorp-Verbindungen"
@@ -75215,9 +75178,8 @@ msgstr "Der Host ist UP, aber Services sind im Warnzustand"
 msgid "host tags"
 msgstr "Host Tags"
 
-#, fuzzy
 msgid "hostname"
-msgstr "Vhost Name"
+msgstr "Host-Name"
 
 msgid "hostname will be ignored when agent_hash is given."
 msgstr "hostname wird ignoriert, wenn agent_hash angegeben wird."
@@ -76123,7 +76085,6 @@ msgstr[1] "Services"
 msgid "service in %s state"
 msgstr "Service im Zustand %s"
 
-#, fuzzy
 msgid "service name"
 msgstr "Service-Name"
 

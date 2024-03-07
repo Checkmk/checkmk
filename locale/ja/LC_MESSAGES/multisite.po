@@ -1914,8 +1914,8 @@ msgid ""
 "the file path for <tt>robot.yaml</tt> is relative to that folder's content."
 msgstr ""
 
-#, fuzzy
-msgid "<u>Info</u>: Downtime also applies to all services of the hosts."
+#, fuzzy, python-format
+msgid "<u>Info</u>: Downtime also applies to all services of the %s."
 msgstr "<u>注意</u>: ダウンタイムは、サービスにも適用されます。"
 
 #, fuzzy
@@ -16501,6 +16501,9 @@ msgstr ""
 msgid "Determined by discovery"
 msgstr "ディスカバリーによる決定"
 
+msgid "Determines how to treat invalid certificate"
+msgstr ""
+
 msgid "Developer resources"
 msgstr "開発者向けリソース"
 
@@ -17882,6 +17885,10 @@ msgstr "コンテキストを転送しない"
 
 msgid "Do not translate SNMP traps"
 msgstr "SNMPトラップを変換しないでください"
+
+#, fuzzy
+msgid "Do not trust"
+msgstr "グループ化しないでください"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "キーに'aws:' プレフィックスを使用しないでください。"
@@ -47470,6 +47477,10 @@ msgstr "サーバーネーム"
 msgid "Server OS"
 msgstr "サーバーOS"
 
+#, fuzzy
+msgid "Server certificate policy"
+msgstr "サイト証明書の有効性"
+
 msgid "Server connections"
 msgstr "サーバー接続"
 
@@ -65427,6 +65438,10 @@ msgstr ""
 
 msgid "Trunk"
 msgstr "トランク"
+
+#, fuzzy
+msgid "Trust"
+msgstr "信頼できる"
 
 msgid "Trust system wide configured CAs"
 msgstr "システム全体で構成されたCAを信頼する"

@@ -1956,8 +1956,8 @@ msgid ""
 "the file path for <tt>robot.yaml</tt> is relative to that folder's content."
 msgstr ""
 
-#, fuzzy
-msgid "<u>Info</u>: Downtime also applies to all services of the hosts."
+#, fuzzy, python-format
+msgid "<u>Info</u>: Downtime also applies to all services of the %s."
 msgstr "Tempi di inattività del servizio"
 
 #, fuzzy
@@ -16958,6 +16958,9 @@ msgstr ""
 msgid "Determined by discovery"
 msgstr "Determinato dalla scoperta"
 
+msgid "Determines how to treat invalid certificate"
+msgstr ""
+
 msgid "Developer resources"
 msgstr "Risorse per gli sviluppatori"
 
@@ -18376,6 +18379,10 @@ msgstr "Non trasferire il contesto"
 
 msgid "Do not translate SNMP traps"
 msgstr "Non tradurre le trappole SNMP"
+
+#, fuzzy
+msgid "Do not trust"
+msgstr "Non raggruppare"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "Non usare il prefisso 'aws:' per la chiave."
@@ -48681,6 +48688,10 @@ msgstr "Nome del server"
 msgid "Server OS"
 msgstr "Sistema operativo del server"
 
+#, fuzzy
+msgid "Server certificate policy"
+msgstr "Validità del certificato del sito"
+
 msgid "Server connections"
 msgstr "Connessioni al server"
 
@@ -67329,6 +67340,10 @@ msgstr ""
 
 msgid "Trunk"
 msgstr "Tronco"
+
+#, fuzzy
+msgid "Trust"
+msgstr "Affidabile"
 
 msgid "Trust system wide configured CAs"
 msgstr "Fidati delle CA configurate a livello di sistema"

@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
     base_version = CMKVersion(
-        "2.2.0p8", Edition.CEE, current_base_branch_name(), current_branch_version()
+        "2.3.0b1", Edition.CEE, current_base_branch_name(), current_branch_version()
     )
     return SiteFactory(version=base_version, prefix="")
 
@@ -74,9 +74,8 @@ def _base_site_demo(site_factory_demo):
 
 
 @pytest.mark.cee
-@pytest.mark.skip("Re-generate backup using a 2.3.0 release.")
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
-    backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
+    backup_path = qa_test_data_path() / Path("update/backups/update_central_2.3.0b1_backup.tar.gz")
     assert backup_path.exists()
 
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)

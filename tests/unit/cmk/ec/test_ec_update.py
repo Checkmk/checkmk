@@ -76,7 +76,7 @@ def test_update_multiple_evens(event_status: EventStatus, status_server: StatusS
     for event in events:
         event_status.new_event(CMKEventConsole.new_event(event))
 
-    event_ids = ",".join([str(n + 1) for n, _ in enumerate(event_status.events())])
+    event_ids = ",".join(str(n + 1) for n, _ in enumerate(event_status.events()))
     s = FakeStatusSocket(
         bytes(f"COMMAND UPDATE;{event_ids};testuser;1;test_comment;test_contact_name", "utf-8")
     )

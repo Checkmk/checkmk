@@ -331,3 +331,24 @@ def test_password_identifier_regex(clients: ClientRegistry) -> None:
             "'abcℕ' does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
         ]
     }
+
+
+@managedtest
+@pytest.mark.usefixtures("mock_password_file_regeneration")
+def test_openapi_password_response_schema(clients: ClientRegistry) -> None:
+    clients.Password.create(
+        ident="so_so_secret",
+        title="so_secret",
+        owner="admin",
+        password="no_one_can_know",
+        shared=["all"],
+    )
+
+    resp = clients.Password.get("so_so_secret")
+    assert resp.json["extensions"] == {
+        "comment": "",
+        "documentation_url": "",
+        "owned_by": "admin",
+        "shared": ["all"],
+        "customer": "provider",
+    }

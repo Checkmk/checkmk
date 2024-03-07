@@ -401,7 +401,7 @@ test-unit-doctests: prepare-protobuf-files
 	# Different files with the same name but in different namespace packages
 	# confuse our tooling.  Let's help by removing those caches as indicated
 	# in the error message.
-	find ../cmk/ -name '__pycache__' -exec rm -rf {} \;
+	find ../cmk/ -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
 		--config-file=pyproject.toml \

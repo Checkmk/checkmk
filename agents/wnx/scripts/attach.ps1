@@ -1,4 +1,5 @@
 param($usbip, $addr, $port)
+
 function Test-Administrator {  
     [OutputType([bool])]
     param()
@@ -31,17 +32,17 @@ if ($LastExitCode -eq 0) {
     Write-Host "Should not happen: connection has been established"
 }
 
-Write-Host "starting: $usbip attach -r $addr -b $port"
+Write-Host "attach starting: $usbip attach -r $addr -b $port"
 
 $sleep = 10
 for ($i = 0; $i -lt 3; $i++) {
     Write-Host wait.... 
     &$usbip attach -r $addr -b $port
     if ($? ) {
-        Write-Host "success!"
+        Write-Host "attach success"
         exit 0
     }
-    Write-Host "error $LastExitCode"
+    Write-Host "attach error $LastExitCode"
     Start-Sleep $sleep
 }
 

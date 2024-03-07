@@ -298,14 +298,15 @@ function Start-Unit-Tests {
 
 function Invoke-Attach {
     if ($argSign -ne $true) {
-        return
+        Write-Host "Skipping attach" -ForegroundColor Yellow
+        return $False
     }
     & ./scripts/attach.ps1 "$usbip_exe" "yubi-usbserver.lan.checkmk.net" "1-1.2"
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
         return $False
     }
-    Write-Host "Attached!" -ForegroundColor Green
+    Write-Host "Attached USB" -ForegroundColor Green
     return $True
 }
 
@@ -321,9 +322,8 @@ function Start-BinarySigning {
         Write-Error "Build Failed, error code is $LASTEXITCODE" -ErrorAction Stop
     }
 
-    $attached = Invoke-Attach
-    if ($attached -ne $True) {
-        Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
+    if ( (Invoke-Attach)[-1] -ne $True) {
+        Write-Host "Failed to attach USB token" -foreground Red
         return
     }
     Remove-Item $hash_file -Force
@@ -338,10 +338,12 @@ function Start-BinarySigning {
     )
 
     foreach ($file in $files_to_sign) {
-        & ./scripts/sign_code.cmd $file $hash_file
+        & ./scripts/sign_code.cmd $file
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
         }
+        & ./scripts/add_hash_line.ps1 $file $hash_file
+
     }
     Write-Host "Success binary signing" -foreground Green
 }
@@ -407,11 +409,12 @@ function Start-MsiSigning {
     }
 
     Write-Host "MSI signing..." -ForegroundColor White
-    & ./scripts/sign_code.cmd $arte/check_mk_agent.msi  $hash_file
+    & ./scripts/sign_code.cmd $arte/check_mk_agent.msi
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed sign MSI " $LASTEXITCODE -foreground Red
         return
     }
+    & "./scripts/add_hash_file.ps1" $arte/check_mk_agent.msi $hash_file
     Invoke-Detach
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {

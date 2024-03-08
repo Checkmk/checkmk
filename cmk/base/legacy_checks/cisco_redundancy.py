@@ -61,6 +61,8 @@ def check_cisco_redundancy(_no_item, params, info):
             "5": "user forced",
             "6": "active unit failed",
             "7": "active unit removed",
+            "8": "active lost gateway connectivity",
+            "9": "RMI port went down on active",
         },
     }
 
@@ -109,7 +111,14 @@ check_info["cisco_redundancy"] = LegacyCheckDefinition(
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.176.1.1.*")),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.176.1.1",
-        oids=["1", "2", "3", "4", "6", "8"],
+        oids=[
+            "1",  # cRFStatusUnitId
+            "2",  # cRFStatusUnitState
+            "3",  # cRFStatusPeerUnitId
+            "4",  # cRFStatusPeerUnitState
+            "6",  # cRFStatusDuplexMode
+            "8",  # cRFStatusLastSwactReasonCode
+        ],
     ),
     service_name="Redundancy Framework Status",
     discovery_function=inventory_cisco_redundancy,

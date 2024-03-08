@@ -50,6 +50,21 @@ register.snmp_section(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
 )
 
+register.snmp_section(
+    name="apc_netbotz_50_other_sensors",
+    parse_function=parse_apc_netbotz_other_sensors,
+    parsed_section_name="apc_netbotz_other_sensors",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.52674.500.4.2.10.1",
+        oids=[
+            "4",  # NETBOTZ50-MIB::otherNumericSensorLabel
+            "3",  # NETBOTZ50-MIB::otherNumericSensorErrorStatus
+            "7",  # NETBOTZ50-MIB::otherNumericSensorValueStr
+        ],
+    ),
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.52674.500"),
+)
+
 
 # MIB: The sensor reading shown as a string (or empty string
 # if it is not plugged into a port).

@@ -38,6 +38,7 @@ def test_detect_spec_dedup(
         ("alcatel_timetra_chassis", "alcatel_timetra_cpu"),
         ("apc_netbotz_fluid", "apc_netbotz_smoke"),
         ("apc_netbotz_v2_other_sensors", "apc_netbotz_v2_sensors"),
+        ("apc_netbotz_50_other_sensors", "apc_netbotz_50_sensors"),
         ("apc_sts_inputs", "apc_sts_source"),
         ("artec_documents", "artec_temp"),
         ("bdt_tape_info", "bdt_tape_status"),

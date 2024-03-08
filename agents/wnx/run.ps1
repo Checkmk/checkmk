@@ -296,36 +296,84 @@ function Start-Unit-Tests {
     Write-Host "Success unittests" -foreground Green
 }
 
-function Invoke-Attach {
+function Invoke-Attach($usbip, $addr, $port) {
     if ($argSign -ne $true) {
         Write-Host "Skipping attach" -ForegroundColor Yellow
-        return $False
+        return
     }
-    & ./scripts/attach.ps1 "$usbip_exe" "yubi-usbserver.lan.checkmk.net" "1-1.2"
+    &$usbip attach -r $addr -b $port
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed to attach USB token" $LASTEXITCODE -foreground Red
-        return $False
+        $argSign = $False
+        return
     }
     Write-Host "Attached USB" -ForegroundColor Green
-    return $True
+    return
 }
 
+function Test-Administrator {  
+    [OutputType([bool])]
+    param()
+    process {
+        [Security.Principal.WindowsPrincipal]$user = [Security.Principal.WindowsIdentity]::GetCurrent();
+        return $user.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator);
+    }
+}
+
+function Invoke-TestSigning($usbip) {
+    if ($argSign -ne $true) {
+        Write-Host "Skipping Test Signing..." -ForegroundColor Yellow
+        return
+    }
+
+    if (-not(Test-Path -Path $usbip -PathType Leaf)) {
+        Write-Host "$usbip doesn't exist" -ForegroundColor Red
+        $argSign = $False
+        return
+    }
+
+    if (-not (Test-Administrator)) {
+        Write-Host "This script must be executed as Administrator." -ForegroundColor Red
+        $argSign = $False
+        return
+    }
+
+    Write-Host "check port"
+    &$usbip port
+    if ($LastExitCode -eq 3) {
+        Write-Host "No chance"
+        $argSign = $False
+        return
+    }
+    Write-Host "try to detach"
+
+    &$usbip detach -p 00
+    if ($LastExitCode -eq 0) {
+        Write-Host "Should not happen: connection has been established"
+    }
+
+}
+
+function Start-MsiControlBuild {
+    if ($argSign -ne $true) {
+        Write-Host "Skipping MSI Control Build..." -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host "Building controlly MSI..." -ForegroundColor White
+    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86"
+    if ($LASTEXITCODE -ne 0 ) {
+        Write-Error "Build Failed, error code is $LASTEXITCODE" -ErrorAction Stop
+    }
+}
 
 function Start-BinarySigning {
     if ($argSign -ne $true) {
         Write-Host "Skipping Signing..." -ForegroundColor Yellow
         return
     }
-    Write-Host "Binary signing..." -ForegroundColor White
-    & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x86"
-    if ($LASTEXITCODE -ne 0 ) {
-        Write-Error "Build Failed, error code is $LASTEXITCODE" -ErrorAction Stop
-    }
 
-    if ( (Invoke-Attach)[-1] -ne $True) {
-        Write-Host "Failed to attach USB token" -foreground Red
-        return
-    }
+    Write-Host "Binary signing..." -ForegroundColor White
     Remove-Item $hash_file -Force
 
     $files_to_sign = @(
@@ -414,7 +462,7 @@ function Start-MsiSigning {
         Write-Host "Failed sign MSI " $LASTEXITCODE -foreground Red
         return
     }
-    & "./scripts/add_hash_file.ps1" $arte/check_mk_agent.msi $hash_file
+    & "./scripts/add_hash_line.ps1" $arte/check_mk_agent.msi $hash_file
     Invoke-Detach
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {
@@ -476,6 +524,9 @@ try {
     Build-MSI
     Set-Msi-Version
     Start-Unit-Tests
+    Invoke-TestSigning $usbip_exe
+    Start-MsiControlBuild
+    Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"
     Start-BinarySigning
     Start-ArtifactUploading
     Start-MsiPatching

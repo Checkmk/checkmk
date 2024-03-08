@@ -99,7 +99,7 @@ impl Default for Config {
 impl Config {
     pub fn from_string(source: &str) -> Result<Option<Self>> {
         YamlLoader::load_from_str(source)?
-            .get(0)
+            .first()
             .and_then(|e| Config::from_yaml(e).transpose())
             .transpose()
     }

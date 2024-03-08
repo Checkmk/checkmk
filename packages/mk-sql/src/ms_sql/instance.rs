@@ -1866,7 +1866,7 @@ async fn exec_win_registry_sql_instances_query(
     query: &str,
 ) -> Result<Vec<SqlInstanceBuilder>> {
     let answers = run_custom_query(client, query).await?;
-    if let Some(rows) = answers.get(0) {
+    if let Some(rows) = answers.first() {
         let instances = to_sql_instance(rows);
         log::info!("Instances found {}", instances.len());
         Ok(instances)

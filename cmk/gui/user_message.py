@@ -95,17 +95,19 @@ def render_user_message_table(what: str) -> None:
             msg = entry["text"].replace("\n", " ")
 
             table.cell(_("Actions"), css=["buttons"], sortable=False)
-            onclick = (
-                "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();" % msg_id
-                if what == "gui_hint"
-                else "cmk.utils.delete_user_message('%s', this);" % msg_id
-            )
-            html.icon_button(
-                "",
-                _("Delete"),
-                "delete",
-                onclick=onclick,
-            )
+            if not entry.get("security"):
+                onclick = (
+                    "cmk.utils.delete_user_message('%s', this);cmk.utils.reload_whole_page();"
+                    % msg_id
+                    if what == "gui_hint"
+                    else "cmk.utils.delete_user_message('%s', this);" % msg_id
+                )
+                html.icon_button(
+                    "",
+                    _("Delete"),
+                    "delete",
+                    onclick=onclick,
+                )
 
             table.cell(_("Message"), msg)
             table.cell(_("Date"), datetime)

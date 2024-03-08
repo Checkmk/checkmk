@@ -82,6 +82,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput
 from cmk.gui.watolib.mode import redirect
 
@@ -154,9 +155,11 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             if credential_id in credentials["webauthn_credentials"]:
                 del credentials["webauthn_credentials"][credential_id]
                 log_event_usermanagement(TwoFactorEventType.webauthn_remove)
+                send_security_message(user.id, SecurityNotificationEvent.webauthn_removed)
             elif credential_id in credentials["totp_credentials"]:
                 del credentials["totp_credentials"][credential_id]
                 log_event_usermanagement(TwoFactorEventType.totp_remove)
+                send_security_message(user.id, SecurityNotificationEvent.totp_removed)
             else:
                 return
             save_two_factor_credentials(user.id, credentials)
@@ -166,6 +169,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             credentials["backup_codes"] = []
             log_event_usermanagement(TwoFactorEventType.backup_remove)
             save_two_factor_credentials(user.id, credentials)
+            send_security_message(user.id, SecurityNotificationEvent.backup_revoked)
             flash(_("All backup codes have been deleted"))
 
         if request.has_var("_backup_codes"):
@@ -173,6 +177,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
             log_event_usermanagement(TwoFactorEventType.backup_add)
             save_two_factor_credentials(user.id, credentials)
+            send_security_message(user.id, SecurityNotificationEvent.backup_reset)
             flash(self.flash_new_backup_codes(codes))
 
     def flash_new_backup_codes(self, codes: list[tuple[Password, PasswordHash]]) -> HTML:
@@ -492,6 +497,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
             }
             save_two_factor_credentials(user.id, credentials)
             log_event_usermanagement(TwoFactorEventType.totp_add)
+            send_security_message(user.id, SecurityNotificationEvent.totp_added)
             session.session_info.two_factor_completed = True
             flash(_("Registration successful"))
             origtarget = "user_two_factor_overview.py"
@@ -782,6 +788,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
         )
         save_two_factor_credentials(user.id, credentials)
         log_event_usermanagement(TwoFactorEventType.webauthn_add_)
+        send_security_message(user.id, SecurityNotificationEvent.webauthn_added)
         session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
         return {"status": "OK"}
@@ -937,6 +944,7 @@ class UserLoginTwoFactor(Page):
             if backup_code := request.get_validated_type_input(Password, "_backup_code"):
                 if is_two_factor_backup_code_valid(user.id, backup_code):
                     log_event_usermanagement(TwoFactorEventType.backup_used)
+                    send_security_message(user.id, SecurityNotificationEvent.backup_used)
                     session.session_info.two_factor_completed = True
                     raise HTTPRedirect(origtarget)
                 log_event_auth("Backup code")

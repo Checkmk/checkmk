@@ -44,6 +44,7 @@ from livestatus import SiteConfiguration, SiteId
 from cmk.utils import agent_registration, paths, render, setup_search_index, store, version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.export import LicenseUsageExtensions
+from cmk.utils.licensing.helper import get_licensing_logger
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.site import omd_site
@@ -2428,6 +2429,10 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
 
 
 def _close_apache_fds():
+    # Close logger handles, before starting bad lowlevel things
+    licensing_logger = get_licensing_logger()
+    del licensing_logger.handlers[:]
+
     # Cleanup resources of the apache
     for x in range(3, 256):
         try:

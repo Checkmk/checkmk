@@ -755,3 +755,27 @@ def test_automatic_dict_append() -> None:
             "metrics": [("something", "line")],
         },
     }
+
+
+@pytest.mark.parametrize(
+    "check_command, expected",
+    [
+        pytest.param(
+            "check-mk-custom!foobar",
+            "check-mk-custom",
+            id="custom-foobar",
+        ),
+        pytest.param(
+            "check-mk-custom!check_ping",
+            "check_ping",
+            id="custom-check_ping",
+        ),
+        pytest.param(
+            "check-mk-custom!./check_ping",
+            "check_ping",
+            id="custom-check_ping-2",
+        ),
+    ],
+)
+def test__parse_check_command(check_command: str, expected: str) -> None:
+    assert utils._parse_check_command(check_command) == expected

@@ -105,6 +105,7 @@ def _url(title: str, _help: str, default_value: str, placeholder: str = "") -> U
         default_value=default_value,
         validate=_validate,
         size=80,
+        title=title,
         placeholder=placeholder,
         help=_help,
     )

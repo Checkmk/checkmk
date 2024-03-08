@@ -1,0 +1,15 @@
+Title: omd cp: Fix etc/ssl/agents/legacy_ca.pem Points to Source of Copy
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1707904094
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+Since Checkmk 2.2.0 there is a agent CA located in <code>etc/ssl/agents/</code>. This CA is
+different from the site CA. In particular, if updating from 2.1.0 to 2.2.0,
+Checkmk will create a symlink <code>etc/ssl/agents/legacy_ca.pem</code>, which points to
+<code>etc/ssl/ca.pem</code>.  After performing an <code>omd cp</code>. This symlink would still point
+to the site, which was the source of the copy. The symlink is now relative. If
+the site was created with version 2.2.0 or above no symlink is needed.

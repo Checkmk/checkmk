@@ -126,7 +126,7 @@ pub fn init(args: ArgsOs) -> Result<(CheckConfig, Env)> {
 }
 
 fn init_logging(args: &Args, environment: &Env, logging: Option<Logging>) -> Result<()> {
-    let l = logging.unwrap_or(Logging::default());
+    let l = logging.unwrap_or_default();
     let level = args.logging_level().unwrap_or_else(|| l.level());
     let send_to = if args.display_log {
         SendTo::Stderr

@@ -39,7 +39,7 @@ pub struct Logging {
 impl Logging {
     pub fn from_string(source: &str) -> Result<Option<Self>> {
         YamlLoader::load_from_str(source)?
-            .get(0)
+            .first()
             .and_then(|e| Logging::from_yaml(e).transpose())
             .transpose()
     }
@@ -95,7 +95,7 @@ impl SystemConfig {
 
     pub fn from_string(source: &str) -> Result<Self> {
         YamlLoader::load_from_str(source)?
-            .get(0)
+            .first()
             .map(SystemConfig::from_yaml)
             .unwrap_or_else(|| Ok(Self::default()))
     }

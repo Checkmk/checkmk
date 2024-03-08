@@ -1,0 +1,16 @@
+Title: Crash when creating combined graphs with empty time filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1709884230
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+When creating a combined graph with an empty time filter (e.g. Last service check),
+the creation of the combined graph would crash.
+
+This behavior is not consistent with the view filtering behavior,
+where the filter is not applied if it is empty.
+
+Now the filter is not applied to combined graphs either.

@@ -1,0 +1,11 @@
+Title: apc_netbotz_sensors, apc_netbotz_other_sensors: Add monitoring for Netbotz 50 devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1709894365
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+apc_netbotz_sensors and apc_netbotz_other_sensors checks provided monitoring for APC Netbotz v2 devices.
+Now, the checks can additionally monitor APC Netbotz 50 devices.

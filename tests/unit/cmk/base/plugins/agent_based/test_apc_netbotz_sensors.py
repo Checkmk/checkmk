@@ -14,7 +14,7 @@ from cmk.base.plugins.agent_based.apc_netbotz_sensors import (
     check_apc_netbotz_sensors_dewpoint,
     check_apc_netbotz_sensors_humidity,
     check_apc_netbotz_sensors_temp,
-    parse_apc_netbotz_sensors,
+    parse_apc_netbotz_v2_sensors,
 )
 from cmk.base.plugins.agent_based.utils.temperature import TempParamType
 
@@ -63,7 +63,7 @@ def test_apc_netbotz_sensors_temp(
     params: TempParamType,
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    parsed = parse_apc_netbotz_sensors(TEST_INFO)
+    parsed = parse_apc_netbotz_v2_sensors(TEST_INFO)
     result = list(check_apc_netbotz_sensors_temp(item=item, params=params, section=parsed))
     assert result == expected_result
 
@@ -92,7 +92,7 @@ def test_apc_netbotz_sensors_humidity(
     params: Mapping[str, object],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    parsed = parse_apc_netbotz_sensors(TEST_INFO)
+    parsed = parse_apc_netbotz_v2_sensors(TEST_INFO)
     result = list(check_apc_netbotz_sensors_humidity(item=item, params=params, section=parsed))
     assert result == expected_result
 
@@ -120,6 +120,6 @@ def test_apc_netbotz_sensors_dewpoint(
     item: str,
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    parsed = parse_apc_netbotz_sensors(TEST_INFO)
+    parsed = parse_apc_netbotz_v2_sensors(TEST_INFO)
     result = list(check_apc_netbotz_sensors_dewpoint(item=item, params={}, section=parsed))
     assert result == expected_result

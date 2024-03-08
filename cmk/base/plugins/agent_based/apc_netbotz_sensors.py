@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import List
+from typing import Callable, List
 
 from .agent_based_api.v1 import (
     get_value_store,
@@ -105,14 +105,16 @@ class SensorData:
 Section = Mapping[str, Mapping[str, SensorData]]
 
 
-def parse_apc_netbotz_sensors(string_table: List[StringTable]) -> Section:
+def parse_apc_netbotz_sensors(
+    string_table: List[StringTable], parse_reading: Callable[[str], float]
+) -> Section:
     parsed: dict[str, dict[str, SensorData]] = {}
     for item_type, block in zip(("temp", "humidity", "dewpoint"), string_table):
         for item_name, reading_str, label, plugged_in_state in block:
             if not plugged_in_state:
                 continue
             parsed.setdefault(item_type, {}).setdefault(
-                item_name, SensorData(reading=float(reading_str) / 10, label=label)
+                item_name, SensorData(reading=parse_reading(reading_str), label=label)
             )
     return parsed
 
@@ -136,9 +138,17 @@ def check_apc_netbotz_sensors(
         )
 
 
+# ACP Netbotz v2 sensors deliver sensor readings in tenth of a degree or tenth of a percent
+def parse_apc_netbotz_v2_sensors(string_table: List[StringTable]) -> Section:
+    def parse_reading(reading: str) -> float:
+        return float(reading) / 10.0
+
+    return parse_apc_netbotz_sensors(string_table, parse_reading)
+
+
 register.snmp_section(
     name="apc_netbotz_v2_sensors",
-    parse_function=parse_apc_netbotz_sensors,
+    parse_function=parse_apc_netbotz_v2_sensors,
     parsed_section_name="apc_netbotz_sensors",
     fetch=[
         SNMPTree(
@@ -155,6 +165,32 @@ register.snmp_section(
         ),
     ],
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
+)
+
+# ACP Netbotz 50 sensors deliver sensor readings in degrees or percent
+def parse_apc_netbotz_50_sensors(string_table: List[StringTable]) -> Section:
+    return parse_apc_netbotz_sensors(string_table, float)
+
+
+register.snmp_section(
+    name="apc_netbotz_50_sensors",
+    parse_function=parse_apc_netbotz_50_sensors,
+    parsed_section_name="apc_netbotz_sensors",
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.52674.500.4.1.1.1",
+            oids=["1", "2", "4", "7"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.52674.500.4.1.2.1",
+            oids=["1", "2", "4", "7"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.52674.500.4.1.3.1",
+            oids=["1", "2", "4", "7"],
+        ),
+    ],
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.52674.500"),
 )
 
 #   .--temperature---------------------------------------------------------.

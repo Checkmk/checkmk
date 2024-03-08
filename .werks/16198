@@ -1,0 +1,28 @@
+Title: mk_informix: Do not allow privilege escalation
+Class: security
+Compatible: compat
+Component: checks
+Date: 1709909870
+Edition: cre
+Level: 1
+Version: 2.1.0p41
+
+The informix database monitoring plugin would previously <code>eval</code> statements parsed from <code>$INFORMIXDIR/bin/onstat</code>. Since the plugin is usually run as root, this could cause statements injected in <code>$INFORMIXDIR/bin/onstat</code> to be run as root as well.
+By adding scripts named the same as other functionality found in <code>$PATH</code> to <code>$INFORMIXDIR/bin</code>, <code>$PATH</code> functionality could also be overshadowed and the custom executed as root.
+Finally, <code>$INFORMIXDIR/bin/onstat</code> would be executed as root, allowing a substituted script to be run with elevated privileges.
+
+With this werk, the environment variables will be exported instead and <code>$PATH</code> will now be searched before <code>$INFORMIXDIR/bin</code>.
+The plugin will now also check if <code>$INFORMIXDIR/bin/onstat</code> belongs to root if the plugin is executed as root. If not, it will be executed as the user owning the executable.
+
+This issue was found during internal review.
+
+<em>Affected Versions</em>:
+
+LI: 2.3.0 (beta)
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<em>Vulnerability Management</em>:
+
+We have rated the issue with a CVSS Score of 8.8 (High) with the following CVSS vector: <code>CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H</code> and assigned CVE <code>CVE-2024-28824</code>.

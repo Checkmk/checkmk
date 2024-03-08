@@ -224,18 +224,23 @@ class ValueSpec(abc.ABC, Generic[T]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         title: str | None = None,
+        label: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[T] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T] | None = None,
     ):
         super().__init__()
         self._title = title
+        self._label = label
         self._help = help
         self._default_value = default_value
         self._validate = validate
 
     def title(self) -> str | None:
         return self._title
+
+    def label(self) -> str | None:
+        return self._label
 
     def help(self) -> str | HTML | None:
         if callable(self._help):
@@ -438,7 +443,13 @@ class Age(ValueSpec[int]):
         validate: ValueSpecValidateFunc[int] | None = None,
         cssclass: str | None = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._label = label
         self._footer = footer
         self._bounds = Bounds[int](minvalue, maxvalue)
@@ -533,7 +544,13 @@ class TimeSpan(ValueSpec[float]):
         validate: ValueSpecValidateFunc[float] | None = None,
         cssclass: str | None = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._label = label
         self._footer = footer
         self._bounds = Bounds[float](minvalue, maxvalue)
@@ -682,7 +699,13 @@ class Integer(ValueSpec[int]):
         default_value: ValueSpecDefault[int] = DEF_VALUE,
         validate: ValueSpecValidateFunc[int] | None = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._bounds = Bounds[int](minvalue, maxvalue)
         self._renderer = NumericRenderer(
             size=size,
@@ -813,7 +836,11 @@ class LegacyDataSize(Integer):
         validate: ValueSpecValidateFunc[int] | None = None,
     ):
         super().__init__(
-            title=title, help=help, label=label, default_value=default_value, validate=validate
+            title=title,
+            help=help,
+            label=label,
+            default_value=default_value,
+            validate=validate,
         )
         self._units = (
             units
@@ -893,7 +920,13 @@ class TextInput(ValueSpec[str]):
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._label = label
         self._size = size  # also possible: "max"
         self._try_max_width = try_max_width  # If set, uses calc(100%-10px)
@@ -2777,7 +2810,13 @@ class Float(ValueSpec[float]):
         default_value: ValueSpecDefault[float] = DEF_VALUE,
         validate: ValueSpecValidateFunc[float] | None = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._bounds = Bounds[float](minvalue, maxvalue)
         self._renderer = NumericRenderer(
             size=size,
@@ -2894,7 +2933,13 @@ class Checkbox(ValueSpec[bool]):
         default_value: ValueSpecDefault[bool] = DEF_VALUE,
         validate: ValueSpecValidateFunc[bool] | None = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._label = label
         self._true_label = true_label if true_label is not None else _("on")
         self._false_label = false_label if false_label is not None else _("off")
@@ -2975,6 +3020,7 @@ class DropdownChoice(ValueSpec[T | None]):
     ):
         super().__init__(
             title=title,
+            label=label,
             help=help,
             default_value=default or default_value,
             validate=validate,
@@ -3586,7 +3632,13 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         validate: ValueSpecValidateFunc[CascadingDropdownChoiceValue] | None = None,
         show_title_of_choices: bool = False,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
         if callable(choices):
             self._choices = lambda: _normalize_choices(choices())
@@ -4555,7 +4607,13 @@ class AbsoluteDate(ValueSpec[None | float]):
         default_value: ValueSpecDefault[float | None] = DEF_VALUE,
         validate: ValueSpecValidateFunc[float | None] | None = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._show_titles = show_titles
         self._label = label
         self._include_time = include_time
@@ -5424,7 +5482,13 @@ class Optional(ValueSpec[None | T]):
         default_value: ValueSpecDefault[T | None] = DEF_VALUE,
         validate: ValueSpecValidateFunc[T | None] | None = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._valuespec = valuespec
         self._label = label
         self._negate = negate
@@ -6134,8 +6198,9 @@ class Dictionary(ValueSpec[DictionaryModel]):
         s = HTML()
         for param, vs in elem:
             if param in value:
+                title = vs.title() if vs.title() else vs.label()
                 s += HTMLWriter.render_tr(
-                    HTMLWriter.render_td("%s:&nbsp;" % vs.title(), class_="title")
+                    HTMLWriter.render_td("%s:&nbsp;" % title, class_="title")
                     + HTMLWriter.render_td(vs.value_to_html(value[param]))
                 )
         return HTMLWriter.render_table(s)
@@ -6239,7 +6304,13 @@ class ElementSelection(ValueSpec[None | str]):
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str | None] | None = None,
     ):
-        super().__init__(title=title, help=help, default_value=default_value, validate=validate)
+        super().__init__(
+            title=title,
+            label=label,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
         self._loaded_at: int | None = None
         self._label = label
         self._empty_text = (
@@ -8648,6 +8719,7 @@ class DatePicker(ValueSpec[str]):
         self._label = label
         super().__init__(
             title=title,
+            label=label,
             help=help,
             default_value=default_value,
             validate=validate,

@@ -201,8 +201,14 @@ class VirtualHostTree(SidebarSnapin):
         if viewname == "svcproblems":
             urlvars += [("st1", "on"), ("st2", "on"), ("st3", "on")]
 
-        urlvars += self._get_tag_url_vars(tree_spec, node_values)
-        urlvars += self._get_folder_url_vars(node_values)
+        active_urlvars: list[str] = []
+        if tag_urlvars := self._get_tag_url_vars(tree_spec, node_values):
+            urlvars += tag_urlvars
+            active_urlvars.append("host_tags")
+        if wato_folder_urlvars := self._get_folder_url_vars(node_values):
+            urlvars += wato_folder_urlvars
+            active_urlvars.append("wato_folder")
+        urlvars += [("_active", ";".join(active_urlvars))]
 
         return makeuri_contextless(request, urlvars, "view.py")
 

@@ -22,6 +22,16 @@ class Suffix:
     prefix: str
     symbol: str
 
+    def use_prefix(self, prefix: str) -> bool:
+        if self.prefix and prefix:
+            return self.prefix == prefix
+        return True
+
+    def use_symbol(self, symbol: str) -> bool:
+        if self.symbol and symbol:
+            return self.symbol == symbol
+        return True
+
 
 @dataclass(frozen=True)
 class Formatted:
@@ -57,11 +67,11 @@ class NotationFormatter:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _preformat_small_number(self, value: int | float) -> Formatted:
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _preformat_large_number(self, value: int | float) -> Formatted:
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         raise NotImplementedError()
 
     def _apply_precision(self, value: int | float) -> float:
@@ -75,16 +85,16 @@ class NotationFormatter:
                 digits = max(exponent + 1, self.precision.digits)
         return value_floor + round(fractional_part, min(digits, _MAX_DIGITS))
 
-    def _format(self, value: int | float) -> Formatted:
+    def _format(self, value: int | float, suffix: Suffix) -> Formatted:
         if value < 0:
-            formatted = self._format(abs(value))
+            formatted = self._format(abs(value), suffix)
             return Formatted(-formatted.value, formatted.suffix)
         if value in (0, 1):
             return Formatted(value, Suffix("", self.symbol))
         if value < 1:
-            formatted = self._preformat_small_number(value)
+            formatted = self._preformat_small_number(value, suffix)
         else:  # value > 1
-            formatted = self._preformat_large_number(value)
+            formatted = self._preformat_large_number(value, suffix)
         return Formatted(self._apply_precision(formatted.value), formatted.suffix)
 
     @abc.abstractmethod
@@ -92,7 +102,7 @@ class NotationFormatter:
         raise NotImplementedError()
 
     def render(self, value: int | float) -> str:
-        formatted = self._format(value)
+        formatted = self._format(value, Suffix("", ""))
         return f"{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip()
 
     @abc.abstractmethod
@@ -127,7 +137,15 @@ class NotationFormatter:
             atom = max_y / num_label_range.right
             quotient = int(max_y / atom)
 
-        return [Label(atom * i, self.render(atom * i)) for i in range(1, quotient + 1)]
+        first = self._format(atom, Suffix("", ""))
+        return [
+            Label(
+                atom * i,
+                f"{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip(),
+            )
+            for i in range(1, quotient + 1)
+            for formatted in (self._format(atom * i, first.suffix),)
+        ]
 
 
 _BASIC_DECIMAL_ATOMS: Final = [1, 2, 5, 10, 20, 50]
@@ -137,10 +155,10 @@ class DecimalFormatter(NotationFormatter):
     def ident(self) -> Literal["Decimal"]:
         return "Decimal"
 
-    def _preformat_small_number(self, value: int | float) -> Formatted:
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
         return Formatted(value, Suffix("", self.symbol))
 
-    def _preformat_large_number(self, value: int | float) -> Formatted:
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         return Formatted(value, Suffix("", self.symbol))
 
     def _format_suffix(self, suffix: Suffix) -> str:
@@ -159,7 +177,7 @@ class SIFormatter(NotationFormatter):
     def ident(self) -> Literal["SI"]:
         return "SI"
 
-    def _preformat_small_number(self, value: int | float) -> Formatted:
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log(value, 10)) - 1
         for exp, power, prefix in (
             (-24, 8, "y"),
@@ -171,11 +189,11 @@ class SIFormatter(NotationFormatter):
             (-6, 2, "μ"),
             (-3, 1, "m"),
         ):
-            if exponent <= exp:
+            if exponent <= exp and suffix.use_prefix(prefix):
                 return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
-    def _preformat_large_number(self, value: int | float) -> Formatted:
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log(value, 10))
         for exp, power, prefix in (
             (24, 8, "Y"),
@@ -187,7 +205,7 @@ class SIFormatter(NotationFormatter):
             (6, 2, "M"),
             (3, 1, "k"),
         ):
-            if exponent >= exp:
+            if exponent >= exp and suffix.use_prefix(prefix):
                 return Formatted(value / pow(1000, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
@@ -207,10 +225,10 @@ class IECFormatter(NotationFormatter):
     def ident(self) -> Literal["IEC"]:
         return "IEC"
 
-    def _preformat_small_number(self, value: int | float) -> Formatted:
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
         return Formatted(value, Suffix("", self.symbol))
 
-    def _preformat_large_number(self, value: int | float) -> Formatted:
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log(value, 2))
         for exp, power, prefix in (
             (80, 8, "Yi"),
@@ -222,7 +240,7 @@ class IECFormatter(NotationFormatter):
             (20, 2, "Mi"),
             (10, 1, "Ki"),
         ):
-            if exponent >= exp:
+            if exponent >= exp and suffix.use_prefix(prefix):
                 return Formatted(value / pow(1024, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
@@ -242,11 +260,11 @@ class StandardScientificFormatter(NotationFormatter):
     def ident(self) -> Literal["StandardScientific"]:
         return "StandardScientific"
 
-    def _preformat_small_number(self, value: int | float) -> Formatted:
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log(value, 10))
         return Formatted(value / pow(10, exponent), Suffix(f"e{exponent}", self.symbol))
 
-    def _preformat_large_number(self, value: int | float) -> Formatted:
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log(value, 10))
         return Formatted(value / pow(10, exponent), Suffix(f"e+{exponent}", self.symbol))
 
@@ -266,11 +284,11 @@ class EngineeringScientificFormatter(NotationFormatter):
     def ident(self) -> Literal["EngineeringScientific"]:
         return "EngineeringScientific"
 
-    def _preformat_small_number(self, value: int | float) -> Formatted:
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log(value, 10) / 3) * 3
         return Formatted(value / pow(10, exponent), Suffix(f"e{exponent}", self.symbol))
 
-    def _preformat_large_number(self, value: int | float) -> Formatted:
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(round(math.log(value, 10)) // 3) * 3
         return Formatted(value / pow(10, exponent), Suffix(f"e+{exponent}", self.symbol))
 
@@ -322,23 +340,23 @@ class TimeFormatter(NotationFormatter):
     def ident(self) -> Literal["Time"]:
         return "Time"
 
-    def _preformat_small_number(self, value: int | float) -> Formatted:
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log(value, 10)) - 1
         for exp, power, prefix in (
             (-6, 2, "μ"),
             (-3, 1, "m"),
         ):
-            if exponent <= exp:
+            if exponent <= exp and suffix.use_prefix(prefix):
                 return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
-    def _preformat_large_number(self, value: int | float) -> Formatted:
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         for factor, symbol in (
             (_ONE_DAY, "d"),
             (_ONE_HOUR, "h"),
             (_ONE_MINUTE, "min"),
         ):
-            if value >= factor:
+            if value >= factor and suffix.use_symbol(symbol):
                 return Formatted(value / factor, Suffix("", symbol))
         return Formatted(value, Suffix("", self.symbol))
 

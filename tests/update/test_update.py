@@ -139,5 +139,6 @@ def test_update(  # pylint: disable=too-many-branches
             f"In the {hostname} host the following services were `OK` in base-version but not in "
             f"target-version: "
             f"{not_ok_services}"
+            f"\nDetails: {[(s, target_data[hostname][s].summary) for s in not_ok_services]})"
         )
         assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg

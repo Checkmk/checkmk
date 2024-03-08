@@ -80,6 +80,7 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
 )
+from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
@@ -1128,6 +1129,7 @@ class ModeEditUser(WatoMode):
                 verify_password_policy(password, password_field_name)
                 user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
+                send_security_message(self._user_id, SecurityNotificationEvent.password_change)
                 increase_serial = True  # password changed, reflect in auth serial
 
             # PW change enforcement

@@ -21,6 +21,7 @@ from cmk.gui.session import session
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
 from cmk.gui.watolib.mode import redirect
 from cmk.gui.watolib.users import verify_password_policy
 
@@ -70,6 +71,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
         verify_password_policy(password)
         user_spec["password"] = hash_password(password)
         user_spec["last_pw_change"] = int(time.time())
+        send_security_message(user.id, SecurityNotificationEvent.password_change)
 
         # In case the user was enforced to change it's password, remove the flag
         try:

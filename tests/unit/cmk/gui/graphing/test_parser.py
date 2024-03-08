@@ -555,8 +555,8 @@ def test_js_render_unit_notation(unit: metrics.Unit, expected: str) -> None:
             [
                 Label(28800, "8 h"),
                 Label(57600, "16 h"),
-                Label(86400, "1 d"),
-                Label(115200, "1.33 d"),
+                Label(86400, "24 h"),
+                Label(115200, "32 h"),
             ],
             id="time-large",
         ),

@@ -2,18 +2,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# This is reinterpretation of our standard run script
+# Some features are not implemented because it is top level script
+# -format
+# -check-format
+# -documentation
+# -setup
+
 if ((get-host).version.major -lt 7) {
     Write-Host "PowerShell version 7 or higher is required." -ForegroundColor Red
     exit
 }
 
-
-# Check for arguments and set flags
 $argAll = $false
 $argClean = $false
-$argSetup = $false
-$argFormat = $false
-$argCheckFormat = $false
 $argCtl = $false
 $argBuild = $false
 $argTest = $false
@@ -22,7 +24,6 @@ $argMsi = $false
 $argOhm = $false
 $argExt = $false
 $argSql = $false
-$argDoc = $false
 $argDetach = $false
 
 $msbuild_exe = "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
@@ -35,7 +36,7 @@ $usbip_exe = "c:\common\usbip-win-0.3.6-dev\usbip.exe"
 $make_exe = where.exe make | Out-String
 
 
-if ("$env:arg_var_value" -eq "") {
+if ("$env:arg_var_value" -ne "") {
     $env:arg_val_name = $env:arg_var_value
 }
 else {
@@ -53,27 +54,30 @@ function Write-Help() {
     Write-Host ""
     Write-Host "Available arguments:"
     Write-Host "  -?, -h, --help       display help and exit"
-    Write-Host "  -A, --all            shortcut to -S -B -E -C -T -M:  setup, build, ctl, ohm, unit, msi, extensions"
-    Write-Host "  -c, --clean          clean literally all, use with care"
+    Write-Host "  -A, --all            shortcut to -B -C -O -T -M -E -Q:  build, ctl, ohm, unit, msi, extensions, mk-sql"
+    Write-Host "  --clean-all          clean literally all, use with care"
     Write-Host "  --clean-artifacts    clean artifacts"
-    Write-Host "  -S, --setup          check setup"
+    #Write-Host "  -S, --setup          check setup" # not implemented
     Write-Host "  -C, --ctl            build controller"
-    Write-Host "  -D, --documentation  create documentation"
-    Write-Host "  -f, --format         format sources"
-    Write-Host "  -F, --check-format   check for correct formatting"
-    Write-Host "  -B, --build          build controller"
+    Write-Host "  -Q, --mk-sql         build mk-sql"
+    # Write-Host "  -D, --documentation  create documentation" # not implemented
+    #Write-Host "  -f, --format         format sources" # not implemented
+    #Write-Host "  -F, --check-format   check for correct formatting" # not implemented
+    Write-Host "  -B, --build          build agent"
     Write-Host "  -M, --msi            build msi"
     Write-Host "  -O, --ohm            build ohm"
     Write-Host "  -E, --extensions     build extensions"
-    Write-Host "  -T, --test           run unit test controller"
-    Write-Host "  --sign file secret   sign controller with file in c:\common and secret"
+    Write-Host "  -T, --test           run agent unit tests"
+    Write-Host "  --detach             detach USB before running"
+    Write-Host "  --sign               sign controller using Yubikey based Code Certificate"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host ""
     Write-Host "$name --ctl"
     Write-Host "$name --build --test"
-    Write-Host "$name --build -T --sign the_file secret"
+    Write-Host "$name --build -T --sign"
     Write-Host "$name -A"
+    Write-Host "$name --all --sign"
 }
 
 
@@ -84,12 +88,11 @@ if ($args.Length -eq 0) {
 else {
     for ($i = 0; $i -lt $args.Length; $i++) {
         switch ($args[$i]) {
-            { $("-h", "--help") -contains "$_" } { Write-Help; return }
+            { $("-?", "-h", "--help") -contains "$_" } { Write-Help; return }
             { $("-A", "--all") -contains $_ } { $argAll = $true }
-            { $("-c", "--clean") -contains $_ } { $argClean = $true; $argCleanArtifacts = $true }
-            { $("-S", "--setup") -contains $_ } { $argSetup = $true }
-            { $("-f", "--format") -contains $_ } { $argFormat = $true }
-            { $("-F", "--check-format") -contains $_ } { $argCheckFormat = $true }
+            #{ $("-S", "--setup") -contains $_ } { $argSetup = $true }
+            #{ $("-f", "--format") -contains $_ } { $argFormat = $true }
+            #{ $("-F", "--check-format") -contains $_ } { $argCheckFormat = $true }
             { $("-C", "--controller") -contains $_ } { $argCtl = $true }
             { $("-B", "--build") -contains $_ } { $argBuild = $true }
             { $("-M", "--msi") -contains $_ } { $argMsi = $true }
@@ -97,30 +100,26 @@ else {
             { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
             { $("-T", "--test") -contains $_ } { $argTest = $true }
-            { $("-D", "--documentation") -contains $_ } { $argDoc = $true }
+            #{ $("-D", "--documentation") -contains $_ } { $argDoc = $true }
+            "--clean-all" { $argClean = $true; $argCleanArtifacts = $true }
             "--clean-artifacts" { $argCleanArtifacts = $true }
             "--detach" { $argDetach = $true }
             "--var" {
                 [Environment]::SetEnvironmentVariable($args[++$i], $args[++$i])
             }
-            "--sign" { 
-                $argSign = $true
-                $argSignFile = $args[++$i]
-                $argSignSecret = $args[++$i]
-            }
+            "--sign" { $argSign = $true }
         }
     }
 }
 
 
 if ($argAll) {
-    $argCtl = $true
     $argBuild = $true
-    $argTest = $true
-    $argSetup = $true
     $argOhm = $true
+    $argCtl = $true
+    $argTest = $true
     $argSql = $true
-    $argExt = $true  
+    $argExt = $true
     $argMsi = $true
 }
 
@@ -435,8 +434,8 @@ function Start-MsiPatching {
     Write-Host "Success artifact uploading" -foreground Green
 }
 
-function Invoke-Detach {
-    if ($argSign -ne $true) {
+function Invoke-Detach($argFlag) {
+    if ($argFlag -ne $true) {
         return
     }
     & $usbip_exe detach -p 00
@@ -463,7 +462,7 @@ function Start-MsiSigning {
         return
     }
     & "./scripts/add_hash_line.ps1" $arte/check_mk_agent.msi $hash_file
-    Invoke-Detach
+    Invoke-Detach $argSign
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed test MSI " $LASTEXITCODE -foreground Red
@@ -504,16 +503,16 @@ function Clear-All() {
 }
 
 
-# Implement other flags and functionality as needed...
-
 Invoke-CheckApp "choco" "choco -v"
 Invoke-CheckApp "perl" "perl -v"
 Invoke-CheckApp "make" "make -v"
 Invoke-CheckApp "msvc" "& ""$msbuild_exe"" --version"
 Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 
+$argAttached = $false
 try {
     $mainStartTime = Get-Date
+    Invoke-Detach $argDetach
     Clear-Artifacts
     Clear-All
     Build-Agent
@@ -527,6 +526,9 @@ try {
     Invoke-TestSigning $usbip_exe
     Start-MsiControlBuild
     Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"
+    if ($argSign -eq $true) {
+        $argAttached = $true
+    }
     Start-BinarySigning
     Start-ArtifactUploading
     Start-MsiPatching
@@ -541,7 +543,7 @@ catch {
     Write-Host $_.ScriptStackTrace -ForegroundColor Yellow
 }
 finally {
-    Invoke-Detach
+    Invoke-Detach $argAttached
 }
 
 

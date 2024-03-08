@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
-from typing import List, Literal
+from typing import Final, List, Literal
 
 from pydantic import BaseModel
 
@@ -16,15 +16,14 @@ from cmk.server_side_calls.v1 import (
     replace_macros,
 )
 
+_DAY: Final[int] = 24 * 3600
+_MILLISECOND: Final[int] = 1000
+
 
 class LevelsType(StrEnum):
     NO_LEVELS = "no_levels"
     FIXED = "fixed"
 
-
-IntLevels = (
-    tuple[Literal[LevelsType.NO_LEVELS], None] | tuple[Literal[LevelsType.FIXED], tuple[int, int]]
-)
 
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
@@ -53,8 +52,8 @@ class Subject(BaseModel):
 
 
 class Certificate(BaseModel):
-    remaining: IntLevels | None = None
-    maximum: int | None = None
+    remaining: FloatLevels | None = None
+    maximum: float | None = None
     self_signed: bool
 
 
@@ -144,8 +143,8 @@ def _response_time_args(response_time: FloatLevels) -> Iterator[str]:
     match response_time:
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--response-time"
-            yield str(int(warn * 1000))
-            yield str(int(crit * 1000))
+            yield f"{int(warn * _MILLISECOND)}"
+            yield f"{int(crit * _MILLISECOND)}"
 
 
 def _validity_args(validity: Certificate) -> Iterator[str]:
@@ -153,17 +152,17 @@ def _validity_args(validity: Certificate) -> Iterator[str]:
         yield from _remaining_args(remaining)
     if (maximum := validity.maximum) is not None:
         yield "--max-validity"
-        yield f"{maximum}"
+        yield f"{int(maximum / _DAY)}"
     if validity.self_signed:
         yield "--allow-self-signed"
 
 
-def _remaining_args(remaining: IntLevels) -> Iterator[str]:
+def _remaining_args(remaining: FloatLevels) -> Iterator[str]:
     match remaining:
-        case (LevelsType.FIXED, (int(warn), int(crit))):
+        case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--not-after"
-            yield str(warn)
-            yield str(crit)
+            yield str(warn / _DAY)
+            yield str(crit / _DAY)
 
 
 def _cert_details_args(cert_details: CertificateDetails) -> Iterator[str]:

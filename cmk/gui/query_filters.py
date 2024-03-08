@@ -403,8 +403,9 @@ class TimeQuery(NumberRangeQuery):
             return None
 
         try:
-            count = int(value[var])
-            secs = count * int(rangename)
+            if (count := value.get(var)) is None:
+                return None
+            secs = int(count) * int(rangename)
             return int(time.time()) - secs
         except ValueError:
             return None

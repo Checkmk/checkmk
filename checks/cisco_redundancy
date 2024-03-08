@@ -55,6 +55,8 @@ def check_cisco_redundancy(_no_item, params, info):
             "5": "user forced",
             "6": "active unit failed",
             "7": "active unit removed",
+            "8": "active lost gateway connectivity",
+            "9": "RMI port went down on active",
         },
     }
 

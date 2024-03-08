@@ -1,0 +1,10 @@
+Title: cisco_redundancy: handle new swact reasons
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1709890474
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+Fixes a crash in the check plugin, caused by not handling two recently added switch of activity reasons.

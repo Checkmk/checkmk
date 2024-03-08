@@ -87,3 +87,7 @@ pub async fn agent_response(
 pub fn is_elevation_required() -> bool {
     !is_elevated::is_elevated()
 }
+
+pub fn is_port_available(port: u16) -> bool {
+    std::net::TcpListener::bind(("127.0.0.1", port)).is_ok()
+}

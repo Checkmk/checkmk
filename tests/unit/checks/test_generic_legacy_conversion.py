@@ -153,7 +153,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "apc_inrow_temp",
         "apc_mod_pdu_modules",
         "apc_netbotz_drycontact",
-        "apc_netbotz_other_sensors",
         "apc_rackpdu_power",
         "apc_sts_inputs",
         "apc_sts_source",

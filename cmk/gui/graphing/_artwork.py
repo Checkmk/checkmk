@@ -622,17 +622,18 @@ def _compute_graph_v_axis(
     return v_axis
 
 
+def _apply_mirrored(min_value: float, max_value: float) -> tuple[float, float]:
+    abs_limit = max(abs(min_value), abs(max_value))
+    return -abs_limit, abs_limit
+
+
 def _compute_min_max(
     explicit_vertical_range: tuple[float | None, float | None],
     layouted_curves_range: tuple[float | None, float | None],
     mirrored: bool,
 ) -> tuple[float, float]:
-    if mirrored:
-        min_values = [-1.0]
-        max_values = [1.0]
-    else:
-        min_values = [0.0]
-        max_values = [1.0]
+    min_values = [0.0]
+    max_values = []
 
     # Apply explicit range if defined in graph
     explicit_min_value, explicit_max_value = explicit_vertical_range
@@ -647,7 +648,13 @@ def _compute_min_max(
     if lc_max_value is not None:
         max_values.append(lc_max_value)
 
-    return min(min_values), max(max_values)
+    min_value = min(min_values)
+    max_value = max(max_values) if max_values else 1.0
+
+    # In case the graph is mirrored, the 0 line is always exactly in the middle
+    if mirrored:
+        return _apply_mirrored(min_value, max_value)
+    return min_value, max_value
 
 
 def _compute_v_axis_min_max(
@@ -673,9 +680,7 @@ def _compute_v_axis_min_max(
 
     # In case the graph is mirrored, the 0 line is always exactly in the middle
     if mirrored:
-        abs_limit = max(abs(min_value), abs(max_value))
-        min_value = -abs_limit
-        max_value = abs_limit
+        min_value, max_value = _apply_mirrored(min_value, max_value)
 
     # Make sure we have a non-zero range. This avoids math errors for
     # silly graphs.

@@ -158,8 +158,7 @@ include \
     packages/neb/neb.make \
     packages/unixcat/unixcat.make \
     packages/xmlsec1/xmlsec1.make \
-    packages/robotmk/robotmk.make \
-    packages/redfish_mkp/redfish_mkp.make
+    packages/robotmk/robotmk.make
 
 ifeq ($(EDITION),enterprise)
 include \

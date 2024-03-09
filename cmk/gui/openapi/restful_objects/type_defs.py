@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from marshmallow import fields, Schema
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from cmk.gui.http import HTTPMethod
 
@@ -57,7 +57,6 @@ DomainType = Literal[
     "autocomplete",
 ]  # fmt: off
 
-DomainObject = dict[str, Any]
 
 CmkEndpointName = Literal[
     "cmk/run",
@@ -192,7 +191,43 @@ PropertyFormat = Literal[
 CollectionItem = dict[str, str]
 LocationType = Literal["path", "query", "header", "cookie"]
 ResultType = Literal["object", "list", "scalar", "void"]
-LinkType = dict[str, str]
+
+
+class LinkType(TypedDict):
+    rel: str
+    href: str
+    type: str
+    method: str
+    domainType: str
+    title: NotRequired[str]
+    body_params: NotRequired[dict[str, str | None]]
+
+
+class ActionObject(TypedDict):
+    id: str
+    memberType: str
+    links: list[LinkType]
+    parameters: dict[str, Any]
+
+
+class Result(TypedDict):
+    links: list[LinkType]
+    value: Any | None
+
+
+class ActionResult(TypedDict):
+    links: list[LinkType]
+    resultType: ResultType
+    result: Result
+
+
+class DomainObject(TypedDict):
+    domainType: DomainType
+    id: str
+    title: str
+    links: list[LinkType]
+    members: dict[str, Any]
+    extensions: dict[str, Any]
 
 
 class CollectionObject(TypedDict):
@@ -212,7 +247,7 @@ class ObjectProperty(TypedDict, total=False):
     extensions: dict[str, Any]
 
 
-Serializable = dict[str, Any] | CollectionObject | ObjectProperty
+Serializable = dict[str, Any] | CollectionObject | ObjectProperty | DomainObject | ActionResult
 ETagBehaviour = Literal["input", "output", "both"]
 
 SchemaClass = type[Schema]

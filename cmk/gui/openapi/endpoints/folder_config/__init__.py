@@ -58,6 +58,7 @@ from cmk.gui.openapi.endpoints.host_config.response_schemas import (
 from cmk.gui.openapi.endpoints.utils import folder_slug
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import CollectionObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
@@ -370,10 +371,10 @@ def list_folders(params: Mapping[str, Any]) -> Response:
     return serve_json(_folders_collection(folders, params["show_hosts"]))
 
 
-def _folders_collection(  # type: ignore[no-untyped-def]
+def _folders_collection(
     folders: list[Folder],
     show_hosts: bool,
-):
+) -> CollectionObject:
     folders_ = []
     for folder in folders:
         members = {}
@@ -403,6 +404,7 @@ def _folders_collection(  # type: ignore[no-untyped-def]
                 members=members,
             )
         )
+    #
     return constructors.collection_object(
         domain_type="folder_config",
         value=folders_,

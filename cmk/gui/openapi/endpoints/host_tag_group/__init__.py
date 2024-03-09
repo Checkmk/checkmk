@@ -32,6 +32,7 @@ from cmk.gui.openapi.endpoints.host_tag_group.response_schemas import (
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.host_attributes import undeclare_host_tag_attribute
@@ -267,7 +268,7 @@ def _serve_host_tag_group(tag_details: TagGroupSpec) -> Response:
     return constructors.response_with_etag_created_from_dict(response, dict(tag_details))
 
 
-def serialize_host_tag_group(details: TagGroupSpec) -> dict[str, Any]:
+def serialize_host_tag_group(details: TagGroupSpec) -> DomainObject:
     extensions = {
         "topic": details.get("topic", "Tags"),
         "tags": details["tags"],

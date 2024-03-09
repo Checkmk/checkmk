@@ -14,7 +14,7 @@ You can find an introduction to time periods in the
 import datetime as dt
 import http.client
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 
 import cmk.utils.dateutils as dateutils
 from cmk.utils.timeperiod import load_timeperiods, TimeperiodSpec
@@ -234,7 +234,8 @@ def list_time_periods(params: Mapping[str, Any]) -> Response:
 
 def _serve_time_period(time_period: DomainObject) -> Response:
     response = serve_json(time_period)
-    return constructors.response_with_etag_created_from_dict(response, time_period)
+    timeperiod_dict = cast(dict[str, Any], time_period)
+    return constructors.response_with_etag_created_from_dict(response, timeperiod_dict)
 
 
 def _to_api_format(  # type: ignore[no-untyped-def]

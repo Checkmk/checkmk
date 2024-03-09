@@ -525,18 +525,17 @@ def get_bi_packs(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
-    packs = [
-        constructors.collection_item(
-            domain_type="bi_pack",
-            identifier=pack.id,
-            title=pack.title,
-        )
-        for pack in bi_packs.packs.values()
-    ]
 
     collection_object = constructors.collection_object(
         domain_type="bi_pack",
-        value=packs,
+        value=[
+            constructors.collection_item(
+                domain_type="bi_pack",
+                identifier=pack.id,
+                title=pack.title,
+            )
+            for pack in bi_packs.packs.values()
+        ],
         links=[constructors.link_rel("self", constructors.collection_href("bi_pack"))],
     )
     return serve_json(collection_object)

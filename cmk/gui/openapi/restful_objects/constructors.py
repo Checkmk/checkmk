@@ -17,6 +17,8 @@ from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request, Response
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.restful_objects.type_defs import (
+    ActionObject,
+    ActionResult,
     CollectionItem,
     CollectionObject,
     DomainObject,
@@ -32,7 +34,7 @@ from cmk.gui.openapi.utils import EXT, ProblemException
 ETagHash = NewType("ETagHash", str)
 
 
-def absolute_url(href):
+def absolute_url(href: str) -> str:
     if href.startswith("/"):
         href = href.lstrip("/")
 
@@ -78,14 +80,14 @@ def link_rel(
             will result in a rel-value of 'foo;baz="bar"'
 
     Returns:
-        A dict representing the link
+        A LinkType
 
     """
     content_type_params = {}
     if profile is not None:
         content_type_params["profile"] = expand_rel(profile)
 
-    link_obj = {
+    link_obj: LinkType = {
         "rel": expand_rel(rel, parameters),
         "href": absolute_url(href),
         "method": method.upper(),
@@ -176,7 +178,7 @@ def require_etag(
     )
 
 
-def object_action(name: str, parameters: dict, base: str) -> dict[str, Any]:
+def object_action(name: str, parameters: dict, base: str) -> ActionObject:
     """An action description to be used as an object member"""
 
     return {
@@ -238,7 +240,7 @@ def action_result(
     result_type: ResultType,
     result_value: Any | None = None,
     result_links: list[LinkType] | None = None,
-) -> dict:
+) -> ActionResult:
     """Construct an Action Result resource
 
     Described in Restful Objects, chapter 19.1-4"""
@@ -277,11 +279,11 @@ class DomainObjectMembers:
         return self.members
 
 
-def object_property_href(  # type: ignore[no-untyped-def]
+def object_property_href(
     domain_type: DomainType,
     identifier: str,
     property_name: str,
-):
+) -> str:
     return f"/objects/{domain_type}/{identifier}/properties/{property_name}"
 
 
@@ -663,7 +665,7 @@ def domain_object(
 
 def collection_object(
     domain_type: DomainType,
-    value: list[CollectionItem | LinkType],
+    value: list[CollectionItem] | list[LinkType] | list[DomainObject],
     links: list[LinkType] | None = None,
     extensions: dict[str, Any] | None = None,
 ) -> CollectionObject:
@@ -734,7 +736,7 @@ def collection_item(
     identifier: str,
     title: str,
     collection_name: str = "all",
-) -> CollectionItem:
+) -> LinkType:
     """A link for use in a collection object.
 
     Args:
@@ -752,7 +754,7 @@ def collection_item(
             us to link to the correct one properly.
 
     Returns:
-        A dict representation of the collection link-entry.
+        A LinkType
 
     """
     return link_rel(

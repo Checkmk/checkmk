@@ -72,7 +72,7 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_sch
 from cmk.gui.openapi.restful_objects.api_error import ApiError
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
@@ -759,7 +759,7 @@ def _serve_host(host: Host, effective_attributes: bool = False) -> Response:
 agent_links_hook: Callable[[HostName], list[LinkType]] = lambda h: []
 
 
-def serialize_host(host: Host, effective_attributes: bool) -> dict[str, Any]:
+def serialize_host(host: Host, effective_attributes: bool) -> DomainObject:
     extensions = {
         "folder": "/" + host.folder().path(),
         "attributes": host.attributes,

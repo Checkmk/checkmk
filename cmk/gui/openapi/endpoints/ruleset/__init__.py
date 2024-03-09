@@ -60,15 +60,14 @@ def list_rulesets(param):
     else:
         rulesets = all_sets
 
-    ruleset_collection: list[DomainObject] = []
-    for ruleset in visible_rulesets(rulesets.get_rulesets()).values():
-        ruleset_collection.append(_serialize_ruleset(ruleset))
-
     # We don't do grouping like in the GUI. This would not add any value here.
     return serve_json(
         constructors.collection_object(
             domain_type="ruleset",
-            value=ruleset_collection,
+            value=[
+                _serialize_ruleset(ruleset)
+                for ruleset in visible_rulesets(rulesets.get_rulesets()).values()
+            ],
         )
     )
 

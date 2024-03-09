@@ -46,7 +46,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    `: rrdtool module is built with rrdtool omd package` \
 	    `: protobuf module is built with protobuf omd package` \
 	    `: fixup git local dependencies` \
-		pipenv requirements --hash | grep -Ev '(protobuf|rrdtool|agent-receiver|pymssql|netapp-ontap)' > requirements-dist.txt ; \
+		pipenv requirements --hash | grep -Ev '(protobuf|rrdtool|agent-receiver|netapp-ontap)' > requirements-dist.txt ; \
 # rpath: Create some dummy rpath which has enough space for later replacement
 # by the final rpath
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
@@ -69,17 +69,6 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
             export PATH="$(PYTHON3_MODULES_WORK_DIR):$$PATH" ; \
             mkdir -p "$(PYTHON3_MODULES_WORK_DIR)" ; \
             install -m 755 "$(PACKAGE_DIR)/omd/use_system_openssl" "$(PYTHON3_MODULES_WORK_DIR)/git" ; \
-		GIT_SSL_CAINFO=$(REPO_PATH)/omd/packages/python3-modules/github-com.pem \
-	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
-		`: dont use precompiled things, build with our build env ` \
-		--no-binary=":all:" \
-		--no-deps \
-		--compile \
-		--isolated \
-		--ignore-installed \
-		--no-warn-script-location \
-		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
-		git+https://github.com/JonasScharpf/pymssql.git@cython3_fix_v227 ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

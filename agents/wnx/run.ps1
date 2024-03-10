@@ -510,6 +510,7 @@ Invoke-CheckApp "msvc" "& ""$msbuild_exe"" --version"
 Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 
 $argAttached = $false
+$result = 1
 try {
     $mainStartTime = Get-Date
     Invoke-Detach $argDetach
@@ -536,6 +537,7 @@ try {
     $endTime = Get-Date
     $elapsedTime = $endTime - $mainStartTime
     Write-Host "Elapsed time: $($elapsedTime.Hours):$($elapsedTime.Minutes):$($elapsedTime.Seconds)"
+    $result = 0
 }
 catch {
     Write-Host "Error: " $_ -ForegroundColor Red
@@ -545,5 +547,6 @@ catch {
 finally {
     Invoke-Detach $argAttached
 }
+exit $result
 
 

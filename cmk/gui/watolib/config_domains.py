@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable
 
-from cryptography.utils import CryptographyDeprecationWarning
+from cryptography.hazmat.primitives import hashes
 from cryptography.x509 import Certificate, load_pem_x509_certificate
 from cryptography.x509.oid import NameOID
 
@@ -336,24 +336,40 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             remote_cas_store.save(site, cert)
 
     @staticmethod
-    def _remote_sites_cas(trusted_cas: list[str]) -> Mapping[SiteId, Certificate]:
-        def _load_cert(trusted_cas: list[str]) -> Iterable[Certificate]:
-            for raw in trusted_cas:
-                with warnings_module.catch_warnings():
-                    warnings_module.filterwarnings("error", category=UserWarning)
-                    try:
-                        yield load_pem_x509_certificate(raw.encode())
-                    except CryptographyDeprecationWarning:
-                        logger.warning(
-                            "There is a certificate with a negative serial number "
-                            "in the trusted certificate authorities! Ignoring that..."
-                        )
-                        continue
+    def _load_cert(cert_str: str) -> Certificate | None:
+        """load a cert and return it except it has a negative serial number
 
+        Cryptography started to warn about negative serial numbers, these warnings are "blindly" written
+        to stderr so it might confuse users. Here we catch these warnings and return None for these.
+        Also we log a warning for these, except for some known certificates. See CMK-16410
+        """
+        # We ignore CAs with negative serials and we warn about them, except these, see CMK-16410
+        ignored_certs = (
+            "88497f01602f3154246ae28c4d5aef10f1d87ebb76626f4ae0b7f95ba7968799",  # EC-ACC
+        )
+        with warnings_module.catch_warnings(record=True, category=UserWarning):
+            cert = load_pem_x509_certificate(cert_str.encode())
+            if cert.serial_number < 0:
+                if cert.fingerprint(hashes.SHA256()).hex() not in ignored_certs:
+                    logger.warning(
+                        "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
+                        cert.subject.rfc4514_string(),
+                    )
+                return None
+        return cert
+
+    @staticmethod
+    def _load_certs(trusted_cas: list[str]) -> Iterable[Certificate]:
+        for cert_str in trusted_cas:
+            if cert := ConfigDomainCACertificates._load_cert(cert_str):
+                yield cert
+
+    @staticmethod
+    def _remote_sites_cas(trusted_cas: list[str]) -> Mapping[SiteId, Certificate]:
         return {
             site_id: cert
             for cert in sorted(
-                _load_cert(trusted_cas),
+                ConfigDomainCACertificates._load_certs(trusted_cas),
                 key=lambda cert: cert.not_valid_after_utc,
             )
             if (
@@ -366,17 +382,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     @staticmethod
     def is_valid_cert(raw_cert: str) -> bool:
         try:
-            with warnings_module.catch_warnings():
-                warnings_module.filterwarnings("error", category=UserWarning)
-                try:
-                    load_pem_x509_certificate(raw_cert.encode())
-                except CryptographyDeprecationWarning:
-                    logger.warning(
-                        "There is a certificate with a negative serial number "
-                        "in the system trusted certificate authorities! Ignoring that..."
-                    )
-                    return False
-            return True
+            return ConfigDomainCACertificates._load_cert(raw_cert) is not None
         except ValueError:
             return False
 

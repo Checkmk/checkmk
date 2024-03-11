@@ -2783,8 +2783,10 @@ mk_ora_sqlplus() {
     logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Piggyback host: $MK_PIGGYBACK_HOST"
 
     start_time="$(perl -MTime::HiRes=time -wle 'print time')"
-    pipe_input="$(ora_session_environment)${function_stdin}"
-
+    read -r -d '' pipe_input <<EOM
+connect ${MK_DB_CONNECT}
+$(ora_session_environment)${function_stdin}
+EOM
     SQLPLUS=${ORACLE_HOME}/bin/sqlplus
     if [ ! -x "${SQLPLUS}" ]; then
         logging -w -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "SQLplus '${SQLPLUS}' not found or ORACLE_HOME '${ORACLE_HOME}' wrong."
@@ -2796,7 +2798,7 @@ mk_ora_sqlplus() {
     fi
 
     EXECUTION_MODE="$(get_binary_execution_mode "$SQLPLUS" "$(get_binary_owner "$SQLPLUS")")"
-    if output=$(echo "$pipe_input" | $EXECUTION_MODE "\"$SQLPLUS\" -L -s \"$MK_DB_CONNECT\""); then
+    if output=$(echo "$pipe_input" | $EXECUTION_MODE "\"$SQLPLUS\" -L -s /nolog"); then
         echo -e "$output"
 
         elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")

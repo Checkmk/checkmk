@@ -75,6 +75,13 @@ class HostAndItemCondition:
     item_form: FormSpec[str] = String(custom_validate=DisallowEmpty())
 
 
+def _validate_name(name: str) -> None:
+    # if we move away from identifiers as strings in the future, we want existing identifiers to
+    # be compatible with that
+    if not name.isidentifier():
+        raise ValueError(f"'{name}' is not a valid Python identifier")
+
+
 @dataclass(frozen=True)
 class Host:
     """Specifies rule configurations for hosts
@@ -99,6 +106,9 @@ class Host:
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
@@ -127,6 +137,9 @@ class Service:
     condition: HostCondition | HostAndServiceCondition
     is_deprecated: bool = False
     help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
@@ -162,6 +175,7 @@ class CheckParameters:
             assert isinstance(self.condition.item_form, (String, SingleChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
@@ -192,6 +206,7 @@ class EnforcedService:
     def __post_init__(self) -> None:
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
@@ -219,6 +234,9 @@ class DiscoveryParameters:
     is_deprecated: bool = False
     help_text: Help | None = None
 
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
+
 
 @dataclass(frozen=True)
 class ActiveCheck:
@@ -242,6 +260,9 @@ class ActiveCheck:
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
@@ -269,6 +290,9 @@ class AgentConfig:
     is_deprecated: bool = False
     help_text: Help | None = None
 
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
+
 
 @dataclass(frozen=True)
 class SpecialAgent:
@@ -292,6 +316,9 @@ class SpecialAgent:
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
@@ -319,6 +346,9 @@ class AgentAccess:
     is_deprecated: bool = False
     help_text: Help | None = None
 
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
+
 
 @dataclass(frozen=True)
 class NotificationParameters:
@@ -344,6 +374,9 @@ class NotificationParameters:
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
@@ -371,6 +404,9 @@ class SNMP:
     is_deprecated: bool = False
     help_text: Help | None = None
 
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
+
 
 @dataclass(frozen=True)
 class InventoryParameters:
@@ -394,3 +430,6 @@ class InventoryParameters:
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)

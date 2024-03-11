@@ -169,22 +169,13 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 
 @pytest.fixture(name="site_factory_update", scope="session")
 def _get_sf_update():
-    # Todo: currently there is no release in previous branch (2.3.0).
-    #   Temporary using daily build.
-    #   Re-adapt code below once a release is available.
-    # base_version = CMKVersion(
-    #     get_min_version(),
-    #     branch=current_base_branch_name(),
-    #     branch_version=current_branch_version(),
-    #     edition=Edition.CEE,
-    # )
-
     base_version = CMKVersion(
-        CMKVersion.DAILY,
-        Edition.CEE,
-        "2.3.0",
-        "2.3.0",
+        get_min_version(),
+        branch=current_base_branch_name(),
+        branch_version=current_branch_version(),
+        edition=Edition.CEE,
     )
+
     return get_site_factory(prefix="update_", version=base_version)
 
 

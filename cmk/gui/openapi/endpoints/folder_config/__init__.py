@@ -41,11 +41,11 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER_PATTERN
 from cmk.gui.openapi.endpoints.folder_config.request_schemas import (
     BulkUpdateFolder,
     CreateFolder,
     DeleteModeField,
-    EXISTING_FOLDER_PATTERN,
     MoveFolder,
     UpdateFolder,
 )

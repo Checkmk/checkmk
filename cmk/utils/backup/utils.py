@@ -317,8 +317,13 @@ def do_site_restore(
         log(stderr.decode(encoding="utf-8", errors="strict"))
         raise MKGeneralException("Site restore failed")
 
-    if subprocess.call(["omd", "start"]) != 0:
-        raise MKGeneralException("Failed to start the site after restore")
+    try:
+        subprocess.check_output(["omd", "start"])
+    except subprocess.CalledProcessError as exc:
+        log(
+            "Failed to start the site after restore.\n"
+            f'Details: {exc.output.decode(encoding="utf-8")}'
+        )
 
 
 def do_site_backup(

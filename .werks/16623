@@ -1,0 +1,19 @@
+Title: HW/SW Inventory: Fix crash when filtering for number of sites for Checkmk version
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1710167848
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+When filtering the Checkmk versions -> #Sites inventory column, a crash occurs with
+C+:
+TypeError (expected string or bytes-like object)
+...
+File "/omd/sites/oldstable/lib/python3/cmk/gui/query_filters.py", line 510, in <lambda>
+    return lambda row: bool(regex.search(row.get(column, "")))
+C-:
+
+This crash has been fixed.
+

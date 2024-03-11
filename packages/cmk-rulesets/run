@@ -24,7 +24,7 @@ usage() {
     echo "  -B, --bandit            run bandit"
     echo "  -a, --all               shortcut for -F -u -m -p -B -C"
     echo "  -f, --format            format sources"
-    echo "  -d, --documentation     generate documentation"
+    echo "  -D, --documentation     generate documentation"
     echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
     echo "  -h, --help              show this help"
 }
@@ -40,7 +40,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'cFumpBafdj:h' --long 'clean,check-format,unit-tests,mypy,pylint,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cFumpBafDj:h' --long 'clean,check-format,unit-tests,mypy,pylint,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -93,7 +93,7 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-d' | '--documentation')
+            '-D' | '--documentation')
                 RUN_DOCUMENTATION=yes
                 shift
                 continue

@@ -1,0 +1,14 @@
+Title: host_config: Create hosts in folder with umlauts
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1710161510
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+When creating hosts in a folder with umlauts in the name via one of the
+<code>host_config</code> endpoints the endpoint would return an error 400 even though
+the query was correct.
+
+Now the hosts are created correctly.

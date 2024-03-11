@@ -1475,3 +1475,14 @@ def test_move_host_between_nested_folders(clients: ClientRegistry) -> None:
     clients.HostConfig.move(host_name="host1", target_folder="~F1~F11~F111")
     clients.HostConfig.move(host_name="host1", target_folder="~F1~F11")
     clients.HostConfig.move(host_name="host1", target_folder="~F1")
+
+
+def test_openapi_create_host_in_folder_with_umlaut(clients: ClientRegistry) -> None:
+    folder_name = "ümlaut"
+    clients.Folder.create(
+        parent="/",
+        folder_name=folder_name,
+        title=folder_name,
+    )
+    response = clients.HostConfig.create(host_name="host1", folder=f"~{folder_name}")
+    assert response.status_code == 200

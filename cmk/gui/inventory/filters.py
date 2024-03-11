@@ -227,7 +227,7 @@ class FilterInvtableTimestampAsAge(FilterNumberRange):
         )
 
 
-class FilterInvtableIDRange(FilterNumberRange):
+class FilterInvtableIntegerRange(FilterNumberRange):
     """Filter for choosing a range in which a certain integer lies"""
 
     def __init__(self, *, inv_info: str, ident: RangedTableFilterName, title: str) -> None:

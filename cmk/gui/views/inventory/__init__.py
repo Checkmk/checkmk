@@ -53,7 +53,7 @@ from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
-    FilterInvtableIDRange,
+    FilterInvtableIntegerRange,
     FilterInvtableInterfaceType,
     FilterInvtableOperStatus,
     FilterInvtableText,
@@ -818,7 +818,7 @@ class ColumnDisplayHint:
         | FilterInvtableAdminStatus
         | FilterInvtableAvailable
         | FilterInvtableInterfaceType
-        | FilterInvtableIDRange
+        | FilterInvtableIntegerRange
     ):
         if self.filter_class:
             return self.filter_class(
@@ -828,7 +828,7 @@ class ColumnDisplayHint:
             )
 
         if (ranged_table_filter_name := get_ranged_table_filter_name(ident)) is not None:
-            return FilterInvtableIDRange(
+            return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
                 ident=ranged_table_filter_name,
                 title=self.long_title,

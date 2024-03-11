@@ -13,7 +13,7 @@ from cmk.gui.i18n import _l
 from cmk.gui.inventory.filters import (
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
-    FilterInvtableIDRange,
+    FilterInvtableIntegerRange,
     FilterInvtableInterfaceType,
     FilterInvtableOperStatus,
     FilterInvtableTimestampAsAge,
@@ -511,7 +511,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.check_mk.versions:*.number": {"title": _l("Number")},
         ".software.applications.check_mk.versions:*.edition": {"title": _l("Edition")},
         ".software.applications.check_mk.versions:*.demo": {"title": _l("Demo"), "paint": "bool"},
-        ".software.applications.check_mk.versions:*.num_sites": {"title": _l("#Sites")},
+        ".software.applications.check_mk.versions:*.num_sites": {"title": _l("#Sites"), "filter": FilterInvtableIntegerRange},
         ".software.applications.check_mk.sites:": {
             "title": _l("Checkmk sites"),
             "keyorder": [
@@ -1713,7 +1713,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".networking.interfaces:*.index": {
             "title": _l("Index"),
             "paint": "number",
-            "filter": FilterInvtableIDRange,
+            "filter": FilterInvtableIntegerRange,
         },
         ".networking.interfaces:*.description": {"title": _l("Description")},
         ".networking.interfaces:*.alias": {"title": _l("Alias")},

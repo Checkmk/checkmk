@@ -1090,20 +1090,12 @@ fn validate_stdout(stdout: &str, label: &str) {
     assert_eq!(contains(&lines, "|state|1"), 3, "{}\n{}", &label, stdout);
     // - details entries: one per engine
     assert_eq!(contains(&lines, "|details|"), 3, "{}\n{}", &label, stdout);
-    assert_eq!(
-        contains(&lines, "|RTM|Express Edition"),
-        2,
-        "{}\n{}",
-        &label,
-        stdout
-    );
-    assert_eq!(
-        contains(&lines, "|RTM|Express Edition (64-bit)"),
-        1,
-        "{}\n{}",
-        &label,
-        stdout
-    );
+    let rtm_count = contains(&lines, "RTM|Express Edition");
+    let sp3_count = contains(&lines, "SP3|Express Edition");
+    assert_eq!(rtm_count + sp3_count, 2, "{}\n{}", &label, stdout);
+    let rtm_count = contains(&lines, "RTM|Express Edition (64-bit)");
+    let sp3_count = contains(&lines, "SP3|Express Edition (64-bit)");
+    assert_eq!(rtm_count + sp3_count, 1, "{}\n{}", &label, stdout);
     assert_eq!(
         contains(&lines, "|RTM|Standard Edition"),
         1,

@@ -16,19 +16,20 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -e, --setup-environment  setup environment"
-    echo "  -c, --clean              remove artifacts first"
-    echo "  -F, --check-format       check for correct formatting"
-    echo "  -b, --build              build executable"
-    echo "  -U, --build-unit-tests   build unit tests"
-    echo "  -u, --unit-tests         run unit tests"
-    echo "  -C, --clippy             run clippy linter"
-    echo "  -a, --all                shortcut for -F -b -U -u -C"
-    echo "  -A, --build-all          shortcut for -b -U"
-    echo "  -f, --format             format sources"
-    echo "  -D, --documentation      generate documentation"
-    echo "  -j N, --jobs=N           allow N jobs at once, default is ${JOBS}"
-    echo "  -h, --help               show this help"
+    echo "  -e, --setup-environment             setup environment"
+    echo "  -c, --clean                         remove artifacts first"
+    echo "  -F, --check-format                  check for correct formatting"
+    echo "  -b, --build                         build executable"
+    echo "  -U, --build-unit-tests              build unit tests"
+    echo "  -u, --unit-tests                    run unit tests"
+    echo "  -C, --clippy                        run clippy linter"
+    echo "  -I F1,F2,..., --features=F1,F2,...  list of features to activate"
+    echo "  -a, --all                           shortcut for -F -b -U -u -C"
+    echo "  -A, --build-all                     shortcut for -b -U"
+    echo "  -f, --format                        format sources"
+    echo "  -D, --documentation                 generate documentation"
+    echo "  -j N, --jobs=N                      allow N jobs at once, default is ${JOBS}"
+    echo "  -h, --help                          show this help"
 }
 
 parse_options() {
@@ -40,10 +41,11 @@ parse_options() {
     RUN_BUILD_UNIT_TESTS=no
     RUN_UNIT_TESTS=no
     RUN_CLIPPY=no
+    FEATURES=""
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ecFbUuCaAfDj:h' --long 'setup-environment,clean,check-format,build,build-unit-tests,unit-tests,clippy,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ecFbUuCIaAfDj:h' --long 'setup-environment,clean,check-format,build,build-unit-tests,unit-tests,clippy,features:,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -85,6 +87,11 @@ parse_options() {
             '-C' | '--clippy')
                 RUN_CLIPPY=yes
                 shift
+                continue
+                ;;
+            '-I' | '--features')
+                FEATURES="$2"
+                shift 2
                 continue
                 ;;
             '-a' | '--all')
@@ -129,7 +136,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY FEATURES RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 # TODO: This needs some serious massaging, some stuff probably don't even belong
@@ -169,12 +176,12 @@ main() {
     test ${RUN_CLEAN} = yes && cargo clean
     test ${RUN_CHECK_FORMAT} = yes && cargo fmt -- --check
     # TODO: Re-evaluate usage of --all-targets below
-    test ${RUN_BUILD} = yes && cargo build --jobs="${JOBS}" --release --all-targets
-    test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test --jobs="${JOBS}" --release --all-targets --no-run
-    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --jobs="${JOBS}" --release --all-targets
-    test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets -- --deny warnings
+    test ${RUN_BUILD} = yes && cargo build --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"} --no-run
+    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --jobs="${JOBS}" --release --all-targets ${FEATURES:+"--features=$FEATURES"}
+    test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets ${FEATURES:+"--features=$FEATURES"} -- --deny warnings
     test ${RUN_FORMAT} = yes && cargo fmt
-    test ${RUN_DOCUMENTATION} = yes && cargo doc --jobs="${JOBS}" --release --lib --bins --examples
+    test ${RUN_DOCUMENTATION} = yes && cargo doc --jobs="${JOBS}" --release --lib --bins --examples ${FEATURES:+"--features=$FEATURES"}
     true
 }
 

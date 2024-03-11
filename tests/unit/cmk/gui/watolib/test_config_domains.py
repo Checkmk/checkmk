@@ -17,6 +17,7 @@ from omdlib.contexts import SiteContext  # pylint: disable=wrong-import-order
 
 from cmk.utils.store import load_text_from_file
 
+import cmk.gui.watolib.config_domains as config_domains
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 
 remote1_newer = (
@@ -85,6 +86,7 @@ remote2 = (
     "-----END CERTIFICATE-----\n"
 )
 
+# CN=EC-ACC,OU=Jerarquia Entitats de Certificacio Catalanes
 negative_serial = (
     "-----BEGIN CERTIFICATE-----\n"
     "MIIFVjCCBD6gAwIBAgIQ7is969Qh3hSoYqwE893EATANBgkqhkiG9w0BAQUFADCB\n"
@@ -116,6 +118,29 @@ negative_serial = (
     "Rp/7SNVel+axofjk70YllJyJ22k4vuxcDlbHZVHlUIiIv0LVKz3l+bqeLrPK9HOS\n"
     "Agu+TGbrIP65y7WZf+a2E/rKS03Z7lNGBjvGTq2TWoF+bCpLagVFjPIhpDGQh2xl\n"
     "nJ2lYJU6Un/10asIbvPuW/mIPX64b24D5EI=\n"
+    "-----END CERTIFICATE-----\n"
+)
+negative_serial_self_generated = (
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIDdjCCAl6gAwIBAgIB1jANBgkqhkiG9w0BAQsFADBUMQswCQYDVQQGEwJERTET\n"
+    "MBEGA1UECAwKU29tZS1TdGF0ZTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0cyBQ\n"
+    "dHkgTHRkMQ0wCwYDVQQDDARUZXN0MB4XDTI0MDMxMjEyMjczNVoXDTI0MDQxMTEy\n"
+    "MjczNVowVDELMAkGA1UEBhMCREUxEzARBgNVBAgMClNvbWUtU3RhdGUxITAfBgNV\n"
+    "BAoMGEludGVybmV0IFdpZGdpdHMgUHR5IEx0ZDENMAsGA1UEAwwEVGVzdDCCASIw\n"
+    "DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALwjwGHMwjbfpYhedHiQTMv840lX\n"
+    "tAAj7qMzFAcEScmSM7eA3/8lJDsECu6IJrHWr9E+xYPjYfDo0FvE7LClKjewZ/ZM\n"
+    "1wNOQGZpSXRf1fuIj9j7V3D4jsf9NNhh39OkVom9kFzmgpLBvZi+vV2PWBt+MWHp\n"
+    "2hE1p0FvqizECcJuPurM+1YLV19xekO2jG/pQdWapoP1+3ygXK2BFn2hfmBkuLME\n"
+    "PMRtIilTfQKwLktQ4jrLo8r/3CuAvGzhn6xs0bkjlMVSq+P2ZAyBbiOA4ZgBvoS2\n"
+    "XnL0b9OV5hKHcLXvV79pcSOkfTW1vn61SIs3hqsQB9qXRwTfKS1z/1Ecs7ECAwEA\n"
+    "AaNTMFEwHQYDVR0OBBYEFJwCbbR6GEf0bz8c4U0LFXmBMt5xMB8GA1UdIwQYMBaA\n"
+    "FJwCbbR6GEf0bz8c4U0LFXmBMt5xMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcN\n"
+    "AQELBQADggEBAKMxGO4A/095brhG6zb5Ttxzmmwm6sYxbvFQ1P9XEhH9muNJRwR1\n"
+    "JGlLqMFrlwprA4jJ2mKbug2dFhBC38K/Y8teZpVgfIDbmnbvWoydh7tHk7IO3XKh\n"
+    "zRiKHH5hPVulLnfSjhZkb0zEL3HtzLloO3kTlq2hse8NG457B1+cp6VbVzTt28FP\n"
+    "vYSuV6jo4O+RwoCWtpSHpaHj+9OqS+FgW50hZJ1Dka9Rn7ffuH8cM3BkAC9Hs7t1\n"
+    "X7TQFDWfQAIVDKvgV5HUU274PnjmriGShrevm12LB+/iuetYiYBgwMU9jwh5vty0\n"
+    "/VrSsAozs97u+tzvnA/C255sFL3J7hobGi8=\n"
     "-----END CERTIFICATE-----\n"
 )
 
@@ -240,3 +265,36 @@ class TestConfigDomainCACertificates:
 
 def test_remote_sites_cas_negative_serials() -> None:
     assert not ConfigDomainCACertificates().is_valid_cert(negative_serial)
+
+
+@pytest.mark.parametrize(
+    "cert_str, log",
+    (
+        (negative_serial, None),
+        (
+            negative_serial_self_generated,
+            "CN=Test,O=Internet Widgits Pty Ltd,ST=Some-State,C=DE",
+        ),
+    ),
+)
+def test_load_cert_ignores_negative_serials(
+    mocker: MockerFixture, cert_str: str, log: str | None
+) -> None:
+    """test that we skip certs with negative serials with a warning except for some"""
+
+    mock = mocker.patch.object(
+        config_domains,
+        "logger",
+    )
+
+    assert config_domains.ConfigDomainCACertificates()._load_cert(cert_str) is None
+
+    if log:
+        mock.warning.assert_called_once_with(
+            "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
+            log,
+        )
+
+
+def test_load_cert() -> None:
+    assert config_domains.ConfigDomainCACertificates()._load_cert(remote2) is not None

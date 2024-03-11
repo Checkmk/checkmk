@@ -8,7 +8,6 @@
 import argparse
 import os
 import sys
-from typing import List
 
 # TODO: is there a better way to do this?
 import cmk.utils.paths
@@ -31,16 +30,13 @@ def parse_arguments(argv):
         "--vcrtrace", action=vcrtrace(**mk_jolokia.JolokiaInstance.FILTER_SENSITIVE)
     )
 
-    opts_with_help: List[List[str]] = []
-    for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES:
-        if len(opt) == 3:
-            opts_with_help.append([str(elem) for elem in opt])
+    opts_with_help = [opt for opt in mk_jolokia.DEFAULT_CONFIG_TUPLES if len(opt) == 3]
 
     for key, default, help_str in opts_with_help:
-        if default is not None:
-            help_str += " Default: %s" % default
+        if default is not None and isinstance(help_str, str):
+            help_str += " Default: %s" % str(default)
 
-        parser.add_argument("--%s" % key, default=default, help=help_str)
+        parser.add_argument("--%s" % key, default=default, help=help_str)  # type: ignore[arg-type]
 
     # now add some arguments we cannot define in the way above:
     parser.add_argument(

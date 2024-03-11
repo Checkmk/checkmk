@@ -278,7 +278,7 @@ def get_replication_paths() -> list[ReplicationPath]:
             ty="dir",
             ident="omd",
             site_path="etc/omd",
-            excludes=["site.conf"],
+            excludes=["site.conf", "instance_id"],
         ),
         ReplicationPath(
             ty="dir",

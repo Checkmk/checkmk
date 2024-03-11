@@ -162,15 +162,6 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
-    echo "================================================================================"
-    command -v cargo
-    cargo --version
-    echo "================================================================================"
-    command -v rustc
-    rustc --version
-    echo "================================================================================"
-    env | sort
-    echo "================================================================================"
     test ${RUN_CLEAN} = yes && cargo clean
     test ${RUN_CHECK_FORMAT} = yes && cargo fmt -- --check
     # TODO: Re-evaluate usage of --all-targets below

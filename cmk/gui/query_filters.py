@@ -514,7 +514,7 @@ def re_ignorecase(text: str, varprefix: str) -> re.Pattern:
 
 def filter_by_column_textregex(filtertext: str, column: str) -> Callable[[Row], bool]:
     regex = re_ignorecase(filtertext, column)
-    return lambda row: bool(regex.search(row.get(column, "")))
+    return lambda row: bool(regex.search(str(row.get(column, ""))))
 
 
 class CheckCommandQuery(TextQuery):

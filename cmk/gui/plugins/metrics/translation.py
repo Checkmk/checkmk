@@ -1027,8 +1027,6 @@ mq_translation: dict[str, CheckMetricEntry] = {
     "queue": {"name": "messages_in_queue"},
 }
 check_metrics["check_mk-mq_queues"] = mq_translation
-check_metrics["check_mk-websphere_mq_channels"] = mq_translation
-check_metrics["check_mk-websphere_mq_queues"] = mq_translation
 check_metrics["check_mk-printer_pages"] = {
     "pages": {"name": "pages_total"},
 }

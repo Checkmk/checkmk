@@ -1,0 +1,42 @@
+Title: Remove websphere_mq plugin
+Class: security
+Compatible: compat
+Component: checks
+Date: 1710155388
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+With this Werk the <code>websphere_mq</code> plugin is removed for security reasons.
+
+In this plugin the output of <code>ps</code> is used to determine an argument for
+<code>runmqsc</code>. This meant that anybody who can launch processes with an arbitrary
+command line could manipulate one argument to <code>runmqsc</code>.
+
+The plugin was already superseded by the agent plugin <code>ibm_mq</code> and deprecated with Werk <a href="https://checkmk.com/werk/10752">10752</a> and version 2.0.0.
+
+Since this plugin is already deprecated and it was not configurable via the
+<em>agent bakery</em> we assumed that this plugin is not frequently used. Therefore we
+decided to not fix the issue but to push the removal.
+
+We found this vulnerability internally.
+
+<strong>Affected versions</strong>:
+
+LI: 2.3.0
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0
+
+<strong>Mitigations</strong>:
+
+Migrate to the <code>ibm_mq</code> plugin.
+
+<strong>Vulnerability Management</strong>:
+
+We have rated the issue with a CVSS Score of 6.5 (Medium) with the following CVSS vector: <code>CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:N/I:H/A:N</code>.
+We assigned CVE-2024-3367 to this vulnerability.
+
+<strong>Changes</strong>:
+
+The plugin was removed.

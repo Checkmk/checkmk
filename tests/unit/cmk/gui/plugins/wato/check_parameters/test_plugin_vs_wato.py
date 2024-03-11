@@ -502,7 +502,6 @@ class ErrorReporter:
             "checkgroup_parameters:airflow_deviation",
         ),
         ("check", "watchdog_sensors_humidity", "checkgroup_parameters:humidity"),
-        ("check", "websphere_mq_channels", "checkgroup_parameters:websphere_mq_channels"),
         ("check", "windows_multipath", "checkgroup_parameters:windows_multipath"),
         ("check", "wmi_cpuload", "checkgroup_parameters:cpu_load"),
         ("discovery", "domino_tasks", "inv_domino_tasks_rules"),

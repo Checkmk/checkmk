@@ -111,7 +111,7 @@ def syslog_time(localtime: time.struct_time = time.localtime()) -> str:
 def _get_imap_or_pop_log_line(msg: POPIMAPMessage, body_limit: int) -> str:
     subject = msg.get("Subject", "None")
     encoding = msg.get("Content-Transfer-Encoding", "None")
-    payload = msg.get_payload()
+    payload = str(msg.get_payload())
 
     # Add the body to the event
     if msg.is_multipart():
@@ -121,9 +121,10 @@ def _get_imap_or_pop_log_line(msg: POPIMAPMessage, body_limit: int) -> str:
             disposition = str(part.get("Content-Disposition"))
             encoding = part.get("Content-Transfer-Encoding", "None")
             if content_type == "text/plain" and "attachment" not in disposition:
-                payload = part.get_payload()
+                payload = str(part.get_payload())
 
     if encoding == "base64":
+        # bytes -> str conversion with str() is brutal...
         payload = str(base64.b64decode(payload))
     return subject + " | " + payload[:body_limit]
 

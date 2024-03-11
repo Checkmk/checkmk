@@ -106,6 +106,9 @@ load(
     "ROBOTMK_VERSION",
     "RRDTOOL_SHA256",
     "RRDTOOL_VERSION",
+    "REDFISH_MKP_COMMIT_HASH",
+    "REDFISH_MKP_VERSION",
+    "REDFISH_MKP_SHA256",
 )
 
 
@@ -294,4 +297,12 @@ load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool")
 rrdtool(
     sha256 = RRDTOOL_SHA256,
     version_str = RRDTOOL_VERSION,
+)
+
+load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp")
+
+redfish_mkp(
+    commit_hash = REDFISH_MKP_COMMIT_HASH,
+    sha256 = REDFISH_MKP_SHA256,
+    version_str = REDFISH_MKP_VERSION,
 )

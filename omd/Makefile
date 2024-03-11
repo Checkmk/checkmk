@@ -57,7 +57,8 @@ PACKAGES := \
     unixcat \
     neb \
     robotmk \
-    xmlsec1
+    xmlsec1 \
+    redfish_mkp
 
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise

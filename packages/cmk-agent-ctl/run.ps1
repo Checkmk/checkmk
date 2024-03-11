@@ -1,21 +1,30 @@
+#!/usr/bin/env pwsh
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# This is reinterpretation of our standard run script
+# This is adaptation of our standard run script to Windows reality
+# Most noticeble change are artifacts upload and path shortening
+
+# CI uses normally path d:\workspace\checkmk\master\checkout as a root to repo
+# we add link d:\y to d:\workspace\checkmk\master\
+# and as sctipt to use path d:\y\checkout
+# The reason is inability of Windows to handle very long paths especially when
+# we have to build  OpenSSL for Rust
+
 
 if ((get-host).version.major -lt 7) {
     Write-Host "PowerShell version 7 or higher is required." -ForegroundColor Red
     exit
 }
 
-$package = Split-Path -Path (Get-Location) -Leaf
+$package_name = Split-Path -Path (Get-Location) -Leaf
 
-$exe_name = "$package.exe"
+$exe_name = "$package_name.exe"
 $root_dir = "$pwd/../.."
 $work_dir = "$pwd"
 $arte = "$root_dir/artefacts"
-#set target=x86_64-pc-windows-mscvc
+#set target=x86_64-pc-windows-mscvc # 64 bit not used now
 $cargo_target = "i686-pc-windows-msvc"
 $exe_dir = "target/$cargo_target/release"
 
@@ -27,9 +36,10 @@ $packCheckFormat = $false
 $packTest = $false
 $packDoc = $false
 
-$shortenPath = ""
-$shortenLink = ""
-
+# repo/branch specific short path
+# TODO(sk): move it to CI upon confirmation that screen works as intended
+$shortenPath = "workdir\workspace\checkmk\master"
+$shortenLink = "y"
 
 if ("$env:arg_var_value" -ne "") {
     $env:arg_val_name = $env:arg_var_value
@@ -51,12 +61,12 @@ function Write-Help() {
     Write-Host "  -?, -h, --help       display help and exit"
     Write-Host "  -A, --all            shortcut to -B -C -T -F:  build, cluippy, test, check format"
     Write-Host "  --clean              clean"
-    Write-Host "  -C, --clippy         run  $package clippy"
-    Write-Host "  -D, --documentation  create  $package documentation"
-    Write-Host "  -f, --format         format  $package sources"
-    Write-Host "  -F, --check-format   check for  $package correct formatting"
-    Write-Host "  -B, --build          build binary $package"
-    Write-Host "  -T, --test           run  $package unit tests"
+    Write-Host "  -C, --clippy         run  $package_name clippy"
+    Write-Host "  -D, --documentation  create  $package_name documentation"
+    Write-Host "  -f, --format         format  $package_name sources"
+    Write-Host "  -F, --check-format   check for  $package_name correct formatting"
+    Write-Host "  -B, --build          build binary $package_name"
+    Write-Host "  -T, --test           run  $package_name unit tests"
     Write-Host "  --shorten link path  change dir from current using link"
     Write-Host ""
     Write-Host "Examples:"
@@ -118,6 +128,7 @@ function Start-ShortenPath($tgt_link, $path) {
     Write-Host "propose to shorten to: $new ($path, $tgt_link)"
     try {
         Set-Location $new -ErrorAction Stop
+        Write-Host "current dir $pwd" -ForegroundColor White
     }
     catch {
         Write-Host "Failed to shorten path, $new doesn't exist" -ForegroundColor Yellow
@@ -126,20 +137,20 @@ function Start-ShortenPath($tgt_link, $path) {
 
 
 function Invoke-Cargo($cmd) {
-    Write-Host "$cmd $package" -ForegroundColor White
+    Write-Host "$cmd $package_name" -ForegroundColor White
     & cargo $cmd
 
     if ($lastexitcode -ne 0) {
-        Write-Error "Failed to $cmd $package with code $lastexitcode" -ErrorAction Stop
+        Write-Error "Failed to $cmd $package_name with code $lastexitcode" -ErrorAction Stop
     }
 }
 
 function Invoke-Cargo($cmd) {
-    Write-Host "$cmd $package" -ForegroundColor White
+    Write-Host "$cmd $package_name" -ForegroundColor White
     & cargo $cmd
 
     if ($lastexitcode -ne 0) {
-        Write-Error "Failed to $cmd $package with code $lastexitcode" -ErrorAction Stop
+        Write-Error "Failed to $cmd $package_name with code $lastexitcode" -ErrorAction Stop
     }
 }
 
@@ -161,7 +172,7 @@ try {
     }
     &rustup update
     &rustup target add $cargo_target
-    rustc -V
+    & rustc -V
     & cargo -V
 
     # Disable assert()s in C/C++ parts (e.g. wepoll-ffi), they map to _assert()/_wassert(),
@@ -178,13 +189,13 @@ try {
     if ($packBuild) {
         &cargo build --release --target $cargo_target
         if ($lastexitcode -ne 0) {
-            Write-Error "Failed to build $package with code $lastexitcode" -ErrorAction Stop
+            Write-Error "Failed to build $package_name with code $lastexitcode" -ErrorAction Stop
         }
     }
     if ($packClippy) {
         &cargo clippy --release --target $cargo_target --tests -- --deny warnings
         if ($lastexitcode -ne 0) {
-            Write-Error "Failed to clippy $package with code $lastexitcode" -ErrorAction Stop
+            Write-Error "Failed to clippy $package_name with code $lastexitcode" -ErrorAction Stop
         }
     }
 
@@ -193,10 +204,10 @@ try {
     }
 
     if ($packCheckFormat) {
-        Write-Host "test format $package" -ForegroundColor White
+        Write-Host "test format $package_name" -ForegroundColor White
         cargo fmt -- --check
         if ($lastexitcode -ne 0) {
-            Write-Error "Failed to test format $package" -ErrorAction Stop
+            Write-Error "Failed to test format $package_name" -ErrorAction Stop
         }
     }
     if ($packTest) {
@@ -205,7 +216,7 @@ try {
         }
         cargo test --release --target $cargo_target -- --test-threads=4
         if ($lastexitcode -ne 0) {
-            Write-Error "Failed to test $package" -ErrorAction Stop
+            Write-Error "Failed to test $package_name" -ErrorAction Stop
         }
     }
     if ($packBuild -and $packTest -and $packClippy) {
@@ -233,4 +244,4 @@ finally {
 }
 
 
-[Environment]::Exit($result)
+exit $result

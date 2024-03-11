@@ -19,11 +19,12 @@ import sys
 import termios
 import time
 import tty
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from functools import cache
 from pathlib import Path
 from typing import Literal, NamedTuple, NoReturn
 
+from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
 from .config import Config, load_config
 from .convert import werkv1_metadata_to_werkv2_metadata
@@ -244,6 +245,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         help="Show these werks, or 'all' for all, of leave out for last",
     )
     parser_show.set_defaults(func=main_show)
+
+    # PREVIEW
+    parser_preview = subparsers.add_parser("preview", help="Preview html rendering of a werk")
+    parser_preview.add_argument(
+        "id",
+    )
+    parser_preview.set_defaults(func=main_preview)
 
     # URL
     parser_url = subparsers.add_parser("url", help="Show the online URL of a werk")
@@ -1022,6 +1030,33 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
     else:
         bail_out("Cannot commit.")
+
+
+def main_preview(args: argparse.Namespace) -> None:
+    werk_path = werk_path_by_id(WerkId(args.id))
+    werk = cmk_werks_load_werk(
+        file_content=Path(werk_path).read_text(encoding="utf-8"), file_name=werk_path.name
+    )
+
+    def meta_data() -> Iterator[str]:
+        for item in werk.model_fields:
+            if item in {"title", "description"}:
+                continue
+            yield f"<dt>{item}<dt><dd>{getattr(werk, item)}</dd>"
+
+    definition_list = "\n".join(meta_data())
+    print(
+        f'<!DOCTYPE html><html lang="en" style="font-family:sans-serif;">'
+        "<head>"
+        f"<title>Preview of werk {args.id}</title>"
+        "</head>"
+        f'<body style="background-color:#ccc; max-width:1600px; padding: 10px; margin:auto;">'
+        f"<h1>{werk.title}</h1>"
+        f'<div style="background-color:#fff; padding: 10px;">{werk.description}</div>'
+        f"<dl>{definition_list}</dl>"
+        "</body>"
+        "</html>"
+    )
 
 
 def get_werk_file_version() -> WerkVersion:

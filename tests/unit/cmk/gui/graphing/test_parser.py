@@ -247,7 +247,7 @@ def test_parse_or_add_unit(
         pytest.param(
             metrics.TimeNotation(),
             0.0000123456789,
-            "12.35 µs",
+            "12.35 μs",
             id="time-small",
         ),
         pytest.param(

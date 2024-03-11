@@ -209,7 +209,7 @@ class DeleteDowntimeBase(BaseSchema):
     delete_type = fields.String(
         required=True,
         description="The option how to delete a downtime.",
-        enum=["params", "query", "by_id"],
+        enum=["params", "query", "by_id", "hostgroup", "servicegroup"],
         example="params",
     )
 
@@ -244,6 +244,26 @@ class DeleteDowntimeByQuery(DeleteDowntimeBase):
     query = gui_fields.query_field(tables.Downtimes, required=True)
 
 
+class DeleteDowntimeByHostGroup(DeleteDowntimeBase):
+    hostgroup_name = gui_fields.GroupField(
+        group_type="host",
+        required=True,
+        should_exist=True,
+        description="Name of a valid hostgroup, all current downtimes for hosts in this group will be deleted.",
+        example="windows",
+    )
+
+
+class DeleteDowntimeByServiceGroup(DeleteDowntimeBase):
+    servicegroup_name = gui_fields.GroupField(
+        group_type="service",
+        required=True,
+        should_exist=True,
+        description="Name of a valid servicegroup, all current downtimes for services in this group will be deleted.",
+        example="windows",
+    )
+
+
 class DeleteDowntime(OneOfSchema):
     type_field = "delete_type"
     type_field_remove = False
@@ -251,6 +271,8 @@ class DeleteDowntime(OneOfSchema):
         "by_id": DeleteDowntimeById,
         "params": DeleteDowntimeByName,
         "query": DeleteDowntimeByQuery,
+        "hostgroup": DeleteDowntimeByHostGroup,
+        "servicegroup": DeleteDowntimeByServiceGroup,
     }
 
 
@@ -318,7 +340,7 @@ class ModifyDowntimeFieldsSchema(BaseSchema):
     modify_type = fields.String(
         required=True,
         description="The option of how to select the downtimes to be targeted by the modification.",
-        enum=["params", "query", "by_id"],
+        enum=["params", "query", "by_id", "hostgroup", "servicegroup"],
         example="params",
     )
 
@@ -364,6 +386,26 @@ class ModifyDowntimeByName(ModifyDowntimeFieldsSchema):
     )
 
 
+class ModifyDowntimeByHostGroup(ModifyDowntimeFieldsSchema):
+    hostgroup_name = gui_fields.GroupField(
+        group_type="host",
+        required=True,
+        should_exist=True,
+        description="Name of a valid hostgroup, all current downtimes for hosts in this group will be modified.",
+        example="windows",
+    )
+
+
+class ModifyDowntimeByServiceGroup(ModifyDowntimeFieldsSchema):
+    servicegroup_name = gui_fields.GroupField(
+        group_type="service",
+        required=True,
+        should_exist=True,
+        description="Name of a valid servicegroup, all current downtimes for services in this group will be modified.",
+        example="windows",
+    )
+
+
 class ModifyDowntime(OneOfSchema):
     type_field = "modify_type"
     type_field_remove = False
@@ -371,4 +413,6 @@ class ModifyDowntime(OneOfSchema):
         "by_id": ModifyDowntimeById,
         "params": ModifyDowntimeByName,
         "query": ModifyDowntimeByQuery,
+        "hostgroup": ModifyDowntimeByHostGroup,
+        "servicegroup": ModifyDowntimeByServiceGroup,
     }

@@ -1231,7 +1231,7 @@ OPERATORS: dict[str, OperatorFunc] = {
     ">=": cast_down(operator.ge),
     "<=": cast_down(operator.le),
     "~": match_regexp,
-    "~~": cast_down(operator.contains),
+    "~~": operator.contains,
 }
 """A dict of all implemented comparison operators."""
 

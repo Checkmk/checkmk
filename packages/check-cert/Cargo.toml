@@ -10,7 +10,7 @@ vendored = ["openssl/vendored"]
 
 [dependencies]
 anyhow = { version = "1.0.75", features = ["backtrace"] }
-clap = { version = "4.3.24", features = ["derive"] }
+clap = { version = "<4.5", features = ["derive"] }  # needs rustc >= 1.74
 openssl = { version = "0.10.57" }
 openssl-probe = "0.1.5"
 time = "0.3.30"
@@ -18,6 +18,6 @@ typed-builder = "0.18.0"
 x509-parser = "0.15.1"
 
 [dev-dependencies]
-assert_cmd = "2.0.12"
-assertor = "*"
-tempfile = "*"
+assert_cmd = { version = "<2.0.14" }  # needs rustc >= 1.73
+assertor = "0.0.2"
+tempfile = "3.10.1"

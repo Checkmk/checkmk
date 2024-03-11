@@ -427,14 +427,14 @@ STAGES:
     - NAME: 'Package check-cert'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_CERT_FILES
       DIR: 'packages/check-cert'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-cert.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all --features=vendored &> ${RESULTS}/check-cert.txt"
       TEXT_ON_SKIP: 'No check-cert files changed'
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
 
     - NAME: 'Package check-http'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_HTTP_FILES
       DIR: 'packages/check-http'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-http.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all --features=reqwest/native-tls-vendored &> ${RESULTS}/check-http.txt"
       TEXT_ON_SKIP: 'No check-http files changed'
       RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
 

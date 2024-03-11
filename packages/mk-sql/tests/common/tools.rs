@@ -264,7 +264,7 @@ pub fn make_tls_block() -> String {
         ca: {}
         client_certificate: {}
 "#,
-            certificate_path, certificate_path
+            "''", certificate_path
         )
     } else {
         String::new()

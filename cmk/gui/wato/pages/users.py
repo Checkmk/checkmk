@@ -1101,11 +1101,13 @@ class ModeEditUser(WatoMode):
                 del user_attrs["password"]
 
         else:  # password
+            password_field_name = "_password_" + self._pw_suffix()
+            password2_field_name = "_password2_" + self._pw_suffix()
             password = request.get_validated_type_input(
-                Password, "_password_" + self._pw_suffix(), empty_is_none=True
+                Password, password_field_name, empty_is_none=True
             )
             password2 = request.get_validated_type_input(
-                Password, "_password2_" + self._pw_suffix(), empty_is_none=True
+                Password, password2_field_name, empty_is_none=True
             )
 
             # We compare both passwords only, if the user has supplied
@@ -1113,7 +1115,7 @@ class ModeEditUser(WatoMode):
             # Note: this validation is done before the main-validiation later on
             # It doesn't make any sense to put this block into the main validation function
             if password2 and password != password2:
-                raise MKUserError("_password2", _("Passwords don't match"))
+                raise MKUserError(password2_field_name, _("Passwords don't match"))
 
             # Detect switch from automation to password
             if "automation_secret" in user_attrs:
@@ -1122,7 +1124,7 @@ class ModeEditUser(WatoMode):
                     del user_attrs["password"]  # which was the hashed automation secret!
 
             if password:
-                verify_password_policy(password)
+                verify_password_policy(password, password_field_name)
                 user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True  # password changed, reflect in auth serial

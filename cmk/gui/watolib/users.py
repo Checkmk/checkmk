@@ -278,19 +278,19 @@ def notification_script_choices() -> list[tuple[str, str]]:
     return choices
 
 
-def verify_password_policy(password: Password) -> None:
+def verify_password_policy(password: Password, varname: str = "password") -> None:
     min_len = active_config.password_policy.get("min_length")
     num_groups = active_config.password_policy.get("num_groups")
 
     result = password.verify_policy(PasswordPolicy(min_len, num_groups))
     if result == PasswordPolicy.Result.TooShort:
         raise MKUserError(
-            "password",
+            varname,
             _("The given password is too short. It must have at least %d characters.") % min_len,
         )
     if result == PasswordPolicy.Result.TooSimple:
         raise MKUserError(
-            "password",
+            varname,
             _(
                 "The password does not use enough character groups. You need to "
                 "set a password which uses at least %d of them."

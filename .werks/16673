@@ -1,0 +1,9 @@
+Title: NagVis: fix support for local gadgets
+Class: fix
+Compatible: compat
+Component: nagvis
+Date: 1716877200
+Edition: cre
+Level: 1
+Version: 2.1.0p44
+

@@ -30,6 +30,8 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD)
 	# https://stackoverflow.com/questions/75208034
 	$(RSYNC) -r --chmod=u+w "$(BAZEL_BIN_EXT)/python/python/" \
 	    "$(PYTHON_INSTALL_DIR)/"
+	# remove executable bit from libraries
+	find "$(PYTHON_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)" -type f | xargs chmod -x
 	# Fix sysconfigdata
 	$(SED) -i "s|/replace-me|$(PACKAGE_PYTHON_DESTDIR)|g" $(PACKAGE_PYTHON_SYSCONFIGDATA)
 	# set RPATH for all ELF binaries we find

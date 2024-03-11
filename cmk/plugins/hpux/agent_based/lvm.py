@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
@@ -23,7 +23,7 @@ from cmk.agent_based.v2 import (
 class Volume:
     group: str
     name: str
-    status: str
+    states: Iterable[str]
 
 
 Section = Mapping[str, Volume]
@@ -40,7 +40,7 @@ def parse_hpux_lvm(string_table: StringTable) -> Section:
             section[lv_name] = Volume(
                 group=vg_name,
                 name=lv_name,
-                status=line[1].split("=")[1],
+                states=line[1].split("=")[1].split(","),
             )
     return section
 
@@ -51,6 +51,14 @@ agent_section_hpux_lvm = AgentSection(
 )
 
 
+_OK_STATES = {"available", "syncd", "snapshot", "space_efficient"}
+
+
+def _compute_state(observed_states: Iterable[str]) -> State:
+    _non_ok_states = set(observed_states) - _OK_STATES
+    return State.CRIT if _non_ok_states else State.OK
+
+
 def discover_hpux_lvm(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
@@ -59,9 +67,7 @@ def check_hpux_lvm(item: str, section: Section) -> CheckResult:
     if (volume := section.get(item)) is None:
         return
 
-    state = State.OK if volume.status == "available,syncd" else State.CRIT
-
-    yield Result(state=state, summary=f"Status: {volume.status}")
+    yield Result(state=_compute_state(volume.states), summary=f"Status: {','.join(volume.states)}")
     yield Result(state=State.OK, summary=f"Volume group: {volume.group}")
 
 

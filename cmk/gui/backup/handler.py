@@ -1889,7 +1889,7 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
 
     def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
         super()._send_download(keys, key_id)
-        keys[key_id].not_downloaded = True
+        keys[key_id].not_downloaded = False
         self.key_store.save(keys)
 
     def _file_name(self, key_id: int, key: Key) -> str:

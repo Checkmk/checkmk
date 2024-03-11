@@ -78,6 +78,7 @@ editions:
         release: ["ubuntu-22.04"]
         daily: *daily_saas
         daily_tests: *daily_saas
+        daily_update_tests: [*daily_saas]
         weekly: *daily_saas
         testbuild: []
 

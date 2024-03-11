@@ -14,6 +14,7 @@ CMK_VERSION="2.4.0b1"
 KAV4FS="kav4fs"
 KESL="kesl"
 
+# BEGIN COMMON PLUGIN CODE
 # check that no users other than root that can change the file
 root_owned() {
     read -r permissions _ owner group _ <<EOF
@@ -38,6 +39,7 @@ EOF
 
     false
 }
+# END COMMON PLUGIN CODE
 
 run() {
     suite="$1"

@@ -161,65 +161,35 @@ class SIFormatter(NotationFormatter):
 
     def _preformat_small_number(self, value: int | float) -> Formatted:
         exponent = math.floor(math.log(value, 10)) - 1
-        if exponent <= -24:
-            factor = pow(1000, 8)
-            prefix = "y"
-        elif exponent <= -21:
-            factor = pow(1000, 7)
-            prefix = "z"
-        elif exponent <= -18:
-            factor = pow(1000, 6)
-            prefix = "a"
-        elif exponent <= -15:
-            factor = pow(1000, 5)
-            prefix = "f"
-        elif exponent <= -12:
-            factor = pow(1000, 4)
-            prefix = "p"
-        elif exponent <= -9:
-            factor = pow(1000, 3)
-            prefix = "n"
-        elif exponent <= -6:
-            factor = pow(1000, 2)
-            prefix = "μ"
-        elif exponent <= -3:
-            factor = 1000
-            prefix = "m"
-        else:
-            factor = 1
-            prefix = ""
-        return Formatted(value * factor, Suffix(prefix, self.symbol))
+        for exp, power, prefix in (
+            (-24, 8, "y"),
+            (-21, 7, "z"),
+            (-18, 6, "a"),
+            (-15, 5, "f"),
+            (-12, 4, "p"),
+            (-9, 3, "n"),
+            (-6, 2, "μ"),
+            (-3, 1, "m"),
+        ):
+            if exponent <= exp:
+                return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
+        return Formatted(value, Suffix("", self.symbol))
 
     def _preformat_large_number(self, value: int | float) -> Formatted:
         exponent = math.floor(math.log(value, 10))
-        if exponent >= 24:
-            factor = pow(1000, 8)
-            prefix = "Y"
-        elif exponent >= 21:
-            factor = pow(1000, 7)
-            prefix = "Z"
-        elif exponent >= 18:
-            factor = pow(1000, 6)
-            prefix = "E"
-        elif exponent >= 15:
-            factor = pow(1000, 5)
-            prefix = "P"
-        elif exponent >= 12:
-            factor = pow(1000, 4)
-            prefix = "T"
-        elif exponent >= 9:
-            factor = pow(1000, 3)
-            prefix = "G"
-        elif exponent >= 6:
-            factor = pow(1000, 2)
-            prefix = "M"
-        elif exponent >= 3:
-            factor = 1000
-            prefix = "k"
-        else:
-            factor = 1
-            prefix = ""
-        return Formatted(value / factor, Suffix(prefix, self.symbol))
+        for exp, power, prefix in (
+            (24, 8, "Y"),
+            (21, 7, "Z"),
+            (18, 6, "E"),
+            (15, 5, "P"),
+            (12, 4, "T"),
+            (9, 3, "G"),
+            (6, 2, "M"),
+            (3, 1, "k"),
+        ):
+            if exponent >= exp:
+                return Formatted(value / pow(1000, power), Suffix(prefix, self.symbol))
+        return Formatted(value, Suffix("", self.symbol))
 
     def _format_suffix(self, suffix: Suffix) -> str:
         return f" {suffix.prefix}{suffix.symbol}"
@@ -242,34 +212,19 @@ class IECFormatter(NotationFormatter):
 
     def _preformat_large_number(self, value: int | float) -> Formatted:
         exponent = math.floor(math.log(value, 2))
-        if exponent >= 80:
-            factor = pow(1024, 8)
-            prefix = "Yi"
-        elif exponent >= 70:
-            factor = pow(1024, 7)
-            prefix = "Zi"
-        elif exponent >= 60:
-            factor = pow(1024, 6)
-            prefix = "Ei"
-        elif exponent >= 50:
-            factor = pow(1024, 5)
-            prefix = "Pi"
-        elif exponent >= 40:
-            factor = pow(1024, 4)
-            prefix = "Ti"
-        elif exponent >= 30:
-            factor = pow(1024, 3)
-            prefix = "Gi"
-        elif exponent >= 20:
-            factor = pow(1024, 2)
-            prefix = "Mi"
-        elif exponent >= 10:
-            factor = 1024
-            prefix = "Ki"
-        else:
-            factor = 1
-            prefix = ""
-        return Formatted(value / factor, Suffix(prefix, self.symbol))
+        for exp, power, prefix in (
+            (80, 8, "Yi"),
+            (70, 7, "Zi"),
+            (60, 6, "Ei"),
+            (50, 5, "Pi"),
+            (40, 4, "Ti"),
+            (30, 3, "Gi"),
+            (20, 2, "Mi"),
+            (10, 1, "Ki"),
+        ):
+            if exponent >= exp:
+                return Formatted(value / pow(1024, power), Suffix(prefix, self.symbol))
+        return Formatted(value, Suffix("", self.symbol))
 
     def _format_suffix(self, suffix: Suffix) -> str:
         return f" {suffix.prefix}{suffix.symbol}"
@@ -369,31 +324,23 @@ class TimeFormatter(NotationFormatter):
 
     def _preformat_small_number(self, value: int | float) -> Formatted:
         exponent = math.floor(math.log(value, 10)) - 1
-        if exponent <= -6:
-            factor = pow(1000, 2)
-            prefix = "µ"
-        elif exponent <= -3:
-            factor = 1000
-            prefix = "m"
-        else:
-            factor = 1
-            prefix = ""
-        return Formatted(value * factor, Suffix(prefix, self.symbol))
+        for exp, power, prefix in (
+            (-6, 2, "μ"),
+            (-3, 1, "m"),
+        ):
+            if exponent <= exp:
+                return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
+        return Formatted(value, Suffix("", self.symbol))
 
     def _preformat_large_number(self, value: int | float) -> Formatted:
-        if value >= _ONE_DAY:
-            factor = _ONE_DAY
-            symbol = "d"
-        elif value >= _ONE_HOUR:
-            factor = _ONE_HOUR
-            symbol = "h"
-        elif value >= _ONE_MINUTE:
-            factor = _ONE_MINUTE
-            symbol = "min"
-        else:
-            factor = 1
-            symbol = self.symbol
-        return Formatted(value / factor, Suffix("", symbol))
+        for factor, symbol in (
+            (_ONE_DAY, "d"),
+            (_ONE_HOUR, "h"),
+            (_ONE_MINUTE, "min"),
+        ):
+            if value >= factor:
+                return Formatted(value / factor, Suffix("", symbol))
+        return Formatted(value, Suffix("", self.symbol))
 
     def _format_suffix(self, suffix: Suffix) -> str:
         return f" {suffix.prefix}{suffix.symbol}"

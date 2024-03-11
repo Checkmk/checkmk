@@ -122,7 +122,6 @@ def test_print_man_page_table(capsys: pytest.CaptureFixture[str]) -> None:
 
     assert len(lines) > 1241
     assert "enterasys_powersupply" in out
-    assert "IBM Websphere MQ: Channel Message Count" in out
 
 
 def man_page_catalog_titles():

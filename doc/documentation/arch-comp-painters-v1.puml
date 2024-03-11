@@ -1,0 +1,75 @@
+@startuml
+
+package painter_options {
+    class PainterOptions {
+      {method}  get_instance: () -> PainterOptions
+    }
+}
+
+PainterOptions ..> http.Request : uses
+PainterOptions ..> user.LoggedInUser : uses
+PainterOptions ..> valuespec.ValueSpec : uses
+PainterOptions ..> display_options.DisplayOptions : uses
+DisplayOptions ..> http.Request : uses
+LoggedInUser ..> http.Request : uses
+ValueSpec ..> http.Request : uses
+
+package gui.type_defs {
+    class PainterParameters {
+        graph_render_options
+    }
+    class GraphRenderOptionsVS
+    class GraphRenderOptionsBase
+
+    GraphRenderOptionsVS --|> GraphRenderOptionsBase : derives from
+    PainterParameters::graph_render_options *-- GraphRenderOptionsVS
+}
+
+package v1.painter_lib {
+
+    class "Painter<T>" as Painter {
+        {field} computer: (Row, PainterConfiguration) -> T
+        {field} formatters: Formatters[T]
+        {field} group_key: (T, PainterConfiguration) -> Any
+        {field} title: str
+        {field} short_title: str
+        {field} columns: Sequence[ColumName]
+        {field} painter_options: list[str]
+        {field} title_classes : list[str]
+        {field} dynamic_columns: (PainterParameters) -> Sequence[ColumnName]
+        {field} derive: (Rows, PainterParameters, list[ColumName]) -> Rows
+        {field} postprocess_query: (Rows, PainterParameters, Sequence[ColumName]) -> Rows
+    }
+    class "Formatters<T>" as Formatters {
+        {field} html: (T, PainterConfiguration) -> CellSpec
+        {field} csv: (T, PainterConfiguration) -> str
+        {field} json: (T, PainterConfiguration) -> JSON
+    }
+
+    class PainterConfiguration {
+        {field} columns: Sequence[ColumName]
+        {field} parameters: PainterParameters
+        {field} painter_options: PainterOptions
+        {field} time_range: tuple[int, int]
+        {field} dynamic_columns: (PainterConfiguration) -> Sequence[ColumName]
+    }
+
+    class "PainterRegistry<Painter>" as PainterRegistry
+
+
+    note right of PainterRegistry
+        v1 registry
+    end note
+
+
+    Painter ..> PainterRegistry : registers class
+
+    Painter::formatters *-left- Formatters
+    PainterConfiguration .left.> Formatters : receives
+    Painter <.. PainterConfiguration : receives
+    PainterConfiguration::parameters *-- PainterParameters
+    PainterConfiguration::painter_options *-- PainterOptions
+    PainterParameters ..> Painter::dynamic_columns : receives
+}
+
+@enduml

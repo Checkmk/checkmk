@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from enum import auto, Enum
 
 from ._localize import Help, Title
-from .form_specs import Dictionary, FormSpec, SingleChoice, String
+from .form_specs import Dictionary, FormSpec, String
 from .form_specs.validators import DisallowEmpty
 
 
@@ -171,10 +171,6 @@ class CheckParameters:
     create_enforced_service: bool = True
 
     def __post_init__(self) -> None:
-        if isinstance(self.condition, HostAndItemCondition):
-            assert isinstance(self.condition.item_form, (String, SingleChoice))
-        if not isinstance(self.topic, (Topic, CustomTopic)):
-            raise ValueError
         _validate_name(self.name)
 
 
@@ -204,8 +200,6 @@ class EnforcedService:
     help_text: Help | None = None
 
     def __post_init__(self) -> None:
-        if not isinstance(self.topic, (Topic, CustomTopic)):
-            raise ValueError
         _validate_name(self.name)
 
 

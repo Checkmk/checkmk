@@ -334,6 +334,13 @@ def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
             "sort_index": dashlet["sort_index"],
             "add_context_to_title": dashlet["add_context_to_title"],
             "is_show_more": dashlet["is_show_more"],
+            # Add the following NotRequired ViewSpec values here, so they are correctly displayed
+            # when editing a builtin dashboard's view dashlet
+            "mobile": dashlet.get("mobile", False),
+            "mustsearch": dashlet.get("mustsearch", False),
+            "force_checkboxes": dashlet.get("force_checkboxes", False),
+            "user_sortable": dashlet.get("user_sortable", False),
+            "play_sounds": dashlet.get("play_sounds", False),
             # Just to satisfy ViewSpec, not saved to storage and not needed for
             # rendering in a ViewDashlet.
             "owner": UserId.builtin(),

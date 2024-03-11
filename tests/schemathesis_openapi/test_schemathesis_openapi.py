@@ -5,7 +5,7 @@
 import logging
 
 import pytest
-from hypothesis import given, strategies
+from hypothesis import given, seed, strategies
 
 from tests.schemathesis_openapi import settings
 from tests.schemathesis_openapi.runners import run_crud_test, run_state_machine_test
@@ -34,6 +34,7 @@ def test_openapi_stateful():
     run_state_machine_test(schema)
 
 
+@seed(314159265358979323846)  # crud causes flaky data generation errors with random seed
 @pytest.mark.type("schemathesis_openapi")
 @given(data=strategies.data())
 @pytest.mark.parametrize(

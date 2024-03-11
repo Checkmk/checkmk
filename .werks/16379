@@ -1,0 +1,15 @@
+Title: Allow disabling of bulk walks on inline SNMPv3 hosts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1710141228
+Edition: cre
+Level: 1
+Version: 2.1.0p41
+
+It was impossible to disable bulkwalks for SNMP version 3 hosts using the inline SNMP backend.
+It is fixed now in the sense that it works as in the classic backend:
+In order to disable bulkwalks <b>for SNMP version 3</b> hosts, you need to make sure they do <b>not</b> match the ruleset "Enable SNMPv2c and bulkwalk for host".
+
+A more thorough fix for this bug and the related phrasing in the rulesets is implemented in for Checkmk 2.3, but it was too risky to port into the stable releases.
+See <a href="https://checkmk.com/werk/16382">Werk #16382</a> for more on that.

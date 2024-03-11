@@ -17,8 +17,7 @@ How to use the query DSL used in the `query` parameters of these endpoints, have
 These endpoints support all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
 which you can look up in the Checkmk documentation.
 
-For a detailed list of columns have a look at the [services table](https://github.com/checkmk/checkmk/blob/master/cmk/utils/livestatus_helpers/tables/services.py)
-definition on GitHub.
+For a detailed list of columns, have a look at the [services table](#section/Table-definitions/Services-Table) definition.
 """
 from collections.abc import Mapping
 from typing import Any

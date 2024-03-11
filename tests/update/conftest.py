@@ -20,7 +20,12 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd
+from tests.testlib.utils import (
+    current_base_branch_name,
+    current_branch_version,
+    edition_from_env,
+    restart_httpd,
+)
 from tests.testlib.version import CMKVersion, get_min_version, version_gte
 
 from cmk.utils.version import Edition
@@ -66,7 +71,7 @@ class BaseVersions:
     BASE_VERSIONS = [
         CMKVersion(
             base_version_str,
-            Edition.CEE,
+            edition_from_env(fallback=Edition.CEE),
             current_base_branch_name(),
             current_branch_version(),
         )
@@ -144,7 +149,7 @@ def _get_site(  # pylint: disable=too-many-branches
     update_conflict_mode = "keepold"
     min_version = CMKVersion(
         BaseVersions.MIN_VERSION,
-        Edition.CEE,
+        edition_from_env(fallback=Edition.CEE),
         current_base_branch_name(),
         current_branch_version(),
     )

@@ -601,6 +601,33 @@ JOB_ID = {
 }
 
 
+class BulkDiscoveryOptions(BaseSchema):
+    monitor_undecided_services = fields.Boolean(
+        required=False,
+        description="The option whether to monitor undecided services or not.",
+        example=True,
+        load_default=False,
+    )
+    remove_vanished_services = fields.Boolean(
+        required=False,
+        description="The option whether to remove vanished services or not.",
+        example=True,
+        load_default=False,
+    )
+    update_service_labels = fields.Boolean(
+        required=False,
+        description="The option whether to update service labels or not.",
+        example=True,
+        load_default=False,
+    )
+    update_host_labels = fields.Boolean(
+        required=False,
+        description="The option whether to update host labels or not.",
+        example=True,
+        load_default=False,
+    )
+
+
 class BulkDiscovery(BaseSchema):
     hostnames = fields.List(
         EXISTING_HOST_NAME,
@@ -608,7 +635,12 @@ class BulkDiscovery(BaseSchema):
         example=["example", "sample"],
         description="A list of host names",
     )
-    mode = _discovery_mode(default_mode="new")
+    options = fields.Nested(
+        BulkDiscoveryOptions,
+        description="The discovery options for the bulk discovery",
+        required=True,
+        example={"monitor_undecided": True, "remove_vanished": True, "update_service_labels": True},
+    )
     do_full_scan = fields.Boolean(
         required=False,
         description="The option whether to perform a full scan or not.",
@@ -648,15 +680,14 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     if job.is_active():
         return Response(status=409)
 
-    mode = body["mode"]
-    if mode == "tabula_rasa":
-        mode = "refresh"
-    elif mode == "only_host_labels":
-        mode = "only-host-labels"
-    elif mode == "fix_all":
-        mode = "fixall"
-
-    discovery_settings = DiscoverySettings.from_discovery_mode(DiscoveryMode.from_str(mode))
+    options = body["options"]
+    discovery_settings = DiscoverySettings(
+        update_host_labels=options["update_host_labels"],
+        add_new_services=options["monitor_undecided_services"],
+        remove_vanished_services=options["remove_vanished_services"],
+        update_changed_service_labels=options["update_service_labels"],
+        update_changed_service_parameters=False,
+    )
     hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"])
     start_bulk_discovery(
         job,

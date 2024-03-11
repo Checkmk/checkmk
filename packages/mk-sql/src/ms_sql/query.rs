@@ -88,7 +88,7 @@ impl<'a> Column<'a> for Row {
 }
 
 /// Runs predefined query
-/// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
+/// return Vec\<Vec\<Row\>\> as a Results Vec: one Vec\<Row\> per one statement in query.
 pub async fn run_known_query<T: Borrow<sqls::Id>>(
     client: &mut Client,
     id: T,
@@ -100,7 +100,7 @@ pub async fn run_known_query<T: Borrow<sqls::Id>>(
 }
 
 /// Runs any query
-/// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
+/// return Vec\<Vec\<Row\>\> as a Results Vec: one Vec\<Row\> per one statement in query.
 pub async fn run_custom_query<T: AsRef<str>>(client: &mut Client, query: T) -> Result<Vec<Answer>> {
     let query = query.as_ref();
     if query.is_empty() {

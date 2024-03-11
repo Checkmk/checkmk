@@ -71,7 +71,7 @@ pub struct Cli {
     pub ignore_proxy_env: bool,
 
     /// Proxy server URL.
-    /// E.g. https://my-proxy.com, socks5://10.1.1.0:8000
+    /// E.g. <https://my-proxy.com>, <socks5://10.1.1.0:8000>
     /// This will override both HTTP_PROXY and HTTPS_PROXY
     #[arg(long)]
     pub proxy_url: Option<String>,
@@ -96,11 +96,11 @@ pub struct Cli {
     #[arg(long)]
     pub force_ip_version: Option<ForceIP>,
 
-    /// Minimum/Maximum expected page size in bytes (Format: MIN[,MAX])
+    /// Minimum/Maximum expected page size in bytes (Format: MIN\[,MAX\])
     #[arg(long, conflicts_with = "without_body", value_parser = parse_optional_pair::<usize>)]
     pub page_size: Option<PageSizeLimits>,
 
-    /// WARN/CRIT levels for response time (Format: WARN>[,CRIT])
+    /// WARN/CRIT levels for response time (Format: WARN>\[,CRIT\])
     #[arg(long, value_parser = parse_optional_pair::<f64>)]
     pub response_time_levels: Option<ResponseTimeLevels>,
 
@@ -150,7 +150,7 @@ pub struct Cli {
     #[arg(long, requires = "body_regex", default_value_t = false)]
     pub body_regex_invert: bool,
 
-    /// Strings to expect in the headers. Format: [KEY]:[VALUE]
+    /// Strings to expect in the headers. Format: \[KEY\]:\[VALUE\]
     /// Specify multiple times for additional headers.
     /// It's possible to only specify key or value, but a (first) separating colon is
     /// mandatory to identify them.
@@ -160,7 +160,7 @@ pub struct Cli {
     #[arg(short = 'd', long, value_parser=parse_string_header_pair)]
     pub header_strings: Vec<(String, String)>,
 
-    /// Regular expressions to expect in the HTTP headers. Format: [KEY]:[VALUE]
+    /// Regular expressions to expect in the HTTP headers. Format: \[KEY\]:\[VALUE\]
     /// Again, the first colon will be recognized as the KEY-VALUE separator, so
     /// a colon is not allowed in the KEY part of the regex specification.
     /// The same rules as for the body regex apply, while key and value are taken as two separate

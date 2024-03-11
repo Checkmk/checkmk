@@ -5,6 +5,8 @@
 
 set -e
 
+JOBS=6
+
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -25,6 +27,7 @@ usage() {
     echo "  -A, --build-all          shortcut for -b -U"
     echo "  -f, --format             format sources"
     echo "  -D, --documentation      generate documentation"
+    echo "  -j N, --jobs=N           allow N jobs at once, default is ${JOBS}"
     echo "  -h, --help               show this help"
 }
 
@@ -40,7 +43,7 @@ parse_options() {
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'ecFbUuCaAfDh' --long 'setup-environment,clean,check-format,build,build-unit-tests,unit-tests,clippy,all,build-all,format,documentation,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'ecFbUuCaAfDj:h' --long 'setup-environment,clean,check-format,build,build-unit-tests,unit-tests,clippy,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -108,6 +111,11 @@ parse_options() {
                 shift
                 continue
                 ;;
+            '-j' | '--jobs')
+                JOBS="$2"
+                shift 2
+                continue
+                ;;
             '-h' | '--help')
                 usage
                 exit 0
@@ -121,7 +129,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION
+    readonly RUN_SETUP_ENVIRONMENT RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 # TODO: This needs some serious massaging, some stuff probably don't even belong
@@ -161,12 +169,12 @@ main() {
     test ${RUN_CLEAN} = yes && cargo clean
     test ${RUN_CHECK_FORMAT} = yes && cargo fmt -- --check
     # TODO: Re-evaluate usage of --all-targets below
-    test ${RUN_BUILD} = yes && cargo build --release --all-targets
-    test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test --release --all-targets --no-run
-    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --release --all-targets
+    test ${RUN_BUILD} = yes && cargo build --jobs="${JOBS}" --release --all-targets
+    test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test --jobs="${JOBS}" --release --all-targets --no-run
+    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=full cargo test --jobs="${JOBS}" --release --all-targets
     test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets -- --deny warnings
     test ${RUN_FORMAT} = yes && cargo fmt
-    test ${RUN_DOCUMENTATION} = yes && cargo doc --release --lib --bin --examples
+    test ${RUN_DOCUMENTATION} = yes && cargo doc --jobs="${JOBS}" --release --lib --bins --examples
     true
 }
 

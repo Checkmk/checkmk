@@ -1791,7 +1791,7 @@ class AutomationScanParents(Automation):
         )
 
         try:
-            gateways = cmk.base.parent_scan.scan_parents_of(
+            gateway_results = cmk.base.parent_scan.scan_parents_of(
                 config_cache,
                 hosts_config,
                 monitoring_host,
@@ -1799,7 +1799,7 @@ class AutomationScanParents(Automation):
                 silent=True,
                 settings=settings,
             )
-            return ScanParentsResult(gateways)
+            return ScanParentsResult(gateway_results)
         except Exception as e:
             raise MKAutomationError("%s" % e)
 

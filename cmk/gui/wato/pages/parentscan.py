@@ -13,7 +13,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.automations.results import Gateway
+from cmk.automations.results import Gateway, GatewayResult
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.bakery as bakery
@@ -66,12 +66,6 @@ class ParentScanTask(NamedTuple):
     site_id: SiteId
     folder_path: str
     host_name: HostName
-
-
-class ParentScanResult(NamedTuple):
-    existing_gw_host_name: HostName
-    ip: str
-    dns_name: HostName
 
 
 # select: 'noexplicit' -> no explicit parents
@@ -173,7 +167,7 @@ class ParentScanBackgroundJob(BackgroundJob):
 
     def _execute_parent_scan(
         self, task: ParentScanTask, settings: ParentScanSettings
-    ) -> Sequence[Gateway]:
+    ) -> Sequence[GatewayResult]:
         return scan_parents(
             task.site_id,
             task.host_name,
@@ -186,41 +180,40 @@ class ParentScanBackgroundJob(BackgroundJob):
                     settings.ping_probes,
                 ],
             ),
-        ).gateways
+        ).results
 
     def _process_parent_scan_results(
-        self, task: ParentScanTask, settings: ParentScanSettings, gateways: Sequence
+        self, task: ParentScanTask, settings: ParentScanSettings, results: Sequence[GatewayResult]
     ) -> None:
-        gateway = ParentScanResult(*gateways[0][0]) if gateways[0][0] else None
-        state, skipped_gateways, error = gateways[0][1:]
+        result = results[0]
 
-        if state in ["direct", "root", "gateway"]:
+        if result.state in ["direct", "root", "gateway"]:
             # The following code updates the host config. The progress from loading the Setup folder
             # until it has been saved needs to be locked.
             with store.lock_checkmk_configuration():
-                self._configure_host_and_gateway(task, settings, gateway)
+                self._configure_host_and_gateway(task, settings, result.gateway)
         else:
-            self._logger.error(error)
+            self._logger.error(result.message)
 
-        if gateway:
+        if result.gateway:
             self._num_gateways_found += 1
 
-        if state in ["direct", "root"]:
+        if result.state in ["direct", "root"]:
             self._num_directly_reachable_hosts += 1
 
-        self._num_unreachable_gateways += skipped_gateways
+        self._num_unreachable_gateways += result.ping_fails
 
-        if state == "notfound":
+        if result.state == "notfound":
             self._num_no_gateway_found += 1
 
-        if state in ["failed", "dnserror", "garbled"]:
+        if result.state in ["failed", "dnserror", "garbled"]:
             self._num_errors += 1
 
     def _configure_host_and_gateway(
         self,
         task: ParentScanTask,
         settings: ParentScanSettings,
-        gateway: ParentScanResult | None,
+        gateway: Gateway | None,
     ) -> None:
         tree = folder_tree()
         tree.invalidate_caches()
@@ -260,7 +253,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         self,
         task: ParentScanTask,
         settings: ParentScanSettings,
-        gateway: ParentScanResult | None,
+        gateway: Gateway | None,
         folder: Folder,
     ) -> list[HostName]:
         """Ensure there is a gateway host in the Checkmk configuration (or raise an exception)
@@ -309,9 +302,7 @@ class ParentScanBackgroundJob(BackgroundJob):
 
         raise NotImplementedError()
 
-    def _determine_gateway_host_name(
-        self, task: ParentScanTask, gateway: ParentScanResult
-    ) -> HostName:
+    def _determine_gateway_host_name(self, task: ParentScanTask, gateway: Gateway) -> HostName:
         if gateway.dns_name:
             return gateway.dns_name
 
@@ -324,7 +315,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         self,
         task: ParentScanTask,
         settings: ParentScanSettings,
-        gateway: ParentScanResult,
+        gateway: Gateway,
         gw_folder: Folder,
     ) -> HostAttributes:
         new_host_attributes = HostAttributes(

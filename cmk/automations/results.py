@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass
-from typing import Any, TypeAlias, TypeVar
+from typing import Any, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -32,9 +32,6 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
-Gateway: TypeAlias = tuple[
-    tuple[HostName | None, HostAddress, HostName | None] | None, str, int, str
-]
 
 
 class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
@@ -402,13 +399,42 @@ class GetSectionInformationResult(ABCAutomationResult):
 result_type_registry.register(GetSectionInformationResult)
 
 
+@dataclass(frozen=True)
+class Gateway:
+    existing_gw_host_name: HostName | None
+    ip: HostAddress
+    dns_name: HostName | None
+
+
+@dataclass(frozen=True)
+class GatewayResult:
+    gateway: Gateway | None
+    state: str
+    ping_fails: int
+    message: str
+
+
 @dataclass
 class ScanParentsResult(ABCAutomationResult):
-    gateways: Sequence[Gateway]
+    results: Sequence[GatewayResult]
 
     @staticmethod
     def automation_call() -> str:
         return "scan-parents"
+
+    @classmethod
+    def deserialize(cls, serialized_result: SerializedResult) -> ScanParentsResult:
+        (serialized_results,) = literal_eval(serialized_result)
+        results = [
+            GatewayResult(
+                gateway=Gateway(*gw) if gw else None,
+                state=state,
+                ping_fails=ping_fails,
+                message=message,
+            )
+            for gw, state, ping_fails, message in serialized_results
+        ]
+        return cls(results=results)
 
 
 result_type_registry.register(ScanParentsResult)

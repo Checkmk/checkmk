@@ -7,13 +7,17 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.utils import version as cmk_version
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
 
 from cmk.automations.results import (
     ABCAutomationResult,
+    Gateway,
+    GatewayResult,
     result_type_registry,
+    ScanParentsResult,
+    SerializedResult,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
@@ -139,3 +143,31 @@ class TestTryDiscoveryResult:
             )
             == result
         )
+
+
+class TestScanParentsResult:
+    SERIALIZED_RESULT = SerializedResult("([((None, '108.170.228.254', None), 'gateway', 0, '')],)")
+
+    DESERIALIZED_RESULT = ScanParentsResult(
+        results=[
+            GatewayResult(
+                gateway=Gateway(None, HostAddress("108.170.228.254"), None),
+                state="gateway",
+                ping_fails=0,
+                message="",
+            )
+        ]
+    )
+
+    def test_serialization_roundtrip(self) -> None:
+        assert (
+            ScanParentsResult.deserialize(
+                self.DESERIALIZED_RESULT.serialize(
+                    cmk_version.Version.from_str(cmk_version.__version__)
+                )
+            )
+            == self.DESERIALIZED_RESULT
+        )
+
+    def test_deserialization(self) -> None:
+        assert ScanParentsResult.deserialize(self.SERIALIZED_RESULT) == self.DESERIALIZED_RESULT

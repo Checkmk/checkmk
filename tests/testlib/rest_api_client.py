@@ -58,6 +58,7 @@ API_DOMAIN = Literal[
     "autocomplete",
     "service_discovery",
     "discovery_run",
+    "parent_scan",
 ]
 
 
@@ -2554,6 +2555,37 @@ class ServiceDiscoveryClient(RestApiClient):
         )
 
 
+class ParentScanClient(RestApiClient):
+    domain: API_DOMAIN = "parent_scan"
+
+    def start(
+        self,
+        host_names: Sequence[str],
+        gateway_hosts: Any,
+        performance_settings: dict | None = None,
+        force_explicit_parents: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = {
+            "host_names": host_names,
+            "gateway_hosts": gateway_hosts,
+            "configuration": {},
+            "performance": {},
+        }
+        if force_explicit_parents is not None:
+            body["configuration"]["force_explicit_parents"] = force_explicit_parents
+
+        if performance_settings:
+            body["performance"] = performance_settings
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/start/invoke",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -2585,6 +2617,7 @@ class ClientRegistry:
     UserRole: UserRoleClient
     AutoComplete: AutocompleteClient
     ServiceDiscovery: ServiceDiscoveryClient
+    ParentScan: ParentScanClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2618,4 +2651,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         UserRole=UserRoleClient(request_handler, url_prefix),
         AutoComplete=AutocompleteClient(request_handler, url_prefix),
         ServiceDiscovery=ServiceDiscoveryClient(request_handler, url_prefix),
+        ParentScan=ParentScanClient(request_handler, url_prefix),
     )

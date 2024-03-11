@@ -24,6 +24,7 @@ from cmk.gui.openapi.endpoints import (
     host_tag_group,
     metric,
     notification_rules,
+    parent_scan,
     password,
     rule,
     ruleset,
@@ -61,6 +62,7 @@ def register(endpoint_registry: EndpointRegistry, job_registry: BackgroundJobReg
     metric.register(endpoint_registry)
     notification_rules.register(endpoint_registry)
     password.register(endpoint_registry)
+    parent_scan.register(endpoint_registry)
     rule.register(endpoint_registry)
     ruleset.register(endpoint_registry)
     service.register(endpoint_registry)

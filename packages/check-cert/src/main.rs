@@ -160,7 +160,7 @@ struct Args {
     #[arg(long)]
     pubkey_size: Option<usize>,
 
-    /// Certificate expiration levels in days [WARN:CRIT]
+    /// Certificate expiration levels in days \[WARN:CRIT\]
     #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]
     not_after: Vec<u32>,
 
@@ -168,7 +168,7 @@ struct Args {
     #[arg(long)]
     max_validity: Option<u32>,
 
-    /// Response time levels in milliseconds [WARN:CRIT]
+    /// Response time levels in milliseconds \[WARN:CRIT\]
     #[arg(
         long,
         num_args = 2,

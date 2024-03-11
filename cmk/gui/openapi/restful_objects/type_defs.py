@@ -40,6 +40,7 @@ DomainType = Literal[
     "metric",
     "notification_rule",
     "password",
+    "parent_scan",
     "rule",
     "ruleset",
     "saml_connection",

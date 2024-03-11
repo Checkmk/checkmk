@@ -52,6 +52,12 @@ TABLE_COLUMNS: Final = (
     "match_groups_syslog_application",
 )
 
+SQLITE_PRAGMAS = {
+    "PRAGMA journal_mode=WAL;": "WAL mode for concurrent reads and writes",
+    "PRAGMA synchronous = NORMAL;": "Writes should not blocked by reads",
+    "PRAGMA busy_timeout = 2000;": "2 seconds timeout for busy handler. Avoids database is locked errors",
+}
+
 
 def configure_sqlite_types() -> None:
     """
@@ -163,7 +169,6 @@ class SQLiteHistory(History):
 
         configure_sqlite_types()
 
-        # TODO consider enabling PRAGMA journal_mode=WAL; after some performance measurements
         # TODO lookup our ec backend thread safety.
         # check_same_thread=False the connection may be accessed in multiple threads.
         self.conn = sqlite3.connect(
@@ -171,6 +176,10 @@ class SQLiteHistory(History):
         )
 
         self.conn.row_factory = sqlite3.Row
+
+        with self.conn as connection:
+            for pragma_string in SQLITE_PRAGMAS:
+                connection.execute(pragma_string)
 
         with self.conn as connection:
             cur = connection.cursor()

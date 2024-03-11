@@ -657,8 +657,6 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
     "wagner_titanus_topsense_info",
     "wagner_titanus_topsense_temperature_default_values",
     "watchdog_sensors_humidity_default_levels",
-    "websphere_mq_channels_default_levels",
-    "websphere_mq_queues_default_levels",
     "win_netstat_states",
     "win_printer_default_levels",
     "windows_license_default_levels",

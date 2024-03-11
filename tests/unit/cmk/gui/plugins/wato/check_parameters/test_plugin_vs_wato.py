@@ -597,11 +597,6 @@ class ErrorReporter:
             "watchdog_sensors_humidity",
             RuleGroup.CheckgroupParameters("humidity"),
         ),
-        (
-            "check",
-            "websphere_mq_channels",
-            RuleGroup.CheckgroupParameters("websphere_mq_channels"),
-        ),
         ("discovery", "domino_tasks", "inv_domino_tasks_rules"),
         ("discovery", "mssql_counters_cache_hits", "inventory_mssql_counters_rules"),
         ("discovery", "mssql_datafiles", "mssql_transactionlogs_discovery"),

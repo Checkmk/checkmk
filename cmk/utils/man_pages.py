@@ -256,7 +256,6 @@ CATALOG_TITLES: Final = {
     "tsm": "IBM Tivoli Storage Manager (TSM)",
     "unitrends": "Unitrends",
     "vnx": "VNX NAS",
-    "websphere_mq": "WebSphere MQ",
     "zerto": "Zerto",
     "ibm_mq": "IBM MQ",
     "pulse_secure": "Pulse Secure",

@@ -284,6 +284,14 @@ class ModeBulkImport(WatoMode):
             """
             hostname_valuespec = Hostname()
 
+            class HostAttributeInstances(dict):
+                def __missing__(self, key):
+                    inst = host_attribute_registry[key]()
+                    self[key] = inst
+                    return inst
+
+            host_attributes = HostAttributeInstances()
+
             for row_num, entry in enumerate(iterator):
                 _host_name: HostName | None = None
                 # keys are ordered in insert-first order, so we can derive col_num from the ordering
@@ -297,7 +305,7 @@ class ModeBulkImport(WatoMode):
                         _host_name = HostName(attr_value)
 
                     if attr_name != "alias":
-                        host_attribute_inst = host_attribute_registry[attr_name]()
+                        host_attribute_inst = host_attributes[attr_name]
 
                         if not attr_value.isascii():
                             raise MKUserError(

@@ -162,7 +162,7 @@ def test__replace_expressions_missing_scalars() -> None:
     translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
     assert (
         gt._replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
-        == "CPU Load - n/a CPU Cores"
+        == "CPU Load"
     )
 
 

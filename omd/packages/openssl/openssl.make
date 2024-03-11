@@ -30,6 +30,16 @@ $(OPENSSL_INTERMEDIATE_INSTALL):  $(OPENSSL_BUILD)
 	# This will leave us with some strange file permissions, but works for now, see
 	# https://stackoverflow.com/questions/75208034
 	$(RSYNC) --recursive --links --times --chmod=u+w "$(BAZEL_BIN_EXT)/openssl/openssl/" "$(OPENSSL_INSTALL_DIR)/"
+	# this will replace forced absolute paths determined at build time by 
+	# Bazel/foreign_cc. Note that this step depends on $OMD_ROOT which is different
+	# each time
+	../scripts/run-pipenv run cmk-dev binreplace \
+	    --regular-expression \
+	    --inplace \
+	    --strict \
+	    "/home/.*?/openssl.build_tmpdir/openssl/" \
+	    "$(OMD_ROOT)/" \
+	    "$(OPENSSL_INSTALL_DIR)/lib/libcrypto.so.3"
 
 # legacy stuff
 .PHONY: $(OPENSSL_CACHE_PKG_PROCESS)

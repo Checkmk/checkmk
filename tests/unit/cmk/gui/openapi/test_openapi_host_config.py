@@ -1562,3 +1562,14 @@ def test_update_host_parent_must_be_list_of_strings(clients: ClientRegistry) -> 
         "Expected data type is list, but your type is str."
         in resp.json["fields"]["update_attributes"]["parents"]
     )
+
+
+def test_openapi_create_host_in_folder_with_umlaut(clients: ClientRegistry) -> None:
+    folder_name = "ümlaut"
+    clients.Folder.create(
+        parent="/",
+        folder_name=folder_name,
+        title=folder_name,
+    )
+    response = clients.HostConfig.create(host_name="host1", folder=f"~{folder_name}")
+    assert response.status_code == 200

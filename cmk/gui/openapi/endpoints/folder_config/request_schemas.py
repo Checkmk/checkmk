@@ -11,16 +11,9 @@ from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER, EXISTING_FOLDER_PATTERN
 
 from cmk import fields
-
-EXISTING_FOLDER_PATTERN = r"^(?:(?:[~\\\/]|(?:[~\\\/][-\w]+)+[~\\\/]?)|[0-9a-fA-F]{32})$"
-
-EXISTING_FOLDER = gui_fields.FolderField(
-    example="/",
-    required=True,
-    pattern=EXISTING_FOLDER_PATTERN,
-)
 
 
 class CreateFolder(BaseSchema):

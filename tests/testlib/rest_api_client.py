@@ -13,7 +13,7 @@ import pprint
 import queue
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn
+from typing import Any, cast, Literal, NoReturn, TYPE_CHECKING
 
 from typing_extensions import TypedDict
 
@@ -22,6 +22,9 @@ from cmk.utils import version
 from cmk.gui.http import HTTPMethod
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.gui.rest_api_types.site_connection import SiteConfig
+
+if TYPE_CHECKING:
+    from cmk.gui.openapi.endpoints.downtime import FindByType
 
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
@@ -1523,26 +1526,30 @@ class DowntimeClient(RestApiClient):
 
     def delete(
         self,
-        delete_type: Literal["by_id", "query", "params"],
+        delete_type: "FindByType",
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
         host_name: str | None = None,
+        host_group: str | None = None,
+        service_group: str | None = None,
         service_descriptions: list[str] | None = None,
         expect_ok: bool = True,
     ) -> Response:
         body: dict[str, Any] = {
             "delete_type": delete_type,
         }
-
-        if delete_type == "by_id":
-            body.update({"downtime_id": downtime_id, "site_id": site_id})
-
-        elif delete_type == "query":
-            body.update({"query": query})
-
-        else:
-            body.update({"host_name": host_name, "service_descriptions": service_descriptions})
+        self._update_find_by_type(
+            body,
+            delete_type,
+            site_id,
+            downtime_id,
+            query,
+            host_name,
+            host_group,
+            service_group,
+            service_descriptions,
+        )
 
         return self.request(
             "post",
@@ -1553,11 +1560,13 @@ class DowntimeClient(RestApiClient):
 
     def modify(
         self,
-        modify_type: Literal["by_id", "query", "params"],
+        modify_type: "FindByType",
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
         host_name: str | None = None,
+        host_group: str | None = None,
+        service_group: str | None = None,
         service_descriptions: list[str] | None = None,
         comment: str | None = None,
         end_time: str | int | None = None,
@@ -1567,15 +1576,17 @@ class DowntimeClient(RestApiClient):
             "modify_type": modify_type,
             "comment": comment,
         }
-
-        if modify_type == "by_id":
-            body.update({"downtime_id": downtime_id, "site_id": site_id})
-
-        elif modify_type == "query":
-            body.update({"query": query})
-
-        else:
-            body.update({"host_name": host_name, "service_descriptions": service_descriptions})
+        self._update_find_by_type(
+            body,
+            modify_type,
+            site_id,
+            downtime_id,
+            query,
+            host_name,
+            host_group,
+            service_group,
+            service_descriptions,
+        )
 
         if end_time is not None:
             body["end_time"] = {
@@ -1589,6 +1600,33 @@ class DowntimeClient(RestApiClient):
             body={k: v for k, v in body.items() if v is not None},
             expect_ok=expect_ok,
         )
+
+    @staticmethod
+    def _update_find_by_type(
+        body: dict,
+        find_type: "FindByType",
+        site_id: str | None = None,
+        downtime_id: str | None = None,
+        query: str | None = None,
+        host_name: str | None = None,
+        host_group: str | None = None,
+        service_group: str | None = None,
+        service_descriptions: list[str] | None = None,
+    ) -> None:
+        if find_type == "by_id":
+            body.update({"downtime_id": downtime_id, "site_id": site_id})
+
+        elif find_type == "query":
+            body.update({"query": query})
+
+        elif find_type == "hostgroup":
+            body.update({"hostgroup_name": host_group})
+
+        elif find_type == "servicegroup":
+            body.update({"servicegroup_name": service_group})
+
+        else:
+            body.update({"host_name": host_name, "service_descriptions": service_descriptions})
 
 
 class GroupConfig(RestApiClient):

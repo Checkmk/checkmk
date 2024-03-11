@@ -66,7 +66,7 @@ DowntimeType = Literal[
     "host", "service", "hostgroup", "servicegroup", "host_by_query", "service_by_query"
 ]
 
-FindByType = Literal["query", "by_id", "params"]
+FindByType = Literal["query", "by_id", "params", "hostgroup", "servicegroup"]
 
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
@@ -537,6 +537,10 @@ def _generate_target_downtimes_query(
     elif find_type == "by_id":
         query_expr = Downtimes.id == body["downtime_id"]
         site_id = SiteId(body["site_id"])
+    elif find_type == "hostgroup":
+        query_expr = Downtimes.host_groups.contains(body["hostgroup_name"])
+    elif find_type == "servicegroup":
+        query_expr = Downtimes.service_groups.contains(body["servicegroup_name"])
     else:
         hostname = body["host_name"]
         if "service_descriptions" not in body:

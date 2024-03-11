@@ -408,10 +408,19 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
             formatter = TimeFormatter(unit.notation.symbol, unit.precision)
             js_formatter = "TimeFormatter"
 
+    match unit.precision:
+        case metrics.AutoPrecision():
+            precision_title = f"auto precision {unit.precision.digits}"
+        case metrics.StrictPrecision():
+            precision_title = f"strict precision {unit.precision.digits}"
+    title_parts = [
+        unit.notation.symbol or "no symbol",
+        f"({formatter.ident()}, {precision_title})",
+    ]
     return units_from_api.register(
         UnitInfo(
             id=unit_id,
-            title=unit.notation.symbol,
+            title=" ".join(title_parts),
             symbol=unit.notation.symbol,
             render=formatter.render,
             js_render=f"""v => new cmk.number_format.{js_formatter}(

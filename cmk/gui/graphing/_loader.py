@@ -52,7 +52,7 @@ def get_unit_info(unit_id: str) -> UnitInfo:
 def registered_units() -> Sequence[tuple[str, str]]:
     return sorted(
         [(name, info.get("description", info["title"])) for (name, info) in unit_info.items()]
-        + [(unit_id, info["symbol"]) for (unit_id, info) in units_from_api.items()],
+        + [(unit_id, info["title"]) for (unit_id, info) in units_from_api.items()],
         key=lambda x: x[1],
     )
 

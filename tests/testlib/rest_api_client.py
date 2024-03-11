@@ -56,6 +56,8 @@ API_DOMAIN = Literal[
     "bi_rule",
     "user_role",
     "autocomplete",
+    "service_discovery",
+    "discovery_run",
 ]
 
 
@@ -2472,6 +2474,54 @@ class AutocompleteClient(RestApiClient):
         )
 
 
+class ServiceDiscoveryClient(RestApiClient):
+    service_discovery_domain: API_DOMAIN = "service_discovery"
+    discovery_run_domain: API_DOMAIN = "discovery_run"
+
+    def bulk_discovery(
+        self,
+        hostnames: Sequence[str],
+        monitor_undecided_services: bool = False,
+        remove_vanished_services: bool = False,
+        update_service_labels: bool = False,
+        update_host_labels: bool = False,
+        do_full_scan: bool | None = None,
+        bulk_size: int | None = None,
+        ignore_errors: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict = {
+            "hostnames": hostnames,
+            "options": {
+                "monitor_undecided_services": monitor_undecided_services,
+                "remove_vanished_services": remove_vanished_services,
+                "update_service_labels": update_service_labels,
+                "update_host_labels": update_host_labels,
+            },
+        }
+
+        if do_full_scan is not None:
+            body["do_full_scan"] = do_full_scan
+        if bulk_size is not None:
+            body["bulk_size"] = bulk_size
+        if ignore_errors is not None:
+            body["ignore_errors"] = ignore_errors
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.discovery_run_domain}/actions/bulk-discovery-start/invoke",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def discovery_run_status(self, id_: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.discovery_run_domain}/{id_}",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -2502,6 +2552,7 @@ class ClientRegistry:
     BiRule: BiRuleClient
     UserRole: UserRoleClient
     AutoComplete: AutocompleteClient
+    ServiceDiscovery: ServiceDiscoveryClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2534,4 +2585,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         BiRule=BiRuleClient(request_handler, url_prefix),
         UserRole=UserRoleClient(request_handler, url_prefix),
         AutoComplete=AutocompleteClient(request_handler, url_prefix),
+        ServiceDiscovery=ServiceDiscoveryClient(request_handler, url_prefix),
     )

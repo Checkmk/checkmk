@@ -31,6 +31,13 @@ from cmk.rulesets.v1.rule_specs import (
 
 # ignore mypy errors due to `Any` since we care about testing the name validation
 @pytest.mark.parametrize(  # type: ignore[misc]
+    ["name"],
+    [
+        pytest.param("element\x07bc", id="invalid identifier"),
+        pytest.param("global", id="reserved identifier"),
+    ],
+)
+@pytest.mark.parametrize(
     ["input_rulespec", "kwargs"],
     [
         pytest.param(
@@ -144,6 +151,7 @@ from cmk.rulesets.v1.rule_specs import (
     ],
 )
 def test_ruleset_name_validation(
+    name: str,
     input_rulespec: type[ActiveCheck]
     | type[AgentAccess]
     | type[AgentConfig]
@@ -157,5 +165,7 @@ def test_ruleset_name_validation(
     | type[SpecialAgent],
     kwargs: Mapping[str, Any],
 ) -> None:
-    with pytest.raises(ValueError, match="element\x07bc' is not a valid Python identifier"):
-        input_rulespec(name="element\abc", **kwargs)  # type: ignore[misc]
+    with pytest.raises(
+        ValueError, match=f"'{name}' is not a valid, non-reserved Python identifier"
+    ):
+        input_rulespec(name=name, **kwargs)  # type: ignore[misc]

@@ -71,6 +71,13 @@ repos:
             language: script
             files: omd/packages/python3?-modules
             types: [file]
+          - id: sphinx
+            name: Sphinx Documentation
+            entry: scripts/run-pipenv run make -C doc/documentation html
+            files: ^doc/documentation/.*(rst|puml)$
+            pass_filenames: false
+            language: script
+            types: [file]
           - id: pylint
             name: Check pylint
             entry: scripts/check-pylint

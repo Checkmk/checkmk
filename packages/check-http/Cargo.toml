@@ -14,7 +14,6 @@ aes-gcm = { version = "0.10.3", features = ["aes", "std"] }
 bytes = { version = "1.5.0" }
 anyhow = { version = "1.0.80" }
 clap = { version = "<4.5", features = ["derive"] }  # needs rustc >= 1.74
-http = { version = "*" }  # NOTE: We use 1.1.0, all libraries use 0.2.12. Is this OK?
 # We need either rustls-tls or native-tls-alpn to establish HTTP/2 connections. Only native-tls
 # supports TLS1.0/TLS1.1, while setting TLS1.3 as minimum version is only supported by rustls. Since
 # we only know that at runtime we need to pull in both TLS backends.

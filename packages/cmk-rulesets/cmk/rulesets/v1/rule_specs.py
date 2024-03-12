@@ -6,6 +6,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import auto, Enum
+from keyword import iskeyword
 
 from ._localize import Help, Title
 from .form_specs import Dictionary, FormSpec, String
@@ -78,8 +79,9 @@ class HostAndItemCondition:
 def _validate_name(name: str) -> None:
     # if we move away from identifiers as strings in the future, we want existing identifiers to
     # be compatible with that
-    if not name.isidentifier():
-        raise ValueError(f"'{name}' is not a valid Python identifier")
+    # for example in the past there already were problems with importing "if.module"
+    if not name.isidentifier() or iskeyword(name):
+        raise ValueError(f"'{name}' is not a valid, non-reserved Python identifier")
 
 
 @dataclass(frozen=True)

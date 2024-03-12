@@ -1,4 +1,4 @@
-Title: mk_postgres.py: Allow Declaring PG_BINARY_NAME in postgres.cfg
+Title: mk_postgres.py: Allow Declaring PG_BINARY_PATH in postgres.cfg
 Class: feature
 Compatible: compat
 Component: checks

@@ -150,6 +150,28 @@ class Crawler:
         self.report_file = Path(report_file or self.site.result_dir() + "/crawl.xml")
         self.requests_session = requests.Session()
         self._find_more_urls: bool = True
+        self._ignored_content_types: set[str] = {
+            "application/json",
+            "application/pdf",
+            "application/x-deb",
+            "application/x-debian-package",
+            "application/x-gzip",
+            "application/x-mkp",
+            "application/x-msdos-program",
+            "application/x-msi",
+            "application/x-pkg",
+            "application/x-redhat-package-manager",
+            "application/x-rpm",
+            "application/x-tar",
+            "application/x-tgz",
+            "application/x-yaml; charset=utf-8",
+            "image/gif",
+            "image/png",
+            "image/svg+xml",
+            "text/x-c++src",
+            "text/x-chdr",
+            "text/x-sh",
+        }
 
         # override value using environment-variable
         maxlen = int(os.environ.get("GUI_CRAWLER_URL_LIMIT", "0")) or max_urls
@@ -346,27 +368,7 @@ class Crawler:
             content_type.startswith(ignored_start) for ignored_start in ["text/plain", "text/csv"]
         ):
             self.handle_skipped_reference(url, reason="content-type", message=content_type)
-        elif content_type in [
-            "application/x-rpm",
-            "application/x-deb",
-            "application/x-debian-package",
-            "application/x-gzip",
-            "application/x-msdos-program",
-            "application/x-msi",
-            "application/x-tgz",
-            "application/x-redhat-package-manager",
-            "application/x-pkg",
-            "application/x-tar",
-            "application/x-yaml; charset=utf-8",
-            "application/json",
-            "application/pdf",
-            "image/png",
-            "image/svg+xml",
-            "image/gif",
-            "text/x-chdr",
-            "text/x-c++src",
-            "text/x-sh",
-        ]:
+        elif content_type in self._ignored_content_types:
             self.handle_skipped_reference(url, reason="content-type", message=content_type)
         else:
             self.handle_error(url, error_type="UnknownContentType", message=content_type)

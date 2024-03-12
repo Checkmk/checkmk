@@ -496,9 +496,9 @@ _MAX_NUM_LABELS: Final = 8
 def _compute_num_labels(min_y: float, max_y: float) -> tuple[NumLabelRange, NumLabelRange]:
     min_num_labels = round(_MAX_NUM_LABELS * abs(min_y) / (abs(min_y) + abs(max_y)))
     if min_num_labels == 0:
-        return NumLabelRange(1, 2), NumLabelRange(1, 6)
-    if min_num_labels == _MAX_NUM_LABELS:
-        return NumLabelRange(1, 6), NumLabelRange(1, 2)
+        min_num_labels = 1
+    elif min_num_labels == _MAX_NUM_LABELS:
+        min_num_labels = _MAX_NUM_LABELS - 1
     return NumLabelRange(1, min_num_labels), NumLabelRange(1, _MAX_NUM_LABELS - min_num_labels)
 
 

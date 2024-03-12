@@ -14,7 +14,6 @@ aes-gcm = { version = "*", features = ["aes", "std"] }
 bytes = { version = "*" }
 anyhow = { version = "*" }
 clap = { version = "*", features = ["derive"] }
-http = { version = "*" }
 # We need either rustls-tls or native-tls-alpn to establish HTTP/2 connections.
 # Only native-tls supports TLS1.0/TLS1.1, while setting TLS1.3 as minimum version is only
 # supported by rustls.

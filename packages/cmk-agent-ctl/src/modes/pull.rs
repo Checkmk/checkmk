@@ -559,7 +559,7 @@ mod tests {
         fn test_socket_exclusive_reuse() {
             let socket_std = make_socket_std();
             let socket_exclusive = make_socket_exclusive();
-            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19901));
 
             let exclusive = socket_exclusive.bind(&addr);
             let a = socket_std.bind(&addr);
@@ -572,12 +572,12 @@ mod tests {
             {
                 let socket_exclusive = make_socket_exclusive();
                 let addr =
-                    SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+                    SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19902));
                 let exclusive = socket_exclusive.bind(&addr);
                 assert!(exclusive.is_ok());
             }
             let socket_exclusive = make_socket_exclusive();
-            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19902));
             let exclusive = socket_exclusive.bind(&addr);
             assert!(exclusive.is_ok());
         }

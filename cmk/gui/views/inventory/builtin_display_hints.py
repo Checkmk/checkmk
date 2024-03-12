@@ -1030,6 +1030,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "application",
                 "variant",
                 "top_level_suite_name",
+                "bottom_level_suite_name",
                 "test_name",
                 "test_item",
             ],
@@ -1037,6 +1038,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.synthetic_monitoring.tests:*.application": {"title": _l("Application")},
         ".software.applications.synthetic_monitoring.tests:*.variant": {"title": _l("Variant")},
         ".software.applications.synthetic_monitoring.tests:*.top_level_suite_name": {"title": _l("Top level suite")},
+        ".software.applications.synthetic_monitoring.tests:*.bottom_level_suite_name": {"title": _l("Bottom level suite")},
         ".software.applications.synthetic_monitoring.tests:*.test_name": {"title": _l("Test")},
         ".software.applications.synthetic_monitoring.tests:*.test_item": {"title": _l("Item")},
         ".software.applications.mobileiron.": {

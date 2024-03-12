@@ -389,7 +389,6 @@ test-unit-omdlib:
 	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
 		-T unit \
 		--config-file=pyproject.toml \
-		--import-mode=importlib \
 		--doctest-modules \
 		--override-ini="pythonpath=. omd/packages/omd/" \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \

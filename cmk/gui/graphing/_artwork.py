@@ -547,7 +547,7 @@ def _render_labels_from_api(
 ) -> Sequence[VerticalAxisLabel]:
     match min_y >= 0, max_y >= 0:
         case True, True:
-            labels = list(formatter.render_y_labels(max_y, NumLabelRange(4, _MAX_NUM_LABELS)))
+            labels = list(formatter.render_y_labels(max_y, NumLabelRange(3, _MAX_NUM_LABELS)))
         case True, False:
             raise ValueError((min_y, max_y))
         case False, True:
@@ -559,7 +559,7 @@ def _render_labels_from_api(
         case False, False:
             labels = [
                 Label(-1 * l.position, l.text)
-                for l in formatter.render_y_labels(abs(max_y), NumLabelRange(4, _MAX_NUM_LABELS))
+                for l in formatter.render_y_labels(abs(max_y), NumLabelRange(3, _MAX_NUM_LABELS))
             ]
 
     return sorted(

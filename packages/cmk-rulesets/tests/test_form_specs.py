@@ -41,9 +41,18 @@ def test_fixed_value_validation_fails() -> None:
         FixedValue(value=float("Inf"), title=Title("Test FixedValue"))
 
 
-def test_dictionary_ident_validation() -> None:
-    elements = {"element\abc": DictElement(parameter_form=FixedValue(value=None))}
-    with pytest.raises(ValueError, match="'element\x07bc' is not a valid Python identifier"):
+@pytest.mark.parametrize(
+    ["name"],
+    [
+        pytest.param("element\x07bc", id="invalid identifier"),
+        pytest.param("global", id="reserved identifier"),
+    ],
+)
+def test_dictionary_ident_validation(name: str) -> None:
+    elements = {name: DictElement(parameter_form=FixedValue(value=None))}
+    with pytest.raises(
+        ValueError, match=f"'{name}' is not a valid, non-reserved Python identifier"
+    ):
         Dictionary(elements=elements)
 
 
@@ -79,20 +88,47 @@ def test_cascading_single_choice_validation() -> None:
         )
 
 
-def test_multiple_choice_element_validation() -> None:
-    with pytest.raises(ValueError, match="'element\x07bc' is not a valid Python identifier"):
-        MultipleChoiceElement(name="element\abc", title=Title("Element ABC"))
+@pytest.mark.parametrize(
+    ["name"],
+    [
+        pytest.param("element\x07bc", id="invalid identifier"),
+        pytest.param("global", id="reserved identifier"),
+    ],
+)
+def test_multiple_choice_element_validation(name: str) -> None:
+    with pytest.raises(
+        ValueError, match=f"'{name}' is not a valid, non-reserved Python identifier"
+    ):
+        MultipleChoiceElement(name=name, title=Title("Element ABC"))
 
 
-def test_single_choice_element_validation() -> None:
-    with pytest.raises(ValueError, match="'element\x07bc' is not a valid Python identifier"):
-        SingleChoiceElement(name="element\abc", title=Title("Element ABC"))
+@pytest.mark.parametrize(
+    ["name"],
+    [
+        pytest.param("element\x07bc", id="invalid identifier"),
+        pytest.param("global", id="reserved identifier"),
+    ],
+)
+def test_single_choice_element_validation(name: str) -> None:
+    with pytest.raises(
+        ValueError, match=f"'{name}' is not a valid, non-reserved Python identifier"
+    ):
+        SingleChoiceElement(name=name, title=Title("Element ABC"))
 
 
-def test_cascading_single_choice_element_validation() -> None:
-    with pytest.raises(ValueError, match="'element\x07bc' is not a valid Python identifier"):
+@pytest.mark.parametrize(
+    ["name"],
+    [
+        pytest.param("element\x07bc", id="invalid identifier"),
+        pytest.param("global", id="reserved identifier"),
+    ],
+)
+def test_cascading_single_choice_element_validation(name: str) -> None:
+    with pytest.raises(
+        ValueError, match=f"'{name}' is not a valid, non-reserved Python identifier"
+    ):
         CascadingSingleChoiceElement(
-            name="element\abc",
+            name=name,
             title=Title("Element ABC"),
             parameter_form=FixedValue(value=None),
         )

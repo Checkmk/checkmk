@@ -6,10 +6,19 @@
 """FormSpecs that can be composed of other FormSpecs"""
 
 from dataclasses import dataclass
+from keyword import iskeyword
 from typing import Any, Generic, Mapping, Sequence
 
 from .._localize import Label, Message, Title
 from ._base import DefaultValue, FormSpec, InputHint, ModelT
+
+
+def _validate_name(name: str) -> None:
+    # if we move away from identifiers as strings in the future, we want existing identifiers to
+    # be compatible with that
+    # for example in the past there already were problems with importing "if.module"
+    if not name.isidentifier() or iskeyword(name):
+        raise ValueError(f"'{name}' is not a valid, non-reserved Python identifier")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -28,8 +37,7 @@ class CascadingSingleChoiceElement(Generic[ModelT]):
     """Configuration specification of this entry."""
 
     def __post_init__(self) -> None:
-        if not self.name.isidentifier():
-            raise ValueError(f"'{self.name}' is not a valid Python identifier")
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True, kw_only=True)  # type: ignore[misc]
@@ -116,8 +124,7 @@ class Dictionary(FormSpec[Mapping[str, object]]):
 
     def __post_init__(self) -> None:
         for key in self.elements:  # type: ignore[misc]
-            if not key.isidentifier():
-                raise ValueError(f"'{key}' is not a valid Python identifier")
+            _validate_name(key)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -162,8 +169,7 @@ class MultipleChoiceElement:
     """Human readable title that will be shown in the UI."""
 
     def __post_init__(self) -> None:
-        if not self.name.isidentifier():
-            raise ValueError(f"'{self.name}' is not a valid Python identifier")
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True, kw_only=True)

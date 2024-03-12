@@ -6,6 +6,7 @@
 import ast
 from dataclasses import dataclass
 from enum import auto, Enum
+from keyword import iskeyword
 from typing import ClassVar, Literal, Sequence, TypeVar
 
 from .._localize import Label, Message, Title
@@ -415,8 +416,8 @@ class SingleChoiceElement:
     """Human readable title that will be shown in the UI."""
 
     def __post_init__(self) -> None:
-        if not self.name.isidentifier():
-            raise ValueError(f"'{self.name}' is not a valid Python identifier")
+        if not self.name.isidentifier() or iskeyword(self.name):
+            raise ValueError(f"'{self.name}' is not a valid, non-reserved Python identifier")
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -442,7 +443,7 @@ class SingleChoice(FormSpec[str]):
     """Text displayed in front of the input field."""
     prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title("Please choose"))
     """Pre-selected choice.
-    
+
     If a DefaultValue is used, it must be one of the elements names.
     If an InputHint is used, its title will be shown as a placeholder in the input field, requiring
     the user to make a choice."""

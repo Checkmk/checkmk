@@ -144,7 +144,9 @@ def scan_parents_of(
         settings = {}
 
     if monitoring_host:
-        nagios_ip = config.lookup_ip_address(config_cache, monitoring_host, family=socket.AF_INET)
+        nagios_ip = config.lookup_ip_address(
+            config_cache, monitoring_host, family=socket.AddressFamily.AF_INET
+        )
     else:
         nagios_ip = None
 
@@ -156,7 +158,7 @@ def scan_parents_of(
     for host in hosts:
         console.verbose("%s " % host)
         try:
-            ip = config.lookup_ip_address(config_cache, host, family=socket.AF_INET)
+            ip = config.lookup_ip_address(config_cache, host, family=socket.AddressFamily.AF_INET)
             if ip is None:
                 raise RuntimeError()
             command = [
@@ -367,7 +369,9 @@ def _fill_ip_to_hostname_cache(
         if config_cache.is_active(hn) and config_cache.is_online(hn)
     }:
         try:
-            cache[config.lookup_ip_address(config_cache, host, family=socket.AF_INET)] = host
+            cache[
+                config.lookup_ip_address(config_cache, host, family=socket.AddressFamily.AF_INET)
+            ] = host
         except Exception:
             pass
 

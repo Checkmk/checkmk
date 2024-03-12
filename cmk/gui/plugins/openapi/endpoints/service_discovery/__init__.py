@@ -630,7 +630,26 @@ class BulkDiscovery(BaseSchema):
         example=["example", "sample"],
         description="A list of host names",
     )
-    mode = _discovery_mode(default_mode="new")
+    mode = fields.String(
+        description="""The mode of the bulk discovery action. The modes 'new', 'remove' and
+        'only_host_labels' modes give you granular control to monitor undecided services, add new
+        host labels and remove vanished services respectively. The mode 'fix_all' groups those
+        individual actions into one single mode. The 'tabula_rasa' and 'refresh' modes both perform
+        a complete refresh of the services and adds new host labels. Both modes perform the same
+        action and are kept for compatibility reasons. All modes will start a background job. The
+        corresponding user interface option for each discovery mode is shown
+        below.
+
+* `new` - Monitor unmonitored services and new host labels
+* `remove` - Remove vanished services
+* `fix_all` - Add unmonitored services and new host labels, remove vanished services
+* `tabula_rasa & refresh` - Refresh all services (tabula rasa), add new host labels
+* `only_host_labels` - Only discover new host labels
+        """,
+        enum=[a.value for a in APIDiscoveryAction],
+        example="refresh",
+        load_default="new",
+    )
     do_full_scan = fields.Boolean(
         required=False,
         description="The option whether to perform a full scan or not.",
@@ -669,11 +688,19 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     if job.is_active():
         return Response(status=409)
 
+    mode = body["mode"]
+    if mode == "tabula_rasa":
+        mode = "refresh"
+    elif mode == "only_host_labels":
+        mode = "only-host-labels"
+    elif mode == "fix_all":
+        mode = "fixall"
+
     hosts_to_discover = prepare_hosts_for_discovery(body["hostnames"])
     start_bulk_discovery(
         job,
         hosts_to_discover,
-        body["mode"],
+        mode,
         body["do_full_scan"],
         body["ignore_errors"],
         body["bulk_size"],

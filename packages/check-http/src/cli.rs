@@ -337,7 +337,7 @@ fn parse_regex_pattern(pattern: &str) -> Result<Regex, regex::Error> {
 mod tests {
     use super::*;
     use clap::CommandFactory;
-    use http::{HeaderName, HeaderValue};
+    use reqwest::header::{HeaderName, HeaderValue};
     use std::str::FromStr;
 
     fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {

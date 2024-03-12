@@ -305,6 +305,7 @@ CATALOG_TITLES: Final = {
     "virtual": "Virtualization",
     "pure_storage": "Pure Storage",
     "synthetic_monitoring": "Synthetic Monitoring",
+    "bazel_cache": "Bazel Remote Cache",
 }
 
 # TODO: Do we need a more generic place for this?

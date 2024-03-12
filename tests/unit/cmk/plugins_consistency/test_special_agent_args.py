@@ -15,6 +15,7 @@ from cmk.utils import password_store
 from cmk.base.server_side_calls import load_special_agents
 
 from cmk.plugins.alertmanager.special_agents import agent_alertmanager
+from cmk.plugins.bazel.lib import agent as agent_bazel
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
@@ -57,6 +58,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "aws_status": agent_aws_status,
     "azure": agent_azure,
     "azure_status": agent_azure_status,
+    "bazel_cache": agent_bazel,
     "bi": None,
     "cisco_meraki": agent_cisco_meraki,
     "cisco_prime": agent_cisco_prime,
@@ -246,6 +248,7 @@ REQUIRED_ARGUMENTS: Final[Mapping[str, list[str]]] = {
     "aws_status": [],
     "gcp_status": [],
     "pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
+    "bazel_cache": ["--host", "SERVER"],
 }
 
 

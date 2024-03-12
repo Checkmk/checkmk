@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 
 from omdlib.update import (
+    _restore_version_meta_dir,
+    _store_version_meta_dir,
     file_type,
     ManagedTypes,
     ManageUpdate,
@@ -374,3 +376,22 @@ def test_backup_prepare_next_run(tmp_path: Path) -> None:
             backup_dir = mu.backup_dir
             assert backup_dir.exists()
     assert not backup_dir.exists()
+
+
+def test_restore_version_meta_dir(tmp_path: Path) -> None:
+    site_dir = tmp_path / "site_dir"
+    site_dir.mkdir()
+    backup_dir = tmp_path / ".update_backup"
+    backup_dir.mkdir()
+    version_metadir = site_dir / ".version_meta"
+    version_metadir.mkdir()
+    version_file = version_metadir / "version"
+    random_file(version_file)
+    save = [read_all(p) for p in walk_in_DFS_order(version_metadir)]
+
+    _store_version_meta_dir(site_dir, backup_dir)
+    assert save == [read_all(p) for p in walk_in_DFS_order(version_metadir)]
+    version_file.unlink()
+    assert save != [read_all(p) for p in walk_in_DFS_order(version_metadir)]
+    _restore_version_meta_dir(site_dir, backup_dir)
+    assert save == [read_all(p) for p in walk_in_DFS_order(version_metadir)]

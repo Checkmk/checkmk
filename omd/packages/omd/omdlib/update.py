@@ -5,6 +5,7 @@
 
 # mypy: disallow-any-expr
 
+import contextlib
 import enum
 import os
 import shutil
@@ -20,6 +21,7 @@ from omdlib.version_info import VersionInfo
 
 
 def store(site_dir: Path, relpath: Path | str, backup_dir: Path) -> None:
+    # `store` is only valid on files, symlinks and empty dirs.
     source = site_dir / relpath
     destination = backup_dir / relpath
     match file_type(source):
@@ -110,6 +112,21 @@ def restore_managed(site_dir: Path, old_skel: Path, new_skel: Path, backup_dir: 
         restore(site_dir, Path(relpath), backup_dir)
 
 
+def _store_version_meta_dir(site_dir: Path, backup_dir: Path) -> None:
+    version_meta_dir = site_dir / ".version_meta"
+    if version_meta_dir.exists():
+        shutil.copytree(version_meta_dir, backup_dir / ".version_meta", symlinks=True)
+
+
+def _restore_version_meta_dir(site_dir: Path, backup_dir: Path) -> None:
+    version_meta_dir = site_dir / ".version_meta"
+    backup_version_meta_dir = backup_dir / ".version_meta"
+    with contextlib.suppress(FileNotFoundError):
+        shutil.rmtree(version_meta_dir)
+    if backup_version_meta_dir.exists():
+        shutil.copytree(backup_version_meta_dir, version_meta_dir, symlinks=True)
+
+
 HOOK_RELPATHS = [
     "etc/check_mk/multisite.d/liveproxyd.mk",
     "etc/apache/apache/listen-port.conf",
@@ -138,8 +155,7 @@ class ManageUpdate:
     def __init__(
         self, site_name: str, tmp_dir: str, site_dir: Path, old_skel: Path, new_skel: Path
     ) -> None:
-        backup_dir = site_dir / ".update_backup"
-        self.backup_dir = backup_dir
+        self.backup_dir = site_dir / ".update_backup"
         self.old_skel = old_skel
         self.new_skel = new_skel
         self.site_dir = site_dir
@@ -160,6 +176,7 @@ class ManageUpdate:
             )
         backup_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
         store(self.site_dir, "version", self.backup_dir)
+        _store_version_meta_dir(self.site_dir, self.backup_dir)
         for relpath in HOOK_RELPATHS:
             store(self.site_dir, relpath, self.backup_dir)
         return self
@@ -182,6 +199,7 @@ class ManageUpdate:
                 unmount_tmpfs_without_save(self.site_name, self.tmp_dir, False, False)
             for relpath in HOOK_RELPATHS:
                 restore(self.site_dir, relpath, self.backup_dir)
+            _restore_version_meta_dir(self.site_dir, self.backup_dir)
             restore(self.site_dir, "version", self.backup_dir)
             restore_managed(self.site_dir, self.old_skel, self.new_skel, self.backup_dir)
         shutil.rmtree(self.backup_dir)

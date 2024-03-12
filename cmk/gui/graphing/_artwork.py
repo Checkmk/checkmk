@@ -698,8 +698,8 @@ def _compute_graph_v_axis(
         rendered_labels = _render_labels_from_api(
             _make_formatter(formatter_ident, unit["symbol"]),
             mirrored,
-            min_y=v_axis_min_max.real_range[0],
-            max_y=v_axis_min_max.real_range[1],
+            min_y=v_axis_min_max.min_value,
+            max_y=v_axis_min_max.max_value,
         )
         max_label_length = max(len(l.text) for l in rendered_labels)
         graph_unit = None

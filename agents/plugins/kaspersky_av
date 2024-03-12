@@ -15,30 +15,40 @@ KAV4FS="kav4fs"
 KESL="kesl"
 
 # BEGIN COMMON PLUGIN CODE
-# check that no users other than root that can change the file
-root_owned() {
-    read -r permissions _ owner group _ <<EOF
-$1
-EOF
+
+# check that no users other than root can change the file
+only_root_can_modify() {
+    permissions=$1
+    owner=$2
+    group=$3
 
     group_write_perm=$(echo "$permissions" | cut -c 6)
     other_write_perm=$(echo "$permissions" | cut -c 9)
 
-    # the file is either owned by root user and root group and other users don't
-    # have write permissions
-    if [ "$owner" = "root" ] && [ "$group" = "root" ] && [ "$other_write_perm" = "-" ]; then
-        true
-        return
+    if [ "$owner" != "root" ] || [ "$other_write_perm" != "-" ]; then
+        return 1
     fi
 
-    # or it's is owned by root and neither the group nor other users have write permissions
-    if [ "$owner" = "root" ] && [ "$group_write_perm" = "-" ] && [ "$other_write_perm" = "-" ]; then
-        true
-        return
-    fi
-
-    false
+    [ "$group" = "root" ] || [ "$group_write_perm" = "-" ]
 }
+
+get_binary_owner() {
+    BINARY_PATH=$1
+    stat -c '%U' "${BINARY_PATH}"
+}
+
+get_binary_execution_mode() {
+    BINARY_PATH=$1
+    BINARY_USER=$2
+
+    # if the executable belongs to someone besides root, do not execute it as root
+    if [ "$(whoami)" = "root" ] && ! only_root_can_modify "$(stat -c '%A' "$BINARY_PATH")" "$(stat -c '%U' "$BINARY_PATH")" "$(stat -c '%G' "$BINARY_PATH")"; then
+        echo "su ${BINARY_USER} -c"
+        return
+    fi
+    echo "bash -c"
+}
+
 # END COMMON PLUGIN CODE
 
 run() {
@@ -46,7 +56,7 @@ run() {
     control="/opt/kaspersky/$suite/bin/$suite-control"
 
     [ -x "$(command -v "$control")" ] || return
-    root_owned "$(ls -l "$control")" || return
+    only_root_can_modify "$(stat -c '%A' "$control")" "$(stat -c '%U' "$control")" "$(stat -c '%G' "$control")" || return
 
     if [ "$suite" = "$KAV4FS" ]; then
         echo "<<<kaspersky_av_updates:sep(58)>>>"

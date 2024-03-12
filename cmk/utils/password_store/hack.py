@@ -20,6 +20,7 @@ HACK_AGENTS = {
     # Make sure to have *all* special agent plugins listed here, so we
     # can test for it
     "azure_status": False,  # needs no secret
+    "bazel_cache": True,
     "bi": False,  # needs no secret
     "cisco_meraki": True,
     "cisco_prime": True,
@@ -67,7 +68,6 @@ def _bail_out(s: str) -> NoReturn:
 def resolve_password_hack(
     input_argv: Iterable[str], password_lookup: Callable[[Path, str], str]
 ) -> list[str]:
-
     argv = list(input_argv)
 
     if len(argv) < 2:
@@ -138,7 +138,6 @@ def apply_password_hack(
         try:
             password = passwords[pw_ident]
         except KeyError:
-
             logger(f'The stored password "{pw_ident}"{log_label} does not exist (anymore).')
             password = "%%%"
 

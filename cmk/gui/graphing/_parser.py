@@ -78,12 +78,11 @@ class NotationFormatter:
         value_floor = math.floor(value)
         if value == value_floor:
             return value
-        fractional_part = value - value_floor
         digits = self.precision.digits
         if isinstance(self.precision, metrics.AutoPrecision):
-            if exponent := abs(math.ceil(math.log(fractional_part, 10))):
+            if exponent := abs(math.ceil(math.log(value - value_floor, 10))):
                 digits = max(exponent + 1, self.precision.digits)
-        return value_floor + round(fractional_part, min(digits, _MAX_DIGITS))
+        return round(value, min(digits, _MAX_DIGITS))
 
     def _format(self, value: int | float, suffix: Suffix) -> Formatted:
         if value < 0:

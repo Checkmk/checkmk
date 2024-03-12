@@ -6,28 +6,37 @@
 # shellcheck source=agents/plugins/kaspersky_av
 MK_SOURCE_ONLY=true source "${UNIT_SH_PLUGINS_DIR}/kaspersky_av"
 
-test_root_owned() {
+test_only_root_can_modify() {
 
     # owned by root:root, other users can't write
-    file_info1="-rwxrwxr-x 1 root root 0 Jan  1 00:00 /opt/kaspersky/kav4fs/bin/kav4fs-control"
-    assertTrue "root_owned \"$file_info1\""
+    permissions1="-rwxrwxr-x"
+    owner1="root"
+    group1="root"
+    assertTrue "only_root_can_modify \"$permissions1\" \"$owner1\" \"$group1\""
 
     # owned by root:root, other users can write
-    file_info2="-rwxrwxrwx 1 root root 0 Jan  1 00:00 /opt/kaspersky/kav4fs/bin/kav4fs-control"
-    assertFalse "root_owned \"$file_info2\""
+    permissions2="-rwxrwxrwx"
+    owner2="root"
+    group2="root"
+    assertFalse "only_root_can_modify \"$permissions2\" \"$owner2\" \"$group2\""
 
     # owned by root:test, group can write
-    file_info3="-rwxrwxr-x 1 root test 0 Jan  1 00:00 /opt/kaspersky/kav4fs/bin/kav4fs-control"
-    assertFalse "root_owned \"$file_info3\""
+    permissions3="-rwxrwxr-x"
+    owner3="root"
+    group3="test"
+    assertFalse "only_root_can_modify \"$permissions3\" \"$owner3\" \"$group3\""
 
     # owned by root:test, group can't write
-    file_info4="-rwxr-xr-x 1 root test 0 Jan  1 00:00 /opt/kaspersky/kav4fs/bin/kav4fs-control"
-    assertTrue "root_owned \"$file_info4\""
+    permissions4="-rwxr-xr-x"
+    owner4="root"
+    group4="test"
+    assertTrue "only_root_can_modify \"$permissions4\" \"$owner4\" \"$group4\""
 
     # not owned by root
-    file_info5="-rwxr-xr-x 1 test test 0 Jan  1 00:00 /opt/kaspersky/kav4fs/bin/kav4fs-control"
-    root_owned "$file_info5"
-    assertFalse "root_owned \"$file_info5\""
+    permissions5="-rwxr-xr-x "
+    owner5="test"
+    group5="test"
+    assertFalse "only_root_can_modify \"$permissions5\" \"$owner5\" \"$group5\""
 
 }
 

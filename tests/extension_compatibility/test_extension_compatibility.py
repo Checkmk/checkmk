@@ -327,6 +327,7 @@ def _remove_extension(site: Site, name: str) -> None:
 
 
 def test_package_list_up_to_date() -> None:
+    pytest.skip("This depends on external factors. Leave it in to manually test it occasionally.")
     parsed_version = parse_check_mk_version(__version__)
     extensions = _compatible_extensions_sorted_by_n_downloads(parsed_version)
 

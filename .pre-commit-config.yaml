@@ -59,6 +59,12 @@ repos:
             entry: scripts/run-black
             language: script
             types: [file, python]
+          - id: bandit
+            name: Run bandit
+            # -l level low -ll = level medium -lll level high
+            entry: scripts/run-pipenv run bandit --config bandit.yaml -ll
+            language: script
+            types: [file, python]
           - id: omd-python-modules
             name: Check Python modules in OMD
             entry: scripts/check-omd-python-modules

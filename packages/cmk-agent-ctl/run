@@ -142,6 +142,10 @@ parse_options() {
 # TODO: This needs some serious massaging, some stuff probably don't even belong
 # here, it should probably live in some Gerrit/Jenkins scripts and/or Makefiles.
 run_setup_environment() {
+    echo "============================================================ run_setup_environment START"
+    env | sort
+    echo "============================================================"
+    set -x
     REPO_DIR="$(realpath ../..)"
 
     # When executed via "make deb", e.g. during local builds, these are set and
@@ -165,6 +169,8 @@ $RUSTFLAGS \
 --remap-path-prefix=${REPO_DIR}=/builddir \
 --remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo-home"
     export RUSTFLAGS
+    set +x
+    echo "============================================================ run_setup_environment END"
 }
 
 main() {

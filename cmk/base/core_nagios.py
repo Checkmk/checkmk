@@ -1311,18 +1311,18 @@ if '-d' in sys.argv:
         for node in config_cache.nodes(hostname):
             if AddressFamily.IPv4 in ConfigCache.address_family(node):
                 needed_ipaddresses[node] = config.lookup_ip_address(
-                    config_cache, node, family=socket.AF_INET
+                    config_cache, node, family=socket.AddressFamily.AF_INET
                 )
 
             if AddressFamily.IPv6 in ConfigCache.address_family(node):
                 needed_ipv6addresses[node] = config.lookup_ip_address(
-                    config_cache, node, family=socket.AF_INET6
+                    config_cache, node, family=socket.AddressFamily.AF_INET6
                 )
 
         try:
             if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
                 needed_ipaddresses[hostname] = config.lookup_ip_address(
-                    config_cache, hostname, family=socket.AF_INET
+                    config_cache, hostname, family=socket.AddressFamily.AF_INET
                 )
         except Exception:
             pass
@@ -1330,19 +1330,19 @@ if '-d' in sys.argv:
         try:
             if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
                 needed_ipv6addresses[hostname] = config.lookup_ip_address(
-                    config_cache, hostname, family=socket.AF_INET6
+                    config_cache, hostname, family=socket.AddressFamily.AF_INET6
                 )
         except Exception:
             pass
     else:
         if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
             needed_ipaddresses[hostname] = config.lookup_ip_address(
-                config_cache, hostname, family=socket.AF_INET
+                config_cache, hostname, family=socket.AddressFamily.AF_INET
             )
 
         if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
             needed_ipv6addresses[hostname] = config.lookup_ip_address(
-                config_cache, hostname, family=socket.AF_INET6
+                config_cache, hostname, family=socket.AddressFamily.AF_INET6
             )
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)

@@ -37,7 +37,9 @@ class AddressFamily(enum.IntFlag):
     DUAL_STACK = IPv4 | IPv6
 
     @classmethod
-    def from_socket(cls, /, af: socket.AddressFamily) -> AddressFamily:
+    def from_socket(
+        cls, /, af: socket.AddressFamily
+    ) -> Literal[AddressFamily.IPv4, AddressFamily.IPv6]:
         match af:
             case socket.AF_INET:
                 return cls.IPv4

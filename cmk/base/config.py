@@ -1787,7 +1787,7 @@ def lookup_ip_address(
     config_cache: ConfigCache,
     host_name: HostName | HostAddress,
     *,
-    family: socket.AddressFamily | AddressFamily | None = None,
+    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
 ) -> HostAddress | None:
     if ConfigCache.address_family(host_name) is AddressFamily.NO_IP:
         # TODO(ml): [IPv6] Silently override the `family` parameter.  Where
@@ -1796,15 +1796,12 @@ def lookup_ip_address(
         return None
     if family is None:
         family = config_cache.default_address_family(host_name)
-    if isinstance(family, socket.AddressFamily):
-        family = AddressFamily.from_socket(family)
     return ip_lookup.lookup_ip_address(
         host_name=host_name,
         family=family,
-        # TODO(ml): [IPv6] What about dual stack?
-        configured_ip_address=(ipaddresses if AddressFamily.IPv4 in family else ipv6addresses).get(
-            host_name
-        ),
+        configured_ip_address=(
+            ipaddresses if family is socket.AddressFamily.AF_INET else ipv6addresses
+        ).get(host_name),
         simulation_mode=simulation_mode,
         is_snmp_usewalk_host=(
             config_cache.get_snmp_backend(host_name) is SNMPBackendEnum.STORED_WALK

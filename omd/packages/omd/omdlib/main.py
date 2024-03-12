@@ -2967,7 +2967,7 @@ def main_update(  # pylint: disable=too-many-branches
         if process.returncode != 0:
             sys.exit(process.returncode)
         sys.stdout.write(
-            "\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
+            f"\nCompleted verifying site configuration. Your site now has version {to_version}.\n"
         )
 
     call_scripts(

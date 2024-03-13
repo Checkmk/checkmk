@@ -1685,12 +1685,14 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
         pytest.param(
             api_v1.form_specs.SimpleLevels(
                 title=api_v1.Title("Lower levels"),
+                help_text=api_v1.Help("This is an explanation for lower levels"),
                 form_spec_template=api_v1.form_specs.Integer(),
                 level_direction=api_v1.form_specs.LevelDirection.LOWER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
             ),
             legacy_valuespecs.CascadingDropdown(
                 title=_("Lower levels"),
+                help=_("This is an explanation for lower levels"),
                 choices=[
                     _get_legacy_no_levels_choice(),
                     _get_legacy_fixed_levels_choice("below"),
@@ -1755,7 +1757,14 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
         pytest.param(
             api_v1.form_specs.Levels[int](
                 title=api_v1.Title("Upper levels"),
-                form_spec_template=api_v1.form_specs.Integer(unit_symbol="GiB"),
+                help_text=api_v1.Help("This is an explanation for upper levels"),
+                form_spec_template=api_v1.form_specs.Integer(
+                    title=api_v1.Title("I will be ignored"),
+                    help_text=api_v1.Help("This is an explanation for a specific value"),
+                    label=api_v1.Label("This is a label"),
+                    unit_symbol="GiB",
+                    prefill=api_v1.form_specs.DefaultValue(-1111),
+                ),
                 level_direction=api_v1.form_specs.LevelDirection.UPPER,
                 prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
                 predictive=api_v1.form_specs.PredictiveLevels(
@@ -1767,6 +1776,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
             ),
             legacy_valuespecs.CascadingDropdown(
                 title=_("Upper levels"),
+                help=_("This is an explanation for upper levels"),
                 choices=(
                     _get_legacy_no_levels_choice(),
                     (
@@ -1778,11 +1788,15 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                     title=_("Warning at"),
                                     default_value=1,
                                     unit="GiB",
+                                    help=_("This is an explanation for a specific value"),
+                                    label=_("This is a label"),
                                 ),
                                 legacy_valuespecs.Integer(
                                     title=_("Critical at"),
                                     default_value=2,
                                     unit="GiB",
+                                    help=_("This is an explanation for a specific value"),
+                                    label=_("This is a label"),
                                 ),
                             ],
                         ),
@@ -1836,11 +1850,19 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                                                 title=_("Warning above"),
                                                                 unit="GiB",
                                                                 default_value=5,
+                                                                help=_(
+                                                                    "This is an explanation for a specific value"
+                                                                ),
+                                                                label=_("This is a label"),
                                                             ),
                                                             legacy_valuespecs.Integer(
                                                                 title=_("Critical above"),
                                                                 unit="GiB",
                                                                 default_value=10,
+                                                                help=_(
+                                                                    "This is an explanation for a specific value"
+                                                                ),
+                                                                label=_("This is a label"),
                                                             ),
                                                         ],
                                                         help=_(
@@ -1910,10 +1932,18 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                                     legacy_valuespecs.Integer(
                                                         title="Warning level is at least",
                                                         unit="GiB",
+                                                        help=_(
+                                                            "This is an explanation for a specific value"
+                                                        ),
+                                                        label=_("This is a label"),
                                                     ),
                                                     legacy_valuespecs.Integer(
                                                         title="Critical level is at least",
                                                         unit="GiB",
+                                                        help=_(
+                                                            "This is an explanation for a specific value"
+                                                        ),
+                                                        label=_("This is a label"),
                                                     ),
                                                 ],
                                             ),

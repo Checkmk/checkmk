@@ -323,18 +323,16 @@ abstract class NotationFormatter {
         if (value == value_floor) {
             return value;
         }
-        const fractional_part = value - value_floor;
         let digits = this.precision.digits;
         if (this.precision instanceof AutoPrecision) {
-            const exponent = Math.abs(Math.ceil(Math.log10(fractional_part)));
+            const exponent = Math.abs(
+                Math.ceil(Math.log10(value - value_floor))
+            );
             if (exponent > 0) {
                 digits = Math.max(exponent + 1, this.precision.digits);
             }
         }
-        return (
-            value_floor +
-            parseFloat(fractional_part.toFixed(Math.min(digits, MAX_DIGITS)))
-        );
+        return parseFloat(value.toFixed(Math.min(digits, MAX_DIGITS)));
     }
 
     render(value: number): string {

@@ -71,20 +71,17 @@ def test_needed_packages(checkmk: docker.models.containers.Container) -> None:
 
 
 def test_start_cmkadmin_password(client: docker.DockerClient) -> None:
+    htpasswd = "/omd/sites/cmk/etc/htpasswd"
+    cmk_admin = "cmkadmin"
+    cmk_password = "blabla"
     with start_checkmk(
         client,
         environment={
-            "CMK_PASSWORD": "blabla",
+            "CMK_PASSWORD": cmk_password,
         },
     ) as c:
-        assert (
-            c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin", "blabla"])[0]
-            == 0
-        )
-        assert (
-            c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin", "blub"])[0]
-            == 3
-        )
+        assert c.exec_run(["htpasswd", "-vb", htpasswd, cmk_admin, cmk_password])[0] == 0
+        assert c.exec_run(["htpasswd", "-vb", htpasswd, cmk_admin, f"!{cmk_password}"])[0] == 3
 
 
 def test_start_custom_site_id(client: docker.DockerClient) -> None:

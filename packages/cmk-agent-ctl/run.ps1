@@ -23,7 +23,7 @@ if ((get-host).version.major -lt 7) {
 $package_name = Split-Path -Path (Get-Location) -Leaf
 
 $exe_name = "$package_name.exe"
-$root_dir = "$pwd/../.."
+$root_dir = & git rev-parse --show-toplevel
 $work_dir = "$pwd"
 $arte = "$root_dir/artefacts"
 #set target=x86_64-pc-windows-mscvc # 64 bit not used now

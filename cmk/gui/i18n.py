@@ -126,7 +126,7 @@ def get_languages() -> list[tuple[str, str]]:
             # directory:" when directory not exists
             pass
 
-    return sorted(list(languages), key=lambda x: x[1])
+    return sorted(list(languages), key=lambda x: (x[0] not in ["en", "de"], x[1]))
 
 
 def _unlocalize() -> None:

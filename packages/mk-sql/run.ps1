@@ -30,7 +30,6 @@ $arte = "$root_dir/artefacts"
 $cargo_target = "i686-pc-windows-msvc"
 $exe_dir = "target/$cargo_target/release"
 
-
 $packBuild = $false
 $packClippy = $false
 $packFormat = $false
@@ -189,6 +188,10 @@ try {
         Invoke-Cargo "clean"
     }
     if ($packBuild) {
+        $cwd= Get-Location
+        $target_dir= Join-Path -Path "$cwd" -ChildPath "target/$cargo_target"
+        Write-Host "Killing processes in $target_dir" -ForegroundColor White
+        Get-Process | Where-Object { $_.path  -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
         &cargo build --release --target $cargo_target
         if ($lastexitcode -ne 0) {
             Write-Error "Failed to build $package_name with code $lastexitcode" -ErrorAction Stop

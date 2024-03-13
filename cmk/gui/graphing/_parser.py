@@ -193,7 +193,7 @@ class SIFormatter(NotationFormatter):
         return Formatted(value, Suffix("", self.symbol))
 
     def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
-        exponent = math.floor(math.log(value, 10))
+        exponent = math.floor(round(math.log(value, 10)))
         for exp, power, prefix in (
             (24, 8, "Y"),
             (21, 7, "Z"),

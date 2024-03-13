@@ -5973,6 +5973,74 @@ class Dictionary(ValueSpec[DictionaryModel]):
         else:
             self._render_input_normal(varprefix, value, two_columns=self._columns == 2)
 
+    def _render_input_normal_row(
+        self,
+        varprefix: str,
+        value: DictionaryModel,
+        two_columns: bool,
+        param: str,
+        vs: ValueSpec,
+    ) -> None:
+        html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
+        html.open_td(class_="dictleft")
+
+        div_id = varprefix + "_d_" + param
+        vp = varprefix + "_p_" + param
+        colon_printed = False
+        if self._optional_keys and param not in self._required_keys:
+            checkbox_varname = vp + "_USE"
+            visible = html.get_checkbox(checkbox_varname)
+            if visible is None:
+                visible = param in value
+            label = vs.title()
+            if two_columns:
+                assert isinstance(label, str)
+                label += ":"
+                colon_printed = True
+            html.checkbox(
+                checkbox_varname,
+                visible,
+                label=label,
+                onclick="cmk.valuespecs.toggle_option(this, %s)" % json.dumps(div_id),
+            )
+        else:
+            visible = True
+            if vs.title():
+                html.write_text(" ")
+                html.write_text(vs.title())
+            # two_columns are used for space efficiency in very few places like e.g. filters
+            # where it is clear from the context if values are required or not. Therefore, we
+            # dont add a required label in this case.
+            if not two_columns and not vs.allow_empty():
+                html.span(_(" (required)"), class_="required")
+
+        if two_columns:
+            if vs.title() and not colon_printed:
+                html.write_text(":")
+            html.help(vs.help())
+            html.close_td()
+            html.open_td(class_="dictright")
+        else:
+            html.br()
+
+        html.open_div(
+            id_=div_id,
+            class_=["dictelement"] + (["indent"] if self._indent and not two_columns else []),
+            style="display:none;" if not visible else None,
+        )
+
+        if not two_columns:
+            html.help(vs.help())
+        # Remember: in complain mode we do not render 'value' (the default value),
+        # but re-display the values from the HTML variables. We must not use 'value'
+        # in that case.
+        the_value = value.get(param, vs.default_value()) if isinstance(value, dict) else None
+        vs.render_input(vp, the_value)
+        html.close_div()
+
+        html.close_td()
+        html.close_tr()
+
     def _render_input_normal(
         self, varprefix: str, value: DictionaryModel, two_columns: bool
     ) -> None:
@@ -5980,66 +6048,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue
-
-            html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
-            html.open_td(class_="dictleft")
-
-            div_id = varprefix + "_d_" + param
-            vp = varprefix + "_p_" + param
-            colon_printed = False
-            if self._optional_keys and param not in self._required_keys:
-                checkbox_varname = vp + "_USE"
-                visible = html.get_checkbox(checkbox_varname)
-                if visible is None:
-                    visible = param in value
-                label = vs.title()
-                if two_columns:
-                    assert isinstance(label, str)
-                    label += ":"
-                    colon_printed = True
-                html.checkbox(
-                    checkbox_varname,
-                    visible,
-                    label=label,
-                    onclick="cmk.valuespecs.toggle_option(this, %s)" % json.dumps(div_id),
-                )
-            else:
-                visible = True
-                if vs.title():
-                    html.write_text(" ")
-                    html.write_text(vs.title())
-                # two_columns are used for space efficiency in very few places like e.g. filters
-                # where it is clear from the context if values are required or not. Therefore, we
-                # dont add a required label in this case.
-                if not two_columns and not vs.allow_empty():
-                    html.span(_(" (required)"), class_="required")
-
-            if two_columns:
-                if vs.title() and not colon_printed:
-                    html.write_text(":")
-                html.help(vs.help())
-                html.close_td()
-                html.open_td(class_="dictright")
-            else:
-                html.br()
-
-            html.open_div(
-                id_=div_id,
-                class_=["dictelement"] + (["indent"] if self._indent and not two_columns else []),
-                style="display:none;" if not visible else None,
-            )
-
-            if not two_columns:
-                html.help(vs.help())
-            # Remember: in complain mode we do not render 'value' (the default value),
-            # but re-display the values from the HTML variables. We must not use 'value'
-            # in that case.
-            the_value = value.get(param, vs.default_value()) if isinstance(value, dict) else None
-            vs.render_input(vp, the_value)
-            html.close_div()
-
-            html.close_td()
-            html.close_tr()
+            self._render_input_normal_row(varprefix, value, two_columns, param, vs)
         html.close_table()
 
     def _render_input_form(

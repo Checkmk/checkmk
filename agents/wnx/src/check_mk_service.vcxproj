@@ -147,10 +147,12 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>echo "prebuild"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>pause 'aaaaaa'</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <Manifest>
       <AdditionalManifestFiles>$(SolutionDir)\check_mk.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -185,10 +187,12 @@
       </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>echo "prebuild"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>pause 'aaaaaa'</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <Manifest>
       <AdditionalManifestFiles>$(SolutionDir)\check_mk.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -222,14 +226,16 @@
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;userenv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>echo "prebuild"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
       </Command>
     </PostBuildEvent>
     <CustomBuildStep>
-      <Command>pause 'aaaaaa'</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <Manifest>
       <AdditionalManifestFiles>$(SolutionDir)\check_mk.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>
@@ -263,14 +269,16 @@
       <AdditionalDependencies>../build/engine\$(Platform)\$(Configuration)\engine.lib;userenv.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>echo "prebuild"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
       </Command>
     </PostBuildEvent>
     <CustomBuildStep>
-      <Command>pause 'aaaaaa'</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <Manifest>
       <AdditionalManifestFiles>$(SolutionDir)\check_mk.manifest %(AdditionalManifestFiles)</AdditionalManifestFiles>

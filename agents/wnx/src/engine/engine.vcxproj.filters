@@ -532,9 +532,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="unpack_packs.cmd">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="..\..\test_files\config\check_mk.example.ini">
       <Filter>data</Filter>
     </None>

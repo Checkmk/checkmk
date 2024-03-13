@@ -1549,7 +1549,7 @@ def make_edit_form_page_menu(
         dropdowns=[
             PageMenuDropdown(
                 name=dropdown_name,
-                title=type_title.title(),
+                title=type_title.capitalize(),
                 topics=[
                     PageMenuTopic(
                         title=_("Actions"),

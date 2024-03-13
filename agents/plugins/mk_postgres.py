@@ -1264,7 +1264,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
             pg_database, pg_port, pg_version = parse_env_file(env_file)
             instances.append(
                 {
-                    "name": instance_name,
+                    "name": instance_name.strip(),
                     "pg_user": pg_user.strip(),
                     "pg_passfile": pg_passfile.strip(),
                     "pg_database": pg_database,
@@ -1313,6 +1313,7 @@ def main(argv=None):
         )
         with open(postgres_cfg_path) as opened_file:
             postgres_cfg = opened_file.readlines()
+        postgres_cfg = [ensure_str(el) for el in postgres_cfg]
         dbuser, pg_binary_path, instances = parse_postgres_cfg(postgres_cfg, helper.get_conf_sep())
     except Exception:
         _, e = sys.exc_info()[:2]  # python2 and python3 compatible exception logging

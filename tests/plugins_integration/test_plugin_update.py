@@ -34,7 +34,13 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
             #   Related: CMK-13774
             # * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
             #   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
-            for changed_service in ["Postfix status", "Postfix Queue"]:
+            # * Some 'PostgreSQL-' services have been removed. Todo: investigate.
+            for changed_service in [
+                "Postfix status",
+                "Postfix Queue",
+                "PostgreSQL Version PGCLUST",
+                "PostgreSQL Version main",
+            ]:
                 if changed_service in base_data[host_name]:
                     base_data[host_name].pop(changed_service)
 

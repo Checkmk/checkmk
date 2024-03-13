@@ -72,7 +72,6 @@ goto :end
 
 :watest_build
 if not "%int_arg_build%" == "1" powershell Write-Host "Skipped build watest" -Foreground Yellow & goto :eof
-call scripts\unpack_packs.cmd
 make install_extlibs || ( powershell Write-Host "Failed to install packages" -Foreground Red & call :halt 33 )
 call build_watest.cmd
 if errorlevel 1 powershell write-Host "Build watest FAIL!" -Foreground Red & call :halt 19

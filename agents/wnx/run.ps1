@@ -142,6 +142,20 @@ function Invoke-CheckApp( [String]$title, [String]$cmdline ) {
     }
 }
 
+function Add-HashLine($file_to_hash, $out_file) {
+    Write-Host "$file_to_hash is to be hashed to $out_file"
+
+    try {
+        $file_to_hash_name = Get-ChildItem -Path $file_to_hash | Select-Object Name -ExpandProperty Name
+        Add-Content -Path $out_file -Value ($file_to_hash_name + " ") -NoNewLine
+        Get-FileHash $file_to_hash -Algorithm SHA256 -ErrorAction Stop | Select-Object Hash -ExpandProperty Hash | Add-Content -Path $out_file
+    }
+    catch {
+        Write-Host "Failed to hash $file_to_hash with error $_" -ForegroundColor Red
+    }
+}
+
+
 function Get-Version {
     $first_line = Get-Content -Path "include\common\wnx_version.h" -TotalCount 1
     if ($first_line.Substring(0, 29) -eq "#define CMK_WIN_AGENT_VERSION") {
@@ -393,7 +407,7 @@ function Start-BinarySigning {
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Error Signing, error code is $LASTEXITCODE" -ErrorAction Stop
         }
-        & ./scripts/add_hash_line.ps1 $file $hash_file
+        Add-HashLine $file $hash_file
 
     }
     Write-Host "Success binary signing" -foreground Green
@@ -465,7 +479,7 @@ function Start-MsiSigning {
         Write-Host "Failed sign MSI " $LASTEXITCODE -foreground Red
         return
     }
-    & "./scripts/add_hash_line.ps1" $arte/check_mk_agent.msi $hash_file
+    Add-HashLine $arte/check_mk_agent.msi $hash_file
     Invoke-Detach $argSign
     & ./scripts/call_signing_tests.cmd
     if ($LASTEXITCODE -ne 0) {

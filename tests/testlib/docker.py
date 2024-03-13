@@ -306,7 +306,7 @@ def checkmk_docker_automation_secret(
 ) -> str:
     """Return the automation secret for a Checkmk docker instance."""
     secret_rc, secret_output = checkmk.exec_run(
-        f"cat '/omd/sites/{site_id}/var/check_mk/web/{api_user}/{api_user}.secret'"
+        f"cat '/omd/sites/{site_id}/var/check_mk/web/{api_user}/automation.secret'"
     )
     assert secret_rc == 0
 

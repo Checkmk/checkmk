@@ -29983,7 +29983,7 @@ msgstr "Initiateur"
 msgid "Inject JavaScript profiling code"
 msgstr ""
 
-msgid "Inject frontend_vue files via vite client"
+msgid "Inject cmk-frontend-vue files via vite client"
 msgstr ""
 
 msgid "Inline SNMP"

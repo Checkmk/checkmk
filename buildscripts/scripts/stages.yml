@@ -186,7 +186,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/unixcat/' || true"
 
     - NAME: CHANGED_FRONTEND_VUE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/frontend_vue/' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-frontend-vue/' || true"
 
 STAGES:
     - NAME: 'Python Typing'
@@ -522,12 +522,12 @@ STAGES:
       TEXT_ON_SKIP: 'No cmk-werks package files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
 
-    - NAME: 'Package frontend_vue'
+    - NAME: 'Package cmk-frontend-vue'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FRONTEND_VUE_FILES,CHANGED_NPM_NODE_SETUP
-      DIR: 'packages/frontend_vue'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/frontend_vue.txt"
-      TEXT_ON_SKIP: 'No frontend_vue files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/frontend_vue.txt"
+      DIR: 'packages/cmk-frontend-vue'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-frontend-vue.txt"
+      TEXT_ON_SKIP: 'No cmk-frontend-vue files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend-vue.txt"
 
     - NAME: 'Package mk-sql'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_MK_SQL_FILES

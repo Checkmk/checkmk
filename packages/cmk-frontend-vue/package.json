@@ -1,5 +1,5 @@
 {
-  "name": "frontend_vue",
+  "name": "cmk-frontend-vue",
   "version": "0.0.0",
   "private": true,
   "type": "module",

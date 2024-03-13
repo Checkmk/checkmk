@@ -134,8 +134,8 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVA
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 frontend-vue:
-	cd packages/frontend_vue && ./run
-	cp packages/frontend_vue/dist/assets/vue_min.js* web/htdocs/js/
+	cd packages/cmk-frontend-vue && ./run
+	cp packages/cmk-frontend-vue/dist/assets/vue_min.js* web/htdocs/js/
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
@@ -313,7 +313,7 @@ what-gerrit-makes:
 
 format-js:
 	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{{enterprise/web,web}/htdocs/js/**/,}*.{js,ts,vue}"
-	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "packages/frontend_vue/src/**/*.{js,ts,vue}"
+	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "packages/cmk-frontend-vue/src/**/*.{js,ts,vue}"
 
 format-css:
 	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "web/htdocs/themes/**/*.scss"

@@ -5987,12 +5987,13 @@ class Dictionary(ValueSpec[DictionaryModel]):
         div_id = varprefix + "_d_" + param
         vp = varprefix + "_p_" + param
         colon_printed = False
+        label = vs.title()
+        is_required_plain_checkbox = False
         if self._optional_keys and param not in self._required_keys:
             checkbox_varname = vp + "_USE"
             visible = html.get_checkbox(checkbox_varname)
             if visible is None:
                 visible = param in value
-            label = vs.title()
             if two_columns:
                 assert isinstance(label, str)
                 label += ":"
@@ -6005,38 +6006,45 @@ class Dictionary(ValueSpec[DictionaryModel]):
             )
         else:
             visible = True
-            if vs.title():
+            if label:
                 html.write_text(" ")
-                html.write_text(vs.title())
+                html.write_text(label)
             # two_columns are used for space efficiency in very few places like e.g. filters
             # where it is clear from the context if values are required or not. Therefore, we
             # dont add a required label in this case.
             if not two_columns and not vs.allow_empty():
                 html.span(_(" (required)"), class_="required")
 
-        if two_columns:
-            if vs.title() and not colon_printed:
-                html.write_text(":")
-            html.help(vs.help())
-            html.close_td()
-            html.open_td(class_="dictright")
-        else:
-            html.br()
+            is_required_plain_checkbox = isinstance(vs, Checkbox) and not label
 
-        html.open_div(
-            id_=div_id,
-            class_=["dictelement"] + (["indent"] if self._indent and not two_columns else []),
-            style="display:none;" if not visible else None,
-        )
+        # If the vs is an instance of Checkbox, is required and does not have a title, we skip
+        # this horizontal and vertical spacing. This makes the Checkbox vs rendering align with
+        # the rendering of checkboxes for optional dict elements
+        if not is_required_plain_checkbox:
+            if two_columns:
+                if label and not colon_printed:
+                    html.write_text(":")
+                html.help(vs.help())
+                html.close_td()
+                html.open_td(class_="dictright")
+            else:
+                html.br()
 
-        if not two_columns:
+            html.open_div(
+                id_=div_id,
+                class_=["dictelement"] + (["indent"] if self._indent and not two_columns else []),
+                style="display:none;" if not visible else None,
+            )
+
+        if not two_columns or is_required_plain_checkbox:
             html.help(vs.help())
         # Remember: in complain mode we do not render 'value' (the default value),
         # but re-display the values from the HTML variables. We must not use 'value'
         # in that case.
         the_value = value.get(param, vs.default_value()) if isinstance(value, dict) else None
         vs.render_input(vp, the_value)
-        html.close_div()
+        if not is_required_plain_checkbox:
+            html.close_div()
 
         html.close_td()
         html.close_tr()

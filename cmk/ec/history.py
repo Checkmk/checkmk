@@ -8,7 +8,7 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
-from logging import Logger
+from logging import getLogger, Logger
 from pathlib import Path
 from typing import Any, Literal
 
@@ -56,7 +56,7 @@ class History(ABC):
 class TimedHistory(History):
     def __init__(self, history: History) -> None:
         self._history = history
-        self._logger = Logger("cmk.mkeventd")
+        self._logger = getLogger("cmk.mkeventd")
 
     @contextmanager
     def _timing(self, method_name: str) -> Iterator[None]:

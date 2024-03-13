@@ -88,7 +88,7 @@ def register(
     not_implemented.register(mode_registry)
     notifications.register(mode_registry)
     object_parameters.register(mode_registry)
-    parentscan.register(mode_registry, job_registry)
+    parentscan.register(mode_registry)
     password_store.register(mode_registry)
     pattern_editor.register(mode_registry)
     predefined_conditions.register(mode_registry)

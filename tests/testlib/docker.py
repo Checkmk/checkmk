@@ -259,27 +259,30 @@ def start_checkmk(
         }.items()
         if value is not None
     }
-    if name and os.getenv("CLEANUP", "1") == "1":
-        try:
-            c: docker.models.containers.Container = client.containers.get(name)
-            c.remove(force=True)
-        except docker.errors.NotFound:
-            pass
-    c = client.containers.run(image=_image.id, detach=True, **kwargs)
-    logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
 
     try:
-        site_id = (environment or {}).get("CMK_SITE_ID", site_id)
-        wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
-        output = c.logs().decode("utf-8")
+        c: docker.models.containers.Container = client.containers.get(name)
+        if os.getenv("REUSE") == "1":
+            c.start()
+            c.exec_run(["omd", "start"], user=site_id)
+        else:
+            c.remove(force=True)
+    except (docker.errors.NotFound, docker.errors.NullResource):
+        c = client.containers.run(image=_image.id, detach=True, **kwargs)
+        logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
 
-        assert ("Created new site" in output) != is_update
-        assert ("cmkadmin with password:" in output) != is_update
+        try:
+            site_id = (environment).get("CMK_SITE_ID", site_id)
+            wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
+            output = c.logs().decode("utf-8")
 
-        assert "STARTING SITE" in output
-    except TimeoutError:
-        logger.error("TIMEOUT while starting Checkmk. Log output: %s", c.logs().decode("utf-8"))
-        raise
+            assert ("Created new site" in output) != is_update
+            assert ("cmkadmin with password:" in output) != is_update
+
+            assert "STARTING SITE" in output
+        except TimeoutError:
+            logger.error("TIMEOUT while starting Checkmk. Log output: %s", c.logs().decode("utf-8"))
+            raise
 
     status_rc, status_output = c.exec_run(["omd", "status"], user=site_id)
     assert status_rc == 0, f"Status is {status_rc}. Output: {status_output.decode('utf-8')}"

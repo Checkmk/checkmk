@@ -246,6 +246,6 @@ def _start_oracle(
     try:
         yield oracle
     finally:
-        oracle.stop()
         if os.getenv("CLEANUP", "1") == "1":
+            oracle.stop()
             oracle.remove(force=True)

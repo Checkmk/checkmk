@@ -79,7 +79,8 @@ import urllib.request
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
-API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
+PROTO = "http" #[http|https]
+API_URL = f"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"
@@ -121,7 +122,8 @@ CODE_TEMPLATE_CURL = """
 
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
-API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
+PROTO="http" #[http|https]
+API_URL="$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
@@ -185,7 +187,8 @@ CODE_TEMPLATE_HTTPIE = """
 #!/bin/bash
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
-API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
+PROTO="http" #[http|https]
+API_URL="$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
@@ -230,7 +233,8 @@ import shutil {%- endif %}
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
-API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
+PROTO = "http" #[http|https]
+API_URL = f"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"

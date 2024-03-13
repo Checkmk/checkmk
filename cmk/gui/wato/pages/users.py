@@ -1620,14 +1620,24 @@ def select_language(user_spec: UserSpec) -> None:
     forms.section(_("Language"))
     html.dropdown("language", languages, deflt=current_language)
     html.help(
-        _(
-            "Configure the language of the user interface. Feel free to contribute to the "
-            "translations on %s."
+        HTMLWriter.render_div(
+            _(
+                "Configure the language of the user interface. Checkmk is officially supported only "
+                "for English and German."
+            )
         )
-        % HTMLWriter.render_a(
-            "Weblate",
-            "https://translate.checkmk.com",
-            target="_blank",
+        + HTMLWriter.render_div(
+            _(
+                "Other language versions are offered for convenience only and anyone using Checkmk "
+                "in a non-supported language does so at their own risk. No guarantee is given for the "
+                "accuracy of the content. Checkmk accepts no liability for incorrect operation due to "
+                "incorrect translations. "
+            )
+            + HTMLWriter.render_a(
+                _("Feel free to contribute here."),
+                "https://translate.checkmk.com",
+                target="_blank",
+            )
         )
     )
 

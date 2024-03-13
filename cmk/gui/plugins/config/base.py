@@ -277,7 +277,7 @@ class CREConfig:
     hide_languages: list[str] = field(default_factory=list)
 
     # Enable/Disable choice of community translated languages
-    enable_community_translations: bool = False
+    enable_community_translations: bool = True
 
     # Default timestamp format to be used in multisite
     default_ts_format: str = "mixed"

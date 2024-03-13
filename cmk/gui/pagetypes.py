@@ -548,14 +548,14 @@ class Overridable(Base[_T_OverridableSpec]):
         if is_user_with_publish_permissions("pagetype", user.id, cls.type_name()):
             vs_visibility: ValueSpec = Optional(
                 title=_("Visibility"),
-                label=_("Make this %s available for other users") % cls.phrase("title"),
+                label=_("Make this %s available for other users") % cls.phrase("title").lower(),
                 none_label=_("Don't publish to other users"),
                 valuespec=PublishTo(
                     publish_all=cls.has_overriding_permission("publish"),
                     publish_groups=cls.has_overriding_permission("publish_to_groups"),
                     publish_sites=cls.has_overriding_permission("publish_to_sites"),
-                    title="",
                     type_title=cls.phrase("title"),
+                    title="",
                     with_foreign_groups=cls.has_overriding_permission("publish_to_foreign_groups"),
                 ),
             )
@@ -1291,8 +1291,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
                 assert user.id is not None
                 page_dict["owner"] = str(user.id)
                 owner_id = user.id
-
-        breadcrumb = make_breadcrumb(title, mode, self._type.list_url())
+        breadcrumb = make_breadcrumb(title, mode, self._type.list_url(), self._type.phrase("title"))
         page_menu = make_edit_form_page_menu(
             breadcrumb,
             dropdown_name=self._type.type_name(),
@@ -1406,10 +1405,12 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
         return parameters, keys_by_topic
 
 
-def make_breadcrumb(title: str, page_name: str, list_url: str) -> Breadcrumb:
+def make_breadcrumb(
+    title: str, page_name: str, list_url: str, parent_title: str | None = None
+) -> Breadcrumb:
     breadcrumb = make_main_menu_breadcrumb(mega_menu_registry.menu_customize())
 
-    breadcrumb.append(BreadcrumbItem(title=title, url=list_url))
+    breadcrumb.append(BreadcrumbItem(title=parent_title or title, url=list_url))
 
     if page_name == "list":  # The list is the parent of all others
         return breadcrumb
@@ -1490,12 +1491,12 @@ def PublishTo(
     publish_all: bool,
     publish_groups: bool,
     publish_sites: bool,
+    type_title: str,
     title: str | None = None,
-    type_title: str | None = None,
     with_foreign_groups: bool = True,
 ) -> CascadingDropdown:
     if title is None:
-        title = _("Make this %s available for other users") % type_title
+        title = _("Make this %s available for other users") % type_title.lower()
 
     choices: list[CascadingDropdownChoice] = []
     if publish_all:
@@ -1551,7 +1552,7 @@ def make_edit_form_page_menu(
                 title=type_title.title(),
                 topics=[
                     PageMenuTopic(
-                        title=_("Save this %s and go to") % type_title,
+                        title=_("Actions"),
                         entries=list(
                             _page_menu_entries_save(
                                 breadcrumb,
@@ -1603,13 +1604,13 @@ def _page_menu_entries_save(
 ) -> Iterator[PageMenuEntry]:
     """Provide the different "save" buttons"""
     yield PageMenuEntry(
-        title=_("List of %s") % type_title_plural,
+        title=_("Save & view list"),
         icon_name="save",
         item=make_form_submit_link(form_name, "_save"),
         is_list_entry=True,
         is_shortcut=True,
         is_suggested=True,
-        shortcut_title=_("Save & go to list"),
+        shortcut_title=_("Save & view list"),
         css_classes=["submit"],
     )
 
@@ -1630,7 +1631,7 @@ def _page_menu_entries_save(
         title=_("Cancel"),
         icon_name="cancel",
         item=make_simple_link(parent_item.url),
-        is_list_entry=False,
+        is_list_entry=True,
         is_shortcut=True,
         is_suggested=True,
     )

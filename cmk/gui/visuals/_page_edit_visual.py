@@ -204,7 +204,7 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
                 "public",
                 vs_no_permission_to_publish(
                     type_title=what[:-1],
-                    title=_("Make this %s available for other users") % what[:-1],
+                    title=_("Make this %s available for other users") % what[:-1].lower(),
                 ),
             )
         )

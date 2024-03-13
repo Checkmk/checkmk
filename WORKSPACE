@@ -135,6 +135,10 @@ cargo_deps(name="check-cert-deps", package="packages/check-cert")
 load("@check-cert-deps//:defs.bzl", check_cert_deps = "crate_repositories")
 check_cert_deps()
 
+cargo_deps(name="check-http-deps", package="packages/check-http")
+load("@check-http-deps//:defs.bzl", check_http_deps = "crate_repositories")
+check_http_deps()
+
 load("//omd/packages/patch:patch_http.bzl", "patch")
 
 patch(

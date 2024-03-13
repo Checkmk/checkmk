@@ -463,8 +463,13 @@ class Request(
             raise MKUserError(varname, _("The given text must only contain ASCII characters."))
         return value
 
-    def get_ascii_input_mandatory(self, varname: str, deflt: str | None = None) -> str:
-        return mandatory_parameter(varname, self.get_ascii_input(varname, deflt))
+    def get_ascii_input_mandatory(
+        self, varname: str, deflt: str | None = None, allowed_values: set[str] | None = None
+    ) -> str:
+        value = mandatory_parameter(varname, self.get_ascii_input(varname, deflt))
+        if allowed_values is not None and value not in allowed_values:
+            raise MKUserError(varname, _("Value must be one of '%s'") % "', '".join(allowed_values))
+        return value
 
     def get_binary_input(self, varname: str, deflt: bytes | None = None) -> bytes | None:
         val = self.var(varname, deflt.decode() if deflt is not None else None)

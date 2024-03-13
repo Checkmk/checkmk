@@ -844,6 +844,27 @@ class ConfigVariableExperimentalFeatures(ConfigVariable):
                         ],
                     ),
                 ),
+                (
+                    "inject_js_profiling_code",
+                    Checkbox(
+                        title=_("Inject JavaScript profiling code"),
+                        default_value=False,
+                    ),
+                ),
+                (
+                    "load_frontend_vue",
+                    DropdownChoice(
+                        title=_("Inject cmk-frontend-vue files via vite client"),
+                        help=_(
+                            "If you activate this and you don't have the vite dev server running "
+                            "you may not be able to deactivate this option via UI, so be careful!"
+                        ),
+                        choices=[
+                            ("static_files", "Load JavaScript from shipped, static files"),
+                            ("inject", "Inject vite client to enable auto hot reloading"),
+                        ],
+                    ),
+                ),
             ],
             optional_keys=False,
         )

@@ -29490,8 +29490,8 @@ msgstr "Urheber"
 msgid "Inject JavaScript profiling code"
 msgstr "JavaScript-Profiling-Code einbinden"
 
-msgid "Inject frontend_vue files via vite client"
-msgstr "Einfügen von frontend_vue-Dateien über den vite-Client"
+msgid "Inject cmk-frontend-vue files via vite client"
+msgstr "Einfügen von cmk-frontend-vue-Dateien über den vite-Client"
 
 msgid "Inline SNMP"
 msgstr "Inline-SNMP"

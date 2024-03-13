@@ -1,4 +1,4 @@
-# frontend_vue
+# cmk-frontend-vue
 
 Checkmk vue experiments
 
@@ -33,8 +33,8 @@ vite dev server is used.
 * run `npm run dev`
 * surf to `http://localhost:5173/<yoursite>/checkmk/` (tailing slash is
   important, otherwise checkmk will redirect to a url without the port)
-* enable "Inject frontend_vue files via vite client" in "User Interface"
+* enable "Inject cmk-frontend-vue files via vite client" in "User Interface"
   in "Experimental Features" in "global settings"
 
 Checkmk should then automatically reload as soon as you change a file of the
-frontend_vue project.
+cmk-frontend-vue project.

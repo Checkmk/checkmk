@@ -53,10 +53,10 @@ export default defineConfig(({ command }) => {
         strictPort: true,
         proxy: {
           // dev server proxies whole checkmk to inject js resources and support auto hot reloading
-          '^(?!/frontend_vue_ahr)': 'http://localhost/'
+          '^(?!/cmk-frontend-vue-ahr)': 'http://localhost/'
         }
       },
-      base: '/frontend_vue_ahr',
+      base: '/cmk-frontend-vue-ahr',
     }
   }
 })

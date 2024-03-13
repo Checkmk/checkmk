@@ -1,12 +1,12 @@
 #!groovy
 
-/// file: test-package-package-frontend_vue.groovy
+/// file: test-package-package-cmk-frontend-vue.groovy
 
 def main() {
     dir("${checkout_dir}") {
         docker_image_from_alias("IMAGE_TESTING").inside() {
-            stage('Test Package package-frontend_vue') {
-                sh("packages/package-frontend_vue/run --clean --all");
+            stage('Test Package package-cmk-frontend-vue') {
+                sh("packages/package-cmk-frontend-vue/run --clean --all");
             }
         }
     }

@@ -622,6 +622,13 @@ table.valuespec_tuple {
     &.tuple_left {
       vertical-align: middle;
     }
+
+    &.tuple_td {
+      &,
+      sup {
+        vertical-align: top;
+      }
+    }
   }
 
   span.title {

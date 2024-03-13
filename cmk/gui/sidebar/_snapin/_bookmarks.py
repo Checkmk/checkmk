@@ -106,7 +106,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
                         2.5,
                         "default_topic",
                         TextInput(
-                            title=_("Default Topic") + "<sup>*</sup>",
+                            title=_("Default topic") + "<sup>*</sup>",
                             size=50,
                             allow_empty=False,
                         ),
@@ -119,6 +119,8 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
                             # is exactly the thing we want. But we want to store the data as dict. This is a
                             # nasty hack to use the transform by default. Better would be to make Dict render
                             # the same way the tuple is rendered.
+                            title=_("Bookmarks"),
+                            add_label=_("Add bookmark"),
                             valuespec=Transform(
                                 valuespec=Tuple(
                                     elements=[
@@ -145,7 +147,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
                                 ),
                                 to_valuespec=bookmark_config_to_vs,
                                 from_valuespec=bookmark_vs_to_config,
-                            )
+                            ),
                         ),
                     ),
                 ],

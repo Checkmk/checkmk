@@ -1384,6 +1384,7 @@ def _convert_to_legacy_levels(
 
     return legacy_valuespecs.CascadingDropdown(
         title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
         choices=choices,
         default_value=_make_levels_default_value(to_convert, prefill_value),
     )

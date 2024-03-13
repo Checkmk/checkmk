@@ -61,7 +61,7 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
     base_version = CMKVersion(
-        "2.2.0p8", Edition.CCE, current_base_branch_name(), current_branch_version()
+        "2.2.0p23", Edition.CCE, current_base_branch_name(), current_branch_version()
     )
     return SiteFactory(version=base_version, prefix="")
 
@@ -153,7 +153,6 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
-@pytest.mark.skip(reason="License verification failure during update process.")  # todo: re-enable
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:

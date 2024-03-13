@@ -417,7 +417,10 @@ class CMKOpenApiSession(requests.Session):
     def bulk_discover_services_and_wait_for_completion(
         self,
         hostnames: list[str],
-        mode: str = "new",
+        monitor_undecided_services: bool = True,
+        remove_vanished_services: bool = False,
+        update_service_labels: bool = False,
+        update_host_labels: bool = True,
         do_full_scan: bool = True,
         bulk_size: int = 10,
         ignore_errors: bool = True,
@@ -426,7 +429,12 @@ class CMKOpenApiSession(requests.Session):
             "/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
             json={
                 "hostnames": hostnames,
-                "mode": mode,
+                "options": {
+                    "monitor_undecided_services": monitor_undecided_services,
+                    "remove_vanished_services": remove_vanished_services,
+                    "update_service_labels": update_service_labels,
+                    "update_host_labels": update_host_labels,
+                },
                 "do_full_scan": do_full_scan,
                 "bulk_size": bulk_size,
                 "ignore_errors": ignore_errors,

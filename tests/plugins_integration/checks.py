@@ -26,12 +26,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SkippedDumps:
-    SKIPPED_DUMPS = [
-        # TODO: restore after CMK-15510
-        "agent-2.2.0p12-mk-oracle-centos",
-        # TODO: restore after CMK-15029
-        "snmp-rittal-CMCIII",
-    ]
+    SKIPPED_DUMPS = []  # type: ignore
 
 
 @dataclass

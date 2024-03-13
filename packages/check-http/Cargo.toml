@@ -11,9 +11,14 @@ edition = "2021"
 
 [dependencies]
 aes-gcm = { version = "*", features = ["aes", "std"] }
-bytes = { version = "*" }
 anyhow = { version = "*" }
+bytes = { version = "*" }
 clap = { version = "*", features = ["derive"] }
+encoding_rs = { version = "*" }
+httpdate = { version = "*" }
+log = { version = "*" }
+mime = { version = "*" }
+regex = { version = "*" }
 # We need either rustls-tls or native-tls-alpn to establish HTTP/2 connections.
 # Only native-tls supports TLS1.0/TLS1.1, while setting TLS1.3 as minimum version is only
 # supported by rustls.
@@ -25,16 +30,7 @@ reqwest = { version = "*", features = [
     "socks",
 ] }
 scrypt = { version = "*", default-features = false, features = ["std"] }
-tokio = { version = "*", features = ["full"] }
-httpdate = { version = "*" }
-mime = { version = "*" }
-encoding_rs = { version = "*" }
-regex = { version = "*" }
-x509-parser = { version = "*" }
+tokio = { version = "*", features = ["rt", "macros", "rt-multi-thread"] }
 tracing = { version = "*" }
-tracing-subscriber = { version = "*", features = [
-    "tracing-log",
-    "env-filter",
-    "registry",
-] }
-log = { version = "*" }
+tracing-subscriber = { version = "*", features = ["env-filter"] }
+x509-parser = { version = "*" }

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.SINotation("B/s"))
 UNIT_BYTES_PER_REQUEST = metrics.Unit(metrics.SINotation("B/req"))
@@ -46,4 +46,153 @@ graph_db_connections = graphs.Graph(
         metrics.WarningOf("active_connections"),
         metrics.CriticalOf("active_connections"),
     ],
+)
+
+metric_busy_workers = metrics.Metric(
+    name="busy_workers",
+    title=Title("Busy workers"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.LIGHT_GRAY,
+)
+
+metric_idle_workers = metrics.Metric(
+    name="idle_workers",
+    title=Title("Idle workers"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.LIGHT_BLUE,
+)
+
+metric_busy_servers = metrics.Metric(
+    name="busy_servers",
+    title=Title("Busy servers"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.LIGHT_GRAY,
+)
+
+metric_idle_servers = metrics.Metric(
+    name="idle_servers",
+    title=Title("Idle servers"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.LIGHT_BLUE,
+)
+
+graph_busy_and_idle_workers = graphs.Graph(
+    name="busy_and_idle_workers",
+    title=Title("Busy and idle workers"),
+    compound_lines=[
+        "busy_workers",
+        "idle_workers",
+    ],
+)
+
+graph_busy_and_idle_servers = graphs.Graph(
+    name="busy_and_idle_servers",
+    title=Title("Busy and idle servers"),
+    compound_lines=[
+        "busy_servers",
+        "idle_servers",
+    ],
+)
+
+metric_open_slots = metrics.Metric(
+    name="open_slots",
+    title=Title("Open slots"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.CYAN,
+)
+
+metric_total_slots = metrics.Metric(
+    name="total_slots",
+    title=Title("Total slots"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.DARK_GREEN,
+)
+
+graph_total_and_open_slots = graphs.Graph(
+    name="total_and_open_slots",
+    title=Title("Total and open slots"),
+    compound_lines=["total_slots"],
+    simple_lines=["open_slots"],
+)
+
+metric_connections = metrics.Metric(
+    name="connections",
+    title=Title("Connections"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.LIGHT_GRAY,
+)
+
+metric_connections_async_writing = metrics.Metric(
+    name="connections_async_writing",
+    title=Title("Asynchronous writing connections"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.ORANGE,
+)
+
+metric_connections_async_keepalive = metrics.Metric(
+    name="connections_async_keepalive",
+    title=Title("Asynchronous keep alive connections"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.YELLOW,
+)
+
+metric_connections_async_closing = metrics.Metric(
+    name="connections_async_closing",
+    title=Title("Asynchronous closing connections"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.LIGHT_RED,
+)
+
+graph_connections = graphs.Graph(
+    name="connections",
+    title=Title("Connections"),
+    compound_lines=["connections"],
+    simple_lines=[
+        "connections_async_writing",
+        "connections_async_keepalive",
+        "connections_async_closing",
+        metrics.WarningOf("connections"),
+        metrics.CriticalOf("connections"),
+    ],
+    optional=[
+        "connections_async_writing",
+        "connections_async_keepalive",
+        "connections_async_closing",
+    ],
+)
+
+metric_open_network_sockets = metrics.Metric(
+    name="open_network_sockets",
+    title=Title("Open network sockets"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.YELLOW,
+)
+
+graph_web_gateway_miscellaneous_statistics = graphs.Graph(
+    name="web_gateway_miscellaneous_statistics",
+    title=Title("Web gateway miscellaneous statistics"),
+    compound_lines=[
+        "open_network_sockets",
+        "connections",
+    ],
+)
+
+perfometer_busy_workers_requests_per_second = perfometers.Stacked(
+    name="busy_workers_requests_per_second",
+    lower=perfometers.Perfometer(
+        name="busy_workers",
+        focus_range=perfometers.FocusRange(
+            perfometers.Closed(0),
+            perfometers.Open(113),
+        ),
+        segments=["busy_workers"],
+    ),
+    upper=perfometers.Perfometer(
+        name="requests_per_second",
+        focus_range=perfometers.FocusRange(
+            perfometers.Closed(0),
+            perfometers.Open(2795),
+        ),
+        segments=["requests_per_second"],
+    ),
 )

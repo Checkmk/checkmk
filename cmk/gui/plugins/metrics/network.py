@@ -289,18 +289,6 @@ metric_info["connections_failed_rate"] = {
     "color": "14/a",
 }
 
-metric_info["open_network_sockets"] = {
-    "title": _("Open network sockets"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["connections"] = {
-    "title": _("Connections"),
-    "unit": "count",
-    "color": "#a080b0",
-}
-
 metric_info["failed_connections"] = {
     "title": _("Failed connections"),
     "unit": "count",
@@ -317,24 +305,6 @@ metric_info["connections_ssl_vpn"] = {
     "title": _("SSL/VPN connections"),
     "unit": "count",
     "color": "13/a",
-}
-
-metric_info["connections_async_writing"] = {
-    "title": _("Asynchronous writing connections"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["connections_async_keepalive"] = {
-    "title": _("Asynchronous keep alive connections"),
-    "unit": "count",
-    "color": "22/a",
-}
-
-metric_info["connections_async_closing"] = {
-    "title": _("Asynchronous closing connections"),
-    "unit": "count",
-    "color": "24/a",
 }
 
 metric_info["connections_rate"] = {
@@ -365,48 +335,6 @@ metric_info["packet_velocity_asic"] = {
     "title": _("Packet velocity asic"),
     "unit": "1/s",
     "color": "26/a",
-}
-
-metric_info["requests_per_second"] = {
-    "title": _("Requests per second"),
-    "unit": "1/s",
-    "color": "#4080a0",
-}
-
-metric_info["busy_workers"] = {
-    "title": _("Busy workers"),
-    "unit": "count",
-    "color": "#a080b0",
-}
-
-metric_info["idle_workers"] = {
-    "title": _("Idle workers"),
-    "unit": "count",
-    "color": "43/b",
-}
-
-metric_info["busy_servers"] = {
-    "title": _("Busy servers"),
-    "unit": "count",
-    "color": "#a080b0",
-}
-
-metric_info["idle_servers"] = {
-    "title": _("Idle servers"),
-    "unit": "count",
-    "color": "43/b",
-}
-
-metric_info["open_slots"] = {
-    "title": _("Open slots"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["total_slots"] = {
-    "title": _("Total slots"),
-    "unit": "count",
-    "color": "33/b",
 }
 
 metric_info["total_sessions"] = {
@@ -1783,49 +1711,6 @@ graph_info["wlan_errors"] = {
     ],
 }
 
-graph_info["busy_and_idle_workers"] = {
-    "title": _("Busy and idle workers"),
-    "metrics": [
-        ("busy_workers", "area"),
-        ("idle_workers", "stack"),
-    ],
-}
-
-graph_info["busy_and_idle_servers"] = {
-    "title": _("Busy and idle servers"),
-    "metrics": [
-        ("busy_servers", "area"),
-        ("idle_servers", "stack"),
-    ],
-}
-
-graph_info["total_and_open_slots"] = {
-    "title": _("Total and open slots"),
-    "metrics": [
-        ("total_slots", "area"),
-        ("open_slots", "line"),
-    ],
-}
-
-graph_info["connections"] = {
-    "title": _("Connections"),
-    "metrics": [
-        ("connections", "area"),
-        ("connections_async_writing", "line"),
-        ("connections_async_keepalive", "line"),
-        ("connections_async_closing", "line"),
-    ],
-    "optional_metrics": [
-        "connections_async_writing",
-        "connections_async_keepalive",
-        "connections_async_closing",
-    ],
-    "scalars": [
-        "connections:warn",
-        "connections:crit",
-    ],
-}
-
 graph_info["time_offset"] = {
     "title": _("Time offset"),
     "metrics": [("time_offset", "area"), ("jitter", "line")],
@@ -2113,14 +1998,6 @@ graph_info["web_gateway_statistics"] = {
     "metrics": [
         ("infections_rate", "stack"),
         ("connections_blocked_rate", "stack"),
-    ],
-}
-
-graph_info["web_gateway_miscellaneous_statistics"] = {
-    "title": _("Web gateway miscellaneous statistics"),
-    "metrics": [
-        ("open_network_sockets", "stack"),
-        ("connections", "stack"),
     ],
 }
 

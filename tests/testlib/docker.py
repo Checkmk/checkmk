@@ -296,8 +296,8 @@ def start_checkmk(
     try:
         yield c
     finally:
-        c.stop()
-        if os.getenv("CLEANUP", "1") == "1":
+        if os.getenv("CLEANUP", "1") != "0":
+            c.stop()
             c.remove(force=True)
 
 

@@ -230,6 +230,8 @@ def start_checkmk(
     volumes_from: list[str] | None = None,
 ) -> Iterator[docker.models.containers.Container]:
     """Provide a readily configured Checkmk docker container."""
+    environment = {"CMK_PASSWORD": "cmk"} | (environment or {})
+
     if version is None:
         version = version_from_env()
 

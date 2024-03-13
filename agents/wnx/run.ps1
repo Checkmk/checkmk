@@ -67,7 +67,7 @@ function Write-Help() {
     Write-Host "  -M, --msi            build msi"
     Write-Host "  -O, --ohm            build ohm"
     Write-Host "  -E, --extensions     build extensions"
-    Write-Host "  -T, --test           run agent unit tests"
+    Write-Host "  -T, --test           run agent component tests using binary in repo_root/artefacts"
     Write-Host "  --detach             detach USB before running"
     Write-Host "  --sign               sign controller using Yubikey based Code Certificate"
     Write-Host ""
@@ -187,6 +187,10 @@ function Build-Agent {
         Write-Error "Failed to build Agent, error code is $LASTEXITCODE" -ErrorAction Stop
     }
 
+    # upload test artifacts for separate testing
+    Copy-Item $build_dir/watest/Win32/Release/watest32.exe $arte -Force -ErrorAction Stop
+    Copy-Item $build_dir/watest/x64/Release/watest64.exe $arte -Force -ErrorAction Stop
+    
     Write-Host "Success building agent" -ForegroundColor Green
 }
 
@@ -297,20 +301,18 @@ function Set-MSI-Version {
     Write-Host "Success setting version MSI" -foreground Green
 }
 
-function Start-Unit-Tests {
+function Start-ComponentTests {
     if ($argTest -ne $true) {
-        Write-Host "Skipping Unit testing..." -ForegroundColor Yellow
+        Write-Host "Skipping component testing..." -ForegroundColor Yellow
         return
     }
-    Write-Host "Running unit tests..." -ForegroundColor White
+    Write-Host "Running component tests..." -ForegroundColor White
     & net stop WinRing0_1_2_0
-    Copy-Item $build_dir/watest/Win32/Release/watest32.exe $arte -Force -ErrorAction Stop
-    Copy-Item $build_dir/watest/x64/Release/watest64.exe $arte -Force -ErrorAction Stop
     & ./call_unit_tests.cmd -*_Simulation:*Component:*ComponentExt:*Flaky
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "Error Unit Testing, error code is $LASTEXITCODE" -ErrorAction Stop
+        Write-Error "Error Component Testing, error code is $LASTEXITCODE" -ErrorAction Stop
     }
-    Write-Host "Success unittests" -foreground Green
+    Write-Host "Success component tests" -foreground Green
 }
 
 function Invoke-Attach($usbip, $addr, $port) {
@@ -541,7 +543,7 @@ try {
     Build-Ext
     Build-MSI
     Set-Msi-Version
-    Start-Unit-Tests
+    Start-ComponentTests
     Invoke-TestSigning $usbip_exe
     Start-MsiControlBuild
     Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"

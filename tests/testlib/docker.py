@@ -273,12 +273,8 @@ def start_checkmk(
         wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
         output = c.logs().decode("utf-8")
 
-        if not is_update:
-            assert "Created new site" in output
-            assert "cmkadmin with password:" in output
-        else:
-            assert "Created new site" not in output
-            assert "cmkadmin with password:" not in output
+        assert ("Created new site" in output) != is_update
+        assert ("cmkadmin with password:" in output) != is_update
 
         assert "STARTING SITE" in output
     except TimeoutError:

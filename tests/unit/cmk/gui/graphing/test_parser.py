@@ -163,7 +163,7 @@ def test_parse_or_add_unit(
         pytest.param(
             metrics.SINotation("unit"),
             999.999,
-            "1000 unit",
+            "1 kunit",
             id="si-large-border",
         ),
         pytest.param(

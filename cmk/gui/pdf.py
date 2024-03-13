@@ -22,11 +22,10 @@ import subprocess
 import tempfile
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from textwrap import wrap
 from typing import Literal, NewType, overload, Protocol
 
-from PIL import PngImagePlugin
-from PIL.Image import Image
 from reportlab.lib.units import mm  # type: ignore[import]
 from reportlab.lib.utils import ImageReader  # type: ignore[import]
 
@@ -36,6 +35,7 @@ from six import ensure_str
 from typing_extensions import TypedDict
 
 import cmk.utils.paths
+from cmk.utils.images import CMKImage, ImageType
 
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.http import ContentDispositionType, response
@@ -444,17 +444,17 @@ class Document:
         self._canvas.rect(self._left, self._bottom, self._inner_width, self._inner_height, fill=0)
         self.restore_state()
 
-    def place_pil_image(
+    def place_image(
         self,
         position: Position,
-        pil: Image,
+        image: CMKImage,
         width_mm: SizeMM | None,
         height_mm: SizeMM | None,
         resolution: SizeDPI | None,
     ) -> None:
-        width, height = self.get_image_dimensions(pil, width_mm, height_mm, resolution)
+        width, height = self.get_image_dimensions(image, width_mm, height_mm, resolution)
         x, y = self.convert_position(position, width, height)
-        ir = ImageReader(pil)
+        ir = ImageReader(image.pil())
         self._canvas.drawImage(ir, x, y - height, width, height, mask="auto")
 
     # Functions for adding floating text
@@ -537,21 +537,20 @@ class Document:
         self._linepos -= margin * mm
         self.restore_state()
 
-    def add_pil_image(
+    def add_image(
         self,
-        pil: Image,
+        image: CMKImage,
         width: SizeMM | None,
         height: SizeMM | None,
         resolution: SizeDPI | None = None,
         border: bool = True,
     ) -> None:
-        width, height = self.get_image_dimensions(pil, width, height, resolution)
+        width, height = self.get_image_dimensions(image, width, height, resolution)
 
         self.advance(height)
         x = self._left + (self._inner_width - width) / 2.0  # center
         y = self._linepos
-        ir = ImageReader(pil)
-        self._canvas.drawImage(ir, x, y, width, height, mask="auto")
+        self._canvas.drawImage(ImageReader(image.pil()), x, y, width, height, mask="auto")
         if border:
             self._canvas.rect(x, y, width, height, fill=0)
 
@@ -723,8 +722,8 @@ class Document:
     def render_image(
         self, left_mm: SizeMM, top_mm: SizeMM, width_mm: SizeMM, height_mm: SizeMM, path: str
     ) -> None:
-        pil = PngImagePlugin.PngImageFile(fp=path)
-        ir = ImageReader(pil)
+        image = CMKImage.from_path(Path(path), ImageType.PNG)
+        ir = ImageReader(image.pil())
         try:
             self._canvas.drawImage(
                 ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
@@ -949,14 +948,13 @@ class Document:
     # is set, then width and height are being ignored.
     def get_image_dimensions(
         self,
-        pil: Image,
+        image: CMKImage,
         width_mm: SizeMM | None,
         height_mm: SizeMM | None,
         resolution: SizeDPI | None = None,
     ) -> tuple[SizeInternal, SizeInternal]:
         # Get bounding box of image in order to get aspect (width / height)
-        bbox = pil.getbbox()
-        assert bbox is not None  # TODO: Why is this the case here?
+        bbox = image.get_bounding_box()
         pix_width, pix_height = bbox[2], bbox[3]
         if resolution is not None:
             resolution_mm = resolution / 2.45

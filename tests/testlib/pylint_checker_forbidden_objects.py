@@ -14,6 +14,7 @@ def register(linter: PyLinter) -> None:
     linter.register_checker(TypingNamedTupleChecker(linter))
     linter.register_checker(SixEnsureStrBinChecker(linter))
     linter.register_checker(ABCMetaChecker(linter))
+    linter.register_checker(PillowImportChecker(linter))
 
 
 class ForbiddenObjectChecker(BaseChecker):
@@ -152,4 +153,16 @@ class ABCMetaChecker(ForbiddenMetaclassChecker):
             "abcmeta-metaclass",
             "Inheritance from ABC should be used instead to define metaclass",
         )
+    }
+
+
+class PillowImportChecker(ForbiddenImportChecker):
+    name = "pillow-module-import"
+    target_lib = "PIL"
+    msgs = {
+        "E9310": (
+            "Imports PIL",
+            "pillow-module-import",
+            "PIL should not be used directly. Use cmk.utils.images instead.",
+        ),
     }

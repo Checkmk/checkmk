@@ -18,7 +18,6 @@ import abc
 import base64
 import datetime
 import hashlib
-import io
 import ipaddress
 import itertools
 import json
@@ -58,7 +57,6 @@ from typing import (
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
-from PIL import Image
 from six import ensure_str
 
 from livestatus import SiteId
@@ -73,6 +71,7 @@ import cmk.utils.regex
 from cmk.utils.encryption import Encrypter
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress as HostAddressType
+from cmk.utils.images import CMKImage, ImageType
 from cmk.utils.labels import AndOrNotLiteral
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
@@ -7024,18 +7023,13 @@ class ImageUpload(FileUpload):
 
         content = value[2]
 
-        if not content.startswith(b"\x89PNG"):
-            raise MKUserError(
-                varprefix, _("Please choose a PNG image.")
-            )  # We could consider adding EXIF removing functionaility through the exif module.
-
         try:
-            im = Image.open(io.BytesIO(content))
-        except OSError:
-            raise MKUserError(varprefix, _("Please choose a valid PNG image."))
+            image = CMKImage(content, ImageType.PNG)
+        except (ValueError, OSError) as exception:
+            raise MKUserError(varprefix, _("Please choose a valid PNG image.")) from exception
 
         if self._max_size:
-            w, h = im.size
+            w, h = image.image_size()
             max_w, max_h = self._max_size
             if w > max_w or h > max_h:
                 raise MKUserError(varprefix, _("Maximum image size: %dx%dpx") % (max_w, max_h))
@@ -7620,7 +7614,8 @@ class IconSelector(ValueSpec[IconSelectorModel]):
 
     def _extract_category_from_png(self, file_path: Path, default: str) -> str:
         # extract the category from the meta data
-        category = Image.open(file_path).info.get("Comment")
+        image = CMKImage.from_path(file_path, ImageType.PNG)
+        category = image.get_comment()
         valid_categories = {k for k, _v in self.categories()}
         if category not in valid_categories:
             return default

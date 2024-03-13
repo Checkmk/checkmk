@@ -560,6 +560,19 @@ def test_js_render_unit_notation(unit: metrics.Unit, expected: str) -> None:
             ],
             id="time-large",
         ),
+        pytest.param(
+            TimeFormatter("s", metrics.AutoPrecision(2)),
+            86400001,
+            "Time",
+            [
+                Label(17280000, "200 d"),
+                Label(34560000, "400 d"),
+                Label(51840000, "600 d"),
+                Label(69120000, "800 d"),
+                Label(86400000, "1000 d"),
+            ],
+            id="time-very-large",
+        ),
     ],
 )
 def test_render_y_labels(

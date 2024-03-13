@@ -368,9 +368,12 @@ class TimeFormatter(NotationFormatter):
 
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         if max_y >= _ONE_DAY:
-            return (
-                _BASIC_TIME_ATOMS[15:19] if int(max_y // _ONE_DAY) < 2 else _BASIC_TIME_ATOMS[15:]
-            )
+            if (q := int(max_y // _ONE_DAY)) < 2:
+                return _BASIC_TIME_ATOMS[15:]
+            exponent = math.floor(round(math.log(q, 10)))
+            return _BASIC_TIME_ATOMS[15:] + [
+                _ONE_DAY * a * pow(10, exponent - 1) for a in _BASIC_DECIMAL_ATOMS
+            ]
         if max_y >= _ONE_HOUR:
             return _BASIC_TIME_ATOMS[9:18]
         if max_y >= _ONE_MINUTE:

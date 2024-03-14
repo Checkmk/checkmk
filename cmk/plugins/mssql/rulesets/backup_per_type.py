@@ -22,7 +22,7 @@ def _item_spec() -> form_specs.String:
             "The MSSQL instance name, the tablespace name and the backup type, each separated "
             "by a space."
         ),
-        custom_validate=validators.DisallowEmpty(),
+        custom_validate=(validators.DisallowEmpty(),),
     )
 
 

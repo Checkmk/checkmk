@@ -69,7 +69,7 @@ def _discovery_parameters_form_alertmanager():
                                             title=Title(
                                                 "Minimum amount of alert rules in a group to create a group service"
                                             ),
-                                            custom_validate=validators.InRange(min_value=1),
+                                            custom_validate=(validators.InRange(min_value=1),),
                                             prefill=DefaultValue(3),
                                             help_text=Help(
                                                 "Below the specified value alert rules will be monitored as a"
@@ -185,7 +185,7 @@ def form_alert_remapping():
         ),
         title=Title("Remap alert rule states"),
         help_text=Help("Configure the monitoring state for Alertmanager rules."),
-        custom_validate=validators.DisallowEmpty(),
+        custom_validate=(validators.DisallowEmpty(),),
     )
 
 

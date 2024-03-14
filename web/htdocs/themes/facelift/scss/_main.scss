@@ -538,7 +538,9 @@ td > div.error {
 '-------------------------------------------------------------------------*/
 
 table.dictionary {
-  width: 100%;
+  &:not(.horizontal) {
+    width: 100%;
+  }
   border-collapse: collapse;
 
   b.header {
@@ -554,7 +556,9 @@ table.dictionary {
   }
 
   td.dictleft {
-    width: 1%;
+    &:not(.horizontal) {
+      width: 1%;
+    }
     white-space: nowrap;
 
     span.required {

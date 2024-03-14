@@ -5900,6 +5900,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         | (Sequence[tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]]) = None,
         migrate: Callable[[tuple], dict] | None = None,
         indent: bool = True,
+        horizontal: bool = False,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -5945,6 +5946,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
         self._headers = headers
         self._migrate = migrate  # value migration from old tuple version
         self._indent = indent
+        self._horizontal = horizontal
 
     def migrate(self, value: Any) -> DictionaryModel:
         return self._migrate(value) if self._migrate else value
@@ -5978,11 +5980,32 @@ class Dictionary(ValueSpec[DictionaryModel]):
         varprefix: str,
         value: DictionaryModel,
         two_columns: bool,
+        nr: int,
         param: str,
         vs: ValueSpec,
     ) -> None:
-        html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
-        html.open_td(class_="dictleft")
+        if not self._horizontal or self._horizontal and nr == 0:
+            html.open_tr(class_="show_more_mode" if param in self._show_more_keys else None)
+
+        self._render_td(
+            varprefix,
+            value,
+            two_columns,
+            param,
+            vs,
+        )
+        if not self._horizontal:
+            html.close_tr()
+
+    def _render_td(
+        self,
+        varprefix: str,
+        value: DictionaryModel,
+        two_columns: bool,
+        param: str,
+        vs: ValueSpec,
+    ) -> None:
+        html.open_td(class_=["dictleft"] + (["horizontal"] if self._horizontal else []))
 
         div_id = varprefix + "_d_" + param
         vp = varprefix + "_p_" + param
@@ -6047,16 +6070,17 @@ class Dictionary(ValueSpec[DictionaryModel]):
             html.close_div()
 
         html.close_td()
-        html.close_tr()
 
     def _render_input_normal(
         self, varprefix: str, value: DictionaryModel, two_columns: bool
     ) -> None:
-        html.open_table(class_=["dictionary"])
-        for param, vs in self._get_elements():
+        html.open_table(class_=["dictionary"] + (["horizontal"] if self._horizontal else []))
+        for nr, (param, vs) in enumerate(self._get_elements()):
             if param in self._hidden_keys:
                 continue
-            self._render_input_normal_row(varprefix, value, two_columns, param, vs)
+            self._render_input_normal_row(varprefix, value, two_columns, nr, param, vs)
+        if self._horizontal:
+            html.close_tr()
         html.close_table()
 
     def _render_input_form(

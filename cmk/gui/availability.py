@@ -357,7 +357,8 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
                         ),
                     ]
                 ),
-                title=_("Visual levels for the availability (OK percentage)"),
+                title=_("Visual levels for the availability"),
+                label=_("Visual levels for the availability (OK percentage)"),
             ),
         ),
         # Show colummns for min, max, avg duration and count

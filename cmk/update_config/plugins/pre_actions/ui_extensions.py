@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from pathlib import Path
+
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui import main_modules
@@ -23,6 +26,14 @@ from cmk.update_config.plugins.pre_actions.utils import (
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
 
+def _get_package_id(package_map: Mapping[Path, PackageID], rel_path: str) -> PackageID | None:
+    # What a knightmare, somebody please help.
+    for path, package in package_map.items():
+        if str(path).endswith(rel_path):
+            return package
+    return None
+
+
 class PreUpdateUIExtensions(PreUpdateAction):
     """Load all web plugins before the real update happens"""
 
@@ -33,7 +44,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
         installer, package_map = get_installer_and_package_map(path_config)
         disabled_packages: set[PackageID] = set()
         for path, _gui_part, module_name, error in get_failed_plugins():
-            package_id = package_map.get(path.resolve())
+            package_id = _get_package_id(package_map, str(path))
             # unpackaged files
             if package_id is None:
                 if continue_on_incomp_local_file(

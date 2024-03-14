@@ -21,6 +21,7 @@ from .query import Columns, QueryFilter, QueryGET
 from .settings import Options, Paths, Settings
 
 TABLE_COLUMNS: Final = (
+    "line",
     "time",
     "what",
     "who",
@@ -164,15 +165,39 @@ class SQLiteHistory(History):
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(
-                """CREATE TABLE IF NOT EXISTS history
-                                (time REAL, what TEXT, who TEXT, addinfo TEXT, id INTEGER, count INTEGER,
-                                text TEXT, first REAL, last REAL,
-                                comment TEXT, sl INTEGER, host TEXT, contact TEXT, application TEXT,
-                                pid INTEGER, priority INTEGER, facility INTEGER, rule_id TEXT,
-                                state INTEGER, phase TEXT, owner TEXT, match_groups JSON,
-                                contact_groups JSON, ipaddress TEXT, orig_host TEXT,
-                                contact_groups_precedence TEXT, core_host TEXT, host_in_downtime BOOL,
-                                match_groups_syslog_application JSON);"""
+                """CREATE TABLE IF NOT EXISTS
+                    history (
+                        line INTEGER PRIMARY KEY AUTOINCREMENT,
+                        time REAL,
+                        what TEXT,
+                        who TEXT,
+                        addinfo TEXT,
+                        id INTEGER,
+                        count INTEGER,
+                        text TEXT,
+                        first REAL,
+                        last REAL,
+                        comment TEXT,
+                        sl INTEGER,
+                        host TEXT,
+                        contact TEXT,
+                        application TEXT,
+                        pid INTEGER,
+                        priority INTEGER,
+                        facility INTEGER,
+                        rule_id TEXT,
+                        state INTEGER,
+                        phase TEXT,
+                        owner TEXT,
+                        match_groups JSON,
+                        contact_groups JSON,
+                        ipaddress TEXT,
+                        orig_host TEXT,
+                        contact_groups_precedence TEXT,
+                        core_host TEXT,
+                        host_in_downtime BOOL,
+                        match_groups_syslog_application JSON
+                    );"""
             )
 
     def flush(self) -> None:
@@ -180,10 +205,15 @@ class SQLiteHistory(History):
         self.conn.commit()
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
+        """Add a single entry to the history table.
+
+        No need to include the line column, as it is autoincremented."""
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(
-                f"INSERT INTO history ({', '.join(TABLE_COLUMNS)}) VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS)))});",
+                f"""INSERT INTO
+                    history ({', '.join(TABLE_COLUMNS[1:])})
+                        VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS[1:])))});""",
                 tuple(
                     itertools.chain(
                         (time.time(), what, who, addinfo),
@@ -195,12 +225,18 @@ class SQLiteHistory(History):
                 ),
             )
 
-    def _add_entry(self, entries: Sequence[Sequence[object]]) -> None:
+    def _add_entries(self, entries: Sequence[Sequence[object]]) -> None:
+        """Add multiple entries to the history table.
+
+        Used only by the cmk-update-config during EC history migration to sqlite.
+        The first column is the line number, which is autoincremented, so ignored in TABLE_COLUMNS.
+        """
         with self.conn as connection:
             cur = connection.cursor()
-            # don't add the first column, it's the line number which is not relevant for sqlite
             cur.executemany(
-                f"INSERT INTO history ({', '.join(TABLE_COLUMNS)}) VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS)))});",
+                f"""INSERT INTO
+                    history ({', '.join(TABLE_COLUMNS[1:])})
+                        VALUES ({', '.join(itertools.repeat('?', len(TABLE_COLUMNS[1:])))});""",
                 (entry[1:] for entry in entries),
             )
 

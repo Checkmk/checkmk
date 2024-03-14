@@ -48,16 +48,19 @@ def history_files_to_sqlite(omd_root: Path, logger: logging.Logger) -> None:
 
     assert isinstance(history_sqlite, SQLiteHistory)
 
-    logger.info("Processing files in history_dir %s", history_dir)
-    for file in sorted(history_dir.glob("*.log"), reverse=True):
+    logger.debug("Processing files in history_dir %s", history_dir)
+    # reverse=False is explicit here to make sure that the newer files are processed last.
+    # this is important because the sqlite history_line column is unique and we want to avoid
+    # duplicate entries AND we want the newest entry to have a higher history_line number.
+    for file in sorted(history_dir.glob("*.log"), reverse=False):
         for parsed_entries in parse_history_file_python(
             StatusTableHistory.columns,
             file,
             logger,
         ):
-            history_sqlite._add_entry(parsed_entries)
+            history_sqlite._add_entries(parsed_entries)
 
         # processed files are not needed anymore
-        logger.info("Renaming file %s", file)
         file.rename(file.with_suffix(".bak"))
-    logger.info("history_files_to_sqlite took: %s", str(timedelta(seconds=time.time() - tic)))
+        logger.debug("Renamed file %s", file)
+    logger.debug("Migrating history files to sqlite took: %s", timedelta(seconds=time.time() - tic))

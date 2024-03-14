@@ -392,7 +392,7 @@ def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence
         return []
     return (
         GetOrganisationsByIDCache(config, org_ids) if org_ids else GetOrganisationsCache(config)
-    ).get_live_data()
+    ).get_data()
 
 
 def _need_organisations(section_names: Sequence[str]) -> bool:

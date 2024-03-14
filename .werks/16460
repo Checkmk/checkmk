@@ -1,0 +1,9 @@
+Title: Cisco Meraki: Fix getting cached organisation IDs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1710420761
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+

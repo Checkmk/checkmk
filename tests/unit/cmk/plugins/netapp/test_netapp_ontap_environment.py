@@ -5,8 +5,6 @@
 
 
 import json
-from datetime import datetime
-from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
@@ -145,8 +143,8 @@ def test_check_netapp_ontap_environment_discrete(item: str, expected_result: Che
     assert list(result) == expected_result
 
 
-NOW_SIMULATED_SECONDS = 0
-FIVE_MIN_AGO_SIMULATED_SECONDS = -300
+NOW_SIMULATED = 0
+FIVE_MIN_AGO_SIMULATED = -300
 
 
 _THRESHOLD_MODELS = [
@@ -245,7 +243,7 @@ def test_check_environment_threshold_fan() -> None:
                 Metric("temp", 10.0, levels=(20.0, 90.0)),
                 Result(state=State.OK, summary="Temperature: 10 °C"),
                 Result(
-                    state=State.WARN,
+                    state=State.CRIT,
                     summary="Temperature trend: +10.0 °C per 5 min (warn/crit at +5 °C per 5 min/+10 °C per 5 min)",
                 ),
                 Result(
@@ -303,16 +301,16 @@ def test_check_environment_threshold_thermal_trend(
 
     value_store = {
         "temp.netapp_environment_thermal_thermal_sensor.dev.delta": (
-            FIVE_MIN_AGO_SIMULATED_SECONDS,
+            FIVE_MIN_AGO_SIMULATED,
             0.0,
         ),
         "temp.netapp_environment_thermal_thermal_sensor.delta": (
-            FIVE_MIN_AGO_SIMULATED_SECONDS,
+            FIVE_MIN_AGO_SIMULATED,
             0.0,
         ),
     }
 
-    with time_machine.travel(datetime.fromtimestamp(NOW_SIMULATED_SECONDS, tz=ZoneInfo("UTC"))):
+    with time_machine.travel(NOW_SIMULATED, tick=False):
         result = list(
             check_environment_threshold(
                 item="thermal_sensor", params=params, section=section, value_store=value_store

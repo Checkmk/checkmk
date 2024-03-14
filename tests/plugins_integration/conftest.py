@@ -212,3 +212,49 @@ def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
 @pytest.fixture(name="plugin_validation_site", scope="session")
 def _get_site_validation() -> Iterator[Site]:
     yield from get_site_factory(prefix="val_").get_test_site()
+
+
+def _periodic_service_discovery_rule() -> dict:
+    periodic_discovery = {
+        "check_interval": 120.0,
+        "severity_unmonitored": 2,
+        "severity_vanished": 1,
+        "severity_changed_service_labels": 1,
+        "severity_new_host_label": 1,
+        "inventory_rediscovery": {
+            "mode": (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": False,
+                    "update_changed_service_labels": True,
+                    "update_host_labels": True,
+                },
+            ),
+            "keep_clustered_vanished_services": True,
+            "group_time": 900,
+            "excluded_time": [((9, 0), (12, 0))],
+            "activation": False,
+        },
+    }
+    return periodic_discovery
+
+
+@pytest.fixture(name="create_periodic_service_discovery_rule", scope="function")
+def _create_periodic_service_discovery_rule(test_site_update: Site) -> None:
+    existing_rules_ids = []
+    for rule in test_site_update.openapi.get_rules("periodic_discovery"):
+        existing_rules_ids.append(rule["id"])
+
+    test_site_update.openapi.create_rule(
+        ruleset_name="periodic_discovery",
+        value=_periodic_service_discovery_rule(),
+    )
+    test_site_update.openapi.activate_changes_and_wait_for_completion()
+
+    yield
+
+    for rule in test_site_update.openapi.get_rules("periodic_discovery"):
+        if rule["id"] not in existing_rules_ids:
+            test_site_update.openapi.delete_rule(rule["id"])
+    test_site_update.openapi.activate_changes_and_wait_for_completion()

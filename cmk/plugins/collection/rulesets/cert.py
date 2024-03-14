@@ -61,7 +61,7 @@ def _valuespec_validity() -> Dictionary:
                         "are within 90 and 365 days."
                     ),
                     displayed_magnitudes=[TimeMagnitude.DAY],
-                    custom_validate=validators.InRange(min_value=0),
+                    custom_validate=(validators.InRange(min_value=0),),
                     prefill=DefaultValue(90.0 * _DAY),
                 )
             ),
@@ -254,7 +254,7 @@ def _valuespec_remaining_validity() -> SimpleLevels[float]:
         ),
         form_spec_template=TimeSpan(
             displayed_magnitudes=[TimeMagnitude.DAY],
-            custom_validate=validators.InRange(min_value=0),
+            custom_validate=(validators.InRange(min_value=0),),
         ),
         level_direction=LevelDirection.LOWER,
         prefill_fixed_levels=DefaultValue((40 * _DAY, 20 * _DAY)),
@@ -270,7 +270,7 @@ def _valuespec_port() -> Integer:
             "report a handshakre error."
         ),
         prefill=DefaultValue(443),
-        custom_validate=validators.NetworkPort(),
+        custom_validate=(validators.NetworkPort(),),
     )
 
 
@@ -284,7 +284,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
         add_element_label=Label("Add new endpoint"),
         remove_element_label=Label("Remove this endpoint"),
         no_element_label=Label("Please add at least one endpoint to monitor"),
-        custom_validate=validators.DisallowEmpty(),
+        custom_validate=(validators.DisallowEmpty(),),
         element_template=Dictionary(
             elements={
                 "address": DictElement[str](
@@ -298,7 +298,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                             "or $HOSTADDRESS$."
                         ),
                         prefill=InputHint("my.host.tld | 192.168.0.73"),
-                        custom_validate=validators.DisallowEmpty(),
+                        custom_validate=(validators.DisallowEmpty(),),
                     ),
                     required=True,
                 ),

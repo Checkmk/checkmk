@@ -146,7 +146,8 @@ class VueFormSpecVisitor:
 
                 try:
                     if custom_validate is not None:
-                        custom_validate(raw_value)
+                        _ = [custom_val(raw_value) for custom_val in custom_validate]
+
                 except MKUserError as e:
                     error = ValidationError(message=str(e), field_id=e.varname or str(uuid.uuid4()))
                     # The aggregated errors are used within our old GUI which

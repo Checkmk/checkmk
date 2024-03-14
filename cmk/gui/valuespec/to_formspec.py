@@ -139,7 +139,7 @@ def _simple_case(
         return form_spec_class(
             title=optional_text(vs_instance.title(), Title),
             help_text=optional_text(vs_instance.help(), Help),
-            custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+            custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
             prefill=default_or_placeholder(vs_instance),
             migrate=migrate_func,
         )
@@ -148,7 +148,7 @@ def _simple_case(
         return form_spec_class(
             title=optional_text(vs_instance.title(), Title),
             help_text=optional_text(vs_instance.help(), Help),
-            custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+            custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
             prefill=default_value(vs_instance, default=form_spec_class.prefill),
             migrate=migrate_func,
         )
@@ -157,7 +157,7 @@ def _simple_case(
         return form_spec_class(
             title=optional_text(vs_instance.title(), Title),
             help_text=optional_text(vs_instance.help(), Help),
-            custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+            custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
             migrate=migrate_func,
         )
 
@@ -258,7 +258,7 @@ def generic_valuespec_to_formspec(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         valuespec=vs_instance,
-        custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -304,7 +304,7 @@ def valuespec_listof(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         element_template=valuespec_to_formspec(vs_instance._valuespec),
-        custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
         add_element_label=Label(vs_instance._add_label),
         remove_element_label=Label(vs_instance._del_label),
         no_element_label=Label(vs_instance._text_if_empty),
@@ -323,7 +323,7 @@ def valuespec_host_state(
         help_text=optional_text(vs_instance.help(), Help),
         # FIXME: This requires Literal[0, 1, 2, 3] as type, but I don't want to cast this.
         prefill=default_or_input_hint(vs_instance, default=form_specs.HostState.prefill),  # type: ignore[arg-type]
-        custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -350,7 +350,7 @@ def valuespec_listofstrings(
         element_template=valuespec_to_formspec(
             vs_instance._valuespec
         ),  # may not necessarily be a String, e.g. NetworkPort
-        custom_validate=formspec_validators.all_of(validator_list),
+        custom_validate=(formspec_validators.all_of(validator_list),),
         migrate=migrate_func,
     )
 
@@ -393,13 +393,10 @@ def valuespec_ldap_distinguished_name(
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._label, Label),
         custom_validate=(
-            formspec_validators.EnforceSuffix(
-                vs_instance.enforce_suffix,
-                case="ignore",
-            )
-            if vs_instance.enforce_suffix
-            else None
-        ),
+            formspec_validators.EnforceSuffix(vs_instance.enforce_suffix, case="ignore"),
+        )
+        if vs_instance.enforce_suffix
+        else None,
         prefill=default_or_placeholder(vs_instance),
         migrate=migrate_func,
     )
@@ -453,7 +450,7 @@ def valuespec_legacy_data_size(
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._renderer._label, Label),
         displayed_magnitudes=displayed_magnitudes,
-        custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -477,7 +474,7 @@ def valuespec_filesize(
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._renderer._label, Label),
         displayed_magnitudes=displayed_magnitudes,
-        custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -504,7 +501,7 @@ def valuespec_integer(
     return form_specs.Integer(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
-        custom_validate=formspec_validators.all_of(validator_list),
+        custom_validate=(formspec_validators.all_of(validator_list),),
         label=optional_text(vs_instance._renderer._label, Label),
         prefill=default_or_input_hint(vs_instance, default=form_specs.Integer.prefill),
         migrate=migrate_func,
@@ -552,7 +549,7 @@ def valuespec_textinput(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._label, Label),
-        custom_validate=formspec_validators.CompoundValidator[str](custom_validators),
+        custom_validate=(formspec_validators.CompoundValidator[str](custom_validators),),
         prefill=default_or_placeholder(vs_instance),
         migrate=migrate_func,
     )
@@ -578,7 +575,7 @@ def valuespec_dictionary(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         elements=dictionary_elements,
-        custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -628,7 +625,7 @@ def valuespec_dropdown_choice(
             for name, title in vs_instance.choices()
         ],
         prefill=default_or_input_hint(vs_instance, default=form_specs.SingleChoice.prefill),
-        custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
         migrate=migrate_func,
     )
 
@@ -752,21 +749,26 @@ def valuespec_url(
         help_text=optional_text(vs_instance.help(), Help),
         prefill=default_or_placeholder(vs_instance),
         migrate=migrate_func,
-        custom_validate=formspec_validators.CompoundValidator[str](
-            [
-                validators.Url(
-                    protocols=[
-                        validators.UrlProtocol(scheme) for scheme in vs_instance._allowed_schemes
-                    ]
-                ),
-                formspec_validators.TextValidator(
-                    min_length=None,
-                    max_length=(
-                        int(vs_instance._size) if vs_instance._size not in ("max", None) else None
+        custom_validate=(
+            formspec_validators.CompoundValidator[str](
+                [
+                    validators.Url(
+                        protocols=[
+                            validators.UrlProtocol(scheme)
+                            for scheme in vs_instance._allowed_schemes
+                        ]
                     ),
-                ),
-                formspec_validators.ValueSpecValidator(vs_instance),
-            ]
+                    formspec_validators.TextValidator(
+                        min_length=None,
+                        max_length=(
+                            int(vs_instance._size)
+                            if vs_instance._size not in ("max", None)
+                            else None
+                        ),
+                    ),
+                    formspec_validators.ValueSpecValidator(vs_instance),
+                ]
+            ),
         ),
     )
 
@@ -789,7 +791,7 @@ def valuespec_float(
     return form_specs.Float(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
-        custom_validate=formspec_validators.CompoundValidator(validator_list),
+        custom_validate=(formspec_validators.CompoundValidator(validator_list),),
         label=optional_text(vs_instance._renderer._label, Label),
         migrate=migrate_func,
         prefill=default_or_input_hint(vs_instance, default=form_specs.Float.prefill),
@@ -804,7 +806,7 @@ def valuespec_email(
     return form_specs.String(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
-        custom_validate=validators.EmailAddress(),
+        custom_validate=(validators.EmailAddress(),),
         migrate=migrate_func,
         prefill=default_or_placeholder(vs_instance),
     )
@@ -870,7 +872,7 @@ def valuespec_list_choice(
         help_text=optional_text(vs_instance.help(), Help),
         elements=elements,
         show_toggle_all=vs_instance._toggle_all,
-        custom_validate=formspec_validators.ValueSpecValidator(vs_instance),
+        custom_validate=(formspec_validators.ValueSpecValidator(vs_instance),),
         prefill=default_value(vs_instance, default=form_specs.MultipleChoice.prefill),
         migrate=migrate_func,
     )

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from functools import partial
 from typing import TypeVar
 
@@ -41,11 +41,6 @@ from cmk.rulesets.v1.form_specs import FormSpec
 
 
 def _v1_custom_text_validate(value: str) -> None:
-    api_v1.form_specs.validators.DisallowEmpty(error_msg=api_v1.Message("Fill this"))(value)
-    api_v1.form_specs.validators.MatchRegex(
-        regex=r"^[^.\r\n]+$", error_msg=api_v1.Message("No dot allowed")
-    )(value)
-
     if value == "admin":
         raise api_v1.form_specs.validators.ValidationError(api_v1.Message("Forbidden"))
 
@@ -143,7 +138,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Label("label"),
                 unit_symbol="d",
                 prefill=api_v1.form_specs.DefaultValue(-1),
-                custom_validate=lambda x: None,
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Integer(
                 title=_("title"),
@@ -167,7 +162,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Label("label"),
                 unit_symbol="1/s",
                 prefill=api_v1.form_specs.DefaultValue(-1.0),
-                custom_validate=lambda x: None,
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Float(
                 title=_("title"),
@@ -205,7 +200,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     api_v1.form_specs.SIMagnitude.EXA,
                 ),
                 prefill=api_v1.form_specs.DefaultValue(-1),
-                custom_validate=lambda x: None,
+                custom_validate=(lambda x: None,),
             ),
             LegacyDataSize(
                 title=_("title"),
@@ -231,7 +226,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Help("help"),
                 label=api_v1.Label("label"),
                 prefill=api_v1.form_specs.DefaultValue(-1.0),
-                custom_validate=lambda x: None,
+                custom_validate=(lambda x: None,),
             ),
             legacy_valuespecs.Percentage(
                 title=_("title"),
@@ -249,10 +244,13 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="minimal TextInput",
         ),
         pytest.param(
-            api_v1.form_specs.String(custom_validate=api_v1.form_specs.validators.DisallowEmpty()),
+            api_v1.form_specs.String(
+                custom_validate=(api_v1.form_specs.validators.DisallowEmpty(),)
+            ),
             legacy_valuespecs.TextInput(
                 placeholder="",
                 allow_empty=False,
+                empty_text=_("An empty value is not allowed here."),
                 validate=lambda _x, _y: None,  # ignored by test
             ),
             id="TextInput empty disallowed",
@@ -264,7 +262,15 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 macro_support=True,
                 help_text=api_v1.Help("help text"),
                 prefill=api_v1.form_specs.InputHint("myname"),
-                custom_validate=_v1_custom_text_validate,
+                custom_validate=(
+                    api_v1.form_specs.validators.DisallowEmpty(
+                        error_msg=api_v1.Message("Fill this")
+                    ),
+                    api_v1.form_specs.validators.MatchRegex(
+                        regex=r"^[^.\r\n]+$", error_msg=api_v1.Message("No dot allowed")
+                    ),
+                    _v1_custom_text_validate,
+                ),
             ),
             legacy_valuespecs.TextInput(
                 title=_("spec title"),
@@ -274,6 +280,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     "help text This field supports the use of macros. The corresponding plugin replaces the macros with the actual values."
                 ),
                 validate=_legacy_custom_text_validate,
+                allow_empty=False,
+                empty_text=_("Fill this"),
             ),
             id="TextInput",
         ),
@@ -293,7 +301,15 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Label("spec label"),
                 help_text=api_v1.Help("help text"),
                 prefill=api_v1.form_specs.DefaultValue("mypattern$"),
-                custom_validate=_v1_custom_text_validate,
+                custom_validate=(
+                    api_v1.form_specs.validators.DisallowEmpty(
+                        error_msg=api_v1.Message("Fill this")
+                    ),
+                    api_v1.form_specs.validators.MatchRegex(
+                        regex=r"^[^.\r\n]+$", error_msg=api_v1.Message("No dot allowed")
+                    ),
+                    _v1_custom_text_validate,
+                ),
             ),
             legacy_valuespecs.RegExp(
                 mode=legacy_valuespecs.RegExp.prefix,
@@ -1011,7 +1027,9 @@ def test_convert_to_legacy_rulespec_group(
                 check_group_name="test_rulespec",
                 group=legacy_wato_groups.RulespecGroupCheckParametersApplications,
                 title=lambda: _("rulespec title"),
-                item_spec=lambda: legacy_valuespecs.TextInput(title=_("item title")),
+                item_spec=lambda: legacy_valuespecs.TextInput(
+                    title=_("item title"), allow_empty=False
+                ),
                 parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
                     elements=[
                         ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
@@ -1082,6 +1100,7 @@ def test_convert_to_legacy_rulespec_group(
                     title=_("item title"),
                     placeholder="",
                     allow_empty=False,
+                    empty_text=_("An empty value is not allowed here."),
                     validate=lambda x, y: None,  # text only checks it's not None.
                 ),
                 parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
@@ -1112,6 +1131,7 @@ def test_convert_to_legacy_rulespec_group(
                     title=_("item title"),
                     placeholder="",
                     allow_empty=False,
+                    empty_text=_("An empty value is not allowed here."),
                     validate=lambda x, y: None,  # text only checks it's not None.
                 ),
                 parameter_valuespec=None,
@@ -1476,16 +1496,31 @@ def test_generated_rulespec_group_single_registration():
 
 
 @pytest.mark.parametrize(
-    "input_value",
+    ["input_value", "validate"],
     [
-        pytest.param("admin", id="custom validation"),
-        pytest.param("", id="empty validation"),
-        pytest.param(".", id="regex validation"),
+        pytest.param("admin", (_v1_custom_text_validate,), id="custom validation"),
+        pytest.param(
+            "",
+            (api_v1.form_specs.validators.DisallowEmpty(error_msg=api_v1.Message("Fill this")),),
+            id="empty validation",
+        ),
+        pytest.param(
+            ".",
+            (
+                api_v1.form_specs.validators.MatchRegex(
+                    regex=r"^[^.\r\n]+$", error_msg=api_v1.Message("No dot allowed")
+                ),
+            ),
+            id="regex validation",
+        ),
     ],
 )
-def test_convert_validation(input_value: str) -> None:
+def test_convert_validation(
+    input_value: str, validate: tuple[Callable[[str], object], ...]
+) -> None:
     converted_spec = _convert_to_legacy_valuespec(
-        api_v1.form_specs.String(custom_validate=_v1_custom_text_validate), _
+        api_v1.form_specs.String(custom_validate=validate),
+        _,
     )
 
     expected_spec = legacy_valuespecs.TextInput(
@@ -1536,7 +1571,7 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
                 "key1": api_v1.form_specs.DictElement(parameter_form=api_v1.form_specs.String())
             }
         ),
-        custom_validate=_v1_custom_list_validate,
+        custom_validate=(_v1_custom_list_validate,),
     )
 
     legacy_list = _convert_to_legacy_valuespec(v1_api_list, _)

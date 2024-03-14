@@ -14,7 +14,7 @@ from cmk.utils.store import save_mk_file
 from .history_file import parse_history_file_python
 from .history_sqlite import SQLiteHistory
 from .main import (
-    create_history,
+    create_history_raw,
     default_slave_status_master,
     load_configuration,
     StatusTableEvents,
@@ -31,13 +31,14 @@ def history_files_to_sqlite(omd_root: Path, logger: logging.Logger) -> None:
     """
     tic = time.time()
 
+    Path(omd_root / "etc/check_mk/mkeventd.d/)").mkdir(parents=True, exist_ok=True)
     save_mk_file(omd_root / "etc/check_mk/mkeventd.d/enable_sqlite.mk", "archive_mode='sqlite'")
 
     history_dir = create_paths(omd_root).history_dir.value
     settings = create_settings("1.2.3i45", omd_root, ["mkeventd"])
     config = load_configuration(settings, logger, default_slave_status_master())
 
-    history_sqlite = create_history(
+    history_sqlite = create_history_raw(
         settings,
         {**config, "archive_mode": "sqlite"},
         logger,

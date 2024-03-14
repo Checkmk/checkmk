@@ -232,11 +232,6 @@ def _get_site(  # pylint: disable=too-many-branches
     return site
 
 
-def version_supported(version: str) -> bool:
-    """Check if the given version is supported for updating."""
-    return version_gte(version, BaseVersions.MIN_VERSION)
-
-
 @pytest.fixture(name="test_setup", params=TestParams.TEST_PARAMS, scope="module")
 def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     """Install the test site with the base version."""

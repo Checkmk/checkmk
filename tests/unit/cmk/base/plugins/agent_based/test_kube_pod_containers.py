@@ -302,7 +302,26 @@ def test_container_terminated_state_linebreak_in_detail() -> None:
 
     assert all(r.state == State.OK for r in result if isinstance(r, Result))
     assert any(
-        r.summary.startswith(r"Status: Succeeded (Completed: Installing helm_v3 chart; )")
+        r.summary.startswith(r"Status: Succeeded (Completed: Installing helm_v3 chart)")
+        for r in result
+        if isinstance(r, Result)
+    )
+
+
+def test_container_terminated_state_no_detail() -> None:
+    terminated_container_state = ContainerTerminatedStateFactory.build(
+        exit_code=0,
+        start_time=TIMESTAMP,
+        end_time=TIMESTAMP + 1,
+        reason="Completed",
+        detail=None,
+    )
+
+    result = list(kube_pod_containers.check_terminated({}, terminated_container_state))
+
+    assert all(r.state == State.OK for r in result if isinstance(r, Result))
+    assert any(
+        r.summary.startswith(r"Status: Succeeded (Completed: None)")
         for r in result
         if isinstance(r, Result)
     )

@@ -89,7 +89,7 @@ def check_terminated(params: Mapping[str, int], state: ContainerTerminatedState)
     if state.exit_code != 0:
         result_state = State(params["failed_state"])
         status = "Failed"
-    detail_for_summary = (state.detail or "None").replace("\n", "; ")
+    detail_for_summary = (state.detail or "None").strip().replace("\n", "; ")
     summary = f"Status: {status} ({state.reason}: {detail_for_summary})"
     yield Result(state=result_state, summary=summary)
 

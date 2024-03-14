@@ -15,15 +15,21 @@ from tests.plugins_integration.checks import (  # pylint: disable=ungrouped-impo
 logger = logging.getLogger(__name__)
 
 
-def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory) -> None:
+def test_plugin_update(
+    test_site_update: Site,
+    site_factory_update: SiteFactory,
+    create_periodic_service_discovery_rule: None,
+) -> None:
     """Test performing the following steps:
 
     * Initialize test-site with min-version and discover services from injected agent-dumps and
         SNMP walks;
     * Update test-site to daily CEE version of the current branch;
     * Compare services found before and after the update;
-    * Re-discover services and compare services found before and after such discovery.
+    * Re-discover services and compare services found before and after such discovery;
+    * Check the number of rules in the ruleset 'periodic_discovery' and compare with the expected.
     """
+    psd_rules_base = test_site_update.openapi.get_rules("periodic_discovery")
     base_data = {}
     base_data_status_0 = {}
     for host_name in get_host_names():
@@ -94,3 +100,13 @@ def test_plugin_update(test_site_update: Site, site_factory_update: SiteFactory)
             f"The following services are found in state=0 in {host_name} target-version before "
             f"service-discovery but not after: {not_found_status_0_services_sd}"
         )
+
+    psd_rules_update = test_site_update.openapi.get_rules("periodic_discovery")
+    err_msg = (
+        "The number of rules in the ruleset 'periodic_discovery' differs between before and after "
+        "the update."
+        "Details:"
+        f"\nPSD rules before the update: \n{psd_rules_base}"
+        f"\nPSD rules after the update: \n{psd_rules_update}"
+    )
+    assert len(psd_rules_update) == len(psd_rules_base), err_msg

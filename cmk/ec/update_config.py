@@ -11,11 +11,15 @@ from pathlib import Path
 
 from cmk.utils.store import save_mk_file
 
-import cmk.ec.export as ec
-
 from .history_file import parse_history_file_python
 from .history_sqlite import SQLiteHistory
-from .main import create_history, make_config, StatusTableEvents, StatusTableHistory
+from .main import (
+    create_history,
+    default_slave_status_master,
+    load_configuration,
+    StatusTableEvents,
+    StatusTableHistory,
+)
 from .settings import create_paths, create_settings
 
 
@@ -31,8 +35,7 @@ def history_files_to_sqlite(omd_root: Path, logger: logging.Logger) -> None:
 
     history_dir = create_paths(omd_root).history_dir.value
     settings = create_settings("1.2.3i45", omd_root, ["mkeventd"])
-    config = make_config(ec.default_config())
-    logger = logging.getLogger("cmk.mkeventd")
+    config = load_configuration(settings, logger, default_slave_status_master())
 
     history_sqlite = create_history(
         settings,

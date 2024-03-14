@@ -63,6 +63,13 @@ from cmk.gui.view_utils import format_plugin_output
             ),
             id="The link has appended state marker",
         ),
+        pytest.param(
+            "Link with parentheses: (https://bitly.com/98K8eH), Another one with trailing colon: (https://bitly.com/98K8eH): Some Stuff",
+            HTML(
+                """Link with parentheses: (<a href="https://bitly.com/98K8eH" title="https://bitly.com/98K8eH" target="_blank" onfocus="if (this.blur) this.blur();"><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a>), Another one with trailing colon: (<a href="https://bitly.com/98K8eH" title="https://bitly.com/98K8eH" target="_blank" onfocus="if (this.blur) this.blur();"><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a>): Some Stuff"""
+            ),
+            id="The link is surrounded by parentheses",
+        ),
     ],
 )
 def test_button_url(args: str, expected: HTML, request_context: None) -> None:

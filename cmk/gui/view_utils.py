@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from typing import Any
 
 from livestatus import SiteId
@@ -121,16 +121,29 @@ def _render_icon_button(output: str) -> str:
             case 0:
                 buffer.append(escaping.escape_attribute(token))
             case 2:
-                # if a url is directly followed by a state marker, separate them
-                if match := re.match(_STATE_MARKER_PATTERN, token):
-                    url, state_marker = match.group(1), match.group(2)
-                    buffer.append(str(html.render_icon_button(url, url, "link", target="_blank")))
-                    buffer.append(escaping.escape_attribute(state_marker))
-                else:
-                    buffer.append(
-                        str(html.render_icon_button(token, token, "link", target="_blank"))
-                    )
+                buffer.extend(_render_url(token, buffer[-1][-1] if buffer and buffer[-1] else ""))
     return "".join(buffer)
+
+
+def _render_url(token: str, last_char: str) -> Iterator[str]:
+    url = token
+    rest: str | None = None
+
+    # if a url is directly followed by a state marker, separate them
+    if match := re.match(_STATE_MARKER_PATTERN, token):
+        url, rest = match.group(1), match.group(2)
+
+    # A URL may be surrounded by parantheses without spaces.
+    # Since ")" and ":" are allowed in URLS, we have to detect this situation explicitly.
+    elif last_char == "(":
+        if token.endswith(")"):
+            url, rest = token[:-1], ")"
+        elif token.endswith("):"):
+            url, rest = token[:-2], "):"
+
+    yield str(html.render_icon_button(url, url, "link", target="_blank"))
+    if rest is not None:
+        yield escaping.escape_attribute(rest)
 
 
 def get_host_list_links(  # pylint: disable=redefined-outer-name

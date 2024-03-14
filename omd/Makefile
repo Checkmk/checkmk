@@ -15,6 +15,12 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 # number of packages to just "omd" - to speed up your tests.
 # PACKAGES="omd"
 #
+# Alternatively,
+# ```
+# cd omd
+# PACKAGE=check-cert; make $PWD/build/stamps/$PACKAGE-build
+# ```
+#
 # You can also create a file named .config and override the
 # PACKAGES variable there to customzie the list of packages.
 

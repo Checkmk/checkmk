@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List
+from typing import Iterable, List, overload
 
 from cmk.gui.num_split import key_num_split
 
@@ -21,5 +21,19 @@ def _make_key(key: str) -> tuple[int | str, ...]:
     return (order, *split)
 
 
+@overload
+def natural_sort(items: dict[str, str], reverse: bool = False) -> List[str]:
+    ...
+
+
+@overload
 def natural_sort(items: Iterable[str], reverse: bool = False) -> List[str]:
+    ...
+
+
+def natural_sort(items: Iterable[str] | dict[str, str], reverse: bool = False) -> List[str]:
+    if isinstance(items, dict):
+        sorted_items = sorted(items.items(), key=lambda item: _make_key(item[1]), reverse=reverse)
+        return [item[0] for item in sorted_items]
+
     return sorted(items, key=_make_key, reverse=reverse)

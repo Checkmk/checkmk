@@ -17,12 +17,12 @@ _ORGANISATIONS = [
 
 
 class FakeGetOrganisationsByIDCache:
-    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+    def get_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
         return _ORGANISATIONS
 
 
 class FakeGetOrganisationsCache:
-    def get_live_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
+    def get_data(self) -> Sequence[agent_cisco_meraki._Organisation]:
         return _ORGANISATIONS
 
 

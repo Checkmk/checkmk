@@ -30,6 +30,7 @@ def gui_user_auth(user_id: UserId, secret: Password) -> Optional[RFC7662]:
     try:
         if userdb.check_credentials(user_id, secret):
             return rfc7662_subject(user_id, "bearer")
+        userdb.on_failed_login(user_id)
     except MKUserError:
         # This is the case of "Automation user rejected". We don't care about that in the REST API
         # because every type of user is allowed in.

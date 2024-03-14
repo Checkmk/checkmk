@@ -413,7 +413,8 @@ def on_succeeded_login(username: UserId) -> str:
 
 def on_failed_login(username: UserId) -> None:
     users = load_users(lock=True)
-    if username in users:
+
+    if username in users and not _is_automation_user(users[username]):
         if "num_failed_logins" in users[username]:
             users[username]["num_failed_logins"] += 1
         else:
@@ -422,7 +423,6 @@ def on_failed_login(username: UserId) -> None:
         if config.lock_on_logon_failures:
             if users[username]["num_failed_logins"] >= config.lock_on_logon_failures:
                 users[username]["locked"] = True
-
         save_users(users)
 
     if config.log_logon_failures:

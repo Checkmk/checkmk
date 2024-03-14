@@ -603,7 +603,9 @@ class Overridable(Base[_T_OverridableSpec]):
 
     def publish_is_allowed(self) -> bool:
         """Whether publishing an element to other users is allowed by the owner"""
-        return not self.owner() or user_may(self.owner(), "general.publish_" + self.type_name())
+        return not self.owner() or is_user_with_publish_permissions(
+            "pagetype", self.owner(), self.type_name()
+        )
 
     def is_public_forced(self) -> bool:
         """Whether the user is allowed to override built-in pagetypes"""

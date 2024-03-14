@@ -187,11 +187,16 @@ def _check_auth_by_header(
     try:
         password = Password(passwd)
     except ValueError as e:
+        # Note: not wrong, invalid. E.g. contains null bytes or is empty
         raise MKAuthException(f"Invalid password: {e}")
 
     # Could be an automation user or a regular user
     if _verify_automation_login(user_id, password.raw) or _verify_user_login(user_id, password):
         return user_id
+
+    # At this point: invalid credentials. Could be user, password or both.
+    # on_failed_login wants to be informed about non-existing users as well.
+    userdb.on_failed_login(user_id, datetime.now())
 
     raise MKAuthException(f"Wrong credentials ({token_name} header)")
 

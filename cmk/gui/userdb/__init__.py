@@ -404,11 +404,9 @@ def UserSelection(  # pylint: disable=redefined-builtin
 
 def on_failed_login(username: UserId, now: datetime) -> None:
     users = load_users(lock=True)
-    if user := users.get(username):
-        user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1
-        if active_config.lock_on_logon_failures:
-            if user["num_failed_logins"] >= active_config.lock_on_logon_failures:
-                user["locked"] = True
+
+    if (user := users.get(username)) and not _is_automation_user(user):
+        _increment_failed_logins_and_lock(user)
         save_users(users, now)
 
     if active_config.log_logon_failures:
@@ -435,6 +433,23 @@ def on_failed_login(username: UserId, now: datetime) -> None:
             log_msg_until_locked,
             request.remote_ip,
         )
+
+
+def _is_automation_user(user: UserSpec) -> bool:
+    # This is duplicated in other places. Moreover, it's not clear if this is the authoritative way
+    # to check for automation users, or if the existence of the secret file should be checked.
+    return "automation_secret" in user
+
+
+def _increment_failed_logins_and_lock(user: UserSpec) -> None:
+    """Increment the number of failed logins for the user and lock the user if necessary."""
+    user["num_failed_logins"] = user.get("num_failed_logins", 0) + 1
+
+    if (
+        active_config.lock_on_logon_failures
+        and user["num_failed_logins"] >= active_config.lock_on_logon_failures
+    ):
+        user["locked"] = True
 
 
 def on_access(username: UserId, session_id: str, now: datetime) -> None:

@@ -1,0 +1,35 @@
+Title: Brute-force protection ineffective for some login methods
+Class: security
+Compatible: compat
+Component: wato
+Date: 1712665452
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Prior to this Werk, the mechanism to lock user accounts after too many failed login attempts was only effective for the web form login method.
+Login attempts via the REST API and basic authentication did not count towards the lockout mechanism.
+As a result, an attacker could try to brute-force user passwords without triggering the lockout mechanism.
+
+This Werk adds the same locking mechanism to login via the REST API and basic authentication <em>for human user accounts</em>.
+
+Note that automation accounts are remain unaffected by the lockout mechanism to avoid having them locked by malicious intent.
+It is therefore important to use long, random automation secrets.
+
+This issue was found during internal review.
+
+<strong>Affected Versions</strong>:
+
+LI: 2.3.0 (beta)
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0 (EOL)
+
+<strong>Mitigations</strong>:
+
+If updating is not possible, the brute-force attempts can be hindered by using a strong password policy.
+
+<strong>Vulnerability Management</strong>:
+
+We have rated the issue with a CVSS Score of 5.9 (Medium) with the following CVSS vector: <code>CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N</code>
+and assigned CVE <code>CVE-2024-28825</code>.

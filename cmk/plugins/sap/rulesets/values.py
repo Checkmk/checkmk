@@ -74,7 +74,7 @@ def _formspec_inventory_sap_values():
                         "paths in SAP. You can use this option to let the inventory function only "
                         "use the last x path levels for naming."
                     ),
-                    custom_validate=validators.InRange(min_value=1),
+                    custom_validate=(validators.InRange(min_value=1),),
                 ),
                 required=False,
             ),

@@ -133,7 +133,7 @@ class SimpleLevels(FormSpec[SimpleLevelsConfigModel[_NumberT]]):
     title: Title | None = None
     help_text: Help | None = None
     migrate: Callable[[object], SimpleLevelsConfigModel[_NumberT]] | None = None
-    custom_validate: Callable[[SimpleLevelsConfigModel[_NumberT]], object] | None = None
+    custom_validate: tuple[Callable[[SimpleLevelsConfigModel[_NumberT]], object], ...] | None = None
 
     form_spec_template: FormSpec[_NumberT]
     """Template for the specification of the form fields of the warning and critical levels.
@@ -188,7 +188,7 @@ class Levels(FormSpec[LevelsConfigModel[_NumberT]]):
     title: Title | None = None
     help_text: Help | None = None
     migrate: Callable[[object], LevelsConfigModel[_NumberT]] | None = None
-    custom_validate: Callable[[LevelsConfigModel[_NumberT]], object] | None = None
+    custom_validate: tuple[Callable[[LevelsConfigModel[_NumberT]], object], ...] | None = None
 
     form_spec_template: FormSpec[_NumberT]
     """Template for the specification of the form fields of the warning and critical levels.

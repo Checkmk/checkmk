@@ -73,7 +73,7 @@ class HostAndItemCondition:
     """
 
     item_title: Title
-    item_form: FormSpec[str] = String(custom_validate=DisallowEmpty())
+    item_form: FormSpec[str] = String(custom_validate=(DisallowEmpty(),))
 
 
 def _validate_name(name: str) -> None:

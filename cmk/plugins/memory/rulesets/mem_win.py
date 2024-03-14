@@ -244,7 +244,7 @@ def _parameters_memory_pagefile_win() -> Dictionary:
                         "over the specified time interval before levels are being applied. "
                         "By default, averaging is turned off. "
                     ),
-                    custom_validate=validators.InRange(60.0, float("inf")),
+                    custom_validate=(validators.InRange(60.0, float("inf")),),
                     prefill=DefaultValue(3600.0),
                 )
             ),

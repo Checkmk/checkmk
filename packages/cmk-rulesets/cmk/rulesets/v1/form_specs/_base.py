@@ -2,7 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
@@ -60,13 +60,13 @@ class FormSpec(Generic[ModelT]):
     By default the value remains unchanged.
     """
     # Since we can't have a default `migrate` other than `None`, we also allow it here for
-    # consistency, although a no-op validator would work as well.
-    custom_validate: Callable[[ModelT], object] | None = None
-    """An optional additional validator.
+    # consistency, although an empty tuple would work as well.
+    custom_validate: Sequence[Callable[[ModelT], object]] | None = None
+    """Optional additional validators.
 
-    After the validation of the specific form spec is successful, this function is executed.
-    It must raise a ValidationError in case validation fails.
-    The return value of the function will not be used.
+    After the validation of the specific form spec is successful, these function are executed.
+    They must raise a ValidationError in case validation fails.
+    The return value of the functions will not be used.
     """
 
 

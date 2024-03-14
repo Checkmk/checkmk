@@ -5,7 +5,7 @@
 import dataclasses
 import enum
 import urllib.parse
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, Callable, Literal, TypeVar
@@ -727,12 +727,24 @@ def _convert_to_legacy_percentage(
 def _convert_to_legacy_text_input(
     to_convert: ruleset_api_v1.form_specs.String, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput:
+    disallow_empty = None
+    if to_convert.custom_validate is not None:
+        disallow_empty = next(
+            (
+                val
+                for val in to_convert.custom_validate
+                if isinstance(val, ruleset_api_v1.form_specs.validators.DisallowEmpty)
+            ),
+            None,
+        )
+
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
-        "allow_empty": not isinstance(
-            to_convert.custom_validate, ruleset_api_v1.form_specs.validators.DisallowEmpty
-        ),
+        "allow_empty": disallow_empty is None,
+        "empty_text": disallow_empty.error_msg.localize(localizer)
+        if disallow_empty is not None
+        else "",
     }
 
     help_text = _localize_optional(to_convert.help_text, localizer)
@@ -935,12 +947,12 @@ _ValidateFuncType = TypeVar("_ValidateFuncType")
 
 
 def _convert_to_legacy_validation(
-    v1_validate_func: Callable[[_ValidateFuncType], object],
+    v1_validate_funcs: Iterable[Callable[[_ValidateFuncType], object]],
     localizer: Callable[[str], str],
 ) -> Callable[[_ValidateFuncType, str], None]:
     def wrapper(value: _ValidateFuncType, var_prefix: str) -> None:
         try:
-            v1_validate_func(value)
+            _ = [v1_validate_func(value) for v1_validate_func in v1_validate_funcs]
         except ruleset_api_v1.form_specs.validators.ValidationError as e:
             raise MKUserError(var_prefix, e.message.localize(localizer))
 

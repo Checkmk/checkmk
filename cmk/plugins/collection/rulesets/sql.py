@@ -22,7 +22,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 parameter_form=form_specs.String(
                     title=Title("Service Description"),
                     help_text=Help("The name of this active service to be displayed."),
-                    custom_validate=validators.DisallowEmpty(),
+                    custom_validate=(validators.DisallowEmpty(),),
                 ),
                 required=True,
             ),
@@ -45,7 +45,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 parameter_form=form_specs.Integer(
                     title=Title("Database Port"),
                     help_text=Help("The port the DBMS listens to"),
-                    custom_validate=validators.NetworkPort(),
+                    custom_validate=(validators.NetworkPort(),),
                 ),
                 required=False,
             ),
@@ -53,7 +53,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 parameter_form=form_specs.String(
                     title=Title("Database Name"),
                     help_text=Help("The name of the database on the DBMS"),
-                    custom_validate=validators.DisallowEmpty(),
+                    custom_validate=(validators.DisallowEmpty(),),
                 ),
                 required=True,
             ),
@@ -61,7 +61,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 parameter_form=form_specs.String(
                     title=Title("Database User"),
                     help_text=Help("The username used to connect to the database"),
-                    custom_validate=validators.DisallowEmpty(),
+                    custom_validate=(validators.DisallowEmpty(),),
                 ),
                 required=True,
             ),
@@ -84,7 +84,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                         "second column is used as check output. The third column is optional and can "
                         "contain performance data."
                     ),
-                    custom_validate=validators.DisallowEmpty(),
+                    custom_validate=(validators.DisallowEmpty(),),
                     monospaced=True,
                 ),
                 required=True,
@@ -148,7 +148,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                         "Store output value into RRD database in a metric with this name."
                     ),
                     prefill=form_specs.DefaultValue("performance_data"),
-                    custom_validate=validators.DisallowEmpty(),
+                    custom_validate=(validators.DisallowEmpty(),),
                 ),
                 required=False,
             ),
@@ -156,7 +156,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 parameter_form=form_specs.String(
                     title=Title("Prefix text"),
                     help_text=Help("Additional text prefixed to the output"),
-                    custom_validate=validators.DisallowEmpty(),
+                    custom_validate=(validators.DisallowEmpty(),),
                 ),
                 required=False,
             ),

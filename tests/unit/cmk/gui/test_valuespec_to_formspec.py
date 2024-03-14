@@ -39,11 +39,11 @@ def test_convert_integer(
             vs_instance.validate_datatype(input_value, "")
 
         with pytest.raises(ValidationError):
-            fs_inst.custom_validate(input_value)
+            _ = [val(input_value) for val in fs_inst.custom_validate]
     else:
         # and both pass if they should.
         vs_instance.validate_datatype(input_value, "")
-        fs_inst.custom_validate(input_value)
+        _ = [val(input_value) for val in fs_inst.custom_validate]
 
 
 @pytest.mark.parametrize(

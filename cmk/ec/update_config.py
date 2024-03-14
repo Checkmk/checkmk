@@ -9,7 +9,7 @@ import time
 from datetime import timedelta
 from pathlib import Path
 
-from cmk.utils.store import save_to_mk_file
+from cmk.utils.store import save_mk_file
 
 import cmk.ec.export as ec
 
@@ -27,11 +27,7 @@ def history_files_to_sqlite(omd_root: Path, logger: logging.Logger) -> None:
     """
     tic = time.time()
 
-    save_to_mk_file(
-        omd_root / "etc/check_mk/mkeventd.d/enable_sqlite.mk",
-        "archive_mode",
-        "sqlite",
-    )
+    save_mk_file(omd_root / "etc/check_mk/mkeventd.d/enable_sqlite.mk", "archive_mode='sqlite'")
 
     history_dir = create_paths(omd_root).history_dir.value
     settings = create_settings("1.2.3i45", omd_root, ["mkeventd"])

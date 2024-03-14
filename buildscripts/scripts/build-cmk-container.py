@@ -249,6 +249,9 @@ def docker_tag(
         )
         LOG.debug("Done")
 
+    image.reload()
+    LOG.debug(f"Final image tags: {image.tags}")
+
 
 def docker_login(registry: str, docker_username: str, docker_passphrase: str) -> None:
     """Log into a registry"""
@@ -421,6 +424,9 @@ def build_tar_gz(
                 # as new tags are appended to the list of tags, the "oldest" one would be used if nothing is specified by the named keyword
                 for chunk in image.save(named=this_tag):
                     tar_ball.write(chunk)
+            LOG.debug(
+                f"Remove image {this_tag} now, it will be loaded from tar.gz at a later point again, see CMK-16498"
+            )
             docker_client.images.remove(image=this_tag)
         else:
             with gzip.open(tar_name, "wb") as tar_ball:

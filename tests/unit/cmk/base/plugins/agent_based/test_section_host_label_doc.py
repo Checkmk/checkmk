@@ -45,6 +45,7 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/meraki/net_id",
     "cmk/meraki/org_id",
     "cmk/meraki/org_name",
+    "cmk/nutanix/object",
     "cmk/os_family",
     "cmk/os_type",
     "cmk/os_platform",

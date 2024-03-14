@@ -88,8 +88,8 @@ def _valuespec_specific_values() -> Dictionary:
                 parameter_form=String(
                     title=Title("Serial number"),
                     help_text=Help(
-                        "The serial number needs to be in hex format. It's not necessary "
-                        "to use upper/lower case letters as any of them are accepted."
+                        "The serial number needs to be in colon-separated hex format, as also "
+                        "shown by 'openssl x509'. The format is not case sensitive."
                     ),
                     prefill=InputHint("5E:49:62:BB:CE:2A:56:A4:15:7F:A1:7C:86:38:45:0F"),
                 )
@@ -98,9 +98,9 @@ def _valuespec_specific_values() -> Dictionary:
                 parameter_form=CascadingSingleChoice(
                     title=Title("Certificate signature algorithm"),
                     help_text=Help(
-                        "The certificate signature algorithm includes an encryption and a "
-                        "hash algorithm. Please note, that an exact match is expected if this "
-                        "option is used."
+                        "The signature algorithm and the message digest algorithm for the "
+                        "certificate's signature. Please note that an exact match is expected if "
+                        "this option is used."
                     ),
                     prefill=DefaultValue("rsa"),
                     elements=[

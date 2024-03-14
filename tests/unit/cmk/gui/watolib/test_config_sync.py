@@ -354,6 +354,7 @@ def _get_expected_paths(
             "etc/check_mk/multisite.d/wato/customers.mk",
             "etc/check_mk/multisite.d/wato/groups.mk",
             "etc/check_mk/multisite.d/wato/user_connections.mk",
+            "etc/password_store.secret",
         ]
 
         if with_local:

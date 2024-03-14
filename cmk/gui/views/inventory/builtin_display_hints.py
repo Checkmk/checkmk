@@ -1035,6 +1035,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "rmk_id",
                 "test_item",
             ],
+            "view": "invsyntheticmonitoring",
         },
         ".software.applications.synthetic_monitoring.tests:*.application": {"title": _l("Application")},
         ".software.applications.synthetic_monitoring.tests:*.variant": {"title": _l("Variant")},

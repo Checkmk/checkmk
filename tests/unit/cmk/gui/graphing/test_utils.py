@@ -1332,6 +1332,10 @@ def test_graph_template_from_template(
     )
 
 
+COLOR = metrics.Color.BLUE
+COLOR_HEX = "#1e90ff"
+
+
 @pytest.mark.parametrize(
     "graph, raw_metric_names, expected_template",
     [
@@ -1341,32 +1345,32 @@ def test_graph_template_from_template(
                 title=Title("Title"),
                 compound_lines=[
                     "metric-name-1",
-                    metrics.Constant(Title("Constant"), UNIT, metrics.Color.BLUE, 10),
+                    metrics.Constant(Title("Constant"), UNIT, COLOR, 10),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
-                    metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
-                    metrics.MaximumOf("metric-name-5", metrics.Color.BLUE),
+                    metrics.MinimumOf("metric-name-4", COLOR),
+                    metrics.MaximumOf("metric-name-5", COLOR),
                     metrics.Sum(
                         Title("Sum"),
-                        metrics.Color.BLUE,
+                        COLOR,
                         ["metric-name-6"],
                     ),
                     metrics.Product(
                         Title("Product"),
                         UNIT,
-                        metrics.Color.BLUE,
+                        COLOR,
                         ["metric-name-7"],
                     ),
                     metrics.Difference(
                         Title("Difference"),
-                        metrics.Color.BLUE,
+                        COLOR,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
                     metrics.Fraction(
                         Title("Fraction"),
                         UNIT,
-                        metrics.Color.BLUE,
+                        COLOR,
                         dividend="metric-name-9",
                         divisor="metric-name-10",
                     ),
@@ -1403,7 +1407,7 @@ def test_graph_template_from_template(
                         Constant(
                             value=10,
                             explicit_unit_name="DecimalNotation__AutoPrecision_2",
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "stack",
                         "Constant",
@@ -1421,7 +1425,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         MinimumOf(
                             Metric("metric-name-4"),
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "stack",
                         "metric-name-4",
@@ -1429,7 +1433,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         MaximumOf(
                             Metric("metric-name-5"),
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "stack",
                         "metric-name-5",
@@ -1437,7 +1441,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Sum(
                             [Metric("metric-name-6")],
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "stack",
                         "Sum",
@@ -1446,7 +1450,7 @@ def test_graph_template_from_template(
                         Product(
                             [Metric("metric-name-7")],
                             explicit_unit_name="DecimalNotation__AutoPrecision_2",
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "stack",
                         "Product",
@@ -1455,7 +1459,7 @@ def test_graph_template_from_template(
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "stack",
                         "Difference",
@@ -1465,7 +1469,7 @@ def test_graph_template_from_template(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
                             explicit_unit_name="DecimalNotation__AutoPrecision_2",
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "stack",
                         "Fraction",
@@ -1480,32 +1484,32 @@ def test_graph_template_from_template(
                 title=Title("Title"),
                 simple_lines=[
                     "metric-name-1",
-                    metrics.Constant(Title("Constant"), UNIT, metrics.Color.BLUE, 10),
+                    metrics.Constant(Title("Constant"), UNIT, COLOR, 10),
                     metrics.WarningOf("metric-name-2"),
                     metrics.CriticalOf("metric-name-3"),
-                    metrics.MinimumOf("metric-name-4", metrics.Color.BLUE),
-                    metrics.MaximumOf("metric-name-5", metrics.Color.BLUE),
+                    metrics.MinimumOf("metric-name-4", COLOR),
+                    metrics.MaximumOf("metric-name-5", COLOR),
                     metrics.Sum(
                         Title("Sum"),
-                        metrics.Color.BLUE,
+                        COLOR,
                         ["metric-name-6"],
                     ),
                     metrics.Product(
                         Title("Product"),
                         UNIT,
-                        metrics.Color.BLUE,
+                        COLOR,
                         ["metric-name-7"],
                     ),
                     metrics.Difference(
                         Title("Difference"),
-                        metrics.Color.BLUE,
+                        COLOR,
                         minuend="metric-name-7",
                         subtrahend="metric-name-8",
                     ),
                     metrics.Fraction(
                         Title("Fraction"),
                         UNIT,
-                        metrics.Color.BLUE,
+                        COLOR,
                         dividend="metric-name-9",
                         divisor="metric-name-10",
                     ),
@@ -1538,14 +1542,14 @@ def test_graph_template_from_template(
                     utils.ScalarDefinition(
                         MinimumOf(
                             Metric("metric-name-4"),
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "metric-name-4",
                     ),
                     utils.ScalarDefinition(
                         MaximumOf(
                             Metric("metric-name-5"),
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "metric-name-5",
                     ),
@@ -1565,7 +1569,7 @@ def test_graph_template_from_template(
                         Constant(
                             value=10,
                             explicit_unit_name="DecimalNotation__AutoPrecision_2",
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "line",
                         "Constant",
@@ -1573,7 +1577,7 @@ def test_graph_template_from_template(
                     MetricDefinition(
                         Sum(
                             [Metric("metric-name-6")],
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "line",
                         "Sum",
@@ -1582,7 +1586,7 @@ def test_graph_template_from_template(
                         Product(
                             [Metric("metric-name-7")],
                             explicit_unit_name="DecimalNotation__AutoPrecision_2",
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "line",
                         "Product",
@@ -1591,7 +1595,7 @@ def test_graph_template_from_template(
                         Difference(
                             minuend=Metric("metric-name-7"),
                             subtrahend=Metric("metric-name-8"),
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "line",
                         "Difference",
@@ -1601,7 +1605,7 @@ def test_graph_template_from_template(
                             dividend=Metric("metric-name-9"),
                             divisor=Metric("metric-name-10"),
                             explicit_unit_name="DecimalNotation__AutoPrecision_2",
-                            explicit_color="#0000ff",
+                            explicit_color=COLOR_HEX,
                         ),
                         "line",
                         "Fraction",
@@ -1690,8 +1694,8 @@ def test_graph_template_from_graph(
                         "metric-name-l2",
                         metrics.WarningOf("metric-name-l3"),
                         metrics.CriticalOf("metric-name-l4"),
-                        metrics.MinimumOf("metric-name-l5", metrics.Color.BLUE),
-                        metrics.MaximumOf("metric-name-l6", metrics.Color.BLUE),
+                        metrics.MinimumOf("metric-name-l5", COLOR),
+                        metrics.MaximumOf("metric-name-l6", COLOR),
                     ],
                     optional=["metric-name-opt-l"],
                     conflicting=["metric-name-confl-l"],
@@ -1704,8 +1708,8 @@ def test_graph_template_from_graph(
                         "metric-name-u2",
                         metrics.WarningOf("metric-name-u3"),
                         metrics.CriticalOf("metric-name-u4"),
-                        metrics.MinimumOf("metric-name-u5", metrics.Color.BLUE),
-                        metrics.MaximumOf("metric-name-u6", metrics.Color.BLUE),
+                        metrics.MinimumOf("metric-name-u5", COLOR),
+                        metrics.MaximumOf("metric-name-u6", COLOR),
                     ],
                     optional=["metric-name-opt-u"],
                     conflicting=["metric-name-confl-u"],
@@ -1739,11 +1743,11 @@ def test_graph_template_from_graph(
                         "metric-name-l4",
                     ),
                     utils.ScalarDefinition(
-                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color="#0000ff"),
+                        MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
                         "metric-name-l5",
                     ),
                     utils.ScalarDefinition(
-                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color="#0000ff"),
+                        MaximumOf(Metric("metric-name-l6"), "max", explicit_color=COLOR_HEX),
                         "metric-name-l6",
                     ),
                     utils.ScalarDefinition(
@@ -1755,11 +1759,11 @@ def test_graph_template_from_graph(
                         "metric-name-u4",
                     ),
                     utils.ScalarDefinition(
-                        MinimumOf(Metric("metric-name-u5"), "min", explicit_color="#0000ff"),
+                        MinimumOf(Metric("metric-name-u5"), "min", explicit_color=COLOR_HEX),
                         "metric-name-u5",
                     ),
                     utils.ScalarDefinition(
-                        MaximumOf(Metric("metric-name-u6"), "max", explicit_color="#0000ff"),
+                        MaximumOf(Metric("metric-name-u6"), "max", explicit_color=COLOR_HEX),
                         "metric-name-u6",
                     ),
                 ],

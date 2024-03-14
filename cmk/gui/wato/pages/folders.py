@@ -742,10 +742,19 @@ class ModeFolder(WatoMode):
                 match_regex = re.compile(searched_folder.lower(), re.IGNORECASE)
                 search_results = 0
 
-            subfolders_dict = {x.title(): x for x in self._folder.subfolders(only_visible=True)}
+            subfolders_dict = {
+                subfolder.name(): subfolder
+                for subfolder in self._folder.subfolders(only_visible=True)
+            }
+            sorted_subfolder_names = natural_sort(
+                {
+                    subfolder_name: subfolder.title()
+                    for subfolder_name, subfolder in subfolders_dict.items()
+                }
+            )
 
-            for title in natural_sort(subfolders_dict.keys()):
-                subfolder = subfolders_dict[title]
+            for name in sorted_subfolder_names:
+                subfolder = subfolders_dict[name]
                 if searched_folder is not None:
                     if not match_regex.search(subfolder.title()):
                         continue

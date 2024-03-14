@@ -156,7 +156,7 @@ class ECServerThread(threading.Thread):
         self._terminate_event.set()
 
 
-def create_history(
+def create_history_raw(
     settings: Settings,
     config: Config,
     logger: Logger,
@@ -165,11 +165,11 @@ def create_history(
 ) -> History:
     match config["archive_mode"]:
         case "file":
-            h: History = FileHistory(settings, config, logger, event_columns, history_columns)
+            return FileHistory(settings, config, logger, event_columns, history_columns)
         case "mongodb":
-            h = MongoDBHistory(settings, config, logger, event_columns, history_columns)
+            return MongoDBHistory(settings, config, logger, event_columns, history_columns)
         case "sqlite":
-            h = SQLiteHistory(
+            return SQLiteHistory(
                 SQLiteSettings.from_settings(
                     settings=settings,
                     database=Path(settings.paths.history_dir.value / "history.sqlite"),
@@ -181,7 +181,17 @@ def create_history(
             )
         case _ as default:
             assert_never(default)
-    return TimedHistory(h) if logger.isEnabledFor(DEBUG) else h
+
+
+def create_history(
+    settings: Settings,
+    config: Config,
+    logger: Logger,
+    event_columns: Columns,
+    history_columns: Columns,
+) -> History:
+    history = create_history_raw(settings, config, logger, event_columns, history_columns)
+    return TimedHistory(history) if logger.isEnabledFor(DEBUG) else history
 
 
 def allowed_ip(

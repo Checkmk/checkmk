@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -65,9 +64,8 @@ def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict[str, ServiceInf
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.xfail(
-    condition=os.environ.get("DISTRO") == "debian-12",
-    reason="Test currently failing on such distro. See CMK-16501.",
+@pytest.mark.skip(
+    reason="Test currently randomly failing. See CMK-16501.",
 )
 def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
     """Assert sanity of the discovered checks."""

@@ -106,7 +106,6 @@ class ModeIcons(WatoMode):
         return redirect(self.mode_url())
 
     def _upload_icon(self, icon_info):
-        # and finally save the image
         dest_dir = cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"
         store.makedirs(dest_dir)
         try:

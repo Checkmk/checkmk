@@ -31,7 +31,7 @@ def history_files_to_sqlite(omd_root: Path, logger: logging.Logger) -> None:
     """
     tic = time.time()
 
-    Path(omd_root / "etc/check_mk/mkeventd.d/)").mkdir(parents=True, exist_ok=True)
+    Path(omd_root / "etc/check_mk/mkeventd.d/").mkdir(parents=True, exist_ok=True)
     save_mk_file(omd_root / "etc/check_mk/mkeventd.d/enable_sqlite.mk", "archive_mode='sqlite'")
 
     history_dir = create_paths(omd_root).history_dir.value

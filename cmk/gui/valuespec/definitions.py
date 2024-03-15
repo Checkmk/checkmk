@@ -68,7 +68,6 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.plugin_registry
 import cmk.utils.regex
-from cmk.utils.encryption import Encrypter
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.images import CMKImage, ImageType
@@ -102,6 +101,7 @@ from cmk.gui.type_defs import (
     Icon,
 )
 from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutocompleterConfig
+from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
     encode_labels_for_http,

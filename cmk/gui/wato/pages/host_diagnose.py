@@ -11,7 +11,6 @@ from typing import NotRequired
 
 from typing_extensions import TypedDict
 
-from cmk.utils.encryption import Encrypter
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
@@ -34,6 +33,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors

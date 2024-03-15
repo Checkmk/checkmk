@@ -7,10 +7,9 @@ import hashlib
 
 import pytest
 
-from cmk.utils.encryption import Encrypter
-
 import cmk.gui.valuespec as vs
 from cmk.gui.http import request
+from cmk.gui.utils.encrypter import Encrypter
 
 from .utils import request_var
 

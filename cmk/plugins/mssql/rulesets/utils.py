@@ -27,6 +27,6 @@ def mssql_condition_instance_tablespace() -> rule_specs.HostAndItemCondition:
         item_title=Title("Instance & tablespace name"),
         item_form=form_specs.String(
             help_text=Help("The MSSQL instance name and the tablespace name separated by a space."),
-            custom_validate=(form_specs.validators.DisallowEmpty(),),
+            custom_validate=(form_specs.validators.LengthInRange(min_value=1),),
         ),
     )

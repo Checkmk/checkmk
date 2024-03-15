@@ -245,12 +245,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.String(
-                custom_validate=(api_v1.form_specs.validators.DisallowEmpty(),)
+                custom_validate=(api_v1.form_specs.validators.LengthInRange(min_value=1),)
             ),
             legacy_valuespecs.TextInput(
                 placeholder="",
                 allow_empty=False,
-                empty_text=_("An empty value is not allowed here."),
+                empty_text=_("The minimum allowed length is 1."),
                 validate=lambda _x, _y: None,  # ignored by test
             ),
             id="TextInput empty disallowed",
@@ -263,8 +263,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Help("help text"),
                 prefill=api_v1.form_specs.InputHint("myname"),
                 custom_validate=(
-                    api_v1.form_specs.validators.DisallowEmpty(
-                        error_msg=api_v1.Message("Fill this")
+                    api_v1.form_specs.validators.LengthInRange(
+                        min_value=1, error_msg=api_v1.Message("Fill this")
                     ),
                     api_v1.form_specs.validators.MatchRegex(
                         regex=r"^[^.\r\n]+$", error_msg=api_v1.Message("No dot allowed")
@@ -302,8 +302,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Help("help text"),
                 prefill=api_v1.form_specs.DefaultValue("mypattern$"),
                 custom_validate=(
-                    api_v1.form_specs.validators.DisallowEmpty(
-                        error_msg=api_v1.Message("Fill this")
+                    api_v1.form_specs.validators.LengthInRange(
+                        min_value=1, error_msg=api_v1.Message("Fill this")
                     ),
                     api_v1.form_specs.validators.MatchRegex(
                         regex=r"^[^.\r\n]+$", error_msg=api_v1.Message("No dot allowed")
@@ -1100,7 +1100,7 @@ def test_convert_to_legacy_rulespec_group(
                     title=_("item title"),
                     placeholder="",
                     allow_empty=False,
-                    empty_text=_("An empty value is not allowed here."),
+                    empty_text=_("The minimum allowed length is 1."),
                     validate=lambda x, y: None,  # text only checks it's not None.
                 ),
                 parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
@@ -1131,7 +1131,7 @@ def test_convert_to_legacy_rulespec_group(
                     title=_("item title"),
                     placeholder="",
                     allow_empty=False,
-                    empty_text=_("An empty value is not allowed here."),
+                    empty_text=_("The minimum allowed length is 1."),
                     validate=lambda x, y: None,  # text only checks it's not None.
                 ),
                 parameter_valuespec=None,
@@ -1501,7 +1501,11 @@ def test_generated_rulespec_group_single_registration():
         pytest.param("admin", (_v1_custom_text_validate,), id="custom validation"),
         pytest.param(
             "",
-            (api_v1.form_specs.validators.DisallowEmpty(error_msg=api_v1.Message("Fill this")),),
+            (
+                api_v1.form_specs.validators.LengthInRange(
+                    min_value=1, error_msg=api_v1.Message("Fill this")
+                ),
+            ),
             id="empty validation",
         ),
         pytest.param(
@@ -1555,7 +1559,9 @@ def test_convert_validation(
 )
 def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -> None:
     def _v1_custom_list_validate(value: Sequence[object]) -> None:
-        api_v1.form_specs.validators.DisallowEmpty(error_msg=api_v1.Message("Empty list"))(value)
+        api_v1.form_specs.validators.LengthInRange(
+            min_value=1, error_msg=api_v1.Message("Empty list")
+        )(value)
 
         if len(value) > 2:
             raise api_v1.form_specs.validators.ValidationError(

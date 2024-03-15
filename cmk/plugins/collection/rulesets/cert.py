@@ -284,7 +284,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
         add_element_label=Label("Add new endpoint"),
         remove_element_label=Label("Remove this endpoint"),
         no_element_label=Label("Please add at least one endpoint to monitor"),
-        custom_validate=(validators.DisallowEmpty(),),
+        custom_validate=(validators.LengthInRange(min_value=1),),
         element_template=Dictionary(
             elements={
                 "address": DictElement[str](
@@ -298,7 +298,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                             "or $HOSTADDRESS$."
                         ),
                         prefill=InputHint("my.host.tld | 192.168.0.73"),
-                        custom_validate=(validators.DisallowEmpty(),),
+                        custom_validate=(validators.LengthInRange(min_value=1),),
                     ),
                     required=True,
                 ),

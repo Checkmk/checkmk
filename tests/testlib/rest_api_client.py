@@ -2610,21 +2610,6 @@ class LDAPConnectionClient(RestApiClient):
             headers=self._set_etag_header(ldap_connection_id, etag),
         )
 
-    def edit(
-        self,
-        ldap_connection_id: str,
-        ldap_data: dict[str, Any],
-        expect_ok: bool = True,
-        etag: IF_MATCH_HEADER_OPTIONS = "star",
-    ) -> Response:
-        return self.request(
-            "put",
-            url=f"/objects/{self.domain}/{ldap_connection_id}",
-            body=ldap_data,
-            expect_ok=expect_ok,
-            headers=self._set_etag_header(ldap_connection_id, etag),
-        )
-
     def _set_etag_header(
         self,
         ldap_connection_id: str,

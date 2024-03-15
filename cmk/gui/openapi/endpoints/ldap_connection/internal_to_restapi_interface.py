@@ -193,51 +193,54 @@ class ConnectionConfig:
 
         dir_type: ACTIVE_DIR | OPEN_LDAP | DIR_SERVER_389
 
-        match api_dir_type:
-            case {
-                "type": "active_directory_automatic",
-                "domain": str() as domain,
-            }:
+        match api_dir_type["type"]:
+            case "active_directory_automatic":
+                auto_api_dir = cast(APIActiveDirAuto, api_dir_type)
                 ad_discover = LDAPConnectionConfigDiscover(
-                    connect_to=("discover", Discover(domain=domain))
+                    connect_to=(
+                        "discover",
+                        Discover(
+                            domain=auto_api_dir["domain"],
+                        ),
+                    )
                 )
                 dir_type = ("ad", ad_discover)
 
-            case {
-                "type": "active_directory_manual",
-                "ldap_server": str() as server,
-                "failover_servers": list() as failover_servers,
-            }:
+            case "active_directory_manual":
+                fixed_api_dir = cast(APIDirTypeManual, api_dir_type)
                 ad_fixed = LDAPConnectionConfigFixed(
                     connect_to=(
                         "fixed_list",
-                        Fixed(server=server, failover_servers=failover_servers),
+                        Fixed(
+                            server=fixed_api_dir["ldap_server"],
+                            failover_servers=fixed_api_dir["failover_servers"],
+                        ),
                     )
                 )
                 dir_type = ("ad", ad_fixed)
 
-            case {
-                "type": "open_ladp",
-                "ldap_server": str() as server,
-                "failover_servers": list() as failover_servers,
-            }:
+            case "open_ldap":
+                fixed_api_dir = cast(APIDirTypeManual, api_dir_type)
                 ol_fixed = LDAPConnectionConfigFixed(
                     connect_to=(
                         "fixed_list",
-                        Fixed(server=server, failover_servers=failover_servers),
+                        Fixed(
+                            server=fixed_api_dir["ldap_server"],
+                            failover_servers=fixed_api_dir["failover_servers"],
+                        ),
                     )
                 )
                 dir_type = ("openldap", ol_fixed)
 
-            case {
-                "type": "389_directory_server",
-                "ldap_server": str() as server,
-                "failover_servers": list() as failover_servers,
-            }:
+            case _:
+                fixed_api_dir = cast(APIDirTypeManual, api_dir_type)
                 se_fixed = LDAPConnectionConfigFixed(
                     connect_to=(
                         "fixed_list",
-                        Fixed(server=server, failover_servers=failover_servers),
+                        Fixed(
+                            server=fixed_api_dir["ldap_server"],
+                            failover_servers=fixed_api_dir["failover_servers"],
+                        ),
                     )
                 )
                 dir_type = ("389directoryserver", se_fixed)
@@ -1288,15 +1291,4 @@ def request_to_create_ldap_connection(ldap_data: APIConnection) -> LDAPConnectio
     all_connections = load_connection_config(lock=True)
     all_connections.append(connection.to_mk_format())
     save_connection_config(all_connections)
-    return connection
-
-
-def request_to_edit_ldap_connection(
-    ldap_id: str, ldap_data: APIConnection
-) -> LDAPConnectionInterface:
-    all_connections = load_connection_config(lock=True)
-    connection = LDAPConnectionInterface.from_api_request(ldap_data)
-    modified_connections = [c for c in all_connections if c["id"] != ldap_id]
-    modified_connections.append(connection.to_mk_format())
-    save_connection_config(modified_connections)
     return connection

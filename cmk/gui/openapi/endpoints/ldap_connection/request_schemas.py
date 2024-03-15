@@ -66,10 +66,6 @@ class LDAPGeneralPropertiesCreateRequest(LDAPGeneralPropertiesRequest):
     id = LDAPConnectionID(presence="should_not_exist")
 
 
-class LDAPGeneralPropertiesUpdateRequest(LDAPGeneralPropertiesRequest):
-    id = LDAPConnectionID(presence="should_exist")
-
-
 class DirectoryTypeBaseRequest(BaseSchema):
     type = fields.String(
         enum=[
@@ -960,7 +956,7 @@ class LDAPConnectionConfigCreateRequest(LDAPConnectionConfigRequest):
 
 class LDAPConnectionConfigUpdateRequest(LDAPConnectionConfigRequest):
     general_properties = fields.Nested(
-        LDAPGeneralPropertiesUpdateRequest,
+        LDAPGeneralPropertiesRequest,
         required=True,
         description="General properties of an LDAP connection.",
         example=GENERAL_PROPERTIES_EXAMPLE,

@@ -11,7 +11,7 @@ import json
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
-from typing import Self
+from typing import NamedTuple, Self
 
 import pytest
 import requests
@@ -176,6 +176,7 @@ CURRENTLY_UNDER_TEST = {
     "https://exchange.checkmk.com/api/packages/download/650/telematik_konnektor-1.3.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.19.mkp",
     "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.30.mkp",
+    "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.31.mkp",
     "https://exchange.checkmk.com/api/packages/download/653/m365_service_health-1.2.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/669/mshpc_jobs_and_nodes-1.0.0.mkp",
     "https://exchange.checkmk.com/api/packages/download/681/Mailcow-1.2.0.mkp",
@@ -188,13 +189,12 @@ CURRENTLY_UNDER_TEST = {
 UNTESTABLE = {
     # This one can't be installed anymore. It tries to deploy a part called 'pnp-rraconf'
     "https://exchange.checkmk.com/api/packages/download/97/dir_size-1.1.1.mkp",
-    # This we don't need to test. It is shipped with 2.3 and has a dedicated test anyway
-    "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.31.mkp",
 }
 
 
-class _ExtensionName(str):
-    ...
+class _DownloadedExtension(NamedTuple):
+    name: str
+    version: str
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -301,32 +301,34 @@ def _download_extension(url: str) -> bytes:
 
 
 @contextlib.contextmanager
-def _install_extension(site: Site, path: Path) -> Iterator[_ExtensionName]:
-    name = None
+def _install_extension(site: Site, path: Path) -> Iterator[_DownloadedExtension]:
+    extension = None
     try:
-        name = _add_extension(site, path)
-        _enable_extension(site, name)
-        yield name
+        extension = _add_extension(site, path)
+        _enable_extension(site, extension.name, extension.version)
+        yield extension
     finally:
-        if name:
-            _disable_extension(site, name)
-            _remove_extension(site, name)
+        if extension:
+            _disable_extension(site, extension.name, extension.version)
+            _remove_extension(site, extension.name, extension.version)
 
 
-def _add_extension(site: Site, path: Path) -> _ExtensionName:
-    return _ExtensionName(site.check_output(["mkp", "add", str(path)]).splitlines()[0].split()[0])
+def _add_extension(site: Site, path: Path) -> _DownloadedExtension:
+    command_output = site.check_output(["mkp", "add", str(path)])
+    name, version = command_output.splitlines()[0].split(maxsplit=1)
+    return _DownloadedExtension(name, version)
 
 
-def _enable_extension(site: Site, name: str) -> None:
-    site.check_output(["mkp", "enable", name])
+def _enable_extension(site: Site, name: str, version: str) -> None:
+    site.check_output(["mkp", "enable", name, version])
 
 
-def _disable_extension(site: Site, name: str) -> None:
-    site.check_output(["mkp", "disable", name])
+def _disable_extension(site: Site, name: str, version: str) -> None:
+    site.check_output(["mkp", "disable", name, version])
 
 
-def _remove_extension(site: Site, name: str) -> None:
-    site.check_output(["mkp", "remove", name])
+def _remove_extension(site: Site, name: str, version: str) -> None:
+    site.check_output(["mkp", "remove", name, version])
 
 
 def test_package_list_up_to_date() -> None:

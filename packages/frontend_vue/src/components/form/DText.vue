@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUpdated } from 'vue'
-import { VueComponentSpec } from '@/types'
-import ValidationError from '../ValidatonError.vue'
+import ValidationError from '@/components/ValidatonError.vue'
+import type { VueSchema, VueText } from '@/vue_types'
+import { extract_validation, extract_value, type ValueAndValidation } from '@/types'
 
 const emit = defineEmits<{
   (e: 'update-value', value: any): void
@@ -11,22 +12,16 @@ function send_value_upstream(new_value: any) {
   emit('update-value', parseInt(new_value))
 }
 
-interface VueTextComponentSpec extends VueComponentSpec {
-  config: {
-    value: string
-    placeholder?: string
-  }
-}
-
 const props = defineProps<{
-  component: VueTextComponentSpec
+  vue_schema: VueText
+  data: ValueAndValidation
 }>()
 
 const component_value = ref<string>()
 
 onMounted(() => {
   // console.log("mounted text")
-  component_value.value = props.component.config.value
+  component_value.value = extract_value(props.data)
   send_value_upstream(component_value.value)
 })
 
@@ -44,8 +39,8 @@ let style = computed(() => {
     :style="style"
     type="text"
     v-model="component_value"
-    @input="send_value_upstream($event.target.value)"
-    :placeholder="component.config.placeholder"
+    @input="send_value_upstream(($event!.target! as HTMLInputElement).value)"
+    :placeholder="vue_schema.placeholder"
   />
-  <ValidationError :component="component"></ValidationError>
+  <ValidationError :error="extract_validation(data)"></ValidationError>
 </template>

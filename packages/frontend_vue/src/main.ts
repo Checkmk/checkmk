@@ -26,9 +26,11 @@ function setup_vue() {
       const app = createApp(Form, {
         form_spec: {
           id: vueApp.id,
-          component: vueApp.component
+          vue_schema: vueApp.vue_schema,
+          data: vueApp.data
         }
       })
+      // @ts-ignore
       app.use(Form)
       app.mount(div)
     } else if (vueApp.app_name == 'd3_table') {
@@ -36,6 +38,7 @@ function setup_vue() {
       const app = createApp(D3Table, {
         table_spec: vueApp.component
       })
+      // @ts-ignore
       app.use(Form)
       app.mount(div)
       console.log('vue fully mounted table')
@@ -44,6 +47,7 @@ function setup_vue() {
       const app = createApp(Table, {
         table_spec: vueApp.component
       })
+      // @ts-ignore
       app.use(Form)
       app.mount(div)
       console.log('vue fully mounted table')

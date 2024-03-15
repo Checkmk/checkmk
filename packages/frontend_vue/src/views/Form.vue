@@ -1,6 +1,6 @@
 <script setup lang="ts" xmlns="http://www.w3.org/1999/html">
-import { ref, computed } from 'vue'
-import { VueComponentSpec, VueFormSpec } from '../types'
+import { ref } from 'vue'
+import { type VueFormSpec } from '@/types'
 import DForm from '@/components/form/DForm.vue'
 
 const props = defineProps<{
@@ -21,7 +21,11 @@ function update_value(new_value: any) {
   <table class="nform">
     <tr>
       <td>
-        <DForm @update-value="update_value" :component="form_spec.component" />
+        <DForm
+          @update-value="update_value"
+          :vue_schema="form_spec.vue_schema"
+          :data="form_spec.data"
+        />
       </td>
     </tr>
     <!-- This input field contains the computed json value which is sent when the form is submitted -->

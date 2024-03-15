@@ -1,36 +1,31 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { VueComponentSpec } from '@/types'
-import ValidationError from '../ValidatonError.vue'
+import { extract_validation, extract_value, type ValueAndValidation } from '@/types'
+import ValidationError from '@/components/ValidatonError.vue'
+import type { VueInteger, VueSchema } from '@/vue_types'
 
 const emit = defineEmits<{
   (e: 'update-value', value: any): void
 }>()
-interface VueLegacyNumberComponentSpec extends VueComponentSpec {
-  config: {
-    value: number
-    unit?: string
-    placeholder?: string
-  }
-}
 
 const props = defineProps<{
-  component: VueLegacyNumberComponentSpec
+  vue_schema: VueInteger
+  data: ValueAndValidation
 }>()
 
 const component_value = ref<string>()
 
 onMounted(() => {
-  component_value.value = props.component.config.value.toString()
-  send_value_upstream(component_value.value)
+  component_value.value = extract_value(props.data).toString()
+  send_value_upstream(component_value.value!)
 })
 
 function send_value_upstream(new_value: string) {
-  emit('update-value', parseInt(new_value))
+  emit('update-value', Number(new_value))
 }
 
 let unit = computed(() => {
-  return props.component.config.unit || ''
+  return props.vue_schema.unit || ''
 })
 
 let style = computed(() => {
@@ -44,9 +39,8 @@ let style = computed(() => {
     :style="style"
     type="text"
     :value="component_value"
-    @input="send_value_upstream($event.target.value)"
-    :placeholder="component.config.placeholder"
+    @input="send_value_upstream(($event!.target! as HTMLInputElement).value)"
   />
   <span v-if="unit" class="vs_floating_text">{{ unit }}</span>
-  <ValidationError :component="component"></ValidationError>
+  <ValidationError :error="extract_validation(data)"></ValidationError>
 </template>

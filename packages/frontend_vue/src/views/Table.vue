@@ -1,7 +1,7 @@
 <script setup lang="ts" xmlns="http://www.w3.org/1999/html">
-import { TableRow, VueTableSpec } from '../types'
+import { type TableRow, type VueTableSpec } from '@/types'
 import { computed, ref, onMounted, onBeforeUpdate, onUpdated } from 'vue'
-import crossfilter, { Crossfilter } from 'crossfilter2'
+import crossfilter from 'crossfilter2'
 import * as d3 from 'd3'
 
 const props = defineProps<{
@@ -17,7 +17,7 @@ const search_text_dimension = row_crossfilter.dimension<string>((d: TableRow) =>
   d.columns.forEach((column) => {
     column.content.forEach((content) => {
       // Might add additional types to this data dimension
-      if (content.type == 'text') combined_text.push(content.content.toLowerCase())
+      if (content.type == 'text') combined_text.push(content.content!.toLowerCase())
     })
   })
   return combined_text.join('#')
@@ -38,11 +38,11 @@ function get_rows() {
   let records: TableRow[]
   if (!use_crossfilter) {
     records = []
-    props.table_spec.rows.forEach((row) => {
+    props.table_spec.rows.forEach((row: TableRow) => {
       let found_match = false
-      row.columns.forEach((columns) => {
-        columns.content.forEach((content) => {
-          if (content.type == 'text' && content.content.includes(search_value)) {
+      row.columns.forEach((column) => {
+        column.content.forEach((content) => {
+          if (content.type == 'text' && content.content!.includes(search_value)) {
             found_match = true
           }
         })
@@ -59,10 +59,10 @@ function get_rows() {
     records = row_crossfilter.allFiltered()
   }
 
-  function get_custom_sorter_function(index: number, direction) {
+  function get_custom_sorter_function(index: number, direction: number) {
     return function (a: TableRow, b: TableRow) {
-      const a_content = a.columns[index].content[0].content.toLowerCase()
-      const b_content = b.columns[index].content[0].content.toLowerCase()
+      const a_content = a.columns[index].content[0]!.content!.toLowerCase()
+      const b_content = b.columns[index].content[0]!.content!.toLowerCase()
       if (a_content == b_content) return 0
       if (a_content > b_content) return direction
       return -direction
@@ -117,7 +117,7 @@ function set_sort_index(index: number) {
               <img class="icon iconbutton" :src="content.icon" />
             </a>
             <span v-if="content.type === 'text'">{{ content.content }}</span>
-            <span v-if="content.type === 'html'" v-html="content.html_content" />
+            <span v-if="content.type === 'html'" v-html="content.content" />
             <a v-if="content.type === 'href'" :href="content.url">{{ content.alias }}</a>
           </template>
         </td>

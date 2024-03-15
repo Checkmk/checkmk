@@ -1,58 +1,59 @@
 <script setup lang="ts" xmlns="http://www.w3.org/1999/html">
-import { ref } from 'vue'
+// import DList from './DList.vue'
 import DInteger from './DInteger.vue'
-import DFloat from './DInteger.vue'
-import { IComponent, VueComponentSpec } from '@/types'
-import DList from './DList.vue'
+import DFloat from './DFloat.vue'
+import DDictionary from './DDictionary.vue'
+import DText from './DText.vue'
 
 import { onBeforeMount, onMounted } from 'vue'
-import DDictionary from './DDictionary.vue'
-import DDropdownChoice from './DDropdownChoice.vue'
-import DLegacyValueSpec from './DLegacyValueSpec.vue'
-import DCheckbox from './DCheckbox.vue'
-import DCascadingDropdownChoice from './DCascadingDropdownChoice.vue'
-import DPercentage from './DPercentage.vue'
-import DListOf from './DListOf.vue'
-import DText from './DText.vue'
+import type { ValueAndValidation } from '@/types'
+import type { VueSchema } from '@/vue_types'
+// import DDropdownChoice from "cmk_vue/components/form/DDropdownChoice.vue";
+// import DLegacyValueSpec from "cmk_vue/components/form/DLegacyValueSpec.vue";
+// import DCheckbox from "cmk_vue/components/form/DCheckbox.vue";
+// import DCascadingDropdownChoice from "cmk_vue/components/form/DCascadingDropdownChoice.vue";
+// import DPercentage from '@/components/form/DPercentage.vue'
+// import DListOf from "cmk_vue/components/form/DListOf.vue";
 
 const emit = defineEmits<{
   (e: 'update-value', value: any): void
 }>()
 
 onBeforeMount(() => {
-  console.log('DFORM before mount', props.component)
+  // console.log('DFORM before mount', props.schema, props.data)
 })
 
 onMounted(() => {
-  console.log('DFORM mounted', props.component)
+  // console.log('DFORM mounted', props.schema, props.data)
 })
 
 const props = defineProps<{
-  component: VueComponentSpec
+  vue_schema: VueSchema
+  data: ValueAndValidation
 }>()
 
 // https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
-const components: { [name: string]: IComponent } = {
+const components: { [name: string]: {} } = {
   integer: DInteger,
   float: DFloat,
-  percentage: DPercentage,
   text: DText,
-  list: DList,
-  list_of: DListOf,
-  dictionary: DDictionary,
-  legacy_valuespec: DLegacyValueSpec,
-  checkbox: DCheckbox,
-  dropdown_choice: DDropdownChoice,
-  cascading_dropdown_choice: DCascadingDropdownChoice
+  // list: DList,
+  // list_of: DListOf,
+  dictionary: DDictionary
+  // legacy_valuespec: DLegacyValueSpec,
+  // checkbox: DCheckbox,
+  // dropdown_choice: DDropdownChoice,
+  // cascading_dropdown_choice: DCascadingDropdownChoice,
 }
 
-function get_component(): IComponent {
-  console.log('get component', props.component.component_type)
-  return components[props.component.component_type]
+function get_component(): object {
+  // console.log('get schema ', props.schema)
+  // console.log('get data   ', props.data)
+  return components[props.vue_schema.vue_type!]
 }
 
 function forward_value_upstream(new_value: any) {
-  console.log('forward value', props.component.component_type, new_value)
+  // console.log('forward value', props.schema.schema_type, new_value)
   emit('update-value', new_value)
 }
 </script>
@@ -60,7 +61,8 @@ function forward_value_upstream(new_value: any) {
 <template>
   <component
     v-bind:is="get_component()"
-    :component="component"
+    :vue_schema="vue_schema"
+    :data="data"
     @update-value="forward_value_upstream"
   >
   </component>

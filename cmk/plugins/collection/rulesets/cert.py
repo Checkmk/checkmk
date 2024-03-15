@@ -61,7 +61,7 @@ def _valuespec_validity() -> Dictionary:
                         "are within 90 and 365 days."
                     ),
                     displayed_magnitudes=[TimeMagnitude.DAY],
-                    custom_validate=(validators.InRange(min_value=0),),
+                    custom_validate=(validators.NumberInRange(min_value=0),),
                     prefill=DefaultValue(90.0 * _DAY),
                 )
             ),
@@ -254,7 +254,7 @@ def _valuespec_remaining_validity() -> SimpleLevels[float]:
         ),
         form_spec_template=TimeSpan(
             displayed_magnitudes=[TimeMagnitude.DAY],
-            custom_validate=(validators.InRange(min_value=0),),
+            custom_validate=(validators.NumberInRange(min_value=0),),
         ),
         level_direction=LevelDirection.LOWER,
         prefill_fixed_levels=DefaultValue((40 * _DAY, 20 * _DAY)),

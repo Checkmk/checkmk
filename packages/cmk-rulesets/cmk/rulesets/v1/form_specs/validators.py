@@ -38,8 +38,8 @@ class DisallowEmpty:  # pylint: disable=too-few-public-methods
             raise ValidationError(self.error_msg)
 
 
-class InRange:  # pylint: disable=too-few-public-methods
-    """Custom validator that ensures the validated value is in a given interval."""
+class NumberInRange:  # pylint: disable=too-few-public-methods
+    """Custom validator that ensures the validated number is in a given interval."""
 
     def __init__(
         self,

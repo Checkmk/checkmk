@@ -91,7 +91,7 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                     displayed_magnitudes=[
                         TimeMagnitude.SECOND,
                     ],
-                    custom_validate=(validators.InRange(min_value=1),),
+                    custom_validate=(validators.NumberInRange(min_value=1),),
                     prefill=DefaultValue(5.0),
                 ),
                 required=True,

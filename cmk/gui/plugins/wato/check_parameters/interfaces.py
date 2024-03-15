@@ -1109,7 +1109,7 @@ def _parameter_valuespec_if() -> Dictionary:
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
-        check_group_name="if",
+        check_group_name="interfaces",
         group=RulespecGroupCheckParametersNetworking,
         item_spec=_item_spec_if,
         match_type="dict",

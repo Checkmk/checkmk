@@ -482,6 +482,6 @@ check_plugin_azure_vm_network_io = CheckPlugin(
     service_name="Azure/VM %s",
     discovery_function=discover_azure_vm_network_io,
     check_function=check_azure_vm_network_io,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
 )

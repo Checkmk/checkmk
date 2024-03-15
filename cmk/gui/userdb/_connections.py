@@ -70,7 +70,6 @@ START_URL = tuple[Literal["start_url"], None | str]
 TEMP_UNIT = tuple[Literal["temperature_unit"], None | Literal["celsius", "fahrenheit"]]
 UI_THEME = tuple[Literal["ui_theme"], None | Literal["facelift", "modern-dark"]]
 FORCE_AUTH_USER = tuple[Literal["force_authuser"], bool]
-CUSTOM_USER_ATTRIBUTE = tuple[str, str]
 
 ATTRIBUTE = (
     DISABLE_NOTIFICATIONS
@@ -82,7 +81,6 @@ ATTRIBUTE = (
     | TEMP_UNIT
     | UI_THEME
     | FORCE_AUTH_USER
-    | CUSTOM_USER_ATTRIBUTE
 )
 
 

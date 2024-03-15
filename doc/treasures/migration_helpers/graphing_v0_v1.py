@@ -959,6 +959,8 @@ def _precision_repr(precision: metrics.AutoPrecision | metrics.StrictPrecision) 
 
 
 def _unit_repr(unit: metrics.Unit) -> str:
+    if unit.precision == metrics.AutoPrecision(2):
+        return f"metrics.Unit({_notation_repr(unit.notation)})"
     return f"metrics.Unit({_notation_repr(unit.notation)}, {_precision_repr(unit.precision)})"
 
 

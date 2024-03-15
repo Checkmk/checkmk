@@ -89,6 +89,7 @@ class Site:
             user="automation" if self.exists() else "cmkadmin",
             password=self.get_automation_secret() if self.exists() else self.admin_password,
             site=self.id,
+            site_version_spec=self.version.version_spec,
         )
 
     @property

@@ -61,7 +61,6 @@ API_DOMAIN = Literal[
     "autocomplete",
     "service_discovery",
     "discovery_run",
-    "ldap_connection",
 ]
 
 
@@ -2561,31 +2560,6 @@ class ServiceDiscoveryClient(RestApiClient):
         )
 
 
-class LDAPConnectionClient(RestApiClient):
-    domain: API_DOMAIN = "ldap_connection"
-
-    def get(
-        self,
-        ldap_connection_id: str,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "get",
-            url=f"/objects/{self.domain}/{ldap_connection_id}",
-            expect_ok=expect_ok,
-        )
-
-    def get_all(
-        self,
-        expect_ok: bool = True,
-    ) -> Response:
-        return self.request(
-            "get",
-            url=f"/domain-types/{self.domain}/collections/all",
-            expect_ok=expect_ok,
-        )
-
-
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -2617,7 +2591,6 @@ class ClientRegistry:
     UserRole: UserRoleClient
     AutoComplete: AutocompleteClient
     ServiceDiscovery: ServiceDiscoveryClient
-    LdapConnection: LDAPConnectionClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2651,5 +2624,4 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         UserRole=UserRoleClient(request_handler, url_prefix),
         AutoComplete=AutocompleteClient(request_handler, url_prefix),
         ServiceDiscovery=ServiceDiscoveryClient(request_handler, url_prefix),
-        LdapConnection=LDAPConnectionClient(request_handler, url_prefix),
     )

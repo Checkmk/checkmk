@@ -34,7 +34,6 @@ DomainType = Literal[
     "hostgroup",
     "host_group_config",
     "host_tag_group",
-    "ldap_connection",
     "licensing",
     "license_usage",
     "metric",

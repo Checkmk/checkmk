@@ -12,11 +12,7 @@ import pytest
 
 from tests.testlib.site import Site
 
-from tests.extension_compatibility.test_extension_compatibility import (
-    _disable_extension,
-    _enable_extension,
-    _ImportErrors,
-)
+from tests.extension_compatibility.test_extension_compatibility import _ImportErrors
 
 MKP_TO_TEST = {
     "redfish",
@@ -64,3 +60,11 @@ def _temporary_enable_extension(site: Site, name: str) -> Iterator[None]:
         yield
     finally:
         _disable_extension(site, name)
+
+
+def _enable_extension(site: Site, name: str) -> None:
+    site.check_output(["mkp", "enable", name])
+
+
+def _disable_extension(site: Site, name: str) -> None:
+    site.check_output(["mkp", "disable", name])

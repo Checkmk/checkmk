@@ -313,6 +313,7 @@ what-gerrit-makes:
 
 format-js:
 	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{{enterprise/web,web}/htdocs/js/**/,}*.{js,ts,vue}"
+	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "packages/frontend_vue/src/**/*.{js,ts,vue}"
 
 format-css:
 	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "web/htdocs/themes/**/*.scss"

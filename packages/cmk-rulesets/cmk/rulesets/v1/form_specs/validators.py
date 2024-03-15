@@ -27,14 +27,40 @@ class ValidationError(ValueError):
         return self._message
 
 
-class DisallowEmpty:  # pylint: disable=too-few-public-methods
-    """Custom validator that makes sure the validated value is not empty."""
+class LengthInRange:  # pylint: disable=too-few-public-methods
+    """Custom validator that ensures the validated size is in a given interval."""
 
-    def __init__(self, error_msg: Message | None = None) -> None:
-        self.error_msg: Final = error_msg or Message("An empty value is not allowed here.")
+    def __init__(
+        self,
+        min_value: int | float | None = None,
+        max_value: int | float | None = None,
+        error_msg: Message | None = None,
+    ) -> None:
+        self.range: Final = (min_value, max_value)
+        self.error_msg: Final = (
+            self._get_default_errmsg(min_value, max_value) if error_msg is None else error_msg
+        )
 
-    def __call__(self, value: Sequence[object]) -> None:
-        if value is None or (isinstance(value, Sized) and len(value) == 0):
+    @staticmethod
+    def _get_default_errmsg(min_: float | None, max_: float | None) -> Message:
+        if min_ is None:
+            if max_ is None:
+                raise ValidationError(
+                    Message(
+                        "Either the minimum or maximum allowed value must be "
+                        "configured, otherwise this validator is meaningless."
+                    )
+                )
+            return Message("The maximum allowed length is %s.") % str(max_)
+
+        if max_ is None:
+            return Message("The minimum allowed length is %s.") % str(min_)
+        return Message("Allowed lengths range from %s to %s.") % (str(min_), str(max_))
+
+    def __call__(self, value: Sized) -> None:
+        if self.range[0] is not None and len(value) < self.range[0]:
+            raise ValidationError(self.error_msg)
+        if self.range[1] is not None and self.range[1] < len(value):
             raise ValidationError(self.error_msg)
 
 

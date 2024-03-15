@@ -10,7 +10,7 @@ from keyword import iskeyword
 
 from ._localize import Help, Title
 from .form_specs import Dictionary, FormSpec, String
-from .form_specs.validators import DisallowEmpty
+from .form_specs.validators import LengthInRange
 
 
 class Topic(Enum):
@@ -73,7 +73,7 @@ class HostAndItemCondition:
     """
 
     item_title: Title
-    item_form: FormSpec[str] = String(custom_validate=(DisallowEmpty(),))
+    item_form: FormSpec[str] = String(custom_validate=(LengthInRange(min_value=1),))
 
 
 def _validate_name(name: str) -> None:

@@ -521,7 +521,9 @@ def _valuespec_connection() -> Dictionary:
                                     "user": DictElement(
                                         parameter_form=String(
                                             title=Title("Username"),
-                                            custom_validate=(validators.DisallowEmpty(),),
+                                            custom_validate=(
+                                                validators.LengthInRange(min_value=1),
+                                            ),
                                         ),
                                         required=True,
                                     ),
@@ -694,7 +696,7 @@ def _valuespec_endpoints() -> List:
             "to specify at least one endpoint to monitor."
         ),
         add_element_label=Label("Add new endpoint"),
-        custom_validate=(validators.DisallowEmpty(),),
+        custom_validate=(validators.LengthInRange(min_value=1),),
         element_template=Dictionary(
             elements={
                 "service_name": DictElement(
@@ -727,7 +729,7 @@ def _valuespec_endpoints() -> List:
                                     help_text=Help(
                                         "The suffix is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
                                     ),
-                                    custom_validate=(validators.DisallowEmpty(),),
+                                    custom_validate=(validators.LengthInRange(min_value=1),),
                                     prefill=InputHint("My HTTP service"),
                                 ),
                                 required=True,

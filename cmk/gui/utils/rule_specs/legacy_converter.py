@@ -727,13 +727,14 @@ def _convert_to_legacy_percentage(
 def _convert_to_legacy_text_input(
     to_convert: ruleset_api_v1.form_specs.String, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput:
-    disallow_empty = None
+    min_len_validator = None
     if to_convert.custom_validate is not None:
-        disallow_empty = next(
+        min_len_validator = next(
             (
                 val
                 for val in to_convert.custom_validate
-                if isinstance(val, ruleset_api_v1.form_specs.validators.DisallowEmpty)
+                if isinstance(val, ruleset_api_v1.form_specs.validators.LengthInRange)
+                and val.range[0] is not None
             ),
             None,
         )
@@ -741,9 +742,9 @@ def _convert_to_legacy_text_input(
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
-        "allow_empty": disallow_empty is None,
-        "empty_text": disallow_empty.error_msg.localize(localizer)
-        if disallow_empty is not None
+        "allow_empty": min_len_validator is None,
+        "empty_text": min_len_validator.error_msg.localize(localizer)
+        if min_len_validator is not None
         else "",
     }
 

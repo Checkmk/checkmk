@@ -5,15 +5,15 @@
 """These functions implement a web service with that a master can call
 automation functions on slaves,"""
 
-import secrets
 import traceback
 from collections.abc import Iterable
 from contextlib import nullcontext
 from datetime import datetime
 
-import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.crypto.password import Password
+from cmk.utils.crypto.secrets import DistributedSetupSecret
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
@@ -21,7 +21,6 @@ from cmk.utils.user import UserId
 from cmk.automations.results import result_type_registry, SerializedResult
 
 import cmk.gui.userdb as userdb
-import cmk.gui.utils
 import cmk.gui.watolib.utils as watolib_utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException
@@ -78,7 +77,7 @@ class PageAutomationLogin(AjaxPage):
                 {
                     "version": cmk_version.__version__,
                     "edition_short": cmk_version.edition().short,
-                    "login_secret": _get_login_secret(create_on_demand=True),
+                    "login_secret": DistributedSetupSecret().read().raw,
                 }
             )
         )
@@ -108,7 +107,7 @@ class PageAutomation(AjaxPage):
         if not secret:
             raise MKAuthException(_("Missing secret for automation command."))
 
-        if secret != _get_login_secret():
+        if not DistributedSetupSecret().check(Password(secret)):
             raise MKAuthException(_("Invalid automation secret."))
 
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
@@ -246,20 +245,3 @@ def _set_version_headers() -> None:
     """
     response.headers["x-checkmk-version"] = cmk_version.__version__
     response.headers["x-checkmk-edition"] = cmk_version.edition().short
-
-
-def _get_login_secret(create_on_demand=False):
-    path = cmk.utils.paths.var_dir + "/wato/automation_secret.mk"
-
-    secret = store.load_object_from_file(path, default=None)
-    if secret is not None:
-        return secret
-
-    if not create_on_demand:
-        return None
-
-    # Note: This will make a secret and base64 encode it, so we'll end up with 43 chars for our
-    #       32 bytes. It would be better to store the raw secret bytes and encode when needed.
-    secret = secrets.token_urlsafe(32)
-    store.save_object_to_file(path, secret)
-    return secret

@@ -706,7 +706,7 @@ def test_perform_discovery_action_update_services(
             CheckPreviewEntry(
                 check_source="vanished",
                 check_plugin_name="lnx_if",
-                ruleset_name="if",
+                ruleset_name="dummy_name",
                 discovery_ruleset_name=None,
                 item="2",
                 old_discovered_parameters={

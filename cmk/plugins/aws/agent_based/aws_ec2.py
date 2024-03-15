@@ -187,7 +187,7 @@ check_plugin_aws_ec2_network_io = CheckPlugin(
     sections=["aws_ec2"],
     service_name="AWS/EC2 Network IO %s",
     discovery_function=discover_aws_ec2_network_io,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_aws_ec2_network_io,
 )

@@ -135,5 +135,5 @@ register.check_plugin(
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     discovery_function=discovery_prism_host_networks,
     check_function=check_prism_host_networks,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
 )

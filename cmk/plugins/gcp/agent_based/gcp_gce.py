@@ -146,7 +146,7 @@ check_plugin_gcp_gce_network = CheckPlugin(
     name="gcp_gce_network",
     service_name="GCP/GCE Network IO %s",
     discovery_function=discover_network,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_network,
 )

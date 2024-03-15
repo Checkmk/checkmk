@@ -139,7 +139,7 @@ check_plugin_aws_rds_network_io = CheckPlugin(
     sections=["aws_rds"],
     service_name="AWS/RDS %s Network IO",
     discovery_function=discover_aws_rds_network_io,
-    check_ruleset_name="if",
+    check_ruleset_name="interfaces",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_aws_rds_network_io,
 )

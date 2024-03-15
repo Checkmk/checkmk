@@ -187,7 +187,7 @@ def form_alert_remapping():
         ),
         title=Title("Remap alert rule states"),
         help_text=Help("Configure the monitoring state for Alertmanager rules."),
-        custom_validate=(validators.DisallowEmpty(),),
+        custom_validate=(validators.LengthInRange(min_value=1),),
     )
 
 

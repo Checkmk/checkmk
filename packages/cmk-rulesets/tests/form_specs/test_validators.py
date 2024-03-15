@@ -11,8 +11,8 @@ import pytest
 
 from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import (
-    DisallowEmpty,
     EmailAddress,
+    LengthInRange,
     MatchRegex,
     NetworkPort,
     NumberInRange,
@@ -223,33 +223,49 @@ def test_match_regex(
 
 
 @pytest.mark.parametrize(
-    ["input_msg", "test_value", "expected_raises", "expected_message"],
+    ["input_args", "input_message", "test_value", "expected_raises", "expected_message"],
     [
-        pytest.param({}, "valid_string", does_not_raise(), None, id="valid string"),
-        pytest.param({}, [0, 1, 2], does_not_raise(), None, id="valid sequence"),
         pytest.param(
-            {},
+            {"min_value": 1}, None, "valid_string", does_not_raise(), None, id="valid string"
+        ),
+        pytest.param(
+            {"min_value": 1}, None, [0, 1, 2], does_not_raise(), None, id="valid sequence"
+        ),
+        pytest.param(
+            {"min_value": 1},
+            None,
             "",
             pytest.raises(ValidationError),
-            "An empty value is not allowed here.",
-            id="invalid string with default message",
+            "The minimum allowed length is 1.",
+            id="invalid string with default message (min)",
         ),
         pytest.param(
-            {},
+            {"min_value": 1},
+            None,
             [],
             pytest.raises(ValidationError),
-            "An empty value is not allowed here.",
-            id="invalid sequence with default message",
+            "The minimum allowed length is 1.",
+            id="invalid sequence with default message (min)",
         ),
         pytest.param(
-            {"error_msg": Message("My own message")},
+            {"max_value": 1},
+            None,
+            {"a": 1, "b": 2},
+            pytest.raises(ValidationError),
+            "The maximum allowed length is 1.",
+            id="invalid sequence with default message (min)",
+        ),
+        pytest.param(
+            {"min_value": 1},
+            Message("My own message"),
             "",
             pytest.raises(ValidationError),
             "My own message",
             id="invalid string with custom message",
         ),
         pytest.param(
-            {"error_msg": Message("My own message")},
+            {"min_value": 1},
+            Message("My own message"),
             [],
             pytest.raises(ValidationError),
             "My own message",
@@ -257,14 +273,15 @@ def test_match_regex(
         ),
     ],
 )
-def test_disallow_empty(
-    input_msg: Mapping[str, Message],
+def test_length_in_range(
+    input_args: Mapping[str, int | float],
+    input_message: Message | None,
     test_value: str | Sequence[object],
     expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
 ) -> None:
     with expected_raises as e:
-        DisallowEmpty(**input_msg)(test_value)
+        LengthInRange(**input_args, error_msg=input_message)(test_value)
 
     assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 

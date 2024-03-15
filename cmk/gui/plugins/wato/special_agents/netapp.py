@@ -63,5 +63,6 @@ rulespec_registry.register(
         group=RulespecGroupDatasourceProgramsHardware,
         name=RuleGroup.SpecialAgents("netapp"),
         valuespec=_valuespec_special_agents_netapp,
+        is_deprecated=True,
     )
 )

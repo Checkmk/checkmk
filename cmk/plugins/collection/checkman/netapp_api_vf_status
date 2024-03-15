@@ -4,6 +4,9 @@ catalog: hw/storagehw/netapp
 license: GPLv2
 distribution: check_mk
 description:
+ This check and the associated special agent (agent_netapp) are deprecated
+ and will be removed in a future version.
+
  This check monitors the states of the vServers in a NetApp environment.
  Possible states are {running}, {stopped}, {inconsistent}, {DR backup},
  {migrating} or {defunct}. If the vFiler state is not {running},

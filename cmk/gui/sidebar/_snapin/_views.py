@@ -75,8 +75,9 @@ def view_menu_items(include_reports: bool) -> Sequence[tuple[str, tuple[str, Vis
         for page in page_type.load().pages():
             if page._show_in_sidebar():
                 visual = page.to_visual()
-                visual["hidden"] = False  # Is currently to configurable for pagetypes
-                visual["icon"] = None  # Is currently to configurable for pagetypes
+                visual["hidden"] = False  # Is currently not configurable for pagetypes
+                visual["icon"] = None  # Is currently not configurable for pagetypes
+                visual["megamenu_search_terms"] = []  # Is currently not configurable for pagetypes
 
                 page_type_items.append((page_type.type_name(), (page.name(), visual)))
 

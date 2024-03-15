@@ -4,6 +4,9 @@ catalog: hw/storagehw/netapp
 license: GPLv2
 distribution: check_mk
 description:
+ This check and the associated special agent (agent_netapp) are deprecated
+ and will be removed in a future version.
+
  The check monitors the time difference between system and agent time for a NetApp filer.
  There are no default levels set. You can configure upper levels for the time difference.
 

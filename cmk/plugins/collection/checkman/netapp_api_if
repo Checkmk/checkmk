@@ -4,6 +4,11 @@ catalog: hw/storagehw/netapp
 license: GPLv2
 distribution: check_mk
 description:
+ This check and the associated special agent (agent_netapp) are deprecated
+ and will be removed in a future version.
+
+ Please configure the new special agent using the "NetApp via Ontap REST API" ruleset.
+
  This check monitors the operational status, link speed, traffic, packet
  counts, discards and errors of network interfaces of a NetApp Filer.
  Currently, only the ethernet and virtual interfaces are checked. For virtual

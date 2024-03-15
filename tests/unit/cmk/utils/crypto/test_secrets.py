@@ -26,7 +26,8 @@ def test_create_secret_and_hmac(tmp_path: Path) -> None:
 
     assert secret.path == my_secret_file
     assert (
-        secret.hmac("hello") == "3bc5a0f1f479929f6c6330bd2dabf2d78ed389ab329f2c0b0baadfb3a01dbeae"
+        secret.secret.hmac(b"hello").hex()
+        == "3bc5a0f1f479929f6c6330bd2dabf2d78ed389ab329f2c0b0baadfb3a01dbeae"
     )
 
 

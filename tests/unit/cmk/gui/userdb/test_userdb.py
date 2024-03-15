@@ -6,7 +6,6 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
-import uuid
 from collections.abc import Callable, Generator
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -53,11 +52,6 @@ if TYPE_CHECKING:
 @pytest.fixture(name="user_id")
 def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
     return with_user[0]
-
-
-@pytest.fixture(name="zero_uuid")
-def zero_uuid_fixture(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(uuid, "uuid4", lambda: "00000000-0000-0000-0000-000000000000")
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -131,6 +125,7 @@ def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
             last_activity=session_info.last_activity,
             flashes=[],
             csrf_token=session_info.csrf_token,
+            encrypter_secret=session_info.encrypter_secret,
             logged_out=False,
             auth_type="web_server",
         )

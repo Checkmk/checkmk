@@ -19,6 +19,7 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.utils.crypto.keys import EncryptedPrivateKeyPEM, PrivateKey
 from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.crypto.secrets import Secret
 from cmk.utils.crypto.types import HashAlgorithm
 from cmk.utils.labels import Labels
 from cmk.utils.metrics import MetricName
@@ -117,6 +118,7 @@ class SessionInfo:
     last_activity: int
     csrf_token: str = field(default_factory=lambda: str(uuid.uuid4()))
     flashes: list[tuple[str, str]] = field(default_factory=list)
+    encrypter_secret: str = field(default_factory=lambda: Secret.generate(32).b64_str)
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library

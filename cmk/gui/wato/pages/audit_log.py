@@ -274,7 +274,7 @@ class ModeAuditLog(WatoMode):
             user.need_permission("wato.auditlog")
             return self._export_audit_log(self._parse_audit_log())
 
-        return None
+        return redirect(makeuri(request, []))
 
     def page(self) -> None:
         with html.form_context("fileselection_form", method="POST"):

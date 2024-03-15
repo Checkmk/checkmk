@@ -8,5 +8,9 @@ Knowledge: doc
 Level: 1
 Version: 2.3.0b1
 
-Previously, the folder name pattern for GET and DELETE endpoints were stricter than the CREATE, provoking that a new folder could not be retrieved nor deleted. This fix widens the folder name pattern on GET and DELETE endpoints to align with the CREATE one.
+Prior to this Werk, the folder name pattern for GET and DELETE endpoints did not allow the use of unicode characters while they were supported by the CREATE endpoint, with the result that folders created with such characters could not be accessed or deleted from the REST API.
+
+For example, the user was able to create a folder named û亿Ï8Ĺ, which then could not be read or deleted from the API.
+
+This Werk widens the folder name pattern on GET and DELETE endpoints to align with the CREATE one and now all of them support unicode characters.
 

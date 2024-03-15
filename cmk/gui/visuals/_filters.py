@@ -1393,8 +1393,15 @@ class TagFilter(Filter):
         ]
 
         html.open_table()
-        for num in range(self.query_filter.count):
+        # Show at least three rows of tag filters (hard coded self.query_filter.count) and add more
+        # rows if respective values are given via the URL.
+        # E.g. links from the virtual host tree snapin may contain multiple tag filter values
+        num = 0
+        while num < self.query_filter.count or value.get(
+            "%s_%d_grp" % (self.query_filter.var_prefix, num)
+        ):
             prefix = "%s_%d" % (self.query_filter.var_prefix, num)
+            num += 1
             html.open_tr()
             html.open_td()
             grp_value = value.get(prefix + "_grp", "")
@@ -1449,6 +1456,11 @@ class TagFilter(Filter):
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
+
+    def value(self) -> FilterHTTPVariables:
+        """Returns the current representation of the filter settings from the HTML
+        var context. This can be used to persist the filter settings."""
+        return dict(request.itervars(self.query_filter.var_prefix))
 
 
 class _FilterHostAuxTags(Filter):

@@ -319,6 +319,8 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help=_("help text"),
                 default_value="mypattern$",
                 validate=_legacy_custom_text_validate,
+                allow_empty=False,
+                empty_text=_("Fill this"),
             ),
             id="RegularExpression",
         ),

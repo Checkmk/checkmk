@@ -581,6 +581,29 @@ def _convert_to_legacy_valuespec(
     return _convert_to_inner_legacy_valuespec(to_convert, localizer)
 
 
+def _get_allow_empty_conf(
+    to_convert: ruleset_api_v1.form_specs.FormSpec[str], localizer: Callable[[str], str]
+) -> Mapping[str, bool | str]:
+    min_len_validator = None
+    if to_convert.custom_validate is not None:
+        min_len_validator = next(
+            (
+                val
+                for val in to_convert.custom_validate
+                if isinstance(val, ruleset_api_v1.form_specs.validators.LengthInRange)
+                and val.range[0] is not None
+            ),
+            None,
+        )
+
+    return {
+        "allow_empty": min_len_validator is None,
+        "empty_text": min_len_validator.error_msg.localize(localizer)
+        if min_len_validator is not None
+        else "",
+    }
+
+
 def _convert_to_legacy_integer(
     to_convert: ruleset_api_v1.form_specs.Integer, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Integer:
@@ -727,25 +750,10 @@ def _convert_to_legacy_percentage(
 def _convert_to_legacy_text_input(
     to_convert: ruleset_api_v1.form_specs.String, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput:
-    min_len_validator = None
-    if to_convert.custom_validate is not None:
-        min_len_validator = next(
-            (
-                val
-                for val in to_convert.custom_validate
-                if isinstance(val, ruleset_api_v1.form_specs.validators.LengthInRange)
-                and val.range[0] is not None
-            ),
-            None,
-        )
-
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
-        "allow_empty": min_len_validator is None,
-        "empty_text": min_len_validator.error_msg.localize(localizer)
-        if min_len_validator is not None
-        else "",
+        **_get_allow_empty_conf(to_convert, localizer),
     }
 
     help_text = _localize_optional(to_convert.help_text, localizer)
@@ -780,6 +788,7 @@ def _convert_to_legacy_regular_expression(
         "title": _localize_optional(to_convert.title, localizer),
         "label": _localize_optional(to_convert.label, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
+        **_get_allow_empty_conf(to_convert, localizer),
     }
 
     match to_convert.prefill:
@@ -1636,7 +1645,7 @@ def _convert_to_legacy_list_choice(
 def _convert_to_legacy_text_area(
     to_convert: ruleset_api_v1.form_specs.MultilineText, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextAreaUnicode:
-    converted_kwargs: dict[str, Any] = {}
+    converted_kwargs: dict[str, Any] = {**_get_allow_empty_conf(to_convert, localizer)}
 
     help_text = _localize_optional(to_convert.help_text, localizer)
     if to_convert.macro_support:

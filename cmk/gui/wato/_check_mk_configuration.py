@@ -3721,7 +3721,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
         ),
     ]
 
-    if user.may("wato.add_or_modify_executables"):
+    if user.may("wato.add_or_modify_executables") and edition() is not Edition.CSE:
         choices.append(("custom", _("Use a custom check plugin..."), PluginCommandLine()))
 
     return choices

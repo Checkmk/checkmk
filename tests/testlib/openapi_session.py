@@ -12,7 +12,6 @@ from typing import Any, AnyStr, NamedTuple
 import requests
 
 from tests.testlib.rest_api_client import RequestHandler, Response
-from tests.testlib.version import version_gte
 
 from cmk.gui.http import HTTPMethod
 
@@ -437,7 +436,7 @@ class CMKOpenApiSession(requests.Session):
         # TODO: this should be removed once the 2.3.0b3 is available as this
         # will introduce the options field to the api call. Until then the test should
         # use the deprecated mode field
-        if not version_gte(self.site_version_spec, "2.3.0b3"):
+        if self.site_version_spec in ["2.3.0b1", "2.3.0b2"]:
             body["mode"] = "new"
         else:
             body["options"] = {

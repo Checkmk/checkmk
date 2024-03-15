@@ -7,7 +7,7 @@ import abc
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Final, Literal
+from typing import Callable, Final, Literal
 
 from cmk.graphing.v1 import metrics
 
@@ -55,6 +55,14 @@ class Label:
     text: str
 
 
+def _compute_auto_precision_digits_for_value(exponent: int, digits: int) -> int:
+    return max(exponent + 1, digits)
+
+
+def _compute_auto_precision_digits_for_label(exponent: int, digits: int) -> int:
+    return exponent + digits
+
+
 @dataclass(frozen=True)
 class NotationFormatter:
     symbol: str
@@ -74,19 +82,28 @@ class NotationFormatter:
     def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         raise NotImplementedError()
 
-    def _apply_precision(self, value: int | float) -> float:
+    def _apply_precision(
+        self,
+        value: int | float,
+        compute_auto_precision_digits: Callable[[int, int], int],
+    ) -> float:
         value_floor = math.floor(value)
         if value == value_floor:
             return value
         digits = self.precision.digits
         if isinstance(self.precision, metrics.AutoPrecision):
             if exponent := abs(math.ceil(math.log10(value - value_floor))):
-                digits = max(exponent + 1, self.precision.digits)
+                digits = compute_auto_precision_digits(exponent, self.precision.digits)
         return round(value, min(digits, _MAX_DIGITS))
 
-    def _format(self, value: int | float, suffix: Suffix) -> Formatted:
+    def _format(
+        self,
+        value: int | float,
+        suffix: Suffix,
+        compute_auto_precision_digits: Callable[[int, int], int],
+    ) -> Formatted:
         if value < 0:
-            formatted = self._format(abs(value), suffix)
+            formatted = self._format(abs(value), suffix, compute_auto_precision_digits)
             return Formatted(-formatted.value, formatted.suffix)
         if value in (0, 1):
             return Formatted(value, Suffix("", self.symbol))
@@ -94,14 +111,20 @@ class NotationFormatter:
             formatted = self._preformat_small_number(value, suffix)
         else:  # value > 1
             formatted = self._preformat_large_number(value, suffix)
-        return Formatted(self._apply_precision(formatted.value), formatted.suffix)
+        return Formatted(
+            self._apply_precision(
+                formatted.value,
+                compute_auto_precision_digits,
+            ),
+            formatted.suffix,
+        )
 
     @abc.abstractmethod
     def _format_suffix(self, suffix: Suffix) -> str:
         raise NotImplementedError()
 
     def render(self, value: int | float) -> str:
-        formatted = self._format(value, Suffix("", ""))
+        formatted = self._format(value, Suffix("", ""), _compute_auto_precision_digits_for_value)
         return f"{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip()
 
     @abc.abstractmethod
@@ -136,14 +159,20 @@ class NotationFormatter:
             atom = max_y / num_label_range.right
             quotient = int(max_y / atom)
 
-        first = self._format(atom, Suffix("", ""))
+        first = self._format(atom, Suffix("", ""), _compute_auto_precision_digits_for_label)
         return [
             Label(
                 atom * i,
                 f"{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip(),
             )
             for i in range(1, quotient + 1)
-            for formatted in (self._format(atom * i, first.suffix),)
+            for formatted in (
+                self._format(
+                    atom * i,
+                    first.suffix,
+                    _compute_auto_precision_digits_for_label,
+                ),
+            )
         ]
 
 

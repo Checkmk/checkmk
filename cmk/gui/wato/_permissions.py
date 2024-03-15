@@ -2,9 +2,6 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from cmk.utils.version import edition, Edition
-
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
     Permission,
@@ -642,7 +639,7 @@ def register(
                 "permission to be able to configure rulesets where bare command lines are "
                 "configured."
             ),
-            defaults=["admin"] if edition() is not Edition.CSE else [],
+            defaults=["admin"],
         )
     )
 

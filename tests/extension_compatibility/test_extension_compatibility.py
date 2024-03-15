@@ -176,7 +176,6 @@ CURRENTLY_UNDER_TEST = {
     "https://exchange.checkmk.com/api/packages/download/650/telematik_konnektor-1.3.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.19.mkp",
     "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.30.mkp",
-    "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.31.mkp",
     "https://exchange.checkmk.com/api/packages/download/653/m365_service_health-1.2.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/669/mshpc_jobs_and_nodes-1.0.0.mkp",
     "https://exchange.checkmk.com/api/packages/download/681/Mailcow-1.2.0.mkp",
@@ -189,6 +188,8 @@ CURRENTLY_UNDER_TEST = {
 UNTESTABLE = {
     # This one can't be installed anymore. It tries to deploy a part called 'pnp-rraconf'
     "https://exchange.checkmk.com/api/packages/download/97/dir_size-1.1.1.mkp",
+    # This we don't need to test. It is shipped with 2.3 and has a dedicated test anyway
+    "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.31.mkp",
 }
 
 

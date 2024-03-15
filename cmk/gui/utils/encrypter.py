@@ -5,7 +5,9 @@
 
 import os
 
-from cmk.utils.crypto.secrets import EncrypterSecret
+from flask import session
+
+from cmk.utils.crypto.secrets import Secret
 from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 
 
@@ -23,10 +25,15 @@ class Encrypter:
     NONCE_LENGTH: int = 16
 
     @staticmethod
+    def _get_secret() -> Secret:
+        assert hasattr(session, "session_info")  # mypy
+        return Secret.from_b64(session.session_info.encrypter_secret)
+
+    @staticmethod
     def encrypt(value: str) -> bytes:
         salt = os.urandom(Encrypter.SALT_LENGTH)
         nonce = os.urandom(Encrypter.NONCE_LENGTH)
-        key = EncrypterSecret().derive_secret_key(salt)
+        key = Encrypter._get_secret().hmac(salt)
         encrypted = aes_gcm_encrypt(key, nonce, value)
         return salt + nonce + encrypted.tag + encrypted.ciphertext
 
@@ -35,5 +42,5 @@ class Encrypter:
         salt, rest = raw[: Encrypter.SALT_LENGTH], raw[Encrypter.SALT_LENGTH :]
         nonce, rest = rest[: Encrypter.NONCE_LENGTH], rest[Encrypter.NONCE_LENGTH :]
         tag, encrypted = rest[: TaggedCiphertext.TAG_LENGTH], rest[TaggedCiphertext.TAG_LENGTH :]
-        key = EncrypterSecret().derive_secret_key(salt)
+        key = Encrypter._get_secret().hmac(salt)
         return aes_gcm_decrypt(key, nonce, TaggedCiphertext(ciphertext=encrypted, tag=tag))

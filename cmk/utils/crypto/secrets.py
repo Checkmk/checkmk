@@ -117,12 +117,9 @@ class SiteInternalSecret(_LocalSecret):
     def path(self) -> Path:
         return paths.site_internal_secret_file
 
-    def _read(self) -> Secret:
-        return Secret(self.path.read_bytes())
-
     def check(self, other: Secret) -> bool:
         """Check if a given secret is the same as this one in a timing attack safe manner"""
-        return self._read().compare(other)
+        return Secret(self.secret).compare(other)
 
 
 class AutomationUserSecret:

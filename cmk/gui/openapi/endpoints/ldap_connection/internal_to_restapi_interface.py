@@ -15,25 +15,15 @@ from cmk.gui.userdb import (
     CUSTOM_USER_ATTRIBUTE,
     DIR_SERVER_389,
     DISABLE_NOTIFICATIONS,
-    DisableNotificationsAttribute,
-    Discover,
-    Fixed,
     FORCE_AUTH_USER,
     get_ldap_connections,
-    GroupsToAttributes,
-    GroupsToContactGroups,
     GroupsToSync,
     ICONS_PER_ITEM,
-    LDAPConnectionConfigDiscover,
-    LDAPConnectionConfigFixed,
     LDAPConnectionTypedDict,
-    load_connection_config,
     NAV_HIDE_ICONS_TITLE,
     OPEN_LDAP,
-    save_connection_config,
     SHOW_MODE,
     START_URL,
-    SyncAttribute,
     TEMP_UNIT,
     UI_SIDEBAR_POSITIONS,
     UI_THEME,
@@ -74,16 +64,6 @@ class GeneralProperties:
             disabled=config["disabled"],
         )
 
-    @classmethod
-    def from_api_request(cls, config: APIGeneralProperties) -> GeneralProperties:
-        return cls(
-            id=config["id"],
-            description=config["description"],
-            comment=config["comment"],
-            docu_url=config["documentation_url"],
-            disabled=config["rule_activation"] == "deactivated",
-        )
-
     def api_response(self) -> APIGeneralProperties:
         r: APIGeneralProperties = {
             "id": self.id,
@@ -96,11 +76,7 @@ class GeneralProperties:
 
 
 class APIDirTypeManual(TypedDict):
-    type: Literal[
-        "active_directory_manual",
-        "open_ldap",
-        "389_directory_server",
-    ]
+    type: Literal["active_directory_manual", "open_ldap", "389_directory_server"]
     ldap_server: str
     failover_servers: list[str]
 
@@ -164,14 +140,14 @@ CHECKBOX = APICheckboxDisabled | APICheckboxEnabled
 @dataclass
 class ConnectionConfig:
     directory_type: DIR_SERVER_389 | OPEN_LDAP | ACTIVE_DIR
-    bind: tuple[str, tuple[Literal["password", "store"], str]] | None
-    port: int | None
-    use_ssl: Literal[True] | None
-    connect_timeout: float | None
-    version: Literal[2, 3] | None
-    page_size: int | None
-    response_timeout: int | None
-    suffix: str | None
+    bind: tuple[str, tuple[Literal["password", "store"], str]] | None = None
+    port: int | None = None
+    use_ssl: Literal[True] | None = None
+    connect_timeout: float | None = None
+    version: Literal[2, 3] | None = None
+    page_size: int | None = None
+    response_timeout: int | None = None
+    suffix: str | None = None
 
     @classmethod
     def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> ConnectionConfig:
@@ -185,115 +161,6 @@ class ConnectionConfig:
             page_size=config.get("page_size"),
             response_timeout=config.get("response_timeout"),
             suffix=config.get("suffix"),
-        )
-
-    @classmethod
-    def from_api_request(cls, config: APIConnectionConfig) -> ConnectionConfig:
-        api_dir_type = config["directory_type"]
-
-        dir_type: ACTIVE_DIR | OPEN_LDAP | DIR_SERVER_389
-
-        match api_dir_type["type"]:
-            case "active_directory_automatic":
-                auto_api_dir = cast(APIActiveDirAuto, api_dir_type)
-                ad_discover = LDAPConnectionConfigDiscover(
-                    connect_to=(
-                        "discover",
-                        Discover(
-                            domain=auto_api_dir["domain"],
-                        ),
-                    )
-                )
-                dir_type = ("ad", ad_discover)
-
-            case "active_directory_manual":
-                fixed_api_dir = cast(APIDirTypeManual, api_dir_type)
-                ad_fixed = LDAPConnectionConfigFixed(
-                    connect_to=(
-                        "fixed_list",
-                        Fixed(
-                            server=fixed_api_dir["ldap_server"],
-                            failover_servers=fixed_api_dir["failover_servers"],
-                        ),
-                    )
-                )
-                dir_type = ("ad", ad_fixed)
-
-            case "open_ldap":
-                fixed_api_dir = cast(APIDirTypeManual, api_dir_type)
-                ol_fixed = LDAPConnectionConfigFixed(
-                    connect_to=(
-                        "fixed_list",
-                        Fixed(
-                            server=fixed_api_dir["ldap_server"],
-                            failover_servers=fixed_api_dir["failover_servers"],
-                        ),
-                    )
-                )
-                dir_type = ("openldap", ol_fixed)
-
-            case _:
-                fixed_api_dir = cast(APIDirTypeManual, api_dir_type)
-                se_fixed = LDAPConnectionConfigFixed(
-                    connect_to=(
-                        "fixed_list",
-                        Fixed(
-                            server=fixed_api_dir["ldap_server"],
-                            failover_servers=fixed_api_dir["failover_servers"],
-                        ),
-                    )
-                )
-                dir_type = ("389directoryserver", se_fixed)
-
-        bind_credentials: tuple[str, tuple[Literal["password", "store"], str]] | None
-        if config["bind_credentials"]["state"] == "enabled":
-            if config["bind_credentials"]["type"] == "explicit":
-                explicit: APIBindExplicit = config["bind_credentials"]
-                bind_credentials = (
-                    explicit["bind_dn"],
-                    ("password", explicit["explicit_password"]),
-                )
-            else:
-                store: APIBindStore = config["bind_credentials"]
-                bind_credentials = (store["bind_dn"], ("store", store["password_store_id"]))
-        else:
-            bind_credentials = None
-
-        port = config["tcp_port"]["port"] if config["tcp_port"]["state"] == "enabled" else None
-        connect_timeout = (
-            config["connect_timeout"]["seconds"]
-            if config["connect_timeout"]["state"] == "enabled"
-            else None
-        )
-        version = (
-            config["ldap_version"]["version"]
-            if config["ldap_version"]["state"] == "enabled"
-            else None
-        )
-        page_size = (
-            config["page_size"]["size"] if config["page_size"]["state"] == "enabled" else None
-        )
-        response_timeout = (
-            config["response_timeout"]["seconds"]
-            if config["response_timeout"]["state"] == "enabled"
-            else None
-        )
-        suffix = (
-            config["connection_suffix"]["suffix"]
-            if config["connection_suffix"]["state"] == "enabled"
-            else None
-        )
-
-        return cls(
-            directory_type=dir_type,
-            bind=bind_credentials,
-            port=port,
-            use_ssl=True if config["ssl_encryption"] == "enable_ssl" else None,
-            connect_timeout=connect_timeout,
-            version=version,
-            page_size=page_size,
-            response_timeout=response_timeout,
-            suffix=suffix,
         )
 
     def api_response(self) -> APIConnectionConfig:
@@ -401,11 +268,11 @@ class Users:
     user_dn: str
     user_scope: SEARCH_SCOPE_INT
     user_id_umlauts: Literal["keep", "replace"]
-    user_filter: str | None
-    user_filter_group: str | None
-    user_id: str | None
-    lower_user_ids: Literal[True] | None
-    create_only_on_login: Literal[True] | None
+    user_filter: str | None = None
+    user_filter_group: str | None = None
+    user_id: str | None = None
+    lower_user_ids: Literal[True] | None = None
+    create_only_on_login: Literal[True] | None = None
 
     @classmethod
     def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> Users:
@@ -418,27 +285,6 @@ class Users:
             user_id=config.get("user_id"),
             lower_user_ids=config.get("lower_user_ids"),
             create_only_on_login=config.get("create_only_on_login"),
-        )
-
-    @classmethod
-    def from_api_request(cls, config: APIUsers) -> Users:
-        return cls(
-            user_dn=config["user_base_dn"],
-            user_scope=SCOPE_API_TO_INT[config["search_scope"]],
-            user_id_umlauts="keep"
-            if config["umlauts_in_user_ids"] == "keep_umlauts"
-            else "replace",
-            user_filter=config["search_filter"]["filter"]
-            if config["search_filter"]["state"] == "enabled"
-            else None,
-            user_filter_group=config["filter_group"]["filter"]
-            if config["filter_group"]["state"] == "enabled"
-            else None,
-            user_id=config["user_id_attribute"]["attribute"]
-            if config["user_id_attribute"]["state"] == "enabled"
-            else None,
-            lower_user_ids=True if config["user_id_case"] == "convert_to_lowercase" else None,
-            create_only_on_login=True if config["create_users"] == "on_login" else None,
         )
 
     def api_response(self) -> APIUsers:
@@ -495,19 +341,6 @@ class Groups:
             group_member=config.get("group_member"),
         )
 
-    @classmethod
-    def from_api_request(cls, config: APIGroups) -> Groups:
-        return cls(
-            group_dn=config["group_base_dn"],
-            group_scope=SCOPE_API_TO_INT[config["search_scope"]],
-            group_filter=config["search_filter"]["filter"]
-            if config["search_filter"]["state"] == "enabled"
-            else None,
-            group_member=config["member_attribute"]["attribute"]
-            if config["member_attribute"]["state"] == "enabled"
-            else None,
-        )
-
     def api_response(self) -> APIGroups:
         def checkbox_state(value: str | None, schema_key: str) -> Any:
             if value is None:
@@ -551,6 +384,17 @@ class APICustomTimeRange(APICheckboxEnabled):
     to_time: float
 
 
+class APIDisableNotifications(TypedDict):
+    temporarily_disable_all_notifications: bool
+    custom_time_range: APICustomTimeRange | APICheckboxDisabled
+
+
+class APIGroupsToSync(TypedDict):
+    group_cn: str
+    attribute_to_set: API_GROUP_ATTRIBUTE_NAME | str
+    value: APIDisableNotifications | str
+
+
 API_GROUP_ATTRIBUTE_NAME = Literal[
     "disable_notifications",
     "mega_menu_icons",
@@ -564,116 +408,15 @@ API_GROUP_ATTRIBUTE_NAME = Literal[
 ]
 
 
-class APIDisableNotificationsValue(TypedDict):
-    temporarily_disable_all_notifications: bool
-    custom_time_range: APICustomTimeRange | APICheckboxDisabled
-
-
-class APIDisableNotifications(TypedDict):
-    group_cn: str
-    attribute_to_set: Literal["disable_notifications"]
-    value: APIDisableNotificationsValue
-
-
-class APIMegaMenuIcons(TypedDict):
-    group_cn: str
-    attribute_to_set: Literal["mega_menu_icons"]
-    value: Literal["per_topic", "per_entry"]
-
-
-class APINavBarIcons(TypedDict):
-    group_cn: str
-    attribute_to_set: Literal["navigation_bar_icons"]
-    value: Literal[
-        "show_title",
-        "do_not_show_title",
-    ]
-
-
-class APIShowMore(TypedDict):
-    group_cn: str
-    attribute_to_set: Literal["show_mode"]
-    value: Literal[
-        "use_default_show_mode",
-        "default_show_less",
-        "default_show_more",
-        "enforce_show_more",
-    ]
-
-
-class APIUISideBarPosition(TypedDict):
-    group_cn: str
-    attribute_to_set: Literal["ui_sidebar_position"]
-    value: Literal[
-        "left",
-        "right",
-    ]
-
-
-class APIUIStartUrl(TypedDict):
-    group_cn: str
-    attribute_to_set: Literal["start_url"]
-    value: Literal["default_start_url"] | str
-
-
-class APITempUnit(TypedDict):
-    group_cn: str
-    attribute_to_set: Literal["temperature_unit"]
-    value: Literal[
-        "default_temp_unit",
-        "celsius",
-        "fahrenheit",
-    ]
-
-
-class APIUITheme(TypedDict):
-    group_cn: str
-    attribute_to_set: Literal["ui_theme"]
-    value: Literal[
-        "default_theme",
-        "light",
-        "dark",
-    ]
-
-
-class APIVisibilityOfHostService(TypedDict):
-    group_cn: str
-    attribute_to_set: Literal["visibility_of_hosts_or_services"]
-    value: Literal[
-        "show_all",
-        "show_for_user_contacts_only",
-    ]
-
-
-class APICustom(TypedDict):
-    group_cn: str
-    attribute_to_set: str
-    value: str
-
-
-GROUPS_TO_SYNC_VALUE = (
-    APIDisableNotifications
-    | APIMegaMenuIcons
-    | APINavBarIcons
-    | APIShowMore
-    | APIUISideBarPosition
-    | APIUIStartUrl
-    | APITempUnit
-    | APIUITheme
-    | APIVisibilityOfHostService
-    | APICustom
-)
-
-
 class APIGroupsToAttributes(APICheckboxEnabled):
     handle_nested: bool
     sync_from_other_connections: list[str]
-    groups_to_sync: list[GROUPS_TO_SYNC_VALUE]
+    groups_to_sync: list[APIGroupsToSync]
 
 
 class APIGroupsWithConnectionID(TypedDict):
     group_dn: str
-    search_in: Literal["this_connection"] | str
+    search_in: str
 
 
 class APIGroupsToRoles(APICheckboxEnabled, total=False):
@@ -704,9 +447,9 @@ class APISyncPlugins(TypedDict, total=False):
 
 def groups_to_attributes_internal_to_api(
     groups_to_sync: list[GroupsToSync],
-) -> list[GROUPS_TO_SYNC_VALUE]:
-    api_groups: list[GROUPS_TO_SYNC_VALUE] = []
-    value: APIDisableNotificationsValue | str
+) -> list[APIGroupsToSync]:
+    api_groups: list[APIGroupsToSync] = []
+    value: APIDisableNotifications | str
     for group in groups_to_sync:
         match group["attribute"][0]:
             case "disable_notifications":
@@ -824,194 +567,6 @@ def groups_to_attributes_internal_to_api(
     return api_groups
 
 
-def sync_attribute_to_internal(api_field: SYNC_ATTRIBUTE | None) -> None | SyncAttribute:
-    if api_field is None:
-        return None
-
-    if api_field["state"] == "enabled":
-        return {"attr": api_field["attribute_to_sync"]}
-    return None
-
-
-def contact_group_membership_req_to_int(
-    data: APIContactGroupMembership | APICheckboxDisabled | None,
-) -> None | GroupsToContactGroups:
-    if data is None:
-        return None
-
-    if data["state"] == "disabled":
-        return None
-
-    groups_to_cg: GroupsToContactGroups = {"other_connections": data["sync_from_other_connections"]}
-    if data.get("handle_nested"):
-        groups_to_cg["nested"] = True
-
-    return groups_to_cg
-
-
-def groups_to_attributes_api_to_int(
-    data: APIGroupsToAttributes | APICheckboxDisabled | None,
-) -> None | GroupsToAttributes:
-    if data is None:
-        return None
-
-    if data["state"] == "disabled":
-        return None
-
-    groups_to_attributes: GroupsToAttributes = {
-        "other_connections": data["sync_from_other_connections"],
-        "groups": [],
-    }
-
-    if data.get("handle_nested"):
-        groups_to_attributes["nested"] = True
-
-    for group in data["groups_to_sync"]:
-        groups_to_sync: GroupsToSync
-
-        if group["attribute_to_set"] == "disable_notifications":
-            dn_value_api = cast(APIDisableNotificationsValue, group["value"])
-            v_int: DisableNotificationsAttribute = {}
-
-            if dn_value_api["temporarily_disable_all_notifications"]:
-                v_int["disable"] = True
-
-            if dn_value_api["custom_time_range"]["state"] == "enabled":
-                timeranges: APICustomTimeRange = dn_value_api["custom_time_range"]
-                v_int["timerange"] = (timeranges["from_time"], timeranges["to_time"])
-
-            disable_notifications: DISABLE_NOTIFICATIONS = ("disable_notifications", v_int)
-
-            groups_to_sync = {
-                "cn": group["group_cn"],
-                "attribute": disable_notifications,
-            }
-
-        else:
-            match group["attribute_to_set"]:
-                case "mega_menu_icons":
-                    megaicons = cast(APIMegaMenuIcons, group)
-                    groups_to_sync = {
-                        "cn": megaicons["group_cn"],
-                        "attribute": (
-                            "icons_per_item",
-                            None if megaicons["value"] == "per_topic" else "entry",
-                        ),
-                    }
-
-                case "navigation_bar_icons":
-                    navbaricons = cast(APINavBarIcons, group)
-                    groups_to_sync = {
-                        "cn": navbaricons["group_cn"],
-                        "attribute": (
-                            "nav_hide_icons_title",
-                            "hide" if navbaricons["value"] == "do_not_show_title" else None,
-                        ),
-                    }
-
-                case "show_mode":
-                    show_mode = cast(APIShowMore, group)
-                    groups_to_sync = {
-                        "cn": show_mode["group_cn"],
-                        "attribute": (
-                            "show_mode",
-                            None
-                            if show_mode["value"] == "use_default_show_mode"
-                            else show_mode["value"],
-                        ),
-                    }
-
-                case "ui_sidebar_position":
-                    sidebar_pos_group = cast(APIUISideBarPosition, group)
-                    sidebar_pos_attribute: UI_SIDEBAR_POSITIONS = (
-                        "ui_sidebar_position",
-                        None if sidebar_pos_group["value"] == "right" else "left",
-                    )
-                    groups_to_sync = {
-                        "cn": sidebar_pos_group["group_cn"],
-                        "attribute": sidebar_pos_attribute,
-                    }
-
-                case "start_url":
-                    starturl = cast(APIUIStartUrl, group)
-                    groups_to_sync = {
-                        "cn": starturl["group_cn"],
-                        "attribute": (
-                            "start_url",
-                            None if starturl["value"] == "default_start_url" else starturl["value"],
-                        ),
-                    }
-
-                case "temperature_unit":
-                    tempunit = cast(APITempUnit, group)
-                    groups_to_sync = {
-                        "cn": tempunit["group_cn"],
-                        "attribute": (
-                            "temperature_unit",
-                            None if tempunit["value"] == "default_temp_unit" else tempunit["value"],
-                        ),
-                    }
-
-                case "ui_theme":
-                    uithemegroup = cast(APIUITheme, group)
-                    theme_map: dict[str, Literal["facelift", "modern-dark"] | None] = {
-                        "default_theme": None,
-                        "light": "facelift",
-                        "dark": "modern-dark",
-                    }
-                    ui_theme_attribute: UI_THEME = (
-                        "ui_theme",
-                        theme_map[uithemegroup["value"]],
-                    )
-                    groups_to_sync = {
-                        "cn": uithemegroup["group_cn"],
-                        "attribute": ui_theme_attribute,
-                    }
-
-                case "visibility_of_hosts_or_services":
-                    forceauth = cast(APIVisibilityOfHostService, group)
-                    groups_to_sync = {
-                        "cn": forceauth["group_cn"],
-                        "attribute": (
-                            "force_authuser",
-                            forceauth["value"] == "show_for_user_contacts_only",
-                        ),
-                    }
-
-                case _:
-                    custom = cast(APICustom, group)
-                    attribute: CUSTOM_USER_ATTRIBUTE = (
-                        custom["attribute_to_set"],
-                        custom["value"],
-                    )
-                    groups_to_sync = {"cn": custom["group_cn"], "attribute": attribute}
-
-        groups_to_attributes["groups"].append(groups_to_sync)
-
-    return groups_to_attributes
-
-
-def groups_to_roles_req_to_int(
-    data: APIGroupsToRoles | APICheckboxDisabled | None,
-) -> None | dict[str, list[tuple[str, str | None]]]:
-    if data is None:
-        return None
-
-    if data["state"] == "disabled":
-        return None
-
-    groups_to_roles: dict[str, list[tuple[str, str | None]]] = {}
-    for role, groups in {k: v for k, v in data.items() if isinstance(v, list)}.items():
-        groups_to_roles[role] = []
-        for group in groups:
-            if group["search_in"] == "this_connection":
-                groups_to_roles[role].append((group["group_dn"], None))
-            else:
-                groups_to_roles[role].append((group["group_dn"], group["search_in"]))
-
-    return groups_to_roles
-
-
 @dataclass
 class SyncPlugins:
     active_plugins: ActivePlugins
@@ -1019,48 +574,6 @@ class SyncPlugins:
     @classmethod
     def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> SyncPlugins:
         return cls(active_plugins=config["active_plugins"])
-
-    @classmethod
-    def from_api_request(cls, config: APISyncPlugins) -> SyncPlugins:
-        ap: dict[str, Any] = {}
-        ap["alias"] = sync_attribute_to_internal(config.pop("alias", None))
-        ap["auth_expire"] = sync_attribute_to_internal(
-            config.pop("authentication_expiration", None)
-        )
-        ap["disable_notifications"] = sync_attribute_to_internal(
-            config.pop("disable_notifications", None)
-        )
-        ap["email"] = sync_attribute_to_internal(config.pop("email_address", None))
-        ap["icons_per_item"] = sync_attribute_to_internal(config.pop("mega_menu_icons", None))
-        ap["nav_hide_icons_title"] = sync_attribute_to_internal(
-            config.pop("navigation_bar_icons", None)
-        )
-        ap["pager"] = sync_attribute_to_internal(config.pop("pager", None))
-        ap["show_mode"] = sync_attribute_to_internal(config.pop("show_mode", None))
-        ap["ui_sidebar_position"] = sync_attribute_to_internal(
-            config.pop("ui_sidebar_position", None)
-        )
-        ap["start_url"] = sync_attribute_to_internal(config.pop("start_url", None))
-        ap["temperature_unit"] = sync_attribute_to_internal(config.pop("temperature_unit", None))
-        ap["ui_theme"] = sync_attribute_to_internal(config.pop("ui_theme", None))
-        ap["force_authuser"] = sync_attribute_to_internal(
-            config.pop("visibility_of_hosts_or_services", None)
-        )
-        ap["groups_to_contactgroups"] = contact_group_membership_req_to_int(
-            config.pop("contact_group_membership", None)
-        )
-        ap["groups_to_attributes"] = groups_to_attributes_api_to_int(
-            config.pop("groups_to_custom_user_attributes", None)
-        )
-        ap["groups_to_roles"] = groups_to_roles_req_to_int(config.pop("groups_to_roles", None))
-
-        # Custom user attributes can be added here too.
-        for k, v in config.items():
-            if k not in ap:
-                ap[k] = sync_attribute_to_internal[v]  # type: ignore[valid-type,misc]
-
-        active_plugins = cast(ActivePlugins, {k: v for k, v in ap.items() if v is not None})
-        return cls(active_plugins=active_plugins)
 
     def api_response(self) -> APISyncPlugins:
         def checkbox_state(plugin_key: str) -> SYNC_ATTRIBUTE:
@@ -1150,13 +663,6 @@ class Other:
     def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> Other:
         return cls(cache_livetime=config["cache_livetime"])
 
-    @classmethod
-    def from_api_request(cls, config: APIOther) -> Other:
-        days_to_seconds = config["sync_interval"]["days"] * 86400
-        hours_to_seconds = config["sync_interval"]["hours"] * 3600
-        minutes_to_seconds = config["sync_interval"]["minutes"] * 60
-        return cls(cache_livetime=days_to_seconds + hours_to_seconds + minutes_to_seconds)
-
     def api_response(self) -> APIOther:
         days, leftover_seconds = divmod(self.cache_livetime, 86400)
         hours, leftover_seconds2 = divmod(leftover_seconds, 3600)
@@ -1201,27 +707,6 @@ class LDAPConnectionInterface:
             other=Other.from_mk_file_format(config),
         )
 
-    @classmethod
-    def from_api_request(cls, config: APIConnection) -> LDAPConnectionInterface:
-        c = cls(
-            general_properties=GeneralProperties.from_api_request(config["general_properties"]),
-            connection_config=ConnectionConfig.from_api_request(config["ldap_connection"]),
-            users=Users.from_api_request(config["users"]),
-            groups=Groups.from_api_request(config["groups"]),
-            sync_plugins=SyncPlugins.from_api_request(config["sync_plugins"]),
-            other=Other.from_api_request(config["other"]),
-        )
-
-        # The UI raises an error when the group dn is not set and you try to configure
-        # the groups to roles plugin.
-        for _user_role, grouplist in c.sync_plugins.active_plugins.get(
-            "groups_to_roles", {}
-        ).items():
-            for dn, _search_in in grouplist:
-                if dn != c.groups.group_dn:
-                    raise ValueError("The configured DN does not match the group base DN.")
-        return c
-
     def api_response(self) -> dict:
         r = {
             "general_properties": self.general_properties.api_response(),
@@ -1233,42 +718,6 @@ class LDAPConnectionInterface:
         }
         return r
 
-    def to_mk_format(self) -> LDAPConnectionTypedDict:
-        r: dict[str, Any] = {
-            "id": self.general_properties.id,
-            "description": self.general_properties.description,
-            "comment": self.general_properties.comment,
-            "docu_url": self.general_properties.docu_url,
-            "disabled": self.general_properties.disabled,
-            "directory_type": self.connection_config.directory_type,
-            "user_dn": self.users.user_dn,
-            "user_scope": self.users.user_scope,
-            "user_id_umlauts": self.users.user_id_umlauts,
-            "group_dn": self.groups.group_dn,
-            "group_scope": self.groups.group_scope,
-            "active_plugins": self.sync_plugins.active_plugins,
-            "cache_livetime": self.other.cache_livetime,
-            "type": "ldap",
-            "version": self.connection_config.version,
-            "page_size": self.connection_config.page_size,
-            "response_timeout": self.connection_config.response_timeout,
-            "suffix": self.connection_config.suffix,
-            "group_filter": self.groups.group_filter,
-            "group_member": self.groups.group_member,
-            "bind": self.connection_config.bind,
-            "port": self.connection_config.port,
-            "use_ssl": self.connection_config.use_ssl,
-            "connect_timeout": self.connection_config.connect_timeout,
-            "user_filter": self.users.user_filter,
-            "user_filter_group": self.users.user_filter_group,
-            "user_id": self.users.user_id,
-            "lower_user_ids": self.users.lower_user_ids,
-            "create_only_on_login": self.users.create_only_on_login,
-        }
-
-        c = cast(LDAPConnectionTypedDict, {k: v for k, v in r.items() if v is not None})
-        return c
-
 
 def request_ldap_connection(ldap_id: str) -> LDAPConnectionInterface:
     return LDAPConnectionInterface.from_mk_file_format(get_ldap_connections()[ldap_id])
@@ -1279,16 +728,3 @@ def request_ldap_connections() -> dict[str, LDAPConnectionInterface]:
         config["id"]: LDAPConnectionInterface.from_mk_file_format(config)
         for config in get_ldap_connections().values()
     }
-
-
-def request_to_delete_ldap_connection(ldap_id: str) -> None:
-    all_connections = load_connection_config(lock=True)
-    save_connection_config([c for c in all_connections if c["id"] != ldap_id])
-
-
-def request_to_create_ldap_connection(ldap_data: APIConnection) -> LDAPConnectionInterface:
-    connection = LDAPConnectionInterface.from_api_request(ldap_data)
-    all_connections = load_connection_config(lock=True)
-    all_connections.append(connection.to_mk_format())
-    save_connection_config(all_connections)
-    return connection

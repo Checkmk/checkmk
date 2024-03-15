@@ -94,6 +94,7 @@ class Site:
             user=AUTOMATION_USER if self.exists() else ADMIN_USER,
             password=self.get_automation_secret() if self.exists() else self.admin_password,
             site=self.id,
+            site_version_spec=self.version.version_spec,
         )
 
     @property

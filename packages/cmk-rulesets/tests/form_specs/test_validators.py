@@ -13,9 +13,9 @@ from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import (
     DisallowEmpty,
     EmailAddress,
-    InRange,
     MatchRegex,
     NetworkPort,
+    NumberInRange,
     RegexGroupsInRange,
     Url,
     UrlProtocol,
@@ -83,7 +83,7 @@ from cmk.rulesets.v1.form_specs.validators import (
         ),
     ],
 )
-def test_in_range(
+def test_number_in_range(
     input_args: Mapping[str, int | float],
     input_message: Message | None,
     test_value: int | float,
@@ -91,7 +91,7 @@ def test_in_range(
     expected_message: str | None,
 ) -> None:
     with expected_raises as e:
-        InRange(**input_args, error_msg=input_message)(test_value)
+        NumberInRange(**input_args, error_msg=input_message)(test_value)
 
     assert expected_message is None or e.value.message.localize(lambda x: x) == expected_message
 

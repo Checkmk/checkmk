@@ -198,7 +198,7 @@ class _DownloadedExtension(NamedTuple):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class _ImportErrors:
+class ImportErrors:
     base_errors: set[str] = dataclasses.field(default_factory=set)
     gui_errors: set[str] = dataclasses.field(default_factory=set)
 
@@ -223,14 +223,14 @@ class _ImportErrors:
 _DOWNLOAD_URL_BASE = "https://exchange.checkmk.com/api/packages/download/"
 
 
-_EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
-    "filehandles-3.2.mkp": _ImportErrors(  # nothing we can do about this one.
+_EXPECTED_IMPORT_ERRORS: Mapping[str, ImportErrors] = {
+    "filehandles-3.2.mkp": ImportErrors(  # nothing we can do about this one.
         gui_errors={
             "wato/filehandles: (unicode error) 'unicodeescape' codec can't decode bytes "
             "in position 51-52: malformed \\N character escape (<string>, line 128)",
         }
     ),
-    "sonicwall-2.0.mkp": _ImportErrors(  # this uses the legacy check api.
+    "sonicwall-2.0.mkp": ImportErrors(  # this uses the legacy check api.
         base_errors={
             "Error in agent based plugin sonicwall_vpn:"
             " cannot import name 'get_rate' from 'cmk.base.check_api'",
@@ -243,14 +243,14 @@ def _get_tested_extensions() -> Iterable[tuple[str, str]]:
     return [(url, url.rsplit("/", 1)[-1]) for url in CURRENTLY_UNDER_TEST]
 
 
-def _get_expected_errors(name: str, site22: Site, extension: bytes) -> _ImportErrors:
+def _get_expected_errors(name: str, site22: Site, extension: bytes) -> ImportErrors:
     with suppress(KeyError):
         return _EXPECTED_IMPORT_ERRORS[name]
 
     # see what happened in 2.2
     site22.write_binary_file(extension_filename := "tmp.mkp", extension)
     with _install_extension(site22, site22.resolve_path(Path(extension_filename))):
-        return _ImportErrors.collect_from_site(site22)
+        return ImportErrors.collect_from_site(site22)
 
 
 @pytest.mark.parametrize(
@@ -266,7 +266,7 @@ def test_extension_compatibility(
     extension = _download_extension(extension_download_url)
     site.write_binary_file(extension_filename := "tmp.mkp", extension)
     with _install_extension(site, site.resolve_path(Path(extension_filename))):
-        encountered = _ImportErrors.collect_from_site(site)
+        encountered = ImportErrors.collect_from_site(site)
 
     if not (encountered.base_errors or encountered.gui_errors):
         # that's good. Just ensure we don't have left over import errors and

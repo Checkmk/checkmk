@@ -24,6 +24,9 @@ if "%~1"=="-?" goto Usage
 if "%~1"=="-A"              (set int_arg_all=1)           & shift & goto CheckOpts
 if "%~1"=="--all"           (set int_arg_all=1)           & shift & goto CheckOpts
 
+if "%~1"=="-B"              (set int_arg_build=1)         & shift & goto CheckOpts
+if "%~1"=="--build"         (set int_arg_build=1)         & shift & goto CheckOpts
+
 if "%~1"=="-C"              (set int_arg_component=1)     & (set int_arg_build=1)     & shift & goto CheckOpts
 if "%~1"=="--component"     (set int_arg_component=1)     & (set int_arg_build=1)     & shift & goto CheckOpts
 
@@ -72,8 +75,7 @@ goto :end
 
 :watest_build
 if not "%int_arg_build%" == "1" powershell Write-Host "Skipped build watest" -Foreground Yellow & goto :eof
-make install_extlibs || ( powershell Write-Host "Failed to install packages" -Foreground Red & call :halt 33 )
-call build_watest.cmd
+pwsh ./run.ps1 --build
 if errorlevel 1 powershell write-Host "Build watest FAIL!" -Foreground Red & call :halt 19
 powershell write-Host "Build watest SUCCESS!" -Foreground Green
 goto :eof

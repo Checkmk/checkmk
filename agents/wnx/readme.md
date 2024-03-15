@@ -19,12 +19,11 @@ Run *windows_setup.cmd*. This is **Simplest** method to install some required Wi
 Alternatively you can **choco install make** and use Makefile
 
 ## Build Scripts
-1. run.cmd - to build/unit test agent
-2. Dev tool: build_watest.cmd- to build 32-bit watest to be used later
+1. run.ps1 - to build/unit test agent
 
 
 ## Test Scripts
-1. All Other Tests: run_tests.cmd
+1. run_tests.cmd
 
 ## Assorted
 To build and measure time use ptime

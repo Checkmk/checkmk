@@ -10,6 +10,54 @@ from cmk.rulesets.v1 import form_specs, Help, Label, rule_specs, Title
 from cmk.rulesets.v1.form_specs import validators
 
 
+def _migrate_port_spec(x: object) -> tuple[Literal["explicit"], int] | tuple[Literal["macro"], str]:
+    """
+    >>> _migrate_port_spec(1234)
+    ('explicit', 1234)
+    >>> _migrate_port_spec(("explicit", 1234))
+    ('explicit', 1234)
+    >>> _migrate_port_spec(("macro", "$MYSQL_PORT$"))
+    ('macro', '$MYSQL_PORT$')
+    """
+    match x:
+        case "explicit", int(value):
+            return "explicit", value
+        case "macro", str(value):
+            return "macro", value
+        case int(value):
+            return "explicit", value
+    raise ValueError(f"Invalid value {x!r} for port spec")
+
+
+def _port_spec() -> form_specs.CascadingSingleChoice:
+    return form_specs.CascadingSingleChoice(
+        title=Title("Database Port"),
+        help_text=Help("The port the DBMS listens to"),
+        elements=(
+            form_specs.CascadingSingleChoiceElement(
+                name="explicit",
+                title=Title("Explicit port number"),
+                parameter_form=form_specs.Integer(custom_validate=(validators.NetworkPort(),)),
+            ),
+            form_specs.CascadingSingleChoiceElement(
+                name="macro",
+                title=Title("Use macro to determine port number"),
+                parameter_form=form_specs.String(
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                    help_text=Help(
+                        "The name of the macro (including the '$'s) which contains the port number. "
+                        "If the macro is not defined or does not represent an integer, config generation will fail."
+                    ),
+                    prefill=form_specs.InputHint("$MYSQL_PORT$"),
+                    macro_support=True,
+                ),
+            ),
+        ),
+        prefill=form_specs.DefaultValue("explicit"),
+        migrate=_migrate_port_spec,
+    )
+
+
 def _form_active_checks_sql() -> form_specs.Dictionary:
     return form_specs.Dictionary(
         help_text=Help(
@@ -41,12 +89,8 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 ),
                 required=True,
             ),
-            "port": form_specs.DictElement[int](
-                parameter_form=form_specs.Integer(
-                    title=Title("Database Port"),
-                    help_text=Help("The port the DBMS listens to"),
-                    custom_validate=(validators.NetworkPort(),),
-                ),
+            "port": form_specs.DictElement(
+                parameter_form=_port_spec(),
                 required=False,
             ),
             "name": form_specs.DictElement[str](

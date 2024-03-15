@@ -19,6 +19,8 @@ from cmk.server_side_calls.v1 import (
     Secret,
 )
 
+PortSpec = tuple[Literal["explicit"], int] | tuple[Literal["macro"], str]
+
 
 class SQLParams(BaseModel):
     description: str
@@ -28,7 +30,7 @@ class SQLParams(BaseModel):
     password: tuple[Literal["store", "password"], str]
     sql: str
     host: str | None = None
-    port: int | None = None
+    port: PortSpec | None = None
     procedure: Mapping[str, str | bool] | None = None
     text: str | None = None
     perfdata: str | None = None
@@ -51,8 +53,12 @@ def generate_sql_command(
     args.append(f"--user={params.user}")
     args.append(parse_secret(params.password, display_format="--password=%s"))
 
-    if params.port is not None:
-        args.append(f"--port={params.port}")
+    match params.port:
+        case "explicit", int(value):
+            args.append(f"--port={value}")
+        case "macro", str(value):
+            # trigger the potential value error here, rather than in every call
+            args.append(f"--port={int(replace_macros(value, host_config.macros))}")
 
     if params.procedure and "useprocs" in params.procedure:
         args.append("--procedure")

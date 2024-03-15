@@ -1,7 +1,7 @@
 <script setup lang="ts" xmlns="http://www.w3.org/1999/html">
-import { TableCell, TableRow, VueTableSpec } from '../types'
+import { type TableCell, type TableRow, type VueTableSpec } from '@/types'
 import { computed, ref, onMounted } from 'vue'
-import crossfilter, { Crossfilter } from 'crossfilter2'
+import crossfilter from 'crossfilter2'
 import * as d3 from 'd3'
 
 const props = defineProps<{
@@ -16,13 +16,13 @@ const search_text_dimension = row_crossfilter.dimension<string>((d: TableRow) =>
   let combined_text: string[] = []
   d.columns.forEach((column) => {
     column.content.forEach((content) => {
-      if (content.type == 'text') combined_text.push(content.content.toLowerCase())
+      if (content.type == 'text') combined_text.push(content.content!.toLowerCase())
     })
   })
   return combined_text.join('#')
 })
 
-function get_rows() {
+function get_rows(): TableRow[] {
   const search_value = search_text.value.toLowerCase()
 
   function get_custom_filter(search_text: string) {
@@ -35,10 +35,10 @@ function get_rows() {
   else search_text_dimension.filterAll()
   let records = row_crossfilter.allFiltered()
 
-  function get_custom_sorter_function(index: number, direction) {
+  function get_custom_sorter_function(index: number, direction: number) {
     return function (a: TableRow, b: TableRow) {
-      const a_content = a.columns[index].content[0].content.toLowerCase()
-      const b_content = b.columns[index].content[0].content.toLowerCase()
+      const a_content = a.columns[index].content[0]!.content!.toLowerCase()
+      const b_content = b.columns[index].content[0]!.content!.toLowerCase()
       if (a_content == b_content) return 0
       if (a_content > b_content) return direction
       return -direction
@@ -47,7 +47,7 @@ function get_rows() {
   if (current_sort_index != null) {
     records.sort(get_custom_sorter_function(current_sort_index[0], current_sort_index[1]))
   }
-  return records
+  return records as TableRow[]
 }
 
 function replace_inpage_search() {
@@ -113,7 +113,7 @@ function update_d3js_table() {
 
   // Data rows
   const data_rows = tbody
-    .selectAll<HTMLTableRowElement, TableRow[]>('tr.data')
+    .selectAll<HTMLTableRowElement, TableRow>('tr.data')
     .data(get_rows(), (d) => {
       return d.key
     })
@@ -144,25 +144,25 @@ function fill_td_cells(
     cell_data.content.forEach((content) => {
       switch (content.type) {
         case 'text':
-          td_node.append('span').text(content.content)
+          td_node.append('span').text(content.content!)
           break
         case 'html':
-          td_node.append('span').html(content.html_content)
+          td_node.append('span').html(content.content!)
           break
         case 'button':
           td_node
             .append('a')
-            .attr('href', content.url)
-            .attr('title', content.title)
+            .attr('href', content.url!)
+            .attr('title', content.title!)
             .append('img')
             .attr('class', 'icon iconbutton')
-            .attr('src', content.icon)
+            .attr('src', content.icon!)
           break
         case 'checkbox':
           td_node.append('input').attr('type', 'checkbox').classed('vue_checkbox', true)
           break
         case 'href':
-          td_node.append('a').attr('href', content.url).text(content.alias)
+          td_node.append('a').attr('href', content.url!).text(content.alias!)
           break
       }
     })

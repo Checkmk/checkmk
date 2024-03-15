@@ -18,7 +18,16 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.validation.visitors.vue_lib import ValidationError, VueAppConfig, VueFormSpecComponent
+from cmk.gui.validation.visitors.vue_lib import ValidationError, ValueAndValidation, VueAppConfig
+from cmk.gui.validation.visitors.vue_types import (
+    VueDictionary,
+    VueDictionaryElement,
+    VueFloat,
+    VueInteger,
+    VueList,
+    VueSchema,
+    VueText,
+)
 
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
@@ -34,7 +43,8 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 
-VueVisitorMethodResult = tuple[VueFormSpecComponent, Any]
+DataForDisk = Any
+VueVisitorMethodResult = tuple[VueSchema, ValueAndValidation, DataForDisk]
 VueFormSpecVisitorMethod = Callable[[Any, Any], VueVisitorMethodResult]
 
 
@@ -66,66 +76,63 @@ class VueFormSpecVisitor:
     - validate value"""
 
     _do_validate: bool
-    _vue_config: VueFormSpecComponent
-    _raw_value: Any
+    _vue_schema: VueSchema
+    _vue_value: ValueAndValidation
+    _data_for_disk: DataForDisk
 
     def __init__(self, form_spec: FormSpec, value: Any, do_validate: bool = True):
         self._do_validate = do_validate
         self._aggregated_validation_errors = set[ValidationError]()
-        self._vue_config, self._raw_value = self._visit(form_spec, value)
+        self._vue_schema, self._vue_value, self._data_for_disk = self._visit(form_spec, value)
 
     @property
-    def vue_config(self):
-        return self._vue_config
+    def vue_schema(self):
+        return self._vue_schema
 
     @property
-    def raw_value(self):
-        return self._raw_value
+    def value(self):
+        return self._vue_value
+
+    @property
+    def data_for_disk(self) -> Any:
+        if self._aggregated_validation_errors:
+            raise MKUserError(
+                "", _("Validation errors occurred. Please fix the input fields and try again.")
+            )
+        return self._data_for_disk
 
     @property
     def validation_errors(self) -> set[ValidationError]:
         return self._aggregated_validation_errors
 
-    def _component_to_dict(self, component: VueFormSpecComponent) -> dict[str, Any]:
+    def _schema_to_dict(self, component: VueSchema) -> dict[str, Any]:
         return asdict(component)
 
     @final
-    def _visit(self, form_spec: FormSpec, value: Any) -> tuple[VueFormSpecComponent, Any]:
+    def _visit(self, form_spec: FormSpec, value: Any) -> VueVisitorMethodResult:
         basic_form_spec = _convert_to_supported_form_spec(form_spec)
 
         with _change_log_indent(2):
             visitor: VueFormSpecVisitorMethod = self._get_matching_visit_function(basic_form_spec)
             _log_indent(f"-> visiting {basic_form_spec.__class__.__name__} {value}")
-            component_result, raw_value = visitor(basic_form_spec, value)
-            self._handle_validation(basic_form_spec, component_result, raw_value)
-
-        return component_result, raw_value
+            return visitor(basic_form_spec, value)
 
     def _get_matching_visit_function(self, form_spec: FormSpec) -> VueFormSpecVisitorMethod:
-        _log_indent(f"find visitor for {form_spec}")
+        # _log_indent(f"find visitor for {form_spec}")
         # TODO: match/case
         if isinstance(form_spec, Integer):
             return self._visit_integer
         if isinstance(form_spec, Float):
             return self._visit_float
-        if isinstance(form_spec, Percentage):
-            return self._visit_percentage
         if isinstance(form_spec, Dictionary):
             return self._visit_dictionary
-        if isinstance(form_spec, CascadingSingleChoice):
-            return self._visit_cascading_dropdown
-        if isinstance(form_spec, SingleChoice):
-            return self._visit_dropdown_choice
         if isinstance(form_spec, List):
             return self._visit_list
         if isinstance(form_spec, String):
             return self._visit_text
         raise MKGeneralException(f"No visitor for {form_spec}")
 
-    def _handle_validation(
-        self, node: FormSpec, component_result: VueFormSpecComponent, raw_value: Any
-    ) -> None:
-        # TODO: rework validation to support FormSpec
+    def _optional_validation(self, node: FormSpec, raw_value: Any) -> None | str:
         with _change_log_indent(4):
             if self._do_validate:
                 _log_indent(f"  validate {node.__class__.__name__}")
@@ -135,184 +142,119 @@ class VueFormSpecVisitor:
                     # Basic exception handling -> TODO: inspect, etc.
                     # Not every formspec has a custom validate callable
                     _log_indent(f"  no custom validate for {node.__class__.__name__}")
-                    return
+                    return None
 
                 try:
                     if custom_validate is not None:
                         custom_validate(raw_value)
                 except MKUserError as e:
                     error = ValidationError(message=str(e), field_id=e.varname or str(uuid.uuid4()))
-                    component_result.validation_errors = [error.message]
                     # The aggregated errors are used within our old GUI which
                     # requires the MKUser error format (field_id + message)
                     self._aggregated_validation_errors.add(error)
+                    return error.message
+        return None
+
+    def _compute_value_and_validation(
+        self, form_spec: FormSpec, vue_value: Any, disk_value: Any
+    ) -> ValueAndValidation:
+        return ValueAndValidation(vue_value, self._optional_validation(form_spec, disk_value))
+
+    def _get_title_and_help(self, form_spec: FormSpec) -> tuple[str, str]:
+        title = "" if form_spec.title is None else form_spec.title.localize(_)
+        help_text = "" if form_spec.help_text is None else form_spec.help_text.localize(_)
+        return title, help_text
 
     def _visit_integer(self, form_spec: Integer, value: int) -> VueVisitorMethodResult:
-        return (
-            VueFormSpecComponent(
-                form_spec,
-                component_type="integer",
-                config={
-                    "value": 0 if value is None else value,
-                    "label": form_spec.title.localize(_) if form_spec.title else None,
-                    "unit": form_spec.unit_symbol if form_spec.unit_symbol else None,
-                },
+        title, help_text = self._get_title_and_help(form_spec)
+        result = (
+            VueInteger(
+                title=title,
+                help=help_text,
             ),
+            self._compute_value_and_validation(form_spec, value, value),
             value,
         )
+        return result
 
     def _visit_float(self, form_spec: Float, value: float) -> VueVisitorMethodResult:
-        return (
-            VueFormSpecComponent(
-                form_spec,
-                component_type="float",
-                config={
-                    "value": 0 if value is None else value,
-                    "label": form_spec.title.localize(_) if form_spec.title else None,
-                    "unit": form_spec.unit_symbol if form_spec.unit_symbol else None,
-                },
+        title, help_text = self._get_title_and_help(form_spec)
+        result = (
+            VueFloat(
+                title=title,
+                help=help_text,
             ),
+            self._compute_value_and_validation(form_spec, value, value),
             value,
         )
-
-    def _visit_percentage(
-        self, form_spec: Percentage, value: int | float
-    ) -> VueVisitorMethodResult:
-        return (
-            VueFormSpecComponent(
-                form_spec,
-                component_type="percentage",
-                config={
-                    "value": value,
-                    "label": form_spec.label.localize(_) if form_spec.label else None,
-                    # FIXME
-                    # Sorry, 20 looks awful. Legacy value specs use "%r" now.
-                    # That is better behaved with respect to undesired cut-off effects.
-                    "precision": 20,
-                },
-            ),
-            value,
-        )
+        return result
 
     def _visit_dictionary(
         self, form_spec: Dictionary, value: dict[str, Any]
     ) -> VueVisitorMethodResult:
-        dict_elements = []
-        raw_value = {}
+        title, help_text = self._get_title_and_help(form_spec)
+        elements_keyspec = []
+        vue_values = {}
+        disk_values = {}
+
         for key_name, dict_element in form_spec.elements.items():
             is_active = key_name in value
             key_value = (
                 value[key_name] if is_active else compute_default_value(dict_element.parameter_form)
             )
 
-            component_result, component_value = self._visit(dict_element.parameter_form, key_value)
-            if is_active:
-                raw_value[key_name] = component_value
-            dict_elements.append(
-                {
-                    "name": key_name,
-                    "required": dict_element.required,
-                    "is_active": is_active,
-                    "component": self._component_to_dict(component_result),
-                }
+            element_schema, vue_value, disk_value = self._visit(
+                dict_element.parameter_form, key_value
             )
 
-        return (
-            VueFormSpecComponent(
-                form_spec,
-                component_type="dictionary",
-                config={"elements": dict_elements},
-            ),
-            raw_value,
-        )
+            if is_active:
+                disk_values[key_name] = disk_value
+                vue_values[key_name] = key_value
 
-    def _visit_cascading_dropdown(
-        self, form_spec: CascadingSingleChoice, value: tuple[str, Any] | None
-    ) -> VueVisitorMethodResult:
-        elements = []
-
-        if value is None:
-            value = compute_default_value(form_spec)
-
-        for element in form_spec.elements:
-            if value[0] == element.name:
-                used_value = value[1]
-            else:
-                used_value = compute_default_value(element.parameter_form)
-
-            form_title = element.parameter_form.title
-            cascading_title = form_title.localize(_) if form_title else element.name
-            choice_component, _choice_raw_value = self._visit(element.parameter_form, used_value)
-            elements.append(
-                (
-                    element.name,
-                    cascading_title,
-                    choice_component,
+            elements_keyspec.append(
+                VueDictionaryElement(
+                    ident=key_name,
+                    default_value=vue_value,
+                    required=dict_element.required,
+                    vue_schema=element_schema,
                 )
             )
 
         return (
-            VueFormSpecComponent(
-                form_spec,
-                component_type="cascading_dropdown_choice",
-                config={
-                    "elements": elements,
-                    "value": value,
-                },
-            ),
-            value,
-        )
-
-    def _visit_dropdown_choice(self, form_spec: SingleChoice, value: Any) -> VueVisitorMethodResult:
-        # TODO: improve transform. the frontend only renders strings
-        return (
-            VueFormSpecComponent(
-                form_spec,
-                component_type="dropdown_choice",
-                config={
-                    "elements": list(
-                        [str(x.name), x.title.localize(_)] for x in form_spec.elements
-                    ),
-                    "value": str(value),
-                },
-            ),
-            value,
+            VueDictionary(title=title, help=help_text, elements=elements_keyspec),
+            self._compute_value_and_validation(form_spec, vue_values, disk_values),
+            disk_values,
         )
 
     def _visit_list(self, form_spec: List, value: list) -> VueVisitorMethodResult:
-        template, _ = self._visit(
+        title, help_text = self._get_title_and_help(form_spec)
+        vue_schema, _value, _data_for_disk = self._visit(
             form_spec.element_template, compute_default_value(form_spec.element_template)
         )
 
         elements = []
-        raw_value = []
+        vue_values = []
+        disk_values = []
         for element in value:
-            component, element_raw_value = self._visit(form_spec.element_template, element)
+            component, vue_value, disk_value = self._visit(form_spec.element_template, element)
             elements.append(component)
-            raw_value.append(element_raw_value)
+            vue_values.append(vue_value)
+            disk_values.append(disk_value)
 
         return (
-            VueFormSpecComponent(
-                form_spec,
-                component_type="list_of",
-                config={
-                    "template": template,
-                    "add_text": _("Add new element"),
-                    "elements": elements,
-                },
-            ),
-            raw_value,
+            VueList(title=title, help=help_text, vue_schema=vue_schema),
+            self._compute_value_and_validation(form_spec, vue_values, disk_values),
+            disk_values,
         )
 
     def _visit_text(self, form_spec: String, value: str) -> VueVisitorMethodResult:
+        title, help_text = self._get_title_and_help(form_spec)
         return (
-            VueFormSpecComponent(
-                form_spec,
-                component_type="text",
-                config={
-                    "value": "" if value is None else value,
-                },
+            VueText(
+                title=title,
+                help=help_text,
             ),
+            self._compute_value_and_validation(form_spec, value, value),
             value,
         )
 
@@ -380,7 +322,7 @@ def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> VueFormSpecTy
 
     # If no explicit conversion exist, create an ugly valuespec
     # TODO: raise an exception
-    return String(title=Title("UNKNOWN custom_form_spec {custom_form_spec}"))
+    return String(title=Title(f"UNKNOWN custom_form_spec {custom_form_spec}"))
 
 
 def compute_default_value(form_spec: FormSpec) -> Any:
@@ -407,7 +349,9 @@ def create_form_spec_visitor(
 ) -> VueFormSpecVisitor:
     _log_indent("CREATE FORM SPEC VISITOR %s" % pprint.pformat(value))
     vue_visitor = VueFormSpecVisitor(form_spec, value, do_validate=do_validate)
-    _log_indent("VISITOR RAW VALUE %s" % pprint.pformat(vue_visitor.raw_value))
+    # _log_indent(
+    #     "VISITOR RAW VALUE %s" % pprint.pformat(vue_visitor.value_and_validation, width=220)
+    # )
     return vue_visitor
 
 
@@ -428,7 +372,12 @@ def _process_validation_errors(vue_visitor: VueFormSpecVisitor) -> None:
 
 def create_form_spec_app_config(vue_visitor: VueFormSpecVisitor, app_id: str) -> dict[str, Any]:
     return asdict(
-        VueAppConfig(id=app_id, app_name="demo", component=asdict(vue_visitor.vue_config))
+        VueAppConfig(
+            id=app_id,
+            app_name="demo",
+            vue_schema=asdict(vue_visitor.vue_schema),
+            data=vue_visitor.value,
+        )
     )
 
 
@@ -448,7 +397,9 @@ def render_form_spec(form_spec: FormSpec, field_id: str, default_value: Any) -> 
 
     vue_visitor = create_form_spec_visitor(form_spec, value, do_validate=do_validate)
     vue_app_config = create_form_spec_app_config(vue_visitor, field_id)
-    _log_indent("%s" % pprint.pformat(vue_app_config, width=180))
+    # logger.warning(f"Vue app config:\n{pprint.pformat(vue_app_config, width=220)}")
+    # logger.warning(f"Vue value:\n{pprint.pformat(vue_visitor.value, width=220)}")
+    # logger.warning(f"Disk value:\n{pprint.pformat(vue_visitor.data_for_disk, width=220)}")
     html.div("", data_cmk_vue_app=json.dumps(vue_app_config))
 
 
@@ -459,4 +410,4 @@ def parse_and_validate_form_spec(form_spec: FormSpec, field_id: str) -> Any:
     value_from_frontend = json.loads(request.get_str_input_mandatory(field_id))
     vue_visitor = create_form_spec_visitor(form_spec, value_from_frontend, do_validate=True)
     _process_validation_errors(vue_visitor)
-    return vue_visitor.raw_value
+    return vue_visitor.data_for_disk

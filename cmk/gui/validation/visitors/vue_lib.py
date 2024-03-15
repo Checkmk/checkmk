@@ -2,35 +2,18 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
 
-from cmk.gui.i18n import _
 from cmk.gui.utils.rule_specs.loader import LoadedRuleSpec
-
-from cmk.rulesets.v1.form_specs import FormSpec
 
 
 @dataclass(kw_only=True)
-class VueFormSpecComponent:
-    component_type: str
-    title: str | None
-    help: str | None
-    validation_errors: list[str] | None
-    config: dict[str, Any]
-
-    def __init__(
-        self,
-        form_spec: FormSpec,
-        component_type: str,
-        config: dict[str, Any],
-        validation_errors: list[str] | None = None,
-    ):
-        self.title = None if form_spec.title is None else form_spec.title.localize(_)
-        self.help = None if form_spec.help_text is None else form_spec.help_text.localize(_)
-        self.component_type = component_type
-        self.validation_errors = validation_errors
-        self.config = config
+class VueDictionaryData:
+    is_active: bool
+    value: Any
 
 
 @dataclass
@@ -45,6 +28,11 @@ class ValidationError:
         return hash(self) == hash(other)
 
 
+class ValueAndValidation(NamedTuple):
+    value: Any
+    validation: str | None
+
+
 # Experimental only registry (not an actual registry)
 form_spec_registry: dict[str, LoadedRuleSpec] = {}
 
@@ -53,4 +41,5 @@ form_spec_registry: dict[str, LoadedRuleSpec] = {}
 class VueAppConfig:
     id: str
     app_name: str
-    component: dict[str, Any]
+    vue_schema: dict[str, Any]
+    data: Any

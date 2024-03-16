@@ -4188,9 +4188,11 @@ IgnoredChecks = HostRulespec(
 )
 
 
-def _from_periodic_service_discovery_config(values: dict) -> dict:
+def _from_periodic_service_discovery_config(values: dict | None) -> dict | None:
     if not values:
         return values
+
+    values = _fix_values_from_analyse_service_automation(values)
 
     if "severity_changed_service_labels" not in values:
         values["severity_changed_service_labels"] = 0
@@ -4223,6 +4225,24 @@ def _valuespec_periodic_discovery():
         ),
         to_valuespec=_from_periodic_service_discovery_config,
     )
+
+
+_MAP_FROM_ANALYSE_SERVICE_KEYS = {
+    "severity_new_services": "severity_unmonitored",
+    "severity_vanished_services": "severity_vanished",
+    "severity_new_host_labels": "severity_new_host_label",
+    "rediscovery": "inventory_rediscovery",
+}
+
+
+def _fix_values_from_analyse_service_automation(values: dict) -> dict:
+    # be able to render what we get from the analyse-service automation.
+    return {
+        _MAP_FROM_ANALYSE_SERVICE_KEYS.get(k, k): v
+        for k, v in values.items()
+        # skip falsy redicovery
+        if k != "rediscovery" or v
+    }
 
 
 def _vs_periodic_discovery() -> Dictionary:
@@ -4313,7 +4333,7 @@ def _vs_periodic_discovery() -> Dictionary:
             ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
         ],
         optional_keys=["inventory_rediscovery"],
-        ignored_keys=["inventory_check_do_scan"],
+        ignored_keys=["inventory_check_do_scan", "commandline_only"],
     )
 
 

@@ -21,6 +21,7 @@ import sys
 import time
 from collections.abc import Container, Iterable, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
+from dataclasses import asdict
 from itertools import islice
 from pathlib import Path
 from typing import Any
@@ -1283,6 +1284,14 @@ class AutomationAnalyseServices(Automation):
         # 2. disocvered services
         # 3. classical checks
         # 4. active checks
+
+        # special case. cheap to check, so check this first:
+        if servicedesc == "Check_MK Discovery":
+            return {
+                "origin": "active",
+                "checktype": "check-mk-inventory",
+                "parameters": asdict(config_cache.discovery_check_parameters(host_name)),
+            }
 
         # 1. Enforced services
         for checkgroup_name, service in config_cache.enforced_services_table(host_name).values():

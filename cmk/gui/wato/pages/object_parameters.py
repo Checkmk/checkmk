@@ -8,7 +8,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 import functools
-from collections.abc import Callable, Collection, Iterator
+from collections.abc import Callable, Collection, Container, Iterator
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.definition import RuleGroup
@@ -140,11 +140,15 @@ class ModeObjectParameters(WatoMode):
 
         last_maingroup = None
         allow_list = get_rulespec_allow_list()
+        irrelevant_rulesets = _get_irrelevant_rulesets(self._service)
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names(for_host)):
             maingroup = groupname.split("/")[0]
             for rulespec in sorted(
                 rulespec_registry.get_by_group(groupname), key=lambda x: x.title or ""
             ):
+                if rulespec.name in irrelevant_rulesets:
+                    continue
+
                 if not allow_list.is_visible(rulespec.name):
                     continue
 
@@ -355,7 +359,11 @@ class ModeObjectParameters(WatoMode):
         render_labels: Callable[[], None],
     ) -> None:
         checktype = serviceinfo["checktype"]
-        rulespec = rulespec_registry[RuleGroup.ActiveChecks(checktype)]
+        rulespec = rulespec_registry[
+            "periodic_discovery"
+            if checktype == "check-mk-inventory"
+            else RuleGroup.ActiveChecks(checktype)
+        ]
         if rulespec_allow_list.is_visible(rulespec.name):
             self._output_analysed_ruleset(
                 all_rulesets,
@@ -629,3 +637,16 @@ class ModeObjectParameters(WatoMode):
         html.close_td()
         html.close_tr()
         html.close_table()
+
+
+def _get_irrelevant_rulesets(service: str | None) -> Container[str]:
+    match service:
+        case "Check_MK Discovery":
+            return {
+                # These two are not considered for the discovery service.
+                # It has its own ruleset for normal interval, and that is also used
+                # for the retry interval.
+                RuleGroup.ExtraServiceConf("check_interval"),
+                RuleGroup.ExtraServiceConf("retry_interval"),
+            }
+    return ()

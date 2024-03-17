@@ -4,12 +4,12 @@ import DInteger from './DInteger.vue'
 import DFloat from './DFloat.vue'
 import DDictionary from './DDictionary.vue'
 import DText from './DText.vue'
+import DLegacyValueSpec from './DLegacyValueSpec.vue'
 
 import { onBeforeMount, onMounted } from 'vue'
 import type { ValueAndValidation } from '@/types'
 import type { VueSchema } from '@/vue_types'
 // import DDropdownChoice from "cmk_vue/components/form/DDropdownChoice.vue";
-// import DLegacyValueSpec from "cmk_vue/components/form/DLegacyValueSpec.vue";
 // import DCheckbox from "cmk_vue/components/form/DCheckbox.vue";
 // import DCascadingDropdownChoice from "cmk_vue/components/form/DCascadingDropdownChoice.vue";
 // import DPercentage from '@/components/form/DPercentage.vue'
@@ -39,16 +39,16 @@ const components: { [name: string]: {} } = {
   text: DText,
   // list: DList,
   // list_of: DListOf,
-  dictionary: DDictionary
-  // legacy_valuespec: DLegacyValueSpec,
+  dictionary: DDictionary,
+  legacy_valuespec: DLegacyValueSpec
   // checkbox: DCheckbox,
   // dropdown_choice: DDropdownChoice,
   // cascading_dropdown_choice: DCascadingDropdownChoice,
 }
 
 function get_component(): object {
-  // console.log('get schema ', props.schema)
-  // console.log('get data   ', props.data)
+  console.log('get schema ', props.vue_schema)
+  console.log('get data   ', props.data)
   return components[props.vue_schema.vue_type!]
 }
 

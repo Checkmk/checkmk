@@ -25,6 +25,17 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.vue.vue_table import (
+    build_checkbox,
+    build_href,
+    build_html,
+    build_icon_button,
+    build_row,
+    build_table,
+    build_table_cell,
+    build_text,
+    render_vue_table,
+)
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
@@ -68,17 +79,6 @@ from cmk.gui.utils.urls import (
     makeactionuri,
     makeuri,
     makeuri_contextless,
-)
-from cmk.gui.validation.visitors.vue_table import (
-    build_checkbox,
-    build_href,
-    build_html,
-    build_icon_button,
-    build_row,
-    build_table,
-    build_table_cell,
-    build_text,
-    render_vue_table,
 )
 from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url

@@ -5,7 +5,13 @@
  * and run json-schema-to-typescript to regenerate this file.
  */
 
-export type VueSchema = VueInteger | VueFloat | VueText | VueDictionary | VueList
+export type VueSchema =
+  | VueInteger
+  | VueFloat
+  | VueText
+  | VueDictionary
+  | VueList
+  | VueLegacyValuespec
 export type VueInteger = VueInteger1 & {
   vue_type?: 'integer'
   label?: string
@@ -34,6 +40,10 @@ export type VueList = VueList1 & {
   vue_schema?: VueSchema
 }
 export type VueList1 = VueBase
+export type VueLegacyValuespec = VueLegacyValuespec1 & {
+  vue_type?: 'legacy_valuespec'
+}
+export type VueLegacyValuespec1 = VueBase
 
 export interface VueTypes {
   all_schemas?: VueSchema[]

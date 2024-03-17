@@ -2,10 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import typing
 from dataclasses import dataclass
-
-from cmk.gui.valuespec import definitions
 
 from cmk.rulesets.v1 import form_specs
 from cmk.rulesets.v1._localize import Title
@@ -20,9 +17,3 @@ class Color(form_specs.FormSpec[str]):
 @dataclass(frozen=True, kw_only=True)
 class DatePicker(form_specs.FormSpec[str]):
     prefill: DefaultValue[str] | InputHint[Title] = InputHint(Title(""))
-
-
-@dataclass(frozen=True, kw_only=True)
-class ValueSpecFormSpec(form_specs.FormSpec[definitions.ValueSpec]):
-    valuespec: definitions.ValueSpec
-    prefill: DefaultValue[typing.Any] | InputHint[Title] = InputHint(Title(""))

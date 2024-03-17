@@ -22,7 +22,7 @@ function setup_vue() {
     if (vue_app_data == undefined) return
     const vueApp = JSON.parse(vue_app_data)
 
-    if (vueApp.app_name == 'demo') {
+    if (vueApp.app_name == 'form_spec') {
       const app = createApp(Form, {
         form_spec: {
           id: vueApp.id,

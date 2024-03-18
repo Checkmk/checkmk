@@ -1,6 +1,5 @@
 load("//foreign_cc_adapted/private/framework/toolchains:linux_commands.bzl", "commands")
 
-# buildifier: disable=unused-variable
 def _shell_commands_impl(repository_ctx):
     """The implementation of `shell_commands`"""
     exec_compatible_with = [
@@ -8,10 +7,10 @@ def _shell_commands_impl(repository_ctx):
     ]
     file = ":linux_commands.bzl"
     return platform_common.ToolchainInfo(
-        commands = commands,
+		    commands = commands
     )
 
 shell_commands = rule(
     doc = "Rule to rule our own shell commands",
-    implementation = _shell_commands_impl,
+    implementation = _shell_commands_impl
 )

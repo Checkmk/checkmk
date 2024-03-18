@@ -9,6 +9,7 @@
 from functools import partial
 
 from cmk.utils.licensing.registry import register_cre_licensing_handler
+from cmk.utils.version import is_managed_edition
 
 import cmk.gui.pages
 from cmk.gui import autocompleters, crash_reporting, dashboard, hooks, mobile, views, visuals, wato
@@ -44,7 +45,8 @@ from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 
 
 def register_sites_options() -> None:
-    hooks.register_builtin("mkeventd-activate-changes", save_active_config)
+    if not is_managed_edition():
+        hooks.register_builtin("mkeventd-activate-changes", save_active_config)
     filters.MultipleSitesFilter.sites_options = cre_sites_options
     autocompleter_registry.register_expression("sites")(
         partial(autocompleters.sites_autocompleter, sites_options=cre_sites_options)

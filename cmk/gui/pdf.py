@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=protected-access
+
 # Coords:
 # 0,0 is at the *bottom* left of the page. When you specify
 # left and top, then a larger top is nearer to the top of the

@@ -48,11 +48,6 @@ disable=
     # programming practice. In some cases, they can even hide bugs.
     broad-except,
     #---------------------------------------------------------------------------
-    # Enabling this would be nice, but not crucial. Nevertheless, this would
-    # improve readability and involve some cleanups in our class hierarchy, so
-    # we should do this some day.
-    protected-access,
-    #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we
     # probably want to use "include-naming-hint=yes" in the BASIC section.

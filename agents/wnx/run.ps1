@@ -27,7 +27,8 @@ $argSql = $false
 $argDetach = $false
 
 $msbuild_exe = "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
-$arte = "$pwd/../../artefacts"
+$repo_root = (get-item $pwd).parent.parent.FullName 
+$arte = "$repo_root/artefacts"
 $build_dir = "$pwd/build"
 $ohm_dir = "$build_dir/ohm/"
 $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
@@ -522,6 +523,17 @@ function Clear-All() {
     Remove-Item -Path "$build_dir" -Recurse -Force -ErrorAction SilentlyContinue
 }
 
+function Update-ArtefactDirs() {
+    If (Test-Path -PathType container $arte) {
+        Write-Host "Using arte dir: '$arte'" -ForegroundColor White
+    }
+    else {
+        Remove-Item $arte -ErrorAction SilentlyContinue     # we may have find strange files from bad scripts
+        Write-Host "Creating arte dir: '$arte'" -ForegroundColor White
+        New-Item -ItemType Directory -Path $arte -ErrorAction Stop > nul
+    }
+}
+
 
 Invoke-CheckApp "choco" "choco -v"
 Invoke-CheckApp "perl" "perl -v"
@@ -534,6 +546,7 @@ $result = 1
 try {
     $mainStartTime = Get-Date
     Invoke-Detach $argDetach
+    Update-ArtefactDirs
     Clear-Artifacts
     Clear-All
     Build-Agent

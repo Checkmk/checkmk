@@ -6,6 +6,7 @@
 import json
 from pathlib import Path
 
+import pytest
 import yaml
 from openapi_spec_validator import validate
 
@@ -38,6 +39,7 @@ def _write_dummy_spec(spec_path: Path) -> None:
     )
 
 
+@pytest.mark.usefixtures("patch_theme")
 def test_yaml_file_authenticated(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     _write_dummy_spec(Path(paths.var_dir).joinpath("rest_api/spec/swagger-ui.spec"))
     resp = logged_in_wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-swagger-ui.yaml", status=200)
@@ -46,6 +48,7 @@ def test_yaml_file_authenticated(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     validate(data)
 
 
+@pytest.mark.usefixtures("patch_theme")
 def test_json_file_authenticated(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     _write_dummy_spec(Path(paths.var_dir).joinpath("rest_api/spec/doc.spec"))
     resp = logged_in_wsgi_app.get("/NO_SITE/check_mk/api/1.0/openapi-doc.json", status=200)

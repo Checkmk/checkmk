@@ -11,6 +11,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import format_plugin_output
 
 
+@pytest.mark.usefixtures("patch_theme")
 @pytest.mark.parametrize(
     "args, expected",
     [

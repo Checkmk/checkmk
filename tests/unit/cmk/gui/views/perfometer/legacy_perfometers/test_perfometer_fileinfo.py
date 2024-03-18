@@ -52,5 +52,6 @@ def test_perfometer_fileinfo_groups(
     perf_data: Perfdata,
     expected_result: LegacyPerfometerResult,
     request_context: None,
+    patch_theme: None,
 ) -> None:
     assert perfometer_fileinfo_groups({}, "", perf_data) == expected_result

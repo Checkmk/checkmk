@@ -17,7 +17,7 @@ from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from typing import Any, ContextManager, Literal, NamedTuple
 from unittest import mock
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import webtest  # type: ignore[import]
@@ -92,6 +92,33 @@ def gui_cleanup_after_test(
     # In case some tests use @request_memoize but don't use the request context, we'll emit the
     # clear event after each request.
     hooks.call("request-end")
+
+
+def fake_detect_icon_path(_: None, icon_name: str = "", prefix: str = "") -> str:
+    if icon_name == "link":
+        return "themes/facelift/images/icon_link.png"
+    if icon_name == "info":
+        return "themes/facelift/images/icon_info.svg"
+    return "unittest.png"
+
+
+@pytest.fixture()
+def patch_theme() -> Iterator[None]:
+    with (
+        patch(
+            "cmk.gui.utils.theme.Theme.detect_icon_path",
+            new=fake_detect_icon_path,
+        ),
+        patch(
+            "cmk.gui.utils.theme.Theme.get",
+            return_value="modern-dark",
+        ),
+        patch(
+            "cmk.gui.utils.theme.theme_choices",
+            return_value=[("modern-dark", "dark ut"), ("facelift", "light ut")],
+        ),
+    ):
+        yield
 
 
 @pytest.fixture()

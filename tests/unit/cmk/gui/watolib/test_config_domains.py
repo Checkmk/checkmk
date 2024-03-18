@@ -266,22 +266,11 @@ class TestConfigDomainCACertificates:
 
 
 def test_remote_sites_cas_negative_serials() -> None:
-    assert not ConfigDomainCACertificates().is_valid_cert(negative_serial)
+    with pytest.raises(Exception, match="Certificate with a negative serial number "):
+        ConfigDomainCACertificates().is_valid_cert(negative_serial)
 
 
-@pytest.mark.parametrize(
-    "cert_str, log",
-    (
-        (negative_serial, None),
-        (
-            negative_serial_self_generated,
-            "CN=Test,O=Internet Widgits Pty Ltd,ST=Some-State,C=DE",
-        ),
-    ),
-)
-def test_load_cert_ignores_negative_serials(
-    mocker: MockerFixture, cert_str: str, log: str | None
-) -> None:
+def test_load_cert_ignores_negative_serials(mocker: MockerFixture) -> None:
     """test that we skip certs with negative serials with a warning except for some"""
 
     mock = mocker.patch.object(
@@ -289,13 +278,16 @@ def test_load_cert_ignores_negative_serials(
         "logger",
     )
 
-    assert config_domains.ConfigDomainCACertificates()._load_cert(cert_str) is None
-
-    if log:
-        mock.warning.assert_called_once_with(
-            "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
-            log,
+    assert not list(
+        config_domains.ConfigDomainCACertificates()._load_certs(
+            [negative_serial, negative_serial_self_generated]
         )
+    )
+
+    mock.warning.assert_called_once_with(
+        "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
+        "CN=Test,O=Internet Widgits Pty Ltd,ST=Some-State,C=DE",
+    )
 
 
 def test_load_cert() -> None:

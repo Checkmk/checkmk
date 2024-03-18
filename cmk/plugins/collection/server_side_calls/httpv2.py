@@ -127,11 +127,15 @@ class EnforceTlsVersion(BaseModel):
     allow_higher: bool
 
 
-class SendData(BaseModel):
-    body_text: str
+class SendDataInner(BaseModel):
+    content: str
     content_type: (
         tuple[Literal[SendDataType.COMMON], ContentType] | tuple[Literal[SendDataType.CUSTOM], str]
     )
+
+
+class SendData(BaseModel):
+    send_data: SendDataInner | None = None
 
 
 class HeaderSpec(BaseModel):
@@ -314,7 +318,7 @@ def _connection_args(
     if (tls_versions := connection.tls_versions) is not None:
         yield from _tls_version_arg(tls_versions)
     if (method_spec := connection.method) is not None:
-        yield from _send_args(method_spec)
+        yield from _method_args(method_spec)
     if (proxy_spec := connection.proxy) is not None:
         yield from _proxy_args(proxy_spec, http_proxies)
     if (redirects := connection.redirects) is not None:
@@ -390,7 +394,7 @@ def _proxy_args(proxy_spec: ProxySpec, http_proxies: Mapping[str, HTTPProxy]) ->
             yield parse_http_proxy(proxy_spec, http_proxies)
 
 
-def _send_args(method_spec: tuple[HttpMethod, SendData | None]) -> Iterator[str]:
+def _method_args(method_spec: tuple[HttpMethod, SendData | None]) -> Iterator[str]:
     method, send_data = method_spec
 
     yield "--method"
@@ -405,11 +409,18 @@ def _send_args(method_spec: tuple[HttpMethod, SendData | None]) -> Iterator[str]
     if send_data is None:
         return
 
+    yield from _send_data_args(send_data)
+
+
+def _send_data_args(send_data: SendData) -> Iterator[str]:
+    if (send_data_inner := send_data.send_data) is None:
+        return
+
     yield "--body"
-    yield send_data.body_text
+    yield send_data_inner.content
 
     yield "--content-type"
-    match send_data.content_type:
+    match send_data_inner.content_type:
         case (SendDataType.CUSTOM, str(ct_str)):
             yield ct_str
         case (SendDataType.COMMON, ContentType(ct_enum)):

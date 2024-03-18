@@ -225,52 +225,59 @@ def _no_send_data() -> FixedValue:
 def _send_data() -> Dictionary:
     return Dictionary(
         elements={
-            "body_text": DictElement(
-                parameter_form=String(
-                    title=Title("Content"),
-                    help_text=Help("Please make sure, that the data is URL-encoded."),
-                ),
-                required=True,
-            ),
-            "content_type": DictElement(
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Content-Type"),
-                    prefill=DefaultValue("common"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="common",
-                            title=Title("Type selection"),
-                            parameter_form=SingleChoice(
-                                title=Title("Select type from list"),
+            "send_data": DictElement(
+                parameter_form=Dictionary(
+                    title=Title("Send data"),
+                    elements={
+                        "content": DictElement(
+                            parameter_form=String(
+                                title=Title("Content"),
+                                help_text=Help("Please make sure, that the data is URL-encoded."),
+                            ),
+                            required=True,
+                        ),
+                        "content_type": DictElement(
+                            parameter_form=CascadingSingleChoice(
+                                title=Title("Content-Type"),
+                                prefill=DefaultValue("common"),
                                 elements=[
-                                    SingleChoiceElement(
-                                        name=content_type.lower()
-                                        .replace("/", "_")
-                                        .replace("-", "_"),
-                                        title=Title(content_type),
-                                    )
-                                    for content_type in [
-                                        "application/json",
-                                        "application/xml",
-                                        "application/x-www-form-urlencoded",
-                                        "text/plain",
-                                        "text/xml",
-                                        "text/html",
-                                    ]
+                                    CascadingSingleChoiceElement(
+                                        name="common",
+                                        title=Title("Type selection"),
+                                        parameter_form=SingleChoice(
+                                            title=Title("Select type from list"),
+                                            elements=[
+                                                SingleChoiceElement(
+                                                    name=content_type.lower()
+                                                    .replace("/", "_")
+                                                    .replace("-", "_"),
+                                                    title=Title(content_type),
+                                                )
+                                                for content_type in [
+                                                    "application/json",
+                                                    "application/xml",
+                                                    "application/x-www-form-urlencoded",
+                                                    "text/plain",
+                                                    "text/xml",
+                                                    "text/html",
+                                                ]
+                                            ],
+                                        ),
+                                    ),
+                                    CascadingSingleChoiceElement(
+                                        name="custom",
+                                        title=Title("Use custom type"),
+                                        parameter_form=String(
+                                            prefill=InputHint("text/plain"),
+                                        ),
+                                    ),
                                 ],
                             ),
+                            required=True,
                         ),
-                        CascadingSingleChoiceElement(
-                            name="custom",
-                            title=Title("Use custom type"),
-                            parameter_form=String(
-                                prefill=InputHint("text/plain"),
-                            ),
-                        ),
-                    ],
+                    },
                 ),
-                required=True,
-            ),
+            )
         },
     )
 

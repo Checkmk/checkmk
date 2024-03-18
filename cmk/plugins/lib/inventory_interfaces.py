@@ -126,11 +126,13 @@ def inventorize_interfaces(
                 ),
                 **({"available": if_available} if if_available is not None else {}),
             },
-            status_columns={
-                "last_change": int(last_change_timestamp),
-            }
-            if last_change_timestamp is not None
-            else {},
+            status_columns=(
+                {
+                    "last_change": int(last_change_timestamp),
+                }
+                if last_change_timestamp is not None
+                else {}
+            ),
         )
 
     yield Attributes(

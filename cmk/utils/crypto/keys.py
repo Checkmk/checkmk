@@ -90,13 +90,11 @@ class PrivateKey:
 
     @overload
     @classmethod
-    def load_pem(cls, pem_data: PlaintextPrivateKeyPEM, password: None = None) -> PrivateKey:
-        ...
+    def load_pem(cls, pem_data: PlaintextPrivateKeyPEM, password: None = None) -> PrivateKey: ...
 
     @overload
     @classmethod
-    def load_pem(cls, pem_data: EncryptedPrivateKeyPEM, password: Password) -> PrivateKey:
-        ...
+    def load_pem(cls, pem_data: EncryptedPrivateKeyPEM, password: Password) -> PrivateKey: ...
 
     @classmethod
     def load_pem(
@@ -170,12 +168,10 @@ class PrivateKey:
         return cls(key)
 
     @overload
-    def dump_pem(self, password: None) -> PlaintextPrivateKeyPEM:
-        ...
+    def dump_pem(self, password: None) -> PlaintextPrivateKeyPEM: ...
 
     @overload
-    def dump_pem(self, password: Password) -> EncryptedPrivateKeyPEM:
-        ...
+    def dump_pem(self, password: Password) -> EncryptedPrivateKeyPEM: ...
 
     def dump_pem(
         self, password: Password | None
@@ -190,9 +186,11 @@ class PrivateKey:
         bytes_ = self._key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.BestAvailableEncryption(password.raw_bytes)
-            if password is not None
-            else serialization.NoEncryption(),
+            encryption_algorithm=(
+                serialization.BestAvailableEncryption(password.raw_bytes)
+                if password is not None
+                else serialization.NoEncryption()
+            ),
         )
         if password is None:
             return PlaintextPrivateKeyPEM(bytes_)

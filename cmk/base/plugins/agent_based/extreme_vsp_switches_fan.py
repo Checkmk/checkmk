@@ -18,7 +18,9 @@ class VSPSwitchFanInfo:
     description: str
     operational_status: str
     operational_speed: str
-    operational_speed_rpm: float | None  # there are cases where this is not present in the walk, because only newer devices have it
+    operational_speed_rpm: (
+        float | None
+    )  # there are cases where this is not present in the walk, because only newer devices have it
 
 
 VSPSwitchesSection = Mapping[str, VSPSwitchFanInfo]

@@ -25,8 +25,7 @@ from typing import Protocol
 
 
 class UserLike(Protocol):
-    def has_permission(self, pname: str) -> bool:
-        ...
+    def has_permission(self, pname: str) -> bool: ...
 
 
 class FakeUser:

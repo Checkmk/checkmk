@@ -78,8 +78,7 @@ class RoutetracerProto(Protocol):
         use_dns: bool,
         probe_method: ProbeMethod,
         ip_address_family: IPAddressFamily,
-    ) -> Route:
-        ...
+    ) -> Route: ...
 
 
 class ProbeMethod(enum.Enum):
@@ -237,11 +236,11 @@ def _check_route(
     ]
 
     return (
-        2
-        if any(missing_routers_crit + found_routers_crit)
-        else 1
-        if any(missing_routers_warn + found_routers_warn)
-        else 0,
+        (
+            2
+            if any(missing_routers_crit + found_routers_crit)
+            else 1 if any(missing_routers_warn + found_routers_warn) else 0
+        ),
         f"%d hop{'' if route.n_hops == 1 else 's'}, missing routers: %s, bad routers: %s\n%s"
         % (
             route.n_hops,

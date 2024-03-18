@@ -20,7 +20,13 @@ def make_persisted_section_dir(
     match fetcher_type:
         case FetcherType.NONE:
             return Path(os.devnull)
-        case FetcherType.PIGGYBACK | FetcherType.SNMP | FetcherType.IPMI | FetcherType.PUSH_AGENT | FetcherType.SPECIAL_AGENT:
+        case (
+            FetcherType.PIGGYBACK
+            | FetcherType.SNMP
+            | FetcherType.IPMI
+            | FetcherType.PUSH_AGENT
+            | FetcherType.SPECIAL_AGENT
+        ):
             return section_cache_path / "persisted_sections" / ident / str(host_name)
         case FetcherType.PROGRAM | FetcherType.TCP:
             return section_cache_path / "persisted" / str(host_name)

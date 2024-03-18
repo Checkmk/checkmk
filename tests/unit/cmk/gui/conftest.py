@@ -382,8 +382,7 @@ def admin_auth_request(
 
 
 class SingleRequest(typing.Protocol):
-    def __call__(self, *, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:
-        ...
+    def __call__(self, *, in_the_past: int = 0) -> tuple[UserId, SessionInfo]: ...
 
 
 @pytest.fixture(scope="function")

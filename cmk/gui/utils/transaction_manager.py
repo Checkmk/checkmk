@@ -15,8 +15,7 @@ from cmk.gui.http import request
 
 
 class ReaderProtocol(Protocol):
-    def __call__(self, lock: bool) -> list[str]:
-        ...
+    def __call__(self, lock: bool) -> list[str]: ...
 
 
 class TransactionManager:

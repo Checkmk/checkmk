@@ -449,9 +449,11 @@ class ModeRuleSearch(ABCRulesetMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(default_value=self._search_options.get("fulltext", ""))
-            if self._page_type is not PageType.RuleSearch
-            else None,
+            inpage_search=(
+                PageMenuSearch(default_value=self._search_options.get("fulltext", ""))
+                if self._page_type is not PageType.RuleSearch
+                else None
+            ),
         )
         _add_doc_references(menu, self._doc_references)
         return menu
@@ -576,13 +578,11 @@ class ModeRulesetGroup(ABCRulesetMode):
     @classmethod
     def mode_url(  # pylint: disable=arguments-differ
         cls, *, group: str, host: str, item: str, service: str
-    ) -> str:
-        ...
+    ) -> str: ...
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -787,8 +787,7 @@ class ModeEditRuleset(WatoMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:

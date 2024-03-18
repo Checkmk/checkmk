@@ -3806,9 +3806,9 @@ def _valuespec_host_check_commands():
             '"Can add or modify executables".'
         ),
         choices=_host_check_commands_host_check_command_choices,
-        default_value="smart"
-        if ConfigDomainOMD().default_globals()["site_core"] == "cmc"
-        else "ping",
+        default_value=(
+            "smart" if ConfigDomainOMD().default_globals()["site_core"] == "cmc" else "ping"
+        ),
         orientation="horizontal",
     )
 

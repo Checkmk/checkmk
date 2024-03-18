@@ -191,9 +191,11 @@ def _create_item_data(entry: list[str | list[int]]) -> BGPData:
         }.get(entry[5] if isinstance(entry[5], str) else "0", "unknown(%r)" % entry[5]),
         last_received_error=entry[6] if isinstance(entry[6], str) else "unknown(%r)" % entry[6],
         established_time=int(entry[7]) if isinstance(entry[7], str) else 0,
-        description=(entry[-2] if isinstance(entry[-2], str) else "unknown(%r)" % entry[-2])
-        if len(entry) > len(BGPData.__annotations__) - 1
-        else "n/a",
+        description=(
+            (entry[-2] if isinstance(entry[-2], str) else "unknown(%r)" % entry[-2])
+            if len(entry) > len(BGPData.__annotations__) - 1
+            else "n/a"
+        ),
         bgp_version=4,
     )
 

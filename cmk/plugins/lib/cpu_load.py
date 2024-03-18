@@ -79,9 +79,11 @@ def _check_cpu_load_type(
             label=label,
             boundaries=(0, num_cpus) if avg == "1" else None,
         ):
-            yield Result(state=e.state, notice=e.details) if notice_only and isinstance(
-                e, Result
-            ) else e
+            yield (
+                Result(state=e.state, notice=e.details)
+                if notice_only and isinstance(e, Result)
+                else e
+            )
     else:
         # warning and critical levels are dependent on cpu count;
         # rule defines levels for one cpu.
@@ -99,6 +101,8 @@ def _check_cpu_load_type(
 
     # provide additional info text
     per_core_txt = f"{avg} min load per core: {(value/num_cpus):.2f} ({num_cpus} {proc_name}cores)"
-    yield Result(state=State.OK, notice=per_core_txt) if notice_only else Result(
-        state=State.OK, summary=per_core_txt
+    yield (
+        Result(state=State.OK, notice=per_core_txt)
+        if notice_only
+        else Result(state=State.OK, summary=per_core_txt)
     )

@@ -406,9 +406,11 @@ def setup_site(site: Site, dump_path: str) -> None:
                     "cp",
                     "-f",
                     f"{config.dump_dir}/{dump_name}",
-                    f"{walk_path}/{dump_name}"
-                    if re.search(r"\bsnmp\b", dump_name)
-                    else f"{dump_path}/{dump_name}",
+                    (
+                        f"{walk_path}/{dump_name}"
+                        if re.search(r"\bsnmp\b", dump_name)
+                        else f"{dump_path}/{dump_name}"
+                    ),
                 ]
             ).returncode
             == 0

@@ -540,8 +540,7 @@ class ABCMegaMenuSearch(ABC):
         return 'cmk.popup_menu.focus_search_field("mk_side_search_field_%s");' % self.name
 
     @abstractmethod
-    def show_search_field(self) -> None:
-        ...
+    def show_search_field(self) -> None: ...
 
 
 class _Icon(TypedDict):

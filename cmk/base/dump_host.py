@@ -69,9 +69,11 @@ def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
         bulk = "yes" if snmp_config.use_bulkwalk else "no"
 
         return "%s%s (%s, Bulkwalk: %s, Port: %d, Backend: %s)" % (
-            "SNMP"
-            if source.source_info().source_type is SourceType.HOST
-            else "Management board - SNMP",
+            (
+                "SNMP"
+                if source.source_info().source_type is SourceType.HOST
+                else "Management board - SNMP"
+            ),
             snmp_config.snmp_version.name.lower(),
             credentials_text,
             bulk,

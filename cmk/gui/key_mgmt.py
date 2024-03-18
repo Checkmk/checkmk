@@ -340,7 +340,7 @@ class PageUploadKey:
 
     def _get_uploaded(
         self,
-        cert_spec: (tuple[Literal["upload"], tuple[str, str, bytes]] | tuple[Literal["text"], str]),
+        cert_spec: tuple[Literal["upload"], tuple[str, str, bytes]] | tuple[Literal["text"], str],
     ) -> str:
         if cert_spec[0] == "upload":
             try:

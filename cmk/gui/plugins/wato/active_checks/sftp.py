@@ -14,9 +14,9 @@ from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 def _valuespec_active_checks_sftp():
     return Migrate(
-        migrate=lambda p: p
-        if isinstance(p, dict)
-        else {"host": p[0], "user": p[1], "secret": p[2], **p[3]},
+        migrate=lambda p: (
+            p if isinstance(p, dict) else {"host": p[0], "user": p[1], "secret": p[2], **p[3]}
+        ),
         valuespec=Dictionary(
             title=_("Check SFTP Service"),
             help=_(
@@ -74,9 +74,9 @@ def _valuespec_active_checks_sftp():
                 (
                     "put",
                     Migrate(
-                        migrate=lambda p: p
-                        if isinstance(p, dict)
-                        else {"local": p[0], "remote": p[1]},
+                        migrate=lambda p: (
+                            p if isinstance(p, dict) else {"local": p[0], "remote": p[1]}
+                        ),
                         valuespec=Dictionary(
                             title=_("Put file to SFTP server"),
                             optional_keys=[],
@@ -114,9 +114,9 @@ def _valuespec_active_checks_sftp():
                 (
                     "get",
                     Migrate(
-                        migrate=lambda p: p
-                        if isinstance(p, dict)
-                        else {"remote": p[0], "local": p[1]},
+                        migrate=lambda p: (
+                            p if isinstance(p, dict) else {"remote": p[0], "local": p[1]}
+                        ),
                         valuespec=Dictionary(
                             title=_("Get file from SFTP server"),
                             optional_keys=[],

@@ -384,14 +384,18 @@ def _create_get_config_sync_file_infos_test_config(base_dir: Path) -> None:
     with base_dir.joinpath("etc/d4").joinpath("x2").open("w", encoding="utf-8") as f:
         f.write("Däng2")
     base_dir.joinpath("etc/d4/layer1/layer2").mkdir(parents=True, exist_ok=True)
-    with base_dir.joinpath("etc/d4/layer1/layer2").joinpath("x3.xyz").open(
-        "w", encoding="utf-8"
-    ) as f:
+    with (
+        base_dir.joinpath("etc/d4/layer1/layer2")
+        .joinpath("x3.xyz")
+        .open("w", encoding="utf-8") as f
+    ):
         f.write("Däng2")
 
-    with base_dir.joinpath("etc/d4/layer1/layer2").joinpath("x4.xyz").open(
-        "w", encoding="utf-8"
-    ) as f:
+    with (
+        base_dir.joinpath("etc/d4/layer1/layer2")
+        .joinpath("x4.xyz")
+        .open("w", encoding="utf-8") as f
+    ):
         f.write("Däng2")
 
     with base_dir.joinpath("etc/f1").open("w", encoding="utf-8") as f:

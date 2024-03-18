@@ -90,8 +90,7 @@ class CheckFunction(Protocol):
         service: ConfiguredService,
         *,
         providers: Mapping[HostKey, Provider],
-    ) -> AggregatedResult:
-        ...
+    ) -> AggregatedResult: ...
 
 
 @dataclass(frozen=True)

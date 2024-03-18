@@ -207,9 +207,11 @@ def parse_zfsget(string_table: StringTable) -> Section:
     return {
         mountpoint: (
             mountpoint,
-            float(entry["quota"])
-            if "quota" in entry
-            else (float(entry["used"]) + float(entry["available"])),
+            (
+                float(entry["quota"])
+                if "quota" in entry
+                else (float(entry["used"]) + float(entry["available"]))
+            ),
             float(entry["available"]),
             0.0,
         )

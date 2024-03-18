@@ -10,8 +10,7 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.theme import theme
 
 
-class MKLogoDashletConfig(DashletConfig):
-    ...
+class MKLogoDashletConfig(DashletConfig): ...
 
 
 class MKLogoDashlet(Dashlet[MKLogoDashletConfig]):

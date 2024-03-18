@@ -45,8 +45,7 @@ Service = tuple[str, dict]
 
 
 class DiscoveryFunction(Protocol):
-    def __call__(self, section: Section) -> Iterable[Service]:
-        ...
+    def __call__(self, section: Section) -> Iterable[Service]: ...
 
 
 @mysql_parse_per_item

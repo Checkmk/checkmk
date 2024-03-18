@@ -41,8 +41,7 @@ class ResultTypeRegistry(Registry[type["ABCAutomationResult"]]):
 result_type_registry = ResultTypeRegistry()
 
 
-class SerializedResult(str):
-    ...
+class SerializedResult(str): ...
 
 
 _DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
@@ -65,8 +64,7 @@ class ABCAutomationResult(ABC):
 
     @staticmethod
     @abstractmethod
-    def automation_call() -> str:
-        ...
+    def automation_call() -> str: ...
 
     def _default_serialize(self) -> SerializedResult:
         return SerializedResult(repr(astuple(self)))

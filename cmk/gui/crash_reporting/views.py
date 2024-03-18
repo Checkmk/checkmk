@@ -220,9 +220,11 @@ class PainterCrashSource(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (
             None,
-            _("Extension")
-            if local_files_involved_in_crash(row["crash_exc_traceback"])
-            else _("Built-in"),
+            (
+                _("Extension")
+                if local_files_involved_in_crash(row["crash_exc_traceback"])
+                else _("Built-in")
+            ),
         )
 
 

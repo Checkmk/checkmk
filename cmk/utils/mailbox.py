@@ -852,9 +852,11 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
     args.fetch_port = args.fetch_port or (
         (995 if args.fetch_tls else 110)
         if args.fetch_protocol == "POP3"
-        else (993 if args.fetch_tls else 143)
-        if args.fetch_protocol == "IMAP"
-        else (443 if args.fetch_tls else 80)
+        else (
+            (993 if args.fetch_tls else 143)
+            if args.fetch_protocol == "IMAP"
+            else (443 if args.fetch_tls else 80)
+        )
     )  # HTTP / REST (e.g. EWS)
 
     if "send_protocol" in args:  # if sending is configured
@@ -879,9 +881,11 @@ def _active_check_main_core(
     # todo argparse - exceptions?
     args = parse_arguments(argument_parser, argv)
     logging.basicConfig(
-        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
-        if args.debug or args.verbose > 0
-        else logging.CRITICAL
+        level=(
+            {0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
+            if args.debug or args.verbose > 0
+            else logging.CRITICAL
+        )
     )
 
     # when we disable certificate validation intensionally we don't want to see warnings

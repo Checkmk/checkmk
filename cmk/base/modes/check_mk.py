@@ -2135,8 +2135,7 @@ class GetSubmitter(Protocol):
         dry_run: bool,
         perfdata_format: Literal["pnp", "standard"],
         show_perfdata: bool,
-    ) -> Submitter:
-        ...
+    ) -> Submitter: ...
 
 
 def mode_check(
@@ -2202,9 +2201,13 @@ def mode_check(
             Snapshot,
         ]
     ] = ()
-    with error_handler, plugin_contexts.current_host(hostname), set_value_store_manager(
-        ValueStoreManager(hostname), store_changes=not dry_run
-    ) as value_store_manager:
+    with (
+        error_handler,
+        plugin_contexts.current_host(hostname),
+        set_value_store_manager(
+            ValueStoreManager(hostname), store_changes=not dry_run
+        ) as value_store_manager,
+    ):
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_plugins = CheckPluginMapper(

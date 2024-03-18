@@ -360,9 +360,11 @@ class ModeObjectParameters(WatoMode):
     ) -> None:
         checktype = serviceinfo["checktype"]
         rulespec = rulespec_registry[
-            "periodic_discovery"
-            if checktype == "check-mk-inventory"
-            else RuleGroup.ActiveChecks(checktype)
+            (
+                "periodic_discovery"
+                if checktype == "check-mk-inventory"
+                else RuleGroup.ActiveChecks(checktype)
+            )
         ]
         if rulespec_allow_list.is_visible(rulespec.name):
             self._output_analysed_ruleset(

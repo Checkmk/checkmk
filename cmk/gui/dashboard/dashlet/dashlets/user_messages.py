@@ -9,8 +9,7 @@ from cmk.gui.i18n import _
 from cmk.gui.user_message import render_user_message_table
 
 
-class MessageUsersDashletConfig(DashletConfig):
-    ...
+class MessageUsersDashletConfig(DashletConfig): ...
 
 
 class MessageUsersDashlet(Dashlet[MessageUsersDashletConfig]):

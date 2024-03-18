@@ -199,8 +199,7 @@ class RequestHandler(abc.ABC):
     """A class representing a way to do HTTP Requests."""
 
     @abc.abstractmethod
-    def set_credentials(self, username: str, password: str) -> None:
-        ...
+    def set_credentials(self, username: str, password: str) -> None: ...
 
     @abc.abstractmethod
     def request(
@@ -210,8 +209,7 @@ class RequestHandler(abc.ABC):
         query_params: Mapping[str, Any] | None = None,
         body: str | None = None,
         headers: Mapping[str, str] | None = None,
-    ) -> Response:
-        ...
+    ) -> Response: ...
 
 
 # types used in RestApiClient
@@ -2178,8 +2176,9 @@ class DcdClient(RestApiClient):
         self,
         dcd_id: str,
         site: str,
-        title: str
-        | None = None,  # Set as optional in order to run tests on missing fields behavior
+        title: (
+            str | None
+        ) = None,  # Set as optional in order to run tests on missing fields behavior
         comment: str | None = None,
         documentation_url: str | None = None,
         disabled: bool | None = None,

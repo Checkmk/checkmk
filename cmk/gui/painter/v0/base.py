@@ -339,19 +339,25 @@ def register_painter(ident: str, spec: dict[str, Any]) -> None:
             "columns": property(lambda s: s._spec["columns"]),
             "render": lambda self, row, cell: paint_function(row),
             "export_for_python": (
-                lambda self, row, cell: spec["export_for_python"](row, cell)
-                if "export_for_python" in spec
-                else paint_function(row)[1]
+                lambda self, row, cell: (
+                    spec["export_for_python"](row, cell)
+                    if "export_for_python" in spec
+                    else paint_function(row)[1]
+                )
             ),
             "export_for_csv": (
-                lambda self, row, cell: spec["export_for_csv"](row, cell)
-                if "export_for_csv" in spec
-                else paint_function(row)[1]
+                lambda self, row, cell: (
+                    spec["export_for_csv"](row, cell)
+                    if "export_for_csv" in spec
+                    else paint_function(row)[1]
+                )
             ),
             "export_for_json": (
-                lambda self, row, cell: spec["export_for_json"](row, cell)
-                if "export_for_json" in spec
-                else paint_function(row)[1]
+                lambda self, row, cell: (
+                    spec["export_for_json"](row, cell)
+                    if "export_for_json" in spec
+                    else paint_function(row)[1]
+                )
             ),
             "group_by": lambda self, row, cell: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),

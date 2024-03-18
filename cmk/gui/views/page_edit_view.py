@@ -1003,13 +1003,11 @@ def join_painters_of_datasource(ds_name: str) -> Mapping[str, Painter]:
 
 
 @overload
-def _allowed_for_datasource(collection: PainterRegistry, ds_name: str) -> Mapping[str, Painter]:
-    ...
+def _allowed_for_datasource(collection: PainterRegistry, ds_name: str) -> Mapping[str, Painter]: ...
 
 
 @overload
-def _allowed_for_datasource(collection: SorterRegistry, ds_name: str) -> Mapping[str, Sorter]:
-    ...
+def _allowed_for_datasource(collection: SorterRegistry, ds_name: str) -> Mapping[str, Sorter]: ...
 
 
 # Filters a list of sorters or painters and decides which of

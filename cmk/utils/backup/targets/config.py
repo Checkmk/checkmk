@@ -21,12 +21,10 @@ from .remote_interface import RemoteTargetParams
 # simple use RemoteTargetParams[...]
 
 
-class _S3TargetParams(RemoteTargetParams[S3Params]):
-    ...
+class _S3TargetParams(RemoteTargetParams[S3Params]): ...
 
 
-class _BlobStorageTargetParams(RemoteTargetParams[BlobStorageParams]):
-    ...
+class _BlobStorageTargetParams(RemoteTargetParams[BlobStorageParams]): ...
 
 
 LocalTargetConfig = tuple[Literal["local"], LocalTargetParams]

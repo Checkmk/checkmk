@@ -628,28 +628,30 @@ class Site:
         if self.update or not self.exists():
             logger.info('Updating site "%s"' if self.update else 'Creating site "%s"', self.id)
             completed_process = subprocess.run(
-                [
-                    "/usr/bin/sudo",
-                    "omd",
-                    "-f",
-                    "-V",
-                    self.version.version_directory(),
-                    "update",
-                    f"--conflict={self.update_conflict_mode}",
-                    self.id,
-                ]
-                if self.update
-                else [
-                    "/usr/bin/sudo",
-                    "omd",
-                    "-V",
-                    self.version.version_directory(),
-                    "create",
-                    "--admin-password",
-                    self.admin_password,
-                    "--apache-reload",
-                    self.id,
-                ],
+                (
+                    [
+                        "/usr/bin/sudo",
+                        "omd",
+                        "-f",
+                        "-V",
+                        self.version.version_directory(),
+                        "update",
+                        f"--conflict={self.update_conflict_mode}",
+                        self.id,
+                    ]
+                    if self.update
+                    else [
+                        "/usr/bin/sudo",
+                        "omd",
+                        "-V",
+                        self.version.version_directory(),
+                        "create",
+                        "--admin-password",
+                        self.admin_password,
+                        "--apache-reload",
+                        self.id,
+                    ]
+                ),
                 check=False,
                 capture_output=True,
                 encoding="utf-8",
@@ -1278,9 +1280,11 @@ class SiteFactory:
             cse_create_onboarding_dummies(site.root)
 
         if prepare_for_tests:
-            with cse_openid_oauth_provider(
-                f"http://localhost:{site.apache_port}"
-            ) if self.version.is_saas_edition() else nullcontext():
+            with (
+                cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
+                if self.version.is_saas_edition()
+                else nullcontext()
+            ):
                 site.prepare_for_tests()
 
         if activate_changes:
@@ -1632,9 +1636,11 @@ class SiteFactory:
             site.id,
             f" [{description}]" if description else "",
         )
-        with cse_openid_oauth_provider(
-            f"http://localhost:{site.apache_port}"
-        ) if self.version.is_saas_edition() else nullcontext():
+        with (
+            cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
+            if self.version.is_saas_edition()
+            else nullcontext()
+        ):
             try:
                 yield site
             finally:

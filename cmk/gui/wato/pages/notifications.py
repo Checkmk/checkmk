@@ -572,9 +572,9 @@ class ModeNotifications(ABCNotificationsMode):
                                     icon_name="analysis",
                                     item=PageMenuPopup(
                                         content=self._render_test_notifications(),
-                                        css_classes=["active"]
-                                        if self._test_notification_ongoing()
-                                        else [],
+                                        css_classes=(
+                                            ["active"] if self._test_notification_ongoing() else []
+                                        ),
                                     ),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -599,9 +599,9 @@ class ModeNotifications(ABCNotificationsMode):
                 title=_("Toggle elements"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Hide user rules")
-                        if self._show_user_rules
-                        else _("Show user rules"),
+                        title=(
+                            _("Hide user rules") if self._show_user_rules else _("Show user rules")
+                        ),
                         icon_name={
                             "icon": "checkbox",
                             "emblem": "disable" if self._show_user_rules else "enable",
@@ -617,9 +617,11 @@ class ModeNotifications(ABCNotificationsMode):
                         ),
                     ),
                     PageMenuEntry(
-                        title=_("Hide analysis")
-                        if self._show_backlog and not request.var("test_notification")
-                        else _("Show analysis"),
+                        title=(
+                            _("Hide analysis")
+                            if self._show_backlog and not request.var("test_notification")
+                            else _("Show analysis")
+                        ),
                         icon_name={
                             "icon": "analyze",
                             "emblem": "disable" if self._show_backlog else "enable",
@@ -1510,8 +1512,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:

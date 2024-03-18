@@ -81,9 +81,10 @@ def test_threading_error_message(flask_app: flask.Flask) -> None:
         flask_app.preprocess_request()
 
         # We run in another thread WITHOUT copying over the request context.
-        with pytest.raises(
-            RuntimeError, match="copy_request_context"
-        ), reraise_exceptions_from_threads():
+        with (
+            pytest.raises(RuntimeError, match="copy_request_context"),
+            reraise_exceptions_from_threads(),
+        ):
             thread = threading.Thread(name="test", target=_run_in_thread, args=("debug",))
             thread.start()
             thread.join()

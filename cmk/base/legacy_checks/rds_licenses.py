@@ -31,7 +31,7 @@ rds_licenses_product_versionid_map = {
     "5": "Windows Server 2016",
     "4": "Windows Server 2012",
     "3": "Windows Server 2008 R2",
-    "2": "Windows Server 2008"
+    "2": "Windows Server 2008",
     # 1    Not supported.
     # 0    Not supported.
 }

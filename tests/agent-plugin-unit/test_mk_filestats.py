@@ -197,9 +197,11 @@ class TestConfigParsing:
         mocker,
     ):
         mocker.patch(
-            "ConfigParser.ConfigParser"
-            if sys.version_info[0] == 2
-            else "configparser.ConfigParser",
+            (
+                "ConfigParser.ConfigParser"
+                if sys.version_info[0] == 2
+                else "configparser.ConfigParser"
+            ),
             return_value=mocked_configparser,
         )
         actual_results = list(mk_filestats.iter_config_section_dicts(config_file_name))

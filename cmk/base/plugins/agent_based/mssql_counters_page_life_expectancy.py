@@ -24,9 +24,11 @@ def discover_mssql_counters_page_life_expectancy(
     """
     yield from (
         Service(
-            item=f"{obj} page_life_expectancy"
-            if instance == "None"
-            else f"{obj} {instance} page_life_expectancy"
+            item=(
+                f"{obj} page_life_expectancy"
+                if instance == "None"
+                else f"{obj} {instance} page_life_expectancy"
+            )
         )
         for (obj, instance), counters in section.items()
         if "page_life_expectancy" in counters

@@ -287,11 +287,13 @@ def show_availability_page(  # pylint: disable=too-many-branches
             request,
             title,
             breadcrumb,
-            page_menu=_page_menu_availability(
-                breadcrumb, view, what, av_mode, av_object, time_range, avoptions
-            )
-            if display_options.enabled(display_options.B)
-            else None,
+            page_menu=(
+                _page_menu_availability(
+                    breadcrumb, view, what, av_mode, av_object, time_range, avoptions
+                )
+                if display_options.enabled(display_options.B)
+                else None
+            ),
             browser_reload=html.browser_reload,
         )
         html.begin_page_content()

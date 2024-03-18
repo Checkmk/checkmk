@@ -530,9 +530,9 @@ class TestSNMPFetcherFetch:
         monkeypatch.setattr(
             snmp,
             "get_snmp_table",
-            lambda tree, **__: table
-            if tree.base == fetcher.plugin_store[section_name].trees[0].base
-            else [],
+            lambda tree, **__: (
+                table if tree.base == fetcher.plugin_store[section_name].trees[0].base else []
+            ),
         )
         file_cache = SNMPFileCache(
             path_template=os.devnull,

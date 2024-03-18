@@ -305,9 +305,9 @@ class ModeAnalyzeConfig(WatoMode):
         results_by_site: dict[SiteId, list[ACTestResult]] = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue: multiprocessing.JoinableQueue[
-            tuple[SiteId, str]
-        ] = multiprocessing.JoinableQueue()
+        result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]] = (
+            multiprocessing.JoinableQueue()
+        )
 
         processes = []
         site_id = SiteId("unknown_site")

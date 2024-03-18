@@ -22,13 +22,11 @@ def _make_key(key: str) -> tuple[int | str, ...]:
 
 
 @overload
-def natural_sort(items: dict[str, str], reverse: bool = False) -> List[str]:
-    ...
+def natural_sort(items: dict[str, str], reverse: bool = False) -> List[str]: ...
 
 
 @overload
-def natural_sort(items: Iterable[str], reverse: bool = False) -> List[str]:
-    ...
+def natural_sort(items: Iterable[str], reverse: bool = False) -> List[str]: ...
 
 
 def natural_sort(items: Iterable[str] | dict[str, str], reverse: bool = False) -> List[str]:

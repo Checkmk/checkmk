@@ -217,9 +217,9 @@ class RulesetMatcher:
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self.ruleset_optimizer.all_processed_hosts()
 
-        optimized_ruleset: Mapping[
-            HostName | HostAddress, Sequence[TRuleValue]
-        ] = self.ruleset_optimizer.get_host_ruleset(ruleset, with_foreign_hosts)
+        optimized_ruleset: Mapping[HostName | HostAddress, Sequence[TRuleValue]] = (
+            self.ruleset_optimizer.get_host_ruleset(ruleset, with_foreign_hosts)
+        )
 
         return optimized_ruleset.get(hostname, [])
 

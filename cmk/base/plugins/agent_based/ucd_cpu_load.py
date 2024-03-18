@@ -19,17 +19,17 @@ def parse_ucd_cpu_load(string_table: List[StringTable]) -> Section | None:
     return Section(
         load=Load(
             *(
-                float(float_cpu_load_str.replace(",", "."))
-                if float_cpu_load_str
-                else float(int_cpu_load_str) / 100.0
-                if int_cpu_load_str
-                else 0
+                (
+                    float(float_cpu_load_str.replace(",", "."))
+                    if float_cpu_load_str
+                    else float(int_cpu_load_str) / 100.0 if int_cpu_load_str else 0
+                )
                 for int_cpu_load_str, float_cpu_load_str in cpu_loads
             )
         ),
-        num_cpus=len(cpu_count)
-        if cpu_count
-        else 1,  # fallback to 1 if we don't get the number of cpu's from SNMP
+        num_cpus=(
+            len(cpu_count) if cpu_count else 1
+        ),  # fallback to 1 if we don't get the number of cpu's from SNMP
     )
 
 

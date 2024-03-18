@@ -595,9 +595,11 @@ def df_check_filesystem_single(
         reserved_hr = render.disksize(reserved_space * 1024**2)
         yield Result(
             state=State.OK,
-            summary="additionally reserved for root: %s" % reserved_hr  #
-            if subtract_reserved
-            else f"therein reserved for root: {reserved_perc_hr} ({reserved_hr})",  #
+            summary=(
+                "additionally reserved for root: %s" % reserved_hr  #
+                if subtract_reserved
+                else f"therein reserved for root: {reserved_perc_hr} ({reserved_hr})"
+            ),  #
         )
 
     if subtract_reserved:

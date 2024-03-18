@@ -40,11 +40,13 @@ GENERATED_GROUP_PREFIX = "gen-"
 
 
 def _localize_optional(
-    to_localize: ruleset_api_v1.Help
-    | ruleset_api_v1.Message
-    | ruleset_api_v1.Label
-    | ruleset_api_v1.Title
-    | None,
+    to_localize: (
+        ruleset_api_v1.Help
+        | ruleset_api_v1.Message
+        | ruleset_api_v1.Label
+        | ruleset_api_v1.Title
+        | None
+    ),
     localizer: Callable[[str], str],
 ) -> str | None:
     return None if to_localize is None else to_localize.localize(localizer)
@@ -146,9 +148,9 @@ def _convert_to_legacy_check_parameter_rulespec(
     if isinstance(to_convert.condition, ruleset_api_v1.rule_specs.HostAndItemCondition):
         return CheckParameterRulespecWithItem(
             check_group_name=to_convert.name,
-            title=None
-            if to_convert.title is None
-            else partial(to_convert.title.localize, localizer),
+            title=(
+                None if to_convert.title is None else partial(to_convert.title.localize, localizer)
+            ),
             group=_convert_to_legacy_rulespec_group(
                 legacy_rulespec_groups.RulespecGroupMonitoringConfiguration,
                 to_convert.topic,
@@ -198,11 +200,11 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
             legacy_rulespecs.RulespecGroupEnforcedServices, to_convert.topic, localizer
         ),
         check_group_name=to_convert.name,
-        parameter_valuespec=partial(
-            _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
-        )
-        if to_convert.parameter_form is not None
-        else None,
+        parameter_valuespec=(
+            partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer)
+            if to_convert.parameter_form is not None
+            else None
+        ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=False,
         match_type="dict",
@@ -226,16 +228,18 @@ def _convert_to_legacy_rulespec_group(
 
 
 def _convert_to_legacy_match_type(
-    to_convert: ruleset_api_v1.rule_specs.ActiveCheck
-    | ruleset_api_v1.rule_specs.AgentConfig
-    | ruleset_api_v1.rule_specs.AgentAccess
-    | ruleset_api_v1.rule_specs.Host
-    | ruleset_api_v1.rule_specs.NotificationParameters
-    | ruleset_api_v1.rule_specs.InventoryParameters
-    | ruleset_api_v1.rule_specs.DiscoveryParameters
-    | ruleset_api_v1.rule_specs.Service
-    | ruleset_api_v1.rule_specs.SNMP
-    | ruleset_api_v1.rule_specs.SpecialAgent,
+    to_convert: (
+        ruleset_api_v1.rule_specs.ActiveCheck
+        | ruleset_api_v1.rule_specs.AgentConfig
+        | ruleset_api_v1.rule_specs.AgentAccess
+        | ruleset_api_v1.rule_specs.Host
+        | ruleset_api_v1.rule_specs.NotificationParameters
+        | ruleset_api_v1.rule_specs.InventoryParameters
+        | ruleset_api_v1.rule_specs.DiscoveryParameters
+        | ruleset_api_v1.rule_specs.Service
+        | ruleset_api_v1.rule_specs.SNMP
+        | ruleset_api_v1.rule_specs.SpecialAgent
+    ),
 ) -> Literal["dict", "all", "first"]:
     match to_convert:
         case ruleset_api_v1.rule_specs.ActiveCheck():
@@ -249,16 +253,18 @@ def _convert_to_legacy_match_type(
 
 
 def _convert_to_legacy_host_rule_spec_rulespec(
-    to_convert: ruleset_api_v1.rule_specs.ActiveCheck
-    | ruleset_api_v1.rule_specs.AgentConfig
-    | ruleset_api_v1.rule_specs.AgentAccess
-    | ruleset_api_v1.rule_specs.Host
-    | ruleset_api_v1.rule_specs.NotificationParameters
-    | ruleset_api_v1.rule_specs.InventoryParameters
-    | ruleset_api_v1.rule_specs.DiscoveryParameters
-    | ruleset_api_v1.rule_specs.Service
-    | ruleset_api_v1.rule_specs.SNMP
-    | ruleset_api_v1.rule_specs.SpecialAgent,
+    to_convert: (
+        ruleset_api_v1.rule_specs.ActiveCheck
+        | ruleset_api_v1.rule_specs.AgentConfig
+        | ruleset_api_v1.rule_specs.AgentAccess
+        | ruleset_api_v1.rule_specs.Host
+        | ruleset_api_v1.rule_specs.NotificationParameters
+        | ruleset_api_v1.rule_specs.InventoryParameters
+        | ruleset_api_v1.rule_specs.DiscoveryParameters
+        | ruleset_api_v1.rule_specs.Service
+        | ruleset_api_v1.rule_specs.SNMP
+        | ruleset_api_v1.rule_specs.SpecialAgent
+    ),
     legacy_main_group: type[legacy_rulespecs.RulespecGroup],
     localizer: Callable[[str], str],
     config_scope_prefix: Callable[[str | None], str] = lambda x: x or "",
@@ -287,9 +293,9 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
-        match_type="dict"
-        if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE
-        else "all",
+        match_type=(
+            "dict" if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
+        ),
     )
 
 
@@ -492,9 +498,11 @@ def _convert_to_inner_legacy_valuespec(
                 required_keys=legacy_key_props.required,
                 ignored_keys=to_convert.deprecated_elements,
                 hidden_keys=legacy_key_props.hidden,
-                validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
-                if to_convert.custom_validate is not None
-                else None,
+                validate=(
+                    _convert_to_legacy_validation(to_convert.custom_validate, localizer)
+                    if to_convert.custom_validate is not None
+                    else None
+                ),
             )
 
         case ruleset_api_v1.form_specs.SingleChoice():
@@ -598,9 +606,9 @@ def _get_allow_empty_conf(
 
     return {
         "allow_empty": min_len_validator is None,
-        "empty_text": min_len_validator.error_msg.localize(localizer)
-        if min_len_validator is not None
-        else "",
+        "empty_text": (
+            min_len_validator.error_msg.localize(localizer) if min_len_validator is not None else ""
+        ),
     }
 
 
@@ -996,9 +1004,9 @@ def _convert_to_legacy_fixed_value(
 ) -> legacy_valuespecs.FixedValue:
     return legacy_valuespecs.FixedValue(
         value=to_convert.value,
-        totext=_localize_optional(to_convert.label, localizer)
-        if to_convert.label is not None
-        else "",
+        totext=(
+            _localize_optional(to_convert.label, localizer) if to_convert.label is not None else ""
+        ),
         title=_localize_optional(to_convert.title, localizer),
         help=_localize_optional(to_convert.help_text, localizer),
     )
@@ -1055,8 +1063,9 @@ def _get_legacy_level_spec(
     form_spec_template: ruleset_api_v1.form_specs.FormSpec[_NumberT],
     title: ruleset_api_v1.Title,
     prefill_value: _NumberT,
-    prefill_type: type[ruleset_api_v1.form_specs.DefaultValue]
-    | type[ruleset_api_v1.form_specs.InputHint],
+    prefill_type: (
+        type[ruleset_api_v1.form_specs.DefaultValue] | type[ruleset_api_v1.form_specs.InputHint]
+    ),
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.ValueSpec:
     # Currently all FormSpec[_NumberT] types have a prefill attribute,
@@ -1133,16 +1142,16 @@ def _get_level_computation_dropdown(
 
     abs_diff_prefill_type = _get_prefill_type(to_convert.prefill_abs_diff)
     # InputHint not supported by legacy VS -> use DEF_VALUE for now.
-    rel_prefill: tuple[float, float] | tuple[
-        legacy_valuespecs.Sentinel, legacy_valuespecs.Sentinel
-    ] = (
+    rel_prefill: (
+        tuple[float, float] | tuple[legacy_valuespecs.Sentinel, legacy_valuespecs.Sentinel]
+    ) = (
         to_convert.prefill_rel_diff.value
         if isinstance(to_convert.prefill_rel_diff, ruleset_api_v1.form_specs.DefaultValue)
         else (legacy_valuespecs.DEF_VALUE, legacy_valuespecs.DEF_VALUE)
     )
-    stddev_prefill: tuple[float, float] | tuple[
-        legacy_valuespecs.Sentinel, legacy_valuespecs.Sentinel
-    ] = (
+    stddev_prefill: (
+        tuple[float, float] | tuple[legacy_valuespecs.Sentinel, legacy_valuespecs.Sentinel]
+    ) = (
         to_convert.prefill_stddev_diff.value
         if isinstance(to_convert.prefill_stddev_diff, ruleset_api_v1.form_specs.DefaultValue)
         else (legacy_valuespecs.DEF_VALUE, legacy_valuespecs.DEF_VALUE)
@@ -1335,9 +1344,11 @@ def _get_predictive_levels_choice_element(
             # The Transform ensures that an updated value in the ruleset plugin
             # is reflecetd in the stored data after update.
             "__reference_metric__": to_convert.reference_metric,
-            "__direction__": "upper"
-            if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER
-            else "lower",
+            "__direction__": (
+                "upper"
+                if level_direction is ruleset_api_v1.form_specs.LevelDirection.UPPER
+                else "lower"
+            ),
         },
     )
 
@@ -1349,8 +1360,10 @@ class _LevelDynamicChoice(enum.StrEnum):
 
 
 def _convert_to_legacy_levels(
-    to_convert: ruleset_api_v1.form_specs.Levels[_NumberT]
-    | ruleset_api_v1.form_specs.SimpleLevels[_NumberT],
+    to_convert: (
+        ruleset_api_v1.form_specs.Levels[_NumberT]
+        | ruleset_api_v1.form_specs.SimpleLevels[_NumberT]
+    ),
     localizer: Callable[[str], str],
 ) -> legacy_valuespecs.CascadingDropdown:
     choices: list[tuple[str, str, legacy_valuespecs.ValueSpec]] = [
@@ -1391,7 +1404,11 @@ def _convert_to_legacy_levels(
         )
 
     match to_convert.form_spec_template:
-        case ruleset_api_v1.form_specs.Float() | ruleset_api_v1.form_specs.TimeSpan() | ruleset_api_v1.form_specs.Percentage():
+        case (
+            ruleset_api_v1.form_specs.Float()
+            | ruleset_api_v1.form_specs.TimeSpan()
+            | ruleset_api_v1.form_specs.Percentage()
+        ):
             # mypy accepts int's in place of float's (https://github.com/python/mypy/issues/11385).
             # However, int is not a subclass of float, issubclass(int, float) is false. In a
             # CascadingDropdown it is not acceptable to pass an int instead of a float (CMK-16402
@@ -1413,8 +1430,10 @@ def _convert_to_legacy_levels(
 
 
 def _make_levels_default_value(
-    to_convert: ruleset_api_v1.form_specs.Levels[_NumberT]
-    | ruleset_api_v1.form_specs.SimpleLevels[_NumberT],
+    to_convert: (
+        ruleset_api_v1.form_specs.Levels[_NumberT]
+        | ruleset_api_v1.form_specs.SimpleLevels[_NumberT]
+    ),
     prefill_fixed: tuple[_NumberT, _NumberT],
 ) -> tuple[str, None | tuple[_NumberT, _NumberT] | dict[str, Any]]:
     if to_convert.prefill_levels_type.value is ruleset_api_v1.form_specs.LevelsType.NONE:

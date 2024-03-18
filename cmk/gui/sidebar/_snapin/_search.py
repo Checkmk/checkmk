@@ -1444,9 +1444,11 @@ class MenuSearchResultsRenderer(abc.ABC):
             module = module_class()
             if module.title not in mapping:
                 mapping[module.title] = (
-                    module.topic.icon_name
-                    if module.topic and module.topic.icon_name
-                    else default_icons[0],
+                    (
+                        module.topic.icon_name
+                        if module.topic and module.topic.icon_name
+                        else default_icons[0]
+                    ),
                     module.icon if module.icon else default_icons[1],
                 )
         return mapping

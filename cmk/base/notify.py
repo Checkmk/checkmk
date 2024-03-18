@@ -680,8 +680,7 @@ def rbn_finalize_plugin_parameters(
     hostname: HostName,
     plugin_name: NotificationPluginNameStr,
     rule_parameters: NotifyPluginParamsList,
-) -> NotifyPluginParamsList:
-    ...
+) -> NotifyPluginParamsList: ...
 
 
 @overload
@@ -689,8 +688,7 @@ def rbn_finalize_plugin_parameters(
     hostname: HostName,
     plugin_name: NotificationPluginNameStr,
     rule_parameters: NotifyPluginParamsDict,
-) -> NotifyPluginParamsDict:
-    ...
+) -> NotifyPluginParamsDict: ...
 
 
 def rbn_finalize_plugin_parameters(

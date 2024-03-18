@@ -400,9 +400,11 @@ _TCurveType = TypeVar("_TCurveType", Curve, LayoutedCurve)
 def order_graph_curves_for_legend_and_mouse_hover(
     graph_recipe: GraphRecipe, curves: Iterable[_TCurveType]
 ) -> Iterator[_TCurveType]:
-    yield from reversed(list(curves)) if any(
-        metric.line_type == "stack" for metric in graph_recipe.metrics
-    ) else curves
+    yield from (
+        reversed(list(curves))
+        if any(metric.line_type == "stack" for metric in graph_recipe.metrics)
+        else curves
+    )
 
 
 # .

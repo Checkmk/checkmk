@@ -846,9 +846,11 @@ def _parameter_valuespec_aws_elb_http() -> Dictionary:
                     title=_("Upper levels for Load Balancers"),
                     elements=_vs_elements_http_errors(
                         ["3xx", "4xx", "5xx", "500", "502", "503", "504"],
-                        title_add=lambda http_err_code: ""
-                        if http_err_code in ["4xx", "5xx"]
-                        else " (Application Load Balancers only)",
+                        title_add=lambda http_err_code: (
+                            ""
+                            if http_err_code in ["4xx", "5xx"]
+                            else " (Application Load Balancers only)"
+                        ),
                     ),
                 ),
             ),

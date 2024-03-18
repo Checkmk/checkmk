@@ -43,9 +43,9 @@ class PluginInfo:
     command_line: str
     argument_function: Callable[[Mapping[str, object]], Sequence[str]] | None = None
     service_description: Callable[[Mapping[str, object]], str] | None = None
-    service_generator: Callable[
-        [HostAddressConfiguration, Mapping[str, object]], Iterator[tuple[str, str]]
-    ] | None = None
+    service_generator: (
+        Callable[[HostAddressConfiguration, Mapping[str, object]], Iterator[tuple[str, str]]] | None
+    ) = None
 
 
 def _get_host_address_config(

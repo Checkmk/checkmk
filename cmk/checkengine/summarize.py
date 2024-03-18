@@ -31,8 +31,7 @@ class SummarizerFunction(Protocol):
     def __call__(
         self,
         host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
-    ) -> Iterable[ActiveCheckResult]:
-        ...
+    ) -> Iterable[ActiveCheckResult]: ...
 
 
 def summarize(

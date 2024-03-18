@@ -276,22 +276,22 @@ class RuleConditions:
             host_folder=self.host_folder,
             host_tags={**self.host_tags},
             host_label_groups=self.host_label_groups,
-            host_name=self.host_name.copy()
-            if isinstance(
-                self.host_name,
-                dict,
-            )
-            else [*self.host_name]
-            if self.host_name is not None
-            else None,
-            service_description=self.service_description.copy()
-            if isinstance(
-                self.service_description,
-                dict,
-            )
-            else [*self.service_description]
-            if self.service_description is not None
-            else None,
+            host_name=(
+                self.host_name.copy()
+                if isinstance(
+                    self.host_name,
+                    dict,
+                )
+                else [*self.host_name] if self.host_name is not None else None
+            ),
+            service_description=(
+                self.service_description.copy()
+                if isinstance(
+                    self.service_description,
+                    dict,
+                )
+                else [*self.service_description] if self.service_description is not None else None
+            ),
             service_label_groups=self.service_label_groups,
         )
 

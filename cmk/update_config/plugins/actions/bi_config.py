@@ -41,10 +41,10 @@ def _migrate_bi_rule_label_conditions(aggregation_packs: BIAggregationPacks) -> 
                     and not isinstance(aggregation.node.search.refer_to, str)
                     and aggregation.node.search.refer_to.get("type") == "child_with"
                 ):
-                    aggregation.node.search.refer_to[
-                        "conditions"
-                    ] = transform_condition_labels_to_label_groups(
-                        aggregation.node.search.refer_to["conditions"]
+                    aggregation.node.search.refer_to["conditions"] = (
+                        transform_condition_labels_to_label_groups(
+                            aggregation.node.search.refer_to["conditions"]
+                        )
                     )
 
         # rule search conditions

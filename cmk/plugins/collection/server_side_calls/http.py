@@ -110,9 +110,7 @@ class DirectHost:
             # automatically set the HTTP Host header and use HTTP/1.1 instead of
             # HTTP/1.0. This can lead to request timeouts on hosts which are
             # not compliant with HTTP/1.1.
-            else None
-            if is_url_mode
-            else self.address
+            else None if is_url_mode else self.address
         )
         if isinstance(virtual_host, str):
             return replace_macros(virtual_host, host_config.macros)
@@ -155,18 +153,21 @@ class URLMode(BaseModel):
     expect_string: str | None = None
     expect_regex: tuple[str, bool, bool, bool] | None = None
     post_data: tuple[str, str] | None = None
-    method: Literal[
-        "GET",
-        "POST",
-        "OPTIONS",
-        "TRACE",
-        "PUT",
-        "DELETE",
-        "HEAD",
-        "CONNECT",
-        "CONNECT:POST",
-        "PROPFIND",
-    ] | None = None
+    method: (
+        Literal[
+            "GET",
+            "POST",
+            "OPTIONS",
+            "TRACE",
+            "PUT",
+            "DELETE",
+            "HEAD",
+            "CONNECT",
+            "CONNECT:POST",
+            "PROPFIND",
+        ]
+        | None
+    ) = None
     no_body: bool = False
     page_size: tuple[int, int] | None = None
     max_age: int | None = None

@@ -120,8 +120,10 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     sites = body["sites"]
     constructors.require_etag(constructors.hash_of_dict(get_pending_changes()))
-    with may_fail(MKUserError), may_fail(MKAuthException, status=401), may_fail(
-        MKLicensingError, status=403
+    with (
+        may_fail(MKUserError),
+        may_fail(MKAuthException, status=401),
+        may_fail(MKLicensingError, status=403),
     ):
         activation_response = activate_changes_start(
             sites, "REST API", force_foreign_changes=body["force_foreign_changes"]
@@ -150,15 +152,19 @@ def _activation_run_domain_object(
     return constructors.domain_object(
         domain_type="activation_run",
         identifier=activation_response.activation_id,
-        title="Activation status: In progress."
-        if activation_response.is_running
-        else "Activation status: Complete.",
+        title=(
+            "Activation status: In progress."
+            if activation_response.is_running
+            else "Activation status: Complete."
+        ),
         extensions=asdict(activation_response),
         deletable=False,
         editable=False,
-        links=[_completion_link(activation_response.activation_id)]
-        if activation_response.is_running
-        else [],
+        links=(
+            [_completion_link(activation_response.activation_id)]
+            if activation_response.is_running
+            else []
+        ),
     )
 
 

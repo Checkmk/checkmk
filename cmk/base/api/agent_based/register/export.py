@@ -256,30 +256,32 @@ def snmp_section(
 
     return register_snmp_section(
         # supressions: we have to live with what the old api gives us. It will be validated.
-        SNMPSection(  # type: ignore[misc]
-            name=name,
-            detect=detect,
-            fetch=fetch,
-            parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
-            parsed_section_name=parsed_section_name,
-            host_label_function=host_label_function,
-            host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
-            host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
-            host_label_ruleset_type=host_label_ruleset_type,
-            supersedes=supersedes,
-        )
-        if isinstance(fetch, list)
-        else SimpleSNMPSection(  # type: ignore[misc]
-            name=name,
-            detect=detect,
-            fetch=fetch,
-            parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
-            parsed_section_name=parsed_section_name,
-            host_label_function=host_label_function,
-            host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
-            host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
-            host_label_ruleset_type=host_label_ruleset_type,
-            supersedes=supersedes,
+        (
+            SNMPSection(  # type: ignore[misc]
+                name=name,
+                detect=detect,
+                fetch=fetch,
+                parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
+                parsed_section_name=parsed_section_name,
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
+                host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
+                host_label_ruleset_type=host_label_ruleset_type,
+                supersedes=supersedes,
+            )
+            if isinstance(fetch, list)
+            else SimpleSNMPSection(  # type: ignore[misc]
+                name=name,
+                detect=detect,
+                fetch=fetch,
+                parse_function=_noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
+                parsed_section_name=parsed_section_name,
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,  # type: ignore[arg-type]
+                host_label_ruleset_name=host_label_ruleset_name,  # type: ignore[arg-type]
+                host_label_ruleset_type=host_label_ruleset_type,
+                supersedes=supersedes,
+            )
         ),
         get_validated_plugin_location(),
     )

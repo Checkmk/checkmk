@@ -104,7 +104,13 @@ __all__ = [
 
 def _fetch_all(
     sources: Iterable[Source], *, simulation: bool, file_cache_options: FileCacheOptions, mode: Mode
-) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot,]]:
+) -> Sequence[
+    tuple[
+        SourceInfo,
+        result.Result[AgentRawData | SNMPRawData, Exception],
+        Snapshot,
+    ]
+]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     return [
         _do_fetch(
@@ -123,7 +129,11 @@ def _do_fetch(
     fetcher: Fetcher,
     *,
     mode: Mode,
-) -> tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot,]:
+) -> tuple[
+    SourceInfo,
+    result.Result[AgentRawData | SNMPRawData, Exception],
+    Snapshot,
+]:
     console.vverbose(f"  Source: {source_info}\n")
     with CPUTracker() as tracker:
         raw_data = get_raw_data(file_cache, fetcher, mode)
@@ -221,9 +231,11 @@ def _summarize_host_sections(
     return ActiveCheckResult.from_subresults(
         *(
             ActiveCheckResult(
-                s.state
-                if (s.state == 0 or override_non_ok_state is None)
-                else override_non_ok_state,
+                (
+                    s.state
+                    if (s.state == 0 or override_non_ok_state is None)
+                    else override_non_ok_state
+                ),
                 f"[{source.ident}] {s.summary}" if idx == 0 else s.summary,
                 s.details,
                 s.metrics,
@@ -268,9 +280,7 @@ class CMKFetcher:
         self.max_cachefile_age: Final = max_cachefile_age
         self.snmp_backend_override: Final = snmp_backend_override
 
-    def __call__(
-        self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
         tuple[
             SourceInfo,
             result.Result[AgentRawData | SNMPRawData, Exception],
@@ -495,9 +505,10 @@ def _get_check_function(
 
     @functools.wraps(check_function)
     def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
-        with plugin_contexts.current_service(
-            str(service.check_plugin_name), service.description
-        ), value_store_manager.namespace(service.id()):
+        with (
+            plugin_contexts.current_service(str(service.check_plugin_name), service.description),
+            value_store_manager.namespace(service.id()),
+        ):
             return _aggregate_results(consume_check_results(check_function(*args, **kw)))
 
     return __check_function
@@ -787,9 +798,11 @@ def _final_read_only_check_parameters(
         # For auto-migrated plugins expecting tuples, they will be
         # unwrapped by a decorator of the original check_function.
         wrap_parameters(
-            inject_prediction_params_recursively(params, injected_p)
-            if _contains_predictive_levels(params)
-            else params,
+            (
+                inject_prediction_params_recursively(params, injected_p)
+                if _contains_predictive_levels(params)
+                else params
+            ),
         )
     )
 
@@ -832,9 +845,11 @@ def inject_prediction_params_recursively(
             return list(inject_prediction_params_recursively(v, injected_p) for v in params)
         case dict():
             return {
-                k: injected_p.model_dump()
-                if k == "__injected__"
-                else inject_prediction_params_recursively(v, injected_p)
+                k: (
+                    injected_p.model_dump()
+                    if k == "__injected__"
+                    else inject_prediction_params_recursively(v, injected_p)
+                )
                 for k, v in params.items()
             }
     return params

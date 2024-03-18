@@ -212,16 +212,14 @@ class DatadogAPI(Protocol):
         api_endpoint: str,
         params: Mapping[str, str | int],
         version: str = "v1",
-    ) -> requests.Response:
-        ...
+    ) -> requests.Response: ...
 
     def post_request(
         self,
         api_endpoint: str,
         body: Mapping[str, str | int],
         version: str = "v1",
-    ) -> requests.Response:
-        ...
+    ) -> requests.Response: ...
 
 
 class ImplDatadogAPI:

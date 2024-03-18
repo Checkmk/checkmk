@@ -16,16 +16,14 @@ from ._wellknown import CMK_ADDONS_PLUGINS, CMK_PLUGINS, PluginGroup
 
 class _PluginProtocol(Protocol):
     @property
-    def name(self) -> Hashable:
-        ...
+    def name(self) -> Hashable: ...
 
 
 _PluginType = TypeVar("_PluginType", bound=_PluginProtocol)
 
 
 class _ImporterProtocol(Protocol):
-    def __call__(self, module_name: str, raise_errors: bool) -> ModuleType | None:
-        ...
+    def __call__(self, module_name: str, raise_errors: bool) -> ModuleType | None: ...
 
 
 @dataclass(frozen=True)

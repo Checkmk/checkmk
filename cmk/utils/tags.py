@@ -70,8 +70,7 @@ def _validate_tag_id(tag_id: TagID | TagGroupID) -> None:
         )
 
 
-class AuxTagInUseError(Exception):
-    ...
+class AuxTagInUseError(Exception): ...
 
 
 class AuxTag:

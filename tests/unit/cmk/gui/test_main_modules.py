@@ -55,9 +55,11 @@ def test_load_local_plugin(main_module_name: str) -> None:
         # Special case: watolib plugin loading is triggered by wato main module
         main_modules._call_load_plugins_hooks(
             [
-                main_module
-                if main_module_name != "watolib"
-                else importlib.import_module("cmk.gui.wato")
+                (
+                    main_module
+                    if main_module_name != "watolib"
+                    else importlib.import_module("cmk.gui.wato")
+                )
             ]
         )
         assert main_module.ding == "dong"

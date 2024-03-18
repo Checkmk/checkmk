@@ -11,8 +11,7 @@ from cmk.agent_based.v2 import HostLabel, HostLabelGenerator
 
 class _WithDescription(Protocol):
     @property
-    def description(self) -> str:
-        ...
+    def description(self) -> str: ...
 
 
 def get_device_type_label(section: _WithDescription) -> HostLabelGenerator:

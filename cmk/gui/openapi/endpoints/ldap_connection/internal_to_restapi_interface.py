@@ -422,18 +422,24 @@ class Users:
         return cls(
             user_dn=config["user_base_dn"],
             user_scope=SCOPE_API_TO_INT[config["search_scope"]],
-            user_id_umlauts="keep"
-            if config["umlauts_in_user_ids"] == "keep_umlauts"
-            else "replace",
-            user_filter=config["search_filter"]["filter"]
-            if config["search_filter"]["state"] == "enabled"
-            else None,
-            user_filter_group=config["filter_group"]["filter"]
-            if config["filter_group"]["state"] == "enabled"
-            else None,
-            user_id=config["user_id_attribute"]["attribute"]
-            if config["user_id_attribute"]["state"] == "enabled"
-            else None,
+            user_id_umlauts=(
+                "keep" if config["umlauts_in_user_ids"] == "keep_umlauts" else "replace"
+            ),
+            user_filter=(
+                config["search_filter"]["filter"]
+                if config["search_filter"]["state"] == "enabled"
+                else None
+            ),
+            user_filter_group=(
+                config["filter_group"]["filter"]
+                if config["filter_group"]["state"] == "enabled"
+                else None
+            ),
+            user_id=(
+                config["user_id_attribute"]["attribute"]
+                if config["user_id_attribute"]["state"] == "enabled"
+                else None
+            ),
             lower_user_ids=True if config["user_id_case"] == "convert_to_lowercase" else None,
             create_only_on_login=True if config["create_users"] == "on_login" else None,
         )
@@ -450,12 +456,14 @@ class Users:
             "search_filter": checkbox_state(self.user_filter, "filter"),
             "filter_group": checkbox_state(self.user_filter_group, "filter"),
             "user_id_attribute": checkbox_state(self.user_id, "attribute"),
-            "user_id_case": "dont_convert_to_lowercase"
-            if self.lower_user_ids is None
-            else "convert_to_lowercase",
-            "umlauts_in_user_ids": "keep_umlauts"
-            if self.user_id_umlauts == "keep"
-            else "replace_umlauts",
+            "user_id_case": (
+                "dont_convert_to_lowercase"
+                if self.lower_user_ids is None
+                else "convert_to_lowercase"
+            ),
+            "umlauts_in_user_ids": (
+                "keep_umlauts" if self.user_id_umlauts == "keep" else "replace_umlauts"
+            ),
             "create_users": "on_sync" if self.create_only_on_login is None else "on_login",
         }
         return r
@@ -497,12 +505,16 @@ class Groups:
         return cls(
             group_dn=config["group_base_dn"],
             group_scope=SCOPE_API_TO_INT[config["search_scope"]],
-            group_filter=config["search_filter"]["filter"]
-            if config["search_filter"]["state"] == "enabled"
-            else None,
-            group_member=config["member_attribute"]["attribute"]
-            if config["member_attribute"]["state"] == "enabled"
-            else None,
+            group_filter=(
+                config["search_filter"]["filter"]
+                if config["search_filter"]["state"] == "enabled"
+                else None
+            ),
+            group_member=(
+                config["member_attribute"]["attribute"]
+                if config["member_attribute"]["state"] == "enabled"
+                else None
+            ),
         )
 
     def api_response(self) -> APIGroups:
@@ -912,9 +924,11 @@ def groups_to_attributes_api_to_int(
                         "cn": show_mode["group_cn"],
                         "attribute": (
                             "show_mode",
-                            None
-                            if show_mode["value"] == "use_default_show_mode"
-                            else show_mode["value"],
+                            (
+                                None
+                                if show_mode["value"] == "use_default_show_mode"
+                                else show_mode["value"]
+                            ),
                         ),
                     }
 

@@ -1556,8 +1556,9 @@ def test_update_from_previous_2() -> None:
     ],
 )
 def test_deserialize_retention_interval(
-    raw_retention_interval: tuple[int, int, int]
-    | tuple[int, int, int, Literal["previous", "current"]],
+    raw_retention_interval: (
+        tuple[int, int, int] | tuple[int, int, int, Literal["previous", "current"]]
+    ),
     expected_retention_interval: RetentionInterval,
 ) -> None:
     assert RetentionInterval.deserialize(raw_retention_interval) == expected_retention_interval

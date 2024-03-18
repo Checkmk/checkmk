@@ -68,8 +68,7 @@ class ABCConfigDomain(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def ident(cls) -> ConfigDomainName:
-        ...
+    def ident(cls) -> ConfigDomainName: ...
 
     @classmethod
     def enabled_domains(cls) -> Sequence[type[ABCConfigDomain]]:

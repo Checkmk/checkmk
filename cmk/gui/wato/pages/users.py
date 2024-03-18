@@ -852,8 +852,7 @@ class ModeEditUser(WatoMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -971,9 +970,11 @@ class ModeEditUser(WatoMode):
                         title=_("Remove two-factor authentication of %s") % self._user_id,
                     )
                 ),
-                is_enabled=userdb.is_two_factor_login_enabled(self._user_id)
-                if self._user_id is not None
-                else False,
+                is_enabled=(
+                    userdb.is_two_factor_login_enabled(self._user_id)
+                    if self._user_id is not None
+                    else False
+                ),
             )
 
     def action(self) -> ActionResult:  # pylint: disable=too-many-branches

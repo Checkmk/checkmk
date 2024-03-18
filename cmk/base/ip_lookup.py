@@ -145,9 +145,9 @@ def cached_dns_lookup(
 
     2) inner layer: see _file_cached_dns_lookup
     """
-    cache: dict[
-        tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None
-    ] = cache_manager.obtain_cache("cached_dns_lookup")
+    cache: dict[tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None] = (
+        cache_manager.obtain_cache("cached_dns_lookup")
+    )
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?
@@ -244,9 +244,11 @@ class IPLookupCacheSerializer:
         assert isinstance(loaded_object, dict)
 
         return {
-            (HostName(k), socket.AF_INET)  # old pre IPv6 style
-            if isinstance(k, str)
-            else (HostName(k[0]), {4: socket.AF_INET, 6: socket.AF_INET6}[k[1]]): HostAddress(v)
+            (
+                (HostName(k), socket.AF_INET)  # old pre IPv6 style
+                if isinstance(k, str)
+                else (HostName(k[0]), {4: socket.AF_INET, 6: socket.AF_INET6}[k[1]])
+            ): HostAddress(v)
             for k, v in loaded_object.items()
         }
 

@@ -46,8 +46,11 @@ def test_temperature_unit_user_celsius(
     expected_temperature_unit_title: str,
     request_context: None,
 ) -> None:
-    with create_and_destroy_user(
-        username="harald",
-        custom_attrs={"temperature_unit": user_setting_temperature_unit},
-    ), run_as_user(UserId("harald")):
+    with (
+        create_and_destroy_user(
+            username="harald",
+            custom_attrs={"temperature_unit": user_setting_temperature_unit},
+        ),
+        run_as_user(UserId("harald")),
+    ):
         assert unit_info["c"]["title"] == expected_temperature_unit_title

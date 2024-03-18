@@ -97,8 +97,7 @@ def set_permissions(
             raise
 
 
-class UnrecognizedBackupTypeError(Exception):
-    ...
+class UnrecognizedBackupTypeError(Exception): ...
 
 
 def load_backup_info(path: Path) -> SiteBackupInfo:

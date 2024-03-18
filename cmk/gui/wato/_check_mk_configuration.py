@@ -5388,22 +5388,21 @@ SnmpCharacterEncodings = HostRulespec(
 
 def _help_enable_snmpv2c():
     return _(
-        "Checkmk defaults to SNMPv1 in order to support as many devices as "
-        "possible. In practice, most SNMP devices also support SNMPv2c, which "
-        "has two advantages: it supports 64 bit counters and bulk walk, which "
-        "saves CPU and network resources and is more performant. Use this rule "
-        "to configure SNMPv2c for as many devices as possible. However, please be "
-        "aware that some devices that support SNMPv2c may be buggy. In such cases, "
-        'you may want to try disabling bulk walk using the ruleset "Disable '
-        'bulk walks on SNMPv2c/v3".'
-    )
+        "Use this rule to enable the use of SNMP verison 2c instead of the default SNMP version 1."
+        " Checkmk defaults to SNMPv1 in order to support as many devices as possible."
+        " In practice, most SNMP devices also support SNMPv2c, which has two advantages:"
+        ' It supports 64 bit counters and the "bulkwalk" query, which is faster and saves CPU and network resources.'
+        " Use this rule to configure SNMPv2c for as many devices as possible."
+        ' However, please be aware some buggy devices do not properly support "bulkwalk" queries.'
+        ' For those you may want to try disabling them using the ruleset "%s".'
+    ) % _("Disable bulkwalks")
 
 
 BulkwalkHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_enable_snmpv2c,
     name="bulkwalk_hosts",
-    title=lambda: _("Enable SNMPv2c and bulk walk for hosts"),
+    title=lambda: _("Enable SNMPv2c for hosts"),
 )
 
 
@@ -5411,7 +5410,7 @@ ManagementBulkwalkHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_enable_snmpv2c,
     name="management_bulkwalk_hosts",
-    title=lambda: _("Enable SNMPv2c and bulk walk for management boards"),
+    title=lambda: _("Enable SNMPv2c for management boards"),
 )
 
 
@@ -5458,11 +5457,10 @@ SnmpWithoutSysDescr = BinaryHostRulespec(
 
 def _help_snmpv2c_without_bulkwalk():
     return _(
-        "Some SNMPv2c/v3 capable devices are buggy when being queried using "
-        "bulk walks. In such cases, you can disable bulk walks with this "
-        "ruleset. Please be aware that you should only do this if no other "
-        "approach is feasible (e.g. limiting the bulk size), as bulk walks are "
-        "much more performant."
+        'Some SNMPv2c/v3 capable devices do not properly support "bulkwalk" queries.'
+        ' For those you can disable "bulkwalk" queries with this ruleset.'
+        " Please be aware that you should only do this if no other approach is feasible"
+        " (e.g. limiting the bulk size), as bulk walks are much more performant."
     )
 
 
@@ -5470,7 +5468,7 @@ Snmpv2CHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_snmpv2c_without_bulkwalk,
     name="snmpv2c_hosts",
-    title=lambda: _("Disable bulk walks on SNMPv2c/v3"),
+    title=lambda: _("Disable bulkwalks"),
 )
 
 

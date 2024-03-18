@@ -110,6 +110,7 @@ from cmk.snmplib import (
     oids_to_walk,
     SNMPCredentials,
     SNMPHostConfig,
+    SNMPVersion,
     walk_for_export,
 )
 
@@ -2106,18 +2107,21 @@ class AutomationDiagHost(Automation):
                 credentials = cred
 
         # SNMP versions
-        if test in ["snmpv2", "snmpv3"]:
-            is_bulkwalk_host = True
-            is_snmpv2or3_without_bulkwalk_host = False
-        elif test == "snmpv2_nobulk":
-            is_bulkwalk_host = False
-            is_snmpv2or3_without_bulkwalk_host = True
-        elif test == "snmpv1":
-            is_bulkwalk_host = False
-            is_snmpv2or3_without_bulkwalk_host = False
-
-        else:
-            return 1, "SNMP command not implemented"
+        match test:
+            case "snmpv1":
+                snmp_version = SNMPVersion.V1
+                bulkwalk_enabled = False  # not implemented in v1 anyway
+            case "snmpv2":
+                snmp_version = SNMPVersion.V2C
+                bulkwalk_enabled = True
+            case "snmpv2_nobulk":
+                snmp_version = SNMPVersion.V2C
+                bulkwalk_enabled = False
+            case "snmpv3":
+                snmp_version = SNMPVersion.V3
+                bulkwalk_enabled = True
+            case other:
+                return 1, f"SNMP command {other!r} not implemented"
 
         # TODO: What about SNMP management boards?
         # TODO: `get_snmp_table()` with some cache handling
@@ -2129,8 +2133,8 @@ class AutomationDiagHost(Automation):
             ipaddress=ipaddress,
             credentials=credentials,
             port=snmp_config.port,
-            is_bulkwalk_host=is_bulkwalk_host,
-            is_snmpv2or3_without_bulkwalk_host=is_snmpv2or3_without_bulkwalk_host,
+            snmp_version=snmp_version,
+            bulkwalk_enabled=bulkwalk_enabled,
             bulk_walk_size_of=snmp_config.bulk_walk_size_of,
             timing={
                 "timeout": snmp_timeout,

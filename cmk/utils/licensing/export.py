@@ -289,8 +289,7 @@ class LicenseUsageSampleParser(Protocol):
         *,
         instance_id: UUID | None = None,
         site_hash: str | None = None,
-    ) -> LicenseUsageSample:
-        ...
+    ) -> LicenseUsageSample: ...
 
 
 class UnknownSampleParserError(Exception):

@@ -112,11 +112,9 @@ class _Discoverable(Protocol):
     comparing equal.
     """
 
-    def id(self) -> Hashable:
-        ...
+    def id(self) -> Hashable: ...
 
-    def comparator(self) -> object:
-        ...
+    def comparator(self) -> object: ...
 
 
 _DiscoveredItem = TypeVar("_DiscoveredItem", bound=_Discoverable)

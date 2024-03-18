@@ -85,32 +85,25 @@ class Base(t.Generic[T], abc.ABC):
 class BaseProtocol(t.Protocol):
     type: str
 
-    def get_name(self) -> str:
-        ...
+    def get_name(self) -> str: ...
 
-    def get_merge_name(self) -> str:
-        ...
+    def get_merge_name(self) -> str: ...
 
-    def get_description(self) -> str:
-        ...
+    def get_description(self) -> str: ...
 
-    def __eq__(self, other: object) -> bool:
-        ...
+    def __eq__(self, other: object) -> bool: ...
 
-    def __gt__(self, other: object) -> bool:
-        ...
+    def __gt__(self, other: object) -> bool: ...
 
 
 class WatoProtocol(BaseProtocol, t.Protocol):
     def validate_parameter(
         self, parameters: t.Optional[ParametersTypeAlias]
-    ) -> t.Optional[Exception]:
-        ...
+    ) -> t.Optional[Exception]: ...
 
 
 class PluginProtocol(BaseProtocol, t.Protocol):
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
-        ...
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]: ...
 
 
 class Plugin(Base[TC], abc.ABC):
@@ -121,8 +114,7 @@ class Plugin(Base[TC], abc.ABC):
         return str(self._element.name)
 
     @abc.abstractmethod
-    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]:
-        ...
+    def get_default_parameters(self) -> t.Optional[ParametersTypeAlias]: ...
 
 
 class PluginDiscovery(Plugin[CheckPlugin]):
@@ -729,8 +721,7 @@ T_contra = t.TypeVar("T_contra", contravariant=True)
 
 
 class SupportsGreaterThan(t.Protocol, t.Generic[T_contra]):
-    def __gt__(self, other: T_contra) -> bool:
-        ...
+    def __gt__(self, other: T_contra) -> bool: ...
 
 
 A = t.TypeVar("A", bound=SupportsGreaterThan)

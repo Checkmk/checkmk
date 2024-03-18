@@ -20,8 +20,7 @@ class PostfixError(Enum):
     SystemNotRunning = "the Postfix mail system is not running"
 
 
-class PostfixPid(int):
-    ...
+class PostfixPid(int): ...
 
 
 def parse_postfix_mailq_status(string_table: StringTable) -> dict[str, PostfixPid | PostfixError]:

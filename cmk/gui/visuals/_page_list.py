@@ -64,8 +64,9 @@ def page_list(  # pylint: disable=too-many-branches
     render_custom_buttons: Callable[[VisualName, TVisual], None] | None = None,
     render_custom_columns: Callable[[Table, VisualName, TVisual], None] | None = None,
     custom_page_menu_entries: Callable[[], Iterable[PageMenuEntry]] | None = None,
-    check_deletable_handler: Callable[[dict[tuple[UserId, VisualName], TVisual], UserId, str], bool]
-    | None = None,
+    check_deletable_handler: (
+        Callable[[dict[tuple[UserId, VisualName], TVisual], UserId, str], bool] | None
+    ) = None,
 ) -> None:
     if custom_columns is None:
         custom_columns = []

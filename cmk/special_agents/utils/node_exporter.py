@@ -20,8 +20,7 @@ class PromQLMetric(typing.TypedDict):
 
 
 class PromQLGetter(typing.Protocol):
-    def __call__(self, promql_expression: str) -> list[PromQLMetric]:
-        ...
+    def __call__(self, promql_expression: str) -> list[PromQLMetric]: ...
 
 
 class NodeExporterQuery(enum.StrEnum):

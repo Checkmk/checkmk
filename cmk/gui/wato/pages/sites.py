@@ -145,8 +145,7 @@ class ModeEditSite(WatoMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:
@@ -1105,8 +1104,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:

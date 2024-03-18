@@ -322,10 +322,12 @@ def parse_winperf_if_win32_networkadapter(string_table: StringTable) -> SectionE
             name=_canonize_name(line_dict["Name"]),
             alias=line_dict["NetConnectionID"],
             # Some interfaces report several exabyte as bandwidth when down ...
-            speed=speed
-            if "Speed" in line_dict
-            and (speed := interfaces.saveint(line_dict["Speed"])) <= 1024**5
-            else 0,
+            speed=(
+                speed
+                if "Speed" in line_dict
+                and (speed := interfaces.saveint(line_dict["Speed"])) <= 1024**5
+                else 0
+            ),
             oper_status=oper_status,
             oper_status_name=oper_status_name,
             mac_address=line_dict["MACAddress"],
@@ -489,28 +491,33 @@ def _merge_sections(
     )
 
     return [
-        interfaces.InterfaceWithCounters(
-            attributes=interfaces.Attributes(
-                **{
-                    **asdict(interface.attributes),
+        (
+            interfaces.InterfaceWithCounters(
+                attributes=interfaces.Attributes(
                     **{
-                        "alias": add_if_data.alias,
-                        "speed": add_if_data.speed or interface.attributes.speed,
-                        "group": section_teaming[add_if_data.guid].team_name
-                        if add_if_data.guid is not None and add_if_data.guid in section_teaming
-                        else None,
-                        "oper_status": add_if_data.oper_status,
-                        "oper_status_name": add_if_data.oper_status_name,
-                        "phys_address": interfaces.mac_address_from_hexstring(
-                            add_if_data.mac_address
-                        ),
+                        **asdict(interface.attributes),
+                        **{
+                            "alias": add_if_data.alias,
+                            "speed": add_if_data.speed or interface.attributes.speed,
+                            "group": (
+                                section_teaming[add_if_data.guid].team_name
+                                if add_if_data.guid is not None
+                                and add_if_data.guid in section_teaming
+                                else None
+                            ),
+                            "oper_status": add_if_data.oper_status,
+                            "oper_status_name": add_if_data.oper_status_name,
+                            "phys_address": interfaces.mac_address_from_hexstring(
+                                add_if_data.mac_address
+                            ),
+                        },
                     },
-                },
-            ),
-            counters=interface.counters,
+                ),
+                counters=interface.counters,
+            )
+            if (add_if_data := additional_data.get(name))
+            else interface
         )
-        if (add_if_data := additional_data.get(name))
-        else interface
         for name, interface in ifaces.items()
     ]
 

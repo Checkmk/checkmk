@@ -73,12 +73,10 @@ class dict_property(t.Generic[T]):
         instance[self.name] = value
 
     @t.overload
-    def __get__(self: Self, instance: None, owner: None = None) -> dict_property[T]:
-        ...
+    def __get__(self: Self, instance: None, owner: None = None) -> dict_property[T]: ...
 
     @t.overload
-    def __get__(self: Self, instance: Inst, owner: type[dict] = ...) -> T:
-        ...
+    def __get__(self: Self, instance: Inst, owner: type[dict] = ...) -> T: ...
 
     def __get__(
         self: Self, instance: Inst | None, owner: type[dict] | None = None

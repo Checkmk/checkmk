@@ -95,9 +95,9 @@ class ABCViewRenderer(abc.ABC):
 
 
 class GUIViewRenderer(ABCViewRenderer):
-    page_menu_dropdowns_hook: Callable[
-        [View, Rows, list[PageMenuDropdown]], None
-    ] = lambda v, r, p: None
+    page_menu_dropdowns_hook: Callable[[View, Rows, list[PageMenuDropdown]], None] = (
+        lambda v, r, p: None
+    )
 
     def __init__(self, view: View, show_buttons: bool) -> None:
         super().__init__(view)
@@ -404,16 +404,18 @@ class GUIViewRenderer(ABCViewRenderer):
                 yield PageMenuEntry(
                     title=command.title,
                     icon_name=command.icon_name,
-                    item=PageMenuPopup(self._render_command_form(info_name, command))
-                    if command.show_command_form
-                    else make_simple_link(
-                        makeuri(
-                            request,
-                            [
-                                ("_transid", str(transactions.get())),
-                                ("_do_actions", "yes"),
-                                (f"_{command.ident}", True),
-                            ],
+                    item=(
+                        PageMenuPopup(self._render_command_form(info_name, command))
+                        if command.show_command_form
+                        else make_simple_link(
+                            makeuri(
+                                request,
+                                [
+                                    ("_transid", str(transactions.get())),
+                                    ("_do_actions", "yes"),
+                                    (f"_{command.ident}", True),
+                                ],
+                            )
                         )
                     ),
                     name="command_%s" % command.ident,

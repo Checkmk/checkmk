@@ -28,7 +28,6 @@ class CPUInfo(
         ],
     )
 ):
-
     """Handle CPU measurements
 
     name: name of core
@@ -154,20 +153,24 @@ def check_cpu_util(
         metric_name = "util"
         label = "Total CPU"
 
-    yield from check_levels_predictive(
-        value_checked,
-        metric_name=metric_name,
-        levels=levels,
-        render_func=render.percent,
-        label=label,
-        boundaries=(0, None),
-    ) if isinstance(levels, dict) else check_levels(
-        value_checked,
-        metric_name=metric_name,
-        levels_upper=levels,
-        render_func=render.percent,
-        label=label,
-        boundaries=(0, None),
+    yield from (
+        check_levels_predictive(
+            value_checked,
+            metric_name=metric_name,
+            levels=levels,
+            render_func=render.percent,
+            label=label,
+            boundaries=(0, None),
+        )
+        if isinstance(levels, dict)
+        else check_levels(
+            value_checked,
+            metric_name=metric_name,
+            levels_upper=levels,
+            render_func=render.percent,
+            label=label,
+            boundaries=(0, None),
+        )
     )
 
     if "core_util_time_total" in params:

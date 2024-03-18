@@ -480,9 +480,11 @@ class Table:
         if actions_enabled and actions_visible:
             html.open_tr(class_=["data", "even0", "actions"])
             html.open_td(colspan=num_cols)
-            with html.form_context(
-                "%s_actions" % table_id
-            ) if not html.in_form() else contextlib.nullcontext():
+            with (
+                html.form_context("%s_actions" % table_id)
+                if not html.in_form()
+                else contextlib.nullcontext()
+            ):
                 if request.has_var("_%s_sort" % table_id):
                     html.open_div(class_=["sort"])
                     html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))

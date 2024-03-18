@@ -175,9 +175,9 @@ class SAMLConnectionTypedDict(UserConnectionTypedDictBase):
     checkmk_assertion_consumer_service_endpoint: str
     checkmk_server_url: str
     connection_timeout: tuple[int, int]
-    signature_certificate: Literal["builtin"] | tuple[
-        Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]
-    ]
+    signature_certificate: (
+        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
+    )
     encryption_certificate: NotRequired[
         Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
     ]

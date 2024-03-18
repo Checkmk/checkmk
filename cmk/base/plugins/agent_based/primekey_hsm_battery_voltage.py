@@ -80,10 +80,10 @@ def check(
         yield Result(state=State.OK, summary=f"PrimeKey HSM battery {item} status absence")
         return
 
-    yield Result(
-        state=State.CRIT, summary=f"PrimeKey HSM battery {item} status not OK"
-    ) if battery.state_fail else Result(
-        state=State.OK, summary=f"PrimeKey HSM battery {item} status OK"
+    yield (
+        Result(state=State.CRIT, summary=f"PrimeKey HSM battery {item} status not OK")
+        if battery.state_fail
+        else Result(state=State.OK, summary=f"PrimeKey HSM battery {item} status OK")
     )
 
     if battery.voltage is None:

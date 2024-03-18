@@ -86,8 +86,7 @@ class FormSpecProtocol(typing.Protocol[ModelT]):
         help_text: Title | None = None,
         migrate: typing.Callable[[object], ModelT] | None = None,
         custom_validate: typing.Callable[[ModelT], object] | None = None,
-    ) -> typing.Self:
-        ...
+    ) -> typing.Self: ...
 
 
 @typing.runtime_checkable
@@ -104,8 +103,7 @@ class FormSpecProtocolPrefill(typing.Protocol[ModelT]):
         help_text: Title | None = None,
         migrate: typing.Callable[[object], ModelT] | None = None,
         custom_validate: typing.Callable[[ModelT], object] | None = None,
-    ) -> typing.Self:
-        ...
+    ) -> typing.Self: ...
 
 
 @typing.runtime_checkable
@@ -123,8 +121,7 @@ class FormSpecProtocolDefault(typing.Protocol[ModelT]):
         help_text: Title | None = None,
         migrate: typing.Callable[[object], ModelT] | None = None,
         custom_validate: typing.Callable[[ModelT], object] | None = None,
-    ) -> typing.Self:
-        ...
+    ) -> typing.Self: ...
 
 
 def _simple_case(
@@ -222,11 +219,9 @@ class MatchEntry(typing.NamedTuple, typing.Generic[V_c]):
 
 
 class MatchDict(typing.Protocol[V_c]):
-    def __getitem__(self, item: type[V_c] | type[None]) -> MatchEntry[V_c]:
-        ...
+    def __getitem__(self, item: type[V_c] | type[None]) -> MatchEntry[V_c]: ...
 
-    def __setitem__(self, item: type[V_c] | type[None], value: MatchEntry[V_c]) -> None:
-        ...
+    def __setitem__(self, item: type[V_c] | type[None], value: MatchEntry[V_c]) -> None: ...
 
 
 matchers: MatchDict[definitions.ValueSpec] = {}
@@ -393,10 +388,10 @@ def valuespec_ldap_distinguished_name(
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._label, Label),
         custom_validate=(
-            formspec_validators.EnforceSuffix(vs_instance.enforce_suffix, case="ignore"),
-        )
-        if vs_instance.enforce_suffix
-        else None,
+            (formspec_validators.EnforceSuffix(vs_instance.enforce_suffix, case="ignore"),)
+            if vs_instance.enforce_suffix
+            else None
+        ),
         prefill=default_or_placeholder(vs_instance),
         migrate=migrate_func,
     )
@@ -879,13 +874,11 @@ def valuespec_list_choice(
 
 
 @typing.overload
-def maybe_lazy(entry: typing.Callable[[], typing.Iterable[T]]) -> typing.Iterable[T]:
-    ...
+def maybe_lazy(entry: typing.Callable[[], typing.Iterable[T]]) -> typing.Iterable[T]: ...
 
 
 @typing.overload
-def maybe_lazy(entry: typing.Iterable[T]) -> typing.Iterable[T]:
-    ...
+def maybe_lazy(entry: typing.Iterable[T]) -> typing.Iterable[T]: ...
 
 
 def maybe_lazy(

@@ -214,16 +214,13 @@ class SpecialColumn(enum.IntEnum):
 
 class OIDSpecLike(Protocol):
     @property
-    def column(self) -> int | str:
-        ...
+    def column(self) -> int | str: ...
 
     @property
-    def encoding(self) -> Literal["string", "binary"]:
-        ...
+    def encoding(self) -> Literal["string", "binary"]: ...
 
     @property
-    def save_to_cache(self) -> bool:
-        ...
+    def save_to_cache(self) -> bool: ...
 
 
 class BackendOIDSpec(NamedTuple):

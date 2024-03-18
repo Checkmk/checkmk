@@ -64,9 +64,9 @@ def _check(
     if restart_rate is not None:
         yield from check_levels(
             restart_rate,
-            levels_upper=params["restart_rate"][1]
-            if params["restart_rate"] != "no_levels"
-            else None,
+            levels_upper=(
+                params["restart_rate"][1] if params["restart_rate"] != "no_levels" else None
+            ),
             metric_name="kube_pod_restart_rate",
             render_func=str,
             label="In last hour",

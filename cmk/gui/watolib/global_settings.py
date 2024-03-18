@@ -43,9 +43,11 @@ def save_global_settings(
         global_settings_config = get_global_settings_config().global_settings
         current_global_settings = dict(load_configuration_settings())
         vars_ = {
-            varname: value
-            if global_settings_config.is_activated(varname)
-            else current_global_settings[varname]
+            varname: (
+                value
+                if global_settings_config.is_activated(varname)
+                else current_global_settings[varname]
+            )
             for varname, value in vars_.items()
             if global_settings_config.is_activated(varname) or varname in current_global_settings
         }

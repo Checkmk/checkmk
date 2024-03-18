@@ -66,9 +66,11 @@ class ActiveCheckResult:
         safe_details = "".join(f"{self._replace_pipe(line)}\n" for line in self.details)
         return "\n".join(
             (
-                " | ".join((safe_summary, " ".join(self.metrics)))
-                if self.metrics
-                else safe_summary,
+                (
+                    " | ".join((safe_summary, " ".join(self.metrics)))
+                    if self.metrics
+                    else safe_summary
+                ),
                 safe_details,
             )
         ).strip()

@@ -29,8 +29,7 @@ HEALTH_STATUS_MAP = {
 SectionStandard = Mapping[str, Any]
 
 
-class _MultipleNodesMarker:
-    ...
+class _MultipleNodesMarker: ...
 
 
 Section = SectionStandard | _MultipleNodesMarker

@@ -527,8 +527,9 @@ class TimeSpan(ValueSpec[float]):
         footer: str | None = None,
         minvalue: float | None = None,
         maxvalue: float | None = None,
-        display: Container[Literal["days", "hours", "minutes", "seconds", "milliseconds"]]
-        | None = None,
+        display: (
+            Container[Literal["days", "hours", "minutes", "seconds", "milliseconds"]] | None
+        ) = None,
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[float] = DEF_VALUE,
@@ -3824,12 +3825,15 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             return choice.title
 
         if self._render == CascadingDropdown.Render.foldable:
-            with output_funnel.plugged(), foldable_container(
-                treename="foldable_cascading_dropdown",
-                id_=hashlib.sha256(repr(value).encode()).hexdigest(),
-                isopen=False,
-                title=choice.title,
-                indent=False,
+            with (
+                output_funnel.plugged(),
+                foldable_container(
+                    treename="foldable_cascading_dropdown",
+                    id_=hashlib.sha256(repr(value).encode()).hexdigest(),
+                    isopen=False,
+                    title=choice.title,
+                    indent=False,
+                ),
             ):
                 html.write_text(rendered_value)
             return HTML(output_funnel.drain())
@@ -4242,9 +4246,11 @@ class DualListChoice(ListChoice):
         return (
             self._locked_choices_text_singular % num_locked_choices
             if num_locked_choices == 1
-            else self._locked_choices_text_plural % num_locked_choices
-            if num_locked_choices > 1
-            else None
+            else (
+                self._locked_choices_text_plural % num_locked_choices
+                if num_locked_choices > 1
+                else None
+            )
         )
 
     def _value_is_invalid(self, value: ListChoiceChoiceIdent) -> bool:
@@ -5896,8 +5902,9 @@ class Dictionary(ValueSpec[DictionaryModel]):
         render: Literal["normal", "form", "form_part"] = "normal",
         form_narrow: bool = False,
         form_isopen: bool = True,
-        headers: None
-        | (Sequence[tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]]) = None,
+        headers: None | (
+            Sequence[tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]]
+        ) = None,
         migrate: Callable[[tuple], dict] | None = None,
         indent: bool = True,
         horizontal: bool = False,
@@ -8294,15 +8301,15 @@ class _CAorCAChain(UploadOrPasteTextFile):
                 "application/pkix-cert",
             ],
             allowed_extensions=[".pem", ".crt"],
-            match=lambda val: 2
-            if not isinstance(val, tuple)
-            else (0 if isinstance(val[1], int) else 1),
+            match=lambda val: (
+                2 if not isinstance(val, tuple) else (0 if isinstance(val[1], int) else 1)
+            ),
             show_alternative_title=show_alternative_title,
             on_change=on_change,
             orientation=orientation,
-            title=_("Certificate Chain (Root / Intermediate Certificate)")
-            if title is None
-            else title,
+            title=(
+                _("Certificate Chain (Root / Intermediate Certificate)") if title is None else title
+            ),
             help=help,
             default_value=default_value,
             validate=validate,
@@ -8405,20 +8412,24 @@ def ListOfCAs(  # pylint: disable=redefined-builtin
         totext=totext,
         text_if_empty=text_if_empty,
         allow_empty=allow_empty,
-        empty_text=_("You need to enter at least one CA. Otherwise no SSL connection can be made.")
-        if empty_text is None
-        else empty_text,
+        empty_text=(
+            _("You need to enter at least one CA. Otherwise no SSL connection can be made.")
+            if empty_text is None
+            else empty_text
+        ),
         sort_by=sort_by,
         title=_("CAs to accept") if title is None else title,
-        help=_(
-            "Only accepting HTTPS connections with a server which certificate "
-            "is signed with one of the CAs that are listed here. That way it is guaranteed "
-            "that it is communicating only with the authentic server. "
-            "If you use self signed certificates for you server then enter that certificate "
-            "here."
-        )
-        if help is None
-        else help,
+        help=(
+            _(
+                "Only accepting HTTPS connections with a server which certificate "
+                "is signed with one of the CAs that are listed here. That way it is guaranteed "
+                "that it is communicating only with the authentic server. "
+                "If you use self signed certificates for you server then enter that certificate "
+                "here."
+            )
+            if help is None
+            else help
+        ),
         default_value=default_value,
         validate=validate,
     )
@@ -8463,9 +8474,11 @@ class SetupSiteChoice(DropdownChoice):
             empty_text=empty_text,
             invalid_choice=invalid_choice,
             invalid_choice_title=_("Unknown site (%s)"),
-            invalid_choice_error=_("The configured site is not known to this site.")
-            if invalid_choice_error is None
-            else invalid_choice_error,
+            invalid_choice_error=(
+                _("The configured site is not known to this site.")
+                if invalid_choice_error is None
+                else invalid_choice_error
+            ),
             no_preselect_title=no_preselect_title,
             on_change=on_change,
             read_only=read_only,
@@ -8473,9 +8486,9 @@ class SetupSiteChoice(DropdownChoice):
             html_attrs=html_attrs,
             title=_("Site") if title is None else title,
             help=help,
-            default_value=self._site_default_value
-            if isinstance(default_value, Sentinel)
-            else default_value,
+            default_value=(
+                self._site_default_value if isinstance(default_value, Sentinel) else default_value
+            ),
             validate=validate,
             deprecated_choices=deprecated_choices,
         )

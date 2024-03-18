@@ -209,9 +209,11 @@ class Version:
         (major, minor, sub, year, month, day) = match.group(1, 2, 3, 4, 5, 6)
 
         return cls(
-            None
-            if all(x is None for x in (major, minor, sub))
-            else _BaseVersion(int(major), int(minor), int(sub)),
+            (
+                None
+                if all(x is None for x in (major, minor, sub))
+                else _BaseVersion(int(major), int(minor), int(sub))
+            ),
             _Release(RType.daily, _BuildDate(int(year), int(month), int(day))),
         )
 
@@ -359,8 +361,7 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-class VersionsCompatible:
-    ...
+class VersionsCompatible: ...
 
 
 class VersionsIncompatible:

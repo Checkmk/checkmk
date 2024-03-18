@@ -269,9 +269,11 @@ def _check_service_lists(
     if change_affected_check_plugins:
         severity = max(
             params.severity_changed_service_labels if modified_labels else 0,
-            params.severity_changed_service_params
-            if _CHANGED_PARAMS_FEATURE_FLAG and modified_params
-            else 0,
+            (
+                params.severity_changed_service_params
+                if _CHANGED_PARAMS_FEATURE_FLAG and modified_params
+                else 0
+            ),
         )
         subresults.append(
             _transition_result(_Transition.CHANGED, change_affected_check_plugins, severity)
@@ -321,7 +323,14 @@ def _iter_output_services(
     services_by_transition: ServicesByTransition,
     params: DiscoveryCheckParameters,
     service_filters: _ServiceFilters,
-) -> Iterable[tuple[_Transition, Sequence[AutocheckServiceWithNodes], int, _ServiceFilter,]]:
+) -> Iterable[
+    tuple[
+        _Transition,
+        Sequence[AutocheckServiceWithNodes],
+        int,
+        _ServiceFilter,
+    ]
+]:
     yield (
         _Transition.NEW,
         services_by_transition.get("new", []),

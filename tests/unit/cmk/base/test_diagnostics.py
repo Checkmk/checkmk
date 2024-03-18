@@ -553,8 +553,10 @@ def test_diagnostics_element_checkmk_files(
 )
 def test_diagnostics_element_checkmk_files_error(
     tmp_path: PurePath,
-    diag_elem: type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
-    | type[diagnostics.CheckmkLogFilesDiagnosticsElement],
+    diag_elem: (
+        type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
+        | type[diagnostics.CheckmkLogFilesDiagnosticsElement]
+    ),
 ) -> None:
     short_test_conf_filepath = "/no/such/file"
     diagnostics_element = diag_elem([short_test_conf_filepath])

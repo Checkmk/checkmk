@@ -390,9 +390,9 @@ def query_raw_api_data_v2(
         raw_replica_sets=client_apps_api.query_raw_replica_sets(),
         node_to_kubelet_health=core_api.query_kubelet_health(node_names),
         api_health=core_api.query_api_health(),
-        raw_kubelet_open_metrics_dumps=core_api.query_kubelet_metrics(node_names)
-        if query_kubelet_endpoints
-        else [],
+        raw_kubelet_open_metrics_dumps=(
+            core_api.query_kubelet_metrics(node_names) if query_kubelet_endpoints else []
+        ),
     )
 
 

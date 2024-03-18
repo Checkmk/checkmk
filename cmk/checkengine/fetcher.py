@@ -56,13 +56,10 @@ class HostKey:
 
 
 class FetcherFunction(Protocol):
-    def __call__(
-        self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
+    def __call__(self, host_name: HostName, *, ip_address: HostAddress | None) -> Sequence[
         tuple[
             SourceInfo,
             result.Result[AgentRawData | SNMPRawData, Exception],
             Snapshot,
         ]
-    ]:
-        ...
+    ]: ...

@@ -299,9 +299,11 @@ class RateWithAverage:
     def __add__(self, other: "RateWithAverage") -> "RateWithAverage":
         return RateWithAverage(
             rate=self.rate + other.rate,
-            average=self.average + other.average
-            if (self.average is not None and other.average is not None)
-            else None,
+            average=(
+                self.average + other.average
+                if (self.average is not None and other.average is not None)
+                else None
+            ),
         )
 
 
@@ -326,10 +328,12 @@ class RatesWithAverages:
     def __add__(self, other: "RatesWithAverages") -> "RatesWithAverages":
         return RatesWithAverages(
             **{
-                field.name: value + other_value
-                if (value := getattr(self, field.name)) is not None
-                and (other_value := getattr(other, field.name)) is not None
-                else None
+                field.name: (
+                    value + other_value
+                    if (value := getattr(self, field.name)) is not None
+                    and (other_value := getattr(other, field.name)) is not None
+                    else None
+                )
                 for field in fields(self)
             }
         )
@@ -370,43 +374,51 @@ class InterfaceWithRatesAndAverages:
             attributes=iface.attributes,
             rates_with_averages=RatesWithAverages(
                 **{
-                    rate_name: None
-                    if rate is None
-                    else RateWithAverage(
-                        rate=rate,
-                        average=averages.get(rate_name),
+                    rate_name: (
+                        None
+                        if rate is None
+                        else RateWithAverage(
+                            rate=rate,
+                            average=averages.get(rate_name),
+                        )
                     )
                     for rate_name, rate in asdict(iface_rates.rates).items()
                 },
                 in_nucast=cls._add_rates_and_averages(
                     *(
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
+                        (
+                            None
+                            if (rate := getattr(iface_rates.rates, rate_name)) is None
+                            else RateWithAverage(
+                                rate,
+                                averages.get(rate_name),
+                            )
                         )
                         for rate_name in ("in_mcast", "in_bcast")
                     ),
                 ),
                 out_nucast=cls._add_rates_and_averages(
                     *(
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
+                        (
+                            None
+                            if (rate := getattr(iface_rates.rates, rate_name)) is None
+                            else RateWithAverage(
+                                rate,
+                                averages.get(rate_name),
+                            )
                         )
                         for rate_name in ("out_mcast", "out_bcast")
                     ),
                 ),
                 total_octets=cls._add_rates_and_averages(
                     *(
-                        None
-                        if (rate := getattr(iface_rates.rates, rate_name)) is None
-                        else RateWithAverage(
-                            rate,
-                            averages.get(rate_name),
+                        (
+                            None
+                            if (rate := getattr(iface_rates.rates, rate_name)) is None
+                            else RateWithAverage(
+                                rate,
+                                averages.get(rate_name),
+                            )
                         )
                         for rate_name in ("in_octets", "out_octets")
                     ),
@@ -1246,9 +1258,11 @@ def _group_members(
                 item[0] == "0",
             ),
             oper_status_name=attributes.oper_status_name,
-            admin_status_name=None
-            if attributes.admin_status is None
-            else get_if_state_name(attributes.admin_status),
+            admin_status_name=(
+                None
+                if attributes.admin_status is None
+                else get_if_state_name(attributes.admin_status)
+            ),
         )
         groups_node.append(member_info)
     return group_members
@@ -1416,17 +1430,19 @@ def _rename_metrics_to_legacy(
         **kwargs: _TCheckInterfaceParams.kwargs,
     ) -> CheckResult:
         yield from (
-            Metric(
-                name=_METRICS_TO_LEGACY_MAP.get(
-                    output.name,
-                    output.name,
-                ),
-                value=output.value,
-                levels=output.levels,
-                boundaries=output.boundaries,
+            (
+                Metric(
+                    name=_METRICS_TO_LEGACY_MAP.get(
+                        output.name,
+                        output.name,
+                    ),
+                    value=output.value,
+                    levels=output.levels,
+                    boundaries=output.boundaries,
+                )
+                if isinstance(output, Metric)
+                else output
             )
-            if isinstance(output, Metric)
-            else output
             for output in check_interfaces(*args, **kwargs)
         )
 

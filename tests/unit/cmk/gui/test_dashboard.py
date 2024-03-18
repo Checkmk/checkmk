@@ -20,8 +20,7 @@ from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.htmllib.html import html
 
 
-class DummyDashletConfig(DashletConfig):
-    ...
+class DummyDashletConfig(DashletConfig): ...
 
 
 class DummyDashlet(Dashlet[DummyDashletConfig]):

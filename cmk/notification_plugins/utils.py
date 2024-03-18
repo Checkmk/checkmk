@@ -296,8 +296,7 @@ class ResponseMatcher(ABC):
     __slots__ = ()
 
     @abstractmethod
-    def matches(self, response: requests.Response, body: JsonOrText) -> bool:
-        ...
+    def matches(self, response: requests.Response, body: JsonOrText) -> bool: ...
 
     def and_(self, other: "ResponseMatcher") -> "CombinedMatcher":
         return CombinedMatcher(matchers=[self, other])

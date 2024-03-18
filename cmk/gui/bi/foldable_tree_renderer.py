@@ -528,8 +528,7 @@ def _status_tree_depth(tree):
     return maxdepth + 1
 
 
-class FoldableTreeRendererBottomUp(ABCFoldableTreeRendererTable):
-    ...
+class FoldableTreeRendererBottomUp(ABCFoldableTreeRendererTable): ...
 
 
 class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):

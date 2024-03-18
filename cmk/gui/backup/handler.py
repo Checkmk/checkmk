@@ -259,8 +259,7 @@ class MKBackupJob(abc.ABC):
         }[state]
 
     @abc.abstractmethod
-    def state_file_path(self) -> Path:
-        ...
+    def state_file_path(self) -> Path: ...
 
     def cleanup(self) -> None:
         self.state_file_path().unlink(missing_ok=True)
@@ -317,8 +316,7 @@ class MKBackupJob(abc.ABC):
             raise MKGeneralException(_("Failed to start the job: %s") % completed_process.stdout)
 
     @abc.abstractmethod
-    def _start_command(self) -> Sequence[str | Path]:
-        ...
+    def _start_command(self) -> Sequence[str | Path]: ...
 
     def stop(self) -> None:
         state = self.state()
@@ -912,13 +910,11 @@ _TBackupJob = TypeVar("_TBackupJob", bound=MKBackupJob)
 class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
     @property
     @abc.abstractmethod
-    def ident(self) -> str:
-        ...
+    def ident(self) -> str: ...
 
     @property
     @abc.abstractmethod
-    def job(self) -> _TBackupJob:
-        ...
+    def job(self) -> _TBackupJob: ...
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
@@ -1029,28 +1025,23 @@ class PageBackupJobState(PageAbstractMKBackupJobState[Job]):
 
 class ABCBackupTargetType(abc.ABC):
     @abc.abstractmethod
-    def __init__(self, params: Mapping[str, object]) -> None:
-        ...
+    def __init__(self, params: Mapping[str, object]) -> None: ...
 
     @property
     @abc.abstractmethod
-    def parameters(self) -> Mapping[str, object]:
-        ...
+    def parameters(self) -> Mapping[str, object]: ...
 
     @property
     @abc.abstractmethod
-    def target(self) -> TargetProtocol:
-        ...
+    def target(self) -> TargetProtocol: ...
 
     @staticmethod
     @abc.abstractmethod
-    def ident() -> str:
-        ...
+    def ident() -> str: ...
 
     @staticmethod
     @abc.abstractmethod
-    def title() -> str:
-        ...
+    def title() -> str: ...
 
     @classmethod
     def valuespec(cls) -> Dictionary:
@@ -1062,20 +1053,17 @@ class ABCBackupTargetType(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def dictionary_elements(cls) -> DictionaryElements:
-        ...
+    def dictionary_elements(cls) -> DictionaryElements: ...
 
     @abc.abstractmethod
-    def validate(self, varprefix: str) -> None:
-        ...
+    def validate(self, varprefix: str) -> None: ...
 
     def backups(self) -> Mapping[str, SiteBackupInfo]:
         _check_if_target_ready(self.target)
         return dict(self.target.list_backups())
 
     @abc.abstractmethod
-    def remove_backup(self, backup_ident: str) -> None:
-        ...
+    def remove_backup(self, backup_ident: str) -> None: ...
 
     def render(self) -> ValueSpecText:
         return self.valuespec().value_to_html(dict(self.parameters))
@@ -1188,13 +1176,11 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
     @abc.abstractmethod
     def _instantiate_target(
         params: RemoteTargetParams,
-    ) -> RemoteTarget[TRemoteParams, TRemoteStorage]:
-        ...
+    ) -> RemoteTarget[TRemoteParams, TRemoteStorage]: ...
 
     @classmethod
     @abc.abstractmethod
-    def _remote_dictionary_elements(cls) -> DictionaryElements:
-        ...
+    def _remote_dictionary_elements(cls) -> DictionaryElements: ...
 
 
 class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):

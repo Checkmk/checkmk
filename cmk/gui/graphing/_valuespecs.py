@@ -47,18 +47,20 @@ from ._utils import (
 
 
 def migrate_graph_render_options_title_format(
-    p: Literal["plain"]
-    | Literal["add_host_name"]
-    | Literal["add_host_alias"]
-    | tuple[
-        Literal["add_title_infos"],
-        list[
-            Literal["add_host_name"]
-            | Literal["add_host_alias"]
-            | Literal["add_service_description"]
-        ],
-    ]
-    | Sequence[GraphTitleFormatVS],
+    p: (
+        Literal["plain"]
+        | Literal["add_host_name"]
+        | Literal["add_host_alias"]
+        | tuple[
+            Literal["add_title_infos"],
+            list[
+                Literal["add_host_name"]
+                | Literal["add_host_alias"]
+                | Literal["add_service_description"]
+            ],
+        ]
+        | Sequence[GraphTitleFormatVS]
+    ),
 ) -> Sequence[GraphTitleFormatVS]:
     # ->1.5.0i2 pnp_graph reportlet
     if p == "add_host_name":

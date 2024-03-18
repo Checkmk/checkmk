@@ -76,12 +76,14 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("drbd_disk"): (lambda p: {}),
     # this is unreadable, but since we remove it soon I don't bother to rewrite it
     CheckPluginName("drbd"): (
-        lambda p: p
-        if isinstance(p, dict)
-        else {
-            "roles_inventory": p[0] and p[0] or None,
-            "diskstates_inventory": (p[0] and p[1]) and p[1] or None,
-        }
+        lambda p: (
+            p
+            if isinstance(p, dict)
+            else {
+                "roles_inventory": p[0] and p[0] or None,
+                "diskstates_inventory": (p[0] and p[1]) and p[1] or None,
+            }
+        )
     ),
     CheckPluginName("drbd_net"): (lambda p: {}),
     CheckPluginName("drbd_stats"): (lambda p: {}),

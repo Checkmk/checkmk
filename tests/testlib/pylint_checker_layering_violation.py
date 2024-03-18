@@ -37,13 +37,13 @@ ImportedName = NewType("ImportedName", str)
 
 
 class PackageFor(Protocol):
-    def __call__(self, name: ModuleName | ImportedName) -> PackageName:
-        ...
+    def __call__(self, name: ModuleName | ImportedName) -> PackageName: ...
 
 
 class IsPackageRelationshipOK(Protocol):
-    def __call__(self, *, importing_package: PackageName, imported_package: PackageName) -> bool:
-        ...
+    def __call__(
+        self, *, importing_package: PackageName, imported_package: PackageName
+    ) -> bool: ...
 
 
 class IsImportOK:

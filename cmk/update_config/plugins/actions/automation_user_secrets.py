@@ -58,9 +58,11 @@ class SynchronizeAutomationSecretAndHtpasswd(UpdateAction):
 
             htpasswd.save(
                 user_id,
-                PasswordHash("!" + hash_password(automation_user_password))
-                if locked
-                else hash_password(automation_user_password),
+                (
+                    PasswordHash("!" + hash_password(automation_user_password))
+                    if locked
+                    else hash_password(automation_user_password)
+                ),
             )
             logger.warning(
                 "Automationuser's (%r) secret does not match the password hash in etc/htpasswd. Updating the hash.",

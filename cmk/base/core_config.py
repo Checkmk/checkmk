@@ -299,9 +299,9 @@ def _bake_on_restart(
 
     agent_bakery.bake_agents(
         target_configs,
-        bake_revision_mode=BakeRevisionMode.INACTIVE
-        if config.apply_bake_revision
-        else BakeRevisionMode.DISABLED,
+        bake_revision_mode=(
+            BakeRevisionMode.INACTIVE if config.apply_bake_revision else BakeRevisionMode.DISABLED
+        ),
         logging_level=config.agent_bakery_logging,
         call_site="config creation",
     )

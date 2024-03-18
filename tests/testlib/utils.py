@@ -358,9 +358,11 @@ def spawn_expect_process(
                         # msg found; sending input
                         LOGGER.info(
                             "%s; sending: %s",
-                            "Optional message found"
-                            if dialog.optional
-                            else "Required message found",
+                            (
+                                "Optional message found"
+                                if dialog.optional
+                                else "Required message found"
+                            ),
                             repr(dialog.send),
                         )
                         p.send(dialog.send)
@@ -477,12 +479,14 @@ def write_file(
         substitute_user=substitute_user,
         stdin=subprocess.PIPE,
         stdout=subprocess.DEVNULL,
-        encoding=None
-        if isinstance(
-            content,
-            bytes,
-        )
-        else "utf-8",
+        encoding=(
+            None
+            if isinstance(
+                content,
+                bytes,
+            )
+            else "utf-8"
+        ),
     ) as p:
         p.communicate(content)
     if p.returncode != 0:

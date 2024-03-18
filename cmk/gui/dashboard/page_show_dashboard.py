@@ -481,15 +481,17 @@ def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type: ignore[no-u
     )
     yield PageMenuTopic(
         title=_("Customize"),
-        entries=[
-            PageMenuEntry(
-                title=_("Edit dashboards"),
-                icon_name="dashboard",
-                item=make_simple_link("edit_dashboards.py"),
-            )
-        ]
-        if user.may("general.edit_dashboards")
-        else [],
+        entries=(
+            [
+                PageMenuEntry(
+                    title=_("Edit dashboards"),
+                    icon_name="dashboard",
+                    item=make_simple_link("edit_dashboards.py"),
+                )
+            ]
+            if user.may("general.edit_dashboards")
+            else []
+        ),
     )
 
 
@@ -675,9 +677,9 @@ def _extend_display_dropdown(
             entries=[
                 PageMenuEntry(
                     title=_("Filter"),
-                    icon_name={"icon": "filter", "emblem": "warning"}
-                    if is_filter_set
-                    else "filter",
+                    icon_name=(
+                        {"icon": "filter", "emblem": "warning"} if is_filter_set else "filter"
+                    ),
                     item=PageMenuSidePopup(
                         visuals.render_filter_form(
                             info_list,

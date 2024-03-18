@@ -120,20 +120,16 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
-class InterfaceName(str):
-    ...
+class InterfaceName(str): ...
 
 
-class cbQosCMName(str):
-    ...
+class cbQosCMName(str): ...
 
 
-class cbQosConfigIndex(str):
-    ...
+class cbQosConfigIndex(str): ...
 
 
-class cbQosPolicyMapName(str):
-    ...
+class cbQosPolicyMapName(str): ...
 
 
 @dataclass(frozen=True)
@@ -250,16 +246,13 @@ def parse_cisco_qos(
     return section
 
 
-class _cbQosPolicyIndex(str):
-    ...
+class _cbQosPolicyIndex(str): ...
 
 
-class _InterfaceIndex(str):
-    ...
+class _InterfaceIndex(str): ...
 
 
-class _cbQosObjectsIndex(str):
-    ...
+class _cbQosObjectsIndex(str): ...
 
 
 def _oid_end_to_policy_and_object_index(
@@ -465,15 +458,17 @@ def check_cisco_qos_(
         except GetRateError:
             continue
         yield from check_levels(
-            get_average(
-                value_store=value_store,
-                key=f"{metric_name}.avg",
-                time=timestamp,
-                value=rate,
-                backlog_minutes=average,
-            )
-            if average
-            else rate,
+            (
+                get_average(
+                    value_store=value_store,
+                    key=f"{metric_name}.avg",
+                    time=timestamp,
+                    value=rate,
+                    backlog_minutes=average,
+                )
+                if average
+                else rate
+            ),
             levels_upper=thresholds,
             label=f"{label} ({average}-min. average)" if average else label,
             render_func=lambda v: (
@@ -489,9 +484,11 @@ def check_cisco_qos_(
 
     yield Result(
         state=State.OK,
-        summary=f"Policy map name: {qos_data.policy_map_name}"
-        if qos_data.policy_map_name
-        else f"Policy map  config index: {qos_data.policy_map_index}",
+        summary=(
+            f"Policy map name: {qos_data.policy_map_name}"
+            if qos_data.policy_map_name
+            else f"Policy map  config index: {qos_data.policy_map_index}"
+        ),
     )
     yield Result(
         state=State.OK,

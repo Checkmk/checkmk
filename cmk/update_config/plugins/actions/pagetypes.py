@@ -31,13 +31,11 @@ _TOverridable_co = TypeVar("_TOverridable_co", bound=Overridable, covariant=True
 
 class PagetypeUpdater(Protocol, Generic[_TOverridable_co]):
     @property
-    def target_type(self) -> type[_TOverridable_co]:
-        ...
+    def target_type(self) -> type[_TOverridable_co]: ...
 
     def __call__(
         self, page_dicts: Mapping[InstanceId, dict[str, object]]
-    ) -> Mapping[InstanceId, dict[str, object]]:
-        ...
+    ) -> Mapping[InstanceId, dict[str, object]]: ...
 
 
 class PagetypeUpdaterRegistry(Registry[PagetypeUpdater]):

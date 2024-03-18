@@ -57,14 +57,16 @@ def main():
     checksums = [
         (
             f"sha1sum:{path}",
-            cmd_out(
-                f"find $(realpath {path}) -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum",
-                stderr=DEVNULL,
-            )
-            .split(" ", 1)[0]
-            .replace("5cd337198ead0768975610a135e26257153198c7", "--")
-            if os.path.exists(path)
-            else "--",
+            (
+                cmd_out(
+                    f"find $(realpath {path}) -type f -print0 | sort -z | xargs -0 sha1sum | sha1sum",
+                    stderr=DEVNULL,
+                )
+                .split(" ", 1)[0]
+                .replace("5cd337198ead0768975610a135e26257153198c7", "--")
+                if os.path.exists(path)
+                else "--"
+            ),
         )
         for e in sys.argv[1:]
         for op, path in (e.split(":", 1),)

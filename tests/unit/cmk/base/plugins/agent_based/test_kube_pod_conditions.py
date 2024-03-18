@@ -131,19 +131,27 @@ def string_table_element(
     state_ready,
 ):
     return {
-        "initialized": ready(state_initialized)
-        if status_initialized
-        else (not_ready(state_initialized) if status_initialized is False else None),
+        "initialized": (
+            ready(state_initialized)
+            if status_initialized
+            else (not_ready(state_initialized) if status_initialized is False else None)
+        ),
         "hasnetwork": ready(True),
-        "scheduled": ready(state_scheduled)
-        if status_scheduled
-        else (not_ready(state_scheduled) if status_scheduled is False else None),
-        "containersready": ready(state_containersready)
-        if status_containersready
-        else (not_ready(state_containersready) if status_containersready is False else None),
-        "ready": ready(state_ready)
-        if status_ready
-        else (not_ready(state_ready) if status_ready is False else None),
+        "scheduled": (
+            ready(state_scheduled)
+            if status_scheduled
+            else (not_ready(state_scheduled) if status_scheduled is False else None)
+        ),
+        "containersready": (
+            ready(state_containersready)
+            if status_containersready
+            else (not_ready(state_containersready) if status_containersready is False else None)
+        ),
+        "ready": (
+            ready(state_ready)
+            if status_ready
+            else (not_ready(state_ready) if status_ready is False else None)
+        ),
     }
 
 

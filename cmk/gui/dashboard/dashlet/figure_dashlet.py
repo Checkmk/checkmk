@@ -118,8 +118,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
         return []
 
     @abc.abstractmethod
-    def generate_response_data(self) -> FigureResponseData:
-        ...
+    def generate_response_data(self) -> FigureResponseData: ...
 
     @property
     def update_interval(self) -> int:

@@ -479,9 +479,9 @@ def code_samples(  # type: ignore[no-untyped-def]
                     path_params=to_openapi(path_params, "path"),
                     query_params=to_openapi(query_params, "query"),
                     header_params=to_openapi(header_params, "header"),
-                    includes_redirect="redirect" in schema.declared_fields
-                    if schema is not None
-                    else False,
+                    includes_redirect=(
+                        "redirect" in schema.declared_fields if schema is not None else False
+                    ),
                     request_endpoint=endpoint.path,
                     request_method=endpoint.method,
                     request_schema=schema,

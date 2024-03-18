@@ -264,9 +264,11 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                                     ),
                                 ),
                                 PageMenuEntry(
-                                    title=_("Regenerate backup codes")
-                                    if backup_codes_given
-                                    else _("Generate backup codes"),
+                                    title=(
+                                        _("Regenerate backup codes")
+                                        if backup_codes_given
+                                        else _("Generate backup codes")
+                                    ),
                                     icon_name="2fa_backup_codes",
                                     item=backup_codes_item,
                                     is_enabled=enable_backup_codes,

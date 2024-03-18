@@ -501,9 +501,11 @@ def render_context_specs(
     for info_key, spec in context_specs:
         forms.section(
             spec.title(),
-            is_show_more=spec.has_show_more()
-            if isinstance(spec, Transform)
-            else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None),
+            is_show_more=(
+                spec.has_show_more()
+                if isinstance(spec, Transform)
+                else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None)
+            ),
         )
         ident = "context_" + info_key
         spec.render_input(ident, context)
@@ -643,8 +645,10 @@ def single_infos_spec(single_infos: SingleInfos) -> tuple[str, FixedValue]:
         FixedValue(
             value=single_infos,
             title=_("Show information of single"),
-            totext=", ".join(single_infos)
-            if single_infos
-            else _("Not restricted to showing a specific object."),
+            totext=(
+                ", ".join(single_infos)
+                if single_infos
+                else _("Not restricted to showing a specific object.")
+            ),
         ),
     )

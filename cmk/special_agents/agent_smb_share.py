@@ -20,8 +20,7 @@ from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_a
 from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
-class SMBShareAgentError(Exception):
-    ...
+class SMBShareAgentError(Exception): ...
 
 
 class File(NamedTuple):

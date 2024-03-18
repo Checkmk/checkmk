@@ -161,8 +161,7 @@ class Submitter(abc.ABC):
             self._submit((submittee for submittee, pending in formatted_submittees if not pending))
 
     @abc.abstractmethod
-    def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
-        ...
+    def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None: ...
 
 
 class NoOpSubmitter(Submitter):

@@ -35,9 +35,11 @@ def test_cmp_of_missing_values(sort_values: Sequence[float | None]) -> None:
     data = [
         {
             "service_check_command": "check_mk-kube_memory",
-            "service_perf_data": "kube_memory_request=209715200;;;0;"
-            if v is None
-            else f"kube_memory_usage={v};;;0; kube_memory_request=209715200;;;;",
+            "service_perf_data": (
+                "kube_memory_request=209715200;;;0;"
+                if v is None
+                else f"kube_memory_usage={v};;;0; kube_memory_request=209715200;;;;"
+            ),
         }
         for v in sort_values
     ]

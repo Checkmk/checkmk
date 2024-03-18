@@ -11,20 +11,17 @@ from cmk.gui.valuespec import ValueSpec
 class UserAttribute(abc.ABC):
     @classmethod
     @abc.abstractmethod
-    def name(cls) -> str:
-        ...
+    def name(cls) -> str: ...
 
     @classmethod
     def is_custom(cls) -> bool:
         return False
 
     @abc.abstractmethod
-    def topic(self) -> str:
-        ...
+    def topic(self) -> str: ...
 
     @abc.abstractmethod
-    def valuespec(self) -> ValueSpec:
-        ...
+    def valuespec(self) -> ValueSpec: ...
 
     def from_config(self) -> bool:
         return False

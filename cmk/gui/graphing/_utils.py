@@ -560,10 +560,12 @@ graph_info = AutomaticDict("manual_graph_template")
 
 
 def _parse_check_command_from_api(
-    check_command: translations.PassiveCheck
-    | translations.ActiveCheck
-    | translations.HostCheckCommand
-    | translations.NagiosPlugin,
+    check_command: (
+        translations.PassiveCheck
+        | translations.ActiveCheck
+        | translations.HostCheckCommand
+        | translations.NagiosPlugin
+    ),
 ) -> str:
     match check_command:
         case translations.PassiveCheck():
@@ -869,15 +871,17 @@ def lookup_metric_translations_for_check_command(
         return None
     return all_translations.get(
         check_command,
-        all_translations.get(
-            check_command.replace(
-                "check_mk-mgmt_",
-                "check_mk-",
-                1,
+        (
+            all_translations.get(
+                check_command.replace(
+                    "check_mk-mgmt_",
+                    "check_mk-",
+                    1,
+                )
             )
-        )
-        if check_command.startswith("check_mk-mgmt_")
-        else None,
+            if check_command.startswith("check_mk-mgmt_")
+            else None
+        ),
     )
 
 

@@ -12,8 +12,7 @@ from cmk.gui.i18n import _
 from cmk.gui.utils.urls import makeuri_contextless
 
 
-class FailedNotificationsDashletConfig(DashletConfig):
-    ...
+class FailedNotificationsDashletConfig(DashletConfig): ...
 
 
 class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):

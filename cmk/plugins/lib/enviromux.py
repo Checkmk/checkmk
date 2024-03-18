@@ -267,9 +267,9 @@ def check_enviromux_temperature(
     yield from check_temperature(
         reading=sensor.value,
         params=params,
-        dev_levels_lower=(sensor.min_threshold, sensor.min_threshold)
-        if sensor.min_threshold
-        else None,
+        dev_levels_lower=(
+            (sensor.min_threshold, sensor.min_threshold) if sensor.min_threshold else None
+        ),
         dev_levels=(sensor.max_threshold, sensor.max_threshold) if sensor.max_threshold else None,
     )
 

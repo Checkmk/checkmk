@@ -67,8 +67,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         return ModeFolder
 
     @abc.abstractmethod
-    def _init_host(self) -> Host:
-        ...
+    def _init_host(self) -> Host: ...
 
     def __init__(self) -> None:
         self._host = self._init_host()
@@ -321,8 +320,7 @@ class ModeEditHost(ABCHostMode):
 
     @overload
     @classmethod
-    def mode_url(cls, **kwargs: str) -> str:
-        ...
+    def mode_url(cls, **kwargs: str) -> str: ...
 
     @classmethod
     def mode_url(cls, **kwargs: str) -> str:

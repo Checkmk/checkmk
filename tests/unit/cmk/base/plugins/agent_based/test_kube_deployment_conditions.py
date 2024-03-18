@@ -99,26 +99,32 @@ def string_table_element(
     state_replicafailure: int,
 ) -> Mapping[str, Any]:
     return {
-        "progressing": None
-        if status_progressing is None
-        else (
-            condition_true(state_progressing)
-            if status_progressing
-            else condition_false(state_progressing)
+        "progressing": (
+            None
+            if status_progressing is None
+            else (
+                condition_true(state_progressing)
+                if status_progressing
+                else condition_false(state_progressing)
+            )
         ),
-        "available": None
-        if status_available is None
-        else (
-            condition_true(state_available)
-            if status_available
-            else condition_false(state_available)
+        "available": (
+            None
+            if status_available is None
+            else (
+                condition_true(state_available)
+                if status_available
+                else condition_false(state_available)
+            )
         ),
-        "replicafailure": None
-        if status_replicafailure is None
-        else (
-            condition_true(state_replicafailure)
-            if status_replicafailure
-            else condition_false(state_replicafailure)
+        "replicafailure": (
+            None
+            if status_replicafailure is None
+            else (
+                condition_true(state_replicafailure)
+                if status_replicafailure
+                else condition_false(state_replicafailure)
+            )
         ),
     }
 

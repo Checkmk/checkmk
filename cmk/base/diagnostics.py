@@ -222,9 +222,10 @@ class DiagnosticsDump:
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
     def _create_tarfile(self) -> None:
-        with tarfile.open(name=self.tarfile_path, mode="w:gz") as tar, tempfile.TemporaryDirectory(
-            dir=self.dump_folder
-        ) as tmp_dump_folder:
+        with (
+            tarfile.open(name=self.tarfile_path, mode="w:gz") as tar,
+            tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder,
+        ):
             for filepath in self._get_filepaths(Path(tmp_dump_folder)):
                 rel_path = str(filepath).replace(str(tmp_dump_folder), "")
                 tar.add(str(filepath), arcname=rel_path)

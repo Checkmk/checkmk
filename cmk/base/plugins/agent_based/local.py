@@ -374,16 +374,18 @@ def _labelify(word: str) -> str:
         "%s%s"
         % (
             this if not prev.isalnum() or prev.isupper() or nxt.isupper() else this.lower(),
-            " "
-            if (
-                prev.isupper()
-                and this.isupper()
-                and nxt.islower()
-                or this.islower()
-                and nxt.isupper()
-                or this.isdigit() is not nxt.isdigit()
-            )
-            else "",
+            (
+                " "
+                if (
+                    prev.isupper()
+                    and this.isupper()
+                    and nxt.islower()
+                    or this.islower()
+                    and nxt.isupper()
+                    or this.isdigit() is not nxt.isdigit()
+                )
+                else ""
+            ),
         )
         for prev, this, nxt in zip(" " + word, word, word[1:] + " ")
     )

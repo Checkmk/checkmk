@@ -38,9 +38,9 @@ def parse_graylog_events(string_table: StringTable) -> EventsInfoSection:
     return EventsInfo(
         num_of_events=int(events_data.get("num_of_events")),
         has_since_argument=events_data.get("has_since_argument"),
-        events_since=int(events_data.get("events_since"))
-        if events_data.get("events_since")
-        else None,
+        events_since=(
+            int(events_data.get("events_since")) if events_data.get("events_since") else None
+        ),
         num_of_events_in_range=int(events_data.get("num_of_events_in_range")),
     )
 

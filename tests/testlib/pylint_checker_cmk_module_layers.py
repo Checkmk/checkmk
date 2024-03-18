@@ -681,13 +681,15 @@ class CMKModuleLayerChecker(BaseChecker):
         for modname in imported:
             self._check_import(
                 node,
-                ModuleName(modname)
-                if node.level is None
-                else get_absolute_importee(
-                    root_name=node.root().name,
-                    modname=modname,
-                    level=node.level,
-                    is_package=_is_package(node),
+                (
+                    ModuleName(modname)
+                    if node.level is None
+                    else get_absolute_importee(
+                        root_name=node.root().name,
+                        modname=modname,
+                        level=node.level,
+                        is_package=_is_package(node),
+                    )
                 ),
             )
 

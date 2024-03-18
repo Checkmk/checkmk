@@ -42,9 +42,9 @@ def parse_liebert_temp_fluid(string_table: StringTable) -> Section:
     return Section(
         readings=pre_parsed,
         upper_device_levels=upper_levels,
-        lower_device_levels=(lower_warn, lower_crit)
-        if lower_warn is not None and lower_crit is not None
-        else None,
+        lower_device_levels=(
+            (lower_warn, lower_crit) if lower_warn is not None and lower_crit is not None else None
+        ),
     )
 
 

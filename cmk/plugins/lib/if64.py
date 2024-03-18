@@ -308,9 +308,11 @@ def _port_mapping(name: str, port_map: Mapping[str, str]) -> str | None:
     return (
         f"maps to {port_map.get(name, '')}"
         if name in port_map
-        else f"belongs to {' and '.join(k for k, v in port_map.items() if v == name)}"
-        if name in port_map.values()
-        else None
+        else (
+            f"belongs to {' and '.join(k for k, v in port_map.items() if v == name)}"
+            if name in port_map.values()
+            else None
+        )
     )
 
 

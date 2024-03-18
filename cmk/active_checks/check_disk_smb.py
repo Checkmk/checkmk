@@ -42,8 +42,7 @@ class SMBShareDiskUsageProto(Protocol):
         port: int | None = None,
         ip_address: str | None = None,
         configfile: str | None = None,
-    ) -> ErrorResult | SMBShare:
-        ...
+    ) -> ErrorResult | SMBShare: ...
 
 
 def _output_check_result(

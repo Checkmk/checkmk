@@ -393,13 +393,11 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
 
     @classmethod
     @abc.abstractmethod
-    def type_name(cls) -> str:
-        ...
+    def type_name(cls) -> str: ...
 
     @classmethod
     @abc.abstractmethod
-    def type_icon(cls) -> Icon:
-        ...
+    def type_icon(cls) -> Icon: ...
 
 
 # .
@@ -1231,9 +1229,11 @@ class ListPage(Page, Generic[_T]):
                 # Owner
                 table.cell(
                     _("Owner"),
-                    HTMLWriter.render_i(_("built-in"))
-                    if instance.is_builtin()
-                    else instance.owner(),
+                    (
+                        HTMLWriter.render_i(_("built-in"))
+                        if instance.is_builtin()
+                        else instance.owner()
+                    ),
                 )
                 table.cell(_("Public"), _("yes") if instance.is_public() else _("no"))
                 table.cell(_("Hidden"), _("yes") if instance.is_hidden() else _("no"))
@@ -1703,8 +1703,7 @@ _T_OverridableContainerSpec = TypeVar("_T_OverridableContainerSpec", bound=Overr
 class OverridableContainer(Overridable[_T_OverridableContainerSpec]):
     @classmethod
     @abc.abstractmethod
-    def may_contain(cls, element_type_name: str) -> bool:
-        ...
+    def may_contain(cls, element_type_name: str) -> bool: ...
 
     @classmethod
     def page_menu_add_to_topics(cls, added_type: str) -> list[PageMenuTopic]:
@@ -1925,8 +1924,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
 
     @classmethod
     @abc.abstractmethod
-    def page_show(cls) -> None:
-        ...
+    def page_show(cls) -> None: ...
 
     @classmethod
     def requested_page(cls, instances: OverridableInstances[Self]) -> Self:

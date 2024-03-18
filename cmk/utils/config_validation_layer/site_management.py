@@ -18,8 +18,7 @@ class SocketVerify(BaseModel):
     verify: bool
 
 
-class EmptyDict(BaseModel):
-    ...
+class EmptyDict(BaseModel): ...
 
 
 PLAIN_TEXT = tuple[Literal["plain_text"], EmptyDict]

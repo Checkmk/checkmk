@@ -295,9 +295,9 @@ def _get_availability_entry(
             makeuri(request, [("mode", "availability")], delvars=["show_checkboxes", "selection"])
         ),
         is_enabled=not view.missing_single_infos,
-        disabled_tooltip=_("Missing required context information")
-        if view.missing_single_infos
-        else None,
+        disabled_tooltip=(
+            _("Missing required context information") if view.missing_single_infos else None
+        ),
     )
 
 

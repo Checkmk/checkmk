@@ -308,9 +308,11 @@ def test_load_filtered_and_merged_tree(
         cmk.gui.inventory,
         "_load_tree_from_file",
         (
-            lambda *args, **kw: ImmutableTree.deserialize({"loaded": "tree"})
-            if kw["tree_type"] == "status_data"
-            else ImmutableTree()
+            lambda *args, **kw: (
+                ImmutableTree.deserialize({"loaded": "tree"})
+                if kw["tree_type"] == "status_data"
+                else ImmutableTree()
+            )
         ),
     )
     row.update({"host_name": hostname})

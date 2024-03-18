@@ -15,7 +15,9 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 class PowerInformation(NamedTuple):
     pse_power: str | None  # there are cases where this is not present in the walk
     input_line_voltage: str
-    output_watts: str | None  # there are cases where this is not present in the walk, because only newer devices have it
+    output_watts: (
+        str | None
+    )  # there are cases where this is not present in the walk, because only newer devices have it
 
 
 @dataclass

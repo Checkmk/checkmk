@@ -267,10 +267,13 @@ register.check_plugin(
 
 
 class SmokeParams(TypedDict):
-    smoke_handling: tuple[Literal["binary"], tuple[int, int]] | tuple[
-        Literal["levels"],
-        None | tuple[float, float],
-    ]
+    smoke_handling: (
+        tuple[Literal["binary"], tuple[int, int]]
+        | tuple[
+            Literal["levels"],
+            None | tuple[float, float],
+        ]
+    )
 
 
 def check_etherbox_smoke(item: str, params: SmokeParams, section: Section) -> CheckResult:

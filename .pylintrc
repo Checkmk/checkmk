@@ -94,6 +94,10 @@ disable=
     # Black doesn't split long strings, we'll have to this by ourselves, see
     # https://github.com/psf/black/issues/1331
     line-too-long,
+    # Since Black 24 black and pylint started to disagree on `def foo(): ...`
+    # https://github.com/psf/black/issues/4173
+    # black is our formatter so the black way is the proper way...
+    multiple-statements,
     #---------------------------------------------------------------------------
     # We are light years away from enabling this...
     missing-docstring,

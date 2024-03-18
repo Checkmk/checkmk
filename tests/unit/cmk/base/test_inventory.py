@@ -1246,9 +1246,11 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
         return [
             (
                 source_info,
-                result.Error(res.error)
-                if res.is_error()
-                else res.map(lambda ok: HostSections(parse(ok))),
+                (
+                    result.Error(res.error)
+                    if res.is_error()
+                    else res.map(lambda ok: HostSections(parse(ok)))
+                ),
             )
             for source_info, res in fetched
         ]

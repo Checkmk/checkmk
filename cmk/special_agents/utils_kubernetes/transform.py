@@ -119,18 +119,20 @@ def pod_containers(
     if container_statuses is None:
         return {}
     for status in container_statuses:
-        state: (
-            api.ContainerTerminatedState | api.ContainerRunningState | api.ContainerWaitingState
-        )
+        state: api.ContainerTerminatedState | api.ContainerRunningState | api.ContainerWaitingState
         if (details := status.state.terminated) is not None:
             state = api.ContainerTerminatedState(
                 exit_code=details.exit_code,
-                start_time=int(convert_to_timestamp(details.started_at))
-                if details.started_at is not None
-                else None,
-                end_time=int(convert_to_timestamp(details.finished_at))
-                if details.finished_at is not None
-                else None,
+                start_time=(
+                    int(convert_to_timestamp(details.started_at))
+                    if details.started_at is not None
+                    else None
+                ),
+                end_time=(
+                    int(convert_to_timestamp(details.finished_at))
+                    if details.finished_at is not None
+                    else None
+                ),
                 reason=details.reason,
                 detail=details.message,
             )
@@ -175,9 +177,11 @@ def pod_conditions(
             "status": condition.status,
             "reason": condition.reason,
             "detail": condition.message,
-            "last_transition_time": int(convert_to_timestamp(condition.last_transition_time))
-            if condition.last_transition_time
-            else None,
+            "last_transition_time": (
+                int(convert_to_timestamp(condition.last_transition_time))
+                if condition.last_transition_time
+                else None
+            ),
         }
         if condition.type in condition_types:
             pod_condition["type"] = condition_types[condition.type]
@@ -299,12 +303,16 @@ def parse_cron_job_spec(spec: client.V1CronJobSpec) -> api.CronJobSpec:
 def parse_cron_job_status(status: client.V1CronJobStatus) -> api.CronJobStatus:
     return api.CronJobStatus(
         active=[ref.uid for ref in status.active] if status.active is not None else None,
-        last_successful_time=convert_to_timestamp(status.last_successful_time)
-        if status.last_successful_time is not None
-        else None,
-        last_schedule_time=convert_to_timestamp(status.last_schedule_time)
-        if status.last_schedule_time is not None
-        else None,
+        last_successful_time=(
+            convert_to_timestamp(status.last_successful_time)
+            if status.last_successful_time is not None
+            else None
+        ),
+        last_schedule_time=(
+            convert_to_timestamp(status.last_schedule_time)
+            if status.last_schedule_time is not None
+            else None
+        ),
     )
 
 
@@ -327,9 +335,9 @@ def parse_job_status(status: client.V1JobStatus) -> api.JobStatus:
     return api.JobStatus(
         active=status.active,
         start_time=convert_to_timestamp(status.start_time) if status.start_time else None,
-        completion_time=convert_to_timestamp(status.completion_time)
-        if status.completion_time
-        else None,
+        completion_time=(
+            convert_to_timestamp(status.completion_time) if status.completion_time else None
+        ),
         failed=status.failed,
         succeeded=status.succeeded,
         conditions=_parse_and_remove_duplicate_conditions(status.conditions),
@@ -438,12 +446,14 @@ def parse_resource_quota_spec(
         raise NotImplementedError("At least one of the given scopes is not supported")
 
     return api.ResourceQuotaSpec(
-        hard=api.HardRequirement(
-            memory=parse_resource_requirement("memory", spec.hard),
-            cpu=parse_resource_requirement("cpu", spec.hard),
-        )
-        if spec.hard is not None
-        else None,
+        hard=(
+            api.HardRequirement(
+                memory=parse_resource_requirement("memory", spec.hard),
+                cpu=parse_resource_requirement("cpu", spec.hard),
+            )
+            if spec.hard is not None
+            else None
+        ),
         scope_selector=scope_selector,
         scopes=scopes,
     )

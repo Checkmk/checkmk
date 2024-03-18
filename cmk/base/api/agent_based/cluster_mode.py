@@ -30,8 +30,7 @@ ClusterMode = Literal["native", "failover", "worst", "best"]
 
 
 class Selector(Protocol):
-    def __call__(self, *a: State) -> State:
-        ...
+    def __call__(self, *a: State) -> State: ...
 
 
 def _unfit_for_clustering(**_kw: object) -> CheckResult:

@@ -454,9 +454,11 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
                             request,
                             transactions,
                             [
-                                ("_show_backlog", "no")
-                                if context_hidden
-                                else ("_hidecontext", "yes"),
+                                (
+                                    ("_show_backlog", "no")
+                                    if context_hidden
+                                    else ("_hidecontext", "yes")
+                                ),
                             ],
                         )
                     ),

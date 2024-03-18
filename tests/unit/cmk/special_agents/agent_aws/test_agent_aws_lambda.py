@@ -89,9 +89,7 @@ def create_config(names: Sequence[str], tags: OverallTags) -> AWSConfig:
     return config
 
 
-def get_lambda_sections(
-    names: Sequence[str], tags: OverallTags
-) -> tuple[
+def get_lambda_sections(names: Sequence[str], tags: OverallTags) -> tuple[
     LambdaRegionLimits,
     LambdaSummary,
     LambdaProvisionedConcurrency,

@@ -532,9 +532,12 @@ def _execute_discovery(
         # doing it the other way around breaks one integration test.
         else config.lookup_ip_address(config_cache, host_name)
     )
-    with plugin_contexts.current_host(host_name), set_value_store_manager(
-        ValueStoreManager(host_name), store_changes=False
-    ) as value_store_manager:
+    with (
+        plugin_contexts.current_host(host_name),
+        set_value_store_manager(
+            ValueStoreManager(host_name), store_changes=False
+        ) as value_store_manager,
+    ):
         is_cluster = host_name in hosts_config.clusters
         check_plugins = CheckPluginMapper(
             config_cache,
@@ -900,9 +903,9 @@ class AutomationRenameHosts(Automation):
         # including the current history files will be handled later when the core
         # is stopped.
         for oldname, newname in renamings:
-            self._finished_history_files[
-                (oldname, newname)
-            ] = self._rename_host_in_core_history_archive(oldname, newname)
+            self._finished_history_files[(oldname, newname)] = (
+                self._rename_host_in_core_history_archive(oldname, newname)
+            )
             if self._finished_history_files[(oldname, newname)]:
                 actions.append("history")
 

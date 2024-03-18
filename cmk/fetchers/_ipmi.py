@@ -55,9 +55,11 @@ class IPMISensor:
             name=ensure_binary(reading.name),  # pylint: disable= six-ensure-str-bin-call
             type=ensure_binary(reading.type),  # pylint: disable= six-ensure-str-bin-call
             value=(b"%0.2f" % reading.value) if reading.value else b"N/A",
-            unit=ensure_binary(reading.units)  # pylint: disable= six-ensure-str-bin-call
-            if reading.units != b"\xc2\xb0C"
-            else b"C",
+            unit=(
+                ensure_binary(reading.units)  # pylint: disable= six-ensure-str-bin-call
+                if reading.units != b"\xc2\xb0C"
+                else b"C"
+            ),
             health=cls._parse_health_txt(reading),
         )
 

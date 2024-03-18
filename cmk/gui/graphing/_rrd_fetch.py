@@ -149,7 +149,10 @@ MetricProperties = tuple[str, GraphConsoldiationFunction | None, float]
 
 def _group_needed_rrd_data_by_service(
     rrd_data_keys: Iterable[RRDDataKey],
-) -> dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties],]:
+) -> dict[
+    tuple[SiteId, HostName, ServiceName],
+    set[MetricProperties],
+]:
     by_service: dict[
         tuple[SiteId, HostName, ServiceName],
         set[MetricProperties],

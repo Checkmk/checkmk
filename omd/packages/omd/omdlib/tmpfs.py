@@ -232,9 +232,10 @@ def remove_from_fstab(site: SiteContext) -> None:
     mountpoint = site.tmp_dir
     sys.stdout.write(f"Removing {mountpoint} from {path_fstab}...")
 
-    with (path_new_fstab := Path(str(path_fstab) + ".new")).open(
-        mode="w"
-    ) as newtab, path_fstab.open() as current_fstab:
+    with (
+        (path_new_fstab := Path(str(path_fstab) + ".new")).open(mode="w") as newtab,
+        path_fstab.open() as current_fstab,
+    ):
         for line in current_fstab:
             if "uid=%s," % site.name in line and mountpoint in line:
                 continue

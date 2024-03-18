@@ -137,16 +137,13 @@ class LegacyVarsMixin:
         return super().has_var(varname)  # type: ignore[misc]
 
     @overload
-    def var(self, name: str) -> str | None:
-        ...
+    def var(self, name: str) -> str | None: ...
 
     @overload
-    def var(self, name: str, default: str) -> str:
-        ...
+    def var(self, name: str, default: str) -> str: ...
 
     @overload
-    def var(self, name: str, default: str | None) -> str | None:
-        ...
+    def var(self, name: str, default: str | None) -> str | None: ...
 
     def var(self, name: str, default: str | None = None) -> str | None:
         legacy_var = self.legacy_vars.get(name, None)
@@ -198,21 +195,20 @@ class LegacyDeprecatedMixin:
         for name, values in self.values.lists():  # type: ignore[attr-defined]
             if name.startswith(prefix):
                 # Preserve previous behaviour
-                yield name, ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                    values[-1]
-                ) if values else None
+                yield name, (
+                    ensure_str(values[-1])  # pylint: disable= six-ensure-str-bin-call
+                    if values
+                    else None
+                )
 
     @overload
-    def var(self, name: str) -> str | None:
-        ...
+    def var(self, name: str) -> str | None: ...
 
     @overload
-    def var(self, name: str, default: str) -> str:
-        ...
+    def var(self, name: str, default: str) -> str: ...
 
     @overload
-    def var(self, name: str, default: str | None) -> str | None:
-        ...
+    def var(self, name: str, default: str | None) -> str | None: ...
 
     def var(self, name: str, default: str | None = None) -> str | None:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
@@ -394,8 +390,7 @@ class Request(
         varname: str,
         *,
         empty_is_none: bool = False,
-    ) -> Validation_T | None:
-        ...
+    ) -> Validation_T | None: ...
 
     @overload
     def get_validated_type_input(
@@ -405,8 +400,7 @@ class Request(
         deflt: None,
         *,
         empty_is_none: bool = False,
-    ) -> Validation_T | None:
-        ...
+    ) -> Validation_T | None: ...
 
     @overload
     def get_validated_type_input(
@@ -416,8 +410,7 @@ class Request(
         deflt: Validation_T,
         *,
         empty_is_none: bool = False,
-    ) -> Validation_T:
-        ...
+    ) -> Validation_T: ...
 
     def get_validated_type_input(
         self,
@@ -651,9 +644,9 @@ class Response(flask.Response):
         Content-Security-Policy will block it. So you can add it here, Apache
         will then take this value and complete the CSP"""
 
-        self.headers[
-            "Content-Security-Policy"
-        ] = f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
+        self.headers["Content-Security-Policy"] = (
+            f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
+        )
 
     def set_content_disposition(self, header_type: ContentDispositionType, filename: str) -> None:
         """Define the Content-Disposition header here, this HTTP header controls how

@@ -323,9 +323,11 @@ def _pod_with_scopes_factory(
     terminating: bool = False,
 ) -> api.Pod:
     return APIPodFactory.build(
-        metadata=MetaDataFactory.build(name=name, factory_use_construct=True)
-        if name
-        else MetaDataFactory.build(factory_use_construct=True),
+        metadata=(
+            MetaDataFactory.build(name=name, factory_use_construct=True)
+            if name
+            else MetaDataFactory.build(factory_use_construct=True)
+        ),
         status=PodStatusFactory.build(qos_class="besteffort" if best_effort else "guaranteed"),
         spec=PodSpecFactory.build(
             priority_class_name=priority_class,

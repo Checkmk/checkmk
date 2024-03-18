@@ -71,9 +71,11 @@ class HostLabel(_Label):
         return cls(
             name=str(raw["name"]),
             value=str(raw["value"]),
-            plugin_name=None
-            if (raw_plugin_name := raw.get("plugin_name")) is None
-            else SectionName(raw_plugin_name),
+            plugin_name=(
+                None
+                if (raw_plugin_name := raw.get("plugin_name")) is None
+                else SectionName(raw_plugin_name)
+            ),
         )
 
     # rather use (de)serialize

@@ -115,23 +115,25 @@ def _io_bytes_results(item, params, fcp_if):
         yield check_levels(
             value,
             what,
-            levels.config
-            if isinstance(
-                levels,
-                PredictiveLevels,
-            )
-            else (
-                levels.upper
-                or (
-                    None,
-                    None,
+            (
+                levels.config
+                if isinstance(
+                    levels,
+                    PredictiveLevels,
                 )
-            )
-            + (
-                levels.lower
-                or (
-                    None,
-                    None,
+                else (
+                    levels.upper
+                    or (
+                        None,
+                        None,
+                    )
+                )
+                + (
+                    levels.lower
+                    or (
+                        None,
+                        None,
+                    )
                 )
             ),
             human_readable_func=render.iobandwidth,

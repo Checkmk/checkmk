@@ -104,8 +104,7 @@ class Automation(abc.ABC):
     needs_config = False
 
     @abc.abstractmethod
-    def execute(self, args: list[str]) -> ABCAutomationResult:
-        ...
+    def execute(self, args: list[str]) -> ABCAutomationResult: ...
 
 
 #

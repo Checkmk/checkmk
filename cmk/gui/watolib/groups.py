@@ -133,12 +133,10 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
         )
 
 
-class UnknownGroupException(Exception):
-    ...
+class UnknownGroupException(Exception): ...
 
 
-class GroupInUseException(Exception):
-    ...
+class GroupInUseException(Exception): ...
 
 
 def delete_group(name: GroupName, group_type: GroupType) -> None:
@@ -432,10 +430,12 @@ class HostAttributeContactGroups(ABCHostAttribute):
         html.checkbox(
             varprefix + self.name() + "_use_for_services",
             value.get("use_for_services", False),
-            label=_("Always add host contact groups also to its services")
-            if is_host
-            else _(
-                "Always add these groups as <b>contacts</b> to all services <b>in all subfolders of this folder</b>"
+            label=(
+                _("Always add host contact groups also to its services")
+                if is_host
+                else _(
+                    "Always add these groups as <b>contacts</b> to all services <b>in all subfolders of this folder</b>"
+                )
             ),
         )
 

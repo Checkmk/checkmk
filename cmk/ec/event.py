@@ -370,9 +370,9 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
         # TODO: What about the other non-string attributes of an event?
         if (service_level := event.get("sl")) is not None:
             event["sl"] = int(service_level)
-        event[
-            "text"
-        ] = f"{(remaining_structured_data + ' ') if remaining_structured_data else ''}{message}"
+        event["text"] = (
+            f"{(remaining_structured_data + ' ') if remaining_structured_data else ''}{message}"
+        )
     else:
         event["text"] = message
     return event

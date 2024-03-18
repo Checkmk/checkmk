@@ -144,9 +144,11 @@ class DiscoveryResult(NamedTuple):
                     self.check_table_created,
                     [
                         tuple(
-                            v
-                            if k != "check_source"
-                            else v.replace("unchanged", "old").replace("changed", "old")
+                            (
+                                v
+                                if k != "check_source"
+                                else v.replace("unchanged", "old").replace("changed", "old")
+                            )
                             for k, v in dataclasses.asdict(cpe).items()
                             if k
                             not in [
@@ -280,14 +282,16 @@ class Discovery:
                     value = (
                         entry.description,
                         entry.old_discovered_parameters,
-                        entry.new_labels
-                        if self._action
-                        in [
-                            DiscoveryAction.FIX_ALL,
-                            DiscoveryAction.UPDATE_SERVICE_LABELS,
-                            DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS,
-                        ]
-                        else entry.old_labels,
+                        (
+                            entry.new_labels
+                            if self._action
+                            in [
+                                DiscoveryAction.FIX_ALL,
+                                DiscoveryAction.UPDATE_SERVICE_LABELS,
+                                DiscoveryAction.SINGLE_UPDATE_SERVICE_LABELS,
+                            ]
+                            else entry.old_labels
+                        ),
                         entry.found_on_nodes,
                     )
                 elif table_target == DiscoveryState.IGNORED:
@@ -630,7 +634,12 @@ def _apply_state_change(
                 remove_disabled_rule,
             )
 
-        case DiscoveryState.CLUSTERED_NEW | DiscoveryState.CLUSTERED_OLD | DiscoveryState.CLUSTERED_VANISHED | DiscoveryState.CLUSTERED_IGNORED:
+        case (
+            DiscoveryState.CLUSTERED_NEW
+            | DiscoveryState.CLUSTERED_OLD
+            | DiscoveryState.CLUSTERED_VANISHED
+            | DiscoveryState.CLUSTERED_IGNORED
+        ):
             _case_clustered(
                 key,
                 value,

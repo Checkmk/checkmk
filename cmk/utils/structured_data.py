@@ -155,8 +155,9 @@ class RetentionInterval:
     @classmethod
     def deserialize(
         cls,
-        raw_retention_interval: tuple[int, int, int]
-        | tuple[int, int, int, Literal["previous", "current"]],
+        raw_retention_interval: (
+            tuple[int, int, int] | tuple[int, int, int, Literal["previous", "current"]]
+        ),
     ) -> RetentionInterval:
         return (
             cls(*raw_retention_interval)

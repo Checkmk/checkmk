@@ -590,26 +590,30 @@ def get_tag_one_of_schema(
             "is": get_schema_from_precalculated_schemas(
                 TagOneOfBaseSchema,
                 {
-                    "value": fields.String(
-                        enum=tag_ids,
-                        description=f"Include selected tag.<br>{help_text}",
-                        required=True,
+                    "value": (
+                        fields.String(
+                            enum=tag_ids,
+                            description=f"Include selected tag.<br>{help_text}",
+                            required=True,
+                        )
+                        if isinstance(tag_group_or_aux_tag, TagGroup)
+                        else fields.Constant("set")
                     )
-                    if isinstance(tag_group_or_aux_tag, TagGroup)
-                    else fields.Constant("set")
                 },
                 f"ValuespecSchema_{name}_tag_is_{tag_group_or_aux_tag.id}",
             ),
             "isnot": get_schema_from_precalculated_schemas(
                 TagOneOfBaseSchema,
                 {
-                    "value": fields.String(
-                        enum=tag_ids,
-                        description=f"Exclude selected tag. <br>{help_text}",
-                        required=True,
+                    "value": (
+                        fields.String(
+                            enum=tag_ids,
+                            description=f"Exclude selected tag. <br>{help_text}",
+                            required=True,
+                        )
+                        if isinstance(tag_group_or_aux_tag, TagGroup)
+                        else fields.Constant("set")
                     )
-                    if isinstance(tag_group_or_aux_tag, TagGroup)
-                    else fields.Constant("set")
                 },
                 f"ValuespecSchema_{name}_tag_isnot_{tag_group_or_aux_tag.id}",
             ),

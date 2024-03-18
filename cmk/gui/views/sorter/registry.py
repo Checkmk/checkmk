@@ -80,9 +80,11 @@ def declare_1to1_sorter(
         {
             "title": painter.title,
             "columns": painter.columns,
-            "cmp": (lambda r1, r2: func(painter.columns[col_num], r2, r1))
-            if reverse
-            else lambda r1, r2: func(painter.columns[col_num], r1, r2),
+            "cmp": (
+                (lambda r1, r2: func(painter.columns[col_num], r2, r1))
+                if reverse
+                else lambda r1, r2: func(painter.columns[col_num], r1, r2)
+            ),
         },
     )
     return painter_name

@@ -130,16 +130,18 @@ class Command(abc.ABC):
         return HTML(
             _("Affected %s: %s")
             % (
-                ungettext(
-                    "host",
-                    "hosts",
-                    len_action_rows,
-                )
-                if cmdtag == "HOST"
-                else ungettext(
-                    "service",
-                    "services",
-                    len_action_rows,
+                (
+                    ungettext(
+                        "host",
+                        "hosts",
+                        len_action_rows,
+                    )
+                    if cmdtag == "HOST"
+                    else ungettext(
+                        "service",
+                        "services",
+                        len_action_rows,
+                    )
                 ),
                 len_action_rows,
             )

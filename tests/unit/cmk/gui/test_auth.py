@@ -33,7 +33,7 @@ def test_check_internal_token(
         request.environ["HTTP_AUTHORIZATION"] = "InternalToken Zm9v"
         assert _check_internal_token() is None
 
-        request.environ[
-            "HTTP_AUTHORIZATION"
-        ] = "InternalToken dW5pdHRlc3RzZWNyZXQ="  # unittestsecret
+        request.environ["HTTP_AUTHORIZATION"] = (
+            "InternalToken dW5pdHRlc3RzZWNyZXQ="  # unittestsecret
+        )
         assert isinstance(_check_internal_token(), SiteInternalPseudoUser)

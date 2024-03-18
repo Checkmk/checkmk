@@ -261,8 +261,7 @@ class MessageForwarderProto(Protocol):
         self,
         method: str | tuple,
         messages: Sequence[ec.SyslogMessage],
-    ) -> LogwatchForwardedResult:
-        ...
+    ) -> LogwatchForwardedResult: ...
 
 
 UsedLogFiles = MutableMapping[str, list[tuple[str | None, str]]]

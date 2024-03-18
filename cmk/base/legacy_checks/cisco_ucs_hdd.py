@@ -59,9 +59,13 @@ def check_cisco_ucs_hdd(item: str, _no_params, section: Section):
         return
 
     yield (
-        0,
-        f"Status: {hdd.operability} (hot spare)",
-    ) if hdd.drive_status in _HOT_SPARE_VALUES else (hdd.state, f"Status: {hdd.operability}")
+        (
+            0,
+            f"Status: {hdd.operability} (hot spare)",
+        )
+        if hdd.drive_status in _HOT_SPARE_VALUES
+        else (hdd.state, f"Status: {hdd.operability}")
+    )
     yield 0, f"Size: {render.disksize(hdd.size)}"
     yield 0, f"Model: {hdd.model}"
     yield 0, f"Vendor: {hdd.vendor}"

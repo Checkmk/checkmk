@@ -1680,9 +1680,9 @@ def make_cre_snapshot_manager(
 
 
 class SnapshotManager:
-    factory: Callable[
-        [str, dict[SiteId, SnapshotSettings], version.Edition], SnapshotManager
-    ] = make_cre_snapshot_manager
+    factory: Callable[[str, dict[SiteId, SnapshotSettings], version.Edition], SnapshotManager] = (
+        make_cre_snapshot_manager
+    )
 
     def __init__(
         self,

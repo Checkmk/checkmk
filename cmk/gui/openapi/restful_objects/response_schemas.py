@@ -297,8 +297,7 @@ class DomainObjectBase(BaseSchema):
     )
 
 
-class DomainObject(DomainObjectBase, Linkable):
-    ...
+class DomainObject(DomainObjectBase, Linkable): ...
 
 
 class MoveFolder(BaseSchema):
@@ -365,8 +364,7 @@ class DomainObjectBaseCollection(BaseSchema):
     extensions = fields.Dict(description="Additional attributes alongside the collection.")
 
 
-class DomainObjectCollection(DomainObjectBaseCollection, Linkable):
-    ...
+class DomainObjectCollection(DomainObjectBaseCollection, Linkable): ...
 
 
 class VersionCapabilities(BaseSchema):

@@ -1014,9 +1014,12 @@ def get_availability_rawdata(
     query += filterheaders
     logrow_limit = avoptions["logrow_limit"]
 
-    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(
-        logrow_limit or None
-    ), CPUTracker() as fetch_rows_tracker:
+    with (
+        sites.only_sites(only_sites),
+        sites.prepend_site(),
+        sites.set_limit(logrow_limit or None),
+        CPUTracker() as fetch_rows_tracker,
+    ):
         data = sites.live().query(query)
 
     columns = ["site"] + columns
@@ -2211,7 +2214,10 @@ def layout_timeline_choords(time_range: AVTimeRange) -> Iterator[tuple[float, st
 
 def _dispatch_scale(
     hours: float,
-) -> tuple[Callable[[time.struct_time], time.struct_time], Callable[[time.struct_time], str],]:
+) -> tuple[
+    Callable[[time.struct_time], time.struct_time],
+    Callable[[time.struct_time], str],
+]:
     """decide automatically whether to use hours, days, weeks or months
 
     Days and weeks needs to take local time into account. Months are irregular.
@@ -2462,9 +2468,12 @@ def get_bi_leaf_history(
     if len(hosts) != 1:
         query += "Or: %d\n" % len(hosts)
 
-    with sites.output_format(LivestatusOutputFormat.JSON), sites.only_sites(
-        list(only_sites)
-    ), sites.prepend_site(), sites.set_limit(livestatus_limit):
+    with (
+        sites.output_format(LivestatusOutputFormat.JSON),
+        sites.only_sites(list(only_sites)),
+        sites.prepend_site(),
+        sites.set_limit(livestatus_limit),
+    ):
         data = sites.live().query(query)
 
     if not data:

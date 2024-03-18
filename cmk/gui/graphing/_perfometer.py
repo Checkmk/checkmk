@@ -235,10 +235,12 @@ class MetricometerRendererRegistry(plugin_registry.Registry[type[MetricometerRen
 
     def get_renderer(
         self,
-        perfometer: perfometers.Perfometer
-        | perfometers.Bidirectional
-        | perfometers.Stacked
-        | PerfometerSpec,
+        perfometer: (
+            perfometers.Perfometer
+            | perfometers.Bidirectional
+            | perfometers.Stacked
+            | PerfometerSpec
+        ),
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> MetricometerRenderer:
         if isinstance(perfometer, perfometers.Perfometer):

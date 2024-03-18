@@ -19,12 +19,14 @@ def mocked_livestatus() -> Generator[MockLiveStatusConnection, None, None]:
     # the mocker.
     live = MockLiveStatusConnection()
     live.set_sites(["dev", "local"])
-    with mock.patch(
-        "cmk.gui.sites._get_enabled_and_disabled_sites", new=live.enabled_and_disabled_sites
-    ), mock.patch(
-        "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
-    ), mock.patch(
-        "livestatus.SingleSiteConnection._create_socket", new=live.create_socket
+    with (
+        mock.patch(
+            "cmk.gui.sites._get_enabled_and_disabled_sites", new=live.enabled_and_disabled_sites
+        ),
+        mock.patch(
+            "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
+        ),
+        mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket),
     ):
         yield live
 

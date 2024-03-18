@@ -898,9 +898,11 @@ def _cluster_service_entry(
             assert existing_autocheck_entry.new is not None
             assert entry.previous is not None
             yield DiscoveredService.id(entry), ServicesTableEntry(
-                transition="changed"
-                if _changed_service(existing_autocheck_entry.new, entry.previous)
-                else "unchanged",
+                transition=(
+                    "changed"
+                    if _changed_service(existing_autocheck_entry.new, entry.previous)
+                    else "unchanged"
+                ),
                 autocheck=DiscoveredItem[AutocheckEntry](
                     new=existing_autocheck_entry.new,
                     previous=entry.previous,
@@ -916,9 +918,11 @@ def _cluster_service_entry(
             assert current_recorded_entry.autocheck.previous is not None
             assert entry.new is not None
             yield DiscoveredService.id(entry), ServicesTableEntry(
-                transition="changed"
-                if _changed_service(current_recorded_entry.autocheck.previous, entry.new)
-                else "unchanged",
+                transition=(
+                    "changed"
+                    if _changed_service(current_recorded_entry.autocheck.previous, entry.new)
+                    else "unchanged"
+                ),
                 autocheck=DiscoveredItem[AutocheckEntry](
                     new=entry.new,
                     previous=current_recorded_entry.autocheck.previous,

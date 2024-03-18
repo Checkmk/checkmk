@@ -98,9 +98,11 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                 ),
                 (
                     value,
-                    _("Deprecated choice, please re-select")
-                    if value == self._MARKER_DEPRECATED_CHOICE
-                    else metric_title(value),
+                    (
+                        _("Deprecated choice, please re-select")
+                        if value == self._MARKER_DEPRECATED_CHOICE
+                        else metric_title(value)
+                    ),
                 ),
             )
         ]
@@ -218,8 +220,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 """
 
     @abc.abstractmethod
-    def graph_specification(self, context: VisualContext) -> TGraphSpec:
-        ...
+    def graph_specification(self, context: VisualContext) -> TGraphSpec: ...
 
     def __init__(
         self,

@@ -57,9 +57,11 @@ def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> D
         # real conversion in one of the following typing steps
         **raw_dashboard,  # type: ignore[typeddict-item]
         "dashlets": [
-            internal_view_to_runtime_view(dashlet_spec)
-            if dashlet_spec["type"] == "view"
-            else dashlet_spec
+            (
+                internal_view_to_runtime_view(dashlet_spec)
+                if dashlet_spec["type"] == "view"
+                else dashlet_spec
+            )
             for dashlet_spec in raw_dashboard["dashlets"]
         ],
     }

@@ -94,6 +94,9 @@ def handle_request(args, sections):
     url_base = f"{args.proto}://{args.hostname}:{args.port}"
     # labels = {}
 
+    session = requests.Session()
+    session.auth = (args.user, args.password)
+
     for section in sections:
         if section.name not in args.sections:
             continue
@@ -102,14 +105,25 @@ def handle_request(args, sections):
 
         url = url_base + section.uri
         try:
-            response = requests.get(url, auth=(args.user, args.password))  # nosec B113
+            response = session.get(url)  # nosec B113
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:
                 raise
 
+            continue  # Try working with the next section
+
+        # Things might go wrong if authentication is missing.
         if response.status_code != 200:
             sys.stderr.write("Could not fetch data from Jenkins. Details: %s\n" % response)
+            continue
+
+        # Jenkins will happily return a HTTP status 200 even if things go wrong.
+        # If we do not receive any content we know that our request has failed.
+        if not response.content:
+            sys.stderr.write(
+                "Jenkins did not return any data when querying for %s\n" % section.name
+            )
             continue
 
         if section.name == "instance":

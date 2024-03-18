@@ -62,7 +62,6 @@ def define_function(name, text):
     lines.append("}")
     return "\n".join(lines)
 
-# buildifier: disable=unused-variable
 def replace_in_files(dir, from_, to_):
     return FunctionAndCallInfo(
         text = """\
@@ -92,7 +91,6 @@ def copy_dir_contents_to_dir(source, target):
         target = target,
     )
 
-# buildifier: disable=unused-variable
 def symlink_contents_to_dir(source, target):
     text = """\
 if [[ -z "$1" ]]; then
@@ -122,7 +120,6 @@ fi
 """
     return FunctionAndCallInfo(text = text)
 
-# buildifier: disable=unused-variable
 def symlink_to_dir(source, target):
     text = """\
 if [[ -z "$1" ]]; then
@@ -167,7 +164,6 @@ fi
 def script_prelude():
     return "set -euo pipefail"
 
-# buildifier: disable=unused-variable
 def increment_pkg_config_path(source):
     text = """\
 local children=$(find "$1" -mindepth 1 -name '*.pc')
@@ -240,7 +236,6 @@ def replace_sandbox_paths(dir_, abs_path):
         abs_path = abs_path,
     )
 
-# buildifier: disable=unused-variable
 def replace_symlink(file):
     return ""
 

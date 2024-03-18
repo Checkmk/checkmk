@@ -4,7 +4,6 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
 RULES_FOREIGN_CC_VERSION = "0.9.0"
-
 http_archive(
     name = "rules_foreign_cc",
     sha256 = "2a4d07cd64b0719b39a7c12218a3e507672b82a97b98c6a89d38565894cf7c51",
@@ -12,7 +11,7 @@ http_archive(
     urls = [
         "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
         UPSTREAM_MIRROR_URL + "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
-    ],
+    ]
 )
 
 load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
@@ -21,11 +20,8 @@ load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_depende
 # those manually because we set `register_toolchains = False` in order to load our own
 # implimentation of the shell toolchain
 register_toolchains("@rules_foreign_cc//toolchains:preinstalled_autoconf_toolchain")
-
 register_toolchains("@rules_foreign_cc//toolchains:preinstalled_m4_toolchain")
-
 register_toolchains("@rules_foreign_cc//toolchains:preinstalled_automake_toolchain")
-
 register_toolchains("@rules_foreign_cc//toolchains:preinstalled_pkgconfig_toolchain")
 
 # Our implimentation of the shell toolchain in order to fix symlinks and other bugs
@@ -38,7 +34,6 @@ rules_foreign_cc_dependencies(
 )
 
 RULES_PKG_VERSION = "0.9.1"
-
 http_archive(
     name = "rules_pkg",
     sha256 = "8f9ee2dc10c1ae514ee599a8b42ed99fa262b757058f65ad3c384289ff70c4b8",
@@ -56,9 +51,8 @@ http_archive(
     urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.36.2/rules_rust-v0.36.2.tar.gz"],
 )
 
-load("//omd/packages/rules:cargo_deps.bzl", "cargo_deps")
 load("//omd/packages/rules:rust_workspace.bzl", "rust_workspace")
-
+load("//omd/packages/rules:cargo_deps.bzl", "cargo_deps")
 rust_workspace()
 
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
@@ -89,35 +83,24 @@ load(
     "LIBGSF_VERSION",
     "MOD_FCGID_SHA256",
     "MOD_FCGID_VERSION",
-    "MOD_WSGI_SHA256",
-    "MOD_WSGI_VERSION",
     "MONITORING_PLUGINS_SHA256",
     "MONITORING_PLUGINS_VERSION",
     "MSITOOLS_SHA256",
     "MSITOOLS_VERSION",
     "NAGIOS_SHA256",
     "NAGIOS_VERSION",
-    "NET_SNMP_SHA256",
-    "NET_SNMP_VERSION",
     "NRPE_SHA256",
     "NRPE_VERSION",
     "OPENSSL_SHA256",
     "OPENSSL_VERSION",
-    "PATCH_SHA256",
-    "PATCH_VERSION",
     "PNP4NAGIOS_SHA256",
     "PNP4NAGIOS_VERSION",
+    "PATCH_SHA256",
+    "PATCH_VERSION",
     "PYTHON_SHA256",
     "PYTHON_VERSION",
-    "REDFISH_MKP_COMMIT_HASH",
-    "REDFISH_MKP_SHA256",
-    "REDFISH_MKP_VERSION",
     "REDIS_SHA256",
     "REDIS_VERSION",
-    "ROBOTMK_SHA256",
-    "ROBOTMK_VERSION",
-    "RRDTOOL_SHA256",
-    "RRDTOOL_VERSION",
     "SNAP7_SHA256",
     "SNAP7_VERSION",
     "STUNNEL_SHA256",
@@ -126,24 +109,25 @@ load(
     "XINETD_VERSION",
     "XMLSEC1_SHA256",
     "XMLSEC1_VERSION",
+    "MOD_WSGI_SHA256",
+    "MOD_WSGI_VERSION",
+    "NET_SNMP_SHA256",
+    "NET_SNMP_VERSION",
+    "ROBOTMK_SHA256",
+    "ROBOTMK_VERSION",
+    "RRDTOOL_SHA256",
+    "RRDTOOL_VERSION",
+    "REDFISH_MKP_COMMIT_HASH",
+    "REDFISH_MKP_VERSION",
+    "REDFISH_MKP_SHA256",
 )
 
-cargo_deps(
-    name = "check-cert-deps",
-    package = "packages/check-cert",
-)
-
+cargo_deps(name="check-cert-deps", package="packages/check-cert")
 load("@check-cert-deps//:defs.bzl", check_cert_deps = "crate_repositories")
-
 check_cert_deps()
 
-cargo_deps(
-    name = "check-http-deps",
-    package = "packages/check-http",
-)
-
+cargo_deps(name="check-http-deps", package="packages/check-http")
 load("@check-http-deps//:defs.bzl", check_http_deps = "crate_repositories")
-
 check_http_deps()
 
 load("//omd/packages/patch:patch_http.bzl", "patch")
@@ -245,8 +229,8 @@ perl_modules()
 load("//omd/packages/crypt-ssleay:cryptssl_http.bzl", "crypt_ssleay")
 
 crypt_ssleay(
-    sha256 = CRYPT_SSL_SHA256,
-    version_str = CRYPT_SSL_VERSION,
+    sha256=CRYPT_SSL_SHA256,
+    version_str=CRYPT_SSL_VERSION,
 )
 
 load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe")
@@ -292,7 +276,6 @@ nagios(
 )
 
 load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_python_requirements")
-
 create_python_requirements(
     name = "python_modules",
     # TODO: differentiate between own code and things we get from other omd packages
@@ -324,7 +307,7 @@ load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk")
 
 robotmk(
     sha256 = ROBOTMK_SHA256,
-    version_str = ROBOTMK_VERSION,
+    version_str= ROBOTMK_VERSION
 )
 
 load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool")

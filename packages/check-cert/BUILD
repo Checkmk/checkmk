@@ -1,7 +1,7 @@
 # //packages/check-cert:check-cert
 
-load("@check-cert-deps//:defs.bzl", "aliases", "all_crate_deps")
 load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
+load("@check-cert-deps//:defs.bzl", "aliases", "all_crate_deps")
 
 rust_library(
     name = "check-cert-lib",

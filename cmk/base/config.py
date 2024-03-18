@@ -1396,8 +1396,9 @@ def load_checks(
         try:
             check_context = new_check_context(get_check_api_context)
 
-            # Make a copy of known check plugin names
+            # Make a copy of known plugin names, we need to track them for nagios config generation
             known_checks = {str(k) for k in check_info}
+            known_agents = {str(k) for k in special_agent_info}
 
             did_compile |= load_precompiled_plugin(f, check_context)
 
@@ -1412,8 +1413,10 @@ def load_checks(
                 raise
             continue
 
-        for check_plugin_name in {str(k) for k in check_info}.difference(known_checks):
-            legacy_check_plugin_files[check_plugin_name] = f
+        for plugin_name in {str(k) for k in check_info}.difference(known_checks) | {
+            str(k) for k in special_agent_info
+        }.difference(known_agents):
+            legacy_check_plugin_files[plugin_name] = f
 
     # Now just drop everything we don't like; this is not a supported API anymore.
     # Users affected by this will see a CRIT in their "Analyse Configuration" page.

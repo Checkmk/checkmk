@@ -21,7 +21,13 @@ from cmk.checkengine.checking import CheckPluginName
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-from cmk.gui.watolib.rulesets import AllRulesets, RuleConditions, RulesetCollection
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderPath,
+    Rule,
+    RuleConditions,
+    RulesetCollection,
+)
 
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -118,10 +124,7 @@ def _transform_label_conditions_in_all_folders(
             _transform_label_conditions(rule_config)
 
         # Overwrite rulesets
-        if varname in all_rulesets._rulesets:
-            all_rulesets._rulesets[varname].replace_folder_config(folder, ruleset_config)
-        else:
-            all_rulesets._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
+        all_rulesets.replace_folder_ruleset_config(folder, ruleset_config, varname)
 
     return all_rulesets
 
@@ -260,6 +263,15 @@ def _transform_replaced_wato_rulesets(
     all_rulesets: RulesetCollection,
     replaced_rulesets: Mapping[RulesetName, RulesetName],
 ) -> None:
+    _transform_replaced_unknown_rulesets(logger, all_rulesets, replaced_rulesets)
+    _transform_replaced_known_rulesets(logger, all_rulesets, replaced_rulesets)
+
+
+def _transform_replaced_known_rulesets(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    replaced_rulesets: Mapping[RulesetName, RulesetName],
+) -> None:
     deprecated_ruleset_names: set[RulesetName] = set()
     for ruleset_name, ruleset in all_rulesets.get_rulesets().items():
         if ruleset_name not in replaced_rulesets:
@@ -267,17 +279,41 @@ def _transform_replaced_wato_rulesets(
 
         new_ruleset = all_rulesets.get(replaced_rulesets[ruleset_name])
 
-        if not new_ruleset.is_empty():
-            logger.log(VERBOSE, "Found deprecated ruleset: %s" % ruleset_name)
-
         logger.log(VERBOSE, f"Replacing ruleset {ruleset_name} with {new_ruleset.name}")
         for folder, _folder_index, rule in ruleset.get_rules():
             new_ruleset.append_rule(folder, rule)
 
         deprecated_ruleset_names.add(ruleset_name)
-
     for deprecated_ruleset_name in deprecated_ruleset_names:
         all_rulesets.delete(deprecated_ruleset_name)
+
+
+def _transform_replaced_unknown_rulesets(
+    logger: Logger,
+    all_rulesets: RulesetCollection,
+    replaced_rulesets: Mapping[RulesetName, RulesetName],
+) -> None:
+    deprecated_unknown_ruleset_names_per_folder: dict[FolderPath, set[RulesetName]] = {}
+    for folder_path, ruleset_configs in all_rulesets.get_unknown_rulesets().items():
+        folder = folder_tree().folder(folder_path)
+        deprecated_unknown_ruleset_names_per_folder[folder_path] = set()
+        for ruleset_name, rule_specs in ruleset_configs.items():
+            if ruleset_name not in replaced_rulesets:
+                continue
+
+            new_ruleset = all_rulesets.get(replaced_rulesets[ruleset_name])
+
+            logger.log(VERBOSE, f"Replacing ruleset {ruleset_name} with {new_ruleset.name}")
+            for rule_spec in rule_specs:
+                new_ruleset.append_rule(folder, Rule.from_config(folder, new_ruleset, rule_spec))
+
+            deprecated_unknown_ruleset_names_per_folder[folder_path].add(ruleset_name)
+    for (
+        folder_path,
+        deprecated_unknown_ruleset_names,
+    ) in deprecated_unknown_ruleset_names_per_folder.items():
+        for deprecated_unknown_ruleset_name in deprecated_unknown_ruleset_names:
+            all_rulesets.delete_unknown(folder_path, deprecated_unknown_ruleset_name)
 
 
 def _transform_wato_rulesets_params(

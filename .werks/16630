@@ -1,0 +1,13 @@
+Title: Prevent check_mail crash for "Move to subfolder" option
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1710753543
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+The active check check_mail can be configured to move mail messages from the inbox to a subfolder via the options "Forward mails as events to Event Console" > "Cleanup messages" > "Move to subfolder".
+
+For IMAP the copying of mails crashed when there were no mails available in the inbox.
+This is fixed to skipping the copy command in case there are no mails given.

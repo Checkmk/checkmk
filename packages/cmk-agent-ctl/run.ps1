@@ -23,7 +23,9 @@ if ((get-host).version.major -lt 7) {
 $package_name = Split-Path -Path (Get-Location) -Leaf
 
 $exe_name = "$package_name.exe"
+$root_dir = & git rev-parse --show-toplevel
 $work_dir = "$pwd"
+$arte = "$root_dir/artefacts"
 #set target=x86_64-pc-windows-mscvc # 64 bit not used now
 $cargo_target = "i686-pc-windows-msvc"
 $exe_dir = "target/$cargo_target/release"
@@ -121,7 +123,7 @@ function Start-ShortenPath($tgt_link, $path) {
     [string]$inp = Get-Location
     [string]$new = $inp.tolower().replace($path, $tgt_link)
     if ($new.tolower() -eq $inp) {
-        Write-Host "Can't shorten path $inp doesn't contain $path" -ForegroundColor Yellow
+        Write-Host "Can't to shorten path $inp doesn't contain $path" -ForegroundColor Yellow
         return
     }
     Write-Host "propose to shorten to: $new ($path, $tgt_link)"
@@ -162,22 +164,6 @@ function Test-Administrator {
     }
 }
 
-function Update-Dirs() {
-    If (Test-Path -PathType container $root_dir) {
-        Write-Host "Using root dir: '$root_dir'" -ForegroundColor White
-    }
-    else {
-        Write-Error "root dir not found: '$root_dir'" -ForegroundColor White -ErrorAction Stop
-    }
-    If (Test-Path -PathType container $arte_dir) {
-        Write-Host "Using arte dir: '$arte_dir'" -ForegroundColor White
-    }
-    else {
-        Write-Host "Creating arte dir: '$arte_dir'" -ForegroundColor White
-        New-Item -ItemType Directory -Path $arte_dir -ErrorAction Stop > nul
-    }
-}
-
 $result = 1
 try {
     $mainStartTime = Get-Date
@@ -195,20 +181,17 @@ try {
     # https://github.com/rust-lang/cc-rs#external-configuration-via-environment-variables
     $env:CFLAGS = "-DNDEBUG"
 
-    # shorten path
+    # shorten path 
     Start-ShortenPath "$shortenLink" "$shortenPath"
-    $root_dir = & git rev-parse --show-toplevel
-    $arte_dir = "$root_dir/artefacts"
-    Update-Dirs
 
     if ($packClean) {
         Invoke-Cargo "clean"
     }
     if ($packBuild) {
-        $cwd = Get-Location
-        $target_dir = Join-Path -Path "$cwd" -ChildPath "target/$cargo_target"
+        $cwd= Get-Location
+        $target_dir= Join-Path -Path "$cwd" -ChildPath "target/$cargo_target"
         Write-Host "Killing processes in $target_dir" -ForegroundColor White
-        Get-Process | Where-Object { $_.path -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
+        Get-Process | Where-Object { $_.path  -and ($_.path -like "$target_dir\*") } | Stop-Process -Force
         &cargo build --release --target $cargo_target
         if ($lastexitcode -ne 0) {
             Write-Error "Failed to build $package_name with code $lastexitcode" -ErrorAction Stop

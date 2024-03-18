@@ -90,10 +90,8 @@ class AuthMode(StrEnum):
 
 class ContentType(StrEnum):
     APPLICATION_JSON = "application_json"
-    APPLICATION_OCTET_STREAM = "application_octet_stream"
     APPLICATION_XML = "application_xml"
-    APPLICATION_ZIP = "application_zip"
-    TEXT_CSV = "text_csv"
+    APPLICATION_X_WWW_FORM_URLENCODED = "application_x_www_form_urlencoded"
     TEXT_PLAIN = "text_plain"
     TEXT_XML = "text_xml"
     TEXT_HTML = "text_html"
@@ -427,10 +425,8 @@ def _send_args(method_spec: tuple[HttpMethod, SendData | None]) -> Iterator[str]
         case (SendDataType.COMMON, ContentType(ct_enum)):
             yield {
                 ContentType.APPLICATION_JSON: "application/json",
-                ContentType.APPLICATION_OCTET_STREAM: "application/octet-stream",
                 ContentType.APPLICATION_XML: "application/xml",
-                ContentType.APPLICATION_ZIP: "application/zip",
-                ContentType.TEXT_CSV: "text/csv",
+                ContentType.APPLICATION_X_WWW_FORM_URLENCODED: "application/x-www-form-urlencoded",
                 ContentType.TEXT_PLAIN: "text/plain",
                 ContentType.TEXT_XML: "text/xml",
                 ContentType.TEXT_HTML: "text/html",

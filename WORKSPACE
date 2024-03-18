@@ -33,6 +33,18 @@ http_archive(
     ],
 )
 
+http_archive(
+    name = "rules_rust",
+    sha256 = "a761d54e49db06f863468e6bba4a13252b1bd499e8f706da65e279b3bcbc5c52",
+    # TODO: Host archive on nexus.
+    urls = ["https://github.com/bazelbuild/rules_rust/releases/download/0.36.2/rules_rust-v0.36.2.tar.gz"],
+)
+
+load("//omd/packages/rules:cargo_deps.bzl", "cargo_deps")
+load("//omd/packages/rules:rust_workspace.bzl", "rust_workspace")
+
+rust_workspace()
+
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
 rules_pkg_dependencies()
@@ -99,6 +111,25 @@ load(
     "XMLSEC1_SHA256",
     "XMLSEC1_VERSION",
 )
+
+cargo_deps(
+    name = "check-cert-deps",
+    package = "packages/check-cert",
+)
+
+load("@check-cert-deps//:defs.bzl", check_cert_deps = "crate_repositories")
+
+check_cert_deps()
+
+cargo_deps(
+    name = "check-http-deps",
+    package = "packages/check-http",
+)
+
+load("@check-http-deps//:defs.bzl", check_http_deps = "crate_repositories")
+
+check_http_deps()
+
 load("//omd/packages/patch:patch_http.bzl", "patch")
 
 patch(

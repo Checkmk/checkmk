@@ -21,6 +21,7 @@ $(OMD_INSTALL): omdlib-install
 # SUP-10161: our openssl is incompatible with some system executables on various sles15sp*
 ifneq ($(filter $(DISTRO_CODE), sles15sp3 sles15sp4 sles15sp5),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/ssh
+	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/scp
 endif
 ifneq ($(filter $(DISTRO_CODE),centos8 sles15sp4 sles15sp5),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/pdftoppm

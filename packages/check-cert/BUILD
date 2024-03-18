@@ -9,10 +9,10 @@ rust_binary(
         "src/**/*.rs",
     ]),
     aliases = aliases(),
-    deps = all_crate_deps(),
-    # deps = all_crate_deps() + ["@openssl"],
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
     visibility = ["//visibility:public"],
+    # deps = all_crate_deps() + ["@openssl"],
+    deps = all_crate_deps(),
 )

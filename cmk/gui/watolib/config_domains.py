@@ -51,6 +51,19 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 
 
+class _NegativeSerialException(Exception):
+    def __init__(self, message: str, subject: str, fingerprint: str) -> None:
+        super().__init__(message)
+        self.subject = subject
+        self.fingerprint = fingerprint
+
+    def should_be_ignored(self) -> bool:
+        # We ignore CAs with negative serials and we warn about them, except these, see CMK-16410
+        return self.fingerprint in (
+            "88497f01602f3154246ae28c4d5aef10f1d87ebb76626f4ae0b7f95ba7968799",  # EC-ACC
+        )
+
+
 @dataclass
 class ConfigDomainCoreSettings:
     hosts_to_update: list[HostName] = field(default_factory=list)
@@ -336,33 +349,34 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             remote_cas_store.save(site, cert)
 
     @staticmethod
-    def _load_cert(cert_str: str) -> Certificate | None:
+    def _load_cert(cert_str: str) -> Certificate:
         """load a cert and return it except it has a negative serial number
 
         Cryptography started to warn about negative serial numbers, these warnings are "blindly" written
-        to stderr so it might confuse users. Here we catch these warnings and return None for these.
-        Also we log a warning for these, except for some known certificates. See CMK-16410
+        to stderr so it might confuse users.
+        Here we catch these warnings and raise an exception if the serial number is negative.
         """
-        # We ignore CAs with negative serials and we warn about them, except these, see CMK-16410
-        ignored_certs = (
-            "88497f01602f3154246ae28c4d5aef10f1d87ebb76626f4ae0b7f95ba7968799",  # EC-ACC
-        )
         with warnings_module.catch_warnings(record=True, category=UserWarning):
             cert = load_pem_x509_certificate(cert_str.encode())
             if cert.serial_number < 0:
-                if cert.fingerprint(hashes.SHA256()).hex() not in ignored_certs:
-                    logger.warning(
-                        "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
-                        cert.subject.rfc4514_string(),
-                    )
-                return None
+                raise _NegativeSerialException(
+                    f"Certificate with a negative serial number {cert.serial_number!r}",
+                    cert.subject.rfc4514_string(),
+                    cert.fingerprint(hashes.SHA256()).hex(),
+                )
         return cert
 
     @staticmethod
     def _load_certs(trusted_cas: list[str]) -> Iterable[Certificate]:
         for cert_str in trusted_cas:
-            if cert := ConfigDomainCACertificates._load_cert(cert_str):
-                yield cert
+            try:
+                yield ConfigDomainCACertificates._load_cert(cert_str)
+            except _NegativeSerialException as e:
+                if not e.should_be_ignored():
+                    logger.warning(
+                        "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
+                        e.subject,
+                    )
 
     @staticmethod
     def _remote_sites_cas(trusted_cas: list[str]) -> Mapping[SiteId, Certificate]:
@@ -382,7 +396,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     @staticmethod
     def is_valid_cert(raw_cert: str) -> bool:
         try:
-            return ConfigDomainCACertificates._load_cert(raw_cert) is not None
+            ConfigDomainCACertificates._load_cert(raw_cert)
+            return True
         except ValueError:
             return False
 
@@ -420,14 +435,19 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     continue
 
                 for raw_cert in raw_certs:
-                    if self.is_valid_cert(raw_cert):
-                        trusted_cas.add(raw_cert)
-                    else:
-                        logger.exception("Skipping invalid certificates in file %s", cert_file_path)
-                        errors.append(
-                            f"Failed to add invalid certificate in '{cert_file_path}' to trusted CA certificates. "
-                            "See web.log for details."
-                        )
+                    try:
+                        if self.is_valid_cert(raw_cert):
+                            trusted_cas.add(raw_cert)
+                            continue
+                    except _NegativeSerialException as e:
+                        if e.should_be_ignored():
+                            continue
+
+                    logger.exception("Skipping invalid certificates in file %s", cert_file_path)
+                    errors.append(
+                        f"Failed to add invalid certificate in '{cert_file_path}' to trusted CA certificates. "
+                        "See web.log for details."
+                    )
 
             break
 

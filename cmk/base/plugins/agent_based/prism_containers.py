@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
 
-from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.lib.prism import load_json
 
 from .agent_based_api.v1 import (
@@ -81,7 +81,7 @@ register.check_plugin(
     name="prism_containers",
     service_name="NTNX Container %s",
     sections=["prism_containers"],
-    check_default_parameters=FILESYSTEM_DEFAULT_LEVELS,
+    check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
     discovery_function=discovery_prism_container,
     check_function=check_prism_container,
     check_ruleset_name="filesystem",

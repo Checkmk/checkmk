@@ -67,15 +67,10 @@ class Validation(StrEnum):
 
 class HttpMethod(StrEnum):
     GET = "get"
+    HEAD = "head"
     POST = "post"
     PUT = "put"
     DELETE = "delete"
-    OPTIONS = "options"
-    TRACE = "trace"
-    HEAD = "head"
-    CONNECT = "connect"
-    CONNECT_POST = "connect_post"
-    PROPFIND = "propfind"
 
 
 class SendDataType(StrEnum):
@@ -401,15 +396,10 @@ def _send_args(method_spec: tuple[HttpMethod, SendData | None]) -> Iterator[str]
     yield "--method"
     yield {
         HttpMethod.GET: "GET",
+        HttpMethod.HEAD: "HEAD",
         HttpMethod.POST: "POST",
         HttpMethod.PUT: "PUT",
         HttpMethod.DELETE: "DELETE",
-        HttpMethod.OPTIONS: "OPTIONS",
-        HttpMethod.TRACE: "TRACE",
-        HttpMethod.HEAD: "HEAD",
-        HttpMethod.CONNECT: "CONNECT",
-        HttpMethod.CONNECT_POST: "CONNECT:POST",
-        HttpMethod.PROPFIND: "PROPFIND",
     }[method]
 
     if send_data is None:

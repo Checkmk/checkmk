@@ -380,6 +380,11 @@ def _valuespec_connection() -> Dictionary:
                             name="get", title=Title("GET"), parameter_form=_send_data("GET")
                         ),
                         CascadingSingleChoiceElement(
+                            name="head",
+                            title=Title("HEAD"),
+                            parameter_form=_send_data(),
+                        ),
+                        CascadingSingleChoiceElement(
                             name="post",
                             title=Title("POST"),
                             parameter_form=_send_data("POST"),
@@ -391,36 +396,6 @@ def _valuespec_connection() -> Dictionary:
                             name="delete",
                             title=Title("DELETE"),
                             parameter_form=_send_data("DELETE"),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="options",
-                            title=Title("OPTIONS"),
-                            parameter_form=_send_data(),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="trace",
-                            title=Title("TRACE"),
-                            parameter_form=_send_data(),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="head",
-                            title=Title("HEAD"),
-                            parameter_form=_send_data(),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="connect",
-                            title=Title("CONNECT"),
-                            parameter_form=_send_data("Connect"),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="connect_post",
-                            title=Title("CONNECT:POST"),
-                            parameter_form=_send_data(),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="propfind",
-                            title=Title("PROPFIND"),
-                            parameter_form=_send_data(),
                         ),
                     ],
                 ),

@@ -13,6 +13,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 TARGET_DIR="${TARGET_DIR:-/opt}"
 
 install() {
+    DESIRED_PYTHON_VERSION=$(get_desired_python_version "${SCRIPT_DIR}")
+    print_debug "Desired python version: ${DESIRED_PYTHON_VERSION}"
+
     # source potential default pyenv path as the user calling this script did not source its bashrc file
     if [[ -d "$HOME/.pyenv/bin" ]]; then
         print_debug "Potential pyenv installation found"
@@ -30,8 +33,8 @@ install() {
         cd "$HOME"/.pyenv/plugins/python-build/../.. && git pull && cd -
 
         pyenv update
-        pyenv install "$(get_desired_python_version "${SCRIPT_DIR}")"
-        pyenv global "$(get_desired_python_version "${SCRIPT_DIR}")" # make pip3 available
+        pyenv install "${DESIRED_PYTHON_VERSION}" --skip-existing
+        pyenv global "${DESIRED_PYTHON_VERSION}" # make pip3 available
         install_pipenv
     else
         print_blue "Team CI recommends to install pyenv for easy use. It is currently not yet installed."
@@ -66,8 +69,8 @@ EOF
                 eval "$(tail -n -3 ~/.bashrc)"
             fi
 
-            pyenv install "$(get_desired_python_version "${SCRIPT_DIR}")"
-            pyenv global "$(get_desired_python_version "${SCRIPT_DIR}")" # make pip3 available
+            pyenv install "${DESIRED_PYTHON_VERSION}"
+            pyenv global "${DESIRED_PYTHON_VERSION}" # make pip3 available
             install_pipenv
         fi
     fi

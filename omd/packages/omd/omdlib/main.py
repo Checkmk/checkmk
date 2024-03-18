@@ -2953,7 +2953,7 @@ def main_update(  # pylint: disable=too-many-branches
         site.load_config(load_defaults(site))
 
         legacy_agent_ca = cert_dir(Path(site.dir)) / "agents/legacy_ca.pem"
-        if legacy_agent_ca.exists():
+        if legacy_agent_ca.is_symlink():
             # This symlink is broken, as omd cp does not support absolute symlinks
             link_legacy_agent_ca_v2(site)
             legacy_agent_ca.unlink()

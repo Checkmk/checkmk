@@ -159,9 +159,9 @@ class TokenAuth(BaseModel):
 
 
 class Connection(BaseModel):
+    method: tuple[HttpMethod, SendData | None]
     http_versions: HttpVersion | None = None
     tls_versions: EnforceTlsVersion | None = None
-    method: tuple[HttpMethod, SendData | None] | None = None  # TODO(ma): CMK-15749
     proxy: ProxySpec | None = None
     redirects: RedirectPolicy | None = None
     timeout: float | None = None
@@ -313,12 +313,11 @@ def _command_arguments(
 def _connection_args(
     connection: Connection, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[str]:
+    yield from _method_args(connection.method)
     if (auth := connection.auth) is not None:
         yield from _auth_args(auth)
     if (tls_versions := connection.tls_versions) is not None:
         yield from _tls_version_arg(tls_versions)
-    if (method_spec := connection.method) is not None:
-        yield from _method_args(method_spec)
     if (proxy_spec := connection.proxy) is not None:
         yield from _proxy_args(proxy_spec, http_proxies)
     if (redirects := connection.redirects) is not None:

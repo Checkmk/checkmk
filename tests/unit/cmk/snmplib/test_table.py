@@ -31,6 +31,7 @@ from cmk.snmplib import (
     SNMPContextTimeout,
     SNMPHostConfig,
     SNMPTable,
+    SNMPVersion,
     SpecialColumn,
 )
 
@@ -44,8 +45,8 @@ SNMPConfig = SNMPHostConfig(
     ipaddress=HostAddress("1.2.3.4"),
     credentials="",
     port=42,
-    is_bulkwalk_host=False,
-    is_snmpv2or3_without_bulkwalk_host=False,
+    bulkwalk_enabled=True,
+    snmp_version=SNMPVersion.V1,
     bulk_walk_size_of=0,
     timing={},
     oid_range_limits={},
@@ -129,7 +130,7 @@ def test_sanitize_snmp_encoding(
     ] == expected
 
 
-def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
+def test_use_advanced_snmp_version(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "bulkwalk_hosts",
@@ -141,13 +142,13 @@ def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
     assert (
         config_cache.make_snmp_config(
             HostName("abc"), HostAddress("1.2.3.4"), SourceType.HOST
-        ).is_bulkwalk_host
+        ).use_bulkwalk
         is False
     )
     assert (
         config_cache.make_snmp_config(
             HostName("localhost"), HostAddress("1.2.3.4"), SourceType.HOST
-        ).is_bulkwalk_host
+        ).use_bulkwalk
         is True
     )
 
@@ -198,7 +199,7 @@ def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> Non
             backend=Backend(
                 dataclasses.replace(
                     SNMPConfig,
-                    credentials=(),  # for `is_snmpv3_host`
+                    snmp_version=SNMPVersion.V3,
                     snmpv3_contexts=[
                         SNMPContextConfig(
                             section=section_name,

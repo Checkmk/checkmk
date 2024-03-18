@@ -23,7 +23,7 @@ from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostAddress
 
-from cmk.snmplib import OID, SNMPBackendEnum, SNMPHostConfig, SNMPRowInfoForStoredWalk
+from cmk.snmplib import OID, SNMPBackendEnum, SNMPHostConfig, SNMPRowInfoForStoredWalk, SNMPVersion
 
 from .snmp_helpers import default_config, get_single_oid
 
@@ -56,6 +56,7 @@ def test_get_single_oid_snmpv3(site: Site, backend_type: SNMPBackendEnum) -> Non
             "authOnlyUser",
             "authOnlyUser",
         ),
+        snmp_version=SNMPVersion.V3,
     )
 
     result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
@@ -80,6 +81,7 @@ def test_get_single_oid_snmpv3_higher_encryption(
             priv_proto,
             "A_long_privKey",
         ),
+        snmp_version=SNMPVersion.V3,
         # TODO: Reorganize snmp tests: at the moment we create *all* snmpsimd processes at setup
         #  but with different ports. Those different processes are then used in test_snmp_modes.py and
         #  backend_snmp.py...

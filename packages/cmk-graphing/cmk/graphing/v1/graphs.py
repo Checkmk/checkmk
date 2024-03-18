@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from ._localize import Localizable
+from ._localize import Title
 from ._type_defs import Bound, Quantity
 
 __all__ = [
@@ -47,6 +47,8 @@ class MinimalRange:
 @dataclass(frozen=True, kw_only=True)
 class Graph:
     """
+    Instances of this class will only be picked up by Checkmk if their names start with ``graph_``.
+
     Args:
         name: A unique name
         title: A title
@@ -65,7 +67,7 @@ class Graph:
 
         >>> graph_name = Graph(
         ...     name="name",
-        ...     title=Localizable("A title"),
+        ...     title=Title("A title"),
         ...     minimal_range=MinimalRange(0, 100),
         ...     compound_lines=["metric-name-1"],
         ...     simple_lines=["metric-name-2"],
@@ -75,12 +77,12 @@ class Graph:
     """
 
     name: str
-    title: Localizable
+    title: Title
     minimal_range: MinimalRange | None = None
-    compound_lines: Sequence[Quantity] = field(default_factory=list)
-    simple_lines: Sequence[Quantity] = field(default_factory=list)
-    optional: Sequence[str] = field(default_factory=list)
-    conflicting: Sequence[str] = field(default_factory=list)
+    compound_lines: Sequence[Quantity] = ()
+    simple_lines: Sequence[Quantity] = ()
+    optional: Sequence[str] = ()
+    conflicting: Sequence[str] = ()
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -103,6 +105,8 @@ class Graph:
 @dataclass(frozen=True, kw_only=True)
 class Bidirectional:
     """
+    Instances of this class will only be picked up by Checkmk if their names start with ``graph_``.
+
     Args:
         name: A unique name
         title: A title
@@ -113,22 +117,22 @@ class Bidirectional:
 
         >>> graph_name = Bidirectional(
         ...     name="name",
-        ...     title=Localizable("A title"),
+        ...     title=Title("A title"),
         ...     lower=Graph(
         ...         name="lower",
-        ...         title=Localizable("A title"),
+        ...         title=Title("A title"),
         ...         compound_lines=["metric-name-1"],
         ...     ),
         ...     upper=Graph(
         ...         name="upper",
-        ...         title=Localizable("A title"),
+        ...         title=Title("A title"),
         ...         compound_lines=["metric-name-2"],
         ...     ),
         ... )
     """
 
     name: str
-    title: Localizable
+    title: Title
     lower: Graph
     upper: Graph
 

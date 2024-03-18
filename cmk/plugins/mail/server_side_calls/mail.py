@@ -12,6 +12,7 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
+    replace_macros,
     Secret,
 )
 
@@ -36,7 +37,7 @@ class MailParams(GeneralMailParams):
 def generate_mail_command(
     params: MailParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveCheckCommand]:
-    description = params.service_description
+    description = replace_macros(params.service_description, host_config.macros)
     args: list[str | Secret] = get_general_mail_arguments(params, host_config)
 
     if params.forward is None:

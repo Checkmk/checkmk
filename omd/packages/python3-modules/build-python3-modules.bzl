@@ -35,6 +35,7 @@ build_cmd = """
     set -e
     # Needed because RULEDIR is relative and we need absolute paths as prefix
     export HOME=$$PWD
+    export TMPDIR="/tmp"
 
     # Path to external dependencies
     # SRCS contains a whitespace seperated list of paths to dependencies.
@@ -57,11 +58,6 @@ build_cmd = """
 
     export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
 
-    # Set up rust toolchain (probably better done bazel wide?)
-    export RUSTUP_HOME="/opt/rust/rustup"
-    export TMPDIR="/tmp"
-    export PATH="/opt/rust/cargo/bin:$$PWD/$$EXT_DEPS_PATH/python/python/bin/:$$PATH"
-
     # Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package
     # Keep in sync with scripts/run-pipenv
     export GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS=4
@@ -77,7 +73,7 @@ build_cmd = """
     export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib"
     export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include"
 
-    if [[ "{requirements}" = -r* ]]; then
+    if [[ "{requirements}" = -r* || "{requirements}" = git+* ]]; then
         REQUIREMENTS="{requirements}"
     else
         REQUIREMENTS=$$HOME/tmp/$(OUTS)
@@ -86,6 +82,12 @@ build_cmd = """
         echo "Copy package sources"
         echo "cp -r {requirements}/** $$REQUIREMENTS"
         cp -r {requirements}/** $$REQUIREMENTS
+    fi
+
+    # Fix python-gssapi build on SLES12SP5
+    # https://github.com/pythongssapi/python-gssapi/issues/212
+    if grep 'PRETTY_NAME="SUSE Linux Enterprise Server 12 SP5"' /etc/os-release >/dev/null 2>&1; then
+        export GSSAPI_COMPILER_ARGS='-DHAS_GSSAPI_EXT_H'
     fi
 
     # Under some distros (e.g. almalinux), the build may use an available c++ system compiler instead of our own /opt/bin/g++
@@ -100,6 +102,7 @@ build_cmd = """
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\
+      --verbose \\
       --no-binary=":all:" \\
       --no-deps \\
       --compile \\
@@ -109,5 +112,5 @@ build_cmd = """
       --prefix="$$HOME/$(OUTS)" \\
       -i {pypi_mirror} \\
       {pip_add_opts} \\
-      $$REQUIREMENTS
+      $$REQUIREMENTS 2>&1 | tee "$$HOME/$(OUTS)_pip_install.stdout"
 """

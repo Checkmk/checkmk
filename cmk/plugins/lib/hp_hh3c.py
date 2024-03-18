@@ -5,8 +5,8 @@
 
 from enum import Enum
 
-from cmk.agent_based.v2 import Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State
 
 OID_SysDesc = ".1.3.6.1.2.1.1.1.0"
 OID_SysObjectID = ".1.3.6.1.2.1.1.2.0"

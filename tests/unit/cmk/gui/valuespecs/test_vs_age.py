@@ -37,7 +37,7 @@ class TestValueSpecAge:
         assert vs.Age().value_to_html(7 * 60 * 60 * 24) == "7 days"
         assert vs.Age().value_to_html(7 * 60 * 60 * 24 + 10) == "7 days 10 seconds"
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(v_days="1", v_hours="2", v_minutes="3", v_seconds="4"):
             result = 1 * (24 * 60 * 60) + 2 * (60 * 60) + 3 * (60) + 4 * (1)
             assert vs.Age().from_html_vars("v") == result

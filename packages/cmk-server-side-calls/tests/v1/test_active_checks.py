@@ -13,10 +13,7 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
-    IPAddressFamily,
-    NetworkAddressConfig,
     parse_secret,
-    ResolvedIPAddressFamily,
     Secret,
     StoredSecret,
 )
@@ -56,41 +53,23 @@ active_check_example = ActiveCheckConfig(
 
 
 def test_active_check_config() -> None:
-    host_config = HostConfig(
-        name="hostname",
-        resolved_address="0.0.0.1",
-        alias="host_alias",
-        resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-        address_config=NetworkAddressConfig(
-            ip_family=IPAddressFamily.DUAL_STACK,
-            ipv4_address="0.0.0.1",
-            ipv6_address=None,
-            additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-            additional_ipv6_addresses=[
-                "fe80::241",
-                "fe80::242",
-                "fe80::243",
-            ],
-        ),
-    )
+    host_config = HostConfig(name="hostname")
     params = {
         "protocol": "HTTP",
         "user": "example_user",
         "password": ("store", "stored_password_id"),
     }
 
-    parsed_params = active_check_example.parameter_parser(params)
-    commands = list(active_check_example.commands_function(parsed_params, host_config, {}))
-
-    assert len(commands) == 1
-    assert commands[0] == ActiveCheckCommand(
-        service_description="Example",
-        command_arguments=[
-            "-p",
-            "HTTP",
-            "-u",
-            "example_user",
-            "-s",
-            StoredSecret(value="stored_password_id", format="%s"),
-        ],
-    )
+    assert list(active_check_example(params, host_config, {})) == [
+        ActiveCheckCommand(
+            service_description="Example",
+            command_arguments=[
+                "-p",
+                "HTTP",
+                "-u",
+                "example_user",
+                "-s",
+                StoredSecret(value="stored_password_id", format="%s"),
+            ],
+        )
+    ]

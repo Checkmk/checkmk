@@ -25,7 +25,7 @@
     <RootNamespace>watest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <AsioVersion>asio-1.24.0-patched</AsioVersion>
-    <FmtVersion>fmt-9.0.0</FmtVersion>
+    <FmtVersion>fmt-10.2.1</FmtVersion>
     <GoogleTest>googletest-71140c3ca7-patched</GoogleTest>
     <YamlCpp>yaml-cpp.9a362420</YamlCpp>
   </PropertyGroup>
@@ -173,10 +173,8 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo Installing test in "$(OutDirFullPath)"
-@cd $(SolutionDir) 
-@prepare_to_tests.cmd $(TargetDir)test
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -214,10 +212,8 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo Installing test in "$(OutDirFullPath)"
-@cd $(SolutionDir) 
-@prepare_to_tests.cmd $(TargetDir)test
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -257,10 +253,8 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo Installing test in "$(OutDirFullPath)"
-@cd $(SolutionDir) 
-@prepare_to_tests.cmd $(TargetDir)test
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -300,10 +294,8 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>@echo Installing test in "$(OutDirFullPath)"
-@cd $(SolutionDir) 
-@prepare_to_tests.cmd $(TargetDir)test
-</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

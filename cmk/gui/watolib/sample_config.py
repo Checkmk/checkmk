@@ -263,6 +263,8 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     "condition": {},
                     "value": {
                         "severity_unmonitored": 1,
+                        "severity_changed_service_labels": 0,
+                        "severity_changed_service_params": 0,
                         "severity_vanished": 0,
                         "severity_new_host_label": 1,
                         "check_interval": 120.0,
@@ -345,7 +347,8 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "mem_win",
                 "megaraid_bbu",
                 "megaraid_pdisks",
-                "megraid_vdisks",
+                "megaraid_ldisks",
+                "megaraid_vdisks",
                 "mknotifyd",
                 "mknotifyd_connection",
                 "mssql_backup",
@@ -380,7 +383,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "wmic_process",
                 "zfsget",
             ],
-            "lock_on_logon_failures": 10,
             "trusted_certificate_authorities": {
                 "use_system_wide_cas": True,
                 # Add the CA of the site to the trusted CAs. This has the benefit that remote sites

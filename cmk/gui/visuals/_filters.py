@@ -128,7 +128,7 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             title=_l("Hostname (regex)"),
             sort_index=100,
             info="host",
-            autocompleter=AutocompleterConfig(ident="monitored_hostname"),
+            autocompleter=AutocompleterConfig(ident="monitored_hostname", escape_regex=True),
             query_filter=query_filters.TextQuery(
                 ident="hostregex",
                 column="host_name",
@@ -175,7 +175,9 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             title=_l("Service (regex)"),
             sort_index=200,
             info="service",
-            autocompleter=AutocompleterConfig(ident="monitored_service_description"),
+            autocompleter=AutocompleterConfig(
+                ident="monitored_service_description", escape_regex=True
+            ),
             query_filter=query_filters.TextQuery(
                 ident="serviceregex",
                 column="service_description",
@@ -989,7 +991,11 @@ class SiteFilter(Filter):
 
 def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
     current_value = value.get("site")
-    return get_site_config(livestatus.SiteId(current_value))["alias"] if current_value else None
+    return (
+        get_site_config(active_config, livestatus.SiteId(current_value))["alias"]
+        if current_value
+        else None
+    )
 
 
 class MultipleSitesFilter(SiteFilter):

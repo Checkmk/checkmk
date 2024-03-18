@@ -9,6 +9,7 @@ import contextlib
 import json
 import pprint
 import re
+import time
 import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from enum import Enum
@@ -44,7 +45,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
-from cmk.gui.utils.theme import theme
+from cmk.gui.utils.theme import theme, Theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
@@ -91,6 +92,10 @@ def inject_js_profiling_code():
     return active_config.experimental_features.get(
         "inject_js_profiling_code"
     ) or html.request.has_var("inject_js_profiling_code")
+
+
+def enable_frontend_vue_auto_hot_reload() -> bool:
+    return active_config.experimental_features.get("load_frontend_vue") == "inject"
 
 
 EncType = typing.Literal[
@@ -242,259 +247,8 @@ class HTMLGenerator(HTMLWriter):
         javascripts = javascripts if javascripts else []
 
         self.open_head()
-
         if inject_js_profiling_code():
-            self.javascript(
-                """
-
-// NOTE:
-// This code is meant to be temporary and is used to investigate the runtime performance of the
-// user-interface on a continuous basis while developing it, without requiring too much infra-
-// structure.
-
-// We set this as early as possible.
-var startTime = Date.now();
-const currentUrl = window.location.pathname + window.location.search;
-
-const repeatUrlsTable = "repeatUrls";
-const metricsTable = "metrics";
-
-// We use a database!
-function openDatabase() {
-    // Whenever we need to change the schema, increment the version here.
-    const dbVersion = 1;
-    const dbName = 'PageMetricsDB';
-
-    return new Promise((resolve, reject) => {
-        const openRequest = indexedDB.open(dbName, dbVersion);
-
-        openRequest.onupgradeneeded = (event) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(metricsTable)) {
-                const objectStore = db.createObjectStore(metricsTable, { autoIncrement: true });
-                objectStore.createIndex('url', 'url', { unique: false });
-                objectStore.createIndex('metricName', 'metricName', { unique: false });
-            }
-            if (!db.objectStoreNames.contains(repeatUrlsTable)) {
-                const objectStore = db.createObjectStore(repeatUrlsTable, { keyPath: "url" });
-            }
-        };
-
-        openRequest.onsuccess = (event) => resolve(event.target.result);
-        openRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-function addRecord(store, object) {
-    return new Promise((resolve, reject) => {
-        const addRequest = store.add(object);
-
-        addRequest.onsuccess = (event) => resolve(event.target.result);
-        addRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-function putRecord(store, object) {
-    return new Promise((resolve, reject) => {
-        const putRequest = store.put(object);
-
-        putRequest.onsuccess = (event) => resolve(event.target.result);
-        putRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-function getRecord(store, key) {
-  return new Promise((resolve, reject) => {
-        let getRequest = store.get(key);
-
-        getRequest.onsuccess = (event) => resolve(event.target.result);
-        getRequest.onerror = (event) => reject(event.target.error);
-  });
-}
-
-
-async function storePageLoadMetric(db, url, metricName, loadTime) {
-    // console.info(`Metric: ${metricName}: ${loadTime}ms (${url})`);
-
-    const transaction = db.transaction([metricsTable], 'readwrite');
-    const store = transaction.objectStore(metricsTable);
-
-    return await addRecord(store, {
-        url: url,
-        metricName: metricName,
-        timestamp: new Date().getTime(),
-        loadTime: loadTime,
-    });
-}
-
-
-async function repeat(times) {
-    const db = await openDatabase();
-
-    const transaction = db.transaction([repeatUrlsTable], 'readwrite');
-    const store = transaction.objectStore(repeatUrlsTable);
-
-    return await putRecord(store, {
-        url: currentUrl,
-        times: times,
-    });
-}
-
-
-async function decreaseUrl(db, url) {
-    const transaction = db.transaction([repeatUrlsTable], 'readwrite');
-    const store = transaction.objectStore(repeatUrlsTable);
-
-    let record = await getRecord(store, url);
-
-    if (record && typeof record.times === 'number' && record.times > 0) {
-        record.times -= 1;
-        return await putRecord(store, record);
-    }
-
-}
-
-
-async function decrease() {
-    const db = await openDatabase();
-    return await decreaseUrl(db, currentUrl);
-}
-
-
-function isMouseoverMutation(mutationRecords) {
-    for (const record of mutationRecords) {
-        // Ignore mouseovers over the graph in index.py
-        if (record.target.className == "graph" || record.target.className == "hover_menu") {
-            return true;
-        }
-    }
-    return false;
-}
-
-
-async function shouldRepeat(db, url) {
-    const transaction = db.transaction([repeatUrlsTable], 'readwrite');
-    const store = transaction.objectStore(repeatUrlsTable);
-
-    let record = await getRecord(store, currentUrl);
-
-    if (record && typeof record.times === 'number' && record.times > 0) {
-        return true;
-    }
-    return false;
-}
-
-
-function waitForMutationsToStop(observedElement, timeoutDuration, isIgnoredMutation) {
-    return new Promise((resolve) => {
-        let lastMutationTime = Date.now();
-        let timer;
-
-        // console.log(`Setting up observer after ${lastMutationTime - startTime}ms`);
-        timer = setTimeout(() => {
-            resolve(lastMutationTime - startTime);
-        }, timeoutDuration);
-
-        const observer = new MutationObserver((mutations) => {
-            lastMutationTime = Date.now();
-            // console.log(`Got mutations after ${lastMutationTime - startTime}ms`);
-            if (isIgnoredMutation(mutations)) return;
-
-            clearTimeout(timer);
-            timer = setTimeout(() => {
-                observer.disconnect();
-                resolve(lastMutationTime - startTime);
-            }, timeoutDuration);
-        });
-
-        observer.observe(observedElement, { childList: true, subtree: true });
-    });
-}
-
-
-async function onDomContentLoaded() {
-    const fullyLoaded = Date.now() - startTime;
-    // We set up the observer earlier so that its internal timing won't be delayed by our
-    // following database work, etc.
-    let mutationWaiter = waitForMutationsToStop(document.body, 2000, isMouseoverMutation);
-
-    const db = await openDatabase();
-    await storePageLoadMetric(db, currentUrl, "fullyLoaded", fullyLoaded);
-
-    const lastMutation = await mutationWaiter;
-    await storePageLoadMetric(db, currentUrl, "fullyRendered", lastMutation);
-
-    if (await shouldRepeat(db, currentUrl)) {
-        await decreaseUrl(db, currentUrl);
-        document.location.reload();
-    }
-}
-
-
-async function nukeDataFromOrbit() {
-    console.warn("Nuking data: started")
-    let db = await openDatabase();
-
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([metricsTable], 'readwrite');
-        const store = transaction.objectStore(metricsTable);
-
-        const clearRequest = store.clear();
-        clearRequest.onsuccess = (event) => {
-            console.warn("Nuking data: done.")
-            resolve(event.target.result);
-        };
-        clearRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-async function clearData() {
-    console.warn("Clearing all data: started")
-    let db = await openDatabase();
-
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([metricsTable], 'readwrite');
-        const store = transaction.objectStore(metricsTable);
-
-        let deletedRows = 0;
-        const cursorRequest = store.openCursor();
-        cursorRequest.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                if (cursor.value.url === currentUrl) {
-                    deletedRows += 1;
-                    cursor.delete();
-                }
-                cursor.continue();
-            } else {
-                console.warn(`Clearing all data: ${deletedRows} records deleted.`);
-                resolve(deletedRows);
-            }
-        };
-        cursorRequest.onerror = (event) => reject(event.target.error);
-    });
-}
-
-
-function help() {
-    console.warn(`Available commands:
-help()              - Show this help.
-clearData()         - Clear all performance data for the current url.
-nukeDataFromOrbit() - Clear all performance data for ALL(!) urls.
-repeat(integer)     - Repeat the current page $integer times. First reload needs to be done manually.
-                      After every reload, the counter is decreased by 1. Once it reaches 0, the
-                      reloads will stop.`);
-}
-
-
-document.addEventListener('DOMContentLoaded', onDomContentLoaded);
-
-"""
-            )
+            self._inject_profiling_code()
 
         self.default_html_headers()
         self.title(title)
@@ -514,10 +268,15 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
 
         # Load all scripts
         for js in javascripts:
-            js_filepath = f"js/{js}_min.js"
-            if current_app.debug:
-                HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
-            self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
+            if js == "vue" and enable_frontend_vue_auto_hot_reload():
+                # those two files are injected by the vite dev server in `./packages/frontend_vue`
+                self.javascript_file("/frontend_vue_ahr/@vite/client", type_="module")
+                self.javascript_file("/frontend_vue_ahr/src/main.ts", type_="module")
+            else:
+                js_filepath = f"js/{js}_min.js"
+                if current_app.debug:
+                    HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
+                self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
 
         self.set_js_csrf_token()
 
@@ -525,6 +284,23 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
 
         self.close_head()
+
+    def _inject_profiling_code(self):
+        self.javascript("const startTime = Date.now();")
+        # A lambda, so it will get evaluated at the end of the request, not the beginning.
+        self.final_javascript(
+            lambda: f"""
+                const generationDuration = {round((time.monotonic() - self.request.started) * 1000, 0)};
+                const currentUrl = window.location.pathname + window.location.search;
+                document.addEventListener(
+                    'DOMContentLoaded',
+                    () => {{
+                        activate_tracking(currentUrl, startTime, generationDuration);
+                    }}
+                );
+            """
+        )
+        self.javascript_file(HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js"))
 
     def set_js_csrf_token(self) -> None:
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
@@ -913,9 +689,12 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             title=title,
         )
 
-    def user_error(self, e: MKUserError) -> None:
+    def user_error(self, e: MKUserError, show_as_warning: bool = False) -> None:
         """Display the given MKUserError and store message for later use"""
-        self.show_error(str(e))
+        if show_as_warning:
+            self.show_warning(str(e))
+        else:
+            self.show_error(str(e))
         user_errors.add(e)
 
     def show_user_errors(self) -> None:
@@ -947,7 +726,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         autocomplete: str | None = None,
         style: str | None = None,
         type_: str | None = None,
-        onkeyup: str | None = None,
+        oninput: str | None = None,
         onblur: str | None = None,
         placeholder: str | None = None,
         data_world: str | None = None,
@@ -994,7 +773,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             "readonly": "true" if read_only else None,
             "value": value,
             "onblur": onblur,
-            "onkeyup": onkeyup,
+            "oninput": oninput,
             "onkeydown": ("cmk.forms.textinput_enter_submit(event, %s);" % json.dumps(submit))
             if submit
             else None,
@@ -1405,12 +1184,16 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         self.write_html(HTMLGenerator.render_icon("trans"))
 
     @staticmethod
-    def render_icon(
+    def render_icon(  # pylint: disable=redefined-outer-name
         icon: Icon,
         title: str | None = None,
         id_: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        *,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> HTML:
         classes = ["icon"] + ([] if cssclass is None else [cssclass])
         if isinstance(class_, list):
@@ -1468,7 +1251,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         )
 
     @staticmethod
-    def render_icon_button(
+    def render_icon_button(  # pylint: disable=redefined-outer-name
         url: None | str,
         title: str,
         icon: Icon,
@@ -1478,6 +1261,9 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         target: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> HTML:
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
@@ -1489,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         assert href is not None
 
         return HTMLWriter.render_a(
-            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton")),
+            content=HTML(HTMLGenerator.render_icon(icon, cssclass="iconbutton", theme=theme)),
             href=href,
             title=title,
             id_=id_,
@@ -1500,7 +1286,7 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             onclick=onclick,
         )
 
-    def icon_button(
+    def icon_button(  # pylint: disable=redefined-outer-name
         self,
         url: str | None,
         title: str,
@@ -1511,10 +1297,13 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
         target: str | None = None,
         cssclass: str | None = None,
         class_: CSSSpec | None = None,
+        # Temporary measure for not having to change all call-sites at once.
+        # The first step was to only change call sites from painters.
+        theme: Theme = theme,
     ) -> None:
         self.write_html(
             HTMLGenerator.render_icon_button(
-                url, title, icon, id_, onclick, style, target, cssclass, class_
+                url, title, icon, id_, onclick, style, target, cssclass, class_, theme=theme
             )
         )
 

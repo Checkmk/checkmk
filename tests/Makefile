@@ -9,16 +9,6 @@ FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
-PYTEST_DOC_TEST_OPTS := \
-    --import-mode=importlib \
-    -o pythonpath=. \
-    --doctest-modules \
-    ../cmk \
-    ../omd/packages/omd
-PYTEST_UNIT_TEST_OPTS = \
-    -T unit \
-    $(PYTEST_DOC_TEST_OPTS) \
-    unit
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 BLACK  := $(SCRIPTS)/run-black
@@ -41,6 +31,7 @@ SYSTEM_TESTS := \
     test-composition \
     test-update-cee \
     test-update-cce \
+    test-update-cse\
     test-schemathesis-openapi \
     test-plugins \
     test-gui-crawl \
@@ -66,6 +57,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
+	test-unit-omdlib test-unit-doctests \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
 	test-unit-neb test-unit-core
 
@@ -292,13 +284,16 @@ test-composition:
 	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
 
 test-extension-compatibility:
-	$(PYTEST) -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
+	$(PYTEST) -vv -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-cee:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cee --log-cli-level=INFO
 
 test-update-cce:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cce --log-cli-level=INFO
+
+test-update-cse:
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cse --log-cli-level=INFO
 
 test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)
@@ -348,7 +343,7 @@ test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality
 
 test-mypy: prepare-protobuf-files
-	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) --no-incremental $$($(FIND_PYTHON_FILES))
+	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES))
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
@@ -390,29 +385,75 @@ test-cycles:
 test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
-test-unit: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+test-unit-omdlib:
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--doctest-modules \
+		--override-ini="pythonpath=. omd/packages/omd/" \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		-- \
+		omd/packages/omd/ \
+		tests/unit/omdlib/
+
+test-unit-doctests: prepare-protobuf-files
+	# Different files with the same name but in different namespace packages
+	# confuse our tooling.  Let's help by removing those caches as indicated
+	# in the error message.
+	find ../cmk/ -name '__pycache__' -exec rm -rf {} \; 2> /dev/null || true
+	# The `consider_namespace_packages` option requires pytest >= 8.1
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--doctest-modules \
+		--override-ini="pythonpath=." \
+		--override-ini="consider_namespace_packages=true" \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		--ignore cmk/plugins \
+		-- \
+		cmk/
+
+test-unit: prepare-protobuf-files test-unit-doctests
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--import-mode=importlib \
+		--override-ini="pythonpath=." \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
+		--ignore=tests/unit/omdlib/ \
+		-- \
+		tests/unit
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
 test-unit-slow: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--import-mode=importlib \
+		--override-ini="pythonpath=." \
 		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		--ignore=tests/unit/omdlib/ \
+		-- \
+		tests/unit
 
 test-unit-slow-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit-slow
 
 test-unit-resilience: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--import-mode=importlib \
+		--override-ini="pythonpath=." \
 		--count=2 \
 		--random-order-bucket=global \
 	        -m "not non_resilient" \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		--ignore=tests/unit/omdlib/ \
+		-- \
+		tests/unit
 
 test-unit-resilience-docker:
 	../scripts/run-in-docker.sh make test-unit-resilience
@@ -421,13 +462,20 @@ test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
 test-unit-coverage-html: prepare-protobuf-files
-	TZ=$(RANDOM_TZ) $(PYTEST) \
+	cd .. && TZ=$(RANDOM_TZ) $(PYTEST) \
+		-T unit \
+		--config-file=pyproject.toml \
+		--import-mode=importlib \
+		--override-ini="pythonpath=." \
 		--cov=cmk \
 		--cov-report=html \
-		--cov-config=.coveragerc_unit \
+		--cov-config="tests/.coveragerc_unit" \
 		--no-cov-on-fail \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		$(PYTEST_UNIT_TEST_OPTS)
+		--ignore=tests/unit/omdlib/ \
+		-- \
+		tests/unit
+
 
 test-unit-shell:
 	./unit-shell/runner.sh

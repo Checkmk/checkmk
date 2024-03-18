@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
@@ -243,7 +243,20 @@ export function on_key_down(id: string) {
             follow_current_search_query(current_search!);
             break;
         case "Escape":
-            on_click_reset(id);
+            if (!current_search) return;
+            if (current_search.has_search_query()) on_click_reset(id);
+            else
+                toggle_popup(
+                    event,
+                    this,
+                    "mega_menu_" + id,
+                    {type: "inline"},
+                    null,
+                    null,
+                    null,
+                    false
+                );
+
             break;
     }
 }

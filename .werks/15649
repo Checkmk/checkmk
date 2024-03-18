@@ -1,0 +1,25 @@
+Title: windows_tasks: Display Correct Scheduled Task State
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1705315505
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the `Scheduled Task State` could be N\A, if the Action of a Windows
+task contained a comma. Moreover, the plugin only supported German or English
+localization settings for Windows. Finally, with German localization settings
+disabled scheduled tasks would be discovered (despite what the checkman page
+claimed). This worked correctly with English localization settings. With this
+Werk, `windows_tasks` uses the new PowerShell API to obtain the data. This
+fixes the aforementioned issues.
+
+Users, whom desire to discover disabled tasks need to configure the new service
+discovery rule `Windows Tasks`.
+
+The changes in this Werk are only applicable, if the underlying Windows version
+supports the PowerShell API. The Windows versions supported by Checkmk 2.2.0 and
+later all support the required the PowerShell functions. Versions such as
+Windows 7 does not support the PowerShell API.

@@ -15,6 +15,7 @@ from typing import Any, cast, NamedTuple, TypeAlias
 
 import black
 import jinja2
+from apispec import APISpec
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
 from marshmallow import Schema
 
@@ -23,7 +24,6 @@ from cmk.utils.site import omd_site
 from cmk.gui import fields
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, to_openapi
-from cmk.gui.openapi.restful_objects.specification import SPEC
 from cmk.gui.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
 
 CODE_TEMPLATE_MACROS = """
@@ -79,7 +79,8 @@ import urllib.request
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
-API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
+PROTO = "http" #[http|https]
+API_URL = f"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"
@@ -110,25 +111,8 @@ request = urllib.request.Request(
             indent(skip_lines=1, spaces=4) }}).encode('utf-8'),
     {%- endif %}
 )
-response = urllib.request.urlopen(request)
-{%- if downloadable %}
-if resp.status_code == 200:
-    file_name = resp.headers["content-disposition"].split("filename=")[1].strip('\"')
-    with open(file_name, 'wb') as out_file:
-        shutil.copyfileobj(response, out_file)
-    print("Done")
-{%- else %}
-if resp.status_code == 200:
-    pprint.pprint(resp.json())
-elif resp.status_code == 204:
-    print("Done")
-{%- endif %}
-{%- if endpoint.does_redirects %}
-elif resp.status_code == 302:
-    print("Redirected to", resp.headers["location"])
-{%- endif %}
-else:
-    raise RuntimeError(pprint.pformat(resp.json()))
+resp = urllib.request.urlopen(request)
+{{ formatted_if_statement }}
 """
 
 CODE_TEMPLATE_CURL = """
@@ -138,7 +122,8 @@ CODE_TEMPLATE_CURL = """
 
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
-API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
+PROTO="http" #[http|https]
+API_URL="$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
@@ -202,7 +187,8 @@ CODE_TEMPLATE_HTTPIE = """
 #!/bin/bash
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
-API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
+PROTO="http" #[http|https]
+API_URL="$PROTO://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
@@ -247,7 +233,8 @@ import shutil {%- endif %}
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
-API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
+PROTO = "http" #[http|https]
+API_URL = f"{PROTO}://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"
@@ -281,25 +268,7 @@ resp = session.{{ method }}(
     stream=True,
     {%- endif %}
 )
-{%- if downloadable %}
-if resp.status_code == 200:
-    file_name = resp.headers["content-disposition"].split("filename=")[1].strip('\"')
-    with open(file_name, 'wb') as out_file:
-        resp.raw.decode_content = True
-        shutil.copyfileobj(resp.raw, out_file)
-    print("Done")
-{%- else %}
-if resp.status_code == 200:
-    pprint.pprint(resp.json())
-elif resp.status_code == 204:
-    print("Done")
-{%- endif %}
-{%- if endpoint.does_redirects %}
-elif resp.status_code == 302:
-    print("Redirected to", resp.headers["location"])
-{%- endif %}
-else:
-    raise RuntimeError(pprint.pformat(resp.json()))
+{{ formatted_if_statement }}
 """
 
 
@@ -480,6 +449,7 @@ def httpie_request_body(examples: JsonObject) -> str:
 
 
 def code_samples(  # type: ignore[no-untyped-def]
+    spec,
     endpoint,
     header_params,
     path_params,
@@ -498,12 +468,13 @@ def code_samples(  # type: ignore[no-untyped-def]
         ...     request_schema = _get_schema('CreateHost')
         ...     does_redirects = False
 
+        >>> spec = make_spec()  # doctest: +SKIP
         >>> endpoint = Endpoint()  # doctest: +SKIP
-        >>> samples = code_samples(endpoint, [], [], [])  # doctest: +SKIP
+        >>> samples = code_samples(spec, endpoint, [], [], [])  # doctest: +SKIP
 
 
     """
-    env = _jinja_environment()
+    env = _jinja_environment(spec)
     result: list[CodeSample] = []
     for example in CODE_EXAMPLES:
         schema = _get_schema(endpoint.request_schema)
@@ -528,6 +499,11 @@ def code_samples(  # type: ignore[no-untyped-def]
                     request_method=endpoint.method,
                     request_schema=schema,
                     request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
+                    formatted_if_statement=formatted_if_statement_for_responses(
+                        endpoint.expected_status_codes,
+                        endpoint.content_type == "application/octet-stream",
+                        example.label,
+                    ),
                 )
                 .strip(),
             }
@@ -594,11 +570,11 @@ def _schema_is_multiple(schema: str | type[Schema] | None) -> bool:
 
 
 @functools.lru_cache
-def _jinja_environment() -> jinja2.Environment:
+def _jinja_environment(spec: APISpec) -> jinja2.Environment:
     """Create a map with code templates, ready to render.
 
     We don't want to build all this stuff at the module-level as it is only needed when
-    re-generating the SPEC file.
+    re-generating the spec file.
 
     >>> class Endpoint:  # doctest: +SKIP
     ...     path = 'foo'
@@ -608,7 +584,7 @@ def _jinja_environment() -> jinja2.Environment:
 
     >>> endpoint = Endpoint()  # doctest: +SKIP
 
-    >>> env = _jinja_environment()
+    >>> env = _jinja_environment(SPEC)  # doctest: +SKIP
     >>> result = env.get_template('curl').render(  # doctest: +SKIP
     ...     hostname='localhost',
     ...     site='heute',
@@ -651,9 +627,53 @@ def _jinja_environment() -> jinja2.Environment:
     )
     # These objects will be available in the templates
     tmpl_env.globals.update(
-        spec=SPEC,
+        spec=spec,
     )
     return tmpl_env
+
+
+def formatted_if_statement_for_responses(
+    expected_response_status_codes: list[int],
+    downloadable: bool,
+    code_example: str,
+) -> str:
+    """Return a formatted if-statement for the requests or urrlib code examples.
+
+    Returns:
+        A string with a formatted if-statement.
+
+    """
+    formatted_str = ""
+    for status_code in sorted(expected_response_status_codes):
+        if status_code < 400:
+            if len(formatted_str) == 0:
+                formatted_str += f"if resp.status_code == {status_code}:\n"
+            else:
+                formatted_str += f"elif resp.status_code == {status_code}:\n"
+
+            if status_code == 200:
+                if downloadable:
+                    formatted_str += "    file_name = resp.headers['content-disposition'].split('filename=')[1].strip('\"')\n"
+                    formatted_str += "    with open(file_name, 'wb') as out_file:\n"
+
+                    if code_example == "requests":
+                        formatted_str += "        resp.raw.decode_content = True\n"
+                        formatted_str += "        shutil.copyfileobj(resp.raw, out_file)\n"
+                    else:
+                        formatted_str += "        shutil.copyfileobj(resp, out_file)\n"
+
+                    formatted_str += "    print('Done')\n"
+
+                else:
+                    formatted_str += "    pprint.pprint(resp.json())\n"
+            elif status_code == 204:
+                formatted_str += "    print('Done')\n"
+            elif status_code == 302:
+                formatted_str += "    print('Redirected to', resp.headers['location'])\n"
+
+    formatted_str += "else:\n"
+    formatted_str += "    raise RuntimeError(pprint.pformat(resp.json()))\n"
+    return formatted_str
 
 
 def _escape_single_quotes(text: str) -> str:

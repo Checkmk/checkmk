@@ -315,10 +315,13 @@ def spawn_expect_process(
     logfile_path: str = "/tmp/sep.out",
     auto_wrap_length: int = 49,
     break_long_words: bool = False,
+    timeout: int = 30,
 ) -> int:
     """Spawn an interactive CLI process via pexpect and process supplied expected dialogs
     "dialogs" must be a list of objects with the following format:
     {"expect": str, "send": str, "count": int, "optional": bool}
+
+    By default, 'timeout' has a value of 30 seconds.
 
     Return codes:
     0: success
@@ -348,7 +351,8 @@ def spawn_expect_process(
                             dialog.expect,  # rc=0
                             pexpect.EOF,  # rc=1
                             pexpect.TIMEOUT,  # rc=2
-                        ]
+                        ],
+                        timeout=timeout,
                     )
                     if rc == 0:
                         # msg found; sending input
@@ -375,7 +379,7 @@ def spawn_expect_process(
                         # max count reached
                         break
             if p.isalive():
-                rc = p.expect(pexpect.EOF)
+                rc = p.expect(pexpect.EOF, timeout=timeout)
             else:
                 rc = p.status
         except Exception as e:
@@ -511,13 +515,21 @@ def restart_httpd() -> None:
         run(["sudo", "httpd", "-k", "restart"])
 
 
+@dataclasses.dataclass
+class ServiceInfo:
+    state: int
+    summary: str
+
+
 def get_services_with_status(
-    host_data: dict, service_status: int, skipped_services: list | tuple = ()
+    host_data: dict[str, ServiceInfo],
+    service_status: int,
+    skipped_services: list[str] | tuple[str, ...] = (),
 ) -> set:
     """Return a set of services in the given status which are not in the 'skipped' list."""
     services_list = set()
     for service in host_data:
-        if host_data[service] == service_status and service not in skipped_services:
+        if host_data[service].state == service_status and service not in skipped_services:
             services_list.add(service)
 
     LOGGER.debug(
@@ -593,6 +605,16 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
             execute(["rm", global_config])
 
 
+def cse_create_onboarding_dummies(root: str) -> None:
+    onboarding_dir = os.path.join(root, "share/check_mk/web/htdocs/onboarding")
+    if os.path.exists(onboarding_dir):
+        return
+    LOGGER.warning("SaaS edition onboarding files not found; creating dummy files...")
+    makedirs(onboarding_dir)
+    write_file(f"{onboarding_dir}/search.css", "/* cse dummy file */")
+    write_file(f"{onboarding_dir}/search.js", "/* cse dummy file */")
+
+
 def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: float = 0.1) -> None:
     start = time.time()
     while time.time() - start < timeout:
@@ -600,4 +622,4 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
             return  # Success. Stop waiting...
         time.sleep(interval)
 
-    raise Exception("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
+    raise TimeoutError("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))

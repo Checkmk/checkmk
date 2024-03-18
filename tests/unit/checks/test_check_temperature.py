@@ -9,8 +9,8 @@ import datetime as dt
 from collections.abc import Iterable
 from typing import Any, NamedTuple
 
-import freezegun
 import pytest
+import time_machine
 
 from cmk.base.check_legacy_includes.temperature import (
     check_temperature,
@@ -256,7 +256,7 @@ def test_check_temperature_trend(test_case:Entry) -> None:
     }
 
     with mock_item_state(state):
-        with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
+        with time_machine.travel(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             result = check_temperature_trend(test_case.reading + test_case.growth,
                                  test_case.wato_dict, 'c',
                                  100,  # crit, don't boil
@@ -286,7 +286,7 @@ def test_check_temperature_called(test_case:Entry) -> None:
     }
 
     with mock_item_state(state):
-        with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
+        with time_machine.travel(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             # Assuming atmospheric pressure...
             result = check_temperature(
                 test_case.reading + test_case.growth,

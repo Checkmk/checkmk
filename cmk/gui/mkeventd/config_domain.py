@@ -37,10 +37,10 @@ class ConfigDomainEventConsole(ABCConfigDomain):
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         if getattr(active_config, "mkeventd_enabled", False):
-            execute_command("RELOAD", site=omd_site())
             log_audit("mkeventd-activate", "Activated changes of event console configuration")
             if hooks.registered("mkeventd-activate-changes"):
                 hooks.call("mkeventd-activate-changes")
+            execute_command("RELOAD", site=omd_site())
         return []
 
     def default_globals(self) -> GlobalSettings:

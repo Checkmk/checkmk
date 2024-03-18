@@ -3,78 +3,94 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
-# mypy: disable-error-code="list-item"
+from pydantic import BaseModel
 
 from cmk.base.config import active_check_info
 
 
-def check_tcp_arguments(params):  # pylint: disable=too-many-branches
-    port, settings = params
-    args = []
+class Parameters(BaseModel):
+    port: int
+    svc_description: str | None = None
+    hostname: str | None = None
+    response_time: tuple[float, float] | None = None
+    timeout: int | None = None
+    refuse_state: Literal["ok", "warn", "crit"] | None = None
+    send_string: str | None = None
+    escape_send_string: Literal[True] | None = None
+    expect: Sequence[str] = ()
+    expect_all: Literal[True] | None = None
+    jail: Literal[True] | None = None
+    mismatch_state: Literal["ok", "warn", "crit"] | None = None
+    delay: int | None = None
+    maxbytes: int | None = None
+    ssl: Literal[True] | None = None
+    cert_days: tuple[int, int] | None = None
+    quit_string: str | None = None
 
-    args += ["-p", str(port)]
 
-    if "response_time" in settings:
-        warn, crit = settings["response_time"]
-        args += ["-w", "%f" % (warn / 1000.0)]
-        args += ["-c", "%f" % (crit / 1000.0)]
+def _add_optional_option(name: str, value: int | str | None) -> tuple[str, str] | tuple[()]:
+    return () if value is None else (f"{name}", str(value))
 
-    if "timeout" in settings:
-        args += ["-t", settings["timeout"]]
 
-    if "refuse_state" in settings:
-        args += ["-r", settings["refuse_state"]]
+def _add_optional_flag(name: str, value: bool | None) -> tuple[str] | tuple[()]:
+    return () if value is None else (f"{name}",)
 
-    if settings.get("escape_send_string"):
-        args.append("--escape")
 
-    if "send_string" in settings:
-        args += ["-s", settings["send_string"]]
+def _make_arguments(params: Parameters, host_address: str) -> list[str]:
+    return [
+        "-p",
+        str(params.port),
+        *(
+            (
+                "-w",
+                "%f" % (params.response_time[0] / 1000.0),
+                "-c",
+                "%f" % (params.response_time[1] / 1000.0),
+            )
+            if params.response_time
+            else ()
+        ),
+        *(_add_optional_option("-t", params.timeout)),
+        *(_add_optional_option("-r", params.refuse_state)),
+        *(_add_optional_flag("--escape", params.escape_send_string)),
+        *(_add_optional_option("-s", params.send_string)),
+        *(o for s in params.expect for o in _add_optional_option("-e", s)),
+        *(_add_optional_flag("-A", params.expect_all)),
+        *(_add_optional_flag("--jail", params.jail)),
+        *(_add_optional_option("-M", params.mismatch_state)),
+        *(_add_optional_option("-d", params.delay)),
+        *(_add_optional_option("-m", params.maxbytes)),
+        *(_add_optional_flag("--ssl", params.ssl)),
+        *(("-D", "%d,%d" % params.cert_days) if params.cert_days else ()),
+        *(_add_optional_option("-q", params.quit_string)),
+        "-H",
+        host_address,
+    ]
 
-    if "expect" in settings:
-        for s in settings["expect"]:
-            args += ["-e", s]
 
-    if settings.get("expect_all"):
-        args.append("-A")
+def _make_service_description(params_raw: Mapping[str, object]) -> str:
+    params = Parameters.model_validate(params_raw)
+    if params.svc_description:
+        return params.svc_description
+    return f"TCP Port {params.port}"
 
-    if settings.get("jail"):
-        args.append("--jail")
 
-    if "mismatch_state" in settings:
-        args += ["-M", settings["mismatch_state"]]
+def check_tcp_arguments(params_raw: Mapping[str, object]) -> list[str]:
+    params = Parameters.model_validate(params_raw)
 
-    if "delay" in settings:
-        args += ["-d", settings["delay"]]
-
-    if "maxbytes" in settings:
-        args += ["-m", settings["maxbytes"]]
-
-    if settings.get("ssl"):
-        args.append("--ssl")
-
-    if "cert_days" in settings:
-        # legacy behavior
-        if isinstance(settings["cert_days"], int):
-            args += ["-D", settings["cert_days"]]
-        else:
-            warn, crit = settings["cert_days"]
-            args += ["-D", "%d,%d" % (warn, crit)]
-
-    if "quit_string" in settings:
-        args += ["-q", settings["quit_string"]]
-
-    if "hostname" in settings:
-        args += ["-H", settings["hostname"]]
+    if params.hostname is None:
+        host_arg = "$HOSTADDRESS$"
     else:
-        args += ["-H", "$HOSTADDRESS$"]
+        host_arg = params.hostname
 
-    return args
+    return _make_arguments(Parameters.model_validate(params_raw), host_arg)
 
 
 active_check_info["tcp"] = {
     "command_line": "check_tcp $ARG1$",
     "argument_function": check_tcp_arguments,
-    "service_description": lambda args: args[1].get("svc_description", "TCP Port %d" % args[0]),
+    "service_description": _make_service_description,
 }

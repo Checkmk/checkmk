@@ -52,7 +52,7 @@ The only difference being `/home/postgres/does-not-exist.env` does not exist in 
 Different defaults are chosen for Windows.
 """
 
-__version__ = "2.3.0b1"
+__version__ = "2.4.0b1"
 
 import abc
 import io
@@ -517,7 +517,9 @@ class PostgresWin(PostgresBase):
     @classmethod
     def _logical_drives(cls):
         # type: () -> Iterable[str]
-        for drive in cls._parse_wmic_logicaldisk(cls._call_wmic_logicaldisk()):
+        for drive in cls._parse_wmic_logicaldisk(  # pylint: disable=use-yield-from # for python2.7
+            cls._call_wmic_logicaldisk()
+        ):
             yield drive
 
     def get_psql_binary_path(self):

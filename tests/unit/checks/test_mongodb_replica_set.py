@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from tests.unit.conftest import FixRegister
 
@@ -50,7 +51,7 @@ def test_check_mongodb_replica_set(
     check_plugin: CheckPlugin,
     section: Mapping[str, Any],
 ) -> None:
-    with on_time(1659514516, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("UTC"))):
         assert list(
             check_plugin.check_function(
                 item="genesys.cardsv2",
@@ -61,6 +62,6 @@ def test_check_mongodb_replica_set(
             Result(
                 state=State.OK,
                 summary="6 additional details available",
-                details="source: mvgenmongodb02:27017\nsyncedTo: 1970-01-20 04:55:49 (UTC)\nmember (mvgenmongodb02:27017) is 0s (0h) behind primary (mvgenmongodb01:27017)\nsource: mvgenmongodb03:27017\nsyncedTo: 1970-01-20 04:55:49 (UTC)\nmember (mvgenmongodb03:27017) is 0s (0h) behind primary (mvgenmongodb01:27017)",
+                details="source: mvgenmongodb02:27017\nsyncedTo: 2022-08-01 10:28:52 (UTC)\nmember (mvgenmongodb02:27017) is 1s (0h) behind primary (mvgenmongodb01:27017)\nsource: mvgenmongodb03:27017\nsyncedTo: 2022-08-01 10:28:53 (UTC)\nmember (mvgenmongodb03:27017) is 0s (0h) behind primary (mvgenmongodb01:27017)",
             )
         ]

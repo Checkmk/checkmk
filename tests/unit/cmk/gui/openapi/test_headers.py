@@ -32,7 +32,9 @@ def test_headers_exposed(
     assert resp.headers["x-checkmk-version"] == cmk_version.__version__
 
 
-def test_headers_not_exposed_for_unauthorized_users(wsgi_app: WebTestAppForCMK) -> None:
+def test_headers_not_exposed_for_unauthorized_users(
+    wsgi_app: WebTestAppForCMK, request_context: None
+) -> None:
     resp = _get_version(
         wsgi_app,
         status=401,

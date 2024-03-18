@@ -1058,6 +1058,13 @@ table.modifydowntimes > tbody > tr {
   border: none;
 }
 
+@mixin ellipsis-text-overflow {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .select2-container--default {
   .select2-results {
     color: $font-color-black;
@@ -1084,6 +1091,7 @@ table.modifydowntimes > tbody > tr {
   .select2-results__option {
     color: $font-color;
     background-color: $input-background-color;
+    @include ellipsis-text-overflow;
   }
 
   .select2-results__option[aria-selected="true"] {
@@ -1294,13 +1302,6 @@ input.hidden_submit {
   display: none;
 }
 
-@mixin ellipsis-text-overflow {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .underline {
   text-decoration: underline;
 }
@@ -1473,4 +1474,29 @@ input.hidden_submit {
   br {
     display: none;
   }
+}
+
+// Sweetalert2
+// JS library used for confirm dialogs and success/error msg popups
+// (see the "Swal" call sites in our typescript code)
+div.swal2-popup {
+  background-color: $bg-color-secondary;
+
+  div.swal2-icon {
+    border-color: $success-dimmed;
+    color: $success-dimmed;
+  }
+
+  h2.swal2-title,
+  div.swal2-html-container {
+    color: $font-color;
+  }
+
+  button.swal2-confirm {
+    background-color: $success-dimmed;
+  }
+}
+
+svg text {
+  fill: $font-color;
 }

@@ -7,19 +7,14 @@ import dataclasses
 import datetime
 import typing
 
-from cmk.agent_based.v2 import (
-    check_levels_fixed,
-    check_levels_predictive,
-    contains,
-    get_rate,
-    GetRateError,
-    Result,
-    State,
-    type_defs,
-)
+from cmk.agent_based.v1 import check_levels, check_levels_predictive
+from cmk.agent_based.v2 import any_of, CheckResult, contains, get_rate, GetRateError, Result, State
 
 DETECT_EMAIL_GATEWAY = contains(".1.3.6.1.2.1.1.1.0", "mcafee email gateway")
-DETECT_WEB_GATEWAY = contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway")
+DETECT_WEB_GATEWAY = any_of(
+    contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway"),
+    contains(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.1230.2.7.1.1"),
+)
 
 ValueStore = typing.MutableMapping[str, typing.Any]
 
@@ -76,7 +71,7 @@ def compute_rate(
     levels: PredictiveLevels,
     key: str,
     label: str | None = None,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     if value is None:
         return
     try:
@@ -93,7 +88,7 @@ def compute_rate(
             label=label,
         )
     else:
-        yield from check_levels_fixed(
+        yield from check_levels(
             rate,
             metric_name=metric_name,
             levels_upper=levels,

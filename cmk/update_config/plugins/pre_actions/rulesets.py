@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """ Pre update checks, executed before any configuration is changed. """
+
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -14,11 +15,7 @@ from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 from cmk.update_config.plugins.actions.rulesets import REPLACED_RULESETS
-from cmk.update_config.plugins.pre_actions.utils import (
-    ConflictMode,
-    NEED_USER_INPUT_MODES,
-    USER_INPUT_CONTINUE,
-)
+from cmk.update_config.plugins.pre_actions.utils import ConflictMode, prompt, USER_INPUT_CONTINUE
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
 
@@ -32,7 +29,7 @@ class PreUpdateRulesets(PreUpdateAction):
                 rulesets = AllRulesets.load_all_rulesets()
         except Exception as exc:
             if (
-                conflict_mode in NEED_USER_INPUT_MODES
+                conflict_mode is ConflictMode.ASK
                 and _request_user_input_on_ruleset_exception(exc).lower() in USER_INPUT_CONTINUE
             ):
                 return None
@@ -49,7 +46,7 @@ class PreUpdateRulesets(PreUpdateAction):
 
 
 def _request_user_input_on_ruleset_exception(exc: Exception) -> str:
-    return input(
+    return prompt(
         f"Exception while trying to load rulesets: {exc}\n\n"
         "You can abort the update process (A) and try to fix "
         "the incompatibilities or try to continue the update (c).\n"
@@ -87,7 +84,7 @@ def _validate_rule_values(
                 )
             except MKUserError as e:
                 return (
-                    conflict_mode in NEED_USER_INPUT_MODES
+                    conflict_mode is ConflictMode.ASK
                     and _request_user_input_on_invalid_rule(ruleset, folder, index, e).lower()
                     in USER_INPUT_CONTINUE
                 )
@@ -98,16 +95,14 @@ def _validate_rule_values(
 def _request_user_input_on_invalid_rule(
     ruleset: Ruleset, folder: Folder, index: int, exception: MKUserError
 ) -> str:
-    return input(
+    return prompt(
         "WARNING: Invalid rule configuration detected\n"
         f"Ruleset: {ruleset.name}\n"
         f"Title: {ruleset.title()}\n"
         f"Folder: {folder.path() or 'main'}\n"
         f"Rule nr: {index + 1}\n"
         f"Exception: {exception}\n\n"
-        "You can abort the update process (A) and "
-        "try to fix the incompatibilities with a downgrade "
-        "to the version you came from or continue (c) the update.\n\n"
+        "You can abort the update process (A) or continue (c) the update.\n\n"
         "Abort update? [A/c]\n"
     )
 

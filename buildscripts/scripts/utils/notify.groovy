@@ -76,8 +76,8 @@ def notify_error(error) {
             });
 
             /// Inform cloud devs if cloud burns
-            if (projectname.contains("build-cmk-cloud-images")) {
-                notify_emails += "max.linke@checkmk.com";
+            if (projectname.contains("build-cmk-cloud-images") || projectname.contains("saas")) {
+                notify_emails.addAll(TEAM_SAAS_MAIL.split(","));
             }
 
             /// Inform nile devs if our extensions fail
@@ -88,6 +88,12 @@ def notify_error(error) {
             /// Inform werk workers if something's wrong with the werk jobs
             if (projectname.startsWith("werks/")) {
                 notify_emails += "benedikt.seidl@checkmk.com";
+            }
+
+            /// Inform QA if something's wrong with those jobs
+            if (projectname.contains("test-plugins") || projectname.contains("test-update")) {
+                notify_emails += "matteo.stifano@checkmk.com";
+                notify_emails += "rene.slowenski@checkmk.com";
             }
 
             /// fallback - for investigation

@@ -1,0 +1,14 @@
+#!/bin/bash
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# This file verifies that under cmk/ there is no __init__.py file, making it a
+# package. This is important because that would change the way outside packages
+# also using the cmk "namespace" would be visible when being imported
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+if test -f "$REPO_PATH/cmk/__init__.py"; then
+    echo "cmk/__init__.py detected. Please remove, this breaks namespace imports." >&2
+    exit 1
+fi

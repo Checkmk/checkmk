@@ -25,10 +25,12 @@
 
 class Column;
 
+enum struct OrderByDirection { ascending, descending };
+
 struct OrderBy {
     std::shared_ptr<Column> column;
     std::optional<std::string> key;  // only for DictColumn
-    bool ascending;
+    OrderByDirection direction;
 };
 
 class ParsedQuery {

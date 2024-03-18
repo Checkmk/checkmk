@@ -175,12 +175,6 @@ metric_info["hops"] = {
     "color": "51/a",
 }
 
-metric_info["uptime"] = {
-    "title": _("Uptime"),
-    "unit": "s",
-    "color": "#80f000",
-}
-
 metric_info["time_difference"] = {
     "title": _("Time difference"),
     "unit": "s",
@@ -295,18 +289,6 @@ metric_info["connections_failed_rate"] = {
     "color": "14/a",
 }
 
-metric_info["open_network_sockets"] = {
-    "title": _("Open network sockets"),
-    "unit": "count",
-    "color": "21/a",
-}
-
-metric_info["connections"] = {
-    "title": _("Connections"),
-    "unit": "count",
-    "color": "#a080b0",
-}
-
 metric_info["failed_connections"] = {
     "title": _("Failed connections"),
     "unit": "count",
@@ -323,24 +305,6 @@ metric_info["connections_ssl_vpn"] = {
     "title": _("SSL/VPN connections"),
     "unit": "count",
     "color": "13/a",
-}
-
-metric_info["connections_async_writing"] = {
-    "title": _("Asynchronous writing connections"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["connections_async_keepalive"] = {
-    "title": _("Asynchronous keep alive connections"),
-    "unit": "count",
-    "color": "22/a",
-}
-
-metric_info["connections_async_closing"] = {
-    "title": _("Asynchronous closing connections"),
-    "unit": "count",
-    "color": "24/a",
 }
 
 metric_info["connections_rate"] = {
@@ -371,48 +335,6 @@ metric_info["packet_velocity_asic"] = {
     "title": _("Packet velocity asic"),
     "unit": "1/s",
     "color": "26/a",
-}
-
-metric_info["requests_per_second"] = {
-    "title": _("Requests per second"),
-    "unit": "1/s",
-    "color": "#4080a0",
-}
-
-metric_info["busy_workers"] = {
-    "title": _("Busy workers"),
-    "unit": "count",
-    "color": "#a080b0",
-}
-
-metric_info["idle_workers"] = {
-    "title": _("Idle workers"),
-    "unit": "count",
-    "color": "43/b",
-}
-
-metric_info["busy_servers"] = {
-    "title": _("Busy servers"),
-    "unit": "count",
-    "color": "#a080b0",
-}
-
-metric_info["idle_servers"] = {
-    "title": _("Idle servers"),
-    "unit": "count",
-    "color": "43/b",
-}
-
-metric_info["open_slots"] = {
-    "title": _("Open slots"),
-    "unit": "count",
-    "color": "31/a",
-}
-
-metric_info["total_slots"] = {
-    "title": _("Total slots"),
-    "unit": "count",
-    "color": "33/b",
 }
 
 metric_info["total_sessions"] = {
@@ -810,6 +732,21 @@ metric_info["time_firstbyte"] = {
 
 metric_info["time_transfer"] = {
     "title": _("Time to receive full response"),
+    "unit": "s",
+    "color": "41/a",
+}
+
+# time_http_headers/time_http_body come from check_httpv2 and correspond
+# to time_headers/time_transfer from the old check_http.
+# We keep the old metrics as long as the old check_http is still in use.
+metric_info["time_http_headers"] = {
+    "title": _("Time to fetch HTTP headers"),
+    "unit": "s",
+    "color": "15/a",
+}
+
+metric_info["time_http_body"] = {
+    "title": _("Time to fetch page content"),
     "unit": "s",
     "color": "41/a",
 }
@@ -1471,15 +1408,21 @@ metric_info["read_retrans"] = {
     "color": "#90ee90",
 }
 
-metric_info["read_avg_rtt_ms"] = {
-    "title": _("Read average rtt"),
-    "unit": "ms",
+metric_info["write_retrans"] = {
+    "title": _("Write retransmission"),
+    "unit": "%",
     "color": "#90ee90",
 }
 
-metric_info["read_avg_exe_ms"] = {
+metric_info["read_avg_rtt_s"] = {
+    "title": _("Read average rtt"),
+    "unit": "s",
+    "color": "#90ee90",
+}
+
+metric_info["read_avg_exe_s"] = {
     "title": _("Read average exe"),
-    "unit": "ms",
+    "unit": "s",
     "color": "#90ee90",
 }
 
@@ -1502,15 +1445,15 @@ metric_info["write_b_op"] = {
     "render": lambda value: cmk.utils.render.fmt_bytes(int(value)),
 }
 
-metric_info["write_avg_rtt_ms"] = {
+metric_info["write_avg_rtt_s"] = {
     "title": _("Write average rtt"),
-    "unit": "ms",
+    "unit": "s",
     "color": "#90ee90",
 }
 
-metric_info["write_avg_exe_ms"] = {
+metric_info["write_avg_exe_s"] = {
     "title": _("Write average exe"),
-    "unit": "ms",
+    "unit": "s",
     "color": "#90ee90",
 }
 
@@ -1765,49 +1708,6 @@ graph_info["wlan_errors"] = {
         ("wlan_physical_errors", "area"),
         ("wlan_resets", "stack"),
         ("wlan_retries", "stack"),
-    ],
-}
-
-graph_info["busy_and_idle_workers"] = {
-    "title": _("Busy and idle workers"),
-    "metrics": [
-        ("busy_workers", "area"),
-        ("idle_workers", "stack"),
-    ],
-}
-
-graph_info["busy_and_idle_servers"] = {
-    "title": _("Busy and idle servers"),
-    "metrics": [
-        ("busy_servers", "area"),
-        ("idle_servers", "stack"),
-    ],
-}
-
-graph_info["total_and_open_slots"] = {
-    "title": _("Total and open slots"),
-    "metrics": [
-        ("total_slots", "area"),
-        ("open_slots", "line"),
-    ],
-}
-
-graph_info["connections"] = {
-    "title": _("Connections"),
-    "metrics": [
-        ("connections", "area"),
-        ("connections_async_writing", "line"),
-        ("connections_async_keepalive", "line"),
-        ("connections_async_closing", "line"),
-    ],
-    "optional_metrics": [
-        "connections_async_writing",
-        "connections_async_keepalive",
-        "connections_async_closing",
-    ],
-    "scalars": [
-        "connections:warn",
-        "connections:crit",
     ],
 }
 
@@ -2098,14 +1998,6 @@ graph_info["web_gateway_statistics"] = {
     "metrics": [
         ("infections_rate", "stack"),
         ("connections_blocked_rate", "stack"),
-    ],
-}
-
-graph_info["web_gateway_miscellaneous_statistics"] = {
-    "title": _("Web gateway miscellaneous statistics"),
-    "metrics": [
-        ("open_network_sockets", "stack"),
-        ("connections", "stack"),
     ],
 }
 

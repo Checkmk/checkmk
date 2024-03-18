@@ -12,10 +12,16 @@ from collections.abc import Iterator
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    HostConfig,
+    replace_macros,
+)
 
 
 class Params(BaseModel, frozen=True):
+    hostname: str
     name: str | None = None
     server: str | None = None
     expect_all_addresses: bool = True
@@ -30,14 +36,13 @@ def commands_function(
     host_config: HostConfig,
     _http_proxies: object,
 ) -> Iterator[ActiveCheckCommand]:
-    command_arguments = ["-H", host_config.name]
+    hostname = replace_macros(params.hostname, host_config.macros)
+    command_arguments = ["-H", hostname]
 
     if params.server is None:
-        if not host_config.resolved_address:
-            raise ValueError("No IP address available")
-        command_arguments += ["-s", host_config.resolved_address]
+        command_arguments += ["-s", host_config.primary_ip_config.address]
     elif params.server and params.server != "default DNS server":
-        command_arguments += ["-s", params.server]
+        command_arguments += ["-s", replace_macros(params.server, host_config.macros)]
 
     if params.expect_all_addresses:
         command_arguments.append("-L")
@@ -57,7 +62,9 @@ def commands_function(
         command_arguments += ["-t", str(params.timeout)]
 
     yield ActiveCheckCommand(
-        service_description=(params.name if params.name else f"DNS {host_config.name}"),
+        service_description=(
+            replace_macros(params.name, host_config.macros) if params.name else f"DNS {hostname}"
+        ),
         command_arguments=command_arguments,
     )
 

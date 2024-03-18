@@ -21,6 +21,7 @@
 #include "livestatus/ListFilter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
+#include "livestatus/Sorter.h"
 #include "livestatus/opids.h"
 class Aggregator;
 class User;
@@ -94,6 +95,11 @@ public:
                 return getValue(row, user, timezone_offset);
             },
             relOp, value, logger());
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        throw std::runtime_error("sorting on list column '" + name() +
+                                 "' not supported");
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

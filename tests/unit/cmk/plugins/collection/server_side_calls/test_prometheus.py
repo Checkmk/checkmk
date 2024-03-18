@@ -6,27 +6,24 @@ import ast
 from collections.abc import Mapping
 
 import pytest
-from polyfactory.factories import DataclassFactory
 from pytest_mock import MockerFixture
 
 from cmk.plugins.collection.server_side_calls.prometheus import special_agent_prometheus
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, NetworkAddressConfig
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 from cmk.special_agents.utils.prometheus import extract_connection_args
 
-
-class HostConfigFactory(DataclassFactory):
-    __model__ = HostConfig
+_TEST_HOST_CONFIG = HostConfig(
+    name="prometheus",
+    ipv4_config=IPv4Config(address="1.2.3.4"),
+)
 
 
 @pytest.mark.parametrize(
-    ["config", "host_config", "expected_result"],
+    ["config", "expected_result"],
     [
         pytest.param(
             {
-                "connection": (
-                    "ip_address",
-                    {},
-                ),
+                "connection": "1.2.3.4",
                 "auth_basic": (
                     "auth_login",
                     {
@@ -38,14 +35,7 @@ class HostConfigFactory(DataclassFactory):
                     },
                 ),
                 "protocol": "http",
-                "host_address": "1.2.3.4",
-                "host_name": "prometheus",
             },
-            HostConfigFactory.build(
-                resolved_address="1.2.3.4",
-                name="prometheus",
-                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
-            ),
             {
                 "api_url": "http://1.2.3.4/api/v1/",
                 "auth": ("user", "secret"),
@@ -55,10 +45,7 @@ class HostConfigFactory(DataclassFactory):
         ),
         pytest.param(
             {
-                "connection": (
-                    "url_custom",
-                    {"url_address": "my-host.com"},
-                ),
+                "connection": "my-host.com",
                 "auth_basic": (
                     "auth_login",
                     {
@@ -73,11 +60,6 @@ class HostConfigFactory(DataclassFactory):
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            HostConfigFactory.build(
-                resolved_address="1.2.3.4",
-                name="prometheus",
-                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
-            ),
             {
                 "auth": ("user", "very_secret"),
                 "api_url": "https://my-host.com/api/v1/",
@@ -87,10 +69,7 @@ class HostConfigFactory(DataclassFactory):
         ),
         pytest.param(
             {
-                "connection": (
-                    "url_custom",
-                    {"url_address": "my-host.com"},
-                ),
+                "connection": "my-host.com",
                 "auth_basic": (
                     "auth_token",
                     {
@@ -102,14 +81,7 @@ class HostConfigFactory(DataclassFactory):
                 ),
                 "verify-cert": True,
                 "protocol": "https",
-                "host_address": "1.2.3.4",
-                "host_name": "prometheus",
             },
-            HostConfigFactory.build(
-                resolved_address="1.2.3.4",
-                name="prometheus",
-                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
-            ),
             {
                 "api_url": "https://my-host.com/api/v1/",
                 "token": "token",
@@ -119,14 +91,7 @@ class HostConfigFactory(DataclassFactory):
         ),
         pytest.param(
             {
-                "connection": (
-                    "ip_address",
-                    {
-                        "port": 9876,
-                        "path_prefix": "somewhere.",
-                        "base_prefix": "later",
-                    },
-                ),
+                "connection": "later1.2.3.4:9876/somewhere.",
                 "auth_basic": (
                     "auth_token",
                     {
@@ -141,11 +106,6 @@ class HostConfigFactory(DataclassFactory):
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            HostConfigFactory.build(
-                resolved_address="1.2.3.4",
-                name="prometheus",
-                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
-            ),
             {
                 "api_url": "https://later1.2.3.4:9876/somewhere./api/v1/",
                 "token": "very_secret",
@@ -155,7 +115,7 @@ class HostConfigFactory(DataclassFactory):
         ),
         pytest.param(
             {
-                "connection": ("url_custom", {"url_address": "http://192.168.58.2:30000"}),
+                "connection": "http://192.168.58.2:30000",
                 "verify-cert": False,
                 "auth_basic": (
                     "auth_login",
@@ -178,7 +138,6 @@ class HostConfigFactory(DataclassFactory):
                     }
                 ],
             },
-            HostConfigFactory.build(),
             {
                 "api_url": "http://http://192.168.58.2:30000/api/v1/",
                 "auth": ("username", "password"),
@@ -191,7 +150,6 @@ class HostConfigFactory(DataclassFactory):
 def test_extract_connection_args(
     mocker: MockerFixture,
     config: Mapping[str, object],
-    host_config: HostConfig,
     expected_result: Mapping[str, object],
 ) -> None:
     mocker.patch(
@@ -201,8 +159,7 @@ def test_extract_connection_args(
             "something_else": "123",
         },
     )
-    params = special_agent_prometheus.parameter_parser(config)
-    command = list(special_agent_prometheus.commands_function(params, host_config, {}))[0]
+    command = list(special_agent_prometheus(config, _TEST_HOST_CONFIG, {}))[0]
     assert isinstance(command.stdin, str)
     agent_config = ast.literal_eval(command.stdin)
     assert extract_connection_args(agent_config) == expected_result

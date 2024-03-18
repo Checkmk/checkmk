@@ -6,7 +6,7 @@
 import json
 from typing import Any
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 PrismAPIData = dict[str, Any]
 

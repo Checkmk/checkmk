@@ -7,6 +7,7 @@ import errno
 import logging
 import os
 import tempfile
+import time
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
@@ -23,6 +24,16 @@ from cmk.utils.regex import regex
 from cmk.utils.render import Age
 
 logger = logging.getLogger("cmk.base")
+
+
+def cachefile_age(path: Path) -> float:
+    """Return the time difference between the last modification and now.
+
+    Raises:
+        FileNotFoundError if `path` does not exist.
+
+    """
+    return time.time() - path.stat().st_mtime
 
 
 @dataclass(frozen=True)
@@ -258,7 +269,7 @@ def _get_piggyback_processed_file_info(
     settings: _TimeSettingsMap,
 ) -> PiggybackFileInfo:
     try:
-        file_age = cmk.utils.cachefile_age(piggyback_file_path)
+        file_age = cachefile_age(piggyback_file_path)
     except FileNotFoundError:
         return PiggybackFileInfo(
             source_hostname, piggyback_file_path, False, "Piggyback file is missing", 0
@@ -319,6 +330,11 @@ def _is_piggyback_file_outdated(
     status_file_path: Path,
     piggyback_file_path: Path,
 ) -> bool:
+    """Return True if the status file is missing or it is newer than the payload file
+
+    It will return True if the payload file is "abandoned", i.e. the source host is
+    still sending data, but no longer has data for this target ( = piggybacked) host.
+    """
     try:
         # TODO use Path.stat() but be aware of:
         # On POSIX platforms Python reads atime and mtime at nanosecond resolution
@@ -528,7 +544,7 @@ def _cleanup_old_source_status_files(
 
     for source_state_file in _get_source_state_files():
         try:
-            file_age = cmk.utils.cachefile_age(source_state_file)
+            file_age = cachefile_age(source_state_file)
         except FileNotFoundError:
             continue  # File has been removed, that's OK.
 
@@ -559,21 +575,25 @@ def _cleanup_old_piggybacked_files(
 
     for piggybacked_host_folder, source_hosts, time_settings in piggybacked_hosts_settings:
         for piggybacked_host_source in source_hosts:
-            file_info = _get_piggyback_processed_file_info(
-                HostName(piggybacked_host_source.name),
-                piggybacked_hostname=HostName(piggybacked_host_folder.name),
-                piggyback_file_path=piggybacked_host_source,
-                settings=time_settings,
-            )
+            src = HostName(piggybacked_host_source.name)
+            dst = HostName(piggybacked_host_folder.name)
 
-            if not file_info.successfully_processed:
-                logger.log(
-                    VERBOSE,
-                    "Piggyback file '%s' is outdated (%s). Remove it.",
-                    piggybacked_host_source,
-                    file_info.message,
-                )
-                _remove_piggyback_file(piggybacked_host_source)
+            try:
+                file_age = cachefile_age(piggybacked_host_source)
+            except FileNotFoundError:
+                continue
+
+            max_cache_age = time_settings.max_cache_age(src, dst)
+            validity_period = time_settings.validity_period(src, dst) or 0
+            if file_age <= max_cache_age or file_age <= validity_period:
+                # Do not remove files just because they're abandoned.
+                # We don't use them anymore, but the DCD still needs to know about them for a while.
+                continue
+
+            logger.log(
+                VERBOSE, "Piggyback file '%s' is outdated. Remove it.", piggybacked_host_source
+            )
+            _remove_piggyback_file(piggybacked_host_source)
 
         # Remove empty backed host directory
         try:

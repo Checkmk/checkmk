@@ -13,6 +13,7 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     parse_secret,
+    replace_macros,
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
@@ -56,7 +57,7 @@ def commands_function(
     _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     command_arguments = [
-        host_config.resolved_address or host_config.name,
+        host_config.primary_ip_config.address,
         "-u",
         params.user,
         "-s",
@@ -99,7 +100,10 @@ def commands_function(
                 ["--cert-server-name", host_config.name] if params.ssl else ["--no-cert-check"]
             )
         case str():
-            command_arguments += ["--cert-server-name", params.ssl]
+            command_arguments += [
+                "--cert-server-name",
+                replace_macros(params.ssl, host_config.macros),
+            ]
         case _:
             assert_never(params.ssl)
 

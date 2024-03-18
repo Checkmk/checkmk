@@ -200,6 +200,10 @@ check_metrics["check_mk-netapp_api_disk_summary"] = {
     "total_disk_capacity": {"name": "disk_capacity"},
     "total_disks": {"name": "disks"},
 }
+check_metrics["check_mk-netapp_ontap_disk_summary"] = {
+    "total_disk_capacity": {"name": "disk_capacity"},
+    "total_disks": {"name": "disks"},
+}
 check_metrics["check_mk-emc_isilon_iops"] = {
     "iops": {"name": "disk_ios"},
 }
@@ -258,12 +262,6 @@ check_metrics["check_mk-jolokia_metrics_threads"] = {
 check_metrics["check_mk-mem_linux"] = {
     "cached": {
         "name": "mem_lnx_cached",
-    },
-    "buffers": {
-        "name": "mem_lnx_buffers",
-    },
-    "slab": {
-        "name": "mem_lnx_slab",
     },
     "active_anon": {
         "name": "mem_lnx_active_anon",
@@ -343,9 +341,7 @@ check_metrics["check_mk-mem_linux"] = {
     "caches": {"name": "caches", "auto_graph": False},
     "swap_free": {"name": "swap_free", "auto_graph": False},
     "mem_free": {"name": "mem_free", "auto_graph": False},
-    "sreclaimable": {"name": "mem_lnx_sreclaimable", "auto_graph": False},
     "pending": {"name": "mem_lnx_pending", "auto_graph": False},
-    "sunreclaim": {"name": "mem_lnx_sunreclaim", "auto_graph": False},
     "anon_huge_pages": {"name": "mem_lnx_anon_huge_pages", "auto_graph": False},
     "anon_pages": {"name": "mem_lnx_anon_pages", "auto_graph": False},
     "mapped": {"name": "mem_lnx_mapped", "auto_graph": False},
@@ -422,6 +418,7 @@ check_metrics["check_mk-df"] = df_translation
 check_metrics["check_mk-db2_logsizes"] = df_translation
 check_metrics["check_mk-esx_vsphere_datastores"] = df_translation
 check_metrics["check_mk-netapp_api_aggr"] = df_translation
+check_metrics["check_mk-netapp_ontap_aggr"] = df_translation
 check_metrics["check_mk-vms_df"] = df_translation
 check_metrics["check_mk-vms_diskstat_df"] = df_translation
 check_metrics["check_disk"] = df_translation
@@ -441,7 +438,9 @@ check_metrics["check_mk-fast_lta_silent_cubes_capacity"] = df_translation
 check_metrics["check_mk-fast_lta_volumes"] = df_translation
 check_metrics["check_mk-libelle_business_shadow_archive_dir"] = df_translation
 check_metrics["check_mk-netapp_api_luns"] = df_translation
+check_metrics["check_mk-netapp_ontap_luns"] = df_translation
 check_metrics["check_mk-netapp_api_qtree_quota"] = df_translation
+check_metrics["check_mk-netapp_ontap_qtree_quota"] = df_translation
 check_metrics["check_mk-emc_datadomain_fs"] = df_translation
 check_metrics["check_mk-emc_isilon_quota"] = df_translation
 check_metrics["check_mk-emc_isilon_ifs"] = df_translation
@@ -466,6 +465,7 @@ check_metrics["check_mk-df_netscaler"] = df_translation
 check_metrics["check_mk-prism_host_usage"] = df_translation
 check_metrics["check_mk-prism_containers"] = df_translation
 check_metrics["check_mk-prism_storage_pools"] = df_translation
+check_metrics["check_mk-ucd_disk"] = df_translation
 check_metrics["check_mk-pure_storage_fa_arrays"] = {
     "fs_used": {"scale": MB},
     "fs_used_percent": {"auto_graph": False},
@@ -488,10 +488,16 @@ do_not_display_fs_size_translation: dict[str, CheckMetricEntry] = {
     },
 }
 check_metrics["check_mk-nfsmounts"] = do_not_display_fs_size_translation
+check_metrics["check_mk-nfsiostat"] = {
+    "read_avg_rtt_ms": {"name": "read_avg_rtt_s", "scale": m},
+    "read_avg_exe_ms": {"name": "read_avg_exe_s", "scale": m},
+    "write_avg_rtt_ms": {"name": "write_avg_rtt_s", "scale": m},
+    "write_avg_exe_ms": {"name": "write_avg_exe_s", "scale": m},
+}
 check_metrics["check_mk-cifsmounts"] = do_not_display_fs_size_translation
 check_metrics["check_mk-proxmox_ve_disk_usage"] = do_not_display_fs_size_translation
 
-check_metrics["check_mk-netapp_api_volumes"] = {
+netapp_volumes_metrics: dict[str, CheckMetricEntry] = {
     "fs_used": {"scale": MB},
     "fs_free": {"scale": MB},
     "fs_used_percent": {
@@ -522,6 +528,10 @@ check_metrics["check_mk-netapp_api_volumes"] = {
     "iscsi_write_latency": {"scale": m},
     "iscsi_other_latency": {"scale": m},
 }
+
+check_metrics["check_mk-netapp_api_volumes"] = netapp_volumes_metrics
+check_metrics["check_mk-netapp_ontap_volumes"] = netapp_volumes_metrics
+
 disk_utilization_translation: dict[str, CheckMetricEntry] = {
     "disk_utilization": {"scale": 100.0},
 }
@@ -569,6 +579,7 @@ check_metrics["check_mk-if64"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation
 check_metrics["check_mk-netapp_api_if"] = if_translation
+check_metrics["check_mk-netapp_ontap_if"] = if_translation
 check_metrics["check_mk-winperf_if"] = if_translation
 check_metrics["check_mk-gcp_gce_network"] = if_translation
 check_metrics["check_mk-azure_vm_network_io"] = if_translation
@@ -821,32 +832,6 @@ check_metrics["check_mk-adva_fsp_if"] = {
 }
 check_metrics["check_mk-allnet_ip_sensoric_tension"] = {
     "tension": {"name": "voltage_percent"},
-}
-check_metrics["check_mk-apache_status"] = {
-    "Uptime": {"name": "uptime"},
-    "IdleWorkers": {"name": "idle_workers"},
-    "BusyWorkers": {"name": "busy_workers"},
-    "IdleServers": {"name": "idle_servers"},
-    "BusyServers": {"name": "busy_servers"},
-    "OpenSlots": {"name": "open_slots"},
-    "TotalSlots": {"name": "total_slots"},
-    "CPULoad": {"name": "load1"},
-    "ReqPerSec": {"name": "requests_per_second"},
-    "BytesPerSec": {"name": "direkt_io"},
-    "ConnsTotal": {"name": "connections"},
-    "ConnsAsyncWriting": {"name": "connections_async_writing"},
-    "ConnsAsyncKeepAlive": {"name": "connections_async_keepalive"},
-    "ConnsAsyncClosing": {"name": "connections_async_closing"},
-    "State_StartingUp": {"name": "apache_state_startingup"},
-    "State_Waiting": {"name": "apache_state_waiting"},
-    "State_Logging": {"name": "apache_state_logging"},
-    "State_DNS": {"name": "apache_state_dns"},
-    "State_SendingReply": {"name": "apache_state_sending_reply"},
-    "State_ReadingRequest": {"name": "apache_state_reading_request"},
-    "State_Closing": {"name": "apache_state_closing"},
-    "State_IdleCleanup": {"name": "apache_state_idle_cleanup"},
-    "State_Finishing": {"name": "apache_state_finishing"},
-    "State_Keepalive": {"name": "apache_state_keep_alive"},
 }
 check_metrics["check_mk-ups_socomec_out_voltage"] = {
     "out_voltage": {"name": "voltage"},

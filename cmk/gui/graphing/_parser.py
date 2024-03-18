@@ -3,477 +3,465 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
+import math
+from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import Callable, Final, Literal
 
-import cmk.utils.render as render
+from cmk.graphing.v1 import metrics
 
-from cmk.gui.i18n import _
-
-from cmk.graphing.v1 import Color, PhysicalUnit, ScientificUnit, Unit
-
+from ._loader import units_from_api
 from ._type_defs import UnitInfo
 
+_MAX_DIGITS: Final = 5
 
-def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
-    match unit:
-        case Unit.BAR:
-            return UnitInfo(
-                title=_("Pressure"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 4, _("bar")),
-                js_render="v => cmk.number_format.physical_precision(v, 4, 'bar')",
+
+@dataclass(frozen=True)
+class Suffix:
+    prefix: str
+    symbol: str
+
+    def use_prefix(self, prefix: str) -> bool:
+        if self.prefix and prefix:
+            return self.prefix == prefix
+        return True
+
+    def use_symbol(self, symbol: str) -> bool:
+        if self.symbol and symbol:
+            return self.symbol == symbol
+        return True
+
+
+@dataclass(frozen=True)
+class Formatted:
+    value: int | float
+    suffix: Suffix
+
+    def format_value(self) -> str:
+        value_ = str(self.value)
+        return value_.rstrip("0").rstrip(".") if "." in value_ else value_
+
+
+@dataclass(frozen=True)
+class NumLabelRange:
+    left: int
+    right: int
+
+
+@dataclass(frozen=True)
+class Label:
+    position: int | float
+    text: str
+
+
+def _compute_auto_precision_digits_for_value(exponent: int, digits: int) -> int:
+    return max(exponent + 1, digits)
+
+
+def _compute_auto_precision_digits_for_label(exponent: int, digits: int) -> int:
+    return exponent + digits
+
+
+@dataclass(frozen=True)
+class NotationFormatter:
+    symbol: str
+    precision: metrics.AutoPrecision | metrics.StrictPrecision
+
+    @abc.abstractmethod
+    def ident(
+        self,
+    ) -> Literal["Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        raise NotImplementedError()
+
+    def _apply_precision(
+        self,
+        value: int | float,
+        compute_auto_precision_digits: Callable[[int, int], int],
+    ) -> float:
+        value_floor = math.floor(value)
+        if value == value_floor:
+            return value
+        digits = self.precision.digits
+        if isinstance(self.precision, metrics.AutoPrecision):
+            if exponent := abs(math.ceil(math.log10(value - value_floor))):
+                digits = compute_auto_precision_digits(exponent, self.precision.digits)
+        return round(value, min(digits, _MAX_DIGITS))
+
+    def _format(
+        self,
+        value: int | float,
+        suffix: Suffix,
+        compute_auto_precision_digits: Callable[[int, int], int],
+    ) -> Formatted:
+        if value < 0:
+            formatted = self._format(abs(value), suffix, compute_auto_precision_digits)
+            return Formatted(-formatted.value, formatted.suffix)
+        if value in (0, 1):
+            return Formatted(value, Suffix("", self.symbol))
+        if value < 1:
+            formatted = self._preformat_small_number(value, suffix)
+        else:  # value > 1
+            formatted = self._preformat_large_number(value, suffix)
+        return Formatted(
+            self._apply_precision(
+                formatted.value,
+                compute_auto_precision_digits,
+            ),
+            formatted.suffix,
+        )
+
+    @abc.abstractmethod
+    def _format_suffix(self, suffix: Suffix) -> str:
+        raise NotImplementedError()
+
+    def render(self, value: int | float) -> str:
+        formatted = self._format(value, Suffix("", ""), _compute_auto_precision_digits_for_value)
+        return f"{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip()
+
+    @abc.abstractmethod
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        raise NotImplementedError()
+
+    def render_y_labels(
+        self, max_y: int | float, num_label_range: NumLabelRange
+    ) -> Sequence[Label]:
+        assert max_y >= 0
+        if max_y == 0:
+            return []
+
+        if max_y < 1:
+            atoms = self._compute_small_y_label_atoms(max_y)
+        else:  # max_y >= 1
+            max_y = math.ceil(max_y)
+            atoms = self._compute_large_y_label_atoms(max_y)
+
+        if possible_atoms := [
+            (a, int(q))
+            for a in atoms
+            if num_label_range.left <= (q := max_y // a) <= num_label_range.right
+        ]:
+            # Take the entry with the smallest amount of labels.
+            atom, quotient = min(possible_atoms, key=lambda t: t[1])
+        else:
+            atom = max_y / num_label_range.right
+            quotient = int(max_y / atom)
+
+        first = self._format(atom, Suffix("", ""), _compute_auto_precision_digits_for_label)
+        return [
+            Label(
+                atom * i,
+                f"{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip(),
             )
-        case Unit.BIT_IEC:
-            return UnitInfo(
-                title=_("Bits"),
-                symbol=unit.value,
-                render=lambda v: render.fmt_bytes(
-                    v, unit_prefix_type=render.IECUnitPrefixes, unit="bits"
+            for i in range(1, quotient + 1)
+            for formatted in (
+                self._format(
+                    atom * i,
+                    first.suffix,
+                    _compute_auto_precision_digits_for_label,
                 ),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes, 2, 'bits')",
             )
-        case Unit.BIT_IEC_PER_SECOND:
-            return UnitInfo(
-                title=_("Bits per second"),
-                symbol=unit.value,
-                render=lambda v: (
-                    render.fmt_bytes(v, unit_prefix_type=render.IECUnitPrefixes, unit="bits")
-                    + _("/s")
-                ),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes, 2, 'bits') + '/s'",
-            )
-        case Unit.BIT_SI:
-            return UnitInfo(
-                title=_("Bits"),
-                symbol=unit.value,
-                render=lambda v: render.fmt_bytes(
-                    v, unit_prefix_type=render.SIUnitPrefixes, unit="bits"
-                ),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.SIUnitPrefixes, 2, 'bits')",
-            )
-        case Unit.BIT_SI_PER_SECOND:
-            return UnitInfo(
-                title=_("Bits per second"),
-                symbol=unit.value,
-                render=lambda v: (
-                    render.fmt_bytes(v, unit_prefix_type=render.SIUnitPrefixes, unit="bits")
-                    + _("/s")
-                ),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.SIUnitPrefixes, 2, 'bits') + '/s'",
-            )
-        case Unit.BYTE_IEC:
-            return UnitInfo(
-                title=_("Bytes"),
-                symbol=unit.value,
-                render=lambda v: render.fmt_bytes(v, unit_prefix_type=render.IECUnitPrefixes),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes)",
-            )
-        case Unit.BYTE_IEC_PER_DAY:
-            # Output in bytes/days, value is in bytes/s
-            return UnitInfo(
-                title=_("Bytes per day"),
-                symbol=unit.value,
-                render=lambda v: (
-                    render.fmt_bytes(v * 86400.0, unit_prefix_type=render.IECUnitPrefixes) + _("/d")
-                ),
-                js_render="v => cmk.number_format.fmt_bytes(v * 86400.0, cmk.number_format.IECUnitPrefixes) + '/d'",
-            )
-        case Unit.BYTE_IEC_PER_OPERATION:
-            return UnitInfo(
-                title=_("Bytes per operation"),
-                symbol=unit.value,
-                render=lambda v: (
-                    render.fmt_bytes(v, unit_prefix_type=render.IECUnitPrefixes) + _("/op")
-                ),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes) + '/op'",
-            )
-        case Unit.BYTE_IEC_PER_SECOND:
-            return UnitInfo(
-                title=_("Bytes per second"),
-                symbol=unit.value,
-                render=lambda v: (
-                    render.fmt_bytes(v, unit_prefix_type=render.IECUnitPrefixes) + _("/s")
-                ),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.IECUnitPrefixes) + '/s'",
-            )
-        case Unit.BYTE_SI:
-            return UnitInfo(
-                title=_("Bytes"),
-                symbol=unit.value,
-                render=lambda v: render.fmt_bytes(v, unit_prefix_type=render.SIUnitPrefixes),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.SIUnitPrefixes)",
-            )
-        case Unit.BYTE_SI_PER_DAY:
-            # Output in bytes/days, value is in bytes/s
-            return UnitInfo(
-                title=_("Bytes per day"),
-                symbol=unit.value,
-                render=lambda v: (
-                    render.fmt_bytes(v * 86400.0, unit_prefix_type=render.SIUnitPrefixes) + _("/d")
-                ),
-                js_render="v => cmk.number_format.fmt_bytes(v * 86400.0, cmk.number_format.SIUnitPrefixes) + '/d'",
-            )
-        case Unit.BYTE_SI_PER_OPERATION:
-            return UnitInfo(
-                title=_("Bytes per operation"),
-                symbol=unit.value,
-                render=lambda v: (
-                    render.fmt_bytes(v, unit_prefix_type=render.SIUnitPrefixes) + _("/op")
-                ),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.SIUnitPrefixes) + '/op'",
-            )
-        case Unit.BYTE_SI_PER_SECOND:
-            return UnitInfo(
-                title=_("Bytes per second"),
-                symbol=unit.value,
-                render=lambda v: (
-                    render.fmt_bytes(v, unit_prefix_type=render.SIUnitPrefixes) + _("/s")
-                ),
-                js_render="v => cmk.number_format.fmt_bytes(v, cmk.number_format.SIUnitPrefixes) + '/s'",
-            )
-        case Unit.COUNT:
-            return UnitInfo(
-                title=_("Count"),
-                symbol="",
-                render=lambda v: render.fmt_number_with_precision(v, drop_zeroes=True),
-                js_render="v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true)",
-            )
-        case Unit.DECIBEL:
-            return UnitInfo(
-                title=_("Decibel"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("dB")),
-                js_render="v => cmk.number_format.drop_dotzero(v) + 'dB'",
-            )
-        case Unit.DECIBEL_MILLIVOLT:
-            return UnitInfo(
-                title=_("Decibel-millivolt"),
-                symbol=unit.value,
-                render=lambda v: "{} {}".format(render.drop_dotzero(v), _("dBmV")),
-                js_render="v => cmk.number_format.drop_dotzero(v) + ' dBmV'",
-            )
-        case Unit.DECIBEL_MILLIWATT:
-            return UnitInfo(
-                title=_("Decibel-milliwatt"),
-                symbol=unit.value,
-                render=lambda v: "{} {}".format(render.drop_dotzero(v), _("dBm")),
-                js_render="v => cmk.number_format.drop_dotzero(v) + ' dBm'",
-            )
-        case Unit.DOLLAR:
-            return UnitInfo(
-                title=_("Dollar"),
-                symbol=unit.value,
-                render=lambda v: "%s $" % v,
-                js_render="v =>v.toFixed(2) + ' $'",
-            )
-        case Unit.ELETRICAL_ENERGY:
-            return UnitInfo(
-                title=_("Electrical energy"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("Wh")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'Wh')",
-            )
-        case Unit.EURO:
-            return UnitInfo(
-                title=_("Euro"),
-                symbol=unit.value,
-                render=lambda v: "%s €" % v,
-                js_render="v =>v.toFixed(2) + ' €'",
-            )
-        case Unit.LITER_PER_SECOND:
-            return UnitInfo(
-                title=_("Liter per second"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("l/s")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'l/s')",
-            )
-        case Unit.NUMBER:
-            return UnitInfo(
-                title=_("Number"),
-                symbol="",
-                render=lambda v: render.scientific(v, 2),
-                js_render="v => cmk.number_format.scientific(v, 2)",
-            )
-        case Unit.PARTS_PER_MILLION:
-            return UnitInfo(
-                title=_("Parts per million"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("ppm")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'ppm')",
-            )
-        case Unit.PERCENTAGE:
-            return UnitInfo(
-                title=_("Percentage"),
-                symbol=unit.value,
-                render=lambda v: render.percent(v, scientific_notation=True),
-                js_render="v => cmk.number_format.percent(v, true)",
-            )
-        case Unit.PERCENTAGE_PER_METER:
-            return UnitInfo(
-                title=_("Percentage per meter"),
-                symbol=unit.value,
-                render=lambda v: render.percent(v, scientific_notation=True) + _("/m"),
-                js_render="v => cmk.number_format.percent(v, true) + '/m'",
-            )
-        case Unit.PER_SECOND:
-            return UnitInfo(
-                title=_("Per second"),
-                symbol=unit.value,
-                render=lambda v: "{}{}".format(render.scientific(v, 2), _("/s")),
-                js_render="v => cmk.number_format.scientific(v, 2) + '/s'",
-            )
-        case Unit.READ_CAPACITY_UNIT:
-            return UnitInfo(
-                title=_("Read capacity unit"),
-                symbol=unit.value,
-                render=lambda v: render.fmt_number_with_precision(v, precision=3, unit="RCU"),
-                js_render="v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 3, false, 'RCU')",
-            )
-        case Unit.REVOLUTIONS_PER_MINUTE:
-            return UnitInfo(
-                title=_("Revolutions per minute"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 4, _("rpm")),
-                js_render="v => cmk.number_format.physical_precision(v, 4, 'rpm')",
-            )
-        case Unit.SECONDS_PER_SECOND:
-            return UnitInfo(
-                title=_("Seconds per second"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("s/s")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 's/s')",
-            )
-        case Unit.VOLT_AMPERE:
-            return UnitInfo(
-                title=_("Electrical Apparent Power"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("VA")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'VA')",
-            )
-        case Unit.WRITE_CAPACITY_UNIT:
-            return UnitInfo(
-                title=_("Write capacity unit"),
-                symbol=unit.value,
-                render=lambda v: render.fmt_number_with_precision(v, precision=3, unit="WCU"),
-                js_render="v => cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 3, false, 'WCU')",
-            )
-        case Unit.AMPERE:
-            return UnitInfo(
-                title=_("Electrical Current"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("A")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'A')",
-            )
-        case Unit.CANDELA:
-            return UnitInfo(
-                title=_("Luminous intensity"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("cd")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'cd')",
-            )
-        case Unit.KELVIN:
-            return UnitInfo(
-                title=_("Temperature"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("K")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'K')",
-            )
-        case Unit.KILOGRAM:
-            return UnitInfo(
-                title=_("Mass"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("kg")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'kg')",
-            )
-        case Unit.METRE:
-            return UnitInfo(
-                title=_("Length"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("m")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'm')",
-            )
-        case Unit.MOLE:
-            return UnitInfo(
-                title=_("Amount of substance"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("mol")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'mol')",
-            )
-        case Unit.SECOND:
-            return UnitInfo(
-                title=_("Time"),
-                symbol=unit.value,
-                render=render.approx_age,
-                js_render="v => cmk.number_format.approx_age",
-            )
-        case Unit.BECQUEREL:
-            return UnitInfo(
-                title=_("Radioactive activity"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("Bq")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'Bq')",
-            )
-        case Unit.COULOMB:
-            return UnitInfo(
-                title=_("Electric charge"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("C")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'C')",
-            )
-        case Unit.DEGREE_CELSIUS:
-            return UnitInfo(
-                title=_("Temperature"),
-                symbol=unit.value,
-                render=lambda v: "{} {}".format(render.drop_dotzero(v), "°C"),
-                js_render="v => cmk.number_format.drop_dotzero(v) + ' °C'",
-            )
-        case Unit.FARAD:
-            return UnitInfo(
-                title=_("Capacitance"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("F")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'F')",
-            )
-        case Unit.GRAY:
-            return UnitInfo(
-                title=_("Radioactive dose"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("Gy")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'Gy')",
-            )
-        case Unit.HENRY:
-            return UnitInfo(
-                title=_("Inductance"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("H")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'H')",
-            )
-        case Unit.HERTZ:
-            return UnitInfo(
-                title=_("Frequency"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("Hz")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'Hz')",
-            )
-        case Unit.JOULE:
-            return UnitInfo(
-                title=_("Heat"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("J")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'J')",
-            )
-        case Unit.KATAL:
-            return UnitInfo(
-                title=_("Catalytic activity"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("kat")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'kat')",
-            )
-        case Unit.LUMEN:
-            return UnitInfo(
-                title=_("Luminous flux"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("lm")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'lm')",
-            )
-        case Unit.LUX:
-            return UnitInfo(
-                title=_("Illuminance"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("lx")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'lx')",
-            )
-        case Unit.NEWTON:
-            return UnitInfo(
-                title=_("Force"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("N")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'N')",
-            )
-        case Unit.OHM:
-            return UnitInfo(
-                title=_("Impedance"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("Ω")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'Ω')",
-            )
-        case Unit.PASCAL:
-            return UnitInfo(
-                title=_("Pressure"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("Pa")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'Pa')",
-            )
-        case Unit.RADIAN:
-            return UnitInfo(
-                title=_("Plane angle"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("rad")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'rad')",
-            )
-        case Unit.SIEMENS:
-            return UnitInfo(
-                title=_("Electrical conductance"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("S")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'S')",
-            )
-        case Unit.SIEVERT:
-            return UnitInfo(
-                title=_("Dose equivalent"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("Sv")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'Sv')",
-            )
-        case Unit.STERADIAN:
-            return UnitInfo(
-                title=_("Solid angle"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("sr")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'sr')",
-            )
-        case Unit.TESLA:
-            return UnitInfo(
-                title=_("Magnetic flux density"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("T")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'T')",
-            )
-        case Unit.VOLT:
-            return UnitInfo(
-                title=_("Electric potential"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("V")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'V')",
-            )
-        case Unit.WATT:
-            return UnitInfo(
-                title=_("Power"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("W")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'W')",
-            )
-        case Unit.WEBER:
-            return UnitInfo(
-                title=_("Magnetic flux"),
-                symbol=unit.value,
-                render=lambda v: render.physical_precision(v, 3, _("Wb")),
-                js_render="v => cmk.number_format.physical_precision(v, 3, 'Wb')",
-            )
-        case PhysicalUnit():
-            return UnitInfo(
-                title=unit.title.localize(_),
-                symbol=unit.symbol,
-                render=lambda v: render.physical_precision(v, 3, unit.symbol),
-                js_render=f"v => cmk.number_format.physical_precision(v, 3, '{unit.symbol}')",
-            )
-        case ScientificUnit():
-            return UnitInfo(
-                title=unit.title.localize(_),
-                symbol=unit.symbol,
-                render=lambda v: "{} {}".format(render.scientific(v, 2), unit.symbol),
-                js_render=f"v => cmk.number_format.scientific(v, 2) + '{unit.symbol}'",
-            )
+        ]
+
+
+_BASIC_DECIMAL_ATOMS: Final = [1, 2, 5, 10, 20, 50]
+
+
+class DecimalFormatter(NotationFormatter):
+    def ident(self) -> Literal["Decimal"]:
+        return "Decimal"
+
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        return Formatted(value, Suffix("", self.symbol))
+
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        return Formatted(value, Suffix("", self.symbol))
+
+    def _format_suffix(self, suffix: Suffix) -> str:
+        return f" {suffix.symbol}"
+
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+
+class SIFormatter(NotationFormatter):
+    def ident(self) -> Literal["SI"]:
+        return "SI"
+
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        exponent = math.floor(math.log10(value)) - 1
+        for exp, power, prefix in (
+            (-24, 8, "y"),
+            (-21, 7, "z"),
+            (-18, 6, "a"),
+            (-15, 5, "f"),
+            (-12, 4, "p"),
+            (-9, 3, "n"),
+            (-6, 2, "μ"),
+            (-3, 1, "m"),
+        ):
+            if exponent <= exp and suffix.use_prefix(prefix):
+                return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
+        return Formatted(value, Suffix("", self.symbol))
+
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        exponent = math.floor(math.log10(value))
+        for exp, power, prefix in (
+            (24, 8, "Y"),
+            (21, 7, "Z"),
+            (18, 6, "E"),
+            (15, 5, "P"),
+            (12, 4, "T"),
+            (9, 3, "G"),
+            (6, 2, "M"),
+            (3, 1, "k"),
+        ):
+            if exponent >= exp and suffix.use_prefix(prefix):
+                return Formatted(value / pow(1000, power), Suffix(prefix, self.symbol))
+        return Formatted(value, Suffix("", self.symbol))
+
+    def _format_suffix(self, suffix: Suffix) -> str:
+        return f" {suffix.prefix}{suffix.symbol}"
+
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+
+class IECFormatter(NotationFormatter):
+    def ident(self) -> Literal["IEC"]:
+        return "IEC"
+
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        return Formatted(value, Suffix("", self.symbol))
+
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        exponent = math.floor(math.log2(value))
+        for exp, power, prefix in (
+            (80, 8, "Yi"),
+            (70, 7, "Zi"),
+            (60, 6, "Ei"),
+            (50, 5, "Pi"),
+            (40, 4, "Ti"),
+            (30, 3, "Gi"),
+            (20, 2, "Mi"),
+            (10, 1, "Ki"),
+        ):
+            if exponent >= exp and suffix.use_prefix(prefix):
+                return Formatted(value / pow(1024, power), Suffix(prefix, self.symbol))
+        return Formatted(value, Suffix("", self.symbol))
+
+    def _format_suffix(self, suffix: Suffix) -> str:
+        return f" {suffix.prefix}{suffix.symbol}"
+
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        exponent = math.floor(math.log2(max_y))
+        return [pow(2, e) for e in range(1, exponent + 1)]
+
+
+class StandardScientificFormatter(NotationFormatter):
+    def ident(self) -> Literal["StandardScientific"]:
+        return "StandardScientific"
+
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        exponent = math.floor(math.log10(value))
+        return Formatted(value / pow(10, exponent), Suffix(f"e{exponent}", self.symbol))
+
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        exponent = math.floor(math.log10(value))
+        return Formatted(value / pow(10, exponent), Suffix(f"e+{exponent}", self.symbol))
+
+    def _format_suffix(self, suffix: Suffix) -> str:
+        return f"{suffix.prefix} {suffix.symbol}"
+
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+
+class EngineeringScientificFormatter(NotationFormatter):
+    def ident(self) -> Literal["EngineeringScientific"]:
+        return "EngineeringScientific"
+
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        exponent = math.floor(math.log10(value) / 3) * 3
+        return Formatted(value / pow(10, exponent), Suffix(f"e{exponent}", self.symbol))
+
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        exponent = math.floor(math.log10(value) // 3) * 3
+        return Formatted(value / pow(10, exponent), Suffix(f"e+{exponent}", self.symbol))
+
+    def _format_suffix(self, suffix: Suffix) -> str:
+        return f"{suffix.prefix} {suffix.symbol}"
+
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+
+_ONE_DAY: Final = 86400
+_ONE_HOUR: Final = 3600
+_ONE_MINUTE: Final = 60
+_BASIC_TIME_ATOMS: Final = [
+    1,
+    2,
+    5,
+    10,
+    20,
+    30,
+    _ONE_MINUTE,
+    2 * _ONE_MINUTE,
+    5 * _ONE_MINUTE,
+    10 * _ONE_MINUTE,
+    20 * _ONE_MINUTE,
+    30 * _ONE_MINUTE,
+    _ONE_HOUR,
+    2 * _ONE_HOUR,
+    4 * _ONE_HOUR,
+    6 * _ONE_HOUR,
+    8 * _ONE_HOUR,
+    12 * _ONE_HOUR,
+    _ONE_DAY,
+    2 * _ONE_DAY,
+    5 * _ONE_DAY,
+    10 * _ONE_DAY,
+    20 * _ONE_DAY,
+    50 * _ONE_DAY,
+    100 * _ONE_DAY,
+]
+
+
+class TimeFormatter(NotationFormatter):
+    def ident(self) -> Literal["Time"]:
+        return "Time"
+
+    def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        exponent = math.floor(math.log10(value)) - 1
+        for exp, power, prefix in (
+            (-6, 2, "μ"),
+            (-3, 1, "m"),
+        ):
+            if exponent <= exp and suffix.use_prefix(prefix):
+                return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
+        return Formatted(value, Suffix("", self.symbol))
+
+    def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        for factor, symbol in (
+            (_ONE_DAY, "d"),
+            (_ONE_HOUR, "h"),
+            (_ONE_MINUTE, "min"),
+        ):
+            if value >= factor and suffix.use_symbol(symbol):
+                return Formatted(value / factor, Suffix("", symbol))
+        return Formatted(value, Suffix("", self.symbol))
+
+    def _format_suffix(self, suffix: Suffix) -> str:
+        return f" {suffix.prefix}{suffix.symbol}"
+
+    def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        factor = pow(10, math.floor(math.log10(max_y)) - 1)
+        return [a * factor for a in _BASIC_DECIMAL_ATOMS]
+
+    def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
+        if max_y >= _ONE_DAY:
+            if (q := int(max_y // _ONE_DAY)) < 2:
+                return _BASIC_TIME_ATOMS[15:]
+            exponent = math.floor(math.log10(q))
+            return _BASIC_TIME_ATOMS[15:] + [
+                _ONE_DAY * a * pow(10, exponent - 1) for a in _BASIC_DECIMAL_ATOMS
+            ]
+        if max_y >= _ONE_HOUR:
+            return _BASIC_TIME_ATOMS[9:18]
+        if max_y >= _ONE_MINUTE:
+            return _BASIC_TIME_ATOMS[3:12]
+        return _BASIC_DECIMAL_ATOMS[:6]
+
+
+def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
+    if (
+        unit_id := (
+            f"{unit.notation.__class__.__name__}_{unit.notation.symbol}"
+            f"_{unit.precision.__class__.__name__}_{unit.precision.digits}"
+        )
+    ) in units_from_api:
+        return units_from_api[unit_id]
+
+    formatter: NotationFormatter
+    match unit.notation:
+        case metrics.DecimalNotation():
+            formatter = DecimalFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "DecimalFormatter"
+        case metrics.SINotation():
+            formatter = SIFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "SIFormatter"
+        case metrics.IECNotation():
+            formatter = IECFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "IECFormatter"
+        case metrics.StandardScientificNotation():
+            formatter = StandardScientificFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "StandardScientificFormatter"
+        case metrics.EngineeringScientificNotation():
+            formatter = EngineeringScientificFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "EngineeringScientificFormatter"
+        case metrics.TimeNotation():
+            formatter = TimeFormatter(unit.notation.symbol, unit.precision)
+            js_formatter = "TimeFormatter"
+
+    match unit.precision:
+        case metrics.AutoPrecision():
+            precision_title = f"auto precision {unit.precision.digits}"
+        case metrics.StrictPrecision():
+            precision_title = f"strict precision {unit.precision.digits}"
+    title_parts = [
+        unit.notation.symbol or "no symbol",
+        f"({formatter.ident()}, {precision_title})",
+    ]
+    return units_from_api.register(
+        UnitInfo(
+            id=unit_id,
+            title=" ".join(title_parts),
+            symbol=unit.notation.symbol,
+            render=formatter.render,
+            js_render=f"""v => new cmk.number_format.{js_formatter}(
+    "{unit.notation.symbol}",
+    new cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
+).render(v)""",
+            formatter_ident=formatter.ident(),
+        )
+    )
 
 
 @dataclass(frozen=True)
@@ -483,84 +471,84 @@ class RGB:
     blue: int
 
 
-def color_to_rgb(color: Color) -> RGB:
+def color_to_rgb(color: metrics.Color) -> RGB:
     match color:
-        case Color.LIGHT_RED:
-            return RGB(255, 51, 51)
-        case Color.RED:
-            return RGB(204, 0, 0)
-        case Color.DARK_RED:
-            return RGB(122, 0, 0)
+        case metrics.Color.LIGHT_RED:
+            return RGB(255, 112, 112)
+        case metrics.Color.RED:
+            return RGB(255, 41, 41)
+        case metrics.Color.DARK_RED:
+            return RGB(164, 0, 0)
 
-        case Color.LIGHT_ORANGE:
-            return RGB(255, 163, 71)
-        case Color.ORANGE:
-            return RGB(255, 127, 0)
-        case Color.DARK_ORANGE:
-            return RGB(204, 102, 0)
+        case metrics.Color.LIGHT_ORANGE:
+            return RGB(255, 150, 100)
+        case metrics.Color.ORANGE:
+            return RGB(255, 110, 33)
+        case metrics.Color.DARK_ORANGE:
+            return RGB(180, 70, 10)
 
-        case Color.LIGHT_YELLOW:
-            return RGB(255, 255, 112)
-        case Color.YELLOW:
-            return RGB(245, 245, 0)
-        case Color.DARK_YELLOW:
-            return RGB(204, 204, 0)
+        case metrics.Color.LIGHT_YELLOW:
+            return RGB(255, 255, 120)
+        case metrics.Color.YELLOW:
+            return RGB(245, 245, 50)
+        case metrics.Color.DARK_YELLOW:
+            return RGB(170, 170, 0)
 
-        case Color.LIGHT_GREEN:
-            return RGB(112, 255, 112)
-        case Color.GREEN:
-            return RGB(0, 255, 0)
-        case Color.DARK_GREEN:
-            return RGB(0, 143, 0)
+        case metrics.Color.LIGHT_GREEN:
+            return RGB(165, 255, 85)
+        case metrics.Color.GREEN:
+            return RGB(55, 250, 55)
+        case metrics.Color.DARK_GREEN:
+            return RGB(40, 140, 15)
 
-        case Color.LIGHT_BLUE:
-            return RGB(71, 71, 255)
-        case Color.BLUE:
-            return RGB(0, 0, 255)
-        case Color.DARK_BLUE:
-            return RGB(0, 0, 163)
+        case metrics.Color.LIGHT_BLUE:
+            return RGB(135, 206, 250)
+        case metrics.Color.BLUE:
+            return RGB(30, 144, 255)
+        case metrics.Color.DARK_BLUE:
+            return RGB(30, 30, 200)
 
-        case Color.LIGHT_CYAN:
-            return RGB(153, 255, 255)
-        case Color.CYAN:
-            return RGB(0, 255, 255)
-        case Color.DARK_CYAN:
-            return RGB(0, 184, 184)
+        case metrics.Color.LIGHT_CYAN:
+            return RGB(150, 255, 255)
+        case metrics.Color.CYAN:
+            return RGB(30, 230, 230)
+        case metrics.Color.DARK_CYAN:
+            return RGB(20, 135, 140)
 
-        case Color.LIGHT_PURPLE:
-            return RGB(163, 71, 255)
-        case Color.PURPLE:
-            return RGB(127, 0, 255)
-        case Color.DARK_PURPLE:
-            return RGB(82, 0, 163)
+        case metrics.Color.LIGHT_PURPLE:
+            return RGB(220, 160, 255)
+        case metrics.Color.PURPLE:
+            return RGB(180, 65, 240)
+        case metrics.Color.DARK_PURPLE:
+            return RGB(120, 20, 160)
 
-        case Color.LIGHT_PINK:
-            return RGB(255, 214, 220)
-        case Color.PINK:
-            return RGB(255, 192, 203)
-        case Color.DARK_PINK:
-            return RGB(255, 153, 170)
+        case metrics.Color.LIGHT_PINK:
+            return RGB(255, 160, 240)
+        case metrics.Color.PINK:
+            return RGB(255, 100, 255)
+        case metrics.Color.DARK_PINK:
+            return RGB(210, 20, 190)
 
-        case Color.LIGHT_BROWN:
-            return RGB(184, 92, 0)
-        case Color.BROWN:
-            return RGB(143, 71, 0)
-        case Color.DARK_BROWN:
-            return RGB(102, 51, 0)
+        case metrics.Color.LIGHT_BROWN:
+            return RGB(230, 180, 140)
+        case metrics.Color.BROWN:
+            return RGB(191, 133, 72)
+        case metrics.Color.DARK_BROWN:
+            return RGB(124, 62, 4)
 
-        case Color.LIGHT_GRAY:
-            return RGB(153, 153, 153)
-        case Color.GRAY:
-            return RGB(127, 127, 127)
-        case Color.DARK_GRAY:
-            return RGB(92, 92, 92)
+        case metrics.Color.LIGHT_GRAY:
+            return RGB(200, 200, 200)
+        case metrics.Color.GRAY:
+            return RGB(164, 164, 164)
+        case metrics.Color.DARK_GRAY:
+            return RGB(121, 121, 121)
 
-        case Color.BLACK:
+        case metrics.Color.BLACK:
             return RGB(0, 0, 0)
-        case Color.WHITE:
+        case metrics.Color.WHITE:
             return RGB(255, 255, 255)
 
 
-def parse_color(color: Color) -> str:
+def parse_color(color: metrics.Color) -> str:
     rgb = color_to_rgb(color)
     return f"#{rgb.red:02x}{rgb.green:02x}{rgb.blue:02x}"

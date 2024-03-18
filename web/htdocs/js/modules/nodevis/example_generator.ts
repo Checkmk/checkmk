@@ -1,14 +1,15 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
 // Note: This file requires a complete redesign
 // It uses way too much fake objects to render some simple styles
+// Fortunately it has no effect on the actual NodeVisualization and is just used within the BI configuration GUI
 
 import * as d3 from "d3";
-import {compute_node_position, LayoutManagerLayer} from "nodevis/layout";
+import {LayoutManagerLayer} from "nodevis/layout";
 import {
     LayoutStyleBlock,
     LayoutStyleHierarchy,
@@ -16,6 +17,7 @@ import {
 } from "nodevis/layout_styles";
 import {
     AbstractLayoutStyle,
+    compute_node_position,
     render_style_options,
     StyleConfig,
     StyleOptionSpec,
@@ -25,7 +27,6 @@ import {
     d3SelectionDiv,
     d3SelectionG,
     d3SelectionSvg,
-    NodeChunk,
     NodeData,
     NodevisNode,
     NodevisWorld,
@@ -137,19 +138,18 @@ export class LayoutStyleExampleGenerator {
     }
 
     _create_fake_world(): NodevisWorld {
-        return {
-            layout_manager: {
-                get_viewport_percentage_of_node:
-                    LayoutManagerLayer.prototype
-                        .get_viewport_percentage_of_node,
-                get_node_positioning:
-                    LayoutManagerLayer.prototype.get_node_positioning,
-                create_undo_step: () => null,
-                update_style_indicators: () => null,
-                layout_applier: {
-                    apply_all_layouts: () => null,
-                },
+        //@ts-ignore
+        const layout_manager = {
+            get_node_positioning:
+                LayoutManagerLayer.prototype.get_node_positioning,
+            create_undo_step: () => null,
+            update_style_indicators: () => null,
+            layout_applier: {
+                apply_all_layouts: () => null,
             },
+        };
+        return {
+            layout_manager: layout_manager,
             force_simulation: {
                 restart_with_alpha: () => null,
             },
@@ -160,6 +160,19 @@ export class LayoutStyleExampleGenerator {
                 },
                 last_zoom: {
                     k: 1,
+                },
+                get_viewport_percentage_of_node: (node: NodevisNode) => {
+                    return {
+                        x: (100.0 * node.x) / 600,
+                        y: (100.0 * node.y) / 400,
+                    };
+                },
+                get_layout_manager: () => {
+                    return layout_manager;
+                },
+                restart_force_simulation: () => null,
+                get_size: () => {
+                    return {width: 600, height: 400};
                 },
             },
         } as unknown as NodevisWorld;
@@ -230,16 +243,13 @@ export class LayoutStyleExampleGenerator {
                 this._options_selection,
                 this._style_instance.get_style_options(),
                 this._style_instance.style_config.options,
-                (event, new_options) => {
+                (new_options: StyleOptionValues) => {
                     if (this._style_instance)
-                        this._style_instance.changed_options(
-                            event,
-                            new_options
-                        );
+                        this._style_instance.changed_options(new_options);
                 },
-                event => {
+                () => {
                     if (this._style_instance)
-                        this._style_instance.reset_default_options(event);
+                        this._style_instance.reset_default_options();
                 }
             );
     }
@@ -313,13 +323,17 @@ export class LayoutStyleExampleGenerator {
             .selectAll<HTMLTableRowElement, StyleOptionSpec>("tr")
             .data(options);
         rows.exit().remove();
-        const rows_enter = rows.enter().append("tr");
+        const rows_enter = rows
+            .enter()
+            .append("tr")
+            .classed("range_input", true);
         rows_enter
             .append("td")
             .text(d => d.text)
             .classed("style_infotext", true);
         rows_enter
             .append("td")
+            .classed("range_input slider", true)
             .append("input")
             .classed("range", true)
             .attr("id", d => d.id)
@@ -417,7 +431,6 @@ export class LayoutStyleExampleGenerator {
         },
         example_options: StyleOptionValues
     ): NodevisNode {
-        const chunk = {coords: {x: 0, y: 0, width: 400, height: 400}};
         let id_counter = 0;
 
         const maximum_nodes = example_options.total_nodes;
@@ -466,7 +479,6 @@ export class LayoutStyleExampleGenerator {
             node.y = 50;
             id_counter += 1;
             node.data.id = id_counter.toString();
-            node.data.chunk = chunk as NodeChunk;
             node.data.hostname = "Demohost";
             node.data.transition_info = {};
         });

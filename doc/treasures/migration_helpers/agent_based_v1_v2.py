@@ -19,10 +19,14 @@ from pathlib import Path
 from typing import Self, Sequence
 
 IMPORTS = (
+    ("from .agent_based_api.v1 import check_levels\n", "\n"),
+    ("from cmk.base.plugins.agent_based_api.v1 import check_levels\n", "\n"),
+    ("check_levels, ", ""),
+    (", check_levels", ""),
     ("cmk.base.plugins.agent_based.agent_based_api.v1", "cmk.agent_based.v2"),
     (".agent_based_api.v1", "cmk.agent_based.v2"),
     ("cmk.base.plugins.agent_based.utils", ".utils"),
-    ("check_levels", "check_levels_fixed as check_levels"),
+    ("cmk.agent_based.v2.type_defs", "cmk.agent_based.v2"),
 )
 
 
@@ -118,12 +122,13 @@ def _transform(file_name: Path, inplace: bool) -> None:
 
 
 def _transform_imports(imports: str) -> str:
+    for old, new in IMPORTS:
+        imports = imports.replace(old, new)
     imports += (
+        "from cmk.agent_based.v1 import check_levels\n"
         "from cmk.agent_based.v2 import AgentSection, SNMPSection,"
         " SimpleSNMPSection, CheckPlugin, InventoryPlugin\n\n"
     )
-    for old, new in IMPORTS:
-        imports = imports.replace(old, new)
     return imports
 
 

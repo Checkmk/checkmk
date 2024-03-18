@@ -30,6 +30,8 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD)
 	# https://stackoverflow.com/questions/75208034
 	$(RSYNC) -r --chmod=u+w "$(BAZEL_BIN_EXT)/python/python/" \
 	    "$(PYTHON_INSTALL_DIR)/"
+	# remove executable bit from libraries
+	find "$(PYTHON_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)" -type f | xargs chmod -x
 	# Fix sysconfigdata
 	$(SED) -i "s|/replace-me|$(PACKAGE_PYTHON_DESTDIR)|g" $(PACKAGE_PYTHON_SYSCONFIGDATA)
 	# set RPATH for all ELF binaries we find
@@ -42,4 +44,14 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD)
 
 $(PYTHON_INSTALL): $(PYTHON_INTERMEDIATE_INSTALL)
 	$(RSYNC) -rl --perms $(PYTHON_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
-	$(SED) -i "s|$(PACKAGE_PYTHON_DESTDIR)|$(OMD_ROOT)|g" $(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/$(PYTHON_SYSCONFIGDATA)
+	$(SED) -i "s|$(PACKAGE_PYTHON_DESTDIR)|$(OMD_ROOT)|g" \
+	    $(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/$(PYTHON_SYSCONFIGDATA)
+	# pre-compile pyc files enforcing `checked-hash` invalidation
+	# note: this is a workaround and should be handled in according Bazel project
+	$(PACKAGE_PYTHON_EXECUTABLE) -m compileall \
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/" \
+	    -x "bad_coding|badsyntax|test/test_lib2to3/data" \
+	    "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/"
+

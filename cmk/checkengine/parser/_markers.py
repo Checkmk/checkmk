@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, MutableMapping, Sequence
+from collections.abc import Iterable, Sequence
 from typing import NamedTuple
 
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.hostaddress import HostName
-from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import translate_hostname, TranslationOptions
 
@@ -16,7 +15,7 @@ __all__ = ["PiggybackMarker", "SectionMarker"]
 
 
 class PiggybackMarker(NamedTuple):
-    hostname: HostName
+    hostname: HostName | None
 
     @staticmethod
     def is_header(line: bytes) -> bool:
@@ -45,15 +44,13 @@ class PiggybackMarker(NamedTuple):
             fallback=encoding_fallback,
         )
         assert raw_host_name
-        hostname = translate_hostname(translation, raw_host_name)
 
-        # Protect Checkmk against unallowed host names. Normally source scripts
-        # like agent plugins should care about cleaning their provided host names
-        # up, but we need to be sure here to prevent bugs in Checkmk code.
-        # TODO: this should be moved into the HostName class, if it is ever created.
-        # Note: hostname can be empty here, even though raw_host_name was not.
-        # Since we're silently redirecting here anyway, just replace '' by '_'.
-        return cls(HostName(regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", hostname or "_")))
+        try:
+            hostname = translate_hostname(translation, raw_host_name)
+            # Note: hostname can be empty here, even though raw_host_name was not.
+            return cls(hostname or None)
+        except ValueError:
+            return cls(None)
 
 
 class SectionMarker(NamedTuple):
@@ -136,7 +133,7 @@ class SectionMarker(NamedTuple):
         )
 
     def __str__(self) -> str:
-        opts: MutableMapping[str, str] = {}
+        opts: dict[str, str] = {}
         if self.cached:
             opts["cached"] = ",".join(str(c) for c in self.cached)
         if self.encoding != "utf-8":

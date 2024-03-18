@@ -21,8 +21,9 @@ from cmk.agent_based.v2 import (
     SimpleSNMPSection,
     SNMPSection,
     SNMPTree,
+    StringByteTable,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import StringByteTable, StringTable
 
 
 def _generator_function():
@@ -47,7 +48,7 @@ def parse_dummy(string_table):  # pylint: disable=unused-argument
 def test_validate_parse_function_type(parse_function: object) -> None:
     with pytest.raises(TypeError):
         section_plugins.validate_parse_function(
-            parse_function,  # type:ignore[arg-type]
+            parse_function,  # type: ignore[arg-type]
             expected_annotations={(str, "str")},  # irrelevant for test
         )
 

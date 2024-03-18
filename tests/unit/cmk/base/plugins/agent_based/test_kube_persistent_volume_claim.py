@@ -2,7 +2,6 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import MutableMapping
 from typing import Any
 
 import pytest
@@ -134,7 +133,7 @@ def test_pvc_with_persistent_volume(bound_pvc: PersistentVolumeClaim) -> None:
         timestamp=60,
     )
 
-    details = " ".join([r.details for r in check_result if isinstance(r, Result)])
+    details = " ".join(r.details for r in check_result if isinstance(r, Result))
     assert "Status" in details
     assert "StorageClass" in details
     assert "Access Modes" in details
@@ -150,7 +149,7 @@ def test_pvc_first_time_pending_status():
             capacity=StorageRequirement(storage=1000),
         )
     )
-    value_store: MutableMapping[str, Any] = {}
+    value_store: dict[str, Any] = {}
     timestamp = 300
     _ = list(
         _check_kube_pvc(

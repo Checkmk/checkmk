@@ -90,11 +90,18 @@ def load_pipfile() -> Pipfile:
     branch_from_env(env_var="GERRIT_BRANCH", fallback=current_base_branch_name) == "master",
     reason="pinning is only enforced in release branches",
 )
-def test_all_deployment_packages_pinned(loaded_pipfile: Pipfile) -> None:
-    unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
+def test_all_packages_pinned(loaded_pipfile: Pipfile) -> None:
+    # Test implements process as decribed in:
+    # https://wiki.lan.tribe29.com/books/how-to/page/creating-a-new-beta-branch#bkmrk-pin-dev-dependencies
+    unpinned_packages = [
+        f"'{n}'"
+        for p_type in ("default", "develop")
+        for n, v in loaded_pipfile.data[p_type].items()
+        if v == "*"
+    ]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "
-        "For the sake of reproducibility, all deployment packages must be pinned to a version!"
+        "For the sake of reproducibility, all packages must be pinned to a version!"
     ) % " ,".join(unpinned_packages)
 
 
@@ -144,11 +151,11 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
 
 def iter_relevant_files(basepath: Path) -> Iterable[Path]:
     exclusions = (
-        basepath / "tests",
         basepath / "agents",  # There are so many optional imports...
-        basepath / "packages",  # ignore all packages
-        basepath / "enterprise/core/src/test",  # test files
+        basepath / "node_modules",
         basepath / "omd/license_sources",  # update_licenses.py contains imports
+        basepath / "packages",  # ignore all packages
+        basepath / "tests",
     )
 
     for source_file_path in iter_sourcefiles(basepath):
@@ -321,7 +328,6 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 CEE_UNUSED_PACKAGES = [
     "cython",
-    "docutils",
     "grpcio",
     "idna",
     "itsdangerous",
@@ -329,15 +335,14 @@ CEE_UNUSED_PACKAGES = [
     "markupsafe",
     "more-itertools",
     "multidict",
-    "ordered-set",
     "pbr",
     "ply",
     "psycopg2-binary",
     "pyasn1-modules",
-    "pykerberos",
     "pymssql",
     "pymysql",
     "pyrsistent",
+    "redfish",  # used by optional MKP
     "requests-kerberos",
     "s3transfer",
     "setuptools-scm",
@@ -353,7 +358,7 @@ CEE_UNUSED_PACKAGES = [
 def test_dependencies_are_used() -> None:
     known_unused_packages = set(CEE_UNUSED_PACKAGES)
     if not is_enterprise_repo():
-        known_unused_packages.update(("PyPDF3", "numpy", "roman"))
+        known_unused_packages.update(("PyPDF", "numpy", "roman"))
 
     unused_dependencies = set(get_unused_dependencies())
 
@@ -384,6 +389,7 @@ def test_dependencies_are_declared() -> None:
         "mypy_boto3_logs",  # used by mypy within typing.TYPE_CHECKING
         "docker",  # optional
         "msrest",  # used in publish_cloud_images.py and not in the product
+        "pipfile",  # used in tests and in helper script pin_dependencies.py
     }
     assert (
         undeclared_dependencies_str >= known_undeclared_dependencies

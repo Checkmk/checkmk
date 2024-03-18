@@ -247,23 +247,25 @@ def add_service_comment(
 
 
 def delete_comments(
-    connection: MultiSiteConnection, query: QueryExpression, site_id: SiteId
+    connection: MultiSiteConnection,
+    query: QueryExpression,
+    site_id: SiteId | None,
 ) -> None:
     """Delete a comment"""
-    prev = connection.only_sites[:] if isinstance(connection.only_sites, list) else None
-    connection.only_sites = [site_id]
-    with detailed_connection(connection) as conn:
-        comments = Query(SHORT_COLUMNS, query).fetchall(conn)
+
+    only_sites = None if site_id is None else [site_id]
+    comments = Query(SHORT_COLUMNS, query).fetchall(connection, True, only_sites)
 
     for comment in comments:
         if comment["is_service"]:
             delete_service_comment(connection, comment["id"], comment["site"])
         else:
             delete_host_comment(connection, comment["id"], comment["site"])
-    connection.only_sites = prev
 
 
-def delete_host_comment(connection: MultiSiteConnection, comment_id: int, site_id: SiteId) -> None:
+def delete_host_comment(
+    connection: MultiSiteConnection, comment_id: int, site_id: SiteId | None
+) -> None:
     """Delete a host comment
 
     Args:
@@ -291,7 +293,7 @@ def delete_host_comment(connection: MultiSiteConnection, comment_id: int, site_i
 
 
 def delete_service_comment(
-    connection: MultiSiteConnection, comment_id: int, site_id: SiteId
+    connection: MultiSiteConnection, comment_id: int, site_id: SiteId | None
 ) -> None:
     """Delete a service comment
 

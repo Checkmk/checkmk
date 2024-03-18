@@ -388,7 +388,7 @@ class BICompiledRule(ABCBICompiledNode):
             [result.downtime_state for result in results]
         )
         if downtime_state > 0:
-            downtime_state = 2 if computation_options.escalate_downtimes_as_warn else 1
+            downtime_state = 1 if computation_options.escalate_downtimes_as_warn else 2
 
         is_acknowledged = False
         if state != 0:

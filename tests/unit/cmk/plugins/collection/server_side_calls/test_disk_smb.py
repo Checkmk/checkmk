@@ -8,26 +8,13 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.disk_smb import active_check_config
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
 
 pytestmark = pytest.mark.checks
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-        ipv4_address="0.0.0.1",
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="0.0.0.1"),
 )
 
 
@@ -107,6 +94,5 @@ def test_check_disk_smb_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = active_check_config.parameter_parser(params)
-    commands = list(active_check_config.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(active_check_config(params, HOST_CONFIG, {}))
     assert commands[0].command_arguments == expected_args

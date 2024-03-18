@@ -18,6 +18,7 @@ import traceback
 import urllib.parse
 import uuid
 from collections.abc import Iterator, Mapping
+from contextlib import suppress
 from datetime import datetime
 from functools import cache
 from pathlib import Path
@@ -47,6 +48,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
+    OPT_CHECKMK_CRASH_REPORTS,
     OPT_CHECKMK_LICENSING_FILES,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
@@ -179,6 +181,9 @@ class DiagnosticsDump:
 
         if parameters.get(OPT_CHECKMK_OVERVIEW):
             optional_elements.append(CheckmkOverviewDiagnosticsElement())
+
+        if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
+            optional_elements.append(CrashDumpsDiagnosticsElement())
 
         rel_checkmk_config_files = parameters.get(OPT_CHECKMK_CONFIG_FILES)
         if rel_checkmk_config_files:
@@ -810,6 +815,14 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
             with Path(filepath).open("rb") as source:
                 json_data = json.dumps(deserialize_dump(source.read()), sort_keys=True, indent=4)
                 store.save_text_to_file(tmp_filepath, json_data)
+        # We 'encrypt' only license thingies at the moment, so there is currently no need to
+        # sanitize encrypted files
+        elif str(rel_filepath) == "multisite.d/sites.mk":
+            sites = store.load_from_mk_file(filepath, "sites", {})
+            for detail in sites.values():
+                with suppress(KeyError):
+                    detail["secret"] = "redacted"
+            store.save_to_mk_file(tmp_filepath, "sites", sites)
         else:
             shutil.copy(str(filepath), str(tmp_filepath))
 
@@ -979,11 +992,44 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
         return requests.post(  # nosec B113 # BNS:773085
             url,
-            data={
-                "_username": "automation",
-                "_secret": automation_secret,
-            },
+            auth=("automation", automation_secret),
         )
+
+
+class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        return "crashdumps"
+
+    @property
+    def title(self) -> str:
+        return _("The latest crash dumps of each type")
+
+    @property
+    def description(self) -> str:
+        return _("Returns the latest crash dumps of each type as found in var/checkmk/crashes")
+
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+        for category in cmk.utils.paths.crash_dir.glob("*"):
+            tmpdir = tmp_dump_folder.joinpath("var/check_mk/crashes/%s" % category.name)
+            tmpdir.mkdir(parents=True, exist_ok=True)
+
+            sorted_dumps = sorted(category.glob("*"), key=lambda path: int(path.stat().st_mtime))
+
+            if sorted_dumps:
+                # Determine the latest file of that category
+                dumpfile_path = sorted_dumps[-1]
+
+                # Pack the dump into a .tar.gz, so it can easily be uploaded
+                # to https://crash.checkmk.com/
+                tarfile_path = tmpdir.joinpath(dumpfile_path.name).with_suffix(".tar.gz")
+
+                with tarfile.open(name=tarfile_path, mode="w:gz") as tar:
+                    for file in dumpfile_path.iterdir():
+                        rel_path = str(file).replace(str(dumpfile_path) + "/", "")
+                        tar.add(str(file), arcname=rel_path)
+
+                yield tarfile_path
 
 
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):

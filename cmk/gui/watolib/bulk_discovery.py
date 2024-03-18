@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
-from cmk.checkengine.discovery import DiscoveryResult
+from cmk.checkengine.discovery import DiscoveryResult, DiscoverySettings
 
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.exceptions import MKUserError
@@ -35,7 +35,6 @@ from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
 from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
 
-DiscoveryMode = NewType("DiscoveryMode", str)
 DoFullScan = NewType("DoFullScan", bool)
 
 BulkSize = NewType("BulkSize", int)
@@ -109,6 +108,13 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                                             "remove_vanished_services",
                                             Checkbox(
                                                 label=_("Remove vanished services"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "update_changed_service_labels",
+                                            Checkbox(
+                                                label=_("Update service labels"),
                                                 default_value=False,
                                             ),
                                         ),
@@ -224,7 +230,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
     def do_execute(
         self,
-        mode: DiscoveryMode,
+        mode: DiscoverySettings,
         do_scan: DoFullScan,
         ignore_errors: IgnoreErrors,
         tasks: Sequence[DiscoveryTask],
@@ -281,7 +287,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     def _bulk_discover_item(
         self,
         task: DiscoveryTask,
-        mode: DiscoveryMode,
+        mode: DiscoverySettings,
         do_scan: DoFullScan,
         ignore_errors: IgnoreErrors,
         job_interface: BackgroundProcessInterface,
@@ -289,7 +295,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         try:
             response = discovery(
                 task.site_id,
-                mode,
+                mode.to_json(),
                 task.host_names,
                 scan=do_scan,
                 raise_errors=not ignore_errors,
@@ -297,7 +303,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 non_blocking_http=True,
             )
             self._process_discovery_results(task, job_interface, response)
-        except Exception:
+        except Exception as e:
             self._num_hosts_failed += len(task.host_names)
             if task.site_id:
                 msg = _("Error during discovery of %s on site %s") % (
@@ -306,7 +312,10 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 )
             else:
                 msg = _("Error during discovery of %s") % (", ".join(task.host_names))
-            self._logger.exception(msg)
+            self._logger.warning(f"{msg}, Error: {e}")
+
+            # only show traceback on debug
+            self._logger.debug("Exception", exc_info=True)
 
         self._num_hosts_processed += len(task.host_names)
 
@@ -415,7 +424,7 @@ def bulk_discovery_job_status(job: BulkDiscoveryBackgroundJob) -> BulkDiscoveryS
 def start_bulk_discovery(
     job: BulkDiscoveryBackgroundJob,
     hosts: list[DiscoveryHost],
-    discovery_mode: DiscoveryMode,
+    discovery_mode: DiscoverySettings,
     do_full_scan: DoFullScan,
     ignore_errors: IgnoreErrors,
     bulk_size: BulkSize,

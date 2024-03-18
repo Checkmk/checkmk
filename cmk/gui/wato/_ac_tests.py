@@ -26,6 +26,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
 from cmk.gui.backup.handler import Config as BackupConfig
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import (
@@ -110,7 +111,10 @@ class ACTestPersistentConnections(ACTest):
         return len(sitenames()) > 1
 
     def execute(self) -> Iterator[ACSingleResult]:
-        yield from (self._check_site(site_id, get_site_config(site_id)) for site_id in sitenames())
+        yield from (
+            self._check_site(site_id, get_site_config(active_config, site_id))
+            for site_id in sitenames()
+        )
 
     def _check_site(self, site_id: SiteId, site_config: SiteConfiguration) -> ACSingleResult:
         persist = site_config.get("persist", False)

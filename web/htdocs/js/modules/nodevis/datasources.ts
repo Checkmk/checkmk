@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
@@ -21,15 +21,19 @@
 //#   +--------------------------------------------------------------------+
 
 import * as d3 from "d3";
-import {TopologyFrontendConfig} from "nodevis/main";
-import {DatasourceCallback, SerializedNodeChunk} from "nodevis/type_defs";
+import {SerializedNodevisLayout} from "nodevis/layout_utils";
+import {
+    DatasourceCallback,
+    SerializedNodeConfig,
+    TopologyFrontendConfig,
+} from "nodevis/type_defs";
 import {CMKAjaxReponse} from "types";
 
 import * as utils from "../utils";
 
 interface AjaxFetchTopologyData {
-    topology_meshes: Record<any, any>;
-    topology_chunks: Record<string, SerializedNodeChunk>;
+    node_config: SerializedNodeConfig;
+    layout?: SerializedNodevisLayout;
     headline: string;
     errors: string[];
     frontend_configuration: TopologyFrontendConfig;
@@ -96,6 +100,7 @@ export class AbstractDatasource extends Object {
     _fetch_url: string | null = null;
     _fetch_params: BodyInit | null = null;
     _fetch_start = 0;
+    _waiting_for_hash: string | null = null;
 
     static id(): string {
         return "abstract_datasource";
@@ -145,11 +150,17 @@ export class AbstractDatasource extends Object {
             headers: {
                 "Content-type": "application/x-www-form-urlencoded",
             },
-        }).then(json_data =>
-            this._set_data(
-                json_data as unknown as CMKAjaxReponse<AjaxFetchTopologyData>
+        }).then(json_data => {
+            const response =
+                json_data as unknown as CMKAjaxReponse<AjaxFetchTopologyData>;
+            if (
+                this._waiting_for_hash != null &&
+                response.result.query_hash != this._waiting_for_hash
             )
-        );
+                return;
+            this._waiting_for_hash = null;
+            this._set_data(response);
+        });
     }
 
     get_data(): Record<string, any> {
@@ -195,6 +206,8 @@ export class AggregationsDatasource extends AbstractDatasource {
 }
 
 export class TopologyDatasource extends AbstractDatasource {
+    override _supports_regular_updates = false;
+
     constructor() {
         super("Topology");
     }
@@ -203,7 +216,12 @@ export class TopologyDatasource extends AbstractDatasource {
         return "topology";
     }
 
-    fetch_hosts(fetch_params: BodyInit | null) {
-        this.fetch("ajax_fetch_topology.py", fetch_params);
+    fetch_hosts(fetch_params: Record<string, any>) {
+        this._waiting_for_hash = Date.now().toString();
+        fetch_params["query_hash"] = this._waiting_for_hash;
+        this.fetch(
+            "ajax_fetch_topology.py",
+            new URLSearchParams(fetch_params).toString()
+        );
     }
 }

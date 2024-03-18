@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 import urllib.parse
-from collections.abc import Callable, Iterator, Mapping, MutableMapping
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from pprint import pformat
@@ -25,6 +25,7 @@ import pytest
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
     check_output,
+    cse_create_onboarding_dummies,
     cse_openid_oauth_provider,
     current_base_branch_name,
     current_branch_version,
@@ -34,6 +35,7 @@ from tests.testlib.utils import (
     PExpectDialog,
     repo_path,
     restart_httpd,
+    ServiceInfo,
     spawn_expect_process,
     wait_until,
     write_file,
@@ -43,6 +45,7 @@ from tests.testlib.web_session import CMKWebSession
 
 import livestatus
 
+from cmk.utils.crypto.secrets import Secret
 from cmk.utils.paths import counters_dir, piggyback_dir, piggyback_source_dir
 from cmk.utils.version import Edition, Version
 
@@ -86,6 +89,7 @@ class Site:
             user="automation" if self.exists() else "cmkadmin",
             password=self.get_automation_secret() if self.exists() else self.admin_password,
             site=self.id,
+            site_version_spec=self.version.version_spec,
         )
 
     @property
@@ -276,14 +280,19 @@ class Site:
 
         assert len(pending_services) == 0
 
-    def get_host_services(self, hostname: str, pending: bool = False) -> dict:
-        """Return dict with key=service and value=status for all services in the given site and host.
+    def get_host_services(self, hostname: str, pending: bool = False) -> dict[str, ServiceInfo]:
+        """Return dict for all services in the given site and host.
 
         If pending=True, return the pending services only.
         """
         services = {}
-        for service in self.openapi.get_host_services(hostname, columns=["state"], pending=pending):
-            services[service["extensions"]["description"]] = service["extensions"]["state"]
+        for service in self.openapi.get_host_services(
+            hostname, columns=["state", "plugin_output"], pending=pending
+        ):
+            services[service["extensions"]["description"]] = ServiceInfo(
+                state=service["extensions"]["state"],
+                summary=service["extensions"]["plugin_output"],
+            )
         return services
 
     def set_timezone(self, timezone: str) -> None:
@@ -1137,6 +1146,15 @@ class Site:
 
         return secret
 
+    def get_site_internal_secret(self) -> Secret:
+        secret_path = "etc/site_internal.secret"
+        secret = self.read_binary_file(secret_path)
+
+        if secret == b"":
+            raise Exception("Failed to read secret from %s" % secret_path)
+
+        return Secret(secret)
+
     def activate_changes_and_wait_for_core_reload(
         self, allow_foreign_changes: bool = False, remote_site: Site | None = None
     ) -> None:
@@ -1225,7 +1243,7 @@ class SiteFactory:
     ) -> None:
         self.version = version
         self._base_ident = prefix if prefix is not None else "s_%s_" % version.branch[:6]
-        self._sites: MutableMapping[str, Site] = {}
+        self._sites: dict[str, Site] = {}
         self._index = 1
         self._update = update
         self._update_conflict_mode = update_conflict_mode
@@ -1242,6 +1260,7 @@ class SiteFactory:
         init_livestatus: bool = True,
         prepare_for_tests: bool = True,
         activate_changes: bool = True,
+        auto_restart_httpd: bool = False,
     ) -> Site:
         site = self._site_obj(name)
 
@@ -1255,12 +1274,21 @@ class SiteFactory:
 
         site.start()
 
+        if self.version.is_saas_edition():
+            cse_create_onboarding_dummies(site.root)
+
         if prepare_for_tests:
-            site.prepare_for_tests()
+            with cse_openid_oauth_provider(
+                f"http://localhost:{site.apache_port}"
+            ) if self.version.is_saas_edition() else nullcontext():
+                site.prepare_for_tests()
 
         if activate_changes:
             # There seem to be still some changes that want to be activated
             site.activate_changes_and_wait_for_core_reload()
+
+        if auto_restart_httpd:
+            restart_httpd()
 
         logger.debug("Created site %s", site.id)
         return site
@@ -1316,7 +1344,9 @@ class SiteFactory:
 
         return site
 
-    def interactive_create(self, name: str, logfile_path: str = "/tmp/omd_install.out") -> Site:
+    def interactive_create(
+        self, name: str, logfile_path: str = "/tmp/omd_install.out", timeout: int = 30
+    ) -> Site:
         """Interactive site creation via Pexpect"""
         self._base_ident = ""
         site = self._site_obj(name)
@@ -1336,6 +1366,7 @@ class SiteFactory:
             ],
             dialogs=[],
             logfile_path=logfile_path,
+            timeout=timeout,
         )
 
         assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
@@ -1366,33 +1397,39 @@ class SiteFactory:
         min_version: CMKVersion,
         conflict_mode: str = "keepold",
         logfile_path: str = "/tmp/sep.out",
+        timeout: int = 30,
     ) -> Site:
         """Update the test-site with the given target-version, if supported.
 
         Such update process is performed interactively via Pexpect.
         """
+        base_version = test_site.version
         self.version = target_version
-        site = self.get_existing_site(test_site.id)
+
+        # refresh site object to install the correct target version
+        self._base_ident = ""
+        site = self.get_existing_site(test_site.id, init_livestatus=False)
+
         site.install_cmk()
         site.stop()
 
         logger.info(
             "Updating %s site from %s version to %s version...",
-            test_site.id,
-            test_site.version.version,
+            site.id,
+            base_version.version,
             target_version.version_directory(),
         )
 
         pexpect_dialogs = []
-        version_supported = self._version_supported(test_site.version.version, min_version.version)
+        version_supported = self._version_supported(base_version.version, min_version.version)
         if version_supported:
             logger.info("Updating to a supported version.")
             pexpect_dialogs.extend(
                 [
                     PExpectDialog(
                         expect=(
-                            f"You are going to update the site {test_site.id} "
-                            f"from version {test_site.version.version_directory()} "
+                            f"You are going to update the site {site.id} "
+                            f"from version {base_version.version_directory()} "
                             f"to version {target_version.version_directory()}."
                         ),
                         send="u\r",
@@ -1411,7 +1448,7 @@ class SiteFactory:
                     PExpectDialog(
                         expect=(
                             f"ERROR: You are trying to update from "
-                            f"{test_site.version.version_directory()} to "
+                            f"{base_version.version_directory()} to "
                             f"{target_version.version_directory()} which is not supported."
                         ),
                         send="\r",
@@ -1431,27 +1468,27 @@ class SiteFactory:
                 target_version.version_directory(),
                 "update",
                 f"--conflict={conflict_mode}",
-                test_site.id,
+                site.id,
             ],
             dialogs=pexpect_dialogs,
             logfile_path=logfile_path,
+            timeout=timeout,
         )
         if version_supported:
             assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
         else:
             assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"
-            pytest.skip(f"{test_site.version} is not a supported version for {target_version}")
+            pytest.skip(f"{base_version} is not a supported version for {target_version}")
 
         with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
 
         # refresh the site object after creating the site
-        self._base_ident = ""
         site = self.get_existing_site(test_site.id)
 
         # restoring the tmpfs was broken and has been fixed with
         # 3448a7da56ed6d4fa2c2f425d0b1f4b6e02230aa
-        from_version = Version.from_str(test_site.version.version)
+        from_version = Version.from_str(base_version.version)
         if (
             (Version.from_str("2.1.0p36") <= from_version < Version.from_str("2.2.0"))
             or (Version.from_str("2.2.0p13") <= from_version < Version.from_str("2.3.0"))
@@ -1496,20 +1533,24 @@ class SiteFactory:
         ),
         conflict_mode: str = "keepold",
     ) -> Site:
-        version_supported = self._version_supported(test_site.version.version, min_version.version)
-        if not version_supported:
-            pytest.skip(
-                f"{test_site.version} is not a supported version for {target_version.version}"
-            )
+        base_version = test_site.version
         self.version = target_version
-        site = self.get_existing_site("central", init_livestatus=False)
+
+        version_supported = self._version_supported(base_version.version, min_version.version)
+        if not version_supported:
+            pytest.skip(f"{base_version} is not a supported version for {target_version.version}")
+
+        # refresh site object to install the correct target version
+        self._base_ident = ""
+        site = self.get_existing_site(test_site.id, init_livestatus=False)
+
         site.install_cmk()
         site.stop()
 
         logger.info(
             "Updating %s site from %s version to %s version...",
-            test_site.id,
-            test_site.version.version,
+            site.id,
+            base_version.version,
             target_version.version_directory(),
         )
 
@@ -1521,13 +1562,13 @@ class SiteFactory:
             "update",
             f"--conflict={conflict_mode}",
         ]
-        test_site.stop()
-        process = test_site.execute(cmd)
+
+        process = site.execute(cmd)
         rc = process.wait()
         assert rc == 0, process.stderr
 
         # refresh the site object after creating the site
-        site = self.get_existing_site("central")
+        site = self.get_existing_site(site.id)
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)
         # start the site after manually installing it
@@ -1545,7 +1586,7 @@ class SiteFactory:
 
         site.openapi.activate_changes_and_wait_for_completion()
 
-        return test_site
+        return site
 
     @staticmethod
     def _version_supported(version: str, min_version: str) -> bool:
@@ -1581,7 +1622,7 @@ class SiteFactory:
             site = self.get_site(
                 name,
                 init_livestatus=init_livestatus,
-                prepare_for_tests=not self.version.is_saas_edition(),
+                prepare_for_tests=True,
             )
         site.start()
         if auto_restart_httpd:
@@ -1594,9 +1635,6 @@ class SiteFactory:
         with cse_openid_oauth_provider(
             f"http://localhost:{site.apache_port}"
         ) if self.version.is_saas_edition() else nullcontext():
-            if self.version.is_saas_edition():
-                site.prepare_for_tests()
-                site.activate_changes_and_wait_for_core_reload()
             try:
                 yield site
             finally:

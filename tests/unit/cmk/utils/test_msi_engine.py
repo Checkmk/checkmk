@@ -28,6 +28,12 @@ EXPECTED_P_NO_HASH: Final = msi_engine._Parameters(
 )
 
 
+def test_extract_major_version():
+    assert msi_engine._extract_major_version("2015.04.12") == "2015.04"
+    assert msi_engine._extract_major_version("2.2.0p15") == "2.2"
+    assert msi_engine._extract_major_version("ups") == "2.3"
+
+
 @pytest.mark.parametrize(
     "cmd_line, parameters, opt_verbose",
     [

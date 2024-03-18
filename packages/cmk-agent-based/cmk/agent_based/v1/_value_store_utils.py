@@ -3,6 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions to work with persisted values"""
+
+
+# pylint: disable=duplicate-code
+
+
 from collections.abc import MutableMapping
 from typing import Any, cast
 
@@ -23,7 +28,9 @@ def get_rate(  # type: ignore[misc]
     *,
     raise_overflow: bool = False,
 ) -> float:
-    """Return a rate based on current value and time and last value and time
+    """
+    1. Update value store.
+    2. Calculate rate based on current value and time and last value and time
 
     Args:
 
@@ -75,7 +82,7 @@ def get_rate(  # type: ignore[misc]
         The computed rate
 
     """
-    # Cast to avoid lots of mypy suppressions. It better reflects the tuth anyway.
+    # Cast to avoid lots of mypy suppressions. It better reflects the truth anyway.
     value_store = cast(MutableMapping[str, object], value_store)
 
     last_state = value_store.get(key)
@@ -151,7 +158,7 @@ def get_average(  # type: ignore[misc]
         The computed average
 
     """
-    # Cast to avoid lots of mypy suppressions. It better reflects the tuth anyway.
+    # Cast to avoid lots of mypy suppressions. It better reflects the truth anyway.
     value_store = cast(MutableMapping[str, object], value_store)
 
     match value_store.get(key, ()):

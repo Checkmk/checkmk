@@ -580,6 +580,16 @@ def fetch_resources_matching_tags(
     return matching_resources_arn
 
 
+def _describe_alarms(
+    client: BaseClient, get_response_content: Callable, names: Sequence[str] | None = None
+) -> Iterator[Mapping[str, object]]:
+    paginator = client.get_paginator("describe_alarms")
+    kwargs = {"AlarmNames": names} if names else {}
+
+    for page in paginator.paginate(**kwargs):
+        yield from get_response_content(page, "MetricAlarms")
+
+
 # .
 #   .--section API---------------------------------------------------------.
 #   |                       _   _                  _    ____ ___           |
@@ -1017,7 +1027,8 @@ class AWSSectionCloudwatch(AWSSection):
 # Example:
 # 2017-01-01 - 2017-05-01; cost and usage data is retrieved from 2017-01-01 up
 # to and including 2017-04-30 but not including 2017-05-01.
-# The GetCostAndUsageRequest operation supports only DAILY and MONTHLY granularities.
+# The GetCostAndUsage operation supports DAILY | MONTHLY | HOURLY granularities.
+# The GetReservationUtilization operation supports only DAILY and MONTHLY granularities.
 
 
 class CostsAndUsage(AWSSection):
@@ -1058,6 +1069,59 @@ class CostsAndUsage(AWSSection):
             ],
         )
         return self._get_response_content(response, "ResultsByTime")
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
+
+
+class ReservationUtilization(AWSSection):
+    @property
+    def name(self) -> str:
+        return "reservation_utilization"
+
+    @property
+    def cache_interval(self) -> int:
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = int(get_seconds_since_midnight(NOW))
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
+
+    @property
+    def granularity(self) -> int:
+        return 86400  # one day
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(self, *args):
+        """Query the AWS GetReservationUtilization API.
+
+        This API lags a day behind and we have to query the data starting the day
+        before yesterday. So we query the last 2 data points and let the check
+        report the most recent data point.
+        In the AWS dashboard, we also only have data for from two days ago.
+        """
+        granularity_name, granularity_interval = "DAILY", self.granularity
+        fmt = "%Y-%m-%d"
+
+        params = {
+            "TimePeriod": {
+                "Start": datetime.strftime(NOW - 2 * timedelta(seconds=granularity_interval), fmt),
+                "End": datetime.strftime(NOW, fmt),
+            },
+            "Granularity": granularity_name,
+        }
+
+        response = self._client.get_reservation_utilization(**params)  # type: ignore[attr-defined]
+        return self._get_response_content(response, "UtilizationsByTime")
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -4020,9 +4084,8 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args):
-        response = self._client.describe_alarms()  # type: ignore[attr-defined]
-        return self._get_response_content(response, "MetricAlarms")
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
+        return list(_describe_alarms(self._client, self._get_response_content))
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -4077,10 +4140,10 @@ class CloudwatchAlarms(AWSSection):
                     for alarm in colleague_contents.content
                     if alarm["AlarmName"] in self._names
                 ]
-            response = self._client.describe_alarms(AlarmNames=self._names)  # type: ignore[attr-defined]
-        else:
-            response = self._client.describe_alarms()  # type: ignore[attr-defined]
-        return self._get_response_content(response, "MetricAlarms")
+            return list(
+                _describe_alarms(self._client, self._get_response_content, names=self._names)
+            )
+        return list(_describe_alarms(self._client, self._get_response_content))
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -6450,7 +6513,9 @@ class AWSSectionsUSEast(AWSSections):
         distributor = ResultDistributor()
 
         if "ce" in services:
-            self._sections.append(CostsAndUsage(self._init_client("ce"), region, config))
+            ce_client = self._init_client("ce")
+            self._sections.append(CostsAndUsage(ce_client, region, config))
+            self._sections.append(ReservationUtilization(ce_client, region, config))
 
         cloudwatch_client = self._init_client("cloudwatch")
         tagging_client = self._init_client("resourcegroupstaggingapi")
@@ -7142,7 +7207,12 @@ def _create_session(
 
 
 def _sts_assume_role(
-    access_key_id: str, secret_access_key: str, role_arn: str, external_id: str, region: str
+    access_key_id: str,
+    secret_access_key: str,
+    role_arn: str,
+    external_id: str,
+    region: str,
+    config: botocore.config.Config | None,
 ) -> boto3.session.Session:
     """
     Returns a session using a set of temporary security credentials that
@@ -7156,7 +7226,7 @@ def _sts_assume_role(
     """
     try:
         session = _create_session(access_key_id, secret_access_key, region)
-        sts_client = session.client("sts")
+        sts_client = session.client("sts", config=config)
         if external_id:
             assumed_role_object = sts_client.assume_role(
                 RoleArn=role_arn, RoleSessionName="AssumeRoleSession", ExternalId=external_id
@@ -7318,17 +7388,24 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
     return aws_config
 
 
-def _create_session_from_args(args: Args, region: str) -> boto3.session.Session:
+def _create_session_from_args(
+    args: Args, region: str, config: botocore.config.Config | None
+) -> boto3.session.Session:
     if args.assume_role:
         return _sts_assume_role(
-            args.access_key_id, args.secret_access_key, args.role_arn, args.external_id, region
+            args.access_key_id,
+            args.secret_access_key,
+            args.role_arn,
+            args.external_id,
+            region,
+            config,
         )
     return _create_session(args.access_key_id, args.secret_access_key, region)
 
 
-def _get_account_id(args: Args) -> str:
-    session = _create_session_from_args(args, args.global_service_region)
-    account_id = session.client("sts").get_caller_identity()["Account"]
+def _get_account_id(args: Args, config: botocore.config.Config | None) -> str:
+    session = _create_session_from_args(args, args.global_service_region, config)
+    account_id = session.client("sts", config=config).get_caller_identity()["Account"]
     return account_id
 
 
@@ -7364,7 +7441,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
         )
 
     try:
-        account_id = _get_account_id(args)
+        account_id = _get_account_id(args, proxy_config)
     except AwsAccessError as ae:
         # can not access AWS, retreat
         sys.stdout.write("<<<aws_exceptions>>>\n")
@@ -7385,7 +7462,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
 
         for region in aws_regions:
             try:
-                session = _create_session_from_args(args, region)
+                session = _create_session_from_args(args, region, proxy_config)
                 sections = aws_sections(
                     hostname, session, account_id, debug=args.debug, config=proxy_config
                 )

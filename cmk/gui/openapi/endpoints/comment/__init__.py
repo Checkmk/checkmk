@@ -48,10 +48,11 @@ from cmk.gui.openapi.endpoints.comment.request_schemas import (
     DeleteComments,
 )
 from cmk.gui.openapi.endpoints.comment.response_schemas import CommentCollection, CommentObject
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 
 from cmk import fields
 
@@ -334,16 +335,17 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
     """Delete comments"""
     user.need_permission("action.addcomment")
     body = params["body"]
-    site_id = body["site_id"]
 
     query_expr: QueryExpression
 
+    site_id: SiteId | None = None
     match body["delete_type"]:
         case "query":
             query_expr = body["query"]
 
         case "by_id":
             query_expr = Comments.id == body["comment_id"]
+            site_id = SiteId(body["site_id"])
 
         case "params":
             host_name = body["host_name"]
@@ -360,7 +362,7 @@ def delete_comments(params: Mapping[str, Any]) -> Response:
             else:
                 query_expr = And(Comments.host_name == host_name)
 
-    comment_cmds.delete_comments(sites.live(), query_expr, SiteId(site_id))
+    comment_cmds.delete_comments(sites.live(), query_expr, site_id)
     return Response(status=204)
 
 

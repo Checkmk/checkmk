@@ -4,15 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 from cmk.plugins.lib.bluecat import DETECT_BLUECAT
 
 
-def inventory_bluecat_ha(section: StringTable) -> DiscoveryResult:
+def discover_bluecat_ha(section: StringTable) -> DiscoveryResult:
     # Only add if device is not in standalone mode
     if section and section[0][0] != "1":
         yield Service()
@@ -51,7 +50,7 @@ check_info["bluecat_ha"] = LegacyCheckDefinition(
         oids=["1"],
     ),
     service_name="HA State",
-    discovery_function=inventory_bluecat_ha,
+    discovery_function=discover_bluecat_ha,
     check_function=check_bluecat_ha,
     check_ruleset_name="bluecat_ha",
     check_default_parameters={

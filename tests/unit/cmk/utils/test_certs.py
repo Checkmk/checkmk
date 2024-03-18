@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import cryptography.x509 as x509
+import time_machine
 from dateutil.relativedelta import relativedelta
 
-from tests.testlib import on_time
 from tests.testlib.certs import rsa_private_keys_equal
 
 from livestatus import SiteId
@@ -147,15 +148,17 @@ class Test_CNTemplate:
 
 def test_create_root_ca_and_key(tmp_path: Path) -> None:
     filename = tmp_path / "test_certs_testCA"
-    with on_time(100, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(100, tz=ZoneInfo("UTC"))):
         ca = RootCA.load_or_create(filename, "peter", key_size=1024)
 
     assert ca.private_key.get_raw_rsa_key().key_size == 1024
     assert ca.certificate.common_name == "peter"
     assert (
-        str(ca.certificate.not_valid_before) == "1970-01-01 00:01:40"
+        str(ca.certificate.not_valid_before) == "1970-01-01 00:01:40+00:00"
     ), "creation time is respected"
-    assert str(ca.certificate.not_valid_after) == "1980-01-01 00:01:40", "is valid for 10 years"
+    assert (
+        str(ca.certificate.not_valid_after) == "1980-01-01 00:01:40+00:00"
+    ), "is valid for 10 years"
     assert ca.certificate.public_key == ca.private_key.public_key
 
     # check extensions
@@ -199,6 +202,7 @@ def test_sign_csr_with_local_ca() -> None:
 
     peters_mom = CertificateWithPrivateKey.generate_self_signed(
         common_name="peters_mom",
+        organization="Checkmk Testing",
         key_size=1024,
         is_ca=True,
     )
@@ -215,22 +219,21 @@ MC4CAQAwBQYDK2VwBCIEIK/fWo6sKC4PDigGfEntUd/o8KKs76Hsi03su4QhpZox
         subject_public_key=peter_key.public_key,
         subject_name=X509Name.create(common_name="peter"),
         expiry=relativedelta(days=1),
-        start_date=datetime.now(),
+        start_date=datetime.now(timezone.utc),
         is_ca=True,
         issuer_signing_key=peters_mom.private_key,
         issuer_name=peters_mom.certificate.subject,
     )
     peter_root_ca = RootCA(peter_cert, peter_key)
-
-    with on_time(567892121, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(567892121, tz=ZoneInfo("UTC"))):
         daughter_cert, daughter_key = peter_root_ca.issue_new_certificate(
             "peters_daughter",
             relativedelta(days=100),
             1024,
         )
 
-    assert str(daughter_cert.not_valid_before) == "1987-12-30 19:48:41"
-    assert str(daughter_cert.not_valid_after) == "1988-04-08 19:48:41"
+    assert str(daughter_cert.not_valid_before) == "1987-12-30 19:48:41+00:00"
+    assert str(daughter_cert.not_valid_after) == "1988-04-08 19:48:41+00:00"
 
     daughter_cert.verify_is_signed_by(peter_cert)
     assert daughter_cert.public_key == daughter_key.public_key, "correct public key in the cert"

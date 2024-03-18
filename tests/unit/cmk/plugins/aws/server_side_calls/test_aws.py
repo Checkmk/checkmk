@@ -9,14 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.plugins.aws.server_side_calls.aws import generate_aws_commands
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
 
 
 @pytest.mark.parametrize(
@@ -53,7 +46,7 @@ from cmk.server_side_calls.v1 import (
                 "--access-key-id",
                 "strawberry",
                 "--secret-access-key",
-                PlainTextSecret("strawberry098"),
+                PlainTextSecret(value="strawberry098"),
                 "--proxy-host",
                 "1.1.1",
                 "--proxy-port",
@@ -61,7 +54,7 @@ from cmk.server_side_calls.v1 import (
                 "--proxy-user",
                 "banana",
                 "--proxy-password",
-                PlainTextSecret("banana123"),
+                PlainTextSecret(value="banana123"),
                 "--global-services",
                 "ce",
                 "--services",
@@ -95,13 +88,13 @@ from cmk.server_side_calls.v1 import (
                 "--access-key-id",
                 "strawberry",
                 "--secret-access-key",
-                StoredSecret("strawberry098", "%s"),
+                StoredSecret(value="strawberry098", format="%s"),
                 "--proxy-host",
                 "1.1.1",
                 "--proxy-user",
                 "banana",
                 "--proxy-password",
-                StoredSecret("banana123", "%s"),
+                StoredSecret(value="banana123", format="%s"),
                 "--hostname",
                 "testhost",
                 "--piggyback-naming-convention",
@@ -161,7 +154,7 @@ from cmk.server_side_calls.v1 import (
                 "--access-key-id",
                 "ut_access_key_id",
                 "--secret-access-key",
-                StoredSecret("ut_secret_access_key_store", format="%s"),
+                StoredSecret(value="ut_secret_access_key_store", format="%s"),
                 "--global-service-region",
                 "ut_global_service_region",
                 "--assume-role",
@@ -214,12 +207,7 @@ def test_aws_argument_parsing(
         params,
         HostConfig(
             name="testhost",
-            resolved_address="unittest_address",
-            alias="unittest_alias",
-            resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-            address_config=NetworkAddressConfig(
-                ipv4_address="unittest_address", ip_family=IPAddressFamily.IPV4
-            ),
+            ipv4_config=IPv4Config(address="unittest_address"),
         ),
         {},
     )

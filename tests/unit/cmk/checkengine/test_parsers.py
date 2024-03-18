@@ -15,7 +15,6 @@ from pathlib import Path
 
 import pytest
 
-import cmk.utils.debug
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
@@ -23,54 +22,16 @@ from cmk.utils.translations import TranslationOptions
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.fetchers.cache import SectionStore
-
-from cmk.checkengine.parser import AgentParser, AgentRawDataSectionElem, NO_SELECTION, SNMPParser
-from cmk.checkengine.parser._agent import is_valid_hostname
+from cmk.checkengine.parser import (
+    AgentParser,
+    AgentRawDataSectionElem,
+    NO_SELECTION,
+    SectionStore,
+    SNMPParser,
+)
 from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
 
 StringTable = list[list[str]]
-
-
-@pytest.mark.parametrize(
-    "hostname",
-    [
-        HostName("ec2-11-111-222-333.cd-blahblah-1.compute.amazonaws.com"),
-        HostName("subdomain.domain.com"),
-        HostName("domain.com"),
-        HostName("domain"),
-        # I don't think the next two are correct but REGEX_HOST_NAME
-        # would match them as well.
-        HostName("_"),
-        HostName("dom_ain.com"),
-    ],
-)
-def test_is_valid_hostname_positive(hostname: HostName) -> None:
-    assert is_valid_hostname(hostname)
-
-
-@pytest.mark.parametrize(
-    "hostname",
-    [
-        HostName("."),
-        HostName(".."),
-        HostName(".domain"),
-        HostName(".domain.com"),
-        HostName("-subdomain.domain.com"),
-        HostName("email@domain.com"),
-        HostName("@subdomain.domain.com"),
-    ],
-)
-def test_is_valid_hostname_negative(hostname: HostName) -> None:
-    assert not is_valid_hostname(hostname)
-
-
-@pytest.fixture(autouse=True)
-def enable_debug_fixture():
-    debug_mode = cmk.utils.debug.debug_mode
-    cmk.utils.debug.enable()
-    yield
-    cmk.utils.debug.debug_mode = debug_mode
 
 
 class TestAgentParser:
@@ -474,10 +435,6 @@ class TestAgentParser:
                 b"<<<other_other_section:cached(1000,900)>>>",
                 b"third line",
                 b"forth line",
-            ],
-            "_b_l-u_": [
-                b"<<<section:cached(1000,900)>>>",
-                b"first line",
             ],
         }
         assert not store.load()
@@ -1328,7 +1285,7 @@ class TestMarkers:
         assert PiggybackMarker.is_header(line) is True
         assert PiggybackMarker.is_footer(line) is False
 
-    def test_piggybacked_host_translation_results_in_empty_string(self) -> None:
+    def test_piggybacked_host_translation_results_in_None(self) -> None:
         line = b"<<<<x>>>>"
         translation = TranslationOptions(
             case=None,
@@ -1338,9 +1295,10 @@ class TestMarkers:
                 (".*(.*?)", r"\1"),
             ],
         )
-        assert PiggybackMarker.from_headerline(
-            line, translation, encoding_fallback="utf-8"
-        ).hostname == HostName("_")
+        assert (
+            PiggybackMarker.from_headerline(line, translation, encoding_fallback="utf-8").hostname
+            is None
+        )
 
     def test_piggybacked_host_footer(self) -> None:
         line = b"<<<<>>>>"

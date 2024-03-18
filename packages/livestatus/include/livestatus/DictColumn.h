@@ -16,9 +16,12 @@
 
 #include "livestatus/Column.h"
 #include "livestatus/DictFilter.h"
+#include "livestatus/DoubleSorter.h"
 #include "livestatus/Filter.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
+#include "livestatus/Sorter.h"
+#include "livestatus/StringSorter.h"
 #include "livestatus/opids.h"
 enum class AttributeKind;
 class Aggregator;
@@ -53,6 +56,20 @@ public:
         return std::make_unique<DictStrValueFilter>(
             kind, this->name(), [this](Row row) { return this->getValue(row); },
             relOp, value);
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<StringSorter>(
+            [this](Row row, const std::optional<std::string> &key) {
+                if (!key) {
+                    throw std::runtime_error("ordering on dictionary column '" +
+                                             name() +
+                                             "' requires a dictionary key");
+                }
+                const auto map = this->getValue(row);
+                const auto iter = map.find(*key);
+                return iter != map.end() ? iter->second : std::string{};
+            });
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
@@ -99,6 +116,20 @@ public:
         return std::make_unique<DictDoubleValueFilter>(
             kind, this->name(), [this](Row row) { return this->getValue(row); },
             relOp, value, logger());
+    }
+
+    [[nodiscard]] std::unique_ptr<Sorter> createSorter() const override {
+        return std::make_unique<DoubleSorter>(
+            [this](Row row, const std::optional<std::string> &key) {
+                if (!key) {
+                    throw std::runtime_error("ordering on dictionary column '" +
+                                             name() +
+                                             "' requires a dictionary key");
+                }
+                const auto map = this->getValue(row);
+                const auto iter = map.find(*key);
+                return iter != map.end() ? iter->second : 0.0;
+            });
     }
 
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(

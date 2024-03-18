@@ -58,19 +58,6 @@ checks = {
             [(0, "Sockets used: 0 of 943629, 0%", [("sockets", 0, None, None, 0, 943629)])],
         )
     ],
-    "proc": [
-        (
-            "rabbit@my-rabbit",
-            {},
-            [
-                (
-                    0,
-                    "Erlang processes used: 431 of 1048576, 0.04%",
-                    [("processes", 431, None, None, 0, 1048576)],
-                )
-            ],
-        )
-    ],
     "mem": [
         (
             "rabbit@my-rabbit",

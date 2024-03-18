@@ -35,9 +35,15 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.visuals import livestatus_query_bare
 
+from ..config import active_config
 from ._graph_render_config import GraphRenderConfigBase
-from ._unit_info import unit_info
-from ._utils import metric_info, metric_title, parse_perf_data, perfvar_translation
+from ._loader import registered_units
+from ._utils import (
+    get_extended_metric_info,
+    parse_perf_data,
+    perfvar_translation,
+    registered_metrics,
+)
 
 
 def migrate_graph_render_options_title_format(
@@ -250,7 +256,7 @@ class ValuesWithUnits(CascadingDropdown):
         validate_value_elemets: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
         help: ValueSpecHelp | None = None,
     ):
-        super().__init__(choices=self._unit_choices, help=help)
+        super().__init__(choices=registered_units(), help=help)
         self._vs_name = vs_name
         self._metric_vs_name = metric_vs_name
         self._elements = elements
@@ -269,20 +275,14 @@ class ValuesWithUnits(CascadingDropdown):
             validate=self._validate_value_elements,
         )
 
-    def _unit_choices(self):
-        return [
-            (name, info.get("description", info["title"]), self._unit_vs(info))
-            for (name, info) in unit_info.items()
-        ]
-
     @staticmethod
-    def resolve_units(metric_name: MetricName_) -> PageResult:
+    def resolve_units(metric_name: MetricName_ | None) -> PageResult:
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
-        known_units = list(unit_info.keys())
-        if metric_name in metric_info:
-            required_unit = metric_info[metric_name]["unit"]
+        known_units = [id_ for id_, _title in registered_units()]
+        if metric_name:
+            required_unit = get_extended_metric_info(metric_name)["unit"]["id"]
         else:
             required_unit = ""
 
@@ -349,8 +349,8 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
         return [
             next(
                 (
-                    (metric_id, str(metric_detail["title"]))
-                    for metric_id, metric_detail in metric_info.items()
+                    (metric_id, metric_title)
+                    for metric_id, metric_title in registered_metrics()
                     if metric_id == value
                 ),
                 (value, value.title()),
@@ -361,7 +361,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
 def _metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
         metric_name = perfvar_translation(perfvar, check_command)["name"]
-        yield metric_name, metric_title(metric_name)
+        yield metric_name, str(get_extended_metric_info(metric_name)["title"])
 
 
 def metrics_of_query(
@@ -381,7 +381,7 @@ def metrics_of_query(
     row = {}
     for row in livestatus_query_bare("service", context, columns):
         perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"]
+            row["service_perf_data"], row["service_check_command"], config=active_config
         )
         known_metrics = set([p.metric_name for p in perf_data] + row["service_metrics"])
         yield from _metric_choices(str(check_command), tuple(map(str, known_metrics)))
@@ -390,8 +390,3 @@ def metrics_of_query(
         yield from _metric_choices(
             str(row["host_check_command"]), tuple(map(str, row["host_metrics"]))
         )
-
-
-def registered_metrics() -> Iterator[Choice]:
-    for metric_id, metric_detail in metric_info.items():
-        yield metric_id, str(metric_detail["title"])

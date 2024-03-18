@@ -12,6 +12,7 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfiguratio
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.config_validation_layer.site_management import validate_sites
 from cmk.utils.site import omd_site
 
 import cmk.gui.hooks as hooks
@@ -210,7 +211,7 @@ class SiteManagement:
                     ),
                 ),
             ],
-            default_value="all" if site_is_local(site_id) else None,
+            default_value="all" if site_is_local(active_config, site_id) else None,
             help=_(
                 "By default the users are synchronized automatically in the interval configured "
                 "in the connection. For example the LDAP connector synchronizes the users every "
@@ -320,12 +321,15 @@ class SiteManagement:
             if site.get("proxy") is not None:
                 site["proxy"] = cls.transform_old_connection_params(site["proxy"])
 
+        validate_sites(sites)
         return sites
 
     @classmethod
     def save_sites(cls, sites: SiteConfigurations, activate: bool = True) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+        validate_sites(sites)
 
         store.mkdir(multisite_dir())
         store.save_to_mk_file(cls._sites_mk(), "sites", sites)
@@ -524,7 +528,6 @@ class CEESiteManagement(SiteManagement):
                             unit=_("sec"),
                             minvalue=0.1,
                             default_value=defaults["heartbeat"][1],
-                            display_format="%.1f",
                         ),
                     ],
                 ),
@@ -732,7 +735,7 @@ def _update_distributed_wato_file(sites):
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
-        if site_is_local(siteid):
+        if site_is_local(active_config, siteid):
             create_distributed_wato_files(
                 base_dir=cmk.utils.paths.omd_root,
                 site_id=siteid,
@@ -766,7 +769,7 @@ def site_globals_editable(site_id, site) -> bool:  # type: ignore[no-untyped-def
     if not has_wato_slave_sites():
         return False
 
-    return site["replication"] or site_is_local(site_id)
+    return site["replication"] or site_is_local(active_config, site_id)
 
 
 def _delete_distributed_wato_file():

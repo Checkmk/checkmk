@@ -17,8 +17,8 @@ from cmk.agent_based.v2 import (
     render,
     SNMPTree,
     startswith,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import StringTable
 
 
 def check_netapp_fcpio(item, params, info):

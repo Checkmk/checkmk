@@ -5,7 +5,7 @@
 
 import json
 
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import StringTable
 
 GraylogSection = dict
 

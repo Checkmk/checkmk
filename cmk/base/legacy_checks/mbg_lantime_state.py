@@ -11,8 +11,7 @@ from cmk.base.check_legacy_includes.mbg_lantime import (
 )
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import all_of, equals, not_exists, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import all_of, equals, not_exists, SNMPTree, StringTable
 
 
 def inventory_mbg_lantime_state(info):

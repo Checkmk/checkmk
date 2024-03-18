@@ -72,7 +72,7 @@ def user_sync_config() -> UserSyncConfig:
     # use global option as default for reading legacy options and on remote site
     # for reading the value set by the Setup master site
     default_cfg = user_sync_default_config(omd_site())
-    return get_site_config(omd_site()).get("user_sync", default_cfg)
+    return get_site_config(active_config, omd_site()).get("user_sync", default_cfg)
 
 
 # Legacy option config.userdb_automatic_sync defaulted to "master".
@@ -82,7 +82,7 @@ def user_sync_config() -> UserSyncConfig:
 def user_sync_default_config(site_name: SiteId) -> UserSyncConfig:
     global_user_sync = _transform_userdb_automatic_sync(active_config.userdb_automatic_sync)
     if global_user_sync == "master":
-        if site_is_local(site_name) and not is_wato_slave_site():
+        if site_is_local(active_config, site_name) and not is_wato_slave_site():
             user_sync_default: UserSyncConfig = "all"
         else:
             user_sync_default = None

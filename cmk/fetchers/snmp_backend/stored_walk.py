@@ -10,7 +10,6 @@ from pathlib import Path
 from typing import Final
 
 import cmk.utils.agent_simulator as agent_simulator
-import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKException, MKGeneralException, MKSNMPError
 from cmk.utils.log import console
@@ -24,13 +23,9 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(SNMPBackend):
-    def __init__(
-        self, snmp_config: SNMPHostConfig, logger: logging.Logger, path: Path | None = None
-    ) -> None:
+    def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger, path: Path) -> None:
         super().__init__(snmp_config, logger)
-        self.path: Final = (
-            path if path is not None else Path(cmk.utils.paths.snmpwalks_dir) / self.hostname
-        )
+        self.path: Final = path
         if not self.path.exists():
             raise MKSNMPError(f"No snmpwalk file {self.path}")
 

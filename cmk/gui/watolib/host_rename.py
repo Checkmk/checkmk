@@ -34,6 +34,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.urls import makeuri
 
+from ..config import active_config
 from .audit_log import log_audit
 from .automation_commands import AutomationCommand
 from .automations import do_remote_automation
@@ -390,13 +391,13 @@ def _rename_host_in_uuid_link_manager(
 ) -> list[str]:
     n_relinked = 0
     for site_id, renamings in renamings_by_site.items():
-        if site_is_local(site_id):
+        if site_is_local(active_config, site_id):
             n_relinked += len(get_uuid_link_manager().rename(renamings))
         else:
             n_relinked += int(
                 str(
                     do_remote_automation(
-                        get_site_config(site_id),
+                        get_site_config(active_config, site_id),
                         "rename-hosts-uuid-link",
                         [
                             (

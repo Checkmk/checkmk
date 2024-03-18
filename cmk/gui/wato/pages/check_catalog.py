@@ -17,8 +17,6 @@ import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.checkengine.checking import CheckPluginNameStr
-
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -135,7 +133,7 @@ class ModeCheckPluginSearch(WatoMode):
 
     def _get_manpages_after_search(self):
         collection: dict[ManPageCatalogPath, list[dict]] = {}
-        handled_check_names: set[CheckPluginNameStr] = set()
+        handled_check_names: set[str] = set()
 
         # TODO: type of entry argument seems to be unclear.
         def entry_part_matches(entry: dict, key: str) -> bool:

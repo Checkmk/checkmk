@@ -43,8 +43,8 @@ from . import (
     _rulespec_groups,
     _snapins,
     filters,
-    pages,
 )
+from . import pages as wato_pages
 from ._notification_parameter import NotificationParameterRegistry
 from ._notification_parameter import registration as _notification_parameter_registration
 from ._virtual_host_tree import VirtualHostTree
@@ -104,7 +104,7 @@ def register(
     )
 
     filters.register(filter_registry)
-    pages.register(page_registry, mode_registry, automation_command_registry, job_registry)
+    wato_pages.register(page_registry, mode_registry, automation_command_registry, job_registry)
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)
     _main_modules.register(main_module_registry)

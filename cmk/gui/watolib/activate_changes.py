@@ -44,6 +44,7 @@ from livestatus import SiteConfiguration, SiteId
 from cmk.utils import agent_registration, paths, render, setup_search_index, store, version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.export import LicenseUsageExtensions
+from cmk.utils.licensing.helper import get_licensing_logger
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.site import omd_site
@@ -74,7 +75,7 @@ from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.nodevis_lib import topology_dir
+from cmk.gui.nodevis.utils import topology_dir
 from cmk.gui.site_config import enabled_sites, get_site_config, is_single_local_site, site_is_local
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import SiteStatus
@@ -273,7 +274,7 @@ def get_replication_paths() -> list[ReplicationPath]:
             ty="dir",
             ident="omd",
             site_path="etc/omd",
-            excludes=["site.conf"],
+            excludes=["site.conf", "instance_id"],
         ),
         ReplicationPath(
             ty="dir",
@@ -651,7 +652,7 @@ def _get_config_sync_state(
 
     Calls the automation call "get-config-sync-state" on the remote site,
     which is handled by AutomationGetConfigSyncState."""
-    site = get_site_config(site_id)
+    site = get_site_config(active_config, site_id)
     response = cmk.gui.watolib.automations.do_remote_automation(
         site,
         "get-config-sync-state",
@@ -677,7 +678,7 @@ def _synchronize_files(
 
     sync_archive = _get_sync_archive(files_to_sync, site_config_dir)
 
-    site = get_site_config(site_id)
+    site = get_site_config(active_config, site_id)
     response = cmk.gui.watolib.automations.do_remote_automation(
         site,
         "receive-config-sync",
@@ -873,7 +874,7 @@ def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
     while True:
         try:
             raw_omd_response = cmk.gui.watolib.automations.do_remote_automation(
-                get_site_config(site_id),
+                get_site_config(active_config, site_id),
                 "checkmk-remote-automation-get-status",
                 [("request", repr("omd-config-change"))],
             )
@@ -897,13 +898,13 @@ def _call_activate_changes_automation(
     omd_ident: ConfigDomainName = config_domain_name.OMD
     domain_requests = _get_domains_needing_activation(omd_ident, site_changes_activate_until)
 
-    if site_is_local(site_id):
+    if site_is_local(active_config, site_id):
         return execute_activate_changes(domain_requests)
 
     serialized_requests = list(asdict(x) for x in domain_requests)
     try:
         response = cmk.gui.watolib.automations.do_remote_automation(
-            get_site_config(site_id),
+            get_site_config(active_config, site_id),
             "activate-changes",
             [("domains", repr(serialized_requests)), ("site_id", site_id)],
         )
@@ -1104,7 +1105,7 @@ class ActivateChanges:
         return [s for s in activation_sites().items() if self._changes_of_site(s[0])]
 
     def _site_is_logged_in(self, site_id, site):
-        return site_is_local(site_id) or "secret" in site
+        return site_is_local(active_config, site_id) or "secret" in site
 
     def _site_is_online(self, status: str) -> bool:
         return status in ["online", "disabled"]
@@ -1126,7 +1127,7 @@ class ActivateChanges:
     def _is_sync_needed_specific_changes(
         self, site_id: SiteId, changes_to_check: Sequence[ChangeSpec]
     ) -> bool:
-        if site_is_local(site_id):
+        if site_is_local(active_config, site_id):
             return False
 
         return any(c["need_sync"] for c in changes_to_check)
@@ -1184,19 +1185,19 @@ class ActivateChanges:
         return self._changes_by_site_until[site_id]
 
 
-def has_been_activated(change) -> bool:  # type:ignore[no-untyped-def]
+def has_been_activated(change) -> bool:  # type: ignore[no-untyped-def]
     return change.get("has_been_activated", False)
 
 
-def prevent_discard_changes(change) -> bool:  # type:ignore[no-untyped-def]
+def prevent_discard_changes(change) -> bool:  # type: ignore[no-untyped-def]
     return change.get("prevent_discard_changes", False)
 
 
-def is_foreign_change(change) -> bool:  # type:ignore[no-untyped-def]
+def is_foreign_change(change) -> bool:  # type: ignore[no-untyped-def]
     return change["user_id"] and change["user_id"] != user.id
 
 
-def affects_all_sites(change) -> bool:  # type:ignore[no-untyped-def]
+def affects_all_sites(change) -> bool:  # type: ignore[no-untyped-def]
     return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
 
@@ -2251,7 +2252,7 @@ def sync_and_activate(
                 )
                 active_tasks["activate_remote_changes"][site_id] = async_result
 
-        remote_config_generation_per_site: MutableMapping[SiteId, int] = {}
+        remote_config_generation_per_site: dict[SiteId, int] = {}
         # we want to mostly parallelize the activation steps, but if one site takes longer,
         # it should not hold up the other sites
         # -> monitor active tasks to handle results as soon as one finishes and start a task for
@@ -2400,7 +2401,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         sync_and_activate(
             self._activation_id,
             self._site_snapshot_settings,
-            self.file_filter_func,
+            ActivateChangesSchedulerBackgroundJob.file_filter_func,
             self._source,
             self._prevent_activate,
         )
@@ -2428,6 +2429,10 @@ def _save_state(activation_id: ActivationId, site_id: SiteId, state: SiteActivat
 
 
 def _close_apache_fds():
+    # Close logger handles, before starting bad lowlevel things
+    licensing_logger = get_licensing_logger()
+    del licensing_logger.handlers[:]
+
     # Cleanup resources of the apache
     for x in range(3, 256):
         try:
@@ -2608,13 +2613,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     local_dir=paths.local_optional_packages_dir,
                     shipped_dir=paths.optional_packages_dir,
                 ),
-                {
-                    mkp_tool.PackagePart.EC_RULE_PACKS: mkp_tool.PackageOperationCallbacks(
-                        install=ec.install_packaged_rule_packs,
-                        release=ec.release_packaged_rule_packs,
-                        uninstall=ec.uninstall_packaged_rule_packs,
-                    )
-                },
+                ec.mkp_callbacks(),
                 version.__version__,
                 parse_version=version.parse_check_mk_version,
             )
@@ -2734,7 +2733,7 @@ def get_file_names_to_sync(
     # New files
     central_files = set(sync_state.central_file_infos.keys())
     remote_files_set = set(sync_state.remote_file_infos.keys())
-    remote_site_config = get_site_config(site_id)
+    remote_site_config = get_site_config(active_config, site_id)
     remote_files = (
         _filter_remote_files(remote_files_set)
         if remote_site_config.get("user_sync")

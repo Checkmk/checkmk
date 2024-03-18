@@ -11,8 +11,7 @@ from typing import assert_never, Literal, NewType, TypeVar
 from pydantic import BaseModel, ConfigDict, Field
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2 import HostLabel
-from cmk.agent_based.v2.type_defs import CheckResult, HostLabelGenerator
+from cmk.agent_based.v2 import CheckResult, HostLabel, HostLabelGenerator
 
 COLLECTOR_SERVICE_NAME = "Cluster collector"
 
@@ -365,7 +364,7 @@ class NodeCondition(BaseModel, extra="forbid"):
 
 
 class NodeConditions(Section):
-    """section: kube_node_conditions_v1"""
+    """section: kube_node_conditions_v2"""
 
     conditions: Sequence[NodeCondition]
 
@@ -580,7 +579,7 @@ class ContainerRunningState(BaseModel):
 
 class ContainerWaitingState(BaseModel):
     type: Literal[ContainerStateType.waiting] = Field(ContainerStateType.waiting)
-    reason: str
+    reason: str | None = None
     detail: str | None = None
 
 

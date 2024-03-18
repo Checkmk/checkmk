@@ -22,8 +22,17 @@ from subprocess import PIPE, Popen
 from typing import Final, NoReturn
 
 from cmk.utils import msi_patch
+from cmk.utils.version import __version__
 
-PRODUCT_NAME: Final = "Check MK Agent 2.2"
+
+def _extract_major_version(version: str) -> str:
+    """converts "2.3.0b1" to "2.3" """
+    num_dot_num_pattern: Final[str] = r"(\d+\.\d+)"
+    return match.group(1) if (match := re.search(num_dot_num_pattern, version)) else "2.3"
+
+
+_MAJOR_VERSION: Final = _extract_major_version(__version__)
+PRODUCT_NAME: Final = f"Check MK Agent {_MAJOR_VERSION}"
 AGENT_STANDARD_MSI_FILE: Final = "check_mk_agent.msi"
 AGENT_UNSIGNED_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
 _APPLY_PATCH_SCRIPT: Final = "apply_unsign_msi_patch.sh"

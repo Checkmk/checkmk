@@ -348,18 +348,17 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
                         Percentage(
                             title=_("Warning below"),
                             default_value=99,
-                            display_format="%.3f",
                             size=7,
                         ),
                         Percentage(
                             title=_("Critical below"),
                             default_value=95,
-                            display_format="%.3f",
                             size=7,
                         ),
                     ]
                 ),
-                title=_("Visual levels for the availability (OK percentage)"),
+                title=_("Visual levels for the availability"),
+                label=_("Visual levels for the availability (OK percentage)"),
             ),
         ),
         # Show colummns for min, max, avg duration and count

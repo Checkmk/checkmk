@@ -19,6 +19,7 @@ from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.urls import makeuri_contextless
 
+from ...config import active_config
 from ._base import SidebarSnapin
 from ._helpers import begin_footnote_links, end_footnote_links, link, render_link
 
@@ -49,7 +50,7 @@ class SiteStatus(SidebarSnapin):
         sites.update_site_states_from_dead_sites()
 
         for sitename, _sitealias in user_sites.sorted_sites():
-            site = site_config.get_site_config(sitename)
+            site = site_config.get_site_config(active_config, sitename)
 
             state = sites.states().get(sitename, sites.SiteStatus({})).get("state")
 

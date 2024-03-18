@@ -26,6 +26,12 @@ VARIABLES:
     - NAME: CHANGED_TESTS_MAKEFILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/Makefile' || true"
 
+    - NAME: CHANGED_OMDLIB_FILES
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | grep '^omd/packages/omd/omdlib/' || true"
+
+    - NAME: CHANGED_OMDLIB_TESTS
+      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | grep '^tests/unit/omdlib/' || true"
+
     - NAME: CHANGED_PYTHON_FILES
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-python-files --filter"
 
@@ -109,6 +115,10 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '.werks/' || true"
       REPLACE_NEWLINES: true
 
+    - NAME: CHANGED_WERK_CODE_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-werks\\|^cmk/utils/werks' || true"
+      REPLACE_NEWLINES: true
+
     - NAME: CHANGED_CHECKMAN_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep 'checkman/' || true"
       REPLACE_NEWLINES: true
@@ -133,8 +143,8 @@ VARIABLES:
     - NAME: CHANGED_CHECK_HTTP_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/' || true"
 
-    - NAME: CHANGED_CHECK_SQL_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-sql/' || true"
+    - NAME: CHANGED_MK_SQL_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-sql/' || true"
 
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
@@ -175,6 +185,9 @@ VARIABLES:
     - NAME: CHANGED_UNIXCAT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/unixcat/' || true"
 
+    - NAME: CHANGED_FRONTEND_VUE_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/frontend_vue/' || true"
+
 STAGES:
     - NAME: 'Python Typing'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_RUN_MYPY_SCRIPT
@@ -202,6 +215,16 @@ STAGES:
       COMMAND: 'make test-cycles-docker &> ${RESULTS}/py-import-cycles.txt'
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
+
+    - NAME: 'omdlib Unit Tests'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_OMDLIB_FILES,CHANGED_OMDLIB_TESTS
+      DIR: 'tests'
+      ENV_VARS:
+        PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-omdlib-junit.xml --color=no"
+      COMMAND: "../scripts/run-in-docker.sh make --quiet test-unit-omdlib"
+      TEXT_ON_SKIP: 'No omdlib files changed'
+      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/python3-omdlib-junit.xml"
 
     - NAME: 'Python Unit Tests'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_CHECKMAN_FILES
@@ -263,6 +286,21 @@ STAGES:
       COMMAND: "./scripts/run-in-docker.sh ./scripts/run-pipenv run python -m cmk.werks.validate &> ${RESULTS}/werk_validate.txt"
       TEXT_ON_SKIP: 'No Werk files changed'
       RESULT_CHECK_FILE_PATTERN: "results/werk_validate.txt"
+
+    - NAME: 'Python Werks Commands'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_WERK_CODE_FILES
+      DIR: ''
+      COMMAND: |
+        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks collect cmk . --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
+        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt
+        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks announce .werks $(make print-VERSION) --format txt &>> ${RESULTS}/werk_commands.txt
+        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks precompile .werks precompiled.json &>> ${RESULTS}/werk_commands.txt
+        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks changelog CHANGELOG precompiled.json &>> ${RESULTS}/werk_commands.txt
+        # we don't have access to the fixup notes in ci, we might have to fetch them, or temporarily disable this check:
+        scripts/run-in-docker.sh scripts/run-pipenv run python3 -m cmk.utils.werks mail . HEAD werk_mail --assume-no-notes-but=$(git log --before="$(date --date="4 weeks ago" --iso=seconds)" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
+        scripts/run-in-docker.sh scripts/run-pipenv run ./werk list &>> ${RESULTS}/werk_commands.txt
+      TEXT_ON_SKIP: 'No Werk code files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/werk_commands.txt"
 
     - NAME: 'Python Pylint'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_PYLINT_RC_FILE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
@@ -389,25 +427,16 @@ STAGES:
     - NAME: 'Package check-cert'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_CERT_FILES
       DIR: 'packages/check-cert'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-cert.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all --features=vendored &> ${RESULTS}/check-cert.txt"
       TEXT_ON_SKIP: 'No check-cert files changed'
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
 
     - NAME: 'Package check-http'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_HTTP_FILES
       DIR: 'packages/check-http'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-http.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all --features=reqwest/native-tls-vendored &> ${RESULTS}/check-http.txt"
       TEXT_ON_SKIP: 'No check-http files changed'
       RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
-
-    - NAME: 'Package check-sql'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_SQL_FILES
-      SEC_VAR_LIST:
-        - 'CI_TEST_SQL_DB_ENDPOINT'
-      DIR: 'packages/check-sql'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-sql.txt"
-      TEXT_ON_SKIP: 'No check-sql files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/check-sql.txt"
 
     # NOTE: This has to come *before* the neb & cmc packages, as they depend on
     # livestatus. Their run scripts rebuild livestatus, "eating away" compiler
@@ -458,19 +487,19 @@ STAGES:
       TEXT_ON_SKIP: 'No cmk-graphing files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-graphing.txt"
 
-    - NAME: 'Package cmk-mkp-tool'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_MKP_TOOL_FILES
-      DIR: 'packages/cmk-mkp-tool'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
-      TEXT_ON_SKIP: 'No cmk-mkp-tool files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
-
     - NAME: 'Package cmk-livestatus-client'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_LIVESTATUS_CLIENT_FILES
       DIR: 'packages/cmk-livestatus-client'
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-livestatus-client.txt"
       TEXT_ON_SKIP: 'No cmk-livestatus-client files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
+
+    - NAME: 'Package cmk-mkp-tool'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_MKP_TOOL_FILES
+      DIR: 'packages/cmk-mkp-tool'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
+      TEXT_ON_SKIP: 'No cmk-mkp-tool files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
 
     - NAME: 'Package cmk-rulesets'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_RULESETS_FILES
@@ -492,6 +521,22 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-werks.txt"
       TEXT_ON_SKIP: 'No cmk-werks package files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
+
+    - NAME: 'Package frontend_vue'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_FRONTEND_VUE_FILES,CHANGED_NPM_NODE_SETUP
+      DIR: 'packages/frontend_vue'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/frontend_vue.txt"
+      TEXT_ON_SKIP: 'No frontend_vue files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/frontend_vue.txt"
+
+    - NAME: 'Package mk-sql'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_MK_SQL_FILES
+      SEC_VAR_LIST:
+        - 'CI_TEST_SQL_DB_ENDPOINT'
+      DIR: 'packages/mk-sql'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/mk-sql.txt"
+      TEXT_ON_SKIP: 'No mk-sql files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/mk-sql.txt"
 
     - NAME: 'Package neb'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES

@@ -3,13 +3,14 @@ workspace(name = "omd_packages")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
+RULES_FOREIGN_CC_VERSION = "0.9.0"
 http_archive(
     name = "rules_foreign_cc",
     sha256 = "2a4d07cd64b0719b39a7c12218a3e507672b82a97b98c6a89d38565894cf7c51",
-    strip_prefix = "rules_foreign_cc-0.9.0",
+    strip_prefix = "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION,
     urls = [
-        "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/0.9.0.tar.gz",
-        UPSTREAM_MIRROR_URL + "rules_foreign_cc-" + "0.9.0" + ".tar.gz",
+        "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
+        UPSTREAM_MIRROR_URL + "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION + ".tar.gz",
     ]
 )
 
@@ -32,13 +33,14 @@ rules_foreign_cc_dependencies(
     register_toolchains = False,
 )
 
+RULES_PKG_VERSION = "0.9.1"
 http_archive(
     name = "rules_pkg",
     sha256 = "8f9ee2dc10c1ae514ee599a8b42ed99fa262b757058f65ad3c384289ff70c4b8",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.9.1/rules_pkg-0.9.1.tar.gz",
-        "https://github.com/bazelbuild/rules_pkg/releases/download/0.9.1/rules_pkg-0.9.1.tar.gz",
-        UPSTREAM_MIRROR_URL + "rules_pkg-" + "0.9.1" + ".tar.gz",
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/" + RULES_PKG_VERSION + "/rules_pkg-" + RULES_PKG_VERSION + ".tar.gz",
+        "https://github.com/bazelbuild/rules_pkg/releases/download/" + RULES_PKG_VERSION + "/rules_pkg-" + RULES_PKG_VERSION + ".tar.gz",
+        UPSTREAM_MIRROR_URL + "rules_pkg-" + RULES_PKG_VERSION + ".tar.gz",
     ],
 )
 
@@ -102,7 +104,14 @@ load(
     "NET_SNMP_VERSION",
     "ROBOTMK_SHA256",
     "ROBOTMK_VERSION",
+    "RRDTOOL_SHA256",
+    "RRDTOOL_VERSION",
+    "REDFISH_MKP_COMMIT_HASH",
+    "REDFISH_MKP_VERSION",
+    "REDFISH_MKP_SHA256",
 )
+
+
 load("//omd/packages/patch:patch_http.bzl", "patch")
 
 patch(
@@ -257,6 +266,7 @@ create_python_requirements(
         "rrdtool",  # don't build with pip -> see rrdtool omd packages
         "agent-receiver",  # don't build with pip (yet)
         "werks",  # don't build with pip (yet)
+        "netapp-ontap",  # their build process is broken, see https://github.com/NetApp/ontap-rest-python/issues/46
     ],
     requirements = "//:Pipfile",
 )
@@ -280,4 +290,19 @@ load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk")
 robotmk(
     sha256 = ROBOTMK_SHA256,
     version_str= ROBOTMK_VERSION
+)
+
+load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool")
+
+rrdtool(
+    sha256 = RRDTOOL_SHA256,
+    version_str = RRDTOOL_VERSION,
+)
+
+load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp")
+
+redfish_mkp(
+    commit_hash = REDFISH_MKP_COMMIT_HASH,
+    sha256 = REDFISH_MKP_SHA256,
+    version_str = REDFISH_MKP_VERSION,
 )

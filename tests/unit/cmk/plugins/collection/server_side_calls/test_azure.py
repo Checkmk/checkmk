@@ -9,30 +9,45 @@ from typing import Any
 import pytest
 
 from cmk.plugins.collection.server_side_calls.azure import special_agent_azure
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    StoredSecret,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, StoredSecret
 
 HOST_CONFIG = HostConfig(
     name="host",
-    resolved_address="127.0.0.1",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-        ipv4_address="127.0.0.1",
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="127.0.0.1"),
 )
 
 
 @pytest.mark.parametrize(
     ["params", "expected_args"],
     [
+        pytest.param(
+            {
+                "authority": "china",
+                "subscription": "banana",
+                "tenant": "strawberry",
+                "client": "blueberry",
+                "secret": ("password", "vurystrong"),
+                "config": {},
+                "services": ["users_count", "Microsoft.DBforMySQL/servers"],
+                "import_tags": "all_tags",
+            },
+            [
+                "--tenant",
+                "strawberry",
+                "--client",
+                "blueberry",
+                "--secret",
+                PlainTextSecret(value="vurystrong", format="%s"),
+                "--authority",
+                "china",
+                "--subscription",
+                "banana",
+                "--services",
+                "users_count",
+                "Microsoft.DBforMySQL/servers",
+            ],
+            id="explicit_password",
+        ),
         pytest.param(
             {
                 "authority": "china",
@@ -57,8 +72,39 @@ HOST_CONFIG = HostConfig(
                 "--services",
                 "users_count",
                 "Microsoft.DBforMySQL/servers",
+                "--ignore-all-tags",
             ],
-            id="explicit_password",
+            id="explicit_password_ignore_tags",
+        ),
+        pytest.param(
+            {
+                "authority": "china",
+                "subscription": "banana",
+                "tenant": "strawberry",
+                "client": "blueberry",
+                "secret": ("password", "vurystrong"),
+                "config": {},
+                "services": ["users_count", "Microsoft.DBforMySQL/servers"],
+                "import_tags": ("filter_tags", "some_pattern_.*"),
+            },
+            [
+                "--tenant",
+                "strawberry",
+                "--client",
+                "blueberry",
+                "--secret",
+                PlainTextSecret(value="vurystrong", format="%s"),
+                "--authority",
+                "china",
+                "--subscription",
+                "banana",
+                "--services",
+                "users_count",
+                "Microsoft.DBforMySQL/servers",
+                "--import-matching-tags-as-labels",
+                "some_pattern_.*",
+            ],
+            id="explicit_password_regex_tag_matching",
         ),
         pytest.param(
             {
@@ -72,6 +118,7 @@ HOST_CONFIG = HostConfig(
                     "tag_based": [("my_tag", "exists")],
                 },
                 "services": [],
+                "import_tags": "all_tags",
             },
             [
                 "--tenant",
@@ -105,6 +152,7 @@ HOST_CONFIG = HostConfig(
                 },
                 "sequential": True,
                 "proxy": ("environment", "environment"),
+                "import_tags": "all_tags",
             },
             [
                 "--tenant",
@@ -138,8 +186,7 @@ def test_azure_argument_parsing(
     expected_args: Sequence[Any],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = special_agent_azure.parameter_parser(params)
-    commands = list(special_agent_azure.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(special_agent_azure(params, HOST_CONFIG, {}))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args

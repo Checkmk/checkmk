@@ -8,6 +8,7 @@ from collections.abc import Iterable
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 from cmk.plugins.lib.docker import NodeInfoSection
 
@@ -20,9 +21,9 @@ def discover_docker_node_info(section: NodeInfoSection) -> Iterable[tuple[None, 
 def check_docker_node_info(_no_item, _no_params, parsed):
     if "Name" in parsed:
         yield 0, "Daemon running on host %s" % parsed["Name"]
-    for state, key in enumerate(("Warning", "Critical", "Unknown"), 1):
-        if key in parsed:
-            yield state, parsed[key]
+    for state, key in [(2, "Critical"), (3, "Unknown")]:
+        for msg in parsed.get(key, ()):
+            yield state, msg
 
 
 check_info["docker_node_info"] = LegacyCheckDefinition(
@@ -33,6 +34,10 @@ check_info["docker_node_info"] = LegacyCheckDefinition(
 
 
 def check_docker_node_containers(_no_item, params, parsed):
+    if list(parsed.keys()) == ["Unknown"]:
+        # The section error is reported by the "Docker node info" service
+        raise IgnoreResultsError("Container statistics missing")
+
     for title, key, levels_prefix in (
         ("containers", "Containers", ""),
         ("running", "ContainersRunning", "running_"),

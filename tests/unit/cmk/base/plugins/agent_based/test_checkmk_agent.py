@@ -7,10 +7,10 @@ import json
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
@@ -24,7 +24,7 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_version,
 )
 from cmk.base.plugins.agent_based.checkmk_agent import (
-    _normalize_ip_addresses as normalize_ip_addresses,
+    _expand_curly_address_notation as expand_curly_address_notation,
 )
 from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
 from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
@@ -481,11 +481,9 @@ def test_certificate_results(
         ]
     )
 
-    with on_time(datetime(2001, 5, 25, 13, 13, 13), "CEST"):
+    with time_machine.travel(datetime(2001, 5, 25, 13, 13, 13, tzinfo=ZoneInfo("UTC"))):
         assert [*_check_cmk_agent_update({}, None, section)] == [
-            Result(
-                state=State.OK, notice="Time since last update check: 2 hours 0 minutes"
-            ),  # timezones?
+            Result(state=State.OK, notice="Time since last update check: 2 hours 0 minutes"),
             Result(state=State.OK, notice="Last update check: 2001-05-25 11:13:00"),
             Result(state=State.OK, notice="Update URL: foo"),
             *results,
@@ -494,7 +492,7 @@ def test_certificate_results(
 
 @pytest.mark.parametrize("duplicate", [False, True])
 def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
-    with on_time(1645800081.5039608, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(1645800081.5039608, tz=ZoneInfo("UTC"))):
         actual = list(
             _check_cmk_agent_update(
                 {},
@@ -528,8 +526,8 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
         Result(state=State.OK, notice="Last update check: 2022-02-16 08:28:01"),
         Result(state=State.OK, summary="Last update: 2022-02-16 08:29:41"),
         Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
-        Result(state=State.OK, notice="Agent configuration: 38bf6e44"),
-        Result(state=State.OK, notice="Pending installation: 1234abcd"),
+        Result(state=State.OK, notice="Agent configuration: 38bf6e44175732bc"),
+        Result(state=State.OK, notice="Pending installation: 1234abcd5678efgh"),
     ]
 
 
@@ -1158,7 +1156,7 @@ def test_certificate_validity(
     controller_section: ControllerSection,
     expected_result: CheckResult,
 ) -> None:
-    with on_time(1674578645.3644419, "UTC"):
+    with time_machine.travel(datetime.fromtimestamp(1674578645.3644419, tz=ZoneInfo("UTC"))):
         assert (
             list(check_checkmk_agent({}, None, None, controller_section, None, None))
             == expected_result
@@ -1284,7 +1282,7 @@ def test_cached_plugins(
     )
 
 
-def test_normalize_ip() -> None:
-    assert normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
-    assert normalize_ip_addresses(["0.0.0.0", "1.1.1.1"]) == ["0.0.0.0", "1.1.1.1"]
-    assert normalize_ip_addresses("0.0.0.0 1.1.1.1") == ["0.0.0.0", "1.1.1.1"]
+def test_expand_curly_address_notation() -> None:
+    assert expand_curly_address_notation("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
+    assert expand_curly_address_notation(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
+    assert expand_curly_address_notation("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]

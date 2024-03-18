@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import datetime
 import fcntl
 import importlib.machinery
 import importlib.util
@@ -19,7 +18,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Final
 
-import freezegun
 import pytest
 import urllib3
 from psutil import Process
@@ -45,10 +43,9 @@ from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unu
 from tests.testlib.web_session import APIError, CMKWebSession
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 
 from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -338,7 +335,9 @@ class Check(BaseCheck):
         super().__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
-        self.info: LegacyCheckDefinition = config.check_info[self.name]
+        info = config.check_info[self.name]
+        assert isinstance(info, LegacyCheckDefinition)
+        self.info = info
         self._migrated_plugin = register.get_check_plugin(
             CheckPluginName(self.name.replace(".", "_"))
         )
@@ -349,24 +348,21 @@ class Check(BaseCheck):
         return {}
 
     def run_parse(self, info):  # type: ignore[no-untyped-def]
-        parse_func = self.info.get("parse_function")
-        if not parse_func:
+        if self.info.parse_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
-        return parse_func(info)
+        return self.info.parse_function(info)
 
     def run_discovery(self, info):  # type: ignore[no-untyped-def]
-        disco_func = self.info.get("discovery_function")
-        if not disco_func:
+        if self.info.discovery_function is None:
             raise MissingCheckInfoError(
                 "Check '%s' " % self.name + "has no discovery function defined"
             )
-        return disco_func(info)
+        return self.info.discovery_function(info)
 
     def run_check(self, item, params, info):  # type: ignore[no-untyped-def]
-        check_func = self.info.get("check_function")
-        if not check_func:
+        if self.info.check_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
-        return check_func(item, params, info)
+        return self.info.check_function(item, params, info)
 
 
 class ActiveCheck(BaseCheck):
@@ -420,16 +416,6 @@ def set_timezone(timezone: str) -> Iterator[None]:
         _set_tz(old_tz)
 
 
-@contextmanager
-def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> Iterator[None]:
-    """Set the time and timezone for the test"""
-    if isinstance(utctime, (int, float)):
-        utctime = datetime.datetime.fromtimestamp(utctime, tz=datetime.UTC)
-
-    with set_timezone(timezone), freezegun.freeze_time(utctime):
-        yield
-
-
 __all__ = [
     "repo_path",
     "add_python_paths",
@@ -437,7 +423,6 @@ __all__ = [
     "fake_version_and_paths",
     "skip_unwanted_test_types",
     "wait_until_liveproxyd_ready",
-    "on_time",
     "set_timezone",
     "Site",
     "SiteFactory",

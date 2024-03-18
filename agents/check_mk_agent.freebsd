@@ -57,7 +57,7 @@ is_valid_plugin() {
     # test if a file is executable and does not have certain
     # extensions (remnants from distro upgrades).
     case "${1:?No plugin defined}" in
-        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp | *.dpkg-tmp) return 1 ;;
         *) [ -f "${1}" ] && [ -x "${1}" ] ;;
     esac
 }
@@ -236,7 +236,7 @@ unset_locale() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.3.0b1"
+    echo "Version: 2.4.0b1"
     echo "AgentOS: freebsd"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
@@ -244,6 +244,15 @@ section_checkmk() {
     echo "SpoolDirectory: ${SPOOLDIR}"
     echo "PluginsDirectory: ${PLUGINSDIR}"
     echo "LocalDirectory: ${LOCALDIR}"
+    echo "OSType: unix"
+
+    while read -r line; do
+        raw_line="${line//\"/}"
+        case $line in
+            NAME=*) echo "OSName: ${raw_line##*=}" ;;
+            VERSION_ID=*) echo "OSVersion: ${raw_line##*=}" ;;
+        esac
+    done </etc/os-release 2>/dev/null
 
     #
     # BEGIN COMMON AGENT CODE

@@ -8,24 +8,11 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.jenkins import special_agent_jenkins
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-    SpecialAgentCommand,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-        ipv4_address="0.0.0.1",
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="0.0.0.1"),
 )
 
 
@@ -87,8 +74,4 @@ HOST_CONFIG = HostConfig(
 def test_agent_jenkins_arguments_password_store(
     params: Mapping[str, object], expected_result: Sequence[SpecialAgentCommand]
 ) -> None:
-    parsed_params = special_agent_jenkins.parameter_parser(params)
-    assert (
-        list(special_agent_jenkins.commands_function(parsed_params, HOST_CONFIG, {}))
-        == expected_result
-    )
+    assert list(special_agent_jenkins(params, HOST_CONFIG, {})) == expected_result

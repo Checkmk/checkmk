@@ -9,13 +9,13 @@ from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.event import Event
+import cmk.ec.export as ec
 from cmk.ec.main import EventStatus, StatusServer
 
 
 def test_delete_event(event_status: EventStatus, status_server: StatusServer) -> None:
     """Delete 1 event"""
-    event: Event = {
+    event: ec.Event = {
         "host": HostName("ABC1"),
         "text": "not important",
         "core_host": HostName("ABC"),
@@ -32,7 +32,7 @@ def test_delete_event(event_status: EventStatus, status_server: StatusServer) ->
 
 def test_delete_multiple_events(event_status: EventStatus, status_server: StatusServer) -> None:
     """Delete event list"""
-    events: list[Event] = [
+    events: list[ec.Event] = [
         {
             "host": HostName("ABC1"),
             "text": "event1 text",
@@ -59,7 +59,7 @@ def test_delete_partially_existing_multiple_events(
     event_status: EventStatus, status_server: StatusServer
 ) -> None:
     """Event list with a missing ID still deletes the existing ID"""
-    events: list[Event] = [
+    events: list[ec.Event] = [
         {
             "host": HostName("ABC1"),
             "text": "event1 text",
@@ -89,7 +89,7 @@ def test_delete_partially_existing_multiple_events(
 
 def test_delete_events_of_host(event_status: EventStatus, status_server: StatusServer) -> None:
     """Delete all events of host"""
-    events: list[Event] = [
+    events: list[ec.Event] = [
         {
             "host": HostName("ABC1"),
             "text": "event1 text",

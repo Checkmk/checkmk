@@ -53,7 +53,7 @@ fi
 section_misc_sections() {
 
     echo "<<<check_mk>>>"
-    echo "Version: 2.3.0b1"
+    echo "Version: 2.4.0b1"
     echo "AgentOS: netbsd"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"
@@ -61,6 +61,9 @@ section_misc_sections() {
     echo "SpoolDirectory: $SPOOLDIR"
     echo "PluginsDirectory: $PLUGINSDIR"
     echo "LocalDirectory: $LOCALDIR"
+    echo "OSType: unix"
+    echo "OSName: $(uname -s)"
+    echo "OSVersion: $(uname -r)"
 
     echo '<<<df>>>'
     df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d

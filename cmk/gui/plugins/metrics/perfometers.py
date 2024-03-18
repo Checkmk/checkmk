@@ -69,14 +69,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["mem_used_percent"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["cpu_mem_used_percent"],
         "total": 100.0,
     }
@@ -115,15 +107,6 @@ perfometer_info.append(
         "type": "logarithmic",
         "metric": "session_rate",
         "half_value": 50.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "uptime",
-        "half_value": 2592000.0,
         "exponent": 2,
     }
 )
@@ -423,10 +406,6 @@ perfometer_info.append({"type": "logarithmic", "metric": "rta", "half_value": 0.
 perfometer_info.append({"type": "logarithmic", "metric": "rtt", "half_value": 0.1, "exponent": 4})
 
 perfometer_info.append(
-    {"type": "logarithmic", "metric": "load1", "half_value": 4.0, "exponent": 2.0}
-)
-
-perfometer_info.append(
     {"type": "logarithmic", "metric": "temp", "half_value": 40.0, "exponent": 1.2}
 )
 
@@ -647,14 +626,6 @@ perfometer_info.append(
         "metric": "dedup_rate",
         "half_value": 30.0,
         "exponent": 1.2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["mem_used"],
-        "total": "mem_total",
     }
 )
 
@@ -980,26 +951,6 @@ perfometer_info.append(
         "type": "linear",
         "segments": ["humidity"],
         "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "requests_per_second",
-                "half_value": 10,
-                "exponent": 5,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "busy_workers",
-                "half_value": 10,
-                "exponent": 2,
-            },
-        ],
     }
 )
 

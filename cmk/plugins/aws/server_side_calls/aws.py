@@ -16,6 +16,7 @@ from cmk.server_side_calls.v1 import (
     HTTPProxy,
     noop_parser,
     parse_secret,
+    replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -66,8 +67,11 @@ def _get_services_config(services):
     return service_args
 
 
-def _proxy_args(details: Mapping[str, Any]) -> Sequence[str | Secret]:
-    proxy_args = ["--proxy-host", details["proxy_host"]]
+def _proxy_args(details: Mapping[str, Any], host_config: HostConfig) -> Sequence[str | Secret]:
+    proxy_args: list[str | Secret] = [
+        "--proxy-host",
+        replace_macros(details["proxy_host"], host_config.macros),
+    ]
 
     if proxy_port := details.get("proxy_port"):
         proxy_args += ["--proxy-port", str(proxy_port)]
@@ -83,14 +87,14 @@ def _proxy_args(details: Mapping[str, Any]) -> Sequence[str | Secret]:
 
 
 def agent_aws_arguments(  # pylint: disable=too-many-branches
-    params: Any, hostname: str
+    params: Any, host_config: HostConfig
 ) -> Iterator[str]:
     yield from [
         "--access-key-id",
         params["access_key_id"],
         "--secret-access-key",
         parse_secret(params["secret_access_key"]),
-        *(_proxy_args(params["proxy_details"]) if "proxy_details" in params else []),
+        *(_proxy_args(params["proxy_details"], host_config) if "proxy_details" in params else []),
     ]
 
     global_service_region = params.get("access", {}).get("global_service_region")
@@ -148,7 +152,7 @@ def agent_aws_arguments(  # pylint: disable=too-many-branches
     yield from _get_tag_options(params.get("overall_tags", []), "overall")
     yield from [
         "--hostname",
-        hostname,
+        host_config.name,
     ]
     yield from ("--piggyback-naming-convention", params["piggyback_naming_convention"])
 
@@ -158,7 +162,7 @@ def generate_aws_commands(
     host_config: HostConfig,
     _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
-    yield SpecialAgentCommand(command_arguments=list(agent_aws_arguments(params, host_config.name)))
+    yield SpecialAgentCommand(command_arguments=list(agent_aws_arguments(params, host_config)))
 
 
 special_agent_aws = SpecialAgentConfig(

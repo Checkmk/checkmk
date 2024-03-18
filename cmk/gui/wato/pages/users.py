@@ -516,10 +516,10 @@ class ModeUsers(WatoMode):
                 auth_method: str | HTML = _("Automation")
             elif user_spec.get("password") or "password" in locked_attributes:
                 auth_method = _("Password")
-                if _is_two_factor_enabled(user_spec):
-                    auth_method += " (+2FA)"
-                elif connection and connection.type() == ConnectorType.SAML2:
+                if connection and connection.type() == ConnectorType.SAML2:
                     auth_method = connection.short_title()
+                if userdb.is_two_factor_login_enabled(uid):
+                    auth_method += " (+2FA)"
             else:
                 auth_method = HTMLWriter.render_i(_("none"))
             add_header(_("Authentication"))
@@ -727,10 +727,10 @@ class ModeUsers(WatoMode):
                     auth_method: str | HTML = _("Automation")
                 elif user_spec.get("password") or "password" in locked_attributes:
                     auth_method = _("Password")
-                    if _is_two_factor_enabled(user_spec):
-                        auth_method += " (+2FA)"
-                    elif connection and connection.type() == ConnectorType.SAML2:
+                    if connection and connection.type() == ConnectorType.SAML2:
                         auth_method = connection.short_title()
+                    if userdb.is_two_factor_login_enabled(uid):
+                        auth_method += " (+2FA)"
                 else:
                     auth_method = HTMLWriter.render_i(_("none"))
                 table.cell(_("Authentication"), auth_method)
@@ -971,7 +971,9 @@ class ModeEditUser(WatoMode):
                         title=_("Remove two-factor authentication of %s") % self._user_id,
                     )
                 ),
-                is_enabled=_is_two_factor_enabled(self._user),
+                is_enabled=userdb.is_two_factor_login_enabled(self._user_id)
+                if self._user_id is not None
+                else False,
             )
 
     def action(self) -> ActionResult:  # pylint: disable=too-many-branches
@@ -1079,38 +1081,33 @@ class ModeEditUser(WatoMode):
                     ntop_username_attribute
                 )
 
-    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
-        # Locking
-        user_attrs["locked"] = html.get_checkbox("locked")
+    def _increment_auth_serial(self, user_attrs: UserSpec) -> None:
+        user_attrs["serial"] = user_attrs.get("serial", 0) + 1
+
+    def _handle_auth_attributes(self, user_attrs: UserSpec) -> None:
         increase_serial = False
 
-        if (
-            self._user_id in self._users
-            and user_attrs["locked"]
-            and self._users[self._user_id]["locked"] != user_attrs["locked"]
-        ):
-            increase_serial = True  # when user is being locked now, increase the auth serial
-
-        # Authentication: Password or Secret
-        auth_method = request.var("authmethod")
-        if auth_method == "secret":
-            secret = request.get_str_input_mandatory("_auth_secret", "")
-            if secret:
+        if request.var("authmethod") == "secret":  # automation secret
+            if secret := request.get_str_input_mandatory("_auth_secret", ""):
                 user_attrs["automation_secret"] = secret
                 user_attrs["password"] = hash_password(Password(secret))
                 increase_serial = True  # password changed, reflect in auth serial
+
                 # automation users cannot set the passwords themselves.
                 user_attrs["last_pw_change"] = int(time.time())
                 user_attrs.pop("enforce_pw_change", None)
+
             elif "automation_secret" not in user_attrs and "password" in user_attrs:
                 del user_attrs["password"]
 
-        else:
+        else:  # password
+            password_field_name = "_password_" + self._pw_suffix()
+            password2_field_name = "_password2_" + self._pw_suffix()
             password = request.get_validated_type_input(
-                Password, "_password_" + self._pw_suffix(), empty_is_none=True
+                Password, password_field_name, empty_is_none=True
             )
             password2 = request.get_validated_type_input(
-                Password, "_password2_" + self._pw_suffix(), empty_is_none=True
+                Password, password2_field_name, empty_is_none=True
             )
 
             # We compare both passwords only, if the user has supplied
@@ -1118,16 +1115,16 @@ class ModeEditUser(WatoMode):
             # Note: this validation is done before the main-validiation later on
             # It doesn't make any sense to put this block into the main validation function
             if password2 and password != password2:
-                raise MKUserError("_password2", _("Passwords don't match"))
+                raise MKUserError(password2_field_name, _("Passwords don't match"))
 
-            # Detect switch back from automation to password
+            # Detect switch from automation to password
             if "automation_secret" in user_attrs:
                 del user_attrs["automation_secret"]
                 if "password" in user_attrs:
-                    del user_attrs["password"]  # which was the encrypted automation password!
+                    del user_attrs["password"]  # which was the hashed automation secret!
 
             if password:
-                verify_password_policy(password)
+                verify_password_policy(password, password_field_name)
                 user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True  # password changed, reflect in auth serial
@@ -1139,7 +1136,22 @@ class ModeEditUser(WatoMode):
 
         # Increase serial (if needed)
         if increase_serial:
-            user_attrs["serial"] = user_attrs.get("serial", 0) + 1
+            self._increment_auth_serial(user_attrs)
+
+    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
+        # Locking
+        user_attrs["locked"] = html.get_checkbox("locked")
+        if (  # toggled for an existing user
+            self._user_id in self._users
+            and self._users[self._user_id]["locked"] != user_attrs["locked"]
+        ):
+            if user_attrs["locked"]:  # user is being locked, increase the auth serial
+                self._increment_auth_serial(user_attrs)
+            else:  # user is being unlocked, reset failed login attempts
+                user_attrs["num_failed_logins"] = 0
+
+        # Authentication: Password or Secret
+        self._handle_auth_attributes(user_attrs)
 
         # Roles
         if edition() != Edition.CSE:
@@ -1608,20 +1620,26 @@ def select_language(user_spec: UserSpec) -> None:
     forms.section(_("Language"))
     html.dropdown("language", languages, deflt=current_language)
     html.help(
-        _(
-            "Configure the language of the user interface. Feel free to contribute to the "
-            "translations on %s."
+        HTMLWriter.render_div(
+            _(
+                "Configure the language of the user interface. Checkmk is officially supported only "
+                "for English and German."
+            )
         )
-        % HTMLWriter.render_a(
-            "Weblate",
-            "https://translate.checkmk.com",
-            target="_blank",
+        + HTMLWriter.render_div(
+            _(
+                "Other language versions are offered for convenience only and anyone using Checkmk "
+                "in a non-supported language does so at their own risk. No guarantee is given for the "
+                "accuracy of the content. Checkmk accepts no liability for incorrect operation due to "
+                "incorrect translations. "
+            )
+            + HTMLWriter.render_a(
+                _("Feel free to contribute here."),
+                "https://translate.checkmk.com",
+                target="_blank",
+            )
         )
     )
-
-
-def _is_two_factor_enabled(user_spec: UserSpec) -> bool:
-    return bool(user_spec.get("two_factor_credentials", {}).get("webauthn_credentials"))
 
 
 def _sync_possible() -> bool:

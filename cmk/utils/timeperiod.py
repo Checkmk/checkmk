@@ -15,6 +15,7 @@ import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.caching import cache_manager
+from cmk.utils.config_validation_layer.timeperiods import validate_timeperiods
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.i18n import _
 
@@ -113,8 +114,25 @@ def builtin_timeperiods() -> TimeperiodSpecs:
 
 def load_timeperiods() -> TimeperiodSpecs:
     timeperiods = store.load_from_mk_file(_get_timeperiods_conf_file_path(), "timeperiods", {})
+    validate_timeperiods(timeperiods)
     timeperiods.update(builtin_timeperiods())
     return timeperiods
+
+
+def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
+    validate_timeperiods(timeperiods)
+    store.mkdir(Path(cmk.utils.paths.check_mk_config_dir, "wato"))
+    store.save_to_mk_file(
+        _get_timeperiods_conf_file_path(),
+        "timeperiods",
+        _filter_builtin_timeperiods(timeperiods),
+    )
+    cleanup_timeperiod_caches()
+
+
+def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs:
+    builtin_keys = set(builtin_timeperiods().keys())
+    return {k: v for k, v in timeperiods.items() if k not in builtin_keys}
 
 
 def _get_timeperiods_conf_file_path() -> Path:

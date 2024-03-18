@@ -72,17 +72,17 @@ def test_openapi_audit_log_invalid_date_filter(clients: ClientRegistry) -> None:
     assert "date" in res_bad_date.json["fields"]
 
 
-def test_openapi_audit_log_clear(audit_log_store: AuditLogStore, clients: ClientRegistry) -> None:
+def test_openapi_audit_log_archive(audit_log_store: AuditLogStore, clients: ClientRegistry) -> None:
     deserialized_entries = LogEntryFactory.batch(4, time=BASE_DATE_TIMESTAMP)
     _populate_audit_log(audit_log_store, deserialized_entries)
 
     res_new = clients.AuditLog.get_all(date=BASE_DATE)
     assert len(res_new.json["value"]) == 4
 
-    clients.AuditLog.clear()
+    clients.AuditLog.archive()
 
-    res_clear = clients.AuditLog.get_all(date=BASE_DATE)
-    assert len(res_clear.json["value"]) == 0
+    res_archive = clients.AuditLog.get_all(date=BASE_DATE)
+    assert len(res_archive.json["value"]) == 0
 
 
 def test_openapi_audit_log_no_filter(

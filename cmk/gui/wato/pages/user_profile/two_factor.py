@@ -181,8 +181,9 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         header_msg = html.render_h3(html.render_b("Successfully generated 10 backup codes"))
         message1 = html.render_p(
             _(
-                "Each code may be used only once. Download and store these backup codes in a safe place. "
-                "If you lose access to your authentication device and backup codes, you'll have to contact your Checkmk admin to recover your account."
+                "Each code may be used only once. Store these backup codes in a safe place. "
+                "If you lose access to your authentication device and backup codes, you'll have to "
+                "contact your Checkmk admin to recover your account."
             )
         )
         codesdiv = html.render_div(
@@ -196,7 +197,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
             "copy codes",
             type_="button",
             onclick=f"cmk.utils.copy_to_clipboard({json.dumps(backup_codes)}, {json.dumps(success_message)})",
-            value=_("Copy codes"),
+            value=_("Copy codes to clipboard"),
             class_=["button buttonlink"],
         )
         return HTML("").join([header_msg, message1, codesdiv, message2, copy_button])
@@ -509,15 +510,20 @@ class RegisterTotpSecret(ABCUserProfilePage):
 
             forms.header("1. %s" % _("Scan QR-Code or enter secret manually"), foldable=False)
             forms.section(legend=False)
-            html.div(
-                "",
-                data_cmk_qrdata="otpauth://totp/%s?secret=%s&issuer=%s"
-                % (
-                    parse.quote(user.alias, safe=""),
-                    base32_secret,
-                    parse.quote("checkmk " + omd_site(), safe=""),
-                ),
+
+            html.call_ts_function(
+                container="div",
+                function_name="render_qr_code",
+                options={
+                    "qrcode": "otpauth://totp/%s?secret=%s&issuer=%s"
+                    % (
+                        parse.quote(user.alias, safe=""),
+                        base32_secret,
+                        parse.quote("checkmk " + omd_site(), safe=""),
+                    ),
+                },
             )
+
             html.open_div()
             html.span("Secret: ")
             html.a(

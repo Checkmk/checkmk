@@ -8,30 +8,21 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.plugins.collection.server_side_calls.bi_aggr import active_check_bi_aggr
-from cmk.server_side_calls.v1 import (
-    ActiveCheckCommand,
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-        ipv4_address="0.0.0.1",
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="0.0.0.1"),
+    macros={
+        "$HOST_NAME$": "hostname",
+    },
 )
 
 
 @pytest.mark.parametrize(
     "params,expected_service",
     [
-        (
+        pytest.param(
             {
                 "base_url": "some/path",
                 "aggregation_name": "foo",
@@ -40,8 +31,24 @@ HOST_CONFIG = HostConfig(
                 "optional": {},
             },
             ActiveCheckCommand(
-                "Aggr foo", ["-b", "some/path", "-a", "foo", "--use-automation-user"]
+                service_description="Aggr foo",
+                command_arguments=["-b", "some/path", "-a", "foo", "--use-automation-user"],
             ),
+            id="required params",
+        ),
+        pytest.param(
+            {
+                "base_url": "some/path",
+                "aggregation_name": "$HOST_NAME$",
+                "username": "bar",
+                "credentials": "automation",
+                "optional": {},
+            },
+            ActiveCheckCommand(
+                service_description="Aggr hostname",
+                command_arguments=["-b", "some/path", "-a", "hostname", "--use-automation-user"],
+            ),
+            id="aggregation name with macro",
         ),
     ],
 )
@@ -50,9 +57,5 @@ def test_check_bi_aggr_argument_parsing(
     expected_service: ActiveCheckCommand,
 ) -> None:
     """Tests if all required arguments are present."""
-    services = list(
-        active_check_bi_aggr.commands_function(
-            active_check_bi_aggr.parameter_parser(params), HOST_CONFIG, {}
-        )
-    )
+    services = list(active_check_bi_aggr(params, HOST_CONFIG, {}))
     assert services == [expected_service]

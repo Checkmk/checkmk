@@ -92,21 +92,18 @@ def execute_tests_in_container(
 
         if interactive:
             logger.info("+-------------------------------------------------")
-            logger.info("| Next steps: Start whatever test you want, for example:")
+            logger.info("| Next steps: Start the test of your choice, for example:")
             logger.info("| ")
-            logger.info("| VERSION=git make -C tests test-integration")
+            logger.info("| make -C tests test-integration")
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
-            logger.info(
-                "| VERSION=git pytest -T integration "
-                "tests/integration/livestatus/test_livestatus.py"
-            )
+            logger.info("| pytest -T integration tests/integration/livestatus/test_livestatus.py")
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
             logger.info(
-                "| VERSION=git pytest -T integration "
+                "| pytest -T integration "
                 "tests/integration/livestatus/test_livestatus.py "
                 "-k test_service_custom_variables "
             )
@@ -114,11 +111,11 @@ def execute_tests_in_container(
             logger.info("|   Execute a single test")
             logger.info("| ")
             logger.info("| !!!WARNING!!!")
-            logger.info("| The version of Checkmk you test against is set using the")
-            logger.info(
-                "| VERSION variable as seen above. Only 'git' tests against the code in your repo."
-            )
-            logger.info("| VERSION defaults to the current daily build of you branch.")
+            logger.info("| The version of Checkmk you test against is set using the VERSION ")
+            logger.info("| environment variable and defaults to the current daily build of ")
+            logger.info("| your branch.")
+            logger.info("| If you want to test a patched version, you need patch it before ")
+            logger.info("| running tests.")
             logger.info("+-------------------------------------------------")
 
             if command:
@@ -240,7 +237,6 @@ def check_for_local_package(version: CMKVersion, distro_name: str) -> bool:
             "debian-12": "bookworm",
             "ubuntu-20.04": "focal",
             "ubuntu-22.04": "jammy",
-            "ubuntu-23.04": "lunar",
             "ubuntu-23.10": "mantic",
             "centos-8": "el8",
             "almalinux-9": "el9",
@@ -315,7 +311,8 @@ def _create_cmk_image(
     logger.info("Build test image [%s] from [%s]", image_name_with_tag, base_image_name_with_tag)
     with _start(
         client,
-        name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
+        # TODO: Re-enable using dedicated container names, the following causes name conflicts:
+        # name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
         image=base_image_name_with_tag,
         labels={
             "org.tribe29.build_time": f"{int(time.time()):d}",
@@ -667,7 +664,7 @@ def _copy_directory(
     tar_stream.seek(0)
 
     with tarfile.TarFile(fileobj=tar_stream) as tar:
-        tar.extractall(str(dest_path))
+        tar.extractall(str(dest_path), filter="data")
 
 
 def _prepare_git_overlay(container: docker.Container, lower_path: str, target_path: str) -> None:

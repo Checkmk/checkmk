@@ -9,16 +9,17 @@
 """
 
 
+from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (
     all_of,
     any_of,
-    check_levels_fixed,
+    CheckResult,
     contains,
+    DiscoveryResult,
     exists,
     Service,
     startswith,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 
 Section = dict[str, int]
 
@@ -152,7 +153,7 @@ def check_printer_pages_types(section: Section) -> CheckResult:
     Metric('pages_color', 21693.0)
     """
     if "pages_total" not in section:
-        yield from check_levels_fixed(
+        yield from check_levels(
             value=sum(section.values()),
             render_func=str,
             metric_name="pages_total",
@@ -161,7 +162,7 @@ def check_printer_pages_types(section: Section) -> CheckResult:
 
     for pages_type, pages in sorted(section.items()):
         if pages_type in PRINTER_PAGES_TYPES:
-            yield from check_levels_fixed(
+            yield from check_levels(
                 value=pages,
                 render_func=str,
                 metric_name=pages_type,

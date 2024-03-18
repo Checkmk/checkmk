@@ -82,7 +82,7 @@ def create_api_sections(
             piggyback_name=piggyback_name,
         ),
         WriteableSection(
-            section_name=SectionName("kube_node_conditions_v1"),
+            section_name=SectionName("kube_node_conditions_v2"),
             section=_conditions(api_node),
             piggyback_name=piggyback_name,
         ),

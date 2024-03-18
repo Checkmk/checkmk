@@ -18,7 +18,7 @@ def default_config_example() -> SiteConfig:
         "status_connection": {
             "connection": {
                 "socket_type": "tcp",
-                "host": "123.124.1.3",
+                "host": "192.168.1.1",
                 "port": 1253,
                 "encrypted": True,
                 "verify": False,

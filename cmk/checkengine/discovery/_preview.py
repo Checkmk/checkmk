@@ -20,8 +20,7 @@ from cmk.utils.timeperiod import timeperiod_active
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.checkresults import ActiveCheckResult, MetricTuple, ServiceCheckResult
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
-from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParametersPreview
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
     make_providers,
@@ -46,9 +45,11 @@ class CheckPreviewEntry:
     check_source: str
     check_plugin_name: str
     ruleset_name: RulesetName | None
+    discovery_ruleset_name: RulesetName | None
     item: Item
-    discovered_parameters: Mapping[str, object]
-    effective_parameters: LegacyCheckParameters
+    old_discovered_parameters: Mapping[str, object]
+    new_discovered_parameters: Mapping[str, object]
+    effective_parameters: TimespecificParametersPreview | Mapping[str, object]
     description: str
     state: int | None
     output: str
@@ -177,6 +178,7 @@ def get_check_preview(
                 },
                 is_enforced=False,
             ),
+            new_discovered_parameters=DiscoveredService.newer(entry).parameters,
             new_service_labels={
                 n: ServiceLabel(n, v)
                 for n, v in DiscoveredService.newer(entry).service_labels.items()
@@ -192,6 +194,7 @@ def get_check_preview(
             host_name,
             service=service,
             new_service_labels={},
+            new_discovered_parameters={},
             check_plugins=check_plugins,
             check_source="manual",  # "enforced" would be nicer
             providers=providers,
@@ -214,6 +217,7 @@ def _check_preview_table_row(
     host_name: HostName,
     *,
     service: ConfiguredService,
+    new_discovered_parameters: Mapping[str, object],
     new_service_labels: Mapping[str, ServiceLabel],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     check_source: _Transition | Literal["manual"],
@@ -223,6 +227,11 @@ def _check_preview_table_row(
     check_plugin = check_plugins.get(service.check_plugin_name)
     ruleset_name = (
         str(check_plugin.ruleset_name) if check_plugin and check_plugin.ruleset_name else None
+    )
+    discovery_ruleset_name = (
+        str(check_plugin.discovery_ruleset_name)
+        if check_plugin and check_plugin.discovery_ruleset_name
+        else None
     )
 
     result = (
@@ -241,8 +250,10 @@ def _check_preview_table_row(
         check_source=check_source,
         check_plugin_name=str(service.check_plugin_name),
         ruleset_name=ruleset_name,
+        discovery_ruleset_name=discovery_ruleset_name,
         item=service.item,
-        discovered_parameters=service.discovered_parameters,
+        old_discovered_parameters=service.discovered_parameters,
+        new_discovered_parameters=new_discovered_parameters,
         effective_parameters=service.parameters.preview(timeperiod_active),
         description=service.description,
         state=result.state,

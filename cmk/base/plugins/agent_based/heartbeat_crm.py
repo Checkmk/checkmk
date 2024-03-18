@@ -480,13 +480,20 @@ def check_heartbeat_crm_resources(
     if (resources := section.resources.resources.get(item)) is None:
         return
 
+    yield from _check_heartbeat_crm_resources(resources, params)
+
+
+def _check_heartbeat_crm_resources(
+    resources: Sequence[Sequence[str]],
+    params: Mapping[str, str | None],
+) -> CheckResult:
     if not resources:
         yield Result(state=State.OK, summary="No resources found")
 
     for resource in resources:
         yield Result(state=State.OK, summary=" ".join(resource))
 
-        if len(resource) == 3 and resource[2] != "Started":
+        if len(resource) in {3, 4} and resource[2] != "Started":
             yield Result(state=State.CRIT, summary=f'Resource is in state "{resource[2]}"')
         elif (
             (target_node := params["expected_node"])

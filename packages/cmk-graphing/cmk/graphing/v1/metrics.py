@@ -7,28 +7,205 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, KW_ONLY
+from enum import auto, Enum
 
-from ._color import Color
-from ._localize import Localizable
-from ._unit import PhysicalUnit, ScientificUnit, Unit
+from ._localize import Title
 
 __all__ = [
-    "Metric",
+    "AutoPrecision",
+    "Color",
     "Constant",
-    "WarningOf",
     "CriticalOf",
-    "MinimumOf",
-    "MaximumOf",
-    "Sum",
-    "Product",
+    "DecimalNotation",
     "Difference",
+    "EngineeringScientificNotation",
     "Fraction",
+    "IECNotation",
+    "MaximumOf",
+    "Metric",
+    "MinimumOf",
+    "Product",
+    "SINotation",
+    "StandardScientificNotation",
+    "StrictPrecision",
+    "Sum",
+    "TimeNotation",
+    "Unit",
+    "WarningOf",
 ]
+
+
+class Color(Enum):
+    LIGHT_RED = auto()
+    RED = auto()
+    DARK_RED = auto()
+
+    LIGHT_ORANGE = auto()
+    ORANGE = auto()
+    DARK_ORANGE = auto()
+
+    LIGHT_YELLOW = auto()
+    YELLOW = auto()
+    DARK_YELLOW = auto()
+
+    LIGHT_GREEN = auto()
+    GREEN = auto()
+    DARK_GREEN = auto()
+
+    LIGHT_BLUE = auto()
+    BLUE = auto()
+    DARK_BLUE = auto()
+
+    LIGHT_CYAN = auto()
+    CYAN = auto()
+    DARK_CYAN = auto()
+
+    LIGHT_PURPLE = auto()
+    PURPLE = auto()
+    DARK_PURPLE = auto()
+
+    LIGHT_PINK = auto()
+    PINK = auto()
+    DARK_PINK = auto()
+
+    LIGHT_BROWN = auto()
+    BROWN = auto()
+    DARK_BROWN = auto()
+
+    LIGHT_GRAY = auto()
+    GRAY = auto()
+    DARK_GRAY = auto()
+
+    BLACK = auto()
+    WHITE = auto()
+
+
+@dataclass(frozen=True)
+class DecimalNotation:
+    """
+    A unit with decimal notation has no special format.
+    """
+
+    symbol: str
+
+
+@dataclass(frozen=True)
+class SINotation:
+    """
+    A unit with the SI notation formats a number with the following magnitudes:
+    y, z, a, f, p, n, µ, m, "", k, M, G, T, P, E, Z, Y.
+    """
+
+    symbol: str
+
+
+@dataclass(frozen=True)
+class IECNotation:
+    """
+    A unit with the IEC notation formats a number with the following magnitudes:
+    "", Ki, Mi, Gi, Ti, Pi, Ei, Zi, Yi.
+    Positive number below one use the decimal notation.
+    """
+
+    symbol: str
+
+
+@dataclass(frozen=True)
+class StandardScientificNotation:
+    """
+    A unit with the standard scientific notation formats a number as following:
+    m * 10**n, where 1 <= |m| < 10.
+    """
+
+    symbol: str
+
+
+@dataclass(frozen=True)
+class EngineeringScientificNotation:
+    """
+    A unit with the engineering scientific notation formats a number as following:
+    m * 10**n, where 1 <= |m| < 1000 and n % 3 == 0.
+    """
+
+    symbol: str
+
+
+@dataclass(frozen=True)
+class TimeNotation:
+    """
+    A unit with the time notation formats a number with the following magnitudes:
+    µs, ms, s, min, h, d.
+    """
+
+    @property
+    def symbol(self) -> str:
+        return "s"
+
+
+@dataclass(frozen=True)
+class AutoPrecision:
+    """
+    A unit with auto precision rounds the fractional part to the given digits or to the latest
+    non-zero digit.
+    """
+
+    digits: int
+
+    def __post_init__(self) -> None:
+        if self.digits < 0:
+            raise ValueError(self.digits)
+
+
+@dataclass(frozen=True)
+class StrictPrecision:
+    """
+    A unit with strict precision rounds the fractional part to the given digits.
+    """
+
+    digits: int
+
+    def __post_init__(self) -> None:
+        if self.digits < 0:
+            raise ValueError(self.digits)
+
+
+@dataclass(frozen=True)
+class Unit:
+    """
+    Defines a unit which can be used within metrics and metric operations.
+
+    Examples:
+
+        >>> Unit(DecimalNotation(""), StrictPrecision(0))  # rendered as integer
+        Unit(notation=DecimalNotation(symbol=''), precision=StrictPrecision(digits=0))
+
+        >>> Unit(DecimalNotation(""), StrictPrecision(2))  # rendered as float with two digits
+        Unit(notation=DecimalNotation(symbol=''), precision=StrictPrecision(digits=2))
+
+        >>> Unit(SINotation("bytes"))  # bytes which are scaled with SI prefixes
+        Unit(notation=SINotation(symbol='bytes'), precision=AutoPrecision(digits=2))
+
+        >>> Unit(IECNotation("bits"))  # bits which are scaled with IEC prefixes
+        Unit(notation=IECNotation(symbol='bits'), precision=AutoPrecision(digits=2))
+    """
+
+    notation: (
+        DecimalNotation
+        | SINotation
+        | IECNotation
+        | StandardScientificNotation
+        | EngineeringScientificNotation
+        | TimeNotation
+    )
+    precision: AutoPrecision | StrictPrecision = AutoPrecision(2)
 
 
 @dataclass(frozen=True, kw_only=True)
 class Metric:
     """
+
+    Instances of this class will only be picked up by Checkmk if their names start with ``metric_``.
+
     A metric can be used within :class:`WarningOf`, :class:`CriticalOf`, :class:`MinimumOf`,
     :class:`MaximumOf`, perfometers or graphs by its name.
 
@@ -42,15 +219,15 @@ class Metric:
 
         >>> metric_metric_name = Metric(
         ...     name="metric_name",
-        ...     title=Localizable("A metric"),
-        ...     unit=Unit.PERCENTAGE,
+        ...     title=Title("A metric"),
+        ...     unit=Unit(DecimalNotation("")),
         ...     color=Color.BLUE,
         ... )
     """
 
     name: str
-    title: Localizable
-    unit: Unit | PhysicalUnit | ScientificUnit
+    title: Title
+    unit: Unit
     color: Color
 
     def __post_init__(self) -> None:
@@ -71,13 +248,18 @@ class Constant:
 
     Example:
 
-        >>> Constant(Localizable("A title"), Unit.COUNT, Color.BLUE, 23.5)
-        Constant(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
-value=23.5)
+        >>> Constant(
+        ...     Title("A title"),
+        ...     Unit(IECNotation("bits")),
+        ...     Color.BLUE,
+        ...     23.5,
+        ... )
+        Constant(title=Title('A title'), unit=Unit(notation=IECNotation(symbol='bits'),\
+ precision=AutoPrecision(digits=2)), color=<Color.BLUE: 14>, value=23.5)
     """
 
-    title: Localizable
-    unit: Unit | PhysicalUnit | ScientificUnit
+    title: Title
+    unit: Unit
     color: Color
     value: int | float
 
@@ -188,15 +370,15 @@ class Sum:
     Example:
 
         >>> Sum(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Color.BLUE,
         ...     ["metric-name-1", "metric-name-2"],
         ... )
-        Sum(title=Localizable('A title'), color=<Color.BLUE: 14>, summands=['metric-name-1', \
+        Sum(title=Title('A title'), color=<Color.BLUE: 14>, summands=['metric-name-1', \
 'metric-name-2'])
     """
 
-    title: Localizable
+    title: Title
     color: Color
     summands: Sequence[
         str
@@ -233,17 +415,18 @@ class Product:
     Example:
 
         >>> Product(
-        ...     Localizable("A title"),
-        ...     Unit.COUNT,
+        ...     Title("A title"),
+        ...     Unit(IECNotation("bits")),
         ...     Color.BLUE,
         ...     ["metric-name-1", "metric-name-2"],
         ... )
-        Product(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
-factors=['metric-name-1', 'metric-name-2'])
+        Product(title=Title('A title'), unit=Unit(notation=IECNotation(symbol='bits'),\
+ precision=AutoPrecision(digits=2)), color=<Color.BLUE: 14>,\
+ factors=['metric-name-1', 'metric-name-2'])
     """
 
-    title: Localizable
-    unit: Unit | PhysicalUnit | ScientificUnit
+    title: Title
+    unit: Unit
     color: Color
     factors: Sequence[
         str
@@ -280,16 +463,16 @@ class Difference:
     Example:
 
         >>> Difference(
-        ...     Localizable("A title"),
+        ...     Title("A title"),
         ...     Color.BLUE,
         ...     minuend="metric-name-1",
         ...     subtrahend="metric-name-2",
         ... )
-        Difference(title=Localizable('A title'), color=<Color.BLUE: 14>, minuend='metric-name-1', \
+        Difference(title=Title('A title'), color=<Color.BLUE: 14>, minuend='metric-name-1', \
 subtrahend='metric-name-2')
     """
 
-    title: Localizable
+    title: Title
     color: Color
     _: KW_ONLY
     minuend: (
@@ -340,18 +523,19 @@ class Fraction:
     Example:
 
         >>> Fraction(
-        ...     Localizable("A title"),
-        ...     Unit.COUNT,
+        ...     Title("A title"),
+        ...     Unit(IECNotation("bits")),
         ...     Color.BLUE,
         ...     dividend="metric-name-1",
         ...     divisor="metric-name-2",
         ... )
-        Fraction(title=Localizable('A title'), unit=<Unit.COUNT: ''>, color=<Color.BLUE: 14>, \
-dividend='metric-name-1', divisor='metric-name-2')
+        Fraction(title=Title('A title'), unit=Unit(notation=IECNotation(symbol='bits'),\
+ precision=AutoPrecision(digits=2)), color=<Color.BLUE: 14>, dividend='metric-name-1',\
+ divisor='metric-name-2')
     """
 
-    title: Localizable
-    unit: Unit | PhysicalUnit | ScientificUnit
+    title: Title
+    unit: Unit
     color: Color
     _: KW_ONLY
     dividend: (

@@ -12,6 +12,7 @@ from collections.abc import Generator, Iterator
 from pathlib import Path
 
 import pytest
+import yaml
 
 from tests.testlib.agent import (
     agent_controller_daemon,
@@ -19,23 +20,15 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd
+from tests.testlib.utils import (
+    current_base_branch_name,
+    current_branch_version,
+    edition_from_env,
+    restart_httpd,
+)
 from tests.testlib.version import CMKVersion, get_min_version, version_gte
 
 from cmk.utils.version import Edition
-
-# not all used base-versions are available for all distros used in the test-job.
-# we temporarily define the distros where all base-versions are available.
-# TODO: improve the test parameterization to select only the base versions available for a given
-#  distro
-SUPPORTED_DISTROS = [
-    "ubuntu-20.04",
-    "ubuntu-22.04",
-    "debian-11",
-    "centos-8",
-    "almalinux-9",
-    "sles-15sp4",
-]
 
 logger = logging.getLogger(__name__)
 
@@ -78,12 +71,25 @@ class BaseVersions:
     BASE_VERSIONS = [
         CMKVersion(
             base_version_str,
-            Edition.CEE,
+            edition_from_env(fallback=Edition.CEE),
             current_base_branch_name(),
             current_branch_version(),
         )
         for base_version_str in BASE_VERSIONS_STR
     ]
+
+
+@dataclasses.dataclass
+class InteractiveModeDistros:
+    @staticmethod
+    def get_supported_distros():
+        with open(Path(__file__).parent.resolve() / "../../editions.yml", "r") as stream:
+            yaml_file = yaml.safe_load(stream)
+
+        return yaml_file["daily_extended"]
+
+    DISTROS = ["ubuntu-22.04", "almalinux-9"]
+    assert set(DISTROS).issubset(set(get_supported_distros()))
 
 
 @dataclasses.dataclass
@@ -100,7 +106,7 @@ class TestParams:
             BaseVersions.BASE_VERSIONS, INTERACTIVE_MODE
         )
         # interactive mode enabled for some specific distros
-        if interactive_mode == (os.environ.get("DISTRO") in ["ubuntu-22.04", "almalinux-9"])
+        if interactive_mode == (os.environ.get("DISTRO") in InteractiveModeDistros.DISTROS)
     ]
 
 
@@ -132,26 +138,9 @@ def get_site_status(site: Site) -> str | None:
     return None
 
 
-def update_config(site: Site) -> int:
-    """Run cmk-update-config and check the result.
-
-    If merging the config worked fine, return 0.
-    If merging the config was not possible, use installation defaults and return 1.
-    If any other error occurred, return 2.
-    """
-    for rc, conflict_mode in enumerate(("abort", "install")):
-        cmd = [f"{site.root}/bin/cmk-update-config", "-v", f"--conflict={conflict_mode}"]
-        process = site.execute(cmd, stdout=subprocess.PIPE)
-        stdout, _ = process.communicate()
-        rc = process.returncode
-        if rc == 0:
-            logger.debug(stdout)
-            return rc
-        logger.error(stdout)
-    return 2
-
-
-def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = None) -> Site:
+def _get_site(  # pylint: disable=too-many-branches
+    version: CMKVersion, interactive: bool, base_site: Site | None = None
+) -> Site:
     """Install or update the test site with the given version.
 
     An update installation is done automatically when an optional base_site is given.
@@ -160,7 +149,7 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
     update_conflict_mode = "keepold"
     min_version = CMKVersion(
         BaseVersions.MIN_VERSION,
-        Edition.CEE,
+        edition_from_env(fallback=Edition.CEE),
         current_base_branch_name(),
         current_branch_version(),
     )
@@ -209,26 +198,38 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
                 base_site,  # type: ignore
                 target_version=version,
                 min_version=min_version,
+                timeout=60,
             )
         else:  # interactive site creation
-            site = sf.interactive_create(site.id, logfile_path)
-
+            try:
+                site = sf.interactive_create(site.id, logfile_path, timeout=60)
+                restart_httpd()
+            except Exception as e:
+                if f"Version {version.version} could not be installed" in str(e):
+                    pytest.skip(
+                        f"Base-version {version.version} not available in "
+                        f'{os.environ.get("DISTRO")}'
+                    )
+                else:
+                    raise
     else:
         if update:
             # non-interactive update as site-user
             sf.update_as_site_user(site, target_version=version, min_version=min_version)
 
-        else:
-            # use SiteFactory for non-interactive site creation
-            site = sf.get_site("central")
-            restart_httpd()
+        else:  # use SiteFactory for non-interactive site creation
+            try:
+                site = sf.get_site("central", auto_restart_httpd=True)
+            except Exception as e:
+                if f"Version {version.version} could not be installed" in str(e):
+                    pytest.skip(
+                        f"Base-version {version.version} not available in "
+                        f'{os.environ.get("DISTRO")}'
+                    )
+                else:
+                    raise
 
     return site
-
-
-def version_supported(version: str) -> bool:
-    """Check if the given version is supported for updating."""
-    return version_gte(version, BaseVersions.MIN_VERSION)
 
 
 @pytest.fixture(name="test_setup", params=TestParams.TEST_PARAMS, scope="module")

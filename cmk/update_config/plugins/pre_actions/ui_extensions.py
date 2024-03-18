@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.exceptions import MKGeneralException
+
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.graphing import parse_perfometer, perfometer_info
 from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
 
 from cmk.mkp_tool import PackageID
@@ -14,6 +17,7 @@ from cmk.update_config.plugins.pre_actions.utils import (
     disable_incomp_mkp,
     get_installer_and_package_map,
     get_path_config,
+    GUI_PLUGINS_PREACTION_SORT_INDEX,
     PACKAGE_STORE,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
@@ -34,7 +38,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
             if package_id is None:
                 if continue_on_incomp_local_file(
                     conflict_mode,
-                    module_name,
+                    path,
                     error,
                 ):
                     continue
@@ -51,6 +55,7 @@ class PreUpdateUIExtensions(PreUpdateAction):
                 installer,
                 package_store,
                 path_config,
+                path,
             ):
                 disabled_packages.add(package_id)
                 remove_failed_plugin(path)
@@ -58,11 +63,17 @@ class PreUpdateUIExtensions(PreUpdateAction):
 
             raise MKUserError(None, "incompatible extension package")
 
+        for perfometer in perfometer_info:
+            try:
+                parse_perfometer(perfometer)
+            except MKGeneralException as e:
+                print(e)
+
 
 pre_update_action_registry.register(
     PreUpdateUIExtensions(
         name="ui_extensions",
         title="UI extensions",
-        sort_index=20,
+        sort_index=GUI_PLUGINS_PREACTION_SORT_INDEX,
     )
 )

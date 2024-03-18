@@ -8,8 +8,17 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError, Metric, render, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import (
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    ServiceLabel,
+    State,
+)
 from cmk.plugins.lib.azure import (
     _get_metrics,
     _get_metrics_number,
@@ -256,13 +265,32 @@ def test_create_discover_by_metrics_function() -> None:
     discovery_func = create_discover_by_metrics_function(
         "average_storage_percent", "average_active_connections"
     )
-    assert list(discovery_func(PARSED_RESOURCES)) == [Service(item="checkmk-mysql-server")]
+    assert list(discovery_func(PARSED_RESOURCES)) == [
+        Service(
+            item="checkmk-mysql-server",
+            labels=[
+                ServiceLabel("cmk/azure/tag/tag1", "value1"),
+                ServiceLabel("cmk/azure/tag/tag2", "value2"),
+            ],
+        )
+    ]
 
 
 @pytest.mark.parametrize(
     "section,expected_discovery",
     [
-        pytest.param(PARSED_RESOURCES, [Service()], id="one resource"),
+        pytest.param(
+            PARSED_RESOURCES,
+            [
+                Service(
+                    labels=[
+                        ServiceLabel("cmk/azure/tag/tag1", "value1"),
+                        ServiceLabel("cmk/azure/tag/tag2", "value2"),
+                    ]
+                )
+            ],
+            id="one resource",
+        ),
         pytest.param(MULTIPLE_RESOURCE_SECTION, [], id="multiple resources"),
     ],
 )

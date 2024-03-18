@@ -15,7 +15,6 @@ from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
-import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -163,7 +162,7 @@ class CommandReschedule(Command):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML("<br><br>" + _("Spreading: %s minutes") % request.var("_resched_spread"))
+        return HTML("<br><br>") + "Spreading: %s minutes" % request.var("_resched_spread")
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
@@ -172,6 +171,13 @@ class CommandReschedule(Command):
             "_resched_spread", default_value="5", size=3, cssclass="number", required=True
         )
         html.write_text(" " + _("minutes"))
+        html.help(
+            _(
+                "Spreading distributes checks evenly over the specified period. "
+                "This helps to avoid short-term peaks in CPU usage and "
+                "therefore, performance problems."
+            )
+        )
         html.close_div()
 
         html.open_div(class_="group")
@@ -183,7 +189,11 @@ class CommandReschedule(Command):
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_resched_checks"):
-            spread = utils.saveint(request.var("_resched_spread"))
+            spread = request.get_validated_type_input_mandatory(int, "_resched_spread")
+            if spread < 0:
+                raise MKUserError(
+                    "_resched_spread", _("Spread should be a positive number: %s") % spread
+                )
 
             t = time.time()
             if spread:
@@ -957,9 +967,9 @@ class CommandAcknowledge(Command):
             formatted_datetime_str = self.confirm_dialog_date_and_time_format(timestamp)
 
         expire_conditions_li = html.render_li(
-            _("On core restart OR recovery (OK/UP)")
+            _("On recovery (OK/UP)")
             if request.var("_ack_sticky")
-            else _("If state changes OR core restarts OR on recovery (OK/UP)")
+            else _("If state changes OR on recovery (OK/UP)")
         )
         expire_time_li = html.render_li(
             _("On %s (server time).") % formatted_datetime_str
@@ -992,7 +1002,7 @@ class CommandAcknowledge(Command):
             label=_("Comment"),
             required=True,
             placeholder=_("e.g. ticket ID"),
-            onkeyup=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
+            oninput=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
         )
         if request.get_str_input("_ack_comment"):
             html.final_javascript(
@@ -1144,8 +1154,7 @@ class CommandAcknowledge(Command):
                         _("You cannot set an expiration date and time that is in the past:")
                         + f' "{expire_date} {expire_time}"',
                     )
-                expire = expire_timestamp - int(time.time())
-                expire_text = ";%d" % expire
+                expire_text = ";%d" % expire_timestamp
             else:
                 expire_text = ""
 
@@ -1532,7 +1541,7 @@ class CommandScheduleDowntimes(Command):
             required=not self._adhoc_downtime_configured(),
             placeholder=_("What is the occasion?"),
             submit="_down_custom",
-            onkeyup="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
+            oninput="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
         )
         if request.get_str_input("_down_comment"):
             html.final_javascript(
@@ -1542,7 +1551,7 @@ class CommandScheduleDowntimes(Command):
 
     def _render_date_and_time(self) -> None:  # pylint: disable=too-many-statements
         html.open_div(class_="group")
-        html.heading("Date and time")
+        html.heading(_("Date and time"))
 
         html.open_table(class_=["down_date_and_time"])
 
@@ -1604,13 +1613,25 @@ class CommandScheduleDowntimes(Command):
     def _get_duration_options(self) -> HTML:
         duration_options = HTML("")
         for nr, time_range in enumerate(active_config.user_downtime_timeranges):
+            css_class = ["button", "duration"]
+            time_range_end = time_range["end"]
+            if nr == 0:
+                end_time = time_interval_end(time_range_end, self._current_local_time())
+                html.final_javascript(
+                    f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'
+                )
+                html.final_javascript(
+                    f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
+                )
+                css_class += ["active"]
+
             duration_options += html.render_input(
                 name=(varname := f'_downrange__{time_range["end"]}'),
                 type_="button",
                 id_=varname,
-                class_=["button", "duration"] + (["active"] if nr == 0 else []),
+                class_=css_class,
                 value=_u(time_range["title"]),
-                onclick=self._get_onclick(time_range["end"], varname),
+                onclick=self._get_onclick(time_range_end, varname),
                 submit="_set_date_and_time",
             )
         return duration_options
@@ -1636,11 +1657,11 @@ class CommandScheduleDowntimes(Command):
 
     def _get_onclick(
         self,
-        time_range: int | Literal["next_day", "next_week", "next_month", "next_year"],
+        time_range_end: int | Literal["next_day", "next_week", "next_month", "next_year"],
         id_: str,
     ) -> str:
         start_time = self._current_local_time()
-        end_time = time_interval_end(time_range, self._current_local_time())
+        end_time = time_interval_end(time_range_end, start_time)
 
         return (
             f'cmk.page_menu.update_down_duration_button("{id_}");'
@@ -1847,9 +1868,21 @@ class CommandScheduleDowntimes(Command):
                 attributes += HTMLWriter.render_li(_("Child hosts also go in downtime."))
 
         if duration := self._flexible_option():
+            hours, remaining_seconds = divmod(duration, 3600)
+            minutes, _seconds = divmod(remaining_seconds, 60)
             attributes += HTMLWriter.render_li(
-                _("Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours.")
-                % (duration / 3600)
+                _(
+                    "Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours and %d %s."
+                )
+                % (
+                    hours,
+                    minutes,
+                    ungettext(
+                        "minute",
+                        "minutes",
+                        minutes,
+                    ),
+                )
             )
 
         if attributes:
@@ -1860,9 +1893,14 @@ class CommandScheduleDowntimes(Command):
             )
 
         return additions + HTMLWriter.render_p(
-            _("<u>Info</u>: Downtime also applies to services.")
+            _("<u>Info</u>: Downtime also applies to all services of the %s.")
+            % ungettext(
+                "host",
+                "hosts",
+                len_action_rows,
+            )
             if cmdtag == "HOST"
-            else _("Info: Downtime does not apply to host.")
+            else _("<u>Info</u>: Downtime does not apply to host.")
         )
 
     def _flexible_option(self) -> int:
@@ -2035,7 +2073,7 @@ def time_interval_end(
 ) -> float | None:
     now = time.localtime(start_time)
     if isinstance(time_value, int):
-        return start_time + 7200
+        return start_time + time_value
     if time_value == "next_day":
         return (
             time.mktime((now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1

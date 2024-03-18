@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib import on_time
+import datetime
+from zoneinfo import ZoneInfo
+
+import time_machine
 
 from cmk.base.plugins.agent_based import chrony
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
@@ -16,7 +19,7 @@ def test_chrony_parse_errmsg() -> None:
 
 
 def test_chrony_parse_valid() -> None:
-    with on_time(1628000000, "UTC"):
+    with time_machine.travel(datetime.datetime.fromtimestamp(1628000000, tz=ZoneInfo("UTC"))):
         assert chrony.parse_chrony(
             [
                 ["Reference", "ID", ":", "55DCBEF6", "(kaesekuchen.ok)"],

@@ -99,7 +99,15 @@ class WebAuthnActionState(TypedDict):
 
 
 SessionId = str
-AuthType = Literal["automation", "cookie", "web_server", "http_header", "bearer", "basic_auth"]
+AuthType = Literal[
+    "automation",
+    "basic_auth",
+    "bearer",
+    "cookie",
+    "http_header",
+    "internal_token",
+    "web_server",
+]
 
 
 @dataclass
@@ -244,6 +252,7 @@ class Visual(TypedDict):
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
     packaged: bool
     link_from: LinkFromSpec
+    megamenu_search_terms: Sequence[str]
 
 
 class VisualLinkSpec(NamedTuple):
@@ -293,7 +302,7 @@ class PainterParameters(TypedDict, total=False):
     color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
     # From historic metric painters
     rrd_consolidation: Literal["average", "min", "max"]
-    time_range: tuple[str, int]
+    time_range: tuple[str | int, int] | Literal["report"]
     # From graph painters
     graph_render_options: GraphRenderOptionsVS
     set_default_time_range: int
@@ -550,7 +559,7 @@ class TopicMenuItem(NamedTuple):
     is_show_more: bool = False
     icon: Icon | None = None
     button_title: str | None = None
-    additional_matches_setup_search: Sequence[str] = ()
+    megamenu_search_terms: Sequence[str] = ()
 
 
 class TopicMenuTopic(NamedTuple):
@@ -590,8 +599,10 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 # Metric & graph specific
 
 
-class PerfDataTuple(NamedTuple):
+@dataclass(frozen=True)
+class PerfDataTuple:
     metric_name: MetricName
+    lookup_metric_name: MetricName
     value: float | int
     unit_name: str
     warn: float | None

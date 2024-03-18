@@ -6,10 +6,12 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
 )
-from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput
+from cmk.gui.valuespec import Dictionary, FixedValue, ListOf, MonitoringState, TextInput
 
 _STATE = {0: "OK", 1: "WARN", 2: "CRIT"}
 
@@ -92,5 +94,31 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_windows_tasks,
         title=lambda: _("Windows Tasks"),
+    )
+)
+
+
+def _valuespec_windows_tasks_discovery():
+    return Dictionary(
+        title=_("Windows Tasks"),
+        elements=[
+            (
+                "discover_disabled",
+                FixedValue(
+                    title=_("Discover disabled tasks"),
+                    value=True,
+                    totext=_("Tasks are discovered regardless of Scheduled Task State."),
+                ),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="dict",
+        name="windows_tasks_discovery",
+        valuespec=_valuespec_windows_tasks_discovery,
     )
 )

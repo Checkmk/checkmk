@@ -5,21 +5,18 @@
 
 
 from ._grouping import PREDICTION_PERIODS, Timegroup, timezone_at
-from ._paths import PREDICTION_DIR
-from ._plugin_interface import estimate_levels, PredictionUpdater
-from ._prediction import DataStat, PredictionData, PredictionInfo, PredictionParameters
+from ._plugin_interface import estimate_levels, make_updated_predictions
+from ._prediction import DataStat, PredictionData, PredictionStore
 from ._query import PredictionQuerier
 
 __all__ = [
-    "PREDICTION_PERIODS",
     "DataStat",
     "estimate_levels",
+    "make_updated_predictions",
     "PredictionData",
-    "PredictionInfo",
+    "PREDICTION_PERIODS",
     "PredictionQuerier",
-    "PredictionUpdater",
-    "PREDICTION_DIR",
-    "PredictionParameters",
+    "PredictionStore",
     "Timegroup",
     "timezone_at",
 ]

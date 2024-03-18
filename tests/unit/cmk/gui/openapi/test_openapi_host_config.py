@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
+import datetime
 from collections.abc import Iterator, Sequence
 from typing import Literal
 from unittest.mock import MagicMock
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 from pytest_mock import MockerFixture
 
 from tests.testlib.rest_api_client import ClientRegistry
@@ -1006,7 +1007,7 @@ def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegi
     assert "should_not_be_invisible" not in host_names
 
 
-@freeze_time("1998-02-09")
+@time_machine.travel(datetime.datetime.fromisoformat("1998-02-09T00:00:00+00:00"), tick=False)
 def test_openapi_effective_attributes_are_transformed_on_their_way_out_regression(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
@@ -1234,7 +1235,7 @@ def test_move_host_to_the_same_folder(clients: ClientRegistry) -> None:
     resp.json["title"] = "Invalid move action"
 
 
-@pytest.mark.usefixtures("custom_host_attribute")
+@pytest.mark.usefixtures("request_context", "custom_host_attribute")
 def test_openapi_host_config_effective_attributes_includes_custom_attributes_regression(
     clients: ClientRegistry,
 ) -> None:
@@ -1247,11 +1248,37 @@ def test_openapi_host_config_effective_attributes_includes_custom_attributes_reg
 def test_openapi_host_config_effective_attributes_includes_tags_regression(
     clients: ClientRegistry,
 ) -> None:
-    clients.HostTagGroup.create(ident="foo", title="foo", tags=[{"ident": "bar", "title": "bar"}])
+    clients.HostTagGroup.create(ident="foo", title="foo", tags=[{"id": "bar", "title": "bar"}])
     clients.HostConfig.create(host_name="test_host", attributes={"tag_foo": "bar"})
 
     resp = clients.HostConfig.get("test_host", effective_attributes=True)
     assert resp.json["extensions"]["effective_attributes"]["tag_foo"] == "bar"
+
+
+def test_openapi_host_config_effective_attributes_labels_from_parent_folder(
+    clients: ClientRegistry,
+) -> None:
+    """Tests inheritance of host labels from parent folder"""
+    clients.Folder.create(
+        folder_name="test_folder",
+        title="Test folder",
+        parent="/",
+        attributes={"labels": {"foo1": "bar1"}},
+    )
+    clients.HostConfig.create(
+        host_name="test_host",
+        attributes={"labels": {"foo2": "bar2"}},
+        folder="/test_folder",
+    )
+
+    resp = clients.HostConfig.get("test_host", effective_attributes=True)
+    assert resp.json["extensions"]["effective_attributes"]["labels"] == {
+        "foo1": "bar1",
+        "foo2": "bar2",
+    }
+    assert resp.json["extensions"]["attributes"]["labels"] == {
+        "foo2": "bar2",
+    }
 
 
 @managedtest
@@ -1275,7 +1302,7 @@ def test_openapi_host_config_correct_contactgroup_default(
 
 
 @managedtest
-@freeze_time("2022-11-05")
+@time_machine.travel(datetime.datetime.fromisoformat("2022-11-05T00:00:00+00:00"), tick=False)
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
     clients: ClientRegistry, with_admin: tuple[str, str]
 ) -> None:
@@ -1507,3 +1534,42 @@ def test_move_host_between_nested_folders(clients: ClientRegistry) -> None:
     clients.HostConfig.move(host_name="host1", target_folder="~F1~F11~F111")
     clients.HostConfig.move(host_name="host1", target_folder="~F1~F11")
     clients.HostConfig.move(host_name="host1", target_folder="~F1")
+
+
+@managedtest
+def test_update_host_parent_must_exist(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="test_host")
+    resp = clients.HostConfig.edit(
+        host_name="test_host", update_attributes={"parents": ["non-existent"]}, expect_ok=False
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: update_attributes"
+    assert (
+        resp.json["fields"]["update_attributes"]["parents"]["0"][0]
+        == "Host not found: 'non-existent'"
+    )
+
+
+@managedtest
+def test_update_host_parent_must_be_list_of_strings(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="test_host")
+    resp = clients.HostConfig.edit(
+        host_name="test_host", update_attributes={"parents": "wrong-type"}, expect_ok=False
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: update_attributes"
+    assert (
+        "Expected data type is list, but your type is str."
+        in resp.json["fields"]["update_attributes"]["parents"]
+    )
+
+
+def test_openapi_create_host_in_folder_with_umlaut(clients: ClientRegistry) -> None:
+    folder_name = "ümlaut"
+    clients.Folder.create(
+        parent="/",
+        folder_name=folder_name,
+        title=folder_name,
+    )
+    response = clients.HostConfig.create(host_name="host1", folder=f"~{folder_name}")
+    assert response.status_code == 200

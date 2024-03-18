@@ -4,25 +4,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_value_store,
     IgnoreResultsError,
     Result,
     State,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.aws.lib import (
+    aws_host_labels,
     AWSMetric,
     check_aws_metrics,
     discover_aws_generic,
     discover_aws_generic_single,
     extract_aws_metrics_by_labels,
     parse_aws,
+    parse_aws_labels,
 )
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.cpu_util import check_cpu_util
@@ -69,6 +73,12 @@ def parse_aws_ec2(string_table: StringTable) -> Section:
 agent_section_aws_ec2 = AgentSection(
     name="aws_ec2",
     parse_function=parse_aws_ec2,
+)
+
+agent_section_ec2_labels = AgentSection(
+    name="ec2_labels",
+    parse_function=parse_aws_labels,
+    host_label_function=aws_host_labels,
 )
 
 #   .--status check--------------------------------------------------------.
@@ -222,7 +232,7 @@ def check_aws_ec2_disk_io(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-    disk_data: MutableMapping[str, float] = {}
+    disk_data: dict[str, float] = {}
     key_pairs: Mapping[
         str, str
     ] = {  # The key from the Mapping is the result that we want and the value is how we get the data

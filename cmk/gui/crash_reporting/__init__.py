@@ -10,7 +10,7 @@ from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroupRegistry, ConfigVariableRegistry
 
-from . import pages
+from . import pages as crash_reporting_pages
 from ._settings import (
     ConfigVariableCrashReportTarget,
     ConfigVariableCrashReportURL,
@@ -38,7 +38,7 @@ def register(
     config_variable_group_registry: ConfigVariableGroupRegistry,
     config_variable_registry: ConfigVariableRegistry,
 ) -> None:
-    pages.register(page_registry)
+    crash_reporting_pages.register(page_registry)
     data_source_registry.register(DataSourceCrashReports)
     sorter_registry.register(SorterCrashTime)
     command_registry.register(CommandDeleteCrashReports)

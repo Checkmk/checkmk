@@ -4,9 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pytest
+import datetime
+from zoneinfo import ZoneInfo
 
-from tests.testlib import on_time
+import pytest
+import time_machine
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.storeonce_servicesets import (
@@ -83,7 +85,7 @@ def test_check_1_capacity(monkeypatch: pytest.MonkeyPatch, section_1: Section) -
         "get_value_store",
         lambda: {"1.delta": (1577972460.0 - 60, 21108135.3046875 - 300)},
     )
-    with on_time("2020-01-02 13:41:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2020, 1, 2, 13, 41, tzinfo=ZoneInfo("UTC"))):
         assert list(
             check_storeonce_servicesets_capacity("1", FILESYSTEM_DEFAULT_PARAMS, section_1)
         ) == [
@@ -189,7 +191,7 @@ def test_check_2_capacity(monkeypatch: pytest.MonkeyPatch, section_2: Section) -
         "get_value_store",
         lambda: {"1.delta": (1577972280.0 - 60, 51789957.953125 - 6000)},
     )
-    with on_time("2020-01-02 13:38:00", "UTC"):
+    with time_machine.travel(datetime.datetime(2020, 1, 2, 13, 38, tzinfo=ZoneInfo("UTC"))):
         assert list(
             check_storeonce_servicesets_capacity("1", FILESYSTEM_DEFAULT_PARAMS, section_2)
         ) == [

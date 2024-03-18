@@ -40,21 +40,35 @@ from ._utils import DiscoverySettings, QualifiedDiscovery
 __all__ = ["execute_check_discovery"]
 
 
+_CHANGED_PARAMS_FEATURE_FLAG = False
+
+
 class _Transition(enum.Enum):
     NEW = enum.auto()
     VANISHED = enum.auto()
+    CHANGED = enum.auto()
 
     @property
     def title(self) -> str:
         match self:
             case _Transition.NEW:
-                return "Unmonitored"
+                return "unmonitored"
             case _Transition.VANISHED:
-                return "Vanished"
+                return "vanished"
+            case _Transition.CHANGED:
+                return "changed"
 
     def need_discovery(self, discovery_mode: DiscoverySettings) -> bool:
-        return (self is _Transition.NEW and discovery_mode.add_new_services) or (
-            self is _Transition.VANISHED and discovery_mode.remove_vanished_services
+        return (
+            (self is _Transition.NEW and discovery_mode.add_new_services)
+            or (self is _Transition.VANISHED and discovery_mode.remove_vanished_services)
+            or (
+                self is _Transition.CHANGED
+                and (
+                    discovery_mode.update_changed_service_parameters
+                    or discovery_mode.update_changed_service_labels
+                )
+            )
         )
 
 
@@ -76,7 +90,7 @@ def execute_check_discovery(
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
     enforced_services: Container[ServiceID],
-) -> ActiveCheckResult:
+) -> Sequence[ActiveCheckResult]:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
     #    - Set FileCacheGlobals.maybe = True (set max_cachefile_age, else 0)
@@ -160,7 +174,7 @@ def execute_check_discovery(
     )
     failed_sources = [r for r in summarizer(host_sections) if r.state != 0]
 
-    return ActiveCheckResult.from_subresults(
+    return [
         *itertools.chain(
             services_result,
             host_labels_result,
@@ -177,7 +191,7 @@ def execute_check_discovery(
                 )
             ],
         )
-    )
+    ]
 
 
 def _check_service_lists(
@@ -201,30 +215,72 @@ def _check_service_lists(
         filtered = True
 
         for service, _found_on_nodes in discovered_services:
-            affected_check_plugins[DiscoveredService.check_plugin_name(service)] += 1
-            filtered &= not service_filter(
-                find_service_description(host_name, *DiscoveredService.id(service))
+            check_plugin_name = DiscoveredService.check_plugin_name(service)
+            service_description = find_service_description(
+                host_name, *DiscoveredService.id(service)
             )
-            subresults.append(
-                _make_active_check_result(
-                    transition,
-                    DiscoveredService.check_plugin_name(service),
-                    service_description=find_service_description(
-                        host_name, *DiscoveredService.id(service)
-                    ),
-                )
+            service_result = _make_service_result(
+                transition.title, check_plugin_name, service_description=service_description
             )
+
+            affected_check_plugins[check_plugin_name] += 1
+            filtered &= not service_filter(service_description)
+            subresults.append(service_result)
 
         if affected_check_plugins:
-            info = ", ".join([f"{k}: {v}" for k, v in affected_check_plugins.items()])
-            count = sum(affected_check_plugins.values())
-            subresults.append(
-                ActiveCheckResult(severity, f"{transition.title} services: {count} ({info})")
-            )
+            transition_result = _transition_result(transition, affected_check_plugins, severity)
+            subresults.append(transition_result)
             need_rediscovery |= not filtered and transition.need_discovery(discovery_mode)
 
+    change_affected_check_plugins: Counter[CheckPluginName] = Counter()
+    filtered = True
+    modified_labels = False
+    modified_params = False
+    for service, _found_on_nodes in services_by_transition.get("changed", []):
+        modified = False
+        check_plugin_name = DiscoveredService.check_plugin_name(service)
+        service_description = find_service_description(host_name, *DiscoveredService.id(service))
+        assert service.previous is not None and service.new is not None
+
+        subresults.append(
+            _make_service_result(
+                _Transition.CHANGED.title,
+                check_plugin_name,
+                service_description=service_description,
+            )
+        )
+
+        if service.new.service_labels != service.previous.service_labels:
+            modified = True
+            modified_labels = True
+            filtered &= not service_filters.changed_labels(service_description)
+
+        # TODO (params-discovery): we removed the params check for now as the front-end
+        # implementation is yet to be done. See previous git history to see how the check was
+        # implemented.
+        if _CHANGED_PARAMS_FEATURE_FLAG and service.new.parameters != service.previous.parameters:
+            modified = True
+            modified_params = True
+            filtered &= not service_filters.changed_params(service_description)
+
+        if modified:
+            change_affected_check_plugins[check_plugin_name] += 1
+
+    if change_affected_check_plugins:
+        severity = max(
+            params.severity_changed_service_labels if modified_labels else 0,
+            params.severity_changed_service_params
+            if _CHANGED_PARAMS_FEATURE_FLAG and modified_params
+            else 0,
+        )
+        subresults.append(
+            _transition_result(_Transition.CHANGED, change_affected_check_plugins, severity)
+        )
+        need_rediscovery |= not filtered and _Transition.CHANGED.need_discovery(discovery_mode)
+
     subresults.extend(
-        _make_ignored_active_check_result(
+        _make_service_result(
+            "ignored",
             DiscoveredService.check_plugin_name(ignored_service),
             service_description=find_service_description(
                 host_name, *DiscoveredService.id(ignored_service)
@@ -237,23 +293,27 @@ def _check_service_lists(
     return subresults, need_rediscovery
 
 
-def _make_active_check_result(
-    transition: _Transition, check_plugin_name: CheckPluginName, *, service_description: str
+def _transition_result(
+    transition: _Transition, affected_check_plugins: Counter, severity: int
+) -> ActiveCheckResult:
+    info = ", ".join([f"{k}: {v}" for k, v in affected_check_plugins.items()])
+    count = sum(affected_check_plugins.values())
+    if transition is _Transition.CHANGED and not _CHANGED_PARAMS_FEATURE_FLAG:
+        # TODO: see above TODO (params-discovery)
+        summary = f"Services with changed discovery labels: {count} ({info})"
+    else:
+        summary = f"Services {transition.title}: {count} ({info})"
+
+    return ActiveCheckResult(severity, summary)
+
+
+def _make_service_result(
+    transition_str: str, check_plugin_name: CheckPluginName, *, service_description: str
 ) -> ActiveCheckResult:
     return ActiveCheckResult(
         0,
         "",
-        [f"{transition.title} service: {check_plugin_name}: {service_description}"],
-    )
-
-
-def _make_ignored_active_check_result(
-    check_plugin_name: CheckPluginName, *, service_description: str
-) -> ActiveCheckResult:
-    return ActiveCheckResult(
-        0,
-        "",
-        [f"Ignored service: {check_plugin_name}: {service_description}"],
+        [f"Service {transition_str}: {check_plugin_name}: {service_description}"],
     )
 
 

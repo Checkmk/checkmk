@@ -180,112 +180,6 @@ ServiceEventType = Literal[
     "as",
     "af",
 ]
-HostTagIpAddressFamilyType = Literal[
-    "ip-v4-only",
-    "ip-v6-only",
-    "ip-v4v6",
-    "no-ip",
-    "!ip-v4-only",
-    "!ip-v6-only",
-    "!ip-v4v6",
-    "!no-ip",
-    "ignore",
-]
-HostTagIpV4Type = Literal[
-    "ip-v4",
-    "!ip-v4",
-    "ignore",
-]
-HostTagIpV6Type = Literal[
-    "ip-v6",
-    "!ip-v6",
-    "ignore",
-]
-HostTagCheckMkAgentType = Literal[
-    "cmk-agent",
-    "!cmk-agent",
-    "all-agents",
-    "!all-agents",
-    "special-agents",
-    "!special-agents",
-    "no-agent",
-    "!no-agent",
-    "ignore",
-]
-HostTagPiggyBackType = Literal[
-    "auto-piggyback",
-    "!auto-piggyback",
-    "piggyback",
-    "!piggyback",
-    "no-piggyback",
-    "!no-piggyback",
-    "ignore",
-]
-HostTagSNMPType = Literal[
-    "no-snmp",
-    "!no-snmp",
-    "snmp-v1",
-    "!snmp-v1",
-    "snmp-v2",
-    "!snmp-v2",
-    "ignore",
-]
-HostTagMonitorSNMPType = Literal[
-    "snmp",
-    "!snmp",
-    "ignore",
-]
-HostTagAgentOrSpecialAgentType = Literal[
-    "tcp",
-    "!tcp",
-    "ignore",
-]
-HostTagAgentType = Literal[
-    "checkmk-agent",
-    "!checkmk-agent",
-    "ignore",
-]
-HostTagPingType = Literal[
-    "ping",
-    "!ping",
-    "ignore",
-]
-HostTagCriticalType = Literal[
-    "prod",
-    "critical",
-    "test",
-    "offline",
-    "!prod",
-    "!critical",
-    "!test",
-    "!offline",
-    "ignore",
-]
-HostTagNetworkType = Literal[
-    "lan",
-    "wan",
-    "dmz",
-    "ignore",
-    "!lan",
-    "!wan",
-    "!dmz",
-]
-
-HostTagTypes = list[
-    HostTagIpAddressFamilyType
-    | HostTagIpV4Type
-    | HostTagIpV6Type
-    | HostTagCheckMkAgentType
-    | HostTagPiggyBackType
-    | HostTagSNMPType
-    | HostTagMonitorSNMPType
-    | HostTagAgentOrSpecialAgentType
-    | HostTagAgentType
-    | HostTagPingType
-    | HostTagCriticalType
-    | HostTagNetworkType
-]
-
 SysLogFacilityIntType = Literal[
     0,
     1,
@@ -442,26 +336,6 @@ RoutingKeyType = tuple[
     Literal["routing_key", "store"],
     str,
 ]
-ServiceLevels = Literal[
-    0,
-    10,
-    20,
-    30,
-]
-ServiceLevelsType = tuple[
-    ServiceLevels,
-    ServiceLevels,
-]
-ServiceLevelsStr = Literal[
-    "no_service_level",
-    "silver",
-    "gold",
-    "platinum",
-]
-ServiceLevelsMap = Mapping[
-    ServiceLevels,
-    ServiceLevelsStr,
-]
 RegexModes = Literal[
     "match_id",
     "match_alias",
@@ -568,7 +442,7 @@ class EventRule(_EventRuleMandatory, total=False):
     match_hostgroups: list[str]
     match_hostlabels: dict[str, str]
     match_hosts: list[str]
-    match_hosttags: HostTagTypes
+    match_hosttags: list[str]
     match_notification_comment: str
     match_plugin_output: str
     match_service_event: Sequence[ServiceEventType]
@@ -577,11 +451,11 @@ class EventRule(_EventRuleMandatory, total=False):
     match_servicelabels: dict[str, str]
     match_services: list[str]
     match_site: list[str]
-    match_sl: ServiceLevelsType
+    match_sl: tuple[int, int]
     match_timeperiod: TimeperiodName
     notify_method: NotifyPluginParams
     bulk: NotifyBulkType
-    match_service_level: ServiceLevelsType
+    match_service_level: tuple[int, int]
     match_only_during_timeperiod: str
     notification_method: NotificationPluginNameStr
 

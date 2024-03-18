@@ -9,6 +9,7 @@ and similar things."""
 from __future__ import annotations
 
 import ast
+import json
 import logging
 import re
 import subprocess
@@ -38,8 +39,10 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
+    BackgroundStatusSnapshot,
     InitialStatusArgs,
     JobStatusSpec,
+    JobStatusStates,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -165,7 +168,7 @@ def local_automation_failure(
     out: str | None = None,
     err: str | None = None,
     exc: Exception | None = None,
-) -> MKGeneralException:
+) -> MKAutomationException:
     call = subprocess.list2cmdline(cmdline) if active_config.debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
     if code:
@@ -176,7 +179,7 @@ def local_automation_failure(
         msg += ", error: <pre>%s</pre>" % _hilite_errors(err)
     if exc:
         msg += ": %s" % exc
-    return MKGeneralException(msg)
+    return MKAutomationException(msg)
 
 
 def _hilite_errors(outdata: str) -> str:
@@ -194,7 +197,7 @@ def check_mk_remote_automation_serialized(
     sync: Callable[[SiteId], None],
     non_blocking_http: bool = False,
 ) -> SerializedResult:
-    site = get_site_config(site_id)
+    site = get_site_config(active_config, site_id)
     if "secret" not in site:
         raise MKGeneralException(
             _('Cannot connect to site "%s": The site is not logged in') % site.get("alias", site_id)
@@ -218,7 +221,7 @@ def check_mk_remote_automation_serialized(
     # Synchronous execution of the actual remote command in a single blocking HTTP request
     return SerializedResult(
         _do_remote_automation_serialized(
-            site=get_site_config(site_id),
+            site=get_site_config(active_config, site_id),
             command="checkmk-automation",
             vars_=[
                 ("automation", command),  # The Checkmk automation command
@@ -313,9 +316,35 @@ def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult
     return ast.literal_eval(
         str(
             do_remote_automation(
-                site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+                site=get_site_config(active_config, site_id),
+                command="execute-dcd-command",
+                vars_=command_args,
             )
         )
+    )
+
+
+def fetch_service_discovery_background_job_status(
+    site_id: SiteId, hostname: str
+) -> BackgroundStatusSnapshot:
+    details = json.loads(
+        str(
+            do_remote_automation(
+                site=get_site_config(active_config, site_id),
+                command="service-discovery-job-snapshot",
+                vars_=[("hostname", hostname)],
+            )
+        )
+    )
+    return BackgroundStatusSnapshot(
+        job_id=details["job_id"],
+        status=JobStatusSpec(**details["status"]),
+        exists=details["exists"],
+        is_active=details["is_active"],
+        has_exception=details["has_exception"],
+        acknowledged_by=details["acknowledged_by"],
+        may_stop=details["may_stop"],
+        may_delete=details["may_delete"],
     )
 
 
@@ -581,7 +610,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
 
     It starts the background job using one call. It then polls the remote site, waiting for
     completion of the job."""
-    site_config = get_site_config(site_id)
+    site_config = get_site_config(active_config, site_id)
 
     job_id = _start_remote_automation_job(site_config, automation_request)
 
@@ -603,6 +632,9 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
         auto_logger.debug("Job status: %r", response)
 
         if not response.job_status.is_active:
+            if response.job_status.state == JobStatusStates.EXCEPTION:
+                raise MKAutomationException("\n".join(response.job_status.loginfo["JobException"]))
+
             result = response.result
             auto_logger.debug("Job is not active anymore. Return the result: %s", result)
             break

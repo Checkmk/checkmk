@@ -15,6 +15,7 @@ from cmk.snmplib import (
     SNMPBackendEnum,
     SNMPDetectSpec,
     SNMPHostConfig,
+    SNMPVersion,
     SpecialColumn,
 )
 
@@ -29,8 +30,8 @@ class TestSNMPHostConfig:
             ipaddress=HostAddress("127.0.0.1"),
             credentials="",
             port=0,
-            is_bulkwalk_host=False,
-            is_snmpv2or3_without_bulkwalk_host=False,
+            bulkwalk_enabled=True,
+            snmp_version=SNMPVersion.V2C,
             bulk_walk_size_of=0,
             timing={},
             oid_range_limits={},

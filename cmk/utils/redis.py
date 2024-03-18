@@ -24,7 +24,7 @@ def get_redis_client() -> Redis[str]:
     if not redis_enabled():
         raise RuntimeError("Redis currently explicitly disabled")
     return Redis.from_url(
-        f"unix://{omd_root}/tmp/run/redis",
+        f"unix://{omd_root / 'tmp/run/redis'}",
         db=0,
         encoding="utf-8",
         decode_responses=True,

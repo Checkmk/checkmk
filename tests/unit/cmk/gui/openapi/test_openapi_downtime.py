@@ -67,6 +67,7 @@ def test_openapi_schedule_hostgroup_downtime(
                 "name": "windows",
             },
         ],
+        "NO_SITE",
     )
     mock_livestatus.expect_query("GET hostgroups\nColumns: members\nFilter: name = windows")
     mock_livestatus.expect_query(
@@ -712,6 +713,208 @@ def test_openapi_delete_downtime_with_params_but_missing_downtime(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_delete_downtime_with_host_group(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.HostGroup.create("windows", "windows")
+    mock_livestatus.add_table(
+        "hostgroups",
+        [
+            {
+                "members": ["example.com", "foo.example.com"],
+                "name": "windows",
+            },
+        ],
+        "NO_SITE",
+    )
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "host_groups": [],
+            },
+            {
+                "id": 124,
+                "host_name": "example.com",
+                "service_description": "Memory",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "host_groups": ["windows"],
+            },
+            {
+                "id": 125,
+                "host_name": "foo.example.com",
+                "service_description": "Memory",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "host_groups": ["windows"],
+            },
+            {
+                "id": 126,
+                "host_name": "foo.example.com",
+                "service_description": "null",
+                "is_service": 0,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some host downtime",
+                "host_groups": ["windows"],
+            },
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id is_service",
+            "Filter: host_groups ~~ windows",
+        ],
+    )
+    mock_livestatus.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;124", match_type="ellipsis")
+    mock_livestatus.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;125", match_type="ellipsis")
+    mock_livestatus.expect_query("COMMAND [...] DEL_HOST_DOWNTIME;126", match_type="ellipsis")
+
+    with mock_livestatus:
+        clients.Downtime.delete(
+            delete_type="hostgroup",
+            host_group="windows",
+        )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_delete_downtime_with_service_group(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.ServiceGroup.create("CPU", "CPU")
+    mock_livestatus.add_table(
+        "servicegroups",
+        [
+            {
+                "members": [
+                    ["heute", "CPU load"],
+                    ["example.com", "CPU load"],
+                ],
+                "name": "CPU",
+            },
+        ],
+        "NO_SITE",
+    )
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "service_groups": ["CPU"],
+            },
+            {
+                "id": 124,
+                "host_name": "example.com",
+                "service_description": "Memory",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "service_groups": ["CPU"],
+            },
+            {
+                "id": 125,
+                "host_name": "foo.example.com",
+                "service_description": "Memory",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "service_groups": [],
+            },
+            {
+                "id": 125,
+                "host_name": "example.com",
+                "service_description": "null",
+                "is_service": 0,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some host downtime",
+                "service_groups": [],
+            },
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id is_service",
+            "Filter: service_groups ~~ CPU",
+        ],
+    )
+    mock_livestatus.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;123", match_type="ellipsis")
+    mock_livestatus.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;124", match_type="ellipsis")
+
+    with mock_livestatus:
+        clients.Downtime.delete(
+            delete_type="servicegroup",
+            service_group="CPU",
+        )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_delete_downtime_non_existing_host_group(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Downtime.delete(
+        delete_type="hostgroup",
+        host_group="non-existent",
+        expect_ok=False,
+    ).assert_status_code(400)
+    assert resp.json["fields"]["hostgroup_name"] == ["Group missing: 'non-existent'"]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_delete_downtime_non_existing_service_group(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Downtime.delete(
+        delete_type="servicegroup",
+        service_group="non-existent",
+        expect_ok=False,
+    ).assert_status_code(400)
+    assert resp.json["fields"]["servicegroup_name"] == ["Group missing: 'non-existent'"]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_non_existing_instance(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
@@ -903,3 +1106,465 @@ def test_with_defaulted_timezone() -> None:
     assert _with_defaulted_timezone(
         datetime.datetime(year=1, month=1, day=1, tzinfo=datetime.timezone.min), _get_local_timezone
     ) == datetime.datetime(1, 1, 1, 0, 0, tzinfo=datetime.timezone.min)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_service_description_for_service_downtimes(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "literally nothing",
+            },
+            {
+                "id": 124,
+                "host_name": "example.com",
+                "service_description": "null",
+                "is_service": 0,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some host downtime",
+            },
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id host_name service_description is_service author start_time end_time recurring comment",
+        ]
+    )
+    with mock_livestatus:
+        resp = clients.Downtime.get_all()
+        assert len(resp.json["value"]) == 2
+
+        for val in resp.json["value"]:
+            if val["extensions"]["is_service"] == "yes":
+                assert val["extensions"]["service_description"] == "CPU load"
+            else:
+                assert "service_description" not in val["extensions"]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.parametrize("service_downtime", [True, False])
+def test_openapi_service_description_for_single_downtime(
+    clients: ClientRegistry,
+    service_downtime: bool,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "a service downtime",
+            },
+            {
+                "id": 124,
+                "host_name": "heute",
+                "service_description": "null",
+                "is_service": 0,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "a host downtime",
+            },
+        ],
+    )
+
+    service_id = 123 if service_downtime else 124
+
+    mock_livestatus.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id host_name service_description is_service author start_time end_time recurring comment",
+            f"Filter: id = {service_id}",
+        ],
+        sites=["NO_SITE"],
+    )
+
+    with mock_livestatus:
+        resp = clients.Downtime.get(downtime_id=service_id, site_id="NO_SITE")
+
+        if service_downtime:
+            assert resp.json["extensions"]["is_service"] == "yes"
+            assert resp.json["extensions"]["service_description"] == "CPU load"
+        else:
+            assert resp.json["extensions"]["is_service"] == "no"
+            assert "service_description" not in resp.json["extensions"]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_modify_downtime_without_parameters(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.Downtime.modify(
+        modify_type="by_id",
+        downtime_id="123",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_modify_downtime_end_time(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "a service downtime",
+            },
+        ],
+    )
+    mock_livestatus.expect_query(
+        "GET downtimes\nColumns: id is_service\nFilter: id = 123", sites=["NO_SITE"]
+    )
+
+    mock_livestatus.expect_query(
+        "COMMAND [...] MODIFY_SVC_DOWNTIME;123;;1701913913;;;;...",
+        match_type="ellipsis",
+        sites=["NO_SITE"],
+    )
+
+    with mock_livestatus:
+        clients.Downtime.modify(
+            modify_type="by_id",
+            site_id="NO_SITE",
+            downtime_id="123",
+            end_time="2023-12-07T01:51:53.000Z",
+        )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+@pytest.mark.parametrize("end_time_delta", [10, -10])
+def test_openapi_modify_downtime_delta_minutes(
+    clients: ClientRegistry,
+    end_time_delta: int,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    delta_seconds: str = "%s%d" % (
+        "+" if end_time_delta > 0 else "-",
+        abs(end_time_delta) * 60,
+    )
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "a service downtime",
+            },
+        ],
+    )
+    mock_livestatus.expect_query(
+        "GET downtimes\nColumns: id is_service\nFilter: id = 123", sites=["NO_SITE"]
+    )
+
+    mock_livestatus.expect_query(
+        f"COMMAND [...] MODIFY_SVC_DOWNTIME;123;;{delta_seconds};...",
+        match_type="ellipsis",
+        sites=["NO_SITE"],
+    )
+
+    with mock_livestatus:
+        clients.Downtime.modify(
+            modify_type="by_id",
+            site_id="NO_SITE",
+            downtime_id="123",
+            end_time=end_time_delta,
+        )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_modify_downtime_comment(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "a service downtime",
+            },
+        ],
+    )
+    mock_livestatus.expect_query(
+        "GET downtimes\nColumns: id is_service\nFilter: id = 123", sites=["NO_SITE"]
+    )
+
+    mock_livestatus.expect_query(
+        "COMMAND [...] MODIFY_SVC_DOWNTIME;123;...;From API with love...",
+        match_type="ellipsis",
+        sites=["NO_SITE"],
+    )
+
+    with mock_livestatus:
+        clients.Downtime.modify(
+            modify_type="by_id", site_id="NO_SITE", downtime_id="123", comment="From API with love"
+        )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_modify_downtime_with_host_group(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.HostGroup.create("windows", "windows")
+    mock_livestatus.add_table(
+        "hostgroups",
+        [
+            {
+                "members": ["example.com", "foo.example.com"],
+                "name": "windows",
+            },
+        ],
+        "NO_SITE",
+    )
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "host_groups": [],
+            },
+            {
+                "id": 124,
+                "host_name": "example.com",
+                "service_description": "Memory",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "host_groups": ["windows"],
+            },
+            {
+                "id": 125,
+                "host_name": "foo.example.com",
+                "service_description": "null",
+                "is_service": 0,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some host downtime",
+                "host_groups": ["windows"],
+            },
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id is_service",
+            "Filter: host_groups ~~ windows",
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        "COMMAND [...] MODIFY_SVC_DOWNTIME;124;...;From API with love...",
+        match_type="ellipsis",
+        sites=["NO_SITE"],
+    )
+
+    mock_livestatus.expect_query(
+        "COMMAND [...] MODIFY_HOST_DOWNTIME;125;...;From API with love...",
+        match_type="ellipsis",
+        sites=["NO_SITE"],
+    )
+
+    with mock_livestatus:
+        clients.Downtime.modify(
+            modify_type="hostgroup", host_group="windows", comment="From API with love"
+        )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_modify_downtime_with_service_group(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.ServiceGroup.create("CPU", "CPU")
+    mock_livestatus.add_table(
+        "servicegroups",
+        [
+            {
+                "members": [
+                    ["heute", "CPU load"],
+                    ["example.com", "CPU load"],
+                ],
+                "name": "CPU",
+            },
+        ],
+        "NO_SITE",
+    )
+    mock_livestatus.add_table(
+        "downtimes",
+        [
+            {
+                "id": 123,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "service_groups": ["CPU"],
+            },
+            {
+                "id": 124,
+                "host_name": "example.com",
+                "service_description": "Memory",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "service_groups": ["CPU"],
+            },
+            {
+                "id": 125,
+                "host_name": "foo.example.com",
+                "service_description": "Memory",
+                "is_service": 1,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some service downtime",
+                "service_groups": [],
+            },
+            {
+                "id": 125,
+                "host_name": "example.com",
+                "service_description": "null",
+                "is_service": 0,
+                "author": "random",
+                "start_time": 1606913913,
+                "end_time": 1606913913,
+                "recurring": 0,
+                "comment": "some host downtime",
+                "service_groups": [],
+            },
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id is_service",
+            "Filter: service_groups ~~ CPU",
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        "COMMAND [...] MODIFY_SVC_DOWNTIME;123;...;From API with love...",
+        match_type="ellipsis",
+        sites=["NO_SITE"],
+    )
+
+    mock_livestatus.expect_query(
+        "COMMAND [...] MODIFY_SVC_DOWNTIME;124;...;From API with love...",
+        match_type="ellipsis",
+        sites=["NO_SITE"],
+    )
+
+    with mock_livestatus:
+        clients.Downtime.modify(
+            modify_type="servicegroup", service_group="CPU", comment="From API with love"
+        )
+
+
+# TODO: Delta must be different than zero
+def test_openapi_modify_downtime_delta_minutes_cannot_be_zero(
+    clients: ClientRegistry,
+) -> None:
+    clients.Downtime.modify(
+        modify_type="by_id",
+        site_id="NO_SITE",
+        downtime_id="123",
+        end_time=0,
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_modify_downtime_non_existing_host_group(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Downtime.modify(
+        modify_type="hostgroup",
+        host_group="non-existent",
+        expect_ok=False,
+    ).assert_status_code(400)
+    assert resp.json["fields"]["hostgroup_name"] == ["Group missing: 'non-existent'"]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_modify_downtime_non_existing_service_group(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Downtime.modify(
+        modify_type="servicegroup",
+        service_group="non-existent",
+        expect_ok=False,
+    ).assert_status_code(400)
+    assert resp.json["fields"]["servicegroup_name"] == ["Group missing: 'non-existent'"]

@@ -10,13 +10,16 @@ from __future__ import annotations
 import functools
 import itertools
 import logging
+import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import partial
-from typing import Final, TypeVar
+from pathlib import Path
+from typing import Final, Literal
 
 import livestatus
 
 import cmk.utils.debug
+import cmk.utils.paths
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
@@ -25,8 +28,9 @@ from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
+from cmk.utils.misc import pnp_cleanup
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.prediction import PredictionParameters, PredictionUpdater
+from cmk.utils.prediction import make_updated_predictions, PredictionStore
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
@@ -76,6 +80,11 @@ from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import make_parser, make_sources, Source
 
+from cmk.agent_based.prediction_backend import (
+    InjectedParameters,
+    lookup_predictive_levels,
+    PredictionParameters,
+)
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
 from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v1 import State
@@ -147,6 +156,7 @@ class CMKParser:
         """Parse fetched data."""
         console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
         output: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
+        section_cache_path = Path(cmk.utils.paths.var_dir)
         # Special agents can produce data for the same check_plugin_name on the same host, in this case
         # the section lines need to be extended
         for source, raw_data in fetched:
@@ -157,6 +167,7 @@ class CMKParser:
                     checking_sections=self.config_cache.make_checking_sections(
                         source.hostname, selected_sections=NO_SELECTION
                     ),
+                    section_cache_path=section_cache_path,
                     keep_outdated=self.keep_outdated,
                     logger=self.logger,
                 ),
@@ -266,9 +277,9 @@ class CMKFetcher:
             Snapshot,
         ]
     ]:
-        nodes = self.config_cache.nodes_of(host_name)
         hosts_config = self.config_cache.hosts_config
-        if nodes is None:
+        is_cluster = host_name in hosts_config.clusters
+        if not is_cluster:
             # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
             # address is unknown). When called as non keepalive ipaddress may be None or
             # is already an address (2nd argument)
@@ -276,29 +287,48 @@ class CMKFetcher:
                 (host_name, ip_address or config.lookup_ip_address(self.config_cache, host_name))
             ]
         else:
-            hosts = [(node, config.lookup_ip_address(self.config_cache, node)) for node in nodes]
+            hosts = [
+                (node, config.lookup_ip_address(self.config_cache, node))
+                for node in self.config_cache.nodes(host_name)
+            ]
 
+        oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
+        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
+        walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+        file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
+        tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
+        cas_dir = Path(cmk.utils.paths.agent_cas_dir)
+        ca_store = Path(cmk.utils.paths.agent_cert_store)
+        site_crt = Path(cmk.utils.paths.site_cert_file)
         return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
-                    host_name_,
-                    ip_address_,
-                    ConfigCache.address_family(host_name_),
+                    current_host_name,
+                    current_ip_address,
+                    ConfigCache.address_family(current_host_name),
                     config_cache=self.config_cache,
-                    is_cluster=host_name in hosts_config.clusters,
+                    is_cluster=current_host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(
-                        self.force_snmp_cache_refresh if nodes is None else False
+                        self.force_snmp_cache_refresh if not is_cluster else False
                     ),
-                    selected_sections=self.selected_sections if nodes is None else NO_SELECTION,
-                    on_scan_error=self.on_error if nodes is None else OnError.RAISE,
+                    selected_sections=self.selected_sections if not is_cluster else NO_SELECTION,
+                    on_scan_error=self.on_error if not is_cluster else OnError.RAISE,
                     simulation_mode=self.simulation_mode,
                     file_cache_options=self.file_cache_options,
                     file_cache_max_age=(
                         self.max_cachefile_age or self.config_cache.max_cachefile_age(host_name)
                     ),
                     snmp_backend_override=self.snmp_backend_override,
+                    oid_cache_dir=oid_cache_dir,
+                    stored_walk_path=stored_walk_path,
+                    walk_cache_path=walk_cache_path,
+                    file_cache_path=file_cache_path,
+                    tcp_cache_path=tcp_cache_path,
+                    cas_dir=cas_dir,
+                    ca_store=ca_store,
+                    site_crt=site_crt,
                 )
-                for host_name_, ip_address_ in hosts
+                for current_host_name, current_ip_address in hosts
             ),
             simulation=self.simulation_mode,
             file_cache_options=self.file_cache_options,
@@ -394,10 +424,14 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 self.value_store_manager,
                 clusters=self.clusters,
             )
+            # Whatch out. The CMC has to agree on the path.
+            prediction_store = PredictionStore(
+                cmk.utils.paths.predictions_dir / host_name / pnp_cleanup(service.description)
+            )
             return get_aggregated_result(
                 host_name,
                 host_name in self.clusters,
-                cluster_nodes=self.config_cache.nodes_of(host_name) or (),
+                cluster_nodes=self.config_cache.nodes(host_name),
                 providers=providers,
                 service=service,
                 plugin=plugin,
@@ -405,6 +439,22 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                 rtc_package=self.rtc_package,
                 get_effective_host=self.config_cache.effective_host,
                 snmp_backend=self.config_cache.get_snmp_backend(host_name),
+                # In the past the creation of predictions (and the livestatus query needed)
+                # was performed inside the check plugins context.
+                # We should consider moving this side effect even further up the stack
+                injected_p=InjectedParameters(
+                    meta_file_path_template=prediction_store.meta_file_path_template,
+                    predictions=make_updated_predictions(
+                        prediction_store,
+                        partial(
+                            livestatus.get_rrd_data,
+                            livestatus.LocalConnection(),
+                            host_name,
+                            service.description,
+                        ),
+                        time.time(),
+                    ),
+                ),
             )
 
         return CheckPlugin(
@@ -412,6 +462,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
             function=check_function,
             default_parameters=plugin.check_default_parameters,
             ruleset_name=plugin.check_ruleset_name,
+            discovery_ruleset_name=plugin.discovery_ruleset_name,
         )
 
     def __iter__(self) -> Iterator[CheckPluginName]:
@@ -598,6 +649,7 @@ def get_aggregated_result(
     plugin: CheckPluginAPI,
     check_function: Callable[..., ServiceCheckResult],
     *,
+    injected_p: InjectedParameters,
     rtc_package: AgentRawData | None,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     snmp_backend: SNMPBackendEnum,
@@ -662,11 +714,7 @@ def get_aggregated_result(
     params_kw = (
         {}
         if plugin.check_default_parameters is None
-        else {
-            "params": _final_read_only_check_parameters(
-                host_name, service.description, service.parameters
-            )
-        }
+        else {"params": _final_read_only_check_parameters(service.parameters, injected_p)}
     )
 
     try:
@@ -725,9 +773,8 @@ def get_aggregated_result(
 
 
 def _final_read_only_check_parameters(
-    host_name: HostName,
-    service_name: ServiceName,
     entries: TimespecificParameters | LegacyCheckParameters,
+    injected_p: InjectedParameters,
 ) -> Parameters:
     params = (
         entries.evaluate(timeperiod_active)
@@ -740,11 +787,7 @@ def _final_read_only_check_parameters(
         # For auto-migrated plugins expecting tuples, they will be
         # unwrapped by a decorator of the original check_function.
         wrap_parameters(
-            _inject_prediction_callback_recursively(
-                host_name,
-                service_name,
-                params,
-            )
+            inject_prediction_params_recursively(params, injected_p)
             if _contains_predictive_levels(params)
             else params,
         )
@@ -756,47 +799,64 @@ def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
         return any(_contains_predictive_levels(p) for p in params)
 
     if isinstance(params, dict):
-        return "__get_predictive_levels__" in params or any(
-            _contains_predictive_levels(p) for p in params.values()
+        return (
+            "__injected__" in params
+            or "__reference_metric__" in params
+            or any(_contains_predictive_levels(p) for p in params.values())
         )
 
     return False
 
 
-_TParams = TypeVar("_TParams", object, list[object], tuple[object, ...], dict[str, object])
+def inject_prediction_params_recursively(
+    params: LegacyCheckParameters | Mapping[str, object],
+    injected_p: InjectedParameters,
+) -> LegacyCheckParameters | Mapping[str, object]:
+    """This currently supports two ways to handle predictive levels.
 
+    The "__injected__" case is legacy, the other case is the new one.
+    Once the legacy case is removed, this can be simplified significantly.
 
-def _inject_prediction_callback_recursively(
-    host_name: HostName, service_name: ServiceName, params: _TParams
-) -> _TParams:
+    Hopefully we can move this out of this scope entirely someday (and get
+    rid of the recursion).
+    """
     match params:
+        case "predictive", {
+            "__reference_metric__": str(metric),
+            "__direction__": "upper" | "lower" as direction,
+        }:
+            return _get_prediction_and_levels(params[1], injected_p, metric, direction)
         case tuple():
-            return tuple(_inject_prediction_callback_iterable(host_name, service_name, params))
+            return tuple(inject_prediction_params_recursively(v, injected_p) for v in params)
         case list():
-            return list(_inject_prediction_callback_iterable(host_name, service_name, params))
+            return list(inject_prediction_params_recursively(v, injected_p) for v in params)
         case dict():
-            if "__get_predictive_levels__" in params:
-                params["__get_predictive_levels__"] = PredictionUpdater(
-                    host_name,
-                    service_name,
-                    PredictionParameters.model_validate(params),
-                    partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
-                )
-                return params
-            return dict(
-                zip(
-                    params.keys(),
-                    _inject_prediction_callback_iterable(host_name, service_name, params.values()),
-                )
-            )
-
+            return {
+                k: injected_p.model_dump()
+                if k == "__injected__"
+                else inject_prediction_params_recursively(v, injected_p)
+                for k, v in params.items()
+            }
     return params
 
 
-def _inject_prediction_callback_iterable(
-    host_name: HostName, service_name: ServiceName, params: Iterable[_TParams]
-) -> Iterable[_TParams]:
-    return (_inject_prediction_callback_recursively(host_name, service_name, v) for v in params)
+def _get_prediction_and_levels(
+    params: dict, injected_p: InjectedParameters, metric: str, direction: Literal["upper", "lower"]
+) -> tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]]:
+    return (
+        "predictive",
+        (
+            metric,
+            *lookup_predictive_levels(
+                metric,
+                direction,
+                PredictionParameters.model_validate(
+                    {k: v for k, v in params.items() if not k.startswith("__")}
+                ),
+                injected_p,
+            ),
+        ),
+    )
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

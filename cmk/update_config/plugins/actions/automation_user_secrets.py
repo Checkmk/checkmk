@@ -43,18 +43,18 @@ class SynchronizeAutomationSecretAndHtpasswd(UpdateAction):
 
             password_hash = htpasswd_entries.get(user_id)
             locked = False
-            assert password_hash is not None
-            if password_hash.startswith("!"):
-                locked = True
-                password_hash = PasswordHash(password_hash[1:])
+            if password_hash is not None:
+                if password_hash.startswith("!"):
+                    locked = True
+                    password_hash = PasswordHash(password_hash[1:])
 
-            if locked:
-                logger.warning(
-                    "Automation user %r is locked!",
-                    user_id,
-                )
-            if matches(automation_user_password, password_hash):
-                continue
+                if locked:
+                    logger.warning(
+                        "Automation user %r is locked!",
+                        user_id,
+                    )
+                if matches(automation_user_password, password_hash):
+                    continue
 
             htpasswd.save(
                 user_id,

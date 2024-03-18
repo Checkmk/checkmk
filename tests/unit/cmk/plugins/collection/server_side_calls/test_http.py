@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Type
 
 import pytest
 
@@ -14,6 +14,7 @@ from cmk.plugins.collection.server_side_calls.http import (
     Family,
     HostSettings,
     HTTPParams,
+    parse_http_params,
     ProxyHost,
     ProxySettings,
     URLMode,
@@ -21,28 +22,29 @@ from cmk.plugins.collection.server_side_calls.http import (
 from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,
-    NetworkAddressConfig,
+    IPv4Config,
+    IPv6Config,
     PlainTextSecret,
-    ResolvedIPAddressFamily,
     StoredSecret,
 )
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
     alias="host_alias",
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-    address_config=NetworkAddressConfig(
-        ipv4_address="0.0.0.2",
-        ipv6_address="fe80::240",
-        additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-        additional_ipv6_addresses=[
+    ipv4_config=IPv4Config(
+        address="0.0.0.1",
+        additional_addresses=["0.0.0.4", "0.0.0.5"],
+    ),
+    ipv6_config=IPv6Config(
+        address="fe80::240",
+        additional_addresses=[
             "fe80::241",
             "fe80::242",
             "fe80::243",
         ],
-        ip_family=IPAddressFamily.DUAL_STACK,
     ),
+    primary_family=IPAddressFamily.IPV4,
+    macros={"$HOSTNAME$": "hostname"},
 )
 
 
@@ -340,7 +342,7 @@ HOST_CONFIG = HostConfig(
             [
                 "--sni",
                 "-I",
-                "0.0.0.2",
+                "0.0.0.1",
                 "-H",
                 "virtual.host",
             ],
@@ -354,7 +356,7 @@ HOST_CONFIG = HostConfig(
             [
                 "--sni",
                 "-I",
-                "0.0.0.2",
+                "0.0.0.1",
             ],
         ),
         pytest.param(
@@ -363,21 +365,20 @@ HOST_CONFIG = HostConfig(
                 "host": {
                     "address": ("proxy", {"address": "proxy", "port": 123}),
                     "port": 43,
-                    "address_family": "ipv6",
+                    "address_family": "ipv4",
                 },
                 "mode": ("url", {}),
             },
             [
                 "-j",
                 "CONNECT",
-                "-6",
                 "--sni",
                 "-p",
                 "123",
                 "-I",
                 "proxy",
                 "-H",
-                "fe80::240:43",
+                "0.0.0.1:43",
             ],
             id="proxy + virtual host (which is ignored)",
         ),
@@ -474,7 +475,7 @@ HOST_CONFIG = HostConfig(
                 "host": {},
                 "mode": ("url", {"expect_regex": ("checkmk", False, False, False)}),
             },
-            ["-r", "checkmk", "--sni", "-I", "0.0.0.2"],
+            ["-r", "checkmk", "--sni", "-I", "0.0.0.1"],
             id="check url, regex without additional options",
         ),
     ],
@@ -484,8 +485,7 @@ def test_check_http_argument_parsing(
     expected_args: Sequence[object],
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = active_check_http.parameter_parser(params)
-    commands = list(active_check_http.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(active_check_http(params, HOST_CONFIG, {}))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args
@@ -533,8 +533,7 @@ def test_check_http_service_description(
     params: Mapping[str, Any],
     expected_description: str,
 ) -> None:
-    parsed_params = active_check_http.parameter_parser(params)
-    commands = list(active_check_http.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(active_check_http(params, HOST_CONFIG, {}))
 
     assert len(commands) == 1
     assert commands[0].service_description == expected_description
@@ -609,7 +608,7 @@ def test_check_http_service_description(
     ],
 )
 def test_parse_http_params(params: Mapping[str, object], expected_result: HTTPParams) -> None:
-    assert active_check_http.parameter_parser(params) == expected_result
+    assert parse_http_params(params) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -637,8 +636,8 @@ def test_direct_host_virtual_host(
     [
         pytest.param("0.0.0.1", 443, "0.0.0.1:443", id="virtual address, port"),
         pytest.param("0.0.0.1", None, "0.0.0.1", id="virtual address, no port"),
-        pytest.param(None, 443, "0.0.0.2:443", id="host config address, port"),
-        pytest.param(None, None, "0.0.0.2", id="host config address, no port"),
+        pytest.param(None, 443, "0.0.0.1:443", id="host config address, port"),
+        pytest.param(None, None, "0.0.0.1", id="host config address, no port"),
         pytest.param("$HOSTNAME$", 443, "hostname:443", id="virtual address with macro, port"),
         pytest.param("$HOSTNAME$", None, "hostname", id="virtual address with macro, no port"),
     ],
@@ -651,3 +650,61 @@ def test_proxy_host_virtual_host(
     proxy_host = ProxyHost(proxy_settings, host_settings)
 
     assert proxy_host.virtual_host(True, HOST_CONFIG) == expected_address
+
+
+HOST_CONFIG_NO_V6 = HostConfig(
+    name="hostname",
+    alias="host_alias",
+    ipv4_config=IPv4Config(
+        address="0.0.0.1",
+        additional_addresses=["0.0.0.4", "0.0.0.5"],
+    ),
+    primary_family=IPAddressFamily.IPV4,
+    macros={"$HOSTNAME$": "hostname"},
+)
+
+
+@pytest.mark.parametrize(
+    "params,exception,error_message",
+    [
+        pytest.param(
+            {
+                "name": "irrelevant",
+                "host": {
+                    "address_family": "ipv6",
+                },
+                "mode": ("url", {}),
+            },
+            ValueError,
+            "IPv6",
+            id="missing address for enforced family",
+        ),
+        pytest.param(
+            {
+                "name": "irrelevant",
+                "host": {
+                    "address_family": "ipv4",
+                },
+                "mode": {"url": {}},
+            },
+            TypeError,
+            "Invalid parameters",
+            id="mode parameters of invalid type",
+        ),
+        pytest.param(
+            {
+                "name": "irrelevant",
+                "host": ("invalid", "parameters"),
+                "mode": ("url", {}),
+            },
+            TypeError,
+            "Invalid parameters",
+            id="host parameters of invalid type",
+        ),
+    ],
+)
+def test_invalid_config(
+    params: Mapping[str, Any], exception: Type[Exception], error_message: str
+) -> None:
+    with pytest.raises(exception, match=error_message):
+        list(active_check_http(params, HOST_CONFIG_NO_V6, {}))

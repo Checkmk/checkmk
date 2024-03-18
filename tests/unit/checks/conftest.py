@@ -9,8 +9,6 @@ from unittest import mock
 
 import pytest
 
-from cmk.utils.caching import cache_manager
-
 
 @pytest.fixture(autouse=True, scope="session")
 def _autouse_fix_register(fix_register):
@@ -26,13 +24,6 @@ def patch_cmk_utils_paths(monkeypatch, tmp_path):
     var_dir_path = tmp_path / "var" / "check_mk"
     # don't mkdir, check should be able to handle that.
     monkeypatch.setattr(cmk.utils.paths, "var_dir", str(var_dir_path))
-
-
-# Automatically refresh caches for each test
-@pytest.fixture(autouse=True, scope="function")
-def clear_config_caches():
-    yield
-    cache_manager.clear()
 
 
 class _MockVSManager(typing.NamedTuple):

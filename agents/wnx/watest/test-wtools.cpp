@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <string_view>
+#include <unordered_set>
 
 #include "common/wtools.h"
 #include "common/wtools_user_control.h"
@@ -25,10 +26,10 @@ namespace {
 // Should be valid for all windows versions
 struct CounterParam {
     const wchar_t *const name_;  // usually number
-    const uint32_t index_;       // the same as name
-    const uint32_t counters_count;
-    const uint32_t instances_min_;
-    const uint32_t instances_max_;
+    uint32_t index_;             // the same as name
+    uint32_t counters_count;
+    uint32_t instances_min_;
+    uint32_t instances_max_;
 };
 
 constexpr CounterParam g_cpu_counter = {.name_ = L"238",
@@ -44,7 +45,7 @@ constexpr CounterParam g_disk_counter = {.name_ = L"234",
 
 }  // namespace
 
-namespace wtools {  // to become friendly for cma::cfg classes
+namespace wtools {
 
 class WtoolsKillProcFixture : public ::testing::Test {
 protected:
@@ -52,12 +53,11 @@ protected:
     static constexpr std::wstring_view nameToUse() { return L"kill_proc.exe"; }
 
     static void KillTmpProcesses() {
-        // kill process
         ScanProcessList([](const PROCESSENTRY32 &entry) {
             if (std::wstring{entry.szExeFile} == nameToUse()) {
                 KillProcess(entry.th32ProcessID, 99);
             }
-            return true;  // continue scan
+            return ScanAction::advance;
         });
     }
 
@@ -84,12 +84,12 @@ protected:
         std::wstring path;
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (std::wstring{entry.szExeFile} != nameToUse()) {
-                return true;  // continue scan
+                return ScanAction::advance;
             }
 
             path = GetProcessPath(entry.th32ProcessID);
             pid = entry.th32ProcessID;
-            return false;
+            return ScanAction::terminate;
         });
 
         return {path, pid};
@@ -224,7 +224,7 @@ protected:
                     names.back(), entry.th32ProcessID,
                     entry.th32ParentProcessID, ::GetCurrentProcessId());
             }
-            return true;
+            return ScanAction::advance;
         });
         EXPECT_TRUE(!names.empty());
         for (auto &name : names) {
@@ -259,9 +259,9 @@ protected:
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ProcessID == pid) {
                 found = true;
-                return false;
+                return ScanAction::terminate;
             }
-            return true;
+            return ScanAction::advance;
         });
         return found;
     }
@@ -271,9 +271,9 @@ protected:
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ParentProcessID == pid) {
                 found = true;
-                return false;
+                return ScanAction::terminate;
             }
-            return true;
+            return ScanAction::advance;
         });
         return found;
     }
@@ -284,11 +284,11 @@ protected:
         DWORD parent_process_id = 0;
         ScanProcessList([&](const PROCESSENTRY32 &entry) {
             if (entry.th32ProcessID != proc_id) {
-                return true;  // continue
+                return ScanAction::advance;
             }
             proc_name = entry.szExeFile;
             parent_process_id = entry.th32ParentProcessID;
-            return false;  // found
+            return ScanAction::terminate;
         });
 
         return {proc_name, parent_process_id};
@@ -814,6 +814,42 @@ TEST(Wtools, InternalUsersDbIntegration) {
         const uc::LdapControl lc;
         ASSERT_EQ(lc.userDel(name), uc::Status::absent);
     }
+}
+
+TEST(Wtools, MakeSafeFolderIntegration) {
+    const auto path = MakeSafeTempFolder("temp");  //
+    EXPECT_TRUE(fs::exists(*path));
+    fs::remove_all(*path);
+}
+
+TEST(Wtools, GetAdapterInfoStore) {
+    const auto store = GetAdapterInfoStore();
+    EXPECT_GE(store.size(), 1U);
+    std::unordered_set<IF_OPER_STATUS> types;
+    for (auto &&info : store | std::views::values) {
+        types.insert(info.oper_status);
+    }
+    EXPECT_TRUE(types.contains(IF_OPER_STATUS::IfOperStatusUp));
+    EXPECT_TRUE(types.contains(IF_OPER_STATUS::IfOperStatusDown));
+}
+
+TEST(Wtools, MangleNameForPerfCounter) {
+    EXPECT_EQ(MangleNameForPerfCounter(L"abc"), L"abc");
+    EXPECT_EQ(MangleNameForPerfCounter(L"/\\!@#$%^&**()__ `~'\""),
+              L"__!@_$%^&**[]__ `~'\"");
+}
+
+TEST(Wtools, OsInfo) {
+    const auto obtained = *GetOsInfo();
+    EXPECT_TRUE(obtained.name.starts_with(L"Microsoft Windows"));
+    EXPECT_TRUE(obtained.name.ends_with(L"Pro") ||      // local
+                obtained.name.ends_with(L"Standard"));  // CI
+
+    const auto num_strings = cma::tools::SplitString(obtained.version, L".");
+    // 10.0.14559
+    EXPECT_GE(std::stoi(num_strings[0]), 10);
+    EXPECT_GE(std::stoi(num_strings[1]), 0);
+    EXPECT_GE(std::stoi(num_strings[2]), 20);
 }
 
 }  // namespace wtools

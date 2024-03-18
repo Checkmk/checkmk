@@ -27,10 +27,11 @@ from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
+from cmk.gui.config import Config
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
-from cmk.gui.graphing import parse_perfometers, perfometer_info
+from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
@@ -39,9 +40,15 @@ from cmk.gui.graphing._html_render import (
 )
 from cmk.gui.graphing._loader import load_graphing_plugins
 from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import add_graphing_plugins, parse_perf_data, translate_metrics
+from cmk.gui.graphing._utils import (
+    add_graphing_plugins,
+    parse_perf_data,
+    parse_perf_data_from_performance_data_livestatus_column,
+    translate_metrics,
+)
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.pages import PageResult
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -60,7 +67,6 @@ def load_plugins() -> None:
     _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
     add_graphing_plugins(load_graphing_plugins())
-    parse_perfometers(perfometer_info)
 
 
 def _register_pre_21_plugin_api() -> None:
@@ -173,9 +179,25 @@ age_human_readable = cmk.utils.render.approx_age
 
 
 def translate_perf_data(
-    perf_data_string: str, check_command: str | None = None
+    perf_data_string: str,
+    *,
+    config: Config,
+    check_command: str | None = None,
 ) -> Mapping[str, TranslatedMetric]:
-    perf_data, check_command = parse_perf_data(perf_data_string, check_command)
+    perf_data, check_command = parse_perf_data(
+        perf_data_string,
+        check_command,
+        config=config,
+    )
+    return translate_metrics(perf_data, check_command)
+
+
+def translate_perf_data_from_performance_data_livestatus_column(
+    perf_data_mapping: Mapping[str, float], check_command: str | None = None
+) -> Mapping[str, TranslatedMetric]:
+    perf_data, check_command = parse_perf_data_from_performance_data_livestatus_column(
+        perf_data_mapping, check_command
+    )
     return translate_metrics(perf_data, check_command)
 
 
@@ -191,13 +213,18 @@ def translate_perf_data(
 
 
 # This page is called for the popup of the graph icon of hosts/services.
-def page_host_service_graph_popup() -> None:
-    """Registered as `host_service_graph_popup`."""
-    host_service_graph_popup_cmk(
-        SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
-        HostName(request.get_str_input_mandatory("host_name")),
-        ServiceName(request.get_str_input_mandatory("service")),
-    )
+class PageHostServiceGraphPopup(cmk.gui.pages.Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "host_service_graph_popup"
+
+    def page(self) -> PageResult:  # pylint: disable=useless-return
+        host_service_graph_popup_cmk(
+            SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
+            request.get_validated_type_input_mandatory(HostName, "host_name"),
+            ServiceName(request.get_str_input_mandatory("service")),
+        )
+        return None  # for mypy
 
 
 # .
@@ -213,10 +240,14 @@ def page_host_service_graph_popup() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def page_graph_dashlet() -> None:
-    """Registered as `graph_dashlet`."""
-    host_service_graph_dashlet_cmk(
-        parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
-        GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
-        graph_display_id=request.get_str_input_mandatory("id"),
-    )
+class PageGraphDashlet(cmk.gui.pages.Page):
+    @classmethod
+    def ident(cls) -> str:
+        return "graph_dashlet"
+
+    def page(self) -> cmk.gui.pages.PageResult:
+        return host_service_graph_dashlet_cmk(
+            parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
+            GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
+            graph_display_id=request.get_str_input_mandatory("id"),
+        )

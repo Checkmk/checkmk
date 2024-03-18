@@ -156,7 +156,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    windows/OpenHardwareMonitorLib.dll \
 	    windows/OpenHardwareMonitorCLI.exe \
 	    windows/robotmk_ext.exe \
-	    windows/check-sql.exe \
+	    windows/mk-sql.exe \
 	    windows/windows_files_hashes.txt \
 	    windows/mrpe \
 	    windows/plugins \
@@ -182,7 +182,12 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	grep -Rl 'check_mk.make: do-not-deploy' $(CHECK_MK_INSTALL_DIR)/lib/python3/ | xargs rm
 
 	# After installing all python modules, ensure they are compiled
-	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk
+	# compile pyc files explicitly selecting `checked-hash` invalidation mode
+	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall \
+	    -f \
+	    --invalidation-mode=checked-hash \
+	    -s "$(CHECK_MK_INSTALL_DIR)/lib/python3" \
+	    "$(CHECK_MK_INSTALL_DIR)/lib/python3/cmk"
 
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib
@@ -191,6 +196,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk
 	$(LN) -sf python3/cmk $(CHECK_MK_INSTALL_DIR)/skel/local/lib/check_mk
 	# Create the plugin namespaces
+	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk_addons/plugins
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/base/plugins/agent_based
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/plugins
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/special_agents
@@ -232,6 +238,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/01_create-sample-config.py $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/post-create/02_cmk-compute-api-spec $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/post-create/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/01_mkp-disable-outdated $(CHECK_MK_INSTALL_DIR)/lib/omd/scripts/update-pre-hooks/

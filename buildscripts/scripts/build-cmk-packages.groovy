@@ -22,6 +22,7 @@ def main() {
         "DEPLOY_TO_WEBSITE_ONLY",
         "DOCKER_TAG_BUILD",
         "FAKE_WINDOWS_ARTIFACTS",
+        "USE_CASE",
     ]);
 
     check_environment_variables([
@@ -46,22 +47,25 @@ def main() {
     /// used on different nodes
     def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
 
+    def bazel_log_prefix = "bazel_log_"
+
     def (jenkins_base_folder, use_case, omd_env_vars, upload_path_suffix) = (
         env.JOB_BASE_NAME == "testbuild" ? [
             new File(currentBuild.fullProjectName).parent,
             "testbuild",
             /// Testbuilds: Do not use our build cache to ensure we catch build related
             /// issues. And disable python optimizations to execute the build faster
-            ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS="],
+            ["NEXUS_BUILD_CACHE_URL="],
             "testbuild/",
         ] : [
             new File(new File(currentBuild.fullProjectName).parent).parent,
-            VERSION == "daily" ? "daily" : "release",
+            VERSION == "daily" ? params.USE_CASE : "release",
             [],
             "",
         ]);
 
-    def distros = versioning.configured_or_overridden_distros(edition, OVERRIDE_DISTROS, use_case);
+    def all_distros = versioning.get_distros(override: "all");
+    def distros = versioning.get_distros(edition: edition, use_case: use_case, override: OVERRIDE_DISTROS);
 
     def deploy_to_website = !params.SKIP_DEPLOY_TO_WEBSITE && !jenkins_base_folder.startsWith("Testing");
 
@@ -84,6 +88,7 @@ def main() {
         """
         |===== CONFIGURATION ===============================
         |distros:.................. │${distros}│
+        |all_distros:.............. │${all_distros}│
         |deploy_to_website:........ │${deploy_to_website}│
         |branch_name:.............. │${branch_name}│
         |cmk_version:.............. │${cmk_version}│
@@ -124,6 +129,7 @@ def main() {
     stage("Cleanup") {
         cleanup_directory("${WORKSPACE}/versions");
         cleanup_directory("${WORKSPACE}/agents");
+        sh("rm -rf ${WORKSPACE}/${bazel_log_prefix}*");
         docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
             dir("${checkout_dir}") {
                 sh("make buildclean");
@@ -229,8 +235,17 @@ def main() {
     }
 
     shout("packages");
-    def package_builds = distros.collectEntries { distro ->
+    def package_builds = all_distros.collectEntries { distro ->
         [("distro ${distro}") : {
+            if (! (distro in distros)) {
+                conditional_stage("${distro} initialize workspace", false) {}
+                conditional_stage("${distro} build package", false) {}
+                conditional_stage("${distro} sign package", false) {}
+                conditional_stage("${distro} test package", false) {}
+                conditional_stage("${distro} copy package", false) {}
+                conditional_stage("${distro} upload package", false) {}
+                return;
+            }
             // The following node call allocates a new workspace for each
             // DISTRO.
             //
@@ -259,13 +274,15 @@ def main() {
                         // * See CMK-12159
                         docker.image("${distro}:${docker_tag}").inside(
                                 /* groovylint-disable LineLength */
-                                "${mount_reference_repo_dir} --ulimit nofile=16384:32768 -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
+                                "${mount_reference_repo_dir} --ulimit nofile=16384:32768 -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro} --init") {
                                 /* groovylint-enable LineLength */
                             stage("${distro} initialize workspace") {
                                 cleanup_directory("${WORKSPACE}/versions");
                                 sh("rm -rf ${distro_dir}");
                                 sh("rsync -a ${checkout_dir}/ ${distro_dir}/");
+                                sh("rm -rf ${distro_dir}/bazel_execution_log*");
                             }
+
                             stage("${distro} build package") {
                                 withCredentials([
                                     usernamePassword(
@@ -281,6 +298,12 @@ def main() {
                                     versioning.print_image_tag();
                                     build_package(distro_package_type(distro), distro_dir, omd_env_vars);
                                 }
+
+                                sh("""echo ==== ${distro} =====
+                                ps wauxw
+                                """)
+
+                                try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix)
                             }
                         }
                     }
@@ -320,6 +343,10 @@ def main() {
     }
     parallel package_builds;
 
+    stage("Plot cache hits") {
+        try_plot_cache_hits(bazel_log_prefix, distros);
+    }
+
     conditional_stage('Upload', !jenkins_base_folder.startsWith("Testing")) {
         currentBuild.description += (
             """ |${currentBuild.description}<br>
@@ -345,6 +372,60 @@ def main() {
                 }
             }
         }
+    }
+}
+
+def try_parse_bazel_execution_log(distro, distro_dir, bazel_log_prefix) {
+    try {
+        dir("${distro_dir}") {
+            def summary_file="${distro_dir}/${bazel_log_prefix}execution_summary_${distro}.json";
+            def cache_hits_file="${distro_dir}/${bazel_log_prefix}cache_hits_${distro}.csv";
+            sh("""scripts/run-pipenv run \
+            buildscripts/scripts/bazel_execution_log_parser.py \
+            --execution_logs_root "${distro_dir}" \
+            --bazel_log_file_pattern "bazel_execution_log*" \
+            --summary_file "${summary_file}" \
+            --cachehit_csv "${cache_hits_file}" \
+            --distro "${distro}"
+        """);
+            stash(name: "${bazel_log_prefix}${distro}", includes: "${bazel_log_prefix}*")
+        }
+    } catch (Exception e) {
+        print("Failed to parse bazel execution logs: ${e}");
+    }
+}
+
+def try_plot_cache_hits(bazel_log_prefix, distros) {
+    try {
+        distros.each { distro ->
+            try {
+                print("Unstashing for distro ${distro}...")
+                unstash(name: "${bazel_log_prefix}${distro}")
+            }
+            catch (Exception e) {
+                print("No stash for ${distro}")
+            }
+        }
+
+        plot csvFileName: 'bazel_cache_hits.csv',
+            csvSeries:
+                distros.collect {[file: "${bazel_log_prefix}cache_hits_${it}.csv"]},
+            description: 'Bazel Remote Cache Analysis',
+            group: 'Bazel Cache',
+            numBuilds: '30',
+            propertiesSeries: [[file: '', label: '']],
+            style: 'line',
+            title: 'Cache hits',
+            yaxis: 'Cache hits in percent',
+            yaxisMaximum: '100',
+            yaxisMinimum: '0'
+
+        archiveArtifacts(
+           artifacts: "${bazel_log_prefix}*",
+        )
+    }
+    catch (Exception e) {
+        print("Failed to plot cache hits: ${e}");
     }
 }
 
@@ -409,7 +490,12 @@ def create_and_upload_bom(workspace, branch_version, version) {
         stage('Create BOM') {
             on_dry_run_omit(LONG_RUNNING, "Create BOM") {
                 scanner_image.inside("-v ${checkout_dir}:${checkout_dir}") {
-                    sh("python3 -m dependencyscanner  --stage prod --outfile '${bom_path}' '${checkout_dir}'");
+                    sh("""python3 -m dependencyscanner \
+                    --stage prod \
+                    --outfile '${bom_path}' \
+                    --research_file researched_master.yml \
+                    --license_cache license_cache_master.json \
+                    '${checkout_dir}'""");
                 }
             }
         }
@@ -456,7 +542,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def patch_file = "unsign-msi.patch";
         def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe";
         def ext_files = "robotmk_ext.exe";
-        def check_sql = "check-sql.exe";
+        def mk_sql = "mk-sql.exe";
         def hashes_file = "windows_files_hashes.txt";
         def artifacts = [
             "check_mk_agent-64.exe",
@@ -467,7 +553,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
             "python-3.cab",
             "${ohm_files}",
             "${ext_files}",
-            "${check_sql}",
+            "${mk_sql}",
             "${hashes_file}",
         ].join(",");
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1 import Title
 
 # .
 #   .--for imports---------------------------------------------------------.
@@ -338,6 +338,7 @@ AWSEC2InstTypes = [
     "m6i.8xlarge",
     "m6i.large",
     "m6i.xlarge",
+    "m7i.large",
     "mac1.metal",
     "p2.16xlarge",
     "p2.8xlarge",
@@ -505,12 +506,12 @@ AWSEC2InstTypes = [
 ]
 
 AWSEC2InstFamilies = {
-    "f": Localizable("Running On-Demand F instances"),
-    "g": Localizable("Running On-Demand G instances"),
-    "inf": Localizable("Running On-Demand Inf instances"),
-    "p": Localizable("Running On-Demand P instances"),
-    "x": Localizable("Running On-Demand X instances"),
-    "_": Localizable("Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances"),
+    "f": Title("Running On-Demand F instances"),
+    "g": Title("Running On-Demand G instances"),
+    "inf": Title("Running On-Demand Inf instances"),
+    "p": Title("Running On-Demand P instances"),
+    "x": Title("Running On-Demand X instances"),
+    "_": Title("Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances"),
 }
 
 # (On-Demand, Reserved, Spot)

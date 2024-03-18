@@ -19,12 +19,11 @@ from cmk.server_side_calls.v1 import (
 def generate_prism_command(
     params: Mapping[str, object], host_config: HostConfig, _http_proxy: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
-    if not host_config.resolved_address:
-        raise ValueError("No IP address available")
+    assert isinstance(params["password"], tuple)  # We're lazy with the parsing...
 
     args: list[str | Secret] = [
         "--server",
-        host_config.resolved_address,
+        host_config.primary_ip_config.address,
         "--username",
         str(params["username"]),
         "--password",
@@ -34,7 +33,7 @@ def generate_prism_command(
     if "port" in params:
         args.extend(["--port", str(params["port"])])
 
-    yield SpecialAgentCommand(args)
+    yield SpecialAgentCommand(command_arguments=args)
 
 
 special_agent_prism = SpecialAgentConfig(

@@ -37,7 +37,7 @@ class TestListOf:
             (2, "zwei"),
         ]
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         with request_var(
             l_count="6",
             l_indexof_3="1",

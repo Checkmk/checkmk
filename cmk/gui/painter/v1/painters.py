@@ -8,6 +8,7 @@ from cmk.gui.i18n import _l
 from cmk.gui.type_defs import Rows
 from cmk.gui.view_utils import CellSpec
 
+from ...config import active_config
 from .helpers import (
     get_perfdata_nth_value,
     get_single_int_column,
@@ -70,7 +71,7 @@ def _get_perfdata_with_staleness_callable(
         return [
             StrWithStaleness(
                 get_perfdata_nth_value(row, value_number),
-                is_stale(row),
+                is_stale(row, config=active_config),
             )
             for row in rows
         ]

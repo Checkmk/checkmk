@@ -18,13 +18,16 @@ import cmk.gui.plugins.views
 import cmk.gui.views
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, RowTable
+from cmk.gui.display_options import display_options
 from cmk.gui.exporter import exporter_registry
-from cmk.gui.http import request
+from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import base as painter_base
 from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
-from cmk.gui.painter_options import painter_option_registry
+from cmk.gui.painter.v0.helpers import RenderLink
+from cmk.gui.painter_options import painter_option_registry, PainterOptions
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
+from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.views import command
@@ -37,7 +40,7 @@ from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
 
 
-def test_registered_painter_options() -> None:
+def test_registered_painter_options(request_context: None) -> None:
     expected = [
         "aggr_expand",
         "aggr_onlyproblems",
@@ -320,7 +323,17 @@ def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
-    painters: list[Painter] = [painter_class() for painter_class in painter_registry.values()]
+    painters: list[Painter] = [
+        painter_class(
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+        )
+        for painter_class in painter_registry.values()
+    ]
     painters_and_cells: list[tuple[Painter, Cell]] = [
         (painter, Cell(ColumnSpec(name=painter.ident), None)) for painter in painters
     ]
@@ -358,7 +371,14 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
         },
     )
 
-    painter = painter_base.painter_registry["abc"]()
+    painter = painter_base.painter_registry["abc"](
+        user=user,
+        config=active_config,
+        request=request,
+        painter_options=PainterOptions.get_instance(),
+        theme=theme,
+        url_renderer=RenderLink(request, response, display_options),
+    )
     dummy_cell = Cell(ColumnSpec(name=painter.ident), None)
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"
@@ -553,6 +573,10 @@ def test_registered_display_hints() -> None:
         ".hardware.cpu.logical_cpus",
         ".hardware.cpu.max_speed",
         ".hardware.cpu.model",
+        ".hardware.cpu.nodes:",
+        ".hardware.cpu.nodes:*.cores",
+        ".hardware.cpu.nodes:*.model",
+        ".hardware.cpu.nodes:*.node_name",
         ".hardware.cpu.sharing_mode",
         ".hardware.cpu.smt_threads",
         ".hardware.cpu.threads",
@@ -614,6 +638,12 @@ def test_registered_display_hints() -> None:
         ".hardware.system.model",
         ".hardware.system.model_name",
         ".hardware.system.node_name",
+        ".hardware.system.nodes:",
+        ".hardware.system.nodes:*.id",
+        ".hardware.system.nodes:*.model",
+        ".hardware.system.nodes:*.node_name",
+        ".hardware.system.nodes:*.product",
+        ".hardware.system.nodes:*.serial",
         ".hardware.system.partition_name",
         ".hardware.system.pki_appliance_version",
         ".hardware.system.product",
@@ -1035,6 +1065,15 @@ def test_registered_display_hints() -> None:
         ".software.applications.oracle.tablespaces:*.type",
         ".software.applications.oracle.tablespaces:*.used_size",
         ".software.applications.oracle.tablespaces:*.version",
+        ".software.applications.synthetic_monitoring.",
+        ".software.applications.synthetic_monitoring.tests:",
+        ".software.applications.synthetic_monitoring.tests:*.application",
+        ".software.applications.synthetic_monitoring.tests:*.bottom_level_suite_name",
+        ".software.applications.synthetic_monitoring.tests:*.suite_id",
+        ".software.applications.synthetic_monitoring.tests:*.test_name",
+        ".software.applications.synthetic_monitoring.tests:*.test_item",
+        ".software.applications.synthetic_monitoring.tests:*.top_level_suite_name",
+        ".software.applications.synthetic_monitoring.tests:*.variant",
         ".software.applications.vmwareesx.",
         ".software.applications.vmwareesx:*.",
         ".software.applications.vmwareesx:*.clusters.",

@@ -44,8 +44,8 @@ from cmk.agent_based.v2 import (
     OIDEnd,
     SNMPTree,
     startswith,
+    StringTable,
 )
-from cmk.agent_based.v2.type_defs import StringTable
 
 
 def inventory_hpux_snmp_cpu(info):

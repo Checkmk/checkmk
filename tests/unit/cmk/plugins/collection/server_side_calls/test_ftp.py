@@ -8,22 +8,11 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.ftp import active_check_ftp
-from cmk.server_side_calls.v1 import (
-    ActiveCheckCommand,
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="0.0.0.1"),
 )
 
 
@@ -90,5 +79,4 @@ def test_check_ftp_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[ActiveCheckCommand]
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = active_check_ftp.parameter_parser(params)
-    assert list(active_check_ftp.commands_function(parsed_params, HOST_CONFIG, {})) == expected_args
+    assert list(active_check_ftp(params, HOST_CONFIG, {})) == expected_args

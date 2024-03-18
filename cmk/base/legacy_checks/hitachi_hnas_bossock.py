@@ -8,8 +8,7 @@ from collections.abc import Iterable, Mapping
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.hitachi_hnas import DETECT
 
 DiscoveryResult = Iterable[tuple[str, Mapping]]

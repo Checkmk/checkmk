@@ -175,7 +175,6 @@ def register(
     config_variable_registry.register(ConfigVariableWATOActivateChangesCommentMode)
     config_variable_registry.register(ConfigVariableWATOActivationMethod)
     config_variable_registry.register(ConfigVariableWATOHideFilenames)
-    config_variable_registry.register(ConfigVariableWATOUploadInsecureSnapshots)
     config_variable_registry.register(ConfigVariableWATOHideHosttags)
     config_variable_registry.register(ConfigVariableWATOHideVarnames)
     config_variable_registry.register(ConfigVariableHideHelpInLists)
@@ -847,6 +846,20 @@ class ConfigVariableExperimentalFeatures(ConfigVariable):
                     Checkbox(
                         title=_("Inject JavaScript profiling code"),
                         default_value=False,
+                    ),
+                ),
+                (
+                    "load_frontend_vue",
+                    DropdownChoice(
+                        title=_("Inject frontend_vue files via vite client"),
+                        help=_(
+                            "If you activate this and you don't have the vite dev server running "
+                            "you may not be able to deactivate this option via UI, so be careful!"
+                        ),
+                        choices=[
+                            ("static_files", "Load JavaScript from shipped, static files"),
+                            ("inject", "Inject vite client to enable auto hot reloading"),
+                        ],
                     ),
                 ),
             ],
@@ -2254,29 +2267,6 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
         )
 
 
-class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupWATO
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainGUI
-
-    def ident(self) -> str:
-        return "wato_upload_insecure_snapshots"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("Allow upload of insecure Setup snapshots"),
-            label=_("upload insecure snapshots"),
-            help=_(
-                "When enabled, insecure snapshots are allowed. Please keep in mind that the upload "
-                "of unverified snapshots represents a security risk, since the content of a snapshot is executed "
-                "during runtime. Any manipulations in the content - either willingly or unwillingly (XSS attack) "
-                "- pose a serious security risk."
-            ),
-        )
-
-
 class ConfigVariableWATOHideHosttags(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
@@ -2492,7 +2482,6 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
         return Optional(
             valuespec=Integer(
                 label=_("Number of logon failures to lock the account"),
-                default_value=10,
                 minvalue=1,
             ),
             title=_("Lock user accounts after N logon failures"),
@@ -3732,7 +3721,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
         ),
     ]
 
-    if user.may("wato.add_or_modify_executables"):
+    if user.may("wato.add_or_modify_executables") and edition() is not Edition.CSE:
         choices.append(("custom", _("Use a custom check plugin..."), PluginCommandLine()))
 
     return choices
@@ -4195,23 +4184,40 @@ IgnoredChecks = HostRulespec(
 )
 
 
+def _from_periodic_service_discovery_config(values: dict) -> dict:
+    if not values:
+        return values
+
+    if "severity_changed_service_labels" not in values:
+        values["severity_changed_service_labels"] = 0
+
+    if "severity_changed_service_params" in values:
+        values.pop("severity_changed_service_params")
+
+    return values
+
+
 def _valuespec_periodic_discovery():
-    return Alternative(
-        title=_("Periodic service discovery"),
-        default_value={
-            "check_interval": 2 * 60,
-            "severity_unmonitored": 1,
-            "severity_vanished": 0,
-            "severity_new_host_label": 1,
-        },
-        elements=[
-            FixedValue(
-                value=None,
-                title=_("Do not perform periodic service discovery check"),
-                totext="",
-            ),
-            _vs_periodic_discovery(),
-        ],
+    return Transform(
+        valuespec=Alternative(
+            title=_("Periodic service discovery"),
+            default_value={
+                "check_interval": 2 * 60,
+                "severity_unmonitored": 1,
+                "severity_changed_service_labels": 0,
+                "severity_vanished": 0,
+                "severity_new_host_label": 1,
+            },
+            elements=[
+                FixedValue(
+                    value=None,
+                    title=_("Do not perform periodic service discovery check"),
+                    totext="",
+                ),
+                _vs_periodic_discovery(),
+            ],
+        ),
+        to_valuespec=_from_periodic_service_discovery_config,
     )
 
 
@@ -4269,6 +4275,22 @@ def _vs_periodic_discovery() -> Dictionary:
                 ),
             ),
             (
+                "severity_changed_service_labels",
+                DropdownChoice(
+                    title=_("Severity of services with changed labels"),
+                    help=_(
+                        "Please select which alarm state the service discovery check services "
+                        "shall assume in case that labels of services have changed."
+                    ),
+                    choices=[
+                        (0, _("OK - do not alert, just display")),
+                        (1, _("Warning")),
+                        (2, _("Critical")),
+                        (3, _("Unknown")),
+                    ],
+                ),
+            ),
+            (
                 "severity_new_host_label",
                 DropdownChoice(
                     title=_("Severity of new host labels"),
@@ -4306,16 +4328,21 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                     valuespec=CascadingDropdown(
                         title=_("Parameters"),
                         sorted=False,
+                        default_value=(
+                            "custom",
+                            {
+                                "add_new_services": False,
+                                "remove_vanished_services": False,
+                                "update_changed_service_labels": False,
+                                "update_host_labels": True,
+                            },
+                        ),
                         choices=[
                             (
                                 "update_everything",
                                 _("Refresh all services and host labels (tabula rasa)"),
                                 FixedValue(
-                                    value={
-                                        "add_new_services": True,
-                                        "remove_vanished_services": True,
-                                        "update_host_labels": True,
-                                    },
+                                    value=None,
                                     title=_("Refresh all services and host labels (tabula rasa)"),
                                     totext="",
                                 ),
@@ -4336,6 +4363,13 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                                             "remove_vanished_services",
                                             Checkbox(
                                                 label=_("Remove vanished services"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "update_changed_service_labels",
+                                            Checkbox(
+                                                label=_("Update service labels"),
                                                 default_value=False,
                                             ),
                                         ),
@@ -4459,6 +4493,60 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                                             ),
                                         ),
                                     ),
+                                    (
+                                        "changed_service_labels_whitelist",
+                                        ListOfStrings(
+                                            title=_("Change labels only for matching services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "change labels of services automatically. "
+                                                "If you set both this and 'Don't change labels for matching services', "
+                                                "both rules have to apply for a service's labels to be changed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_labels_blacklist",
+                                        ListOfStrings(
+                                            title=_("Don't change labels for matching services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "prevent changing of labels for services automatically. "
+                                                "If you set both this and 'Change labels only for matching services', "
+                                                "both rules have to apply for a service's labels to be changed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_params_whitelist",
+                                        ListOfStrings(
+                                            title=_("Change parameters only for matching services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "change parameters of services automatically. "
+                                                "If you set both this and 'Don't change parameters for matching services', "
+                                                "both rules have to apply for a service's parameters to be changed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_params_blacklist",
+                                        ListOfStrings(
+                                            title=_(
+                                                "Don't change parameters for matching services"
+                                            ),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "prevent changing of parameters for services automatically. "
+                                                "If you set both this and 'Change parameters only for matching services', "
+                                                "both rules have to apply for a service's parameters to be changed."
+                                            ),
+                                        ),
+                                    ),
                                 ],
                             ),
                         ),
@@ -4483,6 +4571,7 @@ def _migrate_automatic_rediscover_parameters(
             {
                 "add_new_services": True,
                 "remove_vanished_services": False,
+                "update_changed_service_labels": False,
                 "update_host_labels": True,
             },
         )
@@ -4493,6 +4582,7 @@ def _migrate_automatic_rediscover_parameters(
             {
                 "add_new_services": False,
                 "remove_vanished_services": True,
+                "update_changed_service_labels": False,
                 "update_host_labels": False,
             },
         )
@@ -4503,6 +4593,7 @@ def _migrate_automatic_rediscover_parameters(
             {
                 "add_new_services": True,
                 "remove_vanished_services": True,
+                "update_changed_service_labels": False,
                 "update_host_labels": True,
             },
         )
@@ -4513,6 +4604,7 @@ def _migrate_automatic_rediscover_parameters(
             {
                 "add_new_services": True,
                 "remove_vanished_services": True,
+                "update_changed_service_labels": True,
                 "update_host_labels": True,
             },
         )
@@ -5292,22 +5384,21 @@ SnmpCharacterEncodings = HostRulespec(
 
 def _help_enable_snmpv2c():
     return _(
-        "Checkmk defaults to SNMPv1 in order to support as many devices as "
-        "possible. In practice, most SNMP devices also support SNMPv2c, which "
-        "has two advantages: it supports 64 bit counters and bulk walk, which "
-        "saves CPU and network resources and is more performant. Use this rule "
-        "to configure SNMPv2c for as many devices as possible. However, please be "
-        "aware that some devices that support SNMPv2c may be buggy. In such cases, "
-        'you may want to try disabling bulk walk using the ruleset "Disable '
-        'bulk walks on SNMPv2c/v3".'
-    )
+        "Use this rule to enable the use of SNMP verison 2c instead of the default SNMP version 1."
+        " Checkmk defaults to SNMPv1 in order to support as many devices as possible."
+        " In practice, most SNMP devices also support SNMPv2c, which has two advantages:"
+        ' It supports 64 bit counters and the "bulkwalk" query, which is faster and saves CPU and network resources.'
+        " Use this rule to configure SNMPv2c for as many devices as possible."
+        ' However, please be aware some buggy devices do not properly support "bulkwalk" queries.'
+        ' For those you may want to try disabling them using the ruleset "%s".'
+    ) % _("Disable bulkwalks")
 
 
 BulkwalkHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_enable_snmpv2c,
     name="bulkwalk_hosts",
-    title=lambda: _("Enable SNMPv2c and bulk walk for hosts"),
+    title=lambda: _("Enable SNMPv2c for hosts"),
 )
 
 
@@ -5315,7 +5406,7 @@ ManagementBulkwalkHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_enable_snmpv2c,
     name="management_bulkwalk_hosts",
-    title=lambda: _("Enable SNMPv2c and bulk walk for management boards"),
+    title=lambda: _("Enable SNMPv2c for management boards"),
 )
 
 
@@ -5362,11 +5453,10 @@ SnmpWithoutSysDescr = BinaryHostRulespec(
 
 def _help_snmpv2c_without_bulkwalk():
     return _(
-        "Some SNMPv2c/v3 capable devices are buggy when being queried using "
-        "bulk walks. In such cases, you can disable bulk walks with this "
-        "ruleset. Please be aware that you should only do this if no other "
-        "approach is feasible (e.g. limiting the bulk size), as bulk walks are "
-        "much more performant."
+        'Some SNMPv2c/v3 capable devices do not properly support "bulkwalk" queries.'
+        ' For those you can disable "bulkwalk" queries with this ruleset.'
+        " Please be aware that you should only do this if no other approach is feasible"
+        " (e.g. limiting the bulk size), as bulk walks are much more performant."
     )
 
 
@@ -5374,7 +5464,7 @@ Snmpv2CHosts = BinaryHostRulespec(
     group=RulespecGroupAgentSNMP,
     help_func=_help_snmpv2c_without_bulkwalk,
     name="snmpv2c_hosts",
-    title=lambda: _("Disable bulk walks on SNMPv2c/v3"),
+    title=lambda: _("Disable bulkwalks"),
 )
 
 

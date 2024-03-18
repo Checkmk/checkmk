@@ -24,11 +24,7 @@ class AnnotatedPath(NamedTuple):
 class Paths(NamedTuple):
     """filesystem paths related to the event console"""
 
-    main_config_file: AnnotatedPath
-    config_dir: AnnotatedPath
     active_config_dir: AnnotatedPath
-    rule_pack_dir: AnnotatedPath
-    mkp_rule_pack_dir: AnnotatedPath
     unix_socket: AnnotatedPath
     event_socket: AnnotatedPath
     event_pipe: AnnotatedPath
@@ -46,21 +42,13 @@ class Paths(NamedTuple):
     mongodb_config_file: AnnotatedPath
 
 
-def _default_paths(omd_root: Path, default_config_dir: Path) -> Paths:
+def create_paths(omd_root: Path) -> Paths:
     """Returns all default filesystem paths related to the event console"""
     run_dir = omd_root / "tmp/run/mkeventd"
     state_dir = omd_root / "var/mkeventd"
     return Paths(
-        main_config_file=AnnotatedPath("main configuration", default_config_dir / "mkeventd.mk"),
-        config_dir=AnnotatedPath("configuration directory", default_config_dir / "mkeventd.d"),
         active_config_dir=AnnotatedPath(
             "active configuration directory", state_dir / "active_config"
-        ),
-        rule_pack_dir=AnnotatedPath(
-            "rule pack directory", default_config_dir / "mkeventd.d" / "wato"
-        ),
-        mkp_rule_pack_dir=AnnotatedPath(
-            "rule pack export directory", default_config_dir / "mkeventd.d" / "mkp" / "rule_packs"
         ),
         unix_socket=AnnotatedPath("Unix socket", run_dir / "status"),
         event_socket=AnnotatedPath("event socket", run_dir / "eventsocket"),
@@ -239,9 +227,9 @@ class Settings(NamedTuple):
     options: Options
 
 
-def settings(version: str, omd_root: Path, default_config_dir: Path, argv: list[str]) -> Settings:
+def create_settings(version: str, omd_root: Path, argv: list[str]) -> Settings:
     """Returns all event console settings"""
-    paths = _default_paths(omd_root, default_config_dir)
+    paths = create_paths(omd_root)
     port_numbers = _default_port_numbers()
     parser = ECArgumentParser(Path(argv[0]).name, version, paths, port_numbers)
     args = parser.parse_args(argv[1:])
@@ -263,10 +251,9 @@ if __name__ == "__main__":
     import cmk.utils.version as cmk_version
 
     print(
-        settings(
+        create_settings(
             str(cmk_version.__version__),
             cmk.utils.paths.omd_root,
-            Path(cmk.utils.paths.default_config_dir),
             sys.argv,
         )
     )

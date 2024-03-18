@@ -19,11 +19,9 @@ from cmk.utils.exceptions import (
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackTimeSettings
 
-from cmk.fetchers import FetcherType
-
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.exitspec import ExitSpec
-from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import HostSections
 
 __all__ = ["summarize", "SummarizerFunction"]

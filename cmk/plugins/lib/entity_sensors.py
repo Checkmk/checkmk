@@ -6,8 +6,7 @@
 from collections.abc import Container, Sequence
 from typing import NamedTuple
 
-from cmk.agent_based.v2 import State
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import State, StringTable
 
 OIDSysDescr = ".1.3.6.1.2.1.1.1.0"
 

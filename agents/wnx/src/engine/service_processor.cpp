@@ -549,9 +549,9 @@ bool FindProcessByPid(uint32_t pid) {
     wtools::ScanProcessList([&found, pid](const PROCESSENTRY32 &entry) {
         if (entry.th32ProcessID == pid) {
             found = true;
-            return false;
+            return wtools::ScanAction::terminate;
         }
-        return true;
+        return wtools::ScanAction::advance;
     });
     return found;
 }
@@ -702,6 +702,24 @@ world::ExternalPort::IoParam AsIoParam(
                    : std::optional<uint32_t>{},
     };
 }
+
+void PrepareTempFolder() {
+    try {
+        const auto path = wtools::MakeSafeTempFolder(wtools::safe_temp_sub_dir);
+        if (path.has_value()) {
+            for (const auto &entry :
+                 std::filesystem::directory_iterator(*path)) {
+                fs::remove_all(entry.path());
+            }
+            XLOG::l.i("Temp folder: {}", path);
+        } else {
+            XLOG::l("Failed to create temp folder");
+        }
+
+    } catch (const std::exception &e) {
+        XLOG::l("Failed to create temp folder: {}", e.what());
+    }
+}
 }  // namespace
 
 /// <HOSTING THREAD>
@@ -740,6 +758,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         if (is_service) {
             mc_.InstallDefault(cfg::modules::InstallMode::normal);
             install::ClearPostInstallFlag();
+            PrepareTempFolder();
         } else {
             mc_.LoadDefault();
         }

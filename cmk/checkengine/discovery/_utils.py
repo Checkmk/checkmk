@@ -7,14 +7,21 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import json
 from collections.abc import Hashable, Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Final, Generic, Literal, Protocol, Self, TypeVar
 
 __all__ = ["DiscoveryMode", "QualifiedDiscovery", "DiscoverySettings"]
 
 DiscoveryVsSetting = dict[
-    Literal["add_new_services", "remove_vanished_services", "update_host_labels"], bool
+    Literal[
+        "add_new_services",
+        "remove_vanished_services",
+        "update_host_labels",
+        "update_changed_service_labels",
+    ],
+    bool,
 ]
 DiscoveryVsSettings = tuple[Literal["update_everything", "custom"], DiscoveryVsSetting]
 
@@ -24,8 +31,8 @@ class DiscoverySettings:
     update_host_labels: bool
     add_new_services: bool
     remove_vanished_services: bool
-    # this will be separated into service labels and parameters at some point
-    update_changed_services: bool
+    update_changed_service_labels: bool
+    update_changed_service_parameters: bool
 
     @classmethod
     def from_discovery_mode(cls, mode: DiscoveryMode) -> Self:
@@ -34,7 +41,8 @@ class DiscoverySettings:
             add_new_services=mode
             in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
             remove_vanished_services=mode in (DiscoveryMode.REMOVE, DiscoveryMode.FIXALL),
-            update_changed_services=mode is DiscoveryMode.REFRESH,
+            update_changed_service_labels=mode is DiscoveryMode.REFRESH,
+            update_changed_service_parameters=mode is DiscoveryMode.REFRESH,
         )
 
     @classmethod
@@ -44,7 +52,8 @@ class DiscoverySettings:
                 update_host_labels=False,
                 add_new_services=False,
                 remove_vanished_services=False,
-                update_changed_services=False,
+                update_changed_service_labels=False,
+                update_changed_service_parameters=False,
             )
 
         if "update_everything" in mode:
@@ -52,15 +61,24 @@ class DiscoverySettings:
                 update_host_labels=True,
                 add_new_services=True,
                 remove_vanished_services=True,
-                update_changed_services=True,
+                update_changed_service_labels=True,
+                update_changed_service_parameters=False,
             )
 
         return cls(
             update_host_labels=mode[1].get("update_host_labels", False),
             add_new_services=mode[1].get("add_new_services", False),
             remove_vanished_services=mode[1].get("remove_vanished_services", False),
-            update_changed_services=False,
+            update_changed_service_labels=mode[1].get("update_changed_service_labels", False),
+            update_changed_service_parameters=False,
         )
+
+    def to_json(self) -> str:
+        return json.dumps(asdict(self))
+
+    @classmethod
+    def from_json(cls, mode: str) -> DiscoverySettings:
+        return cls(**json.loads(mode))
 
 
 class DiscoveryMode(enum.Enum):

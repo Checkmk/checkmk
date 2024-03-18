@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 from pytest import MonkeyPatch
 
 import cmk.utils.log
@@ -78,7 +78,7 @@ def _get_only_raw_data_element(
     host_name: HostName,
     time_setting: piggyback.PiggybackTimeSettings,
 ) -> piggyback.PiggybackRawDataInfo:
-    with freeze_time(_FREEZE_DATETIME):
+    with time_machine.travel(_FREEZE_DATETIME):
         raw_data_sequence = piggyback.get_piggyback_raw_data(host_name, time_setting)
     assert len(raw_data_sequence) == 1
     return raw_data_sequence[0]
@@ -263,7 +263,7 @@ def test_has_piggyback_raw_data() -> None:
     time_settings: piggyback.PiggybackTimeSettings = [
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
     ]
-    with freeze_time(_FREEZE_DATETIME):
+    with time_machine.travel(_FREEZE_DATETIME):
         assert piggyback.has_piggyback_raw_data(_TEST_HOST_NAME, time_settings) is True
 
 
@@ -307,7 +307,7 @@ def test_store_piggyback_raw_data_second_source() -> None:
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
     ]
 
-    with freeze_time(_FREEZE_DATETIME):
+    with time_machine.travel(_FREEZE_DATETIME):
         piggyback.store_piggyback_raw_data(
             HostName("source2"),
             {

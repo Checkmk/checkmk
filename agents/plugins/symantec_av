@@ -9,9 +9,37 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
+
+# check that no users other than root that can change the file
+root_owned() {
+    read -r permissions _ owner group _ <<EOF
+$1
+EOF
+
+    group_write_perm=$(echo "$permissions" | cut -c 6)
+    other_write_perm=$(echo "$permissions" | cut -c 9)
+
+    # the file is either owned by root user and root group and other users don't
+    # have write permissions
+    if [ "$owner" = "root" ] && [ "$group" = "root" ] && [ "$other_write_perm" = "-" ]; then
+        true
+        return
+    fi
+
+    # or it's is owned by root and neither the group nor other users have write permissions
+    if [ "$owner" = "root" ] && [ "$group_write_perm" = "-" ] && [ "$other_write_perm" = "-" ]; then
+        true
+        return
+    fi
+
+    false
+}
 
 if [ -f /opt/Symantec/symantec_antivirus/sav ]; then
+
+    root_owned "$(ls -l /opt/Symantec/symantec_antivirus/sav)" || exit
+
     echo "<<<symantec_av_updates>>>"
     /opt/Symantec/symantec_antivirus/sav info -d
 

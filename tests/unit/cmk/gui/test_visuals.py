@@ -222,6 +222,7 @@ def test_get_merged_context(
     infos: SingleInfos | None,
     context_vis: VisualContext,
     expected_context: VisualContext,
+    request_context: None,
 ) -> None:
     for key, val in uri_vars:
         request.set_var(key, val)
@@ -286,6 +287,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "invoratablespace",
         "invkernelconfig",
         "invswpac",
+        "invsyntheticmonitoring",
     ]
     if cmk_version.edition() is cmk_version.Edition.CME:
         expected += ["customer"]

@@ -152,6 +152,11 @@ div#service_container {
 
       &.plugins {
         min-width: 200px;
+
+        p {
+          margin-top: 5px;
+          margin-bottom: 5px;
+        }
       }
 
       a {
@@ -194,6 +199,36 @@ div#service_container {
 
   div.message_container > h2 {
     margin: 0 25px 0px;
+  }
+}
+
+div.warning_container {
+  margin: $spacing;
+  display: inline-flex;
+  border-radius: $theme-border-radius $spacing $spacing $theme-border-radius;
+  align-items: center;
+  background: $color-state-1-background;
+  width: calc(100% - 2 * $spacing);
+  div.content {
+    margin: 0;
+    background-color: $headline-color;
+    border-radius: 0 $theme-border-radius $theme-border-radius 0;
+  }
+  &::before {
+    display: inline-block;
+    padding: 5px;
+    content: url("images/icon_problem.svg");
+  }
+}
+
+div#notification_analysis_container {
+  @include message-container-mixin;
+  margin-top: $spacing;
+  div.message_container {
+    margin: 5px 25px 0px;
+    h2 {
+      margin: 0;
+    }
   }
 }
 
@@ -821,6 +856,10 @@ div.filter_buttons {
 
 .wato table.activation {
   td.details {
+    div.warning {
+      background: $color-state-1-background;
+    }
+
     div.warning,
     div.error {
       margin: 2px 0;

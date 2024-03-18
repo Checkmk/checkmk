@@ -43,16 +43,6 @@ class ComparableVersion(Protocol):
         ...
 
 
-def _get_permissions(part: PackagePart, rel_path: Path) -> int:
-    """Determine permissions by the first matching beginning of 'path'"""
-
-    # I guess this shows that nagios plugins ought to be their own package part.
-    # For now I prefer to stay compatible.
-    if part is PackagePart.LIB and rel_path.parts[:2] == ("nagios", "plugins"):
-        return 0o755
-    return permissions(part)
-
-
 def format_file_name(package_id: PackageID) -> str:
     return f"{package_id.name}-{package_id.version}.mkp"
 
@@ -442,8 +432,10 @@ def _conflicting_files(
 def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
     for part, filenames in manifest.files.items():
         for filename in filenames:
+            if (desired_perm := permissions(part, filename)) is None:
+                continue
+
             path = path_config.get_path(part) / filename
-            desired_perm = _get_permissions(part, filename)
             has_perm = path.stat().st_mode & 0o7777
             if has_perm != desired_perm:
                 _logger.debug(

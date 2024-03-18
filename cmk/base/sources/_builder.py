@@ -10,9 +10,9 @@
 import logging
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
+from pathlib import Path
 from typing import assert_never, Final
 
-import cmk.utils.password_store
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -20,27 +20,25 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawDataElem
 
-from cmk.fetchers import FetcherType, SNMPFetcher
-from cmk.fetchers.cache import SectionStore
+from cmk.fetchers import SNMPFetcher
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import (
     AgentRawDataSectionElem,
     NO_SELECTION,
     Parser,
     SectionNameCollection,
+    SectionStore,
     SNMPParser,
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-import cmk.base.server_side_calls as server_side_calls
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.server_side_calls import load_special_agents
 
 from ._api import Source
 from ._sources import (
@@ -65,6 +63,7 @@ def make_parser(
     *,
     # Always from NO_SELECTION.
     checking_sections: frozenset[SectionName],
+    section_cache_path: Path,
     keep_outdated: bool,
     logger: logging.Logger,
 ) -> Parser:
@@ -77,6 +76,7 @@ def make_parser(
                     source.hostname,
                     fetcher_type=source.fetcher_type,
                     ident=source.ident,
+                    section_cache_path=section_cache_path,
                 ),
                 logger=logger,
             ),
@@ -92,7 +92,10 @@ def make_parser(
         hostname,
         SectionStore[Sequence[AgentRawDataSectionElem]](
             make_persisted_section_dir(
-                source.hostname, fetcher_type=source.fetcher_type, ident=source.ident
+                source.hostname,
+                fetcher_type=source.fetcher_type,
+                ident=source.ident,
+                section_cache_path=section_cache_path,
             ),
             logger=logger,
         ),
@@ -116,6 +119,14 @@ class _Builder:
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
         snmp_backend_override: SNMPBackendEnum | None,
+        oid_cache_dir: Path,
+        stored_walk_path: Path,
+        walk_cache_path: Path,
+        file_cache_path: Path,
+        tcp_cache_path: Path,
+        cas_dir: Path,
+        ca_store: Path,
+        site_crt: Path,
     ) -> None:
         super().__init__()
         assert not is_cluster
@@ -130,22 +141,25 @@ class _Builder:
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
         self.snmp_backend_override: Final = snmp_backend_override
+        self._cds: Final = config_cache.computed_datasources(host_name)
+        self._oid_cache_dir: Final = oid_cache_dir
+        self._stored_walk_path: Final = stored_walk_path
+        self._walk_cache_path: Final = walk_cache_path
+        self._file_cache_path: Final = file_cache_path
+        self._tcp_cache_path: Final = tcp_cache_path
+        self.cas_dir: Final = cas_dir
+        self.ca_store: Final = ca_store
+        self.site_crt: Final = site_crt
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
 
-        if self.config_cache.is_tcp_host(self.host_name) and not self._elems:
+        if self._cds.is_tcp and not self._elems:
             # User wants a special agent, a CheckMK agent, or both.  But
             # we didn't configure anything.  Let's report that.
             self._add(MissingSourceSource(self.host_name, self.ipaddress, "API/agent"))
 
-        if not (
-            (
-                self.config_cache.is_snmp_host(self.host_name)
-                and not self.config_cache.is_tcp_host(self.host_name)
-            )
-            or "no-piggyback" in self.config_cache.tag_list(self.host_name)
-        ):
+        if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
             self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
 
         self._initialize_snmp_based()
@@ -164,31 +178,19 @@ class _Builder:
 
     def _initialize_agent_based(self) -> None:
         def make_special_agents() -> Iterable[Source]:
-            for agentname, params in self.config_cache.special_agents(self.host_name):
-                host_attrs = self.config_cache.get_host_attributes(self.host_name)
-                macros = self.config_cache.get_host_macros_from_attributes(
-                    self.host_name, host_attrs
-                )
-                special_agent = server_side_calls.SpecialAgent(
-                    load_special_agents()[1],
-                    config.special_agent_info,
+            for agentname, agent_data in self.config_cache.special_agent_command_lines(
+                self.host_name, self.ipaddress
+            ):
+                yield SpecialAgentSource(
+                    self.config_cache,
                     self.host_name,
                     self.ipaddress,
-                    server_side_calls.get_host_config(self.host_name, self.config_cache),
-                    host_attrs,
-                    cmk.utils.password_store.load(),
-                    macros=macros,
+                    max_age=self.max_age_agent,
+                    agent_name=agentname,
+                    cmdline=agent_data.cmdline,
+                    stdin=agent_data.stdin,
+                    file_cache_path=self._file_cache_path,
                 )
-                for agent_data in special_agent.iter_special_agent_commands(agentname, params):
-                    yield SpecialAgentSource(
-                        self.config_cache,
-                        self.host_name,
-                        self.ipaddress,
-                        max_age=self.max_age_agent,
-                        agent_name=agentname,
-                        cmdline=agent_data.cmdline,
-                        stdin=agent_data.stdin,
-                    )
 
         special_agents = tuple(make_special_agents())
 
@@ -200,16 +202,16 @@ class _Builder:
         # API, no Checkmk agent      True                False            True
         # no API, no Checkmk agent   False               False            False
 
-        if self.config_cache.is_all_agents_host(self.host_name):
+        if self._cds.is_all_agents_host:
             self._add_agent()
             for elem in special_agents:
                 self._add(elem)
 
-        elif self.config_cache.is_all_special_agents_host(self.host_name):
+        elif self._cds.is_all_special_agents_host:
             for elem in special_agents:
                 self._add(elem)
 
-        elif self.config_cache.is_tcp_host(self.host_name):
+        elif self._cds.is_tcp:
             if special_agents:
                 self._add(special_agents[0])
             else:
@@ -232,7 +234,7 @@ class _Builder:
             SNMPFetcher.plugin_store = make_plugin_store()
 
     def _initialize_snmp_based(self) -> None:
-        if not self.config_cache.is_snmp_host(self.host_name):
+        if not self._cds.is_snmp:
             return
 
         self._initialize_snmp_plugin_store()
@@ -253,6 +255,10 @@ class _Builder:
                     on_scan_error=self.on_scan_error,
                     selected_sections=self.selected_sections,
                     backend_override=self.snmp_backend_override,
+                    oid_cache_dir=self._oid_cache_dir,
+                    stored_walk_path=self._stored_walk_path,
+                    walk_cache_path=self._walk_cache_path,
+                    file_cache_path=self._file_cache_path,
                 )
             )
             return
@@ -273,6 +279,10 @@ class _Builder:
                 on_scan_error=self.on_scan_error,
                 selected_sections=self.selected_sections,
                 backend_override=self.snmp_backend_override,
+                oid_cache_dir=self._oid_cache_dir,
+                stored_walk_path=self._stored_walk_path,
+                walk_cache_path=self._walk_cache_path,
+                file_cache_path=self._file_cache_path,
             )
         )
 
@@ -301,12 +311,20 @@ class _Builder:
                         on_scan_error=self.on_scan_error,
                         selected_sections=self.selected_sections,
                         backend_override=self.snmp_backend_override,
+                        oid_cache_dir=self._oid_cache_dir,
+                        stored_walk_path=self._stored_walk_path,
+                        walk_cache_path=self._walk_cache_path,
+                        file_cache_path=self._file_cache_path,
                     )
                 )
             case "ipmi":
                 self._add(
                     IPMISource(
-                        self.config_cache, self.host_name, ip_address, max_age=self.max_age_agent
+                        self.config_cache,
+                        self.host_name,
+                        ip_address,
+                        max_age=self.max_age_agent,
+                        file_cache_path=self._file_cache_path,
                     )
                 )
             case _:
@@ -323,6 +341,7 @@ class _Builder:
                     self.host_name,
                     self.ipaddress,
                     max_age=self.max_age_agent,
+                    file_cache_path=self._tcp_cache_path,
                 )
             )
             return
@@ -337,6 +356,7 @@ class _Builder:
                         self.host_name,
                         self.ipaddress,
                         max_age=MaxAge(interval, interval, interval),
+                        file_cache_path=self._file_cache_path,
                     )
                 )
             case HostAgentConnectionMode.PULL:
@@ -351,6 +371,10 @@ class _Builder:
                         self.host_name,
                         self.ipaddress,
                         max_age=self.max_age_agent,
+                        file_cache_path=self._tcp_cache_path,
+                        cas_dir=self.cas_dir,
+                        ca_store=self.ca_store,
+                        site_crt=self.site_crt,
                     )
                 )
             case _:
@@ -371,6 +395,14 @@ def make_sources(
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
     snmp_backend_override: SNMPBackendEnum | None,
+    oid_cache_dir: Path,
+    stored_walk_path: Path,
+    walk_cache_path: Path,
+    file_cache_path: Path,
+    tcp_cache_path: Path,
+    cas_dir: Path,
+    ca_store: Path,
+    site_crt: Path,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if is_cluster:
@@ -406,4 +438,12 @@ def make_sources(
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),
         snmp_backend_override=snmp_backend_override,
+        oid_cache_dir=oid_cache_dir,
+        stored_walk_path=stored_walk_path,
+        walk_cache_path=walk_cache_path,
+        file_cache_path=file_cache_path,
+        tcp_cache_path=tcp_cache_path,
+        cas_dir=cas_dir,
+        ca_store=ca_store,
+        site_crt=site_crt,
     ).sources

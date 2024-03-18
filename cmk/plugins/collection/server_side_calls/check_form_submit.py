@@ -6,7 +6,13 @@ from typing import Iterator, Mapping
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, HTTPProxy
+from cmk.server_side_calls.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    HostConfig,
+    HTTPProxy,
+    replace_macros,
+)
 
 
 class UrlParams(BaseModel):
@@ -33,17 +39,15 @@ def commands_function(
     args = []
 
     if details.hosts:
-        args += [*details.hosts]
-    elif host_config.resolved_address:
-        args += [host_config.resolved_address]
+        args += [*[replace_macros(h, host_config.macros) for h in details.hosts]]
     else:
-        raise ValueError("No IP address available")
+        args += [host_config.primary_ip_config.address]
 
     if details.port:
         args += ["--port", str(details.port)]
 
     if details.uri:
-        args += ["--uri", details.uri]
+        args += ["--uri", replace_macros(details.uri, host_config.macros)]
 
     if details.tls_configuration:
         args += ["--tls_configuration", details.tls_configuration]
@@ -55,7 +59,8 @@ def commands_function(
         args += ["--expected_regex", details.expect_regex]
 
     if details.form_name:
-        args += ["--form_name", details.form_name]
+        form_name = replace_macros(details.form_name, host_config.macros)
+        args += ["--form_name", form_name]
 
     if details.query:
         args += ["--query_params", details.query]
@@ -63,9 +68,8 @@ def commands_function(
     if details.num_succeeded:
         args += ["--levels", *(str(e) for e in details.num_succeeded)]
 
-    yield ActiveCheckCommand(
-        service_description=f"FORM {details.form_name}", command_arguments=args
-    )
+    name = replace_macros(params.name, host_config.macros)
+    yield ActiveCheckCommand(service_description=f"FORM {name}", command_arguments=args)
 
 
 active_check_config = ActiveCheckConfig(

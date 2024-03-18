@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import type_defs
+from cmk.agent_based.v2 import StringTable
 
 # TODO
 # Use 'status-numeric' instead of 'status' field regardless of language.
@@ -14,7 +14,7 @@ Object = dict[str, str]
 Section = dict[str, Object]
 
 
-def _parse_hp_msa_objects(string_table: type_defs.StringTable) -> Section:
+def _parse_hp_msa_objects(string_table: StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(_parse_hp_msa_objects([
@@ -58,7 +58,7 @@ def _get_hp_msa_object_item(
     return item.rsplit("_", 1)[-1].strip()
 
 
-def parse_hp_msa(string_table: type_defs.StringTable) -> Section:
+def parse_hp_msa(string_table: StringTable) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_hp_msa([

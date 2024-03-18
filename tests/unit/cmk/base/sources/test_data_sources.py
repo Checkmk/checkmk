@@ -65,12 +65,12 @@ def make_scenario(hostname, tags):
         (
             "snmp-host",
             {"agent": "no-agent", "snmp_ds": "snmp-v2"},
-            [SNMPFetcher],
+            [SNMPFetcher, PiggybackFetcher],
         ),
         (
             "snmp-host",
             {"agent": "no-agent", "snmp_ds": "snmp-v1"},
-            [SNMPFetcher],
+            [SNMPFetcher, PiggybackFetcher],
         ),
         (
             "dual-host",
@@ -94,6 +94,7 @@ def test_host_config_creates_passing_source_sources(
     hostname,
     tags,
     sources,
+    tmp_path,
 ):
     ts = make_scenario(hostname, tags)
     config_cache = ts.apply(monkeypatch)
@@ -110,5 +111,13 @@ def test_host_config_creates_passing_source_sources(
             file_cache_options=FileCacheOptions(),
             file_cache_max_age=MaxAge.zero(),
             snmp_backend_override=None,
+            oid_cache_dir=tmp_path,
+            stored_walk_path=tmp_path,
+            walk_cache_path=tmp_path,
+            file_cache_path=tmp_path,
+            tcp_cache_path=tmp_path,
+            cas_dir=tmp_path,
+            ca_store=tmp_path,
+            site_crt=tmp_path,
         )
     ] == sources

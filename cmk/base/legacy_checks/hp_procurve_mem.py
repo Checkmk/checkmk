@@ -8,8 +8,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import any_of, contains, SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
 
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should

@@ -1,6 +1,8 @@
 [tool.ruff]
 src = ["cmk", "tests"]
-target-version = "py311"
+target-version = "py312"
+
+[tool.ruff.lint]
 ignore = [
     "E402", # module level import not on top of the file
     "E501", # line too long, 100s of fails. Fixable.
@@ -37,11 +39,14 @@ select = ["E", "F", "YTT"]
 unfixable = [
     "F401", # pylint: disable=unused-import. Clean up by hand.
 ]
-[per-file-ignores]
+
+[tool.ruff.lint.per-file-ignores]
 "cmk/gui/config.py" = ["F403", "F405"]
-[flake8-annotations]
+
+[tool.ruff.lint.flake8-annotations]
 suppress-dummy-args = true
-[mccabe]
+
+[tool.ruff.lint.mccabe]
 max-complexity = 15
 
 
@@ -140,14 +145,17 @@ module = [
     "cmk.gui.wato.pages.bulk_edit",
     "cmk.gui.wato.pages.folders",
     "cmk.gui.wato.pages.parentscan",
+    "cmk.gui.watolib.auth_php",
     "cmk.gui.watolib.bulk_discovery",
     "cmk.gui.watolib.config_sync",
     "cmk.gui.watolib.main_menu",
     "cmk.gui.watolib.network_scan",
+    "cmk.gui.watolib.registration",
     "cmk.notification_plugins.*",
     "cmk.update_config.*",
     "cmk.utils.crypto.*",
     "cmk.utils.livestatus_helpers.*",
+    "tests.composition.*",
     "tests.gui_e2e.*",
     "tests.testlib.*",
     "tests.unit.cmk.ec.*",
@@ -176,7 +184,10 @@ testpaths = ["tests"]
 # successful, etc. etc. We might reconsinder lowering the live log level when we
 # have cleaned up things...
 addopts = "--log-cli-level=CRITICAL --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
-markers = ["checks: Run all existing test cases for checks."]
+markers = [
+    "checks: Run all existing test cases for checks.",
+    "slow: Run tests which take relatively larger time to execute.",
+]
 # See: https://docs.python.org/3/library/warnings.html#the-warnings-filter
 filterwarnings = [
     # Breaking change, only in new major version, see https://github.com/marshmallow-code/apispec/pull/759

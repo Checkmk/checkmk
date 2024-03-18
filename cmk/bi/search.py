@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from marshmallow import fields, post_dump, pre_dump, pre_load
+from marshmallow import fields, post_dump, post_load, pre_dump, pre_load
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.hostaddress import HostName
@@ -70,14 +70,18 @@ class LabelGroupConditionSchema(Schema):
     label_group = ReqList(fields.Nested(LabelConditionSchema))
 
     @pre_dump
-    def _pre_dump(self, data: tuple[AndOrNotLiteral, LabelGroup], **kwargs: Any) -> dict[str, Any]:
+    def _pre_dump(
+        self, data: dict[str, Any] | tuple[AndOrNotLiteral, LabelGroup], **kwargs: Any
+    ) -> dict[str, Any]:
+        if isinstance(data, dict):
+            return data
         return {
             "operator": data[0],
             "label_group": [{"operator": op, "label": val} for op, val in data[1]],
         }
 
-    @post_dump
-    def _post_dump(self, data: dict[str, Any], **kwargs: Any) -> tuple[AndOrNotLiteral, LabelGroup]:
+    @post_load
+    def _post_load(self, data: dict[str, Any], **kwargs: Any) -> tuple[AndOrNotLiteral, LabelGroup]:
         op: AndOrNotLiteral = data["operator"]
         label_group: LabelGroup = [
             (label_condition["operator"], label_condition["label"])

@@ -486,14 +486,15 @@ void ParsedQuery::parseLocaltimeLine(std::string_view line) {
 
 void ParsedQuery::parseOrderBy(std::string_view line,
                                const ColumnCreator &make_column) {
+    // Use this header as: `OderBy: COLUMN_NAME [asc,desc]`
     auto column = mk::next_argument(line);
     mk::skip_whitespace(line);
-    auto ascending = [line]() {
+    auto direction = [line]() {
         if (line.empty() || line == "asc"sv) {
-            return true;
+            return OrderByDirection::ascending;
         }
         if (line == "desc"sv) {
-            return false;
+            return OrderByDirection::descending;
         }
         throw std::runtime_error("expected 'asc' or 'desc'");
     };
@@ -502,8 +503,8 @@ void ParsedQuery::parseOrderBy(std::string_view line,
         dot == std::string_view::npos
             ? OrderBy{.column = make_column(column),
                       .key = {},
-                      .ascending = ascending()}
+                      .direction = direction()}
             : OrderBy{.column = make_column(column.substr(0, dot)),
                       .key = column.substr(dot + 1),
-                      .ascending = ascending()});
+                      .direction = direction()});
 }

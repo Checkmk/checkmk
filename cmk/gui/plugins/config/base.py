@@ -89,7 +89,7 @@ class CREConfig:
     screenshotmode: bool = False
     profile: bool | str = False
     users: list[str] = field(default_factory=list)
-    admin_users: list[str] = field(default_factory=lambda: ["omdadmin", "cmkadmin"])
+    admin_users: list[str] = field(default_factory=lambda: ["cmkadmin"])
     guest_users: list[str] = field(default_factory=list)
     default_user_role: str = "user"
     user_online_maxage: int = 30  # seconds
@@ -277,7 +277,7 @@ class CREConfig:
     hide_languages: list[str] = field(default_factory=list)
 
     # Enable/Disable choice of community translated languages
-    enable_community_translations: bool = False
+    enable_community_translations: bool = True
 
     # Default timestamp format to be used in multisite
     default_ts_format: str = "mixed"
@@ -322,7 +322,14 @@ class CREConfig:
     # Bulk discovery default options
     bulk_discovery_default_settings: dict[str, Any] = field(
         default_factory=lambda: {
-            "mode": "new",
+            "mode": (
+                "custom",
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
+            ),
             "selection": (True, False, False, False),
             "performance": (True, 10),
             "error_handling": True,
@@ -525,7 +532,6 @@ class CREConfig:
     wato_enabled: bool = True
     wato_hide_filenames: bool = True
     wato_hide_hosttags: bool = False
-    wato_upload_insecure_snapshots: bool = False
     wato_hide_varnames: bool = True
     wato_hide_help_in_lists: bool = True
     wato_max_snapshots: int = 50

@@ -9,15 +9,15 @@
 import base64
 from os import environ
 
-from cmk.notification_plugins.utils import post_request, process_by_result_map
+from cmk.notification_plugins.utils import post_request, process_by_matchers
 from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
 from cmk.notification_plugins.utils import StateInfo
 
-RESULT_MAP = {
-    (200, 299): StateInfo(0, "json", "eventId"),
-    (300, 499): StateInfo(2, "str", "Error"),
-    (500, 599): StateInfo(1, "str", "Server-Error"),
-}
+RESULT_MATCHER = [
+    ((200, 299), StateInfo(0, "json", "eventId")),
+    ((300, 499), StateInfo(2, "str", "Error")),
+    ((500, 599), StateInfo(1, "str", "Server-Error")),
+]
 
 
 def _signl4_url() -> str:
@@ -88,10 +88,10 @@ def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
 
 
 def main() -> int:
-    return process_by_result_map(
+    return process_by_matchers(
         response=post_request(
             message_constructor=_signl4_msg,
             url=_signl4_url(),
         ),
-        result_map=RESULT_MAP,
+        matchers=RESULT_MATCHER,
     )

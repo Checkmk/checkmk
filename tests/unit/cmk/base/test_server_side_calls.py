@@ -4,42 +4,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import NamedTuple
 
 import pytest
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils import password_store
 from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.config as base_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.server_side_calls import (
-    _get_host_address_config,
     ActiveCheck,
-    ActiveCheckError,
     ActiveServiceData,
-    ActiveServiceDescription,
-    commandline_arguments,
-    get_host_config,
-    HostAddressConfiguration,
-    InfoFunc,
     SpecialAgent,
-    SpecialAgentCommandLine,
     SpecialAgentInfoFunctionResult,
 )
+from cmk.base.server_side_calls._active_checks import (
+    _get_host_address_config,
+    ActiveServiceDescription,
+    HostAddressConfiguration,
+)
+from cmk.base.server_side_calls._commons import ActiveCheckError, commandline_arguments, InfoFunc
+from cmk.base.server_side_calls._special_agents import SpecialAgentCommandLine
 
+from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
     IPAddressFamily,
-    NetworkAddressConfig,
+    IPv4Config,
+    IPv6Config,
     PlainTextSecret,
-    ResolvedIPAddressFamily,
     SpecialAgentCommand,
     SpecialAgentConfig,
     StoredSecret,
@@ -57,55 +57,78 @@ HOST_ATTRS = {
 
 HOST_CONFIG = HostConfig(
     name="hostname",
-    resolved_address="0.0.0.1",
     alias="host_alias",
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.DUAL_STACK,
-        ipv4_address="0.0.0.2",
-        ipv6_address="fe80::240",
-        additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-        additional_ipv6_addresses=[
-            "fe80::241",
-            "fe80::242",
-            "fe80::243",
-        ],
+    ipv4_config=IPv4Config(
+        address="0.0.0.1",
+        additional_addresses=["0.0.0.4", "0.0.0.5"],
     ),
+    ipv6_config=IPv6Config(
+        address="fe80::240",
+        additional_addresses=["fe80::241", "fe80::242", "fe80::243"],
+    ),
+    primary_family=IPAddressFamily.IPV4,
+)
+
+HOST_CONFIG_WITH_MACROS = HostConfig(
+    name="hostname",
+    alias="host_alias",
+    ipv4_config=IPv4Config(
+        address="0.0.0.1",
+        additional_addresses=["0.0.0.4", "0.0.0.5"],
+    ),
+    ipv6_config=IPv6Config(
+        address="fe80::240",
+        additional_addresses=["fe80::241", "fe80::242", "fe80::243"],
+    ),
+    primary_family=IPAddressFamily.IPV4,
+    macros={
+        "$HOSTNAME$": "test_host",
+        "$HOSTADDRESS$": "0.0.0.0",
+        "$HOSTALIAS$": "myalias",
+        "<IP>": "127.0.0.1",
+        "<HOST>": "test_host",
+    },
 )
 
 
-class ConfigCacheMock:
-    def __init__(
-        self,
-        alias: str,
-        additional_ipaddresses: tuple[Sequence[str], Sequence[str]],
-        tags: Mapping[str, str],
-        labels: Mapping[str, str],
-    ):
-        self._tags = tags
-        self._labels = labels
-        self._alias = alias
-        self._additional_ipaddresses = additional_ipaddresses
-
-    @staticmethod
-    def address_family(host_name: str) -> ip_lookup.AddressFamily:
-        host_family_mapping = {"host_name": ip_lookup.AddressFamily.DUAL_STACK}
-        return host_family_mapping[host_name]
-
-    def additional_ipaddresses(self, _host_name: str) -> tuple[Sequence[str], Sequence[str]]:
-        return self._additional_ipaddresses
-
-    def alias(self, _host_name: str) -> str:
-        return self._alias
-
-    def labels(self, _host_name: str) -> Mapping[str, str]:
-        return self._labels
-
-    def tags(self, _host_name: str) -> Mapping[str, str]:
-        return self._tags
+@contextmanager
+def _with_file(path: Path) -> Iterator[None]:
+    present = path.exists()
+    path.touch()
+    try:
+        yield
+    finally:
+        if not present:
+            path.unlink(missing_ok=True)
 
 
-class TestSpecialAgentLegacyConfiguration(NamedTuple):
+def make_config_cache_mock(
+    *,
+    additional_ipaddresses: tuple[Sequence[str], Sequence[str]],
+    ip_stack: ip_lookup.AddressFamily,
+    family: socket.AddressFamily,
+) -> object:
+    class ConfigCacheMock:
+        @staticmethod
+        def address_family(host_name: str) -> ip_lookup.AddressFamily:
+            return ip_stack
+
+        @staticmethod
+        def default_address_family(host_name: str) -> socket.AddressFamily:
+            return family
+
+        @staticmethod
+        def additional_ipaddresses(host_name: str) -> tuple[Sequence[str], Sequence[str]]:
+            return additional_ipaddresses
+
+        @staticmethod
+        def alias(host_name: str) -> str:
+            return "host alias"
+
+    return ConfigCacheMock()
+
+
+class SpecialAgentLegacyConfiguration(NamedTuple):
     args: Sequence[str]
     stdin: str | None
 
@@ -115,7 +138,7 @@ def argument_function_with_exception(*args, **kwargs):
 
 
 @pytest.mark.parametrize(
-    "active_check_rules, legacy_active_check_plugins, active_check_plugins, hostname, host_attrs, macros, stored_passwords, expected_result",
+    "active_check_rules, legacy_active_check_plugins, active_check_plugins, hostname, host_attrs, host_config, stored_passwords, expected_result",
     [
         pytest.param(
             [
@@ -131,7 +154,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -166,7 +189,7 @@ def argument_function_with_exception(*args, **kwargs):
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -195,7 +218,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {"$HOSTALIAS$": "myalias"},
+            HOST_CONFIG_WITH_MACROS,
             {},
             [
                 ActiveServiceData(
@@ -230,7 +253,7 @@ def argument_function_with_exception(*args, **kwargs):
                 "_ADDRESS_FAMILY": "4",
                 "display_name": "my_host",
             },
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -263,7 +286,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -305,7 +328,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -326,20 +349,30 @@ def argument_function_with_exception(*args, **kwargs):
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
                         [
-                            ActiveCheckCommand("First service", ["--arg1", "argument1"]),
-                            ActiveCheckCommand("Second service", ["--arg2", "argument2"]),
+                            ActiveCheckCommand(
+                                service_description="First service",
+                                command_arguments=["--arg1", "argument1"],
+                            ),
+                            ActiveCheckCommand(
+                                service_description="Second service",
+                                command_arguments=["--arg2", "argument2"],
+                            ),
                         ]
                     ),
                 )
             },
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -371,7 +404,7 @@ def argument_function_with_exception(*args, **kwargs):
             {},
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [],
             id="unimplemented_check_plugin",
@@ -382,14 +415,21 @@ def argument_function_with_exception(*args, **kwargs):
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
-                                "My service",
-                                ["--password", PlainTextSecret("mypassword")],
+                                service_description="My service",
+                                command_arguments=[
+                                    "--password",
+                                    PlainTextSecret(value="mypassword"),
+                                ],
                             ),
                         ]
                     ),
@@ -397,7 +437,7 @@ def argument_function_with_exception(*args, **kwargs):
             },
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
@@ -418,14 +458,21 @@ def argument_function_with_exception(*args, **kwargs):
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
-                                "My service",
-                                ["--password", StoredSecret("stored_password")],
+                                service_description="My service",
+                                command_arguments=[
+                                    "--password",
+                                    StoredSecret(value="stored_password"),
+                                ],
                             ),
                         ]
                     ),
@@ -433,7 +480,7 @@ def argument_function_with_exception(*args, **kwargs):
             },
             HostName("myhost"),
             HOST_ATTRS,
-            {},
+            HOST_CONFIG,
             {"stored_password": "mypassword"},
             [
                 ActiveServiceData(
@@ -453,10 +500,10 @@ def argument_function_with_exception(*args, **kwargs):
 def test_get_active_service_data(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
-    macros: Mapping[str, str],
+    host_config: HostConfig,
     stored_passwords: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
 ) -> None:
@@ -464,10 +511,11 @@ def test_get_active_service_data(
         active_check_plugins,
         legacy_active_check_plugins,
         hostname,
-        HOST_CONFIG,
+        host_config,
         host_attrs,
-        translations={},
-        macros=macros,
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
         stored_passwords=stored_passwords,
     )
 
@@ -484,7 +532,9 @@ def test_get_active_service_data(
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=argument_function_with_exception,
@@ -510,7 +560,7 @@ def test_get_active_service_data(
 def test_test_get_active_service_data_crash(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -526,7 +576,10 @@ def test_test_get_active_service_data_crash(
         HostName("test_host"),
         HOST_CONFIG,
         HOST_ATTRS,
-        translations={},
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     list(active_check.get_active_service_data(active_check_rules))
@@ -547,7 +600,9 @@ def test_test_get_active_service_data_crash(
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    "cmk.plugins.my_stuff.server_side_calls", "active_check_my_active_check"
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=argument_function_with_exception,
@@ -573,7 +628,7 @@ def test_test_get_active_service_data_crash(
 def test_test_get_active_service_data_crash_with_debug(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
@@ -588,7 +643,10 @@ def test_test_get_active_service_data_crash_with_debug(
         HostName("test_host"),
         HOST_CONFIG,
         HOST_ATTRS,
-        translations={},
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     with pytest.raises(
@@ -642,14 +700,21 @@ def test_test_get_active_service_data_crash_with_debug(
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
-                                "My service",
-                                ["--password", StoredSecret("stored_password")],
+                                service_description="My service",
+                                command_arguments=[
+                                    "--password",
+                                    StoredSecret(value="stored_password"),
+                                ],
                             ),
                         ]
                     ),
@@ -687,7 +752,7 @@ def test_test_get_active_service_data_crash_with_debug(
 def test_get_active_service_data_warnings(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
@@ -700,7 +765,10 @@ def test_get_active_service_data_warnings(
         hostname,
         HOST_CONFIG,
         host_attrs,
-        translations={},
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     services = list(active_check_config.get_active_service_data(active_check_rules))
@@ -806,14 +874,18 @@ def test_get_active_service_data_warnings(
             ],
             {},
             {
-                "my_active_check": ActiveCheckConfig(
+                PluginLocation(
+                    # this is not what we'd expect here, but we need a module that we know to be importable.
+                    f"{__name__}",
+                    "active_check_my_active_check",
+                ): ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
                     commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
-                                "My service",
-                                ["--password", StoredSecret("mypassword")],
+                                service_description="My service",
+                                command_arguments=["--password", StoredSecret(value="mypassword")],
                             ),
                         ]
                     ),
@@ -862,7 +934,7 @@ def test_get_active_service_data_warnings(
 def test_get_active_service_descriptions(
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
-    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceDescription],
@@ -873,7 +945,10 @@ def test_get_active_service_descriptions(
         hostname,
         HOST_CONFIG,
         host_attrs,
-        translations={},
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
@@ -911,7 +986,15 @@ def test_get_active_service_descriptions_warnings(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     active_check_config = ActiveCheck(
-        {}, legacy_active_check_plugins, hostname, HOST_CONFIG, host_attrs, translations={}
+        {},
+        legacy_active_check_plugins,
+        hostname,
+        HOST_CONFIG,
+        host_attrs,
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
+        stored_passwords={},
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
@@ -958,52 +1041,158 @@ def test_get_host_address_config(
     assert host_config == expected_result
 
 
-def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
-    config_cache = ConfigCacheMock(
-        "alias",
-        ([], [HostAddress("fe80::241"), HostAddress("fe80::242"), HostAddress("fe80::243")]),
-        {"tag1": "value1", "tag2": "value2"},
-        {"label1": "value1", "label2": "value2"},
+def mock_ip_address_of(
+    config_cache: base_config.ConfigCache,
+    host_name: HostName,
+    family: socket.AddressFamily | ip_lookup.AddressFamily,
+) -> HostAddress | None:
+    if family == socket.AF_INET:
+        return HostAddress("0.0.0.1")
+
+    return HostAddress("::1")
+
+
+def test_get_host_config_macros_stringified() -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([], []),
+        ip_stack=ip_lookup.AddressFamily.NO_IP,
+        family=socket.AddressFamily.AF_INET,
     )
 
-    monkeypatch.setattr(base_config, "ConfigCache", ConfigCacheMock)
-    monkeypatch.setattr(base_config, "ipaddresses", {"host_name": ""})
-    monkeypatch.setattr(base_config, "ipv6addresses", {"host_name": HostAddress("::1")})
-    monkeypatch.setattr(base_config, "resolve_address_family", lambda *args: socket.AF_INET6)
-    monkeypatch.setattr(cmk_version, "edition", lambda: cmk_version.Edition.CEE)
-    monkeypatch.setattr(base_config, "ip_address_of", lambda *args: HostAddress("::1"))
-    monkeypatch.setattr(
-        base_config, "get_custom_host_attributes", lambda *args: {"attr1": "value1"}
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+        {"$HOST_EC_SL$": 30},
     )
-
-    host_config = get_host_config(HostName("host_name"), config_cache)  # type: ignore[arg-type]
 
     assert host_config == HostConfig(
         name="host_name",
-        alias="alias",
-        resolved_address="::1",
-        address_config=NetworkAddressConfig(
-            ip_family=IPAddressFamily.DUAL_STACK,
-            ipv4_address=None,
-            ipv6_address="::1",
-            additional_ipv4_addresses=[],
-            additional_ipv6_addresses=["fe80::241", "fe80::242", "fe80::243"],
+        alias="host alias",
+        macros={"$HOST_EC_SL$": "30"},
+    )
+
+
+def test_get_host_config_no_ip() -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([HostAddress("ignore.v4.noip")], [HostAddress("ignore.v6.noip")]),
+        ip_stack=ip_lookup.AddressFamily.NO_IP,
+        family=socket.AddressFamily.AF_INET6,
+    )
+
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+        {},
+    )
+
+    assert host_config == HostConfig(
+        name="host_name",
+        alias="host alias",
+        primary_family=IPAddressFamily.IPV6,
+        macros={},
+    )
+
+
+def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([HostAddress("1.2.3.4")], [HostAddress("ignore.v6.noip")]),
+        ip_stack=ip_lookup.AddressFamily.IPv4,
+        family=socket.AddressFamily.AF_INET,
+    )
+
+    monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
+
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+        {},
+    )
+
+    assert host_config == HostConfig(
+        name="host_name",
+        alias="host alias",
+        ipv4_config=IPv4Config(
+            address="0.0.0.1",
+            additional_addresses=["1.2.3.4"],
         ),
-        resolved_ip_family=ResolvedIPAddressFamily.IPV6,
-        custom_attributes={"attr1": "value1"},
-        tags={"tag1": "value1", "tag2": "value2"},
-        labels={"label1": "value1", "label2": "value2"},
-        customer=None,
+        primary_family=IPAddressFamily.IPV4,
+        macros={},
+    )
+
+
+def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([HostAddress("ignore.v4.ipv6")], [HostAddress("::42")]),
+        ip_stack=ip_lookup.AddressFamily.IPv6,
+        family=socket.AddressFamily.AF_INET6,
+    )
+
+    monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
+
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+        {},
+    )
+
+    assert host_config == HostConfig(
+        name="host_name",
+        alias="host alias",
+        ipv6_config=IPv6Config(
+            address="::1",
+            additional_addresses=["::42"],
+        ),
+        primary_family=IPAddressFamily.IPV6,
+        macros={},
+    )
+
+
+def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
+    config_cache = make_config_cache_mock(
+        additional_ipaddresses=([HostAddress("2.3.4.2")], [HostAddress("::42")]),
+        ip_stack=ip_lookup.AddressFamily.DUAL_STACK,
+        family=socket.AddressFamily.AF_INET6,
+    )
+
+    monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
+
+    host_config = base_config.get_ssc_host_config(
+        HostName("host_name"),
+        config_cache,  # type: ignore[arg-type]
+        {},
+    )
+
+    assert host_config == HostConfig(
+        name="host_name",
+        alias="host alias",
+        ipv4_config=IPv4Config(
+            address="0.0.0.1",
+            additional_addresses=["2.3.4.2"],
+        ),
+        ipv6_config=IPv6Config(
+            address="::1",
+            additional_addresses=["::42"],
+        ),
+        primary_family=IPAddressFamily.IPV6,
+        macros={},
     )
 
 
 @pytest.mark.parametrize(
-    ("plugins", "legacy_plugins", "host_attrs", "stored_passwords", "expected_result"),
+    (
+        "plugins",
+        "legacy_plugins",
+        "host_attrs",
+        "host_config",
+        "stored_passwords",
+        "expected_result",
+    ),
     [
         pytest.param(
             {},
             {"test_agent": lambda a, b, c: "arg0 arg;1"},
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 arg;1", None)],
             id="legacy plugin string args",
@@ -1012,14 +1201,16 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             {},
             {"test_agent": lambda a, b, c: ["arg0", "arg;1"]},
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
             id="legacy plugin list args",
         ),
         pytest.param(
             {},
-            {"test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(["arg0"], None)},
+            {"test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(["arg0"], None)},
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0", None)],
             id="legacy plugin TestSpecialAgentConfiguration",
@@ -1027,11 +1218,12 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {
-                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
                     ["arg0", "arg;1"], None
                 )
             },
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
             id="legacy plugin TestSpecialAgentConfiguration, escaped arg",
@@ -1039,11 +1231,12 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {
-                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
                     ["list0", "list1"], None
                 )
             },
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path list0 list1", None)],
             id="legacy plugin TestSpecialAgentConfiguration, arg list",
@@ -1051,11 +1244,12 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {
-                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
                     ["arg0", "arg;1"], "stdin_blob"
                 )
             },
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", "stdin_blob")],
             id="legacy plugin with stdin, escaped arg",
@@ -1063,11 +1257,12 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         pytest.param(
             {},
             {
-                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                "test_agent": lambda a, b, c: SpecialAgentLegacyConfiguration(
                     ["list0", "list1"], "stdin_blob"
                 )
             },
             {},
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path list0 list1", "stdin_blob")],
             id="legacy plugin with stdin",
@@ -1076,13 +1271,16 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             {},
             {"test_agent": lambda a, b, c: ["-h", "$HOSTNAME$", "-a", "<IP>"]},
             {},
+            HOST_CONFIG_WITH_MACROS,
             {},
             [SpecialAgentCommandLine("agent_path -h 'test_host' -a '127.0.0.1'", None)],
             id="legacy plugin with macros",
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
@@ -1096,13 +1294,16 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg1 'arg2;1'", None)],
             id="one command, escaped arg",
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
@@ -1115,6 +1316,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {},
             [
                 SpecialAgentCommandLine("agent_path arg1 'arg2;1'", None),
@@ -1124,13 +1326,15 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(
-                                command_arguments=["--password", StoredSecret("mypassword")],
+                                command_arguments=["--password", StoredSecret(value="mypassword")],
                             ),
                         ]
                     ),
@@ -1138,19 +1342,22 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path --pwstore=2@0@mypassword --password '***'", None)],
             id="missing stored password",
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(
-                                command_arguments=["--password", StoredSecret("mypassword")],
+                                command_arguments=["--password", StoredSecret(value="mypassword")],
                             ),
                         ]
                     ),
@@ -1158,6 +1365,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {"mypassword": "123456"},
             [
                 SpecialAgentCommandLine(
@@ -1168,7 +1376,9 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
@@ -1182,6 +1392,7 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
             },
             {},
             HOST_ATTRS,
+            HOST_CONFIG,
             {"mypassword": "123456"},
             [SpecialAgentCommandLine("agent_path -h '<HOST>' -a '$HOSTADDRESS$'", None)],
             id="command with macros",
@@ -1189,9 +1400,10 @@ def test_get_host_config(monkeypatch: pytest.MonkeyPatch) -> None:
     ],
 )
 def test_iter_special_agent_commands(
-    plugins: Mapping[str, SpecialAgentConfig],
+    plugins: Mapping[PluginLocation, SpecialAgentConfig],
     legacy_plugins: Mapping[str, InfoFunc],
     host_attrs: Mapping[str, str],
+    host_config: HostConfig,
     stored_passwords: Mapping[str, str],
     expected_result: Sequence[SpecialAgentCommandLine],
     monkeypatch: pytest.MonkeyPatch,
@@ -1203,10 +1415,10 @@ def test_iter_special_agent_commands(
         legacy_plugins,
         HostName("test_host"),
         HostAddress("127.0.0.1"),
-        HOST_CONFIG,
+        host_config,
         host_attrs,
-        stored_passwords,
-        {"$HOSTNAME$": "test_host", "$HOSTADDRESS$": "0.0.0.0", "HOSTALIAS": "test alias"},
+        http_proxies={},
+        stored_passwords=stored_passwords,
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", {}))
     assert commands == expected_result
@@ -1217,7 +1429,9 @@ def test_iter_special_agent_commands(
     [
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=argument_function_with_exception,
@@ -1232,7 +1446,7 @@ def test_iter_special_agent_commands(
     ],
 )
 def test_iter_special_agent_commands_crash(
-    plugins: Mapping[str, SpecialAgentConfig],
+    plugins: Mapping[PluginLocation, SpecialAgentConfig],
     legacy_plugins: Mapping[str, InfoFunc],
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -1250,8 +1464,8 @@ def test_iter_special_agent_commands_crash(
         HostAddress("127.0.0.1"),
         HOST_CONFIG,
         HOST_ATTRS,
-        {},
-        {},
+        http_proxies={},
+        stored_passwords={},
     )
 
     list(special_agent.iter_special_agent_commands("test_agent", {}))
@@ -1268,7 +1482,9 @@ def test_iter_special_agent_commands_crash(
     [
         pytest.param(
             {
-                "test_agent": SpecialAgentConfig(
+                PluginLocation(
+                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+                ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
                     commands_function=argument_function_with_exception,
@@ -1283,7 +1499,7 @@ def test_iter_special_agent_commands_crash(
     ],
 )
 def test_iter_special_agent_commands_crash_with_debug(
-    plugins: Mapping[str, SpecialAgentConfig],
+    plugins: Mapping[PluginLocation, SpecialAgentConfig],
     legacy_plugins: Mapping[str, InfoFunc],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1300,8 +1516,8 @@ def test_iter_special_agent_commands_crash_with_debug(
         HostAddress("127.0.0.1"),
         HOST_CONFIG,
         HOST_ATTRS,
-        {},
-        {},
+        http_proxies={},
+        stored_passwords={},
     )
 
     with pytest.raises(
@@ -1311,28 +1527,40 @@ def test_iter_special_agent_commands_crash_with_debug(
         list(special_agent.iter_special_agent_commands("test_agent", {}))
 
 
-def test_make_source_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cmk.utils.paths, "agents_dir", tmp_path)
-
+def test_make_source_path() -> None:
     special_agent = SpecialAgent(
-        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), HOST_CONFIG, {}, {}, {}
+        {},
+        {},
+        HostName("test_host"),
+        HostAddress("127.0.0.1"),
+        HOST_CONFIG,
+        host_attrs={},
+        http_proxies={},
+        stored_passwords={},
     )
-    agent_path = special_agent._make_source_path("test_agent")
 
-    assert agent_path == tmp_path / "special" / "agent_test_agent"
+    shipped_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
+    with _with_file(shipped_path):
+        agent_path = special_agent._make_source_path("test_agent")
+
+    assert agent_path == shipped_path
 
 
-def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(cmk.utils.paths, "local_agents_dir", tmp_path)
-
-    (tmp_path / "special").mkdir(exist_ok=True)
-    local_agent_path = tmp_path / "special" / "agent_test_agent"
-    local_agent_path.touch()
-
+def test_make_source_path_local_agent() -> None:
     special_agent = SpecialAgent(
-        {}, {}, HostName("test_host"), HostAddress("127.0.0.1"), HOST_CONFIG, {}, {}, {}
+        {},
+        {},
+        HostName("test_host"),
+        HostAddress("127.0.0.1"),
+        HOST_CONFIG,
+        host_attrs={},
+        http_proxies={},
+        stored_passwords={},
     )
-    agent_path = special_agent._make_source_path("test_agent")
+
+    local_agent_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
+    with _with_file(local_agent_path):
+        agent_path = special_agent._make_source_path("test_agent")
 
     assert agent_path == local_agent_path
 

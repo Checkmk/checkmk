@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-TARGET_DIR="/opt"
+TARGET_DIR="${TARGET_DIR:-/opt}"
 
 VALGRIND_VERSION=3.19.0
 DIR_NAME=valgrind-${VALGRIND_VERSION}
@@ -42,4 +42,4 @@ if [ "$1" != "link-only" ]; then
 fi
 set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"
 
-test_package "valgrind --version" "^valgrind-$VALGRIND_VERSION$"
+test_package "${TARGET_DIR}/bin/valgrind --version" "^valgrind-$VALGRIND_VERSION$"

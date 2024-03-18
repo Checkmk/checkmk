@@ -5,14 +5,15 @@
 
 from collections.abc import Sequence
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import set_timezone
+import time_machine
 
 from cmk.gui.graphing._artwork import (
     _areastack,
     _compute_graph_t_axis,
+    _compute_num_labels,
     _compute_v_axis_min_max,
     _halfstep_interpolation,
     _t_axis_labels_seconds,
@@ -21,6 +22,7 @@ from cmk.gui.graphing._artwork import (
     TimeAxis,
     TimeAxisLabel,
 )
+from cmk.gui.graphing._parser import NumLabelRange
 from cmk.gui.graphing._utils import SizeEx
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
@@ -44,6 +46,40 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             _VAxisMinMax((-1.0, 1.0), 2.0, -2.0, 2.0),
             id="default-mirrored",
         ),
+        #
+        pytest.param(
+            (0.01, 0.02),
+            (None, None),
+            None,
+            False,
+            _VAxisMinMax((0.0, 0.02), 0.02, 0.0, 0.03),
+            id="small-pos",
+        ),
+        pytest.param(
+            (0.01, 0.02),
+            (None, None),
+            None,
+            True,
+            _VAxisMinMax((-0.02, 0.02), 0.04, -0.04, 0.04),
+            id="small-pos-mirrored",
+        ),
+        pytest.param(
+            (-0.01, 0.02),
+            (None, None),
+            None,
+            False,
+            _VAxisMinMax((-0.01, 0.02), 0.03, -0.025, 0.035),
+            id="small-neg",
+        ),
+        pytest.param(
+            (-0.01, 0.02),
+            (None, None),
+            None,
+            True,
+            _VAxisMinMax((-0.02, 0.02), 0.04, -0.04, 0.04),
+            id="small-neg-mirrored",
+        ),
+        #
         pytest.param(
             (-5.0, 10.0),
             (None, None),
@@ -57,7 +93,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             (None, None),
             None,
             True,
-            _VAxisMinMax((-5.0, 10.0), 20.0, -20.0, 20.0),
+            _VAxisMinMax((-10.0, 10.0), 20.0, -20.0, 20.0),
             id="explicit_vertical_range-mirrored",
         ),
         pytest.param(
@@ -73,7 +109,7 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
             (-5.0, 10.0),
             None,
             True,
-            _VAxisMinMax((-5.0, 10.0), 20.0, -20.0, 20.0),
+            _VAxisMinMax((-10.0, 10.0), 20.0, -20.0, 20.0),
             id="layouted_curves_range-mirrored",
         ),
         pytest.param(
@@ -158,7 +194,7 @@ def test__compute_v_axis_min_max_precedence(
 
 
 def test_t_axis_labels_seconds() -> None:
-    with set_timezone("Europe/Berlin"):
+    with time_machine.travel(datetime(2024, 1, 1, tzinfo=ZoneInfo("Europe/Berlin"))):
         assert [
             label_pos.timestamp()
             for label_pos in _t_axis_labels_seconds(
@@ -174,7 +210,7 @@ def test_t_axis_labels_seconds() -> None:
 
 
 def test_t_axis_labels_week() -> None:
-    with set_timezone("Europe/Berlin"):
+    with time_machine.travel(datetime(2024, 1, 1, tzinfo=ZoneInfo("Europe/Berlin"))):
         assert [
             label_pos.timestamp()
             for label_pos in _t_axis_labels_week(
@@ -553,7 +589,7 @@ def test_compute_graph_t_axis(
     step: int,
     expected_result: TimeAxis,
 ) -> None:
-    with set_timezone("Europe/Berlin"):
+    with time_machine.travel(datetime(2024, 1, 1, tzinfo=ZoneInfo("Europe/Berlin"))):
         assert (
             _compute_graph_t_axis(
                 start_time=start_time,
@@ -563,3 +599,90 @@ def test_compute_graph_t_axis(
             )
             == expected_result
         )
+
+
+@pytest.mark.parametrize(
+    "min_y, max_y, expected_min_num_label_range, expected_max_num_label_range",
+    [
+        pytest.param(
+            1,
+            1,
+            NumLabelRange(1, 4),
+            NumLabelRange(1, 4),
+            id="50:50",
+        ),
+        pytest.param(
+            1,
+            2,
+            NumLabelRange(1, 3),
+            NumLabelRange(1, 5),
+            id="third",
+        ),
+        pytest.param(
+            1,
+            3,
+            NumLabelRange(1, 2),
+            NumLabelRange(1, 6),
+            id="fourth",
+        ),
+        pytest.param(
+            1,
+            4,
+            NumLabelRange(1, 2),
+            NumLabelRange(1, 6),
+            id="fifth",
+        ),
+        pytest.param(
+            1,
+            5,
+            NumLabelRange(1, 1),
+            NumLabelRange(1, 7),
+            id="sixth",
+        ),
+        pytest.param(
+            1,
+            6,
+            NumLabelRange(1, 1),
+            NumLabelRange(1, 7),
+            id="seventh",
+        ),
+        pytest.param(
+            1,
+            7,
+            NumLabelRange(1, 1),
+            NumLabelRange(1, 7),
+            id="eighth",
+        ),
+        pytest.param(
+            1,
+            8,
+            NumLabelRange(1, 1),
+            NumLabelRange(1, 7),
+            id="ninth",
+        ),
+        pytest.param(
+            1,
+            9,
+            NumLabelRange(1, 1),
+            NumLabelRange(1, 7),
+            id="tenth",
+        ),
+        pytest.param(
+            0,
+            10,
+            NumLabelRange(1, 1),
+            NumLabelRange(1, 7),
+            id="0-10",
+        ),
+    ],
+)
+def test__compute_num_labels(
+    min_y: int | float,
+    max_y: int | float,
+    expected_min_num_label_range: NumLabelRange,
+    expected_max_num_label_range: NumLabelRange,
+) -> None:
+    assert _compute_num_labels(min_y, max_y) == (
+        expected_min_num_label_range,
+        expected_max_num_label_range,
+    )

@@ -24,6 +24,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_licensing_files_map,
     get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_CRASH_REPORTS,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_COMP_BUSINESS_INTELLIGENCE,
@@ -47,6 +48,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
 )
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, request, response
@@ -273,7 +275,7 @@ class ModeDiagnostics(WatoMode):
                 FixedValue(
                     value=True,
                     totext="",
-                    title=_("Local Files"),
+                    title=_("Local Files and MKPs"),
                     help=_(
                         "List of installed, unpacked, optional files below OMD_ROOT/local. "
                         "This also includes information about installed MKPs."
@@ -306,6 +308,19 @@ class ModeDiagnostics(WatoMode):
                         "Helper usage; State of daemons: Apache, Core, Crontag, "
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
                         "(Agent plugin mk_inventory needs to be installed)"
+                    ),
+                ),
+            ),
+            (
+                OPT_CHECKMK_CRASH_REPORTS,
+                FixedValue(
+                    value=True,
+                    totext="",
+                    title=_("Crash Reports"),
+                    help=_(
+                        "The latest crash reports"
+                        "<br>Note: Some crash reports may contain sensitive data like"
+                        "host names or user names."
                     ),
                 ),
             ),
@@ -673,7 +688,7 @@ def _merge_results(site, results) -> CreateDiagnosticsDumpResult:  # type: ignor
         output += result.output
         if result.tarfile_created:
             tarfile_created = True
-            if site_is_local(site):
+            if site_is_local(active_config, site):
                 tarfile_localpath = result.tarfile_path
             else:
                 tarfile_localpath = _get_tarfile_from_remotesite(
@@ -745,11 +760,11 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand):
 
 
 def _get_diagnostics_dump_file(site: SiteId, tarfile_name: str) -> bytes:
-    if site_is_local(site):
+    if site_is_local(active_config, site):
         return _get_local_diagnostics_dump_file(tarfile_name)
 
     raw_response = do_remote_automation(
-        get_site_config(site),
+        get_site_config(active_config, site),
         "diagnostics-dump-get-file",
         [
             ("tarfile_name", tarfile_name),

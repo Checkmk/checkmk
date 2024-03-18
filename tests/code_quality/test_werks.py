@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-import os
 import re
 import subprocess
 from collections import defaultdict
@@ -116,7 +115,7 @@ def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
             # print "No tag found in git: %s. Assuming version was not released yet." % tag_name
             continue
 
-        if not _werk_exists_in_git_tag(tag_name, ".werks/%d" % werk_id):
+        if not _werk_exists_in_git_tag(tag_name, werk_id):
             werk_tags = sorted(
                 _tags_containing_werk(werk_id),
                 key=lambda t: cmk_version.Version.from_str(t[1:]),
@@ -148,8 +147,10 @@ def _git_tag_exists(tag: str) -> bool:
     )
 
 
-def _werk_exists_in_git_tag(tag: str, rel_path: str) -> bool:
-    return rel_path in _werks_in_git_tag(tag)
+def _werk_exists_in_git_tag(tag: str, werk_id: int) -> bool:
+    return f".werks/{werk_id}" in _werks_in_git_tag(
+        tag
+    ) or f".werks/{werk_id}.md" in _werks_in_git_tag(tag)
 
 
 def _tags_containing_werk(werk_id: int) -> list[str]:
@@ -173,7 +174,7 @@ def _werks_in_git_tag(tag: str) -> list[str]:
     # Populate the map of all tags a werk is in
     for werk_file in werks_in_tag:
         try:
-            werk_id = int(os.path.basename(werk_file))
+            werk_id = int(Path(werk_file).stem)
         except ValueError:
             continue
         _werk_to_git_tag[werk_id].append(tag)

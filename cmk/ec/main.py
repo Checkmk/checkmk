@@ -29,7 +29,7 @@ import threading
 import time
 import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from logging import getLogger, Logger
+from logging import DEBUG, getLogger, Logger
 from pathlib import Path
 from types import FrameType
 from typing import Any, assert_never, Literal, TypedDict
@@ -46,19 +46,18 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
 from cmk.utils.site import omd_site
-from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.translations import translate_hostname
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule
-from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
+from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
 from .helpers import ECLock, parse_bytes_into_syslog_messages
-from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
+from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, TimedHistory
 from .history_file import FileHistory
 from .history_mongo import MongoDBHistory
-from .history_sqlite import SQLiteHistory
+from .history_sqlite import SQLiteHistory, SQLiteSettings
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
 from .query import (
@@ -73,9 +72,10 @@ from .query import (
 )
 from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
 from .rule_packs import load_active_config
-from .settings import FileDescriptor, PortNumber, Settings
-from .settings import settings as create_settings
+from .settings import create_settings, FileDescriptor, PortNumber, Settings
 from .snmp import SNMPTrapParser
+from .syslog import SyslogFacility, SyslogPriority
+from .timeperiod import TimePeriods
 
 
 class PackedEventStatus(TypedDict):
@@ -97,78 +97,6 @@ FileDescr = int  # mypy calls this FileDescriptor, but this clashes with our def
 Response = Iterable[Sequence[object]] | Mapping[str, object] | None
 
 LimitKind = Literal["overall", "by_rule", "by_host"]
-
-
-class SyslogPriority:
-    NAMES: Mapping[int, str] = {
-        0: "emerg",
-        1: "alert",
-        2: "crit",
-        3: "err",
-        4: "warning",
-        5: "notice",
-        6: "info",
-        7: "debug",
-    }
-
-    def __init__(self, value: int) -> None:
-        self.value = value
-
-    def __repr__(self) -> str:
-        return f"SyslogPriority({self.value})"
-
-    def __str__(self) -> str:
-        try:
-            return self.NAMES[self.value]
-        except KeyError:
-            return f"(unknown priority {self.value})"
-
-
-class SyslogFacility:
-    NAMES: Mapping[int, str] = {
-        0: "kern",
-        1: "user",
-        2: "mail",
-        3: "daemon",
-        4: "auth",
-        5: "syslog",
-        6: "lpr",
-        7: "news",
-        8: "uucp",
-        9: "cron",
-        10: "authpriv",
-        11: "ftp",
-        12: "ntp",
-        13: "logaudit",
-        14: "logalert",
-        15: "clock",
-        16: "local0",
-        17: "local1",
-        18: "local2",
-        19: "local3",
-        20: "local4",
-        21: "local5",
-        22: "local6",
-        23: "local7",
-        30: "logfile",  # HACK because the RFC says that facilities MUST be in the range 0-23
-        31: "snmptrap",  # everything above that is for internal use. see: https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1
-    }
-
-    def __init__(self, value: int) -> None:
-        if value not in self.NAMES:
-            raise ValueError(
-                f"Value must be one of the following {', '.join(str(key) for key in self.NAMES)}"
-            )
-        self.value = int(value)
-
-    def __repr__(self) -> str:
-        return f"SyslogFacility({self.value})"
-
-    def __str__(self) -> str:
-        try:
-            return self.NAMES[self.value]
-        except KeyError:
-            return f"(unknown facility {self.value})"
 
 
 # .
@@ -228,7 +156,7 @@ class ECServerThread(threading.Thread):
         self._terminate_event.set()
 
 
-def create_history(
+def create_history_raw(
     settings: Settings,
     config: Config,
     logger: Logger,
@@ -241,9 +169,29 @@ def create_history(
         case "mongodb":
             return MongoDBHistory(settings, config, logger, event_columns, history_columns)
         case "sqlite":
-            return SQLiteHistory(settings, config, logger, event_columns, history_columns)
+            return SQLiteHistory(
+                SQLiteSettings.from_settings(
+                    settings=settings,
+                    database=Path(settings.paths.history_dir.value / "history.sqlite"),
+                ),
+                config,
+                logger,
+                event_columns,
+                history_columns,
+            )
         case _ as default:
             assert_never(default)
+
+
+def create_history(
+    settings: Settings,
+    config: Config,
+    logger: Logger,
+    event_columns: Columns,
+    history_columns: Columns,
+) -> History:
+    history = create_history_raw(settings, config, logger, event_columns, history_columns)
+    return TimedHistory(history) if logger.isEnabledFor(DEBUG) else history
 
 
 def allowed_ip(
@@ -377,46 +325,6 @@ class MKSignalException(MKException):
     def __init__(self, signum: int) -> None:
         MKException.__init__(self, f"Got signal {signum}")
         self._signum = signum
-
-
-# .
-#   .--Timeperiods---------------------------------------------------------.
-#   |      _____ _                                _           _            |
-#   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
-#   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
-#   |       | | | | | | | | |  __/ |_) |  __/ |  | | (_) | (_| \__ \       |
-#   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
-#   |                            |_|                                       |
-#   +----------------------------------------------------------------------+
-#   |  Time Periods are used in rule conditions                             |
-#   '----------------------------------------------------------------------'
-
-
-class TimePeriods:
-    """Time Periods are used in rule conditions"""
-
-    def __init__(self, logger: Logger) -> None:
-        self._logger = logger
-        self._active: Mapping[TimeperiodName, bool] = {}
-        self._cache_timestamp: int | None = None
-
-    def _update(self) -> None:
-        try:
-            timestamp = int(time.time())
-            # update at most once a minute
-            if self._cache_timestamp is None or self._cache_timestamp + 60 <= timestamp:
-                self._active = query_timeperiods_in()
-                self._cache_timestamp = timestamp
-        except Exception as e:
-            self._logger.error(f"Cannot update time period information: {e}")
-            raise
-
-    def active(self, name: TimeperiodName) -> bool:
-        self._update()
-        if (is_active := self._active.get(name)) is None:
-            self._logger.warning("unknown time period '%s', assuming it is active", name)
-            is_active = True
-        return is_active
 
 
 # .
@@ -1521,9 +1429,9 @@ class EventServer(ECServerThread):
             return False  # Found no host in core: Not in downtime!
         try:
             return query_hosts_scheduled_downtime_depth(host_name) >= 1
-        except Exception as e:
-            self._logger.error(
-                f"Cannot get downtime info for host '{host_name}', assuming no downtime: {e}"
+        except Exception:
+            self._logger.exception(
+                "Cannot get downtime info for host '%s', assuming no downtime.", host_name
             )
             return False
 
@@ -2269,7 +2177,7 @@ class StatusServer(ECServerThread):
 
         if query.output_format == "plain":
             for row in response:
-                client_socket.sendall(b"\t".join([quote_tab(c) for c in row]) + b"\n")
+                client_socket.sendall(b"\t".join(quote_tab(c) for c in row) + b"\n")
 
         elif query.output_format == "json":
             client_socket.sendall((json.dumps(list(response)) + "\n").encode("utf-8"))
@@ -2416,37 +2324,38 @@ class StatusServer(ECServerThread):
             self._event_status.reset_counters(None)
 
     def handle_command_action(self, arguments: list[str]) -> None:
-        event_id, user, action_id = arguments
-        event: Event | None = self._event_status.event(int(event_id))
-        if user and event is not None:
-            event["owner"] = user
+        event_ids, user, action_id = arguments
+        for event_id in event_ids.split(","):
+            event: Event | None = self._event_status.event(int(event_id))
+            if user and event is not None:
+                event["owner"] = user
 
-        # TODO: De-duplicate code from do_event_actions()
-        if action_id == "@NOTIFY" and event is not None:
-            do_notify(
-                self._event_server.host_config, self._logger, event, user, is_cancelling=False
-            )
-        else:
-            # TODO: This locking doesn't make sense: We use the config outside of the lock below, too.
-            with self._lock_configuration:
-                actions = self._config["action"]
-                if action_id not in actions:
-                    raise MKClientError(
-                        f"The action '{action_id}' is not defined. After adding new commands please "
-                        "make sure that you activate the changes in the Event Console."
-                    )
-                action = actions[action_id]
-            if event:
-                do_event_action(
-                    self._history,
-                    self.settings,
-                    self._config,
-                    self._logger,
-                    self._event_columns,
-                    action,
-                    event,
-                    user,
+            # TODO: De-duplicate code from do_event_actions()
+            if action_id == "@NOTIFY" and event is not None:
+                do_notify(
+                    self._event_server.host_config, self._logger, event, user, is_cancelling=False
                 )
+            else:
+                # TODO: This locking doesn't make sense: We use the config outside of the lock below, too.
+                with self._lock_configuration:
+                    actions = self._config["action"]
+                    if action_id not in actions:
+                        raise MKClientError(
+                            f"The action '{action_id}' is not defined. After adding new commands please "
+                            "make sure that you activate the changes in the Event Console."
+                        )
+                    action = actions[action_id]
+                if event:
+                    do_event_action(
+                        self._history,
+                        self.settings,
+                        self._config,
+                        self._logger,
+                        self._event_columns,
+                        action,
+                        event,
+                        user,
+                    )
 
     def handle_command_switchmode(self, arguments: list[str]) -> None:
         new_mode = arguments[0]
@@ -2698,12 +2607,12 @@ class EventStatus:
         )
 
     def pack_status(self) -> PackedEventStatus:
-        return {
-            "next_event_id": self._next_event_id,
-            "events": self._events,
-            "rule_stats": self._rule_stats,
-            "interval_starts": self._interval_starts,
-        }
+        return PackedEventStatus(
+            next_event_id=self._next_event_id,
+            events=self._events,
+            rule_stats=self._rule_stats,
+            interval_starts=self._interval_starts,
+        )
 
     def unpack_status(self, status: PackedEventStatus) -> None:
         self._next_event_id = status["next_event_id"]
@@ -2744,7 +2653,7 @@ class EventStatus:
                 self._interval_starts = status.get("interval_starts", {})
                 self._logger.info("Loaded event state from %s.", path)
             except Exception:
-                self._logger.exception(f"Error loading event state from {path}")
+                self._logger.exception("Error loading event state from %s", path)
                 raise
 
         # Add new columns and fix broken events
@@ -3352,21 +3261,21 @@ def save_slave_status(settings: Settings, slave_status: SlaveStatus) -> None:
 
 
 def default_slave_status_master() -> SlaveStatus:
-    return {
-        "last_sync": 0,
-        "last_master_down": None,
-        "mode": "master",
-        "success": True,
-    }
+    return SlaveStatus(
+        last_sync=0,
+        last_master_down=None,
+        mode="master",
+        success=True,
+    )
 
 
 def default_slave_status_sync() -> SlaveStatus:
-    return {
-        "last_sync": 0,
-        "last_master_down": None,
-        "mode": "sync",
-        "success": True,
-    }
+    return SlaveStatus(
+        last_sync=0,
+        last_master_down=None,
+        mode="sync",
+        success=True,
+    )
 
 
 def update_slave_status(
@@ -3399,11 +3308,11 @@ def update_slave_status(
 
 
 def make_config(config: ConfigFromWATO) -> Config:
-    return {
+    return Config(
         **config,
-        "action": {action["id"]: action for action in config["actions"]},
-        "last_reload": int(time.time()),
-    }
+        action={action["id"]: action for action in config["actions"]},
+        last_reload=int(time.time()),
+    )
 
 
 def load_configuration(settings: Settings, logger: Logger, slave_status: SlaveStatus) -> Config:
@@ -3465,12 +3374,7 @@ def main() -> None:
     """Main entry and option parsing"""
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
-    settings = create_settings(
-        cmk_version.__version__,
-        cmk.utils.paths.omd_root,
-        Path(cmk.utils.paths.default_config_dir),
-        sys.argv,
-    )
+    settings = create_settings(cmk_version.__version__, cmk.utils.paths.omd_root, sys.argv)
 
     pid_path = None
     try:

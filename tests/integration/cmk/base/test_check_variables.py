@@ -38,18 +38,18 @@ def test_check_default_parameters(request: pytest.FixtureRequest, site: Site) ->
         """
 
 def inventory(info):
-    return [(None, {})]
+    yield None, {}
 
 def check(item, params, info):
-    return 0, "OK - %r" % (params, )
+    yield 0, "OK - %r" % (params, )
 
-check_info["test_check_3"] = {
-    "check_function"          : check,
-    "discovery_function"      : inventory,
-    "service_name"            : "Testcheck 3",
-    "check_ruleset_name"      : "asd",
-    "check_default_parameters": {"param1": 123},
-}
+check_info["test_check_3"] = LegacyCheckDefinition(
+    check_function=check,
+    discovery_function=inventory,
+    service_name="Testcheck 3",
+    check_ruleset_name="asd",
+    check_default_parameters={"param1": 123},
+)
 """,
     )
 

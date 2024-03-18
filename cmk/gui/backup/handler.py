@@ -45,6 +45,7 @@ from cmk.utils.backup.targets.remote_interface import (
 )
 from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
+from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import omd_root
@@ -1889,7 +1890,7 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
 
     def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
         super()._send_download(keys, key_id)
-        keys[key_id].not_downloaded = True
+        keys[key_id].not_downloaded = False
         self.key_store.save(keys)
 
     def _file_name(self, key_id: int, key: Key) -> str:
@@ -1940,7 +1941,7 @@ class RestoreJob(MKBackupJob):
         return _("Restore")
 
     def state_file_path(self) -> Path:
-        return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])
+        return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])  # nosec B108 # BNS:13b2c8
 
     def complete(self) -> None:
         self.cleanup()
@@ -2119,8 +2120,8 @@ class PageBackupRestore:
                     # Validate the passphrase
                     try:
                         key.to_certificate_with_private_key(passphrase)
-                    except ValueError:
-                        raise MKUserError("_key_p_passphrase", _("Invalid pass phrase"))
+                    except (ValueError, WrongPasswordError):
+                        raise MKUserError("_key_p_passphrase", _("Invalid passphrase"))
 
                     transactions.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()

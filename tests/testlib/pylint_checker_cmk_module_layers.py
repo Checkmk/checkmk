@@ -396,6 +396,7 @@ def _is_allowed_for_plugins(
 ) -> bool:
     return any(
         (
+            _in_component(imported=imported, component=Component("cmk.agent_based.v1")),
             _in_component(imported=imported, component=Component("cmk.agent_based.v2")),
             _in_component(imported=imported, component=Component("cmk.graphing.v1")),
             _in_component(imported=imported, component=Component("cmk.rulesets.v1")),
@@ -536,6 +537,35 @@ def _allowed_for_robotmk(
     )
 
 
+def _allow_for_cmk_checkengine(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            _in_component(imported=imported, component=Component("cmk.snmplib")),
+        )
+    )
+
+
+def _allow_for_cmk_fetchers(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.snmplib")),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+        )
+    )
+
+
 _COMPONENTS = (
     (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
@@ -571,9 +601,9 @@ _COMPONENTS = (
     (Component("cmk.base"), _allowed_for_base_cee),
     (Component("cmk.base.cee"), _allowed_for_base_cee),
     (Component("cmk.cmkpasswd"), _is_default_allowed_import),
-    (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.checkengine"), _allow_for_cmk_checkengine),
+    (Component("cmk.fetchers"), _allow_for_cmk_fetchers),
     (Component("cmk.cee.helpers"), _allow_default_plus_fetchers_checkers_and_snmplib),
-    (Component("cmk.checkengine"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.automations"), _allow_default_plus_checkers),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui.plugins"), _allow_for_gui_plugins),
@@ -596,6 +626,7 @@ _COMPONENTS = (
     (Component("cmk.plugins"), _is_allowed_for_plugins),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_default_plus_gui_base_and_bakery),
+    (Component("cmk.validate_plugins"), _is_default_allowed_import),
     (Component("cmk.mkp_tool"), _in_component),  # wants to grow up to be a package one day
     (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.bakery"), _is_default_allowed_import),
@@ -614,6 +645,9 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("bin/check_mk"): Component("cmk.base"),
     ModulePath("bin/cmk-passwd"): Component("cmk.cmkpasswd"),
     ModulePath("bin/cmk-update-config"): Component("cmk.update_config"),
+    ModulePath("bin/cmk-validate-plugins"): Component("cmk.validate_plugins"),
+    ModulePath("bin/cmk-compute-api-spec"): Component("cmk.gui"),
+    ModulePath("bin/cmk-trigger-api-spec-job"): Component("cmk.gui"),
     ModulePath("bin/post-rename-site"): Component("cmk.post_rename_site"),
     ModulePath("bin/mkeventd"): Component("cmk.ec"),
     ModulePath("omd/packages/enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),

@@ -8,9 +8,10 @@ use clap::{Args, Parser, ValueEnum};
 use regex::{Regex, RegexBuilder};
 use reqwest::{
     header::{HeaderName, HeaderValue},
-    Method, StatusCode,
+    Method, StatusCode, Url,
 };
 use std::{str::FromStr, time::Duration};
+use tracing_subscriber::filter::LevelFilter;
 
 #[derive(Parser, Debug)]
 #[command(about = "check_http")]
@@ -35,7 +36,7 @@ pub struct Cli {
 
     /// URL to check
     #[arg(short, long)]
-    pub url: String,
+    pub url: Url,
 
     /// URL version to use for the request.
     /// If not set, start with HTTP/1.1 and upgrade to HTTP/2 if supported by the server.
@@ -71,7 +72,7 @@ pub struct Cli {
     pub ignore_proxy_env: bool,
 
     /// Proxy server URL.
-    /// E.g. https://my-proxy.com, socks5://10.1.1.0:8000
+    /// E.g. <https://my-proxy.com>, <socks5://10.1.1.0:8000>
     /// This will override both HTTP_PROXY and HTTPS_PROXY
     #[arg(long)]
     pub proxy_url: Option<String>,
@@ -96,11 +97,11 @@ pub struct Cli {
     #[arg(long)]
     pub force_ip_version: Option<ForceIP>,
 
-    /// Minimum/Maximum expected page size in bytes (Format: MIN[,MAX])
+    /// Minimum/Maximum expected page size in bytes (Format: MIN\[,MAX\])
     #[arg(long, conflicts_with = "without_body", value_parser = parse_optional_pair::<usize>)]
     pub page_size: Option<PageSizeLimits>,
 
-    /// WARN/CRIT levels for response time (Format: WARN>[,CRIT])
+    /// WARN/CRIT levels for response time (Format: WARN>\[,CRIT\])
     #[arg(long, value_parser = parse_optional_pair::<f64>)]
     pub response_time_levels: Option<ResponseTimeLevels>,
 
@@ -150,7 +151,7 @@ pub struct Cli {
     #[arg(long, requires = "body_regex", default_value_t = false)]
     pub body_regex_invert: bool,
 
-    /// Strings to expect in the headers. Format: [KEY]:[VALUE]
+    /// Strings to expect in the headers. Format: \[KEY\]:\[VALUE\]
     /// Specify multiple times for additional headers.
     /// It's possible to only specify key or value, but a (first) separating colon is
     /// mandatory to identify them.
@@ -160,7 +161,7 @@ pub struct Cli {
     #[arg(short = 'd', long, value_parser=parse_string_header_pair)]
     pub header_strings: Vec<(String, String)>,
 
-    /// Regular expressions to expect in the HTTP headers. Format: [KEY]:[VALUE]
+    /// Regular expressions to expect in the HTTP headers. Format: \[KEY\]:\[VALUE\]
     /// Again, the first colon will be recognized as the KEY-VALUE separator, so
     /// a colon is not allowed in the KEY part of the regex specification.
     /// The same rules as for the body regex apply, while key and value are taken as two separate
@@ -177,7 +178,7 @@ pub struct Cli {
     /// Expected HTTP status code.
     /// Note: Avoid setting this to a 3xx code while setting "--onredirect=warning/critical"
     #[arg(short = 'e', long)]
-    pub status_code: Option<StatusCode>,
+    pub status_code: Vec<StatusCode>,
 
     /// Use TLS version for HTTPS requests.
     /// Not relevant for HTTP connections without TLS.
@@ -188,6 +189,37 @@ pub struct Cli {
     /// Not relevant for HTTP connections without TLS.
     #[arg(long, conflicts_with = "tls_version")]
     pub min_tls_version: Option<TlsVersion>,
+
+    /// Print HTTP headers to stderr.
+    #[arg(short, long, default_value_t = false)]
+    pub debug_headers: bool,
+
+    /// Print page content to stderr.
+    /// Note: Avoid setting --without-body.
+    #[arg(short, long, default_value_t = false)]
+    pub debug_content: bool,
+
+    /// Enable verbosity output to stderr.
+    /// Specify up to three times for INFO/DEBUG/TRACE log output.
+    /// Additionally, since check_httpv2 is written in Rust, you can also control the output
+    /// by passing the environment variable RUST_LOG.
+    /// Since this is a Rust-specific feature, please have a look at the documentation of the
+    /// tracing/tracing_subscriber Rust crate for details.
+    /// Note: RUST_LOG and the verbosity flag work additive. I.e., "-vvv" will already print
+    /// *all* available logging/tracing information to stderr.
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
+}
+
+impl Cli {
+    pub fn logging_level(&self) -> LevelFilter {
+        match self.verbose {
+            3.. => LevelFilter::TRACE,
+            2.. => LevelFilter::DEBUG,
+            1 => LevelFilter::INFO,
+            _ => LevelFilter::OFF,
+        }
+    }
 }
 
 type PageSizeLimits = (usize, Option<usize>);
@@ -321,23 +353,23 @@ where
     }
 }
 
-fn parse_regex_pattern_header_pair(pattern_pair: &str) -> AnyhowResult<(String, String)> {
+fn parse_regex_pattern_header_pair(pattern_pair: &str) -> AnyhowResult<(Regex, Regex)> {
     let (name, value): (String, String) = split_header(pattern_pair)?;
-    RegexBuilder::new(&name).case_insensitive(true).build()?;
-    Regex::new(&value)?;
-    Ok((name, value))
+    Ok((
+        RegexBuilder::new(&name).case_insensitive(true).build()?,
+        Regex::new(&value)?,
+    ))
 }
 
-fn parse_regex_pattern(pattern: &str) -> Result<String, regex::Error> {
-    RegexBuilder::new(pattern).crlf(true).build()?;
-    Ok(pattern.to_string())
+fn parse_regex_pattern(pattern: &str) -> Result<Regex, regex::Error> {
+    RegexBuilder::new(pattern).crlf(true).build()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use clap::CommandFactory;
-    use http::{HeaderName, HeaderValue};
+    use reqwest::header::{HeaderName, HeaderValue};
     use std::str::FromStr;
 
     fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {

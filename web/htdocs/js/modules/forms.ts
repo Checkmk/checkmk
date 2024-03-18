@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
@@ -66,6 +66,23 @@ export function enable_dynamic_form_elements(
 let g_previous_timeout_id: number | null = null;
 let g_ajax_obj: XMLHttpRequest | null;
 
+interface select2DropdownItem {
+    text: string;
+
+    id?: string;
+    selected?: boolean;
+    disabled?: boolean;
+    title?: string;
+}
+
+// Add a title to select2 entries, i.e. the dropdown results and selection
+export function format_select2_item(item: select2DropdownItem) {
+    const span = document.createElement("span");
+    span.setAttribute("title", item.text);
+    span.appendChild(document.createTextNode(item.text));
+    return $(span);
+}
+
 export function enable_select2_dropdowns(
     container: JQuery<Document> | HTMLElement | HTMLDocument | null
 ) {
@@ -82,6 +99,8 @@ export function enable_select2_dropdowns(
     elements.select2({
         dropdownAutoWidth: true,
         minimumResultsForSearch: 5,
+        templateResult: format_select2_item,
+        templateSelection: format_select2_item,
     });
     initialize_autocompleters(container);
 

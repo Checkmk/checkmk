@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Sequence
+from functools import partial
 from pathlib import Path
 from typing import Any, Literal
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -18,6 +20,7 @@ from cmk.utils.structured_data import ImmutableTree
 from cmk.utils.user import UserId
 
 from cmk.gui import sites
+from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter.v0.painters import _paint_custom_notes
@@ -254,6 +257,7 @@ def test_registered_painters() -> None:
         "inv_hardware_cpu_logical_cpus",
         "inv_hardware_cpu_max_speed",
         "inv_hardware_cpu_model",
+        "inv_hardware_cpu_nodes",
         "inv_hardware_cpu_sharing_mode",
         "inv_hardware_cpu_smt_threads",
         "inv_hardware_cpu_threads",
@@ -280,6 +284,7 @@ def test_registered_painters() -> None:
         "inv_hardware_system_model",
         "inv_hardware_system_model_name",
         "inv_hardware_system_node_name",
+        "inv_hardware_system_nodes",
         "inv_hardware_system_partition_name",
         "inv_hardware_system_pki_appliance_version",
         "inv_hardware_system_product",
@@ -428,6 +433,8 @@ def test_registered_painters() -> None:
         "inv_software_applications_oracle_sga",
         "inv_software_applications_oracle_systemparameter",
         "inv_software_applications_oracle_tablespaces",
+        "inv_software_applications_synthetic_monitoring",
+        "inv_software_applications_synthetic_monitoring_tests",
         "inv_software_applications_vmwareesx",
         "inv_software_bios",
         "inv_software_bios_date",
@@ -681,6 +688,13 @@ def test_registered_painters() -> None:
         "invswpac_summary",
         "invswpac_vendor",
         "invswpac_version",
+        "invsyntheticmonitoring_application",
+        "invsyntheticmonitoring_bottom_level_suite_name",
+        "invsyntheticmonitoring_suite_id",
+        "invsyntheticmonitoring_test_item",
+        "invsyntheticmonitoring_test_name",
+        "invsyntheticmonitoring_top_level_suite_name",
+        "invsyntheticmonitoring_variant",
         "invtunnels_index",
         "invtunnels_linkpriority",
         "invtunnels_peerip",
@@ -850,8 +864,10 @@ def fixture_service_painter_names() -> list[str]:
 def test_service_painters(
     service_painter_idents: Sequence[str], live: MockLiveStatusConnection
 ) -> None:
-    with live(expect_status_query=False), request.stashed_vars(), on_time(
-        "2018-04-15 16:50", "CET"
+    with (
+        live(expect_status_query=False),
+        request.stashed_vars(),
+        time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("CET"))),
     ):
         request.del_vars()
 
@@ -894,13 +910,14 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "add_context_to_title": True,
             "is_show_more": False,
             "packaged": False,
+            "megamenu_search_terms": [],
         },
         context={},
     )
 
     row = _service_row()
     for cell in view.row_cells:
-        _tdclass, content = cell.render(row, render_link_to_view)
+        _tdclass, content = cell.render(row, partial(render_link_to_view, request=request))
         assert isinstance(content, (str, HTML))
 
         if isinstance(content, str) and "<" in content:
@@ -1854,12 +1871,15 @@ def test_paint_custom_notes(
     notes_file: Path,
     row: Row,
     notes: list[str],
+    request_context: None,
 ) -> None:
     notes_dir.mkdir(parents=True)
     with open(notes_file, "w") as f:
         f.write("<hr>".join(notes))
 
-    assert notes_file.read_text() == str(_paint_custom_notes(notes_type, row)[1])
+    assert notes_file.read_text() == str(
+        _paint_custom_notes(notes_type, row, config=active_config)[1]
+    )
 
 
 @pytest.mark.parametrize(
@@ -2083,6 +2103,7 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
     service_name: str | None,
     notes_dirs: list[Path],
     notes: list[dict[str, Any]],
+    request_context: None,
 ) -> None:
     expected_notes: list[str] = _load_notes_into_files(notes_dirs, notes)
 
@@ -2093,7 +2114,7 @@ def test_paint_custom_notes_file_inclusion_and_html_tags(
         "host_address": "127.0.0.1",
     }
 
-    displayed_custom_notes = _paint_custom_notes(object_type, row)[1]
+    displayed_custom_notes = _paint_custom_notes(object_type, row, config=active_config)[1]
     assert isinstance(displayed_custom_notes, HTML)
 
     notes_as_string = str(displayed_custom_notes)

@@ -152,6 +152,9 @@ DONT_STRIP = {
     # binaries which link against this library) will segfault.
     # https://github.com/rust-lang/rust/issues/112286
     r"libLLVM-*-rust-*.so",
+    # Stripping these rust libs leads to a segmentation fault on rustc 1.75 & 1.76.
+    r"libstd-*.so",
+    r"librustc_driver-*.so",
 }
 
 

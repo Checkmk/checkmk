@@ -26,7 +26,7 @@ class ResultTest(ABCAutomationResult):
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
         return (
             self._default_serialize()
-            if for_cmk_version >= cmk_version.Version.from_str("2.3.0i1")
+            if for_cmk_version >= cmk_version.Version.from_str("2.4.0i1")
             else SerializedResult(repr((self.field_1,)))
         )
 
@@ -79,6 +79,7 @@ class TestPageAutomation:
         request.set_var("timeout", mk_repr(None).decode())
 
     @pytest.mark.usefixtures(
+        "request_context",
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
@@ -95,6 +96,7 @@ class TestPageAutomation:
             assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
 
     @pytest.mark.usefixtures(
+        "request_context",
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",
@@ -105,7 +107,7 @@ class TestPageAutomation:
             m.setattr(
                 request,
                 "headers",
-                {"x-checkmk-version": "2.2.0p20", "x-checkmk-edition": "cee"},
+                {"x-checkmk-version": "2.3.0p1", "x-checkmk-edition": "cee"},
             )
             automation.PageAutomation()._execute_cmk_automation()
             assert response.get_data() == b"((1, 2),)"
@@ -118,6 +120,7 @@ class TestPageAutomation:
         ],
     )
     @pytest.mark.usefixtures(
+        "request_context",
         "result_type_registry",
         "check_mk_local_automation_serialized",
         "setup_request",

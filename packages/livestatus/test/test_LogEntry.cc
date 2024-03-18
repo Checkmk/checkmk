@@ -83,6 +83,13 @@ info_table notification_state_types(const table<T> &states) {
 }
 }  // namespace
 
+TEST(LogEntry, Encode) {
+    EXPECT_EQ("", LogEntry::encode(""));
+    EXPECT_EQ("foo bar", LogEntry::encode("foo bar"));
+    EXPECT_EQ("\nfoo\nbar\n", LogEntry::encode("\nfoo\nbar\n"));
+    EXPECT_EQ("\nfoo\nbar\n", LogEntry::encode("\\nfoo\\nbar\\n"));
+}
+
 TEST(LogEntry, InitialHostState) {
     // The host state string is directly taken from a log line field.
     for (const auto &[state_name, state] : host_states) {

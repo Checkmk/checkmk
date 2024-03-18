@@ -33,7 +33,7 @@ class TestOptionalDropdownChoice:
             "id_b",
         )
 
-    def test_from_html_vars(self) -> None:
+    def test_from_html_vars(self, request_context: None) -> None:
         valuespec = vs.OptionalDropdownChoice[str](
             vs.TextInput(), [("id_a", "title_a"), ("id_b", "title_b")]
         )

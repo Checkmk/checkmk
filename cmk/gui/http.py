@@ -6,6 +6,7 @@
 
 import ast
 import json
+import time
 import urllib.parse
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
@@ -326,6 +327,7 @@ class Request(
             del environ["SCRIPT_NAME"]
 
         super().__init__(environ, populate_request=populate_request, shallow=shallow)
+        self.started = time.monotonic()
         self.meta = {}
         self._verify_not_using_threaded_mpm()
 
@@ -637,7 +639,7 @@ class Response(flask.Response):
         super().delete_cookie(key, path=url_prefix())
 
     def set_content_type(self, mime_type: str) -> None:
-        self.headers["Content-type"] = get_content_type(mime_type, self.charset)
+        self.headers["Content-type"] = get_content_type(mime_type, "utf-8")
 
     def set_csp_form_action(self, form_action: str) -> None:
         """If you have a form action that is not within the site, the

@@ -26,6 +26,7 @@ from cmk.gui.log import logger
 from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 
+from ..config import active_config
 from . import bakery
 from .automation_commands import AutomationCommand
 from .automations import do_remote_automation
@@ -71,11 +72,13 @@ def execute_network_scan_job() -> None:
         _save_network_scan_result(folder, result)
 
         try:
-            if site_is_local(folder.site_id()):
+            if site_is_local(active_config, folder.site_id()):
                 found = _do_network_scan(folder)
             else:
                 raw_response = do_remote_automation(
-                    get_site_config(folder.site_id()), "network-scan", [("folder", folder.path())]
+                    get_site_config(active_config, folder.site_id()),
+                    "network-scan",
+                    [("folder", folder.path())],
                 )
                 assert isinstance(raw_response, list)
                 found = raw_response
@@ -129,9 +132,9 @@ def _add_scanned_hosts_to_folder(folder: Folder, found: NetworkScanFoundHosts) -
         translation = TranslationOptions(
             {
                 "case": translate_names["case"],
-                "mapping": translate_names["mapping"],
+                "mapping": translate_names.get("mapping", []),
                 "drop_domain": translate_names.get("drop_domain", False),
-                "regex": translate_names["regex"],
+                "regex": translate_names.get("regex", []),
             }
         )
 

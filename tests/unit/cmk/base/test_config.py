@@ -22,6 +22,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
 from cmk.utils.sectionname import SectionName
@@ -41,7 +42,6 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
-from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
 
@@ -340,35 +340,53 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
         }[(host, family)],
     )
 
-    assert config_cache.default_address_family(localhost) is socket.AF_INET
+    assert config_cache.default_address_family(localhost) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(localhost) is AddressFamily.IPv4
-    assert ip_address_of(config_cache, localhost, socket.AF_INET) == "127.0.0.1"
-    assert ip_address_of(config_cache, localhost, socket.AF_INET6) == "::1"
+    assert ip_address_of(config_cache, localhost, socket.AddressFamily.AF_INET) == "127.0.0.1"
+    assert ip_address_of(config_cache, localhost, socket.AddressFamily.AF_INET6) == "::1"
 
-    assert config_cache.default_address_family(no_ip) is socket.AF_INET
+    assert config_cache.default_address_family(no_ip) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(no_ip) is AddressFamily.NO_IP
-    assert ip_address_of(config_cache, no_ip, socket.AF_INET) is None
-    assert ip_address_of(config_cache, no_ip, socket.AF_INET6) is None
+    assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET) is None
+    assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET6) is None
 
-    assert config_cache.default_address_family(dual_stack) is socket.AF_INET
+    assert config_cache.default_address_family(dual_stack) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(dual_stack) is AddressFamily.DUAL_STACK
-    assert ip_address_of(config_cache, dual_stack, socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
-    assert ip_address_of(config_cache, dual_stack, socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
+    assert (
+        ip_address_of(config_cache, dual_stack, socket.AddressFamily.AF_INET)
+        == _FALLBACK_ADDRESS_IPV4
+    )
+    assert (
+        ip_address_of(config_cache, dual_stack, socket.AddressFamily.AF_INET6)
+        == _FALLBACK_ADDRESS_IPV6
+    )
 
-    assert config_cache.default_address_family(cluster) is socket.AF_INET
+    assert config_cache.default_address_family(cluster) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(cluster) is AddressFamily.IPv4  # That's strange
-    assert ip_address_of(config_cache, cluster, socket.AF_INET) == ""
-    assert ip_address_of(config_cache, cluster, socket.AF_INET6) == ""
+    assert ip_address_of(config_cache, cluster, socket.AddressFamily.AF_INET) == ""
+    assert ip_address_of(config_cache, cluster, socket.AddressFamily.AF_INET6) == ""
 
-    assert config_cache.default_address_family(bad_host) is socket.AF_INET
+    assert config_cache.default_address_family(bad_host) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(bad_host) is AddressFamily.IPv4  # That's strange
-    assert ip_address_of(config_cache, bad_host, socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
-    assert ip_address_of(config_cache, bad_host, socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
+    assert (
+        ip_address_of(config_cache, bad_host, socket.AddressFamily.AF_INET)
+        == _FALLBACK_ADDRESS_IPV4
+    )
+    assert (
+        ip_address_of(config_cache, bad_host, socket.AddressFamily.AF_INET6)
+        == _FALLBACK_ADDRESS_IPV6
+    )
 
-    assert config_cache.default_address_family(undiscoverable) is socket.AF_INET
+    assert config_cache.default_address_family(undiscoverable) is socket.AddressFamily.AF_INET
     assert config_cache.address_family(undiscoverable) is AddressFamily.IPv4  # That's strange
-    assert ip_address_of(config_cache, undiscoverable, socket.AF_INET) == _FALLBACK_ADDRESS_IPV4
-    assert ip_address_of(config_cache, undiscoverable, socket.AF_INET6) == _FALLBACK_ADDRESS_IPV6
+    assert (
+        ip_address_of(config_cache, undiscoverable, socket.AddressFamily.AF_INET)
+        == _FALLBACK_ADDRESS_IPV4
+    )
+    assert (
+        ip_address_of(config_cache, undiscoverable, socket.AddressFamily.AF_INET6)
+        == _FALLBACK_ADDRESS_IPV6
+    )
 
 
 @pytest.mark.parametrize(
@@ -607,7 +625,7 @@ def test_is_tcp_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_tcp_host(hostname) == result
+    assert ts.apply(monkeypatch).computed_datasources(hostname).is_tcp == result
 
 
 @pytest.mark.parametrize(
@@ -673,7 +691,7 @@ def test_is_snmp_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_snmp_host(hostname) is result
+    assert ts.apply(monkeypatch).computed_datasources(hostname).is_snmp is result
 
 
 def test_is_not_usewalk_host(monkeypatch: MonkeyPatch) -> None:
@@ -718,7 +736,7 @@ def test_is_all_agents_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_all_agents_host(hostname) is result
+    assert ts.apply(monkeypatch).computed_datasources(hostname).is_all_agents_host is result
 
 
 @pytest.mark.parametrize(
@@ -736,7 +754,7 @@ def test_is_all_special_agents_host(
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname, tags)
-    assert ts.apply(monkeypatch).is_all_special_agents_host(hostname) is result
+    assert ts.apply(monkeypatch).computed_datasources(hostname).is_all_special_agents_host is result
 
 
 @pytest.mark.parametrize(
@@ -1137,6 +1155,8 @@ def test_host_config_inventory_parameters(
                 check_interval=0,
                 severity_new_services=1,
                 severity_vanished_services=0,
+                severity_changed_service_labels=0,
+                severity_changed_service_params=0,
                 severity_new_host_labels=1,
                 rediscovery={},
             ),
@@ -1148,6 +1168,8 @@ def test_host_config_inventory_parameters(
                 check_interval=1,
                 severity_new_services=1,
                 severity_vanished_services=0,
+                severity_changed_service_labels=0,
+                severity_changed_service_params=0,
                 severity_new_host_labels=1,
                 rediscovery={},
             ),
@@ -1168,6 +1190,8 @@ def test_discovery_check_parameters(
                 "value": {
                     "check_interval": 1,
                     "severity_unmonitored": 1,
+                    "severity_changed_service_labels": 0,
+                    "severity_changed_service_params": 0,
                     "severity_vanished": 0,
                     "severity_new_host_label": 1,
                 },
@@ -1178,6 +1202,8 @@ def test_discovery_check_parameters(
                 "value": {
                     "check_interval": 2,
                     "severity_unmonitored": 1,
+                    "severity_changed_service_labels": 0,
+                    "severity_changed_service_params": 1,
                     "severity_vanished": 0,
                     "severity_new_host_label": 1,
                 },
@@ -1797,23 +1823,23 @@ def test_config_cache_is_cluster(cluster_config: ConfigCache) -> None:
 
 
 def test_config_cache_clusters_of(cluster_config: ConfigCache) -> None:
-    assert cluster_config.clusters_of(HostName("node1")) == ["cluster1"]
-    assert cluster_config.clusters_of(HostName("host1")) == []
-    assert cluster_config.clusters_of(HostName("cluster1")) == []
+    assert list(cluster_config.clusters_of(HostName("node1"))) == ["cluster1"]
+    assert not list(cluster_config.clusters_of(HostName("host1")))
+    assert not list(cluster_config.clusters_of(HostName("cluster1")))
 
 
-def test_config_cache_nodes_of(cluster_config: ConfigCache) -> None:
-    assert cluster_config.nodes_of(HostName("node1")) is None
-    assert cluster_config.nodes_of(HostName("host1")) is None
-    assert cluster_config.nodes_of(HostName("cluster1")) == ["node1"]
+def test_config_cache_nodes(cluster_config: ConfigCache) -> None:
+    assert not list(cluster_config.nodes(HostName("node1")))
+    assert not list(cluster_config.nodes(HostName("host1")))
+    assert list(cluster_config.nodes(HostName("cluster1"))) == ["node1"]
 
 
 def test_host_config_parents(cluster_config: ConfigCache) -> None:
-    assert cluster_config.parents(HostName("node1")) == []
-    assert cluster_config.parents(HostName("host1")) == []
+    assert not list(cluster_config.parents(HostName("node1")))
+    assert not list(cluster_config.parents(HostName("host1")))
     # TODO: Move cluster/node parent handling to HostConfig
     # assert cluster_config.make_cee_host_config("cluster1").parents == ["node1"]
-    assert cluster_config.parents(HostName("cluster1")) == []
+    assert not list(cluster_config.parents(HostName("cluster1")))
 
 
 def test_config_cache_tag_list_of_host(monkeypatch: MonkeyPatch) -> None:
@@ -2414,9 +2440,8 @@ def test_config_cache_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> Non
     ts = Scenario()
     clu = HostName("clu")
     ts.add_cluster(clu)
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
-    config_cache = ts.config_cache
     assert clu in config_cache.hosts_config.clusters
     assert config_cache.max_cachefile_age(clu).get(Mode.CHECKING) != config.check_max_cachefile_age
     assert (
@@ -2536,6 +2561,8 @@ def _rule_val(check_interval: int | None) -> dict[str, Any]:
     return {
         "check_interval": check_interval,
         "severity_unmonitored": 0,
+        "severity_changed_service_labels": 0,
+        "severity_changed_service_params": 0,
         "severity_vanished": 0,
         "severity_new_host_label": 0,
     }
@@ -2806,7 +2833,7 @@ explicit_host_conf['{setting_name}'].update({values_})
         )
 
 
-def test_explicit_setting_loading() -> None:
+def test_explicit_setting_loading(patch_omd_site: None) -> None:
     main_mk_file = Path(cmk.utils.paths.main_config_file)
     settings = [
         ("sub1", "parents", {HostName("hostA"): "setting1"}),
@@ -2880,10 +2907,10 @@ class TestPackedConfigStore:
 
 
 def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin: dict[str, LegacyCheckDefinition] = {
-        "duplicate_plugin": {
-            "service_name": "blah",
-        },
+    duplicate_plugin = {
+        "duplicate_plugin": LegacyCheckDefinition(
+            service_name="blah",
+        ),
     }
     registered_plugin = CheckPluginAPI(
         name=CheckPluginName("duplicate_plugin"),
@@ -2906,11 +2933,6 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         {registered_plugin.name: registered_plugin},
     )
     monkeypatch.setattr(
-        config,
-        "check_info",
-        duplicate_plugin,
-    )
-    monkeypatch.setattr(
         cmk.utils.debug,
         "enabled",
         lambda: True,
@@ -2918,12 +2940,12 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
 
     assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
     with pytest.raises(MKGeneralException):
-        config._extract_check_plugins(validate_creation_kwargs=False)
+        config._extract_check_plugins(duplicate_plugin, validate_creation_kwargs=False)
 
 
 def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
-    duplicate_plugin: dict[str, dict[str, Any]] = {
-        "duplicate_plugin": {},
+    duplicate_plugin = {
+        "duplicate_plugin": LegacyCheckDefinition(),
     }
     registered_section = SNMPSectionPlugin(
         SectionName("duplicate_plugin"),
@@ -2945,18 +2967,13 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
         {registered_section.name: registered_section},
     )
     monkeypatch.setattr(
-        config,
-        "check_info",
-        duplicate_plugin,
-    )
-    monkeypatch.setattr(
         cmk.utils.debug,
         "enabled",
         lambda: True,
     )
 
     assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
-    config._extract_agent_and_snmp_sections()
+    config._extract_agent_and_snmp_sections(duplicate_plugin)
     assert (
         agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
         == registered_section

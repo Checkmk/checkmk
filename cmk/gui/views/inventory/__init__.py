@@ -45,7 +45,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
 from cmk.gui.inventory.filters import (
@@ -53,7 +53,7 @@ from cmk.gui.inventory.filters import (
     FilterInvFloat,
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
-    FilterInvtableIDRange,
+    FilterInvtableIntegerRange,
     FilterInvtableInterfaceType,
     FilterInvtableOperStatus,
     FilterInvtableText,
@@ -228,15 +228,14 @@ class PainterInventoryTree(Painter):
         if not (tree := self._compute_data(row, cell)):
             return "", ""
 
-        painter_options = PainterOptions.get_instance()
         tree_renderer = TreeRenderer(
             row["site"],
             row["host_name"],
-            show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+            show_internal_tree_paths=self._painter_options.get("show_internal_tree_paths"),
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree)
+            tree_renderer.show(tree, request=self.request)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -551,6 +550,7 @@ def inv_paint_cmk_label(label: Sequence[str]) -> PaintResult:
         object_type="host",
         with_links=True,
         label_sources={label[0]: "discovered"},
+        request=request,
     )
 
 
@@ -818,7 +818,7 @@ class ColumnDisplayHint:
         | FilterInvtableAdminStatus
         | FilterInvtableAvailable
         | FilterInvtableInterfaceType
-        | FilterInvtableIDRange
+        | FilterInvtableIntegerRange
     ):
         if self.filter_class:
             return self.filter_class(
@@ -828,7 +828,7 @@ class ColumnDisplayHint:
             )
 
         if (ranged_table_filter_name := get_ranged_table_filter_name(ident)) is not None:
-            return FilterInvtableIDRange(
+            return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
                 ident=ranged_table_filter_name,
                 title=self.long_title,
@@ -1163,6 +1163,7 @@ def register_table_views_and_columns() -> None:
 
 def _register_table_views_and_columns() -> None:
     # create painters for node with a display hint
+    painter_options = PainterOptions.get_instance()
     for hints in DISPLAY_HINTS:
         if "*" in hints.abc_path:
             # FIXME DYNAMIC-PATHS
@@ -1178,7 +1179,7 @@ def _register_table_views_and_columns() -> None:
 
         ident = ("inv",) + hints.abc_path
 
-        _register_node_painter("_".join(ident), hints)
+        _register_node_painter("_".join(ident), hints, painter_options=painter_options)
 
         for key, attr_hint in hints.attribute_hints.items():
             _register_attribute_column("_".join(ident + (key,)), attr_hint, hints.abc_path, key)
@@ -1197,7 +1198,9 @@ def _register_table_views_and_columns() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def _register_node_painter(name: str, hints: DisplayHints) -> None:
+def _register_node_painter(
+    name: str, hints: DisplayHints, *, painter_options: PainterOptions
+) -> None:
     """Declares painters for (sub) trees on all host related datasources."""
     register_painter(
         name,
@@ -1225,7 +1228,9 @@ def _register_node_painter(name: str, hints: DisplayHints) -> None:
             "printable": False,
             "load_inv": True,
             "sorter": name,
-            "paint": lambda row: _paint_host_inventory_tree(row, hints.abc_path),
+            "paint": lambda row: _paint_host_inventory_tree(
+                row, hints.abc_path, painter_options=painter_options
+            ),
             "export_for_python": lambda row, cell: (
                 _compute_node_painter_data(row, hints.abc_path).serialize()
             ),
@@ -1246,11 +1251,12 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     return row.get("host_inventory", ImmutableTree()).get_tree(path)
 
 
-def _paint_host_inventory_tree(row: Row, path: SDPath) -> CellSpec:
+def _paint_host_inventory_tree(
+    row: Row, path: SDPath, *, painter_options: PainterOptions
+) -> CellSpec:
     if not (tree := _compute_node_painter_data(row, path)):
         return "", ""
 
-    painter_options = PainterOptions.get_instance()
     tree_renderer = TreeRenderer(
         row["site"],
         row["host_name"],
@@ -1258,7 +1264,7 @@ def _paint_host_inventory_tree(row: Row, path: SDPath) -> CellSpec:
     )
 
     with output_funnel.plugged():
-        tree_renderer.show(tree)
+        tree_renderer.show(tree, request=request)
         code = HTML(output_funnel.drain())
 
     return "invtree", code
@@ -1338,20 +1344,46 @@ def _register_attribute_column(
     filter_registry.register(hint.make_filter(name, inventory_path))
 
 
-def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
+def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
         return None
+    return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
 
-    return row.get("host_inventory", ImmutableTree()).get_attribute(path, key)
+
+def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
+    if (attributes := _get_attributes(row, path)) is None:
+        return None
+    return attributes.pairs.get(key)
 
 
 def _paint_host_inventory_attribute(
     row: Row, path: SDPath, key: str, hint: AttributeDisplayHint
 ) -> CellSpec:
-    _tdclass, code = hint.paint_function(_compute_attribute_painter_data(row, path, key))
-    return "", code
+    if (attributes := _get_attributes(row, path)) is None:
+        return "", ""
+    return _compute_cell_spec(
+        _InventoryTreeValueInfo(
+            key,
+            attributes.pairs.get(key),
+            attributes.retentions.get(key),
+        ),
+        hint,
+    )
+
+
+def _paint_host_inventory_column(row: Row, column: str, hint: ColumnDisplayHint) -> CellSpec:
+    if column not in row:
+        return "", ""
+    return _compute_cell_spec(
+        _InventoryTreeValueInfo(
+            column,
+            row[column],
+            row.get("_".join([column, "retention_interval"])),
+        ),
+        hint,
+    )
 
 
 def _register_table_column(
@@ -1377,7 +1409,7 @@ def _register_table_column(
             "short": hint.short or hint.title,
             "tooltip_title": hint.long_title,
             "columns": [column],
-            "paint": lambda row: hint.paint_function(row.get(column)),
+            "paint": lambda row: _paint_host_inventory_column(row, column, hint),
             "sorter": column,
             # See views/painter/v0/base.py::Cell.painter_parameters
             # We have to add a dummy value here such that the painter_parameters are not None and
@@ -1424,10 +1456,14 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(self, hostrow: Row) -> Sequence[Mapping[SDKey, SDValue]]:
+    def _get_inv_data(
+        self, hostrow: Row
+    ) -> Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]:
         try:
-            return inventory.load_filtered_and_merged_tree(hostrow).get_rows(
-                self._inventory_path.path
+            return (
+                inventory.load_filtered_and_merged_tree(hostrow)
+                .get_tree(self._inventory_path.path)
+                .table.rows_with_retentions
             )
         except inventory.LoadStructuredDataError:
             user_errors.add(
@@ -1439,12 +1475,19 @@ class RowTableInventory(ABCRowTable):
             )
             return []
 
-    def _prepare_rows(self, inv_data: Sequence[Mapping[SDKey, SDValue]]) -> Iterable[Row]:
-        return (
-            [{info_name + "_" + key: value for key, value in row.items()} for row in inv_data]
-            if self._info_names and (info_name := self._info_names[0])
-            else []
-        )
+    def _prepare_rows(
+        self, inv_data: Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]
+    ) -> Iterable[Row]:
+        if not (self._info_names and (info_name := self._info_names[0])):
+            return []
+        rows = []
+        for inv_row in inv_data:
+            row: dict[str, int | float | str | bool | RetentionInterval | None] = {}
+            for key, (value, retention_interval) in inv_row.items():
+                row["_".join([info_name, key])] = value
+                row["_".join([info_name, key, "retention_interval"])] = retention_interval
+            rows.append(row)
+        return rows
 
 
 class ABCDataSourceInventory(ABCDataSource):
@@ -1607,6 +1650,7 @@ def _register_views(
         "owner": UserId.builtin(),
         "add_context_to_title": True,
         "packaged": False,
+        "megamenu_search_terms": [],
     }
 
     # View for the items of one host
@@ -1647,6 +1691,7 @@ def _register_views(
         "owner": UserId.builtin(),
         "add_context_to_title": True,
         "packaged": False,
+        "megamenu_search_terms": [],
     }
 
 
@@ -1705,6 +1750,7 @@ _INV_VIEW_HOST = ViewSpec(
         "sort_index": 99,
         "is_show_more": False,
         "packaged": False,
+        "megamenu_search_terms": [],
     }
 )
 
@@ -1765,6 +1811,7 @@ _INV_VIEW_HOST_CPU = ViewSpec(
         "icon": None,
         "add_context_to_title": True,
         "packaged": False,
+        "megamenu_search_terms": [],
     }
 )
 
@@ -1822,6 +1869,7 @@ _INV_VIEW_HOST_PORTS = ViewSpec(
         "icon": None,
         "add_context_to_title": True,
         "packaged": False,
+        "megamenu_search_terms": [],
     }
 )
 
@@ -1914,7 +1962,13 @@ class PainterInvhistTime(Painter):
         return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["invhist_time"], True, 60 * 10)
+        return paint_age(
+            row["invhist_time"],
+            True,
+            60 * 10,
+            request=self.request,
+            painter_options=self._painter_options,
+        )
 
 
 class PainterInvhistDelta(Painter):
@@ -1948,7 +2002,7 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree)
+            tree_renderer.show(tree, request=self.request)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -2074,6 +2128,7 @@ multisite_builtin_views["inv_host_history"] = {
     "add_context_to_title": True,
     "sort_index": 99,
     "packaged": False,
+    "megamenu_search_terms": [],
 }
 
 # .
@@ -2188,18 +2243,19 @@ def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHi
     return HTML(code)
 
 
-def _show_value(
-    value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
+def _compute_cell_spec(
+    value_info: _InventoryTreeValueInfo,
     hint: AttributeDisplayHint | ColumnDisplayHint,
-) -> None:
-    if isinstance(value_info, _DeltaTreeValueInfo):
-        _show_delta_value(value_info.value, hint)
-        return
-
-    html_value = _get_html_value(value_info.value, hint)
-    if value_info.retention_interval is None or value_info.retention_interval.source == "current":
-        html.write_html(html_value)
-        return
+) -> tuple[str, HTML]:
+    # TODO separate tdclass from rendered value
+    tdclass, code = hint.paint_function(value_info.value)
+    html_value = HTML(code)
+    if (
+        not html_value
+        or value_info.retention_interval is None
+        or value_info.retention_interval.source == "current"
+    ):
+        return tdclass, html_value
 
     now = int(time.time())
     valid_until = (
@@ -2207,32 +2263,43 @@ def _show_value(
     )
     keep_until = valid_until + value_info.retention_interval.retention_interval
     if now > keep_until:
-        html_value = HTMLWriter.render_span(
-            html_value
-            + HTML("&nbsp;")
-            + HTMLWriter.render_img(
-                theme.detect_icon_path("svc_problems", "icon_"),
-                class_=["icon"],
-            ),
-            title=_("Data is outdated and will be removed with the next check execution"),
-        )
-
-    elif now > valid_until:
-        html_value = HTMLWriter.render_span(
-            html_value
-            + HTML("&nbsp;")
-            + HTMLWriter.render_img(
-                theme.detect_icon_path("service_duration", "icon_"),
-                class_=["icon"],
-            ),
-            title=_("Data was provided at %s and is considered valid until %s")
-            % (
-                cmk.utils.render.date_and_time(value_info.retention_interval.cached_at),
-                cmk.utils.render.date_and_time(keep_until),
+        return (
+            tdclass,
+            HTMLWriter.render_span(
+                html_value
+                + HTML("&nbsp;")
+                + HTMLWriter.render_img(
+                    theme.detect_icon_path("svc_problems", "icon_"),
+                    class_=["icon"],
+                ),
+                title=_("Data is outdated and will be removed with the next check execution"),
+                css=["muted_text"],
             ),
         )
+    if now > valid_until:
+        return (
+            tdclass,
+            HTMLWriter.render_span(
+                html_value,
+                title=_("Data was provided at %s and is considered valid until %s")
+                % (
+                    cmk.utils.render.date_and_time(value_info.retention_interval.cached_at),
+                    cmk.utils.render.date_and_time(keep_until),
+                ),
+                css=["muted_text"],
+            ),
+        )
+    return tdclass, html_value
 
-    html.write_html(html_value)
+
+def _show_value(
+    value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
+    hint: AttributeDisplayHint | ColumnDisplayHint,
+) -> None:
+    if isinstance(value_info, _DeltaTreeValueInfo):
+        _show_delta_value(value_info.value, hint)
+        return
+    html.write_html(_compute_cell_spec(value_info, hint)[1])
 
 
 def _show_delta_value(
@@ -2302,7 +2369,7 @@ def _load_inventory_tree(site_id: SiteId, host_name: HostName) -> ImmutableTree:
 # Ajax call for fetching parts of the tree
 def ajax_inv_render_tree() -> None:
     site_id = SiteId(request.get_ascii_input_mandatory("site"))
-    host_name = HostName(request.get_ascii_input_mandatory("host"))
+    host_name = request.get_validated_type_input_mandatory(HostName, "host")
     inventory.verify_permission(host_name, site_id)
 
     raw_path = request.get_ascii_input_mandatory("raw_path")
@@ -2323,7 +2390,7 @@ def ajax_inv_render_tree() -> None:
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
-    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(tree)
+    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(tree, request=request)
 
 
 class TreeRenderer:
@@ -2371,7 +2438,9 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_table(self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints) -> None:
+    def _show_table(  # pylint: disable=redefined-outer-name
+        self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints, *, request: Request
+    ) -> None:
         if hints.table_hint.view_spec:
             # Link to Multisite view with exactly this table
             html.div(
@@ -2425,7 +2494,9 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints) -> None:
+    def _show_node(  # pylint: disable=redefined-outer-name
+        self, node: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints, *, request: Request
+    ) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
         with foldable_container(
             treename=self._tree_name,
@@ -2449,18 +2520,20 @@ class TreeRenderer:
             ),
         ) as is_open:
             if is_open:
-                self.show(node)
+                self.show(node, request=request)
 
-    def show(self, tree: ImmutableTree | ImmutableDeltaTree) -> None:
+    def show(  # pylint: disable=redefined-outer-name
+        self, tree: ImmutableTree | ImmutableDeltaTree, *, request: Request
+    ) -> None:
         hints = DISPLAY_HINTS.get_tree_hints(tree.path)
 
         if tree.attributes:
             self._show_attributes(tree.attributes, hints)
 
         if tree.table:
-            self._show_table(tree.table, hints)
+            self._show_table(tree.table, hints, request=request)
 
         for name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node, hints.get_node_hints(name))
+                self._show_node(node, hints.get_node_hints(name), request=request)

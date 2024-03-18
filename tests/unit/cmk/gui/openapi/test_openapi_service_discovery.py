@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections import defaultdict
 from unittest.mock import call, MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
+
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -31,8 +32,10 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "cpu_loads",
             "cpu_load",
             None,
+            None,
             {},
-            (5.0, 10.0),
+            {},
+            {"levels": (5.0, 10.0)},
             "CPU load",
             0,
             "15 min load: 1.32 at 8 Cores (0.17 per Core)",
@@ -50,6 +53,8 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "cpu_threads",
             "threads",
             None,
+            None,
+            {},
             {},
             {"levels": (2000, 4000)},
             "Number of threads",
@@ -67,7 +72,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "new",
             "df",
             "filesystem",
+            None,
             "/opt/omd/sites/heute/tmp",
+            {"include_volume_name": False},
             {"include_volume_name": False},
             {
                 "include_volume_name": False,
@@ -98,7 +105,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "new",
             "df",
             "filesystem",
+            None,
             "/opt/omd/sites/old/tmp",
+            {"include_volume_name": False},
             {"include_volume_name": False},
             {
                 "include_volume_name": False,
@@ -129,7 +138,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "new",
             "df",
             "filesystem",
+            None,
             "/opt/omd/sites/stable/tmp",
+            {"include_volume_name": False},
             {"include_volume_name": False},
             {
                 "include_volume_name": False,
@@ -160,7 +171,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "new",
             "df",
             "filesystem",
+            None,
             "/",
+            {"include_volume_name": False},
             {"include_volume_name": False},
             {
                 "include_volume_name": False,
@@ -191,7 +204,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "df",
             "filesystem",
+            None,
             "/boot/efi",
+            {"include_volume_name": False},
             {"include_volume_name": False},
             {
                 "include_volume_name": False,
@@ -221,7 +236,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "new",
             "df",
             "filesystem",
+            None,
             "/boot",
+            {"include_volume_name": False},
             {"include_volume_name": False},
             {
                 "include_volume_name": False,
@@ -253,6 +270,8 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "kernel_performance",
             "kernel_performance",
             None,
+            None,
+            {},
             {},
             {},
             "Kernel Performance",
@@ -274,6 +293,8 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "kernel_util",
             "cpu_iowait",
             None,
+            None,
+            {},
             {},
             {},
             "CPU utilization",
@@ -293,7 +314,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "lnx_thermal",
             "temperature",
+            None,
             "Zone 0",
+            {},
             {},
             {"device_levels_handling": "devdefault", "levels": (70.0, 80.0)},
             "Temperature Zone 0",
@@ -308,7 +331,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "lnx_thermal",
             "temperature",
+            None,
             "Zone 1",
+            {},
             {},
             {"device_levels_handling": "devdefault", "levels": (70.0, 80.0)},
             "Temperature Zone 1",
@@ -323,7 +348,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "lnx_thermal",
             "temperature",
+            None,
             "Zone 2",
+            {},
             {},
             {"device_levels_handling": "devdefault", "levels": (70.0, 80.0)},
             "Temperature Zone 2",
@@ -338,7 +365,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "lnx_thermal",
             "temperature",
+            None,
             "Zone 3",
+            {},
             {},
             {"device_levels_handling": "devdefault", "levels": (70.0, 80.0)},
             "Temperature Zone 3",
@@ -353,7 +382,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "lnx_thermal",
             "temperature",
+            None,
             "Zone 4",
+            {},
             {},
             {"device_levels_handling": "devdefault", "levels": (70.0, 80.0)},
             "Temperature Zone 4",
@@ -368,7 +399,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "lnx_thermal",
             "temperature",
+            None,
             "Zone 5",
+            {},
             {},
             {"device_levels_handling": "devdefault", "levels": (70.0, 80.0)},
             "Temperature Zone 5",
@@ -383,7 +416,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "lnx_thermal",
             "temperature",
+            None,
             "Zone 6",
+            {},
             {},
             {"device_levels_handling": "devdefault", "levels": (70.0, 80.0)},
             "Temperature Zone 6",
@@ -398,7 +433,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "lnx_thermal",
             "temperature",
+            None,
             "Zone 7",
+            {},
             {},
             {"device_levels_handling": "devdefault", "levels": (70.0, 80.0)},
             "Temperature Zone 7",
@@ -413,7 +450,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "lnx_thermal",
             "temperature",
+            None,
             "Zone 8",
+            {},
             {},
             {"device_levels_handling": "devdefault", "levels": (70.0, 80.0)},
             "Temperature Zone 8",
@@ -429,6 +468,8 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "mem_linux",
             "memory_linux",
             None,
+            None,
+            {},
             {},
             {
                 "levels_commitlimit": ("perc_free", (20.0, 10.0)),
@@ -499,7 +540,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "mkeventd_status",
             None,
+            None,
             HostName("heute"),
+            {},
             {},
             {},
             "OMD heute Event Console",
@@ -524,7 +567,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "mkeventd_status",
             None,
+            None,
             "stable",
+            {},
             {},
             {},
             "OMD stable Event Console",
@@ -549,7 +594,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "mknotifyd",
             None,
+            None,
             HostName("heute"),
+            {},
             {},
             {},
             "OMD heute Notification Spooler",
@@ -567,7 +614,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "mknotifyd",
             None,
+            None,
             "stable",
+            {},
             {},
             {},
             "OMD stable Notification Spooler",
@@ -585,7 +634,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "mounts",
             "fs_mount_options",
+            None,
             "/",
+            {"mount_options": ["errors=remount-ro", "relatime", "rw"]},
             {"mount_options": ["errors=remount-ro", "relatime", "rw"]},
             {"mount_options": ["errors=remount-ro", "relatime", "rw"]},
             "Mount options of /",
@@ -600,7 +651,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "mounts",
             "fs_mount_options",
+            None,
             "/boot",
+            {"mount_options": ["relatime", "rw"]},
             {"mount_options": ["relatime", "rw"]},
             {"mount_options": ["relatime", "rw"]},
             "Mount options of /boot",
@@ -615,7 +668,20 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "mounts",
             "fs_mount_options",
+            None,
             "/boot/efi",
+            {
+                "mount_options": [
+                    "codepage=437",
+                    "dmask=0077",
+                    "errors=remount-ro",
+                    "fmask=0077",
+                    "iocharset=iso8859-1",
+                    "relatime",
+                    "rw",
+                    "shortname=mixed",
+                ]
+            },
             {
                 "mount_options": [
                     "codepage=437",
@@ -652,7 +718,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "omd_apache",
             None,
+            None,
             "heute",
+            {},
             {},
             {},
             "OMD heute apache",
@@ -707,7 +775,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "omd_apache",
             None,
+            None,
             "stable",
+            {},
             {},
             {},
             "OMD stable apache",
@@ -762,8 +832,10 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "unchanged",
             "systemd_units_services_summary",
             "systemd_services_summary",
+            None,
             "Summary",
             {},
+            {"states": {"active": 0, "failed": 2, "inactive": 0}, "states_default": 2},
             {"states": {"active": 0, "failed": 2, "inactive": 0}, "states_default": 2},
             "Systemd Service Summary",
             0,
@@ -778,6 +850,8 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "tcp_conn_stats",
             "tcp_conn_stats",
             None,
+            None,
+            {},
             {},
             {},
             "TCP Connections",
@@ -805,6 +879,8 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "uptime",
             "uptime",
             None,
+            None,
+            {},
             {},
             {},
             "Uptime",
@@ -819,7 +895,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "active",
             "cmk_inv",
             None,
+            None,
             "Check_MK HW/SW Inventory",
+            {},
             {},
             {},
             "Check_MK HW/SW Inventory",
@@ -986,7 +1064,6 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
         status=200,
     )
     mock_discovery_preview.reset_mock()
-
     df_boot_ignore = aut_user_auth_wsgi_app.follow_link(
         resp,
         "cmk/service.move-ignored",
@@ -1195,44 +1272,24 @@ def test_openapi_discover_single_service(
     mock_set_autochecks.assert_not_called()
 
 
-def test_openapi_bulk_discovery_with_default_options(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
+def test_openapi_bulk_discovery_with_default_options(base: str, clients: ClientRegistry) -> None:
     # create some sample hosts
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/host_config/actions/bulk-create/invoke",
-        params=json.dumps(
+    clients.HostConfig.bulk_create(
+        entries=[
             {
-                "entries": [
-                    {
-                        "host_name": "foobar",
-                        "folder": "/",
-                    },
-                    {
-                        "host_name": "sample",
-                        "folder": "/",
-                    },
-                ]
-            }
-        ),
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+                "host_name": "foobar",
+                "folder": "/",
+            },
+            {
+                "host_name": "sample",
+                "folder": "/",
+            },
+        ]
     )
 
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
-        status=200,
-        params=json.dumps(
-            {
-                "hostnames": ["foobar", "sample"],
-            }
-        ),
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    resp = clients.ServiceDiscovery.bulk_discovery(
+        hostnames=["foobar", "sample"],
+        monitor_undecided_services=True,
     )
     assert resp.json["id"] == "bulk_discovery"
     assert resp.json["title"].endswith("is active") or resp.json["title"].endswith(
@@ -1243,12 +1300,7 @@ def test_openapi_bulk_discovery_with_default_options(
     assert "result" in resp.json["extensions"]["logs"]
     assert "progress" in resp.json["extensions"]["logs"]
 
-    status_resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + f"/objects/discovery_run/{resp.json['id']}",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+    status_resp = clients.ServiceDiscovery.discovery_run_status(resp.json["id"])
     assert status_resp.json["id"] == resp.json["id"]
     assert "active" in status_resp.json["extensions"]
 
@@ -1257,16 +1309,10 @@ def test_openapi_bulk_discovery_with_default_options(
 
 def test_openapi_bulk_discovery_with_invalid_hostname(
     base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
 ) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        f"{base}/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
-        status=400,
-        params=json.dumps({"hostnames": ["wrong_hostname"]}),
-        headers={"Accept": "application/json"},
-        content_type="application/json",
-    )
+    resp = clients.ServiceDiscovery.bulk_discovery(hostnames=["wrong_hostname"], expect_ok=False)
+    resp.assert_status_code(400)
 
 
 @pytest.mark.usefixtures("with_host", "inline_background_jobs")

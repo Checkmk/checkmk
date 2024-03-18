@@ -23,8 +23,8 @@ def r4r_dir() -> Path:
     return _omd_root() / "var/check_mk/wato/requests-for-registration"
 
 
-def users_dir() -> Path:
-    return _omd_root() / "var" / "check_mk" / "web"
+def internal_secret_path() -> Path:
+    return _omd_root() / "etc" / "site_internal.secret"
 
 
 def site_config_path() -> Path:

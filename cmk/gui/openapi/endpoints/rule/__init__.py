@@ -26,7 +26,7 @@ from cmk.gui.openapi.endpoints.rule.fields import (
     RuleSearchOptions,
     UpdateRuleObject,
 )
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import (
@@ -36,6 +36,7 @@ from cmk.gui.openapi.utils import (
     serve_json,
 )
 from cmk.gui.utils import gen_id
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -196,7 +197,9 @@ def create_rule(param):
             title=exc.title,
         )
 
-    rule = _create_rule(folder, ruleset, body["conditions"], body["properties"], value, gen_id())
+    rule = _create_rule(
+        folder, ruleset, body.get("conditions", {}), body.get("properties", {}), value, gen_id()
+    )
 
     index = ruleset.append_rule(folder, rule)
     rulesets.save_folder()
@@ -372,7 +375,12 @@ def edit_rule(param):
         )
 
     new_rule = _create_rule(
-        folder, ruleset, body["conditions"], body["properties"], value, param["rule_id"]
+        folder,
+        ruleset,
+        body.get("conditions", {}),
+        body.get("properties", {}),
+        value,
+        param["rule_id"],
     )
 
     ruleset.edit_rule(current_rule, new_rule)
@@ -384,7 +392,9 @@ def edit_rule(param):
 
 def _validate_value(ruleset: Ruleset, value: Any) -> None:
     try:
-        ruleset.valuespec().validate_value(value, "")
+        valuespec = ruleset.valuespec()
+        valuespec.validate_datatype(value, "")
+        valuespec.validate_value(value, "")
 
     except exceptions.MKUserError as exc:
         if exc.varname is None:

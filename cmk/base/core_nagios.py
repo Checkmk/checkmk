@@ -34,7 +34,7 @@ from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -54,7 +54,6 @@ from cmk.base.core_config import (
     write_notify_host_file,
 )
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.server_side_calls import load_active_checks, load_special_agents
 
 from cmk.discover_plugins import PluginLocation
 
@@ -132,7 +131,7 @@ class NagiosConfig:
         self.servicegroups_to_define: set[ServicegroupName] = set()
         self.contactgroups_to_define: set[ContactgroupName] = set()
         self.checknames_to_define: set[CheckPluginName] = set()
-        self.active_checks_to_define: set[CheckPluginNameStr] = set()
+        self.active_checks_to_define: set[str] = set()
         self.custom_commands_to_define: set[CoreCommandName] = set()
         self.hostcheck_commands_to_define: list[tuple[CoreCommand, str]] = []
 
@@ -488,14 +487,20 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     # legacy checks via active_checks
     active_services = []
 
+    translations = config.get_service_translations(config_cache.ruleset_matcher, hostname)
+    host_macros = ConfigCache.get_host_macros_from_attributes(hostname, host_attrs)
+    resource_macros = config.get_resource_macros()
+    macros = {**host_macros, **resource_macros}
     active_check_config = server_side_calls.ActiveCheck(
-        load_active_checks()[1],
+        server_side_calls.load_active_checks()[1],
         config.active_check_info,
         hostname,
-        server_side_calls.get_host_config(hostname, config_cache),
+        config.get_ssc_host_config(hostname, config_cache, macros),
         host_attrs,
-        stored_passwords=stored_passwords,
-        translations=config.get_service_translations(config_cache.ruleset_matcher, hostname),
+        config.http_proxies,
+        lambda x: config.get_final_service_description(x, translations),
+        config.use_new_descriptions_for,
+        stored_passwords,
         escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
     )
 
@@ -1058,34 +1063,23 @@ def _extra_service_conf_of(
 #   | contains that code and information that is needed for executing all  |
 #   | checks of that host. Also static data that cannot change during the  |
 #   | normal monitoring process is being precomputed and hard coded. This  |
-#   | all saves substantial CPU resources as opposed to running Checkmk   |
+#   | all saves substantial CPU resources as opposed to running Checkmk    |
 #   | in adhoc mode (about 75%).                                           |
 #   '----------------------------------------------------------------------'
 
 
-def _find_check_plugins(checktype: CheckPluginNameStr) -> list[str]:
+def _find_check_plugins(checktype: str) -> set[str]:
     """Find files to be included in precompile host check for a certain
     check (for example df or mem.used).
 
     In case of checks with a period (subchecks) we might have to include both "mem" and "mem.used".
     The subcheck *may* be implemented in a separate file."""
-    if "." in checktype:
-        candidates = [section_name_of(checktype), checktype]
-    else:
-        candidates = [checktype]
-
-    paths = []
-    for candidate in candidates:
-        local_file_path = cmk.utils.paths.local_checks_dir / candidate
-        if local_file_path.exists():
-            paths.append(str(local_file_path))
-            continue
-
-        filename = cmk.utils.paths.checks_dir + "/" + candidate
-        if os.path.exists(filename):
-            paths.append(filename)
-
-    return paths
+    return {
+        filename
+        for candidate in (section_name_of(checktype), checktype)
+        # in case there is no "main check" anymore, the lookup fails -> skip.
+        if (filename := config.legacy_check_plugin_files.get(candidate)) is not None
+    }
 
 
 class HostCheckStore:
@@ -1180,11 +1174,8 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     ) = _get_needed_plugin_names(config_cache, hostname)
 
     if hostname in config_cache.hosts_config.clusters:
-        nodes = config_cache.nodes_of(hostname)
-        if nodes is None:
-            raise TypeError()
-
-        for node in nodes:
+        assert config_cache.nodes(hostname)
+        for node in config_cache.nodes(hostname):
             (
                 node_needed_legacy_check_plugin_names,
                 node_needed_agent_based_check_plugin_names,
@@ -1316,25 +1307,22 @@ if '-d' in sys.argv:
         {},
     )
     if hostname in config_cache.hosts_config.clusters:
-        nodes = config_cache.nodes_of(hostname)
-        if nodes is None:
-            raise TypeError()
-
-        for node in nodes:
+        assert config_cache.nodes(hostname)
+        for node in config_cache.nodes(hostname):
             if AddressFamily.IPv4 in ConfigCache.address_family(node):
                 needed_ipaddresses[node] = config.lookup_ip_address(
-                    config_cache, node, family=socket.AF_INET
+                    config_cache, node, family=socket.AddressFamily.AF_INET
                 )
 
             if AddressFamily.IPv6 in ConfigCache.address_family(node):
                 needed_ipv6addresses[node] = config.lookup_ip_address(
-                    config_cache, node, family=socket.AF_INET6
+                    config_cache, node, family=socket.AddressFamily.AF_INET6
                 )
 
         try:
             if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
                 needed_ipaddresses[hostname] = config.lookup_ip_address(
-                    config_cache, hostname, family=socket.AF_INET
+                    config_cache, hostname, family=socket.AddressFamily.AF_INET
                 )
         except Exception:
             pass
@@ -1342,19 +1330,19 @@ if '-d' in sys.argv:
         try:
             if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
                 needed_ipv6addresses[hostname] = config.lookup_ip_address(
-                    config_cache, hostname, family=socket.AF_INET6
+                    config_cache, hostname, family=socket.AddressFamily.AF_INET6
                 )
         except Exception:
             pass
     else:
         if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
             needed_ipaddresses[hostname] = config.lookup_ip_address(
-                config_cache, hostname, family=socket.AF_INET
+                config_cache, hostname, family=socket.AddressFamily.AF_INET
             )
 
         if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
             needed_ipv6addresses[hostname] = config.lookup_ip_address(
-                config_cache, hostname, family=socket.AF_INET6
+                config_cache, hostname, family=socket.AddressFamily.AF_INET6
             )
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
@@ -1395,7 +1383,7 @@ if '-d' in sys.argv:
 
 def _get_needed_plugin_names(
     config_cache: ConfigCache, host_name: HostName
-) -> tuple[set[CheckPluginNameStr], set[CheckPluginName], set[InventoryPluginName]]:
+) -> tuple[set[str], set[CheckPluginName], set[InventoryPluginName]]:
     needed_legacy_check_plugin_names = {
         f"agent_{name}" for name, _p in config_cache.special_agents(host_name)
     }
@@ -1437,7 +1425,7 @@ def _get_needed_plugin_names(
     )
 
 
-def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPluginNameStr | None:
+def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> str | None:
     legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
     if legacy_name:
         return legacy_name
@@ -1458,25 +1446,22 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPlug
 
 
 def _get_legacy_check_file_names_to_load(
-    needed_check_plugin_names: set[CheckPluginNameStr],
-) -> list[str]:
+    needed_check_plugin_names: set[str],
+) -> set[str]:
     # check info table
-    # We need to include all those plugins that are referenced in the host's
+    # We need to include all those plugins that are referenced in the hosts
     # check table.
-    ssc_api_special_agents = load_special_agents()[1]
-    filenames: list[str] = []
+    ssc_api_special_agents = {p.name for p in server_side_calls.load_special_agents()[1].values()}
+    filenames: set[str] = set()
 
     for check_plugin_name in needed_check_plugin_names:
         # Now add check file(s) itself
         paths = _find_check_plugins(check_plugin_name)
 
-        short_plugin_name = check_plugin_name.replace("agent_", "")
-        if not paths and short_plugin_name not in ssc_api_special_agents:
+        if not paths and check_plugin_name.removeprefix("agent_") not in ssc_api_special_agents:
             raise MKGeneralException(f"Cannot find check file needed for {check_plugin_name}")
 
-        for path in paths:
-            if path not in filenames:
-                filenames.append(path)
+        filenames |= paths
 
     return filenames
 

@@ -10,6 +10,8 @@ def build_make_target(edition) {
             return prefix + "cee" + suffix;
         case 'cloud':
             return prefix + "cce" + suffix;
+        case 'saas':
+            return prefix + "cse" + suffix;
         default:
             error("The update tests are not yet enabled for edition: " + edition);
     }
@@ -20,12 +22,16 @@ def main() {
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
     def branch_version = versioning.get_branch_version(checkout_dir);
 
+    check_job_parameters([
+        ["OVERRIDE_DISTROS"],
+    ]);
+
     check_environment_variables([
         "DOCKER_TAG",
         "EDITION",
     ]);
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, false, "daily_tests");
+    def distros = versioning.get_distros(edition: EDITION, use_case: "daily_update_tests", override: OVERRIDE_DISTROS);
     def make_target = build_make_target(EDITION);
 
     testing_helper.run_make_targets(

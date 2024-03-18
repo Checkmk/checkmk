@@ -9,26 +9,14 @@ from typing import Any
 import pytest
 
 from cmk.plugins.collection.server_side_calls.datadog import special_agent_datadog
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, PlainTextSecret
 
 HOST_CONFIG = HostConfig(
     name="testhost",
-    resolved_address="0.0.0.1",
-    alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="0.0.0.1"),
 )
 
-HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
+HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
 
 
 @pytest.mark.parametrize(
@@ -205,10 +193,7 @@ def test_datadog_argument_parsing(
     params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    parsed_params = special_agent_datadog.parameter_parser(params)
-    commands = list(
-        special_agent_datadog.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES)
-    )
+    commands = list(special_agent_datadog(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_result

@@ -24,13 +24,9 @@ __all__ = [
     "AggregatedResult",
     "CheckPlugin",
     "CheckPluginName",
-    "CheckPluginNameStr",
     "ConfiguredService",
     "ServiceID",
 ]
-
-
-CheckPluginNameStr = str
 
 
 class CheckPluginName(ValidatedString):
@@ -104,3 +100,4 @@ class CheckPlugin:
     function: CheckFunction
     default_parameters: Mapping[str, object] | None
     ruleset_name: RuleSetName | None
+    discovery_ruleset_name: RuleSetName | None

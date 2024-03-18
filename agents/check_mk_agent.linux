@@ -44,7 +44,7 @@ is_valid_plugin() {
     # test if a file is executable and does not have certain
     # extensions (remnants from distro upgrades).
     case "${1:?No plugin defined}" in
-        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp | *.dpkg-tmp) return 1 ;;
         *) [ -f "${1}" ] && [ -x "${1}" ] ;;
     esac
 }
@@ -464,7 +464,7 @@ export_utility_functions() {
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.3.0b1
+Version: 2.4.0b1
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}
@@ -487,6 +487,20 @@ HERE
         #
         # However this ("successfully") reports an empty list or '[unprintable]' on older systemd versions :-(
     fi
+
+    #
+    # OS based labels are created from these variables
+    #
+
+    echo "OSType: linux"
+    while read -r line; do
+        raw_line="${line//\"/}"
+        case $line in
+            ID=*) echo "OSPlatform: ${raw_line##*=}" ;;
+            NAME=*) echo "OSName: ${raw_line##*=}" ;;
+            VERSION_ID=*) echo "OSVersion: ${raw_line##*=}" ;;
+        esac
+    done <<<"$(cat /etc/os-release 2>/dev/null)"
 
     #
     # BEGIN COMMON AGENT CODE
@@ -543,17 +557,6 @@ section_checkmk_failed_plugin() {
 
 section_labels() {
     echo '<<<labels:sep(0)>>>'
-
-    echo '{"cmk/os_type":"linux"}'
-
-    while read -r line; do
-        raw_line="${line//\"/}"
-        case $line in
-            ID=*) echo '{"cmk/os_platform":"'"${raw_line##*=}"'"}' ;;
-            NAME=*) echo '{"cmk/os_name":"'"${raw_line##*=}"'"}' ;;
-            VERSION_ID=*) echo '{"cmk/os_version":"'"${raw_line##*=}"'"}' ;;
-        esac
-    done <<<"$(cat /etc/os-release 2>/dev/null)"
 
     if [ -n "${IS_DOCKERIZED}" ] || [ -n "${IS_LXC_CONTAINER}" ]; then
         echo '{"cmk/device_type":"container"}'
@@ -1118,7 +1121,7 @@ section_mailqueue() {
             done
         fi
         # Always check for the default queue. It can exist even if multiple instances are configured
-        read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)"
+        read_postfix_queue_dirs "$(postconf -h queue_directory 2>/dev/null)" "default"
         read_postfix_master_pid "$(postconf -h queue_directory 2>/dev/null)" "default"
 
     elif [ -x /usr/sbin/ssmtp ]; then

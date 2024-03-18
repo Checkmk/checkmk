@@ -57,6 +57,7 @@ def test_registered_automation_commands() -> None:
         "get-config-sync-state",
         "receive-config-sync",
         "service-discovery-job",
+        "service-discovery-job-snapshot",
         "checkmk-remote-automation-start",
         "checkmk-remote-automation-get-status",
         "discovered-host-label-sync",
@@ -193,7 +194,6 @@ def test_registered_configvars() -> None:
         "wato_icon_categories",
         "wato_max_snapshots",
         "wato_pprint_config",
-        "wato_upload_insecure_snapshots",
         "wato_use_git",
         "graph_timeranges",
         "agent_controller_certificates",
@@ -278,7 +278,7 @@ def test_registered_configvars() -> None:
 
 
 # Can be removed once we use mypy there
-def test_registered_configvars_types() -> None:
+def test_registered_configvars_types(request_context: None) -> None:
     for var_class in config_variable_registry.values():
         var = var_class()
         assert issubclass(var.group(), ConfigVariableGroup)

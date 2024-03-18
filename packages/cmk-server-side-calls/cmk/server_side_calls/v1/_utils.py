@@ -3,77 +3,82 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from abc import abstractmethod
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
-from enum import StrEnum
+from dataclasses import dataclass
+from enum import auto, Enum
+from typing import Final, Literal, TypeVar
 
 
-class ResolvedIPAddressFamily(StrEnum):
-    """Defines a resolved IP address family"""
+class IPAddressFamily(Enum):
+    """Defines an IP address family"""
 
-    IPV4 = "ipv4"
-    """IPv4 address family"""
-    IPV6 = "ipv6"
-    """IPv6 address family"""
+    IPV4 = auto()
+    IPV6 = auto()
 
 
-class IPAddressFamily(StrEnum):
-    """Defines an IP address family from the host configuration"""
-
-    IPV4 = "ipv4"
-    """IPv4 address family"""
-    IPV6 = "ipv6"
-    """IPv6 address family"""
-    DUAL_STACK = "dual_stack"
-    """Dual stack address family"""
-    NO_IP = "no_ip"
-    """No IP address family"""
-
-
-@dataclass(frozen=True)
-class NetworkAddressConfig:
+class IPConfig:
     """
-    Defines a network configuration of the host
-
-    All arguments are exactly defined as in the host configuration, no resolution of IP addresses
-    or family has been done.
-
-    Args:
-        ip_family: IP family of the host
-        ipv4_address: IPv4 address. Will be None if not defined in the configuration
-        ipv6_address: IPv6 address. Will be None if not defined in the configuration
-        additional_ipv4_addresses: Additional IPv4 addresses
-        additional_ipv6_addresses: Additional IPv6 addresses
-
+    Defines an IP configuration of the host
     """
 
-    ip_family: IPAddressFamily
-    ipv4_address: str | None = None
-    ipv6_address: str | None = None
-    additional_ipv4_addresses: Sequence[str] = field(default_factory=list)
-    additional_ipv6_addresses: Sequence[str] = field(default_factory=list)
+    def __init__(self, *, address: str | None, additional_addresses: Sequence[str] = ()):
+        self._address = address
+        self.additional_addresses: Final = additional_addresses
 
     @property
-    def all_ipv4_addresses(self) -> Sequence[str]:
-        """
-        Sequence containing the IPv4 address and the additional IPv4 addresses
-        """
-        if self.ipv4_address:
-            return [self.ipv4_address, *self.additional_ipv4_addresses]
-        return self.additional_ipv4_addresses
+    @abstractmethod
+    def family(self) -> IPAddressFamily:
+        ...
 
     @property
-    def all_ipv6_addresses(self) -> Sequence[str]:
+    def address(self) -> str:
+        """The host address (ip address or host name)
+
+        Raises a RuntimeError if the lookup failed.
+        The exact nature of the problem is reported during config generation.
         """
-        Sequence containing the IPv6 address and the additional IPv6 addresses
-        """
-        if self.ipv6_address:
-            return [self.ipv6_address, *self.additional_ipv6_addresses]
-        return self.additional_ipv6_addresses
+        if not self._address:
+            raise RuntimeError("Host address lookup failed")
+        return self._address
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"address={self._address!r}, "
+            f"additional_addresses={self.additional_addresses!r})"
+        )
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, self.__class__):
+            return NotImplemented
+        return (
+            self._address == __value._address
+            and self.additional_addresses == __value.additional_addresses
+        )
 
 
-@dataclass(frozen=True)
-class HostConfig:  # pylint: disable=too-many-instance-attributes
+class IPv4Config(IPConfig):
+    """
+    Defines an IPv4 configuration of the host
+    """
+
+    @property
+    def family(self) -> Literal[IPAddressFamily.IPV4]:
+        return IPAddressFamily.IPV4
+
+
+class IPv6Config(IPConfig):
+    """
+    Defines an IPv6 configuration of the host
+    """
+
+    @property
+    def family(self) -> Literal[IPAddressFamily.IPV6]:
+        return IPAddressFamily.IPV6
+
+
+class HostConfig:
     """
     Defines a host configuration
 
@@ -95,14 +100,10 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     Args:
         name: Host name
         alias: Host alias
-        resolved_address: If IP address isn't configured in the host config, it will be resolved
-            from the host name.
-        resolved_ip_family: Resolved IP address family
-        address_config: Address settings defined in the host configuration
-        custom_attributes: Custom attributes of the host
-        tags: Tags of the host
-        labels: Labels of the host
-        customer: Customer the host belongs to. Relevant only in the CME edition.
+        ipv4_config: The IPv4 network configuration of the host.
+        ipv6_config: The IPv6 network configuration of the host.
+        primary_family: Primary IP address family
+        macros: Macro mapping that are being replaced for the host
 
 
     Example:
@@ -121,18 +122,61 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
 
-    name: str
-    alias: str
-    resolved_address: str | None
-    address_config: NetworkAddressConfig
-    resolved_ip_family: ResolvedIPAddressFamily | None = None
-    custom_attributes: Mapping[str, str] = field(default_factory=dict)
-    tags: Mapping[str, str] = field(default_factory=dict)
-    labels: Mapping[str, str] = field(default_factory=dict)
-    customer: str | None = None
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        alias: str = "",
+        ipv4_config: IPv4Config | None = None,
+        ipv6_config: IPv6Config | None = None,
+        primary_family: IPAddressFamily = IPAddressFamily.IPV4,
+        macros: Mapping[str, str] | None = None,
+    ):
+        if not name:
+            raise ValueError("Host name has to be a non-empty string")
+
+        self.name: Final = name
+        self.alias: Final = alias or name
+        self.ipv4_config: Final = ipv4_config
+        self.ipv6_config: Final = ipv6_config
+        self._primary_family: Final = primary_family
+        self._primary_ip_config: Final = (
+            self.ipv4_config if primary_family == IPAddressFamily.IPV4 else self.ipv6_config
+        )
+        self.macros: Final = macros or {}
+
+    @property
+    def primary_ip_config(self) -> IPConfig:
+        """Points to the primary address config"""
+        if self._primary_ip_config is None:
+            raise ValueError("Host has no IP stack configured")
+        return self._primary_ip_config
+
+    def __repr__(self) -> str:
+        return (
+            f"{self.__class__.__name__}("
+            f"name={self.name!r}, "
+            f"alias={self.alias!r}, "
+            f"ipv4_config={self.ipv4_config!r}, "
+            f"ipv6_config={self.ipv6_config!r}, "
+            f"primary_family={self._primary_family!r}, "
+            f"macros={self.macros!r})"
+        )
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, self.__class__):
+            return NotImplemented
+        return (
+            self.name == __value.name
+            and self.alias == __value.alias
+            and self.ipv4_config == __value.ipv4_config
+            and self.ipv6_config == __value.ipv6_config
+            and self._primary_family == __value._primary_family
+            and self.macros == __value.macros
+        )
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class HTTPProxy:
     """
     Defines a HTTP proxy
@@ -181,7 +225,7 @@ class HTTPProxy:
     url: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class StoredSecret:
     """
     Defines a password stored in the password store
@@ -197,7 +241,7 @@ class StoredSecret:
 
     Example:
 
-        >>> StoredSecret("stored_password_id", format="example-user:%s")
+        >>> StoredSecret(value="stored_password_id", format="example-user:%s")
         StoredSecret(value='stored_password_id', format='example-user:%s')
     """
 
@@ -205,7 +249,7 @@ class StoredSecret:
     format: str = "%s"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PlainTextSecret:
     """
     Defines an explicit password
@@ -217,7 +261,7 @@ class PlainTextSecret:
 
     Example:
 
-        >>> PlainTextSecret("password1234")
+        >>> PlainTextSecret(value="password1234")
         PlainTextSecret(value='password1234', format='%s')
     """
 
@@ -228,10 +272,16 @@ class PlainTextSecret:
 Secret = StoredSecret | PlainTextSecret
 
 
-def parse_secret(secret: object, display_format: str = "%s") -> Secret:
+# NOTE: This is basically a parser for the values originating from our IndividualOrStoredPassword
+# ValueSpec, it's highly questionable if this really belongs into the API.
+def parse_secret(
+    secret: tuple[Literal["store", "password"], str],
+    display_format: str = "%s",
+) -> Secret:
     """
-    Parses values configured via the :class:`Password` into an instance of one of
-    the two appropriate classes.
+    Parses a secret/password configuration into an instance of one of the two
+    appropriate classes
+
 
     Args:
         secret_type: Type of the secret
@@ -266,19 +316,11 @@ def parse_secret(secret: object, display_format: str = "%s") -> Secret:
         ...     args = ["--auth", secret]
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
-    if not isinstance(secret, tuple):
-        raise ValueError("secret object has to be a tuple")
-
-    secret_type, secret_value = secret
-
-    if not isinstance(secret_value, str):
-        raise ValueError("secret value has to be a string")
-
-    match secret_type:
+    match secret[0]:
         case "store":
-            return StoredSecret(secret_value, format=display_format)
+            return StoredSecret(value=secret[1], format=display_format)
         case "password":
-            return PlainTextSecret(secret_value, format=display_format)
+            return PlainTextSecret(value=secret[1], format=display_format)
         case _:
             raise ValueError("secret type has as to be either 'store' or 'password'")
 
@@ -288,7 +330,7 @@ def parse_http_proxy(
     http_proxies: Mapping[str, HTTPProxy],
 ) -> str:
     """
-    Returns a proxy string from parameters created by the :class:`HTTPProxy` form spec
+    Parses a proxy configuration into a proxy string
 
     The function will check if proxy argument has the expected type.
 
@@ -351,7 +393,10 @@ def parse_http_proxy(
     return "FROM_ENVIRONMENT"
 
 
-def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
+_T_co = TypeVar("_T_co", covariant=True)
+
+
+def noop_parser(params: Mapping[str, _T_co]) -> Mapping[str, _T_co]:
     """
     Parameter parser that doesn't perform a transformation
 
@@ -387,3 +432,25 @@ def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
         ... )
     """
     return params
+
+
+def replace_macros(value: str, macros: Mapping[str, str]) -> str:
+    """
+    Replaces host macros in a string
+
+    Args:
+        value: String in which macros are replaced
+        macros: Mapping of host macros names and values. In the plugins, host macros are
+                provided through the host_config.macros attribute.
+
+    Example:
+
+    >>> ["--hostname", replace_macros("$HOST_NAME$", {"$HOST_NAME$": "Test Host"})]
+    ['--hostname', 'Test Host']
+
+    """
+
+    for macro_name, macro_value in macros.items():
+        value = value.replace(macro_name, macro_value)
+
+    return value

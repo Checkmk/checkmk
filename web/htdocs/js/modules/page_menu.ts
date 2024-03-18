@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
@@ -88,6 +88,19 @@ export function ack_problems_update_expiration_active_state(
         ) as HTMLInputElement;
         if ($(checkbox_input).prop("checked") == false) checkbox_input.click();
     }
+}
+
+export function check_menu_entry_by_checkboxes(id: string) {
+    const checkboxes = document.getElementsByClassName(
+        "page_checkbox"
+    ) as HTMLCollectionOf<HTMLInputElement>;
+    for (let i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].checked) {
+            enable_menu_entry(id, true);
+            return;
+        }
+    }
+    enable_menu_entry(id, false);
 }
 
 export function enable_menu_entry(id: string, enabled: boolean) {

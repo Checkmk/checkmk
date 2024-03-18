@@ -121,10 +121,6 @@ class DeleteCommentById(BaseBulkDelete):
 class DeleteCommentsByQuery(BaseBulkDelete):
     query = gui_fields.query_field(tables.Comments)
 
-    site_id = gui_fields.SiteField(
-        description="The ID of an existing site", example="production", required=True
-    )
-
 
 class DeleteCommentsByParams(BaseBulkDelete):
     host_name = gui_fields.HostField(
@@ -139,10 +135,6 @@ class DeleteCommentsByParams(BaseBulkDelete):
         "removed. If a service has multiple comments then all will be removed",
         required=False,
         example=["CPU load", "Memory"],
-    )
-
-    site_id = gui_fields.SiteField(
-        description="The ID of an existing site", example="production", required=True
     )
 
 

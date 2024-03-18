@@ -14,8 +14,7 @@ import time
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import get_average, get_value_store, render
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import get_average, get_value_store, render, StringTable
 
 
 def inventory_mongodb_flushing(info):

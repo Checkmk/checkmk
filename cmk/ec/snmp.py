@@ -323,7 +323,7 @@ class SNMPTrapTranslator:
                 )
                 self._logger.debug(
                     "Failed trap var binds:\n%s",
-                    "\n".join([f"{i}: {repr(i)}" for i in var_bind_list]),
+                    "\n".join(f"{i}: {repr(i)}" for i in var_bind_list),
                 )
                 self._logger.debug(traceback.format_exc())
                 translated_oid = str(oid)

@@ -21,6 +21,7 @@ from cmk.automations.results import SetAutochecksTable
 
 from cmk.checkengine.checking import CheckPluginName
 
+from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.site_config import site_is_local
@@ -54,7 +55,7 @@ def _automation_serialized(
     if args is None:
         args = []
 
-    if not siteid or site_is_local(siteid):
+    if not siteid or site_is_local(active_config, siteid):
         cmdline, serialized_result = check_mk_local_automation_serialized(
             command=command,
             args=args,

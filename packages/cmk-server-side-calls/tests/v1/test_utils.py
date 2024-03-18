@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+
+from typing import Literal
 
 import pytest
 
@@ -11,12 +12,13 @@ from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
-    NetworkAddressConfig,
+    IPv4Config,
+    IPv6Config,
     noop_parser,
     parse_http_proxy,
     parse_secret,
     PlainTextSecret,
-    ResolvedIPAddressFamily,
+    replace_macros,
     Secret,
     StoredSecret,
 )
@@ -27,23 +29,25 @@ from cmk.server_side_calls.v1 import (
     [
         pytest.param(
             ("store", "stored_password_id"),
-            StoredSecret("stored_password_id", format="%s"),
+            StoredSecret(value="stored_password_id", format="%s"),
             id="stored password",
         ),
         pytest.param(
             ("password", "password1234"),
-            PlainTextSecret("password1234", format="%s"),
+            PlainTextSecret(value="password1234", format="%s"),
             id="plain-text password",
         ),
     ],
 )
-def test_get_secret_from_params(secret: object, expected_result: Secret) -> None:
+def test_get_secret_from_params(
+    secret: tuple[Literal["store", "password"], str], expected_result: Secret
+) -> None:
     assert parse_secret(secret) == expected_result
 
 
 def test_get_secret_from_params_invalid_type() -> None:
     with pytest.raises(ValueError, match="secret type has as to be either 'store' or 'password'"):
-        parse_secret(("invalid", "password1234"))
+        parse_secret(("invalid", "password1234"))  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -80,7 +84,7 @@ def test_get_http_proxy(
     proxy: object,
     expected_result: str,
 ) -> None:
-    http_proxies = {"test_proxy": HTTPProxy("test_proxy", "Test", "test.com")}
+    http_proxies = {"test_proxy": HTTPProxy(id="test_proxy", name="Test", url="test.com")}
 
     assert parse_http_proxy(proxy, http_proxies) == expected_result
 
@@ -109,7 +113,7 @@ def test_get_http_proxy_value_error(
     proxy: object,
     expected_error: str,
 ) -> None:
-    http_proxies = {"test_proxy": HTTPProxy("test_proxy", "Test", "test.com")}
+    http_proxies = {"test_proxy": HTTPProxy(id="test_proxy", name="Test", url="test.com")}
 
     with pytest.raises(ValueError, match=expected_error):
         parse_http_proxy(proxy, http_proxies)
@@ -120,57 +124,57 @@ def test_noop_parser() -> None:
     assert noop_parser(params) == params
 
 
+class TestIPConfig:
+    def test_ipv4_family(self) -> None:
+        assert IPv4Config(address="1.2.3.4").family is IPAddressFamily.IPV4
+
+    def test_ipv6_family(self) -> None:
+        assert IPv6Config(address="fe80::240").family is IPAddressFamily.IPV6
+
+    def test_ipv4_raises(self) -> None:
+        with pytest.raises(RuntimeError):
+            _ = IPv4Config(address=None).address
+
+    def test_ipv6_raises(self) -> None:
+        with pytest.raises(RuntimeError):
+            _ = IPv6Config(address=None).address
+
+
+class TestHostConfig:
+    def test_alias(self) -> None:
+        assert HostConfig(name="my_name").alias is "my_name"
+
+    def test_primary_raises(self) -> None:
+        with pytest.raises(ValueError):
+            _ = HostConfig(name="my_name").primary_ip_config
+
+    def test_host_config_eq(self) -> None:
+        assert HostConfig(name="my_name", alias="my_alias") != HostConfig(name="my_name")
+        assert HostConfig(name="my_name") == HostConfig(name="my_name")
+
+
 @pytest.mark.parametrize(
-    "host_config, expected_all_ipv4, expected_all_ipv6",
+    "string, expected_result",
     [
+        pytest.param("", "", id="empty"),
+        pytest.param("Text without macros", "Text without macros", id="without macros"),
+        pytest.param("My host $HOST_ALIAS$", "My host host_alias", id="one macro"),
         pytest.param(
-            HostConfig(
-                name="hostname",
-                resolved_address="0.0.0.1",
-                alias="host_alias",
-                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-                address_config=NetworkAddressConfig(
-                    ip_family=IPAddressFamily.DUAL_STACK,
-                    ipv4_address="0.0.0.2",
-                    ipv6_address="fe80::240",
-                    additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-                    additional_ipv6_addresses=[
-                        "fe80::241",
-                        "fe80::242",
-                        "fe80::243",
-                    ],
-                ),
-            ),
-            ["0.0.0.2", "0.0.0.4", "0.0.0.5"],
-            ["fe80::240", "fe80::241", "fe80::242", "fe80::243"],
-            id="ipv4address and ipv6address present",
+            "-H $HOST_NAME$ -4 $HOST_IPV4_ADDRESS$ -6 $HOST_IPV6_ADDRESS$",
+            "-H hostname -4 0.0.0.1 -6 fe80::240",
+            id="multiple macros",
         ),
-        pytest.param(
-            HostConfig(
-                name="hostname",
-                resolved_address="0.0.0.1",
-                alias="host_alias",
-                resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-                address_config=NetworkAddressConfig(
-                    ip_family=IPAddressFamily.DUAL_STACK,
-                    ipv4_address=None,
-                    ipv6_address=None,
-                    additional_ipv4_addresses=["0.0.0.4", "0.0.0.5"],
-                    additional_ipv6_addresses=[
-                        "fe80::241",
-                        "fe80::242",
-                        "fe80::243",
-                    ],
-                ),
-            ),
-            ["0.0.0.4", "0.0.0.5"],
-            ["fe80::241", "fe80::242", "fe80::243"],
-            id="ipv4address and ipv6address not present",
-        ),
+        pytest.param("ID$HOST_TAG_tag1$000", "ID55000", id="double replacement"),
     ],
 )
-def test_host_config_properties(
-    host_config: HostConfig, expected_all_ipv4: Sequence[str], expected_all_ipv6: Sequence[str]
-) -> None:
-    assert host_config.address_config.all_ipv4_addresses == expected_all_ipv4
-    assert host_config.address_config.all_ipv6_addresses == expected_all_ipv6
+def test_replace_macros(string: str, expected_result: str) -> None:
+    macros = {
+        "$HOST_NAME$": "hostname",
+        "$HOST_ADDRESS$": "0.0.0.1",
+        "$HOST_ALIAS$": "host_alias",
+        "$HOST_IPV4_ADDRESS$": "0.0.0.1",
+        "$HOST_IPV6_ADDRESS$": "fe80::240",
+        "$HOST_TAG_tag1$": "$HOST_TAG_tag2$",
+        "$HOST_TAG_tag2$": "55",
+    }
+    assert replace_macros(string, macros) == expected_result

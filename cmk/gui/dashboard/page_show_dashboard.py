@@ -46,7 +46,7 @@ from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
@@ -582,7 +582,7 @@ def _dashboard_edit_entries(
                 request,
                 [
                     ("load_name", name),
-                    ("back", urlencode(makeuri(request, []))),
+                    ("mode", "edit"),
                 ],
                 filename="edit_dashboard.py",
             )
@@ -595,7 +595,9 @@ def _dashboard_other_entries(
     linked_dashboards: Iterable[str],
 ) -> Iterable[PageMenuEntry]:
     ntop_not_configured = not is_ntop_configured()
-    for dashboard_name, dashboard in get_permitted_dashboards().items():
+    for dashboard_name, dashboard in sorted(
+        get_permitted_dashboards().items(), key=lambda x: x[1]["sort_index"]
+    ):
         if name in linked_dashboards and dashboard_name in linked_dashboards:
             continue
         if dashboard["hidden"]:

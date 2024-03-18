@@ -70,7 +70,7 @@ from cmk.snmplib import (
 )
 
 import cmk.fetchers.snmp as snmp_factory
-from cmk.fetchers import FetcherType, get_raw_data
+from cmk.fetchers import get_raw_data
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
@@ -82,7 +82,7 @@ from cmk.checkengine.discovery import (
     execute_check_discovery,
     remove_autochecks_of_host,
 )
-from cmk.checkengine.fetcher import FetcherFunction, SourceInfo, SourceType
+from cmk.checkengine.fetcher import FetcherFunction, FetcherType, SourceInfo, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parser import (
     NO_SELECTION,
@@ -122,7 +122,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
-from cmk.base.plugins.server_side_calls import load_active_checks
+from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
@@ -464,7 +464,9 @@ def mode_list_checks() -> None:
     # active checks using both new and old API have to be collected
     all_checks += [
         "check_" + name
-        for name in itertools.chain(config.active_check_info, load_active_checks()[1])
+        for name in itertools.chain(
+            config.active_check_info, (p.name for p in load_active_checks()[1].values())
+        )
     ]
 
     for plugin_name in sorted(all_checks, key=str):
@@ -537,6 +539,15 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
 
         ipaddress = config.lookup_ip_address(config_cache, hostname)
         check_interval = config_cache.check_mk_check_interval(hostname)
+        oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
+        stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
+        walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
+        section_cache_path = Path(cmk.utils.paths.var_dir)
+        file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
+        tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
+        cas_dir = Path(cmk.utils.paths.agent_cas_dir)
+        ca_store = Path(cmk.utils.paths.agent_cert_store)
+        site_crt = Path(cmk.utils.paths.site_cert_file)
 
         output = []
         # Show errors of problematic data sources
@@ -555,6 +566,14 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 inventory=1.5 * check_interval,
             ),
             snmp_backend_override=snmp_backend_override,
+            oid_cache_dir=oid_cache_dir,
+            stored_walk_path=stored_walk_path,
+            walk_cache_path=walk_cache_path,
+            file_cache_path=file_cache_path,
+            tcp_cache_path=tcp_cache_path,
+            cas_dir=cas_dir,
+            ca_store=ca_store,
+            site_crt=site_crt,
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -575,6 +594,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     checking_sections=config_cache.make_checking_sections(
                         hostname, selected_sections=NO_SELECTION
                     ),
+                    section_cache_path=section_cache_path,
                     keep_outdated=file_cache_options.keep_outdated,
                     logger=log.logger,
                 ),
@@ -1010,6 +1030,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         raise MKBailOut("Please specify host names to walk on.")
 
     config_cache = config.get_config_cache()
+    stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
 
     for hostname in (HostName(hn) for hn in hostnames):
         ipaddress = config.lookup_ip_address(config_cache, hostname)
@@ -1019,7 +1040,12 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
         if snmp_backend_override is not None:
             snmp_config = dataclasses.replace(snmp_config, snmp_backend=snmp_backend_override)
-        _do_snmpwalk(options, backend=snmp_factory.make_backend(snmp_config, log.logger))
+        _do_snmpwalk(
+            options,
+            backend=snmp_factory.make_backend(
+                snmp_config, log.logger, stored_walk_path=stored_walk_path
+            ),
+        )
 
 
 modes.register(
@@ -1091,10 +1117,11 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
             for host in frozenset(hosts_config.hosts)
             if config_cache.is_active(host)
             and config_cache.is_online(host)
-            and config_cache.is_snmp_host(host)
+            and config_cache.computed_datasources(host).is_snmp
         )
 
     assert hostnames
+    stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
     for hostname in (HostName(hn) for hn in hostnames):
         ipaddress = config.lookup_ip_address(config_cache, hostname)
         if not ipaddress:
@@ -1104,7 +1131,9 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
         if snmp_backend_override is not None:
             snmp_config = dataclasses.replace(snmp_config, snmp_backend=snmp_backend_override)
 
-        backend = snmp_factory.make_backend(snmp_config, log.logger)
+        backend = snmp_factory.make_backend(
+            snmp_config, log.logger, stored_walk_path=stored_walk_path
+        )
         value = get_single_oid(oid, single_oid_cache={}, backend=backend)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
 
@@ -1207,7 +1236,7 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
                 config_cache.effective_host,
                 partial(config.service_description, ruleset_matcher),
             )
-            for node in config_cache.nodes_of(host) or [host]
+            for node in config_cache.nodes(host) or [host]
         )
         # config_cache.remove_autochecks(host)
         if count:
@@ -1680,14 +1709,14 @@ def mode_check_discovery(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    check_result = ActiveCheckResult(3, "unknown error")
+    checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
     with error_handler:
         fetched = fetcher(hostname, ip_address=None)
         with plugin_contexts.current_host(hostname):
-            check_result = execute_check_discovery(
+            checks_result = execute_check_discovery(
                 hostname,
                 is_cluster=hostname in config_cache.hosts_config.clusters,
-                cluster_nodes=config_cache.nodes_of(hostname) or (),
+                cluster_nodes=config_cache.nodes(hostname),
                 params=config_cache.discovery_check_parameters(hostname),
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
@@ -1710,7 +1739,9 @@ def mode_check_discovery(
             )
 
     if error_handler.result is not None:
-        check_result = error_handler.result
+        checks_result = [error_handler.result]
+
+    check_result = ActiveCheckResult.from_subresults(*checks_result)
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
@@ -1987,7 +2018,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         _preprocess_hostnames(
             frozenset(hostnames),
             is_cluster=lambda hn: hn in config_cache.hosts_config.clusters,
-            resolve_nodes=lambda hn: config_cache.nodes_of(hn) or (),
+            resolve_nodes=config_cache.nodes,
             config_cache=config_cache,
             only_host_labels="only-host-labels" in options,
         )
@@ -2163,7 +2194,7 @@ def mode_check(
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
-    check_result = ActiveCheckResult(3, "unknown error")
+    checks_result: Sequence[ActiveCheckResult] = [ActiveCheckResult(3, "unknown error")]
     fetched: Sequence[
         tuple[
             SourceInfo,
@@ -2183,7 +2214,7 @@ def mode_check(
             rtc_package=None,
         )
         with CPUTracker() as tracker:
-            check_result = execute_checkmk_checks(
+            checks_result = execute_checkmk_checks(
                 hostname=hostname,
                 fetched=((f[0], f[1]) for f in fetched),
                 parser=parser,
@@ -2214,17 +2245,19 @@ def mode_check(
                 exit_spec=config_cache.exit_code_spec(hostname),
             )
 
-        check_result = ActiveCheckResult.from_subresults(
-            check_result,
+        checks_result = [
+            *checks_result,
             make_timing_results(
                 tracker.duration,
                 tuple((f[0], f[2]) for f in fetched),
                 perfdata_with_times=config.check_mk_perfdata_with_times,
             ),
-        )
+        ]
 
     if error_handler.result is not None:
-        check_result = error_handler.result
+        checks_result = [error_handler.result]
+
+    check_result = ActiveCheckResult.from_subresults(*checks_result)
 
     active_check_handler(hostname, check_result.as_text())
     if keepalive:
@@ -2400,7 +2433,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
             previous_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
             if hostname in hosts_config.clusters:
                 check_result = inventory.inventorize_cluster(
-                    config_cache.nodes_of(hostname) or (),
+                    config_cache.nodes(hostname),
                     parameters=parameters,
                     previous_tree=previous_tree,
                 ).check_result
@@ -2494,7 +2527,7 @@ def _execute_active_check_inventory(
 
     if host_name in hosts_config.clusters:
         result = inventory.inventorize_cluster(
-            config_cache.nodes_of(host_name) or (),
+            config_cache.nodes(host_name),
             parameters=parameters,
             previous_tree=previous_tree,
         )
@@ -2531,8 +2564,10 @@ def _execute_active_check_inventory(
         )
         # The order of archive or save is important:
         if save_tree_actions.do_archive:
+            console.verbose("Archive current inventory tree.\n")
             tree_or_archive_store.archive(host_name=host_name)
         if save_tree_actions.do_save:
+            console.verbose("Save new inventory tree.\n")
             tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
 
     return result.check_result
@@ -2559,7 +2594,7 @@ def _get_save_tree_actions(
         return _SaveTreeActions(do_archive=False, do_save=True)
 
     if has_changed := previous_tree != inventory_tree:
-        console.verbose("Inventory tree has changed. Add history entry.\n")
+        console.verbose("Inventory tree has changed.\n")
 
     if update_result.save_tree:
         console.verbose(str(update_result))

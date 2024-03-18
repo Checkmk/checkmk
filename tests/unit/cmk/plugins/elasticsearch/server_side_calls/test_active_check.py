@@ -6,14 +6,9 @@
 from collections.abc import Mapping, Sequence
 
 import pytest
-from polyfactory.factories import DataclassFactory
 
 from cmk.plugins.elasticsearch.server_side_calls.active_check import active_check_config as config
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, NetworkAddressConfig
-
-
-class HostConfigFactory(DataclassFactory):
-    __model__ = HostConfig
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 
 
 @pytest.mark.parametrize(
@@ -26,10 +21,7 @@ class HostConfigFactory(DataclassFactory):
                 "pattern": "bar",
                 "timerange": 1,
             },
-            HostConfigFactory.build(
-                resolved_address="test",
-                address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
-            ),
+            HostConfig(name="test", ipv4_config=IPv4Config(address="test")),
             ["-q", "bar", "-t", "1", "-i", "f o o", "-H", "test"],
             "Elasticsearch Query stuff",
         )
@@ -42,8 +34,7 @@ def test_check_elasticsearch_query(
     expected_description: str,
 ) -> None:
     # Act
-    parsed_params = config.parameter_parser(params)
-    commands = list(config.commands_function(parsed_params, host_config, {}))
+    commands = list(config(params, host_config, {}))
     # Assert
     assert len(commands) == 1
     assert commands[0].service_description == expected_description

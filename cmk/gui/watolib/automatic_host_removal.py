@@ -19,6 +19,7 @@ from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -105,13 +106,13 @@ def _hosts_to_be_removed_for_site(
     job_interface: BackgroundProcessInterface,
     site_id: SiteId,
 ) -> Iterator[Host]:
-    if site_is_local(site_id):
+    if site_is_local(active_config, site_id):
         hostnames = _hosts_to_be_removed_local()
     else:
         try:
             hostnames_serialized = str(
                 do_remote_automation(
-                    get_site_config(site_id),
+                    get_site_config(active_config, site_id),
                     "hosts-for-auto-removal",
                     [],
                 )

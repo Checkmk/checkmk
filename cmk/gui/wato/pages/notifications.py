@@ -617,7 +617,9 @@ class ModeNotifications(ABCNotificationsMode):
                         ),
                     ),
                     PageMenuEntry(
-                        title=_("Hide analysis") if self._show_backlog else _("Show analysis"),
+                        title=_("Hide analysis")
+                        if self._show_backlog and not request.var("test_notification")
+                        else _("Show analysis"),
                         icon_name={
                             "icon": "analyze",
                             "emblem": "disable" if self._show_backlog else "enable",
@@ -626,9 +628,10 @@ class ModeNotifications(ABCNotificationsMode):
                             makeactionuri(
                                 request,
                                 transactions,
-                                [
+                                addvars=[
                                     ("_show_backlog", "" if self._show_backlog else "1"),
                                 ],
+                                delvars=("test_context", "test_notification"),
                             )
                         ),
                         is_shortcut=True,
@@ -725,7 +728,7 @@ class ModeNotifications(ABCNotificationsMode):
                 int(simulation_mode[1]["host_states"][0])
             )
             context["HOSTSTATE"] = host_state_name(int(simulation_mode[1]["host_states"][1]))
-            context["HOSTSTATEID"] = simulation_mode[1]["host_states"][1]
+            context["HOSTSTATEID"] = str(simulation_mode[1]["host_states"][1])
         else:
             context["NOTIFICATIONTYPE"] = "DOWNTIME"
             context["PREVIOUSHOSTHARDSTATE"] = "UP"
@@ -751,7 +754,7 @@ class ModeNotifications(ABCNotificationsMode):
                 else service_state_name(int(simulation_mode[1]["svc_states"][1]))
             )
             context["SERVICESTATEID"] = (
-                "0" if "downtime" in simulation_mode else simulation_mode[1]["svc_states"][1]
+                "0" if "downtime" in simulation_mode else str(simulation_mode[1]["svc_states"][1])
             )
         else:
             context["WHAT"] = "HOST"
@@ -791,9 +794,12 @@ class ModeNotifications(ABCNotificationsMode):
 
     def page(self) -> None:
         context, analyse = self._analyse_result_from_request()
+        # do not show notification backlog if test notifications was performed
+        self._show_backlog = self._show_backlog and not context
         self._show_no_fallback_contact_warning()
         self._show_bulk_notifications()
-        self._show_notification_test(context, analyse)
+        self._show_notification_test_overview(context, analyse)
+        self._show_notification_test_details(context, analyse)
         self._show_notification_backlog()
         self._show_rules(analyse)
 
@@ -881,7 +887,48 @@ class ModeNotifications(ABCNotificationsMode):
                     )
         return True
 
-    def _show_notification_test(
+    def _show_notification_test_overview(
+        self,
+        context: NotificationContext | None,
+        analyse: NotifyAnalysisInfo | None,
+    ) -> None:
+        if not context or not analyse:
+            return
+        html.open_div(class_="matching_message")
+        html.icon("toggle_details")
+        html.b(_("Matching: "))
+        html.write_text(
+            _(
+                "Each parameter is defined by the first matching rule where that parameter "
+                "is set (checked)."
+            )
+        )
+        html.close_div()
+        html.open_div(id_="notification_analysis_container")
+
+        html.open_div(class_="state_bar state0")
+        html.open_span()
+        html.icon("check")
+        html.close_span()
+        html.close_div()
+
+        html.open_div(class_="message_container")
+        html.h2(_("Analysis results"))
+        analyse_rules, analyse_resulting_notifications = analyse
+        html.write_text(
+            _("%s notification rules are matching")
+            % len(tuple(entry for entry in analyse_rules if "match" in entry))
+        )
+        html.br()
+        html.write_text(_("%s resulting notifications") % len(analyse_resulting_notifications))
+        html.br()
+        if request.var("dispatch"):
+            html.write_text(_("Notifications have been sent. "))
+        html.write_text("View the following tables for more details.")
+        html.close_div()
+        html.close_div()
+
+    def _show_notification_test_details(
         self,
         context: NotificationContext | None,
         analyse: NotifyAnalysisInfo | None,
@@ -978,7 +1025,7 @@ class ModeNotifications(ABCNotificationsMode):
             return
 
         with table_element(
-            table_id="backlog", title=_("Recent notifications (for analysis)"), sortable=False
+            table_id="backlog", title=_("Analysis: Recent notifications"), sortable=False
         ) as table:
             for nr, context in enumerate(backlog):
                 table.row()
@@ -1076,7 +1123,9 @@ class ModeNotifications(ABCNotificationsMode):
         table.cell(
             _("Plugin output"),
             cmk.gui.view_utils.format_plugin_output(
-                output, shall_escape=active_config.escape_plugin_output
+                output,
+                request=request,
+                shall_escape=active_config.escape_plugin_output,
             ),
         )
 
@@ -1236,10 +1285,12 @@ class ModeNotifications(ABCNotificationsMode):
                                             ),
                                         ),
                                     ],
+                                    columns=2,
                                     optional_keys=[],
                                 ),
                             ),
                         ],
+                        default_value="status_change",
                     ),
                 ),
                 (
@@ -1276,7 +1327,7 @@ class ModeNotifications(ABCNotificationsMode):
                             title_br=False,
                             elements=[
                                 DatePicker(
-                                    title=_("Event date and time"),
+                                    label=_("Event date and time"),
                                     default_value=time.strftime("%Y-%m-%d"),
                                 ),
                                 TimePicker(default_value=time.strftime("%H:%M")),
@@ -1306,7 +1357,12 @@ class ModeNotifications(ABCNotificationsMode):
             with html.form_context("test_notifications", method="POST"):
                 html.help(_("Test a self defined notification against your ruleset."))
                 self._vs_test_on_options()
-                self._vs_general_test_options().render_input_as_form("general_opts", {})
+                self._vs_general_test_options().render_input_as_form(
+                    "general_opts",
+                    self._get_default_options(
+                        request.var("host_name"), request.var("service_name")
+                    ),
+                )
                 self._vs_dispatched_option().render_input("dispatch", False)
                 self._vs_advanced_test_options().render_input("advanced_opts", "")
                 html.hidden_fields()
@@ -1321,10 +1377,21 @@ class ModeNotifications(ABCNotificationsMode):
 
             return HTML(output_funnel.drain())
 
+    def _get_default_options(self, hostname: str | None, servicename: str | None) -> dict[str, str]:
+        if hostname and servicename:
+            return {"hostname_choice": hostname, "service_choice": servicename}
+        if hostname:
+            return {"hostname_choice": hostname}
+        return {}
+
     def _ensure_correct_default_test_options(self) -> None:
         if request.has_var("_test_service_notifications"):
             html.final_javascript(
                 'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host");'
+            )
+        elif request.has_var("_test_host_notifications"):
+            html.final_javascript(
+                'cmk.wato.toggle_test_notification_visibility("test_on_service", "test_on_host", true);'
             )
         else:
             html.final_javascript(
@@ -1417,7 +1484,9 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
 def _get_notification_sync_sites():
     # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
     # pylint: disable=not-an-iterable
-    return sorted(site_id for site_id in wato_slave_sites() if not site_is_local(site_id))
+    return sorted(
+        site_id for site_id in wato_slave_sites() if not site_is_local(active_config, site_id)
+    )
 
 
 class ModeUserNotifications(ABCUserNotificationsMode):

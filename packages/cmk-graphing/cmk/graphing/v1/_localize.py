@@ -16,7 +16,7 @@ class _Operation(enum.Enum):
     ADD = enum.auto()
 
 
-class Localizable:
+class Title:
     """
     Create a localizable string
 
@@ -35,33 +35,33 @@ class Localizable:
 
         This is a simple use case:
 
-        >>> title = Localizable("Translate this title")
+        >>> title = Title("Translate this title")
 
         Note that the returned type only supports `%` formatting and addition.
 
         When adding localizables, you must make sure the translations of the individual
         components are available.
 
-        >>> help = Localizable("Translate this. ") + Localizable("Translate this separately.")
+        >>> help = Title("Translate this. ") + Title("Translate this separately.")
 
         Sometimes you might want to format individually localized strings, to ensure
         consistent translations:
 
-        >>> help = Localizable("Please use '%s' for foo") % Localizable("params for foo")
+        >>> help = Title("Please use '%s' for foo") % Title("params for foo")
 
-        Be aware that this does *not* result in an instance of a `Localizable`:
+        Be aware that this does *not* result in an instance of a `Title`:
 
-        >>> "%s!" % Localizable("hi")
-        "Localizable('hi')!"
+        >>> "%s!" % Title("hi")
+        "Title('hi')!"
 
     """
 
     def __init__(
         self,
-        arg: str | Localizable,
+        arg: str | Title,
         /,
         *,
-        modifier: tuple[_Operation, tuple[str | Localizable, ...]] | None = None,
+        modifier: tuple[_Operation, tuple[str | Title, ...]] | None = None,
     ) -> None:
         self._arg = arg
         self._modifier = modifier
@@ -92,13 +92,13 @@ class Localizable:
             case _:
                 assert_never(operation)
 
-    def __add__(self, other: Localizable) -> Localizable:
-        return Localizable(self, modifier=(_Operation.ADD, (other,)))
+    def __add__(self, other: Title) -> Title:
+        return Title(self, modifier=(_Operation.ADD, (other,)))
 
-    def __mod__(self, other: str | Localizable | tuple[str | Localizable, ...]) -> Localizable:
-        return Localizable(
+    def __mod__(self, other: str | Title | tuple[str | Title, ...]) -> Title:
+        return Title(
             self, modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,))
         )
 
-    def __rmod__(self, other: Localizable) -> Localizable:
-        return Localizable(other, modifier=(_Operation.MOD, (self,)))
+    def __rmod__(self, other: Title) -> Title:
+        return Title(other, modifier=(_Operation.MOD, (self,)))

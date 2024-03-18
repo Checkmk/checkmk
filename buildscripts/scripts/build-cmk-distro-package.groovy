@@ -30,7 +30,6 @@ def main() {
         "DEBEMAIL='feedback@checkmk.com'",
     ] + (params.DISABLE_CACHE ? [
         "NEXUS_BUILD_CACHE_URL=",
-        "PYTHON_ENABLE_OPTIMIZATIONS=",
         "BAZEL_CACHE_URL=",
         "BAZEL_CACHE_USER=",
         "BAZEL_CACHE_PASSWORD="] : []);
@@ -53,6 +52,12 @@ def main() {
     def container_name = "build-cmk-package-${distro}-${edition}-${cmd_output("git --git-dir=${checkout_dir}/.git log -n 1 --pretty=format:'%h'")}";
     /* groovylint-enable LineLength */
 
+    def causes = currentBuild.getBuildCauses();
+    def triggerd_by = "";
+    for(cause in causes) {
+        triggerd_by += cause.upstreamProject + "/" + cause.upstreamBuild + "\n";
+    }
+
     print(
         """
         |===== CONFIGURATION ===============================
@@ -65,6 +70,7 @@ def main() {
         |docker_args:.............. │${docker_args}│
         |checkout_dir:............. │${checkout_dir}│
         |container_name:........... │${checkout_dir}│
+        |triggerd_by:.............. |${triggerd_by}|
         |===================================================
         """.stripMargin());
 
@@ -85,6 +91,10 @@ def main() {
                     sh("make .ran-webpack");
                 }
 
+                dir("${checkout_dir}") {
+                    sh("make .venv");
+                }
+
                 stage("Fetch agent binaries") {
                     // shout("Fetch agent binaries");
 
@@ -102,7 +112,7 @@ def main() {
                         sh("find .");
                         sh("cp *.deb *.rpm ${checkout_dir}/agents/");
                         sh("mkdir -p ${checkout_dir}/agents/linux");
-                        sh("cp cmk-agent-ctl* check-sql ${checkout_dir}/agents/linux/");
+                        sh("cp cmk-agent-ctl* mk-sql ${checkout_dir}/agents/linux/");
                         if (edition != "raw") {
                             sh("cp cmk-update-agent* ${checkout_dir}/non-free/cmk-update-agent/");
                         }
@@ -119,7 +129,7 @@ def main() {
                             "agents/wnx",
                             "agents/windows",
                             "packages/cmk-agent-ctl",
-                            "packages/check-sql"
+                            "packages/mk-sql"
                         ],
                         dest: "artifacts/winagt-build",
                     );
@@ -135,7 +145,7 @@ def main() {
                             check_mk.user.yml \
                             OpenHardwareMonitorLib.dll \
                             OpenHardwareMonitorCLI.exe \
-                            check-sql.exe \
+                            mk-sql.exe \
                             robotmk_ext.exe \
                             windows_files_hashes.txt \
                             ${checkout_dir}/agents/windows/
@@ -204,17 +214,6 @@ def main() {
                         stage("Build package") {
                             sh("""
                                 cd ${checkout_dir}/omd
-
-                                # ps wauxw | grep bazel
-                                # bazel clean
-                                #strace \
-                                #    --trace='fork,vfork,clone,clone3,execve,openat,write' \
-                                #    -ttt \
-                                #    -f --decode-pids='pidns' \
-                                #    --columns=0 --abbrev='none' -s 65536 \
-                                #    -o "make-omd.strace.log" \
-                                ps wauxw | grep bazel
-
                                 ${omd_env_vars.join(' ')} \
                                 make ${distro_package_type(distro)}
                             """);

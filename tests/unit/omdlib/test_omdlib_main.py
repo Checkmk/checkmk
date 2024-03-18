@@ -590,6 +590,40 @@ def test_permission_action_all_changed_incl_type_ask_default(
     )
 
 
+def test_permission_action_directory_was_removed_in_target() -> None:
+    assert (
+        omdlib.main.permission_action(
+            site=SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="etc/ssl/private",
+            old_type="dir",
+            new_type=None,
+            user_type="dir",
+            old_perm=123,
+            new_perm=0,
+            user_perm=123,
+        )
+        is None
+    )
+
+
+def test_permission_action_directory_was_removed_in_both() -> None:
+    assert (
+        omdlib.main.permission_action(
+            site=SiteContext("bye"),
+            conflict_mode="ask",
+            relpath="etc/ssl/private",
+            old_type="dir",
+            new_type=None,
+            user_type=None,
+            old_perm=123,
+            new_perm=0,
+            user_perm=123,
+        )
+        is None
+    )
+
+
 # In 2.2 we removed world permissions from all the skel files. Some sites
 # had permissions that were different from previous defaults, resulting in
 # repeated questions to users which they should not be asked. See CMK-12090.

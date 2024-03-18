@@ -88,7 +88,7 @@ class MkeventdIcon(Icon):
         # constructed here
         url_prefix = ""
         if getattr(active_config, "mkeventd_distributed", False):
-            site = get_site_config(row["site"])
+            site = get_site_config(active_config, row["site"])
             url_prefix = site["url_prefix"] + "check_mk/"
 
         url_vars = [

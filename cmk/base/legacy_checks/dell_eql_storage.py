@@ -7,8 +7,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import any_of, contains, render, SNMPTree, startswith
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import any_of, contains, render, SNMPTree, startswith, StringTable
 
 
 def inventory_dell_eql_storage(info):

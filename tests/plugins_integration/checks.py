@@ -26,17 +26,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SkippedDumps:
-    # TODO: dumps containing dynamic data to regex
-    SKIPPED_DUMPS = [
-        "agent-2.2.0p14-windows-veeam-backup",
-        "agent-2.2.0p14-windows-dhcp",
-        "agent-2.2.0p14-windows-mssql",
-    ]
+    SKIPPED_DUMPS = []  # type: ignore
 
 
 @dataclass
 class SkippedChecks:
-    SKIPPED_CHECKS = []  # type: ignore
+    SKIPPED_CHECKS = [
+        # TODO: check responses diverging between 2.3.0 and master.
+        #   After CMK-16054 update responses and unskip checks.
+        "agent-2.2.0-ontapi-9.10:Temperature Ambient Shelf 0",
+        "agent-2.2.0-ontapi-9.10:Temperature Internal Shelf 0",
+    ]
 
 
 class CheckModes(IntEnum):
@@ -113,7 +113,7 @@ config = CheckConfig()
 
 def _apply_regexps(identifier: str, canon: dict, result: dict) -> None:
     """Apply regular expressions to the canon and result objects."""
-    regexp_filepath = f"{os.path.dirname(__file__)}/regexp.yaml"
+    regexp_filepath = f"{config.data_dir}/regexp.yaml"
     if not os.path.exists(regexp_filepath):
         return
     with open(regexp_filepath, encoding="utf-8") as regexp_file:
@@ -186,7 +186,11 @@ def get_host_names(site: Site | None = None) -> list[str]:
         if not (config.dump_dir and os.path.exists(config.dump_dir)):
             # need to skip here to abort the collection and return RC=5: "no tests collected"
             pytest.skip(f'Folder "{config.dump_dir}" not found; exiting!', allow_module_level=True)
-        for dump_file_name in [_ for _ in os.listdir(config.dump_dir) if not _.startswith(".")]:
+        for dump_file_name in [
+            _
+            for _ in os.listdir(config.dump_dir)
+            if (not _.startswith(".") and _ not in SkippedDumps.SKIPPED_DUMPS)
+        ]:
             try:
                 dump_file_path = f"{config.dump_dir}/{dump_file_name}"
                 with open(dump_file_path, encoding="utf-8") as dump_file:
@@ -448,7 +452,6 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
 
     logger.info("Running service discovery...")
     site.openapi.discover_services_and_wait_for_completion(host_name)
-    site.openapi.bulk_discover_services([host_name], bulk_size=10, wait_for_completion=True)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()
@@ -463,7 +466,7 @@ def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterat
         site.schedule_check(host_name, "Check_MK", 0, 60)
         pending_checks = site.openapi.get_host_services(host_name, pending=True)
         if idx > 0 and len(pending_checks) == 0:
-            continue
+            break
 
     if pending_checks:
         logger.info(
@@ -519,7 +522,7 @@ def setup_hosts(site: Site, host_names: list[str]) -> None:
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Running service discovery...")
-    site.openapi.bulk_discover_services(host_names, bulk_size=10, wait_for_completion=True)
+    site.openapi.bulk_discover_services_and_wait_for_completion(host_names, bulk_size=10)
 
     logger.info("Activating changes & reloading core...")
     site.activate_changes_and_wait_for_core_reload()

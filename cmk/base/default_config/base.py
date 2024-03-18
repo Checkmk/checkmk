@@ -22,7 +22,6 @@ from cmk.snmplib import RangeLimit, SNMPCredentials, SNMPTiming
 
 from cmk.fetchers import IPMICredentials
 
-from cmk.checkengine.checking import CheckPluginNameStr
 from cmk.checkengine.discovery import RediscoveryParameters
 from cmk.checkengine.exitspec import ExitSpec
 
@@ -150,6 +149,8 @@ always_cleanup_autochecks = None  # For compatiblity with old configuration
 class _PeriodicDiscovery(TypedDict):
     severity_unmonitored: SupportsInt
     severity_vanished: SupportsInt
+    severity_changed_service_labels: SupportsInt
+    severity_changed_service_params: SupportsInt
     severity_new_host_label: SupportsInt
     check_interval: SupportsInt
     inventory_rediscovery: RediscoveryParameters
@@ -302,7 +303,7 @@ snmp_check_interval: list[RuleSpec[tuple[str | None, int]]] = []
 snmp_exclude_sections: list[RuleSpec[Mapping[str, Sequence[str]]]] = []
 # Rulesets for parameters of notification scripts
 notification_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
-use_new_descriptions_for: list[CheckPluginNameStr] = []
+use_new_descriptions_for: list[str] = []
 # Custom user icons / actions to be configured
 host_icons_and_actions: list[RuleSpec[str]] = []
 # Custom user icons / actions to be configured

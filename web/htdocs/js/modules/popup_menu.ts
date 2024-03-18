@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
@@ -103,6 +103,10 @@ export function close_popup() {
 
 export function open_popup() {
     active_popup.open();
+}
+
+export function is_open(ident: string): boolean {
+    return Boolean(active_popup.id && active_popup.id === ident);
 }
 
 // Registerd as click handler on the page while the popup menu is opened

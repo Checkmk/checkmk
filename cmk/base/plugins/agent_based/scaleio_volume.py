@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from typing import Any, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -51,7 +51,7 @@ ScaleioVolumeSection = Mapping[str, ScaleioVolume]
 
 
 def parse_scaleio_volume(string_table: StringTable) -> ScaleioVolumeSection:
-    section: MutableMapping[str, ScaleioVolume] = {}
+    section: dict[str, ScaleioVolume] = {}
 
     for volume_id, volume in parse_scaleio(string_table, "VOLUME").items():
         section[volume_id] = ScaleioVolume(

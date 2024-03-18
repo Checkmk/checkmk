@@ -2,12 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime
 from collections.abc import Sequence
 from typing import NamedTuple
+from zoneinfo import ZoneInfo
 
 import pytest
-
-from tests.testlib import on_time
+import time_machine
 
 from cmk.base.plugins.agent_based import network_fs_mounts
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -19,7 +20,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
-NOW_SIMULATED = 581792400, "UTC"
+NOW_SIMULATED = 581792400
 
 
 @pytest.fixture(name="value_store_patch")
@@ -203,7 +204,7 @@ def test_network_fs_mounts_check(
     check_result: CheckResult,
 ) -> None:
     section = network_fs_mounts.parse_network_fs_mounts(string_table)
-    with on_time(*NOW_SIMULATED):
+    with time_machine.travel(datetime.datetime.fromtimestamp(NOW_SIMULATED, tz=ZoneInfo("UTC"))):
         actual_check_results = list(
             network_fs_mounts.check_network_fs_mount(
                 item, {**FILESYSTEM_DEFAULT_PARAMS, **{"has_perfdata": True}}, section
@@ -251,7 +252,7 @@ def test_nfsmount_v2_check(
     check_result: CheckResult,
 ) -> None:
     section = network_fs_mounts.parse_nfsmounts_v2(string_table)
-    with on_time(*NOW_SIMULATED):
+    with time_machine.travel(datetime.datetime.fromtimestamp(NOW_SIMULATED, tz=ZoneInfo("UTC"))):
         assert (
             list(network_fs_mounts.check_network_fs_mount(item, FILESYSTEM_DEFAULT_PARAMS, section))
             == check_result

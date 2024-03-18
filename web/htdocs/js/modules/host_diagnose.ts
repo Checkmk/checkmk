@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
@@ -92,7 +92,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
                 "&snmpv3_security_password=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_2_3"
+                        "vs_host_p_snmp_v3_credentials_2_3_orig"
                     ).value
                 );
             vars +=
@@ -106,7 +106,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
                 "&snmpv3_privacy_password=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_2_5"
+                        "vs_host_p_snmp_v3_credentials_2_5_orig"
                     ).value
                 );
         }

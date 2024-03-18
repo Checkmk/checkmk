@@ -6,6 +6,7 @@
 
 import itertools
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from typing import NamedTuple
 
 import cmk.utils.paths
 from cmk.utils.agentdatatype import AgentRawData
@@ -43,7 +44,7 @@ from cmk.checkengine.summarize import SummarizerFunction
 
 from ._plugin import AggregatedResult, CheckPlugin, CheckPluginName, ConfiguredService
 
-__all__ = ["execute_checkmk_checks", "check_host_services"]
+__all__ = ["execute_checkmk_checks", "check_host_services", "check_plugins_missing_data"]
 
 
 def execute_checkmk_checks(
@@ -68,7 +69,7 @@ def execute_checkmk_checks(
     submitter: Submitter,
     exit_spec: ExitSpec,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
-) -> ActiveCheckResult:
+) -> Sequence[ActiveCheckResult]:
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
         (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
@@ -102,17 +103,17 @@ def execute_checkmk_checks(
             params=params,
             providers=providers,
         )
-    timed_results = itertools.chain(
-        summarizer(host_sections),
-        check_parsing_errors(
+    timed_results = [
+        *summarizer(host_sections),
+        *check_parsing_errors(
             itertools.chain.from_iterable(
                 resolver.parsing_errors for resolver in providers.values()
             )
         ),
-        _check_plugins_missing_data(service_results, exit_spec),
-    )
+        *check_plugins_missing_data(service_results, exit_spec),
+    ]
 
-    return ActiveCheckResult.from_subresults(*timed_results)
+    return timed_results
 
 
 def _do_inventory_actions_during_checking_for(
@@ -142,7 +143,12 @@ def _do_inventory_actions_during_checking_for(
         tree_store.save(host_name=host_name, tree=status_data_tree)
 
 
-def _check_plugins_missing_data(
+class PluginState(NamedTuple):
+    state: int
+    name: CheckPluginName
+
+
+def check_plugins_missing_data(
     service_results: Sequence[AggregatedResult],
     exit_spec: ExitSpec,
 ) -> Iterable[ActiveCheckResult]:
@@ -169,24 +175,16 @@ def _check_plugins_missing_data(
         r.service.check_plugin_name for r in service_results if not r.data_received
     }
 
-    specific_plugins, generic_plugins = set(), set()
-    for check_plugin_name in plugins_missing_data:
+    yield ActiveCheckResult(0, "Missing monitoring data for plugins")
+
+    for check_plugin_name in sorted(plugins_missing_data):
         for pattern, status in specific_plugins_missing_data_spec:
             reg = regex(pattern)
             if reg.match(str(check_plugin_name)):
-                specific_plugins.add((check_plugin_name, status))
+                yield ActiveCheckResult(status, str(check_plugin_name))
                 break
         else:  # no break
-            generic_plugins.add(str(check_plugin_name))
-
-    plugin_list = ", ".join(sorted(generic_plugins))
-    yield ActiveCheckResult(
-        missing_status,
-        f"Missing monitoring data for plugins: {plugin_list}",
-    )
-    yield from (
-        ActiveCheckResult(status, str(plugin)) for plugin, status in sorted(specific_plugins)
-    )
+            yield ActiveCheckResult(missing_status, str(check_plugin_name))
 
 
 def check_host_services(

@@ -134,6 +134,8 @@ include \
     packages/maintenance/maintenance.make \
     packages/mod_fcgid/mod_fcgid.make \
     packages/monitoring-plugins/monitoring-plugins.make \
+    packages/check-cert/check-cert.make \
+    packages/check-http/check-http.make \
     packages/lcab/lcab.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
@@ -156,7 +158,8 @@ include \
     packages/neb/neb.make \
     packages/unixcat/unixcat.make \
     packages/xmlsec1/xmlsec1.make \
-    packages/robotmk/robotmk.make
+    packages/robotmk/robotmk.make \
+    packages/redfish_mkp/redfish_mkp.make
 
 ifeq ($(EDITION),enterprise)
 include \

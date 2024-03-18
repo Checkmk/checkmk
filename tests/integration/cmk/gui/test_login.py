@@ -211,3 +211,51 @@ def test_human_user_restapi(site: Site) -> None:
     assert "site" in response.json()
     assert not session.is_logged_in()
     assert session.get_auth_cookie() is None
+
+
+@skip_if_saas_edition
+def test_local_secret_no_sessions(site: Site) -> None:
+    """test authenticated request with the site internal secret
+
+    - a session must not be established
+    """
+    b64_token = site.get_site_internal_secret().b64_str
+    session = CMKWebSession(site)
+    response = session.get(
+        f"/{site.id}/check_mk/api/1.0/version",
+        headers={
+            "Authorization": f"InternalToken {b64_token}",
+        },
+    )
+    assert "site" in response.json()
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+    session = CMKWebSession(site)
+    response = session.get(
+        "dashboard.py",
+        headers={
+            "Authorization": f"InternalToken {b64_token}",
+        },
+    )
+    assert "Dashboard" in response.text
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+
+def test_local_secret_permissions(site: Site) -> None:
+    """test if all pages are accessible by the local_secret
+
+    while introducing the secret and refactoring code to this secret we should
+    add tests here to make sure the functionallity works..."""
+
+    session = CMKWebSession(site)
+    b64_token = site.get_site_internal_secret().b64_str
+    response = session.get(
+        f"/{site.id}/check_mk/api/1.0/agent_controller_certificates_settings",
+        headers={
+            "Authorization": f"InternalToken {b64_token}",
+        },
+    )
+    assert response.status_code == 200
+    assert isinstance(response.json()["lifetime_in_months"], int)

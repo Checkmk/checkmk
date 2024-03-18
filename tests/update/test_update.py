@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 import random
 from pathlib import Path
 
@@ -17,16 +16,13 @@ from tests.testlib.version import CMKVersion, version_from_env
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
-from .conftest import get_site_status, SUPPORTED_DISTROS, update_config, update_site
+from .conftest import get_site_status, update_site
 
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.cse
 @pytest.mark.cee
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") not in SUPPORTED_DISTROS,
-    reason=f"This test currently does not support {os.environ.get('DISTRO')}",
-)
 def test_update(  # pylint: disable=too-many-branches
     test_setup: tuple[Site, bool],
     agent_ctl: Path,
@@ -68,8 +64,8 @@ def test_update(  # pylint: disable=too-many-branches
         wait_until_host_receives_data(test_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    test_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     test_site.openapi.activate_changes_and_wait_for_completion()
 
@@ -98,19 +94,14 @@ def test_update(  # pylint: disable=too-many-branches
 
     target_site = update_site(test_site, target_version, not disable_interactive_mode)
 
-    # Triggering cmk config update
-    update_config_result = update_config(target_site)
-
-    assert update_config_result == 0, "Updating the configuration failed unexpectedly!"
-
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"
 
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
 
     logger.info("Discovering services and waiting for completion...")
-    target_site.openapi.bulk_discover_services(
-        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    target_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
     )
     target_site.openapi.activate_changes_and_wait_for_completion()
 
@@ -148,5 +139,6 @@ def test_update(  # pylint: disable=too-many-branches
             f"In the {hostname} host the following services were `OK` in base-version but not in "
             f"target-version: "
             f"{not_ok_services}"
+            f"\nDetails: {[(s, target_data[hostname][s].summary) for s in not_ok_services]})"
         )
         assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg

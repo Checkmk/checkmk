@@ -8,23 +8,13 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.mail.server_side_calls.mail import active_check_mail
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, PlainTextSecret
 
 HOST_CONFIG = HostConfig(
     name="host",
-    resolved_address="127.0.0.1",
     alias="host_alias",
-    address_config=NetworkAddressConfig(
-        ip_family=IPAddressFamily.IPV4,
-        ipv4_address="127.0.0.1",
-    ),
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
+    ipv4_config=IPv4Config(address="127.0.0.1"),
+    macros={"$HOSTNAME$": "host"},
 )
 
 
@@ -180,8 +170,7 @@ def test_check_mail_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = active_check_mail.parameter_parser(params)
-    commands = list(active_check_mail.commands_function(parsed_params, HOST_CONFIG, {}))
+    commands = list(active_check_mail(params, HOST_CONFIG, {}))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args

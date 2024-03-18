@@ -6,14 +6,11 @@
 import collections
 import time
 from collections.abc import Iterable, Mapping, Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.hostaddress import (  # pylint: disable=cmk-module-layer-violation
-    HostAddress,
-    HostName,
-)
+from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
@@ -44,12 +41,25 @@ from .agent_based_api.v1 import check_levels, regex, register, render, Result, S
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
-def _normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:
-    """Expand 10.0.0.{1,2,3}."""
+def _expand_curly_address_notation(ip_addresses: str | Sequence[str]) -> list[str]:
+    """Expand 10.0.0.{1,2,3}.
+
+    >>> _expand_curly_address_notation("1.1.1.1")
+    ['1.1.1.1']
+
+    >>> _expand_curly_address_notation("1.1.1.{1,3}")
+    ['1.1.1.1', '1.1.1.3']
+
+    We ignore certain stuff, this is just showing that this does not really validate anything
+    This behavior is IMHO not important
+
+    >>> _expand_curly_address_notation("1.1.1.1/1337")
+    ['1.1.1.1/1337']
+    """
     if isinstance(ip_addresses, str):
         ip_addresses = ip_addresses.split()
 
-    expanded = [HostAddress(word) for word in ip_addresses if "{" not in word]
+    expanded = [word for word in ip_addresses if "{" not in word]
     for word in ip_addresses:
         if word in expanded:
             continue
@@ -59,7 +69,7 @@ def _normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddre
             curly, suffix = tmp.split("}")
         except ValueError:
             raise MKGeneralException(f"could not expand {word!r}")
-        expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(","))
+        expanded.extend(f"{prefix}{i}{suffix}" for i in curly.split(","))
 
     return expanded
 
@@ -172,9 +182,8 @@ def _check_only_from(
     if agent_only_from is None or config_only_from is None:
         return
 
-    # do we really need '_normalize_ip_addresses'? It deals with '{' expansion.
-    allowed_nets = set(_normalize_ip_addresses(agent_only_from))
-    expected_nets = set(_normalize_ip_addresses(config_only_from))
+    allowed_nets = set(_expand_curly_address_notation(agent_only_from))
+    expected_nets = set(_expand_curly_address_notation(config_only_from))
     if allowed_nets == expected_nets:
         yield Result(
             state=State.OK,
@@ -314,8 +323,9 @@ def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> Check
 
         assert cert_info.not_after is not None  # It is only None if cert is corrupt
 
-        # We get tz aware datetimes and we must not compare them to naive datetimes
-        duration_valid = cert_info.not_after - datetime.now().astimezone()
+        # comparing naive to aware datetimes raises anyway, but the assertion is less obscure
+        assert cert_info.not_after.tzinfo is not None, "cert_info.not_after must be tz aware"
+        duration_valid = cert_info.not_after - datetime.now(timezone.utc)
 
         if duration_valid.total_seconds() < 0:
             yield Result(
@@ -397,10 +407,10 @@ def _check_cmk_agent_update(
         yield Result(state=State.OK, notice=f"Update URL: {update_url}")
 
     if aghash := section.aghash:
-        yield Result(state=State.OK, notice=f"Agent configuration: {aghash[:8]}")
+        yield Result(state=State.OK, notice=f"Agent configuration: {aghash}")
 
     if pending := section.pending_hash:
-        yield Result(state=State.OK, notice=f"Pending installation: {pending[:8]}")
+        yield Result(state=State.OK, notice=f"Pending installation: {pending}")
 
     yield from _check_cmk_agent_update_certificates(section)
 
@@ -512,13 +522,15 @@ def _check_controller_cert_validity(section: ControllerSection, now: float) -> C
             levels_lower=(30 * 24 * 3600, 15 * 24 * 3600),  # (30 days, 15 days)
             render_func=render.timespan,
             label=(
-                f"Time until controller certificate for `{site_id}`, "
-                f"issued by `{connection.local.cert_info.issuer}`, expires"
-            )
-            if (site_id := connection.get_site_id())
-            else (
-                "Time until controller certificate issued by "
-                f"`{connection.local.cert_info.issuer}` (imported connection) expires"
+                (
+                    f"Time until controller certificate for `{site_id}`, "
+                    f"issued by `{connection.local.cert_info.issuer}`, expires"
+                )
+                if (site_id := connection.get_site_id())
+                else (
+                    "Time until controller certificate issued by "
+                    f"`{connection.local.cert_info.issuer}` (imported connection) expires"
+                )
             ),
             notice_only=True,
         )

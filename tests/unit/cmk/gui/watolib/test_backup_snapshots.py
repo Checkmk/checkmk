@@ -14,12 +14,12 @@ def _snapshot_files() -> Generator[pathlib.Path, None, None]:
     yield from pathlib.Path(backup_snapshots.snapshot_dir).glob("wato-snapshot*.tar")
 
 
-def test_create_snapshot() -> None:
+def test_create_snapshot(request_context: None) -> None:
     backup_snapshots.create_snapshot("")
     assert list(_snapshot_files())
 
 
-def test_snapshot_status() -> None:
+def test_snapshot_status(request_context: None) -> None:
     backup_snapshots.create_snapshot("test snapshot")
     snapshot_status = backup_snapshots.get_snapshot_status(next(_snapshot_files()).name)
     assert "test snapshot" in snapshot_status["comment"]
@@ -27,7 +27,7 @@ def test_snapshot_status() -> None:
     assert "broken_text" not in snapshot_status
 
 
-def test_extract_snapshot() -> None:
+def test_extract_snapshot(request_context: None) -> None:
     backup_snapshots.create_snapshot("")
     with tarfile.open(next(_snapshot_files()), mode="r") as snapshot_tar:
         backup_snapshots.extract_snapshot(

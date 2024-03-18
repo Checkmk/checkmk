@@ -42,12 +42,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 from cmk.ec.event import (  # pylint: disable=cmk-module-layer-violation
     create_event_from_syslog_message,
-)
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    SyslogForwarderUnixSocket,
-    SyslogMessage,
 )
 
 from .utils import logwatch
@@ -263,7 +260,7 @@ class MessageForwarderProto(Protocol):
     def __call__(
         self,
         method: str | tuple,
-        messages: Sequence[SyslogMessage],
+        messages: Sequence[ec.SyslogMessage],
     ) -> LogwatchForwardedResult:
         ...
 
@@ -436,7 +433,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
                         continue
 
             syslog_messages.append(
-                SyslogMessage(
+                ec.SyslogMessage(
                     facility=facility,
                     severity=logwatch_to_prio(rclfd_level or line[0]),
                     timestamp=cur_time,
@@ -506,7 +503,7 @@ class MessageForwarder:
     def __call__(
         self,
         method: str | tuple,
-        messages: Sequence[SyslogMessage],
+        messages: Sequence[ec.SyslogMessage],
     ) -> LogwatchForwardedResult:
         if not method:
             method = str(cmk.utils.paths.omd_root / "tmp/run/mkeventd/eventsocket")
@@ -520,26 +517,24 @@ class MessageForwarder:
             )
 
         if not method.startswith("spool:"):
-            return self._forward_pipe(
+            return self._forward_unix_socket(
                 Path(method),
                 messages,
             )
 
         return self._forward_spool_directory(method, messages)
 
-    # write into local event pipe
-    # Important: When the event daemon is stopped, then the pipe
+    # write into local UNIX socket
+    # Important: When the event daemon is stopped, then the socket
     # is *not* existing! This prevents us from hanging in such
     # situations. So we must make sure that we do not create a file
-    # instead of the pipe!
+    # instead of the socket!
     @staticmethod
-    def _forward_pipe(
+    def _forward_unix_socket(
         path: Path,
-        events: Sequence[SyslogMessage],
+        events: Sequence[ec.SyslogMessage],
     ) -> LogwatchForwardedResult:
-        if not events:
-            return LogwatchForwardedResult()
-        SyslogForwarderUnixSocket(path=path).forward(events)
+        ec.forward_to_unix_socket(events, path)
         return LogwatchForwardedResult(num_forwarded=len(events))
 
     # Spool the log messages to given spool directory.
@@ -548,7 +543,7 @@ class MessageForwarder:
     def _forward_spool_directory(
         self,
         method: str,
-        syslog_messages: Sequence[SyslogMessage],
+        syslog_messages: Sequence[ec.SyslogMessage],
     ) -> LogwatchForwardedResult:
         if not syslog_messages:
             return LogwatchForwardedResult()
@@ -601,7 +596,7 @@ class MessageForwarder:
     def _forward_tcp(
         self,
         method: tuple,
-        syslog_messages: Sequence[SyslogMessage],
+        syslog_messages: Sequence[ec.SyslogMessage],
     ) -> LogwatchForwardedResult:
         # Transform old format: (proto, address, port)
         if not isinstance(method[1], dict):

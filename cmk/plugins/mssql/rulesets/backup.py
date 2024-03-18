@@ -5,9 +5,9 @@
 
 from cmk.plugins.mssql.rulesets.utils import (
     fs_mssql_backup_age,
-    mssql_item_spec_instance_tablespace,
+    mssql_condition_instance_tablespace,
 )
-from cmk.rulesets.v1 import form_specs, Localizable, rule_specs
+from cmk.rulesets.v1 import form_specs, Help, rule_specs, Title
 
 
 def _form_spec_discovery_mssql_backup():
@@ -15,15 +15,15 @@ def _form_spec_discovery_mssql_backup():
         elements={
             "mode": form_specs.DictElement(
                 parameter_form=form_specs.SingleChoice(
-                    title=Localizable("Backup modes"),
+                    title=Title("Backup modes"),
                     elements=[
                         form_specs.SingleChoiceElement(
                             name="summary",
-                            title=Localizable("Create a service for each instance"),
+                            title=Title("Create a service for each instance"),
                         ),
                         form_specs.SingleChoiceElement(
                             name="per_type",
-                            title=Localizable("Create a service for each instance and backup type"),
+                            title=Title("Create a service for each instance and backup type"),
                         ),
                     ],
                 ),
@@ -33,7 +33,7 @@ def _form_spec_discovery_mssql_backup():
 
 
 rule_spec_discovery_mssql_backup = rule_specs.DiscoveryParameters(
-    title=Localizable("MSSQL backup discovery"),
+    title=Title("MSSQL backup discovery"),
     topic=rule_specs.Topic.GENERAL,
     eval_type=rule_specs.EvalType.MERGE,
     name="discovery_mssql_backup",
@@ -43,7 +43,7 @@ rule_spec_discovery_mssql_backup = rule_specs.DiscoveryParameters(
 
 def _parameter_formspec_mssql_backup() -> form_specs.Dictionary:
     return form_specs.Dictionary(
-        help_text=Localizable(
+        help_text=Help(
             "This rule allows you to set limits on the age of backups for "
             "different backup types. If your agent does not support "
             "backup types (e.g. <i>Log Backup</i>, <i>Database Diff "
@@ -51,27 +51,25 @@ def _parameter_formspec_mssql_backup() -> form_specs.Dictionary:
             "</i> to set a general limit"
         ),
         elements={
-            "database": fs_mssql_backup_age(Localizable("Database backup")),
-            "database_diff": fs_mssql_backup_age(Localizable("Database diff backup")),
-            "log": fs_mssql_backup_age(Localizable("Log backup")),
-            "file_or_filegroup": fs_mssql_backup_age(Localizable("File or filegroup backup")),
-            "file_diff": fs_mssql_backup_age(Localizable("File diff backup")),
-            "partial": fs_mssql_backup_age(Localizable("Partial backup")),
-            "partial_diff": fs_mssql_backup_age(Localizable("Partial diff backup")),
-            "unspecific": fs_mssql_backup_age(Localizable("Unspecific backup")),
+            "database": fs_mssql_backup_age(Title("Database backup")),
+            "database_diff": fs_mssql_backup_age(Title("Database diff backup")),
+            "log": fs_mssql_backup_age(Title("Log backup")),
+            "file_or_filegroup": fs_mssql_backup_age(Title("File or filegroup backup")),
+            "file_diff": fs_mssql_backup_age(Title("File diff backup")),
+            "partial": fs_mssql_backup_age(Title("Partial backup")),
+            "partial_diff": fs_mssql_backup_age(Title("Partial diff backup")),
+            "unspecific": fs_mssql_backup_age(Title("Unspecific backup")),
             "not_found": form_specs.DictElement(
-                parameter_form=form_specs.ServiceState(
-                    title=Localizable("State if no backup found")
-                )
+                parameter_form=form_specs.ServiceState(title=Title("State if no backup found"))
             ),
         },
     )
 
 
-rule_spec_mssql_backup = rule_specs.CheckParameterWithItem(
+rule_spec_mssql_backup = rule_specs.CheckParameters(
     name="mssql_backup",
-    title=Localizable("MSSQL Backup summary"),
+    title=Title("MSSQL Backup summary"),
     topic=rule_specs.Topic.APPLICATIONS,
-    item_form=mssql_item_spec_instance_tablespace(),
     parameter_form=_parameter_formspec_mssql_backup,
+    condition=mssql_condition_instance_tablespace(),
 )

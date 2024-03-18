@@ -18,9 +18,6 @@ def fixture_check_form_submit() -> ModuleType:
     return import_module_hack("active_checks/check_form_submit")
 
 
-@pytest.mark.skip(
-    reason="CMK-15485 Re-enable when vcr is python 3.12 ready: https://github.com/kevin1024/vcrpy/issues/793"
-)
 @pytest.mark.parametrize(
     "args, expected_exitcode, expected_info",
     [

@@ -51,12 +51,9 @@ ProblemsDashboard = DashboardConfig(
                     "title": _("Host statistics"),
                     "type": "hoststats",
                     "position": (1, 1),
+                    "size": (30, 18),
                     "show_title": True,
-                    "context": {
-                        "wato_folder": {
-                            "wato_folder": "",
-                        }
-                    },
+                    "context": {},
                     "single_infos": [],
                 }
             ),
@@ -65,12 +62,9 @@ ProblemsDashboard = DashboardConfig(
                     "title": _("Service statistics"),
                     "type": "servicestats",
                     "position": (31, 1),
+                    "size": (30, 18),
                     "show_title": True,
-                    "context": {
-                        "wato_folder": {
-                            "wato_folder": "",
-                        }
-                    },
+                    "context": {},
                     "single_infos": [],
                 }
             ),
@@ -224,6 +218,7 @@ ProblemsDashboard = DashboardConfig(
         "add_context_to_title": True,
         "is_show_more": False,
         "packaged": False,
+        "megamenu_search_terms": [],
     }
 )
 
@@ -345,6 +340,7 @@ SimpleProblemsDashboard = DashboardConfig(
         "add_context_to_title": True,
         "is_show_more": False,
         "packaged": False,
+        "megamenu_search_terms": [],
     }
 )
 
@@ -396,5 +392,6 @@ CheckmkOverviewDashboard = DashboardConfig(
         "name": "checkmk",
         "is_show_more": False,
         "packaged": False,
+        "megamenu_search_terms": [],
     }
 )

@@ -89,6 +89,9 @@ config_setting(
     ("agent-based", "$(execpath @omd_packages//packages:cmk-agent-based)"),
     ("mkp-tool", "$(execpath @omd_packages//packages:cmk-mkp-tool)"),
     ("livestatus-client", "$(execpath @omd_packages//packages:cmk-livestatus-client)"),
+    # TODO: Switch to official release when netapp has fixed their build process
+    # See: https://github.com/NetApp/ontap-rest-python/issues/46
+    ("netapp-ontap", "git+https://github.com/Checkmk/netapp-ontap-cmk.git@e38ce4ce357ad2ea8f47260c269757f8805bdbce"),
 ]]
 
 genrule(
@@ -104,6 +107,7 @@ genrule(
             "server-side-calls",
             "werks",
             "livestatus-client",
+            "netapp-ontap",
         ]
     ],
     outs = [

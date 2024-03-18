@@ -90,6 +90,7 @@ from cmk.gui.watolib.host_attributes import (
     MetaData,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -1338,14 +1339,11 @@ class Folder(FolderProtocol):
         for hostname, host in sorted(self.hosts().items()):
             effective = host.effective_attributes()
             cleaned_hosts[hostname] = update_metadata(host.attributes, created_by=user.id)
+            host_labels[hostname] = effective["labels"]
 
             tag_groups = host.tag_groups()
             if tag_groups:
                 host_tags[hostname] = tag_groups
-
-            labels = host.labels()
-            if labels:
-                host_labels[hostname] = labels
 
             if host.is_cluster():
                 nodes = host.cluster_nodes()
@@ -1546,6 +1544,16 @@ class Folder(FolderProtocol):
         self.wato_info_storage_manager().write(Path(self.wato_info_path()), self.serialize())
         if may_use_redis():
             get_wato_redis_client(self.tree).save_folder_info(self)
+
+    def has_rules(self) -> bool:
+        return Path(self.rules_file_path()).exists()
+
+    def is_empty(self) -> bool:
+        return not (self.has_hosts() or self.has_subfolders() or self.has_rules())
+
+    def is_referenced(self) -> bool:
+        conditions = PredefinedConditionStore().filter_by_path(self.path())
+        return len(conditions) > 0
 
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |
@@ -2165,11 +2173,11 @@ class Folder(FolderProtocol):
         self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
 
-        # 2. check if hosts have parents
         subfolder = self.subfolder(name)
         if subfolder is None:
             return
 
+        # 2. Check if hosts have parents
         hosts_with_children = self._get_parents_of_hosts(subfolder.all_hosts_recursively().keys())
         if hosts_with_children:
             raise MKUserError(
@@ -2326,6 +2334,18 @@ class Folder(FolderProtocol):
         self,
         entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
+        """Create many hosts at once.
+
+        Below are the expected Exceptions this function will throw (indirectly). Any other
+        Exception is due to an error.
+
+        Raises:
+            - MKAuthException: When the user doesn't have the rights to see a (or any) host.
+            - MKAuthException: When the user isn't in the contact group specified.
+            - MKUserError: When the host is already there.
+            - MKGeneralException: When something happened during permission check.
+
+        """
         # 1. Check preconditions
         self.prepare_create_hosts()
 
@@ -3172,6 +3192,7 @@ class Host:
     def _compute_effective_attributes(self) -> HostAttributes:
         effective = self.folder().effective_attributes()
         effective.update(self.attributes)
+        effective["labels"] = self.labels()
         return effective
 
     def labels(self) -> Labels:
@@ -3664,7 +3685,7 @@ def rebuild_folder_lookup_cache() -> None:
 
 
 def ajax_popup_host_action_menu() -> None:
-    hostname: HostName = HostName(request.get_ascii_input_mandatory("hostname"))
+    hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
     host = Host.host(hostname)
     if host is None:
         html.show_error(_('"%s" is not a valid host name') % hostname)

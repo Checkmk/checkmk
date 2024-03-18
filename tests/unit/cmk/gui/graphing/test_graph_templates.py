@@ -15,6 +15,7 @@ from livestatus import SiteId
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.metrics as metrics
+from cmk.gui.config import active_config
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing import perfometer_info
 from cmk.gui.graphing._expression import (
@@ -41,6 +42,7 @@ from cmk.gui.graphing._perfometer import (
     LogarithmicPerfometerSpec,
 )
 from cmk.gui.graphing._utils import (
+    graph_info,
     graph_templates_internal,
     GraphTemplate,
     ScalarDefinition,
@@ -144,12 +146,23 @@ def test_matching_graph_templates(
     )
 
 
-def test_replace_expression() -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
+def test__replace_expressions() -> None:
+    perfdata: Perfdata = [PerfDataTuple(n, n, len(n), "", 120, 240, 0, 25) for n in ["load1"]]
     translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
     assert (
         gt._replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
-        == "CPU Load - 25  CPU Cores"
+        == "CPU Load - 25 CPU Cores"
+    )
+
+
+def test__replace_expressions_missing_scalars() -> None:
+    perfdata: Perfdata = [
+        PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["load1"]
+    ]
+    translated_metrics = translate_metrics(perfdata, "check_mk-cpu.loads")
+    assert (
+        gt._replace_expressions("CPU Load - %(load1:max@count) CPU Cores", translated_metrics)
+        == "CPU Load"
     )
 
 
@@ -191,7 +204,7 @@ def test_horizontal_rules_from_thresholds(
                     title="Warning output",
                 ),
             ],
-            metrics.translate_perf_data(perf_string),
+            metrics.translate_perf_data(perf_string, config=active_config),
         )
         == result
     )
@@ -511,7 +524,8 @@ def test_non_trivial_perfometer_declarations() -> None:
 
 def test_non_trivial_graph_declarations() -> None:
     non_trivial_graphs = []
-    for ident, template in graph_templates_internal().items():
+    for ident, raw_template in graph_info.items():
+        template = GraphTemplate.from_template(ident, raw_template)
         expressions = [m.expression for m in template.metrics] + [
             s.expression for s in template.scalars
         ]

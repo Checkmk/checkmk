@@ -1,11 +1,12 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
 import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
+import Swal from "sweetalert2";
 import {CMKAjaxReponse} from "types";
 import * as utils from "utils";
 
@@ -1170,6 +1171,8 @@ export function init_messages_and_werks(
 interface AjaxSidebarGetMessages {
     popup_messages: {id: string; text: string}[];
     hint_messages: {
+        type: string;
+        title: string;
         text: string;
         count: number;
     };
@@ -1183,13 +1186,35 @@ function handle_update_messages(_data: any, response_text: string) {
     }
     const result = response.result;
     const messages_text = result.hint_messages.text;
+    const messages_title = result.hint_messages.title;
     const messages_count = result.hint_messages.count;
 
     update_message_trigger(messages_text, messages_count);
     result.popup_messages.forEach(msg => {
-        console.error(msg.text);
+        Swal.fire({
+            icon: "info",
+            title: messages_title,
+            text: msg.text,
+        });
         mark_message_read(msg.id, messages_text, messages_count);
     });
+
+    if (result.popup_messages.length != 0) {
+        remove_mega_menu_hints();
+    }
+}
+
+function remove_mega_menu_hints() {
+    // If a popup was shown and clicked, there is no need for a hint in the
+    // user menu
+    const msg_mega_menu_hint = document.getElementById("messages_label");
+    if (msg_mega_menu_hint) {
+        msg_mega_menu_hint.remove();
+    }
+    const msg_user_menu_link = document.getElementById("messages_link");
+    if (msg_user_menu_link) {
+        msg_user_menu_link.remove();
+    }
 }
 
 function update_messages() {

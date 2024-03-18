@@ -22,9 +22,10 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.bi import BIManager, get_cached_bi_packs
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.utils import permission_verification as permissions
 
 from cmk import fields
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
@@ -524,18 +525,17 @@ def get_bi_packs(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
-    packs = [
-        constructors.collection_item(
-            domain_type="bi_pack",
-            identifier=pack.id,
-            title=pack.title,
-        )
-        for pack in bi_packs.packs.values()
-    ]
 
     collection_object = constructors.collection_object(
         domain_type="bi_pack",
-        value=packs,
+        value=[
+            constructors.collection_item(
+                domain_type="bi_pack",
+                identifier=pack.id,
+                title=pack.title,
+            )
+            for pack in bi_packs.packs.values()
+        ],
         links=[constructors.link_rel("self", constructors.collection_href("bi_pack"))],
     )
     return serve_json(collection_object)

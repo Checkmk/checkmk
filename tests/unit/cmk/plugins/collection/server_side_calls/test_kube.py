@@ -8,24 +8,14 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.plugins.collection.server_side_calls.kube import special_agent_kube
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    IPAddressFamily,
-    NetworkAddressConfig,
-    PlainTextSecret,
-    ResolvedIPAddressFamily,
-)
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, PlainTextSecret
 
 HOST_CONFIG = HostConfig(
     name="host",
-    resolved_address="11.211.3.32",
-    alias="host_alias",
-    resolved_ip_family=ResolvedIPAddressFamily.IPV4,
-    address_config=NetworkAddressConfig(ip_family=IPAddressFamily.IPV4),
+    ipv4_config=IPv4Config(address="11.211.3.32"),
 )
 
-HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
+HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
 
 
 @pytest.mark.parametrize(
@@ -168,27 +158,24 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
 @pytest.mark.usefixtures("fix_register")
 def test_parse_arguments(params: Mapping[str, object], expected_args: Sequence[str]) -> None:
     """Tests if all required arguments are present."""
-    parsed_params = special_agent_kube.parameter_parser(params)
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_args
 
 
 def test_parse_arguments_with_no_cluster_endpoint() -> None:
-    parsed_params = special_agent_kube.parameter_parser(
-        {
-            "cluster-name": "cluster",
-            "token": ("password", "token"),
-            "kubernetes-api-server": {
-                "endpoint_v2": "https://127.0.0.1",
-                "verify-cert": False,
-                "proxy": ("no_proxy", "no_proxy"),
-            },
-            "monitored-objects": ["pods"],
-        }
-    )
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    params = {
+        "cluster-name": "cluster",
+        "token": ("password", "token"),
+        "kubernetes-api-server": {
+            "endpoint_v2": "https://127.0.0.1",
+            "verify-cert": False,
+            "proxy": ("no_proxy", "no_proxy"),
+        },
+        "monitored-objects": ["pods"],
+    }
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == [
@@ -212,19 +199,17 @@ def test_parse_arguments_with_no_cluster_endpoint() -> None:
 
 def test_cronjob_pvcs_piggyback_option() -> None:
     """Test the cronjob and pvc piggyback option"""
-    parsed_params = special_agent_kube.parameter_parser(
-        {
-            "cluster-name": "cluster",
-            "token": ("password", "token"),
-            "kubernetes-api-server": {
-                "endpoint_v2": "https://11.211.3.32",
-                "verify-cert": False,
-                "proxy": ("no_proxy", "no_proxy"),
-            },
-            "monitored-objects": ["pods", "cronjobs_pods", "pvcs"],
-        }
-    )
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    params = {
+        "cluster-name": "cluster",
+        "token": ("password", "token"),
+        "kubernetes-api-server": {
+            "endpoint_v2": "https://11.211.3.32",
+            "verify-cert": False,
+            "proxy": ("no_proxy", "no_proxy"),
+        },
+        "monitored-objects": ["pods", "cronjobs_pods", "pvcs"],
+    }
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == [
@@ -250,23 +235,21 @@ def test_cronjob_pvcs_piggyback_option() -> None:
 
 def test_cluster_resource_aggregation() -> None:
     """Test the cluster-resource-aggregation option"""
-    parsed_params = special_agent_kube.parameter_parser(
-        {
-            "cluster-name": "cluster",
-            "token": ("password", "token"),
-            "kubernetes-api-server": {
-                "endpoint_v2": "https://11.211.3.32",
-                "verify-cert": False,
-                "proxy": ("no_proxy", "no_proxy"),
-            },
-            "monitored-objects": ["pods"],
-            "cluster-resource-aggregation": (
-                "cluster-aggregation-exclude-node-roles",
-                ["control*", "worker"],
-            ),
-        }
-    )
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    params = {
+        "cluster-name": "cluster",
+        "token": ("password", "token"),
+        "kubernetes-api-server": {
+            "endpoint_v2": "https://11.211.3.32",
+            "verify-cert": False,
+            "proxy": ("no_proxy", "no_proxy"),
+        },
+        "monitored-objects": ["pods"],
+        "cluster-resource-aggregation": (
+            "cluster-aggregation-exclude-node-roles",
+            ["control*", "worker"],
+        ),
+    }
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == [
@@ -287,20 +270,18 @@ def test_cluster_resource_aggregation() -> None:
         "NO_PROXY",
     ]
 
-    parsed_params = special_agent_kube.parameter_parser(
-        {
-            "cluster-name": "cluster",
-            "token": ("password", "token"),
-            "kubernetes-api-server": {
-                "endpoint_v2": "https://11.211.3.32",
-                "verify-cert": False,
-                "proxy": ("no_proxy", "no_proxy"),
-            },
-            "monitored-objects": ["pods"],
-            "cluster-resource-aggregation": "cluster-aggregation-include-all-nodes",
-        }
-    )
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    params = {
+        "cluster-name": "cluster",
+        "token": ("password", "token"),
+        "kubernetes-api-server": {
+            "endpoint_v2": "https://11.211.3.32",
+            "verify-cert": False,
+            "proxy": ("no_proxy", "no_proxy"),
+        },
+        "monitored-objects": ["pods"],
+        "cluster-resource-aggregation": "cluster-aggregation-include-all-nodes",
+    }
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == [
@@ -318,19 +299,17 @@ def test_cluster_resource_aggregation() -> None:
         "--api-server-proxy",
         "NO_PROXY",
     ]
-    parsed_params = special_agent_kube.parameter_parser(
-        {
-            "cluster-name": "cluster",
-            "token": ("password", "token"),
-            "kubernetes-api-server": {
-                "endpoint_v2": "https://11.211.3.32",
-                "verify-cert": False,
-                "proxy": ("no_proxy", "no_proxy"),
-            },
-            "monitored-objects": ["pods"],
-        }
-    )
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    params = {
+        "cluster-name": "cluster",
+        "token": ("password", "token"),
+        "kubernetes-api-server": {
+            "endpoint_v2": "https://11.211.3.32",
+            "verify-cert": False,
+            "proxy": ("no_proxy", "no_proxy"),
+        },
+        "monitored-objects": ["pods"],
+    }
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == [
@@ -359,20 +338,18 @@ def test_host_labels_annotation_selection() -> None:
     # special case needs to be reconsidered.
 
     # Explicit no filtering
-    parsed_params = special_agent_kube.parameter_parser(
-        {
-            "cluster-name": "cluster",
-            "token": ("password", "token"),
-            "kubernetes-api-server": {
-                "endpoint_v2": "https://11.211.3.32",
-                "verify-cert": False,
-                "proxy": ("no_proxy", "no_proxy"),
-            },
-            "import-annotations": "include-annotations-as-host-labels",
-            "monitored-objects": ["pods"],
-        }
-    )
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    params = {
+        "cluster-name": "cluster",
+        "token": ("password", "token"),
+        "kubernetes-api-server": {
+            "endpoint_v2": "https://11.211.3.32",
+            "verify-cert": False,
+            "proxy": ("no_proxy", "no_proxy"),
+        },
+        "import-annotations": "include-annotations-as-host-labels",
+        "monitored-objects": ["pods"],
+    }
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == [
@@ -395,23 +372,21 @@ def test_host_labels_annotation_selection() -> None:
     ]
 
     # Explicit filtering
-    parsed_params = special_agent_kube.parameter_parser(
-        {
-            "cluster-name": "cluster",
-            "token": ("password", "token"),
-            "kubernetes-api-server": {
-                "endpoint_v2": "https://11.211.3.32",
-                "verify-cert": False,
-                "proxy": ("no_proxy", "no_proxy"),
-            },
-            "import-annotations": (
-                "include-matching-annotations-as-host-labels",
-                "checkmk-monitoring$",
-            ),
-            "monitored-objects": ["pods"],
-        }
-    )
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    params = {
+        "cluster-name": "cluster",
+        "token": ("password", "token"),
+        "kubernetes-api-server": {
+            "endpoint_v2": "https://11.211.3.32",
+            "verify-cert": False,
+            "proxy": ("no_proxy", "no_proxy"),
+        },
+        "import-annotations": (
+            "include-matching-annotations-as-host-labels",
+            "checkmk-monitoring$",
+        ),
+        "monitored-objects": ["pods"],
+    }
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == [
@@ -436,20 +411,18 @@ def test_host_labels_annotation_selection() -> None:
 
 
 def test_parse_namespace_patterns() -> None:
-    parsed_params = special_agent_kube.parameter_parser(
-        {
-            "cluster-name": "cluster",
-            "token": ("password", "token"),
-            "kubernetes-api-server": {
-                "endpoint_v2": "https://11.211.3.32",
-                "verify-cert": False,
-                "proxy": ("no_proxy", "no_proxy"),
-            },
-            "monitored-objects": ["pods"],
-            "namespaces": ("namespace-include-patterns", ["default", "kube-system"]),
-        }
-    )
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    params = {
+        "cluster-name": "cluster",
+        "token": ("password", "token"),
+        "kubernetes-api-server": {
+            "endpoint_v2": "https://11.211.3.32",
+            "verify-cert": False,
+            "proxy": ("no_proxy", "no_proxy"),
+        },
+        "monitored-objects": ["pods"],
+        "namespaces": ("namespace-include-patterns", ["default", "kube-system"]),
+    }
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == [
@@ -584,8 +557,7 @@ def test_parse_namespace_patterns() -> None:
 def test_client_configuration_host(
     params: Mapping[str, object], expected_arguments: Sequence[str]
 ) -> None:
-    parsed_params = special_agent_kube.parameter_parser(params)
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     assert commands[0].command_arguments == expected_arguments
@@ -649,8 +621,7 @@ def test_client_configuration_host(
 )
 @pytest.mark.usefixtures("fix_register")
 def test_proxy_arguments(params: Mapping[str, object], expected_proxy_arg: str) -> None:
-    parsed_params = special_agent_kube.parameter_parser(params)
-    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+    commands = list(special_agent_kube(params, HOST_CONFIG, HTTP_PROXIES))
 
     assert len(commands) == 1
     arguments = commands[0].command_arguments

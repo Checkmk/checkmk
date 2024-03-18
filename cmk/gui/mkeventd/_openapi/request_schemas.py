@@ -75,12 +75,6 @@ ec_filters = fields.Nested(
 
 
 class DeleteFilterBase(BaseSchema):
-    site_id = gui_fields.SiteField(
-        description="An existing site id",
-        example="heute",
-        presence="should_exist",
-        required=True,
-    )
     filter_type = fields.String(
         enum=["by_id", "query", "params"],
         required=True,
@@ -90,6 +84,12 @@ class DeleteFilterBase(BaseSchema):
 
 
 class FilterById(DeleteFilterBase):
+    site_id = gui_fields.SiteField(
+        description="An existing site id",
+        example="heute",
+        presence="should_exist",
+        required=True,
+    )
     event_id = fields.Integer(
         required=True,
         description="The event console ID",

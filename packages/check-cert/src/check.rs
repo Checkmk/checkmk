@@ -333,15 +333,15 @@ impl SimpleCheckResult {
     }
 
     pub fn ok_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
-        Self::new(State::Ok, as_option(summary), as_option(details.into()))
+        Self::new(State::Ok, as_option(summary), as_option(details))
     }
 
     pub fn warn_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
-        Self::new(State::Warn, as_option(summary), as_option(details.into()))
+        Self::new(State::Warn, as_option(summary), as_option(details))
     }
 
     pub fn crit_with_details(summary: impl Into<String>, details: impl Into<String>) -> Self {
-        Self::new(State::Crit, as_option(summary), as_option(details.into()))
+        Self::new(State::Crit, as_option(summary), as_option(details))
     }
 }
 
@@ -409,8 +409,8 @@ where
     ) -> Self {
         Self::new(
             State::Ok,
-            Some(summary.into()),
-            Some(details.into()),
+            as_option(summary),
+            as_option(details),
             Some(metrics),
         )
     }
@@ -422,8 +422,8 @@ where
     ) -> Self {
         Self::new(
             State::Warn,
-            Some(summary.into()),
-            Some(details.into()),
+            as_option(summary),
+            as_option(details),
             Some(metrics),
         )
     }
@@ -435,8 +435,8 @@ where
     ) -> Self {
         Self::new(
             State::Crit,
-            Some(summary.into()),
-            Some(details.into()),
+            as_option(summary),
+            as_option(details),
             Some(metrics),
         )
     }

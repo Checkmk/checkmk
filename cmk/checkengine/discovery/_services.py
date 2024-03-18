@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-from collections.abc import Container, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKTimeout, OnError
@@ -118,7 +118,7 @@ def discover_services(
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
 ) -> Iterable[AutocheckEntry]:
-    service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
+    service_table: dict[ServiceID, AutocheckEntry] = {}
     for check_plugin_name in plugin_names:
         try:
             service_table.update(

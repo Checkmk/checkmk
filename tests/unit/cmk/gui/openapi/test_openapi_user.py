@@ -11,7 +11,7 @@ from typing import Any, ContextManager
 from unittest.mock import MagicMock
 
 import pytest
-from freezegun import freeze_time
+import time_machine
 from pytest import MonkeyPatch
 from pytest_mock import MockerFixture
 
@@ -33,6 +33,7 @@ from cmk.gui.openapi.endpoints.user_config import (
 from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import UserObject, UserRole
 from cmk.gui.userdb import ConnectorType
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
@@ -60,7 +61,7 @@ def test_nonexistant_customer(clients: ClientRegistry) -> None:
 def test_idle_timeout(clients: ClientRegistry) -> None:
     username = "user"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(
             username=username,
             fullname="User Name",
@@ -87,7 +88,7 @@ def test_idle_timeout(clients: ClientRegistry) -> None:
 def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> None:
     username = "user"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(
             username=username,
             fullname="User Name",
@@ -124,9 +125,14 @@ def test_openapi_customer(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> 
 
 @managedtest
 def test_openapi_user_minimal_settings(
-    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
+    monkeypatch: MonkeyPatch,
+    run_as_superuser: Callable[[], ContextManager[None]],
+    request_context: None,
 ) -> None:
-    with freeze_time("2021-09-24 12:36:00"), run_as_superuser():
+    with (
+        time_machine.travel(datetime.datetime.fromisoformat("2021-09-24 12:36:00Z")),
+        run_as_superuser(),
+    ):
         user_object: UserObject = {
             UserId("user"): {
                 "attributes": {
@@ -179,7 +185,7 @@ def test_openapi_user_minimal_password_settings(
 ) -> None:
     username = "user"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(
             username=username,
             fullname="User Name",
@@ -201,7 +207,7 @@ def test_openapi_user_minimal_password_settings(
     assert user_from_db["connector"]
     assert user_from_db["connector"] == "htpasswd"
 
-    with freeze_time("2010-02-01 08:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         resp = clients.User.edit(
             username=username,
             auth_option={
@@ -240,7 +246,7 @@ def test_openapi_user_config(
     name = _random_string(10)
     alias = "KPECYCq79E"
 
-    with freeze_time("2010-02-01 08:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         clients.User.create(
             username=name,
             fullname=alias,
@@ -275,7 +281,9 @@ def test_openapi_user_config(
 
 @managedtest
 def test_openapi_user_internal_with_notifications(
-    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
+    monkeypatch: MonkeyPatch,
+    run_as_superuser: Callable[[], ContextManager[None]],
+    request_context: None,
 ) -> None:
     name = UserId(_random_string(10))
 
@@ -366,7 +374,7 @@ def test_openapi_user_edit_auth(clients: ClientRegistry, monkeypatch: MonkeyPatc
     name = "foo"
     alias = "Foo Bar"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(
             username=name,
             fullname=alias,
@@ -379,12 +387,12 @@ def test_openapi_user_edit_auth(clients: ClientRegistry, monkeypatch: MonkeyPatc
     assert extensions["customer"] == "provider"
     assert extensions["auth_option"]["enforce_password_change"] is False
 
-    with freeze_time("2010-02-01 08:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         resp = clients.User.edit(
             username=name, auth_option={"auth_type": "automation", "secret": "QWXWBFUCSUOXNCPJUMS@"}
         )
 
-    with freeze_time("2010-02-01 09:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:00:00Z")):
         resp = clients.User.edit(
             username=name,
             auth_option={
@@ -469,7 +477,9 @@ def test_openapi_incomplete_auth_options(clients: ClientRegistry, auth_type: str
 
 @managedtest
 def test_openapi_user_internal_auth_handling(
-    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
+    monkeypatch: MonkeyPatch,
+    run_as_superuser: Callable[[], ContextManager[None]],
+    request_context: None,
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.userdb.htpasswd.hash_password",
@@ -507,7 +517,7 @@ def test_openapi_user_internal_auth_handling(
         }
     }
 
-    with freeze_time("2010-02-01 08:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:30:00Z")):
         with run_as_superuser():
             edit_users(user_object)
 
@@ -529,7 +539,7 @@ def test_openapi_user_internal_auth_handling(
         "num_failed_logins": 0,
     }
 
-    with freeze_time("2010-02-01 09:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:00:00Z")):
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name),
             {"auth_option": {"secret": "QWXWBFUCSUOXNCPJUMS@", "auth_type": "automation"}},
@@ -564,7 +574,7 @@ def test_openapi_user_internal_auth_handling(
         "connector": "htpasswd",
     }
 
-    with freeze_time("2010-02-01 09:30:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 09:30:00Z")):
         updated_internal_attributes = _api_to_internal_format(
             _load_user(name), {"auth_option": {"auth_type": "remove"}}
         )
@@ -600,7 +610,7 @@ def test_openapi_user_internal_auth_handling(
 def test_openapi_managed_global_edition(clients: ClientRegistry, monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr("cmk.utils.version.edition", lambda: version.Edition.CME)
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         resp = clients.User.create(username="user", fullname="Cosme Fulanito", customer="global")
 
     extensions = resp.json["extensions"]
@@ -610,7 +620,9 @@ def test_openapi_managed_global_edition(clients: ClientRegistry, monkeypatch: Mo
 
 @managedtest
 def test_managed_global_internal(
-    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
+    monkeypatch: MonkeyPatch,
+    run_as_superuser: Callable[[], ContextManager[None]],
+    request_context: None,
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
 
@@ -649,7 +661,7 @@ def test_managed_global_internal(
 def test_global_full_configuration(clients: ClientRegistry) -> None:
     username = "cmkuser"
 
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         clients.User.create(
             username=username,
             fullname="Mathias Kettner",
@@ -736,7 +748,7 @@ def test_openapi_user_update_contact_options(clients: ClientRegistry) -> None:
     # this test uses the internal mechanics of the user endpoint
 
     username = "cmkuser"
-    with freeze_time("2010-02-01 08:00:00"):
+    with time_machine.travel(datetime.datetime.fromisoformat("2010-02-01 08:00:00Z")):
         clients.User.create(
             username=username,
             fullname="Mathias Kettner",
@@ -1235,8 +1247,132 @@ def test_delete_and_edit_user_when_client_user_has_permission_to_do_so(
     clients.User.delete(username="user1")
 
 
+@managedtest
 def test_get_unknown_user(clients: ClientRegistry) -> None:
     clients.User.get(
         username="userA",
         expect_ok=False,
     ).assert_status_code(404)
+
+
+@managedtest
+def test_create_user_with_contact_group(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(name="group_one", alias="Group")
+    resp = clients.User.create(
+        username="user",
+        fullname="user",
+        contactgroups=["group_non_existent"],
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+    resp = clients.User.create(
+        username="user",
+        fullname="user",
+        customer="provider",
+        contactgroups=["group_one"],
+    )
+    assert resp.json["extensions"]["contactgroups"] == ["group_one"]
+
+
+@pytest.fixture(name="mock_ldap_locked_attributes")
+def fixture_mock_ldap_locked_attributes(mocker: MockerFixture) -> MagicMock:
+    """Mock the locked attributes of a LDAP user"""
+    ldap_config = {
+        "id": "CMKTest",
+        "description": "",
+        "comment": "",
+        "docu_url": "",
+        "disabled": False,
+        "directory_type": (
+            "ad",
+            {"connect_to": ("fixed_list", {"server": "some.domain.com"})},
+        ),
+        "bind": (
+            "CN=svc_checkmk,OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+            ("store", "AD_svc_checkmk"),
+        ),
+        "port": 636,
+        "use_ssl": True,
+        "user_dn": "OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+        "user_scope": "sub",
+        "user_filter": "(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
+        "user_id_umlauts": "keep",
+        "group_dn": "OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+        "group_scope": "sub",
+        "active_plugins": {
+            "alias": {},
+            "auth_expire": {},
+            "groups_to_contactgroups": {"nested": True},
+            "disable_notifications": {"attr": "msDS-cloudExtensionAttribute1"},
+            "email": {"attr": "mail"},
+            "icons_per_item": {"attr": "msDS-cloudExtensionAttribute3"},
+            "nav_hide_icons_title": {"attr": "msDS-cloudExtensionAttribute4"},
+            "pager": {"attr": "mobile"},
+            "groups_to_roles": {
+                "admin": [
+                    (
+                        "CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+                        None,
+                    )
+                ]
+            },
+            "show_mode": {"attr": "msDS-cloudExtensionAttribute2"},
+            "ui_sidebar_position": {"attr": "msDS-cloudExtensionAttribute5"},
+            "start_url": {"attr": "msDS-cloudExtensionAttribute9"},
+            "temperature_unit": {"attr": "msDS-cloudExtensionAttribute6"},
+            "ui_theme": {"attr": "msDS-cloudExtensionAttribute7"},
+            "force_authuser": {"attr": "msDS-cloudExtensionAttribute8"},
+        },
+        "cache_livetime": 300,
+        "type": "ldap",
+    }
+
+    return mocker.patch(
+        "cmk.gui.openapi.endpoints.user_config.locked_attributes",
+        return_value=LDAPUserConnector(ldap_config).locked_attributes(),
+    )
+
+
+@pytest.mark.usefixtures("mock_ldap_locked_attributes")
+@managedtest
+def test_edit_ldap_user_with_locked_attributes(
+    clients: ClientRegistry, run_as_superuser: Callable[[], ContextManager[None]]
+) -> None:
+    name = UserId("foo")
+    user_object: UserObject = {
+        name: {
+            "attributes": {
+                "ui_theme": None,
+                "ui_sidebar_position": None,
+                "nav_hide_icons_title": None,
+                "icons_per_item": None,
+                "show_mode": None,
+                "start_url": None,
+                "force_authuser": False,
+                "enforce_pw_change": True,
+                "alias": "cmkADAdmin",
+                "locked": False,
+                "pager": "",
+                "roles": ["guest"],
+                "contactgroups": [],
+                "email": "",
+                "fallback_contact": False,
+                "password": PasswordHash(
+                    "$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C"
+                ),
+                "serial": 1,
+                "connector": "CMKTest",
+                "disable_notifications": {},
+            },
+            "is_new_user": True,
+        },
+    }
+    with run_as_superuser():
+        edit_users(user_object)
+
+    clients.User.edit(
+        username=name,
+        roles=["admin"],
+        expect_ok=False,
+    ).assert_status_code(403)

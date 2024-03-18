@@ -127,9 +127,7 @@ def inventory_intel_true_scale_sensors_temp(parsed):
 
 def check_intel_true_scale_sensors_temp(item, params, parsed):
     if item in parsed:
-        yield check_temperature_list(
-            parsed[item]["temp"], params, "intel_true_scale_sensors_temp_%s" % item
-        )
+        yield from check_temperature_list(parsed[item]["temp"], params)
 
 
 check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(

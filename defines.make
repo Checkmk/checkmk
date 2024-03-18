@@ -41,7 +41,7 @@ else
 SAAS              := no
 endif
 
-VERSION            := 2.3.0b1
+VERSION            := 2.4.0b1
 OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
 PKG_VERSION        := $(VERSION)
@@ -50,7 +50,7 @@ PKG_VERSION        := $(VERSION)
 # the branch name, because we want to re-use a single cache also for derived sandbox
 # branches (1.7.0i1 -> 1.7.0).
 # This needs to be changed in the master branch every time a stable branch is forked.
-BRANCH_VERSION     := 2.3.0
+BRANCH_VERSION     := 2.4.0
 # This automatism did not work well in all cases. There were daily build jobs that used
 # e.g. 2020.02.08 as BRANCH_VERSION, even if they should use 1.7.0
 #BRANCH_VERSION := $(shell echo "$(VERSION)" | sed -E 's/^([0-9]+.[0-9]+.[0-9]+).*$$/\1/')
@@ -88,8 +88,7 @@ PYTHON_MAJOR_DOT_MINOR := $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
 
 # We're separating the python version used in the windows agent modules as they are not directly connected.
 # However, we should keep them as close as possible.
-# TODO(sk): Bump to 3.12 as soon as windows nodes are ready
-PYTHON_VERSION_WINDOWS := 3.11.5
+PYTHON_VERSION_WINDOWS := 3.12.0
 
 # convenience stuff derived from PYTHON_VERSION_WINDOWS
 PY_ARRAY_WINDOWS		:= $(subst ., ,$(PYTHON_VERSION_WINDOWS))

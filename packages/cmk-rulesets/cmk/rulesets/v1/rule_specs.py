@@ -6,9 +6,11 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import auto, Enum
+from keyword import iskeyword
 
-from ._localize import Localizable
-from .form_specs import Dictionary, FormSpec, ItemFormSpec, SingleChoice, Text
+from ._localize import Help, Title
+from .form_specs import Dictionary, FormSpec, String
+from .form_specs.validators import DisallowEmpty
 
 
 class Topic(Enum):
@@ -40,7 +42,7 @@ class CustomTopic:
         title: human-readable title of this group
     """
 
-    title: Localizable
+    title: Title
 
 
 class EvalType(Enum):
@@ -49,212 +51,381 @@ class EvalType(Enum):
 
 
 @dataclass(frozen=True)
-class HostMonitoring:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
+class HostCondition:
+    """Creates a condition that allows users to match the rule based on the host."""
 
 
 @dataclass(frozen=True)
-class ServiceMonitoringWithoutService:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
+class HostAndServiceCondition:
+    """Creates a condition that allows users to match the rule based on the host and the service
+    description."""
 
 
 @dataclass(frozen=True)
-class ServiceMonitoring:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
+class HostAndItemCondition:
+    """Creates a condition that allows users to match the rule based on the host and the item of the
+    service.
+
+    Args:
+        item_title: Title for the item of the service
+        item_form: Configuration specification for the item of the check.
+          By default, a text input field that disallows empty strings will be created.
+    """
+
+    item_title: Title
+    item_form: FormSpec[str] = String(custom_validate=DisallowEmpty())
+
+
+def _validate_name(name: str) -> None:
+    # if we move away from identifiers as strings in the future, we want existing identifiers to
+    # be compatible with that
+    # for example in the past there already were problems with importing "if.module"
+    if not name.isidentifier() or iskeyword(name):
+        raise ValueError(f"'{name}' is not a valid, non-reserved Python identifier")
 
 
 @dataclass(frozen=True)
-class CheckParameterWithItem:
-    title: Localizable
+class Host:
+    """Specifies rule configurations for hosts
+
+    Instaneces of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
-    item_form: ItemFormSpec
+    eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
+
+
+@dataclass(frozen=True)
+class Service:
+    """Specifies rule configurations for services
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        condition: Which targets should be configurable in the rule condition
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
+    topic: Topic | CustomTopic
+    parameter_form: Callable[[], Dictionary]
+    eval_type: EvalType
+    name: str
+    condition: HostCondition | HostAndServiceCondition
+    is_deprecated: bool = False
+    help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
+
+
+@dataclass(frozen=True)
+class CheckParameters:
+    """Specifies rule configurations for checks
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        name: Identifier of the rule spec
+        condition: Which targets should be configurable in the rule condition
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+        create_enforced_service: Whether to automatically create an enforced service for any
+                                  service created with this rule spec
+    """
+
+    title: Title
+    topic: Topic | CustomTopic
+    parameter_form: Callable[[], Dictionary]
+    name: str
+    condition: HostCondition | HostAndItemCondition
+    is_deprecated: bool = False
+    help_text: Help | None = None
     create_enforced_service: bool = True
 
     def __post_init__(self) -> None:
-        assert isinstance(self.item_form, (Text, SingleChoice))
-        if not isinstance(self.topic, (Topic, CustomTopic)):
-            raise ValueError
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
-class CheckParameterWithoutItem:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], Dictionary]
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
-    create_enforced_service: bool = True
+class EnforcedService:
+    """Specifies rule configurations for checks whose creation is enforced
 
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
 
-@dataclass(frozen=True)
-class EnforcedServiceWithItem:
-    title: Localizable
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        name: Identifier of the rule spec
+        condition: Which targets should be configurable in the rule condition
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec] | None
-    item_form: ItemFormSpec
+    parameter_form: Callable[[], Dictionary] | None
     name: str
+    condition: HostCondition | HostAndItemCondition
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
     def __post_init__(self) -> None:
-        assert isinstance(self.item_form, (Text, SingleChoice))
-        if not isinstance(self.topic, (Topic, CustomTopic)):
-            raise ValueError
-
-
-@dataclass(frozen=True)
-class EnforcedServiceWithoutItem:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec] | None
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.topic, (Topic, CustomTopic)):
-            raise ValueError
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
 class DiscoveryParameters:
-    title: Localizable
+    """Specifies configurations for the discovery of services
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
-class ActiveChecks:
-    title: Localizable
+class ActiveCheck:
+    """Specifies rule configurations for active checks
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
+    parameter_form: Callable[[], Dictionary]
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
 class AgentConfig:
-    title: Localizable
+    """Specifies rule configurations for agents
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
 class SpecialAgent:
-    title: Localizable
+    """Specifies rule configurations for special agents
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
+    parameter_form: Callable[[], Dictionary]
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
 class AgentAccess:
-    title: Localizable
+    """Specifies configurations for the connection to the Checkmk and SNMP agents
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
 class NotificationParameters:
-    title: Localizable
+    """Specifies rule configurations for notifications
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
 class SNMP:
-    title: Localizable
+    """Specifies configurations for SNMP services
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], Dictionary]
     eval_type: EvalType
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
+
+    def __post_init__(self) -> None:
+        _validate_name(self.name)
 
 
 @dataclass(frozen=True)
 class InventoryParameters:
-    title: Localizable
+    """Specifies rule configurations for inventory services
+
+    Instance of this class will only be picked up by Checkmk if their names start with
+    ``rule_spec_``.
+
+    Args:
+        title: Human readable title
+        topic: Categorization of the rule
+        parameter_form: Configuration specification
+        name: Identifier of the rule spec
+        is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
+        help_text: Description to help the user with the configuration
+    """
+
+    title: Title
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
+    parameter_form: Callable[[], Dictionary]
     name: str
     is_deprecated: bool = False
-    help_text: Localizable | None = None
+    help_text: Help | None = None
 
-
-@dataclass(frozen=True)
-class ExtraHostConfEventConsole:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
-
-
-@dataclass(frozen=True)
-class ExtraHostConfHostMonitoring:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
-
-
-@dataclass(frozen=True)
-class ExtraServiceConf:
-    title: Localizable
-    topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
-    eval_type: EvalType
-    name: str
-    is_deprecated: bool = False
-    help_text: Localizable | None = None
+    def __post_init__(self) -> None:
+        _validate_name(self.name)

@@ -7,8 +7,8 @@ import json
 import time
 from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.v2 import render, Result, State
-from cmk.agent_based.v2.type_defs import CheckResult, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
 
 MerakiAPIData = Mapping[str, object]
 
@@ -20,7 +20,11 @@ def load_json(string_table: StringTable) -> Sequence[MerakiAPIData]:
         return []
 
 
-def check_last_reported_ts(last_reported_ts: float) -> CheckResult:
+def check_last_reported_ts(
+    last_reported_ts: float,
+    levels_upper: tuple[int, int] | None = None,
+    as_metric: bool = False,
+) -> CheckResult:
     if (age := time.time() - last_reported_ts) < 0:
         yield Result(
             state=State.OK,
@@ -28,7 +32,10 @@ def check_last_reported_ts(last_reported_ts: float) -> CheckResult:
         )
         return
 
-    yield Result(
-        state=State.OK,
-        summary=f"Time since last report: {render.timespan(age)}",
+    yield from check_levels(
+        value=age,
+        label="Time since last report",
+        metric_name="last_reported" if as_metric else None,
+        levels_upper=levels_upper,
+        render_func=render.timespan,
     )

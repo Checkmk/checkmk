@@ -66,13 +66,17 @@ _need_ip_access_list() {
 }
 
 _deploy_controller() {
+    [ -e "/var/lib/cmk-agent/cmk-agent-ctl.gz" ] || {
+        printf "%s\n" "Agent Controller is not packaged. Falling back to legacy systemd setup."
+        return 1
+    }
     printf "Deploying agent controller: %s\n" "${CONTROLLER_TARGET}"
     gunzip --force --quiet -c "/var/lib/cmk-agent/cmk-agent-ctl.gz" >"/var/lib/cmk-agent/cmk-agent-ctl" || {
-        printf "%s\n" "...Failed to unpack with gzip."
+        printf "%s\n" "...Failed to unpack with gzip. Falling back to legacy systemd setup."
         return 1
     }
     install -m 755 "/var/lib/cmk-agent/cmk-agent-ctl" "${CONTROLLER_TARGET}" || {
-        printf "%s\n" "...Failed to move to target location."
+        printf "%s\n" "...Failed to move to target location. Falling back to legacy systemd setup."
         return 1
     }
     rm -f "/var/lib/cmk-agent/cmk-agent-ctl"

@@ -21,10 +21,17 @@ from cmk.utils.structured_data import (
 
 import cmk.gui.inventory
 import cmk.gui.utils
+from cmk.gui.config import active_config
+from cmk.gui.display_options import display_options
+from cmk.gui.http import request, response
 from cmk.gui.inventory.filters import FilterInvtableVersion
+from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
 from cmk.gui.painter.v0.base import JoinCell
+from cmk.gui.painter.v0.helpers import RenderLink
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
+from cmk.gui.utils.theme import theme
 from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
@@ -59,17 +66,20 @@ RAW_ROWS = [("this_site", "this_hostname")]
 RAW_ROWS2 = [("this_site", "this_hostname", "foobar")]
 
 INV_ROWS = [
-    {"sid": "A", "value1": 1, "value2": 4},
-    {"sid": "B", "value1": 2, "value2": 5},
-    {"sid": "C", "value1": 3, "value2": 6},
+    {"sid": ("A", None), "value1": (1, None), "value2": (4, None)},
+    {"sid": ("B", None), "value1": (2, None), "value2": (5, None)},
+    {"sid": ("C", None), "value1": (3, None), "value2": (6, None)},
 ]
 
 EXPECTED_INV_KEYS = [
     "site",
     "host_name",
     "invtesttable_sid",
+    "invtesttable_sid_retention_interval",
     "invtesttable_value1",
+    "invtesttable_value1_retention_interval",
     "invtesttable_value2",
+    "invtesttable_value2_retention_interval",
 ]
 
 INV_HIST_ROWS = [
@@ -940,7 +950,17 @@ def test_registered_sorter_cmp() -> None:
 
     sorter_cls = sorter_registry.get("test_sorter")
     assert sorter_cls is not None
-    assert sorter_cls().cmp({}, {}, None) == 0
+    assert (
+        sorter_cls(
+            user=user,
+            config=active_config,
+            request=request,
+            painter_options=PainterOptions.get_instance(),
+            theme=theme,
+            url_renderer=RenderLink(request, response, display_options),
+        ).cmp({}, {}, None)
+        == 0
+    )
 
 
 def test_row_post_processor() -> None:

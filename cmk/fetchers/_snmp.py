@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import dataclasses
 import logging
 import time
@@ -11,15 +10,12 @@ from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapp
 from pathlib import Path
 from typing import Any, Final
 
-import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.snmplib import (
-    BackendSNMPTree,
     get_snmp_table,
     SNMPBackend,
     SNMPHostConfig,
@@ -28,16 +24,17 @@ from cmk.snmplib import (
     SNMPRowInfo,
 )
 
+from cmk.checkengine.parser import SectionStore
+
 from ._abstract import Fetcher, Mode
 from ._snmpscan import gather_available_raw_section_names
-from .cache import SectionStore
 from .snmp import make_backend, SNMPPluginStore
 
 __all__ = ["SNMPFetcher", "SNMPSectionMeta"]
 
 
 class WalkCache(
-    MutableMapping[str, tuple[bool, SNMPRowInfo]]
+    MutableMapping[tuple[str, str, bool], SNMPRowInfo]
 ):  # pylint: disable=too-many-ancestors
     """A cache on a per-fetchoid basis
 
@@ -51,9 +48,9 @@ class WalkCache(
 
     __slots__ = ("_store", "_path")
 
-    def __init__(self, host_name: HostName) -> None:
-        self._store: MutableMapping[str, tuple[bool, SNMPRowInfo]] = {}
-        self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
+    def __init__(self, walk_cache: Path) -> None:
+        self._store: dict[tuple[str, str, bool], SNMPRowInfo] = {}
+        self._path = walk_cache
 
     def _read_row(self, path: Path) -> SNMPRowInfo:
         return store.load_object_from_file(path, default=None)
@@ -62,12 +59,13 @@ class WalkCache(
         return store.save_object_to_file(path, rowinfo, pretty=False)
 
     @staticmethod
-    def _oid2name(fetchoid: str) -> str:
-        return f"OID{fetchoid}"
+    def _oid2name(fetchoid: str, context_hash: str) -> str:
+        return f"OID{fetchoid}-{context_hash}"
 
     @staticmethod
-    def _name2oid(basename: str) -> str:
-        return basename[3:]
+    def _name2oid(basename: str) -> tuple[str, str]:
+        name_parts = basename[3:].split("-", 1)
+        return name_parts[0], name_parts[1]
 
     def _iterfiles(self) -> Iterable[Path]:
         return self._path.iterdir() if self._path.is_dir() else ()
@@ -75,16 +73,16 @@ class WalkCache(
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._store!r})"
 
-    def __getitem__(self, key: str) -> tuple[bool, SNMPRowInfo]:
+    def __getitem__(self, key: tuple[str, str, bool]) -> SNMPRowInfo:
         return self._store.__getitem__(key)
 
-    def __setitem__(self, key: str, value: tuple[bool, SNMPRowInfo]) -> None:
+    def __setitem__(self, key: tuple[str, str, bool], value: SNMPRowInfo) -> None:
         return self._store.__setitem__(key, value)
 
-    def __delitem__(self, key: str) -> None:
+    def __delitem__(self, key: tuple[str, str, bool]) -> None:
         return self._store.__delitem__(key)
 
-    def __iter__(self) -> Iterator[str]:
+    def __iter__(self) -> Iterator[tuple[str, str, bool]]:
         return self._store.__iter__()
 
     def __len__(self) -> int:
@@ -94,24 +92,10 @@ class WalkCache(
         for path in self._iterfiles():
             path.unlink(missing_ok=True)
 
-    def load(
-        self,
-        *,
-        trees: Iterable[BackendSNMPTree],
-    ) -> None:
+    def load(self) -> None:
         """Try to read the OIDs data from cache files"""
-        # Do not load the cached data if *any* plugin needs live data
-        do_not_load = {
-            f"{tree.base}.{oid.column}"
-            for tree in trees
-            for oid in tree.oids
-            if not oid.save_to_cache
-        }
-
         for path in self._iterfiles():
-            fetchoid = self._name2oid(path.name)
-            if fetchoid in do_not_load:
-                continue
+            fetchoid, context_hash = self._name2oid(path.name)
 
             console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
             try:
@@ -120,22 +104,19 @@ class WalkCache(
                 raise
             except Exception:
                 console.vverbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
-                if cmk.utils.debug.enabled():
-                    raise
                 continue
 
             if read_walk is not None:
-                # 'False': no need to store this value: it is already stored!
-                self._store[fetchoid] = (False, read_walk)
+                self._store[(fetchoid, context_hash, True)] = read_walk
 
     def save(self) -> None:
         self._path.mkdir(parents=True, exist_ok=True)
 
-        for fetchoid, (save_flag, rowinfo) in self._store.items():
+        for (fetchoid, context_hash, save_flag), rowinfo in self._store.items():
             if not save_flag:
                 continue
 
-            path = self._path / self._oid2name(fetchoid)
+            path = self._path / self._oid2name(fetchoid, context_hash)
             console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
             self._write_row(path, rowinfo)
 
@@ -186,6 +167,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         missing_sys_description: bool,
         do_status_data_inventory: bool,
         section_store_path: Path | str,
+        oid_cache_dir: Path | str,
+        stored_walk_path: Path | str,
+        walk_cache_path: Path | str,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__()
@@ -193,6 +177,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
+        self.oid_cache_dir: Final = Path(oid_cache_dir)
+        self.stored_walk_path: Final = Path(stored_walk_path)
+        self.walk_cache_path: Final = Path(walk_cache_path)
         self.snmp_config: Final = snmp_config
         self._logger: Final = logging.getLogger("cmk.helper.snmp")
         self._section_store = SectionStore[SNMPRawDataElem](
@@ -200,6 +187,20 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             logger=self._logger,
         )
         self._backend: SNMPBackend | None = None
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, SNMPFetcher):
+            return False
+        return (
+            self.sections == other.sections
+            and self.on_error == other.on_error
+            and self.missing_sys_description == other.missing_sys_description
+            and self.do_status_data_inventory == other.do_status_data_inventory
+            and self.oid_cache_dir == other.oid_cache_dir
+            and self.stored_walk_path == other.stored_walk_path
+            and self.walk_cache_path == other.walk_cache_path
+            and self.snmp_config == other.snmp_config
+        )
 
     @property
     def disabled_sections(self) -> frozenset[SectionName]:
@@ -227,48 +228,18 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     f"missing_sys_description={self.missing_sys_description!r}",
                     f"do_status_data_inventory={self.do_status_data_inventory!r}",
                     f"section_store_path={self.section_store_path!r}",
+                    f"stored_walk_path={self.stored_walk_path!r}",
+                    f"walk_cache_path={self.walk_cache_path!r}",
                     f"snmp_config={self.snmp_config!r}",
                 )
             )
             + ")"
         )
 
-    @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> "SNMPFetcher":
-        # The SNMPv3 configuration is represented by a tuple of different lengths (see
-        # SNMPCredentials). Since we just deserialized from JSON, we have to convert the
-        # list used by JSON back to a tuple.
-        # SNMPv1/v2 communities are represented by a string: Leave it untouched.
-        serialized_ = copy.deepcopy(dict(serialized))
-        if isinstance(serialized_["snmp_config"]["credentials"], list):
-            serialized_["snmp_config"]["credentials"] = tuple(
-                serialized_["snmp_config"]["credentials"]
-            )
-
-        return cls(
-            sections={
-                SectionName(s): SNMPSectionMeta.deserialize(m)
-                for s, m in serialized_["sections"].items()
-            },
-            on_error=OnError(serialized_["on_error"]),
-            missing_sys_description=serialized_["missing_sys_description"],
-            do_status_data_inventory=serialized_["do_status_data_inventory"],
-            section_store_path=serialized_["section_store_path"],
-            snmp_config=SNMPHostConfig.deserialize(serialized_["snmp_config"]),
-        )
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "sections": {str(s): m.serialize() for s, m in self.sections.items()},
-            "on_error": self.on_error.value,
-            "missing_sys_description": self.missing_sys_description,
-            "do_status_data_inventory": self.do_status_data_inventory,
-            "section_store_path": str(self._section_store.path),
-            "snmp_config": self.snmp_config.serialize(),
-        }
-
     def open(self) -> None:
-        self._backend = make_backend(self.snmp_config, self._logger)
+        self._backend = make_backend(
+            self.snmp_config, self._logger, stored_walk_path=self.stored_walk_path
+        )
 
     def close(self) -> None:
         self._backend = None
@@ -282,6 +253,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             on_error=self.on_error,
             missing_sys_description=self.missing_sys_description,
             backend=backend,
+            oid_cache_dir=self.oid_cache_dir,
         )
 
     def _get_selection(self, mode: Mode) -> frozenset[SectionName]:
@@ -351,16 +323,10 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             # Nothing to discover? That can't be right.
             raise MKFetcherError("Got no data")
 
-        walk_cache = WalkCache(self._backend.hostname)
+        walk_cache = WalkCache(self.walk_cache_path / str(self._backend.hostname))
         if mode is Mode.CHECKING:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
-            walk_cache.load(
-                trees=(
-                    tree
-                    for section_name in section_names
-                    for tree in self.plugin_store[section_name].trees
-                ),
-            )
+            walk_cache.load()
         else:
             walk_cache.clear()
             walk_cache_msg = "SNMP walk cache cleared"

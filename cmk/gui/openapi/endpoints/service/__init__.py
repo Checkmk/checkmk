@@ -17,8 +17,7 @@ How to use the query DSL used in the `query` parameters of these endpoints, have
 These endpoints support all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
 which you can look up in the Checkmk documentation.
 
-For a detailed list of columns have a look at the [services table](https://github.com/checkmk/checkmk/blob/master/cmk/utils/livestatus_helpers/tables/services.py)
-definition on GitHub.
+For a detailed list of columns, have a look at the [services table](#section/Table-definitions/Services-Table) definition.
 """
 from collections.abc import Mapping
 from typing import Any
@@ -31,10 +30,11 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields import HostField
 from cmk.gui.http import Response
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
 
 from cmk import fields
 

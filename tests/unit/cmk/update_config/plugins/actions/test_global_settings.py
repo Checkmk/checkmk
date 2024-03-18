@@ -47,17 +47,22 @@ def test_update_global_config_transform_values(
     }
 
 
-def test_update_global_config_rename_variables_and_change_values(
+def test_update_global_config(
     mocker: MockerFixture,
 ) -> None:
     mocker.patch.object(
         global_settings,
-        "_REMOVED_GLOBALS",
+        "_RENAMED_GLOBALS",
         [
             ("global_a", "new_global_a", {True: 1, False: 0}),
             ("global_b", "new_global_b", {}),
             ("missing", "new_missing", {}),
         ],
+    )
+    mocker.patch.object(
+        global_settings,
+        "_REMOVED_OPTIONS",
+        ["old_unused"],
     )
 
     # Disable variable filtering by known Checkmk variables
@@ -71,6 +76,7 @@ def test_update_global_config_rename_variables_and_change_values(
             "global_a": True,
             "global_b": 14,
             "keep": "do not remove me",
+            "old_unused": "remove me",
             "unknown": "How did this get here?",
         },
     ) == {
@@ -78,4 +84,21 @@ def test_update_global_config_rename_variables_and_change_values(
         "unknown": "How did this get here?",
         "new_global_a": 1,
         "new_global_b": 14,
+    }
+
+
+def test_remove_options() -> None:
+    assert global_settings._remove_options(
+        logging.getLogger(),
+        {
+            "global_a": True,
+            "global_b": 14,
+            "old_unused": "remove me",
+            "unknown": "How did this get here?",
+        },
+        ["old_unused"],
+    ) == {
+        "global_a": True,
+        "global_b": 14,
+        "unknown": "How did this get here?",
     }

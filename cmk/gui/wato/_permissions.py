@@ -2,7 +2,6 @@
 # Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
     Permission,
@@ -137,9 +136,9 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="clear_auditlog",
-            title=_l("Clear audit log"),
+            title=_l("Archive audit log"),
             description=_l(
-                "Clear the entries of the audit log. To be able to clear the audit log "
+                "Archive the entries of the audit log. To be able to archive the audit log "
                 'a user needs the generic Setup permission "Make changes, perform actions", '
                 'the "View audit log" and this permission.'
             ),

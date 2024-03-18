@@ -68,6 +68,7 @@ def test_transaction_valid(
     ignore_transids: bool,
     result: bool,
     is_existing: bool,
+    request_context: None,
 ) -> None:
     assert tm._ignore_transids is False
     if ignore_transids:
@@ -86,20 +87,23 @@ def test_transaction_valid(
     assert tm.transaction_valid() == result
 
 
-def test_is_transaction(tm: TransactionManager) -> None:
+def test_is_transaction(tm: TransactionManager, request_context: None) -> None:
     assert not tm.is_transaction()
     request.set_var("_transid", "123")
     assert tm.is_transaction()
 
 
 @pytest.mark.usefixtures("monkeypatch")
-def test_check_transaction_invalid(tm: TransactionManager) -> None:
+def test_check_transaction_invalid(tm: TransactionManager, request_context: None) -> None:
     assert tm.check_transaction() is False
 
 
 @pytest.mark.usefixtures("monkeypatch")
 def test_check_transaction_valid(
-    transaction_ids: list[str], tm: TransactionManager, mocker: MockerFixture
+    transaction_ids: list[str],
+    tm: TransactionManager,
+    mocker: MockerFixture,
+    request_context: None,
 ) -> None:
     valid_transid = "%d/abc" % time.time()
     request.set_var("_transid", valid_transid)
@@ -111,7 +115,11 @@ def test_check_transaction_valid(
 
 
 @pytest.mark.usefixtures("monkeypatch")
-def test_check_transaction_automation(tm: TransactionManager, mocker: MockerFixture) -> None:
+def test_check_transaction_automation(
+    tm: TransactionManager,
+    mocker: MockerFixture,
+    request_context: None,
+) -> None:
     tm.ignore()
     request.set_var("_transid", "-1")
 

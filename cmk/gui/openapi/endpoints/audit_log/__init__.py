@@ -22,9 +22,10 @@ from cmk.gui.openapi.endpoints.audit_log.request_schemas import (
     user_id_field,
 )
 from cmk.gui.openapi.endpoints.audit_log.response_schemas import AuditLogEntryCollection
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import serve_json
+from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
 
 AuditLogResponse = dict[str, Any]
@@ -41,14 +42,15 @@ LIST_PERMISSION = permissions.Perm("wato.auditlog")
 
 
 @Endpoint(
-    constructors.collection_href("audit_log"),
-    ".../delete",
-    method="delete",
+    constructors.domain_type_action_href("audit_log", "archive"),
+    ".../action",
+    method="post",
     output_empty=True,
     permissions_required=CLEAR_PERMISSION,
+    update_config_generation=False,
 )
-def clear_logs(params: Mapping[str, Any]) -> Response:
-    """Clear the audit log"""
+def archive_logs(params: Mapping[str, Any]) -> Response:
+    """Move audit log entries to archive"""
     user.need_permission("wato.edit")
     user.need_permission("wato.auditlog")
     user.need_permission("wato.clear_auditlog")
@@ -122,5 +124,5 @@ def _get_start_end_day_timestamp(value: datetime.date) -> tuple[int, int]:
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(clear_logs)
     endpoint_registry.register(get_all)
+    endpoint_registry.register(archive_logs)

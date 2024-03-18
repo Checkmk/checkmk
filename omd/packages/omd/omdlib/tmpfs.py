@@ -17,7 +17,12 @@ from pathlib import Path
 
 from omdlib.console import ok
 from omdlib.contexts import SiteContext
-from omdlib.utils import delete_directory_contents, is_containerized
+from omdlib.utils import (
+    chown_tree,
+    create_skeleton_files,
+    delete_directory_contents,
+    is_containerized,
+)
 from omdlib.version_info import VersionInfo
 
 import cmk.utils.tty as tty
@@ -40,35 +45,35 @@ def tmpfs_mounted(sitename: str) -> bool:
     return False
 
 
-def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
-    if tmpfs_mounted(site.name):
+def prepare_tmpfs(version_info: VersionInfo, site_name: str, tmp_dir: str, tmpfs_hook: str) -> None:
+    if tmpfs_mounted(site_name):
         sys.stdout.write("Temporary filesystem already mounted\n")
         return  # Fine: Mounted
 
-    if site.conf["TMPFS"] != "on":
-        sys.stdout.write("Preparing tmp directory %s..." % site.tmp_dir)
+    if tmpfs_hook != "on":
+        sys.stdout.write("Preparing tmp directory %s..." % tmp_dir)
         sys.stdout.flush()
 
-        if os.path.exists(site.tmp_dir):
+        if os.path.exists(tmp_dir):
             return
 
         try:
-            os.mkdir(site.tmp_dir)
-            os.chmod(site.tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
+            os.mkdir(tmp_dir)
+            os.chmod(tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
         except OSError as e:
             if e.errno != errno.EEXIST:  # File exists
                 raise
         return
 
-    sys.stdout.write("Creating temporary filesystem %s..." % site.tmp_dir)
+    sys.stdout.write("Creating temporary filesystem %s..." % tmp_dir)
     sys.stdout.flush()
-    if not os.path.exists(site.tmp_dir):
-        os.mkdir(site.tmp_dir)
-        os.chmod(site.tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
+    if not os.path.exists(tmp_dir):
+        os.mkdir(tmp_dir)
+        os.chmod(tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
 
     mount_options = shlex.split(version_info.MOUNT_OPTIONS)
     completed_process = subprocess.run(
-        ["mount"] + mount_options + [site.tmp_dir],
+        ["mount"] + mount_options + [tmp_dir],
         shell=False,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
@@ -104,11 +109,7 @@ def mark_tmpfs_initialized(site: SiteContext) -> None:
         f.write("")
 
 
-def unmount_tmpfs(  # pylint: disable=too-many-branches
-    site: SiteContext,
-    output: bool = True,
-    kill: bool = False,
-) -> bool:
+def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) -> bool:
     # During omd update TMPFS hook might not be set so assume
     # that the hook is enabled by default.
     # If kill is True, then we do an fuser -k on the tmp
@@ -122,10 +123,18 @@ def unmount_tmpfs(  # pylint: disable=too-many-branches
         save_tmpfs_dump(site)
         if output:
             ok()
+    return unmount_tmpfs_without_save(site.name, site.tmp_dir, output, kill)
 
+
+def unmount_tmpfs_without_save(  # pylint: disable=too-many-branches
+    site_name: str,
+    tmp_dir: str,
+    output: bool,
+    kill: bool,
+) -> bool:
     # Clear directory hierarchy when not using a tmpfs
-    if not tmpfs_mounted(site.name) or _tmpfs_is_managed_by_node(site):
-        tmp = site.tmp_dir
+    if not tmpfs_mounted(site_name) or _tmpfs_is_managed_by_node(site_name, tmp_dir):
+        tmp = tmp_dir
         if os.path.exists(tmp):
             if output:
                 sys.stdout.write("Cleaning up tmp directory...")
@@ -139,20 +148,20 @@ def unmount_tmpfs(  # pylint: disable=too-many-branches
         sys.stdout.write("Unmounting temporary filesystem...")
 
     for _t in range(0, 10):
-        if not tmpfs_mounted(site.name):
+        if not tmpfs_mounted(site_name):
             if output:
                 ok()
             return True
 
-        if _unmount(site):
+        if _unmount(tmp_dir):
             if output:
                 ok()
             return True
 
         if kill:
             if output:
-                sys.stdout.write("Killing processes still using '%s'\n" % site.tmp_dir)
-            subprocess.call(["fuser", "--silent", "-k", site.tmp_dir])
+                sys.stdout.write("Killing processes still using '%s'\n" % tmp_dir)
+            subprocess.call(["fuser", "--silent", "-k", tmp_dir])
 
         if output:
             sys.stdout.write(kill and "K" or ".")
@@ -170,11 +179,11 @@ def fstab_path() -> Path:
     return Path("/etc/fstab")
 
 
-def _unmount(site: SiteContext) -> bool:
-    return subprocess.call(["umount", site.tmp_dir]) == 0
+def _unmount(tmp_dir: str) -> bool:
+    return subprocess.call(["umount", tmp_dir]) == 0
 
 
-def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
+def _tmpfs_is_managed_by_node(site_name: str, tmp_dir: str) -> bool:
     """When running in a container, and the tmpfs is managed by the node, the
     mount is visible, but can not be unmounted. umount exits with 32 in this
     case. Treat this case like there is no tmpfs and only the directory needs
@@ -182,11 +191,11 @@ def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
     if not is_containerized():
         return False
 
-    if not tmpfs_mounted(site.name):
+    if not tmpfs_mounted(site_name):
         return False
 
     return subprocess.call(
-        ["umount", site.tmp_dir], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+        ["umount", tmp_dir], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
     ) in [1, 32]
 
 
@@ -263,8 +272,35 @@ def restore_tmpfs_dump(site: SiteContext) -> None:
     if not _tmpfs_dump_path(site).exists():
         return
     with tarfile.TarFile(_tmpfs_dump_path(site)) as tar:
-        tar.extractall(site.tmp_dir)  # nosec B202
+        tar.extractall(site.tmp_dir, filter="data")  # nosec B202 # BNS:a7d6b8
 
 
 def _tmpfs_dump_path(site: SiteContext) -> Path:
     return Path(site.dir, "var", "omd", "tmpfs-dump.tar")
+
+
+def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, skelroot: str) -> None:
+    prepare_tmpfs(version_info, site.name, site.tmp_dir, site.conf["TMPFS"])
+
+    if not os.listdir(site.tmp_dir):
+        create_skeleton_files(site.dir, site.replacements, skelroot, site.skel_permissions, "tmp")
+        chown_tree(site.tmp_dir, site.name)
+        mark_tmpfs_initialized(site)
+        restore_tmpfs_dump(site)
+
+    _create_livestatus_tcp_socket_link(site)
+
+
+def _create_livestatus_tcp_socket_link(site: SiteContext) -> None:
+    """Point the xinetd to the livestatus socket inteded by LIVESTATUS_TCP_TLS"""
+    link_path = site.tmp_dir + "/run/live-tcp"
+    target = "live-tls" if site.conf["LIVESTATUS_TCP_TLS"] == "on" else "live"
+
+    if os.path.lexists(link_path):
+        os.unlink(link_path)
+
+    parent_dir = os.path.dirname(link_path)
+    if not os.path.exists(parent_dir):
+        os.makedirs(parent_dir)
+
+    os.symlink(target, link_path)

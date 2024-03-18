@@ -10,10 +10,15 @@ from marshmallow import validate, ValidationError
 
 from cmk.utils.tags import BuiltinTagConfig, TagID
 
+from cmk.gui.config import active_config
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.userdb import connection_choices
 from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config_read_only
+from cmk.gui.watolib.tags import (
+    load_all_tag_config_read_only,
+    load_tag_config_read_only,
+    tag_group_exists,
+)
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 
 from cmk import fields
@@ -203,11 +208,13 @@ class AuxTagIDField(fields.String):
             "should_not_exist",
             "ignore",
         ] = "ignore",
+        example: str = "ip-v4",
+        description: str = "An auxiliary tag id",
         **kwargs: Any,
     ) -> None:
         super().__init__(
-            description="An auxiliary tag id",
-            example="ip-v4",
+            description=description,
+            example=example,
             pattern=r"^[-0-9a-zA-Z_]+\Z",
             **kwargs,
         )
@@ -422,3 +429,68 @@ class PasswordStoreIDField(fields.String):
         if self.presence == "should_not_exist":
             if value in pw_ids:
                 raise self.make_error("should_not_exist", store_id=value)
+
+
+class ServiceLevelField(fields.Integer):
+    default_error_messages = {
+        "should_exist": "The provided service level {value!r} does not exist. The available service levels are [{choices!r}]",
+        "should_not_exist": "The provided service level {value!r} already exists.]",
+    }
+
+    def __init__(
+        self,
+        required: bool = True,
+        example: int = 10,
+        presence: Literal["should_exist", "should_not_exist"] = "should_exist",
+        description: str = "A service level represented as an integer",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(required=required, example=example, description=description, **kwargs)
+        self.presence = presence
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        choices = [int_val for int_val, _str_val in active_config.mkeventd_service_levels]
+
+        if self.presence == "should_exist":
+            if value not in choices:
+                raise self.make_error(
+                    "should_exist", value=value, choices=", ".join([str(c) for c in choices])
+                )
+
+        if self.presence == "should_not_exist":
+            if value in choices:
+                raise self.make_error("should_not_exist", value=value)
+
+
+class TagGroupIDField(fields.String):
+    """A field representing the host tag group id"""
+
+    default_error_messages = {
+        "should_exist": "The host tag group id {name!r} should exist but it doesn't",
+        "should_not_exist": "The host tag group id {name!r} should not exist but it does.",
+    }
+
+    def __init__(
+        self,
+        presence: Literal[
+            "should_exist",
+            "should_not_exist",
+            "ignore",
+        ] = "ignore",
+        description: str = "A host tag group id",
+        example: str = "piggyback",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(description=description, example=example, **kwargs)
+        self.presence = presence
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        if self.presence == "should_exist" and not tag_group_exists(value, builtin_included=True):
+            raise self.make_error("should_exist", name=value)
+
+        if self.presence == "should_not_exist" and tag_group_exists(value, builtin_included=True):
+            raise self.make_error("should_exist", name=value)

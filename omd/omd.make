@@ -141,8 +141,3 @@ $(shell echo -n "$(1)" ; \
 )
 endef
 
-ifeq (0,$(shell gcc -Xlinker --help | grep -e "-plugin" > /dev/null; echo $$?))
-PYTHON_ENABLE_OPTIMIZATIONS ?= --enable-optimizations --with-lto
-else
-PYTHON_ENABLE_OPTIMIZATIONS ?=
-endif

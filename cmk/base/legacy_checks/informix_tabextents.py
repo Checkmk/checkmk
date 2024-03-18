@@ -40,9 +40,7 @@ def check_informix_tabextents(item, params, parsed):
         max_extents = -1
         long_output = []
         for entry in parsed[item]:
-            extents = int(entry["extents"])
-            if extents >= max_extents:
-                max_extents = extents
+            max_extents = max(max_extents, int(entry["extents"]))
             long_output.append(
                 "[{}/{}] Extents: {}, Rows: {}".format(
                     entry["db"], entry["tab"], entry["extents"], entry["nrows"]

@@ -175,7 +175,7 @@ def process_view(view_renderer: ABCViewRenderer) -> None:
 
 
 def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
-    all_active_filters = _get_all_active_filters(view_renderer.view)
+    all_active_filters = get_all_active_filters(view_renderer.view)
     with livestatus.intercept_queries() as queries:
         unfiltered_amount_of_rows, rows = _get_view_rows(
             view_renderer.view,
@@ -264,7 +264,7 @@ def _create_url(site: SiteId, query: Query) -> str:
 
 def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
     view = view_renderer.view
-    all_active_filters = _get_all_active_filters(view)
+    all_active_filters = get_all_active_filters(view)
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see
@@ -298,7 +298,7 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
 def get_row_count(view: View) -> int:
     """Returns the number of rows shown by a view"""
 
-    all_active_filters = _get_all_active_filters(view)
+    all_active_filters = get_all_active_filters(view)
     # Check that all needed information for configured single contexts are available
     if view.missing_single_infos:
         raise MKUserError(
@@ -415,7 +415,7 @@ def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, r
     view.process_tracking.duration_view_render = view_render_tracker.duration
 
 
-def _get_all_active_filters(view: View) -> list[Filter]:
+def get_all_active_filters(view: View) -> list[Filter]:
     # Always allow the users to specify all allowed filters using the URL
     use_filters = list(filters_allowed_for_infos(view.datasource.infos).values())
 

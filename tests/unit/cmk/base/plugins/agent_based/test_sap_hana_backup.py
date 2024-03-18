@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import pytest
-from freezegun import freeze_time
-
-from tests.testlib import set_timezone
+import time_machine
 
 import cmk.base.plugins.agent_based.sap_hana_backup as sap_hana_backup
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -20,7 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-NOW_SIMULATED = "2019-01-01 22:00:00.000000"
+NOW_SIMULATED = datetime(2019, 1, 1, 22, tzinfo=ZoneInfo("UTC"))
 ITEM = "inst"
 SECTION = {
     ITEM: sap_hana_backup.Backup(
@@ -85,11 +84,10 @@ def test_discovery_sap_hana_backup() -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_check_sap_hana_backup_OK() -> None:
     params = {"backup_age": (24 * 60 * 60, 2 * 24 * 60 * 60)}
-    with set_timezone("UTC"):  # needed for local summary time string below
-        yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
+    yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
 
     assert yielded_results[0] == Result(state=State.OK, summary="Status: successful")
 
@@ -107,11 +105,10 @@ def test_check_sap_hana_backup_OK() -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_check_sap_hana_backup_CRIT() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
-    with set_timezone("UTC"):  # needed for local summary time string below
-        yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
+    yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
 
     assert yielded_results[0] == Result(state=State.OK, summary="Status: successful")
 
@@ -131,12 +128,11 @@ def test_check_sap_hana_backup_CRIT() -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_cluster_check_sap_hana_backup_CRIT() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
     section = {"node0": SECTION, "node1": SECTION}
-    with set_timezone("UTC"):  # needed for local summary time string below
-        yielded_results = list(sap_hana_backup.cluster_check_sap_hana_backup(ITEM, params, section))
+    yielded_results = list(sap_hana_backup.cluster_check_sap_hana_backup(ITEM, params, section))
 
     assert yielded_results[:2] == [
         Result(state=State.OK, summary="Nodes: node0, node1"),
@@ -159,7 +155,7 @@ def test_cluster_check_sap_hana_backup_CRIT() -> None:
     ]
 
 
-@freeze_time(NOW_SIMULATED)
+@time_machine.travel(NOW_SIMULATED)
 def test_cluster_check_sap_hana_backup_missing_node_data() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
 

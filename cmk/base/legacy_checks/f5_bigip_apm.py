@@ -4,15 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import DiscoveryResult, Service, SNMPTree, StringTable
 
 
-def inventory_f5_bigip_apm(section: StringTable) -> DiscoveryResult:
+def discover_f5_bigip_apm(section: StringTable) -> DiscoveryResult:
     if section and section[0][0]:
         yield Service()
 
@@ -35,6 +34,6 @@ check_info["f5_bigip_apm"] = LegacyCheckDefinition(
         oids=["0"],
     ),
     service_name="SSL/VPN Connections",
-    discovery_function=inventory_f5_bigip_apm,
+    discovery_function=discover_f5_bigip_apm,
     check_function=check_f5_bigip_apm,
 )

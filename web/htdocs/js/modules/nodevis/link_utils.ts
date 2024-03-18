@@ -1,11 +1,11 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as d3 from "d3";
 import {BaseType, Transition} from "d3";
+import {ForceOptions, SimulationForce} from "nodevis/force_utils";
 import {LineConfig} from "nodevis/layout_utils";
 import {
     d3SelectionG,
@@ -26,15 +26,18 @@ export function compute_link_id(link_data: NodevisLink): string {
 export class AbstractLink implements TypeWithName {
     _world: NodevisWorld;
     _link_data: NodevisLink;
+    _root_selection: d3SelectionG | null;
     _selection: d3SelectionG | null;
     _line_config: LineConfig;
 
     constructor(world: NodevisWorld, link_data: NodevisLink) {
         this._world = world;
         this._link_data = link_data;
+        this._root_selection = null;
         this._selection = null;
-        this._line_config =
-            this._link_data.source.data.chunk.layout_settings.config.line_config;
+        this._line_config = this._world.viewport
+            .get_layout_manager()
+            .get_layout().line_config;
     }
 
     class_name() {
@@ -51,40 +54,42 @@ export class AbstractLink implements TypeWithName {
         return compute_link_id(this._link_data);
     }
 
-    render_into<GType extends d3.BaseType, Data>(
-        selection: d3.Selection<GType, Data, d3.BaseType, unknown>
-    ): void {
-        // Straigth line style
+    render_into(selection: d3SelectionG, add_hidden_halo = false): void {
+        this._root_selection = selection;
+
+        const lines: [string, number, number, boolean][] = [];
+        lines.push([this.id(), 1, 1, false]);
+        if (add_hidden_halo)
+            lines.push(["hidden_halo_" + this.id(), 15, 0, true]);
+
+        // Straight line style
         const line_selection = selection
-            .selectAll("line")
-            .data(this._line_config.style == "straight" ? [this.id()] : [])
+            .selectAll<SVGLineElement, [string, number, number, boolean]>(
+                "line"
+            )
+            .data(this._line_config.style == "straight" ? lines : [], d => d[0])
             .join("line")
-            .attr("marker-end", "url(#triangle)")
-            .attr("stroke-width", function (d) {
-                // @ts-ignore
-                return Math.max(1, 2 - d.depth);
-            })
-            .style("stroke", this._color());
+            .classed("halo_line", d => d[3])
+            .attr("opacity", d => d[2])
+            .attr("stroke-width", d => d[1]);
 
         // Elbow and round style
         const path_selection = selection
-            .selectAll("path")
-            .data(this._line_config.style != "straight" ? [this.id()] : [])
+            .selectAll<SVGPathElement, [string, number, number, boolean]>(
+                "path"
+            )
+            .data(this._line_config.style != "straight" ? lines : [], d => d[0])
             .join("path")
             .attr("fill", "none")
-            .attr("stroke-width", 1)
-            .style("stroke", this._color());
+            .classed("halo_line", d => d[3])
+            .attr("opacity", d => d[2])
+            .attr("stroke-width", d => d[1]);
 
         // @ts-ignore
         this._selection =
             this._line_config.style == "straight"
                 ? line_selection
                 : path_selection;
-        if (this._line_config.dashed) this.selection().classed("dashed", true);
-    }
-
-    _color(): string {
-        return "darkgrey";
     }
 
     update_position(_enforce_transition = false) {
@@ -111,7 +116,6 @@ export class AbstractLink implements TypeWithName {
             this.selection().style("stroke-opacity", 0);
             return;
         }
-        this.selection().style("stroke-opacity", 0.3);
         const x1 = source.data.target_coords.x;
         const y1 = source.data.target_coords.y;
         const x2 = target.data.target_coords.x;
@@ -152,12 +156,16 @@ export class AbstractLink implements TypeWithName {
         source: NodevisNode,
         target: NodevisNode
     ): void {
-        const source_selection = source.data.selection;
-        const target_selection = target.data.selection;
+        const source_selection = this._world.viewport
+            .get_nodes_layer()
+            .get_node_by_id(source.data.id);
+        const target_selection = this._world.viewport
+            .get_nodes_layer()
+            .get_node_by_id(target.data.id);
         if (!source_selection || !target_selection) return;
 
-        const source_node = source_selection.node();
-        const target_node = target_selection.node();
+        const source_node = source_selection.selection().node();
+        const target_node = target_selection.selection().node();
         if (!source_node || !target_node) return;
 
         const source_baseVal = source_node.transform.baseVal;
@@ -215,7 +223,7 @@ export class AbstractLink implements TypeWithName {
         if (
             (!source.data.transition_info.use_transition &&
                 !target.data.transition_info.use_transition) ||
-            this._world.layout_manager.dragging
+            this._world.viewport.get_layout_manager().dragging
         )
             return selection;
 
@@ -228,6 +236,20 @@ export class AbstractLink implements TypeWithName {
                 this.selection().attr("in_transit", 0);
             })
             .attr("in_transit", 0);
+    }
+
+    get_force(
+        force_name: SimulationForce,
+        force_options: ForceOptions
+    ): number {
+        return this._get_link_type_specific_force(force_name, force_options);
+    }
+
+    _get_link_type_specific_force(
+        force_name: SimulationForce,
+        force_options: ForceOptions
+    ): number {
+        return force_options[force_name];
     }
 }
 

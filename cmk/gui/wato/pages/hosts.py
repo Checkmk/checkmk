@@ -332,7 +332,7 @@ class ModeEditHost(ABCHostMode):
         return self.mode_url(host=self._host.name())
 
     def _init_host(self) -> Host:
-        hostname = HostName(request.get_ascii_input_mandatory("host"))
+        hostname = request.get_validated_type_input_mandatory(HostName, "host")
         folder = folder_from_request()
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -465,12 +465,28 @@ def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry
 
     if mode_name != "diag_host" and not host.is_cluster():
         yield PageMenuEntry(
-            title=_("Connection tests"),
-            icon_name="diagnose",
+            title=_("Test connection"),
+            icon_name="analysis",
             item=make_simple_link(
                 folder_preserving_link([("mode", "diag_host"), ("host", host.name())])
             ),
         )
+
+    yield PageMenuEntry(
+        title=_("Test notifications"),
+        icon_name="analysis",
+        item=make_simple_link(
+            makeuri_contextless(
+                request,
+                [
+                    ("mode", "notifications"),
+                    ("host_name", host.name()),
+                    ("_test_host_notifications", 1),
+                ],
+                filename="wato.py",
+            )
+        ),
+    )
 
     if mode_name != "object_parameters" and user.may("wato.rulesets"):
         yield PageMenuEntry(
@@ -618,7 +634,7 @@ class CreateHostMode(ABCHostMode):
         attributes = collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = HostName(request.get_ascii_input_mandatory("host"))
+        hostname = request.get_validated_type_input_mandatory(HostName, "host")
         Hostname().validate_value(hostname, "host")
 
         folder = folder_from_request()
@@ -682,7 +698,9 @@ class ModeCreateHost(CreateHostMode):
     def _init_new_host_object(cls) -> Host:
         return Host(
             folder=folder_from_request(),
-            host_name=HostName(request.get_ascii_input_mandatory("host", "")),
+            host_name=request.get_validated_type_input_mandatory(
+                HostName, "host", deflt=HostName("")
+            ),
             attributes={},
             cluster_nodes=None,
         )
@@ -714,7 +732,9 @@ class ModeCreateCluster(CreateHostMode):
     def _init_new_host_object(cls) -> Host:
         return Host(
             folder=folder_from_request(),
-            host_name=HostName(request.get_ascii_input_mandatory("host", "")),
+            host_name=request.get_validated_type_input_mandatory(
+                HostName, "host", deflt=HostName("")
+            ),
             attributes={},
             cluster_nodes=[],
         )

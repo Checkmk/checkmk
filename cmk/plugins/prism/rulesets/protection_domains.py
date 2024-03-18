@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1 import Localizable
+from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
     DictElement,
     Dictionary,
     SingleChoice,
     SingleChoiceElement,
-    Text,
 )
-from cmk.rulesets.v1.rule_specs import CheckParameterWithItem, Topic
+from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, Topic
 
 
 def _parameter_form_prism_protection_domains() -> Dictionary:
@@ -19,26 +19,26 @@ def _parameter_form_prism_protection_domains() -> Dictionary:
         elements={
             "sync_state": DictElement(
                 parameter_form=SingleChoice(
-                    title=Localizable("Target sync state"),
-                    help_text=Localizable(
+                    title=Title("Target sync state"),
+                    help_text=Help(
                         "Configure the target state of the protection domain sync state."
                     ),
                     elements=[
-                        SingleChoiceElement(name="Enabled", title=Localizable("Sync enabled")),
-                        SingleChoiceElement(name="Disabled", title=Localizable("Sync disabled")),
-                        SingleChoiceElement(name="Synchronizing", title=Localizable("Syncing")),
+                        SingleChoiceElement(name="Enabled", title=Title("Sync enabled")),
+                        SingleChoiceElement(name="Disabled", title=Title("Sync disabled")),
+                        SingleChoiceElement(name="Synchronizing", title=Title("Syncing")),
                     ],
-                    prefill_selection="Disabled",
+                    prefill=DefaultValue("Disabled"),
                 )
             )
         },
     )
 
 
-rule_spec_prims_protection_domains = CheckParameterWithItem(
+rule_spec_prims_protection_domains = CheckParameters(
     name="prism_protection_domains",
-    title=Localizable("Nutanix Prism MetroAvail Sync State"),
+    title=Title("Nutanix Prism MetroAvail Sync State"),
     topic=Topic.VIRTUALIZATION,
-    item_form=Text(title=Localizable("Protection Domain")),
     parameter_form=_parameter_form_prism_protection_domains,
+    condition=HostAndItemCondition(item_title=Title("Protection Domain")),
 )

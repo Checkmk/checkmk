@@ -64,7 +64,6 @@ def _special_agents_siemens_plc_siemens_plc_value() -> list[ValueSpec]:
         ),
         Float(
             title=_("Address"),
-            display_format="%.1f",
             help=_(
                 "Addresses are specified with a dot notation, where number "
                 "before the dot specify the byte to fetch and the number after the "

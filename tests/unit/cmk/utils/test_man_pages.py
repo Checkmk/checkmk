@@ -15,7 +15,7 @@ from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 import cmk.utils.man_pages as man_pages
 
-from cmk.base.plugins.server_side_calls import load_active_checks
+from cmk.base.server_side_calls import load_active_checks
 
 from cmk.agent_based.v2 import CheckPlugin
 from cmk.discover_plugins import discover_families, discover_plugins, PluginGroup
@@ -175,7 +175,7 @@ def test_man_page_consistency(
     expected_man_pages = (
         {str(plugin_name) for plugin_name in fix_register.check_plugins}
         | {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
-        | {f"check_{name}" for name in load_active_checks()[1]}
+        | {f"check_{plugin.name}" for plugin in load_active_checks()[1].values()}
         | {"check-mk", "check-mk-inventory"}
     )
     assert set(all_pages) == expected_man_pages

@@ -14,7 +14,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
+from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.config as config
 
@@ -34,9 +34,7 @@ def reset_config() -> None:
     _config_loaded = False
 
 
-def service_description(
-    hostname: HostName, check_plugin_name: CheckPluginNameStr, item: Item
-) -> str:
+def service_description(hostname: HostName, check_plugin_name: str, item: Item) -> str:
     return config.service_description(
         get_ruleset_matcher(), hostname, CheckPluginName(check_plugin_name), item
     )

@@ -35,7 +35,7 @@ def _create_encryption_key(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_suggestion("Backup encryption keys").click()
     logged_in_page.main_area.expect_no_entries()
 
-    logged_in_page.main_area.get_suggestion("Add key").click()
+    logged_in_page.main_area.get_suggestion("Generate key").click()
     logged_in_page.main_area.get_input("key_p_alias").fill("My backup key")
     logged_in_page.main_area.get_input("key_p_passphrase").fill(_backup_passphrase)
     logged_in_page.main_area.get_suggestion("Create").click()
@@ -51,7 +51,7 @@ def _create_backup_job(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_text("Compress the backed up files").check()
 
     logged_in_page.main_area.locator_via_xpath("span", "Do not encrypt the backup").click()
-    logged_in_page.main_area.locator_via_xpath("li", "Encrypt the backup using the key:").click()
+    logged_in_page.main_area.locator_via_xpath("span", "Encrypt the backup using the key:").click()
     logged_in_page.click_and_wait(
         locator=logged_in_page.main_area.locator_via_xpath("span", "My backup key"),
         reload_on_error=True,

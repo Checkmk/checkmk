@@ -450,7 +450,7 @@ def test__group_by_transition(
             ["Vanished Item 1", "Vanished Item 2"],
             (0, 2, 0),
         ),
-        # Vanished services
+        # Service vanished
         # Whitelist
         (
             (
@@ -665,6 +665,8 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         check_interval=60,
         severity_new_services=1,
         severity_vanished_services=0,
+        severity_changed_service_labels=0,
+        severity_changed_service_params=1,
         severity_new_host_labels=0,
         rediscovery=rediscovery,
     )
@@ -874,7 +876,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
             ),
             True,
         ),
-        # Vanished services
+        # Service vanished
         # Whitelist
         (
             _get_params(
@@ -1109,32 +1111,32 @@ def test__check_service_table(
             0,
             "",
             [
-                "Unmonitored service: check_plugin_name: Test Description New Item 1",
+                "Service unmonitored: check_plugin_name: Test Description New Item 1",
             ],
         ),
         ActiveCheckResult(
             0,
             "",
             [
-                "Unmonitored service: check_plugin_name: Test Description New Item 2",
+                "Service unmonitored: check_plugin_name: Test Description New Item 2",
             ],
         ),
-        ActiveCheckResult(1, "Unmonitored services: 2 (check_plugin_name: 2)"),
+        ActiveCheckResult(1, "Services unmonitored: 2 (check_plugin_name: 2)"),
         ActiveCheckResult(
             0,
             "",
             [
-                "Vanished service: check_plugin_name: Test Description Vanished Item 1",
+                "Service vanished: check_plugin_name: Test Description Vanished Item 1",
             ],
         ),
         ActiveCheckResult(
             0,
             "",
             [
-                "Vanished service: check_plugin_name: Test Description Vanished Item 2",
+                "Service vanished: check_plugin_name: Test Description Vanished Item 2",
             ],
         ),
-        ActiveCheckResult(0, "Vanished services: 2 (check_plugin_name: 2)"),
+        ActiveCheckResult(0, "Services vanished: 2 (check_plugin_name: 2)"),
     ]
     assert need_rediscovery == result_need_rediscovery
 
@@ -1158,7 +1160,8 @@ def test__check_host_labels_up_to_date() -> None:
             add_new_services=False,
             remove_vanished_services=False,
             update_host_labels=True,
-            update_changed_services=False,
+            update_changed_service_labels=False,
+            update_changed_service_parameters=False,
         ),
     ) == ([ActiveCheckResult(0, "Host labels: all up to date")], False)
 
@@ -1182,7 +1185,8 @@ def test__check_host_labels_changed() -> None:
             add_new_services=False,
             remove_vanished_services=False,
             update_host_labels=True,
-            update_changed_services=False,
+            update_changed_service_labels=False,
+            update_changed_service_parameters=False,
         ),
     ) == (
         [
@@ -1401,11 +1405,13 @@ _expected_services: dict = {
 _expected_host_labels = [
     HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
     HostLabel("cmk/os_type", "linux", SectionName("check_mk")),
-    HostLabel("cmk/os_platform", "linux", SectionName("check_mk")),
+    HostLabel("cmk/os_platform", "ubuntu", SectionName("check_mk")),
+    HostLabel("cmk/os_name", "Ubuntu", SectionName("check_mk")),
+    HostLabel("cmk/os_version", "22.04", SectionName("check_mk")),
 ]
 
 
-@pytest.mark.usefixtures("fix_register")
+@pytest.mark.usefixtures("patch_omd_site", "fix_register")
 def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     testhost = HostName("test-host")
     ts = Scenario()
@@ -1952,8 +1958,8 @@ def test__discover_services_on_cluster(
     scenario = cluster_scenario
     config_cache = scenario.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
-    nodes = config_cache.nodes_of(scenario.parent)
-    assert nodes is not None
+    nodes = config_cache.nodes(scenario.parent)
+    assert nodes
 
     discovered_services = _get_cluster_services(
         scenario.parent,
@@ -1977,8 +1983,8 @@ def test__perform_host_label_discovery_on_cluster(
     cluster_scenario: ClusterScenario, discovery_test_case: DiscoveryTestCase
 ) -> None:
     scenario = cluster_scenario
-    nodes = scenario.config_cache.nodes_of(scenario.parent)
-    assert nodes is not None
+    nodes = scenario.config_cache.nodes(scenario.parent)
+    assert nodes
 
     host_label_result, kept_labels = analyse_cluster_labels(
         scenario.parent,

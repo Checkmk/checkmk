@@ -42,6 +42,8 @@ class DOWNTIME:
     SCHEDULE_SERVICE: LivestatusCommand = "SCHEDULE_SVC_DOWNTIME"
     DELETE_HOST: LivestatusCommand = "DEL_HOST_DOWNTIME"
     DELETE_SERVICE: LivestatusCommand = "DEL_SVC_DOWNTIME"
+    MODIFY_HOST: LivestatusCommand = "MODIFY_HOST_DOWNTIME"
+    MODIFY_SERVICE: LivestatusCommand = "MODIFY_SVC_DOWNTIME"
 
 
 class QueryException(Exception):
@@ -133,6 +135,38 @@ def delete_downtime(
             _del_service_downtime(connection, downtime["id"], downtime["site"])
         else:
             _del_host_downtime(connection, downtime["id"], downtime["site"])
+
+
+def modify_downtimes(
+    connection: MultiSiteConnection,
+    query: QueryExpression,
+    site_id: SiteId | None,
+    end_time: str | None = None,
+    comment: str | None = None,
+    user_id: UserId = UserId.builtin(),
+) -> None:
+    """Update scheduled downtimes"""
+
+    only_sites = None if site_id is None else [site_id]
+    downtimes = Query(
+        [
+            Downtimes.id,
+            Downtimes.is_service,
+        ],
+        query,
+    ).fetchall(connection, True, only_sites)
+
+    for downtime in downtimes:
+        command = DOWNTIME.MODIFY_SERVICE if downtime["is_service"] else DOWNTIME.MODIFY_HOST
+        _modify_downtime(
+            connection,
+            command,
+            downtime["id"],
+            downtime["site"],
+            end_time="" if end_time is None else end_time,
+            comment=comment if comment is not None else "",
+            user_id=user_id,
+        )
 
 
 def schedule_services_downtimes_with_query(
@@ -245,9 +279,9 @@ def schedule_service_downtime(
 
     Examples:
 
-        >>> import pytz
-        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
-        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
+        >>> from zoneinfo import ZoneInfo
+        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
+        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
@@ -652,9 +686,9 @@ def schedule_host_downtime(
       * https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=122
 
     Examples:
-        >>> import pytz
-        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=pytz.timezone("UTC"))
-        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
+        >>> from zoneinfo import ZoneInfo
+        >>> _start_time = dt.datetime(1970, 1, 1, tzinfo=ZoneInfo("UTC"))
+        >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=ZoneInfo("UTC"))
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
@@ -901,3 +935,31 @@ def _deduplicate(seq):
         result.append(entry)
 
     return result
+
+
+def _modify_downtime(
+    sites: MultiSiteConnection,
+    command: LivestatusCommand,
+    downtime_id: int,
+    site_id: SiteId | None,
+    end_time: str = "",
+    comment: str = "",
+    user_id: UserId = UserId.builtin(),
+) -> None:
+    _user.need_permission("action.downtimes")
+
+    return send_command(
+        sites,
+        command,
+        [
+            downtime_id,
+            "",  # start_time (not used),
+            end_time,  # end_time,
+            "",  # recur_mode (not used),
+            "",  # trigger_id (not used),
+            "",  # duration (not used),
+            user_id,
+            comment.replace("\n", ""),
+        ],
+        site_id,
+    )

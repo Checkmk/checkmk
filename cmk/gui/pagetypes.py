@@ -53,7 +53,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.logged_in import save_user_file, user
+from cmk.gui.logged_in import LoggedInUser, save_user_file, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
@@ -596,14 +596,16 @@ class Overridable(Base[_T_OverridableSpec]):
 
         This does not only need a flag in the page itself, but also the
         permission from its owner to publish it."""
-        if self._["public"] is False:
+        if self._["public"] is False or self._["public"] is None:
             return False
 
         return self.publish_is_allowed()
 
     def publish_is_allowed(self) -> bool:
         """Whether publishing an element to other users is allowed by the owner"""
-        return not self.owner() or user_may(self.owner(), "general.publish_" + self.type_name())
+        return not self.owner() or is_user_with_publish_permissions(
+            "pagetype", self.owner(), self.type_name()
+        )
 
     def is_public_forced(self) -> bool:
         """Whether the user is allowed to override built-in pagetypes"""
@@ -970,11 +972,18 @@ class Overridable(Base[_T_OverridableSpec]):
         assert owner is not None
 
         save_dict = {}
+        save_dict_by_owner: dict[UserId, dict[str, object]] = {}
         for page in instances.instances():
-            if page.owner() == owner:
+            if (page_owner := page.owner()) == owner:
                 save_dict[page.name()] = page.serialize()
+            elif LoggedInUser(owner).may("general.edit_foreign_%s" % cls.type_name()):
+                save_dict_by_owner.setdefault(page_owner, {}).setdefault(
+                    page.name(), page.serialize()
+                )
 
         save_user_file("user_%ss" % cls.type_name(), save_dict, owner)
+        for page_owner, save_dict_of_owner in save_dict_by_owner.items():
+            save_user_file("user_%ss" % cls.type_name(), save_dict_of_owner, page_owner)
 
     def clone(self) -> Self:
         page_dict = self._.copy()
@@ -1039,6 +1048,7 @@ class ListPage(Page, Generic[_T]):
                         ),
                         PageMenuEntry(
                             title=_("Delete selected"),
+                            name="delete",
                             icon_name="delete",
                             item=make_confirmed_form_submit_link(
                                 form_name="bulk_delete",
@@ -1114,6 +1124,7 @@ class ListPage(Page, Generic[_T]):
                 else:
                     self._show_table(instances, scope_instances)
 
+        html.javascript("cmk.page_menu.check_menu_entry_by_checkboxes('delete')")
         html.footer()
 
     @classmethod
@@ -1150,7 +1161,11 @@ class ListPage(Page, Generic[_T]):
         for owner in {e[0] for e in to_delete}:
             self._type.save_user_instances(instances, owner)
 
-        flash(_("The selected %s have been deleted.") % self._type.phrase("title_plural"))
+        if len(to_delete) > 1:
+            flash(_("Selected %s have been deleted.") % self._type.phrase("title_plural").lower())
+        elif len(to_delete) == 1:
+            flash(_("%s has been deleted.") % self._type.phrase("title"))
+
         html.reload_whole_page(self._type.list_url())
 
     def _show_table(
@@ -1169,13 +1184,18 @@ class ListPage(Page, Generic[_T]):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows(this.form);",
+                            onclick="cmk.selection.toggle_all_rows(this.form);"
+                            "cmk.page_menu.check_menu_entry_by_checkboxes('delete')",
                             value="X",
                         ),
                         sortable=False,
                         css=["checkbox"],
                     )
-                    html.checkbox(f"_c_{instance.owner()}+{instance.name()}")
+                    html.checkbox(
+                        f"_c_{instance.owner()}+{instance.name()}",
+                        onclick="cmk.page_menu.check_menu_entry_by_checkboxes('delete')",
+                        class_="page_checkbox",
+                    )
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons visuals"])
@@ -1184,18 +1204,18 @@ class ListPage(Page, Generic[_T]):
                 if isinstance(instance, PageRenderer):
                     html.icon_button(instance.view_url(), _("View"), self._type.type_name())
 
-                # Clone / Customize
-                html.icon_button(instance.clone_url(), _("Create a private copy of this"), "clone")
-
-                # Delete
-                if instance.may_delete():
-                    html.icon_button(instance.delete_url(), _("Delete!"), "delete")
-
                 # Edit
                 if instance.may_edit():
                     html.icon_button(instance.edit_url(), _("Edit"), "edit")
 
                 self._type.custom_list_buttons(instance)
+
+                # Clone / Customize
+                html.icon_button(instance.clone_url(), _("Create a private copy of this"), "clone")
+
+                # Delete
+                if instance.may_delete():
+                    html.icon_button(instance.delete_url(), _("Delete"), "delete")
 
                 # Internal ID of instance (we call that 'name')
                 table.cell(_("ID"), instance.name(), css=["narrow"])
@@ -1447,7 +1467,7 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
     for other_type_name, other_pagetype in page_types.items():
         if current_type_name != other_type_name:
             yield PageMenuEntry(
-                title=other_pagetype.phrase("title_plural").title(),
+                title=other_pagetype.phrase("title_plural"),
                 icon_name=other_type_name,
                 item=make_simple_link("%ss.py" % other_type_name),
             )
@@ -1991,6 +2011,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
             "public": self._["public"],
             "packaged": False,
             "link_from": {},
+            "megamenu_search_terms": [],
         }
 
 
@@ -2306,6 +2327,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
         return [
             (p.name(), p.title())
             for p in sorted(instances.instances(), key=lambda p: p.sort_index())
+            if p.is_permitted()
         ]
 
     @classmethod

@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 import json
 import logging
-from collections.abc import Mapping, Sequence
-from typing import Any, Final
+from collections.abc import Sequence
+from typing import Final
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -45,16 +44,14 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
             + ")"
         )
 
-    @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> "PiggybackFetcher":
-        return cls(**copy.deepcopy(dict(serialized)))
-
-    def to_json(self) -> Mapping[str, Any]:
-        return {
-            "hostname": self.hostname,
-            "address": self.address,
-            "time_settings": self.time_settings,
-        }
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, PiggybackFetcher):
+            return False
+        return (
+            self.hostname == other.hostname
+            and self.address == other.address
+            and self.time_settings == other.time_settings
+        )
 
     def open(self) -> None:
         for origin in (self.hostname, self.address):

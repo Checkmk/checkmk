@@ -432,7 +432,7 @@ class LoggedInUser:
 class LoggedInSuperUser(LoggedInUser):
     def __init__(self) -> None:
         super().__init__(None)
-        self.alias = "Superuser for unauthenticated pages"
+        self.alias = "Superuser for internal use"
         self.email = "admin"
 
     def _gather_roles(self, _user_id: UserId | None) -> list[str]:

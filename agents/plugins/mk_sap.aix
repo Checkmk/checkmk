@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.3.0b1"
+CMK_VERSION="2.4.0b1"
 
 # cat sapservices
 ##!/bin/sh
@@ -43,25 +43,25 @@ CMK_VERSION="2.3.0b1"
 
 sapservices="/usr/sap/sapservices"
 
-if [ -r "$sapservices" ]; then
+_read_sap_services() {
+    grep "^LIBPATH=/usr/sap/" "${sapservices}" | cut -d';' -f3
+}
+
+if [ -r "${sapservices}" ]; then
     echo "<<<aix_sap_processlist:sep(44)>>>"
     # loop over ids
-    # SC2162: read without -r will mangle backslashes.
-    # We suppress it here for compatibility (curretly backslashes e.g. before spaces are dropped).
-    # Since escaping of field seperators is not relevant when reading into one variable, we probably
-    # would have wanted "read -r".
-    # shellcheck disable=SC2162
-    while read LINE; do
-        command=$(echo "$LINE" | grep "^LIBPATH=/usr/sap/" | grep -v "^LIBPATH=/usr/sap/D" | awk -F" " '{print $5}')
-        if [ -n "$command" ]; then
-            id2=$(echo "$command" | awk -F"/" '{print $4}')
-            path="/sapmnt/$id2/exe"
-            sappfpar=$(find "$path" -name sappfpar | head -1)
-            sapcontrol=$(find "$path" -name sapcontrol | head -1)
-            lib_path=$(find "$path" -name libicuuc\*.a | head -1 | sed -e 's,/[^ /]*$,,')
-            id=$(LIBPATH=$LIBPATH:$lib_path $sappfpar SAPSYSTEM "$command")
-            echo -n "[$id]"
-            LIBPATH=$LIBPATH:$lib_path $sapcontrol -nr "$id" -function GetProcessList
-        fi
-    done <"$sapservices"
+    # shellcheck disable=SC2034 # _bin appears unused.
+    _read_sap_services | while read -r _bin command; do
+        [ -n "${command}" ] || continue
+
+        id2=$(echo "${command}" | cut -d/ -f4)
+        path="/sapmnt/${id2}/exe"
+        sappfpar=$(find "${path}" -name sappfpar | head -1)
+        sapcontrol=$(find "${path}" -name sapcontrol | head -1)
+        lib_path=$(find "${path}" -name libicuuc\*.a | head -1 | sed -e 's,/[^ /]*$,,')
+        id=$(LIBPATH=${LIBPATH}:${lib_path} ${sappfpar} SAPSYSTEM "${command}")
+        printf "[%s]" "${id}"
+        LIBPATH=${LIBPATH}:${lib_path} ${sapcontrol} -nr "${id}" -function GetProcessList
+
+    done
 fi

@@ -15,6 +15,12 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 # number of packages to just "omd" - to speed up your tests.
 # PACKAGES="omd"
 #
+# Alternatively,
+# ```
+# cd omd
+# PACKAGE=check-cert; make $PWD/build/stamps/$PACKAGE-build
+# ```
+#
 # You can also create a file named .config and override the
 # PACKAGES variable there to customzie the list of packages.
 
@@ -41,6 +47,8 @@ PACKAGES := \
     stunnel \
     nagios \
     monitoring-plugins \
+    check-cert \
+    check-http \
     nagvis \
     nrpe \
     omd \
@@ -55,7 +63,8 @@ PACKAGES := \
     unixcat \
     neb \
     robotmk \
-    xmlsec1
+    xmlsec1 \
+    redfish_mkp
 
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise
@@ -128,7 +137,7 @@ BOM := bill-of-materials.json
 
 # Called while building the .rpm/.deb packages
 install: $(INSTALL_GLOBAL)
-	$(PIPENV) run ./strip_binaries --exclude cmk-agent-ctl --exclude check-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
+	$(PIPENV) run ./strip_binaries --exclude cmk-agent-ctl --exclude mk-sql --exclude cmc --exclude waitmax --exclude agent_modbus $(DESTDIR)$(OMD_ROOT)/
 
 # Called by our release system to build appliance packages
 cma: $(CMA_PACKAGE)
@@ -304,7 +313,6 @@ deb: debian/changelog debian/control
 	    --preserve-envvar="BAZEL_*" \
 	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="CI" \
-	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
 	    --preserve-envvar="RUSTUP_HOME" \
 	    --prepend-path $$HOME/.cargo/bin \
 	    --prepend-path=/usr/local/bin \

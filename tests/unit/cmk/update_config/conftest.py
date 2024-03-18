@@ -5,7 +5,6 @@
 # pylint: disable=unused-import
 
 from tests.unit.cmk.gui.conftest import (  # NOQA
-    deactivate_search_index_building_at_requenst_end,
     flask_app,
     gui_cleanup_after_test,
     request_context,

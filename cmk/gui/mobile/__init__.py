@@ -6,13 +6,13 @@
 import cmk.gui.pages
 from cmk.gui.views.layout import LayoutRegistry
 
-from .pages import page_index, page_login, page_view
+from .pages import page_login, PageMobileIndex, PageMobileView
 from .views import LayoutMobileDataset, LayoutMobileList, LayoutMobileTable
 
 
 def register(layout_registry: LayoutRegistry) -> None:
-    cmk.gui.pages.register("mobile")(page_index)
-    cmk.gui.pages.register("mobile_view")(page_view)
+    cmk.gui.pages.page_registry.register(PageMobileIndex)
+    cmk.gui.pages.page_registry.register(PageMobileView)
     layout_registry.register(LayoutMobileTable)
     layout_registry.register(LayoutMobileList)
     layout_registry.register(LayoutMobileDataset)

@@ -17,7 +17,7 @@ from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.node_visualization import ParentChildTopologyPage
+from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.type_defs import ABCMegaMenuSearch, MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
 
@@ -144,6 +144,10 @@ class MonitoringSearch(ABCMegaMenuSearch):
                 name="reset",
                 type_="button",
                 onclick="cmk.search.on_click_reset('monitoring');",
+                # When the user searched for something, let him jump to the first result with the first
+                # <TAB> key press instead of jumping to the reset button. The reset can be triggered via
+                # the <ESC> key.
+                tabindex="-1",
             )
         html.close_div()
         html.div("", id_="mk_side_clear")

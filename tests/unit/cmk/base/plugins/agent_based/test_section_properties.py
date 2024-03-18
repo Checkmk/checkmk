@@ -37,7 +37,8 @@ def test_detect_spec_dedup(
     assert offenders == {
         ("alcatel_timetra_chassis", "alcatel_timetra_cpu"),
         ("apc_netbotz_fluid", "apc_netbotz_smoke"),
-        ("apc_netbotz_other_sensors", "apc_netbotz_sensors"),
+        ("apc_netbotz_v2_other_sensors", "apc_netbotz_v2_sensors"),
+        ("apc_netbotz_50_other_sensors", "apc_netbotz_50_sensors"),
         ("apc_sts_inputs", "apc_sts_source"),
         ("artec_documents", "artec_temp"),
         ("bdt_tape_info", "bdt_tape_status"),
@@ -111,10 +112,17 @@ def test_all_sections_are_subscribed_by_some_plugin(
 ) -> None:
     """Test that all registered sections are subscribed to by some plugin
 
-    We have very few sections (one at the time of this writing),
-    that are not subscribed to by any plugin.
+    We have very few sections that are not subscribed to by any plugin.
     We can afford to keep track of those.
     """
+    allowed_unsubscribed_sections = {
+        "labels",
+        "azure_labels",
+        "ec2_labels",
+        "elb_generic_labels",
+        "elbv2_generic_labels",
+    }
+
     all_section_names = set(fix_register.snmp_sections) | set(fix_register.agent_sections)
 
     subscribed_sections_names = set(
@@ -126,7 +134,7 @@ def test_all_sections_are_subscribed_by_some_plugin(
 
     unsubscribed_sections_names = {str(n) for n in all_section_names - subscribed_sections_names}
 
-    assert unsubscribed_sections_names == {"labels"}
+    assert unsubscribed_sections_names == allowed_unsubscribed_sections
 
 
 def test_section_detection_uses_sysdescr_or_sysobjid(

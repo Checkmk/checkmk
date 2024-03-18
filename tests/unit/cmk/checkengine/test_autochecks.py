@@ -168,5 +168,4 @@ def test_consolidate_autochecks_of_real_hosts() -> None:
     # these are entries we expect (Note: this is status quo. Not sure why we keep service D):
     assert len(consolidated) == 3
     assert set(by_plugin) == {"A", "C", "D"}
-    # and this one should have kept the old parameters
-    assert by_plugin["C"].parameters == {"params": "old"}
+    assert by_plugin["C"].parameters == {"params": "new"}

@@ -11,16 +11,9 @@ from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.openapi.endpoints.common_fields import EXISTING_FOLDER, EXISTING_FOLDER_PATTERN
 
 from cmk import fields
-
-EXISTING_FOLDER_PATTERN = r"^(?:(?:[~\\\/]|(?:[~\\\/][-\w]+)+[~\\\/]?)|[0-9a-fA-F]{32})$"
-
-EXISTING_FOLDER = gui_fields.FolderField(
-    example="/",
-    required=True,
-    pattern=EXISTING_FOLDER_PATTERN,
-)
 
 
 class CreateFolder(BaseSchema):
@@ -180,3 +173,24 @@ class BulkDeleteFolder(BaseSchema):
         required=True,
         example=["production", "secondproduction"],
     )
+
+
+class DeleteModeField(fields.String):
+    def __init__(
+        self,
+        required=False,
+        description="Delete policy: 'recursive': Deletes the folder and all the elements it contains. 'abort_on_nonempty': Deletes the folder only if it is not empty.",
+        example="abort_on_nonempty",
+        load_default="recursive",
+    ):
+        super().__init__(
+            required=required,
+            description=description,
+            enum=["recursive", "abort_on_nonempty"],
+            example=example,
+            load_default=load_default,
+        )
+
+    @classmethod
+    def field_name(cls) -> str:
+        return "delete_mode"

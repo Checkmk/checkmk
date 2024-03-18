@@ -37,6 +37,7 @@ class ChangesFields(BaseSchema):
     user_id = fields.String(
         description="The user who made the change",
         example="cmkadmin",
+        allow_none=True,
     )
     action_name = fields.String(
         description="The action carried out",

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections.abc import Callable, Collection, Iterable, Sequence
 from itertools import chain
 
@@ -17,9 +18,10 @@ from cmk.gui.graphing._utils import (
     get_graph_templates,
     graph_templates_internal,
     metric_title,
+    registered_metrics,
     translated_metrics_from_row,
 )
-from cmk.gui.graphing._valuespecs import metrics_of_query, registered_metrics
+from cmk.gui.graphing._valuespecs import metrics_of_query
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import Choices
@@ -65,6 +67,9 @@ def __live_query_to_choices(
     with sites.only_sites(selected_sites), sites.set_limit(limit):
         query_result = query_callback(sites.live())
         choices = [(h, h) for h in sorted(query_result, key=lambda h: h.lower())]
+
+    if params.get("escape_regex"):
+        choices = [(re.escape(val), display) for (val, display) in choices]
 
     if len(choices) > limit:
         choices.insert(0, (None, _("(Max suggestions reached, be more specific)")))

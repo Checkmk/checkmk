@@ -1,13 +1,14 @@
 /**
- * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
 import * as d3 from "d3";
-import {ForceOptions, SimulationForce} from "nodevis/force_simulation";
+import {ForceOptions, SimulationForce} from "nodevis/force_utils";
 import {
     ContextMenuElement,
+    CoreInfo,
     d3SelectionG,
     NodevisNode,
     NodevisWorld,
@@ -20,7 +21,7 @@ import {
 
 type d3SelectionQuickinfo = d3.Selection<
     HTMLDivElement,
-    NodevisNode,
+    string,
     HTMLDivElement,
     any
 >;
@@ -100,26 +101,26 @@ export class AbstractGUINode implements TypeWithName {
         this._external_quickinfo_data = null;
     }
 
-    update_node_data(node: NodevisNode, selection: d3SelectionG) {
+    update_node_data(node: NodevisNode, _selection: d3SelectionG) {
         // TODO: make this obsolete. this class should only know the id, not the data reference
         this._clear_cached_data();
-        node.data.selection = selection;
         this.node = node;
         this.update_node_state();
     }
 
     update_node_state() {
+        if (!this.node.data.type_specific.core) return;
         this.selection()
             .select("circle.state_circle")
             .classed("state0", false)
             .classed("state1", false)
             .classed("state2", false)
             .classed("state3", false)
-            .classed("state" + this.node.data.state, true);
+            .classed("state" + this.node.data.type_specific.core.state, true);
 
         const ack_selection = this.selection()
             .selectAll("image.acknowledged")
-            .data(this.node.data.acknowledged ? [null] : []);
+            .data(this.node.data.type_specific.core.acknowledged ? [null] : []);
         ack_selection
             .enter()
             .append("svg:image")
@@ -133,7 +134,7 @@ export class AbstractGUINode implements TypeWithName {
 
         const dt_selection = this.selection()
             .selectAll("image.in_downtime")
-            .data(this.node.data.in_downtime ? [null] : []);
+            .data(this.node.data.type_specific.core.in_downtime ? [null] : []);
         dt_selection
             .enter()
             .append("svg:image")
@@ -148,27 +149,28 @@ export class AbstractGUINode implements TypeWithName {
 
     render_into(selection: d3SelectionG) {
         this._selection = this._render_into_transform(selection);
-        // TODO: check usage
-        this.node.data.selection = this._selection;
-
         this.render_object();
         this.render_text();
         this.update_node_state();
     }
 
     _get_text(node_id: string): string {
-        const node = this._world.nodes_layer.get_nodevis_node_by_id(node_id);
-        if (!node) return "";
-        if (node.data.chunk.aggr_type == "single" && node.data.service)
-            return node.data.service;
-        return node.data.name;
+        return this._world.viewport.get_node_by_id(node_id).data.name;
     }
 
     render_text(): void {
-        if (!this.node.data.show_text) {
+        if (this.node.data.show_text == false) {
             if (this._text_selection) this.text_selection().remove();
             this._text_selection = null;
             return;
+        }
+
+        let is_host_text = true;
+        let is_service_text = false;
+        const core_info = this.node.data.type_specific.core;
+        if (core_info) {
+            is_service_text = !!core_info.service;
+            is_host_text = !is_service_text;
         }
 
         if (this._text_selection == null) {
@@ -181,6 +183,8 @@ export class AbstractGUINode implements TypeWithName {
                 .append("text")
                 .style("pointer-events", "none")
                 .classed("noselect", true)
+                .classed("host_text", is_host_text)
+                .classed("service_text", is_service_text)
                 .attr(
                     "transform",
                     "translate(" +
@@ -249,11 +253,12 @@ export class AbstractGUINode implements TypeWithName {
                 "transform",
                 "translate(" + spawn_point_x + "," + spawn_point_y + ")"
             )
-            .style("pointer-events", "all")
             .on("mouseover", () => this._show_quickinfo())
             .on("mouseout", () => this._hide_quickinfo())
             .on("contextmenu", event => {
-                this._world.nodes_layer.render_context_menu(event, this.id());
+                this._world.viewport
+                    .get_nodes_layer()
+                    .render_context_menu(event, this.id());
             });
         return selection;
     }
@@ -262,24 +267,26 @@ export class AbstractGUINode implements TypeWithName {
         return "";
     }
 
-    get_context_menu_elements() {
+    get_context_menu_elements(): ContextMenuElement[] {
         const elements: ContextMenuElement[] = [];
+        const core_info = this.node.data.type_specific.core;
+        if (!core_info) return elements;
         elements.push({
             text: "Details of Host",
             href:
                 "view.py?host=" +
-                encodeURIComponent(this.node.data.hostname) +
+                encodeURIComponent(core_info.hostname) +
                 "&view_name=host",
             img: "themes/facelift/images/icon_status.svg",
         });
-        if (this.node.data.service && this.node.data.service != "") {
+        if (core_info.service && core_info.service != "") {
             elements.push({
                 text: "Details of Service",
                 href:
                     "view.py?host=" +
-                    encodeURIComponent(this.node.data.hostname) +
+                    encodeURIComponent(core_info.hostname) +
                     "&service=" +
-                    encodeURIComponent(this.node.data.service) +
+                    encodeURIComponent(core_info.service) +
                     "&view_name=service",
                 img: "themes/facelift/images/icon_status.svg",
             });
@@ -292,7 +299,7 @@ export class AbstractGUINode implements TypeWithName {
         if (!node._children) return;
         const critical_children: NodevisNode[] = [];
         node._children.forEach(child_node => {
-            if (child_node.data.state != 0) {
+            if (child_node.data.type_specific.core.state != 0) {
                 critical_children.push(child_node);
                 this._filter_root_cause(child_node);
             } else {
@@ -316,9 +323,7 @@ export class AbstractGUINode implements TypeWithName {
     collapse_node() {
         this.node.children = [];
         this.node.data.user_interactions.bi = "collapsed";
-        this._world.viewport.recompute_node_chunk_descendants_and_links(
-            this.node.data.chunk
-        );
+        this._world.viewport.recompute_node_and_links();
         this._world.viewport.update_layers();
         this.update_collapsed_indicator(this.node);
     }
@@ -326,9 +331,7 @@ export class AbstractGUINode implements TypeWithName {
     expand_node() {
         this.node.children = this.node._children || [];
         delete this.node.data.user_interactions.bi;
-        this._world.viewport.recompute_node_chunk_descendants_and_links(
-            this.node.data.chunk
-        );
+        this._world.viewport.recompute_node_and_links();
         this._world.viewport.update_layers();
         this.update_collapsed_indicator(this.node);
     }
@@ -348,8 +351,13 @@ export class AbstractGUINode implements TypeWithName {
         if (!node._children) return;
 
         const collapsed = node.children != node._children;
-        const outer_circle = node.data.selection.select("circle");
-        outer_circle.classed("collapsed", collapsed);
+        const gui_node = this._world.viewport
+            .get_nodes_layer()
+            .get_node_by_id(node.data.id);
+        if (gui_node) {
+            const outer_circle = gui_node.selection().select("circle");
+            outer_circle.classed("collapsed", collapsed);
+        }
 
         const nodes = this._world.viewport.get_all_nodes();
         for (const idx in nodes) {
@@ -358,7 +366,7 @@ export class AbstractGUINode implements TypeWithName {
     }
 
     _fixate_quickinfo() {
-        if (this._world.layout_manager.edit_layout) return;
+        if (this._world.viewport.get_layout_manager().edit_layout) return;
 
         if (this.quickinfo_selection().classed("fixed")) {
             this._hide_quickinfo(true);
@@ -383,12 +391,13 @@ export class AbstractGUINode implements TypeWithName {
     _show_quickinfo() {
         if (!this._has_quickinfo) return;
 
-        if (this._world.layout_manager.edit_layout) return;
+        if (this._world.viewport.get_layout_manager().edit_layout) return;
 
-        const div_selection = this._world.nodes_layer
+        const div_selection = this._world.viewport
+            .get_nodes_layer()
             .get_div_selection()
-            .selectAll<HTMLDivElement, NodevisNode>("div.quickinfo")
-            .data<NodevisNode>([this.node], d => d.data.id);
+            .selectAll<HTMLDivElement, string>("div.quickinfo")
+            .data<string>([this.node.data.id], d => d);
         div_selection.exit().remove();
         this._quickinfo_selection = div_selection
             .enter()
@@ -508,6 +517,35 @@ export class AbstractGUINode implements TypeWithName {
                     .attr("r", this.radius)
                     .classed("state_circle", true)
             );
+
+        const icon_url = this._get_icon_url();
+        this.selection()
+            .selectAll<SVGImageElement, string>("g image.main_icon")
+            .data(icon_url ? [icon_url] : [], d => d)
+            .join(enter =>
+                enter
+                    .append("g")
+                    .attr("transform", "translate(-24,-24)")
+                    .append("svg:image")
+                    .classed("main_icon", true)
+            )
+            .attr("xlink:href", d => d)
+            .attr("width", 24)
+            .attr("height", 24);
+    }
+
+    _get_icon_url(): string | null {
+        // Return the URL of the icon to be used for the node
+        // Explicit images are preferred over the default ones from the core
+        const type_specific = this.node.data.type_specific;
+        if (!type_specific) return "";
+
+        const explicit_icon = type_specific.node_images?.icon;
+        if (explicit_icon) return explicit_icon;
+
+        const core_icon = type_specific.core?.icon;
+        if (core_icon) return core_icon;
+        return null;
     }
 
     update_position(enforce_transition = false) {
@@ -548,9 +586,13 @@ export class AbstractGUINode implements TypeWithName {
 
     update_quickinfo_position() {
         if (this._quickinfo_selection == null) return;
+        const gui_node = this._world.viewport
+            .get_nodes_layer()
+            .get_node_by_id(this.id());
+        if (!gui_node) return;
         const coords = this._world.viewport.translate_to_zoom({
-            x: this.node.x,
-            y: this.node.y,
+            x: gui_node.node.x,
+            y: gui_node.node.y,
         });
         this._quickinfo_selection
             .style("left", coords.x + this.radius + "px")
@@ -562,13 +604,13 @@ export class AbstractGUINode implements TypeWithName {
         enforce_transition = false
     ) {
         // TODO: remove
-        if (this._world.layout_manager.skip_optional_transitions)
+        if (this._world.viewport.get_layout_manager().skip_optional_transitions)
             return selection;
 
         if (
             (!this.node.data.transition_info.use_transition &&
                 !enforce_transition) ||
-            this._world.layout_manager.dragging
+            this._world.viewport.get_layout_manager().dragging
         )
             return selection;
 
@@ -629,11 +671,14 @@ export class AbstractGUINode implements TypeWithName {
     }
 }
 
+export function get_core_info(node: NodevisNode): CoreInfo | null {
+    return node.data.type_specific.core ? node.data.type_specific.core : null;
+}
+
 export function get_custom_node_settings(node: NodevisNode) {
-    node.data.custom_node_settings = node.data.custom_node_settings || {
-        id: node.data.id,
-    };
-    return node.data.custom_node_settings;
+    node.data.type_specific.custom_node_settings =
+        node.data.type_specific.custom_node_settings || {};
+    return node.data.type_specific.custom_node_settings;
 }
 
 // Stores node visualization classes

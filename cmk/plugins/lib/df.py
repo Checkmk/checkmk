@@ -8,8 +8,8 @@ from collections.abc import Callable, Generator, Iterable, Mapping, MutableMappi
 from enum import Enum
 from typing import Any, Literal, NamedTuple, NewType
 
-from cmk.agent_based.v2 import check_levels_fixed, Metric, render, Result, Service, State
-from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, render, Result, Service, State
 
 from .size_trend import size_trend
 
@@ -406,7 +406,7 @@ def check_inodes(
         levels.get("inodes_levels"),
     )
 
-    inode_result, inode_metric = check_levels_fixed(
+    inode_result, inode_metric = check_levels(
         value=inodes_total - inodes_avail,
         levels_upper=levels_upper,
         metric_name="inodes_used",

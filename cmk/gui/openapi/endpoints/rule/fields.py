@@ -589,7 +589,7 @@ class HostOrServiceConditionSchema(base.BaseSchema):
             raise ValidationError(f"Unknown match type: {data['operator']}")
 
 
-class RuleProperties(base.BaseSchema):
+class Properties(base.BaseSchema):
     cast_to_dict = True
 
     description = fields.String(
@@ -638,13 +638,14 @@ class LabelGroupCondition(base.BaseSchema):
     )
     label_group = fields.List(
         fields.Nested(LabelCondition),
+        minLength=1,
         required=True,
         description="A list of label conditions that form a label group",
         example=[{"operator": "and", "label": "os:linux"}],
     )
 
 
-class RuleConditions(base.BaseSchema):
+class Conditions(base.BaseSchema):
     cast_to_dict = True
 
     host_name = fields.Nested(
@@ -811,7 +812,7 @@ class RuleExtensions(base.BaseSchema):
         description="The position of this rule in the chain in this folder.",
     )
     properties = fields.Nested(
-        RuleProperties,
+        Properties,
         description="Property values of this rule.",
         example={},
     )
@@ -820,7 +821,7 @@ class RuleExtensions(base.BaseSchema):
         example='{"ignore_fs_types": ["tmpfs"]}',
     )
     conditions = fields.Nested(
-        RuleConditions,
+        Conditions,
         description="Conditions.",
     )
 
@@ -901,7 +902,7 @@ class UpdateRuleObject(base.BaseSchema):
     cast_to_dict = True
 
     properties = fields.Nested(
-        RuleProperties,
+        Properties,
         description="Configuration values for rules.",
         example={"disabled": False},
     )
@@ -915,7 +916,7 @@ class UpdateRuleObject(base.BaseSchema):
         required=True,
     )
     conditions = fields.Nested(
-        RuleConditions,
+        Conditions,
         description="Conditions.",
         example={},
     )

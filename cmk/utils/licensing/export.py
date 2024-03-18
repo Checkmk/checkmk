@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, Enum
-from typing import Final, Protocol
+from typing import Final, Literal, Protocol
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
@@ -406,10 +406,10 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError("Parse sample 1.1: Wrong sample type: %r" % type(raw_sample))
+            raise TypeError("Parse sample 1.1/1.2/1.3: Wrong sample type: %r" % type(raw_sample))
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 1.1: No such site hash")
+            raise ValueError("Parse sample 1.1/1.2/1.3: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
@@ -480,13 +480,13 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError("Parse sample 1.4: Wrong sample type: %r" % type(raw_sample))
+            raise TypeError("Parse sample 1.5: Wrong sample type: %r" % type(raw_sample))
 
         if not (raw_instance_id := raw_sample.get("instance_id")):
-            raise ValueError("Parse sample 2.0: No such instance ID")
+            raise ValueError("Parse sample 1.5: No such instance ID")
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 1.4: No such site hash")
+            raise ValueError("Parse sample 1.5: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
@@ -520,13 +520,13 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError("Parse sample 2.0: Wrong sample type: %r" % type(raw_sample))
+            raise TypeError("Parse sample 2.0/2.1: Wrong sample type: %r" % type(raw_sample))
 
         if not (raw_instance_id := raw_sample.get("instance_id")):
-            raise ValueError("Parse sample 2.0: No such instance ID")
+            raise ValueError("Parse sample 2.0/2.1: No such instance ID")
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError("Parse sample 2.0: No such site hash")
+            raise ValueError("Parse sample 2.0/2.1: No such site hash")
 
         extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
@@ -608,6 +608,42 @@ class LicenseUsageSample:
 #   '----------------------------------------------------------------------'
 
 
+class RawSubscriptionDetailsForAggregation(TypedDict):
+    start: int | None
+    end: int | None
+    limit: Literal["unlimited"] | int | None
+
+
+@dataclass(frozen=True)
+class SubscriptionDetailsForAggregation:
+    start: int | None
+    end: int | None
+    limit: Literal["unlimited"] | tuple[Literal["free"], Literal[3]] | int | None
+
+    def __post_init__(self) -> None:
+        if isinstance(self.limit, int) and self.limit <= 0:
+            raise ValueError(self.limit)
+
+    @property
+    def is_free(self) -> bool:
+        return isinstance(self.limit, tuple) and self.limit[0] == "free"
+
+    @property
+    def real_limit(self) -> int | None:
+        if isinstance(self.limit, tuple):
+            return self.limit[1]
+        if isinstance(self.limit, int):
+            return self.limit
+        return None
+
+    def for_report(self) -> RawSubscriptionDetailsForAggregation:
+        return RawSubscriptionDetailsForAggregation(
+            start=self.start,
+            end=self.end,
+            limit=self.limit[1] if isinstance(self.limit, tuple) else self.limit,
+        )
+
+
 @dataclass(frozen=True)
 class MonthlyServiceAverage:
     sample_date: datetime
@@ -622,14 +658,12 @@ class MonthlyServiceAverage:
 
 
 class RawMonthlyServiceAggregation(TypedDict):
+    subscription_details: RawSubscriptionDetailsForAggregation
     daily_services: Sequence[Mapping[str, float]]
     monthly_service_averages: Sequence[Mapping[str, float]]
     last_service_report: Mapping[str, float] | None
     highest_service_report: Mapping[str, float] | None
     subscription_exceeded_first: Mapping[str, float] | None
-    subscription_start: float | int | None
-    subscription_end: float | int | None
-    subscription_limit: int | None
 
 
 class MonthlyServiceAverages:
@@ -637,17 +671,10 @@ class MonthlyServiceAverages:
 
     def __init__(
         self,
-        subscription_details: SubscriptionDetails | None,
+        subscription_details: SubscriptionDetailsForAggregation,
         short_samples: Sequence[tuple[int, int]],
     ) -> None:
-        self._subscription_start = (
-            None if subscription_details is None else subscription_details.start
-        )
-        self._subscription_end = None if subscription_details is None else subscription_details.end
-        self._subscription_limit_value = (
-            None if subscription_details is None else subscription_details.limit.value
-        )
-
+        self._subscription_details = subscription_details
         self._daily_services = self._calculate_daily_services(short_samples)
         self._monthly_service_averages: list[MonthlyServiceAverage] = []
 
@@ -676,34 +703,32 @@ class MonthlyServiceAverages:
         "This method prepares the following data for javascript rendering"
         self._calculate_averages()
         return RawMonthlyServiceAggregation(
+            subscription_details=self._subscription_details.for_report(),
             daily_services=[d.for_report() for d in self._daily_services],
             monthly_service_averages=[a.for_report() for a in self._monthly_service_averages],
             last_service_report=self._get_last_service_report(),
             highest_service_report=self._get_highest_service_report(),
             subscription_exceeded_first=self._get_subscription_exceeded_first(),
-            subscription_start=self._subscription_start,
-            subscription_end=self._subscription_end,
-            subscription_limit=self._subscription_limit_value,
         )
 
     def _calculate_averages(self) -> None:
         if not self._daily_services:
             return
 
-        if self._subscription_start is None or self._subscription_end is None:
+        if self._subscription_details.start is None or self._subscription_details.end is None:
             # It does not make sense to calculate monthly averages if we do not know where to
             # start or end.
             return
 
         monthly_services: dict[datetime, Counter[str]] = {}
-        month_start = datetime.fromtimestamp(self._subscription_start).replace(
+        month_start = datetime.fromtimestamp(self._subscription_details.start).replace(
             hour=0,
             minute=0,
             second=0,
             microsecond=0,
         )
         month_end = month_start + relativedelta(months=+1)
-        subscription_end_date = datetime.fromtimestamp(self._subscription_end).replace(
+        subscription_end_date = datetime.fromtimestamp(self._subscription_details.end).replace(
             hour=0,
             minute=0,
             second=0,
@@ -744,12 +769,9 @@ class MonthlyServiceAverages:
         return max(self._monthly_service_averages, key=lambda d: d.num_services).for_report()
 
     def _get_subscription_exceeded_first(self) -> Mapping[str, float] | None:
-        if self._subscription_limit_value is None or self._subscription_limit_value < 0:
+        if self._subscription_details.real_limit is None:
             return None
         for service_average in self._monthly_service_averages:
-            if service_average.num_services >= self._subscription_limit_value:
+            if service_average.num_services >= self._subscription_details.real_limit:
                 return service_average.for_report()
         return None
-
-
-# .

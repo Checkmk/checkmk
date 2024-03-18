@@ -10,8 +10,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import SNMPTree
-from cmk.agent_based.v2.type_defs import StringTable
+from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
 
 # Nikolas Hagemann, comNET GmbH - nikolas.hagemann@comnetgmbh.com

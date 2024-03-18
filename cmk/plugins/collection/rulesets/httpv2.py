@@ -215,18 +215,19 @@ def _valuespec_expected_regex_body() -> Dictionary:
     )
 
 
-def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
-    if not http_method:
-        return FixedValue(
-            value=None,
-            label=Label("No additional configuration options for this method."),
-        )
+def _no_send_data() -> FixedValue:
+    return FixedValue(
+        value=None,
+        label=Label("No additional configuration options for this method."),
+    )
 
+
+def _send_data() -> Dictionary:
     return Dictionary(
         elements={
             "body_text": DictElement(
                 parameter_form=String(
-                    title=Title("Data to send"),
+                    title=Title("Content"),
                     help_text=Help("Please make sure, that the data is URL-encoded."),
                 ),
                 required=True,
@@ -243,29 +244,19 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
                                 title=Title("Select type from list"),
                                 elements=[
                                     SingleChoiceElement(
-                                        name="application_json",
-                                        title=Title("application/json"),
-                                    ),
-                                    SingleChoiceElement(
-                                        name="application_xml",
-                                        title=Title("application/xml"),
-                                    ),
-                                    SingleChoiceElement(
-                                        name="application_x_www_form_urlencoded",
-                                        title=Title("application/x-www-form-urlencoded"),
-                                    ),
-                                    SingleChoiceElement(
-                                        name="text_plain",
-                                        title=Title("text/plain"),
-                                    ),
-                                    SingleChoiceElement(
-                                        name="text_xml",
-                                        title=Title("text/xml"),
-                                    ),
-                                    SingleChoiceElement(
-                                        name="text_html",
-                                        title=Title("text/html"),
-                                    ),
+                                        name=content_type.lower()
+                                        .replace("/", "_")
+                                        .replace("-", "_"),
+                                        title=Title(content_type),
+                                    )
+                                    for content_type in [
+                                        "application/json",
+                                        "application/xml",
+                                        "application/x-www-form-urlencoded",
+                                        "text/plain",
+                                        "text/xml",
+                                        "text/html",
+                                    ]
                                 ],
                             ),
                         ),
@@ -377,25 +368,29 @@ def _valuespec_connection() -> Dictionary:
                     prefill=DefaultValue("get"),
                     elements=[
                         CascadingSingleChoiceElement(
-                            name="get", title=Title("GET"), parameter_form=_send_data("GET")
+                            name="get",
+                            title=Title("GET"),
+                            parameter_form=_no_send_data(),
                         ),
                         CascadingSingleChoiceElement(
                             name="head",
                             title=Title("HEAD"),
-                            parameter_form=_send_data(),
+                            parameter_form=_no_send_data(),
                         ),
                         CascadingSingleChoiceElement(
                             name="post",
                             title=Title("POST"),
-                            parameter_form=_send_data("POST"),
+                            parameter_form=_send_data(),
                         ),
                         CascadingSingleChoiceElement(
-                            name="put", title=Title("PUT"), parameter_form=_send_data("PUT")
+                            name="put",
+                            title=Title("PUT"),
+                            parameter_form=_send_data(),
                         ),
                         CascadingSingleChoiceElement(
                             name="delete",
                             title=Title("DELETE"),
-                            parameter_form=_send_data("DELETE"),
+                            parameter_form=_no_send_data(),
                         ),
                     ],
                 ),

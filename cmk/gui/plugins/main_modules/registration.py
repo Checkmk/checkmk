@@ -101,7 +101,8 @@ from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
 
 def register_sites_options() -> None:
-    hooks.register_builtin("mkeventd-activate-changes", save_active_config)
+    if edition() is not Edition.CME:
+        hooks.register_builtin("mkeventd-activate-changes", save_active_config)
     visuals.MultipleSitesFilter.sites_options = cre_sites_options
     visuals.SiteFilter.heading_hook = visuals.cre_site_filter_heading_info
 

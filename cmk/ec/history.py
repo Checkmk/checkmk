@@ -54,6 +54,8 @@ class History(ABC):
 
 
 class TimedHistory(History):
+    """Decorate History methods with timing information."""
+
     def __init__(self, history: History) -> None:
         self._history = history
         self._logger = getLogger("cmk.mkeventd")
@@ -65,7 +67,7 @@ class TimedHistory(History):
             yield
         finally:
             self._logger.debug(
-                "method call %s took: %s ms", method_name, (time.time() - tic) * 1000
+                "method call %s took: %.3f ms", method_name, (time.time() - tic) * 1000
             )
 
     def flush(self) -> None:

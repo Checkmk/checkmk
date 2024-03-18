@@ -14,7 +14,7 @@ MK_ORACLE_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/mk_oracle"
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
-setUp() {
+setup_sqlplus() {
     # Fake the sqlplus binary
     ORACLE_HOME=${SHUNIT_TMPDIR}/ora_home
     FAKE_SQLPLUS=${ORACLE_HOME}/bin/sqlplus
@@ -26,8 +26,27 @@ EOF
     chmod +x "${FAKE_SQLPLUS}"
 }
 
+setup_su() {
+    # Fake su oracle -c "CMD"
+    su() {
+        if [[ "$1" == "oracle" && "$2" == "-c" ]]; then
+            shift 2
+            bash -c "$* non_root_call"
+        fi
+    }
+}
+
+setUp() {
+    setup_su
+    setup_sqlplus
+}
+
 # shellcheck disable=SC2317 # overwritten function called indirectly
 oneTimeSetUp() {
+    # We assume there is always an oracle user
+    # shellcheck disable=SC2034 # variable unused
+    ORACLE_OS_USER="oracle"
+
     export MK_CONFDIR=${SHUNIT_TMPDIR}
     export MK_VARDIR=${SHUNIT_TMPDIR}
 
@@ -98,6 +117,27 @@ tearDown() {
 # .
 
 #   ---helpers-------------------------------------------------------------
+setup_olrloc() {
+    OLRLOC_DIR=${SHUNIT_TMPDIR}/etc
+    mkdir -p "${OLRLOC_DIR}"
+    OLRLOC=${OLRLOC_DIR}/olr.loc
+    # Taken from https://rajat1205sharma.wordpress.com/2015/09/12/oracle-local-registry-olr-11gr2/
+    cat <<EOF >"${OLRLOC}"
+olrconfig_loc=/u01/app/oracle/grid/11.2.0/cdata/a_hostname.olr
+crs_home=/u01/app/oracle/grid/11.2.0
+EOF
+}
+
+teardown_olrloc() {
+    rm -r "${OLRLOC}"
+}
+
+test_get_crs_home() {
+    setup_olrloc
+    crs_home="$(get_crs_home_from_olrloc "${OLRLOC}")"
+    assertEquals "/u01/app/oracle/grid/11.2.0" "${crs_home}"
+    teardown_olrloc
+}
 
 test_get_sqlplus_version_with_precision() {
     sqlplus_version="$(get_sqlplus_version_with_precision 5)"

@@ -192,6 +192,29 @@ Function should_exclude($exclude, $section) {
     return (($exclude -Match "ALL") -or ($exclude -Match $section))
 }
 
+Function plugin_runs_as_local_system_user() {
+    return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+}
+
+Function is_owned_by_local_system_user($filePath) {
+    $acl = Get-Acl -Path $filePath
+
+    # SID for the "NT AUTHORITY\SYSTEM" account
+    $systemSid = "S-1-5-18"
+
+    $ntAccount = New-Object System.Security.Principal.NTAccount($acl.Owner)
+    $ownerSid = $ntAccount.Translate([System.Security.Principal.SecurityIdentifier])
+
+    return ($ownerSid.Value -eq $systemSid)
+}
+
+Function safe_execution_possible($path) {
+    if (-not(plugin_runs_as_local_system_user)) {
+        return $true
+    }
+    return is_owned_by_local_system_user($path)
+}
+
 Function get_dbversion_database ($ORACLE_HOME) {
      # The output of this command contains -- among others -- the version
      $version_str = (Invoke-Expression $ORACLE_HOME'\bin\sqlplus.exe -v')
@@ -241,8 +264,11 @@ Function sqlcall {
           [Parameter(Mandatory = $True, Position = 3)]
           [int]$run_async,
 
+          [Parameter(Mandatory = $True, Position = 4)]
+          [string]$sqlsid,
+
           [Parameter(Mandatory = $True, Position = 5)]
-          [string]$sqlsid
+          [string]$oracle_home
      )
      ################################################################################
      # Meaning of parameters in function sqlcall
@@ -451,7 +477,7 @@ Function sqlcall {
      if ($run_async -eq 0) {
           $SKIP_DOUBLE_ERROR = 0
           try {
-               $res = ( $THE_SQL | sqlplus -L -s "$SQL_CONNECT")
+               $res = ( $THE_SQL | & $oracle_home"\bin\sqlplus" -L -s "$SQL_CONNECT")
                if ($LastExitCode -eq 0) {
                     # we only show the output if there was no error...
                     $res | Set-Content $fullpath
@@ -516,7 +542,7 @@ Function sqlcall {
 
                     $command = {
                         param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
-                        $res = ("$sql" | sqlplus -s -L $sql_connect)
+                        $res = ("$sql" | & $oracle_home"\bin\sqlplus" -s -L $sql_connect)
                         if ($LastExitCode -eq 0) {
                             $res | Set-Content $path
                         }
@@ -2217,6 +2243,12 @@ if ($the_count -gt 0) {
           }
           $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4)
 
+          if (-not(safe_execution_possible($ORACLE_HOME + "\bin\sqlplus.exe"))) {
+              echo "<<<oracle_instance:sep(124)>>>"
+              echo "$ORACLE_SID|FAILURE|A safe execution of $ORACLE_HOME\bin\sqlplus cannot be guaranteed. Either you need to run the checkmk agent as non-system user (by using the rule 'Run plugins and local checks using non-system account' or disallow modifications to the sqlplus by non-system users."
+              continue
+          }
+
           # reset errors found for this instance to zero
           $ERROR_FOUND = 0
 
@@ -2280,7 +2312,7 @@ if ($the_count -gt 0) {
                     debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple SQL"
                     $ERROR_FOUND = 0
                     if ($THE_SQL) {
-                         sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -run_async 0 -sqlsid $inst_name
+                         sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -run_async 0 -sqlsid $inst_name -oracle_home $ORACLE_HOME
                     }
                }
 
@@ -2316,7 +2348,7 @@ if ($the_count -gt 0) {
                          }
                          debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple asyn SQL"
                          if ("$THE_SQL") {
-                              sqlcall -sql_message "async_SQLs" -sqltext "$THE_SQL" -run_async 1 -sqlsid $inst_name
+                              sqlcall -sql_message "async_SQLs" -sqltext "$THE_SQL" -run_async 1 -sqlsid $inst_name -oracle_home $ORACLE_HOME
                          }
                     }
                }

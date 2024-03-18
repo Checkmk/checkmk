@@ -1,0 +1,16 @@
+Title: Make scp command work as site userr on SLES 15
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1711615092
+Edition: cre
+Level: 1
+Version: 2.1.0p42
+
+On SUSE Linux Enterprise Server 15 systems, the <code>scp</code> command could crash with
+
+C+:
+/usr/bin/ssh: symbol lookup error: /usr/bin/ssh: undefined symbol: EVP_KDF_CTX_free, version OPENSSL_1_1_1d lost connection
+C-:
+
+when executed as a site user.

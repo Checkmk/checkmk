@@ -1390,8 +1390,11 @@ if '-d' in sys.argv:
 def _get_needed_plugin_names(
     config_cache: ConfigCache, host_name: HostName
 ) -> tuple[set[CheckPluginNameStr], set[CheckPluginName], set[InventoryPluginName]]:
+    ssc_api_special_agents = {p.name for p in server_side_calls.load_special_agents()[1].values()}
     needed_legacy_check_plugin_names = {
-        f"agent_{name}" for name, _p in config_cache.special_agents(host_name)
+        name
+        for name, _p in config_cache.special_agents(host_name)
+        if name not in ssc_api_special_agents
     }
 
     # Collect the needed check plugin names using the host check table.
@@ -1457,15 +1460,11 @@ def _get_legacy_check_file_names_to_load(
     # check info table
     # We need to include all those plugins that are referenced in the hosts
     # check table.
-    ssc_api_special_agents = {p.name for p in server_side_calls.load_special_agents()[1].values()}
     filenames: set[str] = set()
 
     for check_plugin_name in needed_check_plugin_names:
         # Now add check file(s) itself
         paths = _find_check_plugins(check_plugin_name)
-
-        if not paths and check_plugin_name.removeprefix("agent_") not in ssc_api_special_agents:
-            raise MKGeneralException(f"Cannot find check file needed for {check_plugin_name}")
 
         filenames |= paths
 

@@ -107,16 +107,13 @@
       }
     }
 
-    /* NOTE: the actual height of the content has to be used here. Otherwise */
-    /* artifacts will appear at the bottom of the menu. height: max-content */
-    /* will not suffice, since we set the margin as well. */
-    @mixin small-menu($height, $height_nav_bar) {
+    @mixin small-menu {
       top: inherit;
       bottom: 0;
-      height: $height;
+      height: auto;
 
       div.navigation_bar {
-        height: $height_nav_bar;
+        height: auto;
       }
 
       div.content.inner {
@@ -126,11 +123,11 @@
     }
 
     &.help_links > div.popup_menu {
-      @include small-menu(412px, auto);
+      @include small-menu;
     }
 
     &.user > div.popup_menu {
-      @include small-menu(265px, 30px);
+      @include small-menu;
     }
 
     #messages_link,

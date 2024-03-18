@@ -10,7 +10,7 @@ in this module as small as possible.
 
 from cmk.utils.licensing.registry import get_license_message
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.version import __version__, edition
+from cmk.utils.version import __version__, edition, Edition
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
@@ -73,45 +73,54 @@ mega_menu_registry = MegaMenuRegistry()
 
 
 def _help_menu_topics() -> list[TopicMenuTopic]:
+    learning_items = [
+        TopicMenuItem(
+            name="beginners_guide",
+            title=_("Beginner's guide"),
+            url=doc_reference_url(DocReference.INTRO_WELCOME),
+            target="_blank",
+            sort_index=20,
+            icon="learning_beginner",
+        ),
+        TopicMenuItem(
+            name="user_manual",
+            title=_("User manual"),
+            url=doc_reference_url(),
+            target="_blank",
+            sort_index=30,
+            icon="learning_guide",
+        ),
+        TopicMenuItem(
+            name="video_tutorials",
+            title=_("Video tutorials"),
+            url="https://www.youtube.com/playlist?list=PL8DfRO2DvOK1slgjfTu0hMOnepf1F7ssh",
+            target="_blank",
+            sort_index=40,
+            icon="learning_video_tutorials",
+        ),
+        TopicMenuItem(
+            name="community_forum",
+            title=_("Community forum"),
+            url="https://forum.checkmk.com/",
+            target="_blank",
+            sort_index=50,
+            icon="learning_forum",
+        ),
+    ]
+
+    if edition() == Edition.CSE:
+        learning_items.append(
+            TopicMenuItem(
+                name="getting_started", title=_("Getting started"), sort_index=10, url=""
+            ),
+        )
+
     return [
         TopicMenuTopic(
             name="learning_checkmk",
             title=_("Learning Checkmk"),
             icon="learning_checkmk",
-            items=[
-                TopicMenuItem(
-                    name="beginners_guide",
-                    title=_("Beginner's guide"),
-                    url=doc_reference_url(DocReference.INTRO_WELCOME),
-                    target="_blank",
-                    sort_index=10,
-                    icon="learning_beginner",
-                ),
-                TopicMenuItem(
-                    name="user_manual",
-                    title=_("User manual"),
-                    url=doc_reference_url(),
-                    target="_blank",
-                    sort_index=20,
-                    icon="learning_guide",
-                ),
-                TopicMenuItem(
-                    name="video_tutorials",
-                    title=_("Video tutorials"),
-                    url="https://www.youtube.com/playlist?list=PL8DfRO2DvOK1slgjfTu0hMOnepf1F7ssh",
-                    target="_blank",
-                    sort_index=30,
-                    icon="learning_video_tutorials",
-                ),
-                TopicMenuItem(
-                    name="community_forum",
-                    title=_("Community forum"),
-                    url="https://forum.checkmk.com/",
-                    target="_blank",
-                    sort_index=40,
-                    icon="learning_forum",
-                ),
-            ],
+            items=learning_items,
         ),
         TopicMenuTopic(
             name="developer_resources",

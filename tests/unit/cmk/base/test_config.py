@@ -2116,7 +2116,6 @@ def test_config_cache_extra_attributes_of_service(
     assert config_cache.extra_attributes_of_service(hostname, "CPU load") == result
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "hostname, result",
     [
@@ -2163,8 +2162,8 @@ def test_config_cache_icons_and_actions(
         config_cache.icons_and_actions_of_service(
             hostname,
             "CPU load",
-            CheckPluginName("ps"),
-            {},
+            None,
+            None,
         )
     ) == sorted(result)
 

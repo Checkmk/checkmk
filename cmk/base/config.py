@@ -101,7 +101,6 @@ from cmk.checkengine.discovery import AutochecksManager, CheckPreviewEntry, Disc
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
-from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import (
     AgentParser,
@@ -3327,13 +3326,19 @@ class ConfigCache:
         hostname: HostName,
         description: ServiceName,
         check_plugin_name: CheckPluginName | None,
-        params: LegacyCheckParameters | TimespecificParameters,
+        params: TimespecificParameters | None,
     ) -> list[str]:
         actions = set(
             self.ruleset_matcher.service_extra_conf(
                 hostname, description, service_icons_and_actions
             )
         )
+
+        # Note: according to the typing the rest of this function will
+        # never do anything, meaning the 'icon' parameters of the 'ps'
+        # and 'services' rulesets do not do anything.
+        # It seems like this last worked in 2.0.0.
+        # CMK-16562
 
         # Some WATO rules might register icons on their own
         if check_plugin_name:

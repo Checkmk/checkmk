@@ -427,7 +427,7 @@ function Start-ArtifactUploading {
     $artifacts = @(
         @("$build_dir/install/Release/check_mk_service.msi", "$arte/check_mk_agent.msi"),
         @("$build_dir/check_mk_service/x64/Release/check_mk_service64.exe", "$arte/check_mk_agent-64.exe"),
-        @("$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe", "$arte/OpenHardwareMonitorCLI.exe"),
+        @("$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe", "$arte/check_mk_agent.exe"),
         @("$build_dir/ohm/OpenHardwareMonitorCLI.exe", "$arte/OpenHardwareMonitorCLI.exe"),
         @("$build_dir/ohm/OpenHardwareMonitorLib.dll", "$arte/OpenHardwareMonitorLib.dll"),
         @("./install/resources/check_mk.user.yml", "$arte/check_mk.user.yml"),

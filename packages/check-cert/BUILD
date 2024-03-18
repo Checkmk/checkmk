@@ -1,37 +1,18 @@
-# //packages/check-cert:check-cert
+# `bazel build //:check-cert`.
 
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library")
-load("@check-cert-deps//:defs.bzl", "aliases", "all_crate_deps")
-
-rust_library(
-    name = "check-cert-lib",
-    srcs = [
-        "src/check.rs",
-        "src/checker/certificate.rs",
-        "src/checker/fetcher.rs",
-        "src/checker/verification.rs",
-        "src/fetcher.rs",
-        "src/lib.rs",
-        "src/truststore.rs",
-    ],
-    aliases = aliases(),
-    crate_name = "check_cert",
-    edition = "2021",
-    proc_macro_deps = all_crate_deps(
-        proc_macro = True,
-    ),
-    deps = all_crate_deps() + ["@openssl"],
-)
+load("@crate_index//:defs.bzl", "aliases", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
 
 rust_binary(
     name = "check-cert",
-    srcs = ["src/main.rs"],
+    srcs = glob([
+        "src/**/*.rs",
+    ]),
     aliases = aliases(),
-    crate_name = "check_cert",
-    edition = "2021",
+    deps = all_crate_deps(),
+    # deps = all_crate_deps() + ["@openssl"],
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
     visibility = ["//visibility:public"],
-    deps = all_crate_deps() + [":check-cert-lib"],
 )

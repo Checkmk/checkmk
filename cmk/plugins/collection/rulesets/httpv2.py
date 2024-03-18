@@ -247,20 +247,12 @@ def _send_data(http_method: str | None = None) -> FixedValue | Dictionary:
                                         title=Title("application/json"),
                                     ),
                                     SingleChoiceElement(
-                                        name="application_octet_stream",
-                                        title=Title("application/octet-stream"),
-                                    ),
-                                    SingleChoiceElement(
                                         name="application_xml",
                                         title=Title("application/xml"),
                                     ),
                                     SingleChoiceElement(
-                                        name="application_zip",
-                                        title=Title("application/zip"),
-                                    ),
-                                    SingleChoiceElement(
-                                        name="text_csv",
-                                        title=Title("text/csv"),
+                                        name="application_x_www_form_urlencoded",
+                                        title=Title("application/x-www-form-urlencoded"),
                                     ),
                                     SingleChoiceElement(
                                         name="text_plain",

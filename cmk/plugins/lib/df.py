@@ -550,7 +550,7 @@ def check_filesystem_levels(
     yield Result(state=status, summary=summary)
 
 
-def df_check_filesystem_single(  # type: ignore[no-untyped-def]
+def df_check_filesystem_single(
     value_store: MutableMapping[str, Any],
     mountpoint: str,
     filesystem_size: float | None,
@@ -559,7 +559,7 @@ def df_check_filesystem_single(  # type: ignore[no-untyped-def]
     inodes_total: float | None,
     inodes_avail: float | None,
     params: Mapping[str, Any],
-    this_time=None,
+    this_time: float | None = None,
 ) -> CheckResult:
     if filesystem_size == 0:
         yield Result(state=State.WARN, summary="Size of filesystem is 0 B")
@@ -617,13 +617,13 @@ def df_check_filesystem_single(  # type: ignore[no-untyped-def]
         yield from check_inodes(params, inodes_total, inodes_avail)
 
 
-def df_check_filesystem_list(  # type: ignore[no-untyped-def]
+def df_check_filesystem_list(
     value_store: MutableMapping[str, Any],
     item: str,
     params: Mapping[str, Any],
     fslist_blocks: FSBlocks,
-    fslist_inodes=None,
-    this_time=None,
+    fslist_inodes: Sequence[tuple[str, float | None, float | None]] = (),
+    this_time: float | None = None,
 ) -> CheckResult:
     """Wrapper for `df_check_filesystem_single` supporting groups"""
 
@@ -648,14 +648,14 @@ def df_check_filesystem_list(  # type: ignore[no-untyped-def]
             "avail_mb": avail_mb,
             "reserved_mb": reserved_mb,
         }
-        for (mountp, size_mb, avail_mb, reserved_mb) in (fslist_blocks or [])
+        for mountp, size_mb, avail_mb, reserved_mb in fslist_blocks
     }
     inodes_info = {
         mountp: {
             "inodes_total": inodes_total,
             "inodes_avail": inodes_avail,
         }
-        for (mountp, inodes_total, inodes_avail) in (fslist_inodes or [])
+        for mountp, inodes_total, inodes_avail in fslist_inodes
     }
 
     if "patterns" not in params:

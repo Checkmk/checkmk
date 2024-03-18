@@ -373,7 +373,10 @@ def _valuespec_connection() -> Dictionary:
                         "You may choose to enforce the usage of a specific TLS version. "
                         "Either by pinning to exactly the selected version, or by also allowing "
                         "higher versions. Please note Checkmk does not support SSLv3 or SSLv2 "
-                        "anymore as they are known to be insecure."
+                        "at all. TLS 1.0 and 1.1 is supported by the underlying plug-in but not "
+                        "on this rule set as the plug-in needs to be called with an unsafe "
+                        "configuration of OpenSSL 3. This requires a direct call via "
+                        "<i>Integrate Nagios plugins.</i>"
                     ),
                     elements={
                         "min_version": DictElement(
@@ -385,12 +388,6 @@ def _valuespec_connection() -> Dictionary:
                                     ),
                                     SingleChoiceElement(
                                         name="tls_1_2", title=Title("Enforce TLS v1.2")
-                                    ),
-                                    SingleChoiceElement(
-                                        name="tls_1_1", title=Title("Enforce TLS v1.1")
-                                    ),
-                                    SingleChoiceElement(
-                                        name="tls_1_0", title=Title("Enforce TLS v1.0")
                                     ),
                                 ],
                             ),

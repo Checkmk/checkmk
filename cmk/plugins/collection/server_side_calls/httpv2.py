@@ -28,8 +28,6 @@ class HttpVersion(StrEnum):
 
 class TlsVersion(StrEnum):
     AUTO = "auto"
-    TLS_1_0 = "tls_1_0"
-    TLS_1_1 = "tls_1_1"
     TLS_1_2 = "tls_1_2"
     TLS_1_3 = "tls_1_3"
 
@@ -364,8 +362,6 @@ def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
         return
 
     tls_version_arg = {
-        TlsVersion.TLS_1_0: "tls10",
-        TlsVersion.TLS_1_1: "tls11",
         TlsVersion.TLS_1_2: "tls12",
         TlsVersion.TLS_1_3: "tls13",
     }[tls_versions.min_version]

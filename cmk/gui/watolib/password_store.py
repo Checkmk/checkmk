@@ -69,7 +69,7 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         validate_passwords(cfg)
         meta_data, passwords = split_password_specs(cfg)
         super().save(meta_data, pretty)
-        password_store.save(passwords)
+        password_store.save(passwords, password_store.password_store_path())
 
 
 def join_password_specs(

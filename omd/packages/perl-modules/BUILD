@@ -1,5 +1,5 @@
-load(":rename_perl_packages.bzl", "rename_perl_package")
 load("perl-modules_http.bzl", "PERL_MODULES_LIST_1", "PERL_MODULES_LIST_2")
+load(":rename_perl_packages.bzl", "rename_perl_package")
 
 [rename_perl_package(
     name = module.removesuffix("tar.gz").removesuffix("tgz"),

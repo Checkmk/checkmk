@@ -165,6 +165,7 @@ def create_history_raw(
     event_columns: Columns,
     history_columns: Columns,
 ) -> History:
+    """Factory for History objects based on the current configuration."""
     match config["archive_mode"]:
         case "file":
             return FileHistory(settings, config, logger, event_columns, history_columns)
@@ -192,6 +193,8 @@ def create_history(
     event_columns: Columns,
     history_columns: Columns,
 ) -> History:
+    """Factory for History objects based on the current configuration, optionally augmented with timing information."""
+
     history = create_history_raw(settings, config, logger, event_columns, history_columns)
     return TimedHistory(history) if logger.isEnabledFor(DEBUG) else history
 

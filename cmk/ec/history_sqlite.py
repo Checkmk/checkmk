@@ -63,6 +63,10 @@ SQLITE_PRAGMAS = {
 def configure_sqlite_types() -> None:
     """
     Registers the required converters/adaptors for the sqlite3 type conversions.
+
+    Converter converts JSON to python objects(sqlite->python).
+
+    Adaptor converts python objects to JSON(python->sqlite). E.g. list/tuple -> JSON string.
     """
     sqlite3.register_converter("JSON", lambda value: json.loads(value.decode("utf8")))
     sqlite3.register_converter("BOOL", lambda value: value.decode("utf8") == "1")
@@ -201,6 +205,7 @@ class SQLiteHistory(History):
             )
 
     def flush(self) -> None:
+        """Drop the history table."""
         self.conn.execute("DROP TABLE IF EXISTS history;")
         self.conn.commit()
 
@@ -241,6 +246,10 @@ class SQLiteHistory(History):
             )
 
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
+        """Retrieve entries from the history table.
+
+        Always return all columns, since they are filtered elsewhere.
+        """
         sqlite_query, sqlite_arguments = filters_to_sqlite_query(query.filters)
         if query.limit:
             sqlite_query += " LIMIT ?"
@@ -251,6 +260,10 @@ class SQLiteHistory(History):
             return cur.fetchall()
 
     def housekeeping(self) -> None:
+        """Remove old entries from the history table.
+
+        And performs a vacuum to shrink the database file.
+        """
         delta = time.time() - timedelta(days=self._config["history_lifetime"]).total_seconds()
         with self.conn as connection:
             cur = connection.cursor()

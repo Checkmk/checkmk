@@ -51,8 +51,7 @@ def test_parse_all_arguments() -> None:
 
 
 def test_parse_password_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    password_store.save({"mqtt_password": "blablu"})
-    password_store.save_for_helpers(LATEST_CONFIG)
+    password_store.save_for_helpers(LATEST_CONFIG, {"mqtt_password": "blablu"})
     monkeypatch.setattr(
         "sys.argv",
         [

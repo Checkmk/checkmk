@@ -39,7 +39,6 @@ file, there is the `extract` function which can be used like this:
 
 """
 import os
-import shutil
 import sys
 from collections.abc import Mapping
 from contextlib import suppress
@@ -121,17 +120,18 @@ def replace_passwords() -> None:
         sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 
 
-def save(stored_passwords: Mapping[str, str], custom_path: Path | None = None) -> None:
+def save(passwords: Mapping[str, str], store_path: Path) -> None:
     """Save the passwords to the pre-activation path"""
+    store_path.parent.mkdir(parents=True, exist_ok=True)
     content = ""
-    for ident, pw in stored_passwords.items():
+    for ident, pw in passwords.items():
         # This is normally needed to not break the file format for things like gcp tokens.
         # The GUI does this automatically by having only one line of input field,
         # but other sources (like the REST API) use this function as well.
         password_on_one_line = pw.replace("\n", "")
         content += f"{ident}:{password_on_one_line}\n"
 
-    store.save_bytes_to_file(custom_path or password_store_path(), PasswordStore.encrypt(content))
+    store.save_bytes_to_file(store_path, PasswordStore.encrypt(content))
 
 
 def load() -> dict[str, str]:
@@ -167,12 +167,9 @@ def extract(password_id: PasswordId) -> str | None:
     raise MKGeneralException("Unknown password type.")
 
 
-def save_for_helpers(config_base_path: ConfigPath) -> None:
-    """Save the passwords for the helpers of the monitoring core"""
-    helper_path = _helper_password_store_path(config_base_path)
-    helper_path.parent.mkdir(parents=True, exist_ok=True)
-    with suppress(OSError):
-        shutil.copy(password_store_path(), helper_path)
+def save_for_helpers(config_base_path: ConfigPath, passwords: Mapping[str, str]) -> None:
+    """Update the helper password store with the given passwords"""
+    save(passwords, _helper_password_store_path(config_base_path))
 
 
 def load_for_helpers() -> dict[str, str]:

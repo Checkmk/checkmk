@@ -602,6 +602,9 @@ class Mailbox:
     def delete_mails(self, mails: MailMessages) -> None:
         """Delete mails specified by @mails. Please note that for POP/IMAP we delete mails by
         index (mail.keys()) while with EWS we delete sets of EWSMessage (mail.values())"""
+        if not mails:
+            logging.debug("delete mails: no mails given")
+            return
         assert self._connection is not None
         logging.debug("delete mails %s", mails)
         try:
@@ -622,6 +625,9 @@ class Mailbox:
             raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
     def copy_mails(self, mails: MailMessages, folder: str) -> None:
+        if not mails:
+            logging.debug("copy mails: no mails given")
+            return
         protocol = self.protocol()
         assert self._connection and protocol in {"IMAP", "EWS"}
         # The user wants the message to be moved to the folder

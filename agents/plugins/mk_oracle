@@ -606,9 +606,8 @@ set_ora_env() {
         if [ -f ${OLRLOC} ]; then
             # oratab is not supported in Grid-Infrastructure 12.2+
             # => fetch ORACLE_HOME from cluster repository for all GI/Restart Environments!
-            # OLRLOC holds CRS_HOME
-            # shellcheck disable=SC1090
-            . ${OLRLOC}
+            # OLRLOC holds crs_home
+            crs_home=get_crs_home_from_olrloc "${OLRLOC}"
             export ORA_HOME_SOURCE="(GI):    "
 
             # set ORACLE_HOME = crs_home for ASM
@@ -616,8 +615,10 @@ set_ora_env() {
                 # shellcheck disable=SC2154
                 ORACLE_HOME=${crs_home}
             else
+                crsctl_path="${ORACLE_HOME}"/bin/crsctl
+                EXECUTION_MODE="$(get_binary_execution_mode "$crsctl_path" "$(get_binary_owner "$crsctl_path")")"
                 # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
-                ORACLE_HOME=$("${crs_home}"/bin/crsctl stat res -p -w "((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))" | grep -m1 "^ORACLE_HOME=" | cut -d"=" -f2)
+                ORACLE_HOME=$($EXECUTION_MODE "\"${crsctl_path}\" stat res -p -w \"((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))\"" | grep -m1 \"^ORACLE_HOME=\" | cut -d\"=\" -f2)
             fi
         else
             # Single Instance with oratab
@@ -638,7 +639,6 @@ set_ora_env() {
         fi
     fi
 
-    LD_LIBRARY_PATH=$ORACLE_HOME/lib
     if [ ! -d "${ORACLE_HOME:-'not_found'}" ]; then
         logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 ORACLE_HOME for SID '${ORACLE_SID}' not found or not existing!"
         return 2
@@ -649,7 +649,7 @@ set_ora_env() {
         logging -c -e "[${sid}] [set_ora_env]" "TNS_ADMIN/sqlnet.ora: ${TNS_ADMIN}/sqlnet.ora"
         exit 1
     fi
-    export ORACLE_HOME TNS_ADMIN ORACLE_SID LD_LIBRARY_PATH
+    export ORACLE_HOME TNS_ADMIN ORACLE_SID
 }
 
 set_ora_version() {
@@ -2338,9 +2338,52 @@ handle_custom_sql_errors() {
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
+# BEGIN COMMON PLUGIN CODE
+
+# check that no users other than root can change the file
+only_root_can_modify() {
+    permissions=$1
+    owner=$2
+    group=$3
+
+    group_write_perm=$(echo "$permissions" | cut -c 6)
+    other_write_perm=$(echo "$permissions" | cut -c 9)
+
+    if [ "$owner" != "root" ] || [ "$other_write_perm" != "-" ]; then
+        return 1
+    fi
+
+    [ "$group" = "root" ] || [ "$group_write_perm" = "-" ]
+}
+
+get_binary_owner() {
+    BINARY_PATH=$1
+    stat -c '%U' "${BINARY_PATH}"
+}
+
+get_binary_execution_mode() {
+    BINARY_PATH=$1
+    BINARY_USER=$2
+
+    # if the executable belongs to someone besides root, do not execute it as root
+    if [ "$(whoami)" = "root" ] && ! only_root_can_modify "$(stat -c '%A' "$BINARY_PATH")" "$(stat -c '%U' "$BINARY_PATH")" "$(stat -c '%G' "$BINARY_PATH")"; then
+        echo "su ${BINARY_USER} -c"
+        return
+    fi
+    echo "bash -c"
+}
+
+# END COMMON PLUGIN CODE
+
+get_crs_home_from_olrloc() {
+    grep "crs_home" "${1}" | cut -d"=" -f2
+}
+
 get_sqlplus_version_with_precision() {
     precision="$1"
-    "${ORACLE_HOME}"/bin/sqlplus -V | "${GREP}" ^SQL | cut -d" " -f3 | cut -d"." -f-"${precision}"
+    sqlplus_path="${ORACLE_HOME}"/bin/sqlplus
+    EXECUTION_MODE="$(get_binary_execution_mode "$sqlplus_path" "$(get_binary_owner "$sqlplus_path")")"
+    $EXECUTION_MODE "\"${sqlplus_path}\" -V" | ${GREP} ^SQL | cut -d" " -f3 | cut -d"." -f-"${precision}"
 }
 
 print_dummy_sections() {
@@ -2435,6 +2478,8 @@ run_cached() {
 
     NAME="oracle_${MK_SID}${3}"
     MAXAGE="${1}"
+    # Attention: CMD will contain the shell function to be executed. Make sure to export all needed functions during
+    # that execution (see e.g. export -f logging)
     CMD="${2}"
 
     CREATION_TIMEOUT=$((MAXAGE * 2))
@@ -2655,8 +2700,10 @@ mk_ora_db_connect() {
 
         logging "[${sid}] [mk_ora_db_connect]" "TNS Alias PING: $TNSALIAS"
 
-        if [ -f "${ORACLE_HOME}"/bin/tnsping ]; then
-            if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
+        tnsping_path="${ORACLE_HOME}"/bin/tnsping
+        if [ -f "${tnsping_path}" ]; then
+            EXECUTION_MODE="$(get_binary_execution_mode "$tnsping_path" "$(get_binary_owner "$tnsping_path")")"
+            if $EXECUTION_MODE "\"${tnsping_path}\" \"$TNSALIAS\"" >/dev/null 2>&1; then
                 TNSPINGOK=yes
             else
                 unset TNSALIAS
@@ -2724,17 +2771,19 @@ mk_ora_db_connect() {
 #   '----------------------------------------------------------------------'
 
 mk_ora_sqlplus() {
+    # Executes a SQL query by using sqlplus binary.
+    # The query will be piped-in and consumed via cat - so always execute cat at the very beginning of the function
+    function_stdin="$(cat)"
     local from_where="$1"
     local print_elapsed_time="$2"
     local start_time=
     local elapsed_time=
-    local loc_stdin=
     local output=
 
     logging "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "Piggyback host: $MK_PIGGYBACK_HOST"
 
     start_time="$(perl -MTime::HiRes=time -wle 'print time')"
-    loc_stdin=$(cat)
+    pipe_input="$(ora_session_environment)${function_stdin}"
 
     SQLPLUS=${ORACLE_HOME}/bin/sqlplus
     if [ ! -x "${SQLPLUS}" ]; then
@@ -2746,7 +2795,8 @@ mk_ora_sqlplus() {
         echo "<<<<${MK_PIGGYBACK_HOST}>>>>"
     fi
 
-    if output=$(echo "$(ora_session_environment)${loc_stdin}" | "$SQLPLUS" -L -s "$MK_DB_CONNECT"); then
+    EXECUTION_MODE="$(get_binary_execution_mode "$SQLPLUS" "$(get_binary_owner "$SQLPLUS")")"
+    if output=$(echo "$pipe_input" | $EXECUTION_MODE "\"$SQLPLUS\" -L -s \"$MK_DB_CONNECT\""); then
         echo -e "$output"
 
         elapsed_time=$(bc <<<"$(perl -MTime::HiRes=time -wle 'print time')-$start_time")
@@ -2957,7 +3007,6 @@ execute_queries_for_sid() {
         "ORACLE_SID      : ${ORACLE_SID}" \
         "ORACLE_HOME     : ${ORACLE_HOME}" \
         "TNS_ADMIN       : ${TNS_ADMIN}" \
-        "LD_LIBRARY_PATH : ${LD_LIBRARY_PATH}" \
         "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})" \
         "ORACLE_VERSION_FOUR_PARTS  : ${NUMERIC_ORACLE_VERSION_FOUR_PARTS}"
 
@@ -2995,6 +3044,9 @@ export -f unset_custom_sqls_vars
 export -f custom_sql_section
 export -f do_async_custom_sqls
 export -f handle_custom_sql_errors
+export -f get_binary_execution_mode
+export -f get_binary_owner
+export -f only_root_can_modify
 
 set_up_tmpdirs() {
     ORA_TMPDIR="${MK_VARDIR}/tmp/mk_oracle_tmp_dir"
@@ -3132,7 +3184,6 @@ main_queries() {
             "ORACLE_SID      : ${ORACLE_SID}" \
             "ORACLE_HOME     : ${ORACLE_HOME}" \
             "TNS_ADMIN       : ${TNS_ADMIN}" \
-            "LD_LIBRARY_PATH : ${LD_LIBRARY_PATH}" \
             "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
 
         db_connect=$(mk_ora_db_connect "$remote_instance")

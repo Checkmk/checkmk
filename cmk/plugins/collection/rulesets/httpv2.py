@@ -309,6 +309,40 @@ def _valuespec_connection() -> Dictionary:
             #        input_hint="www.mydomain.de",
             #    ),
             # ),
+            "method": DictElement(
+                parameter_form=CascadingSingleChoice(
+                    title=Title("HTTP method"),
+                    prefill=DefaultValue("get"),
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="get",
+                            title=Title("GET"),
+                            parameter_form=_no_send_data(),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="head",
+                            title=Title("HEAD"),
+                            parameter_form=_no_send_data(),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="post",
+                            title=Title("POST"),
+                            parameter_form=_send_data(),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="put",
+                            title=Title("PUT"),
+                            parameter_form=_send_data(),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="delete",
+                            title=Title("DELETE"),
+                            parameter_form=_no_send_data(),
+                        ),
+                    ],
+                ),
+                required=True,
+            ),
             "http_versions": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("HTTP version"),
@@ -367,39 +401,6 @@ def _valuespec_connection() -> Dictionary:
                             required=True,
                         ),
                     },
-                ),
-            ),
-            "method": DictElement(
-                parameter_form=CascadingSingleChoice(
-                    title=Title("HTTP method"),
-                    prefill=DefaultValue("get"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="get",
-                            title=Title("GET"),
-                            parameter_form=_no_send_data(),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="head",
-                            title=Title("HEAD"),
-                            parameter_form=_no_send_data(),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="post",
-                            title=Title("POST"),
-                            parameter_form=_send_data(),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="put",
-                            title=Title("PUT"),
-                            parameter_form=_send_data(),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="delete",
-                            title=Title("DELETE"),
-                            parameter_form=_no_send_data(),
-                        ),
-                    ],
                 ),
             ),
             "proxy": DictElement(parameter_form=Proxy()),

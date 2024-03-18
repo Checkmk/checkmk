@@ -13,7 +13,7 @@ from tests.testlib.utils import is_enterprise_repo
 
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
+from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig
 
 from cmk.fetchers.snmp import make_backend
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
@@ -34,8 +34,8 @@ def fixture_snmp_config() -> SNMPHostConfig:
         ipaddress=HostAddress("1.2.3.4"),
         credentials="public",
         port=42,
-        bulkwalk_enabled=True,
-        snmp_version=SNMPVersion.V2C,
+        is_bulkwalk_host=False,
+        is_snmpv2or3_without_bulkwalk_host=False,
         bulk_walk_size_of=0,
         timing={},
         oid_range_limits={},

@@ -18,7 +18,6 @@ from cmk.snmplib import (
     SNMPDecodedString,
     SNMPHostConfig,
     SNMPTable,
-    SNMPVersion,
 )
 
 
@@ -30,8 +29,8 @@ def default_config(backend_type: SNMPBackendEnum) -> SNMPHostConfig:
         credentials="public",
         port=1337,
         # TODO: Use SNMPv2 over v1 for the moment
-        bulkwalk_enabled=False,
-        snmp_version=SNMPVersion.V1,
+        is_bulkwalk_host=False,
+        is_snmpv2or3_without_bulkwalk_host=True,
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits={},

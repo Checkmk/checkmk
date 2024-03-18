@@ -12,7 +12,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 
-from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
+from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig
 
 import cmk.fetchers.snmp_backend.classic as classic_snmp
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
@@ -32,8 +32,8 @@ def test_snmp_port_spec(port: int, expected: str) -> None:
         ipaddress=HostAddress("127.0.0.1"),
         credentials="public",
         port=port,
-        bulkwalk_enabled=True,
-        snmp_version=SNMPVersion.V2C,
+        is_bulkwalk_host=False,
+        is_snmpv2or3_without_bulkwalk_host=False,
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits={},
@@ -59,8 +59,8 @@ def test_snmp_proto_spec(is_ipv6: bool, expected: str) -> None:
         ipaddress=HostAddress("127.0.0.1"),
         credentials="public",
         port=161,
-        bulkwalk_enabled=True,
-        snmp_version=SNMPVersion.V2C,
+        is_bulkwalk_host=False,
+        is_snmpv2or3_without_bulkwalk_host=False,
         bulk_walk_size_of=10,
         timing={},
         oid_range_limits={},
@@ -88,8 +88,8 @@ class SNMPSettings(NamedTuple):
                     ipaddress=HostAddress("127.0.0.1"),
                     credentials="public",
                     port=161,
-                    bulkwalk_enabled=False,
-                    snmp_version=SNMPVersion.V2C,
+                    is_bulkwalk_host=True,
+                    is_snmpv2or3_without_bulkwalk_host=True,
                     bulk_walk_size_of=10,
                     timing={"timeout": 2, "retries": 3},
                     oid_range_limits={},
@@ -100,7 +100,8 @@ class SNMPSettings(NamedTuple):
                 context_name="",
             ),
             [
-                "snmpwalk",
+                "snmpbulkwalk",
+                "-Cr10",
                 "-v2c",
                 "-c",
                 "public",
@@ -112,6 +113,7 @@ class SNMPSettings(NamedTuple):
                 "2.00",
                 "-r",
                 "3",
+                "-Cc",
             ],
         ),
         (
@@ -122,8 +124,8 @@ class SNMPSettings(NamedTuple):
                     ipaddress=HostAddress("127.0.0.1"),
                     credentials="public",
                     port=161,
-                    bulkwalk_enabled=True,
-                    snmp_version=SNMPVersion.V1,
+                    is_bulkwalk_host=False,
+                    is_snmpv2or3_without_bulkwalk_host=False,
                     bulk_walk_size_of=5,
                     timing={"timeout": 5, "retries": 1},
                     oid_range_limits={},
@@ -148,6 +150,7 @@ class SNMPSettings(NamedTuple):
                 "1",
                 "-n",
                 "blabla",
+                "-Cc",
             ],
         ),
         (
@@ -158,8 +161,8 @@ class SNMPSettings(NamedTuple):
                     ipaddress=HostAddress("1.2.3.4"),
                     credentials=("authNoPriv", "md5", "md5", "abc"),
                     port=161,
-                    bulkwalk_enabled=True,
-                    snmp_version=SNMPVersion.V3,
+                    is_bulkwalk_host=False,
+                    is_snmpv2or3_without_bulkwalk_host=False,
                     bulk_walk_size_of=5,
                     timing={"timeout": 5, "retries": 1},
                     oid_range_limits={},
@@ -170,8 +173,7 @@ class SNMPSettings(NamedTuple):
                 context_name="blabla",
             ),
             [
-                "snmpbulkwalk",
-                "-Cr5",
+                "snmpwalk",
                 "-v3",
                 "-l",
                 "authNoPriv",
@@ -191,6 +193,7 @@ class SNMPSettings(NamedTuple):
                 "1",
                 "-n",
                 "blabla",
+                "-Cc",
             ],
         ),
         (
@@ -201,8 +204,8 @@ class SNMPSettings(NamedTuple):
                     ipaddress=HostAddress("1.2.3.4"),
                     credentials=("noAuthNoPriv", "secname"),
                     port=161,
-                    bulkwalk_enabled=True,
-                    snmp_version=SNMPVersion.V3,
+                    is_bulkwalk_host=False,
+                    is_snmpv2or3_without_bulkwalk_host=False,
                     bulk_walk_size_of=5,
                     timing={"timeout": 5, "retries": 1},
                     oid_range_limits={},
@@ -213,8 +216,7 @@ class SNMPSettings(NamedTuple):
                 context_name="",
             ),
             [
-                "snmpbulkwalk",
-                "-Cr5",
+                "snmpwalk",
                 "-v3",
                 "-l",
                 "noAuthNoPriv",
@@ -228,6 +230,7 @@ class SNMPSettings(NamedTuple):
                 "5.00",
                 "-r",
                 "1",
+                "-Cc",
             ],
         ),
         (
@@ -238,8 +241,8 @@ class SNMPSettings(NamedTuple):
                     ipaddress=HostAddress("127.0.0.1"),
                     credentials=("authPriv", "md5", "secname", "auhtpassword", "DES", "privacybla"),
                     port=161,
-                    bulkwalk_enabled=True,
-                    snmp_version=SNMPVersion.V3,
+                    is_bulkwalk_host=False,
+                    is_snmpv2or3_without_bulkwalk_host=False,
                     bulk_walk_size_of=5,
                     timing={"timeout": 5, "retries": 1},
                     oid_range_limits={},
@@ -250,8 +253,7 @@ class SNMPSettings(NamedTuple):
                 context_name="",
             ),
             [
-                "snmpbulkwalk",
-                "-Cr5",
+                "snmpwalk",
                 "-v3",
                 "-l",
                 "authPriv",
@@ -273,13 +275,14 @@ class SNMPSettings(NamedTuple):
                 "5.00",
                 "-r",
                 "1",
+                "-Cc",
             ],
         ),
     ],
 )
 def test_snmp_walk_command(settings: SNMPSettings, expected: Sequence[str]) -> None:
     backend = ClassicSNMPBackend(settings.snmp_config, logger)
-    assert backend._snmp_base_command("snmpwalk", settings.context_name) == expected
+    assert backend._snmp_base_command("snmpwalk", settings.context_name) + ["-Cc"] == expected
 
 
 @pytest.mark.parametrize(

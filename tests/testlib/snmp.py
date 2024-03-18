@@ -10,14 +10,7 @@ from typing import Any, Final
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import (
-    BackendSNMPTree,
-    ensure_str,
-    get_snmp_table,
-    SNMPBackendEnum,
-    SNMPHostConfig,
-    SNMPVersion,
-)
+from cmk.snmplib import BackendSNMPTree, ensure_str, get_snmp_table, SNMPBackendEnum, SNMPHostConfig
 
 from cmk.fetchers._snmpscan import _evaluate_snmp_detection as evaluate_snmp_detection
 from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
@@ -31,8 +24,8 @@ SNMP_HOST_CONFIG: Final = SNMPHostConfig(
     ipaddress=HostAddress("127.0.0.1"),
     credentials="",
     port=0,
-    bulkwalk_enabled=True,
-    snmp_version=SNMPVersion.V2C,
+    is_bulkwalk_host=False,
+    is_snmpv2or3_without_bulkwalk_host=False,
     bulk_walk_size_of=0,
     timing={},
     oid_range_limits={},

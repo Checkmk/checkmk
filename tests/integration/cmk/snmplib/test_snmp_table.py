@@ -121,7 +121,7 @@ def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPB
 def test_get_simple_snmp_table_bulkwalk(
     site: Site, backend_type: SNMPBackendEnum, bulk: bool
 ) -> None:
-    config = dataclasses.replace(default_config(backend_type), bulkwalk_enabled=bulk)
+    config = dataclasses.replace(default_config(backend_type), is_bulkwalk_host=bulk)
     table, _ = get_snmp_table(site, INFO_TREE, backend_type, config)
 
     assert table == [

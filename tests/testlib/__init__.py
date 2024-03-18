@@ -122,7 +122,6 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", repo_path() / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % repo_path())
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % repo_path())
-    monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % repo_path())
 
 
 def import_module_hack(pathname: str) -> ModuleType:

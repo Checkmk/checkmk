@@ -49,7 +49,7 @@ def test_html_form_context():
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_html() -> None:
     assert html.have_help is False
     assert compare_html(
@@ -63,7 +63,7 @@ def test_render_help_html() -> None:
     assert html.have_help is True
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_text() -> None:
     assert compare_html(
         html.render_help("äbc"),
@@ -75,7 +75,7 @@ def test_render_help_text() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
     assert user.show_help is True
@@ -89,7 +89,7 @@ def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_add_manual_link() -> None:
     assert user.language == "en"
     assert compare_html(
@@ -103,7 +103,7 @@ def test_add_manual_link() -> None:
     )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "language", lambda: "de")
@@ -118,7 +118,7 @@ def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
         )
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_add_manual_link_anchor(monkeypatch: pytest.MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "language", lambda: "de")

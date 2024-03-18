@@ -1295,7 +1295,7 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:
 
 # Filter form is not really checked. Only checking that no exception occurs
 def test_filters_display_with_empty_request(
-    live: MockLiveStatusConnection, request_context: None
+    live: MockLiveStatusConnection, request_context: None, patch_theme: None
 ) -> None:
     with live:
         for filt in filter_registry.values():

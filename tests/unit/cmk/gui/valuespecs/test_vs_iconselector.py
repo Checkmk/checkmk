@@ -5,6 +5,7 @@
 
 
 import re
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -24,7 +25,15 @@ ICON_NONE: vs.IconSelectorModel = {"icon": None, "emblem": None}  # type: ignore
 
 
 class TestValueSpecFloat:
-    def test_validate(self, request_context: None) -> None:
+    @patch(
+        "cmk.gui.valuespec.definitions.IconSelector.available_icons",
+        return_value=["empty", "crash", "graph"],
+    )
+    @patch(
+        "cmk.gui.valuespec.definitions.IconSelector.available_emblems",
+        return_value=["add"],
+    )
+    def test_validate(self, _mock_icons: MagicMock, _mock_emblems: MagicMock) -> None:
         # ## value may be a string, or a dictionary.
         # ## first test string...
         expect_validate_failure(vs.IconSelector(), "asd", match="The selected icon does not exist.")

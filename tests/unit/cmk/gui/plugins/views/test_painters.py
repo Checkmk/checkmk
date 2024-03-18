@@ -860,7 +860,7 @@ def fixture_service_painter_names() -> list[str]:
     return sorted(list(painters_of_datasource("services").keys()))
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 def test_service_painters(
     service_painter_idents: Sequence[str], live: MockLiveStatusConnection
 ) -> None:

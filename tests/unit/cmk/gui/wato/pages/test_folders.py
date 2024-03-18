@@ -12,6 +12,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.gui.http import Request
 
 
+@pytest.mark.usefixtures("patch_theme")
 @pytest.mark.usefixtures("suppress_license_expiry_header")
 def test_ajax_call(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     ajax_page = "/NO_SITE/check_mk/ajax_popup_move_to_folder.py"
@@ -29,6 +30,7 @@ def test_ajax_call(logged_in_wsgi_app: WebTestAppForCMK) -> None:
     app.get(f"{ajax_page}/{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=404)
 
 
+@pytest.mark.usefixtures("patch_theme")
 @pytest.mark.usefixtures("suppress_license_expiry_header")
 def test_ajax_call_2(
     flask_app: flask.Flask,

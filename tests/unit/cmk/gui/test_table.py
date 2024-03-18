@@ -211,7 +211,7 @@ def test_nesting_context() -> None:
     ), written_text
 
 
-@pytest.mark.usefixtures("request_context")
+@pytest.mark.usefixtures("request_context", "patch_theme")
 @pytest.mark.parametrize("sortable", [True, False])
 @pytest.mark.parametrize("searchable", [True, False])
 @pytest.mark.parametrize("limit", [None, 2])

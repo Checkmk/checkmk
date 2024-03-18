@@ -8,7 +8,7 @@ import string
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from typing import Any, ContextManager
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import time_machine
@@ -879,7 +879,11 @@ def test_response_schema_compatible_with_request_schema(
 
 
 @managedtest
-def test_user_interface_settings(clients: ClientRegistry) -> None:
+@patch(
+    "cmk.gui.userdb.user_attributes.theme_choices",
+    return_value=[("modern-dark", "Dark"), ("facelift", "Light")],
+)
+def test_user_interface_settings(_mock: None, clients: ClientRegistry) -> None:
     username = "cmkuser"
 
     resp = clients.User.create(
@@ -982,7 +986,12 @@ def add_default_customer_in_managed_edition(params: dict[str, Any]) -> None:
 
 
 @managedtest
+@patch(
+    "cmk.gui.userdb.user_attributes.theme_choices",
+    return_value=[("modern-dark", "Dark")],
+)
 def test_openapi_custom_attributes_of_user(
+    _mock: None,
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -1021,7 +1030,11 @@ def test_openapi_custom_attributes_of_user(
 
 
 @managedtest
-def test_edit_custom_attributes_of_user(clients: ClientRegistry) -> None:
+@patch(
+    "cmk.gui.userdb.user_attributes.theme_choices",
+    return_value=[("modern-dark", "Dark")],
+)
+def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) -> None:
     username = "rob_halford"
 
     attr: Mapping[str, str | bool] = {

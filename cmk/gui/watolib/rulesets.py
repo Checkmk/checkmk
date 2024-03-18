@@ -391,6 +391,14 @@ class RulesetCollection:
             else:
                 yield varname, loaded_file_config.get(varname, [])
 
+    def replace_folder_ruleset_config(
+        self, folder: Folder, ruleset_config: Sequence[RuleSpec[object]], varname: RulesetName
+    ) -> None:
+        if varname in self._rulesets:
+            self._rulesets[varname].replace_folder_config(folder, ruleset_config)
+        else:
+            self._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
+
     def replace_folder_config(
         # The Any below should most likely be RuleSpec[object] but I am not sure.
         self,
@@ -404,10 +412,7 @@ class RulesetCollection:
             if not ruleset_config:
                 continue  # Nothing configured: nothing left to do
 
-            if varname in self._rulesets:
-                self._rulesets[varname].replace_folder_config(folder, ruleset_config)
-            else:
-                self._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
+            self.replace_folder_ruleset_config(folder, ruleset_config, varname)
 
     @staticmethod
     def _save_folder(
@@ -463,8 +468,16 @@ class RulesetCollection:
     def delete(self, name: RulesetName) -> None:
         del self._rulesets[name]
 
+    def delete_unknown(self, folder_path: FolderPath, name: RulesetName) -> None:
+        del self._unknown_rulesets[folder_path][name]
+
     def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
         return self._rulesets
+
+    def get_unknown_rulesets(
+        self,
+    ) -> Mapping[FolderPath, Mapping[RulesetName, Sequence[RuleSpec[object]]]]:
+        return self._unknown_rulesets
 
 
 class AllRulesets(RulesetCollection):

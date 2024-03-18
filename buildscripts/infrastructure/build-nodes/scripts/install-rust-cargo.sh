@@ -37,7 +37,7 @@ RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
 export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID="8-$DEFAULT_TOOLCHAIN_VERSION"
+BUILD_ID="9-$DEFAULT_TOOLCHAIN_VERSION"
 # This adds all present toolchain versions to the build ID to make sure they are
 # included in the cached archive.
 for toolchain_version in $ADDITIONAL_TOOLCHAIN_VERSIONS; do

@@ -6,19 +6,14 @@
 # pylint: disable=redefined-outer-name
 
 import logging
-import os
 
 import docker  # type: ignore[import-untyped]
-import pytest
 
 from tests.testlib.docker import checkmk_docker_api_request
 
 logger = logging.getLogger()
 
 
-@pytest.mark.skipif(
-    os.getenv("CI", "").strip().lower() == "true", reason="Does not yet work in CI, investigating."
-)
 def test_docker_oracle(
     checkmk: docker.models.containers.Container,
     oracle: docker.models.containers.Container,

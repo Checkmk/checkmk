@@ -486,7 +486,7 @@ void ParsedQuery::parseLocaltimeLine(std::string_view line) {
 
 void ParsedQuery::parseOrderBy(std::string_view line,
                                const ColumnCreator &make_column) {
-    // Use this header as: `OderBy: COLUMN_NAME [asc,desc]`
+    // Use this header as: `OrderBy: COLUMN_NAME [asc,desc]`
     auto column = mk::next_argument(line);
     mk::skip_whitespace(line);
     auto direction = [line]() {

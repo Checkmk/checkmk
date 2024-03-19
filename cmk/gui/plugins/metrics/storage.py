@@ -140,24 +140,6 @@ metric_info["file_count"] = {
     "color": "23/a",
 }
 
-metric_info["new_files"] = {
-    "title": _("New files in Spool"),
-    "unit": "count",
-    "color": "23/a",
-}
-
-metric_info["deferred_files"] = {
-    "title": _("Deferred files in Spool"),
-    "unit": "count",
-    "color": "16/a",
-}
-
-metric_info["corrupted_files"] = {
-    "title": _("Corrupted files in Spool"),
-    "unit": "count",
-    "color": "34/a",
-}
-
 # cloud storage
 
 metric_info["used_space"] = {
@@ -1730,16 +1712,6 @@ graph_info["mem_perm_used"] = {
 graph_info["datafile_sizes"] = {
     "title": _("Datafile Sizes"),
     "metrics": [("allocated_size", "line"), ("data_size", "area")],
-}
-
-graph_info["files_notification_spool"] = {
-    "title": _("Amount of files in notification spool"),
-    "metrics": [
-        ("new_files", "line"),
-        ("deferred_files", "line"),
-        ("corrupted_files", "line"),
-    ],
-    "optional_metrics": ["deferred_files", "corrupted_files"],
 }
 
 # workaround for showing single metrics of multiple hosts on the same combined graph dashlet

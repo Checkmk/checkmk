@@ -26,6 +26,7 @@ from cmk.gui.background_job import (
     job_registry,
     JobStatusStates,
 )
+from cmk.gui.logged_in import user
 
 
 @pytest.fixture(autouse=True)
@@ -112,6 +113,7 @@ class DummyBackgroundJob(BackgroundJob):
                 title=self.gui_title(),
                 deletable=False,
                 stoppable=True,
+                user=str(user.id) if user.id else None,
             ),
         )
 

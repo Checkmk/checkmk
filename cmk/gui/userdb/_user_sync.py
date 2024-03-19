@@ -27,6 +27,7 @@ from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_loc
 from cmk.gui.type_defs import Users
 from cmk.gui.utils.urls import makeuri_contextless
 
+from ..logged_in import user
 from ._connections import active_connections
 from .store import general_userdb_job, load_users, save_users
 
@@ -157,6 +158,7 @@ class UserSyncBackgroundJob(BackgroundJob):
             InitialStatusArgs(
                 title=self.gui_title(),
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
 

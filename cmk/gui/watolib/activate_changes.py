@@ -1906,6 +1906,7 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                 title=self.gui_title(),
                 lock_wato=False,
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
         self.maximum_age = maximum_age
@@ -2382,6 +2383,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
             InitialStatusArgs(
                 deletable=False,
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
         self._activation_id = activation_id

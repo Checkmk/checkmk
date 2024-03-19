@@ -893,6 +893,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 stoppable=True,
                 host_name=str(host_name),
                 estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
+                user=str(user.id) if user.id else None,
             ),
         )
         self.host_name: Final = host_name

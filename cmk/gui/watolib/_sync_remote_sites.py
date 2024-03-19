@@ -26,6 +26,7 @@ from cmk.gui.cron import register_job
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, wato_slave_sites
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
@@ -135,6 +136,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
                 title=self.gui_title(),
                 lock_wato=False,
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
         self._last_audit_log_timestamps_path = _get_last_audit_log_timestamps_path()

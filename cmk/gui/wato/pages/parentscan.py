@@ -106,6 +106,7 @@ class ParentScanBackgroundJob(BackgroundJob):
                 title=_("Parent scan"),
                 lock_wato=False,
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
 

@@ -36,6 +36,7 @@ class AutodiscoveryBackgroundJob(BackgroundJob):
                 title=self.gui_title(),
                 lock_wato=False,
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
         self.site_id = omd_site()

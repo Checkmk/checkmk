@@ -604,5 +604,6 @@ class SearchIndexBackgroundJob(BackgroundJob):
             InitialStatusArgs(
                 title=_("Search index"),
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )

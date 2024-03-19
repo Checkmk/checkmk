@@ -21,12 +21,6 @@ from cmk.gui.i18n import _
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["process_creations"] = {
-    "title": _("Process creations"),
-    "unit": "1/s",
-    "color": "#ff8020",
-}
-
 metric_info["process_virtual_size"] = {
     "title": _("Virtual size"),
     "unit": "bytes",

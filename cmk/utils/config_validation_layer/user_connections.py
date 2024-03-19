@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Literal, NewType
+from typing import Literal, NewType, Sequence
 
 from pydantic import BaseModel, Field
+from typing_extensions import TypedDict
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 
 # these need to be written to a .mk file, so a more complex type like Path will lead to problems
 PrivateKeyPath = NewType("PrivateKeyPath", str)
@@ -142,42 +143,45 @@ class LDAPConnectionModel(BaseModel):
     type: Literal["ldap"]
 
 
-class UserRoleMapping(BaseModel):
-    user: list[str]
-    admin: list[str]
-    guest: list[str]
-    agent_registration: list[str]
+class ContactGroupMapping(TypedDict):
+    attribute_match_value: str
+    contact_group_ids: Sequence[str]
+
+
+ContactGroupMappingSpec = (
+    str | tuple[str, dict[str, str]] | tuple[str, dict[str, str | Sequence[ContactGroupMapping]]]
+)
+SerializedCertificateSpec = (
+    Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
+)
+IDP_METADATA = tuple[Literal["url"], str] | tuple[Literal["xml"], str]
+ROLE_MAPPING = Literal[False] | tuple[Literal[True], tuple[str, dict[str, list[str]]]]
 
 
 class SAMLConnectionModel(BaseModel):
+    type: Literal["saml2"]
+    version: Literal["1.0.0"]
+    owned_by_site: str
+    customer: str | Omitted = OMITTED_FIELD
     id: str
     name: str
     description: str
     comment: str
     docu_url: str
     disabled: bool
-    idp_metadata: Any
+    idp_metadata: IDP_METADATA
     checkmk_entity_id: str
     checkmk_metadata_endpoint: str
     checkmk_assertion_consumer_service_endpoint: str
     checkmk_server_url: str
-    connection_timeout: tuple[int, int]
-    signature_certificate: (
-        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
-    )
-    encryption_certificate: (
-        Literal["builtin"] | tuple[Literal["custom"], tuple[PrivateKeyPath, PublicKeyPath]]
-    ) = OMITTED_FIELD
+    connection_timeout: tuple[int, int]  # connection timeout, read timeout
+    signature_certificate: SerializedCertificateSpec
+    encryption_certificate: SerializedCertificateSpec | Omitted = OMITTED_FIELD
     user_id_attribute_name: str
     user_alias_attribute_name: str
     email_attribute_name: str
-    contactgroups_mapping: str
-    role_membership_mapping: Literal[False] | tuple[Literal[True], tuple[str, UserRoleMapping]]
-
-    type: Literal["saml2"]
-    version: Literal["1.0.0"]
-    owned_by_site: str
-    customer: str = OMITTED_FIELD
+    contactgroups_mapping: ContactGroupMappingSpec
+    role_membership_mapping: ROLE_MAPPING
 
 
 def validate_user_connections(connections: list) -> None:
@@ -185,4 +189,4 @@ def validate_user_connections(connections: list) -> None:
         if connection["type"] == "ldap":
             LDAPConnectionModel(**connection)
         elif connection["type"] == "saml2":
-            pass  # TODO: validate saml connections - model not yet tested
+            SAMLConnectionModel(**connection)

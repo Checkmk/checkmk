@@ -27,12 +27,15 @@ from cmk.gui.fields.attributes import (
 )
 from cmk.gui.fields.custom_fields import (
     AuxTagIDField,
+    CertPrivateKey,
+    CertPublicKey,
     ContactGroupField,
     IPField,
     LDAPConnectionID,
     NetworkPortNumber,
     PasswordStoreIDField,
     RelativeUrl,
+    SAMLConnectionID,
     ServiceLevelField,
     SplunkURLField,
     TagGroupIDField,
@@ -60,12 +63,15 @@ from cmk.gui.fields.definitions import (
     SiteField,
     Timestamp,
     Username,
+    UserRoleID,
     X509ReqPEMFieldUUID,
 )
 
 __all__ = [
     "AuxTagIDField",
     "host_attributes_field",
+    "CertPublicKey",
+    "CertPrivateKey",
     "column_field",
     "ContactGroupField",
     "customer_field",
@@ -99,12 +105,14 @@ __all__ = [
     "ServiceLevelField",
     "SiteField",
     "SplunkURLField",
+    "SAMLConnectionID",
     "SNMPCredentials",
     "Timeout",
     "TimePeriodIDField",
     "Timestamp",
     "UnixPath",
     "Username",
+    "UserRoleID",
     "RelativeUrl",
     "X509ReqPEMFieldUUID",
 ]

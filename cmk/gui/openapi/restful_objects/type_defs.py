@@ -42,6 +42,7 @@ DomainType = Literal[
     "password",
     "rule",
     "ruleset",
+    "saml_connection",
     "service",
     "service_discovery",
     "service_discovery_run",

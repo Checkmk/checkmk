@@ -28,6 +28,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
+from cmk.gui.utils.permission_verification import BasePerm
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
 
@@ -378,9 +379,14 @@ class LoggedInUser:
         hooks.call("permission-checked", pname)
         return they_may
 
-    def need_permission(self, pname: str) -> None:
-        if not self.may(pname):
-            perm = permissions.permission_registry[pname]
+    def need_permission(self, permission: str | BasePerm) -> None:
+        if isinstance(permission, BasePerm):
+            for p in permission.iter_perms():
+                self.need_permission(p.name)
+            return
+
+        if not self.may(permission):
+            perm = permissions.permission_registry[permission]
             raise MKAuthException(
                 _(
                     "We are sorry, but you lack the permission "

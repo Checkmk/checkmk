@@ -49,6 +49,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.compatibility import (
     EditionsIncompatible,
@@ -718,6 +719,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
             f"{self.job_prefix}{api_request.command}-{automation_id}",
             InitialStatusArgs(
                 title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
+                user=str(user.id) if user.id else None,
             ),
         )
 

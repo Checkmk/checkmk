@@ -72,11 +72,11 @@ class BackgroundJob:
         self._logger = logger if logger else log.logger.getChild("background-job")
 
         if initial_status_args is None:
-            initial_status_args = InitialStatusArgs()
-        initial_status_args.user = str(user.id) if user.id else None
-        initial_status_args.logfile_path = "~/var/log/web.log"
-        self._initial_status_args = initial_status_args
+            initial_status_args = InitialStatusArgs(
+                user=str(user.id) if user.id else None,
+            )
 
+        self._initial_status_args = initial_status_args
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
 

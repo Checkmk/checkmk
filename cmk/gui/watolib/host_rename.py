@@ -31,6 +31,7 @@ from cmk.gui.background_job import (
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.urls import makeuri
 
@@ -275,8 +276,8 @@ def _rename_host_in_event_rules(oldname: HostName, newname: HostName) -> list[st
 
     users = userdb.load_users(lock=True)
     some_user_changed = False
-    for user in users.values():
-        if unrules := user.get("notification_rules"):
+    for user_ in users.values():
+        if unrules := user_.get("notification_rules"):
             if num_changed := rename_in_event_rules(unrules, oldname, newname):
                 actions += ["notify_user"] * num_changed
                 some_user_changed = True
@@ -454,6 +455,7 @@ class RenameHostsBackgroundJob(BackgroundJob):
                 lock_wato=True,
                 stoppable=False,
                 estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
+                user=str(user.id) if user.id else None,
             ),
         )
 

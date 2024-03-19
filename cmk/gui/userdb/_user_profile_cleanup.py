@@ -16,6 +16,7 @@ from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, In
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 
+from ..logged_in import user
 from .store import load_users
 
 
@@ -55,6 +56,7 @@ class UserProfileCleanupBackgroundJob(BackgroundJob):
                 title=self.gui_title(),
                 lock_wato=False,
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
 

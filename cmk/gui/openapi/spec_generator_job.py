@@ -43,6 +43,7 @@ class SpecGeneratorBackgroundJob(BackgroundJob):
                 title=self.gui_title(),
                 stoppable=False,
                 lock_wato=False,
+                user=None,
             ),
         )
 

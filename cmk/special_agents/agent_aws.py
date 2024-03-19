@@ -175,6 +175,10 @@ class Instance(BaseModel):
 #     |
 #     '-- S3Requests
 
+# GlacierLimits
+# |
+# '-- Glacier
+
 # ELBLimits
 # |
 # '-- ELBSummaryGeneric
@@ -2551,7 +2555,7 @@ class GlacierLimits(AWSSectionLimits):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
-class GlacierSummary(AWSSection):
+class Glacier(AWSSection):
     def __init__(
         self,
         client: BaseClient,
@@ -2565,7 +2569,7 @@ class GlacierSummary(AWSSection):
 
     @property
     def name(self) -> str:
-        return "glacier_summary"
+        return "glacier"
 
     @property
     def cache_interval(self) -> int:
@@ -2651,43 +2655,6 @@ class GlacierSummary(AWSSection):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
-
-    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", None)]
-
-
-class Glacier(AWSSection):
-    @property
-    def name(self) -> str:
-        return "glacier"
-
-    @property
-    def cache_interval(self) -> int:
-        """Return the upper limit for allowed cache age.
-
-        Data is updated at midnight, so the cache should not be older than the day.
-        """
-        cache_interval = int(get_seconds_since_midnight(NOW))
-        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
-        return cache_interval
-
-    @property
-    def granularity(self) -> int:
-        return 86400
-
-    def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("glacier_summary")
-        if colleague and colleague.content:
-            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
-        return AWSColleagueContents({}, 0.0)
-
-    def get_live_data(self, *args: AWSColleagueContents) -> None:
-        pass
-
-    def _compute_content(
-        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
-    ) -> AWSComputedContent:
-        return AWSComputedContent(colleague_contents.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
@@ -6748,16 +6715,13 @@ class AWSSectionsGeneric(AWSSections):
                 self._sections.append(s3_requests)
 
         if "glacier" in services:
-            glacier = Glacier(cloudwatch_client, region, config)
             glacier_client = self._init_client("glacier")
             glacier_limits = GlacierLimits(glacier_client, region, config, distributor)
-            glacier_summary = GlacierSummary(glacier_client, region, config, distributor)
+            glacier_summary = Glacier(glacier_client, region, config)
             distributor.add(glacier_limits.name, glacier_summary)
-            distributor.add(glacier_summary.name, glacier)
             if config.service_config.get("glacier_limits"):
                 self._sections.append(glacier_limits)
             self._sections.append(glacier_summary)
-            self._sections.append(glacier)
 
         if "rds" in services:
             rds_client = self._init_client("rds")

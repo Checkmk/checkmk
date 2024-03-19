@@ -309,7 +309,7 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
         """
         return [
             (
-                _("General Properties"),
+                _("General properties"),
                 [
                     (
                         1.1,
@@ -567,7 +567,7 @@ class Overridable(Base[_T_OverridableSpec]):
 
         return parameters + [
             (
-                _("General Properties"),
+                _("General properties"),
                 [
                     (2.2, "public", vs_visibility),
                 ],
@@ -1310,7 +1310,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
         parameters, keys_by_topic = self._collect_parameters(mode)
 
         vs = Dictionary(
-            title=_("General Properties"),
+            title=_("General properties"),
             render="form",
             optional_keys=False,
             elements=parameters,

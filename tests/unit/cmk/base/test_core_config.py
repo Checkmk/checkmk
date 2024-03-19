@@ -17,6 +17,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils import password_store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
@@ -53,6 +54,21 @@ def fixture_core_scenario(monkeypatch):
     ts = Scenario()
     ts.add_host(HostName("test-host"))
     ts.set_option("ipaddresses", {"test-host": "127.0.0.1"})
+    ts.set_ruleset_bundle(
+        "active_checks",
+        {
+            "norris": [
+                {
+                    "value": {
+                        "description": "My active check",
+                        "oh-god-this-is-nested": {"password": ("explicit", "p4ssw0rd!")},
+                    },
+                    "condition": {},
+                    "id": "1",
+                }
+            ]
+        },
+    )
     return ts.apply(monkeypatch)
 
 
@@ -66,6 +82,25 @@ def test_do_create_config_nagios(
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
+
+
+def test_do_create_config_nagios_collects_passwords(
+    core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
+    password_store.save({"stored-secret": "123"}, password_store.password_store_path())
+
+    assert not password_store.load_for_helpers()
+
+    core_config.do_create_config(
+        create_core("nagios"), core_scenario, all_hosts=[HostName("test-host")], duplicates=()
+    )
+
+    assert password_store.load_for_helpers() == {
+        # TODO: once the password collection of ad-hoc passwords is implemented, this should be there:
+        # ":uuid:1234": "p4ssw0rd!",
+        "stored-secret": "123",
+    }
 
 
 def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:

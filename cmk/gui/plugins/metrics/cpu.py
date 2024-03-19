@@ -40,18 +40,6 @@ metric_info["processes"] = {
     "color": "#8040f0",
 }
 
-metric_info["threads"] = {
-    "title": _l("Threads"),
-    "unit": "count",
-    "color": "#8040f0",
-}
-
-metric_info["thread_usage"] = {
-    "title": _l("Thread usage"),
-    "unit": "%",
-    "color": "22/a",
-}
-
 metric_info["threads_idle"] = {
     "title": _l("Idle threads"),
     "unit": "count",
@@ -64,23 +52,10 @@ metric_info["threads_rate"] = {
     "color": "44/a",
 }
 
-metric_info["threads_daemon"] = {
-    "title": _l("Daemon threads"),
-    "unit": "count",
-    "color": "32/a",
-}
-
 metric_info["dedup_rate"] = {
     "title": _l("Deduplication rate"),
     "unit": "count",
     "color": "12/a",
-}
-
-metric_info["threads_max"] = {
-    "title": _l("Maximum number of threads"),
-    "help": _l("Maximum number of threads started at any given time during the JVM lifetime"),
-    "unit": "count",
-    "color": "35/a",
 }
 
 metric_info["threads_total"] = {
@@ -825,24 +800,6 @@ graph_info["context_switches"] = {
         ("vol_context_switches", "area"),
         ("invol_context_switches", "stack"),
     ],
-}
-
-graph_info["threads"] = {
-    "title": _l("Threads"),
-    "metrics": [
-        ("threads", "area"),
-        ("threads_daemon", "stack"),
-        ("threads_max", "stack"),
-    ],
-}
-
-graph_info["thread_usage"] = {
-    "title": _l("Thread usage"),
-    "metrics": [
-        ("thread_usage", "area"),
-    ],
-    "scalars": ["thread_usage:warn", "thread_usage:crit"],
-    "range": (0, 100),
 }
 
 graph_info["threadpool"] = {

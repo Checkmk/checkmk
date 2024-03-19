@@ -15,16 +15,23 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
 )
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 
 
 def register(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(SpecGeneratorBackgroundJob)
-    hooks.register_builtin("tags-changed", _trigger_spec_generation_in_background)
-    hooks.register_builtin("mkp-changed", _trigger_spec_generation_in_background)
+    hooks.register_builtin(
+        "tags-changed",
+        lambda: trigger_spec_generation_in_background(str(user.id) if user.id else None),
+    )
+    hooks.register_builtin(
+        "mkp-changed",
+        lambda: trigger_spec_generation_in_background(str(user.id) if user.id else None),
+    )
 
 
-def _trigger_spec_generation_in_background() -> None:
-    job = SpecGeneratorBackgroundJob()
+def trigger_spec_generation_in_background(user_id: str | None) -> None:
+    job = SpecGeneratorBackgroundJob(user_id)
     with suppress(BackgroundJobAlreadyRunning):
         job.start(_generate_spec_in_background_job)
 
@@ -36,14 +43,14 @@ class SpecGeneratorBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Generate REST API specification")
 
-    def __init__(self) -> None:
+    def __init__(self, user_id: str | None) -> None:
         super().__init__(
             self.job_prefix,
             InitialStatusArgs(
                 title=self.gui_title(),
                 stoppable=False,
                 lock_wato=False,
-                user=None,
+                user=user_id,
             ),
         )
 

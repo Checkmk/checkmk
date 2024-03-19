@@ -7,16 +7,13 @@ import sys
 from logging import getLogger
 from typing import Sequence
 
-from cmk.gui.openapi.spec_generator_job import _trigger_spec_generation_in_background
-from cmk.gui.session import SuperUserContext
-from cmk.gui.utils.script_helpers import gui_context
+from cmk.gui.openapi.spec_generator_job import trigger_spec_generation_in_background
 
 
 def main(args: Sequence[str]) -> int:
     logger = getLogger("api-spec")
     try:
-        with gui_context(), SuperUserContext():
-            _trigger_spec_generation_in_background()
+        trigger_spec_generation_in_background(user_id=None)
     except Exception as e:
         logger.error("ERROR: Failed to initialize background job for regenerating openapi spec")
         logger.error(e)

@@ -67,6 +67,7 @@ echo "========================================================================="
 # shellcheck disable=SC2086
 bazel build \
     ${BAZEL_CI_ARGS} \
+    --extra_toolchains="//omd/packages/toolchain:cc_toolchain_for_linux_x86_64" \
     --verbose_failures \
     --sandbox_debug \
     --subcommands=pretty_print \

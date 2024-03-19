@@ -2,7 +2,11 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+"""
+The McAfee Web Gateway has been rebranded to Skyhigh Secure Web Gateway with its release 12.2.2.
+Where possibile the "McAfee" string has been removed in favor of more generic therms.
+The old plugin names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
+"""
 import datetime
 
 from cmk.base.plugins.agent_based.agent_based_api import v1
@@ -10,7 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api import v1
 from cmk.plugins.lib import mcafee_gateway
 
 
-def parse_mcafee_webgateway_misc(
+def parse_webgateway_misc(
     string_table: v1.type_defs.StringTable,
 ) -> mcafee_gateway.Section | None:
     if not string_table:
@@ -35,7 +39,8 @@ def parse_mcafee_webgateway_misc(
 
 v1.register.snmp_section(
     name="mcafee_webgateway_misc",
-    parse_function=parse_mcafee_webgateway_misc,
+    parsed_section_name="webgateway_misc",
+    parse_function=parse_webgateway_misc,
     fetch=v1.SNMPTree(
         base=".1.3.6.1.4.1.1230.2.7.2.5",
         oids=[
@@ -45,5 +50,21 @@ v1.register.snmp_section(
             "7",  # MCAFEE-MWG-MIB::stTimeConsumedByRuleEngine
         ],
     ),
-    detect=mcafee_gateway.DETECT_WEB_GATEWAY,
+    detect=mcafee_gateway.DETECT_MCAFEE_WEBGATEWAY,
+)
+
+v1.register.snmp_section(
+    name="skyhigh_security_webgateway_misc",
+    parsed_section_name="webgateway_misc",
+    parse_function=parse_webgateway_misc,
+    fetch=v1.SNMPTree(
+        base=".1.3.6.1.4.1.59732.2.7.2.5",
+        oids=[
+            "2",  # ::stClientCount
+            "3",  # ::stConnectedSockets
+            "6",  # ::stResolveHostViaDNS
+            "7",  # ::stTimeConsumedByRuleEngine
+        ],
+    ),
+    detect=mcafee_gateway.DETECT_SKYHIGH_WEBGATEWAY,
 )

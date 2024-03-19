@@ -7,6 +7,8 @@ RULES_FOREIGN_CC_VERSION = "0.9.0"
 
 http_archive(
     name = "rules_foreign_cc",
+    patch_args = ["-p1"],
+    patches = ["//omd/packages/foreign_cc:symlink.patch"],
     sha256 = "2a4d07cd64b0719b39a7c12218a3e507672b82a97b98c6a89d38565894cf7c51",
     strip_prefix = "rules_foreign_cc-" + RULES_FOREIGN_CC_VERSION,
     urls = [
@@ -17,25 +19,7 @@ http_archive(
 
 load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
 
-# These toolchains are configured by defualt by rules_foreign_cc. We need to register
-# those manually because we set `register_toolchains = False` in order to load our own
-# implimentation of the shell toolchain
-register_toolchains("@rules_foreign_cc//toolchains:preinstalled_autoconf_toolchain")
-
-register_toolchains("@rules_foreign_cc//toolchains:preinstalled_m4_toolchain")
-
-register_toolchains("@rules_foreign_cc//toolchains:preinstalled_automake_toolchain")
-
-register_toolchains("@rules_foreign_cc//toolchains:preinstalled_pkgconfig_toolchain")
-
-# Our implimentation of the shell toolchain in order to fix symlinks and other bugs
-register_toolchains("//foreign_cc_adapted:shell_toolchain")
-
-# This sets up some common toolchains for building targets. For more details, please see
-# https://bazelbuild.github.io/rules_foreign_cc/0.9.0/flatten.html#rules_foreign_cc_dependencies
-rules_foreign_cc_dependencies(
-    register_toolchains = False,
-)
+rules_foreign_cc_dependencies()
 
 RULES_PKG_VERSION = "0.9.1"
 

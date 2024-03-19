@@ -231,7 +231,7 @@ class SQLiteHistory(History):
                 ),
             )
 
-    def _add_entries(self, entries: Sequence[Sequence[object]]) -> None:
+    def add_entries(self, entries: Sequence[Sequence[object]]) -> None:
         """Add multiple entries to the history table.
 
         Used only by the cmk-update-config during EC history migration to sqlite.

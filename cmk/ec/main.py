@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 # TODO: Refactor/document locking. It is not clear when and how to apply
 # locks or when they are held by which component.
 
@@ -329,7 +327,7 @@ def replace_groups(text: str, origtext: str, match_groups: MatchGroups) -> str:
 class MKSignalException(MKException):
     def __init__(self, signum: int) -> None:
         MKException.__init__(self, f"Got signal {signum}")
-        self._signum = signum
+        self.signum = signum
 
 
 # .
@@ -2482,7 +2480,7 @@ def run_eventd(  # pylint: disable=too-many-branches
                     raise
                 time.sleep(1)
         except MKSignalException as e:
-            if e._signum == 1:
+            if e.signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
                 reload_configuration(
                     settings,
@@ -2495,7 +2493,7 @@ def run_eventd(  # pylint: disable=too-many-branches
                     slave_status,
                 )
             else:
-                logger.info("Signalled to death by signal %d", e._signum)
+                logger.info("Signalled to death by signal %d", e.signum)
                 terminate(terminate_main_event, event_server, status_server)
 
     # Now wait for termination of the server threads

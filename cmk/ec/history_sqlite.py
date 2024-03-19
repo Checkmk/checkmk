@@ -147,6 +147,7 @@ class SQLiteHistory(History):
         self._logger = logger
         self._event_columns = event_columns
         self._history_columns = history_columns
+        self._last_housekeeping = 0.0
 
         if isinstance(self._settings.database, Path):
             self._settings.database.parent.mkdir(parents=True, exist_ok=True)
@@ -264,10 +265,12 @@ class SQLiteHistory(History):
 
         And performs a vacuum to shrink the database file.
         """
-        delta = time.time() - timedelta(days=self._config["history_lifetime"]).total_seconds()
-        with self.conn as connection:
-            cur = connection.cursor()
-            cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
-
-        # should be executed outside of the transaction
-        self.conn.execute("VACUUM;")
+        now = time.time()
+        if now - self._last_housekeeping > 3600:
+            delta = now - timedelta(days=self._config["history_lifetime"]).total_seconds()
+            with self.conn as connection:
+                cur = connection.cursor()
+                cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
+            # should be executed outside of the transaction
+            self.conn.execute("VACUUM;")
+            self._last_housekeeping = now

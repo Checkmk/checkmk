@@ -110,7 +110,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
             + group_elements
             + other_elements,
             headers=[
-                (_("General Properties"), [key for key, _vs in general_elements]),
+                (_("General properties"), [key for key, _vs in general_elements]),
                 (_("LDAP Connection"), [key for key, _vs in connection_elements]),
                 (_("Users"), [key for key, _vs in user_elements]),
                 (_("Groups"), [key for key, _vs in group_elements]),

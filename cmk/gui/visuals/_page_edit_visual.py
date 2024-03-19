@@ -519,7 +519,7 @@ def _vs_general(
     what: VisualTypeName,
 ) -> Dictionary:
     return Dictionary(
-        title=_("General Properties"),
+        title=_("General properties"),
         render="form",
         optional_keys=False,
         show_more_keys=["description", "add_context_to_title", "sort_index", "is_show_more"],

@@ -540,8 +540,6 @@ def test_non_trivial_graph_declarations() -> None:
         "bandwidth",
         "bandwidth_translated",
         "cmk_cpu_time_by_phase",
-        "cmk_hosts_total",
-        "cmk_services_total",
         "cpu_time",
         "cpu_utilization_3",
         "cpu_utilization_4",

@@ -899,9 +899,11 @@ table.nform {
   tr td.legend {
     padding-right: 8px;
     padding-left: 10px;
-    overflow: hidden;
     text-align: left;
     vertical-align: top;
+    /* TODO: See if we can remove these two overflow-* styles. it seems to be sufficient to handle
+             overflow within the following div.title styling */
+    overflow-x: hidden;
     overflow-wrap: break-word;
 
     div.title {
@@ -915,7 +917,7 @@ table.nform {
 
     div.checkbox {
       float: right;
-      margin-top: 3px;
+      margin-bottom: 3px;
     }
   }
 

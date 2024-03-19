@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from pathlib import Path
 
 from cmk.utils import password_store, store
+from cmk.utils.config_validation_layer.passwords import validate_passwords
 from cmk.utils.password_store import Password
 
 import cmk.gui.userdb as userdb
@@ -49,7 +50,7 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         """The actual passwords are stored in a separate file for special treatment
 
         Have a look at `cmk.utils.password_store` for further information"""
-        return join_password_specs(
+        cfg = join_password_specs(
             store.load_from_mk_file(
                 self._config_file_path,
                 key=self._config_variable,
@@ -58,11 +59,14 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
             ),
             password_store.load(),
         )
+        validate_passwords(cfg)
+        return cfg
 
     def save(self, cfg: Mapping[str, Password], pretty: bool) -> None:
         """The actual passwords are stored in a separate file for special treatment
 
         Have a look at `cmk.utils.password_store` for further information"""
+        validate_passwords(cfg)
         meta_data, passwords = split_password_specs(cfg)
         super().save(meta_data, pretty)
         password_store.save(passwords)

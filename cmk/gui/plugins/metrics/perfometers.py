@@ -132,15 +132,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "last_updated",
-        "half_value": 40.0,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "job_duration",
         "half_value": 120.0,
         "exponent": 2,

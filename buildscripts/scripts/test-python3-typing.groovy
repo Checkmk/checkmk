@@ -6,18 +6,17 @@ def main() {
     dir("${checkout_dir}") {
         stage("Execute Test") {
             sh("""
-                MYPY_ADDOPTS='--cobertura-xml-report=$checkout_dir/mypy_reports --html-report=$checkout_dir/mypy_reports/html' \
-                make -C tests test-mypy-docker
-               """);
-        }
-
-        stage("Archive reports") {
-            archiveArtifacts(artifacts: "mypy_reports/**");
+                MYPY_ADDOPTS='--no-color-output --junit-xml mypy.xml' make -C tests test-mypy-docker
+            """);
         }
 
         stage("Analyse Issues") {
             publishIssues(
-                issues:[scanForIssues(tool: clang())],
+                issues:[scanForIssues(
+                    tool: myPy(
+                        pattern: "mypy.xml",
+                    )
+                )],
                 trendChartType: 'TOOLS_ONLY',
                 qualityGates: [[
                     threshold: 1,
@@ -26,19 +25,7 @@ def main() {
                 ]]
             )
         }
-
-        stage("Publish coverage") {
-            publishHTML([
-                allowMissing: false,
-                alwaysLinkToLastBuild: false,
-                keepAll: true,
-                reportDir: 'mypy_reports/html',
-                reportFiles: 'index.html',
-                reportName: 'Typing coverage',
-                reportTitles: '',
-            ])
-        }
     }
 }
-return this;
 
+return this;

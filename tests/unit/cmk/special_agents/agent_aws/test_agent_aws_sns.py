@@ -15,15 +15,17 @@ from cmk.special_agents.agent_aws import (
     AWSRegionLimit,
     NamingConvention,
     OverallTags,
+    ResultDistributor,
     SNS,
     SNSLimits,
     SNSSMS,
+    SNSSummary,
     SNSTopicsFetcher,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, SNSListSubscriptionsIB, SNSListTopicsIB
 
-SNSSectionsGetter = Callable[[list[str] | None, OverallTags], tuple[SNSSMS, SNS]]
+SNSSectionsGetter = Callable[[list[str] | None, OverallTags], tuple[SNSSummary, SNSSMS, SNS]]
 
 ALL_TOPICS = {
     "TopicName-0 [eu-west-1]",
@@ -136,11 +138,15 @@ def test_agent_aws_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int
 
 @pytest.fixture()
 def get_sns_sections() -> SNSSectionsGetter:
-    def _create_sns_sections(names: list[str] | None, tags: OverallTags) -> tuple[SNSSMS, SNS]:
+    def _create_sns_sections(
+        names: list[str] | None, tags: OverallTags
+    ) -> tuple[SNSSummary, SNSSMS, SNS]:
         region = "eu-west-1"
         config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
         config.add_single_service_config("sns_names", names)
         config.add_service_tags("sns_tags", tags)
+
+        distributor = ResultDistributor()
 
         fake_sns_client = FakeSNSClient(n_std_topics=3, n_fifo_topics=2, n_subs=7)
         fake_cloudwatch_client = FakeCloudwatchClient()
@@ -148,9 +154,13 @@ def get_sns_sections() -> SNSSectionsGetter:
 
         # TODO: FakeSNSClient shoud actually subclass SNSClient, FakeCloudwatchClient should subclass CloudWatchClient, etc.
         sns_topics_fetcher = SNSTopicsFetcher(fake_sns_client, fake_tagging_client, region, config)  # type: ignore[arg-type]
+        sns_summary = SNSSummary(fake_sns_client, region, config, sns_topics_fetcher, distributor)  # type: ignore[arg-type]
         sns_sms = SNSSMS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
-        sns = SNS(fake_cloudwatch_client, region, config, sns_topics_fetcher)  # type: ignore[arg-type]
-        return sns_sms, sns
+        sns = SNS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
+
+        distributor.add(sns_summary.name, sns)
+
+        return sns_summary, sns_sms, sns
 
     return _create_sns_sections
 
@@ -176,9 +186,22 @@ def test_agent_aws_sns(
     tags: OverallTags,
     found_services_name: list[str],
 ) -> None:
-    _sns_sms, sns = get_sns_sections(names, tags)
+    sns_summary, _sns_sms, sns = get_sns_sections(names, tags)
+    sns_summary_results = sns_summary.run().results
+
     assert sns.name == "sns_cloudwatch"
-    perform_agent_aws_sns_test(sns, found_services_name, 3)
+    perform_agent_aws_sns_cloudwatch_test(sns, found_services_name, 3)
+
+    assert sns_summary.cache_interval == 300
+    assert sns_summary.period == 600
+
+    if found_services_name:
+        assert len(sns_summary_results) == 1
+        sns_summary_result = sns_summary_results[0]
+        assert sns_summary_result.piggyback_hostname == ""
+        assert {e["ItemId"] for e in sns_summary_result.content} == set(found_services_name)
+    else:
+        assert len(sns_summary_results) == 0
 
 
 # Cloudwatch doesn't provide SNS SMS data by SNS Topic so names and tags are ignored since they
@@ -204,13 +227,15 @@ def test_agent_aws_sns_sms(
     tags: OverallTags,
     found_services_name: list[str],
 ) -> None:
-    sns_sms, _sns = get_sns_sections(names, tags)
+    _sns_summary, sns_sms, _sns = get_sns_sections(names, tags)
     assert sns_sms.name == "sns_sms_cloudwatch"
-    perform_agent_aws_sns_test(sns_sms, found_services_name, 2)
+    perform_agent_aws_sns_cloudwatch_test(sns_sms, found_services_name, 2)
 
 
-def perform_agent_aws_sns_test(
-    sns_section: SNSSMS | SNS, found_services_name: list[str], metrics_per_topic: int
+def perform_agent_aws_sns_cloudwatch_test(
+    sns_section: SNSSMS | SNS,
+    found_services_name: list[str],
+    metrics_per_topic: int,
 ) -> None:
     assert sns_section.cache_interval == 300
     assert sns_section.period == 600

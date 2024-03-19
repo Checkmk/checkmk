@@ -522,31 +522,13 @@ def _get_wafv2_web_acls(
     return web_acls
 
 
-def _fetch_tagged_resources_with_types(
+ResourceTags = Mapping[str, Tags]
+
+
+def fetch_resource_tags_from_types(
     tagging_client: BaseClient, resource_type_filters: Sequence[str]
-) -> Sequence:
-    tagged_resources = []
-    # The get_resource API call has a matching rule (AND) different than the one that we use in
-    # checkmk (OR) so we need to fetch all the resources containing tags first and then apply our
-    # matching rule.
-    # We are calling it with empty `TagFilter` param so get every resource that ever had a tag.
-    # For the tags matching rules or other info, look at the documentation of the API call:
-    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/resourcegroupstaggingapi.html#ResourceGroupsTaggingAPI.Client.get_resources
-    for page in tagging_client.get_paginator("get_resources").paginate(
-        TagFilters=[],
-        ResourceTypeFilters=resource_type_filters,
-    ):
-        tagged_resources.extend(page.get("ResourceTagMappingList", []))
-
-    return tagged_resources
-
-
-def fetch_resources_matching_tags(
-    tagging_client: BaseClient,
-    tags_to_match: Tags,
-    resource_type_filters: list[str],
-) -> set[str]:
-    """Returns the ARN of all the resources in the region that match **ANY** of the provided tags.
+) -> ResourceTags:
+    """Returns all the resources in the region that have tags.
 
     This is useful when the service-specific API is not returning tags for every resource as this
     allows you to get all the tags with a single API call rather than calling get_tags for every
@@ -562,6 +544,33 @@ def fetch_resources_matching_tags(
     https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/resourcegroupstaggingapi.html#ResourceGroupsTaggingAPI.Client.get_resources
     """
 
+    tagged_resources = []
+    # The get_resource API call has a matching rule (AND) different than the one that we use in
+    # checkmk (OR) so we need to fetch all the resources containing tags first and then apply our
+    # matching rule.
+    # We are calling it with empty `TagFilter` param so get every resource that ever had a tag.
+    # For the tags matching rules or other info, look at the documentation of the API call:
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/resourcegroupstaggingapi.html#ResourceGroupsTaggingAPI.Client.get_resources
+    for page in tagging_client.get_paginator("get_resources").paginate(
+        TagFilters=[],
+        ResourceTypeFilters=resource_type_filters,
+    ):
+        tagged_resources.extend(page.get("ResourceTagMappingList", []))
+
+    return {r["ResourceARN"]: r["Tags"] for r in tagged_resources}
+
+
+def filter_resources_matching_tags(
+    tagged_resources: ResourceTags,
+    tags_to_match: Tags,
+) -> set[str]:
+    """Returns the ARN of all the resources in the region that match **ANY** of the provided tags.
+
+    This is useful when the service-specific API is not returning tags for every resource as this
+    allows you to get all the tags with a single API call (e.g., fetch_resource_tags_from_types)
+    and filter them with this function.
+    """
+
     if not tags_to_match:
         return set()
 
@@ -569,18 +578,15 @@ def fetch_resources_matching_tags(
     for curr_tag in tags_to_match:
         tags_to_match_by_id[curr_tag["Key"]].add(curr_tag["Value"])
 
-    tagged_resources = _fetch_tagged_resources_with_types(tagging_client, resource_type_filters)
-
     matching_resources_arn = set()
-    for resource in tagged_resources:
-        resource_tags = resource["Tags"]
+    for resource_arn, resource_tags in tagged_resources.items():
         is_any_tag_matching = any(
             curr_tag["Key"] in tags_to_match_by_id
             and curr_tag["Value"] in tags_to_match_by_id[curr_tag["Key"]]
             for curr_tag in resource_tags
         )
         if is_any_tag_matching:
-            matching_resources_arn.add(resource["ResourceARN"])
+            matching_resources_arn.add(resource_arn)
     return matching_resources_arn
 
 
@@ -3902,8 +3908,12 @@ class CloudFrontSummary(AWSSection):
             return [d for d in distributions if d["Id"] in self._names]
 
         if self._tags:
-            distributions_arn_matching_tags = fetch_resources_matching_tags(
-                self._tagging_client, self._tags, ["cloudfront:distribution"]
+            resource_tags = fetch_resource_tags_from_types(
+                self._tagging_client, ["cloudfront:distribution"]
+            )
+            distributions_arn_matching_tags = filter_resources_matching_tags(
+                resource_tags,
+                self._tags,
             )
             return [d for d in distributions if d["ARN"] in distributions_arn_matching_tags]
 
@@ -5425,21 +5435,18 @@ class SNSTopicsFetcher:
             for topic in page["Topics"]
         ]
 
-    def fetch_filtered_topics(self, all_topics_arns: list[str]) -> list[SNSTopic]:
-        unfiltered_topics = [SNSTopic.from_arn(arn) for arn in all_topics_arns]
-        filtered_topics = unfiltered_topics.copy()
+    def fetch_all_topic_tags(self) -> ResourceTags:
+        return fetch_resource_tags_from_types(self._tagging_client, ["sns:topic"])
+
+    def filter_topics(self, all_topics_arns: list[str], resource_tags: ResourceTags) -> list[str]:
+        if self._tags:
+            topics_arn_matching_tags = filter_resources_matching_tags(resource_tags, self._tags)
+            return [t for t in all_topics_arns if t in topics_arn_matching_tags]
 
         if self._names:
-            filtered_topics = [t for t in unfiltered_topics if t.topic_name in self._names]
+            return [t for t in all_topics_arns if SNSTopic.from_arn(t).topic_name in self._names]
 
-        if self._tags:
-            topics_arn_matching_tags = fetch_resources_matching_tags(
-                self._tagging_client, self._tags, ["sns:topic"]
-            )
-            filtered_topics = [
-                t for t in unfiltered_topics if t.to_arn() in topics_arn_matching_tags
-            ]
-        return filtered_topics
+        return all_topics_arns
 
 
 class SNSLimits(AWSSectionLimits):
@@ -5529,6 +5536,72 @@ class SNSLimits(AWSSectionLimits):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
+class SNSSummary(AWSSection):
+    def __init__(
+        self,
+        client: BaseClient,
+        region: str,
+        config: AWSConfig,
+        sns_topics_fetcher: SNSTopicsFetcher,
+        distributor: ResultDistributor | None = None,
+    ) -> None:
+        super().__init__(client, region, config, distributor=distributor)
+        self._sns_topics_fetcher = sns_topics_fetcher
+
+    @property
+    def name(self) -> str:
+        return "sns_summary"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("sns_limits")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
+        (colleague_contents,) = args
+
+        if colleague_contents.content:
+            topics_arn = [topic["arn"] for topic in colleague_contents.content]
+        else:
+            topics_arn = [topic.to_arn() for topic in self._sns_topics_fetcher.fetch_all_topics()]
+
+        tags = self._sns_topics_fetcher.fetch_all_topic_tags()
+        filtered_topics = self._sns_topics_fetcher.filter_topics(topics_arn, tags)
+
+        found_topics = []
+        for topic_arn in topics_arn:
+            if topic_arn in filtered_topics:
+                topic = SNSTopic.from_arn(topic_arn)
+                found_topics.append(
+                    {
+                        "Name": topic.topic_name,
+                        "ARN": topic_arn,
+                        "ItemId": topic.to_item_id(),
+                        "Region": topic.region,
+                        "AccountId": topic.account_id,
+                    }
+                )
+
+        return found_topics
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
+
+
 class SNSSMS(AWSSectionCloudwatch):
     @property
     def name(self) -> str:
@@ -5580,16 +5653,8 @@ class SNSSMS(AWSSectionCloudwatch):
 
 
 class SNS(AWSSectionCloudwatch):
-    def __init__(
-        self,
-        client: BaseClient,
-        region: str,
-        config: AWSConfig,
-        topics_fetcher: SNSTopicsFetcher,
-        distributor: ResultDistributor | None = None,
-    ):
-        super().__init__(client, region, config, distributor=distributor)
-        self.topics_fetcher = topics_fetcher
+    def __init__(self, client: BaseClient, region: str, config: AWSConfig):
+        super().__init__(client, region, config)
 
     @property
     def name(self) -> str:
@@ -5604,23 +5669,15 @@ class SNS(AWSSectionCloudwatch):
         return 300
 
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        colleague = self._received_results.get("sns_limits")
+        colleague = self._received_results.get("sns_summary")
         if colleague and colleague.content:
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def _get_filtered_topics(self, colleague_contents: AWSColleagueContents) -> list[SNSTopic]:
-        if colleague_contents.content:
-            unfiltered_topics = [topic["arn"] for topic in colleague_contents.content]
-        else:
-            unfiltered_topics = [topic.to_arn() for topic in self.topics_fetcher.fetch_all_topics()]
-        return self.topics_fetcher.fetch_filtered_topics(unfiltered_topics)
-
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
         # The metrics of this class are grouped by SNS topic
         metrics = []
-        topics = self._get_filtered_topics(colleague_contents)
-        for idx, topic in enumerate(topics):
+        for idx, topic in enumerate(colleague_contents.content):
             for metric_name, stat, unit in [
                 ("NumberOfMessagesPublished", "Sum", "Count"),
                 ("NumberOfNotificationsDelivered", "Sum", "Count"),
@@ -5628,7 +5685,7 @@ class SNS(AWSSectionCloudwatch):
             ]:
                 metric: Metric = {
                     "Id": self._create_id_for_metric_data_query(idx, metric_name),
-                    "Label": topic.to_item_id(),
+                    "Label": topic["ItemId"],
                     "MetricStat": {
                         "Metric": {
                             "Namespace": "AWS/SNS",
@@ -5636,7 +5693,7 @@ class SNS(AWSSectionCloudwatch):
                             "Dimensions": [
                                 {
                                     "Name": "TopicName",
-                                    "Value": topic.topic_name,
+                                    "Value": topic["Name"],
                                 }
                             ],
                         },
@@ -6165,7 +6222,7 @@ class ElastiCacheSummary(AWSSection):
         return clusters, nodes
 
     def _filter_clusters(
-        self, clusters: Iterable[ElastiCacheCluster]
+        self, clusters: Iterable[ElastiCacheCluster], resource_tags: ResourceTags
     ) -> Iterable[ElastiCacheCluster]:
         if self._names is not None:
             for cluster in clusters:
@@ -6174,9 +6231,7 @@ class ElastiCacheSummary(AWSSection):
             return
 
         if self._tags is not None:
-            matching_arns = fetch_resources_matching_tags(
-                self._tagging_client, self._tags, ["elasticache:replicationgroup"]
-            )
+            matching_arns = filter_resources_matching_tags(resource_tags, self._tags)
 
             for cluster in clusters:
                 if cluster.ARN in matching_arns:
@@ -6200,7 +6255,10 @@ class ElastiCacheSummary(AWSSection):
         (colleague_contents,) = args
         clusters, nodes = self._fetch_data(colleague_contents.content)
 
-        filtered_clusters = list(self._filter_clusters(clusters))
+        resource_tags = fetch_resource_tags_from_types(
+            self._tagging_client, ["elasticache:replicationgroup"]
+        )
+        filtered_clusters = list(self._filter_clusters(clusters, resource_tags))
         filtered_node_dicts = list(self._filter_nodes(nodes, filtered_clusters))
 
         return [c.model_dump() for c in filtered_clusters], filtered_node_dicts
@@ -6796,18 +6854,22 @@ class AWSSectionsGeneric(AWSSections):
         if "sns" in services:
             sns_client = self._init_client("sns")
             sns_topics_fetcher = SNSTopicsFetcher(sns_client, tagging_client, region, config)
-            sns_cloudwatch = SNS(
-                cloudwatch_client, region, config, sns_topics_fetcher, distributor=distributor
+            sns_summary = SNSSummary(
+                sns_client, region, config, sns_topics_fetcher, distributor=distributor
             )
+            sns_cloudwatch = SNS(cloudwatch_client, region, config)
+            distributor.add(sns_summary.name, sns_cloudwatch)
             sns_sms_cloudwatch = SNSSMS(cloudwatch_client, region, config)
             if config.service_config.get("sns_limits"):
                 sns_limits = SNSLimits(
                     sns_client, region, config, sns_topics_fetcher, distributor=distributor
                 )
-                distributor.add("sns_limits", sns_cloudwatch)
+                distributor.add(sns_limits.name, sns_summary)
+                distributor.add(sns_limits.name, sns_cloudwatch)
                 self._sections.append(sns_limits)
             # sns_cloudwatch section should always be after sns_limits because it gets the data from
             # there through the distributor
+            self._sections.append(sns_summary)
             self._sections.append(sns_cloudwatch)
             self._sections.append(sns_sms_cloudwatch)
 

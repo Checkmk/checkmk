@@ -611,6 +611,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                 title=self.gui_title(),
                 lock_wato=False,
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
 

@@ -38,6 +38,7 @@ from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users
 from cmk.gui.watolib.audit_log import log_audit
@@ -678,6 +679,7 @@ class OMDConfigChangeBackgroundJob(BackgroundJob):
                 title=self.gui_title(),
                 lock_wato=False,
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
 

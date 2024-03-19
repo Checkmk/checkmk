@@ -21,6 +21,7 @@ from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, In
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -222,6 +223,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
                 title=self.gui_title(),
                 lock_wato=False,
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
 

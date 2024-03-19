@@ -33,6 +33,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -149,6 +150,7 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
             initial_status_args=InitialStatusArgs(
                 title=self.gui_title(),
                 stoppable=False,
+                user=str(user.id) if user.id else None,
             ),
         )
 

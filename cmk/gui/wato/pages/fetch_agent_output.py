@@ -289,7 +289,9 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
             host.site_id(),
             host.name(),
         )
-        super().__init__(job_id, InitialStatusArgs(title=title))
+        super().__init__(
+            job_id, InitialStatusArgs(title=title, user=str(user.id) if user.id else None)
+        )
 
     def fetch_agent_output(self, job_interface):
         job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)

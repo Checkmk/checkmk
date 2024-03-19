@@ -764,6 +764,7 @@ class ELBDescribeTagsIB(InstanceBuilder):
     def _fill_instance(self) -> Iterable[Entity]:
         return [
             Str("LoadBalancerName"),
+            Str("LoadBalancerArn"),
             List(
                 "Tags",
                 [
@@ -2503,49 +2504,6 @@ class EC2DescribeVolumeStatusIB(InstanceBuilder):
                     ),
                 ],
             ),
-        ]
-
-
-class EC2DescribeTagsIB(InstanceBuilder):
-    def _fill_instance(self) -> Iterable[Entity]:
-        return [
-            Str("Key"),
-            Str("ResourceId"),
-            Choice(
-                "ResourceType",
-                [
-                    "client-vpn-endpoint",
-                    "customer-gateway",
-                    "dedicated-host",
-                    "dhcp-options",
-                    "elastic-ip",
-                    "fleet",
-                    "fpga-image",
-                    "host-reservation",
-                    "image",
-                    "instance",
-                    "internet-gateway",
-                    "launch-template",
-                    "natgateway",
-                    "network-acl",
-                    "network-interface",
-                    "reserved-instances",
-                    "route-table",
-                    "security-group",
-                    "snapshot",
-                    "spot-instances-request",
-                    "subnet",
-                    "transit-gateway",
-                    "transit-gateway-attachment",
-                    "transit-gateway-route-table",
-                    "volume",
-                    "vpc",
-                    "vpc-peering-connection",
-                    "vpn-connection",
-                    "vpn-gateway",
-                ],
-            ),
-            Str("Value"),
         ]
 
 

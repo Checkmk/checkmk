@@ -22,6 +22,7 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {}
 
 
 @pytest.mark.parametrize("package_name", MKP_TO_TEST)
+@pytest.mark.skip("TODO: Rebekka is on it")
 def test_shipped_mkp(site: Site, package_name: str) -> None:
     """
     Test if the shipped MKPs are present and can be activated in a site

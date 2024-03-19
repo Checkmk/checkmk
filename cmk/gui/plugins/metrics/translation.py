@@ -211,11 +211,6 @@ check_metrics["check_mk-vms_system_ios"] = {
     "direct": {"name": "direct_io"},
     "buffered": {"name": "buffered_io"},
 }
-check_metrics["check_mk-kernel"] = {
-    "ctxt": {"name": "context_switches"},
-    "pgmajfault": {"name": "major_page_faults"},
-    "processes": {"name": "process_creations"},
-}
 check_metrics["check_mk-oracle_jobs"] = {
     "duration": {"name": "job_duration"},
 }

@@ -34,12 +34,6 @@ metric_info["load_instant"] = {
     "color": "42/a",
 }
 
-metric_info["context_switches"] = {
-    "title": _l("Context switches"),
-    "unit": "1/s",
-    "color": "#80ff20",
-}
-
 metric_info["processes"] = {
     "title": _l("Processes"),
     "unit": "count",

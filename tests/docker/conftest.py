@@ -56,7 +56,7 @@ def _oracle(
     with _start_oracle(
         client,
         checkmk,
-        tmp_path=tmp_path,
+        root_dir=tmp_path,
         name="oracle",
     ) as container:
         yield container
@@ -109,8 +109,8 @@ def _pull_oracle(docker_client: docker.DockerClient) -> docker.models.containers
     return docker_client.images.pull(resolve_image_alias("IMAGE_ORACLE_DB_23C"))
 
 
-def _install_oracle_plugin(container: docker.models.containers.Container, tmp_path: Path) -> None:
-    plugin_source_path = repo_path() / "agents" / "plugins" / "mk_oracle"
+def _install_oracle_plugin(container: docker.models.containers.Container) -> None:
+    plugin_source_path = str(repo_path() / "agents" / "plugins" / "mk_oracle")
     plugin_target_folder = "/usr/lib/check_mk_agent/plugins"
 
     logger.info("Patching the Oracle plugin: Detect free edition + Use default TNS_ADMIN path...")
@@ -123,12 +123,12 @@ def _install_oracle_plugin(container: docker.models.containers.Container, tmp_pa
         r"TNS_ADMIN=${TNS_ADMIN:-$MK_CONFDIR}",
         r"TNS_ADMIN=${TNS_ADMIN:-${ORACLE_HOME}/network/admin}",
     )
-    plugin_temp_path = tmp_path / "mk_oracle"
-    with open(plugin_temp_path, "w") as plugin_file:
+    plugin_source_path = "/tmp/mk_oracle"
+    with open(plugin_source_path, "w") as plugin_file:
         plugin_file.write(plugin_script)
 
     logger.info('Installing Oracle plugin "%s"...', plugin_source_path)
-    assert copy_to_container(container, plugin_temp_path.as_posix(), plugin_target_folder)
+    assert copy_to_container(container, plugin_source_path, plugin_target_folder)
 
     container.exec_run(
         rf'chmod +x "{plugin_target_folder}/mk_oracle"', user="root", privileged=True
@@ -144,7 +144,7 @@ def _install_oracle_plugin(container: docker.models.containers.Container, tmp_pa
 def _start_oracle(
     client: docker.DockerClient,
     checkmk: docker.models.containers.Container,
-    tmp_path: Path,
+    root_dir: Path,
     name: str = "oracle",
 ) -> Iterator[docker.models.containers.Container]:
     oracle_image = _pull_oracle(client)
@@ -157,8 +157,8 @@ def _start_oracle(
     api_user = "automation"
     api_secret = checkmk_docker_automation_secret(checkmk, site_id, api_user)
 
-    oraenv = Path(tmp_path / db.ORAENV).as_posix()
-    oradata = Path(tmp_path / db.ORADATA).as_posix()
+    oraenv = Path(root_dir / db.ORAENV).as_posix()
+    oradata = Path(root_dir / db.ORADATA).as_posix()
 
     makedirs(oraenv)
     execute(["chmod", "775", oradata])
@@ -222,7 +222,7 @@ def _start_oracle(
 
     checkmk_install_agent_controller_daemon(app=oracle)
 
-    _install_oracle_plugin(container=oracle, tmp_path=tmp_path)
+    _install_oracle_plugin(container=oracle)
 
     checkmk_docker_add_host(
         checkmk=checkmk,

@@ -410,10 +410,6 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "logarithmic", "metric": "threads", "half_value": 400.0, "exponent": 2.0}
-)
-
-perfometer_info.append(
     {
         "type": "linear",
         "segments": ["user", "system", "idle", "nice"],

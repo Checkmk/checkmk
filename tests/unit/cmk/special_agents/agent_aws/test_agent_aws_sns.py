@@ -5,8 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
-from unittest.mock import MagicMock
+from typing import Iterable, Mapping, Protocol, Sequence
 
 import pytest
 
@@ -21,11 +20,11 @@ from cmk.special_agents.agent_aws import (
     SNSSMS,
     SNSSummary,
     SNSTopicsFetcher,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import FakeCloudwatchClient, SNSListSubscriptionsIB, SNSListTopicsIB
-
-SNSSectionsGetter = Callable[[list[str] | None, OverallTags], tuple[SNSSummary, SNSSMS, SNS]]
 
 ALL_TOPICS = {
     "TopicName-0 [eu-west-1]",
@@ -40,7 +39,10 @@ TAGGING_PAGINATOR_RESULT = {
     "ResourceTagMappingList": [
         {
             "ResourceARN": "arn:aws:sns:eu-west-1:710145618630:TopicName-3.fifo",
-            "Tags": [{"Key": "test-tag-key", "Value": "test-tag-value"}],
+            "Tags": [
+                {"Key": "test-tag-key-0", "Value": "test-tag-value-0"},
+                {"Key": "test-tag-key-1", "Value": "test-tag-value-1"},
+            ],
         }
     ],
     "ResponseMetadata": {
@@ -109,8 +111,9 @@ def _create_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int) -> SN
     config.add_single_service_config("sns_names", [])
     config.add_single_service_config("sns_tags", [])
     fake_sns_client = FakeSNSClient(n_std_topics, n_fifo_topics, n_subs)
+    fake_tagging_client = FakeTaggingClient()
     # TODO: FakeSNSClient shoud actually subclass SNSClient.
-    topics_fetcher = SNSTopicsFetcher(fake_sns_client, MagicMock(), "region", config)  # type: ignore[arg-type]
+    topics_fetcher = SNSTopicsFetcher(fake_sns_client, fake_tagging_client, "region", config)  # type: ignore[arg-type]
     return SNSLimits(
         client=fake_sns_client,  # type: ignore[arg-type]
         region="region",
@@ -136,13 +139,29 @@ def test_agent_aws_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int
     assert limits_topics_fifo.amount == n_fifo_topics
 
 
+SNSSectionsOut = tuple[SNSSummary, SNSSMS, SNS]
+
+
+class SNSSections(Protocol):
+    def __call__(
+        self,
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> SNSSectionsOut: ...
+
+
 @pytest.fixture()
-def get_sns_sections() -> SNSSectionsGetter:
+def get_sns_sections() -> SNSSections:
     def _create_sns_sections(
-        names: list[str] | None, tags: OverallTags
-    ) -> tuple[SNSSummary, SNSSMS, SNS]:
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> SNSSectionsOut:
         region = "eu-west-1"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+        )
         config.add_single_service_config("sns_names", names)
         config.add_service_tags("sns_tags", tags)
 
@@ -172,16 +191,16 @@ sns_params = [
         (None, None),
         ["TopicName-1 [eu-west-1]", "TopicName-4.fifo [eu-west-1]"],
     ),
-    (None, ([["test-tag-key"]], [["test-tag-value"]]), ["TopicName-3.fifo [eu-west-1]"]),
-    (None, ([["test-tag-key"]], [["wrong-tag-value"]]), []),
-    (None, ([["wrong-tag-key"]], [["test-tag-value"]]), []),
+    (None, ([["test-tag-key-0"]], [["test-tag-value-0"]]), ["TopicName-3.fifo [eu-west-1]"]),
+    (None, ([["test-tag-key-0"]], [["wrong-tag-value"]]), []),
+    (None, ([["wrong-tag-key"]], [["test-tag-value-0"]]), []),
     (["NONEXISTINGID"], (None, None), []),
 ]
 
 
 @pytest.mark.parametrize("names, tags, found_services_name", sns_params)
 def test_agent_aws_sns(
-    get_sns_sections: SNSSectionsGetter,
+    get_sns_sections: SNSSections,
     names: list[str] | None,
     tags: OverallTags,
     found_services_name: list[str],
@@ -213,16 +232,16 @@ sns_sms_params = [
         (None, None),
         ["eu-west-1"],
     ),
-    (None, ([["test-tag-key"]], [["test-tag-value"]]), ["eu-west-1"]),
-    (None, ([["test-tag-key"]], [["wrong-tag-value"]]), ["eu-west-1"]),
-    (None, ([["wrong-tag-key"]], [["test-tag-value"]]), ["eu-west-1"]),
+    (None, ([["test-tag-key-0"]], [["test-tag-value-0"]]), ["eu-west-1"]),
+    (None, ([["test-tag-key-0"]], [["wrong-tag-value"]]), ["eu-west-1"]),
+    (None, ([["wrong-tag-key"]], [["test-tag-value-0"]]), ["eu-west-1"]),
     (["NONEXISTINGID"], (None, None), ["eu-west-1"]),
 ]
 
 
 @pytest.mark.parametrize("names, tags, found_services_name", sns_sms_params)
 def test_agent_aws_sns_sms(
-    get_sns_sections: SNSSectionsGetter,
+    get_sns_sections: SNSSections,
     names: list[str] | None,
     tags: OverallTags,
     found_services_name: list[str],
@@ -250,3 +269,35 @@ def perform_agent_aws_sns_cloudwatch_test(
         assert len(sns_result.content) == metrics_per_topic * len(found_services_name)
     else:
         assert len(sns_results) == 0
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (
+            TagsImportPatternOption.import_all,
+            {
+                "arn:aws:sns:eu-west-1:710145618630:TopicName-3.fifo": [
+                    "test-tag-key-0",
+                    "test-tag-key-1",
+                ]
+            },
+        ),
+        (r".*-1$", {"arn:aws:sns:eu-west-1:710145618630:TopicName-3.fifo": ["test-tag-key-1"]}),
+        (
+            TagsImportPatternOption.ignore_all,
+            {},
+        ),
+    ],
+)
+def test_agent_aws_sns_summary_filters_tags(
+    get_sns_sections: SNSSections,
+    tag_import: TagsOption,
+    expected_tags: dict[str, Sequence[str]],
+) -> None:
+    sns_summary, _sns_sms, _sns = get_sns_sections(None, (None, None), tag_import)
+    sns_summary_results = sns_summary.run().results
+    sns_summary_result = sns_summary_results[0]
+
+    for result in sns_summary_result.content:
+        assert list(result["TagsForCmkLabels"].keys()) == expected_tags.get(result["ARN"], [])

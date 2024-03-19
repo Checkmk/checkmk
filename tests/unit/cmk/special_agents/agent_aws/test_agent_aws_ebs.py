@@ -5,7 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
 import pytest
 
@@ -18,6 +19,8 @@ from cmk.special_agents.agent_aws import (
     NamingConvention,
     OverallTags,
     ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import (
@@ -65,16 +68,29 @@ class FakeEC2Client:
         }
 
 
-EBSSections = Callable[[object | None, OverallTags], tuple[EC2Summary, EBSLimits, EBSSummary, EBS]]
+EBSectionsOut = tuple[EC2Summary, EBSLimits, EBSSummary, EBS]
+
+
+class EBSSections(Protocol):
+    def __call__(
+        self,
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> EBSectionsOut: ...
 
 
 @pytest.fixture()
 def get_ebs_sections() -> EBSSections:
     def _create_ebs_sections(
-        names: object | None, tags: OverallTags
-    ) -> tuple[EC2Summary, EBSLimits, EBSSummary, EBS]:
+        names: object | None,
+        tags: OverallTags,
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> EBSectionsOut:
         region = "region"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+        )
         config.add_single_service_config("ebs_names", names)
         config.add_service_tags("ebs_tags", tags)
         config.add_single_service_config("ec2_names", None)
@@ -223,3 +239,24 @@ def test_agent_aws_ebs_without_limits(get_ebs_sections: EBSSections) -> None:
         # Y (len results) == 6 (metrics) * X (buckets)
         # But: 5 metrics for all volume types
         assert len(result.content) >= 5
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (TagsImportPatternOption.import_all, ["Key-0", "Key-1", "Key-2"]),
+        (r".*-1$", ["Key-1"]),
+        (TagsImportPatternOption.ignore_all, []),
+    ],
+)
+def test_agent_aws_ebs_filters_tags(
+    get_ebs_sections: EBSSections,
+    tag_import: TagsOption,
+    expected_tags: Sequence[str],
+) -> None:
+    _ec2_summary, _ebs_limits, ebs_summary, _ebs = get_ebs_sections(None, (None, None), tag_import)
+    ebs_summary_results = ebs_summary.run().results
+    ebs_summary_result = ebs_summary_results[0]
+
+    for result in ebs_summary_result.content:
+        assert list(result["TagsForCmkLabels"].keys()) == expected_tags

@@ -5,7 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
+from typing import Protocol
 
 import pytest
 
@@ -16,6 +17,8 @@ from cmk.special_agents.agent_aws import (
     NamingConvention,
     OverallTags,
     ResultDistributor,
+    TagsImportPatternOption,
+    TagsOption,
 )
 
 from .agent_aws_fake_clients import GlacierListTagsInstancesIB, GlacierListVaultsIB
@@ -37,16 +40,29 @@ class FakeGlacierClient:
         return {"Tags": {}}
 
 
-GlacierSections = Callable[[object | None, OverallTags], tuple[GlacierLimits, Glacier]]
+GlacierSections = tuple[GlacierLimits, Glacier]
+
+
+class GetGlacierSections(Protocol):
+    def __call__(
+        self,
+        names: object | None = None,
+        tags: OverallTags = (None, None),
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> GlacierSections: ...
 
 
 @pytest.fixture()
-def get_glacier_sections() -> GlacierSections:
+def get_glacier_sections() -> GetGlacierSections:
     def _create_glacier_sections(
-        names: object | None, tags: OverallTags
-    ) -> tuple[GlacierLimits, Glacier]:
+        names: object | None = None,
+        tags: OverallTags = (None, None),
+        tag_import: TagsOption = TagsImportPatternOption.import_all,
+    ) -> GlacierSections:
         region = "eu-central-1"
-        config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
+        config = AWSConfig(
+            "hostname", [], ([], []), NamingConvention.ip_region_instance, tag_import
+        )
         config.add_single_service_config("glacier_names", names)
         config.add_service_tags("glacier_tags", tags)
 
@@ -82,7 +98,7 @@ glacier_params = [
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
 def test_agent_aws_glacier_limits(
-    get_glacier_sections: GlacierSections,
+    get_glacier_sections: GetGlacierSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     amount_vaults: int,
@@ -104,7 +120,7 @@ def test_agent_aws_glacier_limits(
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
 def test_agent_aws_glacier(
-    get_glacier_sections: GlacierSections,
+    get_glacier_sections: GetGlacierSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     amount_vaults: int,
@@ -127,7 +143,7 @@ def test_agent_aws_glacier(
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
 def test_agent_aws_glacier_without_limits(
-    get_glacier_sections: GlacierSections,
+    get_glacier_sections: GetGlacierSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     amount_vaults: int,
@@ -145,3 +161,30 @@ def test_agent_aws_glacier_without_limits(
         assert "Tagging" in glacier_result.content[0]
     else:
         assert not glacier_results
+
+
+@pytest.mark.parametrize(
+    "tag_import, expected_tags",
+    [
+        (
+            TagsImportPatternOption.import_all,
+            {"VaultName-0": ["Tag-0"], "VaultName-1": ["Tag-0", "Tag-1"]},
+        ),
+        (r".*-1$", {"VaultName-1": ["Tag-1"]}),
+        (TagsImportPatternOption.ignore_all, {}),
+    ],
+)
+def test_agent_aws_glacier_filters_tags(
+    get_glacier_sections: GetGlacierSections,
+    tag_import: TagsOption,
+    expected_tags: dict[str, list[str]],
+) -> None:
+    glacier_limits, glacier = get_glacier_sections(tag_import=tag_import)
+    glacier_limits.run()
+    glacier_results = glacier.run().results
+
+    assert glacier_results
+    for result in glacier_results:
+        assert result.content
+        for row in result.content:
+            assert list(row["TagsForCmkLabels"].keys()) == expected_tags.get(row["VaultName"], [])

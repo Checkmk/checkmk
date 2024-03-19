@@ -71,6 +71,7 @@ class _Proxy(BaseModel):
 
 
 class SiteModel(BaseModel):
+    id: str = OMITTED_FIELD
     url_prefix: str
     replication: Literal["slave"] | None
     proxy: _Proxy | None
@@ -95,6 +96,7 @@ class CentralSiteModel(SiteModel):
     replication: None
     timeout: int = Field(ge=0, default=10)
     proxy: _Proxy | None
+    secret: str = OMITTED_FIELD
 
 
 class RemoteSiteModel(SiteModel):
@@ -103,6 +105,7 @@ class RemoteSiteModel(SiteModel):
     timeout: int = Field(ge=0, default=2)
     status_host: tuple[str, str] | None
     user_sync: USER_SYNC
+    customer: str = OMITTED_FIELD
 
 
 def validate_sites(sites: dict) -> dict[SiteId, CentralSiteModel | RemoteSiteModel]:

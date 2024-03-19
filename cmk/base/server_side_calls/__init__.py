@@ -5,6 +5,7 @@
 
 from ._active_checks import ActiveCheck, ActiveServiceData
 from ._commons import SpecialAgentInfoFunctionResult
+from ._config_processing import PreprocessingResult
 from ._loading import load_active_checks, load_special_agents
 from ._special_agents import SpecialAgent, SpecialAgentCommandLine
 
@@ -16,4 +17,5 @@ __all__ = [
     "SpecialAgent",
     "SpecialAgentCommandLine",
     "SpecialAgentInfoFunctionResult",
+    "PreprocessingResult",
 ]

@@ -169,6 +169,12 @@ class Scenario:
     def set_ruleset(self, varname: str, ruleset: Sequence[RuleSpec[Any]]) -> None:
         self.config[varname] = ruleset
 
+    def set_ruleset_bundle(
+        self, varname: str, ruleset: Mapping[str, Sequence[RuleSpec[Any]]]
+    ) -> None:
+        # active checks, special agents, etc.
+        self.config[varname] = ruleset
+
     def set_autochecks(self, hostname: HostName, entries: Sequence[AutocheckEntry]) -> None:
         self._autochecks_mocker.raw_autochecks[hostname] = entries
 

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._color import MONITORING_STATUS_COLORS
 from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _l
 
@@ -363,66 +362,6 @@ def register_omd_apache_metrics():
 
 register_omd_apache_metrics()
 
-metric_info["cmk_hosts_up"] = {
-    "title": _l("UP hosts"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["ok/up"],
-}
-
-metric_info["cmk_hosts_down"] = {
-    "title": _l("DOWN hosts"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["critical/down"],
-}
-
-metric_info["cmk_hosts_unreachable"] = {
-    "title": _l("Unreachable hosts"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["unknown/unreachable"],
-}
-
-metric_info["cmk_hosts_in_downtime"] = {
-    "title": _l("Hosts in downtime"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["in_downtime"],
-}
-
-metric_info["cmk_services_ok"] = {
-    "title": _l("OK services"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["ok/up"],
-}
-
-metric_info["cmk_services_in_downtime"] = {
-    "title": _l("Services in downtime"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["in_downtime"],
-}
-
-metric_info["cmk_services_on_down_hosts"] = {
-    "title": _l("Services of down hosts"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["on_down_host"],
-}
-
-metric_info["cmk_services_warning"] = {
-    "title": _l("WARNING services"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["warning"],
-}
-
-metric_info["cmk_services_unknown"] = {
-    "title": _l("UNKNOWN services"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["unknown/unreachable"],
-}
-
-metric_info["cmk_services_critical"] = {
-    "title": _l("CRITICAL services"),
-    "unit": "count",
-    "color": MONITORING_STATUS_COLORS["critical/down"],
-}
-
 metric_info["age_oldest"] = {
     "title": _l("Oldest age"),
     "unit": "s",
@@ -607,82 +546,4 @@ graph_info["inbound_and_outbound_messages"] = {
         ("messages_outbound", "stack"),
         ("messages_inbound", "stack"),
     ],
-}
-
-graph_info["cmk_hosts_total"] = {
-    "title": _l("Total number of hosts"),
-    "metrics": [
-        (
-            "cmk_hosts_up,"
-            "cmk_hosts_down,"
-            "cmk_hosts_unreachable,"
-            "cmk_hosts_in_downtime,"
-            "+,+,+#0485d1",
-            "stack",
-            _l("Total"),
-        ),
-    ],
-}
-
-graph_info["cmk_hosts_not_up"] = {
-    "title": _l("Number of problematic hosts"),
-    "metrics": [
-        (
-            "cmk_hosts_down",
-            "stack",
-        ),
-        (
-            "cmk_hosts_unreachable",
-            "stack",
-        ),
-        (
-            "cmk_hosts_in_downtime",
-            "stack",
-        ),
-    ],
-    "omit_zero_metrics": True,
-}
-
-graph_info["cmk_services_total"] = {
-    "title": _l("Total number of services"),
-    "metrics": [
-        (
-            "cmk_services_ok,"
-            "cmk_services_in_downtime,"
-            "cmk_services_on_down_hosts,"
-            "cmk_services_warning,"
-            "cmk_services_unknown,"
-            "cmk_services_critical,"
-            "+,+,+,+,+#0485d1",
-            "stack",
-            _l("Total"),
-        ),
-    ],
-}
-
-graph_info["cmk_services_not_ok"] = {
-    "title": _l("Number of problematic services"),
-    "metrics": [
-        (
-            "cmk_services_in_downtime",
-            "stack",
-        ),
-        (
-            "cmk_services_on_down_hosts",
-            "stack",
-        ),
-        (
-            "cmk_services_warning",
-            "stack",
-        ),
-        (
-            "cmk_services_unknown",
-            "stack",
-        ),
-        (
-            "cmk_services_critical",
-            "stack",
-        ),
-    ],
-    "omit_zero_metrics": True,
 }

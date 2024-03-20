@@ -20,8 +20,6 @@ class TestHost:
 
 
 class TestHosts:
-    known_errors: list[str] = [r"Internal error:"]  # CMK-13996
-
     # Text of popup menus seen on GUI
     popup_menus: list[str] = [
         "Host",
@@ -63,10 +61,9 @@ class TestHosts:
             locator = logged_in_page.main_area.get_text(text=link, first=False)
             expect(locator).to_have_count(1)
 
-        # - check known errors
-        for error in self.known_errors:
-            locator = logged_in_page.main_area.locator(f':has-text("{error}") >> visible=true')
-            expect(locator).to_have_count(0)
+        # - check absence of errors and warnings
+        expect(logged_in_page.main_area.locator("div.error")).to_have_count(0)
+        expect(logged_in_page.main_area.locator("div.warning")).to_have_count(0)
 
         # Cleanup
         self._delete_host(logged_in_page, host)

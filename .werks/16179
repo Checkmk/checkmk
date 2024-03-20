@@ -1,0 +1,15 @@
+Title: size_trend: Treat negative free space as 0 in all cases
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1710929049
+Edition: cre
+Level: 1
+Version: 2.2.0p24
+
+Before the version 2.2.0p21, 'Time left until full' was reported to be 0 in case of
+devices reporting negative free space.
+With werk 16330, we stopped reporting the metric in case of very small size changes
+because it lead to infinite values. With this change the behavior was unintentionally
+also changed for negative free space values.
+This werk restores the same functionality in case of negative free space.

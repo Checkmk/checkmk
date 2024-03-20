@@ -568,52 +568,10 @@ metric_info["fw_connections_passthrough"] = {
     "color": "34/a",
 }
 
-metric_info["average_message_rate"] = {
-    "title": _("Incoming messages"),
-    "unit": "1/s",
-    "color": "23/a",
-}
-
-metric_info["average_drop_rate"] = {
-    "title": _("Dropped messages"),
-    "unit": "1/s",
-    "color": "21/b",
-}
-
 metric_info["average_sync_time"] = {
     "title": _("Average slave sync time"),
     "unit": "s",
     "color": "46/a",
-}
-
-metric_info["average_rule_trie_rate"] = {
-    "title": _("Rule tries"),
-    "unit": "1/s",
-    "color": "33/a",
-}
-
-metric_info["average_rule_hit_rate"] = {
-    "title": _("Rule hits"),
-    "unit": "1/s",
-    "color": "34/b",
-}
-
-metric_info["average_event_rate"] = {
-    "title": _("Event creations"),
-    "unit": "1/s",
-    "color": "31/a",
-}
-
-metric_info["average_connect_rate"] = {
-    "title": _("Client connects"),
-    "unit": "1/s",
-    "color": "15/a",
-}
-
-metric_info["average_request_time"] = {
-    "title": _("Average request response time"),
-    "unit": "s",
-    "color": "14/a",
 }
 
 metric_info["average_processing_time"] = {

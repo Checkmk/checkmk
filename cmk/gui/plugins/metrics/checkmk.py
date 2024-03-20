@@ -183,14 +183,6 @@ metric_info["security_updates"] = {
     "color": "#ff0030",
 }
 
-# Note: current can be any phase, not only open, but also
-# delayed, couting or ack.
-metric_info["num_open_events"] = {
-    "title": _l("Current events"),
-    "unit": "count",
-    "color": "26/b",
-}
-
 metric_info["num_high_alerts"] = {
     "title": _l("High alerts"),
     "unit": "count",
@@ -377,22 +369,6 @@ graph_info["livestatus_connects_and_requests"] = {
     "metrics": [
         ("livestatus_request_rate", "line"),
         ("livestatus_connect_rate", "line"),
-    ],
-}
-
-graph_info["message_processing"] = {
-    "title": _l("Message processing"),
-    "metrics": [
-        ("average_message_rate", "line"),
-        ("average_drop_rate", "line"),
-    ],
-}
-
-graph_info["rule_efficiency"] = {
-    "title": _l("Rule efficiency"),
-    "metrics": [
-        ("average_rule_trie_rate", "line"),
-        ("average_rule_hit_rate", "line"),
     ],
 }
 

@@ -505,7 +505,8 @@ def code_samples(  # type: ignore[no-untyped-def]
                         example.label,
                     ),
                 )
-                .strip(),
+                .strip()
+                .rstrip("\\"),
             }
         )
     return result

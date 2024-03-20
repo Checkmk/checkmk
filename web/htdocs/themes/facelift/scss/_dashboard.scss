@@ -47,6 +47,10 @@ div.dashlet {
     &.background {
       background-color: $dashlet-inner-bg-color;
     }
+
+    div.dashlet_content_wrapper {
+      height: 100%;
+    }
   }
 
   iframe {

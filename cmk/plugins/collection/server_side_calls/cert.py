@@ -152,7 +152,7 @@ def _validity_args(validity: Certificate) -> Iterator[str]:
         yield from _remaining_args(remaining)
     if (maximum := validity.maximum) is not None:
         yield "--max-validity"
-        yield f"{int(maximum / _DAY)}"
+        yield f"{round(maximum / _DAY)}"
     if validity.self_signed:
         yield "--allow-self-signed"
 
@@ -161,8 +161,8 @@ def _remaining_args(remaining: FloatLevels) -> Iterator[str]:
     match remaining:
         case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--not-after"
-            yield str(warn / _DAY)
-            yield str(crit / _DAY)
+            yield f"{round(warn / _DAY)}"
+            yield f"{round(crit / _DAY)}"
 
 
 def _cert_details_args(cert_details: CertificateDetails) -> Iterator[str]:

@@ -533,7 +533,8 @@ def code_samples(  # type:ignore[no-untyped-def]
                     request_schema=schema,
                     request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
                 )
-                .strip(),
+                .strip()
+                .rstrip("\\"),
             }
         )
     return result

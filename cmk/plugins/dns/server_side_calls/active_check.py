@@ -48,7 +48,7 @@ def commands_function(
         command_arguments.append("-L")
 
     for address in params.expected_addresses_list:
-        command_arguments += ["-a", address]
+        command_arguments += ["-a", replace_macros(address, host_config.macros)]
 
     if params.expected_authority:
         command_arguments.append("-A")

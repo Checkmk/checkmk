@@ -56,7 +56,7 @@ from cmk.gui.openapi.endpoints.downtime.request_schemas import (
 from cmk.gui.openapi.endpoints.downtime.response_schemas import DowntimeCollection, DowntimeObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.specification import LIVESTATUS_GENERIC_EXPLANATION
+from cmk.gui.openapi.spec.utils import LIVESTATUS_GENERIC_EXPLANATION
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 

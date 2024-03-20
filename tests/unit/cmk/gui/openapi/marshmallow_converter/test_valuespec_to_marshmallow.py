@@ -12,7 +12,7 @@ import cmk.utils.paths
 
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.openapi.marshmallow_converter.valuespec_to_marshmallow import valuespec_to_marshmallow
-from cmk.gui.openapi.spec_generator import main as spec_generate
+from cmk.gui.openapi.spec.spec_generator import main as spec_generate
 from cmk.gui.session import UserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.config_domain_name import config_variable_registry

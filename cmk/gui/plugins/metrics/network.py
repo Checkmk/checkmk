@@ -460,84 +460,6 @@ metric_info["multicast_packets"] = {
     "color": "14/a",
 }
 
-metric_info["tcp_listen"] = {
-    "title": _("State %s") % "LISTEN",
-    "unit": "count",
-    "color": "44/a",
-}
-
-metric_info["tcp_established"] = {
-    "title": _("State %s") % "ESTABLISHED",
-    "unit": "count",
-    "color": "#00f040",
-}
-
-metric_info["tcp_syn_sent"] = {
-    "title": _("State %s") % "SYN_SENT",
-    "unit": "count",
-    "color": "#a00000",
-}
-
-metric_info["tcp_syn_recv"] = {
-    "title": _("State %s") % "SYN_RECV",
-    "unit": "count",
-    "color": "#ff4000",
-}
-
-metric_info["tcp_last_ack"] = {
-    "title": _("State %s") % "LAST_ACK",
-    "unit": "count",
-    "color": "#c060ff",
-}
-
-metric_info["tcp_close_wait"] = {
-    "title": _("State %s") % "CLOSE_WAIT",
-    "unit": "count",
-    "color": "#f000f0",
-}
-
-metric_info["tcp_time_wait"] = {
-    "title": _("State %s") % "TIME_WAIT",
-    "unit": "count",
-    "color": "#00b0b0",
-}
-
-metric_info["tcp_closed"] = {
-    "title": _("State %s") % "CLOSED",
-    "unit": "count",
-    "color": "#ffc000",
-}
-
-metric_info["tcp_closing"] = {
-    "title": _("State %s") % "CLOSING",
-    "unit": "count",
-    "color": "#ffc080",
-}
-
-metric_info["tcp_fin_wait1"] = {
-    "title": _("State %s") % "FIN_WAIT1",
-    "unit": "count",
-    "color": "#cccccc",
-}
-
-metric_info["tcp_fin_wait2"] = {
-    "title": _("State %s") % "FIN_WAIT2",
-    "unit": "count",
-    "color": "#888888",
-}
-
-metric_info["tcp_bound"] = {
-    "title": _("State %s") % "BOUND",
-    "unit": "count",
-    "color": "#4060a0",
-}
-
-metric_info["tcp_idle"] = {
-    "title": _("State %s") % "IDLE",
-    "unit": "count",
-    "color": "41/a",
-}
-
 metric_info["fw_connections_active"] = {
     "title": _("Active connections"),
     "unit": "count",
@@ -1711,27 +1633,6 @@ graph_info["number_of_total_and_running_sessions"] = {
         ("running_sessions", "line"),
         ("total_sessions", "line"),
     ],
-}
-
-graph_info["tcp_connection_states"] = {
-    "title": _("TCP Connection States"),
-    "metrics": [
-        ("tcp_listen", "stack"),
-        ("tcp_syn_sent", "stack"),
-        ("tcp_syn_recv", "stack"),
-        ("tcp_established", "stack"),
-        ("tcp_time_wait", "stack"),
-        ("tcp_last_ack", "stack"),
-        ("tcp_close_wait", "stack"),
-        ("tcp_closed", "stack"),
-        ("tcp_closing", "stack"),
-        ("tcp_fin_wait1", "stack"),
-        ("tcp_fin_wait2", "stack"),
-        ("tcp_bound", "stack"),
-        ("tcp_idle", "stack"),
-    ],
-    "omit_zero_metrics": True,
-    "optional_metrics": ["tcp_bound", "tcp_idle"],
 }
 
 

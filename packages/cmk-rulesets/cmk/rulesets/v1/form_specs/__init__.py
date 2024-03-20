@@ -8,6 +8,7 @@ from ._base import DefaultValue, FormSpec, InputHint, Prefill
 from ._basic import (
     BooleanChoice,
     DataSize,
+    FieldSize,
     FileUpload,
     FixedValue,
     Float,
@@ -77,6 +78,7 @@ __all__ = [
     "DefaultValue",
     "DictElement",
     "Dictionary",
+    "FieldSize",
     "FileUpload",
     "FixedValue",
     "Float",

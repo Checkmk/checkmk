@@ -49,7 +49,7 @@ def test_convert_integer(
 @pytest.mark.parametrize(
     ["vs_instance", "expected_vs_instance"],
     [
-        pytest.param(definitions.TextInput(default_value="17"), None),
+        pytest.param(definitions.TextInput(default_value="17", size=35), None),
         pytest.param(definitions.Checkbox(default_value=False), None),
         pytest.param(definitions.Float(default_value=17.17), None),
         pytest.param(definitions.Integer(default_value=17), None),
@@ -70,7 +70,7 @@ def test_convert_integer(
                 # The setting of no_elements_text is not supported!
                 no_preselect_title="Bitte auswählen.",  # necessary
                 choices=[
-                    ("first", "The first choice.", definitions.TextInput()),
+                    ("first", "The first choice.", definitions.TextInput(size=35)),
                     ("second", "The second choice.", definitions.Integer()),
                     ("third", "The third choice.", definitions.Float()),
                 ],

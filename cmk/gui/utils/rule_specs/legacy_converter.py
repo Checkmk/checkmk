@@ -783,6 +783,14 @@ def _convert_to_legacy_text_input(
         case ruleset_api_v1.form_specs.InputHint():
             converted_kwargs["placeholder"] = to_convert.prefill.value
 
+    match to_convert.field_size:
+        case ruleset_api_v1.form_specs.FieldSize.SMALL:
+            converted_kwargs["size"] = 7
+        case ruleset_api_v1.form_specs.FieldSize.MEDIUM:
+            converted_kwargs["size"] = 35
+        case ruleset_api_v1.form_specs.FieldSize.LARGE:
+            converted_kwargs["size"] = 100
+
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
             to_convert.custom_validate, localizer

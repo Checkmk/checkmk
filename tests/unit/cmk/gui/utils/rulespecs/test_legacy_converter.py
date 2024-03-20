@@ -240,14 +240,36 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.String(),
-            legacy_valuespecs.TextInput(placeholder=""),
+            legacy_valuespecs.TextInput(placeholder="", size=35),
             id="minimal TextInput",
+        ),
+        pytest.param(
+            api_v1.form_specs.String(
+                field_size=api_v1.form_specs.FieldSize.SMALL,
+            ),
+            legacy_valuespecs.TextInput(placeholder="", size=7),
+            id="small TextInput",
+        ),
+        pytest.param(
+            api_v1.form_specs.String(
+                field_size=api_v1.form_specs.FieldSize.MEDIUM,
+            ),
+            legacy_valuespecs.TextInput(placeholder="", size=35),
+            id="medium size TextInput",
+        ),
+        pytest.param(
+            api_v1.form_specs.String(
+                field_size=api_v1.form_specs.FieldSize.LARGE,
+            ),
+            legacy_valuespecs.TextInput(placeholder="", size=100),
+            id="large size TextInput",
         ),
         pytest.param(
             api_v1.form_specs.String(
                 custom_validate=(api_v1.form_specs.validators.LengthInRange(min_value=1),)
             ),
             legacy_valuespecs.TextInput(
+                size=35,
                 placeholder="",
                 allow_empty=False,
                 empty_text=_("The minimum allowed length is 1."),
@@ -282,6 +304,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 validate=_legacy_custom_text_validate,
                 allow_empty=False,
                 empty_text=_("Fill this"),
+                size=35,
             ),
             id="TextInput",
         ),
@@ -389,7 +412,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 prefill=api_v1.form_specs.DefaultValue("first"),
             ),
             legacy_valuespecs.CascadingDropdown(
-                choices=[("first", _("Spec title"), legacy_valuespecs.TextInput(placeholder=""))],
+                choices=[
+                    ("first", _("Spec title"), legacy_valuespecs.TextInput(placeholder="", size=35))
+                ],
                 title=_("parent title"),
                 help=_("parent help"),
                 label=_("parent label"),
@@ -429,7 +454,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             legacy_valuespecs.ListOf(
                 valuespec=legacy_valuespecs.Dictionary(
                     elements=[
-                        ("key1", legacy_valuespecs.TextInput(placeholder="")),
+                        ("key1", legacy_valuespecs.TextInput(placeholder="", size=35)),
                         ("key2", legacy_valuespecs.Integer(unit="km")),
                     ]
                 ),
@@ -1103,6 +1128,7 @@ def test_convert_to_legacy_rulespec_group(
                 group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
                 item_spec=lambda: legacy_valuespecs.TextInput(
+                    size=35,
                     title=_("item title"),
                     placeholder="",
                     allow_empty=False,
@@ -1134,6 +1160,7 @@ def test_convert_to_legacy_rulespec_group(
                 group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
                 item_spec=lambda: legacy_valuespecs.TextInput(
+                    size=35,
                     title=_("item title"),
                     placeholder="",
                     allow_empty=False,

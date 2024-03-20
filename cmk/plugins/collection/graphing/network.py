@@ -48,18 +48,25 @@ graph_db_connections = graphs.Graph(
     ],
 )
 
-metric_busy_workers = metrics.Metric(
-    name="busy_workers",
-    title=Title("Busy workers"),
-    unit=UNIT_NUMBER,
-    color=metrics.Color.LIGHT_GRAY,
-)
-
 metric_idle_workers = metrics.Metric(
     name="idle_workers",
     title=Title("Idle workers"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.LIGHT_BLUE,
+    color=metrics.Color.GREEN,
+)
+
+metric_idle_servers = metrics.Metric(
+    name="idle_servers",
+    title=Title("Idle servers"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.BLUE,
+)
+
+metric_busy_workers = metrics.Metric(
+    name="busy_workers",
+    title=Title("Busy workers"),
+    unit=UNIT_NUMBER,
+    color=metrics.Color.BLUE,
 )
 
 metric_busy_servers = metrics.Metric(
@@ -67,13 +74,6 @@ metric_busy_servers = metrics.Metric(
     title=Title("Busy servers"),
     unit=UNIT_NUMBER,
     color=metrics.Color.LIGHT_GRAY,
-)
-
-metric_idle_servers = metrics.Metric(
-    name="idle_servers",
-    title=Title("Idle servers"),
-    unit=UNIT_NUMBER,
-    color=metrics.Color.LIGHT_BLUE,
 )
 
 graph_busy_and_idle_workers = graphs.Graph(
@@ -105,7 +105,7 @@ metric_total_slots = metrics.Metric(
     name="total_slots",
     title=Title("Total slots"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.DARK_GREEN,
+    color=metrics.Color.BROWN,
 )
 
 graph_total_and_open_slots = graphs.Graph(
@@ -119,28 +119,28 @@ metric_connections = metrics.Metric(
     name="connections",
     title=Title("Connections"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.LIGHT_GRAY,
+    color=metrics.Color.BROWN,
 )
 
 metric_connections_async_writing = metrics.Metric(
     name="connections_async_writing",
     title=Title("Asynchronous writing connections"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.ORANGE,
+    color=metrics.Color.GREEN,
 )
 
 metric_connections_async_keepalive = metrics.Metric(
     name="connections_async_keepalive",
     title=Title("Asynchronous keep alive connections"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.YELLOW,
+    color=metrics.Color.BLUE,
 )
 
 metric_connections_async_closing = metrics.Metric(
     name="connections_async_closing",
     title=Title("Asynchronous closing connections"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.LIGHT_RED,
+    color=metrics.Color.PURPLE,
 )
 
 graph_connections = graphs.Graph(

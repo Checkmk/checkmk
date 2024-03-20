@@ -32,7 +32,7 @@ metric_cmk_hosts_in_downtime = metrics.Metric(
     name="cmk_hosts_in_downtime",
     title=Title("Hosts in downtime"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.CYAN,
+    color=metrics.Color.BLUE,
 )
 
 metric_cmk_services_ok = metrics.Metric(
@@ -46,14 +46,14 @@ metric_cmk_services_in_downtime = metrics.Metric(
     name="cmk_services_in_downtime",
     title=Title("Services in downtime"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.CYAN,
+    color=metrics.Color.GREEN,
 )
 
 metric_cmk_services_on_down_hosts = metrics.Metric(
     name="cmk_services_on_down_hosts",
     title=Title("Services of down hosts"),
     unit=UNIT_NUMBER,
-    color=metrics.Color.DARK_CYAN,
+    color=metrics.Color.BLUE,
 )
 
 metric_cmk_services_warning = metrics.Metric(
@@ -83,7 +83,7 @@ graph_cmk_hosts_total = graphs.Graph(
     compound_lines=[
         metrics.Sum(
             Title("Total"),
-            metrics.Color.BLUE,
+            metrics.Color.BROWN,
             [
                 "cmk_hosts_up",
                 "cmk_hosts_unreachable",

@@ -1189,26 +1189,6 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "logarithmic",
-                "metric": "host_check_rate",
-                "half_value": 50,
-                "exponent": 5,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "service_check_rate",
-                "half_value": 200,
-                "exponent": 5,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
                 "metric": "normal_updates",
                 "half_value": 10,
                 "exponent": 2,

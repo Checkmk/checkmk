@@ -141,14 +141,13 @@ def size_trend(
             ),
         )
 
-    if mb_in_range > 0 and not math.isinf(value := (size_mb - used_mb) / mb_in_range):
+    # CMK-13217: size_mb - used_mb < 0: the device reported nonsense, resulting in a crash:
+    # ValueError("Cannot render negative timespan")
+    free_space = max(size_mb - used_mb, 0)
+
+    if mb_in_range > 0 and not math.isinf(value := free_space / mb_in_range):
         yield from check_levels(
-            # CMK-13217: size_mb - used_mb < 0: the device reported nonsense, resulting in a crash:
-            # ValueError("Cannot render negative timespan")
-            max(
-                value * range_sec / SEC_PER_H,
-                0,
-            ),
+            value * range_sec / SEC_PER_H,
             levels_lower=levels.get("trend_timeleft"),
             metric_name="trend_hoursleft" if "trend_showtimeleft" in levels else None,
             render_func=lambda x: render.timespan(x * SEC_PER_H),

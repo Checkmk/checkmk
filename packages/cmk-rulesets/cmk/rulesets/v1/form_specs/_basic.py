@@ -325,6 +325,12 @@ class ServiceState(FormSpec[Literal[0, 1, 2, 3]]):
     """Value to pre-populate the form field with."""
 
 
+class FieldSize(Enum):
+    SMALL = auto()
+    MEDIUM = auto()
+    LARGE = auto()
+
+
 @dataclass(frozen=True, kw_only=True)
 class String(FormSpec[str]):
     """
@@ -345,6 +351,8 @@ class String(FormSpec[str]):
     Replacing the macros in the plugin is a responsibility of the plugin developer."""
     prefill: Prefill[str] = InputHint("")
     """Value to pre-populate the form field with."""
+    field_size: FieldSize = FieldSize.MEDIUM
+    """Size setting of the input field."""
 
 
 class TimeMagnitude(Enum):

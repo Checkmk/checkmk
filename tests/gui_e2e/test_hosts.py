@@ -3,9 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+from urllib.parse import quote_plus
+
 from faker import Faker
+from playwright.sync_api import expect
 
 from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES_MS
 
 
 class TestHost:
@@ -15,6 +20,59 @@ class TestHost:
 
 
 class TestHosts:
+    known_errors: list[str] = [r"Internal error:"]  # CMK-13996
+
+    # Text of popup menus seen on GUI
+    popup_menus: list[str] = [
+        "Host",
+        "Display",
+        "Help",
+    ]
+
+    # Text of links seen on GUI
+    links: list[str] = [
+        r"Save & run service discovery",
+        r"Save & view folder",
+        r"Save & run connection tests",
+        # TODO: Find a way to select the following elements
+        # r"Update site DNS cache",
+        # r"Main",
+    ]
+
+    def test_navigate_to_host_properties(self, logged_in_page: PPage) -> None:
+        # Setup
+        host = TestHost()
+        self._create_host(logged_in_page, host)
+        # Test-body
+        logged_in_page.main_menu.setup_hosts.click()
+        # - to host-properties
+        url_pattern: str = quote_plus(f"wato.py?folder=&host={host.name}&mode=edit_host")
+        logged_in_page.main_area.get_text(host.name).click()
+        # - wait until the whole page is loaded
+        logged_in_page.page.wait_for_url(
+            url=re.compile(url_pattern), wait_until="load", timeout=TIMEOUT_ACTIVATE_CHANGES_MS
+        )
+
+        # - sanity checks
+        for link in self.links:
+            locator = logged_in_page.main_area.get_suggestion(suggestion=link)
+            expect(locator).to_be_visible()
+            expect(locator).to_have_count(1)
+
+        for popup_menu_name in self.popup_menus:
+            locator = logged_in_page.main_area.locator(
+                f"#popup_trigger_menu_{popup_menu_name.lower()}"
+            )
+            expect(locator).to_have_count(1)
+
+        # - check known errors
+        for error in self.known_errors:
+            locator = logged_in_page.main_area.locator(f':has-text("{error}") >> visible=true')
+            expect(locator).to_have_count(0)
+
+        # Cleanup
+        self._delete_host(logged_in_page, host)
+
     def test_create_and_delete_a_host(self, logged_in_page: PPage, is_chromium: bool) -> None:
         """Creates a host and deletes it afterwards. Calling order of static methods
         is therefore essential!

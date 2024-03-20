@@ -11,9 +11,7 @@ get_bazel_files() {
     # shellcheck disable=SC2086
     find $REPO_PATH \
         -type f \
-        \! -path "${REPO_PATH}/omd/build/*" \
-        -not -path '*/_*' \
-        -a \
+        \! -path "${REPO_PATH}/*/build/*" -a \
         \( -name '*.bzl' \
         -o -name '*.sky' \
         -o -name BUILD.bazel \

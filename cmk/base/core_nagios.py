@@ -1249,7 +1249,7 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")
     output.write("from cmk.discover_plugins import PluginLocation\n")
-    output.write("from cmk.utils.log import console\n")
+    output.write("import cmk.base.obsolete_output as out\n")
     output.write("from cmk.base.api.agent_based.register import register_plugin_by_type\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?

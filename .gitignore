@@ -100,3 +100,7 @@ tests/.hypothesis/
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
+
+# gui-e2e tests: playwright specific ignores
+test-results/
+*.png

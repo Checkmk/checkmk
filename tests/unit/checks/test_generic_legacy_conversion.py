@@ -666,7 +666,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "fortigate_node.sessions",
         "fortigate_sessions",
         "fortigate_sessions_base",
-        "fortigate_signatures",
         "fortigate_sslvpn",
         "fortinet_controller_aps",
         "fortisandbox_cpu_util",

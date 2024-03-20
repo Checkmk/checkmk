@@ -8,22 +8,34 @@
 
 # signature ages (defaults are 1/2 days)
 
+import re
 import time
+from typing import Any
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition, regex
-from cmk.base.config import check_info
-
-from cmk.agent_based.v2 import render, SNMPTree
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    LevelsT,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 
+Section = list[tuple[str, str, str | None, float | None]]
 
-def parse_fortigate_signatures(string_table):
+
+def parse_fortigate_signatures(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
 
     def parse_version(ver):
         # sample: 27.00768(2015-09-01 15:10)
-        ver_regex = regex(r"([0-9.]*)\(([0-9-: ]*)\)")
+        ver_regex = re.compile(r"([0-9.]*)\(([0-9-: ]*)\)")
         match = ver_regex.match(ver)
         if match is None:
             return None, None
@@ -47,34 +59,47 @@ def parse_fortigate_signatures(string_table):
     return parsed
 
 
-def inventory_fortigate_signatures(parsed):
-    if parsed:
-        return [(None, {})]
-    return []
+def discover_fortigate_signatures(section: Section) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_fortigate_signatures(_no_item, params, parsed):
-    for key, title, version, age in parsed:
+def check_fortigate_signatures(params: dict[str, Any], section: Section) -> CheckResult:
+    for key, title, version, age in section:
         if age is None:
             continue
-        yield check_levels(
+        # TODO: remove this levels migration logic by migrating the check parameters to formspecs
+        levels_upper: LevelsT[int] | None = None
+        if key in params:
+            _params = params[key]
+            if _params[0] is None:
+                levels_upper = ("no_levels", None)
+            else:
+                levels_upper = ("fixed", _params)
+
+        yield from check_levels(
             age,
-            None,
-            params.get(key),
-            human_readable_func=render.timespan,
-            infoname=f"[{version}] {title} age",
+            levels_upper=levels_upper,
+            render_func=render.timespan,
+            label=f"[{version}] {title} age",
         )
 
 
-check_info["fortigate_signatures"] = LegacyCheckDefinition(
+snmp_section_fortigate_signatures = SimpleSNMPSection(
+    name="fortigate_signatures",
+    parse_function=parse_fortigate_signatures,
     detect=DETECT_FORTIGATE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.4.2",
         oids=["1", "2", "3", "4"],
     ),
-    parse_function=parse_fortigate_signatures,
+)
+
+
+check_plugin_fortigate_signatures = CheckPlugin(
+    name="fortigate_signatures",
     service_name="Signatures",
-    discovery_function=inventory_fortigate_signatures,
+    discovery_function=discover_fortigate_signatures,
     check_function=check_fortigate_signatures,
     check_ruleset_name="fortinet_signatures",
     check_default_parameters={

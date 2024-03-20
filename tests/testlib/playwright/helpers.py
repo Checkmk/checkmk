@@ -50,9 +50,13 @@ class LocatorHelper(ABC):
     def get_suggestion(self, suggestion: str) -> Locator:
         return self.locator("#suggestions .suggestion").filter(has_text=re.compile(suggestion))
 
-    def get_text(self, text: str, is_visible: bool = True) -> Locator:
+    def get_text(
+        self, text: str, is_visible: bool = True, exact: bool = True, first: bool = True
+    ) -> Locator:
         is_visible_str = ">> visible=true" if is_visible else ""
-        return self.locator(f"text={text} {is_visible_str}").first
+        wrap_text = f"'{text}'" if exact else text
+        locator = self.locator(f"text={wrap_text} {is_visible_str}")
+        return locator.first if first else locator
 
     def get_element_including_texts(self, element_id: str, texts: list[str]) -> Locator:
         has_text_str = "".join([f":has-text('{t}')" for t in texts])
@@ -223,7 +227,7 @@ class MainArea(LocatorHelper):
 
         If it fails, the current test site should be cleaned up.
         """
-        expect(self.get_text("No entries")).to_be_visible()
+        expect(self.get_text("No entries.")).to_be_visible()
 
     def locator_via_xpath(self, element: str, text: str) -> Locator:
         """Return a locator defined by element and text via xpath."""

@@ -34,9 +34,14 @@ class TestHosts:
         r"Save & run service discovery",
         r"Save & view folder",
         r"Save & run connection tests",
-        # TODO: Find a way to select the following elements
-        # r"Update site DNS cache",
-        # r"Main",
+        r"Update site DNS cache",
+    ]
+
+    properties: list[str] = [
+        r"Monitoring agents",
+        r"Custom attributes",
+        r"Management board",
+        r"Creation / Locking",
     ]
 
     def test_navigate_to_host_properties(self, logged_in_page: PPage) -> None:
@@ -54,15 +59,8 @@ class TestHosts:
         )
 
         # - sanity checks
-        for link in self.links:
-            locator = logged_in_page.main_area.get_suggestion(suggestion=link)
-            expect(locator).to_be_visible()
-            expect(locator).to_have_count(1)
-
-        for popup_menu_name in self.popup_menus:
-            locator = logged_in_page.main_area.locator(
-                f"#popup_trigger_menu_{popup_menu_name.lower()}"
-            )
+        for link in self.popup_menus + self.links + self.properties:
+            locator = logged_in_page.main_area.get_text(text=link, first=False)
             expect(locator).to_have_count(1)
 
         # - check known errors

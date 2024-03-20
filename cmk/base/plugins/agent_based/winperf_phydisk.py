@@ -5,11 +5,198 @@
 import time
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, unique
-from typing import Any, Final, Mapping, MutableMapping, NamedTuple, Sequence
+from typing import Any, cast, Final, Mapping, MutableMapping, NamedTuple, Sequence
 
 from cmk.plugins.lib import diskstat
 
-from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
+from .agent_based_api.v1 import (
+    get_value_store,
+    GetRateError,
+    IgnoreResultsError,
+    register,
+    type_defs,
+)
+
+
+class GetRateErrorEmpty(GetRateError):
+    """The exception raised by :func:`.get_rate`.
+    Indicates empty store.
+        You may use this exception to improve logging.
+    """
+
+
+class GetRateErrorTime(GetRateError):
+    """The exception raised by :func:`.get_rate`.
+    Indicates negative time
+        You may use this exception to improve logging.
+    """
+
+
+class GetRateErrorCounter(GetRateError):
+    """The exception raised by :func:`.get_rate`.
+    Indicates negative counter
+        You may use this exception to improve logging.
+    """
+
+
+def update_value_and_calc_rate(  # type: ignore[misc]
+    value_store: MutableMapping[str, Any],
+    key: str,
+    *,
+    timestamp: float,
+    value: float,
+    raise_overflow: bool = False,
+) -> float:
+    """
+    1. Update value store.
+    2. Calculate rate based on current value and time and last value and time
+
+    Basically its replicates behavior of the get_rate function but uses more precise Exceptions to
+    handle abnormal situation.
+
+    Args:
+
+        value_store:     The mapping that holds the last value.
+                         Usually this will be the value store provided by the APIs
+                         :func:`get_value_store`.
+        key:             Unique ID for storing the time/value pair until the next check
+        timestamp:       Timestamp of new value
+        value:           The new value
+        raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+
+    This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
+    provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
+    previous function call (xₙ₋₁, tₙ₋₁):
+
+        rₙ = (xₙ - xₙ₋₁) / (tₙ - tₙ₋₁)
+
+    Note that the function simply computes the quotient of the values and times given,
+    regardless of any unit. You might as well pass something different than the time.
+    However, this function is written with the use case of passing timestamps in mind.
+
+    A :class:`GetRateError` will be raised if one of the following happens:
+
+        * the function is called for the first time
+        * the time has not changed
+        * the rate is negative and `raise_overflow` is set to True (useful
+          for instance when dealing with counters)
+
+    In general there is no need to catch a :class:`.GetRateError`, as it
+    inherits :class:`.IgnoreResultsError`.
+
+    Returns:
+
+        The computed rate
+
+    """
+    try:
+        data_point = DataPoint(timestamp, value)
+        prev = update_store(value_store, key, data_point)  # type: ignore[misc]
+        return calc_rate(prev, new=data_point, raise_overflow=raise_overflow)
+    except GetRateError as e:
+        raise type(e)(f"At {key!r}: {str(e)}")
+
+
+class DataPoint(NamedTuple):
+    """represents a timestamp/value pair"""
+
+    timestamp: float
+    value: float
+
+
+# TODO(sk): typing must be improved i.e. value_store must be statically typed
+def update_store(  # type: ignore[misc]
+    value_store: MutableMapping[str, Any],
+    key: str,
+    data_point: DataPoint,
+) -> DataPoint:
+    """
+    Update value store.
+
+    Args:
+
+        value_store:     The mapping that holds the last value.
+                         Usually this will be the value store provided by the APIs
+                         :func:`get_value_store`.
+        key:             Unique ID for storing the time/value pair until the next check
+        data_point:      Timestamp + value
+
+    A `GetRateErrorEmpty` will be raised if the function is called for the first time
+
+    Returns:
+
+        The last pair (time, val) from the store
+
+    """
+    # Cast to avoid lots of mypy suppressions. It better reflects the truth anyway.
+    value_store = cast(MutableMapping[str, object], value_store)
+
+    last_state = value_store.get(key)
+    value_store[key] = (data_point.timestamp, data_point.value)
+    match last_state:
+        case (
+            float() | int() as last_time,
+            float() | int() as last_value,
+        ):
+            return DataPoint(float(last_time), float(last_value))
+        case _other:
+            raise GetRateErrorEmpty("Initialized")
+
+
+def calc_rate(
+    prev: DataPoint,
+    *,
+    new: DataPoint,
+    raise_overflow: bool = False,
+) -> float:
+    """
+    Calculate rate based on two data points, last one and new one.
+
+    Args:
+
+        prev:      timestamp + value from update_store
+        new:       current timestamp + value
+        raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+
+    This function returns the rate of a measurement rₙ as the quotient of the `value` and `time`
+    provided to the current function call (xₙ, tₙ) and the `value` and `time` provided to the
+    previous function call (xₙ₋₁, tₙ₋₁):
+
+        rₙ = (xₙ - xₙ₋₁) / (tₙ - tₙ₋₁)
+
+    Note that the function simply computes the quotient of the values and times given,
+    regardless of any unit. You might as well pass something different than the time.
+    However, this function is written with the use case of passing timestamps in mind.
+
+    A :class:`GetRateError` will be raised if one of the following happens:
+
+        * the time has not changed -> raise GetRateErrorTime
+        * the rate is negative and `raise_overflow` is set to True (useful
+          for instance when dealing with counters) -> raise GetRateErrorCounter
+
+    In general there is no need to catch a :class:`.GetRateError`, as it
+    inherits :class:`.IgnoreResultsError`.
+
+    Returns:
+
+        The computed rate
+
+    """
+    prev_time, prev_value = prev
+    new_time, new_value = new
+    if new_time <= prev_time:
+        raise GetRateErrorTime(f"No time difference: {new_time} <= {prev_time}")
+
+    rate = (new_value - prev_value) / (new_time - prev_time)
+    if raise_overflow and rate < 0:
+        # Do not try to handle wrapped counters. We do not know
+        # whether they are 32 or 64 bit. It also could happen counter
+        # reset (reboot, etc.). Better is to leave this value undefined
+        # and wait for the next check interval.
+        raise GetRateErrorCounter(f"Value overflow: {new_value} <= {prev_value}")
+
+    return rate
+
 
 # Example output from agent
 # <<<winperf_phydisk>>>
@@ -342,12 +529,11 @@ def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, compute_specs: _Compu
 
 
 def _update_value_and_calc_rate(metric: str, compute_specs: _ComputeSpec, value: float) -> float:
-    """we must use correct name for wrong API name"""
-    return get_rate(
+    return update_value_and_calc_rate(
         compute_specs.value_store,
         metric + compute_specs.value_store_suffix,
-        compute_specs.timestamp,
-        value,
+        timestamp=compute_specs.timestamp,
+        value=value,
         raise_overflow=True,
     )
 

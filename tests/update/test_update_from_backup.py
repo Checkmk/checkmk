@@ -81,19 +81,19 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
     hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 
-    if "sles" not in os.environ.get("DISTRO"):
-        # registering hosts via cmk-agent-ctl in SLES distros currently fails
-        # Todo: investigate. See: CMK-16305
-        for hostname in hostnames:
-            address = f"127.0.0.{hostnames.index(hostname) + 1}"
-            register_controller(agent_ctl, base_site, hostname, site_address=address)
-            wait_until_host_receives_data(base_site, hostname)
+    for hostname in hostnames:
+        # specifying a port is needed to avoid API issues in SLES distros. See CMK-16305
+        # TODO: remove once CMK-16601 is done
+        port = "8001"
+        address = f"127.0.0.{hostnames.index(hostname) + 1}:{port}"
+        register_controller(agent_ctl, base_site, hostname, site_address=address)
+        wait_until_host_receives_data(base_site, hostname)
 
-        logger.info("Discovering services and waiting for completion...")
-        base_site.openapi.bulk_discover_services_and_wait_for_completion(
-            [str(hostname) for hostname in hostnames]
-        )
-        base_site.openapi.activate_changes_and_wait_for_completion()
+    logger.info("Discovering services and waiting for completion...")
+    base_site.openapi.bulk_discover_services_and_wait_for_completion(
+        [str(hostname) for hostname in hostnames]
+    )
+    base_site.openapi.activate_changes_and_wait_for_completion()
 
     base_services = {}
     base_ok_services = {}

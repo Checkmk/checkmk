@@ -191,7 +191,7 @@ class _DownloadedExtension(NamedTuple):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class _ImportErrors:
+class ImportErrors:
     base_errors: set[str] = dataclasses.field(default_factory=set)
     gui_errors: set[str] = dataclasses.field(default_factory=set)
 
@@ -210,127 +210,127 @@ class _ImportErrors:
 _DOWNLOAD_URL_BASE = "https://exchange.checkmk.com/api/packages/download/"
 
 
-_EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
-    "MSTeams-2.1.mkp": _ImportErrors(
+_EXPECTED_IMPORT_ERRORS: Mapping[str, ImportErrors] = {
+    "MSTeams-2.1.mkp": ImportErrors(
         gui_errors={
             "wato/msteams: name 'socket' is not defined",
         }
     ),
-    "cve_2021_44228_log4j_cmk20.mkp": _ImportErrors(
+    "cve_2021_44228_log4j_cmk20.mkp": ImportErrors(
         gui_errors={
             "views/inv_cve_2021_22448_log4j: No module named 'cmk.gui.plugins.views.inventory'",
         },
     ),
-    "veeam_o365-2.6.1.mkp": _ImportErrors(
+    "veeam_o365-2.6.1.mkp": ImportErrors(
         gui_errors={
             "metrics/veeam_o365jobs: cannot import name 'check_metrics' from 'cmk.gui.plugins.metrics.utils' (/omd/sites/ext_comp_1/lib/python3/cmk/gui/plugins/metrics/utils.py)",
             "metrics/veeam_o365licenses: cannot import name 'check_metrics' from 'cmk.gui.plugins.metrics.utils' (/omd/sites/ext_comp_1/lib/python3/cmk/gui/plugins/metrics/utils.py)",
         },
     ),
-    "kentix_devices-3.0.1.mkp": _ImportErrors(
+    "kentix_devices-3.0.1.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin kentix_devices: No module named "
             "'cmk.base.plugins.agent_based.utils.humidity'\n",
         }
     ),
-    "pure-1.4.7.mkp": _ImportErrors(
+    "pure-1.4.7.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin pure_arraydetails: cannot import name "
             "'get_percent_human_readable' from 'cmk.base.check_api' "
             "(/omd/sites/ext_comp_1/lib/python3/cmk/base/check_api.py)\n",
         }
     ),
-    "fail2ban-1.3.1.mkp": _ImportErrors(gui_errors={"wato/fail2ban: name 'Tuple' is not defined"}),
-    "perfcalc-6.0.mkp": _ImportErrors(
+    "fail2ban-1.3.1.mkp": ImportErrors(gui_errors={"wato/fail2ban: name 'Tuple' is not defined"}),
+    "perfcalc-6.0.mkp": ImportErrors(
         gui_errors={
             "wato/perfcalc: cannot import name 'HostTagCondition' from "
             "'cmk.gui.plugins.wato' (unknown location)",
         }
     ),
-    "fileconnector-3.4.0.mkp": _ImportErrors(
+    "fileconnector-3.4.0.mkp": ImportErrors(
         gui_errors={
             "wato/fileconnector: cannot import name 'FullPathFolderChoice' from "
             "'cmk.gui.plugins.wato' (unknown location)",
         }
     ),
-    "gamatronic-1.0.mkp": _ImportErrors(
+    "gamatronic-1.0.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin gamatronic_bat_status: No module named "
             "'cmk.base.plugins.agent_based.utils.ups'\n",
         }
     ),
-    "ssllabs-3.1.1.mkp": _ImportErrors(
+    "ssllabs-3.1.1.mkp": ImportErrors(
         gui_errors={"wato/ssllabs_datasource_programs: name 'Integer' is not defined"}
     ),
-    "qnap-1.4.5.mkp": _ImportErrors(
+    "qnap-1.4.5.mkp": ImportErrors(
         gui_errors={
             "wato/check_parameters_qnap_fans: name 'Tuple' is not defined",
             "wato/check_parameters_qnap_temp: name 'Tuple' is not defined",
         }
     ),
-    "imap-3.0.0.mkp": _ImportErrors(
+    "imap-3.0.0.mkp": ImportErrors(
         gui_errors={
             "wato/active_checks_imap: cannot import name 'RulespecGroupActiveChecks' from "
             "'cmk.gui.plugins.wato.active_checks.common' "
             "(/omd/sites/ext_comp_1/lib/python3/cmk/gui/plugins/wato/active_checks/common.py)",
         }
     ),
-    "postgres_replication-1.2.1.mkp": _ImportErrors(
+    "postgres_replication-1.2.1.mkp": ImportErrors(
         gui_errors={"wato/postgres_replication: name 'DropdownChoice' is not defined"}
     ),
-    "ups_alarms-1.2.mkp": _ImportErrors(
+    "ups_alarms-1.2.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin ups_alarms: No module named "
             "'cmk.base.plugins.agent_based.utils.ups'\n",
         }
     ),
-    "mirth-1.3.mkp": _ImportErrors(
+    "mirth-1.3.mkp": ImportErrors(
         gui_errors={"wato/check_parameters_mirth_stats: name 'Tuple' is not defined"}
     ),
-    "veeamcc_tenant-0.4c.mkp": _ImportErrors(
+    "veeamcc_tenant-0.4c.mkp": ImportErrors(
         gui_errors={"wato/veeamcc_tenant: name 'Tuple' is not defined"}
     ),
-    "access_logs-1.2.mkp": _ImportErrors(
+    "access_logs-1.2.mkp": ImportErrors(
         gui_errors={"wato/access_logs: name 'Tuple' is not defined"}
     ),
-    "emcunity-2.2.4.mkp": _ImportErrors(
+    "emcunity-2.2.4.mkp": ImportErrors(
         gui_errors={
             "metrics/emcunity: No module named 'cmk.gui.plugins.metrics.check_mk'",
             "wato/emcunity_datasource_programs: name 'Tuple' is not defined",
         }
     ),
-    "systemd-0.6.mkp": _ImportErrors(
+    "systemd-0.6.mkp": ImportErrors(
         gui_errors={"wato/systemd: name 'DropdownChoice' is not defined"}
     ),
-    "webinject-1.1.mkp": _ImportErrors(
+    "webinject-1.1.mkp": ImportErrors(
         gui_errors={"wato/active_checks_webinject: name 'Tuple' is not defined"}
     ),
-    "adsl_line-1.4.0.mkp": _ImportErrors(
+    "adsl_line-1.4.0.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin adsl_line: cannot import name "
             "'_cleanup_if_strings' from 'cmk.base.plugins.agent_based.utils.interfaces' "
             "(/omd/sites/ext_comp_1/lib/python3/cmk/base/plugins/agent_based/utils/interfaces.py)\n",
         }
     ),
-    "huawei-2.3.mkp": _ImportErrors(
+    "huawei-2.3.mkp": ImportErrors(
         gui_errors={"metrics/huawei: name 'df_translation' is not defined"}
     ),
-    "proxmox_qemu_backup-1.3.0.mkp": _ImportErrors(
+    "proxmox_qemu_backup-1.3.0.mkp": ImportErrors(
         gui_errors={
             "wato/check_parameters_proxmox_qemu_backup: name 'DropdownChoice' is not defined",
         }
     ),
-    "unifi-2.2.1.mkp": _ImportErrors(
+    "unifi-2.2.1.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin unifi: cannot import name 'TableRow' from "
             "'cmk.base.api.agent_based.inventory_classes' "
             "(/omd/sites/ext_comp_1/lib/python3/cmk/base/api/agent_based/inventory_classes.py)\n",
         }
     ),
-    "cisco_bgp_peer-20180525.v.0.2.mkp": _ImportErrors(
+    "cisco_bgp_peer-20180525.v.0.2.mkp": ImportErrors(
         gui_errors={"wato/cisco_bgp_peer: name 'Integer' is not defined"}
     ),
-    "act-mkeventd-1.4.0p31.mkp": _ImportErrors(
+    "act-mkeventd-1.4.0p31.mkp": ImportErrors(
         gui_errors={
             "dashboard/acteventstat: No module named 'sites'",
             "sidebar/acteventstat: No module named 'sites'",
@@ -340,7 +340,7 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
             "wato/event2live: No module named 'cmk.defines'",
         }
     ),
-    "nextcloud-1.2.2.mkp": _ImportErrors(
+    "nextcloud-1.2.2.mkp": ImportErrors(
         gui_errors={
             "wato/nextcloud_data_extension: cannot import name "
             "'RulespecGroupIntegrateOtherServices' from "
@@ -348,28 +348,28 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
             "(/omd/sites/ext_comp_1/lib/python3/cmk/gui/plugins/wato/active_checks/__init__.py)",
         }
     ),
-    "puppet_agent-1.0.1.mkp": _ImportErrors(
+    "puppet_agent-1.0.1.mkp": ImportErrors(
         gui_errors={"wato/puppet_agent: name 'DropdownChoice' is not defined"}
     ),
-    "net_backup-1.0.2.mkp": _ImportErrors(
+    "net_backup-1.0.2.mkp": ImportErrors(
         gui_errors={"wato/net_backup: name 'DropdownChoice' is not defined"}
     ),
-    "telegram_bulk-1.0.0.mkp": _ImportErrors(
+    "telegram_bulk-1.0.0.mkp": ImportErrors(
         gui_errors={"wato/telegram: name 'TextAreaUnicode' is not defined"}
     ),
-    "cisco_inv_lldp-1.1.mkp": _ImportErrors(
+    "cisco_inv_lldp-1.1.mkp": ImportErrors(
         gui_errors={"views/my_inv_lldp: name 'inventory_displayhints' is not defined"}
     ),
-    "mshpc_jobs_and_nodes-1.0.0.mkp": _ImportErrors(
+    "mshpc_jobs_and_nodes-1.0.0.mkp": ImportErrors(
         gui_errors={"wato/rulespec_agent_mshpc: name 'HTTPUrl' is not defined"}
     ),
-    "dynamicscrm-0.4.mkp": _ImportErrors(
+    "dynamicscrm-0.4.mkp": ImportErrors(
         gui_errors={
             "metrics/dynamicscrm: name 'df_translation' is not defined",
             "wato/dynamicscrm: name 'Tuple' is not defined",
         }
     ),
-    "nutanix_prism-5.0.7.mkp": _ImportErrors(
+    "nutanix_prism-5.0.7.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin prism_cluster_cpu: No module named "
             "'cmk.base.plugins.agent_based.utils.cpu_util'\n",
@@ -379,26 +379,26 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
             "'cmk.base.plugins.agent_based.utils.memory'\n",
         }
     ),
-    "bgp_peer.mkp": _ImportErrors(
+    "bgp_peer.mkp": ImportErrors(
         gui_errors={"views/inv_bgp_peer: No module named 'cmk.gui.plugins.views.inventory'"}
     ),
-    "backupexec_job-1.6.1.mkp": _ImportErrors(
+    "backupexec_job-1.6.1.mkp": ImportErrors(
         gui_errors={"wato/backupexec_job: name 'Tuple' is not defined"}
     ),
-    "agent_ntnx-4.0.mkp": _ImportErrors(
+    "agent_ntnx-4.0.mkp": ImportErrors(
         gui_errors={
             "wato/check_parameters_ntnx: name 'Tuple' is not defined",
             "wato/datasource_programs_ntnx: name 'ListChoice' is not defined",
         }
     ),
-    "sync_check_multi-1.3.1.mkp": _ImportErrors(
+    "sync_check_multi-1.3.1.mkp": ImportErrors(
         gui_errors={
             "wato/sync_check_multi: cannot import name 'add_replication_paths' from "
             "'cmk.gui.watolib' "
             "(/omd/sites/ext_comp_1/lib/python3/cmk/gui/watolib/__init__.py)",
         }
     ),
-    "sap_hana-1.9.8.mkp": _ImportErrors(
+    "sap_hana-1.9.8.mkp": ImportErrors(
         gui_errors={
             "metrics/sap_hana: name 'df_translation' is not defined",
             "wato/sap_hana: name 'CascadingDropdown' is not defined",
@@ -407,19 +407,19 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
             "wato/sap_hana_memrate: name 'CascadingDropdown' is not defined",
         }
     ),
-    "uname-2.0.mkp": _ImportErrors(
+    "uname-2.0.mkp": ImportErrors(
         gui_errors={"wato/check_parameters_uname: name 'RegExp' is not defined"}
     ),
-    "last_windows_update-1.0.mkp": _ImportErrors(
+    "last_windows_update-1.0.mkp": ImportErrors(
         gui_errors={"wato/agent_bakery_last_windows_updates: name 'DropdownChoice' is not defined"}
     ),
-    "mongodb-1.0.mkp": _ImportErrors(
+    "mongodb-1.0.mkp": ImportErrors(
         gui_errors={"wato/active_checks_mongodb: name 'Tuple' is not defined"}
     ),
-    "Radius-0.1.mkp": _ImportErrors(
+    "Radius-0.1.mkp": ImportErrors(
         gui_errors={"wato/check_radius: name 'register_rulegroup' is not defined"}
     ),
-    "dell_storage-0.6.1.mkp": _ImportErrors(
+    "dell_storage-0.6.1.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin dell_storage_disk: cannot import name 'diskstat' "
             "from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
@@ -429,23 +429,23 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
             "'diskstat' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
         }
     ),
-    "jenkins-0.3.mkp": _ImportErrors(gui_errors={"wato/jenkins: name 'ListOf' is not defined"}),
-    "cisco_inv_cdp-1.1.mkp": _ImportErrors(
+    "jenkins-0.3.mkp": ImportErrors(gui_errors={"wato/jenkins: name 'ListOf' is not defined"}),
+    "cisco_inv_cdp-1.1.mkp": ImportErrors(
         gui_errors={"views/my_inv_cdp: name 'inventory_displayhints' is not defined"}
     ),
-    "filehandles-3.2.mkp": _ImportErrors(
+    "filehandles-3.2.mkp": ImportErrors(
         gui_errors={
             "wato/filehandles: (unicode error) 'unicodeescape' codec can't decode bytes "
             "in position 51-52: malformed \\N character escape (filehandles.py, line 128)",
         }
     ),
-    "lvm-2.1.mkp": _ImportErrors(
+    "lvm-2.1.mkp": ImportErrors(
         gui_errors={"wato/agent_bakery_lvm: name 'DropdownChoice' is not defined"}
     ),
-    "windows_os_info-2.3.mkp": _ImportErrors(
+    "windows_os_info-2.3.mkp": ImportErrors(
         gui_errors={"wato/agent_bakery_windows_os_info: name 'DropdownChoice' is not defined"}
     ),
-    "m365_service_health-1.2.1.mkp": _ImportErrors(
+    "m365_service_health-1.2.1.mkp": ImportErrors(
         base_errors={
             "Error in agent based plugin m365_service_health: cannot import name "
             "'IgnoreResults' from 'cmk.base.api.agent_based.checking_classes' "
@@ -473,8 +473,8 @@ def test_extension_compatibility(
         _download_extension(extension_download_url),
     )
     with _install_extension(site, site.resolve_path(Path(extension_filename))):
-        encountered_errors = _ImportErrors.collect_from_site(site)
-        expected_errors = _EXPECTED_IMPORT_ERRORS.get(name, _ImportErrors())
+        encountered_errors = ImportErrors.collect_from_site(site)
+        expected_errors = _EXPECTED_IMPORT_ERRORS.get(name, ImportErrors())
 
     assert encountered_errors.base_errors == expected_errors.base_errors
     assert encountered_errors.gui_errors == expected_errors.gui_errors

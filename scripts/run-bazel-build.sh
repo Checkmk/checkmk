@@ -78,6 +78,7 @@ bazel build \
     --experimental_ui_max_stdouterr_bytes=10000000 \
     --experimental_remote_cache_async \
     --experimental_remote_cache_compression \
+    --remote_local_fallback \
     "${BAZEL_REMOTE_CACHE_ARGUMENT}" \
     ${BAZEL_EXTRA_ARGS} \
     "${TARGET}"

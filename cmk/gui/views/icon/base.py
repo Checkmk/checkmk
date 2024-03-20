@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
 from cmk.utils.tags import TagID
 
@@ -45,10 +46,10 @@ class Icon(abc.ABC):
     @abc.abstractmethod
     def render(
         self,
-        what: str,
+        what: Literal["host", "service"],
         row: Row,
-        tags: list[TagID],
-        custom_vars: dict[str, str],
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> (
         None
         | IconSpec

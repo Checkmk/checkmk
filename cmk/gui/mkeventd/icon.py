@@ -5,7 +5,8 @@
 
 import re
 import shlex
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
 from cmk.utils.tags import TagID
 
@@ -40,7 +41,11 @@ class MkeventdIcon(Icon):
         return ["address", "name"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | tuple[str, str, str]:
         if not active_config.mkeventd_enabled:
             return None

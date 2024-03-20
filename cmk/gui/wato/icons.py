@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Literal
 
 from cmk.utils.tags import TagID
@@ -21,7 +21,7 @@ from cmk.gui.views.icon import Icon
 
 class WatoIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "wato"
 
     @classmethod
@@ -32,7 +32,11 @@ class WatoIcon(Icon):
         return ["filename"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> tuple[str, str, str] | None:
         def may_see_hosts() -> bool:
             return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
@@ -91,7 +95,11 @@ class DownloadAgentOutputIcon(Icon):
         return ["filename", "check_type"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> tuple[str, str, str] | None:
         return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")
 
@@ -100,7 +108,7 @@ class DownloadSnmpWalkIcon(Icon):
     """Action for downloading the current snmp output."""
 
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "download_snmp_walk"
 
     @classmethod
@@ -114,16 +122,20 @@ class DownloadSnmpWalkIcon(Icon):
         return 50
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> tuple[str, str, str] | None:
         return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")
 
 
 def _paint_download_host_info(
-    what: str,
+    what: Literal["host", "service"],
     row: Row,
     tags: Sequence[TagID],
-    custom_vars: dict[str, str],
+    custom_vars: Mapping[str, str],
     ty: Literal["agent", "walk"],
 ) -> tuple[str, str, str] | None:
     if (

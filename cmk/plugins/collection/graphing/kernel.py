@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import metrics, perfometers, Title, translations
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title, translations
 
 translation_kernel = translations.Translation(
     name="kernel",
@@ -35,21 +35,21 @@ metric_major_page_faults = metrics.Metric(
     name="major_page_faults",
     title=Title("Major page faults"),
     unit=UNIT_PER_SECOND,
-    color=metrics.Color.GREEN,
-)
-
-metric_page_swap_in = metrics.Metric(
-    name="page_swap_in",
-    title=Title("Page Swap In"),
-    unit=UNIT_PER_SECOND,
-    color=metrics.Color.CYAN,
+    color=metrics.Color.PURPLE,
 )
 
 metric_page_swap_out = metrics.Metric(
     name="page_swap_out",
-    title=Title("Page Swap Out"),
+    title=Title("Page swap out"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.BLUE,
+)
+
+metric_page_swap_in = metrics.Metric(
+    name="page_swap_in",
+    title=Title("Page swap in"),
+    unit=UNIT_PER_SECOND,
+    color=metrics.Color.GREEN,
 )
 
 perfometer_major_page_faults = perfometers.Perfometer(
@@ -59,4 +59,19 @@ perfometer_major_page_faults = perfometers.Perfometer(
         perfometers.Open(11313),
     ),
     segments=["major_page_faults"],
+)
+
+graph_page_swap_in_out = graphs.Bidirectional(
+    name="page_swap_in_out",
+    title=Title("Page swap"),
+    lower=graphs.Graph(
+        name="page_swap_out",
+        title=Title("Page swap out"),
+        compound_lines=["page_swap_out"],
+    ),
+    upper=graphs.Graph(
+        name="page_swap_in",
+        title=Title("Page swap in"),
+        compound_lines=["page_swap_in"],
+    ),
 )

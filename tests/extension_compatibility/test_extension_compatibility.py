@@ -20,6 +20,8 @@ from tests.testlib.site import Site
 
 from cmk.utils.version import __version__, parse_check_mk_version
 
+REQUESTS_TIMEOUT = 10
+
 NUMBER_OF_EXTENSIONS_TO_COVER = 120
 
 
@@ -480,7 +482,7 @@ def test_extension_compatibility(
 
 def _download_extension(url: str) -> bytes:
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=REQUESTS_TIMEOUT)
     except requests.ConnectionError as e:
         raise pytest.skip(f"Encountered connection issues when attempting to download {url}") from e
     if not response.ok:
@@ -550,7 +552,9 @@ def _compatible_extensions_sorted_by_n_downloads(parsed_version: int) -> list[_E
 
 
 def _compatible_extensions(parsed_version: int) -> Iterator[_Extension]:
-    response = requests.get("https://exchange.checkmk.com/api/packages/all")
+    response = requests.get(
+        "https://exchange.checkmk.com/api/packages/all", timeout=REQUESTS_TIMEOUT
+    )
     response.raise_for_status()
     all_packages_response = _ExchangeResponseAllPackages.model_validate(response.json())
     assert all_packages_response.success, "Querying packages from Checkmk exchange unsuccessful"

@@ -13,7 +13,9 @@ from cmk.utils.caching_redis import ttl_memoize
 
 @pytest.fixture(name="cached_function")
 def cached_function_fixture():
-    @ttl_memoize(10, FakeRedis)
+    # NOTE: With no parameters, FakeRedis() will return a fresh instance every
+    # time! For details, see https://github.com/cunla/fakeredis-py/pull/303
+    @ttl_memoize(10, lambda: FakeRedis(host="localhost"))
     def time_based_function(param: int) -> float:
         return time.time() * param
 

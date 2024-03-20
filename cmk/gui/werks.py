@@ -273,9 +273,7 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     )
 
 
-def _extend_display_dropdown(  # type: ignore[no-untyped-def]
-    menu, werk_table_options: WerkTableOptions
-) -> None:
+def _extend_display_dropdown(menu: PageMenu, werk_table_options: WerkTableOptions) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     display_dropdown.topics.insert(
         0,

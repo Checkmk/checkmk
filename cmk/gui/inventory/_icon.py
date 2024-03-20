@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.tags import TagID
+
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import VisualLinkSpec
+from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.views.icon import Icon
 from cmk.gui.visual_link import url_to_visual
 
@@ -15,18 +17,22 @@ from ._store import has_inventory
 
 class InventoryIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "inventory"
 
     @classmethod
     def title(cls) -> str:
         return _("HW/SW inventory")
 
-    def host_columns(self):
+    def host_columns(self) -> list[str]:
         return ["name"]
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self,
+        what: str,
+        row: Row,
+        tags: list[TagID],
+        custom_vars: dict[str, str],
     ) -> None | tuple[str, str, str]:
         if (
             what == "host"

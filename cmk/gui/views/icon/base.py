@@ -49,7 +49,15 @@ class Icon(abc.ABC):
         row: Row,
         tags: list[TagID],
         custom_vars: dict[str, str],
-    ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
+    ) -> (
+        None
+        | IconSpec
+        | HTML
+        | tuple[IconSpec, str]
+        | tuple[IconSpec, str, str]
+        | tuple[IconSpec, str, str | None]
+        | tuple[IconSpec, str, tuple[str, str]]
+    ):
         raise NotImplementedError()
 
     def columns(self) -> Sequence[ColumnName]:

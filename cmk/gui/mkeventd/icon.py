@@ -7,38 +7,40 @@ import re
 import shlex
 from collections.abc import Sequence
 
+from cmk.utils.tags import TagID
+
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.site_config import get_site_config
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.views.icon import Icon
 
 
 class MkeventdIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "mkeventd"
 
     @classmethod
     def title(cls) -> str:
         return _("Events")
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return False
 
-    def default_sort_index(self):
+    def default_sort_index(self) -> int:
         return 30
 
     def columns(self) -> Sequence[ColumnName]:
         return ["check_command"]
 
-    def host_columns(self):
+    def host_columns(self) -> list[str]:
         return ["address", "name"]
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | tuple[str, str, str]:
         if not active_config.mkeventd_enabled:
             return None
@@ -109,7 +111,7 @@ class MkeventdIcon(Icon):
         return "mkeventd", title, url_prefix + url
 
 
-def _get_hostname(args, row) -> str:  # type: ignore[no-untyped-def]
+def _get_hostname(args: Sequence[str], row: Row) -> str:
     args_splitted = args[0].split("/")
     if args_splitted[0] == "$HOSTNAME$":
         return row["host_name"]

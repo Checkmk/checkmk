@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.tags import TagID
+
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.urls import makeuri_contextless
 
 from .base import Icon
@@ -12,21 +15,25 @@ from .base import Icon
 
 class ShowParentChildTopology(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "parent_child_topology"
 
     @classmethod
     def title(cls) -> str:
         return _("Network topology")
 
-    def host_columns(self):
+    def host_columns(self) -> list[str]:
         return ["name"]
 
-    def default_sort_index(self):
+    def default_sort_index(self) -> int:
         return 51
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self,
+        what: str,
+        row: Row,
+        tags: list[TagID],
+        custom_vars: dict[str, str],
     ) -> tuple[str, str, str]:
         url = makeuri_contextless(
             request,

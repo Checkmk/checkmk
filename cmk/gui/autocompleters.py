@@ -24,7 +24,7 @@ from cmk.gui.graphing._utils import (
 from cmk.gui.graphing._valuespecs import metrics_of_query
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, Row
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, AutocompleterRegistry, Labels
@@ -264,9 +264,7 @@ def label_autocompleter(value: str, params: dict) -> Choices:
     return [(value, value)] if regex(LABEL_REGEX).match(value) else []
 
 
-def _graph_choices_from_livestatus_row(  # type: ignore[no-untyped-def]
-    row,
-) -> Iterable[tuple[str, str]]:
+def _graph_choices_from_livestatus_row(row: Row) -> Iterable[tuple[str, str]]:
     yield from (
         (
             template.id,

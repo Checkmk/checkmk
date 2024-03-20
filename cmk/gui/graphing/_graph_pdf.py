@@ -13,7 +13,7 @@ from cmk.gui.pdf import Document
 from cmk.gui.type_defs import RGBColor, SizeMM
 
 from ._artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea
-from ._color import darken_color, lighten_color, parse_color
+from ._color import parse_color
 from ._graph_render_config import GraphRenderConfigImage
 from ._graph_specification import GraphDataRange
 
@@ -49,7 +49,6 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
     background_color = parse_color(graph_render_config.background_color)
     foreground_color = parse_color(graph_render_config.foreground_color)
     axis_over_width = _graph_axis_over_width(graph_render_config)
-    color_gradient = graph_render_config.color_gradient / 100.0
     curve_line_width = 0.1  # mm
     rule_line_width = 0.1  # mm
     label_line_width = 0.04  # mm
@@ -168,15 +167,6 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
             prev_lower = None
             prev_upper = None
 
-            gradient = (
-                t_orig,
-                v_orig,
-                t_orig,
-                v_orig + v_mm,
-                (darken_color(color, color_gradient), color, lighten_color(color, color_gradient)),
-                (0.0, 0.5, 1.0),
-            )
-
             for lower, upper in points:
                 if (
                     lower is not None
@@ -191,7 +181,7 @@ def render_graph_pdf(  # pylint: disable=too-many-branches
                     pdf_document.line_to(trans_t(t), trans_v(lower))
                     pdf_document.line_to(trans_t(t - step) - 0.01, trans_v(prev_lower))
                     pdf_document.close_path()
-                    pdf_document.fill_path(color, gradient=gradient)
+                    pdf_document.fill_path(color)
 
                 prev_lower = lower
                 prev_upper = upper

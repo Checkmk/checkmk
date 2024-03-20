@@ -736,7 +736,7 @@ class Document:
     def get_line_skip(self) -> SizeMM:
         return self.lineskip() / mm  # fixed: true-division
 
-    def text_width(self, text) -> SizeMM:  # type: ignore[no-untyped-def]
+    def text_width(self, text: str) -> SizeMM:
         return self._canvas.stringWidth(text) / mm  # fixed: true-division
 
     # TODO: unify with render_text()
@@ -843,30 +843,10 @@ class Document:
     def close_path(self) -> None:
         self._path.close()
 
-    def fill_path(self, color: RGBColor, gradient=None) -> None:  # type: ignore[no-untyped-def]
+    def fill_path(self, color: RGBColor) -> None:
         self.save_state()
-
-        # The gradient is dramatically increasing the size of the PDFs. For example a PDF with
-        # 10 graphs has a size of 6 MB with gradients compared to 260 KB without gradients!
-        # It may look better, but that's not worth it.
-        #
-        # Older versions of reportlab do not support gradients
-        # try:
-        #    self._canvas.linearGradient
-        # except:
-        #    gradient = None
-
-        # if gradient:
-        #    grad_left, grad_top, grad_width, grad_height, color_range, switch_points = gradient
-        #    self._canvas.saveState()
-        #    self._canvas.clipPath(self._path, stroke=0)
-        #    self._canvas.linearGradient(grad_left * mm, grad_top * mm, grad_width * mm, grad_height * mm,
-        #                                color_range, switch_points, extend=False)
-        #    self._canvas.restoreState()
-        # else:
         self.set_fill_color(color)
         self._canvas.drawPath(self._path, stroke=0, fill=1)
-
         self.restore_state()
 
     def stroke_path(self, color: RGBColor = black, width: SizeMM = 0.05) -> None:

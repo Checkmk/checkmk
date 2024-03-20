@@ -3,45 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# An icon painter is a python function which gets four parameters and
-# returns one string of rendered HTML code or None.
-#
-# The parameters are shown below:
-#
-#    def paint_icon_image(what, row, tags, host_custom_vars):
-#        """
-#        what:             The type of the current object
-#        row:              The livestatus row for the current object
-#        tags:             List of cmk tags for this object
-#        host_custom_vars: Dict of the objects host custom variables
-#        """
-#        return repr(row)
-#
-# Each icon painter needs to be registered to multisite. To do this
-# you need to add one dictionary to the multisite_icons list. The order
-# of the multisite icons controls in the list controls the order in the
-# GUI.
-# The dictionary must at least contain the 'paint' attribute with the
-# paint function as value. There are several other optional attributes
-# as shown in this example:
-#
-# multisite_icons.append({
-#    # List of columns to be used in this icon
-#    'columns':         [ 'icon_image' ],
-#    # List of columns to be used in this icon when rendering as host
-#    'host_columns':    [],
-#    # List of columns to be used in this icon when rendering as service
-#    'service_columns': [],
-#    # The paint function as mentioned above
-#    'paint':           paint_icon_image,
-# })
-
 import json
 import re
 from collections.abc import Sequence
 
 import cmk.utils
 import cmk.utils.render
+from cmk.utils.tags import TagID
 
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
@@ -54,7 +22,9 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.helpers import render_cache_info
 from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.painter_options import paint_age, PainterOptions
-from cmk.gui.type_defs import ColumnName, VisualLinkSpec
+from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import Icon as IconSpec
+from cmk.gui.type_defs import Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
@@ -78,21 +48,21 @@ from .base import Icon
 
 class ActionMenuIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "action_menu"
 
     @classmethod
     def title(cls) -> str:
         return _("Action menu")
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def default_sort_index(self):
+    def default_sort_index(self) -> int:
         return 10
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         url_vars = [
             ("host", row["host_name"]),
@@ -132,7 +102,7 @@ class ActionMenuIcon(Icon):
 
 class IconImageIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "icon_image"
 
     @classmethod
@@ -142,13 +112,15 @@ class IconImageIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["icon_image"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def default_sort_index(self):
+    def default_sort_index(self) -> int:
         return 25
 
-    def render(self, what, row, tags, custom_vars) -> None | HTML:  # type: ignore[no-untyped-def]
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+    ) -> HTML | None:
         img = row[what + "_icon_image"]
         if not img:
             return None
@@ -172,7 +144,7 @@ class IconImageIcon(Icon):
 
 class RescheduleIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "reschedule"
 
     @classmethod
@@ -182,15 +154,17 @@ class RescheduleIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["check_type", "active_checks_enabled", "check_command"]
 
-    def service_columns(self):
+    def service_columns(self) -> list[str]:
         return ["cached_at", "cache_interval"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+    ) -> tuple[str, str] | tuple[str, str, tuple[str, str]] | None:
         if what == "service" and row["service_cached_at"]:
             output = _("This service is based on cached agent data and cannot be rescheduled.")
             output += " %s" % render_cache_info(what, row)
 
-            return "cannot_reschedule", output, None
+            return "cannot_reschedule", output
 
         # Reschedule button
         if row[what + "_check_type"] == 2:
@@ -241,7 +215,7 @@ class RescheduleIcon(Icon):
 
 class RuleEditorIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "rule_editor"
 
     @classmethod
@@ -251,14 +225,14 @@ class RuleEditorIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["check_type"]
 
-    def host_columns(self):
+    def host_columns(self) -> list[str]:
         return ["name"]
 
-    def service_columns(self):
+    def service_columns(self) -> list[str]:
         return ["description"]
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_check_type"] == 2:
             return None  # shadow services have no parameters
@@ -298,18 +272,18 @@ class RuleEditorIcon(Icon):
 
 class ManpageIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "check_manpage"
 
     @classmethod
     def title(cls) -> str:
         return _("Check manual page")
 
-    def service_columns(self):
+    def service_columns(self) -> list[str]:
         return ["check_command"]
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if what == "service" and active_config.wato_enabled and user.may("wato.use"):
             command = row["service_check_command"]
@@ -353,7 +327,7 @@ class ManpageIcon(Icon):
 
 class AcknowledgeIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_acknowledged"
 
     @classmethod
@@ -363,11 +337,11 @@ class AcknowledgeIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["acknowledged"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_acknowledged"]:
             return "ack", _("This problem has been acknowledged")
@@ -389,7 +363,7 @@ class AcknowledgeIcon(Icon):
 
 class PerfgraphIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "perfgraph"
 
     @classmethod
@@ -399,20 +373,20 @@ class PerfgraphIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["pnpgraph_present"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def default_sort_index(self):
+    def default_sort_index(self) -> int:
         return 20
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_pnpgraph_present"] == 1:
             return self._pnp_icon(row, what)
         return None
 
-    def _pnp_icon(self, row, what):
+    def _pnp_icon(self, row: Row, what: str) -> HTML | None:
         url = self._graph_icon_link(row, what)
 
         # Don't show the icon with Checkmk graphing. The hover makes no sense and there is no
@@ -435,7 +409,7 @@ class PerfgraphIcon(Icon):
             ),
         )
 
-    def _graph_icon_link(self, row, what):
+    def _graph_icon_link(self, row: Row, what: str) -> str:
         if display_options.disabled(display_options.X):
             return ""
         return cmk_graph_url(row, what, request=request)
@@ -456,7 +430,7 @@ class PerfgraphIcon(Icon):
 
 class PredictionIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "prediction"
 
     @classmethod
@@ -466,11 +440,11 @@ class PredictionIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["perf_data"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # TODO: At least for interfaces we have 2 predictive values. But this icon
         # only creates a link to the first one. Add multiple icons or add a navigation
@@ -510,7 +484,7 @@ class PredictionIcon(Icon):
 
 class CustomActionIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "custom_action"
 
     @classmethod
@@ -520,8 +494,8 @@ class CustomActionIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["action_url_expanded", "pnpgraph_present"]
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if display_options.enabled(display_options.X):
             # action_url (only, if not a PNP-URL and pnp_graph is working!)
@@ -547,18 +521,18 @@ class CustomActionIcon(Icon):
 
 class LogwatchIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "logwatch"
 
     @classmethod
     def title(cls) -> str:
         return _("Logwatch")
 
-    def service_columns(self):
+    def service_columns(self) -> list[str]:
         return ["host_name", "service_description", "check_command"]
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if what != "service" or row[what + "_check_command"] not in [
             "check_mk-logwatch",
@@ -590,7 +564,7 @@ class LogwatchIcon(Icon):
 
 class NotesIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "notes"
 
     @classmethod
@@ -600,7 +574,9 @@ class NotesIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["notes_url_expanded", "check_command"]
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+    ) -> tuple[str, str, tuple[str, str]] | None:
         # Adds the url_prefix of the services site to the notes url configured in this site.
         # It also adds the master_url which will be used to link back to the source site
         # in multi site environments.
@@ -626,24 +602,30 @@ class NotesIcon(Icon):
 
 class DowntimesIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_downtimes"
 
     @classmethod
     def title(cls) -> str:
         return _("Status downtimes")
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
     def columns(self) -> Sequence[ColumnName]:
         return ["scheduled_downtime_depth", "downtimes_with_extra_info"]
 
-    def host_columns(self):
+    def host_columns(self) -> list[str]:
         return ["scheduled_downtime_depth", "downtimes_with_extra_info"]
 
-    def render(self, what, row, tags, custom_vars):
-        def detail_txt(downtimes_with_extra_info):
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+    ) -> tuple[IconSpec, str, str | None] | None:
+        def detail_txt(
+            downtimes_with_extra_info: Sequence[
+                tuple[int, str, str, str, int, int, int, bool, int, bool, bool]
+            ]
+        ) -> str:
             if not downtimes_with_extra_info:
                 return ""
 
@@ -724,7 +706,7 @@ class DowntimesIcon(Icon):
 
 class CommentsIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_comments"
 
     @classmethod
@@ -734,10 +716,12 @@ class CommentsIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["comments_with_extra_info"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(self, what, row, tags, custom_vars):
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+    ) -> tuple[str, str, str | None] | None:
         comments = row[what + "_comments_with_extra_info"]
         if len(comments) > 0:
             text = ""
@@ -779,7 +763,7 @@ class CommentsIcon(Icon):
 
 class NotificationsIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_notifications_enabled"
 
     @classmethod
@@ -789,11 +773,11 @@ class NotificationsIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["modified_attributes_list", "notifications_enabled"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Notifications disabled
         enabled = row[what + "_notifications_enabled"]
@@ -820,7 +804,7 @@ class NotificationsIcon(Icon):
 
 class FlappingIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_flapping"
 
     @classmethod
@@ -830,11 +814,11 @@ class FlappingIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["is_flapping"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | tuple[str, str]:
         if row[what + "_is_flapping"]:
             if what == "host":
@@ -858,7 +842,7 @@ class FlappingIcon(Icon):
 
 class StalenessIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_stale"
 
     @classmethod
@@ -868,11 +852,11 @@ class StalenessIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["staleness"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if is_stale(row, config=active_config):
             if what == "host":
@@ -902,7 +886,7 @@ class StalenessIcon(Icon):
 
 class ActiveChecksIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_active_checks"
 
     @classmethod
@@ -912,11 +896,11 @@ class ActiveChecksIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["modified_attributes_list", "active_checks_enabled"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Setting of active checks modified by user
         if "active_checks_enabled" in row[what + "_modified_attributes_list"]:
@@ -944,7 +928,7 @@ class ActiveChecksIcon(Icon):
 
 class PassiveChecksIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_passive_checks"
 
     @classmethod
@@ -954,11 +938,11 @@ class PassiveChecksIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["modified_attributes_list", "accept_passive_checks"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Passive checks disabled manually?
         if "passive_checks_enabled" in row[what + "_modified_attributes_list"]:
@@ -983,7 +967,7 @@ class PassiveChecksIcon(Icon):
 
 class NotificationPeriodIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_notification_period"
 
     @classmethod
@@ -993,11 +977,11 @@ class NotificationPeriodIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["in_notification_period"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row[what + "_in_notification_period"]:
             return "outofnot", _("Out of notification period")
@@ -1017,7 +1001,7 @@ class NotificationPeriodIcon(Icon):
 
 class ServicePeriodIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "status_service_period"
 
     @classmethod
@@ -1027,11 +1011,11 @@ class ServicePeriodIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["in_service_period"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row[what + "_in_service_period"]:
             return "outof_serviceperiod", _("Out of service period")
@@ -1051,15 +1035,15 @@ class ServicePeriodIcon(Icon):
 
 class StarsIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "stars"
 
     @classmethod
     def title(cls) -> str:
         return _("Stars")
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         stars = self._get_stars()
 
@@ -1095,21 +1079,21 @@ class StarsIcon(Icon):
 
 class CrashdumpsIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "crashed_check"
 
     @classmethod
     def title(cls) -> str:
         return _("Crashed check")
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def service_columns(self):
+    def service_columns(self) -> list[str]:
         return ["plugin_output", "state", "host_name"]
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | tuple[str, str] | tuple[str, str, str]:
         if (
             what == "service"
@@ -1165,7 +1149,7 @@ class CrashdumpsIcon(Icon):
 
 class CheckPeriodIcon(Icon):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "check_period"
 
     @classmethod
@@ -1175,14 +1159,14 @@ class CheckPeriodIcon(Icon):
     def columns(self) -> Sequence[ColumnName]:
         return ["in_check_period"]
 
-    def default_toplevel(self):
+    def default_toplevel(self) -> bool:
         return True
 
-    def service_columns(self):
+    def service_columns(self) -> list[str]:
         return ["in_passive_check_period"]
 
-    def render(  # type: ignore[no-untyped-def]
-        self, what, row, tags, custom_vars
+    def render(
+        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
     ) -> None | tuple[str, str]:
         if what == "service":
             if (

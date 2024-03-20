@@ -21,12 +21,6 @@ from cmk.gui.i18n import _
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["age"] = {
-    "title": _("Age"),
-    "unit": "s",
-    "color": "#80f000",
-}
-
 metric_info["last_updated"] = {
     "title": _("Last Updated"),
     "unit": "s",
@@ -109,35 +103,6 @@ metric_info["zfs_l2_size"] = {
     "title": _("L2 cache size"),
     "unit": "bytes",
     "color": "31/a",
-}
-
-metric_info["file_size"] = {
-    "title": _("File size"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-
-metric_info["total_file_size"] = {
-    "title": _("Total file size"),
-    "unit": "bytes",
-    "color": "16/a",
-}
-metric_info["file_size_smallest"] = {
-    "title": _("Smallest file"),
-    "unit": "bytes",
-    "color": "21/a",
-}
-
-metric_info["file_size_largest"] = {
-    "title": _("Largest file"),
-    "unit": "bytes",
-    "color": "25/a",
-}
-
-metric_info["file_count"] = {
-    "title": _("Amount of files"),
-    "unit": "count",
-    "color": "23/a",
 }
 
 # cloud storage
@@ -973,18 +938,6 @@ metric_info["backup_age"] = {
     "title": _("Time since last backup"),
     "unit": "s",
     "color": "34/a",
-}
-
-metric_info["file_age_oldest"] = {
-    "title": _("Oldest file"),
-    "unit": "s",
-    "color": "11/a",
-}
-
-metric_info["file_age_newest"] = {
-    "title": _("Newest file"),
-    "unit": "s",
-    "color": "13/a",
 }
 
 metric_info["logswitches_last_hour"] = {

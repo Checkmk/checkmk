@@ -872,17 +872,6 @@ check_metrics["check_mk-postgres_sessions"] = {
     "total": {"name": "total_sessions"},
     "running": {"name": "running_sessions"},
 }
-check_metrics["check_mk-fileinfo"] = {
-    "size": {"name": "file_size"},
-}
-check_metrics["check_mk-fileinfo_groups"] = {
-    "size": {"name": "total_file_size"},
-    "size_smallest": {"name": "file_size_smallest"},
-    "size_largest": {"name": "file_size_largest"},
-    "count": {"name": "file_count"},
-    "age_oldest": {"name": "file_age_oldest"},
-    "age_newest": {"name": "file_age_newest"},
-}
 check_metrics["check_mk-postgres_stat_database_size"] = {
     "size": {"name": "database_size"},
 }

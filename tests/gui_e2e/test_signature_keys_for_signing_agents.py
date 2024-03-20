@@ -119,7 +119,7 @@ def test_upload_signing_keys(
         + "\n"
         + self_signed_cert.certificate.dump_pem().str
     ).strip() + "\n"
-    fingerprint = self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(":")
+    fingerprint = rf'{self_signed_cert.certificate.fingerprint(HashAlgorithm.MD5).hex(":")}'
 
     # passphrase is invalid
     upload_function(logged_in_page, "Some description", "password", pem_content)
@@ -134,7 +134,7 @@ def test_upload_signing_keys(
 
     # all ok
     upload_function(logged_in_page, "Some description", "SecureP4ssword", pem_content)
-    expect(logged_in_page.main_area.get_text(fingerprint)).to_be_visible()
+    expect(logged_in_page.main_area.get_text(fingerprint.upper())).to_be_visible()
 
     delete_key(logged_in_page, fingerprint)
 

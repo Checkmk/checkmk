@@ -72,7 +72,9 @@ def _restore_backup(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_suggestion("Restore").click()
     logged_in_page.main_area.get_link_from_title("Restore from this backup target").click()
     logged_in_page.main_area.get_link_from_title("Start restore of this backup").click()
-    expect(logged_in_page.main_area.get_text("Start restore of backup")).to_be_visible()
+    expect(
+        logged_in_page.main_area.get_text("Start restore of backup", exact=False)
+    ).to_be_visible()
     logged_in_page.main_area.locator_via_xpath("button", "Start").click()
 
     logged_in_page.main_area.get_input("_key_p_passphrase").fill(_backup_passphrase)
@@ -83,8 +85,8 @@ def _restore_backup(logged_in_page: PPage) -> None:
     # This is the reason why we need to wait for the restoring to be completed while trying to
     # reload the page.
     logged_in_page.click_and_wait(
-        locator=logged_in_page.main_area.get_text("Start restore"),
-        expected_locator=logged_in_page.main_area.get_text("Restore completed"),
+        locator=logged_in_page.main_area.get_text("Start restore", exact=False),
+        expected_locator=logged_in_page.main_area.get_text("Restore completed", exact=False),
         reload_on_error=True,
     )
 

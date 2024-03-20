@@ -351,23 +351,6 @@ check_metrics["check_mk-mem_vmalloc"] = {
     "used": {"name": "mem_lnx_vmalloc_used"},
     "chunk": {"name": "mem_lnx_vmalloc_chunk"},
 }
-tcp_conn_stats_translation: dict[str, CheckMetricEntry] = {
-    "SYN_SENT": {"name": "tcp_syn_sent"},
-    "SYN_RECV": {"name": "tcp_syn_recv"},
-    "ESTABLISHED": {"name": "tcp_established"},
-    "LISTEN": {"name": "tcp_listen"},
-    "TIME_WAIT": {"name": "tcp_time_wait"},
-    "LAST_ACK": {"name": "tcp_last_ack"},
-    "CLOSE_WAIT": {"name": "tcp_close_wait"},
-    "CLOSED": {"name": "tcp_closed"},
-    "CLOSING": {"name": "tcp_closing"},
-    "FIN_WAIT1": {"name": "tcp_fin_wait1"},
-    "FIN_WAIT2": {"name": "tcp_fin_wait2"},
-    "BOUND": {"name": "tcp_bound"},
-    "IDLE": {"name": "tcp_idle"},
-}
-check_metrics["check_mk-tcp_conn_stats"] = tcp_conn_stats_translation
-check_metrics["check_mk-datapower_tcp"] = tcp_conn_stats_translation
 check_metrics["check_mk_active-disk_smb"] = {
     "~.*": {"name": "fs_used"},
 }

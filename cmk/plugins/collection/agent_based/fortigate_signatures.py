@@ -10,7 +10,7 @@
 
 import re
 import time
-from typing import Any
+from typing import Final, Literal, Mapping, NamedTuple, NotRequired, TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,
@@ -26,37 +26,52 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 
-Section = list[tuple[str, str, str | None, float | None]]
+FortigateSignatureKey = Literal["av_age", "ips_age", "av_ext_age", "ips_ext_age"]
+
+
+class FortigateSignatureEntry(NamedTuple):
+    version: str | None
+    age: float | None
+
+
+FORTIGATE_KEY_TO_TITLE_MAP: Final[Mapping[FortigateSignatureKey, str]] = {
+    "av_age": "AV",
+    "ips_age": "IPS",
+    "av_ext_age": "AV Extended",
+    "ips_ext_age": "IPS Extended",
+}
+
+Section = dict[FortigateSignatureKey, FortigateSignatureEntry]
+
+Levels = tuple[int, int] | tuple[None, None]
+
+
+class FortigateSignaturesParams(TypedDict):
+    av_age: NotRequired[Levels]
+    ips_age: NotRequired[Levels]
+    av_ext_age: NotRequired[Levels]
+    ips_ext_age: NotRequired[Levels]
+
+
+def _parse_version(version_string: str) -> tuple[str, float] | tuple[None, None]:
+    # sample: 27.00768(2015-09-01 15:10)
+    version_regex = re.compile(r"([0-9.]*)\(([0-9-: ]*)\)")
+    match = version_regex.match(version_string)
+    if match is None:
+        return None, None
+    # what timezone is this in?
+    t = time.strptime(match.group(2), "%Y-%m-%d %H:%M")
+    ts = time.mktime(t)
+    return match.group(1), time.time() - ts
 
 
 def parse_fortigate_signatures(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
-
-    def parse_version(ver):
-        # sample: 27.00768(2015-09-01 15:10)
-        ver_regex = re.compile(r"([0-9.]*)\(([0-9-: ]*)\)")
-        match = ver_regex.match(ver)
-        if match is None:
-            return None, None
-        # what timezone is this in?
-        t = time.strptime(match.group(2), "%Y-%m-%d %H:%M")
-        ts = time.mktime(t)
-        return match.group(1), time.time() - ts
-
-    parsed = []
-    for (key, title), value in zip(
-        [
-            ("av_age", "AV"),
-            ("ips_age", "IPS"),
-            ("av_ext_age", "AV extended"),
-            ("ips_ext_age", "IPS extended"),
-        ],
-        string_table[0],
-    ):
-        version, age = parse_version(value)
-        parsed.append((key, title, version, age))
-    return parsed
+    return {
+        key: FortigateSignatureEntry(*_parse_version(value))
+        for key, value in zip(FORTIGATE_KEY_TO_TITLE_MAP.keys(), string_table[0])
+    }
 
 
 def discover_fortigate_signatures(section: Section) -> DiscoveryResult:
@@ -64,10 +79,11 @@ def discover_fortigate_signatures(section: Section) -> DiscoveryResult:
         yield Service()
 
 
-def check_fortigate_signatures(params: dict[str, Any], section: Section) -> CheckResult:
-    for key, title, version, age in section:
-        if age is None:
+def check_fortigate_signatures(params: FortigateSignaturesParams, section: Section) -> CheckResult:
+    for key, entry in section.items():
+        if entry.age is None:
             continue
+
         # TODO: remove this levels migration logic by migrating the check parameters to formspecs
         levels_upper: LevelsT[int] | None = None
         if key in params:
@@ -78,10 +94,10 @@ def check_fortigate_signatures(params: dict[str, Any], section: Section) -> Chec
                 levels_upper = ("fixed", _params)
 
         yield from check_levels(
-            age,
+            entry.age,
             levels_upper=levels_upper,
             render_func=render.timespan,
-            label=f"[{version}] {title} age",
+            label=f"[{entry.version}] {FORTIGATE_KEY_TO_TITLE_MAP[key]} age",
         )
 
 
@@ -102,8 +118,8 @@ check_plugin_fortigate_signatures = CheckPlugin(
     discovery_function=discover_fortigate_signatures,
     check_function=check_fortigate_signatures,
     check_ruleset_name="fortinet_signatures",
-    check_default_parameters={
-        "av_age": (86400, 172800),
-        "ips_age": (86400, 172800),
-    },
+    check_default_parameters=FortigateSignaturesParams(
+        av_age=(86400, 172800),
+        ips_age=(86400, 172800),
+    ),
 )

@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Collection, Iterable, Sequence
-from itertools import chain
+from collections.abc import Callable, Collection, Sequence
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
@@ -14,25 +13,13 @@ from cmk.utils.regex import regex
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.graphing._utils import (
-    get_graph_templates,
-    graph_templates_internal,
-    metric_title,
-    registered_metrics,
-    translated_metrics_from_row,
-)
-from cmk.gui.graphing._valuespecs import metrics_of_query
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
-from cmk.gui.type_defs import Choices, Row
+from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, AutocompleterRegistry, Labels
-from cmk.gui.visuals import (
-    get_only_sites_from_context,
-    livestatus_query_bare,
-    livestatus_query_bare_string,
-)
+from cmk.gui.visuals import get_only_sites_from_context, livestatus_query_bare_string
 
 
 def register(page_registry: PageRegistry, autocompleter_registry_: AutocompleterRegistry) -> None:
@@ -48,13 +35,9 @@ def register(page_registry: PageRegistry, autocompleter_registry_: Autocompleter
     autocompleter_registry_.register_autocompleter(
         "kubernetes_labels", kubernetes_labels_autocompleter
     )
-    autocompleter_registry_.register_autocompleter("monitored_metrics", metrics_autocompleter)
     autocompleter_registry_.register_autocompleter("tag_groups", tag_group_autocompleter)
     autocompleter_registry_.register_autocompleter("tag_groups_opt", tag_group_opt_autocompleter)
     autocompleter_registry_.register_autocompleter("label", label_autocompleter)
-    autocompleter_registry_.register_autocompleter(
-        "available_graphs", graph_templates_autocompleter
-    )
 
 
 def __live_query_to_choices(
@@ -207,24 +190,6 @@ def kubernetes_labels_autocompleter(value: str, params: dict) -> Choices:
     return __live_query_to_choices(_query_callback, 200, value, params)
 
 
-def metrics_autocompleter(value: str, params: dict) -> Choices:
-    context = params.get("context", {})
-    host = context.get("host", {}).get("host", "")
-    service = context.get("service", {}).get("service", "")
-    if not params.get("show_independent_of_context") and not all((host, service)):
-        return []
-
-    if context:
-        metrics = set(metrics_of_query(context))
-    else:
-        metrics = set(registered_metrics())
-
-    return sorted(
-        (v for v in metrics if _matches_id_or_title(value, v)),
-        key=lambda a: a[1].lower(),
-    )
-
-
 def tag_group_autocompleter(value: str, params: dict) -> Choices:
     return sorted(
         (v for v in active_config.tags.get_tag_group_choices() if _matches_id_or_title(value, v)),
@@ -262,48 +227,6 @@ def label_autocompleter(value: str, params: dict) -> Choices:
 
     # The user is allowed to enter new labels if they are valid ("<key>:<value>")
     return [(value, value)] if regex(LABEL_REGEX).match(value) else []
-
-
-def _graph_choices_from_livestatus_row(row: Row) -> Iterable[tuple[str, str]]:
-    yield from (
-        (
-            template.id,
-            template.title or metric_title(template.id),
-        )
-        for template in get_graph_templates(translated_metrics_from_row(row))
-    )
-
-
-def graph_templates_autocompleter(value: str, params: dict) -> Choices:
-    """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the
-    completions_params to get the list of choices"""
-    if not params.get("context") and params.get("show_independent_of_context") is True:
-        choices: Iterable[tuple[str, str]] = (
-            (
-                graph_id,
-                graph_details.title or graph_details.id,
-            )
-            for graph_id, graph_details in graph_templates_internal().items()
-        )
-
-    else:
-        columns = [
-            "service_check_command",
-            "service_perf_data",
-            "service_metrics",
-        ]
-
-        choices = set(
-            chain.from_iterable(
-                _graph_choices_from_livestatus_row(row)
-                for row in livestatus_query_bare("service", params["context"], columns)
-            )
-        )
-
-    return sorted(
-        (v for v in choices if _matches_id_or_title(value, v)), key=lambda a: a[1].lower()
-    )
 
 
 def validate_autocompleter_data(api_request):

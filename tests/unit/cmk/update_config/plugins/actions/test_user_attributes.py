@@ -16,7 +16,10 @@ import cmk.gui.userdb as userdb
 from cmk.gui.type_defs import UserSpec
 
 import cmk.update_config.plugins.actions.user_attributes
-from cmk.update_config.plugins.actions.user_attributes import UpdateUserAttributes
+from cmk.update_config.plugins.actions.user_attributes import (
+    _update_disable_notifications,
+    UpdateUserAttributes,
+)
 
 
 @pytest.fixture(name="plugin", scope="module")
@@ -190,3 +193,17 @@ def test_update_user_attributes(
     plugin(logging.getLogger(), {})
 
     assert _load_users_uncached(lock=False)[user_id] == expected
+
+
+@pytest.mark.parametrize(
+    ["old", "expected_new"],
+    [
+        pytest.param({"disable_notifications": True}, {"disable_notifications": {"disable": True}}),
+        pytest.param({"disable_notifications": False}, {"disable_notifications": {}}),
+        pytest.param({"disable_notifications": {}}, {"disable_notifications": {}}),
+        pytest.param({}, {}),
+    ],
+)
+def test_update_disable_notifications(old: UserSpec, expected_new: UserSpec) -> None:
+    _update_disable_notifications(old)
+    assert old == expected_new

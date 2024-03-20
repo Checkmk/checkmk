@@ -48,6 +48,7 @@ def _update_user_attributes(users: Users, logger: Logger) -> Users:
             _remove_flexible_notifications(user_spec)
             logger.warning("Removed notification configuration from user: %s" % user_id)
         _add_user_scheme_serial(user_spec)
+        _update_disable_notifications(user_spec)
 
     _remove_deprecated_language_none(logger, users)
 
@@ -73,6 +74,13 @@ def _remove_flexible_notifications(user: UserSpec) -> None:
             continue
 
         del user[key]  # type: ignore
+
+
+def _update_disable_notifications(user_spec: UserSpec) -> None:
+    # With version 1.6.0 we deprecated boolean disable_notifications. SUP-17012
+    disable_notifications = user_spec.get("disable_notifications")
+    if isinstance(disable_notifications, bool):
+        user_spec["disable_notifications"] = {"disable": True} if disable_notifications else {}
 
 
 class UpdateUserAttributes(UpdateAction):

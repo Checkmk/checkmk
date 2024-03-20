@@ -13,7 +13,7 @@ import time
 from cmk.base.check_api import check_levels, LegacyCheckDefinition, regex
 from cmk.base.config import check_info
 
-from cmk.agent_based.v2 import render, SNMPTree
+from cmk.agent_based.v2 import render, Result, SNMPTree, State
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 
 
@@ -57,6 +57,16 @@ def check_fortigate_signatures(_no_item, params, parsed):
     for key, title, version, age in parsed:
         if age is None:
             continue
+        if age < 0:
+            yield Result(
+                state=State.OK,
+                summary=(
+                    f"The age of the signature appears to be {render.time_offset(age)}. "
+                    "Since this is in the future you should check your system time."
+                ),
+            )
+            continue
+
         yield check_levels(
             age,
             None,

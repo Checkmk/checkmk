@@ -1090,7 +1090,7 @@ read_postfix_master_pid() {
     if [ -e "${postfix_queue_dir}/pid/master.pid" ]; then
         if [ -r "${postfix_queue_dir}/pid/master.pid" ]; then
             postfix_pid=$(sed 's/ //g' <"${postfix_queue_dir}/pid/master.pid") # handle possible spaces in output
-            if ps -p "${postfix_pid}" -o cmd= | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
+            if ps -p "${postfix_pid}" -o cmd= | grep -q ".*postfix/\(s\?bin/\)\?/\?master.*"; then
                 echo "${postfix_instance_name}:the Postfix mail system is running:PID:${postfix_pid}"
             else
                 echo "${postfix_instance_name}:PID file exists but instance is not running!"

@@ -19,9 +19,11 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     LevelsT,
     render,
+    Result,
     Service,
     SimpleSNMPSection,
     SNMPTree,
+    State,
     StringTable,
 )
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
@@ -82,6 +84,15 @@ def discover_fortigate_signatures(section: Section) -> DiscoveryResult:
 def check_fortigate_signatures(params: FortigateSignaturesParams, section: Section) -> CheckResult:
     for key, entry in section.items():
         if entry.age is None:
+            continue
+        if entry.age < 0:
+            yield Result(
+                state=State.OK,
+                summary=(
+                    f"The age of the signature appears to be {render.time_offset(entry.age)}. "
+                    "Since this is in the future you should check your system time."
+                ),
+            )
             continue
 
         # TODO: remove this levels migration logic by migrating the check parameters to formspecs

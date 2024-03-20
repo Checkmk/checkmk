@@ -79,7 +79,7 @@ def main() {
                 --fail \
                 -F token=${GITLAB_TRIGGER_TOKEN} \
                 -F ref="main" \
-                -F variables[BUILD_CMK_TAG]="${docker_tag}" \
+                -F variables[BUILD_CMK_TAG]="${cmk_version}" \
                 -F variables[BUILD_CSE]="true" \
                 https://gitlab.lan.checkmk.net/api/v4/projects/3/trigger/pipeline
             """);

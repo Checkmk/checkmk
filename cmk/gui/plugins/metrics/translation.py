@@ -969,13 +969,6 @@ check_metrics["check_mk-websphere_mq_queues"] = mq_translation
 check_metrics["check_mk-printer_pages"] = {
     "pages": {"name": "pages_total"},
 }
-check_metrics["check_mk-livestatus_status"] = {
-    "host_checks": {"name": "host_check_rate"},
-    "service_checks": {"name": "service_check_rate"},
-    "connections": {"name": "livestatus_connect_rate"},
-    "requests": {"name": "livestatus_request_rate"},
-    "log_messages": {"name": "log_message_rate"},
-}
 check_metrics["check_mk-cisco_wlc_clients"] = {
     "clients": {"name": "connections"},
 }

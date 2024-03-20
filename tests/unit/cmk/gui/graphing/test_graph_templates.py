@@ -558,7 +558,6 @@ def test_non_trivial_graph_declarations() -> None:
         "fs_used",
         "fs_used_2",
         "growing",
-        "livestatus_requests_per_connection",
         "mem_growing",
         "mem_shrinking",
         "oracle_sga_pga_total",

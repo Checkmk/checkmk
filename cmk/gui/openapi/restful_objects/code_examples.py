@@ -119,6 +119,8 @@ CODE_TEMPLATE_CURL = """
 #!/bin/bash
 
 # NOTE: We recommend all shell users to use the "httpie" examples instead.
+#       `curl` should not be used for writing large scripts.
+#       This code is provided for debugging purposes only.
 
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
@@ -130,19 +132,18 @@ PASSWORD="{{ password }}"
 
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
-out=$(
-  curl {%- if includes_redirect %} -L {%- endif %} \\
+curl {%- if includes_redirect %} -L {%- endif %} \\
 {%- if query_params %}
-    -G \\
+  -G \\
 {%- endif %}
-    {%- if not includes_redirect %}
-    --request {{ request_method | upper }} \\
-    {%- endif %}
-    --write-out "\\nxxx-status_code=%{http_code}\\n" \\
-    --header "Authorization: Bearer $USERNAME $PASSWORD" \\
-    --header "Accept: {{ endpoint.content_type }}" \\
+  {%- if not includes_redirect %}
+  --request {{ request_method | upper }} \\
+  {%- endif %}
+  --write-out "\\nxxx-status_code=%{http_code}\\n" \\
+  --header "Authorization: Bearer $USERNAME $PASSWORD" \\
+  --header "Accept: {{ endpoint.content_type }}" \\
 {%- for header in header_params %}
-    --header "{{ header.name }}: {{ header.example }}" \\
+  --header "{{ header.name }}: {{ header.example }}" \\
 {%- endfor %}
 {%- if query_params %}
  {%- for param in query_params %}
@@ -150,37 +151,23 @@ out=$(
   {%- if param.example is defined and param.example %}
     {%- if param.example is iterable and param.example is not string %}
     {%- for example in param.example %}
-    --data-urlencode {{ (param.name + "=" + example) | repr }} \\
+  --data-urlencode {{ (param.name + "=" + example) | repr }} \\
     {%- endfor %}
     {%- else %}
-    --data-urlencode {{ (param.name + "=" + param.example) | repr }} \\
+  --data-urlencode {{ (param.name + "=" + param.example) | repr }} \\
     {%- endif %}
   {%- endif %}
  {%- endfor %}
 {%- endif %}
 {%- if request_schema %}
-    --data '{{ request_schema |
-            to_dict |
-            to_json(indent=2, sort_keys=True) |
-            _escape_single_quotes |
-            indent(skip_lines=1, spaces=8) }}' \\
+  --data '{{ request_schema |
+          to_dict |
+          to_json(indent=2, sort_keys=True) |
+          _escape_single_quotes |
+          indent(skip_lines=1, spaces=8) }}' \\
 {%- endif %}
-    "$API_URL{{ request_endpoint | fill_out_parameters }}")
+  "$API_URL{{ request_endpoint | fill_out_parameters }}"
 
-resp=$( echo "${out}" | grep -v "xxx-status_code" )
-code=$( echo "${out}" | awk -F"=" '/^xxx-status_code/ {print $2}')
-
-# For indentation, please install 'jq' (JSON query tool)
-echo "$resp" | jq
-# echo "$resp"
-
-if [[ $code -lt 400 ]]; then
-    echo "OK"
-    exit 0
-else
-    echo "Request error"
-    exit 1
-fi
 """
 
 CODE_TEMPLATE_HTTPIE = """

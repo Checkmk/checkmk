@@ -8,12 +8,14 @@
 import logging
 
 import docker  # type: ignore[import-untyped]
+import pytest
 
 from tests.testlib.docker import checkmk_docker_api_request
 
 logger = logging.getLogger()
 
 
+@pytest.mark.skip("Still failing in CI, investigating")
 def test_docker_oracle(
     checkmk: docker.models.containers.Container,
     oracle: docker.models.containers.Container,

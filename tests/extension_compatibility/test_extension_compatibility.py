@@ -166,7 +166,7 @@ CURRENTLY_UNDER_TEST = {
     "https://exchange.checkmk.com/api/packages/download/609/btrfs_health-1.0.16.mkp",
     "https://exchange.checkmk.com/api/packages/download/622/Nextcloud-2.5.2.mkp",
     "https://exchange.checkmk.com/api/packages/download/628/powerscale-2.1.4.mkp",
-    "https://exchange.checkmk.com/api/packages/download/650/telematik_konnektor-1.2.0.mkp",
+    "https://exchange.checkmk.com/api/packages/download/650/telematik_konnektor-1.3.1.mkp",
     "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.19.mkp",
     "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.30.mkp",
     "https://exchange.checkmk.com/api/packages/download/652/redfish-2.2.31.mkp",

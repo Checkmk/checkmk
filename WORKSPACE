@@ -149,6 +149,20 @@ redis(
     version_str = REDIS_VERSION,
 )
 
+load("//omd/packages/asio:asio.bzl", "asio")
+
+asio(
+    sha256 = "09b9fe5c670c7bd47c7ee957cd9c184b4c8f0620d5b08b38ce837a24df971bca",
+    version = "1.24.0-patched",
+)
+
+load("//omd/packages/re2:re2.bzl", "re2")
+
+re2(
+    sha256 = "665b65b6668156db2b46dddd33405cd422bd611352c5052ab3dae6a5fbac5506",
+    version = "2022-12-01",
+)
+
 load("//omd/packages/openssl:openssl_http.bzl", "openssl")
 
 openssl(
@@ -321,6 +335,13 @@ load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool")
 rrdtool(
     sha256 = RRDTOOL_SHA256,
     version_str = RRDTOOL_VERSION,
+)
+
+load("//omd/packages/googletest:gtest_http.bzl", "googletest")
+
+googletest(
+    # Googletest doesn't provide releases anymore, it uses a "Abseil Live at Head philosophy" nowadays.
+    commit = "71140c3ca7a87bb1b5b9c9f1500fea8858cce344",
 )
 
 load("//omd/packages/redfish_mkp:redfish_mkp_http.bzl", "redfish_mkp")

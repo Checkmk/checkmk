@@ -951,6 +951,8 @@ def _notation_repr(
     | metrics.EngineeringScientificNotation
     | metrics.TimeNotation,
 ) -> str:
+    if isinstance(notation, metrics.TimeNotation):
+        return f"metrics.{notation.__class__.__name__}()"
     return f"metrics.{notation.__class__.__name__}({notation.symbol!r})"
 
 

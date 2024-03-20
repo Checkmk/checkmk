@@ -6,24 +6,22 @@
 import json
 import subprocess
 from contextlib import contextmanager
-from typing import Iterator, Mapping
+from typing import Iterator
 
 import pytest
 
 from tests.testlib.site import Site
 
-from tests.extension_compatibility.test_extension_compatibility import _ImportErrors
+from tests.extension_compatibility.test_extension_compatibility import ImportErrors
 
 MKP_TO_TEST = {
     "redfish",
 }
 
-_EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {}
-
 
 @pytest.mark.parametrize("package_name", MKP_TO_TEST)
 @pytest.mark.skip("TODO: Rebekka is on it")
-def test_shipped_mkp(site: Site, package_name: str) -> None:
+def test_enabling_shipped_mkp(site: Site, package_name: str) -> None:
     """
     Test if the shipped MKPs are present and can be activated in a site
 
@@ -47,11 +45,10 @@ def test_shipped_mkp(site: Site, package_name: str) -> None:
     assert package_name in mkp_names
 
     with _temporary_enable_extension(site, package_name):
-        encountered_errors = _ImportErrors.collect_from_site(site)
-        expected_errors = _EXPECTED_IMPORT_ERRORS.get(package_name, _ImportErrors())
+        encountered_errors = ImportErrors.collect_from_site(site)
 
-    assert encountered_errors.base_errors == expected_errors.base_errors
-    assert encountered_errors.gui_errors == expected_errors.gui_errors
+    assert not encountered_errors.base_errors
+    assert not encountered_errors.gui_errors
 
 
 @contextmanager

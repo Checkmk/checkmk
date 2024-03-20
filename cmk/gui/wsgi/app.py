@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import logging
-import typing as t
 import warnings
 
 import werkzeug
@@ -19,10 +18,6 @@ from cmk.gui import http
 from cmk.gui.session import FileBasedSession
 from cmk.gui.wsgi.blueprints.checkmk import checkmk
 from cmk.gui.wsgi.blueprints.rest_api import rest_api
-
-if t.TYPE_CHECKING:
-    # Here due to cyclical imports
-    Environments = t.Literal["production", "testing", "development"]
 
 logger = logging.getLogger(__name__)
 

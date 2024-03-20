@@ -571,7 +571,7 @@ def do_log_ack(site, host_name, file_name):  # pylint: disable=too-many-branches
     html.footer()
 
 
-def _get_ack_msg(host_name, file_name) -> str:  # type: ignore[no-untyped-def]
+def _get_ack_msg(host_name: HostName | None, file_name: str | None) -> str:
     if not host_name and not file_name:  # all logs on all hosts
         return _("all logfiles on all hosts")
 

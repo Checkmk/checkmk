@@ -251,6 +251,7 @@ function Invoke-IntegrationTest() {
     if (-not (Test-Administrator)) {
         Write-Error "Integration Testing must be executed as Administrator." -ErrorAction Stop
     }
+    $env:CHECKMK_GIT_DIR = $repo_root
 
     Write-Host "Running integration test..." -Foreground White
     $results = "integration_tests_results.zip"

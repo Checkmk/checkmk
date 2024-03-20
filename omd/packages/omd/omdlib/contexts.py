@@ -129,7 +129,6 @@ class SiteContext(AbstractSiteContext):
             return None
         return "/omd/versions/%s/lib/omd/hooks/" % self.version
 
-    @property
     def replacements(self) -> Replacements:
         """Dictionary of key/value for replacing macros in skel files"""
         version = self.version

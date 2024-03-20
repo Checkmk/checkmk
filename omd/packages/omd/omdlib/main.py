@@ -445,7 +445,7 @@ def _patch_template_file(  # pylint: disable=too-many-branches
     content = Path(src).read_bytes()
     for name, replacements in [
         (old_site_name, old_replacements),
-        (new_site.name, new_site.replacements),
+        (new_site.name, new_site.replacements()),
     ]:
         filename = Path(f"{dst}.skel.{name}")
         filename.write_bytes(replace_tags(content, replacements))
@@ -745,7 +745,7 @@ def _try_merge(
                 ):
                     skel_content = b""
                     break
-        Path(f"{user_path}-{version}").write_bytes(replace_tags(skel_content, site.replacements))
+        Path(f"{user_path}-{version}").write_bytes(replace_tags(skel_content, site.replacements()))
     version_patch = os.popen(  # nosec B605 # BNS:2b5952
         f"diff -u {user_path}-{old_version} {user_path}-{new_version}"
     ).read()
@@ -867,7 +867,7 @@ def update_file(  # pylint: disable=too-many-branches
     new_skel = "/omd/versions/%s/skel" % new_version
 
     new_replacements = {
-        **site.replacements,
+        **site.replacements(),
         # When calling this during "omd update", the site.version and site.edition still point to
         # the original edition, because we are still in the update prcedure and the version symlink
         # has not been changed yet.
@@ -879,7 +879,7 @@ def update_file(  # pylint: disable=too-many-branches
         old_edition,
         site.dir,
         {
-            **site.replacements,
+            **site.replacements(),
             "###EDITION###": old_edition,
         },
     )
@@ -2254,7 +2254,7 @@ def init_site(
 
     # Create skeleton files of non-tmp directories
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
-    create_skeleton_files(site.dir, site.replacements, skelroot, site.skel_permissions, ".")
+    create_skeleton_files(site.dir, site.replacements(), skelroot, site.skel_permissions, ".")
 
     # Save the skeleton files used to initialize this site
     save_version_meta_data(site, omdlib.__version__)
@@ -2518,7 +2518,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
 
     # Needs to be computed before the site is moved to be able to derive the version from the
     # version symlink
-    old_replacements = old_site.replacements
+    old_replacements = old_site.replacements()
 
     if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
@@ -2695,7 +2695,7 @@ def print_diff(
     target_type = filetype(target_file)
 
     changed_type, changed_content, changed = file_status(
-        source_file, site.replacements, target_file, site.replacements
+        source_file, site.replacements(), target_file, site.replacements()
     )
 
     if not changed:
@@ -2712,7 +2712,7 @@ def print_diff(
         else:
             arrow = tty.magenta + "->" + tty.normal
             if "c" in status:
-                source_content = file_contents(source_file, site.replacements)
+                source_content = file_contents(source_file, site.replacements())
                 if os.system("which colordiff > /dev/null 2>&1") == 0:  # nosec B605 # BNS:2b5952
                     diff = "colordiff"
                 else:
@@ -3439,7 +3439,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     if sitename != site.name:
         old_site = SiteContext(sitename)
         patch_skeleton_files(
-            _get_conflict_mode(options), old_site.name, old_site.replacements, site
+            _get_conflict_mode(options), old_site.name, old_site.replacements(), site
         )
 
     # Now switch over to the new site as currently active site

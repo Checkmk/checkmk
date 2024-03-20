@@ -45,11 +45,12 @@ def test_site_context_version(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(os, "readlink", lambda x: "../2018.08.11.cee")
     site = SiteContext("dingeling")
+    replacements = site.replacements()
 
-    assert site.replacements["###SITE###"] == "dingeling"
-    assert site.replacements["###ROOT###"] == "/omd/sites/dingeling"
-    assert site.replacements["###EDITION###"] in ("raw", "enterprise", "cloud", "managed")
-    assert len(site.replacements) == 3
+    assert replacements["###SITE###"] == "dingeling"
+    assert replacements["###ROOT###"] == "/omd/sites/dingeling"
+    assert replacements["###EDITION###"] in ("raw", "enterprise", "cloud", "managed")
+    assert len(replacements) == 3
 
 
 def test_site_context_exists(monkeypatch: pytest.MonkeyPatch) -> None:

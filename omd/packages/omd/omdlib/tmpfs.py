@@ -280,7 +280,7 @@ def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, ske
     prepare_tmpfs(version_info, site.name, site.tmp_dir, site.conf["TMPFS"])
 
     if not os.listdir(site.tmp_dir):
-        create_skeleton_files(site.dir, site.replacements, skelroot, site.skel_permissions, "tmp")
+        create_skeleton_files(site.dir, site.replacements(), skelroot, site.skel_permissions, "tmp")
         chown_tree(site.tmp_dir, site.name)
         mark_tmpfs_initialized(site)
         _restore_tmpfs_dump(site.dir, site.tmp_dir)

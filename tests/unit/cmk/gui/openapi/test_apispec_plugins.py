@@ -12,7 +12,7 @@ from marshmallow import post_load, Schema, ValidationError
 from marshmallow.base import SchemaABC
 
 from cmk.gui.fields.base import ValueTypedDictSchema
-from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
+from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
 
 from cmk import fields
 

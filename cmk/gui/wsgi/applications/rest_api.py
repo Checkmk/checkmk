@@ -38,7 +38,7 @@ from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
     HEADER_CHECKMK_VERSION,
 )
-from cmk.gui.openapi.restful_objects.specification import spec_path
+from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.openapi.utils import (
     EXT,
     GeneralRestAPIException,

@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.gui.openapi.spec_generator import main
+from cmk.gui.openapi.spec.spec_generator import main
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

@@ -302,18 +302,17 @@ function Set-MSI-Version {
     Write-Host "Success setting version MSI" -foreground Green
 }
 
-function Start-ComponentTests {
+function Start-UnitTests {
     if ($argTest -ne $true) {
-        Write-Host "Skipping component testing..." -ForegroundColor Yellow
+        Write-Host "Skipping unit testing..." -ForegroundColor Yellow
         return
     }
-    Write-Host "Running component tests..." -ForegroundColor White
-    & net stop WinRing0_1_2_0
-    & ./call_unit_tests.cmd -*_Simulation:*Component:*ComponentExt:*Flaky
+    Write-Host "Running unit tests..." -ForegroundColor White
+    & ./run_tests.ps1 --unit
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "Error Component Testing, error code is $LASTEXITCODE" -ErrorAction Stop
+        Write-Error "Error unit Testing, error code is $LASTEXITCODE" -ErrorAction Stop
     }
-    Write-Host "Success component tests" -foreground Green
+    Write-Host "Success unit tests" -foreground Green
 }
 
 function Invoke-Attach($usbip, $addr, $port) {
@@ -556,7 +555,7 @@ try {
     Build-Ext
     Build-MSI
     Set-Msi-Version
-    Start-ComponentTests
+    Start-UnitTests
     Invoke-TestSigning $usbip_exe
     Start-MsiControlBuild
     Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"

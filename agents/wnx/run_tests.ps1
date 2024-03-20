@@ -19,6 +19,7 @@ $testRegression = $false
 $testPlugins = $false
 $testBuild = $false
 $testAll = $false
+$testUnit = $false
 $repo_root = (get-item $pwd).parent.parent.FullName
 $cur_dir = $pwd
 $arte = "$repo_root/artefacts"
@@ -42,6 +43,7 @@ function Write-Help() {
     Write-Host "  -R, --regression     regression testing"
     Write-Host "  -I, --integration    integration testing"
     Write-Host "  -P, --plugins        plugins testing"
+    Write-Host "  -U, --unit           unit testing"
     Write-Host ""
     Write-Host "Examples:"
     Write-Host ""
@@ -66,6 +68,7 @@ else {
             { $("-P", "--plugins") -contains $_ } { $testPlugins = $true }
             { $("-I", "--integration") -contains $_ } { $testIntegration = $true }
             { $("-R", "--regression") -contains $_ } { $testRegression = $true }
+            { $("-U", "--unit") -contains $_ } { $testUnit = $true }
         }
     }
 }
@@ -83,19 +86,7 @@ if ($testAll) {
     $testPlugins = $true
     $testBuild = $true
     $testAll = $true
-}
-
-function Invoke-UnitTestX([bool]$run, [String]$name, [String]$cmdline) {
-    if ($run -ne $true) {
-        Write-Host "Skipping $name..." -Foreground Yellow
-        return
-    }
-    Write-Host "Running $name..." -Foreground White
-    & ./call_unit_tests.cmd "$cmdline"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "[-] $name :$_" -Foreground Red -ErrorAction Stop
-    }
-    Write-Host "Success $name..." -Foreground Green
+    $testUnit = $true
 }
 
 function New-TemporaryDirectory() {
@@ -368,6 +359,7 @@ try {
         & pwsh ./run.ps1 --build
     }
 
+    Invoke-UnitTest -run $testUnit -name "unit" -cmdline "-*_Simulation:*Component:*ComponentExt:*Flaky"
     Invoke-UnitTest -run $testComponent -name "component" -cmdline "*Component"
     Invoke-UnitTest -run $testExt -name "ext" -cmdline "*ComponentExt"
     Invoke-UnitTest -run $testSimulation -name "simulation" -cmdline "*_Simulation"

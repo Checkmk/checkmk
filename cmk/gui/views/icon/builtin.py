@@ -5,7 +5,8 @@
 
 import json
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Literal
 
 import cmk.utils
 import cmk.utils.render
@@ -62,7 +63,11 @@ class ActionMenuIcon(Icon):
         return 10
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         url_vars = [
             ("host", row["host_name"]),
@@ -119,7 +124,11 @@ class IconImageIcon(Icon):
         return 25
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> HTML | None:
         img = row[what + "_icon_image"]
         if not img:
@@ -158,7 +167,11 @@ class RescheduleIcon(Icon):
         return ["cached_at", "cache_interval"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> tuple[str, str] | tuple[str, str, tuple[str, str]] | None:
         if what == "service" and row["service_cached_at"]:
             output = _("This service is based on cached agent data and cannot be rescheduled.")
@@ -232,7 +245,11 @@ class RuleEditorIcon(Icon):
         return ["description"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_check_type"] == 2:
             return None  # shadow services have no parameters
@@ -283,7 +300,11 @@ class ManpageIcon(Icon):
         return ["check_command"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if what == "service" and active_config.wato_enabled and user.may("wato.use"):
             command = row["service_check_command"]
@@ -341,7 +362,11 @@ class AcknowledgeIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_acknowledged"]:
             return "ack", _("This problem has been acknowledged")
@@ -380,7 +405,11 @@ class PerfgraphIcon(Icon):
         return 20
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if row[what + "_pnpgraph_present"] == 1:
             return self._pnp_icon(row, what)
@@ -444,7 +473,11 @@ class PredictionIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # TODO: At least for interfaces we have 2 predictive values. But this icon
         # only creates a link to the first one. Add multiple icons or add a navigation
@@ -495,7 +528,11 @@ class CustomActionIcon(Icon):
         return ["action_url_expanded", "pnpgraph_present"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if display_options.enabled(display_options.X):
             # action_url (only, if not a PNP-URL and pnp_graph is working!)
@@ -532,7 +569,11 @@ class LogwatchIcon(Icon):
         return ["host_name", "service_description", "check_command"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if what != "service" or row[what + "_check_command"] not in [
             "check_mk-logwatch",
@@ -575,7 +616,11 @@ class NotesIcon(Icon):
         return ["notes_url_expanded", "check_command"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> tuple[str, str, tuple[str, str]] | None:
         # Adds the url_prefix of the services site to the notes url configured in this site.
         # It also adds the master_url which will be used to link back to the source site
@@ -619,7 +664,11 @@ class DowntimesIcon(Icon):
         return ["scheduled_downtime_depth", "downtimes_with_extra_info"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> tuple[IconSpec, str, str | None] | None:
         def detail_txt(
             downtimes_with_extra_info: Sequence[
@@ -720,7 +769,11 @@ class CommentsIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> tuple[str, str, str | None] | None:
         comments = row[what + "_comments_with_extra_info"]
         if len(comments) > 0:
@@ -777,7 +830,11 @@ class NotificationsIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Notifications disabled
         enabled = row[what + "_notifications_enabled"]
@@ -818,7 +875,11 @@ class FlappingIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | tuple[str, str]:
         if row[what + "_is_flapping"]:
             if what == "host":
@@ -856,7 +917,11 @@ class StalenessIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if is_stale(row, config=active_config):
             if what == "host":
@@ -900,7 +965,11 @@ class ActiveChecksIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Setting of active checks modified by user
         if "active_checks_enabled" in row[what + "_modified_attributes_list"]:
@@ -942,7 +1011,11 @@ class PassiveChecksIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         # Passive checks disabled manually?
         if "passive_checks_enabled" in row[what + "_modified_attributes_list"]:
@@ -981,7 +1054,11 @@ class NotificationPeriodIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row[what + "_in_notification_period"]:
             return "outofnot", _("Out of notification period")
@@ -1015,7 +1092,11 @@ class ServicePeriodIcon(Icon):
         return True
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         if not row[what + "_in_service_period"]:
             return "outof_serviceperiod", _("Out of service period")
@@ -1043,7 +1124,11 @@ class StarsIcon(Icon):
         return _("Stars")
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
         stars = self._get_stars()
 
@@ -1093,7 +1178,11 @@ class CrashdumpsIcon(Icon):
         return ["plugin_output", "state", "host_name"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | tuple[str, str] | tuple[str, str, str]:
         if (
             what == "service"
@@ -1166,7 +1255,11 @@ class CheckPeriodIcon(Icon):
         return ["in_passive_check_period"]
 
     def render(
-        self, what: str, row: Row, tags: list[TagID], custom_vars: dict[str, str]
+        self,
+        what: Literal["host", "service"],
+        row: Row,
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> None | tuple[str, str]:
         if what == "service":
             if (

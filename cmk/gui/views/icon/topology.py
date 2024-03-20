@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+from typing import Literal
+
 from cmk.utils.tags import TagID
 
 from cmk.gui.http import request
@@ -30,10 +33,10 @@ class ShowParentChildTopology(Icon):
 
     def render(
         self,
-        what: str,
+        what: Literal["host", "service"],
         row: Row,
-        tags: list[TagID],
-        custom_vars: dict[str, str],
+        tags: Sequence[TagID],
+        custom_vars: Mapping[str, str],
     ) -> tuple[str, str, str]:
         url = makeuri_contextless(
             request,

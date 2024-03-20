@@ -215,6 +215,7 @@ def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
     """Generate a message matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
@@ -240,6 +241,7 @@ def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
     """Generate a message not matching any EC rule and assert no event is created"""
     match, _, _ = setup_ec
@@ -258,6 +260,7 @@ def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_rule_match_snmp_trap(
     site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
 ) -> None:
@@ -290,6 +293,7 @@ def test_ec_rule_match_snmp_trap(
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_rule_no_match_snmp_trap(
     site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
 ) -> None:
@@ -313,6 +317,7 @@ def test_ec_rule_no_match_snmp_trap(
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_global_settings(
     site: Site,
     setup_ec: Iterator,

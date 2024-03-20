@@ -65,6 +65,7 @@ from cmk.gui.valuespec import (
     AjaxDropdownChoice,
     autocompleter_registry,
     DropdownChoice,
+    FixedValue,
     TextInput,
     ValueSpec,
 )
@@ -1311,18 +1312,32 @@ class ABCFolderMode(WatoMode, abc.ABC):
             ]
             html.set_focus("title")
 
-            # folder name (omit this for root folder)
-            if new or not folder.is_root():
-                if not active_config.wato_hide_filenames:
+            # folder name (omit this for editing root folder)
+            if not active_config.wato_hide_filenames:
+                folder_name_title = _("Internal directory name")
+                folder_name_help = _(
+                    "This is the name of subdirectory where the files and "
+                    "other folders will be created. You cannot change this later."
+                )
+                if new:
                     basic_attributes += [
                         (
                             "name",
                             TextInput(
-                                title=_("Internal directory name"),
-                                help=_(
-                                    "This is the name of subdirectory where the files and "
-                                    "other folders will be created. You cannot change this later."
-                                ),
+                                title=folder_name_title,
+                                help=folder_name_help,
+                            ),
+                            self._folder.name(),
+                        ),
+                    ]
+                elif not folder.is_root():
+                    basic_attributes += [
+                        (
+                            "name",
+                            FixedValue(
+                                value=self._folder.name(),
+                                title=folder_name_title,
+                                help=folder_name_help,
                             ),
                             self._folder.name(),
                         ),

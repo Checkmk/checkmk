@@ -78,7 +78,7 @@ _UNIT_MAP = {
     "count": metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2)),
     "%": metrics.Unit(metrics.DecimalNotation("%")),
     "s": metrics.Unit(metrics.TimeNotation()),
-    "1/s": metrics.Unit(metrics.DecimalNotation("1/s")),
+    "1/s": metrics.Unit(metrics.DecimalNotation("/s")),
     "hz": metrics.Unit(metrics.DecimalNotation("Hz")),
     "bytes": metrics.Unit(metrics.IECNotation("B")),
     "bytes/s": metrics.Unit(metrics.IECNotation("B/s")),

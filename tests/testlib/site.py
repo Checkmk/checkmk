@@ -1351,11 +1351,11 @@ class SiteFactory:
         return site
 
     def interactive_create(
-        self, name: str, logfile_path: str = "/tmp/omd_install.out", timeout: int = 30
+        self, name: str, logfile_path: str = "/tmp/omd_install.out", timeout: int = 60
     ) -> Site:
         """Interactive site creation via Pexpect"""
         self._base_ident = ""
-        site = self._site_obj(name)
+        site = self._site_obj(name, check_wait_timeout=30)
         site.install_cmk()
 
         rc = spawn_expect_process(
@@ -1403,7 +1403,7 @@ class SiteFactory:
         min_version: CMKVersion,
         conflict_mode: str = "keepold",
         logfile_path: str = "/tmp/sep.out",
-        timeout: int = 30,
+        timeout: int = 60,
     ) -> Site:
         """Update the test-site with the given target-version, if supported.
 

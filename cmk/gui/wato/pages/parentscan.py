@@ -134,7 +134,9 @@ class ModeParentScan(WatoMode):
             ping_probes=request.get_integer_input_mandatory("ping_probes", 5),
         )
         self._job = ParentScanBackgroundJob()
-        self._folder = disk_or_search_folder_from_request()
+        self._folder = disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        )
 
     def action(self) -> ActionResult:
         try:
@@ -328,7 +330,9 @@ class ModeParentScan(WatoMode):
         html.write_text(_("Create gateway hosts in"))
         html.open_ul()
 
-        disk_folder = disk_or_search_base_folder_from_request()
+        disk_folder = disk_or_search_base_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        )
         html.radiobutton(
             "where",
             "subfolder",

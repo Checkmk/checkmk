@@ -151,7 +151,9 @@ class ModeFolder(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._folder = disk_or_search_folder_from_request()
+        self._folder = disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        )
 
         if request.has_var("_show_host_tags"):
             user.wato_folders_show_tags = request.get_ascii_input("_show_host_tags") == "1"

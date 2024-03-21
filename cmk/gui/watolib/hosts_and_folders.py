@@ -1066,7 +1066,9 @@ def folder_from_request(var_folder: str | None = None, host_name: str | None = N
 
 
 @request_memoize()
-def disk_or_search_folder_from_request() -> Folder | SearchFolder:
+def disk_or_search_folder_from_request(
+    var_folder: str | None = None, host_name: str | None = None
+) -> Folder | SearchFolder:
     """Return `Folder` that is specified by the current URL
 
     This is either by a folder
@@ -1080,7 +1082,7 @@ def disk_or_search_folder_from_request() -> Folder | SearchFolder:
     if search_folder:
         return search_folder
 
-    return folder_from_request()
+    return folder_from_request(var_folder, host_name)
 
 
 def _search_folder_from_request() -> SearchFolder | None:
@@ -1097,8 +1099,10 @@ def _search_folder_from_request() -> SearchFolder | None:
     return None
 
 
-def disk_or_search_base_folder_from_request() -> Folder:
-    disk_or_search_folder = disk_or_search_folder_from_request()
+def disk_or_search_base_folder_from_request(
+    var_folder: str | None = None, host_name: str | None = None
+) -> Folder:
+    disk_or_search_folder = disk_or_search_folder_from_request(var_folder, host_name)
     if isinstance(disk_or_search_folder, Folder):
         return disk_or_search_folder
 

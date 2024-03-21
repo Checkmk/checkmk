@@ -120,7 +120,7 @@ def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) ->
     if tmpfs_mounted(site.name):
         if output:
             sys.stdout.write("Saving temporary filesystem contents...")
-        save_tmpfs_dump(site)
+        save_tmpfs_dump(site.dir, site.tmp_dir)
         if output:
             ok()
     return unmount_tmpfs_without_save(site.name, site.tmp_dir, output, kill)
@@ -244,7 +244,7 @@ def remove_from_fstab(site: SiteContext) -> None:
     ok()
 
 
-def save_tmpfs_dump(site: SiteContext) -> None:
+def save_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
     """Dump tmpfs content for later restore after remount
 
     Creates a tar archive from the current tmpfs contents that is restored to the
@@ -253,17 +253,17 @@ def save_tmpfs_dump(site: SiteContext) -> None:
     Please note that this only preserves specific files, not the whole tmpfs.
     """
     save_paths = [
-        Path(site.tmp_dir) / "check_mk" / "piggyback",
-        Path(site.tmp_dir) / "check_mk" / "piggyback_sources",
-        Path(site.tmp_dir) / "check_mk" / "counters",
+        Path(site_tmp_dir) / "check_mk" / "piggyback",
+        Path(site_tmp_dir) / "check_mk" / "piggyback_sources",
+        Path(site_tmp_dir) / "check_mk" / "counters",
     ]
 
-    dump_path = Path(site.dir, "var/omd/tmpfs-dump.tar")
+    dump_path = Path(site_dir, "var/omd/tmpfs-dump.tar")
     dump_path.parent.mkdir(parents=True, exist_ok=True)
     with tarfile.TarFile(dump_path, mode="w") as f:
         for save_path in save_paths:
             if save_path.exists():
-                f.add(str(save_path), arcname=str(save_path.relative_to(site.tmp_dir)))
+                f.add(str(save_path), arcname=str(save_path.relative_to(site_tmp_dir)))
     assert dump_path.exists()
 
 

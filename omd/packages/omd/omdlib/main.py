@@ -3121,7 +3121,7 @@ def main_init_action(  # pylint: disable=too-many-branches
             terminate_site_user_processes(site, global_opts)
             # Even if we are not explicitly executing an unmount of the tmpfs, this may be the
             # "stop" before shutting down the computer. Create a tmpfs dump now, just to be sure.
-            save_tmpfs_dump(site)
+            save_tmpfs_dump(site.dir, site.tmp_dir)
 
         if command == "start":
             if not (instance_id_file_path := get_instance_id_file_path(Path(site.dir))).exists():

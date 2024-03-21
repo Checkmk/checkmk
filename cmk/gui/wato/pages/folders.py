@@ -1260,7 +1260,12 @@ class ABCFolderMode(WatoMode, abc.ABC):
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        is_enabled = self._is_new or not folder_from_request().locked()
+        is_enabled = (
+            self._is_new
+            or not folder_from_request(
+                request.var("folder"), request.get_ascii_input("host")
+            ).locked()
+        )
 
         # When backfolder is set, we have the special situation that we want to redirect the user
         # two breadcrumb layers up. This is a very specific case, so we realize this locally instead
@@ -1282,7 +1287,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
             # Edit icon on subfolder preview should bring user back to parent folder
             folder = folder_tree().folder(backfolder)
         else:
-            folder = folder_from_request()
+            folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
@@ -1299,7 +1304,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     # TODO: Clean this method up! Split new/edit handling to sub classes
     def page(self) -> None:
         new = self._is_new
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         folder.permissions.need_permission("read")
 
         if new and folder.locked():
@@ -1369,7 +1374,7 @@ class ModeEditFolder(ABCFolderMode):
         super().__init__(is_new=False)
 
     def _init_folder(self) -> Folder:
-        return folder_from_request()
+        return folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
     def title(self) -> str:
         return _("Folder properties")
@@ -1397,7 +1402,7 @@ class ModeCreateFolder(ABCFolderMode):
         return _("Add folder")
 
     def _save(self, title: str, attributes: HostAttributes) -> None:
-        parent_folder = folder_from_request()
+        parent_folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if not active_config.wato_hide_filenames:
             name = request.get_ascii_input_mandatory("name", "").strip()
             check_wato_foldername("name", name)

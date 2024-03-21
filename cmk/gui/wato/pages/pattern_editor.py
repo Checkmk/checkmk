@@ -86,7 +86,7 @@ class ModePatternEditor(WatoMode):
         self._item = request.get_str_input_mandatory("file", "")
         self._match_txt = request.get_str_input_mandatory("match", "")
 
-        self._host = folder_from_request().host(self._hostname)
+        self._host = folder_from_request(request.var("folder"), self._hostname).host(self._hostname)
 
         if self._hostname and not self._host:
             raise MKUserError(None, _("This host does not exist."))
@@ -213,7 +213,7 @@ class ModePatternEditor(WatoMode):
         already_matched = False
         abs_rulenr = 0
         service_labels: Labels = {}
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if self._hostname:
             service_desc = self._get_service_description(self._hostname, "logwatch", self._item)
             host = folder.host(self._hostname)
@@ -249,7 +249,7 @@ class ModePatternEditor(WatoMode):
 
                         # If hostname (and maybe filename) try match it
                         rule_matches = rule.matches_host_and_item(
-                            folder_from_request(),
+                            folder_from_request(request.var("folder"), self._hostname),
                             self._hostname,
                             self._item,
                             service_desc,

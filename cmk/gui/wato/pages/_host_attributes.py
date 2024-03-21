@@ -170,7 +170,9 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
             if attr.show_inherited_value():
                 if for_what in ["host", "cluster"]:
-                    url = folder_from_request().edit_url()
+                    url = folder_from_request(
+                        request.var("folder"), request.get_ascii_input("host")
+                    ).edit_url()
 
                 container = parent  # container is of type Folder
                 while container:

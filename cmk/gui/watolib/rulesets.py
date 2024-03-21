@@ -970,7 +970,7 @@ class Ruleset:
                 continue
 
             if not rule.matches_host_and_item(
-                folder_from_request(),
+                folder_from_request(folder.name(), hostname),
                 hostname,
                 svc_desc_or_item,
                 svc_desc,

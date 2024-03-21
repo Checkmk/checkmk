@@ -334,7 +334,7 @@ class ModeBulkImport(WatoMode):
             raw_rows
         )
 
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         imported_hosts, _failed_hosts, error_msgs = self._import_hosts_batched(
             host_attribute_tuples,
             folder=folder,

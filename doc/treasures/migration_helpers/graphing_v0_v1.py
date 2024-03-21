@@ -25,7 +25,7 @@ import sys
 import traceback
 import types
 from collections.abc import Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal, TextIO
 
@@ -108,11 +108,22 @@ _UNIT_MAP = {
 }
 
 
-def _parse_legacy_unit(legacy_unit: str) -> metrics.Unit:
-    if legacy_unit in _UNIT_MAP:
-        return _UNIT_MAP[legacy_unit]
-    _LOGGER.info("Unit %r not found, use 'DecimalUnit'", legacy_unit)
-    return metrics.Unit(metrics.DecimalNotation(legacy_unit))
+@dataclass(frozen=True)
+class UnitParser:
+    _units: set[metrics.Unit] = field(default_factory=set)
+
+    @property
+    def units(self) -> Sequence[metrics.Unit]:
+        return list(self._units)
+
+    def parse(self, legacy_unit: str) -> metrics.Unit:
+        if legacy_unit in _UNIT_MAP:
+            unit = _UNIT_MAP[legacy_unit]
+        else:
+            _LOGGER.info("Unit %r not found, use 'DecimalUnit'", legacy_unit)
+            unit = metrics.Unit(metrics.DecimalNotation(legacy_unit))
+        self._units.add(unit)
+        return unit
 
 
 def _rgb_from_hexstr(hexstr: str) -> RGB:
@@ -182,7 +193,9 @@ class _Distance:
         )
 
 
-def _parse_legacy_metric_info(name: str, info: MetricInfo) -> metrics.Metric:
+def _parse_legacy_metric_info(
+    unit_parser: UnitParser, name: str, info: MetricInfo
+) -> metrics.Metric:
     if (legacy_color := info["color"]).startswith("#"):
         rgb = _rgb_from_hexstr(legacy_color)
     else:
@@ -190,7 +203,7 @@ def _parse_legacy_metric_info(name: str, info: MetricInfo) -> metrics.Metric:
     return metrics.Metric(
         name=name,
         title=Title(str(info["title"])),
-        unit=_parse_legacy_unit(info["unit"]),
+        unit=unit_parser.parse(info["unit"]),
         color=min(
             (_Distance.from_rgb(rgb, color) for color in metrics.Color),
             key=lambda d: d.distance,
@@ -199,11 +212,14 @@ def _parse_legacy_metric_info(name: str, info: MetricInfo) -> metrics.Metric:
 
 
 def _parse_legacy_metric_infos(
-    debug: bool, unparseables: list[Unparseable], metric_info: Mapping[str, MetricInfo]
+    debug: bool,
+    unparseables: list[Unparseable],
+    unit_parser: UnitParser,
+    metric_info: Mapping[str, MetricInfo],
 ) -> Iterator[metrics.Metric]:
     for name, info in metric_info.items():
         try:
-            yield _parse_legacy_metric_info(name, info)
+            yield _parse_legacy_metric_info(unit_parser, name, info)
         except Exception as e:
             _show_exception(e)
             if debug:
@@ -392,6 +408,7 @@ def _parse_single_expression(
 
 
 def _resolve_stack(
+    unit_parser: UnitParser,
     stack: Sequence[
         str
         | metrics.Constant
@@ -466,7 +483,7 @@ def _resolve_stack(
                 resolved.append(
                     metrics.Product(
                         Title(explicit_title),
-                        _parse_legacy_unit(explicit_unit_name),
+                        unit_parser.parse(explicit_unit_name),
                         explicit_color,
                         [left, right],
                     )
@@ -485,7 +502,7 @@ def _resolve_stack(
                 resolved.append(
                     metrics.Fraction(
                         Title(explicit_title),
-                        _parse_legacy_unit(explicit_unit_name),
+                        unit_parser.parse(explicit_unit_name),
                         explicit_color,
                         dividend=left,
                         divisor=metrics.Sum(
@@ -510,7 +527,7 @@ def _resolve_stack(
 
 
 def _parse_expression(
-    expression: str, explicit_title: str
+    unit_parser: UnitParser, expression: str, explicit_title: str
 ) -> (
     str
     | metrics.Constant
@@ -567,7 +584,7 @@ def _parse_expression(
             case _:
                 stack.append(_parse_single_expression(word, explicit_title, explicit_color))
 
-    return _resolve_stack(stack, explicit_title, explicit_unit_name, explicit_color)
+    return _resolve_stack(unit_parser, stack, explicit_title, explicit_unit_name, explicit_color)
 
 
 def _raw_metric_names(
@@ -621,6 +638,7 @@ def _perfometer_name(
 
 
 def _parse_legacy_linear_perfometer(
+    unit_parser: UnitParser,
     legacy_linear_perfometer: _LinearPerfometerSpec,
 ) -> perfometers.Perfometer:
     if "condition" in legacy_linear_perfometer:
@@ -632,7 +650,7 @@ def _parse_legacy_linear_perfometer(
         _LOGGER.info("Perfometer field 'label' will not be migrated")
 
     legacy_total = legacy_linear_perfometer["total"]
-    segments = [_parse_expression(s, "") for s in legacy_linear_perfometer["segments"]]
+    segments = [_parse_expression(unit_parser, s, "") for s in legacy_linear_perfometer["segments"]]
     return perfometers.Perfometer(
         name=_perfometer_name(segments),
         focus_range=perfometers.FocusRange(
@@ -640,7 +658,7 @@ def _parse_legacy_linear_perfometer(
             perfometers.Closed(
                 legacy_total
                 if isinstance(legacy_total, (int, float))
-                else _parse_expression(legacy_total, "")
+                else _parse_expression(unit_parser, legacy_total, "")
             ),
         ),
         segments=segments,
@@ -652,9 +670,10 @@ def _compute_85_border(base: int | float, half_value: int | float) -> int:
 
 
 def _parse_legacy_logarithmic_perfometer(
+    unit_parser: UnitParser,
     legacy_logarithmic_perfometer: LogarithmicPerfometerSpec,
 ) -> perfometers.Perfometer:
-    segments = [_parse_expression(legacy_logarithmic_perfometer["metric"], "")]
+    segments = [_parse_expression(unit_parser, legacy_logarithmic_perfometer["metric"], "")]
     return perfometers.Perfometer(
         name=_perfometer_name(segments),
         focus_range=perfometers.FocusRange(
@@ -671,21 +690,22 @@ def _parse_legacy_logarithmic_perfometer(
 
 
 def _parse_legacy_dual_perfometer(
+    unit_parser: UnitParser,
     legacy_dual_perfometer: _DualPerfometerSpec,
 ) -> perfometers.Bidirectional:
     legacy_left, legacy_right = legacy_dual_perfometer["perfometers"]
 
     if legacy_left["type"] == "linear":
-        left = _parse_legacy_linear_perfometer(legacy_left)
+        left = _parse_legacy_linear_perfometer(unit_parser, legacy_left)
     elif legacy_left["type"] == "logarithmic":
-        left = _parse_legacy_logarithmic_perfometer(legacy_left)
+        left = _parse_legacy_logarithmic_perfometer(unit_parser, legacy_left)
     else:
         raise ValueError(legacy_left)
 
     if legacy_right["type"] == "linear":
-        right = _parse_legacy_linear_perfometer(legacy_right)
+        right = _parse_legacy_linear_perfometer(unit_parser, legacy_right)
     elif legacy_right["type"] == "logarithmic":
-        right = _parse_legacy_logarithmic_perfometer(legacy_right)
+        right = _parse_legacy_logarithmic_perfometer(unit_parser, legacy_right)
     else:
         raise ValueError(legacy_right)
 
@@ -697,21 +717,22 @@ def _parse_legacy_dual_perfometer(
 
 
 def _parse_legacy_stacked_perfometer(
+    unit_parser: UnitParser,
     legacy_stacked_perfometer: _StackedPerfometerSpec,
 ) -> perfometers.Stacked:
     legacy_upper, legacy_lower = legacy_stacked_perfometer["perfometers"]
 
     if legacy_upper["type"] == "linear":
-        upper = _parse_legacy_linear_perfometer(legacy_upper)
+        upper = _parse_legacy_linear_perfometer(unit_parser, legacy_upper)
     elif legacy_upper["type"] == "logarithmic":
-        upper = _parse_legacy_logarithmic_perfometer(legacy_upper)
+        upper = _parse_legacy_logarithmic_perfometer(unit_parser, legacy_upper)
     else:
         raise ValueError(legacy_upper)
 
     if legacy_lower["type"] == "linear":
-        lower = _parse_legacy_linear_perfometer(legacy_lower)
+        lower = _parse_legacy_linear_perfometer(unit_parser, legacy_lower)
     elif legacy_lower["type"] == "logarithmic":
-        lower = _parse_legacy_logarithmic_perfometer(legacy_lower)
+        lower = _parse_legacy_logarithmic_perfometer(unit_parser, legacy_lower)
     else:
         raise ValueError(legacy_lower)
 
@@ -725,18 +746,19 @@ def _parse_legacy_stacked_perfometer(
 def _parse_legacy_perfometer_infos(
     debug: bool,
     unparseables: list[Unparseable],
+    unit_parser: UnitParser,
     perfometer_info: Sequence[PerfometerSpec],
 ) -> Iterator[perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked]:
     for idx, info in enumerate(perfometer_info):
         try:
             if info["type"] == "linear":
-                yield _parse_legacy_linear_perfometer(info)
+                yield _parse_legacy_linear_perfometer(unit_parser, info)
             elif info["type"] == "logarithmic":
-                yield _parse_legacy_logarithmic_perfometer(info)
+                yield _parse_legacy_logarithmic_perfometer(unit_parser, info)
             elif info["type"] == "dual":
-                yield _parse_legacy_dual_perfometer(info)
+                yield _parse_legacy_dual_perfometer(unit_parser, info)
             elif info["type"] == "stacked":
-                yield _parse_legacy_stacked_perfometer(info)
+                yield _parse_legacy_stacked_perfometer(unit_parser, info)
         except Exception as e:
             _show_exception(e)
             if debug:
@@ -745,7 +767,7 @@ def _parse_legacy_perfometer_infos(
 
 
 def _parse_legacy_metric(
-    legacy_metric: tuple[str, str] | tuple[str, str, str]
+    unit_parser: UnitParser, legacy_metric: tuple[str, str] | tuple[str, str, str]
 ) -> (
     str
     | metrics.Constant
@@ -759,11 +781,11 @@ def _parse_legacy_metric(
     | metrics.Fraction
 ):
     expression, _line_type, *rest = legacy_metric
-    return _parse_expression(expression, str(rest[0]) if rest else "")
+    return _parse_expression(unit_parser, expression, str(rest[0]) if rest else "")
 
 
 def _parse_legacy_metrics(
-    legacy_metrics: Sequence,
+    unit_parser: UnitParser, legacy_metrics: Sequence
 ) -> tuple[Sequence, Sequence, Sequence, Sequence]:
     lower_compound_lines = []
     lower_simple_lines = []
@@ -772,17 +794,17 @@ def _parse_legacy_metrics(
     for legacy_metric in legacy_metrics:
         match legacy_metric[1]:
             case "-line":
-                lower_simple_lines.append(_parse_legacy_metric(legacy_metric))
+                lower_simple_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
             case "-area":
-                lower_compound_lines.append(_parse_legacy_metric(legacy_metric))
+                lower_compound_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
             case "-stack":
-                lower_compound_lines.append(_parse_legacy_metric(legacy_metric))
+                lower_compound_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
             case "line":
-                upper_simple_lines.append(_parse_legacy_metric(legacy_metric))
+                upper_simple_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
             case "area":
-                upper_compound_lines.append(_parse_legacy_metric(legacy_metric))
+                upper_compound_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
             case "stack":
-                upper_compound_lines.append(_parse_legacy_metric(legacy_metric))
+                upper_compound_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
             case _:
                 raise ValueError(legacy_metric)
 
@@ -790,16 +812,16 @@ def _parse_legacy_metrics(
 
 
 def _parse_legacy_scalars(
-    legacy_scalars: Sequence[str | tuple[str, str | LazyString]]
+    unit_parser: UnitParser, legacy_scalars: Sequence[str | tuple[str, str | LazyString]]
 ) -> Sequence[str | metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf]:
     quantities: list[
         str | metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf
     ] = []
     for legacy_scalar in legacy_scalars:
         if isinstance(legacy_scalar, str):
-            quantity = _parse_expression(legacy_scalar, "")
+            quantity = _parse_expression(unit_parser, legacy_scalar, "")
         elif isinstance(legacy_scalar, tuple):
-            quantity = _parse_expression(legacy_scalar[0], str(legacy_scalar[1]))
+            quantity = _parse_expression(unit_parser, legacy_scalar[0], str(legacy_scalar[1]))
         else:
             raise ValueError(legacy_scalar)
 
@@ -822,7 +844,7 @@ def _parse_legacy_scalars(
 
 
 def _parse_legacy_range(
-    legacy_range: tuple[str | int | float, str | int | float] | None
+    unit_parser: UnitParser, legacy_range: tuple[str | int | float, str | int | float] | None
 ) -> graphs.MinimalRange | None:
     if legacy_range is None:
         return None
@@ -832,34 +854,34 @@ def _parse_legacy_range(
         lower=(
             legacy_lower
             if isinstance(legacy_lower, (int | float))
-            else _parse_expression(legacy_lower, "")
+            else _parse_expression(unit_parser, legacy_lower, "")
         ),
         upper=(
             legacy_upper
             if isinstance(legacy_upper, (int | float))
-            else _parse_expression(legacy_upper, "")
+            else _parse_expression(unit_parser, legacy_upper, "")
         ),
     )
 
 
 def _parse_legacy_graph_info(
-    name: str, info: RawGraphTemplate
+    unit_parser: UnitParser, name: str, info: RawGraphTemplate
 ) -> tuple[graphs.Graph | None, graphs.Graph | None]:
-    quantities = _parse_legacy_scalars(info.get("scalars", []))
+    quantities = _parse_legacy_scalars(unit_parser, info.get("scalars", []))
 
     (
         lower_compound_lines,
         lower_simple_lines,
         upper_compound_lines,
         upper_simple_lines,
-    ) = _parse_legacy_metrics(info["metrics"])
+    ) = _parse_legacy_metrics(unit_parser, info["metrics"])
 
     lower: graphs.Graph | None = None
     if lower_compound_lines or lower_simple_lines:
         lower = graphs.Graph(
             name=name,
             title=Title(str(info["title"])),
-            minimal_range=_parse_legacy_range(info.get("range")),
+            minimal_range=_parse_legacy_range(unit_parser, info.get("range")),
             compound_lines=lower_compound_lines,
             simple_lines=lower_simple_lines,
             optional=info.get("optional_metrics", []),
@@ -871,7 +893,7 @@ def _parse_legacy_graph_info(
         upper = graphs.Graph(
             name=name,
             title=Title(str(info["title"])),
-            minimal_range=_parse_legacy_range(info.get("range")),
+            minimal_range=_parse_legacy_range(unit_parser, info.get("range")),
             compound_lines=upper_compound_lines,
             simple_lines=list(upper_simple_lines) + list(quantities),
             optional=info.get("optional_metrics", []),
@@ -884,11 +906,12 @@ def _parse_legacy_graph_info(
 def _parse_legacy_graph_infos(
     debug: bool,
     unparseables: list[Unparseable],
+    unit_parser: UnitParser,
     graph_info: AutomaticDict,
 ) -> Iterator[graphs.Graph | graphs.Bidirectional]:
     for name, info in graph_info.items():
         try:
-            lower, upper = _parse_legacy_graph_info(name, info)
+            lower, upper = _parse_legacy_graph_info(unit_parser, name, info)
         except Exception as e:
             _show_exception(e)
             if debug:
@@ -1318,7 +1341,7 @@ def _load_module(filepath: Path) -> types.ModuleType:
 
 
 def _migrate_file_content(
-    debug: bool, path: Path, unparseables: list[Unparseable]
+    debug: bool, path: Path, unparseables: list[Unparseable], unit_parser: UnitParser
 ) -> Iterator[
     metrics.Metric
     | translations.Translation
@@ -1331,16 +1354,18 @@ def _migrate_file_content(
     module = _load_module(path)
 
     if hasattr(module, "metric_info"):
-        yield from _parse_legacy_metric_infos(debug, unparseables, module.metric_info)
+        yield from _parse_legacy_metric_infos(debug, unparseables, unit_parser, module.metric_info)
 
     if hasattr(module, "check_metrics"):
         yield from _parse_legacy_check_metrics(debug, unparseables, module.check_metrics)
 
     if hasattr(module, "perfometer_info"):
-        yield from _parse_legacy_perfometer_infos(debug, unparseables, module.perfometer_info)
+        yield from _parse_legacy_perfometer_infos(
+            debug, unparseables, unit_parser, module.perfometer_info
+        )
 
     if hasattr(module, "graph_info"):
-        yield from _parse_legacy_graph_infos(debug, unparseables, module.graph_info)
+        yield from _parse_legacy_graph_infos(debug, unparseables, unit_parser, module.graph_info)
 
 
 def _obj_repr(
@@ -1386,12 +1411,14 @@ def main() -> None:
     unparseables_by_path: dict[Path, list[Unparseable]] = {}
     for raw_path in args.filepaths:
         path = Path(raw_path)
+        unit_parser = UnitParser()
         try:
             objects = list(
                 _migrate_file_content(
                     args.debug,
                     path,
                     unparseables_by_path.setdefault(path, []),
+                    unit_parser,
                 )
             )
         except Exception:

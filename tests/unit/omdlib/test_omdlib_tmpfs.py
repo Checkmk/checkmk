@@ -102,11 +102,11 @@ def test_tmpfs_save_then_restore(tmp_path: Path) -> None:
     assert not unrestored_tmp_file.exists()
 
 
-def test_tmpfs_mount_no_dump(site_context: SiteContext, monkeypatch: pytest.MonkeyPatch) -> None:
-    tmp_dir = Path(site_context.tmp_dir)
-    tmp_dir.mkdir(parents=True, exist_ok=True)
+def test_tmpfs_mount_no_dump(tmp_path: Path) -> None:
+    site_dir = tmp_path
+    site_tmp_dir = tmp_path / "tmp_dir"
+    site_tmp_dir.mkdir(parents=True, exist_ok=True)
 
     # Ensure that no dump exists and then execute the restore operation
-    assert not Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
-    _restore_tmpfs_dump(site_context.dir, site_context.tmp_dir)
-    assert not list(tmp_dir.iterdir())
+    _restore_tmpfs_dump(str(site_dir), str(site_tmp_dir))
+    assert not any(file.exists() for file in site_tmp_dir.iterdir())

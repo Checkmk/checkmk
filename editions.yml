@@ -27,6 +27,10 @@ daily_saas: &daily_saas
 internal_distros: &internal_distros
     - "ubuntu-23.10"
 
+# Currently, all builds of the saas edition should stay completley internal
+internal_editions:
+    - "saas"
+
 # README:
 # - the following sections defines what will be build/tested under which "use-case"
 # - as a consequence, you need to consider e.g.:

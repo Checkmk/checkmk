@@ -105,13 +105,13 @@ def configured_or_overridden_distros(edition, distros, use_case="daily") {
     }
 }
 
-def get_internal_distros_pattern() {
+def get_internal_artifacts_pattern() {
     docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir}") {
         dir("${checkout_dir}") {
             return sh(script: """scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \
                   --editions_file "editions.yml" \
-                  internal_distros \
+                  internal_build_artifacts \
                   --as-codename \
                   --as-rsync-exclude-pattern;
             """, returnStdout: true).trim();

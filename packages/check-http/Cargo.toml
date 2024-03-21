@@ -13,13 +13,14 @@ edition = "2021"
 aes-gcm = { version = "0.10.3", features = ["aes", "std"] }
 bytes = { version = "1.5.0" }
 anyhow = { version = "1.0.80" }
-clap = { version = "<4.5", features = ["derive"] }  # needs rustc >= 1.74
+clap = { version = "<4.5", features = ["derive"] }          # needs rustc >= 1.74
 # We need either rustls-tls or native-tls-alpn to establish HTTP/2 connections. Only native-tls
 # supports TLS1.0/TLS1.1, while setting TLS1.3 as minimum version is only supported by rustls. Since
 # we only know that at runtime we need to pull in both TLS backends.
 reqwest = { version = "0.11.25", features = [
     "json",
-    "rustls-tls",
+    "rustls-tls-webpki-roots", # CADDB store (https://www.ccadb.org/) - Updated on (re)compilation
+    "rustls-tls-native-roots", # Additionally listen to SSL_CERT_FILE
     "native-tls-alpn",
     "socks",
 ] }
@@ -31,4 +32,7 @@ encoding_rs = { version = "0.8.33" }
 regex = { version = "1.10.3" }
 x509-parser = { version = "0.16.0" }
 tracing = { version = "0.1.40" }
-tracing-subscriber = { version = "0.3.18", features = ["tracing-log", "env-filter"] }
+tracing-subscriber = { version = "0.3.18", features = [
+    "tracing-log",
+    "env-filter",
+] }

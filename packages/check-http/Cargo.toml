@@ -25,8 +25,8 @@ regex = { version = "*" }
 # Since we only know that at runtime we need to pull in both TLS backends.
 reqwest = { version = "*", features = [
     "json",
-    "rustls-tls-webpki-roots", # Mozilla's CA store
-    "rustls-tls-native-roots", # Additionally listens to SSL_CERT_FILE
+    "rustls-tls-webpki-roots", # CCADB store (https://www.ccadb.org/) - Updated on (re)compilation
+    "rustls-tls-native-roots", # Additionally listen to SSL_CERT_FILE
     "native-tls-alpn",
     "socks",
 ] }

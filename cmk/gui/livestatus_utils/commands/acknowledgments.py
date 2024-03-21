@@ -28,7 +28,7 @@ def acknowledge_service_problem(  # type: ignore[no-untyped-def]
 ):
     """Acknowledge the current problem for the given service.
 
-    When acknowledging a problem, furhter notifications for the service are disabled, as
+    When acknowledging a problem, further notifications for the service are disabled, as
     long as the service doesn't change state. At state change, notifications are re-enabled.
 
     Args:

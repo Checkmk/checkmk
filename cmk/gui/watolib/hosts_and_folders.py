@@ -1049,19 +1049,25 @@ def folder_lookup_cache() -> FolderLookupCache:
 
 
 @request_memoize()
-def folder_from_request() -> Folder:
-    """Return `Folder` that is specified by the current URL"""
-    if (var_folder := request.var("folder")) is not None:
+def folder_from_request(var_folder: str | None = None, host_name: str | None = None) -> Folder:
+    """
+    Return `Folder` that is specified by the current URL
+
+    Optional you can specify the fetched var via calling this function.
+    This is currently needed for the search that results in
+    ModeEditHost._init_host() were the actual request is available (and not already was cached)
+    """
+    folder_from_req = var_folder or request.var("folder")
+    if folder_from_req is not None:
         try:
-            folder = folder_tree().folder(var_folder)
+            folder = folder_tree().folder(folder_from_req)
         except MKGeneralException as e:
             raise MKUserError("folder", "%s" % e)
     else:
         folder = folder_tree().root_folder()
-        if (
-            host_name := request.get_ascii_input("host")
-        ) is not None:  # find host with full scan. Expensive operation
-            host = Host.host(HostName(host_name))
+        hostname = host_name or request.get_ascii_input("host")
+        if hostname is not None:  # find host with full scan. Expensive operation
+            host = Host.host(HostName(hostname))
             if host:
                 folder = host.folder()
 

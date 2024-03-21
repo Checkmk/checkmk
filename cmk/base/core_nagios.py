@@ -74,15 +74,17 @@ class NagiosCore(core_config.MonitoringCore):
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
         licensing_handler: LicensingHandler,
+        passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
-        self._create_core_config(config_path, licensing_handler)
+        self._create_core_config(config_path, licensing_handler, passwords)
         self._precompile_hostchecks(config_path)
 
     def _create_core_config(
         self,
         config_path: VersionedConfigPath,
         licensing_handler: LicensingHandler,
+        passwords: Mapping[str, str],
     ) -> None:
         """Tries to create a new Checkmk object configuration file for the Nagios core
 
@@ -99,6 +101,7 @@ class NagiosCore(core_config.MonitoringCore):
             config_path,
             hostnames=None,
             licensing_handler=licensing_handler,
+            passwords=passwords,
         )
 
         store.save_text_to_file(cmk.utils.paths.nagios_objects_file, config_buffer.getvalue())
@@ -154,6 +157,7 @@ def create_config(
     config_path: VersionedConfigPath,
     hostnames: list[HostName] | None,
     licensing_handler: LicensingHandler,
+    passwords: Mapping[str, str],
 ) -> None:
     if config.host_notification_periods:
         config_warnings.warn(
@@ -192,13 +196,11 @@ def create_config(
 
     _output_conf_header(cfg)
 
-    stored_passwords = cmk.utils.password_store.load()
-
     licensing_counter = Counter("services")
     all_host_labels: dict[HostName, CollectedHostLabels] = {}
     for hostname in hostnames:
         all_host_labels[hostname] = _create_nagios_config_host(
-            cfg, config_cache, hostname, stored_passwords, licensing_counter
+            cfg, config_cache, hostname, passwords, licensing_counter
         )
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)

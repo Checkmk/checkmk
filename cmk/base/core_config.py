@@ -67,11 +67,14 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
         licensing_handler = self._licensing_handler_type.make()
         self._persist_licensed_state(licensing_handler.state)
-        self._create_config(config_path, config_cache, licensing_handler, hosts_to_update)
+        self._create_config(
+            config_path, config_cache, licensing_handler, passwords, hosts_to_update
+        )
 
     @abc.abstractmethod
     def _create_config(
@@ -79,6 +82,7 @@ class MonitoringCore(abc.ABC):
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
         licensing_handler: LicensingHandler,
+        passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
         raise NotImplementedError
@@ -361,11 +365,15 @@ def _create_core_config(
     _verify_non_duplicate_hosts(duplicates)
     _verify_non_deprecated_checkgroups()
 
+    passwords = cmk.utils.password_store.load()
+
     config_path = next(VersionedConfigPath.current())
     with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
-        core.create_config(config_path, config_cache, hosts_to_update=hosts_to_update)
+        core.create_config(
+            config_path, config_cache, hosts_to_update=hosts_to_update, passwords=passwords
+        )
 
-    cmk.utils.password_store.save_for_helpers(config_path, cmk.utils.password_store.load())
+    cmk.utils.password_store.save_for_helpers(config_path, passwords)
 
 
 def _verify_non_deprecated_checkgroups() -> None:

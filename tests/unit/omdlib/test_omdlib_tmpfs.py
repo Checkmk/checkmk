@@ -83,28 +83,6 @@ def fixture_not_restored_file(site_context):
     return tmp_file
 
 
-def _prepare_tmpfs(site_context):
-    # Create something to restore
-    tmp_dir = Path(site_context.tmp_dir)
-    files = []
-
-    tmp_file = tmp_dir.joinpath("check_mk", "piggyback", "backed", "pig")
-    tmp_file.parent.mkdir(parents=True, exist_ok=True)
-    with tmp_file.open("w") as f:
-        f.write("restored!")
-    assert tmp_file.exists()
-    files.append(tmp_file)
-
-    tmp_file = tmp_dir.joinpath("check_mk", "piggyback_sources", "pig")
-    tmp_file.parent.mkdir(parents=True, exist_ok=True)
-    with tmp_file.open("w") as f:
-        f.write("restored!")
-    assert tmp_file.exists()
-    files.append(tmp_file)
-
-    return files
-
-
 def test_tmpfs_restore_no_tmpfs(
     site_context: SiteContext, monkeypatch: pytest.MonkeyPatch, not_restored_file: Path
 ) -> None:
@@ -112,7 +90,23 @@ def test_tmpfs_restore_no_tmpfs(
     is_mounted_returns = iter((True, False))
     monkeypatch.setattr(omdlib.tmpfs, "tmpfs_mounted", lambda x: next(is_mounted_returns))
 
-    tmp_files = _prepare_tmpfs(site_context)
+    # Create something to restore
+    tmp_dir = Path(site_context.tmp_dir)
+    tmp_files = []
+
+    tmp_file = tmp_dir.joinpath("check_mk", "piggyback", "backed", "pig")
+    tmp_file.parent.mkdir(parents=True, exist_ok=True)
+    with tmp_file.open("w") as f:
+        f.write("restored!")
+    assert tmp_file.exists()
+    tmp_files.append(tmp_file)
+
+    tmp_file = tmp_dir.joinpath("check_mk", "piggyback_sources", "pig")
+    tmp_file.parent.mkdir(parents=True, exist_ok=True)
+    with tmp_file.open("w") as f:
+        f.write("restored!")
+    assert tmp_file.exists()
+    tmp_files.append(tmp_file)
 
     # Now perform unmount call and test result
     assert not omdlib.tmpfs._tmpfs_dump_path(site_context).exists()
@@ -161,7 +155,23 @@ def fixture_mock_umount(monkeypatch):
 def test_tmpfs_restore_with_tmpfs(
     site_context: SiteContext, monkeypatch: pytest.MonkeyPatch, not_restored_file: Path
 ) -> None:
-    tmp_files = _prepare_tmpfs(site_context)
+    # Create something to restore
+    tmp_dir = Path(site_context.tmp_dir)
+    tmp_files = []
+
+    tmp_file = tmp_dir.joinpath("check_mk", "piggyback", "backed", "pig")
+    tmp_file.parent.mkdir(parents=True, exist_ok=True)
+    with tmp_file.open("w") as f:
+        f.write("restored!")
+    assert tmp_file.exists()
+    tmp_files.append(tmp_file)
+
+    tmp_file = tmp_dir.joinpath("check_mk", "piggyback_sources", "pig")
+    tmp_file.parent.mkdir(parents=True, exist_ok=True)
+    with tmp_file.open("w") as f:
+        f.write("restored!")
+    assert tmp_file.exists()
+    tmp_files.append(tmp_file)
 
     # Now perform unmount call and test result
     assert not omdlib.tmpfs._tmpfs_dump_path(site_context).exists()

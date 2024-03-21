@@ -628,40 +628,10 @@ metric_info["exclusive_locks"] = {
     "color": "#ca5706",
 }
 
-metric_info["disk_read_throughput"] = {
-    "title": _("Read throughput"),
-    "unit": "bytes/s",
-    "color": "#40c080",
-}
-
-metric_info["disk_write_throughput"] = {
-    "title": _("Write throughput"),
-    "unit": "bytes/s",
-    "color": "#4080c0",
-}
-
 metric_info["disk_ios"] = {
     "title": _("Disk I/O operations"),
     "unit": "1/s",
     "color": "#60e0a0",
-}
-
-metric_info["disk_read_ios"] = {
-    "title": _("Read operations"),
-    "unit": "1/s",
-    "color": "#60e0a0",
-}
-
-metric_info["disk_write_ios"] = {
-    "title": _("Write operations"),
-    "unit": "1/s",
-    "color": "#60a0e0",
-}
-
-metric_info["disk_average_read_wait"] = {
-    "title": _("Read wait time"),
-    "unit": "s",
-    "color": "#20e8c0",
 }
 
 metric_info["disk_min_read_wait"] = {
@@ -676,12 +646,6 @@ metric_info["disk_max_read_wait"] = {
     "color": "#20e8e0",
 }
 
-metric_info["disk_average_write_wait"] = {
-    "title": _("Write wait time"),
-    "unit": "s",
-    "color": "#20c0e8",
-}
-
 metric_info["disk_min_write_wait"] = {
     "title": _("Minimum write wait time"),
     "unit": "s",
@@ -692,36 +656,6 @@ metric_info["disk_max_write_wait"] = {
     "title": _("Maximum write wait time"),
     "unit": "s",
     "color": "#20e0e8",
-}
-
-metric_info["disk_average_wait"] = {
-    "title": _("Request wait time"),
-    "unit": "s",
-    "color": "#4488cc",
-}
-
-metric_info["disk_average_read_request_size"] = {
-    "title": _("Average read request size"),
-    "unit": "bytes",
-    "color": "#409c58",
-}
-
-metric_info["disk_average_write_request_size"] = {
-    "title": _("Average write request size"),
-    "unit": "bytes",
-    "color": "#40589c",
-}
-
-metric_info["disk_average_request_size"] = {
-    "title": _("Average request size"),
-    "unit": "bytes",
-    "color": "#4488cc",
-}
-
-metric_info["disk_latency"] = {
-    "title": _("Average disk latency"),
-    "unit": "s",
-    "color": "#c04080",
 }
 
 metric_info["disk_read_latency"] = {
@@ -760,12 +694,6 @@ metric_info["other_latency"] = {
     "color": "21/a",
 }
 
-metric_info["disk_queue_length"] = {
-    "title": _("Average disk I/O-queue length"),
-    "unit": "",
-    "color": "35/a",
-}
-
 metric_info["disk_read_ql"] = {
     "title": _("Average disk read queue length"),
     "unit": "",
@@ -776,12 +704,6 @@ metric_info["disk_write_ql"] = {
     "title": _("Average disk write queue length"),
     "unit": "",
     "color": "#7060b0",
-}
-
-metric_info["disk_utilization"] = {
-    "title": _("Disk utilization"),
-    "unit": "%",
-    "color": "#a05830",
 }
 
 metric_info["disk_capacity"] = {
@@ -1305,61 +1227,11 @@ graph_info["wasted_space_of_tables_and_indexes"] = {
 
 # diskstat checks
 
-graph_info["disk_utilization"] = {
-    "title": _("Disk utilization"),
-    "metrics": [
-        ("disk_utilization", "area"),
-    ],
-    "range": (0, 100),
-    "scalars": [
-        "disk_utilization:warn",
-        "disk_utilization:crit",
-    ],
-}
-
-graph_info["disk_throughput"] = {
-    "title": _("Disk throughput"),
-    "metrics": [
-        ("disk_read_throughput", "area"),
-        ("disk_write_throughput", "-area"),
-    ],
-    "scalars": [
-        ("disk_read_throughput:warn", "Warning read"),
-        ("disk_read_throughput:crit", "Critical read"),
-        ("disk_write_throughput:warn,-1,*", "Warning write"),
-        ("disk_write_throughput:crit,-1,*", "Critical write"),
-    ],
-}
-
-graph_info["disk_io_operations"] = {
-    "title": _("Disk I/O operations"),
-    "metrics": [
-        ("disk_read_ios", "area"),
-        ("disk_write_ios", "-area"),
-    ],
-}
-
 graph_info["direct_and_buffered_io_operations"] = {
     "title": _("Direct and buffered I/O operations"),
     "metrics": [
         ("direct_io", "stack"),
         ("buffered_io", "stack"),
-    ],
-}
-
-graph_info["average_request_size"] = {
-    "title": _("Average request size"),
-    "metrics": [
-        ("disk_average_read_request_size", "area"),
-        ("disk_average_write_request_size", "-area"),
-    ],
-}
-
-graph_info["average_end_to_end_wait_time"] = {
-    "title": _("Average end to end wait time"),
-    "metrics": [
-        ("disk_average_read_wait", "area"),
-        ("disk_average_write_wait", "-area"),
     ],
 }
 

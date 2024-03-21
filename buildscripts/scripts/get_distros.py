@@ -241,8 +241,10 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     # TODO
 
 
-def print_internal_distros(args: Args, loaded_yaml: dict) -> None:
+def print_internal_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     distros = flatten(loaded_yaml["internal_distros"])
+    editions = flatten(loaded_yaml["internal_editions"])
+
     if args.as_codename:
         if diff := distros - loaded_yaml["distro_to_codename"].keys():
             raise Exception(
@@ -251,10 +253,10 @@ def print_internal_distros(args: Args, loaded_yaml: dict) -> None:
             )
         distros = [loaded_yaml["distro_to_codename"][d] for d in distros]
     if args.as_rsync_exclude_pattern:
-        print("{" + ",".join([f"'*{d}*'" for d in distros]) + "}")
+        print("{" + ",".join([f"'*{d}*'" for d in list(distros) + list(editions)]) + "}")
         return
 
-    print(" ".join(sorted(set(distros))))
+    print(" ".join(sorted(set(distros).union(set(editions)))))
 
 
 def distros_for_use_case(edition_distros: dict, edition: str, use_case: str) -> Iterable[str]:
@@ -328,10 +330,12 @@ def parse_arguments() -> Args:
     use_cases.add_argument("--edition", required=True)
     use_cases.add_argument("--use_case", required=True)
 
-    internal_distros = subparsers.add_parser("internal_distros")
-    internal_distros.set_defaults(func=print_internal_distros)
-    internal_distros.add_argument("--as-codename", default=False, action="store_true")
-    internal_distros.add_argument("--as-rsync-exclude-pattern", default=False, action="store_true")
+    internal_build_artifacts = subparsers.add_parser("internal_build_artifacts")
+    internal_build_artifacts.set_defaults(func=print_internal_build_artifacts)
+    internal_build_artifacts.add_argument("--as-codename", default=False, action="store_true")
+    internal_build_artifacts.add_argument(
+        "--as-rsync-exclude-pattern", default=False, action="store_true"
+    )
 
     sub_assert_build_artifacts = subparsers.add_parser("assert_build_artifacts")
     sub_assert_build_artifacts.set_defaults(func=assert_build_artifacts)

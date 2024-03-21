@@ -49,8 +49,7 @@ def fixture_with_password_policy(logged_in_page: PPage, test_site: Site) -> Iter
 def _change_password(page: PPage, new_pw: str, new_pw_conf: str, old_pw: str) -> None:
     # first go to dashboard to ensure we're reloading the page in case we're already there
     page.goto_main_dashboard()
-    page.main_menu.user.click()
-    page.main_menu.locator("text=Change password").click()
+    page.main_menu.user_change_password.click()
     page.main_area.locator("input[name='cur_password']").fill(old_pw)
     page.main_area.locator("input[name='password']").fill(new_pw)
     page.main_area.locator("input[name='password2']").fill(new_pw_conf)

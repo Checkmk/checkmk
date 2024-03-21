@@ -14,8 +14,7 @@ _backup_passphrase = "cmk"
 
 
 def _go_to_backups_page(logged_in_page: PPage) -> None:
-    logged_in_page.megamenu_setup.click()
-    logged_in_page.main_menu.get_text("Backups").click()
+    logged_in_page.main_menu.setup_menu("Backups").click()
 
 
 def _create_backup_target(logged_in_page: PPage) -> None:

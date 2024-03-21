@@ -29,10 +29,8 @@ def test_add_remove_snapin(logged_in_page: PPage, snapin_id: str) -> None:
 def test_monitor_searchbar(logged_in_page: PPage, context: BrowserContext) -> None:
     """Navigate to the CPU inventory from the monitor searchbar."""
 
-    megamenu = logged_in_page.megamenu_monitoring
-    megamenu.click()
-    search_bar = logged_in_page.monitor_searchbar
-    search_bar.fill("all hosts")
+    logged_in_page.main_menu.monitor_menu().click()
+    logged_in_page.main_menu.monitor_searchbar.fill("all hosts")
 
     expect(logged_in_page.locator("#Monitor")).to_contain_text("All hosts")
     expect(logged_in_page.locator("#Monitor")).to_contain_text("CPU inventory of all hosts")

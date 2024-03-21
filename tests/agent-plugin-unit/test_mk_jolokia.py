@@ -157,3 +157,18 @@ def test_jolokia_validate_response_skip_instance() -> None:
 )
 def test_jolokia_validate_response_ok(data: Mapping[str, int]) -> None:
     assert data == mk_jolokia.validate_response(_MockHttpResponse(200, **data))
+
+
+def test_jolokia_escape_path_separator() -> None:
+    config = mk_jolokia.load_config(None)
+    data = mk_jolokia.JolokiaInstance(config=config, user_agent="NOT_IMPORTANT").get_post_data(
+        path="Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*localhost!/docs,j2eeType=Servlet,name=default/requestCount",
+        function="read",
+        use_target=True,
+    )
+
+    assert (
+        data["mbean"]
+        == "Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*localhost/docs,j2eeType=Servlet,name=default"
+    )
+    assert data["attribute"] == "requestCount"

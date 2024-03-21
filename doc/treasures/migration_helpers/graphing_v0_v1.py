@@ -27,7 +27,7 @@ import types
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, NamedTuple, TextIO
+from typing import Callable, Literal, NamedTuple, TextIO
 
 from cmk.utils.metrics import MetricName
 
@@ -931,7 +931,8 @@ def _parse_legacy_metrics(
 
 
 def _parse_legacy_scalars(
-    unit_parser: UnitParser, legacy_scalars: Sequence[str | tuple[str, str | LazyString]]
+    unit_parser: UnitParser,
+    legacy_scalars: Sequence[str | tuple[str, str | LazyString]],
 ) -> Iterator[
     str
     | metrics.Constant
@@ -954,11 +955,11 @@ def _parse_legacy_scalars(
 
 
 def _parse_legacy_range(
-    unit_parser: UnitParser, legacy_range: tuple[str | int | float, str | int | float] | None
+    unit_parser: UnitParser,
+    legacy_range: tuple[str | int | float, str | int | float] | None,
 ) -> graphs.MinimalRange | None:
     if legacy_range is None:
         return None
-
     legacy_lower, legacy_upper = legacy_range
     return graphs.MinimalRange(
         lower=(
@@ -975,27 +976,31 @@ def _parse_legacy_range(
 
 
 def _parse_legacy_graph_info(
-    unit_parser: UnitParser, name: str, info: RawGraphTemplate
+    unit_parser: UnitParser,
+    name: str,
+    info: RawGraphTemplate,
 ) -> tuple[graphs.Graph | None, graphs.Graph | None]:
     quantities = _parse_legacy_scalars(unit_parser, info.get("scalars", []))
-
+    minimal_range = _parse_legacy_range(unit_parser, info.get("range"))
     (
         lower_compound_lines,
         lower_simple_lines,
         upper_compound_lines,
         upper_simple_lines,
     ) = _parse_legacy_metrics(unit_parser, info["metrics"])
+    optional_metrics = info.get("optional_metrics", [])
+    conflicting_metrics = info.get("conflicting_metrics", [])
 
     lower: graphs.Graph | None = None
     if lower_compound_lines or lower_simple_lines:
         lower = graphs.Graph(
             name=name,
             title=Title(str(info["title"])),
-            minimal_range=_parse_legacy_range(unit_parser, info.get("range")),
+            minimal_range=minimal_range,
             compound_lines=lower_compound_lines,
             simple_lines=lower_simple_lines,
-            optional=info.get("optional_metrics", []),
-            conflicting=info.get("conflicting_metrics", []),
+            optional=optional_metrics,
+            conflicting=conflicting_metrics,
         )
 
     upper: graphs.Graph | None = None
@@ -1003,11 +1008,11 @@ def _parse_legacy_graph_info(
         upper = graphs.Graph(
             name=name,
             title=Title(str(info["title"])),
-            minimal_range=_parse_legacy_range(unit_parser, info.get("range")),
+            minimal_range=minimal_range,
             compound_lines=upper_compound_lines,
             simple_lines=list(upper_simple_lines) + list(quantities),
-            optional=info.get("optional_metrics", []),
-            conflicting=info.get("conflicting_metrics", []),
+            optional=optional_metrics,
+            conflicting=conflicting_metrics,
         )
 
     return lower, upper
@@ -1040,6 +1045,167 @@ def _parse_legacy_graph_infos(
             yield lower
         elif lower is None and upper is not None:
             yield upper
+
+
+# .
+#   .--finder--------------------------------------------------------------.
+#   |                      __ _           _                                |
+#   |                     / _(_)_ __   __| | ___ _ __                      |
+#   |                    | |_| | '_ \ / _` |/ _ \ '__|                     |
+#   |                    |  _| | | | | (_| |  __/ |                        |
+#   |                    |_| |_|_| |_|\__,_|\___|_|                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _make_filter_name(names: set[str]) -> Callable[[str], bool]:
+    return lambda n: n in names
+
+
+def _filter_raw_metric_names(
+    quantity: (
+        str
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
+    ),
+    filter_name: Callable[[str], bool],
+) -> Iterator[str]:
+    for n in _raw_metric_names(quantity):
+        if filter_name(n):
+            yield n
+
+
+def _collect_metric_names_from_perfometer(
+    perfometer: perfometers.Perfometer, filter_name: Callable[[str], bool]
+) -> Iterator[str]:
+    for b in (perfometer.focus_range.lower.value, perfometer.focus_range.lower.value):
+        if not isinstance(b, (int, float)):
+            yield from _filter_raw_metric_names(b, filter_name)
+    for s in perfometer.segments:
+        yield from _filter_raw_metric_names(s, filter_name)
+
+
+def _collect_metric_names_from_graph(
+    graph: graphs.Graph, filter_name: Callable[[str], bool]
+) -> Iterator[str]:
+    if graph.minimal_range:
+        for b in (graph.minimal_range.lower, graph.minimal_range.lower):
+            if not isinstance(b, (int, float)):
+                yield from _filter_raw_metric_names(b, filter_name)
+    for cl in graph.compound_lines:
+        yield from _filter_raw_metric_names(cl, filter_name)
+    for sl in graph.simple_lines:
+        yield from _filter_raw_metric_names(sl, filter_name)
+    for o in graph.optional:
+        if filter_name(o):
+            yield o
+    for o in graph.conflicting:
+        if filter_name(o):
+            yield o
+
+
+def _collect_metric_names_from_object(
+    obj: (
+        metrics.Metric
+        | translations.Translation
+        | perfometers.Perfometer
+        | perfometers.Bidirectional
+        | perfometers.Stacked
+        | graphs.Graph
+        | graphs.Bidirectional
+    ),
+    filter_name: Callable[[str], bool],
+) -> Iterator[str]:
+    match obj:
+        case translations.Translation():
+            # TODO
+            pass
+        case perfometers.Perfometer():
+            if p_names := set(_collect_metric_names_from_perfometer(obj, filter_name)):
+                yield from p_names
+        case perfometers.Bidirectional():
+            left_names = set(_collect_metric_names_from_perfometer(obj.left, filter_name))
+            right_names = set(_collect_metric_names_from_perfometer(obj.right, filter_name))
+            if left_names or right_names:
+                yield from left_names
+                yield from right_names
+        case perfometers.Stacked():
+            lower_names = set(_collect_metric_names_from_perfometer(obj.lower, filter_name))
+            upper_names = set(_collect_metric_names_from_perfometer(obj.upper, filter_name))
+            if lower_names or upper_names:
+                yield from lower_names
+                yield from upper_names
+        case graphs.Graph():
+            if g_names := set(_collect_metric_names_from_graph(obj, filter_name)):
+                yield from g_names
+        case graphs.Bidirectional():
+            lower_names = set(_collect_metric_names_from_graph(obj.lower, filter_name))
+            upper_names = set(_collect_metric_names_from_graph(obj.upper, filter_name))
+            if lower_names or upper_names:
+                yield from lower_names
+                yield from upper_names
+
+
+def _find_related_objects(
+    names: Sequence[str],
+    migrated_by_path: Mapping[
+        Path,
+        Sequence[
+            metrics.Metric
+            | translations.Translation
+            | perfometers.Perfometer
+            | perfometers.Bidirectional
+            | perfometers.Stacked
+            | graphs.Graph
+            | graphs.Bidirectional,
+        ],
+    ],
+) -> tuple[
+    Mapping[str, metrics.Metric],
+    Mapping[
+        str,
+        translations.Translation
+        | perfometers.Perfometer
+        | perfometers.Bidirectional
+        | perfometers.Stacked
+        | graphs.Graph
+        | graphs.Bidirectional,
+    ],
+]:
+    pre_filter_name = _make_filter_name(set(names))
+    found_metric_names = set(
+        n
+        for objects in migrated_by_path.values()
+        for obj in objects
+        for n in _collect_metric_names_from_object(obj, pre_filter_name)
+    ).union(names)
+    filter_name = _make_filter_name(found_metric_names)
+    metrics_: dict[str, metrics.Metric] = {}
+    related_objects: dict[
+        str,
+        translations.Translation
+        | perfometers.Perfometer
+        | perfometers.Bidirectional
+        | perfometers.Stacked
+        | graphs.Graph
+        | graphs.Bidirectional,
+    ] = {}
+    for objects in migrated_by_path.values():
+        for obj in objects:
+            if isinstance(obj, metrics.Metric):
+                if filter_name(obj.name):
+                    metrics_[obj.name] = obj
+                continue
+            if set(_collect_metric_names_from_object(obj, filter_name)):
+                related_objects[obj.name] = obj
+    return metrics_, related_objects
 
 
 # .
@@ -1440,9 +1606,15 @@ def _parse_arguments() -> argparse.Namespace:
         help="Show information of objects to be migrated",
     )
     parser.add_argument(
-        "filepaths",
+        "--metric-names",
         nargs="+",
-        help="Path to the files where metrics, translations, perfometers or graphs are implemented",
+        required=True,
+        help="Metrics and related perfometers or graphs which will consistently be migrated",
+    )
+    parser.add_argument(
+        "folders",
+        nargs="+",
+        help="Search in these folders",
     )
     return parser.parse_args()
 
@@ -1469,7 +1641,10 @@ def _load_module(filepath: Path) -> types.ModuleType:
 
 
 def _migrate_file_content(
-    debug: bool, path: Path, unparseables: list[Unparseable], unit_parser: UnitParser
+    debug: bool,
+    path: Path,
+    unparseables: list[Unparseable],
+    unit_parser: UnitParser,
 ) -> Iterator[
     metrics.Metric
     | translations.Translation
@@ -1482,6 +1657,8 @@ def _migrate_file_content(
     module = _load_module(path)
 
     if hasattr(module, "metric_info"):
+        # Note: we cannot restrict parsed legacy metrics with 'metrics_names' because we need all
+        # metrics for a consisten migration. Example: a graph uses further metric names.
         yield from _parse_legacy_metric_infos(debug, unparseables, unit_parser, module.metric_info)
 
     if hasattr(module, "check_metrics"):
@@ -1539,26 +1716,44 @@ def _order_unparseables(
 def main() -> None:
     args = _parse_arguments()
     _setup_logger(args.debug, args.verbose)
+    unit_parser = UnitParser()
+    migrated_by_path: dict[
+        Path,
+        list[
+            metrics.Metric
+            | translations.Translation
+            | perfometers.Perfometer
+            | perfometers.Bidirectional
+            | perfometers.Stacked
+            | graphs.Graph
+            | graphs.Bidirectional,
+        ],
+    ] = {}
     unparseables_by_path: dict[Path, list[Unparseable]] = {}
-    for raw_path in args.filepaths:
-        path = Path(raw_path)
-        unit_parser = UnitParser()
-        try:
-            objects = list(
-                _migrate_file_content(
-                    args.debug,
-                    path,
-                    unparseables_by_path.setdefault(path, []),
-                    unit_parser,
+    for raw_folder in args.folders:
+        for path in Path(raw_folder).glob("*.py"):
+            try:
+                migrated_by_path.setdefault(path, []).extend(
+                    _migrate_file_content(
+                        args.debug,
+                        path,
+                        unparseables_by_path.setdefault(path, []),
+                        unit_parser,
+                    )
                 )
-            )
-        except Exception:
-            if args.debug:
-                sys.exit(1)
+            except Exception:
+                if args.debug:
+                    sys.exit(1)
 
-        print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))
-        print("")
-        print("\n\n".join([_obj_repr(unit_parser, obj) for obj in objects]))
+    metrics_by_name, related_objects_by_name = _find_related_objects(
+        args.metric_names, migrated_by_path
+    )
+    if metrics_by_name:
+        units = set(m.unit for m in metrics_by_name.values())
+        print("\n".join([f"{unit_parser.find_unit_name(u)} = {_unit_repr(u)}" for u in units]))
+        print("\n".join([_obj_repr(unit_parser, m) for m in metrics_by_name.values()]))
+    if related_objects_by_name:
+        print("\n".join([_obj_repr(unit_parser, obj) for obj in related_objects_by_name.values()]))
 
     for path, unparseable_names_by_namespace in sorted(
         _order_unparseables(unparseables_by_path).items()

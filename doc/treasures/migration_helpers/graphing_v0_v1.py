@@ -1121,7 +1121,7 @@ def _metric_repr(unit_parser: UnitParser, metric: metrics.Metric) -> str:
         [
             _kwarg_repr("name", _name_repr(metric.name)),
             _kwarg_repr("title", _title_repr(metric.title)),
-            _kwarg_repr("unit", _name_repr(unit_parser.find_unit_name(metric.unit))),
+            _kwarg_repr("unit", unit_parser.find_unit_name(metric.unit)),
             _kwarg_repr("color", _color_repr(metric.color)),
         ],
     )
@@ -1148,7 +1148,7 @@ def _quantity_repr(
         case metrics.Constant():
             args = [
                 _title_repr(quantity.title),
-                _name_repr(unit_parser.find_unit_name(quantity.unit)),
+                unit_parser.find_unit_name(quantity.unit),
                 _color_repr(quantity.color),
                 str(quantity.value),
             ]
@@ -1179,7 +1179,7 @@ def _quantity_repr(
         case metrics.Product():
             args = [
                 _title_repr(quantity.title),
-                _name_repr(unit_parser.find_unit_name(quantity.unit)),
+                unit_parser.find_unit_name(quantity.unit),
                 _color_repr(quantity.color),
                 _list_repr([_quantity_repr(unit_parser, f) for f in quantity.factors]),
             ]
@@ -1193,7 +1193,7 @@ def _quantity_repr(
         case metrics.Fraction():
             args = [
                 _title_repr(quantity.title),
-                _name_repr(unit_parser.find_unit_name(quantity.unit)),
+                unit_parser.find_unit_name(quantity.unit),
                 _color_repr(quantity.color),
                 _kwarg_repr("dividend", _quantity_repr(unit_parser, quantity.dividend)),
                 _kwarg_repr("divisor", _quantity_repr(unit_parser, quantity.divisor)),

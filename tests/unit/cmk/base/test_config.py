@@ -874,8 +874,8 @@ def test_agent_target_version(
         (
             HostName("testhost2"),
             [
-                ("abc", {"param1": 1}),
-                ("xyz", {"param2": 1}),
+                ("abc", [{"param1": 1}]),
+                ("xyz", [{"param2": 1}]),
             ],
         ),
     ],

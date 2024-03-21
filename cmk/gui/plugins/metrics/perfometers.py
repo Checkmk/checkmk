@@ -985,26 +985,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "disk_read_throughput",
-                "half_value": 5000000,
-                "exponent": 10,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "disk_write_throughput",
-                "half_value": 5000000,
-                "exponent": 10,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "disk_ios",
         "half_value": 30,

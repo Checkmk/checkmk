@@ -554,7 +554,6 @@ def test_non_trivial_graph_declarations() -> None:
         "cpu_utilization_8",
         "cpu_utilization_numcpus",
         "cpu_utilization_simple",
-        "disk_throughput",
         "fs_used",
         "fs_used_2",
         "growing",

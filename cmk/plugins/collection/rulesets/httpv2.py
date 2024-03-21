@@ -34,6 +34,7 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import ActiveCheck, Topic
 
 _DAY = 24.0 * 3600.0
+_DEFAULT_USER_AGENT = "checkmk-active-httpv2/2.4.0"
 
 
 def _valuespec_response() -> Dictionary:
@@ -458,7 +459,7 @@ def _valuespec_connection() -> Dictionary:
                         "checkmk/check_http, but you may use your own. The entry needs to be a "
                         "valid string for a header value."
                     ),
-                    prefill=DefaultValue("checkmk/check_http"),
+                    prefill=DefaultValue(_DEFAULT_USER_AGENT),
                 ),
             ),
             "add_headers": DictElement(

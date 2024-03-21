@@ -10,6 +10,7 @@ USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 
 import io
 import os
+import re
 import socket
 import sys
 import urllib.parse
@@ -451,7 +452,8 @@ class JolokiaInstance:
         return session
 
     def get_post_data(self, path, function, use_target):
-        segments = path.strip("/").split("/")
+        segments = re.split(r"(?<!!)/", path.strip("/"))
+        segments[0] = segments[0].replace("!/", "/")
         # we may have one to three segments:
         data = dict(zip(("mbean", "attribute", "path"), segments))
 

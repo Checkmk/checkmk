@@ -237,3 +237,18 @@ def test_parse_fetched_data_v2_0_2_missing_server_version() -> None:
     assert product == "tomcat"
     assert version == "unknown"
     assert agentversion == "2.0.2"
+
+
+def test_jolokia_escape_path_separator() -> None:
+    config = mk_jolokia.load_config(None)
+    data = mk_jolokia.JolokiaInstance(config=config, user_agent="NOT_IMPORTANT").get_post_data(
+        path="Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*localhost!/docs,j2eeType=Servlet,name=default/requestCount",
+        function="read",
+        use_target=True,
+    )
+
+    assert (
+        data["mbean"]
+        == "Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*localhost/docs,j2eeType=Servlet,name=default"
+    )
+    assert data["attribute"] == "requestCount"

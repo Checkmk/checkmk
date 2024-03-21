@@ -1,0 +1,20 @@
+Title: mk_jolokia: Add compatibility for / in MBeans
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1711037404
+Edition: cre
+Level: 1
+Version: 2.2.0p34
+
+Previously it was not possible to select an MBean that had a path separator. This Werk implements the Jolokia path separator <code>!/</code>.
+
+An example is shown in the following fragment of the jolokia.cfg file:
+
+C+:
+...
+custom_vars = [('Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*localhost!/docs,j2eeType=Servlet,name=default','requestCount','myspecialmetric',[],False,'number')]]
+...
+C-:
+
+This will match the entry <code>myinstance,Catalina:J2EEApplication=none,J2EEServer=none,WebModule=//localhost/docs,j2eeType=Servlet,name=defaultmyspecialmetric.requestCount0number</code>

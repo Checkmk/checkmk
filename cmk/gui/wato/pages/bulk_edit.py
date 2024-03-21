@@ -56,7 +56,9 @@ class ModeBulkEdit(WatoMode):
         return ModeFolder
 
     def _from_vars(self) -> None:
-        self._folder = disk_or_search_folder_from_request()
+        self._folder = disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        )
 
     def title(self) -> str:
         return _("Bulk edit hosts")
@@ -142,7 +144,9 @@ class ModeBulkCleanup(WatoMode):
         return ModeFolder
 
     def _from_vars(self) -> None:
-        self._folder = disk_or_search_folder_from_request()
+        self._folder = disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        )
 
     def title(self) -> str:
         return _("Bulk removal of explicit attributes")

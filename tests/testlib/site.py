@@ -483,17 +483,17 @@ class Site:
 
         return completed_process.returncode
 
-    def path(self, rel_path: str) -> str:
+    def path(self, rel_path: str | Path) -> str:
         return os.path.join(self.root, rel_path)
 
-    def read_file(self, rel_path: str) -> str:
+    def read_file(self, rel_path: str | Path) -> str:
         p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE)
         stdout = p.communicate()[0]
         if p.returncode != 0:
             raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
         return stdout if isinstance(stdout, str) else ""
 
-    def read_binary_file(self, rel_path: str) -> bytes:
+    def read_binary_file(self, rel_path: str | Path) -> bytes:
         p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE, encoding=None)
         stdout = p.communicate()[0]
         if p.returncode != 0:
@@ -501,21 +501,21 @@ class Site:
         assert isinstance(stdout, bytes)
         return stdout
 
-    def delete_file(self, rel_path: str) -> None:
+    def delete_file(self, rel_path: str | Path) -> None:
         p = self.execute(["rm", "-f", self.path(rel_path)])
         if p.wait() != 0:
             raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
 
-    def delete_dir(self, rel_path: str) -> None:
+    def delete_dir(self, rel_path: str | Path) -> None:
         p = self.execute(["rm", "-rf", self.path(rel_path)])
         if p.wait() != 0:
             raise Exception("Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
 
-    def write_text_file(self, rel_path: str, content: str) -> None:
+    def write_text_file(self, rel_path: str | Path, content: str) -> None:
         write_file(self.path(str(rel_path)), content, sudo=True, substitute_user=self.id)
 
     def write_binary_file(self, rel_path: str, content: bytes) -> None:
-        write_file(self.path(str(rel_path)), content, sudo=True, substitute_user=self.id)
+        write_file(self.path(rel_path), content, sudo=True, substitute_user=self.id)
 
     def create_rel_symlink(self, link_rel_target: str, rel_link_name: str) -> None:
         with self.execute(
@@ -538,23 +538,23 @@ class Site:
             raise Exception(f"Failed to read symlink at {rel_path}. No stdout.")
         return Path(p.stdout.read().strip())
 
-    def file_exists(self, rel_path: str) -> bool:
+    def file_exists(self, rel_path: str | Path) -> bool:
         p = self.execute(["test", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
         return p.wait() == 0
 
-    def is_file(self, rel_path: str) -> bool:
+    def is_file(self, rel_path: str | Path) -> bool:
         return self.execute(["test", "-f", self.path(rel_path)]).wait() == 0
 
-    def is_dir(self, rel_path: str) -> bool:
+    def is_dir(self, rel_path: str | Path) -> bool:
         return self.execute(["test", "-d", self.path(rel_path)]).wait() == 0
 
-    def file_mode(self, rel_path: str) -> int:
+    def file_mode(self, rel_path: str | Path) -> int:
         return int(self.check_output(["stat", "-c", "%f", self.path(rel_path)]).rstrip(), base=16)
 
-    def inode(self, rel_path: str) -> int:
+    def inode(self, rel_path: str | Path) -> int:
         return int(self.check_output(["stat", "-c", "%i", self.path(rel_path)]).rstrip())
 
-    def makedirs(self, rel_path: str) -> bool:
+    def makedirs(self, rel_path: str | Path) -> bool:
         return makedirs(self.path(rel_path), sudo=True, substitute_user=self.id)
 
     def reset_admin_password(self, new_password: str | None = None) -> None:

@@ -128,6 +128,9 @@ class FileHistory(History):
     def housekeeping(self) -> None:
         _expire_logfiles(self._settings, self._config, self._logger, self._lock, False)
 
+    def close(self) -> None:
+        pass
+
 
 def _expire_logfiles(
     settings: Settings, config: Config, logger: Logger, lock_history: threading.Lock, flush: bool

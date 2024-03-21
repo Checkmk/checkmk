@@ -147,8 +147,8 @@ def fixture_mock_umount(monkeypatch):
     # Use rm logic in unmount_tmpfs instead of unmount
     monkeypatch.setattr(omdlib.tmpfs, "tmpfs_mounted", lambda x: fake_tmpfs.mounted)
 
-    def unmount(site):
-        delete_directory_contents(site.tmp_dir)
+    def unmount(site_tmp_dir):
+        delete_directory_contents(site_tmp_dir)
         fake_tmpfs.unmount()
 
     # Simulate umount
@@ -157,7 +157,6 @@ def fixture_mock_umount(monkeypatch):
     monkeypatch.setattr(time, "sleep", lambda x: None)
 
 
-@pytest.mark.skip("todo: fix typing error")
 @pytest.mark.usefixtures("mock_umount")
 def test_tmpfs_restore_with_tmpfs(
     site_context: SiteContext, monkeypatch: pytest.MonkeyPatch, not_restored_file: Path

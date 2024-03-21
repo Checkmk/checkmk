@@ -109,12 +109,12 @@ def test_tmpfs_restore_no_tmpfs(
     tmp_files.append(tmp_file)
 
     # Now perform unmount call and test result
-    assert not omdlib.tmpfs._tmpfs_dump_path(site_context).exists()
+    assert not Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
     unmount_tmpfs(site_context)
     for tmp_file in tmp_files:
         assert not tmp_file.exists()
 
-    assert omdlib.tmpfs._tmpfs_dump_path(site_context).exists()
+    assert Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
     restore_tmpfs_dump(site_context)
     for tmp_file in tmp_files:
         assert tmp_file.exists()
@@ -174,12 +174,12 @@ def test_tmpfs_restore_with_tmpfs(
     tmp_files.append(tmp_file)
 
     # Now perform unmount call and test result
-    assert not omdlib.tmpfs._tmpfs_dump_path(site_context).exists()
+    assert not Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
     omdlib.tmpfs.unmount_tmpfs(site_context)
     for tmp_file in tmp_files:
         assert not tmp_file.exists()
 
-    assert omdlib.tmpfs._tmpfs_dump_path(site_context).exists()
+    assert Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
     restore_tmpfs_dump(site_context)
     for tmp_file in tmp_files:
         assert tmp_file.exists()
@@ -193,6 +193,6 @@ def test_tmpfs_mount_no_dump(site_context: SiteContext, monkeypatch: pytest.Monk
     tmp_dir.mkdir(parents=True, exist_ok=True)
 
     # Ensure that no dump exists and then execute the restore operation
-    assert not omdlib.tmpfs._tmpfs_dump_path(site_context).exists()
+    assert not Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
     restore_tmpfs_dump(site_context)
     assert not list(tmp_dir.iterdir())

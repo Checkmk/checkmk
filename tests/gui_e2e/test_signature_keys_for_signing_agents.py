@@ -31,8 +31,7 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
 
 def go_to_signature_page(page: PPage) -> None:
     """Go to the `Signature keys for signing agents` page."""
-    page.megamenu_setup.click()
-    page.click_and_wait(page.main_menu.get_text("Windows, Linux, Solaris, AIX"), navigate=True)
+    page.click_and_wait(page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True)
     page.main_area.locator("#page_menu_dropdown_agents >> text=Agents >> visible=true").click()
     page.click_and_wait(page.main_area.get_text("Signature keys"), navigate=True)
     page.main_area.check_page_title("Signature keys for signing agents")
@@ -187,9 +186,8 @@ def test_bake_and_sign(logged_in_page: PPage, test_site: Site, with_key: str) ->
 
     Bake and sign starts an asynchronous background job, which is why we run "wait_for_bakery()".
     If the job finished, the success is reported and the test can continue."""
-    logged_in_page.megamenu_setup.click()
     logged_in_page.click_and_wait(
-        logged_in_page.main_menu.get_text("Windows, Linux, Solaris, AIX"), navigate=True
+        logged_in_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
     )
     logged_in_page.click_and_wait(
         locator=logged_in_page.main_area.get_suggestion("Bake and sign agents"),
@@ -222,9 +220,8 @@ def test_bake_and_sign_disabled(logged_in_page: PPage) -> None:
     go_to_signature_page(logged_in_page)
     delete_key(logged_in_page)
 
-    logged_in_page.megamenu_setup.click()
     logged_in_page.click_and_wait(
-        logged_in_page.main_menu.get_text("Windows, Linux, Solaris, AIX"), navigate=True
+        logged_in_page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True
     )
 
     expect(logged_in_page.main_area.get_suggestion("Bake and sign agents")).to_have_class(

@@ -26,7 +26,7 @@ def parse(string_table: StringTable) -> Section:
     for msg_list in string_table:
         try:
             name, severity, server, timeCreated_iso = msg_list[0:4]
-            message = " ".join(msg_list[5:])
+            message = " ".join(msg_list[4:])
 
             parsed.append(SplunkMessage(name, severity, server, timeCreated_iso, message))
 

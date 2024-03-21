@@ -46,7 +46,7 @@ def _parameter_valuespec_threepar_remotecopy():
             (
                 "5",
                 MonitoringState(
-                    title=_("Status: DISBALE"),
+                    title=_("Status: DISABLE"),
                     default_value=2,
                 ),
             ),

@@ -1267,6 +1267,7 @@ def mode_dump_nagios_config(args: list[HostName]) -> None:
         next(VersionedConfigPath.current()),
         args if len(args) else None,
         get_licensing_handler_type().make(),
+        cmk.utils.password_store.load(),
     )
 
 

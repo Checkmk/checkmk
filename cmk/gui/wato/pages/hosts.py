@@ -333,7 +333,7 @@ class ModeEditHost(ABCHostMode):
 
     def _init_host(self) -> Host:
         hostname = request.get_validated_type_input_mandatory(HostName, "host")
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), hostname)
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         host = folder.load_host(hostname)

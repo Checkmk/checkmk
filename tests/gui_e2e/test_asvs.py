@@ -17,9 +17,7 @@ from tests.testlib.site import Site
 
 
 def _change_password(page: PPage, old_password: str, new_password: str) -> None:
-    page.main_menu.user.click()
-    page.main_menu.locator("text=Change password").click()
-
+    page.main_menu.user_change_password.click()
     page.main_area.locator("input[name='cur_password']").fill(old_password)
     page.main_area.locator("input[name='password']").fill(new_password)
     page.main_area.locator("#suggestions >> text=Save").click()
@@ -48,8 +46,7 @@ def test_password_truncation_error(logged_in_page: PPage) -> None:
     """Bcrypt truncates at 72 chars, check for the error if the password is longer"""
 
     page = logged_in_page
-    page.main_menu.user.click()
-    page.main_menu.locator("text=Change password").click()
+    page.main_menu.user_change_password.click()
 
     page.main_area.locator("input[name='cur_password']").fill("cmk")
     page.main_area.locator("input[name='password']").fill("A" * 80)

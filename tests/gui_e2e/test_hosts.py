@@ -22,7 +22,7 @@ class TestHosts:
         host = TestHost()
         self._create_host(logged_in_page, host)
 
-        logged_in_page.goto_monitoring_all_hosts()
+        logged_in_page.main_menu.monitor_all_hosts.click()
         logged_in_page.select_host(host.name)
 
         self._delete_host(logged_in_page, host)
@@ -32,7 +32,7 @@ class TestHosts:
         host = TestHost()
         self._create_host(logged_in_page, host)
 
-        logged_in_page.goto_monitoring_all_hosts()
+        logged_in_page.main_menu.monitor_all_hosts.click()
         logged_in_page.select_host(host.name)
 
         # Use the Check_MK Service. It is always there and the first.
@@ -50,7 +50,7 @@ class TestHosts:
     @staticmethod
     def _create_host(logged_in_page: PPage, host: TestHost) -> None:
         """Creates a host by starting from a logged in page."""
-        logged_in_page.goto_setup_hosts()
+        logged_in_page.main_menu.setup_hosts.click()
         logged_in_page.main_area.get_suggestion("Add host").click()
 
         logged_in_page.main_area.get_input("host").fill(host.name)
@@ -68,7 +68,7 @@ class TestHosts:
     @staticmethod
     def _delete_host(logged_in_page: PPage, host: TestHost) -> None:
         """Deletes the former created host by starting from a logged in page."""
-        logged_in_page.goto_setup_hosts()
+        logged_in_page.main_menu.setup_hosts.click()
 
         # click on "delete host" for the given hostname via xpath selector
         logged_in_page.main_area.locator(

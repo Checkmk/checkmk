@@ -11,7 +11,7 @@ from tests.testlib.playwright.helpers import PPage
 def test_user_color_theme(logged_in_page: PPage) -> None:
     default_label = str(logged_in_page.main_menu.user_color_theme_button.get_attribute("value"))
     default_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
-    logged_in_page.main_menu.user_color_theme.click()
+    logged_in_page.main_menu.user_color_theme_button.click()
     expect(logged_in_page.main_menu.user_color_theme_button).not_to_have_value(default_label)
     changed_label = str(logged_in_page.main_menu.user_color_theme_button.get_attribute("value"))
     changed_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
@@ -26,7 +26,7 @@ def test_user_color_theme(logged_in_page: PPage) -> None:
     assert saved_label == changed_label, "Saved color theme is not properly displayed!"
     assert saved_value == changed_value, "Saved color theme is not properly reflected!"
 
-    logged_in_page.main_menu.user_color_theme.click()
+    logged_in_page.main_menu.user_color_theme_button.click()
     expect(logged_in_page.main_menu.user_color_theme_button).not_to_have_value(saved_label)
     reverted_label = logged_in_page.main_menu.user_color_theme_button.get_attribute("value")
     reverted_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
@@ -39,7 +39,7 @@ def test_user_sidebar_position(logged_in_page: PPage) -> None:
         logged_in_page.main_menu.user_sidebar_position_button.get_attribute("value")
     )
     default_value = str(logged_in_page.sidebar.locator().get_attribute("class"))
-    logged_in_page.main_menu.user_sidebar_position.click()
+    logged_in_page.main_menu.user_sidebar_position_button.click()
     expect(logged_in_page.main_menu.user_sidebar_position_button).not_to_have_value(default_label)
     changed_label = logged_in_page.main_menu.user_sidebar_position_button.get_attribute("value")
     changed_value = logged_in_page.sidebar.locator().get_attribute("class")
@@ -54,7 +54,7 @@ def test_user_sidebar_position(logged_in_page: PPage) -> None:
     assert saved_label == changed_label, "Saved sidebar position is not properly displayed!"
     assert saved_value == changed_value, "Saved sidebar position is not properly reflected!"
 
-    logged_in_page.main_menu.user_sidebar_position.click()
+    logged_in_page.main_menu.user_sidebar_position_button.click()
     expect(logged_in_page.main_menu.user_sidebar_position_button).not_to_have_value(saved_label)
     reverted_label = str(
         logged_in_page.main_menu.user_sidebar_position_button.get_attribute("value")

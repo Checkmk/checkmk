@@ -122,6 +122,7 @@ class LDAPConnectTimeout(LDAPCheckbox):
 
 class LDAPVersion(LDAPCheckbox):
     version = fields.Integer(
+        enum=[2, 3],
         description="The selected LDAP version the LDAP server is serving. Most modern "
         "servers use LDAP version 3.",
         example=3,
@@ -196,7 +197,6 @@ class LDAPConnection(BaseSchema):
     )
     ldap_version = fields.Nested(
         LDAPVersion,
-        enum=[2, 3],
         description="If the ldap version is set and the version it's set to. Either 2 or 3.",
         example={"state": "enabled", "version": 3},
     )

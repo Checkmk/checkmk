@@ -6,6 +6,7 @@
 
 import socket
 from collections.abc import Collection, Mapping, Sequence
+from typing import Any, Iterable
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
@@ -70,6 +71,12 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeRenameHost)
 
 
+class HostRenamingException(MKGeneralException):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+        self.message = message
+
+
 class ModeBulkRenameHost(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -122,15 +129,10 @@ class ModeBulkRenameHost(WatoMode):
     def action(self) -> ActionResult:
         renaming_config = self._vs_renaming_config().from_html_vars("")
         self._vs_renaming_config().validate_value(renaming_config, "")
-        renamings = self._collect_host_renamings(renaming_config)
-
-        if not renamings:
-            flash(_("No matching host names"))
-            return None
-
-        warning = self._renaming_collision_error(renamings)
-        if warning:
-            flash(warning)
+        try:
+            renamings = self._collect_host_renamings(renaming_config)
+        except HostRenamingException as e:
+            flash(e.message)
             return None
 
         message = HTMLWriter.render_b(
@@ -172,34 +174,61 @@ class ModeBulkRenameHost(WatoMode):
             return FinalizeRequest(code=200)
         return None  # browser reload
 
-    def _renaming_collision_error(self, renamings):
+    @staticmethod
+    def _format_renamings_warning(message: str, values: Iterable[str]) -> str:
+        values_list = "".join(f"<li>{value}</li>" for value in sorted(values))
+        return f"<b>{message}</b><ul>{values_list}</ul>"
+
+    def _validate_renamings(
+        self, renamings: list[tuple[Folder, HostName, str]]
+    ) -> list[tuple[Folder, HostName, HostName]]:
+        """Check if the new names are valid host names and do not collide with existing hosts.
+        Return a new list of renamings."""
+        invalid_names = set()
         name_collisions = set()
-        new_names = [new_name for _folder, _old_name, new_name in renamings]
+        seen_names = set()
         all_host_names = Host.all().keys()
-        for name in new_names:
-            if name in all_host_names:
-                name_collisions.add(name)
-        for name in new_names:
-            if new_names.count(name) > 1:
-                name_collisions.add(name)
+        updated_renamings = []
+        for folder, old_name, new_name in renamings:
+            if new_name in seen_names or new_name in all_host_names:
+                name_collisions.add(new_name)
+            seen_names.add(new_name)
+            try:
+                updated_renamings.append((folder, old_name, HostName(new_name)))
+            except ValueError:
+                invalid_names.add(new_name)
 
-        if name_collisions:
-            warning = "<b>%s</b><ul>" % _(
-                "You cannot do this renaming since the following host names would collide:"
+        warning = ""
+        if invalid_names:
+            warning += self._format_renamings_warning(
+                _("You cannot do this renaming since the following host names would be invalid:"),
+                invalid_names,
             )
-            for name in sorted(list(name_collisions)):
-                warning += "<li>%s</li>" % name
-            warning += "</ul>"
-            return warning
-        return None
+        if name_collisions:
+            warning += self._format_renamings_warning(
+                _("You cannot do this renaming since the following host names would collide:"),
+                name_collisions,
+            )
+        if warning:
+            raise HostRenamingException(warning)
 
-    def _collect_host_renamings(self, renaming_config):
-        return self._recurse_hosts_for_renaming(
+        return updated_renamings
+
+    def _collect_host_renamings(
+        self, renaming_config: dict[str, Any]
+    ) -> list[tuple[Folder, HostName, HostName]]:
+        unchecked = self._recurse_hosts_for_renaming(
             folder_from_request(request.var("folder"), request.get_ascii_input("host")),
             renaming_config,
         )
+        if not unchecked:
+            raise HostRenamingException(_("No matching host names"))
 
-    def _recurse_hosts_for_renaming(self, folder, renaming_config):
+        return self._validate_renamings(unchecked)
+
+    def _recurse_hosts_for_renaming(
+        self, folder: Folder, renaming_config: dict[str, Any]
+    ) -> list[tuple[Folder, HostName, str]]:
         entries = []
         for host_name, host in folder.hosts().items():
             target_name = self._host_renamed_into(host_name, renaming_config)
@@ -210,20 +239,23 @@ class ModeBulkRenameHost(WatoMode):
                 entries += self._recurse_hosts_for_renaming(subfolder, renaming_config)
         return entries
 
-    def _host_renamed_into(self, hostname, renaming_config):
+    def _host_renamed_into(self, hostname: str, renaming_config: dict[str, Any]) -> str | None:
         prefix_regex = regex(renaming_config["match_hostname"])
         if not prefix_regex.match(hostname):
             return None
 
         new_hostname = hostname
         for operation in renaming_config["renamings"]:
-            new_hostname = self._host_renaming_operation(operation, new_hostname)
+            if (result := self._host_renaming_operation(operation, new_hostname)) is not None:
+                new_hostname = result
+            else:
+                return None
 
         if new_hostname != hostname:
             return new_hostname
         return None
 
-    def _host_renaming_operation(self, operation, hostname):
+    def _host_renaming_operation(self, operation: Any, hostname: str) -> str | None:
         if operation == "drop_domain":
             return hostname.split(".", 1)[0]
         if operation == "reverse_dns":
@@ -311,8 +343,8 @@ class ModeBulkRenameHost(WatoMode):
                         ]
                     ),
                 ),
-                ("add_suffix", _("Add Suffix"), Hostname()),
-                ("add_prefix", _("Add Prefix"), Hostname()),
+                ("add_suffix", _("Add Suffix"), TextInput(allow_empty=False, size=38)),
+                ("add_prefix", _("Add Prefix"), TextInput(allow_empty=False, size=38)),
                 ("drop_domain", _("Drop Domain Suffix")),
                 ("reverse_dns", _("Convert IP addresses of hosts into host their DNS names")),
                 (

@@ -258,7 +258,7 @@ def save_tmpfs_dump(site: SiteContext) -> None:
         Path(site.tmp_dir) / "check_mk" / "counters",
     ]
 
-    dump_path = _tmpfs_dump_path(site)
+    dump_path = Path(site.dir, "var/omd/tmpfs-dump.tar")
     dump_path.parent.mkdir(parents=True, exist_ok=True)
     with tarfile.TarFile(dump_path, mode="w") as f:
         for save_path in save_paths:
@@ -270,14 +270,10 @@ def save_tmpfs_dump(site: SiteContext) -> None:
 def restore_tmpfs_dump(site: SiteContext) -> None:
     """Populate the tmpfs from the previously created tmpfs dump
     Silently skipping over in case there is no dump available."""
-    if not _tmpfs_dump_path(site).exists():
+    if not Path(site.dir, "var/omd/tmpfs-dump.tar").exists():
         return
-    with tarfile.TarFile(_tmpfs_dump_path(site)) as tar:
+    with tarfile.TarFile(Path(site.dir, "var/omd/tmpfs-dump.tar")) as tar:
         tar.extractall(site.tmp_dir, filter="data")  # nosec B202 # BNS:a7d6b8
-
-
-def _tmpfs_dump_path(site: SiteContext) -> Path:
-    return Path(site.dir, "var", "omd", "tmpfs-dump.tar")
 
 
 def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, skelroot: str) -> None:

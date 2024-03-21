@@ -74,7 +74,7 @@ class Unparseable:
 
 _UNUSED_UNIT = metrics.Unit(metrics.DecimalNotation(""))
 _UNIT_MAP = {
-    "": metrics.Unit(metrics.StandardScientificNotation("")),
+    "": metrics.Unit(metrics.DecimalNotation("")),
     "count": metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2)),
     "%": metrics.Unit(metrics.DecimalNotation("%")),
     "s": metrics.Unit(metrics.TimeNotation()),

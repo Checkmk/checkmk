@@ -962,7 +962,6 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
         title="Sidebar element",
         icon_name="custom_snapin",
         item=_dashboard_add_non_view_dashlet_link(name, "snapin"),
-        is_show_more=True,
     )
 
 
@@ -1000,14 +999,12 @@ def _dashboard_add_other_dashlet_entries(name: DashboardName) -> Iterable[PageMe
         title="Custom URL",
         icon_name="dashlet_url",
         item=_dashboard_add_non_view_dashlet_link(name, "url"),
-        is_show_more=True,
     )
 
     yield PageMenuEntry(
         title="Static text",
         icon_name="dashlet_nodata",
         item=_dashboard_add_non_view_dashlet_link(name, "nodata"),
-        is_show_more=True,
     )
 
 

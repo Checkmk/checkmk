@@ -1,5 +1,5 @@
 {
-  "checksum": "38902c76b3fa6c2e0b88eed70bd99c50a0b88f79122bda34aacfda2174f4d9d6",
+  "checksum": "68a31d07efea99987665935ca68bcea6c09f4391734655110088bc4752bfe561",
   "crates": {
     "addr2line 0.21.0": {
       "name": "addr2line",
@@ -242,13 +242,13 @@
       },
       "license": "Apache-2.0 OR MIT"
     },
-    "aho-corasick 1.1.2": {
+    "aho-corasick 1.1.3": {
       "name": "aho-corasick",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/aho-corasick/1.1.2/download",
-          "sha256": "b2969dcb958b36655471fc61f7e416fa76033bdd4bfed0678d8fee1e2d07a1f0"
+          "url": "https://static.crates.io/crates/aho-corasick/1.1.3/download",
+          "sha256": "8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916"
         }
       },
       "targets": [
@@ -284,7 +284,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "1.1.2"
+        "version": "1.1.3"
       },
       "license": "Unlicense OR MIT"
     },
@@ -705,7 +705,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             },
             {
@@ -756,7 +756,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             }
           ],
@@ -997,13 +997,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "bitflags 2.4.2": {
+    "bitflags 2.5.0": {
       "name": "bitflags",
-      "version": "2.4.2",
+      "version": "2.5.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/bitflags/2.4.2/download",
-          "sha256": "ed570934406eb16438a4e976b1b4500774099c13b8cb96eec99f620f05090ddf"
+          "url": "https://static.crates.io/crates/bitflags/2.5.0/download",
+          "sha256": "cf4b9d6a944f767f8e5e0db018570623c85f3d925ac718db4e06d0187adb21c1"
         }
       },
       "targets": [
@@ -1046,7 +1046,7 @@
           }
         },
         "edition": "2021",
-        "version": "2.4.2"
+        "version": "2.5.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -1257,7 +1257,7 @@
               "target": "bytes"
             },
             {
-              "id": "clap 4.5.2",
+              "id": "clap 4.5.3",
               "target": "clap"
             },
             {
@@ -1281,7 +1281,7 @@
               "target": "regex"
             },
             {
-              "id": "reqwest 0.11.26",
+              "id": "reqwest 0.12.0",
               "target": "reqwest"
             },
             {
@@ -1355,13 +1355,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap 4.5.2": {
+    "clap 4.5.3": {
       "name": "clap",
-      "version": "4.5.2",
+      "version": "4.5.3",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap/4.5.2/download",
-          "sha256": "b230ab84b0ffdf890d5a10abdbc8b83ae1c4918275daea1ab8801f71536b2651"
+          "url": "https://static.crates.io/crates/clap/4.5.3/download",
+          "sha256": "949626d00e063efc93b6dca932419ceb5432f99769911c0b995f7e884c778813"
         }
       },
       "targets": [
@@ -1406,13 +1406,13 @@
         "proc_macro_deps": {
           "common": [
             {
-              "id": "clap_derive 4.5.0",
+              "id": "clap_derive 4.5.3",
               "target": "clap_derive"
             }
           ],
           "selects": {}
         },
-        "version": "4.5.2"
+        "version": "4.5.3"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -1478,13 +1478,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "clap_derive 4.5.0": {
+    "clap_derive 4.5.3": {
       "name": "clap_derive",
-      "version": "4.5.0",
+      "version": "4.5.3",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/clap_derive/4.5.0/download",
-          "sha256": "307bc0538d5f0f83b8248db3087aa92fe504e4691294d0c96c0eabc33f47ba47"
+          "url": "https://static.crates.io/crates/clap_derive/4.5.3/download",
+          "sha256": "90239a040c80f5e14809ca132ddc4176ab33d5e17e49691793296e3fcb34d72f"
         }
       },
       "targets": [
@@ -1512,7 +1512,7 @@
         "deps": {
           "common": [
             {
-              "id": "heck 0.4.1",
+              "id": "heck 0.5.0",
               "target": "heck"
             },
             {
@@ -1524,14 +1524,14 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "4.5.0"
+        "version": "4.5.3"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -2093,7 +2093,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             }
           ],
@@ -2778,6 +2778,107 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              "alloc"
+            ],
+            "aarch64-apple-ios": [
+              "alloc"
+            ],
+            "aarch64-apple-ios-sim": [
+              "alloc"
+            ],
+            "aarch64-fuchsia": [
+              "alloc"
+            ],
+            "aarch64-linux-android": [
+              "alloc"
+            ],
+            "aarch64-pc-windows-msvc": [
+              "alloc"
+            ],
+            "aarch64-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "aarch64-unknown-nixos-gnu": [
+              "alloc"
+            ],
+            "aarch64-unknown-nto-qnx710": [
+              "alloc"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "alloc"
+            ],
+            "armv7-linux-androideabi": [
+              "alloc"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "alloc"
+            ],
+            "i686-apple-darwin": [
+              "alloc"
+            ],
+            "i686-linux-android": [
+              "alloc"
+            ],
+            "i686-pc-windows-msvc": [
+              "alloc"
+            ],
+            "i686-unknown-freebsd": [
+              "alloc"
+            ],
+            "i686-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "alloc"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "alloc"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "thumbv7em-none-eabi": [
+              "alloc"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "alloc"
+            ],
+            "x86_64-apple-darwin": [
+              "alloc"
+            ],
+            "x86_64-apple-ios": [
+              "alloc"
+            ],
+            "x86_64-fuchsia": [
+              "alloc"
+            ],
+            "x86_64-linux-android": [
+              "alloc"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "alloc"
+            ],
+            "x86_64-unknown-freebsd": [
+              "alloc"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              "alloc"
+            ],
+            "x86_64-unknown-none": [
+              "alloc"
+            ]
+          }
+        },
         "edition": "2018",
         "version": "0.3.30"
       },
@@ -2808,6 +2909,107 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              "alloc"
+            ],
+            "aarch64-apple-ios": [
+              "alloc"
+            ],
+            "aarch64-apple-ios-sim": [
+              "alloc"
+            ],
+            "aarch64-fuchsia": [
+              "alloc"
+            ],
+            "aarch64-linux-android": [
+              "alloc"
+            ],
+            "aarch64-pc-windows-msvc": [
+              "alloc"
+            ],
+            "aarch64-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "aarch64-unknown-nixos-gnu": [
+              "alloc"
+            ],
+            "aarch64-unknown-nto-qnx710": [
+              "alloc"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "alloc"
+            ],
+            "armv7-linux-androideabi": [
+              "alloc"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "alloc"
+            ],
+            "i686-apple-darwin": [
+              "alloc"
+            ],
+            "i686-linux-android": [
+              "alloc"
+            ],
+            "i686-pc-windows-msvc": [
+              "alloc"
+            ],
+            "i686-unknown-freebsd": [
+              "alloc"
+            ],
+            "i686-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "alloc"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "alloc"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "thumbv7em-none-eabi": [
+              "alloc"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "alloc"
+            ],
+            "x86_64-apple-darwin": [
+              "alloc"
+            ],
+            "x86_64-apple-ios": [
+              "alloc"
+            ],
+            "x86_64-fuchsia": [
+              "alloc"
+            ],
+            "x86_64-linux-android": [
+              "alloc"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "alloc"
+            ],
+            "x86_64-unknown-freebsd": [
+              "alloc"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "alloc"
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              "alloc"
+            ],
+            "x86_64-unknown-none": [
+              "alloc"
+            ]
+          }
+        },
         "deps": {
           "common": [
             {
@@ -3037,13 +3239,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "h2 0.3.24": {
+    "h2 0.4.3": {
       "name": "h2",
-      "version": "0.3.24",
+      "version": "0.4.3",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/h2/0.3.24/download",
-          "sha256": "bb2c4422095b67ee78da96fbb51a4cc413b3b25883c7717ff7ca1ab31022c9c9"
+          "url": "https://static.crates.io/crates/h2/0.4.3/download",
+          "sha256": "51ee2dd2e4f378392eeff5d51618cd9a63166a2513846bbc55f21cfacd9199d4"
         }
       },
       "targets": [
@@ -3085,7 +3287,7 @@
               "target": "futures_util"
             },
             {
-              "id": "http 0.2.12",
+              "id": "http 1.1.0",
               "target": "http"
             },
             {
@@ -3111,8 +3313,8 @@
           ],
           "selects": {}
         },
-        "edition": "2018",
-        "version": "0.3.24"
+        "edition": "2021",
+        "version": "0.4.3"
       },
       "license": "MIT"
     },
@@ -3152,13 +3354,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "heck 0.4.1": {
+    "heck 0.5.0": {
       "name": "heck",
-      "version": "0.4.1",
+      "version": "0.5.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/heck/0.4.1/download",
-          "sha256": "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
+          "url": "https://static.crates.io/crates/heck/0.5.0/download",
+          "sha256": "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
         }
       },
       "targets": [
@@ -3177,14 +3379,8 @@
         "compile_data_glob": [
           "**"
         ],
-        "crate_features": {
-          "common": [
-            "default"
-          ],
-          "selects": {}
-        },
-        "edition": "2018",
-        "version": "0.4.1"
+        "edition": "2021",
+        "version": "0.5.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -3257,13 +3453,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "http 0.2.12": {
+    "http 1.1.0": {
       "name": "http",
-      "version": "0.2.12",
+      "version": "1.1.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/http/0.2.12/download",
-          "sha256": "601cbb57e577e2f5ef5be8e7b83f0f63994f25aa94d673e54a92d5c516d101f1"
+          "url": "https://static.crates.io/crates/http/1.1.0/download",
+          "sha256": "21b9ddb458710bc376481b842f5da65cdf31522de232c1ca8146abce2a358258"
         }
       },
       "targets": [
@@ -3282,6 +3478,13 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -3300,17 +3503,17 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.2.12"
+        "version": "1.1.0"
       },
       "license": "MIT OR Apache-2.0"
     },
-    "http-body 0.4.6": {
+    "http-body 1.0.0": {
       "name": "http-body",
-      "version": "0.4.6",
+      "version": "1.0.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/http-body/0.4.6/download",
-          "sha256": "7ceab25649e9960c0311ea418d17bee82c0dcec1bd053b5f9a66e265a693bed2"
+          "url": "https://static.crates.io/crates/http-body/1.0.0/download",
+          "sha256": "1cac85db508abc24a2e48553ba12a996e87244a0395ce011e62b37158745d643"
         }
       },
       "targets": [
@@ -3336,8 +3539,59 @@
               "target": "bytes"
             },
             {
-              "id": "http 0.2.12",
+              "id": "http 1.1.0",
               "target": "http"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "1.0.0"
+      },
+      "license": "MIT"
+    },
+    "http-body-util 0.1.1": {
+      "name": "http-body-util",
+      "version": "0.1.1",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/http-body-util/0.1.1/download",
+          "sha256": "0475f8b2ac86659c21b64320d5d653f9efe42acd2a4e560073ec61a155a34f1d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "http_body_util",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "http_body_util",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "bytes 1.5.0",
+              "target": "bytes"
+            },
+            {
+              "id": "futures-core 0.3.30",
+              "target": "futures_core"
+            },
+            {
+              "id": "http 1.1.0",
+              "target": "http"
+            },
+            {
+              "id": "http-body 1.0.0",
+              "target": "http_body"
             },
             {
               "id": "pin-project-lite 0.2.13",
@@ -3347,7 +3601,7 @@
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.4.6"
+        "version": "0.1.1"
       },
       "license": "MIT"
     },
@@ -3441,13 +3695,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "hyper 0.14.28": {
+    "hyper 1.2.0": {
       "name": "hyper",
-      "version": "0.14.28",
+      "version": "1.2.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/hyper/0.14.28/download",
-          "sha256": "bf96e135eb83a2a8ddf766e426a841d8ddd7449d5f00d34ea02b41d2f19eef80"
+          "url": "https://static.crates.io/crates/hyper/1.2.0/download",
+          "sha256": "186548d73ac615b32a73aafe38fb4f56c0d340e110e5a200bcadbaf2e199263a"
         }
       },
       "targets": [
@@ -3469,12 +3723,9 @@
         "crate_features": {
           "common": [
             "client",
-            "h2",
+            "default",
             "http1",
-            "http2",
-            "runtime",
-            "socket2",
-            "tcp"
+            "http2"
           ],
           "selects": {}
         },
@@ -3489,32 +3740,24 @@
               "target": "futures_channel"
             },
             {
-              "id": "futures-core 0.3.30",
-              "target": "futures_core"
-            },
-            {
               "id": "futures-util 0.3.30",
               "target": "futures_util"
             },
             {
-              "id": "h2 0.3.24",
+              "id": "h2 0.4.3",
               "target": "h2"
             },
             {
-              "id": "http 0.2.12",
+              "id": "http 1.1.0",
               "target": "http"
             },
             {
-              "id": "http-body 0.4.6",
+              "id": "http-body 1.0.0",
               "target": "http_body"
             },
             {
               "id": "httparse 1.8.0",
               "target": "httparse"
-            },
-            {
-              "id": "httpdate 1.0.3",
-              "target": "httpdate"
             },
             {
               "id": "itoa 1.0.10",
@@ -3525,20 +3768,12 @@
               "target": "pin_project_lite"
             },
             {
-              "id": "socket2 0.5.6",
-              "target": "socket2"
+              "id": "smallvec 1.13.2",
+              "target": "smallvec"
             },
             {
               "id": "tokio 1.36.0",
               "target": "tokio"
-            },
-            {
-              "id": "tower-service 0.3.2",
-              "target": "tower_service"
-            },
-            {
-              "id": "tracing 0.1.40",
-              "target": "tracing"
             },
             {
               "id": "want 0.3.1",
@@ -3547,18 +3782,18 @@
           ],
           "selects": {}
         },
-        "edition": "2018",
-        "version": "0.14.28"
+        "edition": "2021",
+        "version": "1.2.0"
       },
       "license": "MIT"
     },
-    "hyper-rustls 0.24.2": {
+    "hyper-rustls 0.26.0": {
       "name": "hyper-rustls",
-      "version": "0.24.2",
+      "version": "0.26.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/hyper-rustls/0.24.2/download",
-          "sha256": "ec3efd23720e2049821a693cbc7e65ea87c72f1c58ff2f9522ff332b1491e590"
+          "url": "https://static.crates.io/crates/hyper-rustls/0.26.0/download",
+          "sha256": "a0bea761b46ae2b24eb4aef630d8d1c398157b6fc29e6350ecf090a0b70c952c"
         }
       },
       "targets": [
@@ -3584,40 +3819,53 @@
               "target": "futures_util"
             },
             {
-              "id": "http 0.2.12",
+              "id": "http 1.1.0",
               "target": "http"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "hyper 1.2.0",
               "target": "hyper"
             },
             {
-              "id": "rustls 0.21.10",
+              "id": "hyper-util 0.1.3",
+              "target": "hyper_util"
+            },
+            {
+              "id": "rustls 0.22.2",
               "target": "rustls"
+            },
+            {
+              "id": "rustls-pki-types 1.3.1",
+              "target": "rustls_pki_types",
+              "alias": "pki_types"
             },
             {
               "id": "tokio 1.36.0",
               "target": "tokio"
             },
             {
-              "id": "tokio-rustls 0.24.1",
+              "id": "tokio-rustls 0.25.0",
               "target": "tokio_rustls"
+            },
+            {
+              "id": "tower-service 0.3.2",
+              "target": "tower_service"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.24.2"
+        "version": "0.26.0"
       },
       "license": "Apache-2.0 OR ISC OR MIT"
     },
-    "hyper-tls 0.5.0": {
+    "hyper-tls 0.6.0": {
       "name": "hyper-tls",
-      "version": "0.5.0",
+      "version": "0.6.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/hyper-tls/0.5.0/download",
-          "sha256": "d6183ddfa99b85da61a140bea0efc93fdf56ceaa041b37d553518030827f9905"
+          "url": "https://static.crates.io/crates/hyper-tls/0.6.0/download",
+          "sha256": "70206fc6890eaca9fde8a0bf71caa2ddfc9fe045ac9e5c70df101a7dbde866e0"
         }
       },
       "targets": [
@@ -3636,6 +3884,12 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "alpn"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
@@ -3643,8 +3897,16 @@
               "target": "bytes"
             },
             {
-              "id": "hyper 0.14.28",
+              "id": "http-body-util 0.1.1",
+              "target": "http_body_util"
+            },
+            {
+              "id": "hyper 1.2.0",
               "target": "hyper"
+            },
+            {
+              "id": "hyper-util 0.1.3",
+              "target": "hyper_util"
             },
             {
               "id": "native-tls 0.2.11",
@@ -3657,14 +3919,112 @@
             {
               "id": "tokio-native-tls 0.3.1",
               "target": "tokio_native_tls"
+            },
+            {
+              "id": "tower-service 0.3.2",
+              "target": "tower_service"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.5.0"
+        "version": "0.6.0"
       },
       "license": "MIT/Apache-2.0"
+    },
+    "hyper-util 0.1.3": {
+      "name": "hyper-util",
+      "version": "0.1.3",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/hyper-util/0.1.3/download",
+          "sha256": "ca38ef113da30126bbff9cd1705f9273e15d45498615d138b0c20279ac7a76aa"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "hyper_util",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "hyper_util",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "client",
+            "client-legacy",
+            "default",
+            "http1",
+            "http2",
+            "tokio"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "bytes 1.5.0",
+              "target": "bytes"
+            },
+            {
+              "id": "futures-channel 0.3.30",
+              "target": "futures_channel"
+            },
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "http 1.1.0",
+              "target": "http"
+            },
+            {
+              "id": "http-body 1.0.0",
+              "target": "http_body"
+            },
+            {
+              "id": "hyper 1.2.0",
+              "target": "hyper"
+            },
+            {
+              "id": "pin-project-lite 0.2.13",
+              "target": "pin_project_lite"
+            },
+            {
+              "id": "socket2 0.5.6",
+              "target": "socket2"
+            },
+            {
+              "id": "tokio 1.36.0",
+              "target": "tokio"
+            },
+            {
+              "id": "tower 0.4.13",
+              "target": "tower"
+            },
+            {
+              "id": "tower-service 0.3.2",
+              "target": "tower_service"
+            },
+            {
+              "id": "tracing 0.1.40",
+              "target": "tracing"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.1.3"
+      },
+      "license": "MIT"
     },
     "idna 0.5.0": {
       "name": "idna",
@@ -5041,7 +5401,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.4.2",
+              "id": "bitflags 2.5.0",
               "target": "bitflags"
             },
             {
@@ -5137,7 +5497,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             }
           ],
@@ -5425,6 +5785,92 @@
         "version": "2.3.1"
       },
       "license": "MIT OR Apache-2.0"
+    },
+    "pin-project 1.1.5": {
+      "name": "pin-project",
+      "version": "1.1.5",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/pin-project/1.1.5/download",
+          "sha256": "b6bf43b791c5b9e34c3d182969b4abb522f9343702850a2e57f460d00d09b4b3"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "pin_project",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "pin_project",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2021",
+        "proc_macro_deps": {
+          "common": [
+            {
+              "id": "pin-project-internal 1.1.5",
+              "target": "pin_project_internal"
+            }
+          ],
+          "selects": {}
+        },
+        "version": "1.1.5"
+      },
+      "license": "Apache-2.0 OR MIT"
+    },
+    "pin-project-internal 1.1.5": {
+      "name": "pin-project-internal",
+      "version": "1.1.5",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/pin-project-internal/1.1.5/download",
+          "sha256": "2f38a4412a78282e09a2cf38d195ea5420d15ba0602cb375210efbc877243965"
+        }
+      },
+      "targets": [
+        {
+          "ProcMacro": {
+            "crate_name": "pin_project_internal",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "pin_project_internal",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "proc-macro2 1.0.79",
+              "target": "proc_macro2"
+            },
+            {
+              "id": "quote 1.0.35",
+              "target": "quote"
+            },
+            {
+              "id": "syn 2.0.53",
+              "target": "syn"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "1.1.5"
+      },
+      "license": "Apache-2.0 OR MIT"
     },
     "pin-project-lite 0.2.13": {
       "name": "pin-project-lite",
@@ -5807,7 +6253,7 @@
         "deps": {
           "common": [
             {
-              "id": "aho-corasick 1.1.2",
+              "id": "aho-corasick 1.1.3",
               "target": "aho_corasick"
             },
             {
@@ -5932,7 +6378,7 @@
         "deps": {
           "common": [
             {
-              "id": "aho-corasick 1.1.2",
+              "id": "aho-corasick 1.1.3",
               "target": "aho_corasick"
             },
             {
@@ -6040,13 +6486,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "reqwest 0.11.26": {
+    "reqwest 0.12.0": {
       "name": "reqwest",
-      "version": "0.11.26",
+      "version": "0.12.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/reqwest/0.11.26/download",
-          "sha256": "78bf93c4af7a8bb7d879d51cebe797356ff10ae8516ace542b5182d9dcac10b2"
+          "url": "https://static.crates.io/crates/reqwest/0.12.0/download",
+          "sha256": "58b48d98d932f4ee75e541614d32a7f44c889b72bd9c2e04d95edd135989df88"
         }
       },
       "targets": [
@@ -6069,23 +6515,19 @@
           "common": [
             "__rustls",
             "__tls",
+            "charset",
             "default",
             "default-tls",
-            "hyper-rustls",
-            "hyper-tls",
+            "h2",
+            "http2",
             "json",
+            "macos-system-configuration",
             "native-tls",
             "native-tls-alpn",
-            "native-tls-crate",
-            "rustls",
-            "rustls-tls",
+            "rustls-pki-types",
+            "rustls-tls-native-roots",
             "rustls-tls-webpki-roots",
-            "serde_json",
-            "socks",
-            "tokio-native-tls",
-            "tokio-rustls",
-            "tokio-socks",
-            "webpki-roots"
+            "socks"
           ],
           "selects": {}
         },
@@ -6108,7 +6550,7 @@
               "target": "futures_util"
             },
             {
-              "id": "http 0.2.12",
+              "id": "http 1.1.0",
               "target": "http"
             },
             {
@@ -6143,24 +6585,32 @@
                 "target": "encoding_rs"
               },
               {
-                "id": "h2 0.3.24",
+                "id": "h2 0.4.3",
                 "target": "h2"
               },
               {
-                "id": "http-body 0.4.6",
+                "id": "http-body 1.0.0",
                 "target": "http_body"
               },
               {
-                "id": "hyper 0.14.28",
+                "id": "http-body-util 0.1.1",
+                "target": "http_body_util"
+              },
+              {
+                "id": "hyper 1.2.0",
                 "target": "hyper"
               },
               {
-                "id": "hyper-rustls 0.24.2",
+                "id": "hyper-rustls 0.26.0",
                 "target": "hyper_rustls"
               },
               {
-                "id": "hyper-tls 0.5.0",
+                "id": "hyper-tls 0.6.0",
                 "target": "hyper_tls"
+              },
+              {
+                "id": "hyper-util 0.1.3",
+                "target": "hyper_util"
               },
               {
                 "id": "ipnet 2.9.0",
@@ -6192,12 +6642,20 @@
                 "target": "pin_project_lite"
               },
               {
-                "id": "rustls 0.21.10",
+                "id": "rustls 0.22.2",
                 "target": "rustls"
+              },
+              {
+                "id": "rustls-native-certs 0.7.0",
+                "target": "rustls_native_certs"
               },
               {
                 "id": "rustls-pemfile 1.0.4",
                 "target": "rustls_pemfile"
+              },
+              {
+                "id": "rustls-pki-types 1.3.1",
+                "target": "rustls_pki_types"
               },
               {
                 "id": "tokio 1.36.0",
@@ -6208,7 +6666,7 @@
                 "target": "tokio_native_tls"
               },
               {
-                "id": "tokio-rustls 0.24.1",
+                "id": "tokio-rustls 0.25.0",
                 "target": "tokio_rustls"
               },
               {
@@ -6216,7 +6674,7 @@
                 "target": "tokio_socks"
               },
               {
-                "id": "webpki-roots 0.25.4",
+                "id": "webpki-roots 0.26.1",
                 "target": "webpki_roots"
               }
             ],
@@ -6253,7 +6711,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.11.26"
+        "version": "0.12.0"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -6428,13 +6886,13 @@
       },
       "license": "MIT/Apache-2.0"
     },
-    "rustix 0.38.31": {
+    "rustix 0.38.32": {
       "name": "rustix",
-      "version": "0.38.31",
+      "version": "0.38.32",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustix/0.38.31/download",
-          "sha256": "6ea3e1a662af26cd7a3ba09c0297a31af215563ecf42817c98df621387f4e949"
+          "url": "https://static.crates.io/crates/rustix/0.38.32/download",
+          "sha256": "65e04861e65f21776e67888bfbea442b3642beaa0138fdb1dd7a84a52dffdb89"
         }
       },
       "targets": [
@@ -6475,11 +6933,11 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.4.2",
+              "id": "bitflags 2.5.0",
               "target": "bitflags"
             },
             {
-              "id": "rustix 0.38.31",
+              "id": "rustix 0.38.32",
               "target": "build_script_build"
             }
           ],
@@ -6521,7 +6979,7 @@
           }
         },
         "edition": "2021",
-        "version": "0.38.31"
+        "version": "0.38.32"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -6530,13 +6988,13 @@
       },
       "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT"
     },
-    "rustls 0.21.10": {
+    "rustls 0.22.2": {
       "name": "rustls",
-      "version": "0.21.10",
+      "version": "0.22.2",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls/0.21.10/download",
-          "sha256": "f9d5a6813c0759e4609cd494e8e725babae6a2ca7b62a5536a13daaec6fcb7ba"
+          "url": "https://static.crates.io/crates/rustls/0.22.2/download",
+          "sha256": "e87c9956bd9807afa1f77e0f7594af32566e830e088a5576d27c5b6f30f49d41"
         }
       },
       "targets": [
@@ -6566,10 +7024,10 @@
         ],
         "crate_features": {
           "common": [
-            "dangerous_configuration",
             "default",
             "log",
             "logging",
+            "ring",
             "tls12"
           ],
           "selects": {}
@@ -6585,22 +7043,31 @@
               "target": "ring"
             },
             {
-              "id": "rustls 0.21.10",
+              "id": "rustls 0.22.2",
               "target": "build_script_build"
             },
             {
-              "id": "rustls-webpki 0.101.7",
+              "id": "rustls-pki-types 1.3.1",
+              "target": "rustls_pki_types",
+              "alias": "pki_types"
+            },
+            {
+              "id": "rustls-webpki 0.102.2",
               "target": "webpki"
             },
             {
-              "id": "sct 0.7.1",
-              "target": "sct"
+              "id": "subtle 2.5.0",
+              "target": "subtle"
+            },
+            {
+              "id": "zeroize 1.7.0",
+              "target": "zeroize"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.21.10"
+        "version": "0.22.2"
       },
       "build_script_attrs": {
         "data_glob": [
@@ -6615,6 +7082,69 @@
           ],
           "selects": {}
         }
+      },
+      "license": "Apache-2.0 OR ISC OR MIT"
+    },
+    "rustls-native-certs 0.7.0": {
+      "name": "rustls-native-certs",
+      "version": "0.7.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rustls-native-certs/0.7.0/download",
+          "sha256": "8f1fb85efa936c42c6d5fc28d2629bb51e4b2f4b8a5211e297d599cc5a093792"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rustls_native_certs",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rustls_native_certs",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "rustls-pemfile 2.1.1",
+              "target": "rustls_pemfile"
+            },
+            {
+              "id": "rustls-pki-types 1.3.1",
+              "target": "rustls_pki_types",
+              "alias": "pki_types"
+            }
+          ],
+          "selects": {
+            "cfg(all(unix, not(target_os = \"macos\")))": [
+              {
+                "id": "openssl-probe 0.1.5",
+                "target": "openssl_probe"
+              }
+            ],
+            "cfg(target_os = \"macos\")": [
+              {
+                "id": "security-framework 2.9.2",
+                "target": "security_framework"
+              }
+            ],
+            "cfg(windows)": [
+              {
+                "id": "schannel 0.1.23",
+                "target": "schannel"
+              }
+            ]
+          }
+        },
+        "edition": "2021",
+        "version": "0.7.0"
       },
       "license": "Apache-2.0 OR ISC OR MIT"
     },
@@ -6657,13 +7187,102 @@
       },
       "license": "Apache-2.0 OR ISC OR MIT"
     },
-    "rustls-webpki 0.101.7": {
-      "name": "rustls-webpki",
-      "version": "0.101.7",
+    "rustls-pemfile 2.1.1": {
+      "name": "rustls-pemfile",
+      "version": "2.1.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls-webpki/0.101.7/download",
-          "sha256": "8b6275d1ee7a1cd780b64aca7726599a1dbc893b1e64144529e55c3c2f745765"
+          "url": "https://static.crates.io/crates/rustls-pemfile/2.1.1/download",
+          "sha256": "f48172685e6ff52a556baa527774f61fcaa884f59daf3375c62a3f1cd2549dab"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rustls_pemfile",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rustls_pemfile",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "base64 0.21.7",
+              "target": "base64"
+            },
+            {
+              "id": "rustls-pki-types 1.3.1",
+              "target": "rustls_pki_types",
+              "alias": "pki_types"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "2.1.1"
+      },
+      "license": "Apache-2.0 OR ISC OR MIT"
+    },
+    "rustls-pki-types 1.3.1": {
+      "name": "rustls-pki-types",
+      "version": "1.3.1",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rustls-pki-types/1.3.1/download",
+          "sha256": "5ede67b28608b4c60685c7d54122d4400d90f62b40caee7700e700380a390fa8"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "rustls_pki_types",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "rustls_pki_types",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "1.3.1"
+      },
+      "license": "MIT OR Apache-2.0"
+    },
+    "rustls-webpki 0.102.2": {
+      "name": "rustls-webpki",
+      "version": "0.102.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/rustls-webpki/0.102.2/download",
+          "sha256": "faaa0a62740bedb9b2ef5afa303da42764c012f743917351dc9a237ea1663610"
         }
       },
       "targets": [
@@ -6685,7 +7304,7 @@
         "crate_features": {
           "common": [
             "alloc",
-            "default",
+            "ring",
             "std"
           ],
           "selects": {}
@@ -6697,6 +7316,11 @@
               "target": "ring"
             },
             {
+              "id": "rustls-pki-types 1.3.1",
+              "target": "rustls_pki_types",
+              "alias": "pki_types"
+            },
+            {
               "id": "untrusted 0.9.0",
               "target": "untrusted"
             }
@@ -6704,7 +7328,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.101.7"
+        "version": "0.102.2"
       },
       "license": "ISC"
     },
@@ -6873,49 +7497,6 @@
         "version": "0.11.0"
       },
       "license": "MIT OR Apache-2.0"
-    },
-    "sct 0.7.1": {
-      "name": "sct",
-      "version": "0.7.1",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/sct/0.7.1/download",
-          "sha256": "da046153aa2352493d6cb7da4b6e5c0c057d8a1d0a9aa8560baffdd945acd414"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "sct",
-            "crate_root": "src/lib.rs",
-            "srcs": [
-              "**/*.rs"
-            ]
-          }
-        }
-      ],
-      "library_target_name": "sct",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "ring 0.17.8",
-              "target": "ring"
-            },
-            {
-              "id": "untrusted 0.9.0",
-              "target": "untrusted"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.7.1"
-      },
-      "license": "Apache-2.0 OR ISC OR MIT"
     },
     "security-framework 2.9.2": {
       "name": "security-framework",
@@ -7137,7 +7718,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             }
           ],
@@ -7429,13 +8010,13 @@
       },
       "license": "MIT"
     },
-    "smallvec 1.13.1": {
+    "smallvec 1.13.2": {
       "name": "smallvec",
-      "version": "1.13.1",
+      "version": "1.13.2",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/smallvec/1.13.1/download",
-          "sha256": "e6ecd384b10a64542d77071bd64bd7b231f4ed5940fba55e98c3de13824cf3d7"
+          "url": "https://static.crates.io/crates/smallvec/1.13.2/download",
+          "sha256": "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
         }
       },
       "targets": [
@@ -7454,8 +8035,141 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              "const_generics",
+              "const_new"
+            ],
+            "aarch64-apple-ios": [
+              "const_generics",
+              "const_new"
+            ],
+            "aarch64-apple-ios-sim": [
+              "const_generics",
+              "const_new"
+            ],
+            "aarch64-fuchsia": [
+              "const_generics",
+              "const_new"
+            ],
+            "aarch64-linux-android": [
+              "const_generics",
+              "const_new"
+            ],
+            "aarch64-pc-windows-msvc": [
+              "const_generics",
+              "const_new"
+            ],
+            "aarch64-unknown-linux-gnu": [
+              "const_generics",
+              "const_new"
+            ],
+            "aarch64-unknown-nixos-gnu": [
+              "const_generics",
+              "const_new"
+            ],
+            "aarch64-unknown-nto-qnx710": [
+              "const_generics",
+              "const_new"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "const_generics",
+              "const_new"
+            ],
+            "armv7-linux-androideabi": [
+              "const_generics",
+              "const_new"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "const_generics",
+              "const_new"
+            ],
+            "i686-apple-darwin": [
+              "const_generics",
+              "const_new"
+            ],
+            "i686-linux-android": [
+              "const_generics",
+              "const_new"
+            ],
+            "i686-pc-windows-msvc": [
+              "const_generics",
+              "const_new"
+            ],
+            "i686-unknown-freebsd": [
+              "const_generics",
+              "const_new"
+            ],
+            "i686-unknown-linux-gnu": [
+              "const_generics",
+              "const_new"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "const_generics",
+              "const_new"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "const_generics",
+              "const_new"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "const_generics",
+              "const_new"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "const_generics",
+              "const_new"
+            ],
+            "thumbv7em-none-eabi": [
+              "const_generics",
+              "const_new"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "const_generics",
+              "const_new"
+            ],
+            "x86_64-apple-darwin": [
+              "const_generics",
+              "const_new"
+            ],
+            "x86_64-apple-ios": [
+              "const_generics",
+              "const_new"
+            ],
+            "x86_64-fuchsia": [
+              "const_generics",
+              "const_new"
+            ],
+            "x86_64-linux-android": [
+              "const_generics",
+              "const_new"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "const_generics",
+              "const_new"
+            ],
+            "x86_64-unknown-freebsd": [
+              "const_generics",
+              "const_new"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "const_generics",
+              "const_new"
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              "const_generics",
+              "const_new"
+            ],
+            "x86_64-unknown-none": [
+              "const_generics",
+              "const_new"
+            ]
+          }
+        },
         "edition": "2018",
-        "version": "1.13.1"
+        "version": "1.13.2"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -7608,13 +8322,13 @@
       },
       "license": "BSD-3-Clause"
     },
-    "syn 2.0.52": {
+    "syn 2.0.53": {
       "name": "syn",
-      "version": "2.0.52",
+      "version": "2.0.53",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/syn/2.0.52/download",
-          "sha256": "b699d15b36d1f02c3e7c69f8ffef53de37aefae075d8488d4ba1a7788d574a07"
+          "url": "https://static.crates.io/crates/syn/2.0.53/download",
+          "sha256": "7383cd0e49fff4b6b90ca5670bfd3e9d6a733b3f90c686605aa7eec8c4996032"
         }
       },
       "targets": [
@@ -7667,7 +8381,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.0.52"
+        "version": "2.0.53"
       },
       "license": "MIT OR Apache-2.0"
     },
@@ -7744,7 +8458,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             }
           ],
@@ -7902,7 +8616,7 @@
           "selects": {
             "cfg(any(unix, target_os = \"wasi\"))": [
               {
-                "id": "rustix 0.38.31",
+                "id": "rustix 0.38.32",
                 "target": "rustix"
               }
             ],
@@ -8017,7 +8731,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             }
           ],
@@ -8340,6 +9054,7 @@
           "selects": {
             "aarch64-apple-darwin": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8350,6 +9065,7 @@
             ],
             "aarch64-apple-ios": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8360,6 +9076,7 @@
             ],
             "aarch64-apple-ios-sim": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8370,6 +9087,7 @@
             ],
             "aarch64-fuchsia": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8380,6 +9098,7 @@
             ],
             "aarch64-linux-android": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8390,6 +9109,7 @@
             ],
             "aarch64-pc-windows-msvc": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8401,6 +9121,7 @@
             ],
             "aarch64-unknown-linux-gnu": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8411,6 +9132,7 @@
             ],
             "aarch64-unknown-nixos-gnu": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8421,6 +9143,7 @@
             ],
             "aarch64-unknown-nto-qnx710": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8431,6 +9154,7 @@
             ],
             "arm-unknown-linux-gnueabi": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8441,6 +9165,7 @@
             ],
             "armv7-linux-androideabi": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8451,6 +9176,7 @@
             ],
             "armv7-unknown-linux-gnueabi": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8461,6 +9187,7 @@
             ],
             "i686-apple-darwin": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8471,6 +9198,7 @@
             ],
             "i686-linux-android": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8481,6 +9209,7 @@
             ],
             "i686-pc-windows-msvc": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8492,6 +9221,7 @@
             ],
             "i686-unknown-freebsd": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8502,6 +9232,7 @@
             ],
             "i686-unknown-linux-gnu": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8512,6 +9243,7 @@
             ],
             "powerpc-unknown-linux-gnu": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8522,6 +9254,7 @@
             ],
             "riscv32imc-unknown-none-elf": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8532,6 +9265,7 @@
             ],
             "riscv64gc-unknown-none-elf": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8542,6 +9276,7 @@
             ],
             "s390x-unknown-linux-gnu": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8552,6 +9287,7 @@
             ],
             "thumbv7em-none-eabi": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8562,6 +9298,7 @@
             ],
             "thumbv8m.main-none-eabi": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8572,6 +9309,7 @@
             ],
             "x86_64-apple-darwin": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8582,6 +9320,7 @@
             ],
             "x86_64-apple-ios": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8592,6 +9331,7 @@
             ],
             "x86_64-fuchsia": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8602,6 +9342,7 @@
             ],
             "x86_64-linux-android": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8612,6 +9353,7 @@
             ],
             "x86_64-pc-windows-msvc": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8623,6 +9365,7 @@
             ],
             "x86_64-unknown-freebsd": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8633,6 +9376,7 @@
             ],
             "x86_64-unknown-linux-gnu": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8643,6 +9387,7 @@
             ],
             "x86_64-unknown-nixos-gnu": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8653,6 +9398,7 @@
             ],
             "x86_64-unknown-none": [
               "bytes",
+              "io-std",
               "io-util",
               "libc",
               "mio",
@@ -8759,7 +9505,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             }
           ],
@@ -8813,13 +9559,13 @@
       },
       "license": "MIT"
     },
-    "tokio-rustls 0.24.1": {
+    "tokio-rustls 0.25.0": {
       "name": "tokio-rustls",
-      "version": "0.24.1",
+      "version": "0.25.0",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/tokio-rustls/0.24.1/download",
-          "sha256": "c28327cf380ac148141087fbfb9de9d7bd4e84ab5d2c28fbc911d753de8a7081"
+          "url": "https://static.crates.io/crates/tokio-rustls/0.25.0/download",
+          "sha256": "775e0c0f0adb3a2f22a00c4745d728b479985fc15ee7ca6a2608388c5569860f"
         }
       },
       "targets": [
@@ -8842,6 +9588,7 @@
           "common": [
             "default",
             "logging",
+            "ring",
             "tls12"
           ],
           "selects": {}
@@ -8849,8 +9596,13 @@
         "deps": {
           "common": [
             {
-              "id": "rustls 0.21.10",
+              "id": "rustls 0.22.2",
               "target": "rustls"
+            },
+            {
+              "id": "rustls-pki-types 1.3.1",
+              "target": "rustls_pki_types",
+              "alias": "pki_types"
             },
             {
               "id": "tokio 1.36.0",
@@ -8859,8 +9611,8 @@
           ],
           "selects": {}
         },
-        "edition": "2018",
-        "version": "0.24.1"
+        "edition": "2021",
+        "version": "0.25.0"
       },
       "license": "MIT/Apache-2.0"
     },
@@ -8983,6 +9735,119 @@
       },
       "license": "MIT"
     },
+    "tower 0.4.13": {
+      "name": "tower",
+      "version": "0.4.13",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/tower/0.4.13/download",
+          "sha256": "b8fa9be0de6cf49e536ce1851f987bd21a43b771b09473c3549a6c853db37c1c"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "tower",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "tower",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "__common",
+            "default",
+            "futures-core",
+            "futures-util",
+            "log",
+            "make",
+            "pin-project",
+            "pin-project-lite",
+            "tokio",
+            "tracing",
+            "util"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "futures-core 0.3.30",
+              "target": "futures_core"
+            },
+            {
+              "id": "futures-util 0.3.30",
+              "target": "futures_util"
+            },
+            {
+              "id": "pin-project 1.1.5",
+              "target": "pin_project"
+            },
+            {
+              "id": "pin-project-lite 0.2.13",
+              "target": "pin_project_lite"
+            },
+            {
+              "id": "tokio 1.36.0",
+              "target": "tokio"
+            },
+            {
+              "id": "tower-layer 0.3.2",
+              "target": "tower_layer"
+            },
+            {
+              "id": "tower-service 0.3.2",
+              "target": "tower_service"
+            },
+            {
+              "id": "tracing 0.1.40",
+              "target": "tracing"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2018",
+        "version": "0.4.13"
+      },
+      "license": "MIT"
+    },
+    "tower-layer 0.3.2": {
+      "name": "tower-layer",
+      "version": "0.3.2",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/tower-layer/0.3.2/download",
+          "sha256": "c20c8dbed6283a09604c3e69b4b7eeb54e298b8a600d4d5ecb5ad39de609f1d0"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "tower_layer",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "tower_layer",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2018",
+        "version": "0.3.2"
+      },
+      "license": "MIT"
+    },
     "tower-service 0.3.2": {
       "name": "tower-service",
       "version": "0.3.2",
@@ -9045,10 +9910,111 @@
             "std",
             "tracing-attributes"
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              "log"
+            ],
+            "aarch64-apple-ios": [
+              "log"
+            ],
+            "aarch64-apple-ios-sim": [
+              "log"
+            ],
+            "aarch64-fuchsia": [
+              "log"
+            ],
+            "aarch64-linux-android": [
+              "log"
+            ],
+            "aarch64-pc-windows-msvc": [
+              "log"
+            ],
+            "aarch64-unknown-linux-gnu": [
+              "log"
+            ],
+            "aarch64-unknown-nixos-gnu": [
+              "log"
+            ],
+            "aarch64-unknown-nto-qnx710": [
+              "log"
+            ],
+            "arm-unknown-linux-gnueabi": [
+              "log"
+            ],
+            "armv7-linux-androideabi": [
+              "log"
+            ],
+            "armv7-unknown-linux-gnueabi": [
+              "log"
+            ],
+            "i686-apple-darwin": [
+              "log"
+            ],
+            "i686-linux-android": [
+              "log"
+            ],
+            "i686-pc-windows-msvc": [
+              "log"
+            ],
+            "i686-unknown-freebsd": [
+              "log"
+            ],
+            "i686-unknown-linux-gnu": [
+              "log"
+            ],
+            "powerpc-unknown-linux-gnu": [
+              "log"
+            ],
+            "riscv32imc-unknown-none-elf": [
+              "log"
+            ],
+            "riscv64gc-unknown-none-elf": [
+              "log"
+            ],
+            "s390x-unknown-linux-gnu": [
+              "log"
+            ],
+            "thumbv7em-none-eabi": [
+              "log"
+            ],
+            "thumbv8m.main-none-eabi": [
+              "log"
+            ],
+            "x86_64-apple-darwin": [
+              "log"
+            ],
+            "x86_64-apple-ios": [
+              "log"
+            ],
+            "x86_64-fuchsia": [
+              "log"
+            ],
+            "x86_64-linux-android": [
+              "log"
+            ],
+            "x86_64-pc-windows-msvc": [
+              "log"
+            ],
+            "x86_64-unknown-freebsd": [
+              "log"
+            ],
+            "x86_64-unknown-linux-gnu": [
+              "log"
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              "log"
+            ],
+            "x86_64-unknown-none": [
+              "log"
+            ]
+          }
         },
         "deps": {
           "common": [
+            {
+              "id": "log 0.4.21",
+              "target": "log"
+            },
             {
               "id": "pin-project-lite 0.2.13",
               "target": "pin_project_lite"
@@ -9110,7 +10076,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             }
           ],
@@ -9298,7 +10264,7 @@
               "target": "sharded_slab"
             },
             {
-              "id": "smallvec 1.13.1",
+              "id": "smallvec 1.13.2",
               "target": "smallvec"
             },
             {
@@ -9992,7 +10958,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             },
             {
@@ -10152,7 +11118,7 @@
               "target": "quote"
             },
             {
-              "id": "syn 2.0.52",
+              "id": "syn 2.0.53",
               "target": "syn"
             },
             {
@@ -10290,13 +11256,13 @@
       },
       "license": "MIT OR Apache-2.0"
     },
-    "webpki-roots 0.25.4": {
+    "webpki-roots 0.26.1": {
       "name": "webpki-roots",
-      "version": "0.25.4",
+      "version": "0.26.1",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/webpki-roots/0.25.4/download",
-          "sha256": "5f20c57d8d7db6d3b86154206ae5d8fba62dd39573114de97c2cb0578251f8e1"
+          "url": "https://static.crates.io/crates/webpki-roots/0.26.1/download",
+          "sha256": "b3de34ae270483955a94f4b21bdaaeb83d508bb84a01435f393818edb0012009"
         }
       },
       "targets": [
@@ -10315,8 +11281,18 @@
         "compile_data_glob": [
           "**"
         ],
+        "deps": {
+          "common": [
+            {
+              "id": "rustls-pki-types 1.3.1",
+              "target": "rustls_pki_types",
+              "alias": "pki_types"
+            }
+          ],
+          "selects": {}
+        },
         "edition": "2018",
-        "version": "0.25.4"
+        "version": "0.26.1"
       },
       "license": "MPL-2.0"
     },
@@ -11638,6 +12614,43 @@
         "version": "0.16.0"
       },
       "license": "MIT OR Apache-2.0"
+    },
+    "zeroize 1.7.0": {
+      "name": "zeroize",
+      "version": "1.7.0",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/zeroize/1.7.0/download",
+          "sha256": "525b4ec142c6b68a2d10f01f7bbf6755599ca3f81ea53b8431b7dd348f5fdb2d"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "zeroize",
+            "crate_root": "src/lib.rs",
+            "srcs": [
+              "**/*.rs"
+            ]
+          }
+        }
+      ],
+      "library_target_name": "zeroize",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "alloc",
+            "default"
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "1.7.0"
+      },
+      "license": "Apache-2.0 OR MIT"
     }
   },
   "binary_crates": [],
@@ -11761,6 +12774,29 @@
     ],
     "cfg(all(target_arch = \"x86_64\", target_env = \"msvc\", not(windows_raw_dylib)))": [
       "x86_64-pc-windows-msvc"
+    ],
+    "cfg(all(unix, not(target_os = \"macos\")))": [
+      "aarch64-apple-ios",
+      "aarch64-apple-ios-sim",
+      "aarch64-fuchsia",
+      "aarch64-linux-android",
+      "aarch64-unknown-linux-gnu",
+      "aarch64-unknown-nixos-gnu",
+      "aarch64-unknown-nto-qnx710",
+      "arm-unknown-linux-gnueabi",
+      "armv7-linux-androideabi",
+      "armv7-unknown-linux-gnueabi",
+      "i686-linux-android",
+      "i686-unknown-freebsd",
+      "i686-unknown-linux-gnu",
+      "powerpc-unknown-linux-gnu",
+      "s390x-unknown-linux-gnu",
+      "x86_64-apple-ios",
+      "x86_64-fuchsia",
+      "x86_64-linux-android",
+      "x86_64-unknown-freebsd",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(any())": [],
     "cfg(any(target_arch = \"aarch64\", target_arch = \"arm\", target_arch = \"x86\", target_arch = \"x86_64\"))": [
@@ -12140,13 +13176,13 @@
     "aes-gcm 0.10.3",
     "anyhow 1.0.81",
     "bytes 1.5.0",
-    "clap 4.5.2",
+    "clap 4.5.3",
     "encoding_rs 0.8.33",
     "httpdate 1.0.3",
     "log 0.4.21",
     "mime 0.3.17",
     "regex 1.10.3",
-    "reqwest 0.11.26",
+    "reqwest 0.12.0",
     "scrypt 0.11.0",
     "tokio 1.36.0",
     "tracing 0.1.40",

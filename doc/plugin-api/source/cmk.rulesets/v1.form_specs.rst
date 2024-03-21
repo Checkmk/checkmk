@@ -66,7 +66,7 @@ old data to the new data model. This is done by providing migration functions th
 migrate old data to the new data model.
 
 Here we offer a set of migration functions that can be used to migrate old configurations to the
-new class::`Levels` and class::`SimpleLevels` forms.
+new :class:`Levels` and :class:`SimpleLevels` forms.
 
-.. automodule:: cmk.rulesets.v1.form_specs.migration
+.. automodule:: cmk.rulesets.v1.form_specs._migrations
    :members:

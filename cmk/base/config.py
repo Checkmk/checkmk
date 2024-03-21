@@ -150,6 +150,9 @@ ObjectMacros = dict[str, AnyStr]
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
+SSCRules = Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+
+
 class FilterMode(enum.Enum):
     NONE = enum.auto()
     INCLUDE_CLUSTERED = enum.auto()
@@ -1882,8 +1885,8 @@ class ConfigCache:
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
         self.__computed_datasources: dict[HostName | HostAddress, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
-        self.__active_checks: dict[HostName, list[tuple[str, Sequence[Any]]]] = {}
-        self.__special_agents: dict[HostName, Sequence[tuple[str, Mapping[str, object]]]] = {}
+        self.__active_checks: dict[HostName, SSCRules] = {}
+        self.__special_agents: dict[HostName, SSCRules] = {}
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
@@ -2615,15 +2618,15 @@ class ConfigCache:
         """Return the free form configured custom checks without formalization"""
         return self.ruleset_matcher.get_host_values(host_name, custom_checks)
 
-    def active_checks(self, host_name: HostName) -> list[tuple[str, Sequence[Any]]]:
+    def active_checks(self, host_name: HostName) -> SSCRules:
         """Returns the list of active checks configured for this host
 
         These are configured using the active check formalization of WATO
         where the whole parameter set is configured using valuespecs.
         """
 
-        def make_active_checks() -> list[tuple[str, Sequence[Any]]]:
-            configured_checks: list[tuple[str, Sequence[Any]]] = []
+        def make_active_checks() -> SSCRules:
+            configured_checks: list[tuple[str, Sequence[Mapping[str, object]]]] = []
             for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts
@@ -2677,9 +2680,9 @@ class ConfigCache:
             }.values()
         )
 
-    def special_agents(self, host_name: HostName) -> Sequence[tuple[str, Mapping[str, object]]]:
-        def special_agents_impl() -> Sequence[tuple[str, Mapping[str, object]]]:
-            matched: list[tuple[str, Mapping[str, object]]] = []
+    def special_agents(self, host_name: HostName) -> SSCRules:
+        def special_agents_impl() -> SSCRules:
+            matched: list[tuple[str, Sequence[Mapping[str, object]]]] = []
             # Previous to 1.5.0 it was not defined in which order the special agent
             # rules overwrite each other. When multiple special agents were configured
             # for a single host a "random" one was picked (depending on the iteration
@@ -2689,7 +2692,9 @@ class ConfigCache:
             for agentname, ruleset in sorted(special_agents.items()):
                 params = self.ruleset_matcher.get_host_values(host_name, ruleset)
                 if params:
-                    matched.append((agentname, params[0]))
+                    # we have match type first, so pick the first.
+                    # However, nest it in a list to have a consistent return type
+                    matched.append((agentname, [params[0]]))
             return matched
 
         with contextlib.suppress(KeyError):
@@ -2700,25 +2705,26 @@ class ConfigCache:
     def special_agent_command_lines(
         self, host_name: HostName, ip_address: HostAddress | None
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
-        for agentname, params in self.special_agents(host_name):
-            host_attrs = self.get_host_attributes(host_name)
-            macros = {
-                "<IP>": ip_address or "",
-                "<HOST>": host_name,
-                **self.get_host_macros_from_attributes(host_name, host_attrs),
-            }
-            special_agent = SpecialAgent(
-                load_special_agents()[1],
-                special_agent_info,
-                host_name,
-                ip_address,
-                get_ssc_host_config(host_name, self, macros),
-                host_attrs,
-                http_proxies,
-                password_store.load(),
-            )
-            for agent_data in special_agent.iter_special_agent_commands(agentname, params):
-                yield agentname, agent_data
+        for agentname, params_seq in self.special_agents(host_name):
+            for params in params_seq:
+                host_attrs = self.get_host_attributes(host_name)
+                macros = {
+                    "<IP>": ip_address or "",
+                    "<HOST>": host_name,
+                    **self.get_host_macros_from_attributes(host_name, host_attrs),
+                }
+                special_agent = SpecialAgent(
+                    load_special_agents()[1],
+                    special_agent_info,
+                    host_name,
+                    ip_address,
+                    get_ssc_host_config(host_name, self, macros),
+                    host_attrs,
+                    http_proxies,
+                    password_store.load(),
+                )
+                for agent_data in special_agent.iter_special_agent_commands(agentname, params):
+                    yield agentname, agent_data
 
     def hostgroups(self, host_name: HostName) -> Sequence[str]:
         """Returns the list of hostgroups of this host

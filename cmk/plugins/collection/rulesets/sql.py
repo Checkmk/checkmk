@@ -109,10 +109,13 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 ),
                 required=True,
             ),
-            "password": form_specs.DictElement[tuple[Literal["password", "store"], str]](
+            "password": form_specs.DictElement[
+                tuple[Literal["explicit-password", "stored-password"], str, str]
+            ](
                 parameter_form=form_specs.Password(
                     title=Title("Database Password"),
                     help_text=Help("The password used to connect to the database"),
+                    migrate=form_specs.migrate_to_password,
                 ),
                 required=True,
             ),

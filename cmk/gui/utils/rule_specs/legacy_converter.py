@@ -9,6 +9,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, Callable, Literal, TypeVar
+from uuid import uuid4
 
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition
@@ -20,6 +21,7 @@ from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.valuespec import Transform
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
 from cmk.gui.wato import pages as legacy_page_groups
@@ -1617,13 +1619,39 @@ def _convert_to_legacy_monitored_service_description(
     return legacy_valuespecs.MonitoredServiceDescription(**converted_kwargs)
 
 
+def _transform_password_forth(value: object) -> tuple[str, str]:
+    match value:
+        case "explicit_password", str(), str(password):
+            return "password", password
+        case "stored_password", str(password_store_id), str():
+            return "store", password_store_id
+
+    raise ValueError(value)
+
+
+def _transform_password_back(
+    value: tuple[str, str]
+) -> tuple[Literal["explicit_password", "stored_password"], str, str]:
+    match value:
+        case "password", str(password):
+            return "explicit_password", str(uuid4()), password
+        case "store", str(password_store_id):
+            return "stored_password", password_store_id, ""
+
+    raise ValueError(value)
+
+
 def _convert_to_legacy_individual_or_stored_password(
     to_convert: ruleset_api_v1.form_specs.Password, localizer: Callable[[str], str]
-) -> legacy_valuespecs.CascadingDropdown:
-    return legacy_page_groups.IndividualOrStoredPassword(
-        title=_localize_optional(to_convert.title, localizer),
-        help=_localize_optional(to_convert.help_text, localizer),
-        allow_empty=False,
+) -> legacy_valuespecs.Transform:
+    return Transform(
+        legacy_page_groups.IndividualOrStoredPassword(
+            title=_localize_optional(to_convert.title, localizer),
+            help=_localize_optional(to_convert.help_text, localizer),
+            allow_empty=False,
+        ),
+        forth=_transform_password_forth,
+        back=_transform_password_back,
     )
 
 

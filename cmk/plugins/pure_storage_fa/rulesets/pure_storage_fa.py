@@ -12,6 +12,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     FixedValue,
+    migrate_to_password,
     Password,
     String,
     TimeMagnitude,
@@ -54,6 +55,7 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                         " or through the Purity command line interface"
                         " (pureadmin create --api-token)"
                     ),
+                    migrate=migrate_to_password,
                 ),
                 required=True,
             ),

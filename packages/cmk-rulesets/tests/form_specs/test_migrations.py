@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import nullcontext as does_not_raise
-from typing import ContextManager, NamedTuple, TypeVar
+from typing import ContextManager, Literal, NamedTuple, TypeVar
 
 import pytest
 
@@ -12,6 +12,7 @@ from cmk.rulesets.v1.form_specs import (
     LevelsConfigModel,
     migrate_to_lower_float_levels,
     migrate_to_lower_integer_levels,
+    migrate_to_password,
     migrate_to_upper_float_levels,
     migrate_to_upper_integer_levels,
 )
@@ -498,3 +499,35 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_stdev() -> None:
     )
     assert migrate_to_upper_integer_levels(old, scale) == new
     assert migrate_to_upper_integer_levels(new, scale) == new
+
+
+@pytest.mark.parametrize(
+    ["old", "new"],
+    [
+        pytest.param(
+            ("password", "secret-password"),
+            ("explicit-password", "throwaway-id", "secret-password"),
+            id="migrate explicit password",
+        ),
+        pytest.param(
+            ("store", "password_1"),
+            ("stored-password", "password_1", ""),
+            id="migrate stored password",
+        ),
+        pytest.param(
+            ("explicit-password", "067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+            ("explicit-password", "067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+            id="already migrated explicit password",
+        ),
+        pytest.param(
+            ("stored-password", "password_1", ""),
+            ("stored-password", "password_1", ""),
+            id="already migrated stored password",
+        ),
+    ],
+)
+def test_migrate_to_password(
+    old: object, new: tuple[Literal["explicit-password", "stored-password"], str, str]
+) -> None:
+    assert migrate_to_password(old) == new
+    assert migrate_to_password(new) == new

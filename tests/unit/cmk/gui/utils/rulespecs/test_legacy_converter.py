@@ -733,7 +733,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.Password(),
-            legacy_page_groups.IndividualOrStoredPassword(allow_empty=False),
+            legacy_valuespecs.Transform(
+                legacy_page_groups.IndividualOrStoredPassword(allow_empty=False),
+            ),
             id="minimal Password",
         ),
         pytest.param(
@@ -741,10 +743,12 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Title("password title"),
                 help_text=api_v1.Help("help text"),
             ),
-            legacy_page_groups.IndividualOrStoredPassword(
-                title=_("password title"),
-                help=_("help text"),
-                allow_empty=False,
+            legacy_valuespecs.Transform(
+                legacy_page_groups.IndividualOrStoredPassword(
+                    title=_("password title"),
+                    help=_("help text"),
+                    allow_empty=False,
+                ),
             ),
             id="Password",
         ),

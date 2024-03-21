@@ -259,3 +259,28 @@ def migrate_to_float_simple_levels(
         model: Old value presented to the consumers to be migrated
     """
     return _migrate_to_simple_levels(model, scale, float)
+
+
+def migrate_to_password(
+    model: object,
+) -> tuple[Literal["explicit-password", "stored-password"], str, str]:
+    """
+    Transform a previous password configuration represented by ("password", <password>) or
+    ("store", <password-store-id>) to a model of the `Password` FormSpec, represented by
+    ("explicit-password", <password-id>, <password>) or
+    ("stored-password", <password-store-id>, "").
+
+    Args:
+        model: Old value presented to the consumers to be migrated
+    """
+    match model:
+        case "password", str(password):
+            return "explicit-password", "throwaway-id", password
+        case "store", str(password_store_id):
+            return "stored-password", password_store_id, ""
+        case "explicit-password", str(password_id), str(password):
+            return "explicit-password", password_id, password
+        case "stored-password", str(password_store_id), str(password):
+            return "stored-password", password_store_id, password
+
+    raise TypeError(f"Could not migrate {model!r} to Password.")

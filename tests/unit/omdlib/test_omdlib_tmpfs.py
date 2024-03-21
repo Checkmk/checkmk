@@ -12,7 +12,7 @@ import pytest
 
 import omdlib.tmpfs
 from omdlib.contexts import SiteContext
-from omdlib.tmpfs import add_to_fstab, restore_tmpfs_dump, unmount_tmpfs
+from omdlib.tmpfs import _restore_tmpfs_dump, add_to_fstab, unmount_tmpfs
 from omdlib.utils import delete_directory_contents
 
 
@@ -115,7 +115,7 @@ def test_tmpfs_restore_no_tmpfs(
         assert not tmp_file.exists()
 
     assert Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
-    restore_tmpfs_dump(site_context)
+    _restore_tmpfs_dump(site_context.dir, site_context.tmp_dir)
     for tmp_file in tmp_files:
         assert tmp_file.exists()
 
@@ -180,7 +180,7 @@ def test_tmpfs_restore_with_tmpfs(
         assert not tmp_file.exists()
 
     assert Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
-    restore_tmpfs_dump(site_context)
+    _restore_tmpfs_dump(site_context.dir, site_context.tmp_dir)
     for tmp_file in tmp_files:
         assert tmp_file.exists()
 
@@ -194,5 +194,5 @@ def test_tmpfs_mount_no_dump(site_context: SiteContext, monkeypatch: pytest.Monk
 
     # Ensure that no dump exists and then execute the restore operation
     assert not Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
-    restore_tmpfs_dump(site_context)
+    _restore_tmpfs_dump(site_context.dir, site_context.tmp_dir)
     assert not list(tmp_dir.iterdir())

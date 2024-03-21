@@ -267,13 +267,13 @@ def save_tmpfs_dump(site: SiteContext) -> None:
     assert dump_path.exists()
 
 
-def restore_tmpfs_dump(site: SiteContext) -> None:
+def _restore_tmpfs_dump(site_dir: str, site_tmp_dir: str) -> None:
     """Populate the tmpfs from the previously created tmpfs dump
     Silently skipping over in case there is no dump available."""
-    if not Path(site.dir, "var/omd/tmpfs-dump.tar").exists():
+    if not Path(site_dir, "var/omd/tmpfs-dump.tar").exists():
         return
-    with tarfile.TarFile(Path(site.dir, "var/omd/tmpfs-dump.tar")) as tar:
-        tar.extractall(site.tmp_dir, filter="data")  # nosec B202 # BNS:a7d6b8
+    with tarfile.TarFile(Path(site_dir, "var/omd/tmpfs-dump.tar")) as tar:
+        tar.extractall(site_tmp_dir, filter="data")  # nosec B202 # BNS:a7d6b8
 
 
 def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, skelroot: str) -> None:
@@ -283,7 +283,7 @@ def prepare_and_populate_tmpfs(version_info: VersionInfo, site: SiteContext, ske
         create_skeleton_files(site.dir, site.replacements, skelroot, site.skel_permissions, "tmp")
         chown_tree(site.tmp_dir, site.name)
         mark_tmpfs_initialized(site)
-        restore_tmpfs_dump(site)
+        _restore_tmpfs_dump(site.dir, site.tmp_dir)
 
     _create_livestatus_tcp_socket_link(site)
 

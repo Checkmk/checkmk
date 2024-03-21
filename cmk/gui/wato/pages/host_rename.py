@@ -194,7 +194,10 @@ class ModeBulkRenameHost(WatoMode):
         return None
 
     def _collect_host_renamings(self, renaming_config):
-        return self._recurse_hosts_for_renaming(folder_from_request(), renaming_config)
+        return self._recurse_hosts_for_renaming(
+            folder_from_request(request.var("folder"), request.get_ascii_input("host")),
+            renaming_config,
+        )
 
     def _recurse_hosts_for_renaming(self, folder, renaming_config):
         entries = []
@@ -406,7 +409,7 @@ class ModeRenameHost(WatoMode):
     def _from_vars(self) -> None:
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
 
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), host_name)
         if not folder.has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -475,7 +478,7 @@ class ModeRenameHost(WatoMode):
             )
 
         newname = request.get_validated_type_input_mandatory(HostName, "newname")
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         self._check_new_host_name(folder, "newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.

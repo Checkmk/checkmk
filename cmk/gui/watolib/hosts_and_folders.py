@@ -1050,17 +1050,15 @@ def folder_from_request(var_folder: str | None = None, host_name: str | None = N
     This is currently needed for the search that results in
     ModeEditHost._init_host() were the actual request is available (and not already was cached)
     """
-    folder_from_req = var_folder or request.var("folder")
-    if folder_from_req is not None:
+    if var_folder is not None:
         try:
-            folder = folder_tree().folder(folder_from_req)
+            folder = folder_tree().folder(var_folder)
         except MKGeneralException as e:
             raise MKUserError("folder", "%s" % e)
     else:
         folder = folder_tree().root_folder()
-        hostname = host_name or request.get_ascii_input("host")
-        if hostname is not None:  # find host with full scan. Expensive operation
-            host = Host.host(HostName(hostname))
+        if host_name is not None:  # find host with full scan. Expensive operation
+            host = Host.host(HostName(host_name))
             if host:
                 folder = host.folder()
 
@@ -1227,7 +1225,9 @@ class Folder(FolderProtocol):
         return self._parent
 
     def is_current_folder(self) -> bool:
-        return self.is_same_as(folder_from_request())
+        return self.is_same_as(
+            folder_from_request(request.var("folder"), request.get_ascii_input("host"))
+        )
 
     def is_transitive_parent_of(self, maybe_child: Folder) -> bool:
         if self.is_same_as(maybe_child):
@@ -3549,7 +3549,7 @@ def _collect_hosts(folder: Folder) -> Mapping[HostName, CollectedHostAttributes]
 
 
 def folder_preserving_link(add_vars: HTTPVariables) -> str:
-    return folder_from_request().url(add_vars)
+    return folder_from_request(request.var("folder"), request.get_ascii_input("host")).url(add_vars)
 
 
 def make_action_link(vars_: HTTPVariables) -> str:
@@ -3578,7 +3578,9 @@ def get_folder_title(path: str) -> str:
 
 # TODO: Move to Folder()?
 def check_wato_foldername(htmlvarname: str | None, name: str, just_name: bool = False) -> None:
-    if not just_name and folder_from_request().has_subfolder(name):
+    if not just_name and folder_from_request(
+        request.var("folder"), request.get_ascii_input("host")
+    ).has_subfolder(name):
         raise MKUserError(htmlvarname, _("A folder with that name already exists."))
 
     if not name:

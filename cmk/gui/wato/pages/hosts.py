@@ -95,7 +95,9 @@ class ABCHostMode(WatoMode, abc.ABC):
         )
 
     def _page_menu_save_entries(self) -> Iterator[PageMenuEntry]:
-        if folder_from_request().locked_hosts():
+        if folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        ).locked_hosts():
             return
 
         yield PageMenuEntry(
@@ -140,7 +142,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         # Fake a cluster host in order to get calculated tag groups via effective attributes...
         cluster_computed_datasources = cmk.utils.tags.compute_datasources(
             Host(
-                folder_from_request(),
+                folder_from_request(request.var("folder"), request.get_ascii_input("host")),
                 self._host.name(),
                 collect_attributes("cluster", new=False),
                 [],
@@ -238,7 +240,9 @@ class ABCHostMode(WatoMode, abc.ABC):
             html.close_div()
 
         lock_message = ""
-        locked_hosts = folder_from_request().locked_hosts()
+        locked_hosts = folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        ).locked_hosts()
         if locked_hosts:
             if locked_hosts is True:
                 lock_message = _("Host attributes locked (You cannot edit this host)")
@@ -270,7 +274,7 @@ class ABCHostMode(WatoMode, abc.ABC):
                 new=self._mode != "edit",
                 hosts={self._host.name(): self._host} if self._mode != "new" else {},
                 for_what="host" if not self._is_cluster() else "cluster",
-                parent=folder_from_request(),
+                parent=folder_from_request(request.var("folder"), request.get_ascii_input("host")),
                 basic_attributes=basic_attributes,
             )
 
@@ -363,7 +367,7 @@ class ModeEditHost(ABCHostMode):
         )
 
     def action(self) -> ActionResult:
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -618,7 +622,7 @@ class CreateHostMode(ABCHostMode):
         clonename = request.get_ascii_input("clone")
         if not clonename:
             return self._init_new_host_object()
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
         if not folder.has_host(HostName(clonename)):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         host = folder.load_host(HostName(clonename))
@@ -635,7 +639,7 @@ class CreateHostMode(ABCHostMode):
         hostname = request.get_validated_type_input_mandatory(HostName, "host")
         Hostname().validate_value(hostname, "host")
 
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), hostname)
         if transactions.check_transaction():
             folder.create_hosts([(hostname, attributes, cluster_nodes)])
 
@@ -694,11 +698,10 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls) -> Host:
+        host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
         return Host(
-            folder=folder_from_request(),
-            host_name=request.get_validated_type_input_mandatory(
-                HostName, "host", deflt=HostName("")
-            ),
+            folder=folder_from_request(request.var("folder"), host_name),
+            host_name=host_name,
             attributes={},
             cluster_nodes=None,
         )
@@ -728,11 +731,10 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls) -> Host:
+        host_name = request.get_validated_type_input_mandatory(HostName, "host", deflt=HostName(""))
         return Host(
-            folder=folder_from_request(),
-            host_name=request.get_validated_type_input_mandatory(
-                HostName, "host", deflt=HostName("")
-            ),
+            folder=folder_from_request(request.var("folder"), host_name),
+            host_name=host_name,
             attributes={},
             cluster_nodes=[],
         )

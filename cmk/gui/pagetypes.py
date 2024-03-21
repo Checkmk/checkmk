@@ -2398,7 +2398,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
                 title=_("Reports"),
                 url="edit_reports.py",
                 sort_index=10,
-                is_show_more=True,
+                is_show_more=False,
                 icon="report",
             )
         )
@@ -2412,7 +2412,7 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
             title=page_type_.phrase("title_plural"),
             url="%ss.py" % page_type_.type_name(),
             sort_index=40 + (index * 10),
-            is_show_more=page_type_.type_is_show_more(),
+            is_show_more=False,
             icon=page_type_.type_icon(),
         )
 

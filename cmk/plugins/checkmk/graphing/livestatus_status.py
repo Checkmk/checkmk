@@ -272,7 +272,7 @@ graph_livestatus_requests_per_connection = graphs.Graph(
             metrics.Color.DARK_YELLOW,
             dividend="livestatus_request_rate",
             divisor=metrics.Sum(
-                Title(""),
+                Title("Average requests per connection"),
                 metrics.Color.GRAY,
                 [
                     "livestatus_connect_rate",
@@ -325,7 +325,7 @@ graph_average_helper_latency = graphs.Graph(
 graph_host_and_service_checks = graphs.Graph(
     name="host_and_service_checks",
     title=Title("Host and service checks"),
-    compound_lines=[
+    simple_lines=[
         "host_check_rate",
         "service_check_rate",
     ],
@@ -334,7 +334,7 @@ graph_host_and_service_checks = graphs.Graph(
 graph_number_of_monitored_hosts_and_services = graphs.Graph(
     name="number_of_monitored_hosts_and_services",
     title=Title("Number of monitored hosts and services"),
-    compound_lines=[
+    simple_lines=[
         "monitored_hosts",
         "monitored_services",
     ],

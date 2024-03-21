@@ -27,7 +27,7 @@ import types
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, TextIO
+from typing import Literal, NamedTuple, TextIO
 
 from cmk.utils.metrics import MetricName
 
@@ -72,58 +72,167 @@ class Unparseable:
     name: str
 
 
-_UNUSED_UNIT = metrics.Unit(metrics.DecimalNotation(""))
+class ParsedUnit(NamedTuple):
+    name: str
+    unit: metrics.Unit
+
+
 _UNIT_MAP = {
-    "": metrics.Unit(metrics.DecimalNotation("")),
-    "count": metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2)),
-    "%": metrics.Unit(metrics.DecimalNotation("%")),
-    "s": metrics.Unit(metrics.TimeNotation()),
-    "1/s": metrics.Unit(metrics.DecimalNotation("/s")),
-    "hz": metrics.Unit(metrics.DecimalNotation("Hz")),
-    "bytes": metrics.Unit(metrics.IECNotation("B")),
-    "bytes/s": metrics.Unit(metrics.IECNotation("B/s")),
-    "s/s": metrics.Unit(metrics.DecimalNotation("s/s")),
-    "bits": metrics.Unit(metrics.IECNotation("bits/s")),
-    "bits/s": metrics.Unit(metrics.IECNotation("bits/d")),
-    "bytes/d": metrics.Unit(metrics.IECNotation("B/d")),
-    "c": metrics.Unit(metrics.DecimalNotation("°C")),
-    "a": metrics.Unit(metrics.DecimalNotation("A"), metrics.AutoPrecision(3)),
-    "v": metrics.Unit(metrics.DecimalNotation("V"), metrics.AutoPrecision(3)),
-    "w": metrics.Unit(metrics.DecimalNotation("W"), metrics.AutoPrecision(3)),
-    "va": metrics.Unit(metrics.DecimalNotation("VA"), metrics.AutoPrecision(3)),
-    "wh": metrics.Unit(metrics.DecimalNotation("Wh"), metrics.AutoPrecision(3)),
-    "dbm": metrics.Unit(metrics.DecimalNotation("dBm")),
-    "dbmv": metrics.Unit(metrics.DecimalNotation("dBmV")),
-    "db": metrics.Unit(metrics.DecimalNotation("dB")),
-    "ppm": metrics.Unit(metrics.DecimalNotation("ppm")),
-    "%/m": metrics.Unit(metrics.DecimalNotation("%/m")),
-    "bar": metrics.Unit(metrics.DecimalNotation("bar"), metrics.AutoPrecision(4)),
-    "pa": metrics.Unit(metrics.DecimalNotation("Pa"), metrics.AutoPrecision(3)),
-    "l/s": metrics.Unit(metrics.DecimalNotation("l/s"), metrics.AutoPrecision(3)),
-    "rpm": metrics.Unit(metrics.DecimalNotation("rpm"), metrics.AutoPrecision(4)),
-    "bytes/op": metrics.Unit(metrics.IECNotation("B/op")),
-    "EUR": metrics.Unit(metrics.DecimalNotation("€"), metrics.StrictPrecision(2)),
-    "RCU": metrics.Unit(metrics.SINotation("RCU"), metrics.AutoPrecision(3)),
-    "WCU": metrics.Unit(metrics.SINotation("WCU"), metrics.AutoPrecision(3)),
+    "": ParsedUnit(
+        "UNIT_NUMBER",
+        metrics.Unit(metrics.DecimalNotation("")),
+    ),
+    "count": ParsedUnit(
+        "UNIT_COUNTER",
+        metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2)),
+    ),
+    "%": ParsedUnit(
+        "UNIT_PERCENTAGE",
+        metrics.Unit(metrics.DecimalNotation("%")),
+    ),
+    "s": ParsedUnit(
+        "UNIT_TIME",
+        metrics.Unit(metrics.TimeNotation()),
+    ),
+    "1/s": ParsedUnit(
+        "UNIT_PER_SECOND",
+        metrics.Unit(metrics.DecimalNotation("/s")),
+    ),
+    "hz": ParsedUnit(
+        "UNIT_HERTZ",
+        metrics.Unit(metrics.DecimalNotation("Hz")),
+    ),
+    "bytes": ParsedUnit(
+        "UNIT_BYTES",
+        metrics.Unit(metrics.IECNotation("B")),
+    ),
+    "bytes/s": ParsedUnit(
+        "UNIT_BYTES_PER_SECOND",
+        metrics.Unit(metrics.IECNotation("B/s")),
+    ),
+    "s/s": ParsedUnit(
+        "UNIT_SECONDS_PER_SECOND",
+        metrics.Unit(metrics.DecimalNotation("s/s")),
+    ),
+    "bits": ParsedUnit(
+        "UNIT_BITS",
+        metrics.Unit(metrics.IECNotation("bits/s")),
+    ),
+    "bits/s": ParsedUnit(
+        "UNIT_BITS_PER_SECOND",
+        metrics.Unit(metrics.IECNotation("bits/d")),
+    ),
+    "bytes/d": ParsedUnit(
+        "UNIT_BYTES_PER_DAY",
+        metrics.Unit(metrics.IECNotation("B/d")),
+    ),
+    "c": ParsedUnit(
+        "UNIT_DEGREE_CELSIUS",
+        metrics.Unit(metrics.DecimalNotation("°C")),
+    ),
+    "a": ParsedUnit(
+        "UNIT_AMPERE",
+        metrics.Unit(metrics.DecimalNotation("A"), metrics.AutoPrecision(3)),
+    ),
+    "v": ParsedUnit(
+        "UNIT_VOLTAGE",
+        metrics.Unit(metrics.DecimalNotation("V"), metrics.AutoPrecision(3)),
+    ),
+    "w": ParsedUnit(
+        "UNIT_ELECTRICAL_POWER",
+        metrics.Unit(metrics.DecimalNotation("W"), metrics.AutoPrecision(3)),
+    ),
+    "va": ParsedUnit(
+        "UNIT_ELECTRICAL_APPARENT_POWER",
+        metrics.Unit(metrics.DecimalNotation("VA"), metrics.AutoPrecision(3)),
+    ),
+    "wh": ParsedUnit(
+        "UNIT_ELECTRICAL_ENERGY",
+        metrics.Unit(metrics.DecimalNotation("Wh"), metrics.AutoPrecision(3)),
+    ),
+    "dbm": ParsedUnit(
+        "UNIT_DECIBEL_MILLIWATTS",
+        metrics.Unit(metrics.DecimalNotation("dBm")),
+    ),
+    "dbmv": ParsedUnit(
+        "UNIT_DECIBEL_MILLIVOLTS",
+        metrics.Unit(metrics.DecimalNotation("dBmV")),
+    ),
+    "db": ParsedUnit(
+        "UNIT_DECIBEL",
+        metrics.Unit(metrics.DecimalNotation("dB")),
+    ),
+    "ppm": ParsedUnit(
+        "UNIT_PARTS_PER_MILLION",
+        metrics.Unit(metrics.DecimalNotation("ppm")),
+    ),
+    "%/m": ParsedUnit(
+        "UNIT_PERCENTAGE_PER_METER",
+        metrics.Unit(metrics.DecimalNotation("%/m")),
+    ),
+    "bar": ParsedUnit(
+        "UNIT_BAR",
+        metrics.Unit(metrics.DecimalNotation("bar"), metrics.AutoPrecision(4)),
+    ),
+    "pa": ParsedUnit(
+        "UNIT_PASCAL",
+        metrics.Unit(metrics.DecimalNotation("Pa"), metrics.AutoPrecision(3)),
+    ),
+    "l/s": ParsedUnit(
+        "UNIT_LITER_PER_SECOND",
+        metrics.Unit(metrics.DecimalNotation("l/s"), metrics.AutoPrecision(3)),
+    ),
+    "rpm": ParsedUnit(
+        "UNIT_REVOLUTIONS_PER_MINUTE",
+        metrics.Unit(metrics.DecimalNotation("rpm"), metrics.AutoPrecision(4)),
+    ),
+    "bytes/op": ParsedUnit(
+        "UNIT_BYTES_PER_OPERATION",
+        metrics.Unit(metrics.IECNotation("B/op")),
+    ),
+    "EUR": ParsedUnit(
+        "UNIT_EURO",
+        metrics.Unit(metrics.DecimalNotation("€"), metrics.StrictPrecision(2)),
+    ),
+    "RCU": ParsedUnit(
+        "UNIT_READ_CAPACITY_UNIT",
+        metrics.Unit(metrics.SINotation("RCU"), metrics.AutoPrecision(3)),
+    ),
+    "WCU": ParsedUnit(
+        "UNIT_WRITE_CAPACITY_UNIT",
+        metrics.Unit(metrics.SINotation("WCU"), metrics.AutoPrecision(3)),
+    ),
 }
 
 
 @dataclass(frozen=True)
 class UnitParser:
-    _units: set[metrics.Unit] = field(default_factory=set)
+    _units: set[ParsedUnit] = field(default_factory=set)
 
     @property
-    def units(self) -> Sequence[metrics.Unit]:
+    def units(self) -> Sequence[ParsedUnit]:
         return list(self._units)
+
+    def find_unit_name(self, unit: metrics.Unit) -> str:
+        for u in self.units:
+            if u.unit == unit:
+                return u.name
+        return self.default.name
+
+    @property
+    def default(self) -> ParsedUnit:
+        parsed = _UNIT_MAP[""]
+        self._units.add(parsed)
+        return parsed
 
     def parse(self, legacy_unit: str) -> metrics.Unit:
         if legacy_unit in _UNIT_MAP:
-            unit = _UNIT_MAP[legacy_unit]
+            parsed = _UNIT_MAP[legacy_unit]
         else:
             _LOGGER.info("Unit %r not found, use 'DecimalUnit'", legacy_unit)
-            unit = metrics.Unit(metrics.DecimalNotation(legacy_unit))
-        self._units.add(unit)
-        return unit
+            parsed = self.default
+        self._units.add(parsed)
+        return parsed.unit
 
 
 def _rgb_from_hexstr(hexstr: str) -> RGB:
@@ -336,6 +445,7 @@ def _parse_scalar_name(
 
 
 def _make_percent(
+    unit_parser: UnitParser,
     percent_value: (
         str | metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf
     ),
@@ -350,13 +460,13 @@ def _make_percent(
         dividend=metrics.Product(
             # Title, unit, color have no impact
             Title(""),
-            _UNUSED_UNIT,
+            unit_parser.default.unit,
             metrics.Color.GRAY,
             [
                 metrics.Constant(
                     # Title, unit, color have no impact
                     Title(""),
-                    _UNUSED_UNIT,
+                    unit_parser.default.unit,
                     metrics.Color.GRAY,
                     100.0,
                 ),
@@ -372,7 +482,7 @@ def _make_percent(
 
 
 def _parse_single_expression(
-    expression: str, explicit_title: str, explicit_color: metrics.Color
+    unit_parser: UnitParser, expression: str, explicit_title: str, explicit_color: metrics.Color
 ) -> (
     str
     | metrics.Constant
@@ -394,14 +504,14 @@ def _parse_single_expression(
         metric_name = expression
         scalar = _parse_scalar_name(scalar_name, metric_name)
         return (
-            _make_percent(scalar, metric_name, explicit_title, explicit_color)
+            _make_percent(unit_parser, scalar, metric_name, explicit_title, explicit_color)
             if percent
             else scalar
         )
 
     metric_name = expression
     return (
-        _make_percent(metric_name, metric_name, explicit_title, explicit_color)
+        _make_percent(unit_parser, metric_name, metric_name, explicit_title, explicit_color)
         if percent
         else metric_name
     )
@@ -514,7 +624,7 @@ def _resolve_stack(
                                 metrics.Constant(
                                     # Title, unit, color have no impact
                                     Title(""),
-                                    _UNUSED_UNIT,
+                                    unit_parser.default.unit,
                                     metrics.Color.GRAY,
                                     1e-16,
                                 ),
@@ -582,7 +692,9 @@ def _parse_expression(
             case "MIN" | "MAX" | "AVERAGE" | "MERGE" | ">" | ">=" | "<" | "<=":
                 raise ValueError(word)
             case _:
-                stack.append(_parse_single_expression(word, explicit_title, explicit_color))
+                stack.append(
+                    _parse_single_expression(unit_parser, word, explicit_title, explicit_color)
+                )
 
     return _resolve_stack(unit_parser, stack, explicit_title, explicit_unit_name, explicit_color)
 
@@ -1002,20 +1114,21 @@ def _inst_repr(
     return f"{namespace}.{inst.__class__.__name__}({', '.join(args)}{trailing_comma})"
 
 
-def _metric_repr(metric: metrics.Metric) -> str:
+def _metric_repr(unit_parser: UnitParser, metric: metrics.Metric) -> str:
     return _inst_repr(
         "metrics",
         metric,
         [
             _kwarg_repr("name", _name_repr(metric.name)),
             _kwarg_repr("title", _title_repr(metric.title)),
-            _kwarg_repr("unit", _unit_repr(metric.unit)),
+            _kwarg_repr("unit", _name_repr(unit_parser.find_unit_name(metric.unit))),
             _kwarg_repr("color", _color_repr(metric.color)),
         ],
     )
 
 
 def _quantity_repr(
+    unit_parser: UnitParser,
     quantity: (
         str
         | metrics.Constant
@@ -1035,7 +1148,7 @@ def _quantity_repr(
         case metrics.Constant():
             args = [
                 _title_repr(quantity.title),
-                _unit_repr(quantity.unit),
+                _name_repr(unit_parser.find_unit_name(quantity.unit)),
                 _color_repr(quantity.color),
                 str(quantity.value),
             ]
@@ -1061,29 +1174,29 @@ def _quantity_repr(
             args = [
                 _title_repr(quantity.title),
                 _color_repr(quantity.color),
-                _list_repr([_quantity_repr(f) for f in quantity.summands]),
+                _list_repr([_quantity_repr(unit_parser, f) for f in quantity.summands]),
             ]
         case metrics.Product():
             args = [
                 _title_repr(quantity.title),
-                _unit_repr(quantity.unit),
+                _name_repr(unit_parser.find_unit_name(quantity.unit)),
                 _color_repr(quantity.color),
-                _list_repr([_quantity_repr(f) for f in quantity.factors]),
+                _list_repr([_quantity_repr(unit_parser, f) for f in quantity.factors]),
             ]
         case metrics.Difference():
             args = [
                 _title_repr(quantity.title),
                 _color_repr(quantity.color),
-                _kwarg_repr("minuend", _quantity_repr(quantity.minuend)),
-                _kwarg_repr("subtrahend", _quantity_repr(quantity.subtrahend)),
+                _kwarg_repr("minuend", _quantity_repr(unit_parser, quantity.minuend)),
+                _kwarg_repr("subtrahend", _quantity_repr(unit_parser, quantity.subtrahend)),
             ]
         case metrics.Fraction():
             args = [
                 _title_repr(quantity.title),
-                _unit_repr(quantity.unit),
+                _name_repr(unit_parser.find_unit_name(quantity.unit)),
                 _color_repr(quantity.color),
-                _kwarg_repr("dividend", _quantity_repr(quantity.dividend)),
-                _kwarg_repr("divisor", _quantity_repr(quantity.divisor)),
+                _kwarg_repr("dividend", _quantity_repr(unit_parser, quantity.dividend)),
+                _kwarg_repr("divisor", _quantity_repr(unit_parser, quantity.divisor)),
             ]
     return _inst_repr("metrics", quantity, args)
 
@@ -1143,6 +1256,7 @@ def translation_repr(translation_: translations.Translation) -> str:
 
 
 def _bound_value_repr(
+    unit_parser: UnitParser,
     bound_value: int
     | float
     | str
@@ -1158,105 +1272,115 @@ def _bound_value_repr(
 ) -> str:
     if isinstance(bound_value, (int, float)):
         return str(bound_value)
-    return _quantity_repr(bound_value)
+    return _quantity_repr(unit_parser, bound_value)
 
 
-def _bound_repr(bound: perfometers.Closed | perfometers.Open) -> str:
+def _bound_repr(unit_parser: UnitParser, bound: perfometers.Closed | perfometers.Open) -> str:
     return _inst_repr(
         "perfometers",
         bound,
         [
-            _bound_value_repr(bound.value),
+            _bound_value_repr(unit_parser, bound.value),
         ],
     )
 
 
-def _focus_range_repr(focus_range: perfometers.FocusRange) -> str:
+def _focus_range_repr(unit_parser: UnitParser, focus_range: perfometers.FocusRange) -> str:
     return _inst_repr(
         "perfometers",
         focus_range,
         [
-            _bound_repr(focus_range.lower),
-            _bound_repr(focus_range.upper),
+            _bound_repr(unit_parser, focus_range.lower),
+            _bound_repr(unit_parser, focus_range.upper),
         ],
     )
 
 
-def _perfometer_repr(perfometer: perfometers.Perfometer) -> str:
+def _perfometer_repr(unit_parser: UnitParser, perfometer: perfometers.Perfometer) -> str:
     return _inst_repr(
         "perfometers",
         perfometer,
         [
             _kwarg_repr("name", _name_repr(perfometer.name)),
-            _kwarg_repr("focus_range", _focus_range_repr(perfometer.focus_range)),
-            _kwarg_repr("segments", _list_repr([_quantity_repr(s) for s in perfometer.segments])),
+            _kwarg_repr("focus_range", _focus_range_repr(unit_parser, perfometer.focus_range)),
+            _kwarg_repr(
+                "segments",
+                _list_repr([_quantity_repr(unit_parser, s) for s in perfometer.segments]),
+            ),
         ],
     )
 
 
-def _p_bidirectional_repr(perfometer: perfometers.Bidirectional) -> str:
+def _p_bidirectional_repr(unit_parser: UnitParser, perfometer: perfometers.Bidirectional) -> str:
     return _inst_repr(
         "perfometers",
         perfometer,
         [
             _kwarg_repr("name", _name_repr(perfometer.name)),
-            _kwarg_repr("left", _perfometer_repr(perfometer.left)),
-            _kwarg_repr("right", _perfometer_repr(perfometer.right)),
+            _kwarg_repr("left", _perfometer_repr(unit_parser, perfometer.left)),
+            _kwarg_repr("right", _perfometer_repr(unit_parser, perfometer.right)),
         ],
     )
 
 
-def _p_stacked_repr(perfometer: perfometers.Stacked) -> str:
+def _p_stacked_repr(unit_parser: UnitParser, perfometer: perfometers.Stacked) -> str:
     return _inst_repr(
         "perfometers",
         perfometer,
         [
             _kwarg_repr("name", _name_repr(perfometer.name)),
-            _kwarg_repr("lower", _perfometer_repr(perfometer.lower)),
-            _kwarg_repr("upper", _perfometer_repr(perfometer.upper)),
+            _kwarg_repr("lower", _perfometer_repr(unit_parser, perfometer.lower)),
+            _kwarg_repr("upper", _perfometer_repr(unit_parser, perfometer.upper)),
         ],
     )
 
 
 def perfometer_repr(
+    unit_parser: UnitParser,
     perfometer: perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked,
 ) -> str:
     match perfometer:
         case perfometers.Perfometer():
-            return _perfometer_repr(perfometer)
+            return _perfometer_repr(unit_parser, perfometer)
         case perfometers.Bidirectional():
-            return _p_bidirectional_repr(perfometer)
+            return _p_bidirectional_repr(unit_parser, perfometer)
         case perfometers.Stacked():
-            return _p_stacked_repr(perfometer)
+            return _p_stacked_repr(unit_parser, perfometer)
 
 
-def _minimal_range_repr(minimal_range: graphs.MinimalRange) -> str:
+def _minimal_range_repr(unit_parser: UnitParser, minimal_range: graphs.MinimalRange) -> str:
     return _inst_repr(
         "graphs",
         minimal_range,
         [
-            _bound_value_repr(minimal_range.lower),
-            _bound_value_repr(minimal_range.upper),
+            _bound_value_repr(unit_parser, minimal_range.lower),
+            _bound_value_repr(unit_parser, minimal_range.upper),
         ],
     )
 
 
-def _g_graph_repr(graph: graphs.Graph) -> str:
+def _g_graph_repr(unit_parser: UnitParser, graph: graphs.Graph) -> str:
     args = [
         _kwarg_repr("name", _name_repr(graph.name)),
         _kwarg_repr("title", _title_repr(graph.title)),
     ]
     if graph.minimal_range:
-        args.append(_kwarg_repr("minimal_range", _minimal_range_repr(graph.minimal_range)))
+        args.append(
+            _kwarg_repr("minimal_range", _minimal_range_repr(unit_parser, graph.minimal_range))
+        )
     if graph.compound_lines:
         args.append(
             _kwarg_repr(
-                "compound_lines", _list_repr([_quantity_repr(l) for l in graph.compound_lines])
+                "compound_lines",
+                _list_repr([_quantity_repr(unit_parser, l) for l in graph.compound_lines]),
             )
         )
     if graph.simple_lines:
         args.append(
-            _kwarg_repr("simple_lines", _list_repr([_quantity_repr(l) for l in graph.simple_lines]))
+            _kwarg_repr(
+                "simple_lines",
+                _list_repr([_quantity_repr(unit_parser, l) for l in graph.simple_lines]),
+            )
         )
     if graph.optional:
         args.append(_kwarg_repr("optional", _list_repr([_name_repr(o) for o in graph.optional])))
@@ -1267,25 +1391,25 @@ def _g_graph_repr(graph: graphs.Graph) -> str:
     return _inst_repr("graphs", graph, args)
 
 
-def _g_bidirectional_repr(graph: graphs.Bidirectional) -> str:
+def _g_bidirectional_repr(unit_parser: UnitParser, graph: graphs.Bidirectional) -> str:
     return _inst_repr(
         "graphs",
         graph,
         [
             _kwarg_repr("name", _name_repr(graph.name)),
             _kwarg_repr("title", _title_repr(graph.title)),
-            _kwarg_repr("lower", _g_graph_repr(graph.lower)),
-            _kwarg_repr("upper", _g_graph_repr(graph.upper)),
+            _kwarg_repr("lower", _g_graph_repr(unit_parser, graph.lower)),
+            _kwarg_repr("upper", _g_graph_repr(unit_parser, graph.upper)),
         ],
     )
 
 
-def _graph_repr(graph: graphs.Graph | graphs.Bidirectional) -> str:
+def _graph_repr(unit_parser: UnitParser, graph: graphs.Graph | graphs.Bidirectional) -> str:
     match graph:
         case graphs.Graph():
-            return _g_graph_repr(graph)
+            return _g_graph_repr(unit_parser, graph)
         case graphs.Bidirectional():
-            return _g_bidirectional_repr(graph)
+            return _g_bidirectional_repr(unit_parser, graph)
 
 
 # .
@@ -1369,6 +1493,7 @@ def _migrate_file_content(
 
 
 def _obj_repr(
+    unit_parser: UnitParser,
     obj: metrics.Metric
     | translations.Translation
     | perfometers.Perfometer
@@ -1382,13 +1507,13 @@ def _obj_repr(
 
     match obj:
         case metrics.Metric():
-            return f"metric_{_obj_var_name()} = {_metric_repr(obj)}"
+            return f"metric_{_obj_var_name()} = {_metric_repr(unit_parser, obj)}"
         case translations.Translation():
             return f"translation_{_obj_var_name()} = {translation_repr(obj)}"
         case perfometers.Perfometer() | perfometers.Bidirectional() | perfometers.Stacked():
-            return f"perfometer_{_obj_var_name()} = {perfometer_repr(obj)}"
+            return f"perfometer_{_obj_var_name()} = {perfometer_repr(unit_parser, obj)}"
         case graphs.Graph() | graphs.Bidirectional():
-            return f"graph_{_obj_var_name()} = {_graph_repr(obj)}"
+            return f"graph_{_obj_var_name()} = {_graph_repr(unit_parser, obj)}"
 
 
 def _order_unparseables(
@@ -1425,7 +1550,9 @@ def main() -> None:
             if args.debug:
                 sys.exit(1)
 
-        print("\n\n".join([_obj_repr(obj) for obj in objects]))
+        print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))
+        print("")
+        print("\n\n".join([_obj_repr(unit_parser, obj) for obj in objects]))
 
     for path, unparseable_names_by_namespace in sorted(
         _order_unparseables(unparseables_by_path).items()

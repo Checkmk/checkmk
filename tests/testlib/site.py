@@ -64,6 +64,7 @@ class Site:
         update: bool = False,
         update_conflict_mode: str = "install",
         enforce_english_gui: bool = True,
+        check_wait_timeout: int = 20,
     ) -> None:
         assert site_id
         self.id = site_id
@@ -82,6 +83,8 @@ class Site:
         self.update = update
         self.update_conflict_mode = update_conflict_mode
         self.enforce_english_gui = enforce_english_gui
+
+        self.check_wait_timeout = check_wait_timeout
 
         self.openapi = CMKOpenApiSession(
             host=self.http_address,
@@ -184,7 +187,7 @@ class Site:
         state: int,
         output: str,
         expected_state: int | None = None,
-        wait_timeout: int = 20,
+        wait_timeout: int | None = None,
     ) -> None:
         if expected_state is None:
             expected_state = state
@@ -208,7 +211,7 @@ class Site:
         state: int,
         output: str,
         expected_state: int | None = None,
-        wait_timeout: int = 20,
+        wait_timeout: int | None = None,
     ) -> None:
         if expected_state is None:
             expected_state = state
@@ -232,7 +235,7 @@ class Site:
         hostname: str,
         service_description: str,
         expected_state: int | None = None,
-        wait_timeout: int = 20,
+        wait_timeout: int | None = None,
     ) -> None:
         logger.debug("%s;%s schedule check", hostname, service_description)
         last_check_before = self._last_service_check(hostname, service_description)
@@ -325,14 +328,14 @@ class Site:
         last_check_before: float,
         command_timestamp: float,
         expected_state: int | None = None,
-        wait_timeout: int = 20,
+        wait_timeout: int | None = None,
     ) -> None:
         query: str = (
             "GET hosts\n"
             "Columns: last_check state plugin_output\n"
             f"Filter: host_name = {hostname}\n"
             f"WaitObject: {hostname}\n"
-            f"WaitTimeout: {wait_timeout*1000:d}\n"
+            f"WaitTimeout: {wait_timeout or self.check_wait_timeout*1000:d}\n"
             f"WaitTrigger: check\n"
             f"WaitCondition: last_check > {last_check_before:.0f}\n"
         )
@@ -356,7 +359,7 @@ class Site:
         last_check_before: float,
         command_timestamp: float,
         expected_state: int | None = None,
-        wait_timeout: int = 20,
+        wait_timeout: int | None = None,
     ) -> None:
         query: str = (
             "GET services\n"
@@ -364,7 +367,7 @@ class Site:
             f"Filter: host_name = {hostname}\n"
             f"Filter: description = {service_description}\n"
             f"WaitObject: {hostname};{service_description}\n"
-            f"WaitTimeout: {wait_timeout*1000:d}\n"
+            f"WaitTimeout: {(wait_timeout or self.check_wait_timeout)*1000:d}\n"
             f"WaitCondition: last_check > {last_check_before:.0f}\n"
             "WaitCondition: has_been_checked = 1\n"
             "WaitTrigger: check\n"
@@ -382,20 +385,20 @@ class Site:
             wait_timeout,
         )
 
-    @staticmethod
     def _verify_next_check_output(
+        self,
         command_timestamp: float,
         last_check: float,
         last_check_before: float,
         state: int,
         expected_state: int | None,
         plugin_output: str,
-        wait_timeout: int = 20,
+        wait_timeout: int | None = None,
     ) -> None:
         logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
         if not last_check > last_check_before:
             raise TimeoutError(
-                f"Check result not processed within {wait_timeout} seconds "
+                f"Check result not processed within {wait_timeout or self.check_wait_timeout} seconds "
                 f"(last check before reschedule: {last_check_before:.0f}, "
                 f"scheduled at: {command_timestamp:.0f}, last check: {last_check:.0f})"
             )
@@ -1668,7 +1671,7 @@ class SiteFactory:
         self._index += 1
         return new_ident
 
-    def _site_obj(self, name: str) -> Site:
+    def _site_obj(self, name: str, check_wait_timeout: int = 20) -> Site:
         if f"{self._base_ident}{name}" in self._sites:
             return self._sites[f"{self._base_ident}{name}"]
         # For convenience, allow to retrieve site by name or full ident
@@ -1683,6 +1686,7 @@ class SiteFactory:
             reuse=False,
             update=self._update,
             enforce_english_gui=self._enforce_english_gui,
+            check_wait_timeout=check_wait_timeout,
         )
 
     def save_results(self) -> None:

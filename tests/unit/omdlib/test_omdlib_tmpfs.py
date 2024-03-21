@@ -5,14 +5,13 @@
 
 # pylint: disable=protected-access
 
-import time
 from pathlib import Path
 
 import pytest
 
 import omdlib.tmpfs
 from omdlib.contexts import SiteContext
-from omdlib.tmpfs import _restore_tmpfs_dump, add_to_fstab, unmount_tmpfs
+from omdlib.tmpfs import _restore_tmpfs_dump, add_to_fstab, save_tmpfs_dump
 from omdlib.utils import delete_directory_contents
 
 
@@ -71,121 +70,36 @@ def test_add_to_fstab_empty(tmp_path: Path, tmp_fstab: Path, site_context: SiteC
     )
 
 
-@pytest.fixture(name="not_restored_file")
-def fixture_not_restored_file(site_context):
-    # Create something that is skipped during restore
-    tmp_dir = Path(site_context.tmp_dir)
-    tmp_file = tmp_dir.joinpath("not_restored_file")
-    tmp_file.parent.mkdir(parents=True, exist_ok=True)
-    with tmp_file.open("w") as f:
-        f.write("not_restored!")
-    assert tmp_file.exists()
-    return tmp_file
-
-
-def test_tmpfs_restore_no_tmpfs(
-    site_context: SiteContext, monkeypatch: pytest.MonkeyPatch, not_restored_file: Path
-) -> None:
-    # Use rm logic in unmount_tmpfs instead of unmount
-    is_mounted_returns = iter((True, False))
-    monkeypatch.setattr(omdlib.tmpfs, "tmpfs_mounted", lambda x: next(is_mounted_returns))
-
+def test_tmpfs_save_then_restore(tmp_path: Path) -> None:
+    site_dir = str(tmp_path)
+    site_tmp_dir = str(tmp_path / "tmp_dir")
+    tmpfs_dump_path = Path(site_dir) / "var/omd/tmpfs-dump.tar"
     # Create something to restore
-    tmp_dir = Path(site_context.tmp_dir)
-    tmp_files = []
+    restored_tmp_files = [
+        Path(site_tmp_dir) / "check_mk/piggyback/backed/pig",
+        Path(site_tmp_dir) / "check_mk/piggyback_sources/pig",
+    ]
+    for file in restored_tmp_files:
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_text("restored!")
 
-    tmp_file = tmp_dir.joinpath("check_mk", "piggyback", "backed", "pig")
-    tmp_file.parent.mkdir(parents=True, exist_ok=True)
-    with tmp_file.open("w") as f:
-        f.write("restored!")
-    assert tmp_file.exists()
-    tmp_files.append(tmp_file)
-
-    tmp_file = tmp_dir.joinpath("check_mk", "piggyback_sources", "pig")
-    tmp_file.parent.mkdir(parents=True, exist_ok=True)
-    with tmp_file.open("w") as f:
-        f.write("restored!")
-    assert tmp_file.exists()
-    tmp_files.append(tmp_file)
+    unrestored_tmp_file = Path(site_tmp_dir) / "unrestored"
+    file.parent.mkdir(parents=True, exist_ok=True)
+    file.write_text("unrestored!")
+    tmp_files = restored_tmp_files + [unrestored_tmp_file]
 
     # Now perform unmount call and test result
-    assert not Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
-    unmount_tmpfs(site_context)
-    for tmp_file in tmp_files:
-        assert not tmp_file.exists()
+    assert not tmpfs_dump_path.exists()
+    save_tmpfs_dump(site_dir, site_tmp_dir)
+    delete_directory_contents(site_tmp_dir)
+    assert all(not file.exists() for file in tmp_files)
 
-    assert Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
-    _restore_tmpfs_dump(site_context.dir, site_context.tmp_dir)
-    for tmp_file in tmp_files:
-        assert tmp_file.exists()
-
-    # Test that out-of-scope files are not restored
-    assert not not_restored_file.exists()
-
-
-class FakeTMPFS:
-    def __init__(self) -> None:
-        self.mounted = True
-
-    def unmount(self):
-        self.mounted = False
-
-    def mount(self):
-        self.mounted = True
-
-
-@pytest.fixture(name="mock_umount")
-def fixture_mock_umount(monkeypatch):
-    fake_tmpfs = FakeTMPFS()
-
-    # Use rm logic in unmount_tmpfs instead of unmount
-    monkeypatch.setattr(omdlib.tmpfs, "tmpfs_mounted", lambda x: fake_tmpfs.mounted)
-
-    def unmount(site_tmp_dir):
-        delete_directory_contents(site_tmp_dir)
-        fake_tmpfs.unmount()
-
-    # Simulate umount
-    monkeypatch.setattr(omdlib.tmpfs, "_unmount", unmount)
-    # Disable wait during unmount
-    monkeypatch.setattr(time, "sleep", lambda x: None)
-
-
-@pytest.mark.usefixtures("mock_umount")
-def test_tmpfs_restore_with_tmpfs(
-    site_context: SiteContext, monkeypatch: pytest.MonkeyPatch, not_restored_file: Path
-) -> None:
-    # Create something to restore
-    tmp_dir = Path(site_context.tmp_dir)
-    tmp_files = []
-
-    tmp_file = tmp_dir.joinpath("check_mk", "piggyback", "backed", "pig")
-    tmp_file.parent.mkdir(parents=True, exist_ok=True)
-    with tmp_file.open("w") as f:
-        f.write("restored!")
-    assert tmp_file.exists()
-    tmp_files.append(tmp_file)
-
-    tmp_file = tmp_dir.joinpath("check_mk", "piggyback_sources", "pig")
-    tmp_file.parent.mkdir(parents=True, exist_ok=True)
-    with tmp_file.open("w") as f:
-        f.write("restored!")
-    assert tmp_file.exists()
-    tmp_files.append(tmp_file)
-
-    # Now perform unmount call and test result
-    assert not Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
-    omdlib.tmpfs.unmount_tmpfs(site_context)
-    for tmp_file in tmp_files:
-        assert not tmp_file.exists()
-
-    assert Path(site_context.dir, "var/omd/tmpfs-dump.tar").exists()
-    _restore_tmpfs_dump(site_context.dir, site_context.tmp_dir)
-    for tmp_file in tmp_files:
-        assert tmp_file.exists()
+    assert tmpfs_dump_path.exists()
+    _restore_tmpfs_dump(site_dir, site_tmp_dir)
+    assert all(file.exists() for file in restored_tmp_files)
 
     # Test that out-of-scope files are not restored
-    assert not not_restored_file.exists()
+    assert not unrestored_tmp_file.exists()
 
 
 def test_tmpfs_mount_no_dump(site_context: SiteContext, monkeypatch: pytest.MonkeyPatch) -> None:

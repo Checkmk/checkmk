@@ -18,6 +18,7 @@ from cmk.automations.results import Gateway, GatewayResult
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.check_mk_automations import scan_parents
@@ -75,7 +76,9 @@ class ParentScanBackgroundJob(BackgroundJob):
         )
 
     def _back_url(self) -> str:
-        return disk_or_search_folder_from_request().url()
+        return disk_or_search_folder_from_request(
+            request.var("folder"), request.get_ascii_input("host")
+        ).url()
 
     def do_execute(
         self,
@@ -250,10 +253,14 @@ class ParentScanBackgroundJob(BackgroundJob):
 
     def _determine_gateway_folder(self, where: str, folder: Folder) -> Folder:
         if where == "here":  # directly in current folder
-            return disk_or_search_base_folder_from_request()
+            return disk_or_search_base_folder_from_request(
+                request.var("folder"), request.get_ascii_input("host")
+            )
 
         if where == "subfolder":
-            current = disk_or_search_base_folder_from_request()
+            current = disk_or_search_base_folder_from_request(
+                request.var("folder"), request.get_ascii_input("host")
+            )
 
             # Put new gateways in subfolder "Parents" of current
             # folder. Does this folder already exist?

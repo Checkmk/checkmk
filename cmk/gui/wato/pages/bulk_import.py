@@ -230,7 +230,7 @@ class ModeBulkImport(WatoMode):
         fail_messages = []
         selected = []
         imported_hosts = []
-        folder = folder_from_request()
+        folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
         for row_num, row in enumerate(csv_reader):
             if not row:

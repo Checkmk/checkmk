@@ -48,6 +48,9 @@ class History(ABC):
     @abstractmethod
     def housekeeping(self) -> None: ...
 
+    @abstractmethod
+    def close(self) -> None: ...
+
 
 class TimedHistory(History):
     """Decorate History methods with timing information."""
@@ -81,6 +84,10 @@ class TimedHistory(History):
     def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         with self._timing("get"):
             return self._history.get(query)
+
+    def close(self) -> None:
+        with self._timing("close"):
+            return self._history.close()
 
 
 def _log_event(

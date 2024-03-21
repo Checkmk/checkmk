@@ -119,6 +119,11 @@ class MongoDBHistory(History):
         _update_mongodb_indexes(self._settings, self._mongodb)
         _update_mongodb_history_lifetime(self._settings, self._config, self._mongodb)
 
+    def close(self) -> None:
+        if self._mongodb.connection:
+            self._mongodb.connection.close()
+            self._mongodb.connection = None
+
 
 def filters_to_mongo_query(
     filters: Iterable[QueryFilter],

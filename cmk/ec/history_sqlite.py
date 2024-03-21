@@ -274,3 +274,12 @@ class SQLiteHistory(History):
             # should be executed outside of the transaction
             self.conn.execute("VACUUM;")
             self._last_housekeeping = now
+
+    def close(self) -> None:
+        """Explicitly close the connection to the sqlite database.
+
+        Used during a new object instantiation,
+        to avoid sqlite3.OperationalError: database is locked.
+        """
+        self.conn.commit()
+        self.conn.close()

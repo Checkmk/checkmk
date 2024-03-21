@@ -3352,6 +3352,8 @@ def reload_configuration(
 ) -> None:
     with lock_configuration:
         config = load_configuration(settings, logger, slave_status)
+
+        history.close()
         history = create_history(
             settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
         )

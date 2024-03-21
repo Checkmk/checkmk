@@ -300,8 +300,7 @@ class ABCSyslogForwarder(ABC):
     def forward(
         self,
         syslog_messages: Iterable[SyslogMessage],
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class SyslogForwarderUnixSocket(ABCSyslogForwarder):

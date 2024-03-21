@@ -79,11 +79,9 @@ class CrashReportStore:
         if not isinstance(d, dict):
             return d
         return {
-            k
-            if isinstance(k, str)
-            else json.dumps(k, cls=RobustJSONEncoder): cls._dump_crash_info(v)
-            if isinstance(v, dict)
-            else v
+            k if isinstance(k, str) else json.dumps(k, cls=RobustJSONEncoder): (
+                cls._dump_crash_info(v) if isinstance(v, dict) else v
+            )
             for k, v in d.items()
         }
 

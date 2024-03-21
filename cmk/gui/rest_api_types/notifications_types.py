@@ -717,9 +717,9 @@ class JiraIssuePlugin:
                     "project_id": "" if self.project_id is None else self.project_id,
                     "issue_type_id": "" if self.issue_type_id is None else self.issue_type_id,
                     "host_custom_id": "" if self.host_custom_id is None else self.host_custom_id,
-                    "service_custom_id": ""
-                    if self.service_custom_id is None
-                    else self.service_custom_id,
+                    "service_custom_id": (
+                        "" if self.service_custom_id is None else self.service_custom_id
+                    ),
                     "monitoring_url": "" if self.monitoring is None else self.monitoring,
                     "site_custom_id": self.site_customid.api_response(),
                     "priority_id": self.priority.api_response(),
@@ -921,9 +921,9 @@ class PagerDutyPlugin:
     disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
     http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
     url_prefix_for_links_to_checkmk: CheckboxURLPrefix = field(default_factory=CheckboxURLPrefix)
-    webhook_url: Literal[
+    webhook_url: Literal["https://events.pagerduty.com/v2/enqueue"] = (
         "https://events.pagerduty.com/v2/enqueue"
-    ] = "https://events.pagerduty.com/v2/enqueue"
+    )
 
     @classmethod
     def from_mk_file_format(cls, pluginparams: NotifyPluginParams | None) -> PagerDutyPlugin:

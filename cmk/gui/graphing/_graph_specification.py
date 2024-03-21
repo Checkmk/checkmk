@@ -179,12 +179,10 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
 
     @staticmethod
     @abstractmethod
-    def name() -> str:
-        ...
+    def name() -> str: ...
 
     @abstractmethod
-    def recipes(self) -> Sequence[GraphRecipe]:
-        ...
+    def recipes(self) -> Sequence[GraphRecipe]: ...
 
 
 class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):

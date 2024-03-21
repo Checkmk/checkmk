@@ -95,7 +95,7 @@ def _get_cisco_asa_state_name(st: str) -> str:
     )
 
 
-def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Section) -> CheckResult:
+def check_cisco_asa_failover(params: Mapping[str, Any], section: Section) -> CheckResult:
     yield Result(
         state=State.OK,
         summary=f"Device ({section.local_role}) is the {section.local_status_detail}",

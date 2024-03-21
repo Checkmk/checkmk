@@ -593,16 +593,13 @@ def inv_paint_service_status(status: str) -> PaintResult:
 
 class _Comparable(Protocol):
     @abc.abstractmethod
-    def __eq__(self, other: object) -> bool:
-        ...
+    def __eq__(self, other: object) -> bool: ...
 
     @abc.abstractmethod
-    def __lt__(self, other: CmpInvValue) -> bool:
-        ...
+    def __lt__(self, other: CmpInvValue) -> bool: ...
 
     @abc.abstractmethod
-    def __gt__(self, other: CmpInvValue) -> bool:
-        ...
+    def __gt__(self, other: CmpInvValue) -> bool: ...
 
 
 CmpInvValue = TypeVar("CmpInvValue", bound=_Comparable)
@@ -2448,9 +2445,9 @@ class TreeRenderer:
             )
 
         columns = _make_columns(table.rows, hints.table_hint.key_order)
-        sorted_rows: Sequence[Sequence[_InventoryTreeValueInfo]] | Sequence[
-            Sequence[_DeltaTreeValueInfo]
-        ]
+        sorted_rows: (
+            Sequence[Sequence[_InventoryTreeValueInfo]] | Sequence[Sequence[_DeltaTreeValueInfo]]
+        )
         if isinstance(table, ImmutableTable):
             sorted_rows = _sort_rows(table, columns)
         else:

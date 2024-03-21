@@ -699,9 +699,11 @@ class ProxmoxVeSession:
             method="GET",
             url=self._base_url + sub_url,
             # todo: generic
-            params={"limit": "5000"}
-            if (sub_url.endswith("/log") or sub_url.endswith("/tasks"))
-            else {},
+            params=(
+                {"limit": "5000"}
+                if (sub_url.endswith("/log") or sub_url.endswith("/tasks"))
+                else {}
+            ),
             verify=self._verify_ssl,
             timeout=self._timeout,
         )
@@ -780,9 +782,7 @@ class ProxmoxVeAPI:
                 return (
                     request_tree
                     if isinstance(request_tree, Mapping)
-                    else next(iter(request_tree))
-                    if len(request_tree) > 0
-                    else {}
+                    else next(iter(request_tree)) if len(request_tree) > 0 else {}
                 )  #  #
 
             def extract_variable(st: RequestStructure) -> Mapping[str, Any] | None:

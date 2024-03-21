@@ -8,8 +8,7 @@ from zlib import decompress
 from zlib import error as zlibError
 
 
-class DecompressionError(Exception):
-    ...
+class DecompressionError(Exception): ...
 
 
 class Decompressor(Enum):

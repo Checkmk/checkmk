@@ -354,11 +354,13 @@ def couchbase_main(args: Args) -> int:
         port=args.port,
         timeout=args.timeout,
         credentials=(
-            args.username,
-            args.password,
-        )
-        if args.username and args.password
-        else None,
+            (
+                args.username,
+                args.password,
+            )
+            if args.username and args.password
+            else None
+        ),
     )
 
     try:

@@ -184,8 +184,7 @@ class RuleProperties:
         return r
 
 
-class BulkNotAllowedException(Exception):
-    ...
+class BulkNotAllowedException(Exception): ...
 
 
 @dataclass

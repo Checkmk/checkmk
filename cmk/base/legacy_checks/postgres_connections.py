@@ -88,9 +88,11 @@ def check_postgres_connections(item, params, parsed):
     maximum = float(database_connections["mc"])
 
     connections = {
-        "active": database_connections["active"]
-        if has_active_and_idle
-        else database_connections["current"],
+        "active": (
+            database_connections["active"]
+            if has_active_and_idle
+            else database_connections["current"]
+        ),
         "idle": database_connections["idle"] if has_active_and_idle else None,
     }
 

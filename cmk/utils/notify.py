@@ -194,7 +194,7 @@ def ensure_utf8(logger_: Logger | None = None) -> None:
 def create_spoolfile(
     logger_: Logger,
     spool_dir: Path,
-    data: (NotificationForward | NotificationResult | NotificationViaPlugin),
+    data: NotificationForward | NotificationResult | NotificationViaPlugin,
 ) -> None:
     spool_dir.mkdir(parents=True, exist_ok=True)
     file_path = spool_dir / str(uuid.uuid4())

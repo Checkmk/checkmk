@@ -100,9 +100,12 @@ def _status(
 ) -> section.CronJobStatus:
     return section.CronJobStatus(
         active_jobs_count=len(cronjob_status.active) if cronjob_status.active else None,
-        last_duration=_calculate_job_duration(last_completed_job)
-        if (last_completed_job := _retrieve_last_completed_job(timestamp_sorted_jobs)) is not None
-        else None,
+        last_duration=(
+            _calculate_job_duration(last_completed_job)
+            if (last_completed_job := _retrieve_last_completed_job(timestamp_sorted_jobs))
+            is not None
+            else None
+        ),
         last_successful_time=cronjob_status.last_successful_time,
         last_schedule_time=cronjob_status.last_schedule_time,
     )

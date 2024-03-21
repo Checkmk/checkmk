@@ -193,9 +193,11 @@ def _our_logging_level_to_gui_logging_level(lvl: int) -> int:
 def _load_plugins(logger: logging.Logger) -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
-        []
-        if edition() is Edition.CRE
-        else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions"),
+        (
+            []
+            if edition() is Edition.CRE
+            else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
+        ),
     ):
         logger.error("Error in action plugin %s: %s\n", plugin, exc)
         if debug.enabled():
@@ -205,9 +207,11 @@ def _load_plugins(logger: logging.Logger) -> None:
 def _load_pre_plugins() -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"),
-        []
-        if edition() is Edition.CRE
-        else load_plugins_with_exceptions("cmk.update_config.cee.plugins.pre_actions"),
+        (
+            []
+            if edition() is Edition.CRE
+            else load_plugins_with_exceptions("cmk.update_config.cee.plugins.pre_actions")
+        ),
     ):
         sys.stderr.write(f"Error in pre action plugin {plugin}: {exc}\n")
         if debug.enabled():

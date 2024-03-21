@@ -205,9 +205,9 @@ def check_windows_tasks(
     )
     yield Result(
         state=State(state),
-        summary=f"{state_txt} ({last_result_hex})"
-        if state_txt
-        else f"Got exit code {last_result_hex}",
+        summary=(
+            f"{state_txt} ({last_result_hex})" if state_txt else f"Got exit code {last_result_hex}"
+        ),
     )
 
     if data.get("Scheduled Task State", None) != "Enabled":

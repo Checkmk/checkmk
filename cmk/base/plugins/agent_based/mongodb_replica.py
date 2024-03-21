@@ -89,14 +89,16 @@ def check_mongodb_replica(section: ReplicaSet) -> CheckResult:
         )
     )
     yield from (
-        Result(
-            state=State.OK,
-            summary=f"{designation.capitalize()}: {', '.join(hosts)}",
-        )
-        if hosts
-        else Result(
-            state=State.OK,
-            summary=f"No {designation}",
+        (
+            Result(
+                state=State.OK,
+                summary=f"{designation.capitalize()}: {', '.join(hosts)}",
+            )
+            if hosts
+            else Result(
+                state=State.OK,
+                summary=f"No {designation}",
+            )
         )
         for designation, hosts in (
             (

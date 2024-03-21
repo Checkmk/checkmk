@@ -66,9 +66,11 @@ class ValidationStep(enum.Enum):
 def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
     return ActiveCheckResult(
         state=2 if errors else 0,
-        summary=f"{step.value.capitalize()} failed"
-        if errors
-        else f"{step.value.capitalize()} succeeded",
+        summary=(
+            f"{step.value.capitalize()} failed"
+            if errors
+            else f"{step.value.capitalize()} succeeded"
+        ),
         details=list(errors),
     )
 
@@ -201,7 +203,11 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
                     )
                 ) is not None:
                     errors.append(error)
-            case agent_based_v2.SimpleSNMPSection() | agent_based_v2.SNMPSection() | agent_based_v2.AgentSection():
+            case (
+                agent_based_v2.SimpleSNMPSection()
+                | agent_based_v2.SNMPSection()
+                | agent_based_v2.AgentSection()
+            ):
                 if (
                     error := _validate_agent_based_plugin_v2_ruleset_ref(
                         plugin,

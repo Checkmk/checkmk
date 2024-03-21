@@ -49,9 +49,9 @@ register.agent_section(
 def inventory_win_bios(section: Mapping[str, str | int]):  # type: ignore[no-untyped-def]
     attr = {k: section[k] for k in ("date", "model", "vendor", "version") if k in section}
     with suppress(KeyError):
-        attr[
-            "version"
-        ] = f"{section['smbios_version']} {section['major_version']}.{section['minor_version']}"
+        attr["version"] = (
+            f"{section['smbios_version']} {section['major_version']}.{section['minor_version']}"
+        )
 
     yield Attributes(
         path=["software", "bios"],

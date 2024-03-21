@@ -46,8 +46,7 @@ class ABCViewDashletConfig(DashletConfig):
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
 
-class LinkedViewDashletConfig(ABCViewDashletConfig):
-    ...
+class LinkedViewDashletConfig(ABCViewDashletConfig): ...
 
 
 class _ViewDashletConfigMandatory(ABCViewDashletConfig):

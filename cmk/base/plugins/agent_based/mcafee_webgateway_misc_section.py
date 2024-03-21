@@ -22,12 +22,14 @@ def parse_mcafee_webgateway_misc(
     return mcafee_gateway.Section(
         client_count=int(clients_str) if clients_str.isdigit() else None,
         socket_count=int(sockets_str) if sockets_str.isdigit() else None,
-        time_to_resolve_dns=datetime.timedelta(milliseconds=int(time_dns_str))
-        if time_dns_str.isdigit()
-        else None,
-        time_consumed_by_rule_engine=datetime.timedelta(milliseconds=int(time_engine_str))
-        if time_engine_str.isdigit()
-        else None,
+        time_to_resolve_dns=(
+            datetime.timedelta(milliseconds=int(time_dns_str)) if time_dns_str.isdigit() else None
+        ),
+        time_consumed_by_rule_engine=(
+            datetime.timedelta(milliseconds=int(time_engine_str))
+            if time_engine_str.isdigit()
+            else None
+        ),
     )
 
 

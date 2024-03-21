@@ -36,8 +36,7 @@ class Sensor:
 
 
 @dataclasses.dataclass(frozen=True)
-class VoltageSensor(Sensor):
-    ...
+class VoltageSensor(Sensor): ...
 
 
 @dataclasses.dataclass(frozen=True)

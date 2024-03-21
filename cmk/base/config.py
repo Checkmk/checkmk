@@ -1037,9 +1037,9 @@ _old_service_descriptions: Mapping[str, Callable[[Item], tuple[ServiceName, Item
     "netscaler_mem": lambda item: ("Memory used", item),
     "nullmailer_mailq": lambda item: ("Nullmailer Queue", None),
     "nvidia_temp": lambda item: ("Temperature NVIDIA %s", item),
-    "postfix_mailq": lambda item: ("Postfix Queue", None)
-    if item == "default"
-    else ("Postfix Queue %s", item),
+    "postfix_mailq": lambda item: (
+        ("Postfix Queue", None) if item == "default" else ("Postfix Queue %s", item)
+    ),
     "ps": lambda item: ("proc_%s", item),
     "qmail_stats": lambda item: ("Qmail Queue", None),
     "raritan_emx": lambda item: ("Rack %s", item),
@@ -1350,9 +1350,9 @@ NEGATE = tuple_rulesets.NEGATE
 #           _initialize_data_structures()
 # The following data structures will be filled by the checks
 # all known checks
-check_info: dict[
-    object, object
-] = {}  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
+check_info: dict[object, object] = (
+    {}
+)  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
 # for nagios config: keep track which plugin lives where
 legacy_check_plugin_files: dict[CheckPluginNameStr, str] = {}
 # Lookup for legacy names
@@ -1866,18 +1866,22 @@ def get_ssc_host_config(
     return server_side_calls_api.HostConfig(
         name=host_name,
         alias=config_cache.alias(host_name),
-        ipv4_config=server_side_calls_api.IPv4Config(
-            address=ip_address_of(config_cache, host_name, socket.AF_INET),
-            additional_addresses=additional_addresses_ipv4,
-        )
-        if ip_lookup.AddressFamily.IPv4 in hosts_ip_stack
-        else None,
-        ipv6_config=server_side_calls_api.IPv6Config(
-            address=ip_address_of(config_cache, host_name, socket.AF_INET6),
-            additional_addresses=additional_addresses_ipv6,
-        )
-        if ip_lookup.AddressFamily.IPv6 in hosts_ip_stack
-        else None,
+        ipv4_config=(
+            server_side_calls_api.IPv4Config(
+                address=ip_address_of(config_cache, host_name, socket.AF_INET),
+                additional_addresses=additional_addresses_ipv4,
+            )
+            if ip_lookup.AddressFamily.IPv4 in hosts_ip_stack
+            else None
+        ),
+        ipv6_config=(
+            server_side_calls_api.IPv6Config(
+                address=ip_address_of(config_cache, host_name, socket.AF_INET6),
+                additional_addresses=additional_addresses_ipv6,
+            )
+            if ip_lookup.AddressFamily.IPv6 in hosts_ip_stack
+            else None
+        ),
         primary_family=_get_ssc_ip_family(primary_family),
         macros={k: str(v) for k, v in macros.items()},
     )
@@ -2150,9 +2154,11 @@ class ConfigCache:
                         # This is the ruleset "Enable SNMPv2c",
                         # (Which enables SNMP version 2, implying the *possibility* to use bulkwalk.)
                         # Very poor naming of the variable.
-                        bulkwalk_hosts
-                        if source_type is SourceType.HOST
-                        else management_bulkwalk_hosts,
+                        (
+                            bulkwalk_hosts
+                            if source_type is SourceType.HOST
+                            else management_bulkwalk_hosts
+                        ),
                     ),
                     credentials,
                 ),
@@ -2302,9 +2308,10 @@ class ConfigCache:
 
         return resolved
 
-    def enforced_services_table(
-        self, hostname: HostName
-    ) -> Mapping[ServiceID, tuple[RulesetName, ConfiguredService],]:
+    def enforced_services_table(self, hostname: HostName) -> Mapping[
+        ServiceID,
+        tuple[RulesetName, ConfiguredService],
+    ]:
         """Return a table of enforced services
 
         Note: We need to reverse the order of the enforced services.
@@ -2407,14 +2414,12 @@ class ConfigCache:
     @overload
     def management_credentials(
         self, host_name: HostName, protocol: Literal["snmp"]
-    ) -> SNMPCredentials:
-        ...
+    ) -> SNMPCredentials: ...
 
     @overload
     def management_credentials(
         self, host_name: HostName, protocol: Literal["ipmi"]
-    ) -> IPMICredentials:
-        ...
+    ) -> IPMICredentials: ...
 
     def management_credentials(
         self, host_name: HostName, protocol: Literal["snmp", "ipmi"]
@@ -3025,9 +3030,11 @@ class ConfigCache:
     def max_cachefile_age(self, hostname: HostName) -> MaxAge:
         check_interval = self.check_mk_check_interval(hostname)
         return MaxAge(
-            checking=check_max_cachefile_age
-            if self.nodes_of(hostname) is None
-            else cluster_max_cachefile_age,
+            checking=(
+                check_max_cachefile_age
+                if self.nodes_of(hostname) is None
+                else cluster_max_cachefile_age
+            ),
             discovery=1.5 * check_interval,
             inventory=1.5 * check_interval,
         )

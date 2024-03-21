@@ -998,9 +998,11 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
             "value": value,
             "onblur": onblur,
             "oninput": oninput,
-            "onkeydown": ("cmk.forms.textinput_enter_submit(event, %s);" % json.dumps(submit))
-            if submit
-            else None,
+            "onkeydown": (
+                ("cmk.forms.textinput_enter_submit(event, %s);" % json.dumps(submit))
+                if submit
+                else None
+            ),
             "placeholder": placeholder,
             "data-world": data_world,
             "data-max-labels": None if data_max_labels is None else str(data_max_labels),
@@ -1698,13 +1700,11 @@ document.addEventListener('DOMContentLoaded', onDomContentLoaded);
 
 
 @overload
-def _path(path_or_str: Path) -> Path:
-    ...
+def _path(path_or_str: Path) -> Path: ...
 
 
 @overload
-def _path(path_or_str: str) -> Path:
-    ...
+def _path(path_or_str: str) -> Path: ...
 
 
 def _path(path_or_str: Path | str) -> Path:

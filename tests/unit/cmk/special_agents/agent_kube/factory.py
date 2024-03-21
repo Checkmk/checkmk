@@ -33,8 +33,7 @@ T = typing.TypeVar("T", bound=pydantic.BaseModel)
 
 
 class Batch(typing.Protocol[T]):
-    def __call__(self, size: int) -> list[T]:
-        ...
+    def __call__(self, size: int) -> list[T]: ...
 
 
 def randomize_size(batch: Batch[T]) -> typing.Callable[[], list[T]]:

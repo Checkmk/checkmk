@@ -106,9 +106,9 @@ class Config(BaseModel, frozen=True):
     ) -> Config:
         return cls(
             site=SiteConfig.load(path_site),
-            cma_system=CMASystemConfig.load(path_cma_system)
-            if is_cma()
-            else CMASystemConfig(targets={}),
+            cma_system=(
+                CMASystemConfig.load(path_cma_system) if is_cma() else CMASystemConfig(targets={})
+            ),
             path_site=path_site,
         )
 

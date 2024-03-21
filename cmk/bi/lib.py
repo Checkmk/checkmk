@@ -87,8 +87,7 @@ class QueryCallback(Protocol):
         only_sites: list[SiteId] | None = None,
         output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
         fetch_full_data: bool = False,
-    ) -> LivestatusResponse:
-        ...
+    ) -> LivestatusResponse: ...
 
 
 class SitesCallback(NamedTuple):
@@ -324,23 +323,19 @@ T = TypeVar("T", str, dict, list)
 
 
 @overload
-def replace_macros(pattern: str, macros: MacroMapping) -> str:
-    ...
+def replace_macros(pattern: str, macros: MacroMapping) -> str: ...
 
 
 @overload
-def replace_macros(pattern: tuple[str, ...], macros: MacroMapping) -> list[str]:
-    ...
+def replace_macros(pattern: tuple[str, ...], macros: MacroMapping) -> list[str]: ...
 
 
 @overload
-def replace_macros(pattern: list[str], macros: MacroMapping) -> list[str]:
-    ...
+def replace_macros(pattern: list[str], macros: MacroMapping) -> list[str]: ...
 
 
 @overload
-def replace_macros(pattern: dict[str, str], macros: MacroMapping) -> dict[str, str]:
-    ...
+def replace_macros(pattern: dict[str, str], macros: MacroMapping) -> dict[str, str]: ...
 
 
 def replace_macros(
@@ -426,22 +421,19 @@ class ABCBISearcher(ABC):
         self,
         hosts: Iterable[BIHostData],
         tag_conditions: Mapping[TagGroupID, TagCondition],
-    ) -> Iterable[BIHostData]:
-        ...
+    ) -> Iterable[BIHostData]: ...
 
     @abstractmethod
     def filter_host_folder(
         self,
         hosts: Iterable[BIHostData],
         folder_path: str,
-    ) -> Iterable[BIHostData]:
-        ...
+    ) -> Iterable[BIHostData]: ...
 
     @abstractmethod
     def filter_host_labels(
         self, hosts: Iterable[BIHostData], required_label_groups: Any
-    ) -> Iterable[BIHostData]:
-        ...
+    ) -> Iterable[BIHostData]: ...
 
 
 class ABCBIStatusFetcher(ABC):

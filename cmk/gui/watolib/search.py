@@ -75,18 +75,15 @@ class ABCMatchItemGenerator(ABC):
         return hash(self.name)
 
     @abstractmethod
-    def generate_match_items(self) -> MatchItems:
-        ...
+    def generate_match_items(self) -> MatchItems: ...
 
     @staticmethod
     @abstractmethod
-    def is_affected_by_change(change_action_name: str) -> bool:
-        ...
+    def is_affected_by_change(change_action_name: str) -> bool: ...
 
     @property
     @abstractmethod
-    def is_localization_dependent(self) -> bool:
-        ...
+    def is_localization_dependent(self) -> bool: ...
 
 
 class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):

@@ -13,9 +13,9 @@ from cmk.gui.wato import RulespecGroupIntegrateOtherServices
 
 def _valuespec_active_checks_notify_count():
     return Migrate(
-        migrate=lambda p: p
-        if isinstance(p, dict)
-        else {"description": p[0], "interval": p[1], **p[2]},
+        migrate=lambda p: (
+            p if isinstance(p, dict) else {"description": p[0], "interval": p[1], **p[2]}
+        ),
         valuespec=Dictionary(
             title=_("Check notification number per contact"),
             help=_(

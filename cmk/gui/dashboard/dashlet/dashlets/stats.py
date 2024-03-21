@@ -189,8 +189,7 @@ class StatsElement:
         return serialized
 
 
-class StatsDashletConfig(DashletConfig):
-    ...
+class StatsDashletConfig(DashletConfig): ...
 
 
 class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):

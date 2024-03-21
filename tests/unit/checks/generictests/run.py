@@ -196,10 +196,11 @@ def run(check_info, dataset):
 
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with current_host(HostName("non-existent-testhost")), mock_item_state(
-                mock_is
-            ), MockHostExtraConf(check, mock_hec), MockHostExtraConf(
-                check, mock_hecm, "get_host_merged_dict"
+            with (
+                current_host(HostName("non-existent-testhost")),
+                mock_item_state(mock_is),
+                MockHostExtraConf(check, mock_hec),
+                MockHostExtraConf(check, mock_hecm, "get_host_merged_dict"),
             ):
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 

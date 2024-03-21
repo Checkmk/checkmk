@@ -48,6 +48,7 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
         ('()()()', '\\1, \\3')
 
     """
+
     tuple_fields = ("search", "replace_with")
     cast_to_dict = True
 

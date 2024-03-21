@@ -171,9 +171,9 @@ class ACTest:
                 return
 
             yield ACTestResult(
-                state=ACResultState.worst(r.state for r in results)
-                if results
-                else ACResultState.OK,
+                state=(
+                    ACResultState.worst(r.state for r in results) if results else ACResultState.OK
+                ),
                 text=", ".join(r.state_marked_text for r in results),
                 test_id=self.id(),
                 category=self.category(),

@@ -854,8 +854,10 @@ def fixture_service_painter_names() -> list[str]:
 def test_service_painters(
     service_painter_idents: Sequence[str], live: MockLiveStatusConnection
 ) -> None:
-    with live(expect_status_query=False), request.stashed_vars(), on_time(
-        "2018-04-15 16:50", "CET"
+    with (
+        live(expect_status_query=False),
+        request.stashed_vars(),
+        on_time("2018-04-15 16:50", "CET"),
     ):
         request.del_vars()
 

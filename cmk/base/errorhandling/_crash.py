@@ -91,9 +91,9 @@ def create_check_crash_dump(
             },
             type_specific_attributes={
                 "snmp_info": _read_snmp_info(host_name),
-                "agent_output": _read_agent_output(host_name)
-                if rtc_package is None
-                else rtc_package,
+                "agent_output": (
+                    _read_agent_output(host_name) if rtc_package is None else rtc_package
+                ),
             },
         )
         CrashReportStore().save(crash)

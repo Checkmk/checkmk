@@ -56,8 +56,7 @@ SYNTHETIC_MON_CHECK_NAME = "robotmk_test"
 
 
 class DoCreateSample(Protocol):
-    def __call__(self, now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample:
-        ...
+    def __call__(self, now: Now, instance_id: UUID, site_hash: str) -> LicenseUsageSample: ...
 
 
 @dataclass(frozen=True)

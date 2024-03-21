@@ -574,7 +574,10 @@ def _forward_message(
     text: str = "some_text",
     item: str | None = None,
     application: str = "-",
-) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[float, int, list[str]]],]:
+) -> tuple[
+    logwatch_ec.LogwatchForwardedResult,
+    list[tuple[float, int, list[str]]],
+]:
     messages_forwarded: list[tuple[float, int, list[str]]] = []
 
     class TestForwardTcpMessageForwarder(logwatch_ec.MessageForwarder):

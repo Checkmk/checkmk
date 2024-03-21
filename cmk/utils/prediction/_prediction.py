@@ -26,12 +26,10 @@ _DAY = 86400
 
 class MetricRecord(Protocol):
     @property
-    def window(self) -> range:
-        ...
+    def window(self) -> range: ...
 
     @property
-    def values(self) -> Sequence[float | None]:
-        ...
+    def values(self) -> Sequence[float | None]: ...
 
 
 class DataStat(NamedTuple):
@@ -203,9 +201,11 @@ def _forward_fill_resample(
 def _data_stats(slices: Iterable[Iterable[float | None]]) -> list[DataStat | None]:
     "Statistically summarize all the upsampled RRD data"
     return [  # can't inline this b/c it is unit tested :-/
-        DataStat.from_values(point_line)
-        if (point_line := [x for x in time_column if x is not None])
-        else None
+        (
+            DataStat.from_values(point_line)
+            if (point_line := [x for x in time_column if x is not None])
+            else None
+        )
         for time_column in zip(*slices)
     ]
 
@@ -215,6 +215,4 @@ def _std_dev(point_line: Sequence[float], average: float) -> float | None:
     # In the case of a single data-point an unbiased standard deviation is undefined.
     if samples == 1:
         return None
-    return math.sqrt(
-        abs(sum(p**2 for p in point_line) - average**2 * samples) / float(samples - 1)
-    )
+    return math.sqrt(abs(sum(p**2 for p in point_line) - average**2 * samples) / float(samples - 1))

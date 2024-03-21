@@ -48,9 +48,11 @@ class BothEntityLevel(BaseModel):
 
 
 class CAdvisorOptions(BaseModel):
-    entity_level: tuple[Literal["container"], ContainerEntityLevel] | tuple[
-        Literal["pod"], PodEntityLevel
-    ] | tuple[Literal["both"], BothEntityLevel]
+    entity_level: (
+        tuple[Literal["container"], ContainerEntityLevel]
+        | tuple[Literal["pod"], PodEntityLevel]
+        | tuple[Literal["both"], BothEntityLevel]
+    )
     namespace_include_patterns: list[str] | None = None
     entities: list[str]
 
@@ -74,18 +76,25 @@ class PromQLCheck(BaseModel):
 
 
 class PrometheusParams(BaseModel):
-    connection: tuple[Literal["ip_address"], ConnectionElements] | tuple[
-        Literal["host_name"], ConnectionElements
-    ] | tuple[Literal["url_custom"], UrlCustom]
+    connection: (
+        tuple[Literal["ip_address"], ConnectionElements]
+        | tuple[Literal["host_name"], ConnectionElements]
+        | tuple[Literal["url_custom"], UrlCustom]
+    )
     verify_cert: bool | None = Field(default=None, alias="verify-cert")
-    auth_basic: tuple[Literal["auth_login"], BasicAuthentication] | tuple[
-        Literal["auth_token"], TokenAuthentication
-    ] | None = None
+    auth_basic: (
+        tuple[Literal["auth_login"], BasicAuthentication]
+        | tuple[Literal["auth_token"], TokenAuthentication]
+        | None
+    ) = None
     protocol: Literal["http", "https"]
-    exporter: list[
-        tuple[Literal["node_exporter"], NodeExporterOptions]
-        | tuple[Literal["cadvisor"], CAdvisorOptions]
-    ] | None = None
+    exporter: (
+        list[
+            tuple[Literal["node_exporter"], NodeExporterOptions]
+            | tuple[Literal["cadvisor"], CAdvisorOptions]
+        ]
+        | None
+    ) = None
     promql_checks: list[PromQLCheck] | None = None
 
 

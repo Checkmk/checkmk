@@ -609,10 +609,15 @@ def filter_test_id(t):
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
 def test_filters_filter(test: FilterTest, set_config: SetConfig) -> None:
-    with set_config(
-        wato_host_attrs=[{"name": "bla", "title": "Bla"}],  # Needed for ABCFilterCustomAttribute
-        tags=cmk.utils.tags.BuiltinTagConfig(),  # Need for ABCTagFilter
-    ), on_time("2018-04-15 16:50", "CET"):
+    with (
+        set_config(
+            wato_host_attrs=[
+                {"name": "bla", "title": "Bla"}
+            ],  # Needed for ABCFilterCustomAttribute
+            tags=cmk.utils.tags.BuiltinTagConfig(),  # Need for ABCTagFilter
+        ),
+        on_time("2018-04-15 16:50", "CET"),
+    ):
         filt = filter_registry[test.ident]
         filter_vars = dict(filt.value())  # Default empty vars, exhaustive
         filter_vars.update(dict(test.request_vars))

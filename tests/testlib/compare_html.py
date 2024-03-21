@@ -17,13 +17,11 @@ def prettify(html_text: str) -> str:
 
 
 @overload
-def encode_attribute(value: list[str]) -> list[str]:
-    ...
+def encode_attribute(value: list[str]) -> list[str]: ...
 
 
 @overload
-def encode_attribute(value: str) -> str:
-    ...
+def encode_attribute(value: str) -> str: ...
 
 
 def encode_attribute(value: list[str] | str) -> list[str] | str:
@@ -36,13 +34,11 @@ def encode_attribute(value: list[str] | str) -> list[str] | str:
 
 
 @overload
-def undo_encode_attribute(value: list[str]) -> list[str]:
-    ...
+def undo_encode_attribute(value: list[str]) -> list[str]: ...
 
 
 @overload
-def undo_encode_attribute(value: str) -> str:
-    ...
+def undo_encode_attribute(value: str) -> str: ...
 
 
 def undo_encode_attribute(value: list[str] | str) -> list[str] | str:
@@ -55,13 +51,11 @@ def undo_encode_attribute(value: list[str] | str) -> list[str] | str:
 
 
 @overload
-def subber(value: list[str]) -> list[str]:
-    ...
+def subber(value: list[str]) -> list[str]: ...
 
 
 @overload
-def subber(value: str) -> str:
-    ...
+def subber(value: str) -> str: ...
 
 
 def subber(value: list[str] | str) -> list[str] | str:

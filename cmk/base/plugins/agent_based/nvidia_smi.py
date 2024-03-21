@@ -147,9 +147,11 @@ def _let_pydantic_check_power_state(value: str | None) -> PowerState:
 def parse_nvidia_smi(string_table: StringTable) -> Section:
     xml = ElementTree.fromstring("".join([element[0] for element in string_table]))
     return Section(
-        timestamp=datetime.strptime(timestamp, "%a %b %d %H:%M:%S %Y")
-        if (timestamp := get_text_from_element(xml.find("timestamp")))
-        else None,
+        timestamp=(
+            datetime.strptime(timestamp, "%a %b %d %H:%M:%S %Y")
+            if (timestamp := get_text_from_element(xml.find("timestamp")))
+            else None
+        ),
         driver_version=get_text_from_element(xml.find("driver_version")),
         cuda_version=get_text_from_element(xml.find("cuda_version")),
         attached_gpus=get_int_from_element(xml.find("attached_gpus")),

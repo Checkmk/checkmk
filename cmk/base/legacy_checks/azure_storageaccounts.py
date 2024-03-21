@@ -53,7 +53,7 @@ check_info["azure_storageaccounts"] = LegacyCheckDefinition(
     discovery_function=discover_azure_storageaccounts,
     check_function=check_azure_storageaccounts,
     check_ruleset_name="azure_storageaccounts",
-    check_default_parameters={}
+    check_default_parameters={},
     # metrics description:
     # https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
     # 'ingress_levels': tuple [B]
@@ -90,7 +90,7 @@ check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
     ),
     check_function=check_azure_storageaccounts_flow,
     check_ruleset_name="azure_storageaccounts",
-    check_default_parameters={}
+    check_default_parameters={},
     # metrics description:
     # https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
     # 'ingress_levels': tuple [B]
@@ -129,7 +129,7 @@ check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
     ),
     check_function=check_azure_storageaccounts_performance,
     check_ruleset_name="azure_storageaccounts",
-    check_default_parameters={}
+    check_default_parameters={},
     # metrics description:
     # https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
     # 'ingress_levels': tuple [B]

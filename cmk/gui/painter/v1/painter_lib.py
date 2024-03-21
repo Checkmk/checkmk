@@ -80,9 +80,9 @@ class Painter(Generic[T]):
     # dynamic_columns/derive will be reviewed later on
     dynamic_columns: Callable[[PainterParameters], Sequence[ColumnName]] | None = None
     derive: Callable[[Rows, PainterParameters, list[ColumnName]], None] | None = None
-    postprocess_query: None | (
-        Callable[[Rows, PainterParameters, Sequence[ColumnName]], Rows]
-    ) = None
+    postprocess_query: None | (Callable[[Rows, PainterParameters, Sequence[ColumnName]], Rows]) = (
+        None
+    )
 
     def export_title(self) -> str:
         return self.ident

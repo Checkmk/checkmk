@@ -570,9 +570,11 @@ def check_netapp_interfaces(  # pylint: disable=too-many-branches
                         fop["link-status"] != "up" and fop["node"] == vif["home_node"]
                         for fop in vif["failover_ports"]
                     )
-                    else State.WARN
-                    if any(fop["link-status"] != "up" for fop in vif["failover_ports"])
-                    else State.OK
+                    else (
+                        State.WARN
+                        if any(fop["link-status"] != "up" for fop in vif["failover_ports"])
+                        else State.OK
+                    )
                 ),
                 notice=f"Failover Group: [{failover_group_str}]",
             )

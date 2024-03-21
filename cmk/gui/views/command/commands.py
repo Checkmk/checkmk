@@ -977,9 +977,11 @@ class CommandAcknowledge(Command):
             else _("No expiration date")
         )
         persistent_comment_div = html.render_div(
-            _("Comment will be kept after acknowledgment expires.")
-            if request.var("_ack_persistent")
-            else _("Comment will be removed after acknowledgment expires."),
+            (
+                _("Comment will be kept after acknowledgment expires.")
+                if request.var("_ack_persistent")
+                else _("Comment will be removed after acknowledgment expires.")
+            ),
             class_="confirm_block",
         )
 
@@ -1409,17 +1411,13 @@ class CommandGroupDowntimes(CommandGroup):
 
 
 class RecurringDowntimes(Protocol):
-    def choices(self) -> Choices:
-        ...
+    def choices(self) -> Choices: ...
 
-    def show_input_elements(self, default: str) -> None:
-        ...
+    def show_input_elements(self, default: str) -> None: ...
 
-    def number(self) -> int:
-        ...
+    def number(self) -> int: ...
 
-    def title_prefix(self, recurring_number: int) -> str:
-        ...
+    def title_prefix(self, recurring_number: int) -> str: ...
 
 
 class NoRecurringDowntimes:

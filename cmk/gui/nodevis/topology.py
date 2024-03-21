@@ -911,9 +911,11 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
                         extra_info.update(
                             {
                                 "site": service_info.site,
-                                "icon": theme.detect_icon_path(service_info.icon_image, "icon_")
-                                if service_info.icon_image
-                                else None,
+                                "icon": (
+                                    theme.detect_icon_path(service_info.icon_image, "icon_")
+                                    if service_info.icon_image
+                                    else None
+                                ),
                                 "state": service_info.state,
                             }
                         )
@@ -926,9 +928,11 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
                         extra_info.update(
                             {
                                 "site": host_info.site,
-                                "icon": theme.detect_icon_path(host_info.icon_image, "icon_")
-                                if host_info.icon_image
-                                else None,
+                                "icon": (
+                                    theme.detect_icon_path(host_info.icon_image, "icon_")
+                                    if host_info.icon_image
+                                    else None
+                                ),
                                 "state": host_info.state,
                                 "has_been_checked": host_info.has_been_checked,
                                 "num_services_warn": host_info.num_services_warn,

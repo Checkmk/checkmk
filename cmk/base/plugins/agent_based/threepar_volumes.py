@@ -68,14 +68,16 @@ def parse_threepar_volumes(string_table: StringTable) -> ThreeParVolumeSection:
                 is_system_volume=volume["policies"]["system"],
                 total_capacity=total_capacity,
                 free_capacity=total_capacity - volume["userSpace"]["usedMiB"],
-                deduplication=capacity_efficiency.get(
-                    "deduplication"
-                )  # Will only be created if the capacityEfficiency section is available
-                if capacity_efficiency
-                else None,
-                compaction=capacity_efficiency.get("compaction")
-                if capacity_efficiency
-                else None,  # Will only be created if the capacityEfficiency section is available
+                deduplication=(
+                    capacity_efficiency.get(
+                        "deduplication"
+                    )  # Will only be created if the capacityEfficiency section is available
+                    if capacity_efficiency
+                    else None
+                ),
+                compaction=(
+                    capacity_efficiency.get("compaction") if capacity_efficiency else None
+                ),  # Will only be created if the capacityEfficiency section is available
                 provisioning=float(volume["userSpace"]["rawReservedMiB"] * 1024**2),
                 provisioning_type=PROVISIONING_MAP[volume["provisioningType"]],
                 state=STATES.get(volume["state"], State.UNKNOWN),

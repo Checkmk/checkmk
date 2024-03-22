@@ -22,15 +22,17 @@ class Suffix:
     prefix: str
     symbol: str
 
-    def use_prefix(self, prefix: str) -> bool:
-        if self.prefix and prefix:
-            return self.prefix == prefix
-        return True
+    def find_prefix(self, prefixes: Sequence[tuple[int, int, str]]) -> tuple[int, str]:
+        for _exp, power, prefix in prefixes:
+            if self.prefix == prefix:
+                return power, prefix
+        return (1, "")
 
-    def use_symbol(self, symbol: str) -> bool:
-        if self.symbol and symbol:
-            return self.symbol == symbol
-        return True
+    def find_symbol(self, symbols: Sequence[tuple[int, str]]) -> tuple[int, str]:
+        for factor, symbol in symbols:
+            if self.symbol == symbol:
+                return factor, symbol
+        return (1, "")
 
 
 @dataclass(frozen=True)
@@ -228,16 +230,22 @@ class SIFormatter(NotationFormatter):
         return "SI"
 
     def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        if suffix.prefix:
+            power, prefix = suffix.find_prefix(_SI_SMALL_PREFIXES)
+            return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
         exponent = math.floor(math.log10(value)) - 1
         for exp, power, prefix in _SI_SMALL_PREFIXES:
-            if exponent <= exp and suffix.use_prefix(prefix):
+            if exponent <= exp:
                 return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
     def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        if suffix.prefix:
+            power, prefix = suffix.find_prefix(_SI_LARGE_PREFIXES)
+            return Formatted(value / pow(1000, power), Suffix(prefix, self.symbol))
         exponent = math.floor(math.log10(value))
         for exp, power, prefix in _SI_LARGE_PREFIXES:
-            if exponent >= exp and suffix.use_prefix(prefix):
+            if exponent >= exp:
                 return Formatted(value / pow(1000, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
@@ -273,9 +281,12 @@ class IECFormatter(NotationFormatter):
         return Formatted(value, Suffix("", self.symbol))
 
     def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        if suffix.prefix:
+            power, prefix = suffix.find_prefix(_IEC_LARGE_PREFIXES)
+            return Formatted(value / pow(1024, power), Suffix(prefix, self.symbol))
         exponent = math.floor(math.log2(value))
         for exp, power, prefix in _IEC_LARGE_PREFIXES:
-            if exponent >= exp and suffix.use_prefix(prefix):
+            if exponent >= exp:
                 return Formatted(value / pow(1024, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
@@ -385,15 +396,21 @@ class TimeFormatter(NotationFormatter):
         return "Time"
 
     def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        if suffix.prefix:
+            power, prefix = suffix.find_prefix(_TIME_SMALL_PREFIXES)
+            return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
         exponent = math.floor(math.log10(value)) - 1
         for exp, power, prefix in _TIME_SMALL_PREFIXES:
-            if exponent <= exp and suffix.use_prefix(prefix):
+            if exponent <= exp:
                 return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
     def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
+        if suffix.symbol:
+            factor, symbol = suffix.find_symbol(_TIME_LARGE_SYMBOLS)
+            return Formatted(value / factor, Suffix("", symbol or self.symbol))
         for factor, symbol in _TIME_LARGE_SYMBOLS:
-            if value >= factor and suffix.use_symbol(symbol):
+            if value >= factor:
                 return Formatted(value / factor, Suffix("", symbol))
         return Formatted(value, Suffix("", self.symbol))
 

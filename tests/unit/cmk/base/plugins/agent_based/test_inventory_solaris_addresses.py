@@ -58,10 +58,10 @@ from .utils_inventory import sort_inventory_result
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 2,
-                        "description": "bge0",
-                        "alias": "bge0",
                     },
                     inventory_columns={
+                        "description": "bge0",
+                        "alias": "bge0",
                         "speed": 0,
                         "phys_address": "0:3:ba:29:fc:cc",
                         "port_type": 6,
@@ -72,10 +72,10 @@ from .utils_inventory import sort_inventory_result
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 3,
-                        "description": "ce0",
-                        "alias": "ce0",
                     },
                     inventory_columns={
+                        "description": "ce0",
+                        "alias": "ce0",
                         "speed": 0,
                         "phys_address": "0:3:ba:7:84:5e",
                         "port_type": 6,

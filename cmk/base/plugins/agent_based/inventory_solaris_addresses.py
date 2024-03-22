@@ -110,10 +110,10 @@ def inventory_solaris_addresses(section: Section) -> InventoryResult:
             path=["networking", "interfaces"],
             key_columns={
                 "index": iface.idx,
-                "description": iface.description,
-                "alias": iface.alias,
             },
             inventory_columns={
+                "description": iface.description,
+                "alias": iface.alias,
                 "speed": 0,
                 "phys_address": iface.phys_address,
                 "port_type": 6,

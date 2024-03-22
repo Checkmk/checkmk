@@ -67,10 +67,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 1,
-                        "description": "Vlan-interface1",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "Vlan-interface1",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -83,10 +83,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 32769,
-                        "description": "port-channel 1",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "port-channel 1",
+                        "alias": "",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -99,10 +99,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49152,
-                        "description": "AUX0",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "AUX0",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "",
                         "oper_status": 1,
@@ -114,10 +114,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49153,
-                        "description": "gigabitEthernet 1/0/1",
-                        "alias": "Uplink sw-ks-01",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/1",
+                        "alias": "Uplink sw-ks-01",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -189,10 +189,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 1,
-                        "description": "Vlan-interface1",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "Vlan-interface1",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -205,10 +205,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 32769,
-                        "description": "port-channel 1",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "port-channel 1",
+                        "alias": "",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -221,10 +221,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49152,
-                        "description": "AUX0",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "AUX0",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "",
                         "oper_status": 1,
@@ -237,10 +237,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49153,
-                        "description": "gigabitEthernet 1/0/1",
-                        "alias": "Uplink sw-ks-01",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/1",
+                        "alias": "Uplink sw-ks-01",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -315,10 +315,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 1,
-                        "description": "Vlan-interface1",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "Vlan-interface1",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -332,10 +332,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 32769,
-                        "description": "port-channel 1",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "port-channel 1",
+                        "alias": "",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -349,10 +349,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49152,
-                        "description": "AUX0",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "AUX0",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "",
                         "oper_status": 1,
@@ -365,10 +365,10 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49153,
-                        "description": "gigabitEthernet 1/0/1",
-                        "alias": "Uplink sw-ks-01",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/1",
+                        "alias": "Uplink sw-ks-01",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,

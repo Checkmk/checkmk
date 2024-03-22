@@ -1203,10 +1203,10 @@ def test_inventory_lnx_if_no_bonding() -> None:
             path=["networking", "interfaces"],
             key_columns={
                 "index": 1,
-                "description": "wlp3s0",
-                "alias": "wlp3s0",
             },
             inventory_columns={
+                "description": "wlp3s0",
+                "alias": "wlp3s0",
                 "speed": 0,
                 "phys_address": "AA:AA:AA:AA:AA:AA",
                 "oper_status": 2,
@@ -1263,10 +1263,10 @@ def test_inventory_lnx_if_with_bonding() -> None:
             path=["networking", "interfaces"],
             key_columns={
                 "index": 1,
-                "description": "wlp3s0",
-                "alias": "wlp3s0",
             },
             inventory_columns={
+                "description": "wlp3s0",
+                "alias": "wlp3s0",
                 "speed": 0,
                 "phys_address": "BB:BB:BB:BB:BB:BB",
                 "oper_status": 2,

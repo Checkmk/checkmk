@@ -498,12 +498,14 @@ _MAX_NUM_LABELS: Final = 8
 
 
 def _compute_num_labels(min_y: float, max_y: float) -> tuple[NumLabelRange, NumLabelRange]:
-    min_num_labels = round(_MAX_NUM_LABELS * abs(min_y) / (abs(min_y) + abs(max_y)))
-    if min_num_labels == 0:
-        min_num_labels = 1
-    elif min_num_labels == _MAX_NUM_LABELS:
-        min_num_labels = _MAX_NUM_LABELS - 1
-    return NumLabelRange(1, min_num_labels), NumLabelRange(1, _MAX_NUM_LABELS - min_num_labels)
+    if abs(min_y) == abs(max_y):
+        return NumLabelRange(2, 4), NumLabelRange(2, 4)
+    min_max_num_labels = round(_MAX_NUM_LABELS * abs(min_y) / (abs(min_y) + abs(max_y)))
+    max_max_num_labels = _MAX_NUM_LABELS - min_max_num_labels
+    return (
+        NumLabelRange(round(min_max_num_labels / 3.0), min_max_num_labels),
+        NumLabelRange(round(max_max_num_labels / 3.0), max_max_num_labels),
+    )
 
 
 def _make_formatter(

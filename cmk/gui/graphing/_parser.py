@@ -201,38 +201,42 @@ class DecimalFormatter(NotationFormatter):
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
 
+_SI_SMALL_PREFIXES: Final = [
+    (-24, 8, "y"),
+    (-21, 7, "z"),
+    (-18, 6, "a"),
+    (-15, 5, "f"),
+    (-12, 4, "p"),
+    (-9, 3, "n"),
+    (-6, 2, "μ"),
+    (-3, 1, "m"),
+]
+_SI_LARGE_PREFIXES: Final = [
+    (24, 8, "Y"),
+    (21, 7, "Z"),
+    (18, 6, "E"),
+    (15, 5, "P"),
+    (12, 4, "T"),
+    (9, 3, "G"),
+    (6, 2, "M"),
+    (3, 1, "k"),
+]
+
+
 class SIFormatter(NotationFormatter):
     def ident(self) -> Literal["SI"]:
         return "SI"
 
     def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log10(value)) - 1
-        for exp, power, prefix in (
-            (-24, 8, "y"),
-            (-21, 7, "z"),
-            (-18, 6, "a"),
-            (-15, 5, "f"),
-            (-12, 4, "p"),
-            (-9, 3, "n"),
-            (-6, 2, "μ"),
-            (-3, 1, "m"),
-        ):
+        for exp, power, prefix in _SI_SMALL_PREFIXES:
             if exponent <= exp and suffix.use_prefix(prefix):
                 return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
     def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log10(value))
-        for exp, power, prefix in (
-            (24, 8, "Y"),
-            (21, 7, "Z"),
-            (18, 6, "E"),
-            (15, 5, "P"),
-            (12, 4, "T"),
-            (9, 3, "G"),
-            (6, 2, "M"),
-            (3, 1, "k"),
-        ):
+        for exp, power, prefix in _SI_LARGE_PREFIXES:
             if exponent >= exp and suffix.use_prefix(prefix):
                 return Formatted(value / pow(1000, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
@@ -249,6 +253,18 @@ class SIFormatter(NotationFormatter):
         return [a * factor for a in _BASIC_DECIMAL_ATOMS]
 
 
+_IEC_LARGE_PREFIXES: Final = [
+    (80, 8, "Yi"),
+    (70, 7, "Zi"),
+    (60, 6, "Ei"),
+    (50, 5, "Pi"),
+    (40, 4, "Ti"),
+    (30, 3, "Gi"),
+    (20, 2, "Mi"),
+    (10, 1, "Ki"),
+]
+
+
 class IECFormatter(NotationFormatter):
     def ident(self) -> Literal["IEC"]:
         return "IEC"
@@ -258,16 +274,7 @@ class IECFormatter(NotationFormatter):
 
     def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log2(value))
-        for exp, power, prefix in (
-            (80, 8, "Yi"),
-            (70, 7, "Zi"),
-            (60, 6, "Ei"),
-            (50, 5, "Pi"),
-            (40, 4, "Ti"),
-            (30, 3, "Gi"),
-            (20, 2, "Mi"),
-            (10, 1, "Ki"),
-        ):
+        for exp, power, prefix in _IEC_LARGE_PREFIXES:
             if exponent >= exp and suffix.use_prefix(prefix):
                 return Formatted(value / pow(1024, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
@@ -362,6 +369,15 @@ _BASIC_TIME_ATOMS: Final = [
     50 * _ONE_DAY,
     100 * _ONE_DAY,
 ]
+_TIME_SMALL_PREFIXES: Final = [
+    (-6, 2, "μ"),
+    (-3, 1, "m"),
+]
+_TIME_LARGE_SYMBOLS: Final = [
+    (_ONE_DAY, "d"),
+    (_ONE_HOUR, "h"),
+    (_ONE_MINUTE, "min"),
+]
 
 
 class TimeFormatter(NotationFormatter):
@@ -370,20 +386,13 @@ class TimeFormatter(NotationFormatter):
 
     def _preformat_small_number(self, value: int | float, suffix: Suffix) -> Formatted:
         exponent = math.floor(math.log10(value)) - 1
-        for exp, power, prefix in (
-            (-6, 2, "μ"),
-            (-3, 1, "m"),
-        ):
+        for exp, power, prefix in _TIME_SMALL_PREFIXES:
             if exponent <= exp and suffix.use_prefix(prefix):
                 return Formatted(value * pow(1000, power), Suffix(prefix, self.symbol))
         return Formatted(value, Suffix("", self.symbol))
 
     def _preformat_large_number(self, value: int | float, suffix: Suffix) -> Formatted:
-        for factor, symbol in (
-            (_ONE_DAY, "d"),
-            (_ONE_HOUR, "h"),
-            (_ONE_MINUTE, "min"),
-        ):
+        for factor, symbol in _TIME_LARGE_SYMBOLS:
             if value >= factor and suffix.use_symbol(symbol):
                 return Formatted(value / factor, Suffix("", symbol))
         return Formatted(value, Suffix("", self.symbol))

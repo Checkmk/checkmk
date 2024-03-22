@@ -547,10 +547,10 @@ metrics_from_api = MetricsFromAPI()
 
 
 def registered_metrics() -> Iterator[tuple[str, str]]:
-    for metric_id, mi in metric_info.items():
-        yield metric_id, str(mi["title"])
     for metric_id, mie in metrics_from_api.items():
         yield metric_id, str(mie["title"])
+    for metric_id, mi in metric_info.items():
+        yield metric_id, str(mi["title"])
 
 
 check_metrics: dict[str, dict[MetricName, CheckMetricEntry]] = {}

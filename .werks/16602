@@ -1,0 +1,11 @@
+Title: agent_gcp: reduced query rate
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1711370607
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+
+An exception was sometimes raised for an excessive frequency of queries to the GCP API.
+The agent now queries the GCP API once per metric.

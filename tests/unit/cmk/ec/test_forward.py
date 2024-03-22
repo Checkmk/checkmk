@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import pytest
 
 import cmk.ec.export as ec
@@ -35,41 +33,44 @@ class TestStructuredDataID:
         assert repr(StructuredDataID("enterprise@123")) == "enterprise@123"
 
     @pytest.mark.parametrize(
-        "id_, expected_result",
+        "id_",
         [
             pytest.param(
                 "syncAccuracy",
-                True,
                 id="normal id without enterprise number",
             ),
             pytest.param(
                 "Checkmk@123",
-                True,
                 id="normal id with enterprise number",
             ),
+        ],
+    )
+    def test_validate_passes(
+        self,
+        id_: str,
+    ) -> None:
+        assert StructuredDataID(id_)
+
+    @pytest.mark.parametrize(
+        "id_",
+        (
             pytest.param(
                 "Checkmk@",
-                False,
                 id="id with missing enterprise number",
             ),
             pytest.param(
                 "Checkmk@1hugo",
-                False,
                 id="id with invalid enterprise number",
             ),
             pytest.param(
                 "Checkmk@1@2",
-                False,
                 id="id with multiple @",
             ),
-        ],
+        ),
     )
-    def test_validate(
-        self,
-        id_: str,
-        expected_result: bool,
-    ) -> None:
-        assert StructuredDataID._validate(id_) is expected_result
+    def test_validate_raises(self, id_: str) -> None:
+        with pytest.raises(ValueError, match="is not an RFC 5425-conform SD-ID."):
+            assert StructuredDataID(id_)
 
 
 class TestStructuredDataValue:

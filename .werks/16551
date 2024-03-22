@@ -1,0 +1,18 @@
+Title: Crash in agent bakery GUI after cloning a site
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1711098828
+Edition: cee
+Level: 1
+Version: 2.2.0p25
+
+After cloning a site with <code>omd cp</code> or renaming it with <code>omd mv</code>, opening the agent bakery GUI
+did result in a crash, showing a message like
+
+C+:
+Internal error: '/omd/sites/SITE/share/check_mk/agents/check_mk_agent.linux' is not in the subpath of '/omd/sites/SITE_COPY/share/check_mk/agents' OR one path is relative and the other is absolute.
+C-:
+
+As a workaround, you can delete the file <code>~/var/check_mk/wato/bakery_file_status.mk</code>
+on the site.

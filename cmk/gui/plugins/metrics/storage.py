@@ -394,19 +394,19 @@ metric_info["mem_lnx_writeback_tmp"] = {
 
 metric_info["mem_lnx_total_total"] = {
     "title": _("Total virtual memory"),
-    "color": "#f0f0f0",
+    "color": "#1e8fff",
     "unit": "bytes",
 }
 
 metric_info["mem_lnx_committed_as"] = {
     "title": _("Committed memory"),
-    "color": "#40a080",
+    "color": "#32a852",
     "unit": "bytes",
 }
 
 metric_info["mem_lnx_commit_limit"] = {
     "title": _("Commit limit"),
-    "color": "#e0e0e0",
+    "color": "#ff64ff",
     "unit": "bytes",
 }
 

@@ -25,6 +25,7 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry
 
 import cmk.base.config as config
 import cmk.base.core_nagios as core_nagios
@@ -37,7 +38,7 @@ def test_format_nagios_object() -> None:
         "check_interval": "hüch",
         "_HÄÄÄÄ": "XXXXXX_YYYY",
     }
-    cfg = core_nagios._format_nagios_object("service", spec)
+    cfg = core_nagios.format_nagios_object("service", spec)
     assert isinstance(cfg, str)
     assert (
         cfg
@@ -277,7 +278,7 @@ def test_create_nagios_host_spec(
     config_cache = ts.apply(monkeypatch)
     host_attrs = config_cache.get_host_attributes(hostname)
 
-    host_spec = core_nagios._create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
+    host_spec = core_nagios.create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
     assert host_spec == result
 
 
@@ -334,16 +335,13 @@ def test_dump_precompiled_hostcheck(
     hostname = HostName("localhost")
     ts = Scenario()
     ts.add_host(hostname)
+    ts.set_autochecks(
+        hostname,
+        [AutocheckEntry(CheckPluginName("uptime"), None, {}, {})],
+    )
     config_cache = ts.apply(monkeypatch)
 
-    # Ensure a host check is created
-    monkeypatch.setattr(
-        core_nagios,
-        "_get_needed_plugin_names",
-        lambda *args, **kw: (set(), {CheckPluginName("uptime")}, set()),
-    )
-
-    host_check = core_nagios._dump_precompiled_hostcheck(
+    host_check = core_nagios.dump_precompiled_hostcheck(
         config_cache,
         config_path,
         hostname,
@@ -359,7 +357,7 @@ def test_dump_precompiled_hostcheck_without_check_mk_service(
     ts = Scenario()
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
-    host_check = core_nagios._dump_precompiled_hostcheck(
+    host_check = core_nagios.dump_precompiled_hostcheck(
         config_cache,
         config_path,
         hostname,
@@ -371,7 +369,7 @@ def test_dump_precompiled_hostcheck_not_existing_host(
     monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
 ) -> None:
     config_cache = Scenario().apply(monkeypatch)
-    host_check = core_nagios._dump_precompiled_hostcheck(
+    host_check = core_nagios.dump_precompiled_hostcheck(
         config_cache,
         config_path,
         HostName("not-existing"),
@@ -584,7 +582,7 @@ def test_create_nagios_servicedefs_active_check(
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios._create_nagios_servicedefs(
+    core_nagios.create_nagios_servicedefs(
         cfg, config_cache, hostname, host_attrs, {}, license_counter
     )
 
@@ -683,7 +681,7 @@ def test_create_nagios_servicedefs_with_warnings(
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios._create_nagios_servicedefs(
+    core_nagios.create_nagios_servicedefs(
         cfg, config_cache, HostName("my_host"), host_attrs, {}, license_counter
     )
 
@@ -737,7 +735,7 @@ def test_create_nagios_servicedefs_omit_service(
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios._create_nagios_servicedefs(
+    core_nagios.create_nagios_servicedefs(
         cfg, config_cache, hostname, host_attrs, {}, license_counter
     )
 
@@ -798,7 +796,7 @@ def test_create_nagios_servicedefs_invalid_args(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
 
-    core_nagios._create_nagios_servicedefs(
+    core_nagios.create_nagios_servicedefs(
         cfg, config_cache, hostname, host_attrs, {}, license_counter
     )
 
@@ -870,10 +868,10 @@ def test_create_nagios_config_commands(
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
-    core_nagios._create_nagios_servicedefs(
+    core_nagios.create_nagios_servicedefs(
         cfg, config_cache, hostname, host_attrs, {}, license_counter
     )
-    core_nagios._create_nagios_config_commands(cfg)
+    core_nagios.create_nagios_config_commands(cfg)
 
     assert license_counter["services"] == 1
     assert outfile.getvalue() == expected_result

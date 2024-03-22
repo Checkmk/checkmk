@@ -195,7 +195,7 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=Metric(quantity),
                 line_type=line_type,
-                title=str(metrics_from_api[quantity]["title"]),
+                title=str(get_extended_metric_info(quantity)["title"]),
             )
         case metrics.Constant():
             return MetricDefinition(
@@ -208,21 +208,21 @@ def _parse_quantity(
                 title=str(quantity.title.localize(_)),
             )
         case metrics.WarningOf():
-            metric_ = metrics_from_api[quantity.metric_name]
+            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
                 title=str(metric_["title"]),
             )
         case metrics.CriticalOf():
-            metric_ = metrics_from_api[quantity.metric_name]
+            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
                 title=str(metric_["title"]),
             )
         case metrics.MinimumOf():
-            metric_ = metrics_from_api[quantity.metric_name]
+            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=MinimumOf(
                     Metric(quantity.metric_name),
@@ -232,7 +232,7 @@ def _parse_quantity(
                 title=str(metric_["title"]),
             )
         case metrics.MaximumOf():
-            metric_ = metrics_from_api[quantity.metric_name]
+            metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=MaximumOf(
                     Metric(quantity.metric_name),

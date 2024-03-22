@@ -32,7 +32,7 @@ metric_file_pmd_mapped = Metric(
     name="file_pmd_mapped",
     title=Title("Page cache mapped into userspace with huge pages"),
     unit=UNIT_BYTES,
-    color=Color.PURPLE,
+    color=Color.BLUE,
 )
 
 metric_percpu = Metric(
@@ -46,14 +46,14 @@ metric_shmem_huge_pages = Metric(
     name="shmem_huge_pages",
     title=Title("Shared memory and tmpfs allocated with huge pages"),
     unit=UNIT_BYTES,
-    color=Color.PURPLE,
+    color=Color.GREEN,
 )
 
 metric_shmem_pmd_mapped = Metric(
     name="shmem_pmd_mapped",
     title=Title("Shared memory mapped into userspace with huge pages"),
     unit=UNIT_BYTES,
-    color=Color.PURPLE,
+    color=Color.ORANGE,
 )
 
 metric_kreclaimable = Metric(
@@ -326,5 +326,16 @@ graph_caches = Graph(
         "swap_cached",
         "mem_lnx_buffers",
         "mem_lnx_cached",
+    ],
+)
+
+graph_huge_pages = Graph(
+    name="huge_pages",
+    title=Title("Huge pages"),
+    simple_lines=[
+        "file_huge_pages",
+        "file_pmd_mapped",
+        "shmem_huge_pages",
+        "shmem_pmd_mapped",
     ],
 )

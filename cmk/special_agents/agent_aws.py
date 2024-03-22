@@ -1174,8 +1174,11 @@ class ReservationUtilization(AWSSection):
             },
             "Granularity": granularity_name,
         }
-
-        response = self._client.get_reservation_utilization(**params)  # type: ignore[attr-defined]
+        try:
+            response = self._client.get_reservation_utilization(**params)  # type: ignore[attr-defined]
+        except self._client.exceptions.DataUnavailableException:
+            logging.warning("ReservationUtilization: No data available")
+            return []
         return self._get_response_content(response, "UtilizationsByTime")
 
     def _compute_content(

@@ -106,10 +106,10 @@ def inventorize_interfaces(
             path=["networking", "interfaces"],
             key_columns={
                 "index": if_index_nr,
-                "description": interface.descr,
-                "alias": interface.alias,
             },
             inventory_columns={
+                "description": interface.descr,
+                "alias": interface.alias,
                 "speed": interface.speed,
                 "phys_address": interface.phys_address,
                 **(

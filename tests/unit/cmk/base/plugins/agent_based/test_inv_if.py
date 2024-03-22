@@ -771,10 +771,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 1,
-                        "description": "Vlan-interface1",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "Vlan-interface1",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -788,10 +788,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 32769,
-                        "description": "port-channel 1",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "port-channel 1",
+                        "alias": "",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -805,10 +805,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49152,
-                        "description": "AUX0",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "AUX0",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "",
                         "oper_status": 1,
@@ -821,10 +821,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49153,
-                        "description": "gigabitEthernet 1/0/1",
-                        "alias": "Uplink sw-ks-01",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/1",
+                        "alias": "Uplink sw-ks-01",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -838,10 +838,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49154,
-                        "description": "gigabitEthernet 1/0/2",
-                        "alias": "Uplink sw-ks-01",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/2",
+                        "alias": "Uplink sw-ks-01",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -855,10 +855,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49155,
-                        "description": "gigabitEthernet 1/0/3",
-                        "alias": "pve-muc",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/3",
+                        "alias": "pve-muc",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -872,10 +872,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49156,
-                        "description": "gigabitEthernet 1/0/4",
-                        "alias": "pve-muc-ipmi",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/4",
+                        "alias": "pve-muc-ipmi",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -889,10 +889,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49157,
-                        "description": "gigabitEthernet 1/0/5",
-                        "alias": "monitoring",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/5",
+                        "alias": "monitoring",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -906,10 +906,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49158,
-                        "description": "gigabitEthernet 1/0/6",
-                        "alias": "monitoring-ipmi",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/6",
+                        "alias": "monitoring-ipmi",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -923,10 +923,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49159,
-                        "description": "gigabitEthernet 1/0/7",
-                        "alias": "pve-muc",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/7",
+                        "alias": "pve-muc",
                         "speed": 10000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -940,10 +940,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49160,
-                        "description": "gigabitEthernet 1/0/8",
-                        "alias": "pve-muc1-ipmi",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/8",
+                        "alias": "pve-muc1-ipmi",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -957,10 +957,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49161,
-                        "description": "gigabitEthernet 1/0/9",
-                        "alias": "esxi",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/9",
+                        "alias": "esxi",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -974,10 +974,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49162,
-                        "description": "gigabitEthernet 1/0/10",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/10",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -991,10 +991,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49163,
-                        "description": "gigabitEthernet 1/0/11",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/11",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1008,10 +1008,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49164,
-                        "description": "gigabitEthernet 1/0/12",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/12",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1025,10 +1025,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49165,
-                        "description": "gigabitEthernet 1/0/13",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/13",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1042,10 +1042,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49166,
-                        "description": "gigabitEthernet 1/0/14",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/14",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1059,10 +1059,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49167,
-                        "description": "gigabitEthernet 1/0/15",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/15",
+                        "alias": "",
                         "speed": 1000000000,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 1,
@@ -1076,10 +1076,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49168,
-                        "description": "gigabitEthernet 1/0/16",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/16",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1093,10 +1093,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49169,
-                        "description": "gigabitEthernet 1/0/17",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/17",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1110,10 +1110,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49170,
-                        "description": "gigabitEthernet 1/0/18",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/18",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1127,10 +1127,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49171,
-                        "description": "gigabitEthernet 1/0/19",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/19",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1144,10 +1144,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49172,
-                        "description": "gigabitEthernet 1/0/20",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/20",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1161,10 +1161,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49173,
-                        "description": "gigabitEthernet 1/0/21",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/21",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1178,10 +1178,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49174,
-                        "description": "gigabitEthernet 1/0/22",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/22",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1195,10 +1195,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49175,
-                        "description": "gigabitEthernet 1/0/23",
-                        "alias": " ",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/23",
+                        "alias": " ",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1212,10 +1212,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49176,
-                        "description": "gigabitEthernet 1/0/24",
-                        "alias": " ",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/24",
+                        "alias": " ",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1229,10 +1229,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49177,
-                        "description": "gigabitEthernet 1/0/25",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/25",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1246,10 +1246,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49178,
-                        "description": "gigabitEthernet 1/0/26",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/26",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1263,10 +1263,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49179,
-                        "description": "gigabitEthernet 1/0/27",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/27",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1280,10 +1280,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49180,
-                        "description": "gigabitEthernet 1/0/28",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/28",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "oper_status": 2,
@@ -1297,10 +1297,10 @@ def test_inventory_if() -> None:
                     path=["networking", "interfaces"],
                     key_columns={
                         "index": 49181,
-                        "description": "gigabitEthernet 1/0/28",
-                        "alias": "",
                     },
                     inventory_columns={
+                        "description": "gigabitEthernet 1/0/28",
+                        "alias": "",
                         "speed": 0,
                         "phys_address": "74:DA:88:58:16:11",
                         "port_type": 6,

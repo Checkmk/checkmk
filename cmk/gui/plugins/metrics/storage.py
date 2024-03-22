@@ -1320,12 +1320,10 @@ graph_info["mem_shrinking"] = {
 # Linux memory graphs. They are a lot...
 
 graph_info["ram_swap_overview"] = {
-    "title": _("RAM + Swap overview"),
+    "title": _("RAM + swap overview"),
     "metrics": [
-        ("mem_total", "line"),
-        ("swap_total", "line"),
-        ("mem_used", "line"),
-        ("swap_used", "line"),
+        ("mem_total,swap_total,+#87cefa", "area", _("RAM + swap installed")),
+        ("mem_used,swap_used,+#37fa37", "line", _("RAM + swap used")),
     ],
 }
 

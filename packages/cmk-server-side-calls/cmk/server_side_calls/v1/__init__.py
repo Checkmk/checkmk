@@ -9,15 +9,18 @@ from typing import Any
 from ._active_checks import ActiveCheckCommand, ActiveCheckConfig
 from ._special_agents import SpecialAgentCommand, SpecialAgentConfig
 from ._utils import (
+    EnvProxy,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
     IPv4Config,
     IPv6Config,
     noop_parser,
+    NoProxy,
     parse_http_proxy,
     replace_macros,
     Secret,
+    URLProxy,
 )
 
 
@@ -49,14 +52,17 @@ __all__ = [
     "ActiveCheckConfig",
     "ActiveCheckCommand",
     "parse_http_proxy",
+    "EnvProxy",
     "HostConfig",
     "HTTPProxy",
     "IPAddressFamily",
     "IPv4Config",
     "IPv6Config",
     "noop_parser",
+    "NoProxy",
     "replace_macros",
     "Secret",
     "SpecialAgentCommand",
     "SpecialAgentConfig",
+    "URLProxy",
 ]

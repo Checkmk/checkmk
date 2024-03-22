@@ -224,6 +224,54 @@ class HTTPProxy:
     url: str
 
 
+class URLProxy(NamedTuple):
+    """
+    Surrogate for a HTTP proxy defined by the user
+
+    This is a surrogate for a HTTP proxy defined globally or explicitly in the setup.
+
+    Example:
+
+        >>> proxy = URLProxy('proxy.com')  # don't create it, it's passed by the backend
+        >>> if isinstance(proxy, URLProxy):
+        ...     argv = ["--proxy", proxy.url]
+
+    """
+
+    type: Literal["url_proxy"] = "url_proxy"
+    url: str = ""
+
+
+class EnvProxy(NamedTuple):
+    """
+    Surrogate for a HTTP proxy defined in the process environment
+
+    Example:
+
+        >>> proxy = EnvProxy()  # don't create it, it's passed by the backend
+        >>> if isinstance(proxy, EnvProxy):
+        ...     argv = ["--use-environment-proxy"]
+
+    """
+
+    type: Literal["env_proxy"] = "env_proxy"
+
+
+class NoProxy(NamedTuple):
+    """
+    Surrogate for a connection without proxy
+
+    Example:
+
+        >>> proxy = NoProxy()  # don't create it, it's passed by the backend
+        >>> if isinstance(proxy, NoProxy):
+        ...     argv = ["--no-proxy"]
+
+    """
+
+    type: Literal["no_proxy"] = "no_proxy"
+
+
 class Secret(NamedTuple):
     # it seems that NamedTuple is the most reasonable way to create a pydantic compatible class
     # without adding a dependency on pydantic

@@ -14,9 +14,9 @@ in adhoc mode (about 75%).
 import itertools
 import os
 import py_compile
+import re
 import socket
 import sys
-from io import StringIO
 from pathlib import Path
 
 import cmk.utils.config_path
@@ -26,7 +26,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 
 from cmk.checkengine.checking import CheckPluginName
@@ -40,6 +40,8 @@ from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import IPStackConfig
 
 from cmk.discover_plugins import PluginLocation
+
+from ._host_check_config import HostCheckConfig
 
 
 class HostCheckStore:
@@ -163,110 +165,24 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     ):
         return None
 
-    output = StringIO()
-    output.write("#!/usr/bin/env python3\n")
-    output.write("# encoding: utf-8\n\n")
-
-    output.write("import logging\n")
-    output.write("import sys\n\n")
-
-    if verify_site_python:
-        output.write("if not sys.executable.startswith('/omd'):\n")
-        output.write('    sys.stdout.write("ERROR: Only executable with sites python\\n")\n')
-        output.write("    sys.exit(2)\n\n")
-
-    # Self-compile: replace symlink with precompiled python-code, if
-    # we are run for the first time
-    if config.delay_precompile:
-        output.write(
-            """
-import os
-if os.path.islink(%(dst)r):
-    import py_compile
-    os.remove(%(dst)r)
-    py_compile.compile(%(src)r, %(dst)r, %(dst)r, True)
-    os.chmod(%(dst)r, 0o700)
-
-"""
-            % {
-                "src": str(HostCheckStore.host_check_source_file_path(config_path, hostname)),
-                "dst": str(HostCheckStore.host_check_file_path(config_path, hostname)),
-            }
-        )
-
-    # Remove precompiled directory from sys.path. Leaving it in the path
-    # makes problems when host names (name of precompiled files) are equal
-    # to python module names like "random"
-    output.write("sys.path.pop(0)\n")
-
-    output.write("import cmk.utils.log\n")
-    output.write("import cmk.utils.debug\n")
-    output.write("from cmk.utils.exceptions import MKTerminate\n")
-    output.write("from cmk.utils.config_path import LATEST_CONFIG\n")
-    output.write("\n")
-    output.write("import cmk.base.utils\n")
-    output.write("import cmk.base.config as config\n")
-    output.write("from cmk.discover_plugins import PluginLocation\n")
-    output.write("import cmk.base.obsolete_output as out\n")
-    output.write("from cmk.utils.log import console\n")
-    output.write("from cmk.base.api.agent_based.register import register_plugin_by_type\n")
-    output.write("import cmk.base.check_api as check_api\n")
-    output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
-    output.write("from cmk.checkengine.submitters import get_submitter\n")
-    output.write("\n")
-
     locations = _get_needed_agent_based_locations(
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
     )
-    for module in {l.module for l in locations}:
-        output.write("import %s\n" % module)
-        console.verbose(" %s%s%s", tty.green, module, tty.normal, stream=sys.stderr)
-    for location in (l for l in locations if l.name is not None):
-        output.write(f"register_plugin_by_type({location!r}, {location.module}.{location.name})\n")
 
-    # Register default Checkmk signal handler
-    output.write("cmk.base.utils.register_sigint_handler()\n")
-
-    # initialize global variables
-    output.write(
-        """
-# very simple commandline parsing: only -v (once or twice) and -d are supported
-
-cmk.utils.log.setup_console_logging()
-logger = logging.getLogger("cmk.base")
-
-# TODO: This is not really good parsing, because it not cares about syntax like e.g. "-nv".
-#       The later regular argument parsing is handling this correctly. Try to clean this up.
-cmk.utils.log.logger.setLevel(cmk.utils.log.verbosity_to_log_level(len([ a for a in sys.argv if a in [ "-v", "--verbose"] ])))
-
-if '-d' in sys.argv:
-    cmk.utils.debug.enable()
-
-"""
-    )
-
-    file_list = sorted(_get_legacy_check_file_names_to_load(needed_legacy_check_plugin_names))
-    formatted_file_list = (
-        "\n    %s,\n" % ",\n    ".join("%r" % n for n in file_list) if file_list else ""
-    )
-    output.write(
-        "config.load_checks(check_api.get_check_api_context, [%s])\n" % formatted_file_list
-    )
+    checks_to_load = sorted(_get_legacy_check_file_names_to_load(needed_legacy_check_plugin_names))
 
     for check_plugin_name in sorted(needed_legacy_check_plugin_names):
         console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
 
-    output.write("config.load_packed_config(LATEST_CONFIG)\n")
-
     # IP addresses
-    (
-        needed_ipaddresses,
-        needed_ipv6addresses,
-    ) = (
-        {},
-        {},
-    )
+    # FIXME:
+    # What we construct here does not match what we need to assign it to `config.ipaddresses` and
+    # `config.ipv6addresses` later.
+    # But maybe it is in fact not a problem, because `config.lookup_ip_address` happens to never
+    # return `None` the way we call it here.
+    needed_ipaddresses: dict[HostName, HostAddress | None] = {}
+    needed_ipv6addresses: dict[HostName, HostAddress | None] = {}
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
         for node in config_cache.nodes(hostname):
@@ -306,40 +222,25 @@ if '-d' in sys.argv:
                 config_cache, hostname, family=socket.AddressFamily.AF_INET6
             )
 
-    output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
-    output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)
-    output.write("try:\n")
-    output.write("    # mode_check is `mode --check hostname`\n")
-    output.write("    from cmk.base.modes.check_mk import mode_check\n")
-    output.write("    sys.exit(\n")
-    output.write("        mode_check(\n")
-    output.write("            get_submitter,\n")
-    output.write("            {},\n")
-    output.write(f"           [{hostname!r}],\n")
-    output.write("            active_check_handler=lambda *args: None,\n")
-    output.write("            keepalive=False,\n")
-    output.write("        )\n")
-    output.write("    )\n")
-    output.write("except MKTerminate:\n")
-    output.write("    out.output('<Interrupted>\\n', stream=sys.stderr)\n")
-    output.write("    sys.exit(1)\n")
-    output.write("except SystemExit as e:\n")
-    output.write("    sys.exit(e.code)\n")
-    output.write("except Exception as e:\n")
-    output.write("    import traceback, pprint\n")
-
-    # status output message
-    output.write(
-        '    sys.stdout.write("UNKNOWN - Exception in precompiled check: %s (details in long output)\\n" % e)\n'
+    # assign the values here, just to let the type checker do its job
+    host_check_config = HostCheckConfig(
+        delay_precompile=bool(config.delay_precompile),
+        src=str(HostCheckStore.host_check_source_file_path(config_path, hostname)),
+        dst=str(HostCheckStore.host_check_file_path(config_path, hostname)),
+        verify_site_python=verify_site_python,
+        locations=locations,
+        checks_to_load=checks_to_load,
+        ipaddresses=needed_ipaddresses,  # type: ignore[arg-type]  # see FIXME above.
+        ipv6addresses=needed_ipv6addresses,  # type: ignore[arg-type]  # see FIXME above.
+        hostname=hostname,
     )
 
-    # generate traceback for long output
-    output.write('    sys.stdout.write("Traceback: %s\\n" % traceback.format_exc())\n')
-
-    output.write("\n")
-    output.write("    sys.exit(3)\n")
-
-    return output.getvalue()
+    return re.sub(
+        f" = {HostCheckConfig.__name__}(.*\n)",
+        f" = {host_check_config!r}",
+        (Path(__file__).parent / "_host_check_template.py").read_text(),
+        re.DOTALL,
+    )
 
 
 def _get_needed_plugin_names(

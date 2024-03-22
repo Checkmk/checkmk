@@ -1,0 +1,10 @@
+Title: Windows agent obtains winperf data using separate process
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1711121597
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+This change fixes regression introduced in 2.1.0p2

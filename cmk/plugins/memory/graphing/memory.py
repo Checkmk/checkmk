@@ -18,190 +18,196 @@ from cmk.graphing.v1.metrics import (
 )
 from cmk.graphing.v1.perfometers import Closed, FocusRange, Perfometer
 
-PERCENT = Unit(DecimalNotation("%"))
-
-BYTES = Unit(IECNotation("B"), StrictPrecision(2))
+UNIT_PERCENTAGE = Unit(DecimalNotation("%"))
+UNIT_BYTES = Unit(IECNotation("B"), StrictPrecision(2))
 
 metric_file_huge_pages = Metric(
     name="file_huge_pages",
     title=Title("File huge pages"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_file_pmd_mapped = Metric(
     name="file_pmd_mapped",
     title=Title("Page cache mapped into userspace with huge pages"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_percpu = Metric(
     name="percpu",
     title=Title("Memory allocated to percpu"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_shmem_huge_pages = Metric(
     name="shmem_huge_pages",
     title=Title("Shared memory and tmpfs allocated with huge pages"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_shmem_pmd_mapped = Metric(
     name="shmem_pmd_mapped",
     title=Title("Shared memory mapped into userspace with huge pages"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_kreclaimable = Metric(
     name="kreclaimable",
     title=Title("Reclaimable kernel allocations"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_sreclaimable = Metric(
     name="sreclaimable",
     title=Title("Reclaimable slab"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_sunreclaim = Metric(
     name="sunreclaim",
     title=Title("Unreclaimable slab"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_mem_used_percent = Metric(
     name="mem_used_percent",
-    title=Title("RAM used"),
-    unit=PERCENT,
+    title=Title("RAM usage"),
+    unit=UNIT_PERCENTAGE,
     color=Color.BLUE,
 )
 
 metric_mem_used_percent_avg = Metric(
     name="mem_used_percent_avg",
-    title=Title("RAM used (averaged)"),
-    unit=PERCENT,
+    title=Title("RAM usage (averaged)"),
+    unit=UNIT_PERCENTAGE,
     color=Color.LIGHT_BLUE,
 )
 
 metric_mem_total = Metric(
     name="mem_total",
     title=Title("RAM installed"),
-    unit=BYTES,
-    color=Color.DARK_BLUE,
+    unit=UNIT_BYTES,
+    color=Color.BLUE,
 )
 
 metric_mem_used = Metric(
     name="mem_used",
     title=Title("RAM used"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_mem_used_avg = Metric(
     name="mem_used_avg",
     title=Title("RAM used (averaged)"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.LIGHT_PURPLE,
 )
 
 metric_mem_free = Metric(
     name="mem_free",
     title=Title("RAM free"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.GREEN,
 )
 
 metric_mem_free_avg = Metric(
     name="mem_free_avg",
     title=Title("RAM free (averaged)"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.LIGHT_GREEN,
 )
 
 metric_pagefile_used_percent = Metric(
     name="pagefile_used_percent",
     title=Title("Commit charge"),
-    unit=PERCENT,
+    unit=UNIT_PERCENTAGE,
     color=Color.BLUE,
 )
 
 metric_pagefile_used_percent_avg = Metric(
     name="pagefile_used_percent_avg",
     title=Title("Commit charge (averaged)"),
-    unit=PERCENT,
+    unit=UNIT_PERCENTAGE,
     color=Color.LIGHT_BLUE,
 )
 
 metric_pagefile_used = Metric(
     name="pagefile_used",
     title=Title("Commit charge"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.PURPLE,
 )
 
 metric_pagefile_used_avg = Metric(
     name="pagefile_used_avg",
     title=Title("Commit charge (averaged)"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.LIGHT_PURPLE,
 )
 
 metric_pagefile_free = Metric(
     name="pagefile_free",
     title=Title("Commitable memory"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.GREEN,
 )
 
 metric_pagefile_free_avg = Metric(
     name="pagefile_free_avg",
     title=Title("Commitable memory (averaged)"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.LIGHT_GREEN,
 )
 
 metric_swap_total = Metric(
     name="swap_total",
     title=Title("Swap installed"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.LIGHT_PINK,
 )
 
 metric_swap_used = Metric(
     name="swap_used",
     title=Title("Swap used"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.DARK_GREEN,
 )
 
 metric_swap_cached = Metric(
     name="swap_cached",
     title=Title("Swap cached"),
-    unit=BYTES,
-    color=Color.LIGHT_CYAN,
+    unit=UNIT_BYTES,
+    color=Color.LIGHT_GREEN,
 )
 
-metric_buffers = Metric(
-    name="buffers",
+metric_mem_lnx_buffers = Metric(
+    name="mem_lnx_buffers",
     title=Title("Buffered memory"),
-    unit=BYTES,
-    color=Color.LIGHT_CYAN,
+    unit=UNIT_BYTES,
+    color=Color.CYAN,
 )
 
-metric_slab = Metric(
-    name="slab",
+metric_mem_lnx_slab = Metric(
+    name="mem_lnx_slab",
     title=Title("Slab (Various smaller caches)"),
-    unit=BYTES,
+    unit=UNIT_BYTES,
     color=Color.LIGHT_PURPLE,
+)
+
+metric_mem_lnx_cached = Metric(
+    name="mem_lnx_cached",
+    title=Title("Cached memory"),
+    unit=UNIT_BYTES,
+    color=Color.BLUE,
 )
 
 graph_mem_percent = Graph(
@@ -223,7 +229,7 @@ graph_mem_absolute = Graph(
     name="mem_absolute",
     title=Title("RAM"),
     simple_lines=(
-        Sum(Title("Total RAM"), Color.BLACK, ("mem_used", "mem_free")),
+        Sum(Title("Total RAM"), Color.DARK_BLUE, ("mem_used", "mem_free")),
         WarningOf("mem_used"),
         CriticalOf("mem_used"),
     ),
@@ -237,7 +243,7 @@ graph_mem_absolute_avg = Graph(
     name="mem_absolute_avg",
     title=Title("RAM (averaged)"),
     simple_lines=(
-        Sum(Title("Total RAM"), Color.BLACK, ("mem_used_avg", "mem_free_avg")),
+        Sum(Title("Total RAM"), Color.DARK_BLUE, ("mem_used_avg", "mem_free_avg")),
         WarningOf("mem_used_avg"),
         CriticalOf("mem_used_avg"),
     ),
@@ -266,7 +272,7 @@ graph_pagefile_absolute = Graph(
     name="pagefile_absolute",
     title=Title("Commit charge"),
     simple_lines=(
-        Sum(Title("Total commitable memory"), Color.BLACK, ("pagefile_used", "pagefile_free")),
+        Sum(Title("Total commitable memory"), Color.DARK_BLUE, ("pagefile_used", "pagefile_free")),
         WarningOf("pagefile_used"),
         CriticalOf("pagefile_used"),
     ),
@@ -282,7 +288,7 @@ graph_pagefile_absolute_avg = Graph(
     simple_lines=(
         Sum(
             Title("Total commitable memory"),
-            Color.BLACK,
+            Color.DARK_BLUE,
             ("pagefile_used_avg", "pagefile_free_avg"),
         ),
         WarningOf("pagefile_used_avg"),
@@ -310,4 +316,15 @@ perfometer_mem_used = Perfometer(
     name="mem_used",
     focus_range=FocusRange(Closed(0), Closed("mem_total")),
     segments=["mem_used"],
+)
+
+graph_caches = Graph(
+    name="caches",
+    title=Title("Caches"),
+    simple_lines=[
+        "mem_lnx_slab",
+        "swap_cached",
+        "mem_lnx_buffers",
+        "mem_lnx_cached",
+    ],
 )

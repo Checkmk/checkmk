@@ -212,7 +212,7 @@ metric_mem_lnx_cached = Metric(
 
 graph_mem_percent = Graph(
     name="mem_percent",
-    title=Title("RAM used"),
+    title=Title("RAM usage"),
     minimal_range=MinimalRange(0, 100),
     simple_lines=(
         "mem_used_percent",
@@ -222,6 +222,7 @@ graph_mem_percent = Graph(
         WarningOf("mem_used_percent_avg"),
         CriticalOf("mem_used_percent_avg"),
     ),
+    optional=["mem_used_percent_avg"],
 )
 
 

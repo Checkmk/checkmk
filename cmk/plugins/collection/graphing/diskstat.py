@@ -142,6 +142,29 @@ graph_disk_utilization = graphs.Graph(
     ],
 )
 
+graph_disk_throughput = graphs.Bidirectional(
+    name="disk_throughput",
+    title=Title("Disk throughput"),
+    lower=graphs.Graph(
+        name="disk_read_throughput",
+        title=Title("Read throughput"),
+        compound_lines=["disk_read_throughput"],
+        simple_lines=[
+            metrics.WarningOf("disk_read_throughput"),
+            metrics.CriticalOf("disk_read_throughput"),
+        ],
+    ),
+    upper=graphs.Graph(
+        name="disk_write_throughput",
+        title=Title("Write throughput"),
+        compound_lines=["disk_write_throughput"],
+        simple_lines=[
+            metrics.WarningOf("disk_write_throughput"),
+            metrics.CriticalOf("disk_write_throughput"),
+        ],
+    ),
+)
+
 graph_disk_io_operations = graphs.Bidirectional(
     name="disk_io_operations",
     title=Title("Disk I/O operations"),
@@ -184,28 +207,5 @@ graph_average_end_to_end_wait_time = graphs.Bidirectional(
         name="disk_average_read_wait",
         title=Title("Average end to end wait time"),
         compound_lines=["disk_average_read_wait"],
-    ),
-)
-
-graph_disk_throughput = graphs.Bidirectional(
-    name="disk_throughput",
-    title=Title("Disk throughput"),
-    lower=graphs.Graph(
-        name="disk_read_throughput",
-        title=Title("Read throughput"),
-        compound_lines=["disk_read_throughput"],
-        simple_lines=[
-            metrics.WarningOf("disk_read_throughput"),
-            metrics.CriticalOf("disk_read_throughput"),
-        ],
-    ),
-    upper=graphs.Graph(
-        name="disk_write_throughput",
-        title=Title("Write throughput"),
-        compound_lines=["disk_write_throughput"],
-        simple_lines=[
-            metrics.WarningOf("disk_write_throughput"),
-            metrics.CriticalOf("disk_write_throughput"),
-        ],
     ),
 )

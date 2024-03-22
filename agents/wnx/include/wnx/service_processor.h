@@ -702,6 +702,8 @@ void WaitForAsyncPluginThreads(std::chrono::duration<T, B> allowed_wait) {
               PluginEntry::threadCount(), (allowed_wait - wait_time).count());
 }
 
+std::string FindWinPerfExe(std::string_view exe_name);
+
 }  // namespace cma::srv
 
 #endif  // SERVICE_PROCESSOR_H

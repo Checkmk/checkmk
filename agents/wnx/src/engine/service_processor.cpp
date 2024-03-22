@@ -209,39 +209,35 @@ void ServiceProcessor::stopTestingMainThread() {
     thread_.join();
 }
 
-namespace {
-std::string FindWinPerfExe() {
-    auto exe_name = cfg::groups::g_winperf.exe();
-
-    if (tools::IsEqual(exe_name, "agent")) {
-        XLOG::t.i("Looking for default agent");
-        const fs::path f{cfg::GetRootDir()};
-        std::vector names{f / cfg::kDefaultAppFileName};
-
-        if constexpr (tgt::Is64bit()) {
-            names.emplace_back(f / "check_mk_service64.exe");
-        }
-
-        names.emplace_back(f / "check_mk_service32.exe");
-
-        exe_name.clear();
-        for (const auto &name : names) {
-            std::error_code ec;
-            if (fs::exists(name, ec)) {
-                XLOG::d.i("Using file '{}' for winperf", name);
-                break;
-            }
-        }
-        if (exe_name.empty()) {
-            XLOG::l.crit("In folder '{}' not found binaries to exec winperf");
-            return {};
-        }
-    } else {
+std::string FindWinPerfExe(std::string_view exe_name) {
+    if (!tools::IsEqual(exe_name, "agent")) {
         XLOG::d.i("Looking for agent '{}'", exe_name);
+        return std::string{exe_name};
     }
-    return exe_name;
+
+    XLOG::t.i("Looking for default agent");
+    const fs::path f{cfg::GetRootDir()};
+    std::vector names{f / cfg::kDefaultAppFileName};
+
+    if constexpr (tgt::Is64bit()) {
+        names.emplace_back(f / "check_mk_service64.exe");
+    }
+
+    names.emplace_back(f / "check_mk_service32.exe");
+
+    for (const auto &name : names) {
+        std::error_code ec;
+        if (fs::exists(name, ec)) {
+            XLOG::d.i("Using file '{}' for winperf", name);
+            return name.string();
+        }
+    }
+
+    XLOG::l.crit("In folder '{}' not found binaries to exec winperf");
+    return {};
 }
 
+namespace {
 std::wstring GetWinPerfLogFile() {
     return cfg::groups::g_winperf.isTrace()
                ? (fs::path{cfg::GetLogDir()} / "winperf.log").wstring()
@@ -257,7 +253,8 @@ void ServiceProcessor::kickWinPerf(AnswerId answer_id,
         cmd_line = L"ip:" + wtools::ConvertToUtf16(ip_addr) + L" " + cmd_line;
     }
 
-    auto exe_name = wtools::ConvertToUtf16(FindWinPerfExe());
+    auto exe_name =
+        wtools::ConvertToUtf16(FindWinPerfExe(cfg::groups::g_winperf.exe()));
     const auto timeout = cfg::groups::g_winperf.timeout();
     auto prefix = wtools::ConvertToUtf16(cfg::groups::g_winperf.prefix());
 

@@ -6,7 +6,7 @@
 import importlib
 import sys
 import traceback
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
@@ -21,12 +21,12 @@ from .metrics import register_pre_21_plugin_api
 
 
 @contextmanager
-def suppress_module_not_found(name: str) -> Iterator[None]:
-    """Specialized to contextlib.supress with additional module name matching"""
+def suppress_module_not_found(names: Sequence[str]) -> Iterator[None]:
+    """Specialized contextlib.supress with additional module name matching"""
     try:
         yield
     except ModuleNotFoundError as e:
-        if e.name != name:
+        if e.name not in names:
             raise
 
 
@@ -35,27 +35,27 @@ def suppress_module_not_found(name: str) -> Iterator[None]:
 # possibly a third time over the plugin discovery mechanism.
 import cmk.gui.plugins.main_modules  # pylint: disable=cmk-module-layer-violation
 
-with suppress_module_not_found("cmk.gui.raw"):
+with suppress_module_not_found(("cmk.gui.raw", "cmk.gui.raw.registration")):
     import cmk.gui.raw.registration
 
     cmk.gui.raw.registration.register()
 
-with suppress_module_not_found("cmk.gui.cee"):
+with suppress_module_not_found(("cmk.gui.cee", "cmk.gui.cee.registration")):
     import cmk.gui.cee.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cee.registration.register()
 
-with suppress_module_not_found("cmk.gui.cme"):
+with suppress_module_not_found(("cmk.gui.cme", "cmk.gui.cme.registration")):
     import cmk.gui.cme.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cme.registration.register()
 
-with suppress_module_not_found("cmk.gui.cce"):
+with suppress_module_not_found(("cmk.gui.cce", "cmk.gui.cce.registration")):
     import cmk.gui.cce.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cce.registration.register()
 
-with suppress_module_not_found("cmk.gui.cse"):
+with suppress_module_not_found(("cmk.gui.cse", "cmk.gui.cse.registration")):
     import cmk.gui.cse.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cse.registration.register()

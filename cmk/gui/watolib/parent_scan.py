@@ -35,7 +35,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 @dataclass(frozen=True)
 class ParentScanTask:
     site_id: SiteId
-    folder_path: str
+    host_folder_path: str
     host_name: HostName
 
 
@@ -43,7 +43,7 @@ class ParentScanTask:
 # 'here'        -> new hosts are created directly in the current folder
 # 'subfolder'   -> new hosts are created in a "parents" subfolder of the current folder
 # 'there'       -> new hosts are created in the same folder as the host
-WhereChoices = Literal["nowhere", "here", "subfolder", "there"]
+WhereChoices = Literal["nowhere", "here", "subfolder", "there", "gateway_folder"]
 
 
 @dataclass(frozen=True)
@@ -55,6 +55,7 @@ class ParentScanSettings:
     max_ttl: int
     force_explicit: bool
     ping_probes: int
+    gateway_folder_path: str | None  # in combination with where == 'gateway_folder'
 
 
 class ParentScanBackgroundJob(BackgroundJob):
@@ -187,11 +188,14 @@ class ParentScanBackgroundJob(BackgroundJob):
     ) -> None:
         tree = folder_tree()
         tree.invalidate_caches()
-        folder = tree.folder(task.folder_path)
+        host_folder = tree.folder(task.host_folder_path)
+        gateway_folder = (
+            tree.folder(settings.gateway_folder_path) if settings.gateway_folder_path else None
+        )
 
-        parents = self._configure_gateway(task, settings, gateway, folder)
+        parents = self._configure_gateway(task, settings, gateway, host_folder, gateway_folder)
 
-        if (host := folder.host(task.host_name)) is None:
+        if (host := host_folder.host(task.host_name)) is None:
             # This seems to never happen.
             # `host` being optional was revealed when `folder` was no longer `Any`.
             raise MKGeneralException("No host named '{task.host_name}'")
@@ -224,7 +228,8 @@ class ParentScanBackgroundJob(BackgroundJob):
         task: ParentScanTask,
         settings: ParentScanSettings,
         gateway: Gateway | None,
-        folder: Folder,
+        host_folder: Folder,
+        gateway_folder: Folder | None,
     ) -> list[HostName]:
         """Ensure there is a gateway host in the Checkmk configuration (or raise an exception)
 
@@ -240,7 +245,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         if settings.where == "nowhere":
             raise MKUserError(None, _("Need parent %s, but not allowed to create one") % gateway.ip)
 
-        gw_folder = self._determine_gateway_folder(settings.where, folder)
+        gw_folder = self._determine_gateway_folder(settings.where, host_folder, gateway_folder)
         gw_host_name = self._determine_gateway_host_name(task, gateway)
         gw_host_attributes = self._determine_gateway_attributes(task, settings, gateway, gw_folder)
         gw_folder.create_hosts(
@@ -251,7 +256,9 @@ class ParentScanBackgroundJob(BackgroundJob):
 
         return [gw_host_name]
 
-    def _determine_gateway_folder(self, where: str, folder: Folder) -> Folder:
+    def _determine_gateway_folder(
+        self, where: str, host_folder: Folder, gateway_folder: Folder | None
+    ) -> Folder:
         if where == "here":  # directly in current folder
             return disk_or_search_base_folder_from_request(
                 request.var("folder"), request.get_ascii_input("host")
@@ -272,7 +279,12 @@ class ParentScanBackgroundJob(BackgroundJob):
             return current.create_subfolder("parents", _("Parents"), {})
 
         if where == "there":  # In same folder as host
-            return folder
+            return host_folder
+
+        if where == "gateway_folder":
+            if gateway_folder is None:
+                raise MKUserError(None, _("Expected specific gateway folder"))
+            return gateway_folder
 
         raise NotImplementedError()
 

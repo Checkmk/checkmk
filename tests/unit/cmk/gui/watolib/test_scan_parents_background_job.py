@@ -61,6 +61,7 @@ def test_scan_parents_job(mocker: MagicMock, host: Host) -> None:
         max_ttl=3,
         force_explicit=True,
         ping_probes=4,
+        gateway_folder_path=None,
     )
 
     # WHEN

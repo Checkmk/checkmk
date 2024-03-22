@@ -132,6 +132,7 @@ class ModeParentScan(WatoMode):
             max_ttl=request.get_integer_input_mandatory("max_ttl", 10),
             force_explicit=html.get_checkbox("force_explicit") or False,
             ping_probes=request.get_integer_input_mandatory("ping_probes", 5),
+            gateway_folder_path=None,
         )
         self._job = ParentScanBackgroundJob()
         self._folder = disk_or_search_folder_from_request(
@@ -241,6 +242,7 @@ class ModeParentScan(WatoMode):
                     "ping_probes": 5,
                     "max_ttl": 10,
                     "force_explicit": False,
+                    "gateway_folder_path": None,
                 },
             )
         )

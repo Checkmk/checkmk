@@ -308,24 +308,6 @@ metric_info["mem_lnx_total_used"] = {
     "unit": "bytes",
 }
 
-metric_info["mem_lnx_cached"] = {
-    "title": _("Cached memory"),
-    "color": "#91cceb",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_buffers"] = {
-    "title": _("Buffered memory"),
-    "color": "#5bb9eb",
-    "unit": "bytes",
-}
-
-metric_info["mem_lnx_slab"] = {
-    "title": _("Slab (Various smaller caches)"),
-    "color": "#af91eb",
-    "unit": "bytes",
-}
-
 metric_info["mem_lnx_pending"] = {
     "title": _("Pending memory"),
     "color": "25/a",
@@ -1353,16 +1335,6 @@ graph_info["swap"] = {
         ("swap_total", "line"),
         ("swap_used", "stack"),
         ("swap_cached", "stack"),
-    ],
-}
-
-graph_info["caches"] = {
-    "title": _("Caches"),
-    "metrics": [
-        ("mem_lnx_slab", "stack"),
-        ("swap_cached", "stack"),
-        ("mem_lnx_buffers", "stack"),
-        ("mem_lnx_cached", "stack"),
     ],
 }
 

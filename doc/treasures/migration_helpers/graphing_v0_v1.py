@@ -481,6 +481,18 @@ def _make_percent(
     )
 
 
+def _parse_constant_or_metric_name(expression: str) -> str | metrics.Constant:
+    try:
+        return metrics.Constant(
+            Title(""),
+            metrics.Unit(metrics.DecimalNotation("")),
+            metrics.Color.BLUE,
+            float(expression),
+        )
+    except ValueError:
+        return expression
+
+
 def _parse_single_expression(
     unit_parser: UnitParser, expression: str, explicit_title: str, explicit_color: metrics.Color
 ) -> (
@@ -490,9 +502,6 @@ def _parse_single_expression(
     | metrics.CriticalOf
     | metrics.MinimumOf
     | metrics.MaximumOf
-    | metrics.Sum
-    | metrics.Product
-    | metrics.Difference
     | metrics.Fraction
 ):
     expression = _drop_consolidation_func_name(expression)
@@ -500,8 +509,7 @@ def _parse_single_expression(
         expression = expression[:-3]
 
     if ":" in expression:
-        expression, scalar_name = expression.split(":")
-        metric_name = expression
+        metric_name, scalar_name = expression.split(":")
         scalar = _parse_scalar_name(scalar_name, metric_name)
         return (
             _make_percent(unit_parser, scalar, metric_name, explicit_title, explicit_color)
@@ -509,11 +517,10 @@ def _parse_single_expression(
             else scalar
         )
 
-    metric_name = expression
     return (
-        _make_percent(unit_parser, metric_name, metric_name, explicit_title, explicit_color)
+        _make_percent(unit_parser, expression, expression, explicit_title, explicit_color)
         if percent
-        else metric_name
+        else _parse_constant_or_metric_name(expression)
     )
 
 
@@ -925,34 +932,25 @@ def _parse_legacy_metrics(
 
 def _parse_legacy_scalars(
     unit_parser: UnitParser, legacy_scalars: Sequence[str | tuple[str, str | LazyString]]
-) -> Sequence[str | metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf]:
-    quantities: list[
-        str | metrics.WarningOf | metrics.CriticalOf | metrics.MinimumOf | metrics.MaximumOf
-    ] = []
+) -> Iterator[
+    str
+    | metrics.Constant
+    | metrics.WarningOf
+    | metrics.CriticalOf
+    | metrics.MinimumOf
+    | metrics.MaximumOf
+    | metrics.Sum
+    | metrics.Product
+    | metrics.Difference
+    | metrics.Fraction
+]:
     for legacy_scalar in legacy_scalars:
         if isinstance(legacy_scalar, str):
-            quantity = _parse_expression(unit_parser, legacy_scalar, "")
+            yield _parse_expression(unit_parser, legacy_scalar, "")
         elif isinstance(legacy_scalar, tuple):
-            quantity = _parse_expression(unit_parser, legacy_scalar[0], str(legacy_scalar[1]))
+            yield _parse_expression(unit_parser, legacy_scalar[0], str(legacy_scalar[1]))
         else:
             raise ValueError(legacy_scalar)
-
-        # There are scalars which are calculated via RPN. We have to migrate them manually.
-        if isinstance(
-            quantity,
-            (
-                str,
-                metrics.WarningOf,
-                metrics.CriticalOf,
-                metrics.MinimumOf,
-                metrics.MaximumOf,
-            ),
-        ):
-            quantities.append(quantity)
-        else:
-            raise ValueError(quantity)
-
-    return quantities
 
 
 def _parse_legacy_range(
@@ -1079,12 +1077,14 @@ def _title_repr(title: Title) -> str:
 
 
 def _notation_repr(
-    notation: metrics.DecimalNotation
-    | metrics.SINotation
-    | metrics.IECNotation
-    | metrics.StandardScientificNotation
-    | metrics.EngineeringScientificNotation
-    | metrics.TimeNotation,
+    notation: (
+        metrics.DecimalNotation
+        | metrics.SINotation
+        | metrics.IECNotation
+        | metrics.StandardScientificNotation
+        | metrics.EngineeringScientificNotation
+        | metrics.TimeNotation
+    ),
 ) -> str:
     if isinstance(notation, metrics.TimeNotation):
         return f"metrics.{notation.__class__.__name__}()"
@@ -1202,10 +1202,12 @@ def _quantity_repr(
 
 
 def _check_command_repr(
-    check_command: translations.PassiveCheck
-    | translations.ActiveCheck
-    | translations.HostCheckCommand
-    | translations.NagiosPlugin,
+    check_command: (
+        translations.PassiveCheck
+        | translations.ActiveCheck
+        | translations.HostCheckCommand
+        | translations.NagiosPlugin
+    ),
 ) -> str:
     return _inst_repr(
         "translations",
@@ -1257,18 +1259,20 @@ def translation_repr(translation_: translations.Translation) -> str:
 
 def _bound_value_repr(
     unit_parser: UnitParser,
-    bound_value: int
-    | float
-    | str
-    | metrics.Constant
-    | metrics.WarningOf
-    | metrics.CriticalOf
-    | metrics.MinimumOf
-    | metrics.MaximumOf
-    | metrics.Sum
-    | metrics.Product
-    | metrics.Difference
-    | metrics.Fraction,
+    bound_value: (
+        int
+        | float
+        | str
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
+    ),
 ) -> str:
     if isinstance(bound_value, (int, float)):
         return str(bound_value)
@@ -1494,13 +1498,15 @@ def _migrate_file_content(
 
 def _obj_repr(
     unit_parser: UnitParser,
-    obj: metrics.Metric
-    | translations.Translation
-    | perfometers.Perfometer
-    | perfometers.Bidirectional
-    | perfometers.Stacked
-    | graphs.Graph
-    | graphs.Bidirectional,
+    obj: (
+        metrics.Metric
+        | translations.Translation
+        | perfometers.Perfometer
+        | perfometers.Bidirectional
+        | perfometers.Stacked
+        | graphs.Graph
+        | graphs.Bidirectional
+    ),
 ) -> str:
     def _obj_var_name() -> str:
         return obj.name.replace(".", "_").replace("-", "_")

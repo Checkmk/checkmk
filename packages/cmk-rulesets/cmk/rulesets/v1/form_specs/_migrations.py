@@ -21,9 +21,11 @@ def _extract_bound(
 
 
 def _extract_levels(
-    raw_levels: tuple[Literal["absolute"], tuple[int, int] | tuple[float, float]]
-    | tuple[Literal["relative"], tuple[float, float]]
-    | tuple[Literal["stdev"], tuple[float, float]],
+    raw_levels: (
+        tuple[Literal["absolute"], tuple[int, int] | tuple[float, float]]
+        | tuple[Literal["relative"], tuple[float, float]]
+        | tuple[Literal["stdev"], tuple[float, float]]
+    ),
     scale: float,
     ntype: type[_NumberT],
 ) -> (
@@ -100,19 +102,24 @@ def _parse_to_predictive_levels(
 def _migrate_to_levels(
     model: object, scale: float, ntype: type[_NumberT], level_dir: LevelDirection
 ) -> LevelsConfigModel[_NumberT]:
+    if (already_migrated := _parse_already_migrated(model, ntype, level_dir)) is not None:
+        return already_migrated
+
     match model:
-        case None | (None, None) | ("no_levels", None):
+        case None | (None, None):
             return "no_levels", None
 
-        case ("fixed", (int(warn), int(crit)) | (float(warn), float(crit))) | (
-            int(warn),
-            int(crit),
-        ) | (float(warn), float(crit)):
+        case (int(warn), int(crit)) | (float(warn), float(crit)):
             return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
-        case ("predictive", val_dict) | val_dict if isinstance(val_dict, dict):
+        case dict(val_dict):
             if (
-                pred_levels := _parse_to_predictive_levels(val_dict, scale, ntype, level_dir)
+                pred_levels := _parse_to_predictive_levels(
+                    val_dict,  # type: ignore[misc] # Expression type contains "Any"
+                    scale,
+                    ntype,
+                    level_dir,
+                )
             ) is None:
                 return "no_levels", None
             return "predictive", pred_levels
@@ -122,6 +129,26 @@ def _migrate_to_levels(
                 f"Could not migrate {model} of type {ntype.__name__} to a {type(model).__name__} "
                 f"based Levels model"
             )
+
+
+def _parse_already_migrated(
+    model: object, ntype: type[_NumberT], level_dir: LevelDirection
+) -> LevelsConfigModel[_NumberT] | None:
+    match model:
+        case ("no_levels", None):
+            return "no_levels", None
+
+        case ("fixed", (int(w), int(c)) | (float(w), float(c))):
+            return "fixed", (ntype(w), ntype(c))
+
+        case ("predictive", val_dict):
+            # do not scale, but for the typing we still need to parse.
+            if (
+                pred_levels := _parse_to_predictive_levels(val_dict, 1.0, ntype, level_dir)
+            ) is None:
+                return "no_levels", None
+            return "predictive", pred_levels
+    return None
 
 
 def migrate_to_upper_integer_levels(model: object, scale: float = 1.0) -> LevelsConfigModel[int]:
@@ -185,10 +212,14 @@ def _migrate_to_simple_levels(
         case None | (None, None) | ("no_levels", None):
             return "no_levels", None
 
-        case ("fixed", (int(warn), int(crit)) | (float(warn), float(crit))) | (
-            int(warn),
-            int(crit),
-        ) | (float(warn), float(crit)):
+        case (
+            ("fixed", (int(warn), int(crit)) | (float(warn), float(crit)))
+            | (
+                int(warn),
+                int(crit),
+            )
+            | (float(warn), float(crit))
+        ):
             return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
         case ("predictive", val_dict) | val_dict if isinstance(val_dict, dict):

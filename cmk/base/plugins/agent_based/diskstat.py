@@ -139,6 +139,9 @@ def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
         if major != "None" and minor != "None" and (int(major), int(minor)) in name_info:
             device = name_info[(int(major), int(minor))]
 
+        if device in name_info:
+            device = name_info[device]
+
         # There are 1000 ticks per second
         disks[device] = {
             "timestamp": timestamp,
@@ -223,8 +226,8 @@ def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
 # }
 def diskstat_extract_name_info(
     string_table: type_defs.StringTable,
-) -> tuple[int | None, type_defs.StringTable, Mapping[tuple[int, int], str]]:
-    name_info = {}  # dict from (major, minor) to itemname
+) -> tuple[int | None, type_defs.StringTable, Mapping[Any, str]]:
+    name_info = {}  # dict from (major, minor) or str to itemname
     timestamp = None
 
     info_plain = []
@@ -234,6 +237,8 @@ def diskstat_extract_name_info(
             phase = "dmsetup_info"
         elif line[0] == "[vx_dsk]":
             phase = "vx_dsk"
+        elif line[0] == "[disk_id]":
+            phase = "disk_id"
         else:
             if phase == "info":
                 if len(line) == 1:
@@ -256,6 +261,17 @@ def diskstat_extract_name_info(
                 group, disk = line[2].split("/")[-2:]
                 name = f"VxVM {group}-{disk}"
                 name_info[major, minor] = name
+            elif phase == "disk_id":
+                name = '/'.join(line[0].split('/')[4:])
+                if (
+                    name.startswith("ata-")
+                    or name.startswith("scsi-")
+                    or name.startswith("nvme-")
+                    or name.startswith("usb-")
+                ):
+                    disk = line[1][6:]
+                    if disk not in name_info:
+                        name_info[disk] = name
     return timestamp, info_plain, name_info
 
 

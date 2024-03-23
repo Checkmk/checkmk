@@ -1227,7 +1227,7 @@ if os.path.islink(%(dst)r):
     import py_compile
     os.remove(%(dst)r)
     py_compile.compile(%(src)r, %(dst)r, %(dst)r, True)
-    os.chmod(%(dst)r, 0o755)
+    os.chmod(%(dst)r, 0o700)
 
 """
             % {

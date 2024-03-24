@@ -252,8 +252,20 @@ def test_parse_or_add_unit(
         ),
         pytest.param(
             metrics.TimeNotation(),
+            137,
+            "2 min 17 s",
+            id="time-minutes",
+        ),
+        pytest.param(
+            metrics.TimeNotation(),
+            4312,
+            "1 h 12 min",
+            id="time-hours",
+        ),
+        pytest.param(
+            metrics.TimeNotation(),
             123456.789,
-            "1.43 d",
+            "1 d 10 h",
             id="time-large",
         ),
         pytest.param(

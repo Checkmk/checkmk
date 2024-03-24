@@ -38,11 +38,6 @@ def _find_symbol_factor(use_symbol: str, symbols: Sequence[tuple[int, str]]) -> 
     return 1
 
 
-def _santize_value(value: int | float) -> str:
-    value_ = str(value)
-    return value_.rstrip("0").rstrip(".") if "." in value_ else value_
-
-
 @dataclass(frozen=True)
 class NumLabelRange:
     left: int
@@ -53,14 +48,6 @@ class NumLabelRange:
 class Label:
     position: int | float
     text: str
-
-
-def _compute_auto_precision_digits_for_value(exponent: int, digits: int) -> int:
-    return max(exponent + 1, digits)
-
-
-def _compute_auto_precision_digits_for_label(exponent: int, digits: int) -> int:
-    return exponent + digits
 
 
 @dataclass(frozen=True)
@@ -87,9 +74,7 @@ class NotationFormatter:
         raise NotImplementedError()
 
     def _apply_precision(
-        self,
-        value: int | float,
-        compute_auto_precision_digits: Callable[[int, int], int],
+        self, value: int | float, compute_auto_precision_digits: Callable[[int, int], int]
     ) -> float:
         value_floor = math.floor(value)
         if value == value_floor:
@@ -115,13 +100,21 @@ class NotationFormatter:
     def _format_suffix(self, prefix: str, symbol: str) -> str:
         raise NotImplementedError()
 
+    def _postformat(
+        self, formatted: Formatted, compute_auto_precision_digits: Callable[[int, int], int]
+    ) -> str:
+        value_ = str(self._apply_precision(formatted.value, compute_auto_precision_digits))
+        value = value_.rstrip("0").rstrip(".") if "." in value_ else value_
+        suffix = self._format_suffix(formatted.prefix, formatted.symbol)
+        return f"{value}{suffix}".strip()
+
     def render(self, value: int | float) -> str:
         sign = "" if value >= 0 else "-"
-        formatted = self._preformat(abs(value))
-        return (
-            f"{sign}{_santize_value(self._apply_precision(formatted.value, _compute_auto_precision_digits_for_value))}"
-            f"{self._format_suffix(formatted.prefix, formatted.symbol)}"
-        ).strip()
+        postformatted = self._postformat(
+            self._preformat(abs(value)),
+            lambda exponent, digits: max(exponent + 1, digits),
+        )
+        return f"{sign}{postformatted}"
 
     @abc.abstractmethod
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -159,15 +152,12 @@ class NotationFormatter:
         return [
             Label(
                 atom * i,
-                (
-                    f"{_santize_value(self._apply_precision(formatted.value, _compute_auto_precision_digits_for_label))}"
-                    f"{self._format_suffix(formatted.prefix, formatted.symbol)}"
-                ).strip(),
+                self._postformat(
+                    self._preformat(atom * i, use_prefix=first.prefix, use_symbol=first.symbol),
+                    lambda exponent, digits: exponent + digits,
+                ),
             )
             for i in range(1, quotient + 1)
-            for formatted in (
-                self._preformat(atom * i, use_prefix=first.prefix, use_symbol=first.symbol),
-            )
         ]
 
 

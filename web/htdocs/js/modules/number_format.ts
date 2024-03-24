@@ -296,13 +296,15 @@ function sanitize(value: string): string {
     return rstrip(value, ".");
 }
 
-class Preformatted {
+class Formatted {
     value: number;
-    suffix: string;
+    prefix: string;
+    symbol: string;
 
-    constructor(value: number, suffix: string) {
+    constructor(value: number, prefix: string, symbol: string) {
         this.value = value;
-        this.suffix = suffix;
+        this.prefix = prefix;
+        this.symbol = symbol;
     }
 }
 
@@ -315,10 +317,10 @@ abstract class NotationFormatter {
         this.precision = precision;
     }
 
-    abstract _preformat_small_number(value: number): Preformatted;
-    abstract _preformat_large_number(value: number): Preformatted;
+    protected abstract preformat_small_number(value: number): Formatted[];
+    protected abstract preformat_large_number(value: number): Formatted[];
 
-    apply_precision(value: number): number {
+    protected apply_precision(value: number): number {
         const value_floor = Math.floor(value);
         if (value == value_floor) {
             return value;
@@ -335,37 +337,65 @@ abstract class NotationFormatter {
         return parseFloat(value.toFixed(Math.min(digits, MAX_DIGITS)));
     }
 
-    render(value: number): string {
-        if (value < 0) {
-            return "-" + this.render(Math.abs(value));
-        }
+    protected preformat(value: number): Formatted[] {
         if ([0, 1].includes(value)) {
-            return (String(value) + " " + this.symbol).trim();
+            return [new Formatted(value, "", this.symbol)];
         }
-        let preformatted;
         if (value < 1) {
-            preformatted = this._preformat_small_number(value);
-        } else {
-            // value > 1
-            preformatted = this._preformat_large_number(value);
+            return this.preformat_small_number(value);
         }
-        const value_with_precision = this.apply_precision(preformatted.value);
-        return sanitize(String(value_with_precision)) + preformatted.suffix;
+        // value > 1
+        return this.preformat_large_number(value);
+    }
+
+    protected abstract compose(
+        text: string,
+        prefix: string,
+        symbol: string
+    ): string;
+
+    protected postformat(formatted_parts: Formatted[]): string {
+        const results: string[] = [];
+        let text;
+        for (const formatted of formatted_parts) {
+            text = String(this.apply_precision(formatted.value));
+            if (text.includes(".")) {
+                text = sanitize(text);
+            }
+            results.push(
+                this.compose(text, formatted.prefix, formatted.symbol).trim()
+            );
+        }
+        return results.join(" ");
+    }
+
+    public render(value: number): string {
+        let sign;
+        if (value < 0) {
+            sign = "-";
+        } else {
+            sign = "";
+        }
+        return sign + this.postformat(this.preformat(value));
     }
 }
 
 export class DecimalFormatter extends NotationFormatter {
-    _preformat_small_number(value: number): Preformatted {
-        return new Preformatted(value, " " + this.symbol);
+    protected preformat_small_number(value: number): Formatted[] {
+        return [new Formatted(value, "", this.symbol)];
     }
 
-    _preformat_large_number(value: number): Preformatted {
-        return new Preformatted(value, " " + this.symbol);
+    protected preformat_large_number(value: number): Formatted[] {
+        return [new Formatted(value, "", this.symbol)];
+    }
+
+    protected compose(text: string, _prefix: string, symbol: string): string {
+        return text + " " + symbol;
     }
 }
 
 export class SIFormatter extends NotationFormatter {
-    _preformat_small_number(value: number): Preformatted {
+    protected preformat_small_number(value: number): Formatted[] {
         const exponent = Math.floor(Math.log10(value)) - 1;
         let factor: number;
         let prefix: string;
@@ -397,10 +427,10 @@ export class SIFormatter extends NotationFormatter {
             factor = 1;
             prefix = "";
         }
-        return new Preformatted(value * factor, " " + prefix + this.symbol);
+        return [new Formatted(value * factor, prefix, this.symbol)];
     }
 
-    _preformat_large_number(value: number): Preformatted {
+    protected preformat_large_number(value: number): Formatted[] {
         const exponent = Math.floor(Math.log10(value));
         let factor: number;
         let prefix: string;
@@ -432,16 +462,20 @@ export class SIFormatter extends NotationFormatter {
             factor = 1;
             prefix = "";
         }
-        return new Preformatted(value / factor, " " + prefix + this.symbol);
+        return [new Formatted(value / factor, prefix, this.symbol)];
+    }
+
+    protected compose(text: string, prefix: string, symbol: string): string {
+        return text + " " + prefix + symbol;
     }
 }
 
 export class IECFormatter extends NotationFormatter {
-    _preformat_small_number(value: number): Preformatted {
-        return new Preformatted(value, " " + this.symbol);
+    protected preformat_small_number(value: number): Formatted[] {
+        return [new Formatted(value, "", this.symbol)];
     }
 
-    _preformat_large_number(value: number): Preformatted {
+    protected preformat_large_number(value: number): Formatted[] {
         const exponent = Math.floor(Math.log2(value));
         let factor: number;
         let prefix: string;
@@ -473,43 +507,67 @@ export class IECFormatter extends NotationFormatter {
             factor = 1;
             prefix = "";
         }
-        return new Preformatted(value / factor, " " + prefix + this.symbol);
+        return [new Formatted(value / factor, prefix, this.symbol)];
+    }
+
+    protected compose(text: string, prefix: string, symbol: string): string {
+        return text + " " + prefix + symbol;
     }
 }
 
 export class StandardScientificFormatter extends NotationFormatter {
-    _preformat_small_number(value: number): Preformatted {
+    protected preformat_small_number(value: number): Formatted[] {
         const exponent = Math.floor(Math.log10(value));
-        return new Preformatted(
-            value / Math.pow(10, exponent),
-            "e" + exponent + " " + this.symbol
-        );
+        return [
+            new Formatted(
+                value / Math.pow(10, exponent),
+                "e" + exponent,
+                this.symbol
+            ),
+        ];
     }
 
-    _preformat_large_number(value: number): Preformatted {
+    protected preformat_large_number(value: number): Formatted[] {
         const exponent = Math.floor(Math.log10(value));
-        return new Preformatted(
-            value / Math.pow(10, exponent),
-            "e+" + exponent + " " + this.symbol
-        );
+        return [
+            new Formatted(
+                value / Math.pow(10, exponent),
+                "e+" + exponent,
+                this.symbol
+            ),
+        ];
+    }
+
+    protected compose(text: string, prefix: string, symbol: string): string {
+        return text + prefix + " " + symbol;
     }
 }
 
 export class EngineeringScientificFormatter extends NotationFormatter {
-    _preformat_small_number(value: number): Preformatted {
+    protected preformat_small_number(value: number): Formatted[] {
         const exponent = Math.floor(Math.log10(value) / 3) * 3;
-        return new Preformatted(
-            value / Math.pow(10, exponent),
-            "e" + exponent + " " + this.symbol
-        );
+        return [
+            new Formatted(
+                value / Math.pow(10, exponent),
+                "e" + exponent,
+                this.symbol
+            ),
+        ];
     }
 
-    _preformat_large_number(value: number): Preformatted {
+    protected preformat_large_number(value: number): Formatted[] {
         const exponent = Math.floor(Math.log10(10000) / 3) * 3;
-        return new Preformatted(
-            value / Math.pow(10, exponent),
-            "e+" + exponent + " " + this.symbol
-        );
+        return [
+            new Formatted(
+                value / Math.pow(10, exponent),
+                "e+" + exponent,
+                this.symbol
+            ),
+        ];
+    }
+
+    protected compose(text: string, prefix: string, symbol: string): string {
+        return text + prefix + " " + symbol;
     }
 }
 
@@ -517,8 +575,24 @@ const _ONE_DAY = 86400;
 const _ONE_HOUR = 3600;
 const _ONE_MINUTE = 60;
 
+class TimeLargeSymbol {
+    factor: number;
+    symbol: string;
+
+    constructor(factor: number, symbol: string) {
+        this.factor = factor;
+        this.symbol = symbol;
+    }
+}
+
+const _TIME_LARGE_SYMBOLS: TimeLargeSymbol[] = [
+    new TimeLargeSymbol(_ONE_DAY, "d"),
+    new TimeLargeSymbol(_ONE_HOUR, "h"),
+    new TimeLargeSymbol(_ONE_MINUTE, "min"),
+];
+
 export class TimeFormatter extends NotationFormatter {
-    _preformat_small_number(value: number): Preformatted {
+    protected preformat_small_number(value: number): Formatted[] {
         const exponent = Math.floor(Math.log10(value)) - 1;
         let factor: number;
         let prefix: string;
@@ -532,25 +606,68 @@ export class TimeFormatter extends NotationFormatter {
             factor = 1;
             prefix = "";
         }
-        return new Preformatted(value * factor, " " + prefix + this.symbol);
+        return [new Formatted(value * factor, prefix, this.symbol)];
     }
 
-    _preformat_large_number(value: number): Preformatted {
-        let factor: number;
-        let symbol: string;
-        if (value >= _ONE_DAY) {
-            factor = _ONE_DAY;
-            symbol = "d";
-        } else if (value >= _ONE_HOUR) {
-            factor = _ONE_HOUR;
-            symbol = "h";
-        } else if (value >= _ONE_MINUTE) {
-            factor = _ONE_MINUTE;
-            symbol = "min";
-        } else {
-            factor = 1;
-            symbol = this.symbol;
+    protected preformat_large_number(value: number): Formatted[] {
+        let use_symbol = "";
+        for (const time_large_symbol of _TIME_LARGE_SYMBOLS) {
+            if (value >= time_large_symbol.factor) {
+                use_symbol = time_large_symbol.symbol;
+                break;
+            }
         }
-        return new Preformatted(value / factor, " " + symbol);
+        const rounded_value = parseFloat(value.toFixed(0));
+        const formatted_parts: Formatted[] = [];
+        let days;
+        let hours;
+        let minutes;
+        let seconds;
+        switch (use_symbol) {
+            case "d": {
+                days = Math.floor(rounded_value / _ONE_DAY);
+                formatted_parts.push(new Formatted(days, "", "d"));
+                hours = parseFloat(
+                    ((rounded_value - days * _ONE_DAY) / _ONE_HOUR).toFixed()
+                );
+                if (days < 10 && hours > 0) {
+                    formatted_parts.push(new Formatted(hours, "", "h"));
+                }
+                break;
+            }
+            case "h": {
+                hours = Math.floor(rounded_value / _ONE_HOUR);
+                formatted_parts.push(new Formatted(hours, "", "h"));
+                minutes = parseFloat(
+                    (
+                        (rounded_value - hours * _ONE_HOUR) /
+                        _ONE_MINUTE
+                    ).toFixed()
+                );
+                if (minutes > 0) {
+                    formatted_parts.push(new Formatted(minutes, "", "min"));
+                }
+                break;
+            }
+            case "min": {
+                minutes = Math.floor(rounded_value / _ONE_MINUTE);
+                formatted_parts.push(new Formatted(minutes, "", "min"));
+                seconds = parseFloat(
+                    (rounded_value - minutes * _ONE_MINUTE).toFixed()
+                );
+                if (seconds > 0) {
+                    formatted_parts.push(new Formatted(seconds, "", "s"));
+                }
+                break;
+            }
+            default: {
+                formatted_parts.push(new Formatted(value, "", "s"));
+            }
+        }
+        return formatted_parts;
+    }
+
+    protected compose(text: string, prefix: string, symbol: string): string {
+        return text + " " + prefix + symbol;
     }
 }

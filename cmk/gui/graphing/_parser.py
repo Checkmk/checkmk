@@ -31,13 +31,6 @@ def _find_prefix_power(use_prefix: str, prefixes: Sequence[tuple[int, int, str]]
     return 1
 
 
-def _find_symbol_factor(use_symbol: str, symbols: Sequence[tuple[int, str]]) -> int:
-    for factor, symbol in symbols:
-        if use_symbol == symbol:
-            return factor
-    return 1
-
-
 @dataclass(frozen=True)
 class NumLabelRange:
     left: int
@@ -422,13 +415,32 @@ class TimeFormatter(NotationFormatter):
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
     ) -> Sequence[Formatted]:
-        if use_symbol:
-            factor = _find_symbol_factor(use_symbol, _TIME_LARGE_SYMBOLS)
-            return [Formatted(value / factor, "", use_symbol or self.symbol)]
-        for factor, symbol in _TIME_LARGE_SYMBOLS:
-            if value >= factor:
-                return [Formatted(value / factor, "", symbol)]
-        return [Formatted(value, "", self.symbol)]
+        if not use_symbol:
+            for factor, symbol in _TIME_LARGE_SYMBOLS:
+                if value >= factor:
+                    use_symbol = symbol
+                    break
+        rounded_value = round(value)
+        formatted_parts = []
+        match use_symbol:
+            case "d":
+                days = int(rounded_value // _ONE_DAY)
+                formatted_parts.append(Formatted(days, "", "d"))
+                if days < 10 and (hours := round((rounded_value - days * _ONE_DAY) / _ONE_HOUR)):
+                    formatted_parts.append(Formatted(hours, "", "h"))
+            case "h":
+                hours = int(rounded_value // _ONE_HOUR)
+                formatted_parts.append(Formatted(hours, "", "h"))
+                if minutes := round((rounded_value - hours * _ONE_HOUR) / _ONE_MINUTE):
+                    formatted_parts.append(Formatted(minutes, "", "min"))
+            case "min":
+                minutes = int(rounded_value // _ONE_MINUTE)
+                formatted_parts.append(Formatted(minutes, "", "min"))
+                if seconds := round(rounded_value - minutes * _ONE_MINUTE):
+                    formatted_parts.append(Formatted(seconds, "", "s"))
+            case _:
+                formatted_parts.append(Formatted(value, "", "s"))
+        return formatted_parts
 
     def _compose(self, text: str, prefix: str, symbol: str) -> str:
         return f"{text} {prefix}{symbol}"

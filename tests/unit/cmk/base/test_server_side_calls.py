@@ -761,7 +761,7 @@ def test_test_get_active_service_data_crash_with_debug(
                     expanded_args="--pwstore=2@0@stored_password --password " "'***'",
                 ),
             ],
-            '\nWARNING: The stored password "stored_password" used by host "myhost" does not exist.\n',
+            '\nWARNING: The stored password "stored_password" used by host "myhost" does not exist (anymore).\n',
             id="stored_password_missing",
         ),
     ],
@@ -1670,7 +1670,7 @@ def test_commandline_arguments(
         pytest.param(
             HostName("test"),
             None,
-            'The stored password "pw-id" used by host host "test" does not exist (anymore).',
+            'The stored password "pw-id" used by host "test" does not exist (anymore).',
             id="service name not present",
         ),
         pytest.param(

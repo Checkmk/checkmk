@@ -43,7 +43,7 @@ import sys
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal, NoReturn
+from typing import Literal
 
 from typing_extensions import TypedDict
 
@@ -53,6 +53,8 @@ from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.crypto.secrets import PasswordStoreSecret
 from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
+
+from . import hack
 
 PasswordLookupType = Literal["password", "store"]
 PasswordId = str | tuple[PasswordLookupType, str]
@@ -74,50 +76,11 @@ def password_store_path() -> Path:
     return Path(cmk.utils.paths.var_dir, "stored_passwords")
 
 
-def bail_out(s: str) -> NoReturn:
-    sys.stdout.write("UNKNOWN - %s\n" % s)
-    sys.stderr.write("UNKNOWN - %s\n" % s)
-    sys.exit(3)
-
-
+# This function and its questionable bahavior of operating in-place on sys.argv is quasi-public.
+# Many third party plugins rely on it, so we must not change it.
+# One day, when we have a more official versioned API we can hopefully remove it.
 def replace_passwords() -> None:
-    if len(sys.argv) < 2:
-        return  # command line too short
-
-    if not [a for a in sys.argv if a.startswith("--pwstore")]:
-        return  # no password store in use
-
-    # --pwstore=4@4@web,6@0@foo
-    #  In the 4th argument at char 4 replace the following bytes
-    #  with the passwords stored under the ID 'web'
-    #  In the 6th argument at char 0 insert the password with the ID 'foo'
-
-    # Extract first argument and parse it
-
-    pwstore_args = sys.argv.pop(1).split("=", 1)[1]
-    passwords = load_for_helpers()
-
-    for password_spec in pwstore_args.split(","):
-        parts = password_spec.split("@")
-        if len(parts) != 3:
-            bail_out(f"pwstore: Invalid --pwstore entry: {password_spec}")
-
-        try:
-            num_arg, pos_in_arg, password_id = int(parts[0]), int(parts[1]), parts[2]
-        except ValueError:
-            bail_out(f"pwstore: Invalid format: {password_spec}")
-
-        try:
-            arg = sys.argv[num_arg]
-        except IndexError:
-            bail_out("pwstore: Argument %d does not exist" % num_arg)
-
-        try:
-            password = passwords[password_id]
-        except KeyError:
-            bail_out(f"pwstore: Password '{password_id}' does not exist")
-
-        sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
+    sys.argv[:] = hack.resolve_password_hack(sys.argv, load_for_helpers())
 
 
 def save(passwords: Mapping[str, str], store_path: Path) -> None:

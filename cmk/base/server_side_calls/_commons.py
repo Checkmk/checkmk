@@ -68,7 +68,7 @@ def _prepare_check_command(
     command_spec: CheckCommandArguments,
     hostname: HostName,
     description: ServiceName | None,
-    passwords_from_store: Mapping[str, str],
+    passwords: Mapping[str, str],
 ) -> str:
     """Prepares a check command for execution by Checkmk
 
@@ -76,8 +76,7 @@ def _prepare_check_command(
     for the command line. These entries will be completed by the executed program later to get the
     password from the password store.
     """
-    passwords: list[tuple[str, str, str]] = []
-    formatted: list[str] = []
+    formatted: list[str | tuple[str, str, str]] = []
     for arg in command_spec:
         if isinstance(arg, (int, float)):
             formatted.append(str(arg))
@@ -86,45 +85,25 @@ def _prepare_check_command(
             formatted.append(shlex.quote(arg))
 
         elif isinstance(arg, tuple) and len(arg) == 3:
-            pw_ident, preformated_arg = arg[1:]
-            try:
-                password = passwords_from_store[pw_ident]
-            except KeyError:
-                if hostname and description:
-                    descr = f' used by service "{description}" on host "{hostname}"'
-                elif hostname:
-                    descr = f' used by host host "{hostname}"'
-                else:
-                    descr = ""
-
-                config_warnings.warn(
-                    f'The stored password "{pw_ident}"{descr} does not exist (anymore).'
-                )
-                password = "%%%"
-
-            pw_start_index = str(preformated_arg.index("%s"))
-            formatted.append(shlex.quote(preformated_arg % ("*" * len(password))))
-            passwords.append((str(len(formatted)), pw_start_index, pw_ident))
+            formatted.append(arg)
 
         else:
             raise ActiveCheckError(f"Invalid argument for command line: {arg!r}")
 
-    if passwords:
-        pw = ",".join(["@".join(p) for p in passwords])
-        pw_store_arg = f"--pwstore={pw}"
-        formatted = [shlex.quote(pw_store_arg)] + formatted
-
-    return " ".join(formatted)
+    return " ".join(
+        password_store.hack.apply_password_hack(
+            formatted, passwords, config_warnings.warn, _make_log_label(hostname, description)
+        ),
+    )
 
 
 def replace_passwords(
     host_name: str,
-    stored_passwords: Mapping[str, str],
+    passwords: Mapping[str, str],
     arguments: Sequence[str | Secret],
     surrogated_secrets: Mapping[int, tuple[Literal["store", "password"], str]],
 ) -> str:
-    passwords: list[tuple[str, str, str]] = []
-    formatted: list[str] = []
+    formatted: list[str | tuple[str, str, str]] = []
 
     for arg in arguments:
         if isinstance(arg, str):
@@ -137,25 +116,22 @@ def replace_passwords(
             case "password":
                 formatted.append(shlex.quote(arg.format % secret_value))
             case "store":
-                try:
-                    password = stored_passwords[secret_value]
-                except KeyError:
-                    config_warnings.warn(
-                        f'The stored password "{secret_value}" used by host "{host_name}"'
-                        " does not exist."
-                    )
-                    password = "%%%"
+                # fall back to old hack, for now
+                formatted.append(("store", secret_value, arg.format))
 
-                pw_start_index = str(arg.format.index("%s"))
-                formatted.append(shlex.quote(arg.format % ("*" * len(password))))
-                passwords.append((str(len(formatted)), pw_start_index, secret_value))
+    return " ".join(
+        password_store.hack.apply_password_hack(
+            formatted, passwords, config_warnings.warn, _make_log_label(host_name)
+        ),
+    )
 
-    if passwords:
-        pw = ",".join(["@".join(p) for p in passwords])
-        pw_store_arg = f"--pwstore={pw}"
-        formatted = [shlex.quote(pw_store_arg)] + formatted
 
-    return " ".join(formatted)
+def _make_log_label(host_name: str | None, description: ServiceName | None = None) -> str:
+    if host_name and description:
+        return f' used by service "{description}" on host "{host_name}"'
+    if host_name:
+        return f' used by host "{host_name}"'
+    return ""
 
 
 def replace_macros(string: str, macros: Mapping[str, str]) -> str:

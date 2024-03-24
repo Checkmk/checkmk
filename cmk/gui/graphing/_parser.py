@@ -40,9 +40,10 @@ class Formatted:
     value: int | float
     suffix: Suffix
 
-    def format_value(self) -> str:
-        value_ = str(self.value)
-        return value_.rstrip("0").rstrip(".") if "." in value_ else value_
+
+def _santize_value(value: int | float) -> str:
+    value_ = str(value)
+    return value_.rstrip("0").rstrip(".") if "." in value_ else value_
 
 
 @dataclass(frozen=True)
@@ -98,26 +99,14 @@ class NotationFormatter:
                 digits = compute_auto_precision_digits(exponent, self.precision.digits)
         return round(value, min(digits, _MAX_DIGITS))
 
-    def _format(
-        self,
-        value: int | float,
-        suffix: Suffix,
-        compute_auto_precision_digits: Callable[[int, int], int],
-    ) -> Formatted:
+    def _preformat(self, value: int | float, suffix: Suffix) -> Formatted:
         assert value >= 0
         if value in (0, 1):
             return Formatted(value, Suffix("", self.symbol))
         if value < 1:
-            formatted = self._preformat_small_number(value, suffix)
-        else:  # value > 1
-            formatted = self._preformat_large_number(value, suffix)
-        return Formatted(
-            self._apply_precision(
-                formatted.value,
-                compute_auto_precision_digits,
-            ),
-            formatted.suffix,
-        )
+            return self._preformat_small_number(value, suffix)
+        # value > 1
+        return self._preformat_large_number(value, suffix)
 
     @abc.abstractmethod
     def _format_suffix(self, suffix: Suffix) -> str:
@@ -125,10 +114,11 @@ class NotationFormatter:
 
     def render(self, value: int | float) -> str:
         sign = "" if value >= 0 else "-"
-        formatted = self._format(
-            abs(value), Suffix("", ""), _compute_auto_precision_digits_for_value
-        )
-        return f"{sign}{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip()
+        formatted = self._preformat(abs(value), Suffix("", ""))
+        return (
+            f"{sign}{_santize_value(self._apply_precision(formatted.value, _compute_auto_precision_digits_for_value))}"
+            f"{self._format_suffix(formatted.suffix)}"
+        ).strip()
 
     @abc.abstractmethod
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
@@ -162,20 +152,17 @@ class NotationFormatter:
             atom = max_y / num_label_range.right
             quotient = int(max_y / atom)
 
-        first = self._format(atom, Suffix("", ""), _compute_auto_precision_digits_for_label)
+        first = self._preformat(atom, Suffix("", ""))
         return [
             Label(
                 atom * i,
-                f"{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip(),
+                (
+                    f"{_santize_value(self._apply_precision(formatted.value, _compute_auto_precision_digits_for_label))}"
+                    f"{self._format_suffix(formatted.suffix)}"
+                ).strip(),
             )
             for i in range(1, quotient + 1)
-            for formatted in (
-                self._format(
-                    atom * i,
-                    first.suffix,
-                    _compute_auto_precision_digits_for_label,
-                ),
-            )
+            for formatted in (self._preformat(atom * i, first.suffix),)
         ]
 
 

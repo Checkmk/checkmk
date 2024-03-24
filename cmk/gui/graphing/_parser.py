@@ -104,9 +104,7 @@ class NotationFormatter:
         suffix: Suffix,
         compute_auto_precision_digits: Callable[[int, int], int],
     ) -> Formatted:
-        if value < 0:
-            formatted = self._format(abs(value), suffix, compute_auto_precision_digits)
-            return Formatted(-formatted.value, formatted.suffix)
+        assert value >= 0
         if value in (0, 1):
             return Formatted(value, Suffix("", self.symbol))
         if value < 1:
@@ -126,8 +124,11 @@ class NotationFormatter:
         raise NotImplementedError()
 
     def render(self, value: int | float) -> str:
-        formatted = self._format(value, Suffix("", ""), _compute_auto_precision_digits_for_value)
-        return f"{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip()
+        sign = "" if value >= 0 else "-"
+        formatted = self._format(
+            abs(value), Suffix("", ""), _compute_auto_precision_digits_for_value
+        )
+        return f"{sign}{formatted.format_value()}{self._format_suffix(formatted.suffix)}".strip()
 
     @abc.abstractmethod
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:

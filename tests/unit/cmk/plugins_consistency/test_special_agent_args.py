@@ -106,6 +106,7 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
 UNMIGRATED = {
     "acme_sbc",
     "activemq",
+    "alertmanager",
     "allnet_ip_sensoric",
     "appdynamics",
     "aws_status",

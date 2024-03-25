@@ -45,7 +45,7 @@ def _agent_elasticsearch_arguments(
         args.extend(["-s", secret])
     if "port" in params:
         args.extend(["-p", str(params["port"])])
-    if params.get("no-cert-check", False):
+    if params.get("no_cert_check", False):
         args.append("--no-cert-check")
 
     args.append("--")  # make sure the hosts are separated from the infos

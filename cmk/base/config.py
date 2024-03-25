@@ -324,8 +324,8 @@ class ClusterCacheInfo:
     nodes_of: Mapping[HostName, Sequence[HostName]]
 
 
-class RRDConfig(TypedDict):
-    """RRDConfig
+class RRDObjectConfig(TypedDict):
+    """RRDObjectConfig
     This typing might not be complete or even wrong, feel free to improve"""
 
     cfs: Iterable[Literal["MIN", "MAX", "AVERAGE"]]  # conceptually a Set[Literal[...]]
@@ -4103,7 +4103,7 @@ def boil_down_agent_rules(
 
 class CEEConfigCache(ConfigCache):
     def __init__(self) -> None:
-        self.__rrd_config: dict[HostName, RRDConfig | None] = {}
+        self.__rrd_config: dict[HostName, RRDObjectConfig | None] = {}
         self.__recuring_downtimes: dict[HostName, Sequence[RecurringDowntime]] = {}
         self.__flap_settings: dict[HostName, tuple[float, float, float]] = {}
         self.__log_long_output: dict[HostName, bool] = {}
@@ -4129,8 +4129,8 @@ class CEEConfigCache(ConfigCache):
     def cmc_log_rrdcreation(self) -> Literal["terse", "full"] | None:
         return cmc_log_rrdcreation
 
-    def rrd_config(self, host_name: HostName) -> RRDConfig | None:
-        def _rrd_config() -> RRDConfig | None:
+    def rrd_config(self, host_name: HostName) -> RRDObjectConfig | None:
+        def _rrd_config() -> RRDObjectConfig | None:
             entries = self.ruleset_matcher.get_host_values(host_name, cmc_host_rrd_config)
             return entries[0] if entries else None
 
@@ -4261,7 +4261,7 @@ class CEEConfigCache(ConfigCache):
 
     def rrd_config_of_service(
         self, hostname: HostName, description: ServiceName
-    ) -> RRDConfig | None:
+    ) -> RRDObjectConfig | None:
         out = self.ruleset_matcher.service_extra_conf(hostname, description, cmc_service_rrd_config)
         return out[0] if out else None
 

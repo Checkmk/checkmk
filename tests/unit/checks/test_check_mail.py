@@ -7,15 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.mail.server_side_calls.mail import active_check_mail
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
+from tests.testlib import ActiveCheck
 
-HOST_CONFIG = HostConfig(
-    name="host",
-    alias="host_alias",
-    ipv4_config=IPv4Config(address="127.0.0.1"),
-    macros={"$HOSTNAME$": "host"},
-)
+pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
@@ -23,52 +17,49 @@ HOST_CONFIG = HostConfig(
     [
         pytest.param(
             {
-                "service_description": "Email",
                 "fetch": (
                     "IMAP",
                     {
                         "connection": {"disable_tls": False, "port": 143},
-                        "auth": ("basic", ("foo", Secret(1))),
+                        "auth": ("basic", ("foo", "bar")),
                     },
                 ),
                 "connect_timeout": 15,
             },
             [
                 "--fetch-protocol=IMAP",
-                "--fetch-server=127.0.0.1",
+                "--fetch-server=$HOSTADDRESS$",
                 "--fetch-tls",
                 "--fetch-port=143",
                 "--fetch-username=foo",
-                Secret(1, "--fetch-password=%s"),
+                "--fetch-password=bar",
                 "--connect-timeout=15",
             ],
             id="imap",
         ),
         pytest.param(
             {
-                "service_description": "Email",
                 "fetch": (
                     "EWS",
                     {
                         "connection": {"disable_tls": True, "port": 143},
-                        "auth": ("basic", ("foo", Secret(1))),
+                        "auth": ("basic", ("foo", "bar")),
                     },
                 ),
                 "connect_timeout": 15,
             },
             [
                 "--fetch-protocol=EWS",
-                "--fetch-server=127.0.0.1",
+                "--fetch-server=$HOSTADDRESS$",
                 "--fetch-port=143",
                 "--fetch-username=foo",
-                Secret(1, "--fetch-password=%s"),
+                "--fetch-password=bar",
                 "--connect-timeout=15",
             ],
             id="ews_no_tls",
         ),
         pytest.param(
             {
-                "service_description": "Email",
                 "fetch": (
                     "EWS",
                     {
@@ -76,7 +67,7 @@ HOST_CONFIG = HostConfig(
                         "connection": {"disable_tls": True, "port": 143},
                         "auth": (
                             "oauth2",
-                            ("client_id", Secret(1), "tenant_id"),
+                            ("client_id", ("password", "client_secret"), "tenant_id"),
                         ),
                         "email_address": "foo@bar.com",
                     },
@@ -85,10 +76,10 @@ HOST_CONFIG = HostConfig(
             },
             [
                 "--fetch-protocol=EWS",
-                "--fetch-server=host",
+                "--fetch-server=$HOSTNAME$",
                 "--fetch-port=143",
                 "--fetch-client-id=client_id",
-                Secret(1, "--fetch-client-secret=%s"),
+                "--fetch-client-secret=client_secret",
                 "--fetch-tenant-id=tenant_id",
                 "--fetch-email-address=foo@bar.com",
                 "--connect-timeout=15",
@@ -102,7 +93,7 @@ HOST_CONFIG = HostConfig(
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "auth": ("basic", ("me@gmx.de", Secret(1))),
+                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
                         "connection": {"disable_tls": True, "port": 123},
                     },
                 ),
@@ -118,7 +109,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=imap.gmx.de",
                 "--fetch-port=123",
                 "--fetch-username=me@gmx.de",
-                Secret(1, "--fetch-password=%s"),
+                "--fetch-password=p4ssw0rd",
                 "--forward-ec",
                 "--forward-facility=2",
                 "--forward-host=me.too@checkmk.com",
@@ -133,7 +124,7 @@ HOST_CONFIG = HostConfig(
                     "IMAP",
                     {
                         "server": "imap.gmx.de",
-                        "auth": ("basic", ("me@gmx.de", Secret(1))),
+                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
                         "connection": {"disable_tls": True, "port": 123},
                     },
                 ),
@@ -152,7 +143,7 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=imap.gmx.de",
                 "--fetch-port=123",
                 "--fetch-username=me@gmx.de",
-                Secret(1, "--fetch-password=%s"),
+                "--fetch-password=p4ssw0rd",
                 "--forward-ec",
                 "--forward-method=my_method",
                 "--match-subject=subject",
@@ -170,8 +161,5 @@ def test_check_mail_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    commands = list(active_check_mail(params, HOST_CONFIG, {}))
-
-    assert len(commands) == 1
-    assert commands[0].command_arguments == expected_args
-    assert commands[0].service_description == "Email"
+    active_check = ActiveCheck("check_mail")
+    assert active_check.run_argument_function(params) == expected_args

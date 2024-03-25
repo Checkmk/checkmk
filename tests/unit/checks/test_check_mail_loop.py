@@ -7,18 +7,13 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.mail.server_side_calls.mail_loop import active_check_mail_loop
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
+from tests.testlib import ActiveCheck
 
-HOST_CONFIG = HostConfig(
-    name="host",
-    ipv4_config=IPv4Config(address="127.0.0.1"),
-    macros={"$HOSTNAME$": "host", "$HOSTADDRESS$": "127.0.0.1"},
-)
+pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    "params,expected_args, expected_desc",
+    "params,expected_args",
     [
         (
             {
@@ -29,25 +24,24 @@ HOST_CONFIG = HostConfig(
                     {
                         "server": "bar",
                         "connection": {"disable_tls": True, "port": 143},
-                        "auth": ("basic", ("hans", Secret(1))),
+                        "auth": ("basic", ("hans", "wurst")),
                     },
                 ),
-                "mail_from": "",
-                "mail_to": "",
+                "mail_from": None,
+                "mail_to": None,
             },
             [
                 "--fetch-protocol=IMAP",
                 "--fetch-server=bar",
                 "--fetch-port=143",
                 "--fetch-username=hans",
-                Secret(1, "--fetch-password=%s"),
+                "--fetch-password=wurst",
                 "--send-protocol=SMTP",
-                "--send-server=127.0.0.1",
-                "--mail-from=",
-                "--mail-to=",
-                "--status-suffix=host-foo",
+                "--send-server=$HOSTADDRESS$",
+                "--mail-from=None",
+                "--mail-to=None",
+                "--status-suffix=non-existent-testhost-foo",
             ],
-            "Mail Loop foo",
         ),
         (
             {
@@ -58,7 +52,7 @@ HOST_CONFIG = HostConfig(
                     {
                         "server": "smtp.gmx.de",
                         "connection": {"tls": True, "port": 42},
-                        "auth": ("me@gmx.de", Secret(1)),
+                        "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
                     },
                 ),
                 "fetch": (
@@ -66,7 +60,7 @@ HOST_CONFIG = HostConfig(
                     {
                         "server": "imap.gmx.de",
                         "connection": {"disable_tls": False},
-                        "auth": ("basic", ("me@gmx.de", Secret(2))),
+                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
                     },
                 ),
                 "mail_from": "me_from@gmx.de",
@@ -79,22 +73,21 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=imap.gmx.de",
                 "--fetch-tls",
                 "--fetch-username=me@gmx.de",
-                Secret(2, "--fetch-password=%s"),
+                "--fetch-password=p4ssw0rd",
                 "--connect-timeout=23",
                 "--send-protocol=SMTP",
                 "--send-server=smtp.gmx.de",
                 "--send-port=42",
                 "--send-tls",
                 "--send-username=me@gmx.de",
-                Secret(1, "--send-password=%s"),
+                "--send-password=p4ssw0rd",
                 "--mail-from=me_from@gmx.de",
                 "--mail-to=me_to@gmx.de",
-                "--status-suffix=host-MailLoop_imap",
+                "--status-suffix=non-existent-testhost-MailLoop_imap",
                 "--warning=93780",
                 "--critical=183840",
                 "--subject=Some subject",
             ],
-            "Mail Loop MailLoop_imap",
         ),
         pytest.param(
             {
@@ -108,7 +101,7 @@ HOST_CONFIG = HostConfig(
                             "disable_cert_validation": True,
                             "port": 50,
                         },
-                        "auth": ("oauth2", ("client_id", Secret(1), "tenant_id")),
+                        "auth": ("oauth2", ("client_id", ("store", "password_1"), "tenant_id")),
                         "email_address": "address@email.com",
                     },
                 ),
@@ -117,32 +110,31 @@ HOST_CONFIG = HostConfig(
                     {
                         "server": "bar",
                         "connection": {"disable_tls": True, "port": 143},
-                        "auth": ("basic", ("hans", Secret(2))),
+                        "auth": ("basic", ("hans", "wurst")),
                     },
                 ),
-                "mail_from": "",
-                "mail_to": "",
+                "mail_from": None,
+                "mail_to": None,
             },
             [
                 "--fetch-protocol=IMAP",
                 "--fetch-server=bar",
                 "--fetch-port=143",
                 "--fetch-username=hans",
-                Secret(2, "--fetch-password=%s"),
+                "--fetch-password=wurst",
                 "--send-protocol=EWS",
-                "--send-server=127.0.0.1",
+                "--send-server=$HOSTADDRESS$",
                 "--send-port=50",
                 "--send-tls",
                 "--send-disable-cert-validation",
                 "--send-client-id=client_id",
-                Secret(1, "--send-client-secret=%s"),
+                ("store", "password_1", "--send-client-secret=%s"),
                 "--send-tenant-id=tenant_id",
                 "--send-email-address=address@email.com",
-                "--mail-from=",
-                "--mail-to=",
-                "--status-suffix=host-foo",
+                "--mail-from=None",
+                "--mail-to=None",
+                "--status-suffix=non-existent-testhost-foo",
             ],
-            "Mail Loop foo",
             id="send EWS, OAuth",
         ),
         pytest.param(
@@ -157,7 +149,7 @@ HOST_CONFIG = HostConfig(
                             "disable_cert_validation": True,
                             "port": 50,
                         },
-                        "auth": ("basic", ("user", Secret(1))),
+                        "auth": ("basic", ("user", ("store", "password_1"))),
                         "email_address": "address@email.com",
                     },
                 ),
@@ -166,11 +158,11 @@ HOST_CONFIG = HostConfig(
                     {
                         "server": "bar",
                         "connection": {"disable_tls": True, "port": 143},
-                        "auth": ("basic", ("hans", Secret(2))),
+                        "auth": ("basic", ("hans", "wurst")),
                     },
                 ),
-                "mail_from": "",
-                "mail_to": "",
+                "mail_from": None,
+                "mail_to": None,
                 "delete_messages": True,
             },
             [
@@ -178,31 +170,27 @@ HOST_CONFIG = HostConfig(
                 "--fetch-server=bar",
                 "--fetch-port=143",
                 "--fetch-username=hans",
-                Secret(2, "--fetch-password=%s"),
+                "--fetch-password=wurst",
                 "--send-protocol=EWS",
-                "--send-server=127.0.0.1",
+                "--send-server=$HOSTADDRESS$",
                 "--send-port=50",
                 "--send-tls",
                 "--send-disable-cert-validation",
                 "--send-username=user",
-                Secret(1, "--send-password=%s"),
+                ("store", "password_1", "--send-password=%s"),
                 "--send-email-address=address@email.com",
-                "--mail-from=",
-                "--mail-to=",
+                "--mail-from=None",
+                "--mail-to=None",
                 "--delete-messages",
-                "--status-suffix=host-foo",
+                "--status-suffix=non-existent-testhost-foo",
             ],
-            "Mail Loop foo",
             id="send EWS, basic auth",
         ),
     ],
 )
 def test_check_mail_loop_argument_parsing(
-    params: Mapping[str, object], expected_args: Sequence[str], expected_desc: str
+    params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    commands = list(active_check_mail_loop(params, HOST_CONFIG, {}))
-
-    assert len(commands) == 1
-    assert commands[0].command_arguments == expected_args
-    assert commands[0].service_description == expected_desc
+    active_check = ActiveCheck("check_mail_loop")
+    assert active_check.run_argument_function(params) == expected_args

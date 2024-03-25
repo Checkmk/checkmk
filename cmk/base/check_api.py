@@ -110,8 +110,8 @@ def savefloat(f: Any) -> float:
 
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
-def is_ipv6_primary(hostname: HostName) -> bool:
-    return _config.get_config_cache().default_address_family(hostname) is socket.AF_INET6
+def is_ipv6_primary(hostname: str) -> bool:
+    return _config.get_config_cache().default_address_family(HostName(hostname)) is socket.AF_INET6
 
 
 def get_age_human_readable(seconds: float) -> str:

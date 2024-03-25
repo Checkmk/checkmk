@@ -9,6 +9,7 @@ from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
     Integer,
+    migrate_to_password,
     MultipleChoice,
     MultipleChoiceElement,
     Password,
@@ -59,6 +60,7 @@ def _formspec_jenkins() -> Dictionary:
                     custom_validate=[
                         LengthInRange(min_value=1),
                     ],
+                    migrate=migrate_to_password,
                 ),
                 required=True,
             ),

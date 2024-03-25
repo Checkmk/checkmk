@@ -4126,6 +4126,9 @@ class CEEConfigCache(ConfigCache):
         self.__rtc_secret.clear()
         self.__agent_config.clear()
 
+    def cmc_log_rrdcreation(self) -> Literal["terse", "full"] | None:
+        return cmc_log_rrdcreation
+
     def rrd_config(self, host_name: HostName) -> RRDConfig | None:
         def _rrd_config() -> RRDConfig | None:
             entries = self.ruleset_matcher.get_host_values(host_name, cmc_host_rrd_config)

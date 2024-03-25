@@ -139,7 +139,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
         pytest.param(
             {
                 "api_key": Secret(0),
-                "sections": ["sec1", "sec2"],
+                "sections": ["licenses_overview", "device_statuses"],
             },
             [
                 SpecialAgentCommand(
@@ -147,8 +147,8 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                         "testhost",
                         Secret(0),
                         "--sections",
-                        "sec1",
-                        "sec2",
+                        "licenses-overview",
+                        "device-statuses",
                     ]
                 )
             ],

@@ -38,6 +38,7 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "static_checks:fileinfo-groups": "static_checks:fileinfo_groups_checking",
     "checkgroup_parameters:if": "checkgroup_parameters:interfaces",
     "static_checks:if": "static_checks:interfaces",
+    "special_agents:3par": "special_agents:three_par",
 }
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {

@@ -48,7 +48,7 @@ def generate_three_par_command(
 
 
 special_agent_three_par = SpecialAgentConfig(
-    name="3par",
+    name="three_par",
     parameter_parser=ThreeParParams.model_validate,
     commands_function=generate_three_par_command,
 )

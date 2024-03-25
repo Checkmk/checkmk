@@ -13,12 +13,12 @@ perfometer_aws_overall_hosts_health_perc = perfometers.Perfometer(
 
 perfometer_aws_bucket_size = perfometers.Perfometer(
     name="aws_bucket_size",
-    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(12148001999)),
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(2000000000)),
     segments=["aws_bucket_size"],
 )
 
 perfometer_aws_s3_buckets = perfometers.Perfometer(
     name="aws_s3_buckets",
-    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(565)),
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(90)),
     segments=["aws_s3_buckets"],
 )

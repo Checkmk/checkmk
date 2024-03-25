@@ -112,18 +112,12 @@ perfometer_disk_throughput = perfometers.Bidirectional(
     name="disk_throughput",
     left=perfometers.Perfometer(
         name="disk_read_throughput",
-        focus_range=perfometers.FocusRange(
-            perfometers.Closed(0),
-            perfometers.Open(15811388300),
-        ),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(9000000)),
         segments=["disk_read_throughput"],
     ),
     right=perfometers.Perfometer(
         name="disk_write_throughput",
-        focus_range=perfometers.FocusRange(
-            perfometers.Closed(0),
-            perfometers.Open(15811388300),
-        ),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(9000000)),
         segments=["disk_write_throughput"],
     ),
 )

@@ -37,10 +37,7 @@ metric_threads_max = metrics.Metric(
 
 perfometer_threads = perfometers.Perfometer(
     name="threads",
-    focus_range=perfometers.FocusRange(
-        perfometers.Closed(0),
-        perfometers.Open(4525),
-    ),
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(700)),
     segments=["threads"],
 )
 

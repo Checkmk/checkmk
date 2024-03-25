@@ -293,6 +293,7 @@ def test_rulespec_get_all_groups() -> None:
         "static/virtualization",
         "static/hardware",
         "datasource_programs/apps",
+        "datasource_programs/cloud",
         "datasource_programs/custom",
         "datasource_programs/hw",
         "datasource_programs/os",

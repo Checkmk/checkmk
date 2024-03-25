@@ -16,10 +16,10 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
     [
         (
             {
-                "basicauth": ("bla", Secret(123)),
+                "basicauth": {"username": "bla", "password": Secret(123)},
                 "port": 8080,
-                "no-tls": True,
-                "no-cert-check": True,
+                "no_tls": True,
+                "no_cert_check": True,
                 "timeout": 60,
             },
             (

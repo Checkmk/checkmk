@@ -11,11 +11,13 @@ from pydantic import BaseModel
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
+    EnvProxy,
     HostConfig,
     HTTPProxy,
-    parse_http_proxy,
+    NoProxy,
     replace_macros,
     Secret,
+    URLProxy,
 )
 
 _DAY: Final[int] = 24 * 3600
@@ -31,13 +33,6 @@ class TlsVersion(StrEnum):
     AUTO = "auto"
     TLS_1_2 = "tls_1_2"
     TLS_1_3 = "tls_1_3"
-
-
-class ProxyMode(StrEnum):
-    ENVIRONMENT = "environment"
-    NO_PROXY = "no_proxy"
-    GLOBAL = "global"
-    URL = "url"
 
 
 class RedirectPolicy(StrEnum):
@@ -96,13 +91,6 @@ class MatchType(StrEnum):
     REGEX = "regex"
 
 
-ProxySpec = (
-    tuple[Literal[ProxyMode.ENVIRONMENT], Literal[ProxyMode.ENVIRONMENT]]
-    | tuple[Literal[ProxyMode.NO_PROXY], None]
-    | tuple[Literal[ProxyMode.GLOBAL], str]
-    | tuple[Literal[ProxyMode.URL], str]
-)
-
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
     | tuple[Literal[LevelsType.FIXED], tuple[float, float]]
@@ -149,7 +137,7 @@ class Connection(BaseModel):
     method: tuple[HttpMethod, SendData | None]
     http_versions: HttpVersion | None = None
     tls_versions: EnforceTlsVersion | None = None
-    proxy: ProxySpec | None = None
+    proxy: URLProxy | EnvProxy | NoProxy | None = None
     redirects: RedirectPolicy | None = None
     timeout: float | None = None
     user_agent: str | None = None
@@ -302,8 +290,8 @@ def _connection_args(
         yield from _auth_args(auth)
     if (tls_versions := connection.tls_versions) is not None:
         yield from _tls_version_arg(tls_versions)
-    if (proxy_spec := connection.proxy) is not None:
-        yield from _proxy_args(proxy_spec, http_proxies)
+    if (proxy := connection.proxy) is not None:
+        yield from _proxy_args(proxy, http_proxies)
     if (redirects := connection.redirects) is not None:
         yield from _redirect_args(redirects)
     if (http_versions := connection.http_versions) is not None:
@@ -343,23 +331,22 @@ def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
     yield tls_version_arg
 
 
-def _proxy_args(proxy_spec: ProxySpec, http_proxies: Mapping[str, HTTPProxy]) -> Iterator[str]:
-    match proxy_spec:
-        case (ProxyMode.ENVIRONMENT, ProxyMode.ENVIRONMENT):
+def _proxy_args(
+    proxy: EnvProxy | URLProxy | NoProxy, http_proxies: Mapping[str, HTTPProxy]
+) -> Iterator[str]:
+    match proxy:
+        case EnvProxy():
             return
-        case (ProxyMode.NO_PROXY, None):
+        case NoProxy():
             yield "--ignore-proxy-env"
         # Note: check_httpv2 is capable of taking the credentials separately,
         # and to read the password from password store, with arguments
         # --proxy-user and --proxy-pw-plain/--proxy-pw-pwstore.
         # However, if everthing is passed via url, as it's done now, check_httpv2 is
         # also capable of handling that correctly.
-        case (ProxyMode.URL, str(url)):
+        case URLProxy(url=url):
             yield "--proxy-url"
             yield url
-        case (ProxyMode.GLOBAL, _):
-            yield "--proxy-url"
-            yield parse_http_proxy(proxy_spec, http_proxies)
 
 
 def _method_args(method_spec: tuple[HttpMethod, SendData | None]) -> Iterator[str]:

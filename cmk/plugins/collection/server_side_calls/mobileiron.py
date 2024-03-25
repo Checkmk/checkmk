@@ -9,16 +9,16 @@ from collections.abc import Iterator, Mapping, Sequence
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
+    EnvProxy,
     HostConfig,
     HTTPProxy,
-    parse_http_proxy,
+    NoProxy,
     replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
+    URLProxy,
 )
-
-from .utils import ProxyType
 
 KEY_FIELD_MAP = {
     "serialNumber": ("serialNumber",),
@@ -34,7 +34,7 @@ KEY_FIELD_MAP = {
 class MobileIronParams(BaseModel):
     username: str
     password: Secret
-    proxy: tuple[ProxyType, str | None] | None = None
+    proxy: URLProxy | EnvProxy | NoProxy | None = None
     partition: Sequence[str]
     key_fields: str
     android_regex: Sequence[str] = Field(default_factory=list)
@@ -56,11 +56,14 @@ def generate_mobileiron_command(
         "--hostname",
         host_config.name,
     ]
-    if params.proxy:
-        args += [
-            "--proxy",
-            parse_http_proxy(params.proxy, http_proxies),
-        ]
+
+    match params.proxy:
+        case URLProxy(url=url):
+            args += ["--proxy", url]
+        case EnvProxy():
+            args += ["--proxy", "FROM_ENVIRONMENT"]
+        case NoProxy():
+            args += ["--proxy", "NO_PROXY"]
 
     for expression in params.android_regex:
         args.append(f"--android-regex={expression}")

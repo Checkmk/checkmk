@@ -3,45 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.vsphere.server_side_calls.special_agent import commands_function, Params
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
+from tests.testlib import SpecialAgent
+
+pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    ["params", "expected_arguments"],
+    "params,expected_args",
     [
-        pytest.param(
+        (
             {
                 "tcp_port": 443,
                 "direct": True,
                 "skip_placeholder_vms": True,
                 "ssl": False,
-                "secret": Secret(123),
+                "secret": "secret",
                 "spaces": "cut",
                 "user": "username",
                 "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
-                "snapshots_on_host": False,
             },
             [
-                "1.2.3.4",
-                "-u",
-                "username",
-                "-s",
-                Secret(123),
-                "-i",
-                "hostsystem,virtualmachine,datastore,counters",
-                "--spaces",
-                "cut",
                 "-p",
                 "443",
+                "-u",
+                "username",
+                "-s=secret",
+                "-i",
+                "hostsystem,virtualmachine,datastore,counters",
                 "--direct",
                 "--hostname",
                 "host",
                 "-P",
+                "--spaces",
+                "cut",
                 "--no-cert-check",
             ],
         ),
@@ -54,47 +51,46 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgen
                 "vm_piggyname": "alias",
                 "skip_placeholder_vms": True,
                 "ssl": False,
-                "secret": Secret(42),
+                "secret": ("store", "stored_secret"),
                 "spaces": "cut",
                 "user": "username",
                 "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
-                "snapshots_on_host": True,
             },
             [
-                "1.2.3.4",
-                "-u",
-                "username",
-                "-s",
-                Secret(42),
-                "-i",
-                "hostsystem,virtualmachine,datastore,counters",
-                "--spaces",
-                "cut",
                 "-p",
                 "443",
+                "-u",
+                "username",
+                ("store", "stored_secret", "-s=%s"),
+                "-i",
+                "hostsystem,virtualmachine,datastore,counters",
                 "--direct",
                 "--hostname",
                 "host",
                 "-P",
+                "--spaces",
+                "cut",
                 "--vm_piggyname",
                 "alias",
-                "--snapshots-on-host",
                 "--no-cert-check",
             ],
         ),
     ],
 )
-def test_commands_function(
-    params: Mapping[str, object],
-    expected_arguments: Sequence[str | Secret],
+@pytest.mark.parametrize(
+    "ip_address, expected_host_address",
+    [
+        (None, "host"),
+        ("1.2.3.4", "1.2.3.4"),
+    ],
+)
+def test_vsphere_argument_parsing(
+    params: dict,
+    expected_args: list[str],
+    ip_address: str | None,
+    expected_host_address: str,
 ) -> None:
-    assert list(
-        commands_function(
-            Params.model_validate(params),
-            HostConfig(
-                name="host",
-                ipv4_config=IPv4Config(address="1.2.3.4"),
-            ),
-            {},
-        )
-    ) == [SpecialAgentCommand(command_arguments=expected_arguments)]
+    """Tests if all required arguments are present."""
+    agent = SpecialAgent("agent_vsphere")
+    arguments = agent.argument_func(params, "host", ip_address)
+    assert arguments == expected_args + [expected_host_address]

@@ -18,11 +18,16 @@ from cmk.server_side_calls.v1 import (
 )
 
 
+class _CiscoPrimeAuth(BaseModel):
+    username: str
+    password: Secret
+
+
 class CiscoPrimeParams(BaseModel):
-    basicauth: tuple[str, Secret] | None = None
+    basicauth: _CiscoPrimeAuth | None = None
     port: int | None = None
-    no_tls: bool = Field(alias="no-tls", default=False)
-    no_cert_check: bool = Field(alias="no-cert-check", default=False)
+    no_tls: bool = Field(default=False)
+    no_cert_check: bool = Field(default=False)
     timeout: int | None = None
     host: str | tuple[str, Mapping[str, str]] | None = None
 
@@ -41,7 +46,7 @@ def generate_cisco_prime_command(
     if params.basicauth:
         auth: tuple[str | Secret, ...] = (
             "-u",
-            params.basicauth[1].with_format(f"{params.basicauth[0]}:%s"),
+            params.basicauth.password.with_format(f"{params.basicauth.username}:%s"),
         )
     else:
         auth = ()

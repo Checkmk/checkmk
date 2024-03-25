@@ -47,7 +47,7 @@ from cmk.special_agents import (
 )
 
 TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
-    "3par": None,
+    "three_par": None,
     "activemq": agent_activemq,
     "acme_sbc": None,  # not even python.
     "alertmanager": agent_alertmanager,

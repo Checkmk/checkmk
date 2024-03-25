@@ -20,7 +20,8 @@ rust_library(
     proc_macro_deps = all_crate_deps(
         proc_macro = True,
     ),
-    deps = all_crate_deps() + ["@openssl"],
+    # Defining `deps = ["@openssl"]` here results in static linkage.
+    deps = all_crate_deps(),
 )
 
 rust_binary(

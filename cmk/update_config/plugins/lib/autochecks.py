@@ -25,9 +25,17 @@ from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 
-_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: Mapping[
-    CheckPluginName, Callable[[str | None], str | None]
-] = {
+_ALL_REPLACED_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPluginName] = {
+    **REPLACED_CHECK_PLUGINS,
+    **{
+        old_name.create_management_name(): new_name.create_management_name()
+        for old_name, new_name in REPLACED_CHECK_PLUGINS.items()
+    },
+}
+
+TDiscoveredItemsTransforms = Mapping[CheckPluginName, Callable[[str | None], str | None]]
+
+_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: TDiscoveredItemsTransforms = {
     CheckPluginName("barracuda_mailqueues"): (lambda _x: None),
     CheckPluginName("checkpoint_memory"): (lambda _x: None),
     CheckPluginName("datapower_mem"): (lambda _x: None),
@@ -38,14 +46,24 @@ _EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: Mapping[
     CheckPluginName("ucd_mem"): (lambda _x: None),
 }
 
+_ALL_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: TDiscoveredItemsTransforms = {
+    **_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS,
+    **{
+        name.create_management_name(): transform
+        for name, transform in _EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS.items()
+    },
+}
+
 # some autocheck parameters need transformation even though there is no ruleset.
-_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
+TDiscoveredParametersTransforms = Mapping[
     CheckPluginName,
     Callable[
         [Any],  # should be LegacyCheckParameters, but this makes writing transforms cumbersome ...
         Mapping[str, object],
     ],
-] = {
+]
+
+_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
     CheckPluginName("aironet_clients"): (lambda p: {}),
     CheckPluginName("aironet_errors"): (lambda p: {}),
     CheckPluginName("alcatel_cpu_aos7"): (lambda p: {}),
@@ -125,6 +143,14 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("tsm_sessions"): (lambda p: {}),
     CheckPluginName("vxvm_objstatus"): (lambda p: {}),
     CheckPluginName("wut_webtherm_humidity"): (lambda p: {}),
+}
+
+_ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
+    **_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS,
+    **{
+        name.create_management_name(): transform
+        for name, transform in _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.items()
+    },
 }
 
 
@@ -229,12 +255,14 @@ def _fix_entry(
     hostname: str,
 ) -> AutocheckEntry:
     """Change names of removed plugins to the new ones and transform parameters"""
-    new_plugin_name = REPLACED_CHECK_PLUGINS.get(entry.check_plugin_name, entry.check_plugin_name)
+    new_plugin_name = _ALL_REPLACED_CHECK_PLUGINS.get(
+        entry.check_plugin_name, entry.check_plugin_name
+    )
 
-    explicit_item_transform = _EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS.get(
+    explicit_item_transform = _ALL_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS.get(
         new_plugin_name, lambda x: x
     )
-    explicit_parameters_transform = _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(
+    explicit_parameters_transform = _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS.get(
         new_plugin_name, lambda x: x
     )
 

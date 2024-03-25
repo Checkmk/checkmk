@@ -656,6 +656,7 @@ class EventServer(ECServerThread):
         ]
         client_sockets: dict[FileDescr, tuple[socket.socket, tuple[str, int] | None, bytes]] = {}
         select_timeout = 1
+        unprocessed_pipe_data = b""
         while not self._terminate_event.is_set():
             try:
                 readable: list[FileDescr | socket.socket] = select.select(
@@ -709,21 +710,15 @@ class EventServer(ECServerThread):
 
             # Read data from pipe
             if pipe in readable:
-                data = b""
                 try:
-                    data = os.read(pipe, 4096)
+                    unprocessed_pipe_data += os.read(pipe, 4096)
                 except Exception:
                     self._logger.exception("General exception during pipe os.read")
 
-                if not data:
-                    os.close(pipe)
-                    listen_list.remove(pipe)
-                    listen_list.append(self.open_pipe())
-
-                messages, unprocessed = parse_bytes_into_syslog_messages(data)
+                messages, unprocessed_pipe_data = parse_bytes_into_syslog_messages(
+                    unprocessed_pipe_data
+                )
                 self.process_syslog_messages(messages, None)
-                if unprocessed:
-                    self._logger.warning("Ignoring incomplete message '%r' from pipe", data)
 
             # Read events from builtin syslog server
             if self._syslog_udp is not None and self._syslog_udp in readable:

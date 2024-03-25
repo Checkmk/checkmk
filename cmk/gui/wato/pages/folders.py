@@ -172,6 +172,8 @@ class ModeFolder(WatoMode):
             return self._search_folder_page_menu(breadcrumb)
         assert not isinstance(self._folder, SearchFolder)
 
+        has_hosts = bool(self._folder.has_hosts())
+
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -188,7 +190,7 @@ class ModeFolder(WatoMode):
                         ),
                         make_checkbox_selection_topic(
                             "wato-folder-/%s" % self._folder.path(),
-                            is_enabled=bool(self._folder.has_hosts()),
+                            is_enabled=has_hosts,
                         ),
                     ],
                 ),
@@ -214,7 +216,7 @@ class ModeFolder(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(),
+            inpage_search=PageMenuSearch() if has_hosts else None,
         )
 
         self._extend_display_dropdown(menu)

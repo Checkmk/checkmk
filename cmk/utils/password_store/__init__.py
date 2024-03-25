@@ -44,6 +44,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
 from typing import Literal
+from uuid import uuid4
 
 from typing_extensions import TypedDict
 
@@ -58,6 +59,9 @@ from . import hack
 
 PasswordLookupType = Literal["password", "store"]
 PasswordId = str | tuple[PasswordLookupType, str]
+
+
+_PASSWORD_ID_PREFIX = ":uuid:"  # cannot collide with user defined id.
 
 
 class Password(TypedDict):
@@ -102,16 +106,35 @@ def load() -> dict[str, str]:
 
 
 def _load(store_path: Path) -> dict[str, str]:
-    passwords: dict[str, str] = {}
     with suppress(FileNotFoundError):
         store_path_bytes: bytes = store_path.read_bytes()
         if not store_path_bytes:
-            return passwords
-        for line in PasswordStore.decrypt(store_path_bytes).splitlines():
-            ident, password = line.strip().split(":", 1)
-            passwords[ident] = password
+            return {}
+        return _deserialise_passwords(PasswordStore.decrypt(store_path_bytes))
+    return {}
+
+
+def _deserialise_passwords(raw: str) -> dict[str, str]:
+    """
+
+    >>> _deserialise_passwords("my_stored:uuid:p4ssw0rd\\n:uuid:1234:s3:cr37!")
+    {'my_stored': 'uuid:p4ssw0rd', ':uuid:1234': 's3:cr37!'}
+
+    """
+    passwords: dict[str, str] = {}
+    for line in raw.splitlines():
+        if (sline := line.strip()).startswith(_PASSWORD_ID_PREFIX):
+            uuid, password = sline.removeprefix(_PASSWORD_ID_PREFIX).split(":", 1)
+            ident = f"{_PASSWORD_ID_PREFIX}{uuid}"
+        else:
+            ident, password = sline.split(":", 1)
+        passwords[ident] = password
 
     return passwords
+
+
+def ad_hoc_password_id() -> str:
+    return f"{_PASSWORD_ID_PREFIX}{uuid4()}"
 
 
 def extract(password_id: PasswordId) -> str | None:

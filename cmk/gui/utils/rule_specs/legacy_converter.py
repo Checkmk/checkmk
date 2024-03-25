@@ -9,8 +9,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, Callable, Literal, TypeVar
-from uuid import uuid4
 
+from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import Edition
 
@@ -1634,7 +1634,7 @@ def _transform_password_back(
 ) -> tuple[Literal["explicit_password", "stored_password"], str, str]:
     match value:
         case "password", str(password):
-            return "explicit_password", str(uuid4()), password
+            return "explicit_password", ad_hoc_password_id(), password
         case "store", str(password_store_id):
             return "stored_password", password_store_id, ""
 

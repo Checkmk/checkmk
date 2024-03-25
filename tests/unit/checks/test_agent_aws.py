@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.plugins.aws.server_side_calls.aws import generate_aws_commands
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
+from tests.testlib import SpecialAgent
 
 
 @pytest.mark.parametrize(
@@ -18,12 +16,12 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
         pytest.param(
             {
                 "access_key_id": "strawberry",
-                "secret_access_key": Secret(1),
+                "secret_access_key": ("password", "strawberry098"),
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_port": 22,
                     "proxy_user": "banana",
-                    "proxy_password": Secret(2),
+                    "proxy_password": ("password", "banana123"),
                 },
                 "access": {},
                 "global_services": {
@@ -46,7 +44,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
                 "--access-key-id",
                 "strawberry",
                 "--secret-access-key",
-                Secret(1),
+                "strawberry098",
                 "--proxy-host",
                 "1.1.1",
                 "--proxy-port",
@@ -54,7 +52,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
                 "--proxy-user",
                 "banana",
                 "--proxy-password",
-                Secret(2),
+                "banana123",
                 "--global-services",
                 "ce",
                 "--services",
@@ -72,11 +70,11 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
         pytest.param(
             {
                 "access_key_id": "strawberry",
-                "secret_access_key": Secret(1),
+                "secret_access_key": ("store", "strawberry098"),
                 "proxy_details": {
                     "proxy_host": "1.1.1",
                     "proxy_user": "banana",
-                    "proxy_password": Secret(2),
+                    "proxy_password": ("store", "banana123"),
                 },
                 "access": {},
                 "global_services": {},
@@ -88,13 +86,13 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
                 "--access-key-id",
                 "strawberry",
                 "--secret-access-key",
-                Secret(1),
+                ("store", "strawberry098", "%s"),
                 "--proxy-host",
                 "1.1.1",
                 "--proxy-user",
                 "banana",
                 "--proxy-password",
-                Secret(2),
+                ("store", "banana123", "%s"),
                 "--hostname",
                 "testhost",
                 "--piggyback-naming-convention",
@@ -129,9 +127,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
                         )
                     },
                     # special treatment of certain services?
-                    "cloudwatch_alarms": {
-                        "alarms": ("ut_ignored", ["ut_cloudwatch_alarms_tuple_1"])
-                    },
+                    "cloudwatch": {"alarms": ("ut_ignored", ["ut_cloudwatch_alarms_tuple_1"])},
                     "s3": {"requests": None},  # None if the option is active
                     "wafv2": {"cloudfront": None},  # same here
                 },
@@ -147,14 +143,14 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
                 "regions": ["ut_region_1"],
                 # mandatory params:
                 "access_key_id": "ut_access_key_id",
-                "secret_access_key": Secret(42),
+                "secret_access_key": ("store", "ut_secret_access_key_store"),
                 "piggyback_naming_convention": "ut_piggyback_naming_convention",
             },
             [
                 "--access-key-id",
                 "ut_access_key_id",
                 "--secret-access-key",
-                Secret(42),
+                ("store", "ut_secret_access_key_store", "%s"),
                 "--global-service-region",
                 "ut_global_service_region",
                 "--assume-role",
@@ -200,15 +196,10 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
     ],
 )
 def test_aws_argument_parsing(
-    params: object,
+    params: Mapping[str, Any],
     expected_args: Sequence[Any],
 ) -> None:
-    (command,) = generate_aws_commands(
-        params,
-        HostConfig(
-            name="testhost",
-            ipv4_config=IPv4Config(address="unittest_address"),
-        ),
-        {},
-    )
-    assert command.command_arguments == expected_args
+    """Tests if all required arguments are present."""
+    agent = SpecialAgent("agent_aws")
+    arguments = agent.argument_func(params, "testhost", "address")
+    assert arguments == expected_args

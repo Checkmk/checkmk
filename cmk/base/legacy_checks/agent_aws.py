@@ -1,28 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
-# TIME WASTED TRYING TO TYPE PARAMS: 4h
-# (see patch 8 of gerrit change 67437; its probably easier to simplify the valuespec first)
-
-
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.server_side_calls.v1 import (
-    HostConfig,
-    HTTPProxy,
-    noop_parser,
-    replace_macros,
-    Secret,
-    SpecialAgentCommand,
-    SpecialAgentConfig,
-)
+from cmk.base.check_api import passwordstore_get_cmdline
+from cmk.base.config import special_agent_info
 
 
-def _get_tag_options(tag_values: list[tuple[str, list[str]]], prefix: str) -> list[str]:
+def _get_tag_options(tag_values, prefix):
     options = []
     for key, values in tag_values:
         options.append("--%s-tag-key" % prefix)
@@ -42,130 +29,103 @@ def _get_services_config(services):
     for service_name, service_config in services.items():
         if service_config is None:
             continue
-
         if service_config.get("limits"):
             service_args += ["--%s-limits" % service_name]
-
         selection = service_config.get("selection")
         if not isinstance(selection, tuple):
             # Here: value of selection is 'all' which means there's no
             # restriction (names or tags) to the instances of a specific
-            # AWS service. The command-line option already includes this
+            # AWS service. The commandline option already includes this
             # service '--services SERVICE1 SERVICE2 ...' (see below).
             continue
-
-        if not selection[1]:
+        selection_type, selection_values = selection
+        if not selection_values:
             continue
-
-        if selection[0] == "names":
+        if selection_type == "names":
             service_args.append("--%s-names" % service_name)
-            service_args += selection[1]
-
-        elif selection[0] == "tags":
-            service_args += _get_tag_options(selection[1], service_name)
+            service_args += selection_values
+        elif selection_type == "tags":
+            service_args += _get_tag_options(selection_values, service_name)
     return service_args
 
 
-def _proxy_args(details: Mapping[str, Any], host_config: HostConfig) -> Sequence[str | Secret]:
-    proxy_args: list[str | Secret] = [
-        "--proxy-host",
-        replace_macros(details["proxy_host"], host_config.macros),
-    ]
-
+def _proxy_args(details: Mapping[str, Any]) -> Sequence[Any]:
+    proxy_args = ["--proxy-host", details["proxy_host"]]
     if proxy_port := details.get("proxy_port"):
         proxy_args += ["--proxy-port", str(proxy_port)]
-
     if (proxy_user := details.get("proxy_user")) and (proxy_pwd := details.get("proxy_password")):
         proxy_args += [
             "--proxy-user",
             proxy_user,
             "--proxy-password",
-            proxy_pwd,
+            passwordstore_get_cmdline("%s", proxy_pwd),
         ]
     return proxy_args
 
 
 def agent_aws_arguments(  # pylint: disable=too-many-branches
-    params: Any, host_config: HostConfig
-) -> Iterator[str]:
-    yield from [
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
+) -> Sequence[Any]:
+    args = [
         "--access-key-id",
         params["access_key_id"],
         "--secret-access-key",
-        params["secret_access_key"],  # this is a `Secret`
-        *(_proxy_args(params["proxy_details"], host_config) if "proxy_details" in params else []),
+        passwordstore_get_cmdline("%s", params["secret_access_key"]),
+        *(_proxy_args(params["proxy_details"]) if "proxy_details" in params else []),
     ]
-
     global_service_region = params.get("access", {}).get("global_service_region")
     if global_service_region is not None:
-        yield from ["--global-service-region", global_service_region]
-
+        args += ["--global-service-region", global_service_region]
     role_arn_id = params.get("access", {}).get("role_arn_id")
     if role_arn_id:
-        yield "--assume-role"
+        args += ["--assume-role"]
         if role_arn_id[0]:
-            yield from ["--role-arn", role_arn_id[0]]
+            args += ["--role-arn", role_arn_id[0]]
         if role_arn_id[1]:
-            yield from ["--external-id", role_arn_id[1]]
-
+            args += ["--external-id", role_arn_id[1]]
     regions = params.get("regions")
     if regions:
-        yield "--regions"
-        yield from regions
-
+        args.append("--regions")
+        args += regions
     global_services = params.get("global_services", {})
     if global_services:
-        yield "--global-services"
+        args.append("--global-services")
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
-        yield from sorted(global_services)
-        yield from _get_services_config(global_services)  # type: ignore[arg-type]
-
+        args += sorted(global_services)
+        args += _get_services_config(global_services)
     services = params.get("services", {})
-
+    # for backwards compatibility
+    if "cloudwatch" in services:
+        services["cloudwatch_alarms"] = services["cloudwatch"]
+        del services["cloudwatch"]
     if services:
-        yield "--services"
+        args.append("--services")
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
-        yield from sorted(services)
-        yield from _get_services_config(services)  # type: ignore[arg-type]
-
+        args += sorted(services)
+        args += _get_services_config(services)
     if "requests" in services.get("s3", {}):
-        yield "--s3-requests"
-
+        args += ["--s3-requests"]
     alarms = services.get("cloudwatch_alarms", {}).get("alarms")
     if alarms:
         # {'alarms': 'all'} is handled by no additionally specified names
-        yield "--cloudwatch-alarms"
+        args += ["--cloudwatch-alarms"]
         if isinstance(alarms, tuple):
-            yield from alarms[1]
-
+            args += alarms[1]
     if "cloudfront" in services.get("wafv2", {}):
-        yield "--wafv2-cloudfront"
-
+        args += ["--wafv2-cloudfront"]
     if "cloudfront" in global_services:
         cloudfront_host_assignment = global_services["cloudfront"]["host_assignment"]
-        yield from ["--cloudfront-host-assignment", cloudfront_host_assignment]
-
+        args += ["--cloudfront-host-assignment", cloudfront_host_assignment]
     # '--overall-tags': [('KEY_1', ['VAL_1', 'VAL_2']), ...)],
-    yield from _get_tag_options(params.get("overall_tags", []), "overall")
-    yield from [
+    args += _get_tag_options(params.get("overall_tags", []), "overall")
+    args += [
         "--hostname",
-        host_config.name,
+        hostname,
     ]
-    yield from ("--piggyback-naming-convention", params["piggyback_naming_convention"])
+    args.extend(("--piggyback-naming-convention", params["piggyback_naming_convention"]))
+    return args
 
 
-def generate_aws_commands(
-    params: object,
-    host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
-) -> Iterator[SpecialAgentCommand]:
-    yield SpecialAgentCommand(command_arguments=list(agent_aws_arguments(params, host_config)))
-
-
-special_agent_aws = SpecialAgentConfig(
-    name="aws",
-    parameter_parser=noop_parser,
-    commands_function=generate_aws_commands,
-)
+special_agent_info["aws"] = agent_aws_arguments

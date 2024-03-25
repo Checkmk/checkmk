@@ -16,9 +16,6 @@ metric_uptime = metrics.Metric(
 
 perfometer_uptime = perfometers.Perfometer(
     name="uptime",
-    focus_range=perfometers.FocusRange(
-        perfometers.Closed(0),
-        perfometers.Open(30 * 24 * 3600),
-    ),
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(5000000)),
     segments=["uptime"],
 )

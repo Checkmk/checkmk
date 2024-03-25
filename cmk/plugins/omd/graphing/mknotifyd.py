@@ -38,10 +38,7 @@ metric_corrupted_files = metrics.Metric(
 
 perfometer_last_updated = perfometers.Perfometer(
     name="last_updated",
-    focus_range=perfometers.FocusRange(
-        perfometers.Closed(0),
-        perfometers.Open(452),
-    ),
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(70)),
     segments=["last_updated"],
 )
 

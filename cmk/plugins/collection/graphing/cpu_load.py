@@ -30,7 +30,7 @@ metric_load15 = metrics.Metric(
 
 perfometer_load1 = perfometers.Perfometer(
     name="load1",
-    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(10)),
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(6)),
     segments=["load1"],
 )
 

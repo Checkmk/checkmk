@@ -308,6 +308,8 @@ class ModeFolder(WatoMode):
             and user.may("wato.manage_hosts")
             and self._folder.permissions.may("write")
         ):
+            is_enabled = bool(self._folder.has_hosts())
+
             yield PageMenuEntry(
                 title=_("Add host"),
                 icon_name="new",
@@ -331,6 +333,8 @@ class ModeFolder(WatoMode):
                 title=_("Run bulk service discovery"),
                 icon_name="services",
                 item=make_simple_link(self._folder.url([("mode", "bulkinventory"), ("all", "1")])),
+                disabled_tooltip="Add host/subfolder to use this action",
+                is_enabled=is_enabled,
             )
 
         if user.may("wato.rename_hosts"):
@@ -338,6 +342,8 @@ class ModeFolder(WatoMode):
                 title=_("Rename multiple hosts"),
                 icon_name="rename_host",
                 item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
+                disabled_tooltip="Add host/subfolder to use this action",
+                is_enabled=is_enabled,
             )
 
         if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
@@ -355,6 +361,8 @@ class ModeFolder(WatoMode):
                     confirm_button=_("Remove"),
                     warning=True,
                 ),
+                disabled_tooltip="Add host/subfolder to use this action",
+                is_enabled=is_enabled,
             )
 
         if (
@@ -366,6 +374,8 @@ class ModeFolder(WatoMode):
                 title=_("Detect network parent hosts"),
                 icon_name="parentscan",
                 item=make_simple_link(self._folder.url([("mode", "parentscan"), ("all", "1")])),
+                disabled_tooltip="Add host/subfolder to use this action",
+                is_enabled=is_enabled,
             )
 
         if user.may("wato.random_hosts"):
@@ -391,6 +401,7 @@ class ModeFolder(WatoMode):
                     form_name="hosts",
                     button_name="_bulk_edit",
                 ),
+                disabled_tooltip="Add host/subfolder to use this action",
                 is_enabled=is_enabled,
             )
 
@@ -402,6 +413,7 @@ class ModeFolder(WatoMode):
                     form_name="hosts",
                     button_name="_bulk_inventory",
                 ),
+                disabled_tooltip="Add host/subfolder to use this action",
                 is_enabled=is_enabled,
             )
 
@@ -412,6 +424,7 @@ class ModeFolder(WatoMode):
                     icon_name="move",
                     name="move_rules",
                     item=PageMenuPopup(self._render_bulk_move_form()),
+                    disabled_tooltip="Add host/subfolder to use this action",
                     is_enabled=is_enabled,
                 )
 
@@ -423,6 +436,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_parentscan",
                     ),
+                    disabled_tooltip="Add host/subfolder to use this action",
                     is_enabled=is_enabled,
                 )
 
@@ -434,6 +448,7 @@ class ModeFolder(WatoMode):
                         form_name="hosts",
                         button_name="_bulk_cleanup",
                     ),
+                    disabled_tooltip="Add host/subfolder to use this action",
                     is_enabled=is_enabled,
                 )
 
@@ -449,6 +464,8 @@ class ModeFolder(WatoMode):
                     confirm_button=_("Remove"),
                     warning=True,
                 ),
+                disabled_tooltip="Add host/subfolder to use this action",
+                is_enabled=is_enabled,
             )
 
         if not self._folder.locked_hosts() and user.may("wato.manage_hosts"):
@@ -460,6 +477,7 @@ class ModeFolder(WatoMode):
                     button_name="_bulk_delete",
                     title=_("Delete selected hosts"),
                 ),
+                disabled_tooltip="Add host/subfolder to use this action",
                 is_enabled=is_enabled,
             )
 

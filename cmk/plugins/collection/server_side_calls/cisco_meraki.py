@@ -46,7 +46,7 @@ def agent_cisco_meraki_arguments(
 
     if params.sections is not None:
         args.append("--sections")
-        args += params.sections
+        args += [s.replace("_", "-") for s in params.sections]
 
     if params.orgs is not None:
         args.append("--orgs")

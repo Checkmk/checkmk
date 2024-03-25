@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from collections.abc import Iterator, Mapping
+from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
@@ -20,7 +20,7 @@ from cmk.server_side_calls.v1 import (
 class NetappOntapParams(BaseModel):
     username: str
     password: Secret
-    no_cert_check: bool = Field(default=False, alias="no-cert-check")
+    no_cert_check: Literal["verify_cert", "no_cert_check"]
 
 
 def generate_netapp_ontap_command(
@@ -32,7 +32,7 @@ def generate_netapp_ontap_command(
     args += ["--username", params.username]
     args += ["--password", params.password]
 
-    if params.no_cert_check:
+    if params.no_cert_check == "no_cert_check":
         args += ["--no-cert-check"]
 
     yield SpecialAgentCommand(command_arguments=args)

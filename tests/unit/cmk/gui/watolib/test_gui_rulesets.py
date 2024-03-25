@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping
 
 # pylint: disable=redefined-outer-name
 from dataclasses import dataclass
+from unittest.mock import patch
 
 import pytest
 from pytest import FixtureRequest
@@ -27,6 +28,7 @@ import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
+from cmk.gui.utils.rule_specs import legacy_converter
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
 
@@ -633,7 +635,7 @@ class _RuleHelper:
             RuleGroup.SpecialAgents("gcp"),
             {
                 "project": "old_value",
-                "credentials": ("password", "hunter2"),
+                "credentials": ("explicit_password", "uuid", "hunter2"),
                 "services": ["gcs", "gce"],
             },
         )
@@ -648,7 +650,9 @@ class _RuleHelper:
 
 @pytest.fixture(
     params=[
-        _RuleHelper(_RuleHelper.gcp_rule, "credentials", ("password", "geheim"), "project"),
+        _RuleHelper(
+            _RuleHelper.gcp_rule, "credentials", ("explicit_password", "uuid", "geheim"), "project"
+        ),
         pytest.param(
             _RuleHelper(_RuleHelper.ssh_rule, "sshkey", ("new_priv", "public_key"), "runas"),
             marks=pytest.mark.skipif(
@@ -677,7 +681,10 @@ def test_diff_rules_new_rule(request_context: None, rule_helper: _RuleHelper) ->
 
 def test_diff_to_no_changes(request_context: None, rule_helper: _RuleHelper) -> None:
     rule = rule_helper.rule()
-    assert rule.diff_to(rule) == "Nothing was changed."
+    # An uuid is created every time a rule is created/edited, so mock it here for the comparison.
+    # The actual password should stay the same
+    with patch.object(legacy_converter, "ad_hoc_password_id", return_value="test-uuid"):
+        assert rule.diff_to(rule) == "Nothing was changed."
 
 
 def test_diff_to_secret_changed(request_context: None, rule_helper: _RuleHelper) -> None:
@@ -689,7 +696,10 @@ def test_diff_to_secret_changed(request_context: None, rule_helper: _RuleHelper)
 def test_diff_to_secret_unchanged(request_context: None, rule_helper: _RuleHelper) -> None:
     old, new = rule_helper.rule(), rule_helper.rule()
     new.value[rule_helper.other_attr] = "new_value"
-    diff = old.diff_to(new)
+    # An uuid is created every time a rule is created/edited, so mock it here for the comparison.
+    # The actual password should stay the same
+    with patch.object(legacy_converter, "ad_hoc_password_id", return_value="test-uuid"):
+        diff = old.diff_to(new)
     assert "Redacted secrets changed." not in diff
     assert 'changed from "old_value" to "new_value".' in diff
 

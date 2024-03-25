@@ -5,9 +5,11 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Generic, Iterable, Self, TypeVar
+from typing import Generic, Iterable, Literal, Self, TypeVar
 
-from cmk.server_side_calls.v1 import Secret
+import cmk.utils.config_warnings as config_warnings
+
+from cmk.server_side_calls.v1 import EnvProxy, NoProxy, Secret, URLProxy
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
@@ -59,6 +61,12 @@ _RuleSetType_co = TypeVar("_RuleSetType_co", covariant=True)
 
 
 @dataclass(frozen=True)
+class ProxyConfig:
+    host_name: str
+    global_proxies: Mapping[str, Mapping[str, str]]
+
+
+@dataclass(frozen=True)
 class ReplacementResult(Generic[_RuleSetType_co]):
     value: _RuleSetType_co
     found_secrets: Mapping[str, str]
@@ -66,9 +74,10 @@ class ReplacementResult(Generic[_RuleSetType_co]):
 
 
 def process_configuration_to_parameters(
-    params: Mapping[str, object]
+    params: Mapping[str, object],
+    proxy_config: ProxyConfig | None = None,
 ) -> ReplacementResult[Mapping[str, object]]:
-    d_results = [(k, _processed_config_value(v)) for k, v in params.items()]
+    d_results = [(k, _processed_config_value(v, proxy_config)) for k, v in params.items()]
     return ReplacementResult(
         value={k: res.value for k, res in d_results},
         found_secrets={k: v for _, res in d_results for k, v in res.found_secrets.items()},
@@ -76,10 +85,13 @@ def process_configuration_to_parameters(
     )
 
 
-def _processed_config_value(params: object) -> ReplacementResult[object]:
+def _processed_config_value(
+    params: object,
+    proxy_config: ProxyConfig | None,
+) -> ReplacementResult[object]:
     match params:
         case list():
-            results = [_processed_config_value(v) for v in params]
+            results = [_processed_config_value(v, proxy_config) for v in params]
             return ReplacementResult(
                 value=[res.value for res in results],
                 found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
@@ -91,14 +103,22 @@ def _processed_config_value(params: object) -> ReplacementResult[object]:
                     return _replace_password(passwd_id, None)
                 case "explicit_password", str(passwd_id), str(value):
                     return _replace_password(passwd_id, value)
-            results = [_processed_config_value(v) for v in params]
+                case "global" | "environment" | "url" | "no_proxy", str() | None:
+                    if proxy_config is not None:
+                        return ReplacementResult(
+                            value=_replace_proxies(params, proxy_config),
+                            found_secrets={},
+                            surrogates={},
+                        )
+
+            results = [_processed_config_value(v, proxy_config) for v in params]
             return ReplacementResult(
                 value=tuple(res.value for res in results),
                 found_secrets={k: v for res in results for k, v in res.found_secrets.items()},
                 surrogates={k: v for res in results for k, v in res.surrogates.items()},
             )
         case dict():
-            return process_configuration_to_parameters(params)
+            return process_configuration_to_parameters(params, proxy_config)
     return ReplacementResult(value=params, found_secrets={}, surrogates={})
 
 
@@ -113,3 +133,28 @@ def _replace_password(
         found_secrets={} if value is None else {name: value},
         surrogates={surrogate: name},
     )
+
+
+def _replace_proxies(
+    proxy_params: tuple[Literal["global", "environment", "url", "no_proxy"], str | None],
+    proxy_config: ProxyConfig,
+) -> URLProxy | NoProxy | EnvProxy:
+    match proxy_params:
+        case ("global", str(proxy_id)):
+            try:
+                global_proxy = proxy_config.global_proxies[proxy_id]
+                return URLProxy(url=global_proxy["proxy_url"])
+            except KeyError:
+                config_warnings.warn(
+                    f'The global proxy "{proxy_id}" used by host "{proxy_config.host_name}"'
+                    " does not exist."
+                )
+                return EnvProxy()
+        case ("environment", str()):
+            return EnvProxy()
+        case ("url", str(url)):
+            return URLProxy(url=url)
+        case ("no_proxy", None):
+            return NoProxy()
+        case _:
+            raise ValueError(f"Invalid proxy configuration: {proxy_config}")

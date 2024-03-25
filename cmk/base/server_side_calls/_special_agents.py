@@ -23,7 +23,7 @@ from ._commons import (
     replace_passwords,
     SpecialAgentInfoFunctionResult,
 )
-from ._config_processing import process_configuration_to_parameters
+from ._config_processing import process_configuration_to_parameters, ProxyConfig
 
 
 @dataclass(frozen=True)
@@ -98,7 +98,8 @@ class SpecialAgent:
             for id, proxy in self._http_proxies.items()
         }
 
-        processed = process_configuration_to_parameters(conf_dict)
+        proxy_config = ProxyConfig(self.host_name, self._http_proxies)
+        processed = process_configuration_to_parameters(conf_dict, proxy_config)
 
         for command in special_agent(processed.value, self.host_config, http_proxies):
             args = replace_passwords(

@@ -9,21 +9,21 @@ from collections.abc import Iterator, Mapping, Sequence
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
+    EnvProxy,
     HostConfig,
     HTTPProxy,
-    parse_http_proxy,
+    NoProxy,
     replace_macros,
     Secret,
     SpecialAgentCommand,
     SpecialAgentConfig,
+    URLProxy,
 )
-
-from .utils import ProxyType
 
 
 class Params(BaseModel):
     api_key: Secret
-    proxy: tuple[ProxyType, str | None] | None = None
+    proxy: URLProxy | NoProxy | EnvProxy | None = None
     sections: Sequence[str] | None = None
     orgs: Sequence[str] | None = None
 
@@ -38,11 +38,13 @@ def agent_cisco_meraki_arguments(
         params.api_key.unsafe(),
     ]
 
-    if params.proxy is not None:
-        args += [
-            "--proxy",
-            parse_http_proxy(params.proxy, http_proxies),
-        ]
+    match params.proxy:
+        case URLProxy(url=url):
+            args += ["--proxy", url]
+        case EnvProxy():
+            args += ["--proxy", "FROM_ENVIRONMENT"]
+        case NoProxy():
+            args += ["--proxy", "NO_PROXY"]
 
     if params.sections is not None:
         args.append("--sections")

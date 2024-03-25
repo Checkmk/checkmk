@@ -21,7 +21,7 @@ from cmk.discover_plugins import discover_executable, family_libexec_dir, Plugin
 from cmk.server_side_calls.v1 import ActiveCheckConfig, HostConfig, HTTPProxy
 
 from ._commons import commandline_arguments, replace_macros, replace_passwords
-from ._config_processing import process_configuration_to_parameters
+from ._config_processing import process_configuration_to_parameters, ProxyConfig
 
 
 class InvalidPluginInfoError(Exception):
@@ -175,7 +175,8 @@ class ActiveCheck:
 
         for conf_dict in plugin_params:
             # actually these ^- are configuration sets.
-            processed = process_configuration_to_parameters(conf_dict)
+            proxy_config = ProxyConfig(self.host_name, self._http_proxies)
+            processed = process_configuration_to_parameters(conf_dict, proxy_config)
 
             for service in active_check(processed.value, self.host_config, http_proxies):
                 arguments = replace_passwords(

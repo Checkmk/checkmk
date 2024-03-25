@@ -22,7 +22,7 @@ def test_agent_elasticsearch_arguments_cert_check() -> None:
     (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG, {})
     assert "--no-cert-check" not in cmd.command_arguments
 
-    params["no-cert-check"] = True
+    params["no_cert_check"] = True
     (cmd,) = special_agent_elasticsearch(params, TEST_HOST_CONFIG, {})
     assert "--no-cert-check" in cmd.command_arguments
 

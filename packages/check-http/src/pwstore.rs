@@ -11,7 +11,7 @@ use anyhow::{anyhow, Result as AnyhowResult};
 use scrypt::{scrypt, Params};
 use std::{collections::HashMap, env, fs, path::PathBuf};
 
-const PW_STORE_FILE: &str = "var/check_mk/stored_passwords";
+const PW_STORE_FILE: &str = "var/check_mk/core/helper_config/latest/stored_passwords";
 const PW_STORE_SECRET_FILE: &str = "etc/password_store.secret";
 const OMD_ROOT: &str = "OMD_ROOT";
 

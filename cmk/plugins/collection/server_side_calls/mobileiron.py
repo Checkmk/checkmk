@@ -20,16 +20,26 @@ from cmk.server_side_calls.v1 import (
 
 from .utils import ProxyType
 
+KEY_FIELD_MAP = {
+    "serialNumber": ("serialNumber",),
+    "emailAddress": ("emailAddress",),
+    "emailAddress_serialNumber": ("emailAddress", "serialNumber"),
+    "deviceModel_serialNumber": ("deviceModel", "serialNumber"),
+    "uid": ("uid",),
+    "uid_serialNumber": ("uid", "serialNumber"),
+    "guid": ("guid",),
+}
+
 
 class MobileIronParams(BaseModel):
     username: str
     password: Secret
     proxy: tuple[ProxyType, str | None] | None = None
     partition: Sequence[str]
-    key_fields: tuple[str] | tuple[str, str] = Field(..., alias="key-fields")
-    android_regex: Sequence[str] = Field(alias="android-regex", default_factory=list)
-    ios_regex: Sequence[str] = Field(alias="ios-regex", default_factory=list)
-    other_regex: Sequence[str] = Field(alias="other-regex", default_factory=list)
+    key_fields: str
+    android_regex: Sequence[str] = Field(default_factory=list)
+    ios_regex: Sequence[str] = Field(default_factory=list)
+    other_regex: Sequence[str] = Field(default_factory=list)
 
 
 def generate_mobileiron_command(
@@ -61,7 +71,7 @@ def generate_mobileiron_command(
     for expression in params.other_regex:
         args.append(f"--other-regex={expression}")
 
-    for key_field in params.key_fields:
+    for key_field in KEY_FIELD_MAP[params.key_fields]:
         args.append("--key-fields")
         args.append(key_field)
 

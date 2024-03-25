@@ -107,6 +107,7 @@ UNMIGRATED = {
     "appdynamics",
     "aws",
     "aws_status",
+    "azure",
     "couchbase",
     "datadog",
     "ddn_s2a",

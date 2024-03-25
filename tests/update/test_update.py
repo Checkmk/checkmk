@@ -77,6 +77,10 @@ def test_update(  # pylint: disable=too-many-branches
         # get baseline monitoring data for each host
         base_data[hostname] = test_site.get_host_services(hostname)
 
+        # OMD status service turning into CRIT after the update (looks like for performance reasons)
+        # See CMK-16608. TODO: restore service after ticket is done.
+        base_data[hostname].pop(f"OMD {test_site.id} status")
+
         # * The 'Postfix status' service has been renamed into 'Postfix status default'.
         #   Related: CMK-13774
         # * The 'Postfix Queue' has been renamed into 'Postfix Queue default'

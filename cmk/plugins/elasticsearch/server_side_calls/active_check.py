@@ -28,7 +28,7 @@ class Params(BaseModel):
     pattern: str
     fieldname: list[str] | None = None
     timerange: int
-    count: tuple[int, int] | None = None
+    count: tuple[Literal["fixed"], int, int] | tuple[Literal["no_levels"], None] | None = None
 
 
 def commands_function(
@@ -48,8 +48,8 @@ def commands_function(
         args += ["-i", " ".join(params.index)]
     if params.fieldname is not None:
         args += ["-f", " ".join(params.fieldname)]
-    if params.count is not None:
-        warn, crit = params.count
+    if params.count is not None and params.count[0] == "fixed":
+        _ty, warn, crit = params.count
         args += ["--warn=%d" % warn, "--crit=%d" % crit]
 
     if params.hostname is not None:

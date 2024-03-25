@@ -97,16 +97,18 @@ class NotationFormatter:
         return self._preformat_large_number(value, use_prefix, use_symbol)
 
     @abc.abstractmethod
-    def _format_suffix(self, prefix: str, symbol: str) -> str:
+    def _compose(self, text: str, prefix: str, symbol: str) -> str:
         raise NotImplementedError()
 
     def _postformat(
         self, formatted: Formatted, compute_auto_precision_digits: Callable[[int, int], int]
     ) -> str:
-        value_ = str(self._apply_precision(formatted.value, compute_auto_precision_digits))
-        value = value_.rstrip("0").rstrip(".") if "." in value_ else value_
-        suffix = self._format_suffix(formatted.prefix, formatted.symbol)
-        return f"{value}{suffix}".strip()
+        text = str(self._apply_precision(formatted.value, compute_auto_precision_digits))
+        return self._compose(
+            text.rstrip("0").rstrip(".") if "." in text else text,
+            formatted.prefix,
+            formatted.symbol,
+        ).strip()
 
     def render(self, value: int | float) -> str:
         sign = "" if value >= 0 else "-"
@@ -178,8 +180,8 @@ class DecimalFormatter(NotationFormatter):
     ) -> Formatted:
         return Formatted(value, "", self.symbol)
 
-    def _format_suffix(self, prefix: str, symbol: str) -> str:
-        return f" {symbol}"
+    def _compose(self, text: str, prefix: str, symbol: str) -> str:
+        return f"{text} {symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -240,8 +242,8 @@ class SIFormatter(NotationFormatter):
                 return Formatted(value / pow(1000, power), prefix, self.symbol)
         return Formatted(value, "", self.symbol)
 
-    def _format_suffix(self, prefix: str, symbol: str) -> str:
-        return f" {prefix}{symbol}"
+    def _compose(self, text: str, prefix: str, symbol: str) -> str:
+        return f"{text} {prefix}{symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -285,8 +287,8 @@ class IECFormatter(NotationFormatter):
                 return Formatted(value / pow(1024, power), prefix, self.symbol)
         return Formatted(value, "", self.symbol)
 
-    def _format_suffix(self, prefix: str, symbol: str) -> str:
-        return f" {prefix}{symbol}"
+    def _compose(self, text: str, prefix: str, symbol: str) -> str:
+        return f"{text} {prefix}{symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -313,8 +315,8 @@ class StandardScientificFormatter(NotationFormatter):
         exponent = math.floor(math.log10(value))
         return Formatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)
 
-    def _format_suffix(self, prefix: str, symbol: str) -> str:
-        return f"{prefix} {symbol}"
+    def _compose(self, text: str, prefix: str, symbol: str) -> str:
+        return f"{text}{prefix} {symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -341,8 +343,8 @@ class EngineeringScientificFormatter(NotationFormatter):
         exponent = math.floor(math.log10(value) // 3) * 3
         return Formatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)
 
-    def _format_suffix(self, prefix: str, symbol: str) -> str:
-        return f"{prefix} {symbol}"
+    def _compose(self, text: str, prefix: str, symbol: str) -> str:
+        return f"{text}{prefix} {symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -421,8 +423,8 @@ class TimeFormatter(NotationFormatter):
                 return Formatted(value / factor, "", symbol)
         return Formatted(value, "", self.symbol)
 
-    def _format_suffix(self, prefix: str, symbol: str) -> str:
-        return f" {prefix}{symbol}"
+    def _compose(self, text: str, prefix: str, symbol: str) -> str:
+        return f"{text} {prefix}{symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)

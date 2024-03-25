@@ -86,9 +86,6 @@ metric_age = metrics.Metric(
 
 perfometer_age = perfometers.Perfometer(
     name="age",
-    focus_range=perfometers.FocusRange(
-        perfometers.Closed(0),
-        perfometers.Open(29325132),
-    ),
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(5000000)),
     segments=["age"],
 )

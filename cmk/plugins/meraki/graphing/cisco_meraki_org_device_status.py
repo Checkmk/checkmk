@@ -24,6 +24,6 @@ graph_meraki_device_status = graphs.Graph(
 
 perfometer_meraki_last_reported = perfometers.Perfometer(
     name="meraki_last_reported",
-    focus_range=perfometers.FocusRange(lower=perfometers.Closed(0), upper=perfometers.Open(7200.0)),
+    focus_range=perfometers.FocusRange(lower=perfometers.Closed(0), upper=perfometers.Open(7200)),
     segments=["last_reported"],
 )

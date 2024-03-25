@@ -246,18 +246,12 @@ perfometer_service_check_rate_host_check_rate = perfometers.Stacked(
     name="service_check_rate_host_check_rate",
     lower=perfometers.Perfometer(
         name="service_check_rate",
-        focus_range=perfometers.FocusRange(
-            perfometers.Closed(0),
-            perfometers.Open(55901),
-        ),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(400)),
         segments=["service_check_rate"],
     ),
     upper=perfometers.Perfometer(
         name="host_check_rate",
-        focus_range=perfometers.FocusRange(
-            perfometers.Closed(0),
-            perfometers.Open(13975),
-        ),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(90)),
         segments=["host_check_rate"],
     ),
 )

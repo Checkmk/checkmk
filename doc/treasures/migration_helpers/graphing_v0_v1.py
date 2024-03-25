@@ -784,8 +784,10 @@ def _parse_legacy_linear_perfometer(
     )
 
 
-def _compute_85_border(base: int | float, half_value: int | float) -> int:
-    return int(pow(base, 3.5) * half_value)
+def _compute_border85(half_value: int | float) -> int:
+    border85 = int((85.0 * half_value) / 50)
+    power = pow(10, math.floor(math.log10(border85)))
+    return math.ceil(border85 / power) * power
 
 
 def _parse_legacy_logarithmic_perfometer(
@@ -797,12 +799,7 @@ def _parse_legacy_logarithmic_perfometer(
         name=_perfometer_name(segments),
         focus_range=perfometers.FocusRange(
             perfometers.Closed(0),
-            perfometers.Open(
-                _compute_85_border(
-                    legacy_logarithmic_perfometer["exponent"],
-                    legacy_logarithmic_perfometer["half_value"],
-                )
-            ),
+            perfometers.Open(_compute_border85(legacy_logarithmic_perfometer["half_value"])),
         ),
         segments=segments,
     )

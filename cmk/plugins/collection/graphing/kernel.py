@@ -54,10 +54,7 @@ metric_page_swap_in = metrics.Metric(
 
 perfometer_major_page_faults = perfometers.Perfometer(
     name="major_page_faults",
-    focus_range=perfometers.FocusRange(
-        perfometers.Closed(0),
-        perfometers.Open(11313),
-    ),
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(2000)),
     segments=["major_page_faults"],
 )
 

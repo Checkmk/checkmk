@@ -181,18 +181,12 @@ perfometer_busy_workers_requests_per_second = perfometers.Stacked(
     name="busy_workers_requests_per_second",
     lower=perfometers.Perfometer(
         name="busy_workers",
-        focus_range=perfometers.FocusRange(
-            perfometers.Closed(0),
-            perfometers.Open(113),
-        ),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(20)),
         segments=["busy_workers"],
     ),
     upper=perfometers.Perfometer(
         name="requests_per_second",
-        focus_range=perfometers.FocusRange(
-            perfometers.Closed(0),
-            perfometers.Open(2795),
-        ),
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(20)),
         segments=["requests_per_second"],
     ),
 )

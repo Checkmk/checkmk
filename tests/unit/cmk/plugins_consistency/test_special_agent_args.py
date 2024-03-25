@@ -105,6 +105,7 @@ UNMIGRATED = {
     "alertmanager",
     "allnet_ip_sensoric",
     "appdynamics",
+    "aws",
     "aws_status",
     "couchbase",
     "datadog",

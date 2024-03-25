@@ -690,7 +690,7 @@ def test_registered_painters() -> None:
         "invswpac_version",
         "invsyntheticmonitoring_application",
         "invsyntheticmonitoring_bottom_level_suite_name",
-        "invsyntheticmonitoring_suite_id",
+        "invsyntheticmonitoring_rmk_id",
         "invsyntheticmonitoring_test_item",
         "invsyntheticmonitoring_test_name",
         "invsyntheticmonitoring_top_level_suite_name",

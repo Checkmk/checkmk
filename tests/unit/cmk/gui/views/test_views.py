@@ -1071,7 +1071,7 @@ def test_registered_display_hints() -> None:
         ".software.applications.synthetic_monitoring.tests:",
         ".software.applications.synthetic_monitoring.tests:*.application",
         ".software.applications.synthetic_monitoring.tests:*.bottom_level_suite_name",
-        ".software.applications.synthetic_monitoring.tests:*.suite_id",
+        ".software.applications.synthetic_monitoring.tests:*.rmk_id",
         ".software.applications.synthetic_monitoring.tests:*.test_name",
         ".software.applications.synthetic_monitoring.tests:*.test_item",
         ".software.applications.synthetic_monitoring.tests:*.top_level_suite_name",

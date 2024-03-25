@@ -43,7 +43,6 @@ from cmk.special_agents import (
     agent_smb_share,
     agent_splunk,
     agent_storeonce4x,
-    agent_vsphere,
 )
 
 TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
@@ -99,7 +98,6 @@ TESTED_SA_MODULES: Final[Mapping[str, ModuleType | None]] = {
     "tinkerforge": None,
     "ucs_bladecenter": None,
     "vnx_quotas": None,
-    "vsphere": agent_vsphere,
     "zerto": None,
 }
 

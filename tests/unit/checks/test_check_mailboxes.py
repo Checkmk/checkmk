@@ -7,14 +7,9 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.mail.server_side_calls.mailboxes import active_check_mailboxes
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
+from tests.testlib import ActiveCheck
 
-HOST_CONFIG = HostConfig(
-    name="host",
-    ipv4_config=IPv4Config(address="127.0.0.1"),
-    macros={"$HOSTNAME$": "host"},
-)
+pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
@@ -22,7 +17,6 @@ HOST_CONFIG = HostConfig(
     [
         (
             {
-                "service_description": "Mailboxes",
                 "fetch": (
                     "IMAP",
                     {
@@ -31,59 +25,54 @@ HOST_CONFIG = HostConfig(
                             "disable_tls": True,
                             "port": 143,
                         },
-                        "auth": ("basic", ("hans", Secret(0))),
+                        "auth": ("basic", ("hans", "wurst")),
                     },
-                ),
+                )
             },
             [
                 "--fetch-protocol=IMAP",
                 "--fetch-server=foo",
                 "--fetch-port=143",
                 "--fetch-username=hans",
-                Secret(0, "--fetch-password=%s"),
+                "--fetch-password=wurst",
             ],
         ),
         (
             {
-                "service_description": "Mailboxes",
                 "fetch": (
                     "EWS",
                     {
                         "server": "foo",
                         "connection": {},
-                        "auth": ("basic", ("hans", Secret(1))),
+                        "auth": ("basic", ("hans", "wurst")),
                     },
-                ),
+                )
             },
             [
                 "--fetch-protocol=EWS",
                 "--fetch-server=foo",
                 "--fetch-tls",
                 "--fetch-username=hans",
-                Secret(1, "--fetch-password=%s"),
+                "--fetch-password=wurst",
             ],
         ),
         (
             {
-                "service_description": "Mailboxes",
                 "fetch": (
                     "EWS",
                     {
                         "server": "foo",
                         "connection": {},
-                        "auth": (
-                            "oauth2",
-                            ("client_id", Secret(0), "tenant_id"),
-                        ),
+                        "auth": ("oauth2", ("client_id", "client_secret", "tenant_id")),
                     },
-                ),
+                )
             },
             [
                 "--fetch-protocol=EWS",
                 "--fetch-server=foo",
                 "--fetch-tls",
                 "--fetch-client-id=client_id",
-                Secret(0, "--fetch-client-secret=%s"),
+                "--fetch-client-secret=client_secret",
                 "--fetch-tenant-id=tenant_id",
             ],
         ),
@@ -99,7 +88,7 @@ HOST_CONFIG = HostConfig(
                             "disable_cert_validation": True,
                             "port": 10,
                         },
-                        "auth": ("basic", ("user", Secret(1))),
+                        "auth": ("basic", ("user", ("store", "password_1"))),
                     },
                 ),
                 "connect_timeout": 10,
@@ -111,11 +100,11 @@ HOST_CONFIG = HostConfig(
             },
             [
                 "--fetch-protocol=IMAP",
-                "--fetch-server=host",
+                "--fetch-server=$HOSTNAME$",
                 "--fetch-disable-cert-validation",
                 "--fetch-port=10",
                 "--fetch-username=user",
-                Secret(1, "--fetch-password=%s"),
+                ("store", "password_1", "--fetch-password=%s"),
                 "--connect-timeout=10",
                 "--retrieve-max=100",
                 "--warn-age-oldest=0",
@@ -135,8 +124,5 @@ def test_check_mailboxes_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    commands = list(active_check_mailboxes(params, HOST_CONFIG, {}))
-
-    assert len(commands) == 1
-    assert commands[0].command_arguments == expected_args
-    assert commands[0].service_description == "Mailboxes"
+    active_check = ActiveCheck("check_mailboxes")
+    assert active_check.run_argument_function(params) == expected_args

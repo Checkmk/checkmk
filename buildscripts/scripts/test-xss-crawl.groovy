@@ -80,9 +80,9 @@ def main() {
                     sh("make .venv");
 
                     stage("Fetch Checkmk package") {
-                        fetch_job_artifacts(
+                        upstream_build(
                             relative_job_name: "builders/build-cmk-distro-package",
-                            params: [
+                            build_params: [
                                 /// currently CUSTOM_GIT_REF must match, but in the future
                                 /// we should define dependency paths for build-cmk-distro-package
                                 CUSTOM_GIT_REF: cmd_output("git rev-parse HEAD"),

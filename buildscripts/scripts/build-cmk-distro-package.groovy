@@ -91,9 +91,9 @@ def main() {
                 stage("Fetch agent binaries") {
                     // shout("Fetch agent binaries");
 
-                    fetch_job_artifacts(
+                    upstream_build(
                         relative_job_name: "builders/build-linux-agent-updater",
-                        params: [
+                        build_params: [
                             DISABLE_CACHE: DISABLE_CACHE,
                             VERSION: VERSION,
                         ],
@@ -111,9 +111,9 @@ def main() {
                         }
                     }
 
-                    fetch_job_artifacts(
+                    upstream_build(
                         relative_job_name: "winagt-build",  // TODO: move to builders
-                        params: [
+                        build_params: [
                             DISABLE_CACHE: DISABLE_CACHE,
                             VERSION: VERSION,
                         ],
@@ -151,9 +151,9 @@ def main() {
                         """);
                     }
 
-                    fetch_job_artifacts(
+                    upstream_build(
                         relative_job_name: "winagt-build-modules",  // TODO: move to builders
-                        params: [
+                        build_params: [
                             DISABLE_CACHE: DISABLE_CACHE,
                             VERSION: VERSION,
                         ],

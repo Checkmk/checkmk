@@ -5,7 +5,7 @@
 
 from collections.abc import Iterator, Mapping
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
@@ -20,9 +20,9 @@ class Params(BaseModel):
     username: str | None = None
     password: Secret | None = None
     port: int | None = None
-    no_cert_check: bool = Field(False, alias="no-cert-check")
+    no_cert_check: bool = False
     timeout: int | None = None
-    log_cutoff_weeks: int | None = Field(None, alias="log-cutoff-weeks")
+    log_cutoff_weeks: int | None = None
 
 
 def commands_function(

@@ -21,9 +21,9 @@ from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, Secret
                 "username": "user",
                 "password": Secret(23),
                 "port": "443",
-                "no-cert-check": True,
+                "no_cert_check": True,
                 "timeout": "30",
-                "log-cutoff-weeks": "4",
+                "log_cutoff_weeks": "4",
             },
             [
                 "-u",

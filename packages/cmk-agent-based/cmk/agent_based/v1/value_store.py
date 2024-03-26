@@ -52,8 +52,7 @@ class _ValueStoreManagerProtocol(Protocol):
     def active_service_interface(self) -> MutableMapping[str, Any] | None:  # type: ignore[misc]
         ...
 
-    def save(self) -> None:
-        ...
+    def save(self) -> None: ...
 
 
 _active_host_value_store: _ValueStoreManagerProtocol | None = None

@@ -8,7 +8,7 @@ from dataclasses import dataclass, replace
 from enum import Enum, StrEnum
 from typing import Literal, TypeVar
 
-from ..v1 import Metric, Result, State
+from cmk.agent_based.v1 import Metric, Result, State
 
 _NumberT = TypeVar("_NumberT", int, float)
 

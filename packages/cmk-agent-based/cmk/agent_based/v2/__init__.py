@@ -69,7 +69,7 @@ On popular demand we add a function to render a number of seconds that might be 
 """
 # pylint: disable=duplicate-code
 
-from ..v1 import (
+from cmk.agent_based.v1 import (
     all_of,
     any_of,
     Attributes,
@@ -102,9 +102,15 @@ from ..v1 import (
     State,
     TableRow,
 )
-from ..v1._detection import SNMPDetectSpecification  # sorry
-from ..v1.register import RuleSetType
-from ..v1.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator, InventoryResult
+from cmk.agent_based.v1._detection import SNMPDetectSpecification  # sorry
+from cmk.agent_based.v1.register import RuleSetType
+from cmk.agent_based.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    HostLabelGenerator,
+    InventoryResult,
+)
+
 from . import clusterize, render
 from ._check_levels import check_levels, FixedLevelsT, LevelsT, NoLevelsT, PredictiveLevelsT
 from ._get_average import get_average

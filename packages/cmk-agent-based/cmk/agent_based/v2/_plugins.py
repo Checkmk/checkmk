@@ -12,10 +12,10 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Generic, overload, TypeVar
 
-from ..v1 import SNMPTree
-from ..v1._detection import SNMPDetectSpecification  # sorry
-from ..v1.register import RuleSetType
-from ..v1.type_defs import (
+from cmk.agent_based.v1 import SNMPTree
+from cmk.agent_based.v1._detection import SNMPDetectSpecification  # sorry
+from cmk.agent_based.v1.register import RuleSetType
+from cmk.agent_based.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     HostLabelGenerator,
@@ -100,14 +100,13 @@ class AgentSection(Generic[_Section]):
         *,
         name: str,
         parse_function: Callable[[StringTable], _Section | None],
-        host_label_function: (Callable[[_Section], HostLabelGenerator] | None) = None,
+        host_label_function: Callable[[_Section], HostLabelGenerator] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
         parsed_section_name: str | None = None,
         supersedes: list[str] | None = None,
-    ):
-        ...
+    ): ...
 
     @overload
     def __init__(  # pylint: disable=too-many-arguments
@@ -121,8 +120,7 @@ class AgentSection(Generic[_Section]):
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
         parsed_section_name: str | None = None,
         supersedes: list[str] | None = None,
-    ):
-        ...
+    ): ...
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -242,14 +240,13 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
         parse_function: Callable[[_TableTypeT], _Section | None],
-        host_label_function: (Callable[[_Section], HostLabelGenerator] | None) = None,
+        host_label_function: Callable[[_Section], HostLabelGenerator] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
         parsed_section_name: str | None = None,
         supersedes: list[str] | None = None,
-    ):
-        ...
+    ): ...
 
     @overload
     def __init__(  # pylint: disable=too-many-arguments
@@ -265,8 +262,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
         parsed_section_name: str | None = None,
         supersedes: list[str] | None = None,
-    ):
-        ...
+    ): ...
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -362,7 +358,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
     name: str
     detect: SNMPDetectSpecification
     fetch: Sequence[SNMPTree]
-    parse_function: (Callable[[Sequence[_TableTypeT]], _Section | None])
+    parse_function: Callable[[Sequence[_TableTypeT]], _Section | None]
     parsed_section_name: str | None = None
     host_label_function: (
         Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
@@ -382,14 +378,13 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         detect: SNMPDetectSpecification,
         fetch: Sequence[SNMPTree],
         parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
-        host_label_function: (Callable[[_Section], HostLabelGenerator] | None) = None,
+        host_label_function: Callable[[_Section], HostLabelGenerator] | None = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
         parsed_section_name: str | None = None,
         supersedes: list[str] | None = None,
-    ):
-        ...
+    ): ...
 
     @overload
     def __init__(  # pylint: disable=too-many-arguments
@@ -405,8 +400,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
         host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
         parsed_section_name: str | None = None,
         supersedes: list[str] | None = None,
-    ):
-        ...
+    ): ...
 
     def __init__(  # pylint: disable=too-many-arguments
         self,

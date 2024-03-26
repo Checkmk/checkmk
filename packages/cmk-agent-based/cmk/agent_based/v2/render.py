@@ -11,7 +11,7 @@ a string.
 
 # pylint: disable=duplicate-code
 
-from ..v1.render import (  # pylint: disable=redefined-builtin
+from cmk.agent_based.v1.render import (  # pylint: disable=redefined-builtin
     bytes,
     date,
     datetime,

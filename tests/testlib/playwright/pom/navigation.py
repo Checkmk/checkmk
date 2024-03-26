@@ -7,7 +7,6 @@ from playwright.sync_api import Error, expect, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.playwright.helpers import Keys, LocatorHelper
-from tests.testlib.playwright.timeouts import TemporaryTimeout, TIMEOUT_ACTIVATE_CHANGES_MS
 
 
 class MainMenu(LocatorHelper):
@@ -174,8 +173,13 @@ class Sidebar(LocatorHelper):
 class CmkPage(LocatorHelper):
     """Parent object representing a Checkmk GUI page."""
 
-    def __init__(self, page: Page) -> None:
-        super().__init__(page)
+    def __init__(
+        self,
+        page: Page,
+        timeout_assertions: int | None = None,
+        timeout_navigation: int | None = None,
+    ) -> None:
+        super().__init__(page, timeout_assertions, timeout_navigation)
         self.url: str
         self.main_menu = MainMenu(self.page)
         self.main_area = MainArea(self.page)
@@ -185,22 +189,19 @@ class CmkPage(LocatorHelper):
         return self.page.locator(selector)
 
     def activate_selected(self) -> None:
-        with TemporaryTimeout(self.page, TIMEOUT_ACTIVATE_CHANGES_MS):
-            self.main_area.locator("#menu_suggestion_activate_selected").click()
+        self.main_area.locator("#menu_suggestion_activate_selected").click()
 
     def expect_success_state(self) -> None:
         expect(
             self.main_area.locator("#site_gui_e2e_central_status.msg.state_success")
-        ).to_be_visible(timeout=TIMEOUT_ACTIVATE_CHANGES_MS)
+        ).to_be_visible()
 
         expect(
             self.main_area.locator("#site_gui_e2e_central_progress.progress.state_success")
-        ).to_be_visible(timeout=TIMEOUT_ACTIVATE_CHANGES_MS)
+        ).to_be_visible()
 
         # assert no further changes are pending
-        expect(self.main_area.locator("div.page_state.no_changes")).to_be_visible(
-            timeout=TIMEOUT_ACTIVATE_CHANGES_MS
-        )
+        expect(self.main_area.locator("div.page_state.no_changes")).to_be_visible()
 
     def goto_main_dashboard(self) -> None:
         """Click the banner and wait for the dashboard"""

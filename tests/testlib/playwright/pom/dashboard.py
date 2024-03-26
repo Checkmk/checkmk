@@ -14,8 +14,15 @@ from tests.testlib.playwright.pom.navigation import CmkPage
 class LoginPage(CmkPage):
     """Represents the login page of Checkmk GUI."""
 
-    def __init__(self, page: Page, site_id: str, site_url: str | None = None) -> None:
-        super().__init__(page)
+    def __init__(
+        self,
+        page: Page,
+        site_id: str,
+        site_url: str | None = None,
+        timeout_assertions: int | None = None,
+        timeout_navigation: int | None = None,
+    ) -> None:
+        super().__init__(page, timeout_assertions, timeout_navigation)
         self.site_id = site_id
         if site_url:
             self.site_url = site_url
@@ -42,11 +49,8 @@ class LoginPage(CmkPage):
     def go(
         self,
         url: str | None = None,
-        timeout: float | None = None,
         wait_until: Literal["commit", "domcontentloaded", "load", "networkidle"] | None = None,
         referer: str | None = None,
     ) -> Response | None:
         """calls page.goto() but will accept relative urls"""
-        return self.page.goto(
-            urljoin(self.site_url, url), timeout=timeout, wait_until=wait_until, referer=referer
-        )
+        return self.page.goto(urljoin(self.site_url, url), wait_until=wait_until, referer=referer)

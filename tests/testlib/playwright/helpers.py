@@ -12,32 +12,47 @@ from re import Pattern
 
 from playwright.sync_api import expect, Locator, Page
 
+from tests.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS, TIMEOUT_NAVIGATION
+
 
 class LocatorHelper(ABC):
-    """base class for helper classes for certain page elements"""
+    """base class for helper classes for certain page elements
 
-    def __init__(self, page: Page, timeout: float = 30000) -> None:
+    `timeout` defaults to 30 seconds, if not provided.
+    """
+
+    def __init__(
+        self,
+        page: Page,
+        timeout_assertions: int | None = None,
+        timeout_navigation: int | None = None,
+    ) -> None:
+        # default timeout
+        if timeout_assertions is None:
+            timeout_assertions = TIMEOUT_ASSERTIONS
+        if timeout_navigation is None:
+            timeout_navigation = TIMEOUT_NAVIGATION
         # explicitly set all default timeouts
-        page.set_default_timeout(timeout)
-        page.set_default_navigation_timeout(timeout)
-        expect.set_options(timeout=timeout)
+        page.set_default_timeout(timeout_navigation)
+        page.set_default_navigation_timeout(timeout_navigation)
+        expect.set_options(timeout=timeout_assertions)
         self.page = page
 
     @abstractmethod
     def locator(self, selector: str) -> Locator:
         """return locator for this subpart"""
 
-    def check_success(self, message: str | Pattern, timeout_ms: int = 15000) -> None:
+    def check_success(self, message: str | Pattern) -> None:
         """check for a success div and its content"""
-        expect(self.locator("div.success")).to_have_text(message, timeout=timeout_ms)
+        expect(self.locator("div.success")).to_have_text(message)
 
-    def check_error(self, message: str | Pattern, timeout_ms: int = 15000) -> None:
+    def check_error(self, message: str | Pattern) -> None:
         """check for an error div and its content"""
-        expect(self.locator("div.error")).to_have_text(message, timeout=timeout_ms)
+        expect(self.locator("div.error")).to_have_text(message)
 
-    def check_warning(self, message: str | Pattern, timeout_ms: int = 15000) -> None:
+    def check_warning(self, message: str | Pattern) -> None:
         """check for a warning div and its content"""
-        expect(self.locator("div.warning")).to_have_text(message, timeout=timeout_ms)
+        expect(self.locator("div.warning")).to_have_text(message)
 
     def get_input(self, input_name: str) -> Locator:
         return self.locator(f'input[name="{input_name}"]')

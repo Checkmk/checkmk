@@ -46,7 +46,7 @@ def agent_gcp_arguments(
         "--project",
         params.project,
         "--credentials",
-        params.credentials,
+        params.credentials.unsafe(),
         "--date",
         today.isoformat(),
     ]

@@ -32,7 +32,7 @@ def generate_three_par_command(
         "--user",
         params.user,
         "--password",
-        params.password,
+        params.password.unsafe(),
         "--port",
         str(params.port),
     ]

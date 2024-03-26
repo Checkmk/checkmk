@@ -465,7 +465,7 @@ def active_check_preview_rows(
         config.http_proxies,
         make_final_service_name,
         config.use_new_descriptions_for,
-        cmk.utils.password_store.load(),
+        config_cache.collect_passwords(),
     )
 
     return list(
@@ -1332,7 +1332,7 @@ class AutomationAnalyseServices(Automation):
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             config.use_new_descriptions_for,
-            cmk.utils.password_store.load(),
+            config_cache.collect_passwords(),
         )
 
         active_checks = config_cache.active_checks(host_name)
@@ -2193,7 +2193,7 @@ class AutomationActiveCheck(Automation):
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             config.use_new_descriptions_for,
-            cmk.utils.password_store.load(),
+            config_cache.collect_passwords(),
         )
 
         active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])

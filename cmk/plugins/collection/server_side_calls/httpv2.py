@@ -15,6 +15,7 @@ from cmk.server_side_calls.v1 import (
     HTTPProxy,
     parse_http_proxy,
     replace_macros,
+    Secret,
 )
 
 _DAY: Final[int] = 24 * 3600
@@ -90,11 +91,6 @@ class ContentType(StrEnum):
     TEXT_HTML = "text_html"
 
 
-class PasswordType(StrEnum):
-    PASSWORD = "password"
-    STORE = "store"
-
-
 class ServicePrefix(StrEnum):
     AUTO = "auto"
     NONE = "none"
@@ -111,8 +107,6 @@ ProxySpec = (
     | tuple[Literal[ProxyMode.GLOBAL], str]
     | tuple[Literal[ProxyMode.URL], str]
 )
-
-PasswordSpec = tuple[PasswordType, str]
 
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
@@ -148,12 +142,12 @@ class HeaderRegexSpec(BaseModel):
 
 class UserAuth(BaseModel):
     user: str
-    password: PasswordSpec
+    password: Secret
 
 
 class TokenAuth(BaseModel):
     header: str
-    token: PasswordSpec
+    token: Secret
 
 
 class Connection(BaseModel):
@@ -287,7 +281,7 @@ def generate_http_services(
 
 def _command_arguments(
     endpoint: HttpEndpoint, http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[str]:
+) -> Iterator[str | Secret]:
     yield "--url"
     yield endpoint.url
 
@@ -310,7 +304,7 @@ def _command_arguments(
 
 def _connection_args(
     connection: Connection, http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[str]:
+) -> Iterator[str | Secret]:
     yield from _method_args(connection.method)
     if (auth := connection.auth) is not None:
         yield from _auth_args(auth)
@@ -335,26 +329,13 @@ def _auth_args(
         tuple[Literal[AuthMode.BASIC_AUTH], UserAuth]
         | tuple[Literal[AuthMode.TOKEN_AUTH], TokenAuth]
     )
-) -> Iterator[str]:
+) -> tuple[str | Secret, ...]:
     match auth:
         case (AuthMode.BASIC_AUTH, UserAuth(user=user, password=password)):
-            yield "--auth-user"
-            yield user
-            yield from _password_args(password, "--auth-pw-plain", "--auth-pw-pwstore")
+            return ("--auth-user", user, "--auth-pw-pwstore", password)
         case (AuthMode.TOKEN_AUTH, TokenAuth(header=header, token=token)):
-            yield "--token-header"
-            yield header
-            yield from _password_args(token, "--token-key-plain", "--token-key-pwstore")
-
-
-def _password_args(password: PasswordSpec, plain_arg: str, store_arg: str) -> Iterator[str]:
-    match password:
-        case (PasswordType.PASSWORD, pw):
-            yield plain_arg
-            yield pw
-        case (PasswordType.STORE, ident):
-            yield store_arg
-            yield ident
+            return ("--token-header", header, "--token-key-pwstore", token)
+    raise ValueError(auth)
 
 
 def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:

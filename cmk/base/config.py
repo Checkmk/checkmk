@@ -2754,6 +2754,7 @@ class ConfigCache:
         return self.__special_agents.setdefault(host_name, special_agents_impl())
 
     def collect_passwords(self) -> Mapping[str, str]:
+        # consider making the hosts an argument. Sometimes we only need one.
         all_active_hosts = {
             hn
             for hn in itertools.chain(self.hosts_config.hosts, self.hosts_config.clusters)
@@ -2768,8 +2769,8 @@ class ConfigCache:
             return {
                 id_: secret
                 for host in all_active_hosts
-                for id_, secret in PreprocessingResult.from_config(
-                    rules_function(host)
+                for id_, secret in (
+                    PreprocessingResult.from_config(rules_function(host))
                 ).ad_hoc_secrets.items()
             }
 

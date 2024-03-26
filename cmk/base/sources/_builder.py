@@ -12,7 +12,6 @@ from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from typing import assert_never, Final
 
-import cmk.utils.password_store
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -176,7 +175,7 @@ class _Builder:
                         config.get_ssc_host_config(self.host_name, self.config_cache, macros),
                         host_attrs,
                         config.http_proxies,
-                        cmk.utils.password_store.load(),
+                        self.config_cache.collect_passwords(),
                     )
                     for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                         yield SpecialAgentSource(

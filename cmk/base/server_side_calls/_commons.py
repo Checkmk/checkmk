@@ -5,7 +5,7 @@
 
 import shlex
 from collections.abc import Mapping, Sequence
-from typing import Callable, Iterable, Literal, Protocol
+from typing import Callable, Iterable, Protocol
 
 import cmk.utils.config_warnings as config_warnings
 from cmk.utils import password_store
@@ -40,7 +40,7 @@ def commandline_arguments(
     hostname: HostName,
     description: ServiceName | None,
     commandline_args: SpecialAgentInfoFunctionResult,
-    passwords_from_store: Mapping[str, str] | None = None,
+    passwords: Mapping[str, str],
 ) -> str:
     """Commandline arguments for special agents or active checks."""
 
@@ -56,12 +56,7 @@ def commandline_arguments(
             "string of the concatenated arguments (Service: %s)." % (description)
         )
 
-    return _prepare_check_command(
-        args,
-        hostname,
-        description,
-        password_store.load() if passwords_from_store is None else passwords_from_store,
-    )
+    return _prepare_check_command(args, hostname, description, passwords)
 
 
 def _prepare_check_command(
@@ -99,9 +94,11 @@ def _prepare_check_command(
 
 def replace_passwords(
     host_name: str,
-    passwords: Mapping[str, str],
     arguments: Sequence[str | Secret],
-    surrogated_secrets: Mapping[int, tuple[Literal["store", "password"], str]],
+    passwords: Mapping[str, str],
+    surrogated_secrets: Mapping[int, str],
+    *,
+    apply_password_store_hack: bool,
 ) -> str:
     formatted: list[str | tuple[str, str, str]] = []
 
@@ -110,14 +107,30 @@ def replace_passwords(
             formatted.append(shlex.quote(arg))
             continue
 
-        secret_type, secret_value = surrogated_secrets[arg.id]
+        secret = arg
+        secret_name = surrogated_secrets[secret.id]
 
-        match secret_type:
-            case "password":
-                formatted.append(shlex.quote(arg.format % secret_value))
-            case "store":
-                # fall back to old hack, for now
-                formatted.append(("store", secret_value, arg.format))
+        if secret.pass_safely:
+            formatted.append(shlex.quote(secret_name))
+            continue
+
+        # we are meant to pass it as plain secret here, but we
+        # maintain a list of plugins that have a very special hack in place.
+
+        if apply_password_store_hack:
+            # fall back to old hack, for now
+            formatted.append(("store", secret_name, arg.format))
+            continue
+
+        # TODO: I think we can check this much earlier now.
+        try:
+            secret_value = passwords[secret_name]
+        except KeyError:
+            config_warnings.warn(
+                f'The stored password "{secret_name}" used by host "{host_name}"' " does not exist."
+            )
+            secret_value = "%%%"
+        formatted.append(shlex.quote(secret.format % secret_value))
 
     return " ".join(
         password_store.hack.apply_password_hack(

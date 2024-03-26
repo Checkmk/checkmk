@@ -162,6 +162,23 @@ def save_for_helpers(config_base_path: ConfigPath, passwords: Mapping[str, str])
     save(passwords, _helper_password_store_path(config_base_path))
 
 
+def lookup(password_id: str, /) -> str:
+    """Look up the password in the password store compiled for the helpers and return it.
+
+    Raises:
+        ValueError: If the password_id is not found in the password store.
+
+    Returns:
+        The password as found in the password store.
+    """
+    try:
+        return load_for_helpers()[password_id]
+    except KeyError:
+        # the fact that this is a dict is an implementation detail.
+        # Let's make it a ValueError.
+        raise ValueError(f"Password {password_id!r} not found in password store")
+
+
 def load_for_helpers() -> dict[str, str]:
     return _load(_helper_password_store_path(LATEST_CONFIG))
 

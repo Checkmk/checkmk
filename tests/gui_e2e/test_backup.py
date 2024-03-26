@@ -8,7 +8,7 @@ import re
 
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.pom.dashboard import PPage
 
 _backup_passphrase = "cmk"
 

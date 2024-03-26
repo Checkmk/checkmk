@@ -6,7 +6,8 @@
 import pytest
 from playwright.sync_api import BrowserContext, expect
 
-from tests.testlib.playwright.helpers import Keys, PPage
+from tests.testlib.playwright.helpers import Keys
+from tests.testlib.playwright.pom.dashboard import PPage
 
 
 @pytest.mark.parametrize("snapin_id", [("snapin_container_time"), ("snapin_container_speedometer")])

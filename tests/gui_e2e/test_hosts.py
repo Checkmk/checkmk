@@ -9,7 +9,7 @@ from urllib.parse import quote_plus
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.pom.dashboard import PPage
 from tests.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES_MS
 
 

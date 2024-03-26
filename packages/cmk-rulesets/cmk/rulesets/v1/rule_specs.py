@@ -114,7 +114,7 @@ class Host:
 
 
 @dataclass(frozen=True)
-class Service:
+class Service:  # pylint: disable=too-many-instance-attributes
     """Specifies rule configurations for services
 
     Instance of this class will only be picked up by Checkmk if their names start with
@@ -145,7 +145,7 @@ class Service:
 
 
 @dataclass(frozen=True)
-class CheckParameters:
+class CheckParameters:  # pylint: disable=too-many-instance-attributes
     """Specifies rule configurations for checks
 
     Instance of this class will only be picked up by Checkmk if their names start with

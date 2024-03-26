@@ -34,7 +34,7 @@ HOST_CONFIG = HostConfig(
                         "-u",
                         "username",
                         "-s",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "test",
                     ]
                 )
@@ -58,7 +58,7 @@ HOST_CONFIG = HostConfig(
                         "-u",
                         "username",
                         "-s",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "-m",
                         "instance jobs nodes queue",
                         "-p",

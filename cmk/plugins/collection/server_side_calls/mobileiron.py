@@ -50,7 +50,7 @@ def generate_mobileiron_command(
         "-u",
         params.username,
         "-p",
-        params.password,
+        params.password.unsafe(),
         "--partition",
         ",".join(partitions),
         "--hostname",

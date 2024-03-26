@@ -39,7 +39,7 @@ def test_check_sql_simple_ok_case() -> None:
         "--dbms=postgres",
         "--name=bar",
         "--user=hans",
-        Secret(0, format="--password=%s"),
+        Secret(0).unsafe("--password=%s"),
         "--metrics=my_metric_name",
         "--text=my_additional_text",
         "",
@@ -92,7 +92,7 @@ def test_check_sql_port_macro_replaced() -> None:
         "--dbms=postgres",
         "--name=bar",
         "--user=hans",
-        Secret(0, format="--password=%s"),
+        Secret(0).unsafe("--password=%s"),
         "--port=5432",
         "",
     ]

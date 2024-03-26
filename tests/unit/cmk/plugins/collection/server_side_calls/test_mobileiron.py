@@ -37,7 +37,7 @@ HOST_CONFIG = HostConfig(
                 "-u",
                 "mobileironuser",
                 "-p",
-                Secret(23),
+                Secret(23).unsafe(),
                 "--partition",
                 "10",
                 "--hostname",

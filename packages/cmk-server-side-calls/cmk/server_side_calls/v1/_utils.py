@@ -231,24 +231,46 @@ class Secret(NamedTuple):
     Surrogate for a secret defined by the user
 
     This is a surrogate for a secret defined in the setup.
-    You, the developer if the plugin, can use it to define the place and formatting
-    of the secrets usage.
+    You, the developer of the plugin, can use it to define
+
+     * where in the argv list the password will be
+     * how it might have to be formatted
+     * whether to pass the secret itself, or preferable, only the
+       name of the secret in the password store
+
+    Note that neither the passord itself nor the name of the password is contained
+    in this object.
 
     Example:
 
-        >>> my_secret = Secret(id=42)  # don't create it, it is passed by the backend
-        >>> argv = ["--basicauth",  my_secret.with_format("my_username:%s")]
+        >>> my_secret = Secret(42)  # don't create it, it is passed by the backend
+        >>> # ideally, you just pass the reference for the password store
+        >>> argv = ["--secret-from-store",  my_secret]
+        >>> # plugins might not support the password store, and have special formatting needs:
+        >>> argv = ["--basicauth", my_secret.unsafe("user:%s")]
 
     """
     id: int
     format: str = "%s"
+    pass_safely: bool = True
 
-    def with_format(self, /, template: str) -> Self:
+    def unsafe(self, /, template: str = "%s") -> Self:
         """
-        Returns a new Secret with a different format
+        Returns a new :class:`Secret` that will be passed along as plain text.
 
         Args:
             template: The new formatting template
+
+        Example:
+
+            If include the the secret like this in the command line:
+
+                >>> my_secret = Secret(42)  # don't create it, it is passed by the backend
+                >>> args = ["--basicauth", my_secret.unsafe("user:%s")]
+
+            What the plugin will receive as argv is `[`'--basicauth', 'user:myS3cret!123']``
+
+
         """
         try:
             # we don't have this validation upon creation, but at least prevent errors here.
@@ -256,7 +278,7 @@ class Secret(NamedTuple):
         except TypeError as e:
             raise ValueError(f"Invalid formatting template: {template}") from e
 
-        return self.__class__(self.id, template)
+        return self.__class__(id=self.id, pass_safely=False, format=template)
 
 
 def parse_http_proxy(

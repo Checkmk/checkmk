@@ -50,7 +50,7 @@ def generate_sql_command(
     args.append(f"--dbms={params.dbms}")
     args.append(f"--name={replace_macros(params.name, host_config.macros)}")
     args.append(f"--user={params.user}")
-    args.append(params.password.with_format("--password=%s"))
+    args.append(params.password.unsafe("--password=%s"))
 
     match params.port:
         case "explicit", int(value):

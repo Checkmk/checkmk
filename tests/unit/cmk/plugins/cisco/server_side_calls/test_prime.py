@@ -26,7 +26,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
                 "--hostname",
                 "ipaddress",
                 "-u",
-                Secret(123, "bla:%s"),
+                Secret(123).unsafe("bla:%s"),
                 "--port",
                 "8080",
                 "--no-tls",

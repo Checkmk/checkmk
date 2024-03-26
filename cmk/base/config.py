@@ -2708,7 +2708,7 @@ class ConfigCache:
         return self.__special_agents.setdefault(host_name, special_agents_impl())
 
     def special_agent_command_lines(
-        self, host_name: HostName, ip_address: HostAddress | None
+        self, host_name: HostName, ip_address: HostAddress | None, passwords: Mapping[str, str]
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
         for agentname, params_seq in self.special_agents(host_name):
             for params in params_seq:
@@ -2726,12 +2726,13 @@ class ConfigCache:
                     get_ssc_host_config(host_name, self, macros),
                     host_attrs,
                     http_proxies,
-                    password_store.load(),
+                    passwords,
                 )
                 for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                     yield agentname, agent_data
 
     def collect_passwords(self) -> Mapping[str, str]:
+        # consider making the hosts an argument. Sometimes we only need one.
         all_active_hosts = {
             hn
             for hn in itertools.chain(self.hosts_config.hosts, self.hosts_config.clusters)
@@ -2746,8 +2747,8 @@ class ConfigCache:
             return {
                 id_: secret
                 for host in all_active_hosts
-                for id_, secret in PreprocessingResult.from_config(
-                    rules_function(host)
+                for id_, secret in (
+                    PreprocessingResult.from_config(rules_function(host))
                 ).ad_hoc_secrets.items()
             }
 

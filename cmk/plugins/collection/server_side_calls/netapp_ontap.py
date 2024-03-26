@@ -30,7 +30,7 @@ def generate_netapp_ontap_command(
 
     args = ["--hostname", host_config.primary_ip_config.address]
     args += ["--username", params.username]
-    args += ["--password", params.password]
+    args += ["--password", params.password.unsafe()]
 
     if params.no_cert_check == "no_cert_check":
         args += ["--no-cert-check"]

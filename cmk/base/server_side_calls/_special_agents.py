@@ -9,6 +9,7 @@ from pathlib import Path
 
 import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
+import cmk.utils.password_store as password_store
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
 
@@ -22,7 +23,7 @@ from ._commons import (
     replace_passwords,
     SpecialAgentInfoFunctionResult,
 )
-from ._config_processing import process_configuration_into_parameters
+from ._config_processing import process_configuration_to_parameters
 
 
 @dataclass(frozen=True)
@@ -71,7 +72,9 @@ class SpecialAgent:
         agent_configuration: SpecialAgentInfoFunctionResult,
     ) -> str:
         path = self._make_source_path(agent_name)
-        args = commandline_arguments(self.host_name, None, agent_configuration)
+        args = commandline_arguments(
+            self.host_name, None, agent_configuration, self.stored_passwords
+        )
         return replace_macros(f"{path} {args}", self.host_config.macros)
 
     def _iter_legacy_commands(
@@ -95,11 +98,15 @@ class SpecialAgent:
             for id, proxy in self._http_proxies.items()
         }
 
-        params, surrogated_secrets = process_configuration_into_parameters(conf_dict)
+        processed = process_configuration_to_parameters(conf_dict)
 
-        for command in special_agent(params, self.host_config, http_proxies):
+        for command in special_agent(processed.value, self.host_config, http_proxies):
             args = replace_passwords(
-                self.host_name, self.stored_passwords, command.command_arguments, surrogated_secrets
+                self.host_name,
+                command.command_arguments,
+                self.stored_passwords,
+                processed.surrogates,
+                apply_password_store_hack=password_store.hack.HACK_AGENTS[special_agent.name],
             )
             # there's a test that currently prevents us from moving this out of the loop
             path = self._make_source_path(special_agent.name)

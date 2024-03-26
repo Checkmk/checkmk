@@ -109,9 +109,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                 ),
                 required=True,
             ),
-            "password": form_specs.DictElement[
-                tuple[Literal["explicit_password", "stored_password"], str, str]
-            ](
+            "password": form_specs.DictElement(
                 parameter_form=form_specs.Password(
                     title=Title("Database Password"),
                     help_text=Help("The password used to connect to the database"),

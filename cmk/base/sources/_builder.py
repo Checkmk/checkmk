@@ -179,7 +179,9 @@ class _Builder:
     def _initialize_agent_based(self) -> None:
         def make_special_agents() -> Iterable[Source]:
             for agentname, agent_data in self.config_cache.special_agent_command_lines(
-                self.host_name, self.ipaddress
+                self.host_name,
+                self.ipaddress,
+                self.config_cache.collect_passwords(),
             ):
                 yield SpecialAgentSource(
                     self.config_cache,

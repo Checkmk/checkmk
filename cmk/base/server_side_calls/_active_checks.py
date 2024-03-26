@@ -10,6 +10,7 @@ from typing import Any, Callable, Literal
 
 import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
+import cmk.utils.password_store as password_store
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
@@ -20,7 +21,7 @@ from cmk.discover_plugins import discover_executable, family_libexec_dir, Plugin
 from cmk.server_side_calls.v1 import ActiveCheckConfig, HostConfig, HTTPProxy
 
 from ._commons import commandline_arguments, replace_macros, replace_passwords
-from ._config_processing import process_configuration_into_parameters
+from ._config_processing import process_configuration_to_parameters
 
 
 class InvalidPluginInfoError(Exception):
@@ -171,17 +172,18 @@ class ActiveCheck:
 
         for conf_dict in plugin_params:
             # actually these ^- are configuration sets.
-            params, surrogated_secrets = process_configuration_into_parameters(conf_dict)
+            processed = process_configuration_to_parameters(conf_dict)
 
-            for service in active_check(params, self.host_config, http_proxies):
+            for service in active_check(processed.value, self.host_config, http_proxies):
                 arguments = replace_passwords(
                     self.host_name,
-                    self.stored_passwords,
                     service.command_arguments,
-                    surrogated_secrets,
+                    self.stored_passwords,
+                    processed.surrogates,
+                    apply_password_store_hack=password_store.hack.HACK_CHECKS[active_check.name],
                 )
                 command_line = f"check_{active_check.name} {arguments}"
-                yield service.service_description, arguments, command_line, conf_dict  # conf or params, actually?
+                yield service.service_description, arguments, command_line, conf_dict
 
     def _iterate_legacy_services(
         self,

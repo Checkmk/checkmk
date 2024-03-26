@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from playwright.sync_api import expect, Locator
+from playwright.sync_api import Error, expect, Locator, Page
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.playwright.helpers import LocatorHelper
+from tests.testlib.playwright.helpers import Keys, LocatorHelper
+from tests.testlib.playwright.timeouts import TemporaryTimeout, TIMEOUT_ACTIVATE_CHANGES_MS
 
 
 class MainMenu(LocatorHelper):
@@ -167,3 +169,94 @@ class Sidebar(LocatorHelper):
 
     def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator("#check_mk_sidebar").locator(selector)
+
+
+class CmkPage(LocatorHelper):
+    """Parent object representing a Checkmk GUI page."""
+
+    def __init__(self, page: Page) -> None:
+        super().__init__(page)
+        self.url: str
+        self.main_menu = MainMenu(self.page)
+        self.main_area = MainArea(self.page)
+        self.sidebar = Sidebar(self.page)
+
+    def locator(self, selector: str = "xpath=.") -> Locator:
+        return self.page.locator(selector)
+
+    def activate_selected(self) -> None:
+        with TemporaryTimeout(self.page, TIMEOUT_ACTIVATE_CHANGES_MS):
+            self.main_area.locator("#menu_suggestion_activate_selected").click()
+
+    def expect_success_state(self) -> None:
+        expect(
+            self.main_area.locator("#site_gui_e2e_central_status.msg.state_success")
+        ).to_be_visible(timeout=TIMEOUT_ACTIVATE_CHANGES_MS)
+
+        expect(
+            self.main_area.locator("#site_gui_e2e_central_progress.progress.state_success")
+        ).to_be_visible(timeout=TIMEOUT_ACTIVATE_CHANGES_MS)
+
+        # assert no further changes are pending
+        expect(self.main_area.locator("div.page_state.no_changes")).to_be_visible(
+            timeout=TIMEOUT_ACTIVATE_CHANGES_MS
+        )
+
+    def goto_main_dashboard(self) -> None:
+        """Click the banner and wait for the dashboard"""
+        self.main_menu.main_page.click()
+        self.main_area.check_page_title("Main dashboard")
+
+    def select_host(self, host_name: str) -> None:
+        self.main_area.locator(f"td a:has-text('{host_name}')").click()
+
+    def goto_add_sidebar_element(self) -> None:
+        self.locator("div#check_mk_sidebar >> div#add_snapin > a").click()
+        self.main_area.check_page_title("Add sidebar element")
+
+    def press_keyboard(self, key: Keys) -> None:
+        self.page.keyboard.press(str(key.value))
+
+    def click_and_wait(
+        self,
+        locator: Locator,
+        navigate: bool = False,
+        expected_locator: Locator | None = None,
+        reload_on_error: bool = False,
+        max_tries: int = 10,
+    ) -> None:
+        """Wait until the specified locator could be clicked.
+        After a successful click, wait until the current URL has changed and is loaded
+        or an expected locator is found.
+        """
+        url = self.page.url
+        clicked = False
+
+        for _ in range(max_tries):
+            if not clicked:
+                try:
+                    locator.click()
+                    clicked = True
+                except PWTimeoutError:
+                    pass
+
+            if clicked:
+                try:
+                    if navigate:
+                        expect(self.page).not_to_have_url(url)
+                    if expected_locator:
+                        expect(expected_locator).to_be_visible()
+                    self.page.wait_for_load_state("networkidle")
+                    return
+                except AssertionError:
+                    pass
+
+            try:
+                if reload_on_error:
+                    self.page.reload(wait_until="networkidle")
+            except Error:
+                continue
+
+        raise AssertionError(
+            "Current URL did not change, expected locator not found or page failed to reload."
+        )

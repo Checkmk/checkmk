@@ -121,7 +121,12 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
+from cmk.base.server_side_calls import (
+    load_special_agents,
+    PreprocessingResult,
+    SpecialAgent,
+    SpecialAgentCommandLine,
+)
 
 from cmk.server_side_calls import v1 as server_side_calls_api
 
@@ -2725,6 +2730,32 @@ class ConfigCache:
                 )
                 for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                     yield agentname, agent_data
+
+    def collect_passwords(self) -> Mapping[str, str]:
+        all_active_hosts = {
+            hn
+            for hn in itertools.chain(self.hosts_config.hosts, self.hosts_config.clusters)
+            if self.is_active(hn) and self.is_online(hn)
+        }
+
+        def _gather_secrets_from(
+            rules_function: Callable[
+                [HostName], Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+            ]
+        ) -> Mapping[str, str]:
+            return {
+                id_: secret
+                for host in all_active_hosts
+                for id_, secret in PreprocessingResult.from_config(
+                    rules_function(host)
+                ).ad_hoc_secrets.items()
+            }
+
+        return {
+            **password_store.load(),
+            **_gather_secrets_from(self.active_checks),
+            **_gather_secrets_from(self.special_agents),
+        }
 
     def hostgroups(self, host_name: HostName) -> Sequence[str]:
         """Returns the list of hostgroups of this host

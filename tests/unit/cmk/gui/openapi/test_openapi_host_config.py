@@ -1495,6 +1495,17 @@ def test_create_host_with_newline_in_the_name(
     )
 
 
+def test_create_host_with_too_long_of_a_name(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostConfig.create(
+        host_name=255 * "a",
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["fields"]["host_name"][0] == f"HostName too long: {16*'a'+'…'!r}"
+
+
 @managedtest
 def test_bulk_delete_no_entries(clients: ClientRegistry) -> None:
     r = clients.HostConfig.bulk_delete(entries=[], expect_ok=False)

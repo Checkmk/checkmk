@@ -24,7 +24,7 @@ class LocatorHelper(ABC):
         self.page = page
 
     @abstractmethod
-    def locator(self, selector: str = "xpath=.") -> Locator:
+    def locator(self, selector: str) -> Locator:
         """return locator for this subpart"""
 
     def check_success(self, message: str | Pattern, timeout_ms: int = 15000) -> None:

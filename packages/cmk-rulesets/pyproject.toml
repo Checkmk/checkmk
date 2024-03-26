@@ -47,7 +47,12 @@ persistent = "no"
 score = "no"
 
 [tool.pylint.messages_control]
-disable = "missing-docstring,fixme,too-many-instance-attributes"
+disable = [
+  # We should at least document modules and classes. :-/
+  "missing-module-docstring",
+  "missing-class-docstring",
+  "missing-function-docstring",
+]
 
 [tool.pylint.similarities]
 min-similarity-lines = 5

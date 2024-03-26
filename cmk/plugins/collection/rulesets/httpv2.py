@@ -70,7 +70,6 @@ def _valuespec_document() -> Dictionary:
         elements={
             "document_body": DictElement(
                 parameter_form=SingleChoice(
-                    title=Title("Document body"),
                     help_text=Help(
                         "As an alternative to fetch the complete document including the actual web site or application (document body), you may also choose to fetch only the header. Please note, that in this case still the HTTP methods GET or POST will be used by default and not HEAD."
                     ),
@@ -298,7 +297,7 @@ header_dict_elements = {
 
 def _valuespec_connection() -> Dictionary:
     return Dictionary(
-        title=Title("Connection details"),
+        title=Title("Connection buildup"),
         help_text=Help(
             "Options in this group define how the connection to the web server is established."
         ),
@@ -672,9 +671,9 @@ def _valuespec_endpoints() -> List:
                             ),
                             "name": DictElement(
                                 parameter_form=String(
-                                    title=Title("Suffix"),
+                                    title=Title("Name"),
                                     help_text=Help(
-                                        "The suffix is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
+                                        "The name is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
                                     ),
                                     custom_validate=(validators.LengthInRange(min_value=1),),
                                     prefill=InputHint("My HTTP service"),
@@ -689,9 +688,18 @@ def _valuespec_endpoints() -> List:
                     parameter_form=String(
                         title=Title("URL"),
                         help_text=Help(
-                            "The URL to monitor. This URL should include the protocol (HTTP or HTTPS), the full address and, if needed, also the port the endpoint should not be monitoring using a standard port (80 or 443). Please note, that authentication must not added here as it exposes sensible information. Please add a potential authentication in the connection details."
+                            "The URL to monitor. This URL must include the protocol (HTTP or "
+                            "HTTPS), the full address and, if needed, also the port the endpoint "
+                            "if using a non standard port. The URL may also include query "
+                            "parameters or anchors. You may use macros in this field. The most "
+                            "common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$. "
+                            "Please note, that authentication must "
+                            "not be added here as it exposes sensible information. Use "
+                            "'authentication' in the connection buildup options, instead. "
                         ),
-                        prefill=InputHint("https://subdomain.domain.tld:port/path/to/filename"),
+                        prefill=InputHint(
+                            "https://subdomain.domain.tld:port/path/to/filename?parameter=value#anchor"
+                        ),
                     ),
                     required=True,
                 ),

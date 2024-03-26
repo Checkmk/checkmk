@@ -12,7 +12,7 @@ See:
 - https://owasp.org/www-project-application-security-verification-standard/"""
 from playwright.sync_api import BrowserContext
 
-from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.pom.dashboard import PPage
 from tests.testlib.site import Site
 
 

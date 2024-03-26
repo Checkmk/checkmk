@@ -12,7 +12,7 @@ import pytest
 from playwright.sync_api import expect, FilePayload
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.pom.dashboard import PPage
 from tests.testlib.site import Site
 
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey

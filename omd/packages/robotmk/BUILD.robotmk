@@ -12,6 +12,6 @@ genrule(
     cmd = """
          target_path=$$(realpath $(RULEDIR));
          cd external/robotmk/artifact/;
-         cp robotmk_scheduler.exe robotmk_agent_plugin.exe windows64/rcc.exe $${target_path};
+         cp rmk_windows64/robotmk_scheduler.exe rmk_windows64/robotmk_agent_plugin.exe rcc/windows64/rcc.exe $${target_path};
     """,
 )

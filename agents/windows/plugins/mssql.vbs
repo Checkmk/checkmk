@@ -780,7 +780,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
            backup_database = Trim(record("database_name"))
            If dbNames.Exists(backup_database) Then
                backup_database = Replace(backup_database, " ", "_")
-               found_db_backups.add backup_database, ""
+               found_db_backups.add LCase(backup_database), ""
 
                lastBackupDate = Trim(record("last_backup_date"))
                backup_type = Trim(record("type"))
@@ -809,7 +809,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         If databaseResponse.hasError Then
             addOutput("MSSQL_" & instance_id & "|" & backup_database & "|-|-|-|" & databaseResponse.errorMessage)
         End If
-        If Not found_db_backups.Exists(backup_database) Then
+        If Not found_db_backups.Exists(LCase(backup_database)) Then
             addOutput("MSSQL_" & instance_id & "|" & backup_database & "|-|-|-|no backup found")
         End If
     Next

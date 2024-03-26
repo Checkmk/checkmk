@@ -163,7 +163,7 @@ annotated-types = "==0.5.0"  # provides validators for pydantic2
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==2.0.1"
 rrdtool = "==0.1.16"  # Actually we ship the binding which comes with rrdtool itself...
-docstring-parser = "==0.15"  # direct dependency
+docstring-parser = "==0.16"  # direct dependency
 pyprof2calltree = "==1.4.5"  # used for GUI/API profiling
 pyparsing = "==3.0.9"  # direct dependency
 redis = "==4.5.4"  # needed by GUI (caching)

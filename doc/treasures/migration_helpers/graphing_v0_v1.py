@@ -88,6 +88,12 @@ def _parse_arguments() -> argparse.Namespace:
         default=False,
         help="Check connected graph objects",
     )
+    parser.add_argument(
+        "--sanitize",
+        action="store_true",
+        default=False,
+        help="Sanitize connected graph objects, eg. improve colors or similar",
+    )
     return parser.parse_args()
 
 
@@ -1325,19 +1331,20 @@ def _parse_legacy_metrics(
     upper_compound_lines = []
     upper_simple_lines = []
     for legacy_metric in legacy_metrics:
+        migrated_metric = _parse_legacy_metric(unit_parser, legacy_metric)
         match legacy_metric[1]:
             case "-line":
-                lower_simple_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
+                lower_simple_lines.append(migrated_metric)
             case "-area":
-                lower_compound_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
+                lower_compound_lines.append(migrated_metric)
             case "-stack":
-                lower_compound_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
+                lower_compound_lines.append(migrated_metric)
             case "line":
-                upper_simple_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
+                upper_simple_lines.append(migrated_metric)
             case "area":
-                upper_compound_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
+                upper_compound_lines.append(migrated_metric)
             case "stack":
-                upper_compound_lines.append(_parse_legacy_metric(unit_parser, legacy_metric))
+                upper_compound_lines.append(migrated_metric)
             case _:
                 raise ValueError(legacy_metric)
 
@@ -1368,6 +1375,61 @@ def _parse_legacy_scalars(
             raise ValueError(legacy_scalar)
 
 
+def _parse_lower_or_upper_scalars(
+    scalars: Sequence[
+        str
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
+    ],
+) -> tuple[
+    Sequence[
+        str
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
+    ],
+    Sequence[
+        str
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
+    ],
+]:
+    lower_scalars = []
+    upper_scalars = []
+    for s in scalars:
+        if (
+            isinstance(s, metrics.Product)
+            and len(s.factors) == 2
+            and any(isinstance(f, metrics.Constant) and f.value == -1 for f in s.factors)
+        ):
+            for f in s.factors:
+                if not isinstance(f, metrics.Constant):
+                    lower_scalars.append(f)
+        else:
+            upper_scalars.append(s)
+    return lower_scalars, upper_scalars
+
+
 def _parse_legacy_range(
     unit_parser: UnitParser,
     legacy_range: tuple[str | int | float, str | int | float] | None,
@@ -1394,7 +1456,8 @@ def _parse_legacy_graph_info(
     name: str,
     info: RawGraphTemplate,
 ) -> tuple[graphs.Graph | None, graphs.Graph | None]:
-    quantities = _parse_legacy_scalars(unit_parser, info.get("scalars", []))
+    scalars = list(_parse_legacy_scalars(unit_parser, info.get("scalars", [])))
+    lower_scalars, upper_scalars = _parse_lower_or_upper_scalars(scalars)
     minimal_range = _parse_legacy_range(unit_parser, info.get("range"))
     (
         lower_compound_lines,
@@ -1412,19 +1475,25 @@ def _parse_legacy_graph_info(
             title=Title(str(info["title"])),
             minimal_range=minimal_range,
             compound_lines=lower_compound_lines,
-            simple_lines=lower_simple_lines,
+            simple_lines=list(lower_simple_lines) + list(lower_scalars),
             optional=optional_metrics,
             conflicting=conflicting_metrics,
         )
 
     upper: graphs.Graph | None = None
     if upper_compound_lines or upper_simple_lines:
+        simple_lines = list(upper_simple_lines)
+        if upper_scalars:
+            simple_lines.extend(upper_scalars)
+        else:
+            _LOGGER.info("Check scalars manually: %r, %r", name, scalars)
+            simple_lines.extend(scalars)
         upper = graphs.Graph(
             name=name,
             title=Title(str(info["title"])),
             minimal_range=minimal_range,
             compound_lines=upper_compound_lines,
-            simple_lines=list(upper_simple_lines) + list(quantities),
+            simple_lines=simple_lines,
             optional=optional_metrics,
             conflicting=conflicting_metrics,
         )
@@ -1461,6 +1530,20 @@ def _parse_legacy_graph_infos(
             yield upper
 
 
+@dataclass(frozen=True)
+class MigratedObjects:
+    metrics: Sequence[metrics.Metric]
+    translations: Sequence[translations.Translation]
+    perfometers: Sequence[perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked]
+    graph_templates: Sequence[graphs.Graph | graphs.Bidirectional]
+
+    def __iter__(self):
+        yield from self.metrics
+        yield from self.translations
+        yield from self.perfometers
+        yield from self.graph_templates
+
+
 def _migrate(
     debug: bool,
     unparseables: list[Unparseable],
@@ -1469,26 +1552,119 @@ def _migrate(
     legacy_check_metrics: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
     legacy_perfometer_info: Sequence[PerfometerSpec],
     legacy_graph_info: Mapping[str, RawGraphTemplate],
-) -> Iterator[
-    metrics.Metric
-    | translations.Translation
-    | perfometers.Perfometer
-    | perfometers.Bidirectional
-    | perfometers.Stacked
-    | graphs.Graph
-    | graphs.Bidirectional,
-]:
-    # Note: we cannot restrict parsed legacy metrics with 'metrics_names' because we need all
-    # metrics for a consisten migration. Example: a graph uses further metric names.
-    yield from _parse_legacy_metric_infos(debug, unparseables, unit_parser, legacy_metric_info)
-    yield from _parse_legacy_check_metrics(debug, unparseables, legacy_check_metrics)
-    yield from _parse_legacy_perfometer_infos(
-        debug, unparseables, unit_parser, legacy_perfometer_info
+) -> MigratedObjects:
+    return MigratedObjects(
+        list(_parse_legacy_metric_infos(debug, unparseables, unit_parser, legacy_metric_info)),
+        list(_parse_legacy_check_metrics(debug, unparseables, legacy_check_metrics)),
+        list(
+            _parse_legacy_perfometer_infos(debug, unparseables, unit_parser, legacy_perfometer_info)
+        ),
+        list(_parse_legacy_graph_infos(debug, unparseables, unit_parser, legacy_graph_info)),
     )
-    yield from _parse_legacy_graph_infos(debug, unparseables, unit_parser, legacy_graph_info)
 
 
 # .
+#   .--sanitize------------------------------------------------------------.
+#   |                                   _ _   _                            |
+#   |                   ___  __ _ _ __ (_) |_(_)_______                    |
+#   |                  / __|/ _` | '_ \| | __| |_  / _ \                   |
+#   |                  \__ \ (_| | | | | | |_| |/ /  __/                   |
+#   |                  |___/\__,_|_| |_|_|\__|_/___\___|                   |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _collect_metric_names_from_quantity(
+    quantity: (
+        str
+        | metrics.Constant
+        | metrics.WarningOf
+        | metrics.CriticalOf
+        | metrics.MinimumOf
+        | metrics.MaximumOf
+        | metrics.Sum
+        | metrics.Product
+        | metrics.Difference
+        | metrics.Fraction
+    ),
+) -> Iterator[str]:
+    match quantity:
+        case str():
+            yield quantity
+        case metrics.WarningOf() | metrics.CriticalOf() | metrics.MinimumOf() | metrics.MaximumOf():
+            yield quantity.metric_name
+        case metrics.Sum():
+            for summand in quantity.summands:
+                yield from _collect_metric_names_from_quantity(summand)
+        case metrics.Product():
+            for factor in quantity.factors:
+                yield from _collect_metric_names_from_quantity(factor)
+        case metrics.Difference():
+            yield from _collect_metric_names_from_quantity(quantity.minuend)
+            yield from _collect_metric_names_from_quantity(quantity.subtrahend)
+        case metrics.Fraction():
+            yield from _collect_metric_names_from_quantity(quantity.dividend)
+            yield from _collect_metric_names_from_quantity(quantity.divisor)
+
+
+def _collect_metric_names_from_graph(migrated_graph_template: graphs.Graph) -> Iterator[str]:
+    for compound_line in migrated_graph_template.compound_lines:
+        yield from _collect_metric_names_from_quantity(compound_line)
+    for simple_line in migrated_graph_template.simple_lines:
+        yield from _collect_metric_names_from_quantity(simple_line)
+
+
+def _sanitize_metric_colors(
+    migrated_metrics: Sequence[metrics.Metric],
+    migrated_graph_templates: Sequence[graphs.Graph | graphs.Bidirectional],
+) -> Sequence[metrics.Metric]:
+    colors_by_metric_name: dict[str, metrics.Color] = {}
+    for migrated_graph_template in migrated_graph_templates:
+        if isinstance(migrated_graph_template, graphs.Bidirectional):
+            if (
+                len(
+                    lower_metric_names := set(
+                        _collect_metric_names_from_graph(migrated_graph_template.lower)
+                    )
+                )
+                == 1
+            ) and (
+                len(
+                    upper_metric_names := set(
+                        _collect_metric_names_from_graph(migrated_graph_template.upper)
+                    )
+                )
+                == 1
+            ):
+                colors_by_metric_name[lower_metric_names.pop()] = metrics.Color.BLUE
+                colors_by_metric_name[upper_metric_names.pop()] = metrics.Color.GREEN
+
+    sanitized_metrics: list[metrics.Metric] = []
+    for migrated_metric in migrated_metrics:
+        if migrated_metric.name in colors_by_metric_name:
+            sanitized_metrics.append(
+                metrics.Metric(
+                    name=migrated_metric.name,
+                    title=migrated_metric.title,
+                    unit=migrated_metric.unit,
+                    color=colors_by_metric_name[migrated_metric.name],
+                )
+            )
+        else:
+            sanitized_metrics.append(migrated_metric)
+    return sanitized_metrics
+
+
+def _sanitize(migrated_objects: MigratedObjects) -> MigratedObjects:
+    return MigratedObjects(
+        _sanitize_metric_colors(migrated_objects.metrics, migrated_objects.graph_templates),
+        migrated_objects.translations,
+        migrated_objects.perfometers,
+        migrated_objects.graph_templates,
+    )
+
+
+#  .
 #   .--repr----------------------------------------------------------------.
 #   |                                                                      |
 #   |                         _ __ ___ _ __  _ __                          |
@@ -1902,7 +2078,7 @@ def main() -> None:
         legacy_graph_info,
     ) = _load(args.debug, args.folders, args.translations)
 
-    connected_objects = _compute_connected_objects(
+    all_connected_objects = _compute_connected_objects(
         args.debug,
         args.folders,
         args.metric_names,
@@ -1912,23 +2088,24 @@ def main() -> None:
     )
 
     if args.check:
-        for connected_object in connected_objects:
-            print(connected_object)
+        for connected_objects in all_connected_objects:
+            print(connected_objects)
         return
 
     unparseables: list[Unparseable] = []
     unit_parser = UnitParser()
-    migrated_objects = list(
-        _migrate(
-            args.debug,
-            unparseables,
-            unit_parser,
-            {n: m for c in connected_objects for n, m in c.metrics.items()},
-            legacy_check_metrics,
-            [p.spec for c in connected_objects for p in c.perfometers],
-            {g.ident: g.template for c in connected_objects for g in c.graph_templates},
-        )
+    migrated_objects = _migrate(
+        args.debug,
+        unparseables,
+        unit_parser,
+        {n: m for c in all_connected_objects for n, m in c.metrics.items()},
+        legacy_check_metrics,
+        [p.spec for c in all_connected_objects for p in c.perfometers],
+        {g.ident: g.template for c in all_connected_objects for g in c.graph_templates},
     )
+
+    if args.sanitize:
+        migrated_objects = _sanitize(migrated_objects)
 
     if migrated_objects:
         print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))

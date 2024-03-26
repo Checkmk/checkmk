@@ -59,11 +59,6 @@ class LevelsType(StrEnum):
     FIXED = "fixed"
 
 
-class Validation(StrEnum):
-    NO_VALIDATION = "no_validation"
-    VALIDATE = "validate"
-
-
 class HttpMethod(StrEnum):
     GET = "get"
     HEAD = "head"
@@ -209,11 +204,7 @@ class HttpSettings(BaseModel):
     connection: Connection | None = None
     response_time: FloatLevels | None = None
     server_response: ServerResponse | None = None
-    cert: (
-        tuple[Literal[Validation.NO_VALIDATION], None]
-        | tuple[Literal[Validation.VALIDATE], FloatLevels]
-        | None
-    ) = None
+    cert: FloatLevels | None = None
     document: Document | None = None
     content: Content | None = None
 
@@ -454,14 +445,9 @@ def _status_code_args(response_codes: ServerResponse) -> Iterator[str]:
         yield str(code)
 
 
-def _cert_args(
-    cert_validation: (
-        tuple[Literal[Validation.NO_VALIDATION], None]
-        | tuple[Literal[Validation.VALIDATE], FloatLevels]
-    )
-) -> Iterator[str]:
+def _cert_args(cert_validation: FloatLevels) -> Iterator[str]:
     match cert_validation:
-        case (Validation.VALIDATE, (LevelsType.FIXED, (float(warn), float(crit)))):
+        case (LevelsType.FIXED, (float(warn), float(crit))):
             yield "--certificate-levels"
             yield f"{round(warn / _DAY)},{round(crit / _DAY)}"
 

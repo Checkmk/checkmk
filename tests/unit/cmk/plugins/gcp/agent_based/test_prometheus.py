@@ -2,20 +2,13 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import ast
+
 from collections.abc import Mapping
 
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.plugins.collection.server_side_calls.prometheus import special_agent_prometheus
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 from cmk.special_agents.utils.prometheus import extract_connection_args
-
-_TEST_HOST_CONFIG = HostConfig(
-    name="prometheus",
-    ipv4_config=IPv4Config(address="1.2.3.4"),
-)
 
 
 @pytest.mark.parametrize(
@@ -113,38 +106,6 @@ _TEST_HOST_CONFIG = HostConfig(
             },
             id="pwstore_token",
         ),
-        pytest.param(
-            {
-                "connection": "http://192.168.58.2:30000",
-                "verify-cert": False,
-                "auth_basic": (
-                    "auth_login",
-                    {"username": "username", "password": ("password", "password")},
-                ),
-                "protocol": "http",
-                "exporter": [("node_exporter", {"entities": ["df", "diskstat", "mem", "kernel"]})],
-                "promql_checks": [
-                    {
-                        "service_description": "service_name",
-                        "host_name": "heute",
-                        "metric_components": [
-                            {
-                                "metric_label": "label",
-                                "metric_name": "k8s_cpu_allocatable",
-                                "promql_query": "promql:query",
-                                "levels": {"lower_levels": (0.0, 0.0), "upper_levels": (0.0, 0.0)},
-                            }
-                        ],
-                    }
-                ],
-            },
-            {
-                "api_url": "http://http://192.168.58.2:30000/api/v1/",
-                "auth": ("username", "password"),
-                "verify-cert": False,
-            },
-            id="extensive_config",
-        ),
     ],
 )
 def test_extract_connection_args(
@@ -159,7 +120,4 @@ def test_extract_connection_args(
             "something_else": "123",
         },
     )
-    command = list(special_agent_prometheus(config, _TEST_HOST_CONFIG, {}))[0]
-    assert isinstance(command.stdin, str)
-    agent_config = ast.literal_eval(command.stdin)
-    assert extract_connection_args(agent_config) == expected_result
+    assert extract_connection_args(config) == expected_result

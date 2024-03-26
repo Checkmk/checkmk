@@ -17,8 +17,7 @@ from .models import ConnectionMode, R4RStatus, RequestForRegistration
 from .site_context import agent_output_dir, internal_secret_path, r4r_dir
 
 
-class NotRegisteredException(Exception):
-    ...
+class NotRegisteredException(Exception): ...
 
 
 class RegisteredHost:  # pylint: disable=too-few-public-methods

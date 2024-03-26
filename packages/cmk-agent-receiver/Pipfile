@@ -5,7 +5,7 @@ name = "pypi"
 
 [dev-packages]
 bandit = "*"
-black = "==23.3.0"  # our main black and pylint cannot handle the newer stuff
+black = "*"
 httpx = "*"  # used by tests
 isort = "*"
 mypy = "*"

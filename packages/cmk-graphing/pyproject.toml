@@ -49,6 +49,6 @@ score = "no"
 disable = "missing-docstring,fixme"
 
 [tool.pytest.ini_options]
-pythonpath = [ "." ]
-testpaths = [ "cmk", "tests" ]
+pythonpath = ["."]
+testpaths = ["cmk", "tests"]
 addopts = "--doctest-modules --import-mode=importlib"

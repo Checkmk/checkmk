@@ -7,9 +7,9 @@ edition = "2021"
 
 [dependencies]
 tiberius = { version = "0.12.2", features = [
-    "winauth",
-    "sql-browser-tokio",
-    # "integrated-auth-gssapi",
+  "winauth",
+  "sql-browser-tokio",
+  # "integrated-auth-gssapi",
 ] } # MS SQL
 
 
@@ -18,10 +18,10 @@ tiberius = { version = "0.12.2", features = [
 # https://github.com/rust-cross/rust-musl-cross/issues/44
 openssl = { version = "0.10.57", features = ["vendored"] }
 tokio = { version = "1.32.0", features = [
-    "full",
-    "rt",
-    "rt-multi-thread",
-    "macros",
+  "full",
+  "rt",
+  "rt-multi-thread",
+  "macros",
 ] }
 # tokio-rustls = "0.24.1"
 tokio-util = { version = "0.7.8", features = ["compat"] }
@@ -30,17 +30,17 @@ anyhow = "1.0.75"
 flexi_logger = { version = "0.27", default-features = false } # extension for log to allow log redirection
 log = { version = "0.4" }
 clap = { version = "4.1.*", features = [
-    "derive",
+  "derive",
 ] } # replace with 4.4.2 if rutsc >= 1.70
 yaml-rust = "0.4.5"
 lazy_static = { version = "1.4" }
 futures = { version = "0.3.25" }
 # used for New Types derives, may be removed
 derive_more = { version = "0.99", features = [
-    "from",
-    "display",
-    "into",
-    "default",
+  "from",
+  "display",
+  "into",
+  "default",
 ] }
 
 [dev-dependencies]

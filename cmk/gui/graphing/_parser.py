@@ -18,8 +18,15 @@ _MAX_DIGITS: Final = 5
 
 
 @dataclass(frozen=True)
-class Formatted:
+class Preformatted:
     value: int | float
+    prefix: str
+    symbol: str
+
+
+@dataclass(frozen=True)
+class Formatted:
+    text: str
     prefix: str
     symbol: str
 
@@ -57,13 +64,13 @@ class NotationFormatter:
     @abc.abstractmethod
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         raise NotImplementedError()
 
     @abc.abstractmethod
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         raise NotImplementedError()
 
     def _apply_precision(
@@ -80,22 +87,22 @@ class NotationFormatter:
 
     def _preformat(
         self, value: int | float, *, use_prefix: str = "", use_symbol: str = ""
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         assert value >= 0
         if value in (0, 1):
-            return [Formatted(value, "", self.symbol)]
+            return [Preformatted(value, "", self.symbol)]
         if value < 1:
             return self._preformat_small_number(value, use_prefix, use_symbol)
         # value > 1
         return self._preformat_large_number(value, use_prefix, use_symbol)
 
     @abc.abstractmethod
-    def _compose(self, text: str, prefix: str, symbol: str) -> str:
+    def _compose(self, formatted: Formatted) -> str:
         raise NotImplementedError()
 
     def _postformat(
         self,
-        formatted_parts: Sequence[Formatted],
+        formatted_parts: Sequence[Preformatted],
         compute_auto_precision_digits: Callable[[int, int], int],
     ) -> str:
         results = []
@@ -103,9 +110,11 @@ class NotationFormatter:
             text = str(self._apply_precision(formatted.value, compute_auto_precision_digits))
             results.append(
                 self._compose(
-                    text.rstrip("0").rstrip(".") if "." in text else text,
-                    formatted.prefix,
-                    formatted.symbol,
+                    Formatted(
+                        text.rstrip("0").rstrip(".") if "." in text else text,
+                        formatted.prefix,
+                        formatted.symbol,
+                    )
                 ).strip()
             )
         return " ".join(results)
@@ -172,16 +181,16 @@ class DecimalFormatter(NotationFormatter):
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
-        return [Formatted(value, "", self.symbol)]
+    ) -> Sequence[Preformatted]:
+        return [Preformatted(value, "", self.symbol)]
 
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
-        return [Formatted(value, "", self.symbol)]
+    ) -> Sequence[Preformatted]:
+        return [Preformatted(value, "", self.symbol)]
 
-    def _compose(self, text: str, prefix: str, symbol: str) -> str:
-        return f"{text} {symbol}"
+    def _compose(self, formatted: Formatted) -> str:
+        return f"{formatted.text} {formatted.symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -220,30 +229,30 @@ class SIFormatter(NotationFormatter):
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         if use_prefix:
             power = _find_prefix_power(use_prefix, _SI_SMALL_PREFIXES)
-            return [Formatted(value * pow(1000, power), use_prefix, self.symbol)]
+            return [Preformatted(value * pow(1000, power), use_prefix, self.symbol)]
         exponent = math.floor(math.log10(value)) - 1
         for exp, power, prefix in _SI_SMALL_PREFIXES:
             if exponent <= exp:
-                return [Formatted(value * pow(1000, power), prefix, self.symbol)]
-        return [Formatted(value, "", self.symbol)]
+                return [Preformatted(value * pow(1000, power), prefix, self.symbol)]
+        return [Preformatted(value, "", self.symbol)]
 
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         if use_prefix:
             power = _find_prefix_power(use_prefix, _SI_LARGE_PREFIXES)
-            return [Formatted(value / pow(1000, power), use_prefix, self.symbol)]
+            return [Preformatted(value / pow(1000, power), use_prefix, self.symbol)]
         exponent = math.floor(math.log10(value))
         for exp, power, prefix in _SI_LARGE_PREFIXES:
             if exponent >= exp:
-                return [Formatted(value / pow(1000, power), prefix, self.symbol)]
-        return [Formatted(value, "", self.symbol)]
+                return [Preformatted(value / pow(1000, power), prefix, self.symbol)]
+        return [Preformatted(value, "", self.symbol)]
 
-    def _compose(self, text: str, prefix: str, symbol: str) -> str:
-        return f"{text} {prefix}{symbol}"
+    def _compose(self, formatted: Formatted) -> str:
+        return f"{formatted.text} {formatted.prefix}{formatted.symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -272,23 +281,23 @@ class IECFormatter(NotationFormatter):
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
-        return [Formatted(value, "", self.symbol)]
+    ) -> Sequence[Preformatted]:
+        return [Preformatted(value, "", self.symbol)]
 
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         if use_prefix:
             power = _find_prefix_power(use_prefix, _IEC_LARGE_PREFIXES)
-            return [Formatted(value / pow(1024, power), use_prefix, self.symbol)]
+            return [Preformatted(value / pow(1024, power), use_prefix, self.symbol)]
         exponent = math.floor(math.log2(value))
         for exp, power, prefix in _IEC_LARGE_PREFIXES:
             if exponent >= exp:
-                return [Formatted(value / pow(1024, power), prefix, self.symbol)]
-        return [Formatted(value, "", self.symbol)]
+                return [Preformatted(value / pow(1024, power), prefix, self.symbol)]
+        return [Preformatted(value, "", self.symbol)]
 
-    def _compose(self, text: str, prefix: str, symbol: str) -> str:
-        return f"{text} {prefix}{symbol}"
+    def _compose(self, formatted: Formatted) -> str:
+        return f"{formatted.text} {formatted.prefix}{formatted.symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -305,18 +314,18 @@ class StandardScientificFormatter(NotationFormatter):
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         exponent = math.floor(math.log10(value))
-        return [Formatted(value / pow(10, exponent), f"e{exponent}", self.symbol)]
+        return [Preformatted(value / pow(10, exponent), f"e{exponent}", self.symbol)]
 
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         exponent = math.floor(math.log10(value))
-        return [Formatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
+        return [Preformatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
-    def _compose(self, text: str, prefix: str, symbol: str) -> str:
-        return f"{text}{prefix} {symbol}"
+    def _compose(self, formatted: Formatted) -> str:
+        return f"{formatted.text}{formatted.prefix} {formatted.symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -333,18 +342,18 @@ class EngineeringScientificFormatter(NotationFormatter):
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         exponent = math.floor(math.log10(value) / 3) * 3
-        return [Formatted(value / pow(10, exponent), f"e{exponent}", self.symbol)]
+        return [Preformatted(value / pow(10, exponent), f"e{exponent}", self.symbol)]
 
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         exponent = math.floor(math.log10(value) // 3) * 3
-        return [Formatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
+        return [Preformatted(value / pow(10, exponent), f"e+{exponent}", self.symbol)]
 
-    def _compose(self, text: str, prefix: str, symbol: str) -> str:
-        return f"{text}{prefix} {symbol}"
+    def _compose(self, formatted: Formatted) -> str:
+        return f"{formatted.text}{formatted.prefix} {formatted.symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)
@@ -402,19 +411,19 @@ class TimeFormatter(NotationFormatter):
 
     def _preformat_small_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         if use_prefix:
             power = _find_prefix_power(use_prefix, _TIME_SMALL_PREFIXES)
-            return [Formatted(value * pow(1000, power), use_prefix, self.symbol)]
+            return [Preformatted(value * pow(1000, power), use_prefix, self.symbol)]
         exponent = math.floor(math.log10(value)) - 1
         for exp, power, prefix in _TIME_SMALL_PREFIXES:
             if exponent <= exp:
-                return [Formatted(value * pow(1000, power), prefix, self.symbol)]
-        return [Formatted(value, "", self.symbol)]
+                return [Preformatted(value * pow(1000, power), prefix, self.symbol)]
+        return [Preformatted(value, "", self.symbol)]
 
     def _preformat_large_number(
         self, value: int | float, use_prefix: str, use_symbol: str
-    ) -> Sequence[Formatted]:
+    ) -> Sequence[Preformatted]:
         if not use_symbol:
             for factor, symbol in _TIME_LARGE_SYMBOLS:
                 if value >= factor:
@@ -425,25 +434,25 @@ class TimeFormatter(NotationFormatter):
         match use_symbol:
             case "d":
                 days = int(rounded_value // _ONE_DAY)
-                formatted_parts.append(Formatted(days, "", "d"))
+                formatted_parts.append(Preformatted(days, "", "d"))
                 if days < 10 and (hours := round((rounded_value - days * _ONE_DAY) / _ONE_HOUR)):
-                    formatted_parts.append(Formatted(hours, "", "h"))
+                    formatted_parts.append(Preformatted(hours, "", "h"))
             case "h":
                 hours = int(rounded_value // _ONE_HOUR)
-                formatted_parts.append(Formatted(hours, "", "h"))
+                formatted_parts.append(Preformatted(hours, "", "h"))
                 if minutes := round((rounded_value - hours * _ONE_HOUR) / _ONE_MINUTE):
-                    formatted_parts.append(Formatted(minutes, "", "min"))
+                    formatted_parts.append(Preformatted(minutes, "", "min"))
             case "min":
                 minutes = int(rounded_value // _ONE_MINUTE)
-                formatted_parts.append(Formatted(minutes, "", "min"))
+                formatted_parts.append(Preformatted(minutes, "", "min"))
                 if seconds := round(rounded_value - minutes * _ONE_MINUTE):
-                    formatted_parts.append(Formatted(seconds, "", "s"))
+                    formatted_parts.append(Preformatted(seconds, "", "s"))
             case _:
-                formatted_parts.append(Formatted(value, "", "s"))
+                formatted_parts.append(Preformatted(value, "", "s"))
         return formatted_parts
 
-    def _compose(self, text: str, prefix: str, symbol: str) -> str:
-        return f"{text} {prefix}{symbol}"
+    def _compose(self, formatted: Formatted) -> str:
+        return f"{formatted.text} {formatted.prefix}{formatted.symbol}"
 
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         factor = pow(10, math.floor(math.log10(max_y)) - 1)

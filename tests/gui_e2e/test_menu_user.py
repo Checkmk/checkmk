@@ -5,7 +5,7 @@
 
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.pom.dashboard import PPage
 
 
 def test_user_color_theme(logged_in_page: PPage) -> None:

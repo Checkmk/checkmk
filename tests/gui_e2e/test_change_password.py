@@ -8,7 +8,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.playwright.helpers import PPage
+from tests.testlib.playwright.pom.dashboard import PPage
 from tests.testlib.site import Site
 
 

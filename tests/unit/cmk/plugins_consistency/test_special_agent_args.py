@@ -9,6 +9,8 @@ from typing import Final, Mapping
 
 import pytest
 
+from cmk.utils import password_store
+
 from cmk.base.server_side_calls import load_special_agents
 
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
@@ -257,7 +259,8 @@ def test_all_agents_tested() -> None:
 @pytest.mark.parametrize(
     "name, module", [(n, m) for n, m in TESTED_SA_MODULES.items() if m is not None]
 )
-def test_parse_arguments(name: str, module: ModuleType) -> None:
+def test_parse_arguments(monkeypatch: pytest.MonkeyPatch, name: str, module: ModuleType) -> None:
+    monkeypatch.setattr(password_store, "lookup", lambda x: x)
     minimal_args_list = REQUIRED_ARGUMENTS[name]
 
     # Special agents should process their arguments in a function called parse_arguments

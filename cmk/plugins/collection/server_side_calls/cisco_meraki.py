@@ -33,7 +33,7 @@ def agent_cisco_meraki_arguments(
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret] = [
         host_config.name,
-        params.api_key.unsafe(),
+        params.api_key,
     ]
 
     match params.proxy:

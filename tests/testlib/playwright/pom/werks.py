@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib.playwright.pom.dashboard import PPage
+from tests.testlib.playwright.pom.dashboard import LoginPage
 
 
-class Werks(PPage):
+class Werks(LoginPage):
     page_title: str = "Change log (Werks)"
 
     def __init__(
         self,
-        ppage: PPage,
+        ppage: LoginPage,
     ):
         super().__init__(ppage.page, ppage.site_id, ppage.site_url)
         self.click_and_wait(self.main_menu.help_werks, navigate=True)

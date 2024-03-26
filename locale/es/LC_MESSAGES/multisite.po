@@ -5739,6 +5739,10 @@ msgstr "Duración permitida desde la última sincronización"
 msgid "Allowed is 1 ... 9"
 msgstr "Se permite 1 ... 9"
 
+#, fuzzy, python-format
+msgid "Allowed lengths range from %s to %s."
+msgstr "Se ha cambiado el nombre del nodo del clúster de %s a %s."
+
 msgid "Allowed license states"
 msgstr "Estados de licencia permitidos"
 
@@ -9440,12 +9444,6 @@ msgstr "Ayudante CMK"
 msgid "CMK helper usage"
 msgstr "Uso de la ayuda CMK"
 
-msgid "CONNECT"
-msgstr ""
-
-msgid "CONNECT:POST"
-msgstr ""
-
 msgid "CPG member name"
 msgstr "Nombre del miembro del CPG"
 
@@ -10242,6 +10240,10 @@ msgstr "Comprobación de certificados"
 
 msgid "Certificate Key File"
 msgstr "Archivo de claves de certificado"
+
+#, fuzzy
+msgid "Certificate age"
+msgstr "Cadena de certificados"
 
 #, fuzzy
 msgid "Certificate and key file"
@@ -11051,25 +11053,6 @@ msgstr "Checkmk config filename"
 msgid "Checkmk dashboard"
 msgstr "Cuadro de mandos Checkmk"
 
-msgid ""
-"Checkmk defaults to SNMPv1 in order to support as many devices as possible. "
-"In practice, most SNMP devices also support SNMPv2c, which has two "
-"advantages: it supports 64 bit counters and bulk walk, which saves CPU and "
-"network resources and is more performant. Use this rule to configure SNMPv2c "
-"for as many devices as possible. However, please be aware that some devices "
-"that support SNMPv2c may be buggy. In such cases, you may want to try "
-"disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
-msgstr ""
-"Checkmk utiliza por defecto SNMPv1 para soportar el mayor número posible de "
-"dispositivos. En la práctica, la mayoría de los dispositivos SNMP también "
-"son compatibles con SNMPv2c, que tiene dos ventajas: admite contadores de 64 "
-"bits y el recorrido masivo, lo que ahorra recursos de CPU y de red y es más "
-"eficaz. Utilice esta regla para configurar SNMPv2c para tantos dispositivos "
-"como sea posible. Sin embargo, tenga en cuenta que algunos dispositivos que "
-"soportan SNMPv2c pueden tener errores. En tales casos, puede intentar "
-"desactivar el paseo masivo utilizando el conjunto de reglas \"Desactivar "
-"paseos masivos en SNMPv2c/v3\"."
-
 #, fuzzy
 msgid "Checkmk edition"
 msgstr "Edición de checkmk: %s"
@@ -11216,25 +11199,79 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk con datos de rendimiento de tiempos"
 
-msgid "Checkmk: BI"
+#, fuzzy
+msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI"
 
-msgid "Checkmk: Dashboards"
+#, fuzzy
+msgid "Checkmk: BI: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: BI: Secs"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Dashboards: Bytes"
+msgstr "Checkmk: Cuadros de mando"
+
+#, fuzzy
+msgid "Checkmk: Dashboards: Requests"
+msgstr "Checkmk: Cuadros de mando"
+
+#, fuzzy
+msgid "Checkmk: Dashboards: Secs"
 msgstr "Checkmk: Cuadros de mando"
 
 msgid "Checkmk: Message"
 msgstr "Checkmk: Mensaje"
 
-msgid "Checkmk: Other"
+#, fuzzy
+msgid "Checkmk: Other: Bytes"
 msgstr "Checkmk: Otros"
 
-msgid "Checkmk: Sidebar elements"
+#, fuzzy
+msgid "Checkmk: Other: Requests"
+msgstr "Checkmk: Otros"
+
+#, fuzzy
+msgid "Checkmk: Other: Secs"
+msgstr "Checkmk: Otros"
+
+#, fuzzy
+msgid "Checkmk: Sidebar elements: Bytes"
 msgstr "Checkmk: Elementos de la barra lateral"
 
-msgid "Checkmk: Views"
+#, fuzzy
+msgid "Checkmk: Sidebar elements: Requests"
+msgstr "Checkmk: Elementos de la barra lateral"
+
+#, fuzzy
+msgid "Checkmk: Sidebar elements: Secs"
+msgstr "Checkmk: Elementos de la barra lateral"
+
+#, fuzzy
+msgid "Checkmk: Views: Bytes"
 msgstr "Checkmk: Vistas"
 
-msgid "Checkmk: WATO"
+#, fuzzy
+msgid "Checkmk: Views: Requests"
+msgstr "Checkmk: Vistas"
+
+#, fuzzy
+msgid "Checkmk: Views: Secs"
+msgstr "Checkmk: Vistas"
+
+#, fuzzy
+msgid "Checkmk: WATO: Bytes"
+msgstr "Comprobar: WATO"
+
+#, fuzzy
+msgid "Checkmk: WATO: Requests"
+msgstr "Comprobar: WATO"
+
+#, fuzzy
+msgid "Checkmk: WATO: Secs"
 msgstr "Comprobar: WATO"
 
 #, python-format
@@ -13468,6 +13505,10 @@ msgstr "Contiene un archivo corrupto %s"
 msgid "Contains: %d %s and %d %s"
 msgstr "Contiene: %d %s y %d %s"
 
+#, fuzzy
+msgid "Content"
+msgstr "Contenido"
+
 msgid "Content elements"
 msgstr "Elementos de contenido"
 
@@ -15406,10 +15447,6 @@ msgstr "Datos para ascender"
 msgid "Data to move within"
 msgstr "Datos que se mueven dentro de"
 
-#, fuzzy
-msgid "Data to send"
-msgstr "Datos enviados"
-
 msgid ""
 "Data to send via HTTP POST method. Please make sure, that the data is URL-"
 "encoded (for example \"key1=val1&key2=val2\")."
@@ -15810,9 +15847,6 @@ msgstr "Incremento por defecto"
 msgid "Default Status"
 msgstr "Estado por defecto"
 
-msgid "Default Topic"
-msgstr "Tema por defecto"
-
 msgid "Default User Profile"
 msgstr "Perfil de usuario por defecto"
 
@@ -15916,6 +15950,10 @@ msgstr "Por defecto, mostrar menos"
 
 msgid "Default to show more"
 msgstr "Por defecto para mostrar más"
+
+#, fuzzy
+msgid "Default topic"
+msgstr "Tema por defecto"
 
 msgid "Default user profile"
 msgstr "Perfil de usuario por defecto"
@@ -17343,8 +17381,9 @@ msgstr ""
 "Desactivar la sincronización automática de usuarios (utilizar los usuarios "
 "del sitio maestro)"
 
-msgid "Disable bulk walks on SNMPv2c/v3"
-msgstr "Desactivar los paseos masivos en SNMPv2c/v3"
+#, fuzzy
+msgid "Disable bulkwalks"
+msgstr "Desactivar todo"
 
 msgid "Disable certificate validation"
 msgstr "Desactivar la validación de certificados SSL"
@@ -17658,6 +17697,10 @@ msgstr "Porcentaje de uso del disco"
 msgid "Disk read"
 msgstr "Lectura de disco"
 
+#, fuzzy
+msgid "Disk read I/O operations"
+msgstr "Operaciones de lectura de disco"
+
 msgid "Disk read latency"
 msgstr "Latencia de lectura del disco"
 
@@ -17684,6 +17727,10 @@ msgstr "Utilización del disco"
 
 msgid "Disk write"
 msgstr "Escritura en disco"
+
+#, fuzzy
+msgid "Disk write I/O operations"
+msgstr "Operaciones de escritura en disco"
 
 msgid "Disk write latency"
 msgstr "Latencia de escritura del disco"
@@ -19924,10 +19971,12 @@ msgstr "Habilitar el acceso a Livestatus a través de la red (TCP)"
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Activar SMTP AUTH (LOGIN)"
 
-msgid "Enable SNMPv2c and bulk walk for hosts"
+#, fuzzy
+msgid "Enable SNMPv2c for hosts"
 msgstr "Habilitar SNMPv2c y bulk walk para hosts"
 
-msgid "Enable SNMPv2c and bulk walk for management boards"
+#, fuzzy
+msgid "Enable SNMPv2c for management boards"
 msgstr "Habilitar SNMPv2c y el paseo masivo para las tarjetas de gestión"
 
 msgid "Enable TLS"
@@ -20346,14 +20395,6 @@ msgstr "Aplicar la versión de Python 2"
 
 msgid "Enforce Python 3 version"
 msgstr "Aplicar la versión de Python 3"
-
-#, fuzzy
-msgid "Enforce TLS v1.0"
-msgstr "Utilizar SSL, aplicar TLSv1.1"
-
-#, fuzzy
-msgid "Enforce TLS v1.1"
-msgstr "Utilizar SSL, aplicar TLSv1.1"
 
 #, fuzzy
 msgid "Enforce TLS v1.2"
@@ -21506,6 +21547,10 @@ msgid "Explicit match"
 msgstr "Coincidencia explícita"
 
 msgid "Explicit number"
+msgstr "Número explícito"
+
+#, fuzzy
+msgid "Explicit port number"
 msgstr "Número explícito"
 
 msgid "Explicit range"
@@ -23130,6 +23175,10 @@ msgstr "Previsión para el futuro"
 msgid "Forecast model parametrization"
 msgstr "Parametrización del modelo de previsión"
 
+#, fuzzy
+msgid "Forks"
+msgstr "Redes"
+
 msgid "Form factor"
 msgstr "Factor de forma"
 
@@ -23700,9 +23749,6 @@ msgstr "Opciones generales"
 
 msgid "General Permissions"
 msgstr "Permisos generales"
-
-msgid "General Properties"
-msgstr "Propiedades generales"
 
 msgid "General Settings"
 msgstr "Configuración general"
@@ -25955,11 +26001,12 @@ msgstr "Alias de host"
 msgid "Host already exist"
 msgstr "El anfitrión ya existe"
 
-msgid "Host and Service Checks"
-msgstr "Comprobaciones de host y de servicio"
-
 msgid "Host and Service Events"
 msgstr "Eventos de host y servicio"
+
+#, fuzzy
+msgid "Host and service checks"
+msgstr "Comprobaciones de host y de servicio"
 
 msgid "Host and service configuration rule"
 msgstr "Regla de configuración de hosts y servicios"
@@ -26806,6 +26853,10 @@ msgid "Hub running as HotSpare"
 msgstr "Hub funcionando como HotSpare"
 
 msgid "Huge Pages"
+msgstr "Páginas enormes"
+
+#, fuzzy
+msgid "Huge pages"
 msgstr "Páginas enormes"
 
 msgid "Huge pages free"
@@ -29052,6 +29103,18 @@ msgstr "Política de extracción de imágenes"
 
 msgid "Image size"
 msgstr "Tamaño de la imagen"
+
+#, fuzzy
+msgid "Image: Bytes"
+msgstr "Imágenes"
+
+#, fuzzy
+msgid "Image: Requests"
+msgstr "Solicitudes gestionadas"
+
+#, fuzzy
+msgid "Image: Secs"
+msgstr "Imágenes"
 
 msgid "Images"
 msgstr "Imágenes"
@@ -33027,10 +33090,6 @@ msgstr "Lista de interfaces agrupadas en su lugar"
 msgid "List grouped interfaces separately"
 msgstr "Lista de interfaces agrupadas por separado"
 
-#, python-format
-msgid "List of %s"
-msgstr "Lista de %s"
-
 #, fuzzy
 msgid "List of all aggregations for simple API calls"
 msgstr "Lista de todas las agregaciones para llamadas API simples"
@@ -33164,17 +33223,15 @@ msgstr "Estado de Liveproxyd"
 msgid "Livestatus"
 msgstr "Livestatus"
 
-msgid "Livestatus Connects and Requests"
-msgstr "Conexiones y solicitudes de Livestatus"
-
-msgid "Livestatus Requests per Connection"
-msgstr "Solicitudes de Livestatus por conexión"
-
 msgid "Livestatus connections"
 msgstr "Conexiones Livestatus"
 
 msgid "Livestatus connects"
 msgstr "Livestatus se conecta"
+
+#, fuzzy
+msgid "Livestatus connects and requests"
+msgstr "Conexiones y solicitudes de Livestatus"
 
 msgid "Livestatus encryption"
 msgstr "Encriptación de Livestatus"
@@ -33212,6 +33269,10 @@ msgstr "Registro de proxy de Livestatus"
 
 msgid "Livestatus requests"
 msgstr "Solicitudes de Livestatus"
+
+#, fuzzy
+msgid "Livestatus requests per connection"
+msgstr "Solicitudes de Livestatus por conexión"
 
 msgid "Livestatus usage"
 msgstr "Uso de Livestatus"
@@ -35503,12 +35564,6 @@ msgstr "Número máximo de cortes de servicio"
 msgid "Maximum number of threads"
 msgstr "Número máximo de hilos"
 
-msgid ""
-"Maximum number of threads started at any given time during the JVM lifetime"
-msgstr ""
-"Número máximo de hilos iniciados en cualquier momento durante la vida de la "
-"JVM"
-
 #, fuzzy
 msgid "Maximum of "
 msgstr "Máximo"
@@ -37278,13 +37333,40 @@ msgstr "Mapa de NagVis"
 msgid "NagVis maps"
 msgstr "Mapas de NagVis"
 
-msgid "NagVis: AJAX"
+#, fuzzy
+msgid "NagVis: AJAX: Bytes"
 msgstr "NagVis: AJAX"
 
-msgid "NagVis: Other"
+#, fuzzy
+msgid "NagVis: AJAX: Requests"
+msgstr "NagVis: AJAX"
+
+#, fuzzy
+msgid "NagVis: AJAX: Secs"
+msgstr "NagVis: AJAX"
+
+#, fuzzy
+msgid "NagVis: Other: Bytes"
 msgstr "NagVis: Otros"
 
-msgid "NagVis: Sidebar element"
+#, fuzzy
+msgid "NagVis: Other: Requests"
+msgstr "NagVis: Otros"
+
+#, fuzzy
+msgid "NagVis: Other: Secs"
+msgstr "NagVis: Otros"
+
+#, fuzzy
+msgid "NagVis: Sidebar element: Bytes"
+msgstr "NagVis: Elemento de la barra lateral"
+
+#, fuzzy
+msgid "NagVis: Sidebar element: Requests"
+msgstr "NagVis: Elemento de la barra lateral"
+
+#, fuzzy
+msgid "NagVis: Sidebar element: Secs"
 msgstr "NagVis: Elemento de la barra lateral"
 
 msgid "Nagios"
@@ -39203,9 +39285,6 @@ msgstr "Número de usuarios de Lotus Domino"
 msgid "Number of Mails in Queue"
 msgstr "Número de correos en cola"
 
-msgid "Number of Monitored Hosts and Services"
-msgstr "Número de hosts y servicios supervisados"
-
 msgid "Number of Nodes"
 msgstr "Número de nodos"
 
@@ -39512,6 +39591,10 @@ msgstr "Número de mensajes en un periodo de tiempo definido nivel inferior"
 
 msgid "Number of messages in defined timespan upper level"
 msgstr "Número de mensajes en el tiempo definido nivel superior"
+
+#, fuzzy
+msgid "Number of monitored hosts and services"
+msgstr "Número de hosts y servicios supervisados"
 
 msgid "Number of new connections per second"
 msgstr "Número de conexiones nuevas por segundo"
@@ -39878,6 +39961,22 @@ msgstr "Uso de la memoria de la máquina virtual ESX"
 msgid "Nutanix single VM State"
 msgstr "Estado de la VM de Citrix"
 
+#, fuzzy
+msgid "Nutanix: Containers"
+msgstr "# Contenedores"
+
+#, fuzzy
+msgid "Nutanix: Prism Alerts"
+msgstr "Alertas de Nutanix Prism"
+
+#, fuzzy
+msgid "Nutanix: Prism Cluster"
+msgstr "Alertas de Nutanix Prism"
+
+#, fuzzy
+msgid "Nutanix: Storage Pools"
+msgstr "Piscinas de almacenamiento"
+
 msgid "Nvidia"
 msgstr "Nvidia"
 
@@ -39985,9 +40084,6 @@ msgid ""
 msgstr ""
 "OPROCS: El número de aplicaciones que están actualmente conectadas a la cola "
 "para poner mensajes en la cola."
-
-msgid "OPTIONS"
-msgstr ""
 
 #, python-format
 msgid "ORACLE %s"
@@ -41060,6 +41156,18 @@ msgstr "Otros servicios"
 msgid "Other speed in bits per second"
 msgstr "Otra velocidad en bits por segundo"
 
+#, fuzzy
+msgid "Other: Bytes"
+msgstr "Otros hosts"
+
+#, fuzzy
+msgid "Other: Requests"
+msgstr "Solicite"
+
+#, fuzzy
+msgid "Other: Secs"
+msgstr "Otros servicios"
+
 msgid ""
 "Otherwise counting will start from one with a new event for the next rule "
 "match."
@@ -41487,9 +41595,6 @@ msgstr ""
 msgid "POST / GET Variables"
 msgstr "Variables POST / GET"
 
-msgid "PROPFIND"
-msgstr ""
-
 msgid "PSU"
 msgstr "FUENTE DE ALIMENTACIÓN"
 
@@ -41642,12 +41747,6 @@ msgstr "Búsqueda de páginas"
 msgid "Page Reads"
 msgstr "Página de lectura"
 
-msgid "Page Swap In"
-msgstr "Cambio de página en"
-
-msgid "Page Swap Out"
-msgstr "Cambio de página"
-
 msgid "Page Writes"
 msgstr "Página de Escritos"
 
@@ -41665,6 +41764,18 @@ msgstr "Tamaño de la página"
 
 msgid "Page size to expect"
 msgstr "Tamaño de página a esperar"
+
+#, fuzzy
+msgid "Page swap"
+msgstr "Cambio de página en"
+
+#, fuzzy
+msgid "Page swap in"
+msgstr "Cambio de página en"
+
+#, fuzzy
+msgid "Page swap out"
+msgstr "Cambio de página"
 
 msgid "Page tables"
 msgstr "Tablas de páginas"
@@ -44675,10 +44786,19 @@ msgstr "media"
 msgid "RAM + Swap"
 msgstr "RAM + Swap"
 
-msgid "RAM + Swap overview"
+msgid "RAM + Swap used"
+msgstr "RAM + Swap utilizados"
+
+#, fuzzy
+msgid "RAM + swap installed"
+msgstr "Total de RAM + Swap instalado"
+
+#, fuzzy
+msgid "RAM + swap overview"
 msgstr "Resumen de RAM + Swap"
 
-msgid "RAM + Swap used"
+#, fuzzy
+msgid "RAM + swap used"
 msgstr "RAM + Swap utilizados"
 
 #, fuzzy
@@ -44690,6 +44810,14 @@ msgstr ""
 
 msgid "RAM installed"
 msgstr "RAM instalada"
+
+#, fuzzy
+msgid "RAM usage"
+msgstr "RAM utilizada"
+
+#, fuzzy
+msgid "RAM usage (averaged)"
+msgstr "Leer average exe"
 
 msgid "RAM used"
 msgstr "RAM utilizada"
@@ -48028,9 +48156,6 @@ msgstr "Guardar y pasar a %s"
 msgid "Save & go to host properties"
 msgstr "Guardar e ir a las propiedades del host"
 
-msgid "Save & go to list"
-msgstr "Guardar e ir a la lista"
-
 msgid "Save & run connection tests"
 msgstr "Guardar & ejecutar pruebas de conexión"
 
@@ -48044,6 +48169,10 @@ msgid "Save & view folder"
 msgstr "Guardar & ver carpeta"
 
 #, fuzzy
+msgid "Save & view list"
+msgstr "Guardar & ver carpeta"
+
+#, fuzzy
 msgid "Save as new layout for this aggregation"
 msgstr "Crear una copia de esta agregación"
 
@@ -48052,10 +48181,6 @@ msgstr "Guardar los filtros e ir al diseñador"
 
 msgid "Save response"
 msgstr "Guardar respuesta"
-
-#, python-format
-msgid "Save this %s and go to"
-msgstr "Guarde este %s y vaya a"
 
 msgid "Save this host and go to"
 msgstr "Guarde este host y vaya a"
@@ -48207,11 +48332,20 @@ msgstr "Script executed"
 msgid "Script pattern"
 msgstr "Script pattern"
 
-msgid "Scripts"
-msgstr "Scripts"
-
 msgid "Scripts to integrate Nagios plugis"
 msgstr "Scripts para integrar los plugis de Nagios"
+
+#, fuzzy
+msgid "Scripts: Bytes"
+msgstr "Script Type"
+
+#, fuzzy
+msgid "Scripts: Requests"
+msgstr "%s Solicitudes"
+
+#, fuzzy
+msgid "Scripts: Secs"
+msgstr "Scripts"
 
 msgid "Search"
 msgstr "Buscar"
@@ -48927,6 +49061,10 @@ msgstr "Enviar datos HTTP POST"
 
 msgid "Send custom notification"
 msgstr "Enviar notificación personalizada"
+
+#, fuzzy
+msgid "Send data"
+msgstr "Datos mapeados"
 
 msgid "Send email"
 msgstr "Enviar correo electrónico"
@@ -51367,7 +51505,35 @@ msgstr ""
 msgid "Size growth per minute"
 msgstr "Crecimiento del tamaño por minuto"
 
+#, fuzzy
+msgid "Size of Agents"
+msgstr "Tamaño de la licencia"
+
+#, fuzzy
+msgid "Size of Core"
+msgstr "Tamaño de los archivos de registro"
+
+#, fuzzy
+msgid "Size of History"
+msgstr "Tamaño de los RRD"
+
+#, fuzzy
+msgid "Size of Inventory"
+msgstr "Inventario"
+
+#, fuzzy
+msgid "Size of Local"
+msgstr "Tamaño de los archivos de registro"
+
+#, fuzzy
+msgid "Size of PNP4Nagios"
+msgstr "Archivos Spool de PNP4Nagios"
+
 msgid "Size of RRDs"
+msgstr "Tamaño de los RRD"
+
+#, fuzzy
+msgid "Size of Tmp"
 msgstr "Tamaño de los RRD"
 
 msgid "Size of active mail queue"
@@ -51601,11 +51767,13 @@ msgstr ""
 "devuelven el combustible disponible en lugar de lo que queda. En este caso "
 "es posible subir los niveles para manejar este comportamiento"
 
+#, fuzzy
 msgid ""
-"Some SNMPv2c/v3 capable devices are buggy when being queried using bulk "
-"walks. In such cases, you can disable bulk walks with this ruleset. Please "
-"be aware that you should only do this if no other approach is feasible (e.g. "
-"limiting the bulk size), as bulk walks are much more performant."
+"Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
+"queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
+"Please be aware that you should only do this if no other approach is "
+"feasible (e.g. limiting the bulk size), as bulk walks are much more "
+"performant."
 msgstr ""
 "Algunos dispositivos con capacidad SNMPv2c/v3 presentan fallos cuando se les "
 "consulta mediante recorridos masivos. En estos casos, puede desactivar los "
@@ -52986,8 +53154,60 @@ msgstr "Estado %s"
 msgid "State (severity) of event"
 msgstr "Estado (gravedad) del evento"
 
+#, fuzzy
+msgid "State BOUND"
+msgstr "Estado %s"
+
+#, fuzzy
+msgid "State CLOSED"
+msgstr "CERRADO"
+
+#, fuzzy
+msgid "State CLOSE_WAIT"
+msgstr "CERRAR_ESPERAR"
+
+#, fuzzy
+msgid "State CLOSING"
+msgstr "CIERRE"
+
+#, fuzzy
+msgid "State ESTABLISHED"
+msgstr "ESTABLECIDO"
+
+#, fuzzy
+msgid "State FIN_WAIT1"
+msgstr "FIN_WAIT1"
+
+#, fuzzy
+msgid "State FIN_WAIT2"
+msgstr "FIN_WAIT2"
+
+#, fuzzy
+msgid "State IDLE"
+msgstr "Identificación del sitio"
+
+#, fuzzy
+msgid "State LAST_ACK"
+msgstr "LAST_ACK"
+
+#, fuzzy
+msgid "State LISTEN"
+msgstr "Estado %s"
+
 msgid "State Retention Interval"
 msgstr "Intervalo de retención del Estado"
+
+#, fuzzy
+msgid "State SYN_RECV"
+msgstr "SYN_RECV"
+
+#, fuzzy
+msgid "State SYN_SENT"
+msgstr "SYN_SENT"
+
+#, fuzzy
+msgid "State TIME_WAIT"
+msgstr "TIEMPO_ESPERADO"
 
 msgid "State and Count of Processes"
 msgstr "Estado y recuento de procesos"
@@ -54072,7 +54292,16 @@ msgstr "Estilo"
 msgid "Style of connection lines"
 msgstr "Estilo de las líneas de conexión"
 
-msgid "Styles"
+#, fuzzy
+msgid "Styles: Bytes"
+msgstr "Estilos"
+
+#, fuzzy
+msgid "Styles: Requests"
+msgstr "%s Solicitudes"
+
+#, fuzzy
+msgid "Styles: Secs"
 msgstr "Estilos"
 
 msgid ""
@@ -54667,9 +54896,6 @@ msgstr "TCP"
 msgid "TCP Connect"
 msgstr "Conexión TCP"
 
-msgid "TCP Connection States"
-msgstr "Estados de la conexión TCP"
-
 #, python-format
 msgid "TCP Connection Timeout (<a href=\"%s\">Rules</a>)"
 msgstr "Tiempo de espera de la conexión TCP (<a href=\"%s\">Reglas</a>)"
@@ -54717,6 +54943,10 @@ msgstr "Conexión TCP"
 
 msgid "TCP connect timeout for connecting to the master"
 msgstr "Tiempo de espera de la conexión TCP para conectarse al maestro"
+
+#, fuzzy
+msgid "TCP connection states"
+msgstr "Estados de la conexión TCP"
 
 msgid "TCP connection statistics"
 msgstr "Estadísticas de conexión TCP"
@@ -54784,9 +55014,6 @@ msgstr "TNS Alias %s"
 
 msgid "TP Link: Used memory via SNMP"
 msgstr "Enlace TP: Memoria utilizada a través de SNMP"
-
-msgid "TRACE"
-msgstr ""
 
 msgid "TS Quotas (not used)"
 msgstr "Cuotas de TS (no utilizadas)"
@@ -57863,6 +58090,10 @@ msgid "The maximum age of the last backup."
 msgstr "La edad máxima de la última copia de seguridad."
 
 #, fuzzy, python-format
+msgid "The maximum allowed length is %s."
+msgstr "%s es demasiado %s. El valor permitido %s es %s."
+
+#, fuzzy, python-format
 msgid "The maximum allowed number of regex groups is %s."
 msgstr "%s es demasiado %s. El valor permitido %s es %s."
 
@@ -57980,6 +58211,10 @@ msgstr ""
 "La etiqueta de la métrica se muestra junto al valor consultado en el detalle "
 "del estado del servicio resultante. El nombre de la métrica se tomará como "
 "etiqueta si no se ha especificado nada."
+
+#, fuzzy, python-format
+msgid "The minimum allowed length is %s."
+msgstr "%s es demasiado %s. El valor permitido %s es %s."
 
 #, fuzzy, python-format
 msgid "The minimum allowed number of regex groups is %s."
@@ -58147,6 +58382,12 @@ msgstr ""
 
 msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
 msgstr "El nombre de la interfaz (interfaz de red pública/privada IPv4/IPv6)"
+
+msgid ""
+"The name of the macro (including the '$'s) which contains the port number. "
+"If the macro is not defined or does not represent an integer, config "
+"generation will fail."
+msgstr ""
 
 msgid ""
 "The name of the memory pool in the format 'INSTANCE Memory Pool POOLNAME'"
@@ -70153,6 +70394,10 @@ msgstr "Utiliza los niveles menos críticos de tu y del dispositivo"
 msgid "Use local FQDN"
 msgstr "Utilizar el FQDN local"
 
+#, fuzzy
+msgid "Use macro to determine port number"
+msgstr "Utilice una representación estrecha para este número"
+
 msgid "Use manually created ORACLE password wallet"
 msgstr "Utilizar la cartera de contraseñas ORACLE creada manualmente"
 
@@ -70551,6 +70796,27 @@ msgstr ""
 "agente especial. Por favor, añada aquí el nombre del host, por ejemplo, "
 "mi_conejomq.com. Si no se establece, el host asignado se utiliza como "
 "instancia."
+
+#, fuzzy, python-format
+msgid ""
+"Use this rule to enable the use of SNMP verison 2c instead of the default "
+"SNMP version 1. Checkmk defaults to SNMPv1 in order to support as many "
+"devices as possible. In practice, most SNMP devices also support SNMPv2c, "
+"which has two advantages: It supports 64 bit counters and the \"bulkwalk\" "
+"query, which is faster and saves CPU and network resources. Use this rule to "
+"configure SNMPv2c for as many devices as possible. However, please be aware "
+"some buggy devices do not properly support \"bulkwalk\" queries. For those "
+"you may want to try disabling them using the ruleset \"%s\"."
+msgstr ""
+"Checkmk utiliza por defecto SNMPv1 para soportar el mayor número posible de "
+"dispositivos. En la práctica, la mayoría de los dispositivos SNMP también "
+"son compatibles con SNMPv2c, que tiene dos ventajas: admite contadores de 64 "
+"bits y el recorrido masivo, lo que ahorra recursos de CPU y de red y es más "
+"eficaz. Utilice esta regla para configurar SNMPv2c para tantos dispositivos "
+"como sea posible. Sin embargo, tenga en cuenta que algunos dispositivos que "
+"soportan SNMPv2c pueden tener errores. En tales casos, puede intentar "
+"desactivar el paseo masivo utilizando el conjunto de reglas \"Desactivar "
+"paseos masivos en SNMPv2c/v3\"."
 
 #, python-format
 msgid "Use this ruleset to assign <a href=\"%s\">%s</a> to services."
@@ -75719,8 +75985,10 @@ msgstr ""
 msgid ""
 "You may choose to enforce the usage of a specific TLS version. Either by "
 "pinning to exactly the selected version, or by also allowing higher "
-"versions. Please note Checkmk does not support SSLv3 or SSLv2 anymore as "
-"they are known to be insecure."
+"versions. Please note Checkmk does not support SSLv3 or SSLv2 at all. TLS "
+"1.0 and 1.1 is supported by the underlying plug-in but not on this rule set "
+"as the plug-in needs to be called with an unsafe configuration of OpenSSL 3. "
+"This requires a direct call via <i>Integrate Nagios plugins.</i>"
 msgstr ""
 
 msgid ""
@@ -76447,22 +76715,6 @@ msgstr "cualquier"
 
 msgid "any node"
 msgstr "cualquier nodo"
-
-#, fuzzy
-msgid "application/json"
-msgstr "Aplicaciones"
-
-#, fuzzy
-msgid "application/octet-stream"
-msgstr "Resumen de aplicaciones"
-
-#, fuzzy
-msgid "application/xml"
-msgstr "Aplicación"
-
-#, fuzzy
-msgid "application/zip"
-msgstr "Aplicación"
 
 msgid "apt-get dist-upgrade"
 msgstr "apt-get dist-upgrade"
@@ -78158,18 +78410,6 @@ msgstr "pruebas"
 msgid "tests"
 msgstr "Realización de pruebas"
 
-msgid "text/csv"
-msgstr ""
-
-msgid "text/html"
-msgstr ""
-
-msgid "text/plain"
-msgstr ""
-
-msgid "text/xml"
-msgstr ""
-
 msgid "th notification"
 msgstr "ª notificación"
 
@@ -78461,6 +78701,65 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~| msgid "Data sent"
+#~ msgid "Data to send"
+#~ msgstr "Datos enviados"
+
+#, fuzzy
+#~| msgid "Use SSL, enforce TLSv1.1"
+#~ msgid "Enforce TLS v1.0"
+#~ msgstr "Utilizar SSL, aplicar TLSv1.1"
+
+#, fuzzy
+#~| msgid "Use SSL, enforce TLSv1.1"
+#~ msgid "Enforce TLS v1.1"
+#~ msgstr "Utilizar SSL, aplicar TLSv1.1"
+
+#, fuzzy
+#~| msgid "Applications"
+#~ msgid "application/json"
+#~ msgstr "Aplicaciones"
+
+#, fuzzy
+#~| msgid "Applications overview"
+#~ msgid "application/octet-stream"
+#~ msgstr "Resumen de aplicaciones"
+
+#, fuzzy
+#~| msgid "Application"
+#~ msgid "application/xml"
+#~ msgstr "Aplicación"
+
+#, fuzzy
+#~| msgid "Application"
+#~ msgid "application/zip"
+#~ msgstr "Aplicación"
+
+#~ msgid "General Properties"
+#~ msgstr "Propiedades generales"
+
+#, python-format
+#~ msgid "List of %s"
+#~ msgstr "Lista de %s"
+
+#~ msgid ""
+#~ "Maximum number of threads started at any given time during the JVM "
+#~ "lifetime"
+#~ msgstr ""
+#~ "Número máximo de hilos iniciados en cualquier momento durante la vida de "
+#~ "la JVM"
+
+#~ msgid "Save & go to list"
+#~ msgstr "Guardar e ir a la lista"
+
+#, python-format
+#~ msgid "Save this %s and go to"
+#~ msgstr "Guarde este %s y vaya a"
+
+#~ msgid "Disable bulk walks on SNMPv2c/v3"
+#~ msgstr "Desactivar los paseos masivos en SNMPv2c/v3"
 
 #, fuzzy
 #~| msgid "Maximum rate of rejected packets"
@@ -79249,9 +79548,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 #~ msgid "Network Topology"
 #~ msgstr "Topología de la red"
-
-#~ msgid "Other Services"
-#~ msgstr "Otros servicios"
 
 #~ msgid "Power Supplies"
 #~ msgstr "Fuentes de alimentación"

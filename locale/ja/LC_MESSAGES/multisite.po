@@ -5531,6 +5531,10 @@ msgstr "最後の同期からの許容期間"
 msgid "Allowed is 1 ... 9"
 msgstr "許可されるのは1 ... 9"
 
+#, fuzzy, python-format
+msgid "Allowed lengths range from %s to %s."
+msgstr "クラスタノードの名前を %s から %sに変更しました。"
+
 msgid "Allowed license states"
 msgstr "許可されたライセンスの状態"
 
@@ -9106,12 +9110,6 @@ msgstr "CMKヘルパー"
 msgid "CMK helper usage"
 msgstr "CMKヘルパーの使用状況"
 
-msgid "CONNECT"
-msgstr ""
-
-msgid "CONNECT:POST"
-msgstr ""
-
 msgid "CPG member name"
 msgstr "CPGメンバー名"
 
@@ -9890,6 +9888,10 @@ msgstr "証明書の確認"
 
 msgid "Certificate Key File"
 msgstr "証明書キーファイル"
+
+#, fuzzy
+msgid "Certificate age"
+msgstr "証明書チェーン"
 
 #, fuzzy
 msgid "Certificate and key file"
@@ -10679,24 +10681,6 @@ msgstr "Checkmk設定ファイル名"
 msgid "Checkmk dashboard"
 msgstr "Checkmk ダッシュボード"
 
-msgid ""
-"Checkmk defaults to SNMPv1 in order to support as many devices as possible. "
-"In practice, most SNMP devices also support SNMPv2c, which has two "
-"advantages: it supports 64 bit counters and bulk walk, which saves CPU and "
-"network resources and is more performant. Use this rule to configure SNMPv2c "
-"for as many devices as possible. However, please be aware that some devices "
-"that support SNMPv2c may be buggy. In such cases, you may want to try "
-"disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
-msgstr ""
-"Checkmkは、できるだけ多くのデバイスをサポートするために、デフォルトでSNMPv1を"
-"使用しています。実際には、ほとんどのSNMP機器はSNMPv2cもサポートしており、64"
-"ビットカウンタとバルクウォークをサポートしているため、CPUとネットワークリソー"
-"スを節約でき、よりパフォーマンスが高いという2つの利点があります。このルールを"
-"使って、できるだけ多くの機器にSNMPv2cを設定します。ただし、SNMPv2cに対応した"
-"機器にはバグがある場合がありますので、ご注意ください。バグがあった場合、ルー"
-"ルセット「Disable bulk walks on SNMPv2c/v3 」を使用して、バルクウォークを無効"
-"にしてみるとよいでしょう。"
-
 msgid "Checkmk edition"
 msgstr "Checkmkエディション"
 
@@ -10833,25 +10817,79 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "時間パフォーマンスデータを使用したCheckmk"
 
-msgid "Checkmk: BI"
+#, fuzzy
+msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk:BI"
 
-msgid "Checkmk: Dashboards"
+#, fuzzy
+msgid "Checkmk: BI: Requests"
+msgstr "Checkmk:BI"
+
+#, fuzzy
+msgid "Checkmk: BI: Secs"
+msgstr "Checkmk:BI"
+
+#, fuzzy
+msgid "Checkmk: Dashboards: Bytes"
+msgstr "Checkmk: ダッシュボード"
+
+#, fuzzy
+msgid "Checkmk: Dashboards: Requests"
+msgstr "Checkmk: ダッシュボード"
+
+#, fuzzy
+msgid "Checkmk: Dashboards: Secs"
 msgstr "Checkmk: ダッシュボード"
 
 msgid "Checkmk: Message"
 msgstr "Checkmk: メッセージ"
 
-msgid "Checkmk: Other"
+#, fuzzy
+msgid "Checkmk: Other: Bytes"
 msgstr "Checkmk:その他"
 
-msgid "Checkmk: Sidebar elements"
+#, fuzzy
+msgid "Checkmk: Other: Requests"
+msgstr "Checkmk:その他"
+
+#, fuzzy
+msgid "Checkmk: Other: Secs"
+msgstr "Checkmk:その他"
+
+#, fuzzy
+msgid "Checkmk: Sidebar elements: Bytes"
 msgstr "Checkmk: サイドバー要素"
 
-msgid "Checkmk: Views"
+#, fuzzy
+msgid "Checkmk: Sidebar elements: Requests"
+msgstr "Checkmk: サイドバー要素"
+
+#, fuzzy
+msgid "Checkmk: Sidebar elements: Secs"
+msgstr "Checkmk: サイドバー要素"
+
+#, fuzzy
+msgid "Checkmk: Views: Bytes"
 msgstr "Checkmk: ビュー"
 
-msgid "Checkmk: WATO"
+#, fuzzy
+msgid "Checkmk: Views: Requests"
+msgstr "Checkmk: ビュー"
+
+#, fuzzy
+msgid "Checkmk: Views: Secs"
+msgstr "Checkmk: ビュー"
+
+#, fuzzy
+msgid "Checkmk: WATO: Bytes"
+msgstr "Checkmk: WATO"
+
+#, fuzzy
+msgid "Checkmk: WATO: Requests"
+msgstr "Checkmk: WATO"
+
+#, fuzzy
+msgid "Checkmk: WATO: Secs"
 msgstr "Checkmk: WATO"
 
 #, python-format
@@ -12991,6 +13029,10 @@ msgstr "破損したファイル%sが含まれています"
 msgid "Contains: %d %s and %d %s"
 msgstr "含む: %d %s と%d %s"
 
+#, fuzzy
+msgid "Content"
+msgstr "内容"
+
 msgid "Content elements"
 msgstr "コンテンツ要素"
 
@@ -14894,10 +14936,6 @@ msgstr "上に移動するデータ"
 msgid "Data to move within"
 msgstr "移動するデータ"
 
-#, fuzzy
-msgid "Data to send"
-msgstr "送信データ"
-
 msgid ""
 "Data to send via HTTP POST method. Please make sure, that the data is URL-"
 "encoded (for example \"key1=val1&key2=val2\")."
@@ -15295,9 +15333,6 @@ msgstr "デフォルトのインクリメント"
 msgid "Default Status"
 msgstr "デフォルトステータス"
 
-msgid "Default Topic"
-msgstr "デフォルトのトピック"
-
 msgid "Default User Profile"
 msgstr "デフォルトのユーザープロファイル"
 
@@ -15398,6 +15433,10 @@ msgstr "デフォルトを少なく表示する"
 
 msgid "Default to show more"
 msgstr "デフォルトをもっと表示にする"
+
+#, fuzzy
+msgid "Default topic"
+msgstr "デフォルトのトピック"
 
 msgid "Default user profile"
 msgstr "デフォルトのユーザープロファイル"
@@ -16780,8 +16819,9 @@ msgstr "ホストの自動削除を無効化"
 msgid "Disable automatic user synchronization (use master site users)"
 msgstr "自動ユーザー同期を無効にする(マスターサイトユーザーを使用)"
 
-msgid "Disable bulk walks on SNMPv2c/v3"
-msgstr "SNMPv2c/v3でのバルクウォークを無効にする"
+#, fuzzy
+msgid "Disable bulkwalks"
+msgstr "全てを無効化"
 
 msgid "Disable certificate validation"
 msgstr "証明書の検証を無効にする"
@@ -17084,6 +17124,10 @@ msgstr "ディスク使用率"
 msgid "Disk read"
 msgstr "ディスク読取"
 
+#, fuzzy
+msgid "Disk read I/O operations"
+msgstr "ディスク読込操作"
+
 msgid "Disk read latency"
 msgstr "ディスク読み取りの待ち時間"
 
@@ -17110,6 +17154,10 @@ msgstr "ディスク使用率"
 
 msgid "Disk write"
 msgstr "ディスク書込"
+
+#, fuzzy
+msgid "Disk write I/O operations"
+msgstr "ディスク書込操作"
 
 msgid "Disk write latency"
 msgstr "ディスク書き込みの待ち時間"
@@ -19303,10 +19351,12 @@ msgstr "ネットワーク(TCP)を介したLivestatusアクセスを有効にす
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH(LOGIN)を有効にする"
 
-msgid "Enable SNMPv2c and bulk walk for hosts"
+#, fuzzy
+msgid "Enable SNMPv2c for hosts"
 msgstr "ホストのSNMPv2cとバルクウォークを有効にする"
 
-msgid "Enable SNMPv2c and bulk walk for management boards"
+#, fuzzy
+msgid "Enable SNMPv2c for management boards"
 msgstr "マネジメントボードのSNMPv2cとバルクウォークを有効化する"
 
 msgid "Enable TLS"
@@ -19704,14 +19754,6 @@ msgstr "Python2バージョンを適用する"
 
 msgid "Enforce Python 3 version"
 msgstr "Python3バージョンを適用する"
-
-#, fuzzy
-msgid "Enforce TLS v1.0"
-msgstr "SSLを使用し、TLSv1.1を適用します"
-
-#, fuzzy
-msgid "Enforce TLS v1.1"
-msgstr "SSLを使用し、TLSv1.1を適用します"
 
 #, fuzzy
 msgid "Enforce TLS v1.2"
@@ -20834,6 +20876,10 @@ msgid "Explicit match"
 msgstr "明示的な一致"
 
 msgid "Explicit number"
+msgstr "明示的な番号"
+
+#, fuzzy
+msgid "Explicit port number"
 msgstr "明示的な番号"
 
 msgid "Explicit range"
@@ -22421,6 +22467,10 @@ msgstr "将来への予測"
 msgid "Forecast model parametrization"
 msgstr "予測モデルのパラメータ化"
 
+#, fuzzy
+msgid "Forks"
+msgstr "ネットワーク"
+
 msgid "Form factor"
 msgstr "フォーム ファクタ"
 
@@ -22973,9 +23023,6 @@ msgstr "一般的なオプション"
 
 msgid "General Permissions"
 msgstr "一般的な権限"
-
-msgid "General Properties"
-msgstr "一般的なプロパティ"
 
 msgid "General Settings"
 msgstr "一般設定"
@@ -25167,11 +25214,12 @@ msgstr "ホストエイリアス"
 msgid "Host already exist"
 msgstr "ホストはすでに存在します"
 
-msgid "Host and Service Checks"
-msgstr "ホストとサービスのチェック"
-
 msgid "Host and Service Events"
 msgstr "ホストおよびサービスイベント"
+
+#, fuzzy
+msgid "Host and service checks"
+msgstr "ホストとサービスのチェック"
 
 msgid "Host and service configuration rule"
 msgstr "ホストとサービスの構成ルール"
@@ -25999,6 +26047,10 @@ msgid "Hub running as HotSpare"
 msgstr "HotSpareとして実行されているハブ"
 
 msgid "Huge Pages"
+msgstr "巨大なページ"
+
+#, fuzzy
+msgid "Huge pages"
 msgstr "巨大なページ"
 
 msgid "Huge pages free"
@@ -28129,6 +28181,18 @@ msgstr "画像プルポリシー"
 
 msgid "Image size"
 msgstr "画像サイズ"
+
+#, fuzzy
+msgid "Image: Bytes"
+msgstr "イメージ"
+
+#, fuzzy
+msgid "Image: Requests"
+msgstr "処理されたリクエスト"
+
+#, fuzzy
+msgid "Image: Secs"
+msgstr "イメージ"
 
 msgid "Images"
 msgstr "イメージ"
@@ -31992,10 +32056,6 @@ msgstr "代わりに、グループ化されたインターフェイスを一覧
 msgid "List grouped interfaces separately"
 msgstr "グループ化されたインターフェイスを個別に一覧表示する"
 
-#, python-format
-msgid "List of %s"
-msgstr "%s のリスト"
-
 #, fuzzy
 msgid "List of all aggregations for simple API calls"
 msgstr "単純なAPIコールの全集約のリスト"
@@ -32120,17 +32180,15 @@ msgstr "Liveproxydステータス"
 msgid "Livestatus"
 msgstr "Livestatus"
 
-msgid "Livestatus Connects and Requests"
-msgstr "Livestatusの接続とリクエスト"
-
-msgid "Livestatus Requests per Connection"
-msgstr "接続ごとのLivestatusリクエスト"
-
 msgid "Livestatus connections"
 msgstr "Livestatus 接続"
 
 msgid "Livestatus connects"
 msgstr "Livestatusが接続します"
+
+#, fuzzy
+msgid "Livestatus connects and requests"
+msgstr "Livestatusの接続とリクエスト"
 
 msgid "Livestatus encryption"
 msgstr "ライブステータス暗号化"
@@ -32168,6 +32226,10 @@ msgstr "Livestatusプロキシロギング"
 
 msgid "Livestatus requests"
 msgstr "Livestatusリクエスト"
+
+#, fuzzy
+msgid "Livestatus requests per connection"
+msgstr "接続ごとのLivestatusリクエスト"
 
 msgid "Livestatus usage"
 msgstr "Livestatusの使用状況"
@@ -34389,10 +34451,6 @@ msgstr "サービス停止の最大数"
 msgid "Maximum number of threads"
 msgstr "スレッドの最大数"
 
-msgid ""
-"Maximum number of threads started at any given time during the JVM lifetime"
-msgstr "JVMの存続期間中の任意の時点で開始されたスレッドの最大数"
-
 msgid "Maximum of "
 msgstr "最大 "
 
@@ -36118,13 +36176,40 @@ msgstr "NagVisマップ"
 msgid "NagVis maps"
 msgstr "NagVisマップ"
 
-msgid "NagVis: AJAX"
+#, fuzzy
+msgid "NagVis: AJAX: Bytes"
 msgstr "NagVis: AJAX"
 
-msgid "NagVis: Other"
+#, fuzzy
+msgid "NagVis: AJAX: Requests"
+msgstr "NagVis: AJAX"
+
+#, fuzzy
+msgid "NagVis: AJAX: Secs"
+msgstr "NagVis: AJAX"
+
+#, fuzzy
+msgid "NagVis: Other: Bytes"
 msgstr "NagVis: その他"
 
-msgid "NagVis: Sidebar element"
+#, fuzzy
+msgid "NagVis: Other: Requests"
+msgstr "NagVis: その他"
+
+#, fuzzy
+msgid "NagVis: Other: Secs"
+msgstr "NagVis: その他"
+
+#, fuzzy
+msgid "NagVis: Sidebar element: Bytes"
+msgstr "NagVis:サイドバー要素"
+
+#, fuzzy
+msgid "NagVis: Sidebar element: Requests"
+msgstr "NagVis:サイドバー要素"
+
+#, fuzzy
+msgid "NagVis: Sidebar element: Secs"
 msgstr "NagVis:サイドバー要素"
 
 msgid "Nagios"
@@ -37994,9 +38079,6 @@ msgstr "LotusDominoユーザーの数"
 msgid "Number of Mails in Queue"
 msgstr "キュー内のメールの数"
 
-msgid "Number of Monitored Hosts and Services"
-msgstr "監視対象のホストとサービスの数"
-
 msgid "Number of Nodes"
 msgstr "ノードの数"
 
@@ -38293,6 +38375,10 @@ msgstr "定義された期間の下位レベルのメッセージの数"
 
 msgid "Number of messages in defined timespan upper level"
 msgstr "定義された期間の上位レベルのメッセージの数"
+
+#, fuzzy
+msgid "Number of monitored hosts and services"
+msgstr "監視対象のホストとサービスの数"
 
 msgid "Number of new connections per second"
 msgstr "1秒あたりの新しい接続数"
@@ -38637,6 +38723,22 @@ msgstr "Nutanix VMのメモリ使用量"
 msgid "Nutanix single VM State"
 msgstr "Nutanix single VMの状態"
 
+#, fuzzy
+msgid "Nutanix: Containers"
+msgstr "# コンテナ"
+
+#, fuzzy
+msgid "Nutanix: Prism Alerts"
+msgstr "Nutanixプリズムアラート"
+
+#, fuzzy
+msgid "Nutanix: Prism Cluster"
+msgstr "Nutanixプリズムアラート"
+
+#, fuzzy
+msgid "Nutanix: Storage Pools"
+msgstr "ストレージプール"
+
 msgid "Nvidia"
 msgstr "Nvidia"
 
@@ -38742,9 +38844,6 @@ msgid ""
 msgstr ""
 "OPPROCS: メッセージをキューに入れるために現在キューに接続されているアプリケー"
 "ションの数。"
-
-msgid "OPTIONS"
-msgstr ""
 
 #, python-format
 msgid "ORACLE %s"
@@ -39787,6 +39886,18 @@ msgstr "他のサービス"
 msgid "Other speed in bits per second"
 msgstr "その他の速度(ビット/秒)"
 
+#, fuzzy
+msgid "Other: Bytes"
+msgstr "他のホスト"
+
+#, fuzzy
+msgid "Other: Requests"
+msgstr "リクエスト"
+
+#, fuzzy
+msgid "Other: Secs"
+msgstr "他のサービス"
+
 msgid ""
 "Otherwise counting will start from one with a new event for the next rule "
 "match."
@@ -40186,9 +40297,6 @@ msgstr ""
 msgid "POST / GET Variables"
 msgstr "POST/GET 変数"
 
-msgid "PROPFIND"
-msgstr ""
-
 msgid "PSU"
 msgstr "PSU"
 
@@ -40341,12 +40449,6 @@ msgstr "ページルックアップ"
 msgid "Page Reads"
 msgstr "ページの読み取り"
 
-msgid "Page Swap In"
-msgstr "ページスワップイン"
-
-msgid "Page Swap Out"
-msgstr "ページスワップアウト"
-
 msgid "Page Writes"
 msgstr "ページ書き込み"
 
@@ -40364,6 +40466,18 @@ msgstr "ページサイズ"
 
 msgid "Page size to expect"
 msgstr "予想されるページサイズ"
+
+#, fuzzy
+msgid "Page swap"
+msgstr "ページスワップイン"
+
+#, fuzzy
+msgid "Page swap in"
+msgstr "ページスワップイン"
+
+#, fuzzy
+msgid "Page swap out"
+msgstr "ページスワップアウト"
 
 msgid "Page tables"
 msgstr "ページテーブル"
@@ -43288,10 +43402,19 @@ msgstr "平均"
 msgid "RAM + Swap"
 msgstr "RAM +スワップ"
 
-msgid "RAM + Swap overview"
+msgid "RAM + Swap used"
+msgstr "RAM +スワップ使用"
+
+#, fuzzy
+msgid "RAM + swap installed"
+msgstr "合計RAM +インストールされたスワップ"
+
+#, fuzzy
+msgid "RAM + swap overview"
 msgstr "RAM + Swapの概要"
 
-msgid "RAM + Swap used"
+#, fuzzy
+msgid "RAM + swap used"
 msgstr "RAM +スワップ使用"
 
 #, fuzzy
@@ -43303,6 +43426,14 @@ msgstr ""
 
 msgid "RAM installed"
 msgstr "インストールされたRAM"
+
+#, fuzzy
+msgid "RAM usage"
+msgstr "使用されるRAM"
+
+#, fuzzy
+msgid "RAM usage (averaged)"
+msgstr "平均的なexeファイルを読む"
 
 msgid "RAM used"
 msgstr "使用されるRAM"
@@ -46571,9 +46702,6 @@ msgstr "保存して%sに移動します"
 msgid "Save & go to host properties"
 msgstr "保存してホストプロパティに移動します"
 
-msgid "Save & go to list"
-msgstr "保存してリストに移動"
-
 msgid "Save & run connection tests"
 msgstr "保存して接続テストを実行"
 
@@ -46587,6 +46715,10 @@ msgid "Save & view folder"
 msgstr "保存してフォルダを確認"
 
 #, fuzzy
+msgid "Save & view list"
+msgstr "保存してフォルダを確認"
+
+#, fuzzy
 msgid "Save as new layout for this aggregation"
 msgstr "この集計のコピーを作成します"
 
@@ -46595,10 +46727,6 @@ msgstr "フィルタを保存してデザイナーに移動"
 
 msgid "Save response"
 msgstr "応答を保存"
-
-#, python-format
-msgid "Save this %s and go to"
-msgstr "この %s を保存して、"
 
 msgid "Save this host and go to"
 msgstr "このホストを保存して、行く"
@@ -46745,11 +46873,20 @@ msgstr "スクリプトが実行されました"
 msgid "Script pattern"
 msgstr "スクリプトパターン"
 
-msgid "Scripts"
-msgstr "スクリプト"
-
 msgid "Scripts to integrate Nagios plugis"
 msgstr "Nagiosplugisを統合するためのスクリプト"
+
+#, fuzzy
+msgid "Scripts: Bytes"
+msgstr "スクリプトタイプ"
+
+#, fuzzy
+msgid "Scripts: Requests"
+msgstr "%s リクエスト"
+
+#, fuzzy
+msgid "Scripts: Secs"
+msgstr "スクリプト"
 
 msgid "Search"
 msgstr "探す"
@@ -47438,6 +47575,10 @@ msgstr "HTTP POSTデータを送信する"
 
 msgid "Send custom notification"
 msgstr "カスタム通知の送信"
+
+#, fuzzy
+msgid "Send data"
+msgstr "マップされたデータ"
 
 msgid "Send email"
 msgstr "メールを送る"
@@ -49794,7 +49935,35 @@ msgstr "サイズフィルターの仕様は、[OPERATOR][INT]の形式である
 msgid "Size growth per minute"
 msgstr "1分あたりのサイズの増加"
 
+#, fuzzy
+msgid "Size of Agents"
+msgstr "ライセンスのサイズ"
+
+#, fuzzy
+msgid "Size of Core"
+msgstr "ログファイルのサイズ"
+
+#, fuzzy
+msgid "Size of History"
+msgstr "RRDsのサイズ"
+
+#, fuzzy
+msgid "Size of Inventory"
+msgstr "インベントリ"
+
+#, fuzzy
+msgid "Size of Local"
+msgstr "ログファイルのサイズ"
+
+#, fuzzy
+msgid "Size of PNP4Nagios"
+msgstr "PNP4Nagiosのスプールファイル"
+
 msgid "Size of RRDs"
+msgstr "RRDsのサイズ"
+
+#, fuzzy
+msgid "Size of Tmp"
 msgstr "RRDsのサイズ"
 
 msgid "Size of active mail queue"
@@ -50019,11 +50188,13 @@ msgstr ""
 "一部のプリンター（例：コニカのドラムカートリッジ）では、残量ではなく、使用可"
 "能な燃料が返されます。この場合、レベルを上げて対応することが可能です"
 
+#, fuzzy
 msgid ""
-"Some SNMPv2c/v3 capable devices are buggy when being queried using bulk "
-"walks. In such cases, you can disable bulk walks with this ruleset. Please "
-"be aware that you should only do this if no other approach is feasible (e.g. "
-"limiting the bulk size), as bulk walks are much more performant."
+"Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
+"queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
+"Please be aware that you should only do this if no other approach is "
+"feasible (e.g. limiting the bulk size), as bulk walks are much more "
+"performant."
 msgstr ""
 "SNMPv2c/v3対応デバイスの中には、バルクウォークを使用してクエリーを実行すると"
 "バグが発生するものがあります。そのような場合、このルールセットでバルクウォー"
@@ -51323,8 +51494,60 @@ msgstr "状態 %s"
 msgid "State (severity) of event"
 msgstr "イベントの状態(重大度)"
 
+#, fuzzy
+msgid "State BOUND"
+msgstr "状態 %s"
+
+#, fuzzy
+msgid "State CLOSED"
+msgstr "閉まっている"
+
+#, fuzzy
+msgid "State CLOSE_WAIT"
+msgstr "CLOSE_WAIT"
+
+#, fuzzy
+msgid "State CLOSING"
+msgstr "クロージング"
+
+#, fuzzy
+msgid "State ESTABLISHED"
+msgstr "ESTABLISHED"
+
+#, fuzzy
+msgid "State FIN_WAIT1"
+msgstr "FIN_WAIT1"
+
+#, fuzzy
+msgid "State FIN_WAIT2"
+msgstr "FIN_WAIT2"
+
+#, fuzzy
+msgid "State IDLE"
+msgstr "サイトID"
+
+#, fuzzy
+msgid "State LAST_ACK"
+msgstr "LAST_ACK"
+
+#, fuzzy
+msgid "State LISTEN"
+msgstr "状態 %s"
+
 msgid "State Retention Interval"
 msgstr "状態保持間隔"
+
+#, fuzzy
+msgid "State SYN_RECV"
+msgstr "SYN_RECV"
+
+#, fuzzy
+msgid "State SYN_SENT"
+msgstr "SYN_SENT"
+
+#, fuzzy
+msgid "State TIME_WAIT"
+msgstr "TIME_WAIT"
 
 msgid "State and Count of Processes"
 msgstr "プロセスの状態と数"
@@ -52384,7 +52607,16 @@ msgstr "スタイル"
 msgid "Style of connection lines"
 msgstr "接続線のスタイル"
 
-msgid "Styles"
+#, fuzzy
+msgid "Styles: Bytes"
+msgstr "スタイル"
+
+#, fuzzy
+msgid "Styles: Requests"
+msgstr "%s リクエスト"
+
+#, fuzzy
+msgid "Styles: Secs"
 msgstr "スタイル"
 
 msgid ""
@@ -52963,9 +53195,6 @@ msgstr "TCP"
 msgid "TCP Connect"
 msgstr "TCPコネクト"
 
-msgid "TCP Connection States"
-msgstr "TCP接続状態"
-
 #, python-format
 msgid "TCP Connection Timeout (<a href=\"%s\">Rules</a>)"
 msgstr "TCP 接続タイムアウト(<a href=\"%s\">ルール</a>)"
@@ -53013,6 +53242,10 @@ msgstr "TCP接続"
 
 msgid "TCP connect timeout for connecting to the master"
 msgstr "マスターに接続するためのTCP接続タイムアウト"
+
+#, fuzzy
+msgid "TCP connection states"
+msgstr "TCP接続状態"
 
 msgid "TCP connection statistics"
 msgstr "TCP接続統計"
@@ -53080,9 +53313,6 @@ msgstr "TNSエイリアス %s"
 
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: SNMP経由で使用されたメモリ"
-
-msgid "TRACE"
-msgstr ""
 
 msgid "TS Quotas (not used)"
 msgstr "TSクォータ(未使用)"
@@ -55951,6 +56181,10 @@ msgid "The maximum age of the last backup."
 msgstr "最後のバックアップの最大経過日数。"
 
 #, fuzzy, python-format
+msgid "The maximum allowed length is %s."
+msgstr "最大許容値は %sです。"
+
+#, fuzzy, python-format
 msgid "The maximum allowed number of regex groups is %s."
 msgstr "最大許容値は %sです。"
 
@@ -56061,6 +56295,10 @@ msgid ""
 msgstr ""
 "メトリックラベルは、結果のサービスのステータス詳細のクエリ値と一緒に表示され"
 "ます。何も指定されていない場合、メトリック名がラベルとして使用されます。"
+
+#, fuzzy, python-format
+msgid "The minimum allowed length is %s."
+msgstr "最小許容値は %sです。"
 
 #, fuzzy, python-format
 msgid "The minimum allowed number of regex groups is %s."
@@ -56219,6 +56457,12 @@ msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
 msgstr ""
 "インターフェイスの名前(パブリック/プライベートIPv4/ IPv6ネットワークインター"
 "フェイス)"
+
+msgid ""
+"The name of the macro (including the '$'s) which contains the port number. "
+"If the macro is not defined or does not represent an integer, config "
+"generation will fail."
+msgstr ""
 
 msgid ""
 "The name of the memory pool in the format 'INSTANCE Memory Pool POOLNAME'"
@@ -67775,6 +68019,10 @@ msgstr "ユーザーやデバイスレベルの最も重要度の低いものを
 msgid "Use local FQDN"
 msgstr "ローカルFQDNを使用する"
 
+#, fuzzy
+msgid "Use macro to determine port number"
+msgstr "この数値にはナローレンダリングを使用する"
+
 msgid "Use manually created ORACLE password wallet"
 msgstr "手動で作成したORACLEパスワードウォレットを使用する"
 
@@ -68142,6 +68390,26 @@ msgstr ""
 "このオプションを使用して、特別なエージェントがチェックするインスタンスを設定"
 "します。ここにホスト名を追加してください。例:my_rabbitmq.com 設定されていない"
 "場合、割り当てられたホストがインスタンスとして使用されます。"
+
+#, fuzzy, python-format
+msgid ""
+"Use this rule to enable the use of SNMP verison 2c instead of the default "
+"SNMP version 1. Checkmk defaults to SNMPv1 in order to support as many "
+"devices as possible. In practice, most SNMP devices also support SNMPv2c, "
+"which has two advantages: It supports 64 bit counters and the \"bulkwalk\" "
+"query, which is faster and saves CPU and network resources. Use this rule to "
+"configure SNMPv2c for as many devices as possible. However, please be aware "
+"some buggy devices do not properly support \"bulkwalk\" queries. For those "
+"you may want to try disabling them using the ruleset \"%s\"."
+msgstr ""
+"Checkmkは、できるだけ多くのデバイスをサポートするために、デフォルトでSNMPv1を"
+"使用しています。実際には、ほとんどのSNMP機器はSNMPv2cもサポートしており、64"
+"ビットカウンタとバルクウォークをサポートしているため、CPUとネットワークリソー"
+"スを節約でき、よりパフォーマンスが高いという2つの利点があります。このルールを"
+"使って、できるだけ多くの機器にSNMPv2cを設定します。ただし、SNMPv2cに対応した"
+"機器にはバグがある場合がありますので、ご注意ください。バグがあった場合、ルー"
+"ルセット「Disable bulk walks on SNMPv2c/v3 」を使用して、バルクウォークを無効"
+"にしてみるとよいでしょう。"
 
 #, python-format
 msgid "Use this ruleset to assign <a href=\"%s\">%s</a> to services."
@@ -73052,8 +73320,10 @@ msgstr ""
 msgid ""
 "You may choose to enforce the usage of a specific TLS version. Either by "
 "pinning to exactly the selected version, or by also allowing higher "
-"versions. Please note Checkmk does not support SSLv3 or SSLv2 anymore as "
-"they are known to be insecure."
+"versions. Please note Checkmk does not support SSLv3 or SSLv2 at all. TLS "
+"1.0 and 1.1 is supported by the underlying plug-in but not on this rule set "
+"as the plug-in needs to be called with an unsafe configuration of OpenSSL 3. "
+"This requires a direct call via <i>Integrate Nagios plugins.</i>"
 msgstr ""
 
 msgid ""
@@ -73751,22 +74021,6 @@ msgstr "どれか"
 
 msgid "any node"
 msgstr "任意のノード"
-
-#, fuzzy
-msgid "application/json"
-msgstr "アプリケーション"
-
-#, fuzzy
-msgid "application/octet-stream"
-msgstr "アプリケーションの概要"
-
-#, fuzzy
-msgid "application/xml"
-msgstr "アプリケーション"
-
-#, fuzzy
-msgid "application/zip"
-msgstr "アプリケーション"
 
 msgid "apt-get dist-upgrade"
 msgstr "apt-get dist-upgrade"
@@ -75434,18 +75688,6 @@ msgstr "テスト"
 msgid "tests"
 msgstr "テストを実行する"
 
-msgid "text/csv"
-msgstr ""
-
-msgid "text/html"
-msgstr ""
-
-msgid "text/plain"
-msgstr ""
-
-msgid "text/xml"
-msgstr ""
-
 msgid "th notification"
 msgstr "通知"
 
@@ -75736,6 +75978,63 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Data sent"
+#~ msgid "Data to send"
+#~ msgstr "送信データ"
+
+#, fuzzy
+#~| msgid "Use SSL, enforce TLSv1.1"
+#~ msgid "Enforce TLS v1.0"
+#~ msgstr "SSLを使用し、TLSv1.1を適用します"
+
+#, fuzzy
+#~| msgid "Use SSL, enforce TLSv1.1"
+#~ msgid "Enforce TLS v1.1"
+#~ msgstr "SSLを使用し、TLSv1.1を適用します"
+
+#, fuzzy
+#~| msgid "Applications"
+#~ msgid "application/json"
+#~ msgstr "アプリケーション"
+
+#, fuzzy
+#~| msgid "Applications overview"
+#~ msgid "application/octet-stream"
+#~ msgstr "アプリケーションの概要"
+
+#, fuzzy
+#~| msgid "Application"
+#~ msgid "application/xml"
+#~ msgstr "アプリケーション"
+
+#, fuzzy
+#~| msgid "Application"
+#~ msgid "application/zip"
+#~ msgstr "アプリケーション"
+
+#~ msgid "General Properties"
+#~ msgstr "一般的なプロパティ"
+
+#, python-format
+#~ msgid "List of %s"
+#~ msgstr "%s のリスト"
+
+#~ msgid ""
+#~ "Maximum number of threads started at any given time during the JVM "
+#~ "lifetime"
+#~ msgstr "JVMの存続期間中の任意の時点で開始されたスレッドの最大数"
+
+#~ msgid "Save & go to list"
+#~ msgstr "保存してリストに移動"
+
+#, python-format
+#~ msgid "Save this %s and go to"
+#~ msgstr "この %s を保存して、"
+
+#~ msgid "Disable bulk walks on SNMPv2c/v3"
+#~ msgstr "SNMPv2c/v3でのバルクウォークを無効にする"
 
 #, fuzzy
 #~| msgid ""
@@ -76537,9 +76836,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Network Topology"
 #~ msgstr "ネットワークトポロジー"
-
-#~ msgid "Other Services"
-#~ msgstr "他のサービス"
 
 #~ msgid "Power Supplies"
 #~ msgstr "電源供給装置"

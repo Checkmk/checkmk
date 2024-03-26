@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-03-18 07:38+0000\n"
 "Last-Translator: Jörg Herbel <joerg.herbel@checkmk.com>\n"
@@ -5682,6 +5682,10 @@ msgstr "Durata permisă de la ultima sincronizare"
 msgid "Allowed is 1 ... 9"
 msgstr "Numărul permis este 1 ... 9"
 
+#, fuzzy, python-format
+msgid "Allowed lengths range from %s to %s."
+msgstr "Valorile admise variază între %s și %s."
+
 msgid "Allowed license states"
 msgstr "State de licență permise"
 
@@ -9374,12 +9378,6 @@ msgstr "Ajutor CMK"
 msgid "CMK helper usage"
 msgstr "Utilizarea ajutorului CMK"
 
-msgid "CONNECT"
-msgstr "CONEXIUNE"
-
-msgid "CONNECT:POST"
-msgstr "CONEXIUNE:POST"
-
 msgid "CPG member name"
 msgstr "Numele membrului CPG"
 
@@ -10170,6 +10168,10 @@ msgstr "Verificarea certificatelor"
 msgid "Certificate Key File"
 msgstr "Fișier cu cheie de certificat"
 
+#, fuzzy
+msgid "Certificate age"
+msgstr "Lanțul de certificate"
+
 msgid "Certificate and key file"
 msgstr "Fișier de certificat și cheie"
 
@@ -10953,25 +10955,6 @@ msgstr "Checkmk config filename"
 msgid "Checkmk dashboard"
 msgstr "Tabloul de bord Checkmk"
 
-msgid ""
-"Checkmk defaults to SNMPv1 in order to support as many devices as possible. "
-"In practice, most SNMP devices also support SNMPv2c, which has two "
-"advantages: it supports 64 bit counters and bulk walk, which saves CPU and "
-"network resources and is more performant. Use this rule to configure SNMPv2c "
-"for as many devices as possible. However, please be aware that some devices "
-"that support SNMPv2c may be buggy. In such cases, you may want to try "
-"disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
-msgstr ""
-"Checkmk utilizează în mod implicit SNMPv1 pentru a sprijini cât mai multe "
-"dispozitive. În practică, majoritatea dispozitivelor SNMP suportă și "
-"SNMPv2c, care are două avantaje: suportă contoare pe 64 de biți și bulk "
-"walk, ceea ce economisește resursele CPU și de rețea și este mai performant. "
-"Folosiți această regulă pentru a configura SNMPv2c pentru cât mai multe "
-"dispozitive posibil. Cu toate acestea, vă rugăm să aveți în vedere că unele "
-"dispozitive care acceptă SNMPv2c pot avea erori. În astfel de cazuri, este "
-"posibil să încercați să dezactivați bulk walk folosind setul de reguli "
-"\"Disable bulk walks on SNMPv2c/v3\"."
-
 msgid "Checkmk edition"
 msgstr "Ediția Checkmk"
 
@@ -11111,25 +11094,79 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk cu date de performanță ori"
 
-msgid "Checkmk: BI"
+#, fuzzy
+msgid "Checkmk: BI: Bytes"
 msgstr "Checkmk: BI"
 
-msgid "Checkmk: Dashboards"
+#, fuzzy
+msgid "Checkmk: BI: Requests"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: BI: Secs"
+msgstr "Checkmk: BI"
+
+#, fuzzy
+msgid "Checkmk: Dashboards: Bytes"
+msgstr "Checkmk: Tablouri de bord"
+
+#, fuzzy
+msgid "Checkmk: Dashboards: Requests"
+msgstr "Checkmk: Tablouri de bord"
+
+#, fuzzy
+msgid "Checkmk: Dashboards: Secs"
 msgstr "Checkmk: Tablouri de bord"
 
 msgid "Checkmk: Message"
 msgstr "Checkmk: Mesaj"
 
-msgid "Checkmk: Other"
+#, fuzzy
+msgid "Checkmk: Other: Bytes"
 msgstr "Checkmk: Altele"
 
-msgid "Checkmk: Sidebar elements"
+#, fuzzy
+msgid "Checkmk: Other: Requests"
+msgstr "Checkmk: Altele"
+
+#, fuzzy
+msgid "Checkmk: Other: Secs"
+msgstr "Checkmk: Altele"
+
+#, fuzzy
+msgid "Checkmk: Sidebar elements: Bytes"
 msgstr "Checkmk: Elemente de bară laterală"
 
-msgid "Checkmk: Views"
+#, fuzzy
+msgid "Checkmk: Sidebar elements: Requests"
+msgstr "Checkmk: Elemente de bară laterală"
+
+#, fuzzy
+msgid "Checkmk: Sidebar elements: Secs"
+msgstr "Checkmk: Elemente de bară laterală"
+
+#, fuzzy
+msgid "Checkmk: Views: Bytes"
 msgstr "Checkmk: Vizualizări"
 
-msgid "Checkmk: WATO"
+#, fuzzy
+msgid "Checkmk: Views: Requests"
+msgstr "Checkmk: Vizualizări"
+
+#, fuzzy
+msgid "Checkmk: Views: Secs"
+msgstr "Checkmk: Vizualizări"
+
+#, fuzzy
+msgid "Checkmk: WATO: Bytes"
+msgstr "Checkmk: WATO"
+
+#, fuzzy
+msgid "Checkmk: WATO: Requests"
+msgstr "Checkmk: WATO"
+
+#, fuzzy
+msgid "Checkmk: WATO: Secs"
 msgstr "Checkmk: WATO"
 
 #, python-format
@@ -13338,6 +13375,10 @@ msgstr "Conține un fișier corupt %s"
 msgid "Contains: %d %s and %d %s"
 msgstr "Conține: %d %s și %d %s."
 
+#, fuzzy
+msgid "Content"
+msgstr "Cuprins"
+
 msgid "Content elements"
 msgstr "Elemente de conținut"
 
@@ -15259,9 +15300,6 @@ msgstr "Date pentru a avansa"
 msgid "Data to move within"
 msgstr "Date pentru a se deplasa în cadrul"
 
-msgid "Data to send"
-msgstr "Date de trimis"
-
 msgid ""
 "Data to send via HTTP POST method. Please make sure, that the data is URL-"
 "encoded (for example \"key1=val1&key2=val2\")."
@@ -15660,9 +15698,6 @@ msgstr "Creștere implicită"
 msgid "Default Status"
 msgstr "Stare implicită"
 
-msgid "Default Topic"
-msgstr "Subiect implicit"
-
 msgid "Default User Profile"
 msgstr "Profil de utilizator implicit"
 
@@ -15763,6 +15798,10 @@ msgstr "Implicit pentru a arăta mai puțin"
 
 msgid "Default to show more"
 msgstr "Implicit pentru a arăta mai mult"
+
+#, fuzzy
+msgid "Default topic"
+msgstr "Subiect implicit"
 
 msgid "Default user profile"
 msgstr "Profil de utilizator implicit"
@@ -17181,8 +17220,9 @@ msgstr ""
 "Dezactivați sincronizarea automată a utilizatorilor (utilizați utilizatorii "
 "site-ului principal)"
 
-msgid "Disable bulk walks on SNMPv2c/v3"
-msgstr "Dezactivarea plimbărilor în masă pe SNMPv2c/v3"
+#, fuzzy
+msgid "Disable bulkwalks"
+msgstr "Dezactivați toate"
 
 msgid "Disable certificate validation"
 msgstr "Dezactivați validarea certificatelor"
@@ -17487,6 +17527,10 @@ msgstr "Procentul de utilizare a discului"
 msgid "Disk read"
 msgstr "Citire disc"
 
+#, fuzzy
+msgid "Disk read I/O operations"
+msgstr "Operațiuni de citire pe disc"
+
 msgid "Disk read latency"
 msgstr "Latența de citire a discului"
 
@@ -17513,6 +17557,10 @@ msgstr "Utilizarea discului"
 
 msgid "Disk write"
 msgstr "Scriere pe disc"
+
+#, fuzzy
+msgid "Disk write I/O operations"
+msgstr "Operațiuni de scriere pe disc"
 
 msgid "Disk write latency"
 msgstr "Latența de scriere pe disc"
@@ -19741,10 +19789,12 @@ msgstr "Activarea accesului la Livestatus prin rețea (TCP)"
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Activați SMTP AUTH (LOGIN)"
 
-msgid "Enable SNMPv2c and bulk walk for hosts"
+#, fuzzy
+msgid "Enable SNMPv2c for hosts"
 msgstr "Activați SNMPv2c și mersul în masă pentru gazde"
 
-msgid "Enable SNMPv2c and bulk walk for management boards"
+#, fuzzy
+msgid "Enable SNMPv2c for management boards"
 msgstr "Activați SNMPv2c și mersul în masă pentru plăcile de management"
 
 msgid "Enable TLS"
@@ -20152,12 +20202,6 @@ msgstr "Aplică versiunea Python 2"
 
 msgid "Enforce Python 3 version"
 msgstr "Forțați versiunea Python 3"
-
-msgid "Enforce TLS v1.0"
-msgstr "Aplicați TLS v1.0"
-
-msgid "Enforce TLS v1.1"
-msgstr "Aplicați TLS v1.1"
 
 msgid "Enforce TLS v1.2"
 msgstr "Aplicați TLS v1.2"
@@ -21298,6 +21342,10 @@ msgid "Explicit match"
 msgstr "Potrivire explicită"
 
 msgid "Explicit number"
+msgstr "Număr explicit"
+
+#, fuzzy
+msgid "Explicit port number"
 msgstr "Număr explicit"
 
 msgid "Explicit range"
@@ -22907,6 +22955,10 @@ msgstr "Previziuni în viitor"
 msgid "Forecast model parametrization"
 msgstr "Parametrizarea modelului de prognoză"
 
+#, fuzzy
+msgid "Forks"
+msgstr "Rețele"
+
 msgid "Form factor"
 msgstr "Factor de formă"
 
@@ -23467,9 +23519,6 @@ msgstr "Opțiuni generale"
 
 msgid "General Permissions"
 msgstr "Permisiuni generale"
-
-msgid "General Properties"
-msgstr "Proprietăți generale"
 
 msgid "General Settings"
 msgstr "Setări generale"
@@ -25689,11 +25738,12 @@ msgstr "Aliasul gazdei"
 msgid "Host already exist"
 msgstr "Gazda există deja"
 
-msgid "Host and Service Checks"
-msgstr "Verificări ale gazdei și ale serviciului"
-
 msgid "Host and Service Events"
 msgstr "Evenimente de găzduire și de serviciu"
+
+#, fuzzy
+msgid "Host and service checks"
+msgstr "Verificări ale gazdei și ale serviciului"
 
 msgid "Host and service configuration rule"
 msgstr "Regula de configurare a gazdei și a serviciului"
@@ -26524,6 +26574,10 @@ msgid "Hub running as HotSpare"
 msgstr "Hub care funcționează ca HotSpare"
 
 msgid "Huge Pages"
+msgstr "Pagini uriașe"
+
+#, fuzzy
+msgid "Huge pages"
 msgstr "Pagini uriașe"
 
 msgid "Huge pages free"
@@ -28776,6 +28830,18 @@ msgstr "Politica de extragere a imaginilor"
 
 msgid "Image size"
 msgstr "Dimensiunea imaginii"
+
+#, fuzzy
+msgid "Image: Bytes"
+msgstr "Imagini"
+
+#, fuzzy
+msgid "Image: Requests"
+msgstr "cereri"
+
+#, fuzzy
+msgid "Image: Secs"
+msgstr "Imagini"
 
 msgid "Images"
 msgstr "Imagini"
@@ -32722,10 +32788,6 @@ msgstr "Listează în schimb interfețele grupate"
 msgid "List grouped interfaces separately"
 msgstr "Listarea separată a interfețelor grupate"
 
-#, python-format
-msgid "List of %s"
-msgstr "Lista de %s"
-
 msgid "List of all aggregations for simple API calls"
 msgstr "Lista tuturor agregărilor pentru apelurile API simple"
 
@@ -32854,17 +32916,15 @@ msgstr "Starea Liveproxyd"
 msgid "Livestatus"
 msgstr "Livestatus"
 
-msgid "Livestatus Connects and Requests"
-msgstr "Livestatus se conectează și solicită"
-
-msgid "Livestatus Requests per Connection"
-msgstr "Solicitări de Livestatus pe conexiune"
-
 msgid "Livestatus connections"
 msgstr "Conexiuni Livestatus"
 
 msgid "Livestatus connects"
 msgstr "Livestatus se conectează"
+
+#, fuzzy
+msgid "Livestatus connects and requests"
+msgstr "Livestatus se conectează și solicită"
 
 msgid "Livestatus encryption"
 msgstr "Criptare Livestatus"
@@ -32902,6 +32962,10 @@ msgstr "Livestatus proxy logging"
 
 msgid "Livestatus requests"
 msgstr "Solicitări Livestatus"
+
+#, fuzzy
+msgid "Livestatus requests per connection"
+msgstr "Solicitări de Livestatus pe conexiune"
 
 msgid "Livestatus usage"
 msgstr "Utilizarea Livestatus"
@@ -35148,12 +35212,6 @@ msgstr "Numărul maxim de întreruperi ale serviciului"
 msgid "Maximum number of threads"
 msgstr "Numărul maxim de fire"
 
-msgid ""
-"Maximum number of threads started at any given time during the JVM lifetime"
-msgstr ""
-"Numărul maxim de fire de execuție pornite la un moment dat pe durata de "
-"viață a JVM-ului"
-
 msgid "Maximum of "
 msgstr "Maximum de "
 
@@ -36907,13 +36965,40 @@ msgstr "Harta NagVis"
 msgid "NagVis maps"
 msgstr "Hărți NagVis"
 
-msgid "NagVis: AJAX"
+#, fuzzy
+msgid "NagVis: AJAX: Bytes"
 msgstr "NagVis: AJAX"
 
-msgid "NagVis: Other"
+#, fuzzy
+msgid "NagVis: AJAX: Requests"
+msgstr "NagVis: AJAX"
+
+#, fuzzy
+msgid "NagVis: AJAX: Secs"
+msgstr "NagVis: AJAX"
+
+#, fuzzy
+msgid "NagVis: Other: Bytes"
 msgstr "NagVis: Altele"
 
-msgid "NagVis: Sidebar element"
+#, fuzzy
+msgid "NagVis: Other: Requests"
+msgstr "NagVis: Altele"
+
+#, fuzzy
+msgid "NagVis: Other: Secs"
+msgstr "NagVis: Altele"
+
+#, fuzzy
+msgid "NagVis: Sidebar element: Bytes"
+msgstr "NagVis: Element de bară laterală"
+
+#, fuzzy
+msgid "NagVis: Sidebar element: Requests"
+msgstr "NagVis: Element de bară laterală"
+
+#, fuzzy
+msgid "NagVis: Sidebar element: Secs"
 msgstr "NagVis: Element de bară laterală"
 
 msgid "Nagios"
@@ -38815,9 +38900,6 @@ msgstr "Numărul de utilizatori Lotus Domino"
 msgid "Number of Mails in Queue"
 msgstr "Numărul de mailuri în coadă"
 
-msgid "Number of Monitored Hosts and Services"
-msgstr "Numărul de gazde și servicii monitorizate"
-
 msgid "Number of Nodes"
 msgstr "Numărul de noduri"
 
@@ -39122,6 +39204,10 @@ msgstr "Numărul de mesaje în intervalul de timp definit nivel inferior"
 
 msgid "Number of messages in defined timespan upper level"
 msgstr "Numărul de mesaje în intervalul de timp definit nivel superior"
+
+#, fuzzy
+msgid "Number of monitored hosts and services"
+msgstr "Numărul de gazde și servicii monitorizate"
 
 msgid "Number of new connections per second"
 msgstr "Numărul de conexiuni noi pe secundă"
@@ -39469,6 +39555,22 @@ msgstr "Utilizarea memoriei Nutanix VM"
 msgid "Nutanix single VM State"
 msgstr "Nutanix Single VM State"
 
+#, fuzzy
+msgid "Nutanix: Containers"
+msgstr "# Containere"
+
+#, fuzzy
+msgid "Nutanix: Prism Alerts"
+msgstr "Alerte Nutanix Prism"
+
+#, fuzzy
+msgid "Nutanix: Prism Cluster"
+msgstr "Alerte Nutanix Prism"
+
+#, fuzzy
+msgid "Nutanix: Storage Pools"
+msgstr "Grupuri de stocare"
+
 msgid "Nvidia"
 msgstr "Nvidia"
 
@@ -39579,9 +39681,6 @@ msgid ""
 msgstr ""
 "OPROCS: Numărul de aplicații care sunt conectate în prezent la coada de "
 "așteptare pentru a pune mesaje în coadă."
-
-msgid "OPTIONS"
-msgstr "OPȚIUNI"
 
 #, python-format
 msgid "ORACLE %s"
@@ -40647,6 +40746,18 @@ msgstr "Alte servicii"
 msgid "Other speed in bits per second"
 msgstr "Altă viteză în biți pe secundă"
 
+#, fuzzy
+msgid "Other: Bytes"
+msgstr "Alte gazde"
+
+#, fuzzy
+msgid "Other: Requests"
+msgstr "Cereri"
+
+#, fuzzy
+msgid "Other: Secs"
+msgstr "Alte servicii"
+
 msgid ""
 "Otherwise counting will start from one with a new event for the next rule "
 "match."
@@ -41071,9 +41182,6 @@ msgstr "POST"
 msgid "POST / GET Variables"
 msgstr "Variabile POST / GET"
 
-msgid "PROPFIND"
-msgstr "PROPFIND"
-
 msgid "PSU"
 msgstr "PSU"
 
@@ -41225,12 +41333,6 @@ msgstr "Căutări de pagini"
 msgid "Page Reads"
 msgstr "Pagina Citește"
 
-msgid "Page Swap In"
-msgstr "Schimb de pagină În"
-
-msgid "Page Swap Out"
-msgstr "Schimb de pagini"
-
 msgid "Page Writes"
 msgstr "Pagina Scrie"
 
@@ -41248,6 +41350,18 @@ msgstr "Dimensiunea paginii"
 
 msgid "Page size to expect"
 msgstr "Dimensiunea paginii la care să vă așteptați"
+
+#, fuzzy
+msgid "Page swap"
+msgstr "Schimb de pagină În"
+
+#, fuzzy
+msgid "Page swap in"
+msgstr "Schimb de pagină În"
+
+#, fuzzy
+msgid "Page swap out"
+msgstr "Schimb de pagini"
 
 msgid "Page tables"
 msgstr "Tabele de pagină"
@@ -44221,10 +44335,19 @@ msgstr "RAM (în medie)"
 msgid "RAM + Swap"
 msgstr "RAM + Swap"
 
-msgid "RAM + Swap overview"
+msgid "RAM + Swap used"
+msgstr "RAM + Swap folosit"
+
+#, fuzzy
+msgid "RAM + swap installed"
+msgstr "Total RAM + Swap instalat"
+
+#, fuzzy
+msgid "RAM + swap overview"
 msgstr "Prezentare generală RAM + Swap"
 
-msgid "RAM + Swap used"
+#, fuzzy
+msgid "RAM + swap used"
 msgstr "RAM + Swap folosit"
 
 msgid "RAM free"
@@ -44235,6 +44358,14 @@ msgstr "RAM liber (în medie)"
 
 msgid "RAM installed"
 msgstr "RAM instalat"
+
+#, fuzzy
+msgid "RAM usage"
+msgstr "RAM utilizat"
+
+#, fuzzy
+msgid "RAM usage (averaged)"
+msgstr "RAM utilizată (medie)"
 
 msgid "RAM used"
 msgstr "RAM utilizat"
@@ -47507,9 +47638,6 @@ msgstr "Salvați și mergeți la %s"
 msgid "Save & go to host properties"
 msgstr "Salvați și mergeți la proprietățile gazdei"
 
-msgid "Save & go to list"
-msgstr "Salvați și treceți la listă"
-
 msgid "Save & run connection tests"
 msgstr "Salvați & executați testele de conectare"
 
@@ -47522,6 +47650,10 @@ msgstr "Salvați și testați"
 msgid "Save & view folder"
 msgstr "Salvați & vizualizați folderul"
 
+#, fuzzy
+msgid "Save & view list"
+msgstr "Salvați & vizualizați folderul"
+
 msgid "Save as new layout for this aggregation"
 msgstr "Salvați ca nou aspect pentru această agregare"
 
@@ -47530,10 +47662,6 @@ msgstr "Salvați filtrele și mergeți la designer"
 
 msgid "Save response"
 msgstr "Salvați răspunsul"
-
-#, python-format
-msgid "Save this %s and go to"
-msgstr "Salvați acest %s și mergeți la"
 
 msgid "Save this host and go to"
 msgstr "Salvați această gazdă și mergeți la"
@@ -47683,11 +47811,20 @@ msgstr "Script executat"
 msgid "Script pattern"
 msgstr "Model de script"
 
-msgid "Scripts"
-msgstr "Scripturi"
-
 msgid "Scripts to integrate Nagios plugis"
 msgstr "Scripturi pentru a integra Nagios plugis"
+
+#, fuzzy
+msgid "Scripts: Bytes"
+msgstr "Tip de script"
+
+#, fuzzy
+msgid "Scripts: Requests"
+msgstr "%s Cereri"
+
+#, fuzzy
+msgid "Scripts: Secs"
+msgstr "Scripturi"
 
 msgid "Search"
 msgstr "Cautare"
@@ -48416,6 +48553,10 @@ msgstr "Trimiteți date HTTP POST"
 
 msgid "Send custom notification"
 msgstr "Trimiteți o notificare personalizată"
+
+#, fuzzy
+msgid "Send data"
+msgstr "Parola"
 
 msgid "Send email"
 msgstr "Trimiteți un e-mail"
@@ -50856,7 +50997,35 @@ msgstr ""
 msgid "Size growth per minute"
 msgstr "Creșterea dimensiunii pe minut"
 
+#, fuzzy
+msgid "Size of Agents"
+msgstr "Dimensiunea licenței"
+
+#, fuzzy
+msgid "Size of Core"
+msgstr "Dimensiunea fișierelor jurnal"
+
+#, fuzzy
+msgid "Size of History"
+msgstr "Dimensiunea RRD-urilor"
+
+#, fuzzy
+msgid "Size of Inventory"
+msgstr "Inventar"
+
+#, fuzzy
+msgid "Size of Local"
+msgstr "Dimensiunea fișierelor jurnal"
+
+#, fuzzy
+msgid "Size of PNP4Nagios"
+msgstr "Fișiere Spool ale PNP4Nagios"
+
 msgid "Size of RRDs"
+msgstr "Dimensiunea RRD-urilor"
+
+#, fuzzy
+msgid "Size of Tmp"
 msgstr "Dimensiunea RRD-urilor"
 
 msgid "Size of active mail queue"
@@ -51089,11 +51258,13 @@ msgstr ""
 "combustibilul disponibil în loc de cel rămas. În acest caz, este posibil să "
 "se răstoarne nivelurile pentru a gestiona acest comportament"
 
+#, fuzzy
 msgid ""
-"Some SNMPv2c/v3 capable devices are buggy when being queried using bulk "
-"walks. In such cases, you can disable bulk walks with this ruleset. Please "
-"be aware that you should only do this if no other approach is feasible (e.g. "
-"limiting the bulk size), as bulk walks are much more performant."
+"Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
+"queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
+"Please be aware that you should only do this if no other approach is "
+"feasible (e.g. limiting the bulk size), as bulk walks are much more "
+"performant."
 msgstr ""
 "Unele dispozitive capabile de SNMPv2c/v3 au erori atunci când sunt "
 "interogate folosind bulk walks. În astfel de cazuri, puteți dezactiva bulk "
@@ -52470,8 +52641,60 @@ msgstr "Stat (ST)"
 msgid "State (severity) of event"
 msgstr "Starea (gravitatea) evenimentului"
 
+#, fuzzy
+msgid "State BOUND"
+msgstr "Stat %s"
+
+#, fuzzy
+msgid "State CLOSED"
+msgstr "ÎNCHIS"
+
+#, fuzzy
+msgid "State CLOSE_WAIT"
+msgstr "CLOSE_WAIT"
+
+#, fuzzy
+msgid "State CLOSING"
+msgstr "ÎNCHIDEREA"
+
+#, fuzzy
+msgid "State ESTABLISHED"
+msgstr "STABILIT"
+
+#, fuzzy
+msgid "State FIN_WAIT1"
+msgstr "FIN_WAIT1"
+
+#, fuzzy
+msgid "State FIN_WAIT2"
+msgstr "FIN_WAIT2"
+
+#, fuzzy
+msgid "State IDLE"
+msgstr "ID-ul sitului"
+
+#, fuzzy
+msgid "State LAST_ACK"
+msgstr "LAST_ACK"
+
+#, fuzzy
+msgid "State LISTEN"
+msgstr "Stat (ST)"
+
 msgid "State Retention Interval"
 msgstr "Interval de retenție de stat"
+
+#, fuzzy
+msgid "State SYN_RECV"
+msgstr "SYN_RECV"
+
+#, fuzzy
+msgid "State SYN_SENT"
+msgstr "SYN_SENT"
+
+#, fuzzy
+msgid "State TIME_WAIT"
+msgstr "TIME_WAIT"
 
 msgid "State and Count of Processes"
 msgstr "Starea și numărul de procese"
@@ -53560,7 +53783,16 @@ msgstr "Stil"
 msgid "Style of connection lines"
 msgstr "Stilul liniilor de conectare"
 
-msgid "Styles"
+#, fuzzy
+msgid "Styles: Bytes"
+msgstr "Stiluri"
+
+#, fuzzy
+msgid "Styles: Requests"
+msgstr "%s Cereri"
+
+#, fuzzy
+msgid "Styles: Secs"
 msgstr "Stiluri"
 
 msgid ""
@@ -54139,9 +54371,6 @@ msgstr "TCP"
 msgid "TCP Connect"
 msgstr "Conectare TCP"
 
-msgid "TCP Connection States"
-msgstr "Stări de conexiune TCP"
-
 #, python-format
 msgid "TCP Connection Timeout (<a href=\"%s\">Rules</a>)"
 msgstr "Timpul de expirare a conexiunii TCP (<a href=\"%s\">Reguli</a>)"
@@ -54187,6 +54416,10 @@ msgstr "Conectare TCP"
 
 msgid "TCP connect timeout for connecting to the master"
 msgstr "Timpul de așteptare a conexiunii TCP pentru conectarea la master"
+
+#, fuzzy
+msgid "TCP connection states"
+msgstr "Stări de conexiune TCP"
 
 msgid "TCP connection statistics"
 msgstr "Statisticile privind conexiunile TCP"
@@ -54251,9 +54484,6 @@ msgstr "Alias TNS %s"
 
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: Memorie utilizată prin SNMP"
-
-msgid "TRACE"
-msgstr "TRACE"
 
 msgid "TS Quotas (not used)"
 msgstr "Contingente TS (neutilizate)"
@@ -57310,6 +57540,10 @@ msgstr ""
 msgid "The maximum age of the last backup."
 msgstr "Vârsta maximă a ultimei copii de rezervă."
 
+#, fuzzy, python-format
+msgid "The maximum allowed length is %s."
+msgstr "Valoarea maximă admisă este %s."
+
 #, python-format
 msgid "The maximum allowed number of regex groups is %s."
 msgstr "Numărul maxim permis de grupuri regex este %s."
@@ -57428,6 +57662,10 @@ msgstr ""
 "Eticheta metrică este afișată alături de valoarea interogată în detaliile de "
 "stare ale serviciului rezultat. Numele metricii va fi luat ca etichetă dacă "
 "nu s-a specificat nimic."
+
+#, fuzzy, python-format
+msgid "The minimum allowed length is %s."
+msgstr "Valoarea minimă admisă este %s."
 
 #, python-format
 msgid "The minimum allowed number of regex groups is %s."
@@ -57604,6 +57842,12 @@ msgstr ""
 
 msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
 msgstr "Numele interfeței (Public/Private IPv4/IPv6 Network Interface)"
+
+msgid ""
+"The name of the macro (including the '$'s) which contains the port number. "
+"If the macro is not defined or does not represent an integer, config "
+"generation will fail."
+msgstr ""
 
 msgid ""
 "The name of the memory pool in the format 'INSTANCE Memory Pool POOLNAME'"
@@ -69082,6 +69326,10 @@ msgstr "Utilizați cel mai puțin critic al dvs. și al dispozitivului's nivelur
 msgid "Use local FQDN"
 msgstr "Utilizați FQDN local"
 
+#, fuzzy
+msgid "Use macro to determine port number"
+msgstr "Utilizați o redare îngustă pentru acest număr"
+
 msgid "Use manually created ORACLE password wallet"
 msgstr "Utilizați portofelul de parole ORACLE creat manual"
 
@@ -69482,6 +69730,27 @@ msgstr ""
 "către agentul special. Vă rugăm să adăugați aici numele de gazdă, de "
 "exemplu: my_rabbitmq.com. Dacă nu este setat, gazda atribuită este utilizată "
 "ca instanță."
+
+#, fuzzy, python-format
+msgid ""
+"Use this rule to enable the use of SNMP verison 2c instead of the default "
+"SNMP version 1. Checkmk defaults to SNMPv1 in order to support as many "
+"devices as possible. In practice, most SNMP devices also support SNMPv2c, "
+"which has two advantages: It supports 64 bit counters and the \"bulkwalk\" "
+"query, which is faster and saves CPU and network resources. Use this rule to "
+"configure SNMPv2c for as many devices as possible. However, please be aware "
+"some buggy devices do not properly support \"bulkwalk\" queries. For those "
+"you may want to try disabling them using the ruleset \"%s\"."
+msgstr ""
+"Checkmk utilizează în mod implicit SNMPv1 pentru a sprijini cât mai multe "
+"dispozitive. În practică, majoritatea dispozitivelor SNMP suportă și "
+"SNMPv2c, care are două avantaje: suportă contoare pe 64 de biți și bulk "
+"walk, ceea ce economisește resursele CPU și de rețea și este mai performant. "
+"Folosiți această regulă pentru a configura SNMPv2c pentru cât mai multe "
+"dispozitive posibil. Cu toate acestea, vă rugăm să aveți în vedere că unele "
+"dispozitive care acceptă SNMPv2c pot avea erori. În astfel de cazuri, este "
+"posibil să încercați să dezactivați bulk walk folosind setul de reguli "
+"\"Disable bulk walks on SNMPv2c/v3\"."
 
 #, python-format
 msgid "Use this ruleset to assign <a href=\"%s\">%s</a> to services."
@@ -74625,8 +74894,10 @@ msgstr ""
 msgid ""
 "You may choose to enforce the usage of a specific TLS version. Either by "
 "pinning to exactly the selected version, or by also allowing higher "
-"versions. Please note Checkmk does not support SSLv3 or SSLv2 anymore as "
-"they are known to be insecure."
+"versions. Please note Checkmk does not support SSLv3 or SSLv2 at all. TLS "
+"1.0 and 1.1 is supported by the underlying plug-in but not on this rule set "
+"as the plug-in needs to be called with an unsafe configuration of OpenSSL 3. "
+"This requires a direct call via <i>Integrate Nagios plugins.</i>"
 msgstr ""
 
 msgid ""
@@ -75352,18 +75623,6 @@ msgstr "orice"
 
 msgid "any node"
 msgstr "orice nod"
-
-msgid "application/json"
-msgstr "aplicație/json"
-
-msgid "application/octet-stream"
-msgstr "aplicație/octet-stream"
-
-msgid "application/xml"
-msgstr "aplicație/xml"
-
-msgid "application/zip"
-msgstr "aplicație/zip"
 
 msgid "apt-get dist-upgrade"
 msgstr "apt-get dist-upgrade"
@@ -77030,18 +77289,6 @@ msgstr "testare"
 msgid "tests"
 msgstr "teste"
 
-msgid "text/csv"
-msgstr "text/csv"
-
-msgid "text/html"
-msgstr "text/html"
-
-msgid "text/plain"
-msgstr "text/plain"
-
-msgid "text/xml"
-msgstr "text/xml"
-
 msgid "th notification"
 msgstr "a notificare"
 
@@ -77334,6 +77581,78 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "CONNECT"
+#~ msgstr "CONEXIUNE"
+
+#~ msgid "CONNECT:POST"
+#~ msgstr "CONEXIUNE:POST"
+
+#~ msgid "Data to send"
+#~ msgstr "Date de trimis"
+
+#~ msgid "Enforce TLS v1.0"
+#~ msgstr "Aplicați TLS v1.0"
+
+#~ msgid "Enforce TLS v1.1"
+#~ msgstr "Aplicați TLS v1.1"
+
+#~ msgid "OPTIONS"
+#~ msgstr "OPȚIUNI"
+
+#~ msgid "PROPFIND"
+#~ msgstr "PROPFIND"
+
+#~ msgid "TRACE"
+#~ msgstr "TRACE"
+
+#~ msgid "application/json"
+#~ msgstr "aplicație/json"
+
+#~ msgid "application/octet-stream"
+#~ msgstr "aplicație/octet-stream"
+
+#~ msgid "application/xml"
+#~ msgstr "aplicație/xml"
+
+#~ msgid "application/zip"
+#~ msgstr "aplicație/zip"
+
+#~ msgid "text/csv"
+#~ msgstr "text/csv"
+
+#~ msgid "text/html"
+#~ msgstr "text/html"
+
+#~ msgid "text/plain"
+#~ msgstr "text/plain"
+
+#~ msgid "text/xml"
+#~ msgstr "text/xml"
+
+#~ msgid "General Properties"
+#~ msgstr "Proprietăți generale"
+
+#, python-format
+#~ msgid "List of %s"
+#~ msgstr "Lista de %s"
+
+#~ msgid ""
+#~ "Maximum number of threads started at any given time during the JVM "
+#~ "lifetime"
+#~ msgstr ""
+#~ "Numărul maxim de fire de execuție pornite la un moment dat pe durata de "
+#~ "viață a JVM-ului"
+
+#~ msgid "Save & go to list"
+#~ msgstr "Salvați și treceți la listă"
+
+#, python-format
+#~ msgid "Save this %s and go to"
+#~ msgstr "Salvați acest %s și mergeți la"
+
+#~ msgid "Disable bulk walks on SNMPv2c/v3"
+#~ msgstr "Dezactivarea plimbărilor în masă pe SNMPv2c/v3"
 
 #~ msgid ""
 #~ "The cumulative relative runtime is calculated by the <i>(runtime * 100) / "
@@ -78101,9 +78420,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "Network Topology"
 #~ msgstr "Topologia rețelei"
-
-#~ msgid "Other Services"
-#~ msgstr "Alte servicii"
 
 #~ msgid "Server Time"
 #~ msgstr "Ora serverului"
@@ -80336,10 +80652,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
-#~ msgid "End date"
-#~ msgstr "Parola"
-
-#, fuzzy
 #~ msgid "Start date"
 #~ msgstr "Numele Elementului"
 
@@ -82395,10 +82707,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 #~ msgid "Host label discovery"
 #~ msgstr "Numele Elementului"
-
-#, fuzzy
-#~ msgid "LIST Requests"
-#~ msgstr "cereri"
 
 #, fuzzy
 #~ msgid "New aux tag"

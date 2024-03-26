@@ -188,7 +188,7 @@ def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
 
 def permissions(part: PackagePart, rel_path: Path) -> int | None:
     match part:
-        case (PackagePart.CMK_PLUGINS | PackagePart.CMK_ADDONS_PLUGINS):
+        case PackagePart.CMK_PLUGINS | PackagePart.CMK_ADDONS_PLUGINS:
             return (
                 _PERMISSION_EXECUTABLE
                 if rel_path.parts[-2] == "libexec"

@@ -36,11 +36,9 @@ _logger = logging.getLogger(__name__)
 
 
 class ComparableVersion(Protocol):
-    def __ge__(self, other: Self) -> bool:
-        ...
+    def __ge__(self, other: Self) -> bool: ...
 
-    def __lt__(self, other: Self) -> bool:
-        ...
+    def __lt__(self, other: Self) -> bool: ...
 
 
 def format_file_name(package_id: PackageID) -> str:

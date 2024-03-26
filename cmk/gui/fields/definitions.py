@@ -24,7 +24,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 import cmk.utils.version as version
 from cmk.utils.exceptions import MKException
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
@@ -585,6 +585,19 @@ class HostField(base.String):
                 host._user_needs_permission("write")
 
         return
+
+    def _deserialize(
+        self,
+        value: Any,
+        attr: str | None,
+        data: typing.Mapping[str, Any] | None,
+        **kwargs: Any,
+    ) -> HostAddress:
+        value = super()._deserialize(value, attr, data)
+        try:
+            return HostAddress(value)
+        except ValueError as e:
+            raise ValidationError(str(e)) from e
 
     def _validate(self, value):
         super()._validate(value)

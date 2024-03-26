@@ -618,35 +618,13 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                 ),
             ),
             "server_response": DictElement(parameter_form=_valuespec_response()),
-            "cert": DictElement(
-                parameter_form=CascadingSingleChoice(
+            "cert": DictElement[SimpleLevelsConfigModel[float]](
+                parameter_form=SimpleLevels[float](
                     title=Title("Certificate validity"),
-                    prefill=DefaultValue("validate"),
-                    elements=[
-                        CascadingSingleChoiceElement(
-                            name="validate",
-                            title=Title("Check certificate"),
-                            parameter_form=SimpleLevels[float](
-                                title=Title("Check validity"),
-                                form_spec_template=TimeSpan(
-                                    displayed_magnitudes=(TimeMagnitude.DAY,)
-                                ),
-                                level_direction=LevelDirection.LOWER,
-                                prefill_fixed_levels=InputHint((90.0 * _DAY, 60.0 * _DAY)),
-                                help_text=Help(
-                                    "Minimum number of days a certificate has to be valid."
-                                ),
-                            ),
-                        ),
-                        CascadingSingleChoiceElement(
-                            name="no_validation",
-                            title=Title("Do not check certificate"),
-                            parameter_form=FixedValue(
-                                value=None,
-                                title=Title("Do not check certificate"),
-                            ),
-                        ),
-                    ],
+                    form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.DAY]),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=DefaultValue((40.0 * _DAY, 20.0 * _DAY)),
+                    help_text=Help("Minimum number of days a certificate has to be valid."),
                 )
             ),
             "document": DictElement(parameter_form=_valuespec_document()),

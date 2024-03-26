@@ -27,7 +27,7 @@ import types
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Literal, NamedTuple, TextIO
+from typing import Literal, NamedTuple, TextIO
 
 from cmk.utils.metrics import MetricName
 
@@ -52,17 +52,444 @@ from cmk.graphing.v1 import graphs, metrics, perfometers, Title, translations
 _LOGGER = logging.getLogger(__file__)
 
 
+def _parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawTextHelpFormatter,
+        allow_abbrev=False,
+    )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        default=False,
+        help="Stop at the very first exception",
+    )
+    parser.add_argument(
+        "folders",
+        nargs="+",
+        help="Search in these folders",
+    )
+    parser.add_argument(
+        "--metric-names",
+        nargs="+",
+        required=True,
+        help="Filter by these metrics names",
+    )
+    parser.add_argument(
+        "--translations",
+        action="store_true",
+        default=False,
+        help="Migrate translations",
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        default=False,
+        help="Check connected graph objects",
+    )
+    return parser.parse_args()
+
+
+def _setup_logger(debug: bool) -> None:
+    handler: logging.StreamHandler[TextIO] | logging.NullHandler
+    if debug:
+        handler = logging.StreamHandler()
+    else:
+        handler = logging.NullHandler()
+    _LOGGER.addHandler(handler)
+    _LOGGER.setLevel(logging.INFO)
+
+
+def _load_module(filepath: Path) -> types.ModuleType:
+    if (spec := importlib.util.spec_from_file_location(f"{filepath.name}", filepath)) is None:
+        raise TypeError(spec)
+    if (mod := importlib.util.module_from_spec(spec)) is None:
+        raise TypeError(mod)
+    if spec.loader is None:
+        raise TypeError(spec.loader)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _load_file_content(path: Path) -> tuple[
+    Mapping[str, MetricInfo],
+    Mapping[str, Mapping[MetricName, CheckMetricEntry]],
+    Sequence[PerfometerSpec],
+    AutomaticDict,
+]:
+    module = _load_module(path)
+    if hasattr(module, "metric_info"):
+        metric_info = module.metric_info
+    else:
+        metric_info = {}
+    if hasattr(module, "check_metrics"):
+        check_metrics = module.check_metrics
+    else:
+        check_metrics = {}
+    if hasattr(module, "perfometer_info"):
+        perfometer_info = module.perfometer_info
+    else:
+        perfometer_info = []
+    if hasattr(module, "graph_info"):
+        graph_info = module.graph_info
+    else:
+        graph_info = AutomaticDict()
+    return metric_info, check_metrics, perfometer_info, graph_info
+
+
+def _load(debug: bool, folders: Sequence[str], load_translations: bool) -> tuple[
+    Mapping[str, MetricInfo],
+    Mapping[str, Mapping[MetricName, CheckMetricEntry]],
+    Sequence[PerfometerSpec],
+    Mapping[str, RawGraphTemplate],
+]:
+    legacy_metric_info: dict[str, MetricInfo] = {}
+    legacy_check_metrics: dict[str, Mapping[MetricName, CheckMetricEntry]] = {}
+    legacy_perfometer_info: list[PerfometerSpec] = []
+    legacy_graph_info: dict[str, RawGraphTemplate] = {}
+    for raw_folder in folders:
+        for path in Path(raw_folder).glob("*.py"):
+            try:
+                (
+                    loaded_metric_info,
+                    loaded_check_metrics,
+                    loaded_perfometer_info,
+                    loaded_graph_info,
+                ) = _load_file_content(path)
+            except Exception:
+                if debug:
+                    sys.exit(1)
+
+            legacy_metric_info.update(loaded_metric_info)
+            if load_translations:
+                legacy_check_metrics.update(loaded_check_metrics)
+            legacy_perfometer_info.extend(loaded_perfometer_info)
+            legacy_graph_info.update(loaded_graph_info)
+    return legacy_metric_info, legacy_check_metrics, legacy_perfometer_info, legacy_graph_info
+
+
 def _show_exception(e: Exception) -> None:
     _LOGGER.error("".join(traceback.format_exception(e)))
 
 
-#   .--parser--------------------------------------------------------------.
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+
+def _drop_consolidation_func_name(expression: str) -> str:
+    if expression.endswith(".max"):
+        return expression[:-4]
+    if expression.endswith(".min"):
+        return expression[:-4]
+    if expression.endswith(".average"):
+        return expression[:-8]
+    return expression
+
+
+# .
+#   .--connected objects---------------------------------------------------.
+#   |                                            _           _             |
+#   |             ___ ___  _ __  _ __   ___  ___| |_ ___  __| |            |
+#   |            / __/ _ \| '_ \| '_ \ / _ \/ __| __/ _ \/ _` |            |
+#   |           | (_| (_) | | | | | | |  __/ (__| ||  __/ (_| |            |
+#   |            \___\___/|_| |_|_| |_|\___|\___|\__\___|\__,_|            |
 #   |                                                                      |
-#   |                   _ __   __ _ _ __ ___  ___ _ __                     |
-#   |                  | '_ \ / _` | '__/ __|/ _ \ '__|                    |
-#   |                  | |_) | (_| | |  \__ \  __/ |                       |
-#   |                  | .__/ \__,_|_|  |___/\___|_|                       |
-#   |                  |_|                                                 |
+#   |                         _     _           _                          |
+#   |                    ___ | |__ (_) ___  ___| |_ ___                    |
+#   |                   / _ \| '_ \| |/ _ \/ __| __/ __|                   |
+#   |                  | (_) | |_) | |  __/ (__| |_\__ \                   |
+#   |                   \___/|_.__// |\___|\___|\__|___/                   |
+#   |                            |__/                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _collect_metric_names_of_single_expression(expression: str) -> str:
+    expression = _drop_consolidation_func_name(expression)
+    if expression.endswith("(%)"):
+        expression = expression[:-3]
+    if ":" in expression:
+        metric_name, _scalar_name = expression.split(":")
+        return metric_name
+    return expression
+
+
+@dataclass
+class CheckedExpression:
+    metric_names: set[str] = field(default_factory=set)
+    parseable: bool = True
+
+    def update(self, checked_expression: CheckedExpression) -> None:
+        self.metric_names |= checked_expression.metric_names
+        if not checked_expression.parseable:
+            self.parseable = checked_expression.parseable
+
+
+def _collect_metric_names_of_expression(expression: str) -> CheckedExpression:
+    if "#" in expression:
+        expression, _explicit_hexstr_color = expression.rsplit("#", 1)
+    if "@" in expression:
+        expression, _explicit_unit_name = expression.rsplit("@", 1)
+    metric_names = set()
+    parseable = True
+    for word in expression.split(","):
+        match word:
+            case "+" | "*" | "-" | "/":
+                continue
+            case "MIN" | "MAX" | "AVERAGE" | "MERGE" | ">" | ">=" | "<" | "<=":
+                parseable = False
+                continue
+            case _:
+                metric_name = _collect_metric_names_of_single_expression(word)
+                try:
+                    float(metric_name)
+                except ValueError:
+                    metric_names.add(metric_name)
+    return CheckedExpression(metric_names, parseable)
+
+
+def _collect_metric_names_from_legacy_linear_perfometer(
+    legacy_perfometer: _LinearPerfometerSpec,
+) -> Iterator[CheckedExpression]:
+    for expression in legacy_perfometer["segments"]:
+        yield _collect_metric_names_of_expression(expression)
+    if (total := legacy_perfometer.get("total")) and isinstance(total, str):
+        yield _collect_metric_names_of_expression(total)
+    if condition := legacy_perfometer.get("condition"):
+        checked_expression = _collect_metric_names_of_expression(condition)
+        yield CheckedExpression(checked_expression.metric_names, False)
+    if label := legacy_perfometer.get("label"):
+        yield _collect_metric_names_of_expression(label[0])
+
+
+def _collect_metric_names_from_legacy_logarithmic_perfometer(
+    legacy_perfometer: LogarithmicPerfometerSpec,
+) -> CheckedExpression:
+    return _collect_metric_names_of_expression(legacy_perfometer["metric"])
+
+
+def _collect_metric_names_from_legacy_perfometer(
+    legacy_perfometer: PerfometerSpec,
+) -> CheckedExpression:
+    checked_expression = CheckedExpression()
+    if legacy_perfometer["type"] == "linear":
+        for pe in _collect_metric_names_from_legacy_linear_perfometer(legacy_perfometer):
+            checked_expression.update(pe)
+    elif legacy_perfometer["type"] == "logarithmic":
+        checked_expression.update(
+            _collect_metric_names_from_legacy_logarithmic_perfometer(legacy_perfometer)
+        )
+    elif legacy_perfometer["type"] in ("dual", "stacked"):
+        for p in legacy_perfometer["perfometers"]:
+            checked_expression.update(_collect_metric_names_from_legacy_perfometer(p))
+    return checked_expression
+
+
+def _collect_metric_names_from_legacy_graph(
+    legacy_graph: RawGraphTemplate,
+) -> CheckedExpression:
+    checked_expression = CheckedExpression()
+    for scalar in legacy_graph.get("scalars", []):
+        if isinstance(scalar, tuple):
+            checked_expression.update(_collect_metric_names_of_expression(scalar[0]))
+        else:
+            checked_expression.update(_collect_metric_names_of_expression(scalar))
+    for metric in legacy_graph["metrics"]:
+        checked_expression.update(_collect_metric_names_of_expression(metric[0]))
+    for boundary in legacy_graph.get("range", []):
+        if isinstance(boundary, str):
+            checked_expression.update(_collect_metric_names_of_expression(boundary))
+    if optional_metrics := legacy_graph.get("optional_metrics", []):
+        checked_expression.update(CheckedExpression(set(optional_metrics), True))
+    if conflicting_metrics := legacy_graph.get("conflicting_metrics", []):
+        checked_expression.update(CheckedExpression(set(conflicting_metrics), True))
+    return checked_expression
+
+
+@dataclass(frozen=True)
+class CheckedPerfometer:
+    index: int
+    parseable: bool
+
+
+@dataclass(frozen=True)
+class CheckedGraphTemplate:
+    ident: str
+    parseable: bool
+
+
+@dataclass(frozen=True)
+class GraphingObjectReferences:
+    perfometer_indices: set[int] = field(default_factory=set)
+    graph_template_ids: set[str] = field(default_factory=set)
+
+
+def _find_connected_metric_names(
+    metric_name: str,
+    handled_metric_names: set[str],
+    checked_perfometers: Mapping[int, CheckedExpression],
+    checked_graph_templates: Mapping[str, CheckedExpression],
+    used_metrics: Mapping[str, GraphingObjectReferences],
+) -> Iterator[str]:
+    if metric_name in handled_metric_names:
+        return
+
+    handled_metric_names.add(metric_name)
+    references = used_metrics[metric_name]
+    connected_metric_names = set()
+    for idx in references.perfometer_indices:
+        connected_metric_names |= checked_perfometers[idx].metric_names
+
+    for ident in references.graph_template_ids:
+        connected_metric_names |= checked_graph_templates[ident].metric_names
+
+    for connected_metric_name in connected_metric_names:
+        yield connected_metric_name
+        yield from _find_connected_metric_names(
+            connected_metric_name,
+            handled_metric_names,
+            checked_perfometers,
+            checked_graph_templates,
+            used_metrics,
+        )
+
+
+@dataclass(frozen=True)
+class ConnectedPerfometer:
+    idx: int
+    spec: PerfometerSpec
+    parseable: bool
+
+
+@dataclass(frozen=True)
+class ConnectedGraphTemplate:
+    ident: str
+    template: RawGraphTemplate
+    parseable: bool
+
+
+@dataclass(frozen=True)
+class ConnectedObjects:
+    metrics: Mapping[str, MetricInfo]
+    perfometers: Sequence[ConnectedPerfometer]
+    graph_templates: Sequence[ConnectedGraphTemplate]
+
+
+def _make_connected_objects(
+    metric_names_filter: Sequence[str],
+    legacy_metric_info: Mapping[str, MetricInfo],
+    legacy_perfometer_info: Sequence[PerfometerSpec],
+    legacy_graph_info: Mapping[str, RawGraphTemplate],
+    used_metrics: Mapping[str, GraphingObjectReferences],
+    checked_perfometers: Mapping[int, CheckedExpression],
+    checked_graph_templates: Mapping[str, CheckedExpression],
+) -> Iterator[ConnectedObjects]:
+    handled_metric_names: set[str] = set()
+    all_connected_metric_names: set[tuple[str, ...]] = set()
+    for metric_name in used_metrics:
+        if metric_name not in metric_names_filter:
+            continue
+        all_connected_metric_names.add(
+            tuple(
+                sorted(
+                    set(
+                        _find_connected_metric_names(
+                            metric_name,
+                            handled_metric_names,
+                            checked_perfometers,
+                            checked_graph_templates,
+                            used_metrics,
+                        )
+                    )
+                )
+            )
+        )
+
+    for connected_metric_names in all_connected_metric_names:
+        perfometers_: list[ConnectedPerfometer] = []
+        graph_templates_: list[ConnectedGraphTemplate] = []
+        for metric_name in connected_metric_names:
+            references = used_metrics[metric_name]
+            for idx in references.perfometer_indices:
+                connected_perfometer = ConnectedPerfometer(
+                    idx,
+                    legacy_perfometer_info[idx],
+                    checked_perfometers[idx].parseable,
+                )
+                if connected_perfometer not in perfometers_:
+                    perfometers_.append(connected_perfometer)
+
+            for ident in references.graph_template_ids:
+                connected_graph_template = ConnectedGraphTemplate(
+                    ident,
+                    legacy_graph_info[ident],
+                    checked_graph_templates[ident].parseable,
+                )
+                if connected_graph_template not in graph_templates_:
+                    graph_templates_.append(connected_graph_template)
+
+        yield ConnectedObjects(
+            {c: legacy_metric_info[c] for c in connected_metric_names},
+            perfometers_,
+            graph_templates_,
+        )
+
+
+def _compute_connected_objects(
+    debug: bool,
+    folders: Sequence[str],
+    metric_names_filter: Sequence[str],
+    legacy_metric_info: Mapping[str, MetricInfo],
+    legacy_perfometer_info: Sequence[PerfometerSpec],
+    legacy_graph_info: Mapping[str, RawGraphTemplate],
+) -> Sequence[ConnectedObjects]:
+    checked_perfometers: dict[int, CheckedExpression] = {}
+    checked_graph_templates: dict[str, CheckedExpression] = {}
+    used_metrics: dict[str, GraphingObjectReferences] = {}
+
+    for idx, legacy_perfometer in enumerate(legacy_perfometer_info):
+        checked_expression = _collect_metric_names_from_legacy_perfometer(legacy_perfometer)
+        checked_perfometers.setdefault(idx, checked_expression)
+        for metric_name in checked_expression.metric_names:
+            used_metrics.setdefault(metric_name, GraphingObjectReferences()).perfometer_indices.add(
+                idx
+            )
+
+    for ident, template in legacy_graph_info.items():
+        checked_expression = _collect_metric_names_from_legacy_graph(template)
+        checked_graph_templates.setdefault(ident, checked_expression)
+        for metric_name in checked_expression.metric_names:
+            used_metrics.setdefault(metric_name, GraphingObjectReferences()).graph_template_ids.add(
+                ident
+            )
+
+    return list(
+        _make_connected_objects(
+            metric_names_filter,
+            legacy_metric_info,
+            legacy_perfometer_info,
+            legacy_graph_info,
+            used_metrics,
+            checked_perfometers,
+            checked_graph_templates,
+        )
+    )
+
+
+# .
+#   .--migrate-------------------------------------------------------------.
+#   |                           _                 _                        |
+#   |                 _ __ ___ (_) __ _ _ __ __ _| |_ ___                  |
+#   |                | '_ ` _ \| |/ _` | '__/ _` | __/ _ \                 |
+#   |                | | | | | | | (_| | | | (_| | ||  __/                 |
+#   |                |_| |_| |_|_|\__, |_|  \__,_|\__\___|                 |
+#   |                             |___/                                    |
 #   '----------------------------------------------------------------------'
 
 
@@ -417,16 +844,6 @@ def _parse_legacy_check_metrics(
 
 
 _Operators = Literal["+", "*", "-", "/"]
-
-
-def _drop_consolidation_func_name(expression: str) -> str:
-    if expression.endswith(".max"):
-        return expression[:-4]
-    if expression.endswith(".min"):
-        return expression[:-4]
-    if expression.endswith(".average"):
-        return expression[:-8]
-    return expression
 
 
 def _parse_scalar_name(
@@ -1019,7 +1436,7 @@ def _parse_legacy_graph_infos(
     debug: bool,
     unparseables: list[Unparseable],
     unit_parser: UnitParser,
-    graph_info: AutomaticDict,
+    graph_info: Mapping[str, RawGraphTemplate],
 ) -> Iterator[graphs.Graph | graphs.Bidirectional]:
     for name, info in graph_info.items():
         try:
@@ -1044,165 +1461,31 @@ def _parse_legacy_graph_infos(
             yield upper
 
 
-# .
-#   .--finder--------------------------------------------------------------.
-#   |                      __ _           _                                |
-#   |                     / _(_)_ __   __| | ___ _ __                      |
-#   |                    | |_| | '_ \ / _` |/ _ \ '__|                     |
-#   |                    |  _| | | | | (_| |  __/ |                        |
-#   |                    |_| |_|_| |_|\__,_|\___|_|                        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _make_filter_name(names: set[str]) -> Callable[[str], bool]:
-    return lambda n: n in names
-
-
-def _filter_raw_metric_names(
-    quantity: (
-        str
-        | metrics.Constant
-        | metrics.WarningOf
-        | metrics.CriticalOf
-        | metrics.MinimumOf
-        | metrics.MaximumOf
-        | metrics.Sum
-        | metrics.Product
-        | metrics.Difference
-        | metrics.Fraction
-    ),
-    filter_name: Callable[[str], bool],
-) -> Iterator[str]:
-    for n in _raw_metric_names(quantity):
-        if filter_name(n):
-            yield n
-
-
-def _collect_metric_names_from_perfometer(
-    perfometer: perfometers.Perfometer, filter_name: Callable[[str], bool]
-) -> Iterator[str]:
-    for b in (perfometer.focus_range.lower.value, perfometer.focus_range.lower.value):
-        if not isinstance(b, (int, float)):
-            yield from _filter_raw_metric_names(b, filter_name)
-    for s in perfometer.segments:
-        yield from _filter_raw_metric_names(s, filter_name)
-
-
-def _collect_metric_names_from_graph(
-    graph: graphs.Graph, filter_name: Callable[[str], bool]
-) -> Iterator[str]:
-    if graph.minimal_range:
-        for b in (graph.minimal_range.lower, graph.minimal_range.lower):
-            if not isinstance(b, (int, float)):
-                yield from _filter_raw_metric_names(b, filter_name)
-    for cl in graph.compound_lines:
-        yield from _filter_raw_metric_names(cl, filter_name)
-    for sl in graph.simple_lines:
-        yield from _filter_raw_metric_names(sl, filter_name)
-    for o in graph.optional:
-        if filter_name(o):
-            yield o
-    for o in graph.conflicting:
-        if filter_name(o):
-            yield o
-
-
-def _collect_metric_names_from_object(
-    obj: (
-        metrics.Metric
-        | translations.Translation
-        | perfometers.Perfometer
-        | perfometers.Bidirectional
-        | perfometers.Stacked
-        | graphs.Graph
-        | graphs.Bidirectional
-    ),
-    filter_name: Callable[[str], bool],
-) -> Iterator[str]:
-    match obj:
-        case translations.Translation():
-            # TODO
-            pass
-        case perfometers.Perfometer():
-            if p_names := set(_collect_metric_names_from_perfometer(obj, filter_name)):
-                yield from p_names
-        case perfometers.Bidirectional():
-            left_names = set(_collect_metric_names_from_perfometer(obj.left, filter_name))
-            right_names = set(_collect_metric_names_from_perfometer(obj.right, filter_name))
-            if left_names or right_names:
-                yield from left_names
-                yield from right_names
-        case perfometers.Stacked():
-            lower_names = set(_collect_metric_names_from_perfometer(obj.lower, filter_name))
-            upper_names = set(_collect_metric_names_from_perfometer(obj.upper, filter_name))
-            if lower_names or upper_names:
-                yield from lower_names
-                yield from upper_names
-        case graphs.Graph():
-            if g_names := set(_collect_metric_names_from_graph(obj, filter_name)):
-                yield from g_names
-        case graphs.Bidirectional():
-            lower_names = set(_collect_metric_names_from_graph(obj.lower, filter_name))
-            upper_names = set(_collect_metric_names_from_graph(obj.upper, filter_name))
-            if lower_names or upper_names:
-                yield from lower_names
-                yield from upper_names
-
-
-def _find_related_objects(
-    names: Sequence[str],
-    migrated_by_path: Mapping[
-        Path,
-        Sequence[
-            metrics.Metric
-            | translations.Translation
-            | perfometers.Perfometer
-            | perfometers.Bidirectional
-            | perfometers.Stacked
-            | graphs.Graph
-            | graphs.Bidirectional,
-        ],
-    ],
-) -> tuple[
-    Mapping[str, metrics.Metric],
-    Mapping[
-        str,
-        translations.Translation
-        | perfometers.Perfometer
-        | perfometers.Bidirectional
-        | perfometers.Stacked
-        | graphs.Graph
-        | graphs.Bidirectional,
-    ],
+def _migrate(
+    debug: bool,
+    unparseables: list[Unparseable],
+    unit_parser: UnitParser,
+    legacy_metric_info: Mapping[str, MetricInfo],
+    legacy_check_metrics: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
+    legacy_perfometer_info: Sequence[PerfometerSpec],
+    legacy_graph_info: Mapping[str, RawGraphTemplate],
+) -> Iterator[
+    metrics.Metric
+    | translations.Translation
+    | perfometers.Perfometer
+    | perfometers.Bidirectional
+    | perfometers.Stacked
+    | graphs.Graph
+    | graphs.Bidirectional,
 ]:
-    pre_filter_name = _make_filter_name(set(names))
-    found_metric_names = set(
-        n
-        for objects in migrated_by_path.values()
-        for obj in objects
-        for n in _collect_metric_names_from_object(obj, pre_filter_name)
-    ).union(names)
-    filter_name = _make_filter_name(found_metric_names)
-    metrics_: dict[str, metrics.Metric] = {}
-    related_objects: dict[
-        str,
-        translations.Translation
-        | perfometers.Perfometer
-        | perfometers.Bidirectional
-        | perfometers.Stacked
-        | graphs.Graph
-        | graphs.Bidirectional,
-    ] = {}
-    for objects in migrated_by_path.values():
-        for obj in objects:
-            if isinstance(obj, metrics.Metric):
-                if filter_name(obj.name):
-                    metrics_[obj.name] = obj
-                continue
-            if set(_collect_metric_names_from_object(obj, filter_name)):
-                related_objects[obj.name] = obj
-    return metrics_, related_objects
+    # Note: we cannot restrict parsed legacy metrics with 'metrics_names' because we need all
+    # metrics for a consisten migration. Example: a graph uses further metric names.
+    yield from _parse_legacy_metric_infos(debug, unparseables, unit_parser, legacy_metric_info)
+    yield from _parse_legacy_check_metrics(debug, unparseables, legacy_check_metrics)
+    yield from _parse_legacy_perfometer_infos(
+        debug, unparseables, unit_parser, legacy_perfometer_info
+    )
+    yield from _parse_legacy_graph_infos(debug, unparseables, unit_parser, legacy_graph_info)
 
 
 # .
@@ -1579,97 +1862,6 @@ def _graph_repr(unit_parser: UnitParser, graph: graphs.Graph | graphs.Bidirectio
             return _g_bidirectional_repr(unit_parser, graph)
 
 
-# .
-
-
-def _parse_arguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description=__doc__,
-        formatter_class=argparse.RawTextHelpFormatter,
-        allow_abbrev=False,
-    )
-    parser.add_argument(
-        "-d",
-        "--debug",
-        action="store_true",
-        default=False,
-        help="Stop at the very first exception",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        action="store_true",
-        default=False,
-        help="Show information of objects to be migrated",
-    )
-    parser.add_argument(
-        "--metric-names",
-        nargs="+",
-        required=True,
-        help="Metrics and related perfometers or graphs which will consistently be migrated",
-    )
-    parser.add_argument(
-        "folders",
-        nargs="+",
-        help="Search in these folders",
-    )
-    return parser.parse_args()
-
-
-def _setup_logger(debug: bool, verbose: bool) -> None:
-    handler: logging.StreamHandler[TextIO] | logging.NullHandler
-    if debug or verbose:
-        handler = logging.StreamHandler()
-    else:
-        handler = logging.NullHandler()
-    _LOGGER.addHandler(handler)
-    _LOGGER.setLevel(logging.INFO)
-
-
-def _load_module(filepath: Path) -> types.ModuleType:
-    if (spec := importlib.util.spec_from_file_location(f"{filepath.name}", filepath)) is None:
-        raise TypeError(spec)
-    if (mod := importlib.util.module_from_spec(spec)) is None:
-        raise TypeError(mod)
-    if spec.loader is None:
-        raise TypeError(spec.loader)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-def _migrate_file_content(
-    debug: bool,
-    path: Path,
-    unparseables: list[Unparseable],
-    unit_parser: UnitParser,
-) -> Iterator[
-    metrics.Metric
-    | translations.Translation
-    | perfometers.Perfometer
-    | perfometers.Bidirectional
-    | perfometers.Stacked
-    | graphs.Graph
-    | graphs.Bidirectional,
-]:
-    module = _load_module(path)
-
-    if hasattr(module, "metric_info"):
-        # Note: we cannot restrict parsed legacy metrics with 'metrics_names' because we need all
-        # metrics for a consisten migration. Example: a graph uses further metric names.
-        yield from _parse_legacy_metric_infos(debug, unparseables, unit_parser, module.metric_info)
-
-    if hasattr(module, "check_metrics"):
-        yield from _parse_legacy_check_metrics(debug, unparseables, module.check_metrics)
-
-    if hasattr(module, "perfometer_info"):
-        yield from _parse_legacy_perfometer_infos(
-            debug, unparseables, unit_parser, module.perfometer_info
-        )
-
-    if hasattr(module, "graph_info"):
-        yield from _parse_legacy_graph_infos(debug, unparseables, unit_parser, module.graph_info)
-
-
 def _obj_repr(
     unit_parser: UnitParser,
     obj: (
@@ -1696,75 +1888,54 @@ def _obj_repr(
             return f"graph_{_obj_var_name()} = {_graph_repr(unit_parser, obj)}"
 
 
-def _order_unparseables(
-    unparseables_by_path: Mapping[Path, Sequence[Unparseable]]
-) -> Mapping[Path, Mapping[Literal["metrics", "translations", "perfometers", "graphs"], set[str]]]:
-    ordered: dict[
-        Path, dict[Literal["metrics", "translations", "perfometers", "graphs"], set[str]]
-    ] = {}
-    for path, unparseables in unparseables_by_path.items():
-        for unparseable in unparseables:
-            ordered.setdefault(path, {}).setdefault(unparseable.namespace, set()).add(
-                unparseable.name
-            )
-    return ordered
+# .
 
 
 def main() -> None:
     args = _parse_arguments()
-    _setup_logger(args.debug, args.verbose)
-    unit_parser = UnitParser()
-    migrated_by_path: dict[
-        Path,
-        list[
-            metrics.Metric
-            | translations.Translation
-            | perfometers.Perfometer
-            | perfometers.Bidirectional
-            | perfometers.Stacked
-            | graphs.Graph
-            | graphs.Bidirectional,
-        ],
-    ] = {}
-    unparseables_by_path: dict[Path, list[Unparseable]] = {}
-    for raw_folder in args.folders:
-        for path in Path(raw_folder).glob("*.py"):
-            try:
-                migrated_by_path.setdefault(path, []).extend(
-                    _migrate_file_content(
-                        args.debug,
-                        path,
-                        unparseables_by_path.setdefault(path, []),
-                        unit_parser,
-                    )
-                )
-            except Exception:
-                if args.debug:
-                    sys.exit(1)
+    _setup_logger(args.debug)
 
-    metrics_by_name, related_objects_by_name = _find_related_objects(
-        args.metric_names, migrated_by_path
+    (
+        legacy_metric_info,
+        legacy_check_metrics,
+        legacy_perfometer_info,
+        legacy_graph_info,
+    ) = _load(args.debug, args.folders, args.translations)
+
+    connected_objects = _compute_connected_objects(
+        args.debug,
+        args.folders,
+        args.metric_names,
+        legacy_metric_info,
+        legacy_perfometer_info,
+        legacy_graph_info,
     )
-    if metrics_by_name:
-        units = set(m.unit for m in metrics_by_name.values())
-        print("\n".join([f"{unit_parser.find_unit_name(u)} = {_unit_repr(u)}" for u in units]))
-        print("\n".join([_obj_repr(unit_parser, m) for m in metrics_by_name.values()]))
-    if related_objects_by_name:
-        print("\n".join([_obj_repr(unit_parser, obj) for obj in related_objects_by_name.values()]))
 
-    for path, unparseable_names_by_namespace in sorted(
-        _order_unparseables(unparseables_by_path).items()
-    ):
-        _LOGGER.info(
-            "%s\n%s",
-            path,
-            "\n".join(
-                [
-                    f"  {namespace}: {', '.join(sorted(unparseable_names))}"
-                    for namespace, unparseable_names in unparseable_names_by_namespace.items()
-                ]
-            ),
+    if args.check:
+        for connected_object in connected_objects:
+            print(connected_object)
+        return
+
+    unparseables: list[Unparseable] = []
+    unit_parser = UnitParser()
+    migrated_objects = list(
+        _migrate(
+            args.debug,
+            unparseables,
+            unit_parser,
+            {n: m for c in connected_objects for n, m in c.metrics.items()},
+            legacy_check_metrics,
+            [p.spec for c in connected_objects for p in c.perfometers],
+            {g.ident: g.template for c in connected_objects for g in c.graph_templates},
         )
+    )
+
+    if migrated_objects:
+        print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))
+    for migrated_object in migrated_objects:
+        print(_obj_repr(unit_parser, migrated_object))
+    for unparseable in unparseables:
+        _LOGGER.info("%s", unparseable)
 
 
 if __name__ == "__main__":

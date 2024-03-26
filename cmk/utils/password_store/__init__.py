@@ -60,8 +60,9 @@ from . import hack
 PasswordLookupType = Literal["password", "store"]
 PasswordId = str | tuple[PasswordLookupType, str]
 
-
-_PASSWORD_ID_PREFIX = ":uuid:"  # cannot collide with user defined id.
+# CMK-16660
+# _PASSWORD_ID_PREFIX = ":uuid:"  # cannot collide with user defined id.
+_PASSWORD_ID_PREFIX = "uuid"
 
 
 class Password(TypedDict):
@@ -116,9 +117,12 @@ def _load(store_path: Path) -> dict[str, str]:
 
 def _deserialise_passwords(raw: str) -> dict[str, str]:
     """
+    This is designed to work with a _PASSWORD_ID_PREFIX that
+    contains a colon at the beginning and the end, but
+    that is not supported by the other implementations.
 
-    >>> _deserialise_passwords("my_stored:uuid:p4ssw0rd\\n:uuid:1234:s3:cr37!")
-    {'my_stored': 'uuid:p4ssw0rd', ':uuid:1234': 's3:cr37!'}
+    >>> _deserialise_passwords("my_stored:p4ssw0rd\\nuuid1234:s3:cr37!")
+    {'my_stored': 'p4ssw0rd', 'uuid1234': 's3:cr37!'}
 
     """
     passwords: dict[str, str] = {}

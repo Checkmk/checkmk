@@ -28,8 +28,7 @@ class IPConfig:
 
     @property
     @abstractmethod
-    def family(self) -> IPAddressFamily:
-        ...
+    def family(self) -> IPAddressFamily: ...
 
     @property
     def address(self) -> str:

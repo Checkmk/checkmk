@@ -7,12 +7,13 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.ldap import active_check_ldap
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config
+from tests.testlib import ActiveCheck
+
+pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    "params, expected_args",
+    "params,expected_args",
     [
         (
             {
@@ -30,7 +31,7 @@ from cmk.server_side_calls.v1 import HostConfig, IPv4Config
                 "port": 389,
                 "version": "v2",
             },
-            ["-H", "baz", "-b", "bar", "-p", "389", "-2"],
+            ["-H", "baz", "-b", "bar", "-p", 389, "-2"],
         ),
     ],
 )
@@ -38,12 +39,5 @@ def test_check_ldap_argument_parsing(
     params: Mapping[str, str | float], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    (command,) = active_check_ldap(
-        params,
-        HostConfig(
-            name="hostname",
-            ipv4_config=IPv4Config(address="ipaddress"),
-        ),
-        {},
-    )
-    assert command.command_arguments == expected_args
+    active_check = ActiveCheck("check_ldap")
+    assert active_check.run_argument_function(params) == expected_args

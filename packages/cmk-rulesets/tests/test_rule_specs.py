@@ -152,17 +152,19 @@ from cmk.rulesets.v1.rule_specs import (
 )
 def test_ruleset_name_validation(
     name: str,
-    input_rulespec: type[ActiveCheck]
-    | type[AgentAccess]
-    | type[AgentConfig]
-    | type[CheckParameters]
-    | type[DiscoveryParameters]
-    | type[EnforcedService]
-    | type[InventoryParameters]
-    | type[NotificationParameters]
-    | type[Service]
-    | type[SNMP]
-    | type[SpecialAgent],
+    input_rulespec: (
+        type[ActiveCheck]
+        | type[AgentAccess]
+        | type[AgentConfig]
+        | type[CheckParameters]
+        | type[DiscoveryParameters]
+        | type[EnforcedService]
+        | type[InventoryParameters]
+        | type[NotificationParameters]
+        | type[Service]
+        | type[SNMP]
+        | type[SpecialAgent]
+    ),
     kwargs: Mapping[str, Any],
 ) -> None:
     with pytest.raises(

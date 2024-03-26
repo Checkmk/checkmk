@@ -188,7 +188,7 @@ def test_openapi_specific_service(
     live.expect_query(
         [
             "GET services",
-            "Columns: description host_name state_type state last_check",
+            "Columns: host_name description state state_type last_check",
             "Filter: host_name = heute",
             "Filter: description = Filesystem",
             "And: 2",
@@ -209,6 +209,62 @@ def test_openapi_specific_service(
             "state_type": "hard",
             "state": 0,
             "last_check": 1593697877,
+        }
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
+def test_openapi_specific_service_specific_columns(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    live: MockLiveStatusConnection = mock_livestatus
+
+    live.add_table(
+        "services",
+        [
+            {
+                "host_name": "heute",
+                "host_alias": "heute",
+                "description": "Filesystem",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 1593697877,
+                "acknowledged": 0,
+            },
+            {
+                "host_name": "example.com",
+                "host_alias": "example.com",
+                "description": "Filesystem /boot",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 0,
+                "acknowledged": 0,
+            },
+        ],
+    )
+
+    live.expect_query(
+        [
+            "GET services",
+            "Columns: state state_type",
+            "Filter: host_name = heute",
+            "Filter: description = Filesystem",
+            "And: 2",
+        ]
+    )
+    with live:
+        base = "/NO_SITE/check_mk/api/1.0"
+
+        resp = aut_user_auth_wsgi_app.call_method(
+            "get",
+            base
+            + "/objects/host/heute/actions/show_service/invoke?service_description=Filesystem&columns=state&columns=state_type",
+            headers={"Accept": "application/json"},
+            status=200,
+        )
+        assert resp.json_body["extensions"] == {
+            "state": 0,
+            "state_type": "hard",
         }
 
 
@@ -246,7 +302,7 @@ def test_openapi_service_with_slash_character(
     live.expect_query(
         [
             "GET services",
-            "Columns: description host_name state_type state last_check",
+            "Columns: host_name description state state_type last_check",
             "Filter: host_name = example.com",
             "Filter: description = Filesystem /böot",
             "And: 2",
@@ -306,7 +362,7 @@ def test_openapi_non_existing_service(
     live.expect_query(
         [
             "GET services",
-            "Columns: description host_name state_type state last_check",
+            "Columns: host_name description state state_type last_check",
             "Filter: host_name = heute",
             "Filter: description = CPU",
             "And: 2",

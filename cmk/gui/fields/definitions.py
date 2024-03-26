@@ -415,6 +415,7 @@ def column_field(
     example: list[str],
     required: bool = False,
     mandatory: list[ColumnTypes] | None = None,
+    default: list[Column] | None = None,
 ) -> "_ListOfColumns":
     column_names: list[str] = []
     if mandatory is not None:
@@ -423,13 +424,15 @@ def column_field(
                 column_names.append(col.name)
             else:
                 column_names.append(col)
+    if default is None:
+        default = [getattr(table, col) for col in column_names]
 
     return _ListOfColumns(
         _LiveStatusColumn(table=table, required=required),
         table=table,
         required=required,
         mandatory=column_names,
-        load_default=[getattr(table, col) for col in column_names],
+        load_default=default,
         description=f"The desired columns of the `{table.__tablename__}` table. If left empty, a "
         "default set of columns is used.",
         example=example,

@@ -7,7 +7,6 @@
 
 import abc
 import dataclasses
-import itertools
 import os
 import shutil
 import socket
@@ -39,7 +38,6 @@ import cmk.base.config as config
 import cmk.base.obsolete_output as out
 from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.nagios_utils import do_check_nagiosconfig
-from cmk.base.server_side_calls import PreprocessingResult
 
 CoreCommandName = str
 CoreCommand = str
@@ -367,10 +365,7 @@ def _create_core_config(
     _verify_non_duplicate_hosts(duplicates)
     _verify_non_deprecated_checkgroups()
 
-    passwords = {
-        **cmk.utils.password_store.load(),
-        **_gather_secrets(config_cache),
-    }
+    passwords = config_cache.collect_passwords()
 
     config_path = next(VersionedConfigPath.current())
     with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
@@ -379,34 +374,6 @@ def _create_core_config(
         )
 
     cmk.utils.password_store.save_for_helpers(config_path, passwords)
-
-
-def _gather_secrets(config_cache: ConfigCache) -> Mapping[str, str]:
-    all_active_hosts = {
-        hn
-        for hn in itertools.chain(
-            config_cache.hosts_config.hosts, config_cache.hosts_config.clusters
-        )
-        if config_cache.is_active(hn) and config_cache.is_online(hn)
-    }
-    return _gather_secrets_from(
-        all_active_hosts, config_cache.active_checks
-    ) | _gather_secrets_from(all_active_hosts, config_cache.special_agents)
-
-
-_RulesFunction = Callable[[HostName], Sequence[tuple[str, Sequence[Mapping[str, object]]]]]
-
-
-def _gather_secrets_from(
-    all_active_hosts: Iterable[HostName], rules_function: _RulesFunction
-) -> dict[str, str]:
-    return {
-        id_: secret
-        for host in all_active_hosts
-        for id_, secret in PreprocessingResult.from_config(
-            rules_function(host)
-        ).ad_hoc_secrets.items()
-    }
 
 
 def _verify_non_deprecated_checkgroups() -> None:

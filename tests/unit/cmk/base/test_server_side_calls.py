@@ -22,6 +22,8 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.server_side_calls import (
     ActiveCheck,
     ActiveServiceData,
+    load_active_checks,
+    load_special_agents,
     SpecialAgent,
     SpecialAgentInfoFunctionResult,
 )
@@ -413,7 +415,12 @@ def argument_function_with_exception(*args, **kwargs):
             [
                 (
                     "my_active_check",
-                    [{"description": "My active check", "password": ("password", "myp4ssw0rd")}],
+                    [
+                        {
+                            "description": "My active check",
+                            "password": ("stored_password", "stored_password", ""),
+                        }
+                    ],
                 ),
             ],
             {},
@@ -430,56 +437,7 @@ def argument_function_with_exception(*args, **kwargs):
                             ActiveCheckCommand(
                                 service_description="My service",
                                 command_arguments=[
-                                    "--password",
-                                    p["password"],
-                                ],
-                            ),
-                        ]
-                    ),
-                )
-            },
-            HostName("myhost"),
-            HOST_ATTRS,
-            HOST_CONFIG,
-            {},
-            [
-                ActiveServiceData(
-                    plugin_name="my_active_check",
-                    description="My service",
-                    command="check_mk_active-my_active_check",
-                    command_display="check_mk_active-my_active_check!--password myp4ssw0rd",
-                    command_line="check_my_active_check --password myp4ssw0rd",
-                    params={
-                        "description": "My active check",
-                        "password": ("password", "myp4ssw0rd"),
-                    },
-                    expanded_args="--password myp4ssw0rd",
-                ),
-            ],
-            id="one_service_password",
-        ),
-        pytest.param(
-            [
-                (
-                    "my_active_check",
-                    [{"description": "My active check", "password": ("store", "stored_password")}],
-                ),
-            ],
-            {},
-            {
-                PluginLocation(
-                    # this is not what we'd expect here, but we need a module that we know to be importable.
-                    f"{__name__}",
-                    "active_check_my_active_check",
-                ): ActiveCheckConfig(
-                    name="my_active_check",
-                    parameter_parser=lambda p: p,
-                    commands_function=lambda p, *_: (
-                        [
-                            ActiveCheckCommand(
-                                service_description="My service",
-                                command_arguments=[
-                                    p["password"].with_format("--secret=%s"),
+                                    p["password"].unsafe("--secret=%s"),
                                 ],
                             ),
                         ]
@@ -499,7 +457,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line="check_my_active_check --pwstore=1@9@stored_password '--secret=**********'",
                     params={
                         "description": "My active check",
-                        "password": ("store", "stored_password"),
+                        "password": ("stored_password", "stored_password", ""),
                     },
                     expanded_args="--pwstore=1@9@stored_password '--secret=**********'",
                 ),
@@ -509,6 +467,7 @@ def argument_function_with_exception(*args, **kwargs):
     ],
 )
 def test_get_active_service_data(
+    monkeypatch: pytest.MonkeyPatch,
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
@@ -518,6 +477,7 @@ def test_get_active_service_data(
     stored_passwords: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
 ) -> None:
+    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "my_active_check", True)
     active_check = ActiveCheck(
         active_check_plugins,
         legacy_active_check_plugins,
@@ -532,6 +492,128 @@ def test_get_active_service_data(
 
     services = list(active_check.get_active_service_data(active_check_rules))
     assert services == expected_result
+
+
+_PASSWORD_TEST_ACTIVE_CHECKS = {
+    PluginLocation(
+        "cmk.plugins.test.server_side_calls.test_check",
+        "active_check_test_check",
+    ): ActiveCheckConfig(
+        name="test_check",
+        parameter_parser=lambda p: p,
+        commands_function=lambda p, *_: (
+            [
+                ActiveCheckCommand(
+                    service_description="My service",
+                    command_arguments=[
+                        "--password-id",
+                        p["password"],
+                        "--password-plain-in-curly",
+                        p["password"].unsafe("{%s}"),
+                    ],
+                ),
+            ]
+        ),
+    )
+}
+
+
+def test_get_active_service_data_password_with_hack(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        ActiveCheck, "_get_command", lambda self, pn, cl: ("check_mk_active-check_path", cl)
+    )
+    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", True)
+    active_check = ActiveCheck(
+        plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
+        legacy_plugins={},
+        host_name=HostName("myhost"),
+        host_config=HOST_CONFIG,
+        host_attrs=HOST_ATTRS,
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
+        stored_passwords={":uuid:1234": "p4ssw0rd!"},
+    )
+
+    assert list(
+        active_check.get_active_service_data(
+            [
+                (
+                    "test_check",
+                    [
+                        {
+                            "description": "My active check",
+                            "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
+                        }
+                    ],
+                )
+            ]
+        )
+    ) == [
+        ActiveServiceData(
+            plugin_name="test_check",
+            description="My service",
+            command="check_mk_active-check_path",
+            command_display="check_mk_active-check_path!--pwstore=4@1@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
+            command_line="check_test_check --pwstore=4@1@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
+            params={
+                "description": "My active check",
+                "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
+            },
+            expanded_args="--pwstore=4@1@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
+        ),
+    ]
+
+
+def test_get_active_service_data_password_without_hack(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        ActiveCheck, "_get_command", lambda self, pn, cl: ("check_mk_active-check_path", cl)
+    )
+    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", False)
+    active_check = ActiveCheck(
+        plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
+        legacy_plugins={},
+        host_name=HostName("myhost"),
+        host_config=HOST_CONFIG,
+        host_attrs=HOST_ATTRS,
+        http_proxies={},
+        service_name_finalizer=lambda x: x,
+        use_new_descriptions_for=[],
+        stored_passwords={":uuid:1234": "p4ssw0rd!"},
+    )
+
+    assert list(
+        active_check.get_active_service_data(
+            [
+                (
+                    "test_check",
+                    [
+                        {
+                            "description": "My active check",
+                            "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
+                        }
+                    ],
+                )
+            ]
+        )
+    ) == [
+        ActiveServiceData(
+            plugin_name="test_check",
+            description="My service",
+            command="check_mk_active-check_path",
+            command_display="check_mk_active-check_path!--password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd\\!}'",
+            command_line="check_test_check --password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd!}'",
+            params={
+                "description": "My active check",
+                "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
+            },
+            expanded_args="--password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd\\!}'",
+        ),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -709,7 +791,12 @@ def test_test_get_active_service_data_crash_with_debug(
             [
                 (
                     "my_active_check",
-                    [{"description": "My active check", "password": ("store", "stored_password")}],
+                    [
+                        {
+                            "description": "My active check",
+                            "password": ("stored_password", "stored_password", ""),
+                        }
+                    ],
                 ),
             ],
             {},
@@ -727,7 +814,7 @@ def test_test_get_active_service_data_crash_with_debug(
                                 service_description="My service",
                                 command_arguments=[
                                     "--password",
-                                    p["password"],
+                                    p["password"].unsafe(),
                                 ],
                             ),
                         ]
@@ -756,7 +843,7 @@ def test_test_get_active_service_data_crash_with_debug(
                     "'***'",
                     params={
                         "description": "My active check",
-                        "password": ("store", "stored_password"),
+                        "password": ("stored_password", "stored_password", ""),
                     },
                     expanded_args="--pwstore=2@0@stored_password --password " "'***'",
                 ),
@@ -767,6 +854,7 @@ def test_test_get_active_service_data_crash_with_debug(
     ],
 )
 def test_get_active_service_data_warnings(
+    monkeypatch: pytest.MonkeyPatch,
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
@@ -776,6 +864,7 @@ def test_get_active_service_data_warnings(
     expected_warning: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "my_active_check", True)
     active_check_config = ActiveCheck(
         active_check_plugins,
         legacy_active_check_plugins,
@@ -889,7 +978,12 @@ def test_get_active_service_data_warnings(
             [
                 (
                     "my_active_check",
-                    [{"description": "My active check", "password": ("password", "myp4ssw0rd")}],
+                    [
+                        {
+                            "description": "My active check",
+                            "password": ("explicit_password", ":uuid:1234", "myp4ssw0rd"),
+                        }
+                    ],
                 ),
             ],
             {},
@@ -927,7 +1021,7 @@ def test_get_active_service_data_warnings(
                     description="My service",
                     params={
                         "description": "My active check",
-                        "password": ("password", "myp4ssw0rd"),
+                        "password": ("explicit_password", ":uuid:1234", "myp4ssw0rd"),
                     },
                 ),
             ],
@@ -955,6 +1049,7 @@ def test_get_active_service_data_warnings(
     ],
 )
 def test_get_active_service_descriptions(
+    monkeypatch: pytest.MonkeyPatch,
     active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
     active_check_plugins: Mapping[PluginLocation, ActiveCheckConfig],
@@ -962,6 +1057,7 @@ def test_get_active_service_descriptions(
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceDescription],
 ) -> None:
+    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "my_active_check", True)
     active_check_config = ActiveCheck(
         active_check_plugins,
         legacy_active_check_plugins,
@@ -1365,58 +1461,6 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
                 ): SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
-                    commands_function=lambda p, *_: (
-                        [
-                            SpecialAgentCommand(
-                                command_arguments=["--password", p["password"]],
-                            ),
-                        ]
-                    ),
-                )
-            },
-            {},
-            {"password": ("store", "mypassword")},
-            HOST_ATTRS,
-            HOST_CONFIG,
-            {},
-            [SpecialAgentCommandLine("agent_path --pwstore=2@0@mypassword --password '***'", None)],
-            id="missing stored password",
-        ),
-        pytest.param(
-            {
-                PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
-                ): SpecialAgentConfig(
-                    name="test_agent",
-                    parameter_parser=lambda e: e,
-                    commands_function=lambda p, *_: (
-                        [
-                            SpecialAgentCommand(
-                                command_arguments=["--password", p["password"]],
-                            ),
-                        ]
-                    ),
-                )
-            },
-            {},
-            {"password": ("store", "mypassword")},
-            HOST_ATTRS,
-            HOST_CONFIG,
-            {"mypassword": "123456"},
-            [
-                SpecialAgentCommandLine(
-                    "agent_path --pwstore=2@0@mypassword --password '******'", None
-                )
-            ],
-            id="stored password",
-        ),
-        pytest.param(
-            {
-                PluginLocation(
-                    "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
-                ): SpecialAgentConfig(
-                    name="test_agent",
-                    parameter_parser=lambda e: e,
                     commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(
@@ -1447,6 +1491,7 @@ def test_iter_special_agent_commands(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
+    monkeypatch.setitem(password_store.hack.HACK_AGENTS, "test_agent", True)
 
     special_agent = SpecialAgent(
         plugins,
@@ -1460,6 +1505,83 @@ def test_iter_special_agent_commands(
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", parameters))
     assert commands == expected_result
+
+
+_PASSWORD_TEST_PLUGINS = {
+    PluginLocation(
+        "cmk.plugins.test.server_side_calls.test_agent", "special_agent_text"
+    ): SpecialAgentConfig(
+        name="test_agent",
+        parameter_parser=lambda e: e,
+        commands_function=lambda p, *_: (
+            [
+                SpecialAgentCommand(
+                    command_arguments=[
+                        "--password-id",
+                        p["password"],
+                        "--password-plain-in-curly",
+                        p["password"].unsafe("{%s}"),
+                    ],
+                ),
+            ]
+        ),
+    )
+}
+
+
+def test_iter_special_agent_commands_stored_password_with_hack(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
+    monkeypatch.setitem(password_store.hack.HACK_AGENTS, "test_agent", True)
+
+    special_agent = SpecialAgent(
+        plugins=_PASSWORD_TEST_PLUGINS,
+        legacy_plugins={},
+        host_name=HostName("test_host"),
+        host_address=HostAddress("127.0.0.1"),
+        host_config=HOST_CONFIG,
+        host_attrs=HOST_ATTRS,
+        http_proxies={},
+        stored_passwords={":uuid:1234": "p4ssw0rd!"},
+    )
+    assert list(
+        special_agent.iter_special_agent_commands(
+            "test_agent", {"password": ("explicit_password", ":uuid:1234", "p4ssw0rd!")}
+        )
+    ) == [
+        SpecialAgentCommandLine(
+            "agent_path --pwstore=4@1@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
+            None,
+        )
+    ]
+
+
+def test_iter_special_agent_commands_stored_password_without_hack(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
+    monkeypatch.setitem(password_store.hack.HACK_AGENTS, "test_agent", False)
+
+    special_agent = SpecialAgent(
+        plugins=_PASSWORD_TEST_PLUGINS,
+        legacy_plugins={},
+        host_name=HostName("test_host"),
+        host_address=HostAddress("127.0.0.1"),
+        host_config=HOST_CONFIG,
+        host_attrs=HOST_ATTRS,
+        http_proxies={},
+        stored_passwords={":uuid:1234": "p4ssw0rd!"},
+    )
+    assert list(
+        special_agent.iter_special_agent_commands(
+            "test_agent", {"password": ("explicit_password", ":uuid:1234", "p4ssw0rd!")}
+        )
+    ) == [
+        SpecialAgentCommandLine(
+            "agent_path --password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd!}'", None
+        )
+    ]
 
 
 @pytest.mark.parametrize(
@@ -1604,40 +1726,29 @@ def test_make_source_path_local_agent() -> None:
 
 
 @pytest.mark.parametrize(
-    "args, passwords_from_store, password_store_elements, expected_result",
+    "args, passwords, expected_result",
     [
-        pytest.param("args 123 -x 1 -y 2", None, {}, "args 123 -x 1 -y 2", id="string argument"),
+        pytest.param("args 123 -x 1 -y 2", {}, "args 123 -x 1 -y 2", id="string argument"),
         pytest.param(
             ["args", "1; echo", "-x", "1", "-y", "2"],
-            None,
             {},
             "args '1; echo' -x 1 -y 2",
             id="list argument",
         ),
         pytest.param(
             ["args", "1 2 3", "-d=2", "--hallo=eins", 9],
-            None,
             {},
             "args '1 2 3' -d=2 --hallo=eins 9",
             id="list argument with numbers",
         ),
         pytest.param(
             ["arg1", ("store", "pw-id", "--password=%s"), "arg3"],
-            {"pw-id": ["abc", "123", "x'äd!?", "aädg"]},
-            {},
-            "--pwstore=2@11@pw-id arg1 '--password=****' arg3",
-            id="passwords_from_store",
-        ),
-        pytest.param(
-            ["arg1", ("store", "pw-id", "--password=%s"), "arg3"],
-            None,
-            {"pw-id": ["abc", "123", "x'äd!?", "aädg"]},
+            {"pw-id": "aädg"},
             "--pwstore=2@11@pw-id arg1 '--password=****' arg3",
             id="password store argument",
         ),
         pytest.param(
             ["arg1", ("store", "pw-id; echo HI;", "--password=%s"), "arg3"],
-            None,
             {"pw-id; echo HI;": "the password"},
             "'--pwstore=2@11@pw-id; echo HI;' arg1 '--password=************' arg3",
             id="password store sanitization (CMK-14149)",
@@ -1646,15 +1757,10 @@ def test_make_source_path_local_agent() -> None:
 )
 def test_commandline_arguments(
     args: SpecialAgentInfoFunctionResult,
-    passwords_from_store: Mapping[str, str] | None,
-    password_store_elements: Mapping[str, str],
+    passwords: Mapping[str, str],
     expected_result: str,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(password_store, "load", lambda: password_store_elements)
-    cmdline_args = commandline_arguments(
-        HostName("test"), "test service", args, passwords_from_store
-    )
+    cmdline_args = commandline_arguments(HostName("test"), "test service", args, passwords)
     assert cmdline_args == expected_result
 
 
@@ -1688,7 +1794,7 @@ def test_commandline_arguments_nonexisting_password(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     commandline_arguments(
-        host_name, service_name, ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
+        host_name, service_name, ["arg1", ("store", "pw-id", "--password=%s"), "arg3"], {}
     )
     captured = capsys.readouterr()
     assert expected_warning in captured.out
@@ -1707,7 +1813,7 @@ def test_commandline_arguments_invalid_arguments_type(args: int | tuple[int, int
         ActiveCheckError,
         match=r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Service: test service\).",
     ):
-        commandline_arguments(HostName("test"), "test service", args)  # type: ignore[arg-type]
+        commandline_arguments(HostName("test"), "test service", args, {})  # type: ignore[arg-type]
 
 
 def test_commandline_arguments_invalid_argument() -> None:
@@ -1715,4 +1821,16 @@ def test_commandline_arguments_invalid_argument() -> None:
         ActiveCheckError,
         match=r"Invalid argument for command line: \(1, 2\)",
     ):
-        commandline_arguments(HostName("test"), "test service", ["arg1", (1, 2), "arg3"])  # type: ignore[list-item]
+        commandline_arguments(HostName("test"), "test service", ["arg1", (1, 2), "arg3"], {})  # type: ignore[list-item]
+
+
+def test_hack_apply_map_special_agents_is_complete() -> None:
+    assert set(password_store.hack.HACK_AGENTS) == {
+        p.name for p in load_special_agents()[1].values()
+    }
+
+
+def test_hack_apply_map_active_checks_is_complete() -> None:
+    assert set(password_store.hack.HACK_CHECKS) == {
+        p.name for p in load_active_checks()[1].values()
+    }

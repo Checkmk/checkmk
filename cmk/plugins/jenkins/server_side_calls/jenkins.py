@@ -38,7 +38,7 @@ def agent_jenkins_config(
         "-u",
         params.user,
         "-s",
-        params.password,
+        params.password.unsafe(),
     ]
 
     if params.sections:

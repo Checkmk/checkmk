@@ -46,7 +46,7 @@ def generate_cisco_prime_command(
     if params.basicauth:
         auth: tuple[str | Secret, ...] = (
             "-u",
-            params.basicauth.password.with_format(f"{params.basicauth.username}:%s"),
+            params.basicauth.password.unsafe(f"{params.basicauth.username}:%s"),
         )
     else:
         auth = ()

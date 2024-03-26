@@ -29,7 +29,7 @@ from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPv4Config, Secret
                 "-u",
                 "user",
                 "-p",
-                Secret(23),
+                Secret(23).unsafe(),
                 "--port",
                 "443",
                 "--no-cert-check",

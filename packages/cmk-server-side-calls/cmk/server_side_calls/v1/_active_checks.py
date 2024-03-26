@@ -39,7 +39,7 @@ class ActiveCheckCommand:
         ...     ]
         ... )
         ActiveCheckCommand(service_description='Example description', command_arguments=['--user', \
-'example-user', '--password', Secret(id=0, format='%s')])
+'example-user', '--password', Secret(id=0, format='%s', pass_safely=True)])
     """
 
     service_description: str

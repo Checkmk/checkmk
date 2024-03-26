@@ -46,7 +46,7 @@ def test_agent_elasticsearch_arguments_password_store() -> None:
         "-u",
         "user",
         "-s",
-        Secret(0),
+        Secret(0).unsafe(),
         "--",
         "testhost",
     ]

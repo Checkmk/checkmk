@@ -12,6 +12,53 @@ import sys
 from collections.abc import Callable, Iterable, Mapping
 from typing import NoReturn
 
+HACK_AGENTS = {
+    # For the plugins developed against the cmk.server_side_calls.v1 we
+    # need to know whether they support the password store natively, or
+    # if we have to apply the password store hack.
+    # Make sure to have *all* special agent plugins listed here, so we
+    # can test for it
+    "azure_status": False,  # needs no secret
+    "bi": False,  # needs no secret
+    "cisco_meraki": True,
+    "cisco_prime": True,
+    "elasticsearch": True,  # TODO: migrate ruleset
+    "fritzbox": False,  # needs no secret
+    "gcp": True,  # TODO: migrate ruleset
+    "jenkins": True,
+    "mobileiron": True,
+    "netapp_ontap": True,
+    "prism": True,
+    "prometheus": True,  # TODO: revert SSC
+    "proxmox_ve": True,
+    "pure_storage_fa": True,
+    "three_par": True,
+}
+
+
+HACK_CHECKS = {
+    # For the plugins developed against the cmk.server_side_calls.v1 we
+    # need to know whether they support the password store natively, or
+    # if we have to apply the password store hack.
+    # Make sure to have *all* active check plugins listed here, so we
+    # can test for it
+    "by_ssh": False,  # has no secret
+    "cert": False,  # has no secret
+    "cmk_inv": False,  # has no secret
+    "dns": False,  # has no secret
+    "elasticsearch_query": True,  # TODO: migrate ruleset
+    "form_submit": False,  # has no secret
+    "ftp": False,  # has no secret
+    "httpv2": False,  # yay!
+    "icmp": False,  # has no secret
+    "mkevents": False,  # has no secret
+    "notify_count": False,  # has no secret
+    "sql": True,
+    "ssh": False,  # has no secret
+    "traceroute": False,  # has no secret
+    "uniserv": False,  # has no secret
+}
+
 
 def _bail_out(s: str) -> NoReturn:
     sys.stdout.write("UNKNOWN - %s\n" % s)

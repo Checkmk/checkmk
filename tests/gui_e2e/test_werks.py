@@ -8,7 +8,7 @@ import logging
 import pytest
 
 from tests.testlib import repo_path
-from tests.testlib.playwright.pom.dashboard import PPage
+from tests.testlib.playwright.pom.dashboard import LoginPage
 from tests.testlib.playwright.pom.werks import Werks
 
 import cmk.utils.werks
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.skip(reason="skipping temporarily; werks integration is broken")
-def test_werks_available(logged_in_page: PPage) -> None:
+def test_werks_available(logged_in_page: LoginPage) -> None:
     # get the expected editions for the werks
     # NOTE: We can not use cmk_version to detect the edition due to monkey-patching in the testlib!
     # since the tests are always running in a CEE environment, we do not consider other editions

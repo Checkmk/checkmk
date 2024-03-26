@@ -6,13 +6,13 @@
 from base64 import b32decode
 from datetime import datetime
 
-from tests.testlib.playwright.pom.dashboard import PPage
+from tests.testlib.playwright.pom.dashboard import LoginPage
 
 from cmk.utils.totp import TOTP
 
 
 def test_totp(
-    logged_in_page: PPage,
+    logged_in_page: LoginPage,
 ) -> None:
     # first go to dashboard to ensure we're reloading the page in case we're already there
     logged_in_page.goto_main_dashboard()

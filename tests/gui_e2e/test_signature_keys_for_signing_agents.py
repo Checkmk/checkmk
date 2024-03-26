@@ -12,7 +12,7 @@ import pytest
 from playwright.sync_api import expect, FilePayload
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
-from tests.testlib.playwright.pom.dashboard import PPage
+from tests.testlib.playwright.pom.dashboard import LoginPage
 from tests.testlib.site import Site
 
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey
@@ -29,7 +29,7 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
     )
 
 
-def go_to_signature_page(page: PPage) -> None:
+def go_to_signature_page(page: LoginPage) -> None:
     """Go to the `Signature keys for signing agents` page."""
     page.click_and_wait(page.main_menu.setup_menu("Windows, Linux, Solaris, AIX"), navigate=True)
     page.main_area.locator("#page_menu_dropdown_agents >> text=Agents >> visible=true").click()
@@ -37,7 +37,7 @@ def go_to_signature_page(page: PPage) -> None:
     page.main_area.check_page_title("Signature keys for signing agents")
 
 
-def delete_key(page: PPage, identifier: str | None = None) -> None:
+def delete_key(page: LoginPage, identifier: str | None = None) -> None:
     """Delete a key based on some text, e.g. alias or hash.
 
     Note: you already have to be on the `Signature keys for signing agents` site.
@@ -51,7 +51,7 @@ def delete_key(page: PPage, identifier: str | None = None) -> None:
         pass
 
 
-def send_pem_content(page: PPage, description: str, password: str, content: str) -> None:
+def send_pem_content(page: LoginPage, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via the Paste textarea method."""
     go_to_signature_page(page)
     delete_key(page, description)
@@ -68,7 +68,7 @@ def send_pem_content(page: PPage, description: str, password: str, content: str)
     page.main_area.get_suggestion("Upload").click()
 
 
-def send_pem_file(page: PPage, description: str, password: str, content: str) -> None:
+def send_pem_file(page: LoginPage, description: str, password: str, content: str) -> None:
     """Upload a combined pem file (private key and certificate) via upload."""
     go_to_signature_page(page)
     delete_key(page, description)
@@ -101,9 +101,9 @@ def wait_for_bakery(test_site: Site, max_attempts: int = 60) -> None:
 
 @pytest.mark.parametrize("upload_function", (send_pem_content, send_pem_file))
 def test_upload_signing_keys(
-    logged_in_page: PPage,
+    logged_in_page: LoginPage,
     self_signed_cert: CertificateWithPrivateKey,
-    upload_function: Callable[[PPage, str, str, str], None],
+    upload_function: Callable[[LoginPage, str, str, str], None],
 ) -> None:
     """Send a few payloads to the `Signature keys for signing agents` page and check the
     responses."""
@@ -140,7 +140,7 @@ def test_upload_signing_keys(
 
 
 @pytest.mark.skip("Skipped due to CMK-14702")
-def test_add_key(logged_in_page: PPage) -> None:
+def test_add_key(logged_in_page: LoginPage) -> None:
     """Add a key, aka let Checkmk generate it."""
     go_to_signature_page(logged_in_page)
     delete_key(logged_in_page, "e2e-test")
@@ -164,7 +164,7 @@ def test_add_key(logged_in_page: PPage) -> None:
 
 @pytest.fixture(name="with_key")
 def with_key_fixture(
-    logged_in_page: PPage, self_signed_cert: CertificateWithPrivateKey
+    logged_in_page: LoginPage, self_signed_cert: CertificateWithPrivateKey
 ) -> Iterator[str]:
     """Create a signing key via the GUI, yield and then delete it again."""
     key_name = "with_key_fixture"
@@ -181,7 +181,7 @@ def with_key_fixture(
     delete_key(logged_in_page, key_name)
 
 
-def test_bake_and_sign(logged_in_page: PPage, test_site: Site, with_key: str) -> None:
+def test_bake_and_sign(logged_in_page: LoginPage, test_site: Site, with_key: str) -> None:
     """Go to agents and click bake and sign.
 
     Bake and sign starts an asynchronous background job, which is why we run "wait_for_bakery()".
@@ -215,7 +215,7 @@ def test_bake_and_sign(logged_in_page: PPage, test_site: Site, with_key: str) ->
 
 
 @pytest.mark.xfail(reason="flaky test, sometimes the button is not (yet) disabled")
-def test_bake_and_sign_disabled(logged_in_page: PPage) -> None:
+def test_bake_and_sign_disabled(logged_in_page: LoginPage) -> None:
     """Delete all keys, go to agents and check that the sign buttons are disabled."""
     go_to_signature_page(logged_in_page)
     delete_key(logged_in_page)

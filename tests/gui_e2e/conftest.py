@@ -11,7 +11,7 @@ from collections.abc import Generator
 import pytest
 from playwright.sync_api import BrowserContext, Page
 
-from tests.testlib.playwright.pom.dashboard import PPage
+from tests.testlib.playwright.pom.dashboard import LoginPage
 from tests.testlib.site import get_site_factory, Site
 
 logger = logging.getLogger(__name__)
@@ -24,9 +24,9 @@ def get_site() -> Generator[Site, None, None]:
     yield from get_site_factory(prefix="gui_e2e_").get_test_site()
 
 
-def log_in(log_in_url: str, page: Page, test_site: Site) -> PPage:
+def log_in(log_in_url: str, page: Page, test_site: Site) -> LoginPage:
     page.goto(log_in_url)
-    ppage = PPage(
+    ppage = LoginPage(
         page,
         site_id=test_site.id,
         site_url=test_site.internal_url,
@@ -37,11 +37,11 @@ def log_in(log_in_url: str, page: Page, test_site: Site) -> PPage:
 
 
 @pytest.fixture(name="logged_in_page")
-def logged_in(test_site: Site, page: Page) -> PPage:
+def logged_in(test_site: Site, page: Page) -> LoginPage:
     return log_in(test_site.internal_url, page, test_site)
 
 
 @pytest.fixture(name="logged_in_page_mobile")
-def logged_in_mobile(test_site: Site, context_mobile: BrowserContext) -> PPage:
+def logged_in_mobile(test_site: Site, context_mobile: BrowserContext) -> LoginPage:
     page = context_mobile.new_page()
     return log_in(test_site.internal_url_mobile, page, test_site)

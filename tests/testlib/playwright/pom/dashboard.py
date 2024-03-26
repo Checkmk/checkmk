@@ -11,8 +11,8 @@ from playwright.sync_api import Page, Response
 from tests.testlib.playwright.pom.navigation import CmkPage
 
 
-class PPage(CmkPage):
-    """Playwright Page, wrapper around the page"""
+class LoginPage(CmkPage):
+    """Represents the login page of Checkmk GUI."""
 
     def __init__(self, page: Page, site_id: str, site_url: str | None = None) -> None:
         super().__init__(page)

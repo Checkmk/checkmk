@@ -9,7 +9,7 @@ from urllib.parse import quote_plus
 from faker import Faker
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.pom.dashboard import PPage
+from tests.testlib.playwright.pom.dashboard import LoginPage
 from tests.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES_MS
 
 
@@ -42,7 +42,7 @@ class TestHosts:
         r"Creation / Locking",
     ]
 
-    def test_navigate_to_host_properties(self, logged_in_page: PPage) -> None:
+    def test_navigate_to_host_properties(self, logged_in_page: LoginPage) -> None:
         # Setup
         host = TestHost()
         self._create_host(logged_in_page, host)
@@ -68,7 +68,7 @@ class TestHosts:
         # Cleanup
         self._delete_host(logged_in_page, host)
 
-    def test_create_and_delete_a_host(self, logged_in_page: PPage, is_chromium: bool) -> None:
+    def test_create_and_delete_a_host(self, logged_in_page: LoginPage, is_chromium: bool) -> None:
         """Creates a host and deletes it afterwards. Calling order of static methods
         is therefore essential!
         """
@@ -80,7 +80,7 @@ class TestHosts:
 
         self._delete_host(logged_in_page, host)
 
-    def test_reschedule(self, logged_in_page: PPage, is_chromium: bool) -> None:
+    def test_reschedule(self, logged_in_page: LoginPage, is_chromium: bool) -> None:
         """reschedules a check"""
         host = TestHost()
         self._create_host(logged_in_page, host)
@@ -101,7 +101,7 @@ class TestHosts:
         self._delete_host(logged_in_page, host)
 
     @staticmethod
-    def _create_host(logged_in_page: PPage, host: TestHost) -> None:
+    def _create_host(logged_in_page: LoginPage, host: TestHost) -> None:
         """Creates a host by starting from a logged in page."""
         logged_in_page.main_menu.setup_hosts.click()
         logged_in_page.main_area.get_suggestion("Add host").click()
@@ -119,7 +119,7 @@ class TestHosts:
         logged_in_page.expect_success_state()
 
     @staticmethod
-    def _delete_host(logged_in_page: PPage, host: TestHost) -> None:
+    def _delete_host(logged_in_page: LoginPage, host: TestHost) -> None:
         """Deletes the former created host by starting from a logged in page."""
         logged_in_page.main_menu.setup_hosts.click()
 

@@ -8,16 +8,16 @@ import re
 
 from playwright.sync_api import expect
 
-from tests.testlib.playwright.pom.dashboard import PPage
+from tests.testlib.playwright.pom.dashboard import LoginPage
 
 _backup_passphrase = "cmk"
 
 
-def _go_to_backups_page(logged_in_page: PPage) -> None:
+def _go_to_backups_page(logged_in_page: LoginPage) -> None:
     logged_in_page.main_menu.setup_menu("Backups").click()
 
 
-def _create_backup_target(logged_in_page: PPage) -> None:
+def _create_backup_target(logged_in_page: LoginPage) -> None:
     logged_in_page.main_area.get_suggestion("Backup targets").click()
     logged_in_page.main_area.expect_no_entries()
 
@@ -30,7 +30,7 @@ def _create_backup_target(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_suggestion("Save").click()
 
 
-def _create_encryption_key(logged_in_page: PPage) -> None:
+def _create_encryption_key(logged_in_page: LoginPage) -> None:
     logged_in_page.main_area.get_suggestion("Backup encryption keys").click()
     logged_in_page.main_area.expect_no_entries()
 
@@ -43,7 +43,7 @@ def _create_encryption_key(logged_in_page: PPage) -> None:
     )
 
 
-def _create_backup_job(logged_in_page: PPage) -> None:
+def _create_backup_job(logged_in_page: LoginPage) -> None:
     logged_in_page.main_area.get_suggestion("Add job").click()
     logged_in_page.main_area.get_input("edit_job_p_ident").fill("mybackup")
     logged_in_page.main_area.get_input("edit_job_p_title").fill("My backup")
@@ -58,7 +58,7 @@ def _create_backup_job(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_suggestion("Save").click()
 
 
-def _start_backup(logged_in_page: PPage) -> None:
+def _start_backup(logged_in_page: LoginPage) -> None:
     # todo: reload needed to refresh the status bar (see CMK-11721). Once the issue is fixed,
     #  remove reload.
     logged_in_page.click_and_wait(
@@ -68,7 +68,7 @@ def _start_backup(logged_in_page: PPage) -> None:
     )
 
 
-def _restore_backup(logged_in_page: PPage) -> None:
+def _restore_backup(logged_in_page: LoginPage) -> None:
     logged_in_page.main_area.get_suggestion("Restore").click()
     logged_in_page.main_area.get_link_from_title("Restore from this backup target").click()
     logged_in_page.main_area.get_link_from_title("Start restore of this backup").click()
@@ -93,7 +93,7 @@ def _restore_backup(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_suggestion("Complete the restore").click()
 
 
-def _cleanup(logged_in_page: PPage) -> None:
+def _cleanup(logged_in_page: LoginPage) -> None:
     """Remove the created backup job, target and encryption key."""
     _go_to_backups_page(logged_in_page)
 
@@ -117,7 +117,7 @@ def _cleanup(logged_in_page: PPage) -> None:
     logged_in_page.main_area.expect_no_entries()
 
 
-def test_backups(logged_in_page: PPage) -> None:
+def test_backups(logged_in_page: LoginPage) -> None:
     _go_to_backups_page(logged_in_page)
     logged_in_page.main_area.expect_no_entries()
 

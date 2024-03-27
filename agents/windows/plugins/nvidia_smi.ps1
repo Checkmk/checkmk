@@ -7,7 +7,7 @@ if (!$MK_CONFDIR) {
     $MK_CONFDIR = "%PROGRAMDATA%\checkmk\agent\config"
 }
 $CONFIG_FILE = "${MK_CONFDIR}\nvidia_smi_cfg.ps1"
-$DEFAULT_NVIDIA_SMI_PATH = "C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe"
+$DEFAULT_NVIDIA_SMI_PATH = "C:\Windows\System32\nvidia-smi.exe"
 
 if (Test-Path -Path $CONFIG_FILE ) {
     . $CONFIG_FILE

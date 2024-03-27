@@ -1005,12 +1005,13 @@ impl SqlInstance {
         databases: &[String],
         sep: char,
     ) -> (Vec<String>, HashSet<String>) {
-        let mut only_databases: HashSet<String> = databases.iter().cloned().collect();
+        let mut only_databases: HashSet<String> =
+            databases.iter().map(|s| s.to_lowercase()).collect();
         let s: Vec<String> = if !rows.is_empty() {
             rows[0]
                 .iter()
                 .filter_map(|row| {
-                    let backup_database = row.get_value_by_name("database_name");
+                    let backup_database = row.get_value_by_name("database_name").to_lowercase();
                     if only_databases.contains(&backup_database) {
                         only_databases.remove(&backup_database);
                         to_backup_entry(&self.mssql_name(), &backup_database, row, sep)

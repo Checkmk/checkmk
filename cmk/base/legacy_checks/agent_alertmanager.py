@@ -5,13 +5,12 @@
 
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 from cmk.base.config import special_agent_info
 
 
 def agent_alertmanager_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: str | None
+    params: Mapping[str, object], hostname: str, ipaddress: str | None
 ) -> Sequence[str]:
     alertmanager_params = {**params, "host_address": ipaddress, "host_name": hostname}
     return ["--config", repr(alertmanager_params)]

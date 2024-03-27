@@ -28,6 +28,6 @@ def test_check_by_ssh_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[object]
 ) -> None:
     """Tests if all required arguments are present."""
-    (cmd,) = active_check_by_ssh(params, TEST_HOST_CONFIG, {})
+    (cmd,) = active_check_by_ssh(params, TEST_HOST_CONFIG)
 
     assert cmd.command_arguments == expected_args

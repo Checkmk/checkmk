@@ -93,6 +93,5 @@ def test_check_traceroute_argument_parsing(
             name="hostname",
             ipv4_config=IPv4Config(address="ipaddress"),
         ),
-        {},
     )
     assert command.command_arguments == expected_args

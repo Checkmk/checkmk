@@ -7,13 +7,7 @@ from collections.abc import Iterator, Mapping
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import (
-    ActiveCheckCommand,
-    ActiveCheckConfig,
-    HostConfig,
-    HTTPProxy,
-    Secret,
-)
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, Secret
 
 
 class ExampleParams(BaseModel):
@@ -29,7 +23,6 @@ def parse_example_params(params: Mapping[str, object]) -> ExampleParams:
 def generate_example_commands(
     params: ExampleParams,
     _host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[ActiveCheckCommand]:
     yield ActiveCheckCommand(
         service_description="Example",
@@ -59,7 +52,7 @@ def test_active_check_config() -> None:
         "password": Secret(42),
     }
 
-    commands = list(active_check_example(params, host_config, {}))
+    commands = list(active_check_example(params, host_config))
 
     assert len(commands) == 1
     assert commands[0] == ActiveCheckCommand(

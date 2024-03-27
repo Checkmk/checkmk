@@ -34,7 +34,6 @@ class Params(BaseModel, frozen=True):
 def commands_function(
     params: Params,
     host_config: HostConfig,
-    _http_proxies: object,
 ) -> Iterator[ActiveCheckCommand]:
     hostname = replace_macros(params.hostname, host_config.macros)
     command_arguments = ["-H", hostname]

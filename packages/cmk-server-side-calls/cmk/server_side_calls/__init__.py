@@ -28,7 +28,6 @@ Special agent
     ...
     >>> from cmk.server_side_calls.v1 import (
     ...     HostConfig,
-    ...     HTTPProxy,
     ...     Secret,
     ...     SpecialAgentCommand,
     ...     SpecialAgentConfig,
@@ -44,7 +43,6 @@ Special agent
     >>> def generate_example_commands(
     ...     params: ExampleParams,
     ...     _host_config: HostConfig,
-    ...     _http_proxies: Mapping[str, HTTPProxy],
     ... ) -> Iterator[SpecialAgentCommand]:
     ...     args: Sequence[str | Secret] = [
     ...         "-p",
@@ -81,7 +79,6 @@ Active check
     ...     ActiveCheckCommand,
     ...     ActiveCheckConfig,
     ...     HostConfig,
-    ...     HTTPProxy,
     ...     Secret,
     ... )
     ...
@@ -95,7 +92,6 @@ Active check
     >>> def generate_example_commands(
     ...     params: ExampleParams,
     ...     _host_config: HostConfig,
-    ...     _http_proxies: Mapping[str, HTTPProxy],
     ... ) -> Iterator[ActiveCheckCommand]:
     ...     args: Sequence[str | Secret] = [
     ...         "-p",

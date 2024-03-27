@@ -5,7 +5,6 @@
 
 from abc import abstractmethod
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Final, Literal, NamedTuple, Self
 
@@ -109,13 +108,12 @@ class HostConfig:
 
         >>> from collections.abc import Iterable, Mapping
 
-        >>> from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentCommand
+        >>> from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand
 
 
         >>> def generate_example_commands(
         ...     params: Mapping[str, object],
         ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = ["--hostname", host_config.name, "--address", host_config.address]
         ...     yield SpecialAgentCommand(command_arguments=args)
@@ -173,55 +171,6 @@ class HostConfig:
             and self._primary_family == __value._primary_family
             and self.macros == __value.macros
         )
-
-
-@dataclass(frozen=True, kw_only=True)
-class HTTPProxy:
-    """
-    Defines a HTTP proxy
-
-    This object represents a HTTP proxy configured in the global settings.
-    A mapping of HTTPProxy objects will be created by the backend and passed to
-    the `commands_function`.
-    The mapping consists of a proxy ids as keys and HTTPProxy objects as values.
-
-    Args:
-        id: Id of the proxy
-        name: Name of the proxy
-        url: Url of the proxy
-
-    Example:
-
-        >>> from collections.abc import Iterable, Mapping
-        >>> from typing import Literal
-
-        >>> from pydantic import BaseModel
-
-        >>> from cmk.server_side_calls.v1 import (
-        ...     HostConfig,
-        ...     HTTPProxy,
-        ...     SpecialAgentCommand,
-        ...     parse_http_proxy
-        ... )
-
-        >>> class ExampleParams(BaseModel):
-        ...     proxy: tuple[Literal["global", "environment", "url", "no_proxy"], str | None]
-
-        >>> def generate_example_commands(
-        ...     params: ExampleParams,
-        ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
-        ... ) -> Iterable[SpecialAgentCommand]:
-        ...     args = [
-        ...         "--proxy",
-        ...         parse_http_proxy(params.proxy, http_proxies)
-        ...     ]
-        ...     yield SpecialAgentCommand(command_arguments=args)
-    """
-
-    id: str
-    name: str
-    url: str
 
 
 class URLProxy(NamedTuple):
@@ -329,74 +278,6 @@ class Secret(NamedTuple):
         return self.__class__(id=self.id, pass_safely=False, format=template)
 
 
-def parse_http_proxy(
-    proxy: object,
-    http_proxies: Mapping[str, HTTPProxy],
-) -> str:
-    """
-    Parses a proxy configuration into a proxy string
-
-    The function will check if proxy argument has the expected type.
-
-    Args:
-        proxy: An object created by the HTTPProxy form spec
-        http_proxies: Mapping of globally defined HTTP proxies
-
-    Returns:
-        String representing a proxy configuration
-
-    Example:
-
-        >>> from collections.abc import Iterable, Mapping
-
-        >>> from cmk.server_side_calls.v1 import (
-        ...     SpecialAgentCommand,
-        ...     HostConfig,
-        ...     HTTPProxy,
-        ...     parse_http_proxy
-        ... )
-
-
-        >>> def generate_example_commands(
-        ...     params: Mapping[str, object],
-        ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
-        ... ) -> Iterable[SpecialAgentCommand]:
-        ...     proxy = parse_http_proxy(("global", "example_proxy"), http_proxies)
-        ...     args = ["--proxy", proxy]
-        ...     yield SpecialAgentCommand(command_arguments=args)
-    """
-    if not isinstance(proxy, tuple):
-        raise ValueError("proxy object has to be a tuple")
-
-    proxy_type, proxy_value = proxy
-
-    if not isinstance(proxy_type, str) or proxy_type not in (
-        "global",
-        "environment",
-        "url",
-        "no_proxy",
-    ):
-        raise ValueError(
-            "proxy type has to be one of: 'global', 'environment', 'url' or 'no_proxy'"
-        )
-
-    if not isinstance(proxy_value, str) and proxy_value is not None:
-        raise ValueError("proxy value has to be a string or None")
-
-    if proxy_type == "url":
-        return str(proxy_value)
-
-    if proxy_type == "no_proxy":
-        return "NO_PROXY"
-
-    if proxy_type == "global":
-        if (global_proxy := http_proxies.get(str(proxy_value))) is not None:
-            return str(global_proxy.url)
-
-    return "FROM_ENVIRONMENT"
-
-
 def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
     # NOTE: please do not add a TypeVar here. The only intended use case is Mapping[str, object],
     # and using a TypeVar in the return type hinders mypy's type inference at the callsites.
@@ -422,7 +303,6 @@ def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
         >>> def generate_example_commands(
         ...     params: Mapping[str, object],
         ...     host_config: HostConfig,
-        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = ["--service", str(params["service"])]
         ...     yield SpecialAgentCommand(command_arguments=args)

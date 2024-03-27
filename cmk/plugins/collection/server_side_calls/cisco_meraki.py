@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
     EnvProxy,
     HostConfig,
-    HTTPProxy,
     NoProxy,
     replace_macros,
     Secret,
@@ -31,7 +30,6 @@ class Params(BaseModel):
 def agent_cisco_meraki_arguments(
     params: Params,
     host_config: HostConfig,
-    http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret] = [
         host_config.name,

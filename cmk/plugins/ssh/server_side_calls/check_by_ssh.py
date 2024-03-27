@@ -10,7 +10,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     replace_macros,
 )
 
@@ -34,7 +33,6 @@ def _check_by_ssh_parser(params: Mapping[str, object]) -> _SSHOptions:
 def check_by_ssh_command(
     params: _SSHOptions,
     host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[ActiveCheckCommand]:
     args = []
     settings = params[1]

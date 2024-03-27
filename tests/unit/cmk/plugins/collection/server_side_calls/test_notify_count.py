@@ -38,4 +38,4 @@ def test_check_notify_count_argument_parsing(
     params: Mapping[str, object], expected_result: Sequence[ActiveCheckCommand]
 ) -> None:
     """Tests if all required arguments are present."""
-    assert list(active_check_notify_count(params, HOST_CONFIG, {})) == expected_result
+    assert list(active_check_notify_count(params, HOST_CONFIG)) == expected_result

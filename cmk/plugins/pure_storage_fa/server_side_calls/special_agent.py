@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 
@@ -25,7 +25,6 @@ class Params(BaseModel, frozen=True):
 def commands_function(
     params: Params,
     host_config: HostConfig,
-    _http_proxies: Mapping[str, object],
 ) -> Iterator[SpecialAgentCommand]:
     command_arguments: list[str | Secret] = (
         ["--timeout", str(params.timeout)] if params.timeout else []

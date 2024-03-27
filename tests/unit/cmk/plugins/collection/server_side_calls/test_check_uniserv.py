@@ -13,7 +13,6 @@ def test_parse_version():
         active_check_uniserv(
             params,
             HostConfig(name="test", ipv4_config=IPv4Config(address="address")),
-            {},
         )
     ) == [
         ActiveCheckCommand(
@@ -36,7 +35,6 @@ def test_parse_address():
         active_check_uniserv(
             params,
             HostConfig(name="test", ipv4_config=IPv4Config(address="address")),
-            {},
         )
     ) == [
         ActiveCheckCommand(

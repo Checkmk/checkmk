@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, HTTPProxy
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig
 
 
 class Address(BaseModel):
@@ -28,7 +28,6 @@ class Parameters(BaseModel):
 def commands_check_uniserv(
     params: Parameters,
     host_config: HostConfig,
-    _proxies: Mapping[str, HTTPProxy],
 ) -> Iterable[ActiveCheckCommand]:
     args: list[str] = [
         host_config.primary_ip_config.address,

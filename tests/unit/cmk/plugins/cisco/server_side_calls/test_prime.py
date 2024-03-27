@@ -70,6 +70,5 @@ def test_cisco_prime_argument_parsing(
             name="hostname",
             ipv4_config=IPv4Config(address="ipaddress"),
         ),
-        {},
     )
     assert command.command_arguments == expected_args

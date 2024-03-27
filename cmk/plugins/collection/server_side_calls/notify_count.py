@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 
 from pydantic import BaseModel
 
@@ -11,7 +11,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     replace_macros,
 )
 
@@ -23,7 +22,8 @@ class NotifyCountParams(BaseModel):
 
 
 def generate_notify_count_command(
-    params: NotifyCountParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: NotifyCountParams,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:
     args = ["-r", str(params.interval)]
 

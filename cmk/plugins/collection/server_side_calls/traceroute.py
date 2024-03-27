@@ -11,7 +11,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     IPAddressFamily,
     replace_macros,
 )
@@ -31,7 +30,8 @@ def filter_routers(
 
 
 def generate_traceroute_command(
-    params: TracerouteParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: TracerouteParams,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:
     args = [host_config.primary_ip_config.address]
 

@@ -116,5 +116,5 @@ def test_gcp_argument_parsing(
     params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    commands = list(special_agent_gcp(params, HOST_CONFIG, {}))
+    commands = list(special_agent_gcp(params, HOST_CONFIG))
     assert commands[0].command_arguments == expected_result

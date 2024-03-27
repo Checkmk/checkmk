@@ -592,7 +592,7 @@ set_ora_env() {
             # oratab is not supported in Grid-Infrastructure 12.2+
             # => fetch ORACLE_HOME from cluster repository for all GI/Restart Environments!
             # OLRLOC holds crs_home
-            crs_home=get_crs_home_from_olrloc "${OLRLOC}"
+            crs_home=$(get_crs_home_from_olrloc "${OLRLOC}")
             export ORA_HOME_SOURCE="(GI):    "
 
             # set ORACLE_HOME = crs_home for ASM
@@ -600,10 +600,10 @@ set_ora_env() {
                 # shellcheck disable=SC2154
                 ORACLE_HOME=${crs_home}
             else
-                crsctl_path="${ORACLE_HOME}"/bin/crsctl
+                crsctl_path="${crs_home}"/bin/crsctl
                 EXECUTION_MODE="$(get_binary_execution_mode "$crsctl_path" "$(get_binary_owner "$crsctl_path")")"
                 # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
-                ORACLE_HOME=$($EXECUTION_MODE "\"${crsctl_path}\" stat res -p -w \"((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))\"" | grep -m1 \"^ORACLE_HOME=\" | cut -d\"=\" -f2)
+                ORACLE_HOME=$($EXECUTION_MODE "\"${crsctl_path}\" stat res -p -w \"((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))\"" | grep -m1 ^ORACLE_HOME= | cut -d= -f2)
             fi
         else
             # Single Instance with oratab

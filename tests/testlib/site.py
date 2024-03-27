@@ -262,23 +262,23 @@ class Site:
         """Reschedule services in the test-site for a given host until no pending services are
         found."""
         count = 0
-        pending_services = self.get_host_services(hostname, pending=True)
-
-        # reschedule services
-        self.schedule_check(hostname, "Check_MK", 0)
-
-        while len(pending_services) > 0 and count < max_count:
+        while (
+            len(pending_services := self.get_host_services(hostname, pending=True)) > 0
+            and count < max_count
+        ):
             logger.info(
-                "The following services in %s host were found with pending status:\n%s.\n"
+                "The following services in %s host are in pending state:\n%s\n"
                 "Rescheduling checks...",
                 hostname,
                 pformat(pending_services),
             )
             self.schedule_check(hostname, "Check_MK", 0)
-            pending_services = self.get_host_services(hostname, pending=True)
             count += 1
 
-        assert len(pending_services) == 0
+        assert len(pending_services) == 0, (
+            "The following services are in pending state after rescheduling checks:"
+            f"\n{pformat(pending_services)}\n"
+        )
 
     def get_host_services(self, hostname: str, pending: bool = False) -> dict[str, ServiceInfo]:
         """Return dict for all services in the given site and host.

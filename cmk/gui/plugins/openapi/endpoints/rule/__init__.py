@@ -10,6 +10,10 @@ import typing
 
 from cmk.utils.datastructures import denilled
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.rulesets.conditions import (
+    allow_host_label_conditions,
+    allow_service_label_conditions,
+)
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec
 
 from cmk.gui import exceptions, http
@@ -431,10 +435,16 @@ def _create_rule(
         RuleConditions(
             host_folder=folder.path(),
             host_tags=conditions.get("host_tags"),
-            host_labels=conditions.get("host_labels"),
+            host_labels=conditions.get("host_labels")
+            if allow_host_label_conditions(ruleset.rulespec.name)
+            else None,
             host_name=conditions.get("host_name"),
-            service_description=conditions.get("service_description"),
-            service_labels=conditions.get("service_labels"),
+            service_description=(
+                conditions.get("service_description") if ruleset.item_type() else None
+            ),
+            service_labels=conditions.get("service_labels")
+            if (ruleset.item_type() and allow_service_label_conditions(ruleset.rulespec.name))
+            else None,
         ),
         RuleOptions.from_config(properties),
         value,

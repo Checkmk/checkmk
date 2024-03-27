@@ -1,0 +1,9 @@
+Title: Changing settings in the site configuration can no longer cause ActivateChanges to hang forever
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1711528118
+Edition: cre
+Level: 1
+Version: 2.1.0p42
+

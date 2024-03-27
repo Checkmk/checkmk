@@ -1,0 +1,11 @@
+Title: Licensing: Introduce grace period for unlicensed state
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1711554926
+Edition: cce
+Level: 1
+Version: 2.2.0p27
+
+To lessen the impact of a setup becoming unlicensed, there is now a 7 day grace period before becoming unlicensed.
+In this time only warnings will be shown so that users have the opportunity to fix the licensing issues.

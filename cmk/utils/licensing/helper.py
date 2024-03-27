@@ -78,3 +78,7 @@ def write_licensed_state(path: Path, state: LicenseState) -> None:
 
 def get_state_file_created_path() -> Path:
     return paths.licensing_dir / "state_file_created"
+
+
+def get_state_change_path() -> Path:
+    return paths.licensing_dir / "state_change"

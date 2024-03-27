@@ -1,0 +1,17 @@
+Title: notifications: Fix plugin permissions not loaded automatically
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1711549357
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Previously, it was possible for users with the "Notification configuration"
+permission to edit notification rules even if they did not have the permission
+to the plugin that was being used in the rule. When such a user edited
+such a rule, they were able to overwrite the notification plugin with
+any plugin they were allowed to use.
+
+This werk stops users from editing rules that use notification plugins
+they don't have access to.

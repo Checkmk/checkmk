@@ -100,6 +100,12 @@ from cmk.gui.watolib.users import notification_script_choices
 
 
 class ABCNotificationsMode(ABCEventsMode):
+    def __init__(self) -> None:
+        super().__init__()
+
+        # Make sure that all dynamic permissions are available
+        permissions.load_dynamic_permissions()
+
     # TODO: Clean this up. Use inheritance
     @classmethod
     def _rule_match_conditions(cls):

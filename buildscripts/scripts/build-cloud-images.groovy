@@ -65,8 +65,11 @@ def main() {
                 raiseOnError: true,
             ) {
                 dir("${checkout_dir}/packer") {
-                    // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
-                    sh("packer init .");
+                    // https://developer.hashicorp.com/packer/docs/configure#environment-variables-usable-for-packer
+                    withEnv(['CHECKPOINT_DISABLE=1', "PACKER_CONFIG_DIR=${checkout_dir}/packer/.packer"]){
+                        // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
+                        sh("packer init .");
+                    }
                 }
             }
             parallel(create_build_stages(cloud_targets, env_secret_map, build_cloud_images));

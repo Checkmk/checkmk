@@ -322,37 +322,6 @@ STAGES:
       RESULT_CHECK_TYPE: "SHELLUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/shell-unit.txt"
 
-    - NAME: 'cmk-frontend Format'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_FRONTEND_FILES
-      DIR: 'packages/cmk-frontend'
-      COMMAND: "../../scripts/run-in-docker.sh bash -c './run prettier' &> ${RESULTS}/prettier.txt"
-      TEXT_ON_SKIP: 'No files changed'
-      RESULT_CHECK_TYPE: "PRETTIER"
-      RESULT_CHECK_FILE_PATTERN: "results/prettier.txt"
-
-    - NAME: 'cmk-frontend Build'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_FRONTEND_FILES
-      DIR: 'packages/cmk-frontend'
-      COMMAND: "../../scripts/run-in-docker.sh bash -c './run build' &> ${RESULTS}/build.txt"
-      TEXT_ON_SKIP: 'No files changed'
-      RESULT_CHECK_TYPE: "TSJSBUILD"
-      RESULT_CHECK_FILE_PATTERN: "results/build.txt"
-
-    - NAME: 'cmk-frontend TypeScript Lint'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_FRONTEND_FILES
-      DIR: 'packages/cmk-frontend'
-      COMMAND: "../../scripts/run-in-docker.sh bash -c './run eslint' &> ${RESULTS}/js-lint.txt"
-      TEXT_ON_SKIP: 'No files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/js-lint.txt"
-
-    - NAME: 'cmk-frontend TypeScript Type Checking'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_FRONTEND_FILES
-      DIR: 'packages/cmk-frontend'
-      COMMAND: "../../scripts/run-in-docker.sh bash -c './run tsc' &> ${RESULTS}/js-types.txt"
-      TEXT_ON_SKIP: 'No files changed'
-      RESULT_CHECK_TYPE: "TSJSTYPES"
-      RESULT_CHECK_FILE_PATTERN: "results/js-types.txt"
-
     - NAME: 'Bazel Format'
       ONLY_WHEN_NOT_EMPTY: CHANGED_BAZEL_FILES
       DIR: 'tests'
@@ -523,3 +492,10 @@ STAGES:
       TEXT_ON_SKIP: 'No unixcat files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
+
+    - NAME: 'Package cmk-frontend'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_FRONTEND_FILES
+      DIR: 'packages/cmk-frontend'
+      COMMAND: "../../scripts/run-in-docker.sh ./run all &> ${RESULTS}/cmk-frontend.txt"
+      TEXT_ON_SKIP: 'No cmk-frontend files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-frontend.txt"

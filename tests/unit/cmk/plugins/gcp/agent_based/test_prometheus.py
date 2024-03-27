@@ -2,24 +2,17 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import ast
+
 from collections.abc import Mapping
 
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.plugins.collection.server_side_calls.prometheus import special_agent_prometheus
-from cmk.server_side_calls.v1 import HostConfig, IPv4Config
 from cmk.special_agents.utils.prometheus import extract_connection_args
-
-_TEST_HOST_CONFIG = HostConfig(
-    name="prometheus",
-    ipv4_config=IPv4Config(address="1.2.3.4"),
-)
 
 
 @pytest.mark.parametrize(
-    ["config", "host_config", "expected_result"],
+    ["config", "expected_result"],
     [
         pytest.param(
             {
@@ -41,7 +34,6 @@ _TEST_HOST_CONFIG = HostConfig(
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            _TEST_HOST_CONFIG,
             {
                 "api_url": "http://1.2.3.4/api/v1/",
                 "auth": ("user", "secret"),
@@ -69,7 +61,6 @@ _TEST_HOST_CONFIG = HostConfig(
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            _TEST_HOST_CONFIG,
             {
                 "auth": ("user", "very_secret"),
                 "api_url": "https://my-host.com/api/v1/",
@@ -97,7 +88,6 @@ _TEST_HOST_CONFIG = HostConfig(
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            _TEST_HOST_CONFIG,
             {
                 "api_url": "https://my-host.com/api/v1/",
                 "token": "token",
@@ -129,7 +119,6 @@ _TEST_HOST_CONFIG = HostConfig(
                 "host_address": "1.2.3.4",
                 "host_name": "prometheus",
             },
-            _TEST_HOST_CONFIG,
             {
                 "api_url": "https://later1.2.3.4:9876/somewhere./api/v1/",
                 "token": "very_secret",
@@ -162,7 +151,6 @@ _TEST_HOST_CONFIG = HostConfig(
                     }
                 ],
             },
-            _TEST_HOST_CONFIG,
             {
                 "api_url": "http://http://192.168.58.2:30000/api/v1/",
                 "auth": ("username", "password"),
@@ -175,7 +163,6 @@ _TEST_HOST_CONFIG = HostConfig(
 def test_extract_connection_args(
     mocker: MockerFixture,
     config: Mapping[str, object],
-    host_config: HostConfig,
     expected_result: Mapping[str, object],
 ) -> None:
     mocker.patch(
@@ -185,7 +172,4 @@ def test_extract_connection_args(
             "something_else": "123",
         },
     )
-    command = list(special_agent_prometheus(config, host_config, {}))[0]
-    assert isinstance(command.stdin, str)
-    agent_config = ast.literal_eval(command.stdin)
-    assert extract_connection_args(agent_config) == expected_result
+    assert extract_connection_args(config) == expected_result

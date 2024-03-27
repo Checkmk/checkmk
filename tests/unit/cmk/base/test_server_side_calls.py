@@ -107,12 +107,12 @@ def _with_file(path: Path) -> Iterator[None]:
 def make_config_cache_mock(
     *,
     additional_ipaddresses: tuple[Sequence[str], Sequence[str]],
-    ip_stack: ip_lookup.AddressFamily,
+    ip_stack: ip_lookup.IPStackConfig,
     family: socket.AddressFamily,
 ) -> object:
     class ConfigCacheMock:
         @staticmethod
-        def address_family(host_name: str) -> ip_lookup.AddressFamily:
+        def ip_stack_config(host_name: str) -> ip_lookup.IPStackConfig:
             return ip_stack
 
         @staticmethod
@@ -1163,7 +1163,7 @@ def test_get_host_address_config(
 def mock_ip_address_of(
     config_cache: base_config.ConfigCache,
     host_name: HostName,
-    family: socket.AddressFamily | ip_lookup.AddressFamily,
+    family: socket.AddressFamily | ip_lookup.IPStackConfig,
 ) -> HostAddress | None:
     if family == socket.AF_INET:
         return HostAddress("0.0.0.1")
@@ -1174,7 +1174,7 @@ def mock_ip_address_of(
 def test_get_host_config_macros_stringified() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([], []),
-        ip_stack=ip_lookup.AddressFamily.NO_IP,
+        ip_stack=ip_lookup.IPStackConfig.NO_IP,
         family=socket.AddressFamily.AF_INET,
     )
 
@@ -1194,7 +1194,7 @@ def test_get_host_config_macros_stringified() -> None:
 def test_get_host_config_no_ip() -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("ignore.v4.noip")], [HostAddress("ignore.v6.noip")]),
-        ip_stack=ip_lookup.AddressFamily.NO_IP,
+        ip_stack=ip_lookup.IPStackConfig.NO_IP,
         family=socket.AddressFamily.AF_INET6,
     )
 
@@ -1215,7 +1215,7 @@ def test_get_host_config_no_ip() -> None:
 def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("1.2.3.4")], [HostAddress("ignore.v6.noip")]),
-        ip_stack=ip_lookup.AddressFamily.IPv4,
+        ip_stack=ip_lookup.IPStackConfig.IPv4,
         family=socket.AddressFamily.AF_INET,
     )
 
@@ -1242,7 +1242,7 @@ def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("ignore.v4.ipv6")], [HostAddress("::42")]),
-        ip_stack=ip_lookup.AddressFamily.IPv6,
+        ip_stack=ip_lookup.IPStackConfig.IPv6,
         family=socket.AddressFamily.AF_INET6,
     )
 
@@ -1269,7 +1269,7 @@ def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
     config_cache = make_config_cache_mock(
         additional_ipaddresses=([HostAddress("2.3.4.2")], [HostAddress("::42")]),
-        ip_stack=ip_lookup.AddressFamily.DUAL_STACK,
+        ip_stack=ip_lookup.IPStackConfig.DUAL_STACK,
         family=socket.AddressFamily.AF_INET6,
     )
 

@@ -37,7 +37,7 @@ import cmk.base.config as config
 import cmk.base.server_side_calls as server_side_calls
 import cmk.base.utils
 from cmk.base.config import ConfigCache
-from cmk.base.ip_lookup import AddressFamily
+from cmk.base.ip_lookup import IPStackConfig
 
 from cmk.discover_plugins import PluginLocation
 
@@ -270,18 +270,18 @@ if '-d' in sys.argv:
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
         for node in config_cache.nodes(hostname):
-            if AddressFamily.IPv4 in ConfigCache.address_family(node):
+            if IPStackConfig.IPv4 in ConfigCache.ip_stack_config(node):
                 needed_ipaddresses[node] = config.lookup_ip_address(
                     config_cache, node, family=socket.AddressFamily.AF_INET
                 )
 
-            if AddressFamily.IPv6 in ConfigCache.address_family(node):
+            if IPStackConfig.IPv6 in ConfigCache.ip_stack_config(node):
                 needed_ipv6addresses[node] = config.lookup_ip_address(
                     config_cache, node, family=socket.AddressFamily.AF_INET6
                 )
 
         try:
-            if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
+            if IPStackConfig.IPv4 in ConfigCache.ip_stack_config(hostname):
                 needed_ipaddresses[hostname] = config.lookup_ip_address(
                     config_cache, hostname, family=socket.AddressFamily.AF_INET
                 )
@@ -289,19 +289,19 @@ if '-d' in sys.argv:
             pass
 
         try:
-            if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
+            if IPStackConfig.IPv6 in ConfigCache.ip_stack_config(hostname):
                 needed_ipv6addresses[hostname] = config.lookup_ip_address(
                     config_cache, hostname, family=socket.AddressFamily.AF_INET6
                 )
         except Exception:
             pass
     else:
-        if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
+        if IPStackConfig.IPv4 in ConfigCache.ip_stack_config(hostname):
             needed_ipaddresses[hostname] = config.lookup_ip_address(
                 config_cache, hostname, family=socket.AddressFamily.AF_INET
             )
 
-        if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
+        if IPStackConfig.IPv6 in ConfigCache.ip_stack_config(hostname):
             needed_ipv6addresses[hostname] = config.lookup_ip_address(
                 config_cache, hostname, family=socket.AddressFamily.AF_INET6
             )

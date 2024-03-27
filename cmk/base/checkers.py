@@ -315,7 +315,7 @@ class CMKFetcher:
                 make_sources(
                     current_host_name,
                     current_ip_address,
-                    ConfigCache.address_family(current_host_name),
+                    ConfigCache.ip_stack_config(current_host_name),
                     config_cache=self.config_cache,
                     is_cluster=current_host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(

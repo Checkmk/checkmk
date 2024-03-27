@@ -30,7 +30,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.config import ConfigCache
-from cmk.base.ip_lookup import AddressFamily
+from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import Source
 
 
@@ -119,7 +119,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     )
 
     addresses: str | None = ""
-    if ConfigCache.address_family(hostname) is not AddressFamily.DUAL_STACK:
+    if ConfigCache.ip_stack_config(hostname) is not IPStackConfig.DUAL_STACK:
         addresses = ipaddress
     else:
         try:
@@ -192,7 +192,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         for source in sources.make_sources(
             hostname,
             ipaddress,
-            ConfigCache.address_family(hostname),
+            ConfigCache.ip_stack_config(hostname),
             is_cluster=hostname in hosts_config.clusters,
             file_cache_options=FileCacheOptions(),
             config_cache=config_cache,

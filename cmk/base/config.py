@@ -120,7 +120,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_section_plugin_from_legacy,
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.ip_lookup import AddressFamily
+from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.server_side_calls import (
     load_special_agents,
     PreprocessingResult,
@@ -1763,7 +1763,7 @@ def lookup_ip_address(
     *,
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
 ) -> HostAddress | None:
-    if ConfigCache.address_family(host_name) is AddressFamily.NO_IP:
+    if ConfigCache.ip_stack_config(host_name) is IPStackConfig.NO_IP:
         # TODO(ml): [IPv6] Silently override the `family` parameter.  Where
         # that is necessary, the callers are highly unlikely to handle IPv6
         # and DUAL_STACK correctly.
@@ -1819,7 +1819,7 @@ def get_ssc_host_config(
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
     primary_family = config_cache.default_address_family(host_name)
-    hosts_ip_stack = config_cache.address_family(host_name)
+    hosts_ip_stack = config_cache.ip_stack_config(host_name)
     additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
         host_name
     )
@@ -1832,7 +1832,7 @@ def get_ssc_host_config(
                 address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET),
                 additional_addresses=additional_addresses_ipv4,
             )
-            if ip_lookup.AddressFamily.IPv4 in hosts_ip_stack
+            if ip_lookup.IPStackConfig.IPv4 in hosts_ip_stack
             else None
         ),
         ipv6_config=(
@@ -1840,7 +1840,7 @@ def get_ssc_host_config(
                 address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET6),
                 additional_addresses=additional_addresses_ipv6,
             )
-            if ip_lookup.AddressFamily.IPv6 in hosts_ip_stack
+            if ip_lookup.IPStackConfig.IPv6 in hosts_ip_stack
             else None
         ),
         primary_family=_get_ssc_ip_family(primary_family),
@@ -2072,7 +2072,7 @@ class ConfigCache:
     def ip_lookup_config(self, host_name: HostName) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(
             hostname=host_name,
-            address_family=ConfigCache.address_family(host_name),
+            ip_stack_config=ConfigCache.ip_stack_config(host_name),
             is_snmp_host=self.computed_datasources(host_name).is_snmp,
             snmp_backend=self.get_snmp_backend(host_name),
             default_address_family=self.default_address_family(host_name),
@@ -2833,7 +2833,7 @@ class ConfigCache:
         explicit_command = self.explicit_check_command(host_name)
         if explicit_command is not None:
             return explicit_command
-        if ConfigCache.address_family(host_name) is AddressFamily.NO_IP:
+        if ConfigCache.ip_stack_config(host_name) is IPStackConfig.NO_IP:
             return "ok"
         return default_host_check_command
 
@@ -3205,19 +3205,19 @@ class ConfigCache:
         return self._check_mk_check_interval[hostname]
 
     @staticmethod
-    def address_family(host_name: HostName | HostAddress) -> AddressFamily:
+    def ip_stack_config(host_name: HostName | HostAddress) -> IPStackConfig:
         # TODO(ml): [IPv6] clarify tag_groups vs tag_groups["address_family"]
         tag_groups = ConfigCache.tags(host_name)
         if (
             TagGroupID("no-ip") in tag_groups
             or TagID("no-ip") == tag_groups[TagGroupID("address_family")]
         ):
-            return AddressFamily.NO_IP
+            return IPStackConfig.NO_IP
         if (
             TagGroupID("ip-v4v6") in tag_groups
             or TagID("ip-v4v6") == tag_groups[TagGroupID("address_family")]
         ):
-            return AddressFamily.DUAL_STACK
+            return IPStackConfig.DUAL_STACK
         if (
             TagGroupID("ip-v6") in tag_groups
             or TagID("ip-v6") == tag_groups[TagGroupID("address_family")]
@@ -3225,14 +3225,14 @@ class ConfigCache:
             TagGroupID("ip-v4") in tag_groups
             or TagID("ip-v4") == tag_groups[TagGroupID("address_family")]
         ):
-            return AddressFamily.DUAL_STACK
+            return IPStackConfig.DUAL_STACK
         if (
             TagGroupID("ip-v6") in tag_groups
             or TagGroupID("ip-v6-only") in tag_groups
             or tag_groups[TagGroupID("address_family")] in {TagID("ip-v6"), TagID("ip-v6-only")}
         ):
-            return AddressFamily.IPv6
-        return AddressFamily.IPv4
+            return IPStackConfig.IPv6
+        return IPStackConfig.IPv4
 
     def default_address_family(
         self, hostname: HostName | HostAddress
@@ -3247,8 +3247,8 @@ class ConfigCache:
 
         def is_ipv6_primary() -> bool:
             # Whether or not the given host is configured to be monitored primarily via IPv6
-            return ConfigCache.address_family(hostname) is AddressFamily.IPv6 or (
-                ConfigCache.address_family(hostname) is AddressFamily.DUAL_STACK
+            return ConfigCache.ip_stack_config(hostname) is IPStackConfig.IPv6 or (
+                ConfigCache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK
                 and primary_ip_address_family_of() is socket.AF_INET6
             )
 
@@ -3525,11 +3525,11 @@ class ConfigCache:
         if "alias" not in attrs:
             attrs["alias"] = self.alias(hostname)
 
-        family = ConfigCache.address_family(hostname)
+        ip_stack_config = ConfigCache.ip_stack_config(hostname)
 
         # Now lookup configured IP addresses
         v4address: str | None = None
-        if AddressFamily.IPv4 in family:
+        if IPStackConfig.IPv4 in ip_stack_config:
             v4address = ip_address_of(self, hostname, socket.AddressFamily.AF_INET)
 
         if v4address is None:
@@ -3537,7 +3537,7 @@ class ConfigCache:
         attrs["_ADDRESS_4"] = v4address
 
         v6address: str | None = None
-        if AddressFamily.IPv6 in family:
+        if IPStackConfig.IPv6 in ip_stack_config:
             v6address = ip_address_of(self, hostname, socket.AddressFamily.AF_INET6)
         if v6address is None:
             v6address = ""
@@ -3582,7 +3582,7 @@ class ConfigCache:
             "_NODENAMES": " ".join(sorted_nodes),
         }
         node_ips_4 = []
-        if AddressFamily.IPv4 in ConfigCache.address_family(hostname):
+        if IPStackConfig.IPv4 in ConfigCache.ip_stack_config(hostname):
             family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] = (
                 socket.AddressFamily.AF_INET
             )
@@ -3594,7 +3594,7 @@ class ConfigCache:
                     node_ips_4.append(ip_lookup.fallback_ip_for(family))
 
         node_ips_6 = []
-        if AddressFamily.IPv6 in ConfigCache.address_family(hostname):
+        if IPStackConfig.IPv6 in ConfigCache.ip_stack_config(hostname):
             family = socket.AddressFamily.AF_INET6
             for h in sorted_nodes:
                 addr = ip_address_of(self, h, family)

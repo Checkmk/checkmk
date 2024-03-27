@@ -1962,7 +1962,7 @@ class AutomationDiagHost(Automation):
         for source in sources.make_sources(
             host_name,
             ipaddress,
-            ConfigCache.address_family(host_name),
+            ConfigCache.ip_stack_config(host_name),
             config_cache=config_cache,
             is_cluster=host_name in hosts_config.clusters,
             simulation_mode=config.simulation_mode,
@@ -2353,7 +2353,7 @@ class AutomationGetAgentOutput(Automation):
                 for source in sources.make_sources(
                     hostname,
                     ipaddress,
-                    ConfigCache.address_family(hostname),
+                    ConfigCache.ip_stack_config(hostname),
                     config_cache=config_cache,
                     is_cluster=hostname in hosts_config.clusters,
                     simulation_mode=config.simulation_mode,

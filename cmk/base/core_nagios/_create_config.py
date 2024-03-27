@@ -45,7 +45,7 @@ from cmk.base.core_config import (
     get_labels_from_attributes,
     write_notify_host_file,
 )
-from cmk.base.ip_lookup import AddressFamily
+from cmk.base.ip_lookup import IPStackConfig
 
 from ._precompile_host_checks import precompile_hostchecks
 
@@ -687,7 +687,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             license_counter,
         )
 
-    if ConfigCache.address_family(hostname) is AddressFamily.DUAL_STACK:
+    if ConfigCache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK:
         if config_cache.default_address_family(hostname) is socket.AF_INET6:
             if "PING IPv4" not in used_descriptions:
                 _add_ping_service(

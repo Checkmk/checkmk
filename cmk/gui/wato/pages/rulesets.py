@@ -18,6 +18,11 @@ from typing import Any, cast, overload
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.labels import Labels
 from cmk.utils.regex import escape_regex_chars
+from cmk.utils.rulesets.conditions import (
+    allow_host_label_conditions,
+    allow_label_conditions,
+    allow_service_label_conditions,
+)
 from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionNE,
     TagConditionNOR,
@@ -2035,12 +2040,12 @@ class ABCEditRuleMode(WatoMode):
 
     # TODO: refine type
     def _validate_predefined_condition(self, value: str | None, varprefix: str) -> None:
-        if _allow_label_conditions(self._rulespec.name):
+        if allow_label_conditions(self._rulespec.name):
             return
 
         conditions = self._get_predefined_rule_conditions(value)
-        if (conditions.host_labels and not _allow_host_label_conditions(self._rulespec.name)) or (
-            conditions.service_labels and not _allow_service_label_conditions(self._rulespec.name)
+        if (conditions.host_labels and not allow_host_label_conditions(self._rulespec.name)) or (
+            conditions.service_labels and not allow_service_label_conditions(self._rulespec.name)
         ):
             raise MKUserError(
                 varprefix,
@@ -2143,7 +2148,7 @@ class VSExplicitConditions(Transform):
             ("host_tags", self._vs_host_tag_condition()),
         ]
 
-        if _allow_host_label_conditions(self._rulespec.name):
+        if allow_host_label_conditions(self._rulespec.name):
             elements.append(("host_labels", self._vs_host_label_condition()))
 
         elements.append(("explicit_hosts", self._vs_explicit_hosts()))
@@ -2158,7 +2163,7 @@ class VSExplicitConditions(Transform):
             "host_tags": conditions.host_tags,
         }
 
-        if _allow_host_label_conditions(self._rulespec.name):
+        if allow_host_label_conditions(self._rulespec.name):
             explicit["host_labels"] = conditions.host_labels
 
         explicit_hosts = conditions.host_list
@@ -2170,7 +2175,7 @@ class VSExplicitConditions(Transform):
             if explicit_services is not None:
                 explicit["explicit_services"] = explicit_services
 
-            if _allow_service_label_conditions(self._rulespec.name):
+            if allow_service_label_conditions(self._rulespec.name):
                 explicit["service_labels"] = conditions.service_labels
 
         return explicit
@@ -2183,7 +2188,7 @@ class VSExplicitConditions(Transform):
             ("explicit_services", self._vs_explicit_services())
         ]
 
-        if _allow_service_label_conditions(self._rulespec.name):
+        if allow_service_label_conditions(self._rulespec.name):
             elements.append(("service_labels", self._vs_service_label_condition()))
 
         return elements
@@ -2214,7 +2219,7 @@ class VSExplicitConditions(Transform):
             )
             service_labels = (
                 explicit["service_labels"]
-                if _allow_service_label_conditions(self._rulespec.name)
+                if allow_service_label_conditions(self._rulespec.name)
                 else {}
             )
 
@@ -2222,7 +2227,7 @@ class VSExplicitConditions(Transform):
             host_folder=explicit["folder_path"],
             host_tags=explicit["host_tags"],
             host_labels=explicit["host_labels"]
-            if _allow_host_label_conditions(self._rulespec.name)
+            if allow_host_label_conditions(self._rulespec.name)
             else {},
             host_name=self._condition_list_from_valuespec(
                 explicit.get("explicit_hosts"), is_service=False
@@ -2385,26 +2390,6 @@ class VSExplicitConditions(Transform):
                 html.li(_("No conditions"), class_="no_conditions")
             html.close_ul()
             return HTML(output_funnel.drain())
-
-
-def _allow_label_conditions(rulespec_name: str) -> bool:
-    return _allow_host_label_conditions(rulespec_name) and _allow_service_label_conditions(
-        rulespec_name
-    )
-
-
-def _allow_host_label_conditions(rulespec_name: str) -> bool:
-    """Rulesets that influence the labels of hosts must not use host label conditions"""
-    return rulespec_name not in [
-        "host_label_rules",
-    ]
-
-
-def _allow_service_label_conditions(rulespec_name: str) -> bool:
-    """Rulesets that influence the labels of services must not use service label conditions"""
-    return rulespec_name not in [
-        "service_label_rules",
-    ]
 
 
 class RuleConditionRenderer:

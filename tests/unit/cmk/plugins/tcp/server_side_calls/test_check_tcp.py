@@ -10,6 +10,9 @@ from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
 TEST_CONFIG = HostConfig(name="testhost", ipv4_config=IPv4Config(address="1.2.3.4"))
 
 
+DAY = 86400
+
+
 def test_check_tcp_arguments_minimal() -> None:
     assert list(active_check_tcp({"port": 1}, TEST_CONFIG)) == [
         ActiveCheckCommand(
@@ -26,7 +29,7 @@ def test_check_tcp_arguments_full() -> None:
                 "port": 1,
                 "svc_description": "foo",
                 "hostname": "bar",
-                "response_time": (1.0, 2.0),
+                "response_time": ("fixed", (0.001, 0.002)),
                 "timeout": 3,
                 "refuse_state": "ok",
                 "send_string": "baz",
@@ -38,7 +41,7 @@ def test_check_tcp_arguments_full() -> None:
                 "delay": 4,
                 "maxbytes": 5,
                 "ssl": True,
-                "cert_days": (6, 7),
+                "cert_days": ("fixed", (6.0 * DAY, 7.0 * DAY)),
                 "quit_string": "quux",
             },
             TEST_CONFIG,

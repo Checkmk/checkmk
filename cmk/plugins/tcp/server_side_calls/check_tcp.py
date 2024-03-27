@@ -15,13 +15,15 @@ from cmk.server_side_calls.v1 import (
     replace_macros,
 )
 
+_LevelsModel = tuple[Literal["no_levels"], None] | tuple[Literal["fixed"], tuple[float, float]]
+
 
 class Parameters(BaseModel):
     port: int
     svc_description: str | None = None
     hostname: str | None = None
-    response_time: tuple[float, float] | None = None
-    timeout: int | None = None
+    response_time: _LevelsModel = ("no_levels", None)
+    timeout: float | None = None
     refuse_state: Literal["ok", "warn", "crit"] | None = None
     send_string: str | None = None
     escape_send_string: Literal[True] | None = None
@@ -32,7 +34,7 @@ class Parameters(BaseModel):
     delay: int | None = None
     maxbytes: int | None = None
     ssl: Literal[True] | None = None
-    cert_days: tuple[int, int] | None = None
+    cert_days: _LevelsModel = ("no_levels", None)
     quit_string: str | None = None
 
 
@@ -44,21 +46,30 @@ def _add_optional_flag(name: str, value: bool | None) -> tuple[str] | tuple[()]:
     return () if value is None else (f"{name}",)
 
 
+def _to_days(seconds: float) -> int:
+    return int(seconds / 86400)
+
+
+def _add_cert_days(cert_days: tuple[float, float] | None) -> tuple[str, str] | tuple[()]:
+    return () if cert_days is None else ("-D", f"{_to_days(cert_days[0])},{_to_days(cert_days[1])}")
+
+
 def _make_arguments(params: Parameters, host_address: str) -> list[str]:
+    levels = params.response_time[1]
     return [
         "-p",
         str(params.port),
         *(
             (
                 "-w",
-                "%f" % (params.response_time[0] / 1000.0),
+                "%f" % levels[0],
                 "-c",
-                "%f" % (params.response_time[1] / 1000.0),
+                "%f" % levels[1],
             )
-            if params.response_time
+            if levels
             else ()
         ),
-        *(_add_optional_option("-t", params.timeout)),
+        *(_add_optional_option("-t", int(params.timeout) if params.timeout else None)),
         *(_add_optional_option("-r", params.refuse_state)),
         *(_add_optional_flag("--escape", params.escape_send_string)),
         *(_add_optional_option("-s", params.send_string)),
@@ -69,7 +80,7 @@ def _make_arguments(params: Parameters, host_address: str) -> list[str]:
         *(_add_optional_option("-d", params.delay)),
         *(_add_optional_option("-m", params.maxbytes)),
         *(_add_optional_flag("--ssl", params.ssl)),
-        *(("-D", "%d,%d" % params.cert_days) if params.cert_days else ()),
+        *(_add_cert_days(params.cert_days[1])),
         *(_add_optional_option("-q", params.quit_string)),
         "-H",
         host_address,

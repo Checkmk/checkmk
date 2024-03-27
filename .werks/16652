@@ -1,0 +1,9 @@
+Title: NVIDIA Graphics Card: Fix parsing error on new data format
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1712312228
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+

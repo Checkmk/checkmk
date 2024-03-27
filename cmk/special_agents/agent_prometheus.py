@@ -41,6 +41,11 @@ def parse_arguments(argv):
         type=int,
         help="""Timeout for individual processes in seconds (default 10)""",
     )
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="The configuration is passed as repr object. This option will change in the future.",
+    )
 
     args = parser.parse_args(argv)
     return args
@@ -908,7 +913,7 @@ def main(argv=None):
         argv = sys.argv[1:]
     args = parse_arguments(argv)
     try:
-        config = ast.literal_eval(sys.stdin.read())
+        config = ast.literal_eval(args.config)
         config_args = _extract_config_args(config)
         session = generate_api_session(extract_connection_args(config))
         exporter_options = config_args["exporter_options"]

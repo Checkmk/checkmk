@@ -11,7 +11,7 @@ import json
 import logging
 import sys
 import traceback
-from typing import Any
+from typing import Any, NotRequired
 
 import requests
 from typing_extensions import TypedDict
@@ -35,11 +35,8 @@ def parse_arguments(argv):
     return args
 
 
-class IgnoreAlerts(TypedDict, total=False):
-    # TODO: Remove total=False and mark as ignore_na as
-    # not required when upgrading to Python 3.10:
-    # https://www.python.org/dev/peps/pep-0655/
-    ignore_na: bool
+class IgnoreAlerts(TypedDict):
+    ignore_na: NotRequired[bool]
     ignore_alert_rules: list[str]
     ignore_alert_groups: list[str]
 

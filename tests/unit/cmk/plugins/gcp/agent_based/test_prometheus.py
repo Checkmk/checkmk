@@ -16,10 +16,7 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
     [
         pytest.param(
             {
-                "connection": (
-                    "ip_address",
-                    {},
-                ),
+                "connection": "1.2.3.4",
                 "auth_basic": (
                     "auth_login",
                     {
@@ -31,8 +28,6 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                     },
                 ),
                 "protocol": "http",
-                "host_address": "1.2.3.4",
-                "host_name": "prometheus",
             },
             {
                 "api_url": "http://1.2.3.4/api/v1/",
@@ -43,10 +38,7 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
         ),
         pytest.param(
             {
-                "connection": (
-                    "url_custom",
-                    {"url_address": "my-host.com"},
-                ),
+                "connection": "my-host.com",
                 "auth_basic": (
                     "auth_login",
                     {
@@ -58,8 +50,6 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                     },
                 ),
                 "protocol": "https",
-                "host_address": "1.2.3.4",
-                "host_name": "prometheus",
             },
             {
                 "auth": ("user", "very_secret"),
@@ -70,10 +60,7 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
         ),
         pytest.param(
             {
-                "connection": (
-                    "url_custom",
-                    {"url_address": "my-host.com"},
-                ),
+                "connection": "my-host.com",
                 "auth_basic": (
                     "auth_token",
                     {
@@ -85,8 +72,6 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                 ),
                 "verify-cert": True,
                 "protocol": "https",
-                "host_address": "1.2.3.4",
-                "host_name": "prometheus",
             },
             {
                 "api_url": "https://my-host.com/api/v1/",
@@ -97,14 +82,7 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
         ),
         pytest.param(
             {
-                "connection": (
-                    "ip_address",
-                    {
-                        "port": 9876,
-                        "path_prefix": "somewhere.",
-                        "base_prefix": "later",
-                    },
-                ),
+                "connection": "later1.2.3.4:9876/somewhere.",
                 "auth_basic": (
                     "auth_token",
                     {
@@ -116,8 +94,6 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                 ),
                 "verify-cert": True,
                 "protocol": "https",
-                "host_address": "1.2.3.4",
-                "host_name": "prometheus",
             },
             {
                 "api_url": "https://later1.2.3.4:9876/somewhere./api/v1/",
@@ -128,7 +104,7 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
         ),
         pytest.param(
             {
-                "connection": ("url_custom", {"url_address": "http://192.168.58.2:30000"}),
+                "connection": "http://192.168.58.2:30000",
                 "verify-cert": False,
                 "auth_basic": (
                     "auth_login",

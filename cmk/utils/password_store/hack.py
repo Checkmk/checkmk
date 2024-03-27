@@ -22,9 +22,9 @@ HACK_AGENTS = {
     "bi": False,  # needs no secret
     "cisco_meraki": True,
     "cisco_prime": True,
-    "elasticsearch": True,  # TODO: migrate ruleset
+    "elasticsearch": True,
     "fritzbox": False,  # needs no secret
-    "gcp": True,  # TODO: migrate ruleset
+    "gcp": True,
     "jenkins": True,
     "mobileiron": True,
     "netapp_ontap": True,
@@ -45,7 +45,7 @@ HACK_CHECKS = {
     "cert": False,  # has no secret
     "cmk_inv": False,  # has no secret
     "dns": False,  # has no secret
-    "elasticsearch_query": True,  # TODO: migrate ruleset
+    "elasticsearch_query": True,
     "form_submit": False,  # has no secret
     "ftp": False,  # has no secret
     "httpv2": False,  # yay!

@@ -63,5 +63,5 @@ HOST_CONFIG = HostConfig(
 )
 def test_prism_argument_parsing(params: Mapping[str, object], expected_args: Sequence[str]) -> None:
     """Tests if all required arguments are present."""
-    command = list(generate_prism_command(params, HOST_CONFIG, {}))[0]
+    command = list(generate_prism_command(params, HOST_CONFIG))[0]
     assert command.command_arguments == expected_args

@@ -12,7 +12,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     replace_macros,
 )
 
@@ -110,7 +109,7 @@ def _merge_settings(standard: StandardSettings, individual: Settings | None) -> 
 
 
 def generate_cert_services(
-    params: Sequence[CertEndpoint], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+    params: Sequence[CertEndpoint], host_config: HostConfig
 ) -> Iterator[ActiveCheckCommand]:
     for endpoint in params:
         endpoint.address = replace_macros(endpoint.address, host_config.macros)

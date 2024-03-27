@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    HTTPProxy,
     replace_macros,
     Secret,
     SpecialAgentCommand,
@@ -33,7 +32,7 @@ class CiscoPrimeParams(BaseModel):
 
 
 def generate_cisco_prime_command(
-    params: CiscoPrimeParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: CiscoPrimeParams, host_config: HostConfig
 ) -> Iterator[SpecialAgentCommand]:
     match params.host:
         case "host_name":

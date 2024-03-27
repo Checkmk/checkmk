@@ -15,7 +15,6 @@ from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    HTTPProxy,
     noop_parser,
     replace_macros,
     Secret,
@@ -25,7 +24,8 @@ from cmk.server_side_calls.v1 import (
 
 
 def _agent_elasticsearch_arguments(
-    params: Mapping[str, object], hostconfig: HostConfig, proxy_config: Mapping[str, HTTPProxy]
+    params: Mapping[str, object],
+    hostconfig: HostConfig,
 ) -> Iterable[SpecialAgentCommand]:
     # We're lazy with the parsing, so we need a few asserts and str()s below to please mypy.
     assert isinstance(params["infos"], Sequence)  # of Literal["cluster_health", "nodes", "stats"]

@@ -12,7 +12,6 @@ from cmk.plugins.collection.server_side_calls.cisco_meraki import special_agent_
 from cmk.server_side_calls.v1 import (
     EnvProxy,
     HostConfig,
-    HTTPProxy,
     IPv4Config,
     NoProxy,
     Secret,
@@ -24,8 +23,6 @@ HOST_CONFIG = HostConfig(
     name="testhost",
     ipv4_config=IPv4Config(address="0.0.0.1"),
 )
-
-HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy.com")}
 
 
 @pytest.mark.parametrize(
@@ -139,4 +136,4 @@ def test_argument_parsing(
     expected_args: Sequence[SpecialAgentCommand],
 ) -> None:
     """Tests if all required arguments are present."""
-    assert list(special_agent_cisco_meraki(params, HOST_CONFIG, HTTP_PROXIES)) == expected_args
+    assert list(special_agent_cisco_meraki(params, HOST_CONFIG)) == expected_args

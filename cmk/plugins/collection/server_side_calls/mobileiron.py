@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
     EnvProxy,
     HostConfig,
-    HTTPProxy,
     NoProxy,
     replace_macros,
     Secret,
@@ -43,7 +42,8 @@ class MobileIronParams(BaseModel):
 
 
 def generate_mobileiron_command(
-    params: MobileIronParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+    params: MobileIronParams,
+    host_config: HostConfig,
 ) -> Iterator[SpecialAgentCommand]:
     partitions = [replace_macros(p, host_config.macros) for p in params.partition]
     args: list[str | Secret] = [

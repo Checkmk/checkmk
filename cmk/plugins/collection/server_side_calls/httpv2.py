@@ -13,7 +13,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     EnvProxy,
     HostConfig,
-    HTTPProxy,
     NoProxy,
     replace_macros,
     Secret,
@@ -246,7 +245,7 @@ def _merge_settings(
 
 
 def generate_http_services(
-    params: Sequence[HttpEndpoint], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+    params: Sequence[HttpEndpoint], host_config: HostConfig
 ) -> Iterator[ActiveCheckCommand]:
     macros = host_config.macros
     for endpoint in params:
@@ -255,13 +254,11 @@ def generate_http_services(
         endpoint.url = replace_macros(endpoint.url, macros)
         yield ActiveCheckCommand(
             service_description=f"{prefix}{replace_macros(endpoint.service_name.name, macros)}",
-            command_arguments=list(_command_arguments(endpoint, http_proxies)),
+            command_arguments=list(_command_arguments(endpoint)),
         )
 
 
-def _command_arguments(
-    endpoint: HttpEndpoint, http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[str | Secret]:
+def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str | Secret]:
     yield "--url"
     yield endpoint.url
 
@@ -269,7 +266,7 @@ def _command_arguments(
         return
 
     if (connection := settings.connection) is not None:
-        yield from _connection_args(connection, http_proxies)
+        yield from _connection_args(connection)
     if (response_time := settings.response_time) is not None:
         yield from _response_time_arguments(response_time)
     if (server_response := settings.server_response) is not None:
@@ -282,16 +279,14 @@ def _command_arguments(
         yield from _content_args(content)
 
 
-def _connection_args(
-    connection: Connection, http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[str | Secret]:
+def _connection_args(connection: Connection) -> Iterator[str | Secret]:
     yield from _method_args(connection.method)
     if (auth := connection.auth) is not None:
         yield from _auth_args(auth)
     if (tls_versions := connection.tls_versions) is not None:
         yield from _tls_version_arg(tls_versions)
     if (proxy := connection.proxy) is not None:
-        yield from _proxy_args(proxy, http_proxies)
+        yield from _proxy_args(proxy)
     if (redirects := connection.redirects) is not None:
         yield from _redirect_args(redirects)
     if (http_versions := connection.http_versions) is not None:
@@ -331,9 +326,7 @@ def _tls_version_arg(tls_versions: EnforceTlsVersion) -> Iterator[str]:
     yield tls_version_arg
 
 
-def _proxy_args(
-    proxy: EnvProxy | URLProxy | NoProxy, http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[str]:
+def _proxy_args(proxy: EnvProxy | URLProxy | NoProxy) -> Iterator[str]:
     match proxy:
         case EnvProxy():
             return

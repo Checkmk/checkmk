@@ -12,7 +12,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     replace_macros,
     Secret,
 )
@@ -46,7 +45,7 @@ def check_ldap_desc(params: LDAPParams, macros: Mapping[str, str]) -> str:
 
 
 def generate_ldap_commands(
-    params: LDAPParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: LDAPParams, host_config: HostConfig
 ) -> Iterator[ActiveCheckCommand]:
     args: list[str | Secret] = []
 

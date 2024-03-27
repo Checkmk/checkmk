@@ -14,7 +14,7 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentConfig
+from cmk.server_side_calls.v1 import HostConfig, SpecialAgentConfig
 
 from ._commons import (
     commandline_arguments,
@@ -93,15 +93,11 @@ class SpecialAgent:
     def _iter_commands(
         self, special_agent: SpecialAgentConfig, conf_dict: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
-        http_proxies = {
-            id: HTTPProxy(id=id, name=proxy["title"], url=proxy["proxy_url"])
-            for id, proxy in self._http_proxies.items()
-        }
 
         proxy_config = ProxyConfig(self.host_name, self._http_proxies)
         processed = process_configuration_to_parameters(conf_dict, proxy_config)
 
-        for command in special_agent(processed.value, self.host_config, http_proxies):
+        for command in special_agent(processed.value, self.host_config):
             args = replace_passwords(
                 self.host_name,
                 command.command_arguments,

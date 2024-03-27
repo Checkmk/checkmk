@@ -46,7 +46,7 @@ def test_check_ldap_argument_parsing(
     params: Mapping[str, str | float], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    (command,) = active_check_ldap(params, HOST_CONFIG, {})
+    (command,) = active_check_ldap(params, HOST_CONFIG)
     assert command.command_arguments == expected_args
 
 
@@ -61,7 +61,6 @@ def test_check_ldap_authentication() -> None:
                 },
             },
             HOST_CONFIG,
-            {},
         )
     ) == [
         ActiveCheckCommand(
@@ -88,7 +87,6 @@ def test_check_ldap_response_time() -> None:
                 "response_time": ("fixed", (1.2, 2.3)),
             },
             HOST_CONFIG,
-            {},
         )
     ) == [
         ActiveCheckCommand(

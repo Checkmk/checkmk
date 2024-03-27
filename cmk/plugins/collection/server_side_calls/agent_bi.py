@@ -7,7 +7,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Sequence
 
-from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
 
 #  { "agent_bi_options" :
 #  [{'credentials': 'automation', 'site': 'local'},
@@ -49,7 +49,6 @@ def _agent_bi_parser(params: Mapping[str, object]) -> _AgentBIOptions:
 def _agent_bi_arguments(
     params: _AgentBIOptions,
     _hostconfig: HostConfig,
-    _proxy_config: Mapping[str, HTTPProxy],
 ) -> Iterable[SpecialAgentCommand]:
     yield SpecialAgentCommand(command_arguments=[], stdin=repr(params))
 

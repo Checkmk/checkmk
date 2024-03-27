@@ -7,7 +7,6 @@ from collections.abc import Iterator, Mapping
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    HTTPProxy,
     noop_parser,
     Secret,
     SpecialAgentCommand,
@@ -16,7 +15,8 @@ from cmk.server_side_calls.v1 import (
 
 
 def generate_prism_command(
-    params: Mapping[str, object], host_config: HostConfig, _http_proxy: Mapping[str, HTTPProxy]
+    params: Mapping[str, object],
+    host_config: HostConfig,
 ) -> Iterator[SpecialAgentCommand]:
     assert isinstance(secret := params["password"], Secret)
 

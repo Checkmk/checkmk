@@ -39785,18 +39785,6 @@ msgstr "組織ID"
 msgid "Organisation Name"
 msgstr "組織名"
 
-msgid "Organisation device statuses"
-msgstr "組織のデバイス状態"
-
-msgid "Organisation licenses overview"
-msgstr "組織ライセンスの概要"
-
-msgid "Organisation sensor readings"
-msgstr "組織センサーの読取"
-
-msgid "Organisations"
-msgstr "組織"
-
 msgid "Organization"
 msgstr "組織"
 
@@ -39808,7 +39796,23 @@ msgid "Organization Name"
 msgstr "組織名"
 
 #, fuzzy
+msgid "Organization device statuses"
+msgstr "組織のデバイス状態"
+
+#, fuzzy
+msgid "Organization licenses overview"
+msgstr "組織ライセンスの概要"
+
+#, fuzzy
+msgid "Organization sensor readings"
+msgstr "組織センサーの読取"
+
+#, fuzzy
 msgid "Organizational unit (OU)"
+msgstr "組織"
+
+#, fuzzy
+msgid "Organizations"
 msgstr "組織"
 
 msgid "Organize your hosts in groups independent of the tree structure."
@@ -74341,6 +74345,10 @@ msgstr "自動検出"
 msgid "detections/s"
 msgstr "検出数/秒"
 
+#, fuzzy
+msgid "deviceModel and serialNumber"
+msgstr "デバイス名とセンサー名を使用する"
+
 msgid "devices"
 msgstr "デバイス"
 
@@ -74431,6 +74439,14 @@ msgstr "エコー"
 
 msgid "email addresses: "
 msgstr "メールアドレス: "
+
+#, fuzzy
+msgid "emailAddress"
+msgstr "電子メールアドレス"
+
+#, fuzzy
+msgid "emailAddress and serialNumber"
+msgstr "Eメールアドレス属性"
 
 msgid "empty"
 msgstr "空の"
@@ -74608,6 +74624,9 @@ msgstr "グループ化"
 
 msgid "groups"
 msgstr "グループ"
+
+msgid "guid"
+msgstr ""
 
 msgid "h"
 msgstr "h"
@@ -75574,6 +75593,10 @@ msgstr "コンタクトグループの通知を送信します。"
 msgid "send only every"
 msgstr "すべてを送信する"
 
+#, fuzzy
+msgid "serialNumber"
+msgstr "シリアルナンバー"
+
 msgid "service"
 msgid_plural "services"
 msgstr[0] "サービス"
@@ -75774,6 +75797,14 @@ msgstr "2つのレベル"
 
 msgid "uPnP configuration enabled"
 msgstr "uPnP設定が有効"
+
+#, fuzzy
+msgid "uid"
+msgstr "ビルドキャッシュ"
+
+#, fuzzy
+msgid "uid and serialNumber"
+msgstr "シリアルナンバー"
 
 msgid "unknown"
 msgstr "不明"
@@ -75978,6 +76009,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Organisations"
+#~ msgstr "組織"
 
 #, fuzzy
 #~| msgid "Data sent"

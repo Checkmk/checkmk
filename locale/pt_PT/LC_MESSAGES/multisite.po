@@ -40628,18 +40628,6 @@ msgstr "ID da organização"
 msgid "Organisation Name"
 msgstr "Nome da organização"
 
-msgid "Organisation device statuses"
-msgstr "Estados dos dispositivos da organização"
-
-msgid "Organisation licenses overview"
-msgstr "Descrição geral das licenças de organização"
-
-msgid "Organisation sensor readings"
-msgstr "Leituras dos sensores da organização"
-
-msgid "Organisations"
-msgstr "Organizações"
-
 msgid "Organization"
 msgstr "Organização"
 
@@ -40651,7 +40639,23 @@ msgid "Organization Name"
 msgstr "Nome da Organização"
 
 #, fuzzy
+msgid "Organization device statuses"
+msgstr "Estados dos dispositivos da organização"
+
+#, fuzzy
+msgid "Organization licenses overview"
+msgstr "Descrição geral das licenças de organização"
+
+#, fuzzy
+msgid "Organization sensor readings"
+msgstr "Leituras dos sensores da organização"
+
+#, fuzzy
 msgid "Organizational unit (OU)"
+msgstr "Organização"
+
+#, fuzzy
+msgid "Organizations"
 msgstr "Organização"
 
 msgid "Organize your hosts in groups independent of the tree structure."
@@ -76205,6 +76209,10 @@ msgstr "detectar automaticamente"
 msgid "detections/s"
 msgstr "detecções/s"
 
+#, fuzzy
+msgid "deviceModel and serialNumber"
+msgstr "Use o nome do dispositivo e do sensor"
+
 msgid "devices"
 msgstr "aparelhos"
 
@@ -76295,6 +76303,14 @@ msgstr "echo"
 
 msgid "email addresses: "
 msgstr "endereços de e-mail: "
+
+#, fuzzy
+msgid "emailAddress"
+msgstr "Endereço de e-mail"
+
+#, fuzzy
+msgid "emailAddress and serialNumber"
+msgstr "Atributo do endereço de correio electrónico"
 
 msgid "empty"
 msgstr "vazio"
@@ -76473,6 +76489,9 @@ msgstr "grupo por"
 
 msgid "groups"
 msgstr "grupos"
+
+msgid "guid"
+msgstr ""
 
 msgid "h"
 msgstr "h"
@@ -77446,6 +77465,10 @@ msgstr "enviar notificações de grupo de contato:"
 msgid "send only every"
 msgstr "enviar apenas todos"
 
+#, fuzzy
+msgid "serialNumber"
+msgstr "Número de série"
+
 msgid "service"
 msgid_plural "services"
 msgstr[0] "serviço"
@@ -77648,6 +77671,14 @@ msgstr "dois níveis"
 
 msgid "uPnP configuration enabled"
 msgstr "Configuração uPnP activada"
+
+#, fuzzy
+msgid "uid"
+msgstr "Construir Cache"
+
+#, fuzzy
+msgid "uid and serialNumber"
+msgstr "Número de série"
 
 msgid "unknown"
 msgstr "desconhecido"
@@ -77853,6 +77884,9 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Organisations"
+#~ msgstr "Organizações"
 
 #, fuzzy
 #~| msgid "Data sent"

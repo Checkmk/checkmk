@@ -40687,18 +40687,6 @@ msgstr "Organisaties"
 msgid "Organisation Name"
 msgstr "Organisatie Naam"
 
-msgid "Organisation device statuses"
-msgstr "Apparaatstatussen van de organisatie"
-
-msgid "Organisation licenses overview"
-msgstr "Overzicht organisatievergunningen"
-
-msgid "Organisation sensor readings"
-msgstr "Organisatie sensor metingen"
-
-msgid "Organisations"
-msgstr "Organisaties"
-
 msgid "Organization"
 msgstr "Organisatie"
 
@@ -40710,7 +40698,23 @@ msgid "Organization Name"
 msgstr "Organisatie Naam"
 
 #, fuzzy
+msgid "Organization device statuses"
+msgstr "Apparaatstatussen van de organisatie"
+
+#, fuzzy
+msgid "Organization licenses overview"
+msgstr "Overzicht organisatievergunningen"
+
+#, fuzzy
+msgid "Organization sensor readings"
+msgstr "Organisatie sensor metingen"
+
+#, fuzzy
 msgid "Organizational unit (OU)"
+msgstr "Organisatie"
+
+#, fuzzy
+msgid "Organizations"
 msgstr "Organisatie"
 
 msgid "Organize your hosts in groups independent of the tree structure."
@@ -76343,6 +76347,10 @@ msgstr "automatisch detecteren"
 msgid "detections/s"
 msgstr "detecties/s"
 
+#, fuzzy
+msgid "deviceModel and serialNumber"
+msgstr "Gebruik apparaat- en sensornaam"
+
 msgid "devices"
 msgstr "apparaten"
 
@@ -76433,6 +76441,14 @@ msgstr "echo"
 
 msgid "email addresses: "
 msgstr "e-mailadressen: "
+
+#, fuzzy
+msgid "emailAddress"
+msgstr "Email Adres"
+
+#, fuzzy
+msgid "emailAddress and serialNumber"
+msgstr "Kenmerk e-mailadres"
 
 msgid "empty"
 msgstr "leeg"
@@ -76612,6 +76628,9 @@ msgstr "groep door"
 
 msgid "groups"
 msgstr "groepen"
+
+msgid "guid"
+msgstr ""
 
 msgid "h"
 msgstr "h"
@@ -77593,6 +77612,10 @@ msgstr "meldingen van contactgroep verzenden:"
 msgid "send only every"
 msgstr "stuur alleen elke"
 
+#, fuzzy
+msgid "serialNumber"
+msgstr "Serienummer"
+
 msgid "service"
 msgid_plural "services"
 msgstr[0] "service"
@@ -77797,6 +77820,14 @@ msgstr "twee niveaus"
 msgid "uPnP configuration enabled"
 msgstr "uPnP-configuratie ingeschakeld"
 
+#, fuzzy
+msgid "uid"
+msgstr "Cache bouwen"
+
+#, fuzzy
+msgid "uid and serialNumber"
+msgstr "Serienummer"
+
 msgid "unknown"
 msgstr "onbekend"
 
@@ -77999,6 +78030,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Organisations"
+#~ msgstr "Organisaties"
 
 #, fuzzy
 #~| msgid "Data sent"

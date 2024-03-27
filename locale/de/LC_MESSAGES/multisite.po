@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-03-26 00:11+0000\n"
+"PO-Revision-Date: 2024-03-27 10:57+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -932,7 +932,7 @@ msgid "(nothing selected)"
 msgstr "(nicht ausgewählt)"
 
 msgid "(only works with the microcore)"
-msgstr "(nur für den Microcore verfügbar)"
+msgstr "(nur für den Micro Core verfügbar)"
 
 msgid "(overrides <b>username</b>)"
 msgstr "(überschreibt <b>Benutzername</b>)"
@@ -1243,7 +1243,7 @@ msgid ""
 "anymore. You might need to update all agents manually!"
 msgstr ""
 "<b>Achtung:</b> Diesen Schlüssel zu löschen bedeutet, dass Sie keine "
-"Signaturen mit diesem Schlüssel mehr erstellen können. Bereits ausgerollte "
+"Signaturen mit diesem Schlüssel mehr erstellen können. Bereits verteilte "
 "Agenten können sich womöglich nicht mehr aktualisieren. Sie müssen all diese "
 "Agenten manuell aktualisieren!"
 
@@ -1343,7 +1343,7 @@ msgid ""
 "3.4 installation (or newer) with installed python packages \"pyOpenSSL\", "
 "\"requests\" and \"PySocks\" is required on the target hosts."
 msgstr ""
-"<b>Hinweis<sup>3</sup>:</b> Um dieses Plugin auf Solaris einzusetzen, ist "
+"<b>Hinweis<sup>3</sup>:</b> Um dieses Plugin auf Solaris zu verteilen, ist "
 "eine Python 3.4-Installation (oder neuer) mit installierten Python-Paketen "
 "\"pyOpenSSL\", \"requests\" und \"PySocks\" auf den Zielrechnern "
 "erforderlich."
@@ -1667,7 +1667,7 @@ msgid ""
 "initialized in parallel during startup of the Microcore, which may cause "
 "load peaks when having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
-"<p>Der Checkmk Microcore nutzt Checkmk Checker-Prozesse um die Checkmk- und "
+"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die Checkmk- und "
 "Checkmk-Discovery-Checks der überwachten Systeme auszuführen. Es sollten "
 "immer genügend Hilfsprozesse vorhanden sein um die konfigurierten Checks zu "
 "bearbeiten.</p><p>Wenn die Hilfsprozesse der Checker zu 100% ausgelastet "
@@ -1676,15 +1676,15 @@ msgstr ""
 "aktuelle.</p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-"
 "Timeouts verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href="
 "\"view.py?view_name=service_check_durations\">viel Zeit der Hilfsprozesse "
-"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
-"Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der Anzahl der "
-"Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu konfigurieren, "
-"da diese relativ viel Arbeitsspeicher benötigen. Ihr System muss in der Lage "
-"sein den Speicherbedarf zu decken. Ein weiteres Problem ist, dass die "
-"Checker-Prozesse beim Start des Microcores gleichzeitig initialisiert "
-"werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
-"kann.</p>"
+"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato."
+"py?mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk "
+"Checker-Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der "
+"Anzahl der Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu "
+"konfigurieren, da diese relativ viel Arbeitsspeicher benötigen. Ihr System "
+"muss in der Lage sein den Speicherbedarf zu decken. Ein weiteres Problem "
+"ist, dass die Checker-Prozesse beim Start des Micro Cores gleichzeitig "
+"initialisiert werden, was zu Lastspitzen bzw. einer längeren "
+"Initialisierungsphase führen kann.</p>"
 
 #, no-python-format
 msgid ""
@@ -1704,7 +1704,7 @@ msgid ""
 "parallel during startup of the Microcore, which may cause load peaks when "
 "having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
-"<p>Der Checkmk Microcore nutzt Checkmk Checker-Prozesse um die Checkmk- und "
+"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die Checkmk- und "
 "Checkmk-Discovery-Checks der überwachten Systeme auszuführen. Es sollten "
 "immer genügend Hilfsprozesse vorhanden sein um die konfigurierten Checks zu "
 "bearbeiten.</p><p>Wenn die Hilfsprozesse der Checker zu 100% ausgelastet "
@@ -1713,15 +1713,15 @@ msgstr ""
 "aktuell.</p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-"
 "Timeouts verringern können</li><li>Prüfen Sie, welche Checks/Plugins <a href="
 "\"view.py?view_name=service_check_durations\">viel Zeit der Hilfsprozesse "
-"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
-"Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der Anzahl der "
-"Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu konfigurieren, "
-"da diese relativ viel Arbeitsspeicher benötigen. Ihr System muss in der Lage "
-"sein den Speicherbedarf zu decken. Ein weiteres Problem ist, dass die "
-"Checker-Prozesse beim Start des Microcores gleichzeitig initialisiert "
-"werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
-"kann.</p>"
+"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato."
+"py?mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk "
+"Checker-Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der "
+"Anzahl der Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu "
+"konfigurieren, da diese relativ viel Arbeitsspeicher benötigen. Ihr System "
+"muss in der Lage sein den Speicherbedarf zu decken. Ein weiteres Problem "
+"ist, dass die Checker-Prozesse beim Start des Micro Cores gleichzeitig "
+"initialisiert werden, was zu Lastspitzen bzw. einer längeren "
+"Initialisierungsphase führen kann.</p>"
 
 #, no-python-format
 msgid ""
@@ -1742,7 +1742,7 @@ msgid ""
 "parallel during startup of the Microcore, which may cause load peaks when "
 "having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
-"<p>Der Checkmk Microcore nutzt Checkmk Checker-Prozesse um die Checkmk- und "
+"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die Checkmk- und "
 "Checkmk-Discovery-Checks der überwachten Systeme auszuführen. Es sollten "
 "immer genügend Hilfsprozesse vorhanden sein um die konfigurierten Checks zu "
 "bearbeiten.</p><p>Wenn die Hilfsprozesse der Checker zu 100% ausgelastet "
@@ -1751,15 +1751,15 @@ msgstr ""
 "aktuell.</p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-"
 "Timeouts verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href="
 "\"view.py?view_name=service_check_durations\">viel Zeit der Hilfsprozesse "
-"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
-"Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der Anzahl der "
-"Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu konfigurieren, "
-"da diese relativ viel Arbeitsspeicher benötigen. Ihr System muss in der Lage "
-"sein, den Speicherbedarf zu decken. Ein weiteres Problem ist, dass die "
-"Checker-Prozesse beim Start des Microcores gleichzeitig initialisiert "
-"werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
-"kann.</p>"
+"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato."
+"py?mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk "
+"Checker-Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der "
+"Anzahl der Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu "
+"konfigurieren, da diese relativ viel Arbeitsspeicher benötigen. Ihr System "
+"muss in der Lage sein, den Speicherbedarf zu decken. Ein weiteres Problem "
+"ist, dass die Checker-Prozesse beim Start des Micro Cores gleichzeitig "
+"initialisiert werden, was zu Lastspitzen bzw. einer längeren "
+"Initialisierungsphase führen kann.</p>"
 
 #, no-python-format
 msgid ""
@@ -1775,18 +1775,17 @@ msgid ""
 "mode=edit_configvar&varname=cmc_check_helpers\">number of check helpers</a></"
 "li></ul></p>"
 msgstr ""
-"<p>Der Checkmk-Microcore nutzt Hilfsprozesse zur Ausführung von aktiven "
+"<p>Der Checkmk Micro Core nutzt Hilfsprozesse zur Ausführung von aktiven "
 "Checks (z.B. check_http, check_...). Es sollten immer genügend Hilfsprozesse "
 "vorhanden sein um die konfigurierten Checks zu bearbeiten.</p><p>Wenn die "
 "Hilfsprozesse zu 100% ausgelastet sind, werden die konfigurierten Checks "
 "nicht rechtzeitig ausgeführt. Infolge dessen steigt die Latenz der Checks "
 "und die Check-Ergebnisse sind nicht aktuelle.</p><p>Mögliche Aktionen:"
 "<ul><li>Prüfen Sie, ob Sie die Check-Timeouts verringen können</"
-"li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view.py?"
-"view_name=service_check_durations\">viel Zeit der Hilfsprozesse verbrauchen</"
-"a></li><li>Erhöhen Sie die <a href=\"wato.py?"
-"mode=edit_configvar&varname=cmc_check_helpers\">Anzahl der Hilfsprozesse</"
-"a></li></ul></p>"
+"li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view.py?view_name="
+"service_check_durations\">viel Zeit der Hilfsprozesse verbrauchen</a></"
+"li><li>Erhöhen Sie die <a href=\"wato.py?mode=edit_configvar&varname="
+"cmc_check_helpers\">Anzahl der Hilfsprozesse</a></li></ul></p>"
 
 #, python-format
 msgid ""
@@ -2011,8 +2010,8 @@ msgid ""
 "Deployment may present different conditions. You can set a time for how long "
 "a condition is allowed to be in a certain state before the check alerts."
 msgstr ""
-"Eine Deployment nimmt während ihres Lebenszyklus verschiedene Zustände an. "
-"Abhängig davon kann ein Deployment verschiedene Zustände aufweisen. Sie "
+"Eine Verteilung nimmt während ihres Lebenszyklus verschiedene Zustände an. "
+"Abhängig davon kann eine Verteilung verschiedene Zustände aufweisen. Sie "
 "können eine Zeit festlegen, wie lange eine Bedingung in einem bestimmten "
 "Zustand sein darf, bevor der Check Alarm schlägt."
 
@@ -3375,7 +3374,7 @@ msgid "Activation not possible because of the following licensing issues:"
 msgstr "Aktivierung nicht möglich wegen der folgenden Lizenzierungsprobleme:"
 
 msgid "Activation of automatic agent updates"
-msgstr "Aktivierung von automatischen Agentupdates"
+msgstr "Aktivierung von automatischen Agenten-Updates"
 
 msgid ""
 "Activation of changes for the event console (rule modification, global "
@@ -4490,7 +4489,7 @@ msgid ""
 "such a baked agent that contains the plugin. This needs to be done manually "
 "(for the last time)."
 msgstr ""
-"Nach Erstellen einer Regel, die den Agentenupdater ausrollt, müssen die "
+"Nach Erstellen einer Regel, die den Agent Updater verteilt, müssen die "
 "Agenten neu gebacken werden. Auf allen Hosts, die automatische Updates "
 "durchführen, muss ein solcher gebackener Agent, der das Plugin enthält, "
 "installiert sein. Dies muss einmalig manuell durchgeführt werden."
@@ -4539,8 +4538,8 @@ msgid ""
 msgstr ""
 "Nach Ablauf der hier eingestellten Zeit werden laufende Host- und Service-"
 "Checks abgebrochen und als UNKNOWN gewertet. Falls Sie das für einzelne "
-"Services konfigurieren möchten, verwenden Sie bitte den Regelsatz <a href=\"%"
-"s\">%s</a>."
+"Services konfigurieren möchten, verwenden Sie bitte den Regelsatz <a href="
+"\"%s\">%s</a>."
 
 msgid "After the configured time notification plugins are being interrupted."
 msgstr "Nach der eingestellten Zeit werden Alarmierungsplugins abgebrochen."
@@ -4692,25 +4691,25 @@ msgid "Agent Controller"
 msgstr "Agent Controller"
 
 msgid "Agent Deployment: Downloaded Agent Hash"
-msgstr "Agenten-Updates: Hash heruntergeladener Agent"
+msgstr "Agentenverteilung: heruntergeladener Agent-Hash"
 
 msgid "Agent Deployment: Icons"
-msgstr "Agenten-Updates: Icons"
+msgstr "Agentenverteilung: Icons"
 
 msgid "Agent Deployment: Installed Agent Hash"
-msgstr "Agenten-Updates: Hash installierter Agent"
+msgstr "Agentenverteilung: installierter Agent-Hash"
 
 msgid "Agent Deployment: Last Contact"
-msgstr "Agenten-Updates: Letzter Kontakt"
+msgstr "Agentenverteilung: letzter Kontakt"
 
 msgid "Agent Deployment: Last Download"
-msgstr "Agenten-Updates: Letzter Download"
+msgstr "Agentenverteilung: letzter Download"
 
 msgid "Agent Deployment: Last Error"
-msgstr "Agenten-Updates: Letzter Fehler"
+msgstr "Agentenverteilung: letzter Fehler"
 
 msgid "Agent Deployment: Target Agent Hash"
-msgstr "Agenten-Updates: Hash Zielagent"
+msgstr "Agentenverteilung: Zielagent-Hash"
 
 msgid "Agent Error"
 msgstr "Agentenfehler"
@@ -4723,7 +4722,7 @@ msgstr "TCP-Verbindungstimeout des Agenten"
 
 #, python-format
 msgid "Agent Updates are disabled for hostname %s because it is"
-msgstr "Agentenupdate sind für den Host %s abgeschaltet, weil er"
+msgstr "Agentenupdates sind für den Host-Namen %s deaktiviert, weil er"
 
 msgid "Agent Version"
 msgstr "Agentenversion"
@@ -4765,18 +4764,18 @@ msgid "Agent controller connections"
 msgstr "Agent Controller Verbindungen"
 
 msgid "Agent controller deployment"
-msgstr "Agent-Controller deployment"
+msgstr "Agent Controller-Verteilung"
 
 msgid "Agent deployment"
-msgstr "Bereitstellung des Agenten"
+msgstr "Agentenverteilung"
 
 msgid ""
 "Agent deployment is currently globally disabled on the deployment server."
 msgstr ""
-"Agentenausrollen ist momentan auf dem Verteilserver global deaktiviert."
+"Agentenverteilung ist momentan auf dem Verteilserver global deaktiviert."
 
 msgid "Agent deployment status"
-msgstr "Status der Agentenupdates"
+msgstr "Status der Agentenverteilung"
 
 msgid "Agent directory"
 msgstr "Agentenverzeichnis"
@@ -4828,19 +4827,19 @@ msgid "Agent type"
 msgstr "Agent-Type"
 
 msgid "Agent update status"
-msgstr "Status Agentenupdates"
+msgstr "Status Agentenupdate"
 
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "Agent Updater (Linux, Windows, Solaris)"
 
 msgid "Agent updater ruleset"
-msgstr "Regelkette des Agentenupdater"
+msgstr "Regelkette des Agent Updater"
 
 msgid ""
 "Agent updater will follow variables \"HTTP_PROXY\" and \"HTTPS_PROXY\" on "
 "the host."
 msgstr ""
-"Der Agent Updater berücksichtigt die Umgebungsvariablen \"HTTP_PROXY\" and "
+"Der Agent Updater berücksichtigt die Umgebungsvariablen \"HTTP_PROXY\" und "
 "\"HTTPS_PROXY\" auf dem Host."
 
 msgid "Agent updates"
@@ -5013,7 +5012,7 @@ msgid "Alert Statistics: Number of warnings"
 msgstr "Alarmstatistik: Anzahl von WARN"
 
 msgid "Alert handler"
-msgstr "Alerthandler"
+msgstr "Alert Handler"
 
 msgid "Alert handler are configured to handle all check execution."
 msgstr ""
@@ -5021,28 +5020,28 @@ msgstr ""
 "abarbeiten."
 
 msgid "Alert handler configuration"
-msgstr "Alerthandler-Konfiguration"
+msgstr "Alert Handler-Konfiguration"
 
 msgid "Alert handler execution, failed"
-msgstr "Alerthandlerausführung, gescheitert"
+msgstr "Alert Handler-Ausführung, gescheitert"
 
 msgid "Alert handler execution, successful"
-msgstr "Alerthandlerausführung, erfolgreich"
+msgstr "Alert Handler-Ausführung, erfolgreich"
 
 msgid "Alert handler executions"
-msgstr "Alerthandlerausführungen"
+msgstr "Alert Handler-Ausführungen"
 
 msgid "Alert handler failed"
-msgstr "Alerthandler gescheitert"
+msgstr "Alert Handler gescheitert"
 
 msgid "Alert handler log level"
 msgstr "Log-Level für Alert Handler"
 
 msgid "Alert handler rule"
-msgstr "Alerthandler-Regel"
+msgstr "Alert Handler-Regel"
 
 msgid "Alert handler rules"
-msgstr "Alerthandler-Regeln"
+msgstr "Alert Handler-Regeln"
 
 msgid "Alert handler started"
 msgstr "Alert Handler gestartet"
@@ -5055,16 +5054,16 @@ msgstr "Alert-Handler mit Parametern"
 
 #, python-format
 msgid "Alert handler: %s"
-msgstr "Alerthandler: %s"
+msgstr "Alert Handler: %s"
 
 msgid "Alert handler: Don't handle all check executions"
 msgstr "Alert-Handler: Check-Ausführungen nicht behandeln"
 
 msgid "Alert handlers"
-msgstr "Alerthandler"
+msgstr "Alert Handler"
 
 msgid "Alert handlers to deploy"
-msgstr "Alerthandler, die installiert werden sollen"
+msgstr "Alert Handler, die verteilt werden sollen"
 
 msgid "Alert handlers will handle state changes."
 msgstr "Alert Handler behandeln Zustandsänderungen."
@@ -5184,7 +5183,7 @@ msgid "All aggregations the given host is part of"
 msgstr "Alle Aggregationen, in denen ein bestimmter Host enthalten ist"
 
 msgid "All alert handler executions."
-msgstr "Alle Alerthandlerausführungen."
+msgstr "Alle Alert Hhandler-Ausführungen."
 
 msgid "All applications"
 msgstr "Alle Anwendungen"
@@ -5490,8 +5489,8 @@ msgid ""
 "All services of a given host. The host and site must be set via HTTP "
 "variables."
 msgstr ""
-"Alle Services eines gegebenen Hosts. Host und Instanz müssen per HTTP-"
-"Variablen gesetzt werden."
+"Alle Services eines gegebenen Hosts. Der Host und die Instanz müssen per "
+"HTTP-Variablen gesetzt werden."
 
 msgid "All services of a given site."
 msgstr "Alle Services einer bestimmten Instanz."
@@ -5655,9 +5654,9 @@ msgstr "Erlaubte Dauer seit der letzten Synchronisation"
 msgid "Allowed is 1 ... 9"
 msgstr "Erlaubt ist 1 ... 9"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Allowed lengths range from %s to %s."
-msgstr "Erlaubte Werte gehen von %s bis %s."
+msgstr "Erlaubte Längen gehen von %s bis %s."
 
 msgid "Allowed license states"
 msgstr "Erlaubte Lizenzzustände"
@@ -6116,9 +6115,9 @@ msgid ""
 "Analyze configuration can only be used with the local site and distributed "
 "Setup slave sites. You currently have no such site configured."
 msgstr ""
-"Die Konfigurationsanalyse kann nur mit der lokalen Instanz oder mit "
-"untergeordneten Instanzen in einem verteilten Setup ausgeführt werden. Sie "
-"haben aktuell keine solche Instanz konfiguriert."
+"Die Konfigurationsanalyse kann nur mit der lokalen Instanz oder mit Remote-"
+"Instanzen in einem verteilten Setup ausgeführt werden. Sie haben aktuell "
+"keine solche Instanz konfiguriert."
 
 msgid "Analyze host patterns"
 msgstr "Analysiere Host-Muster"
@@ -7082,7 +7081,7 @@ msgid "Automatic activation"
 msgstr "Automatisches Aktivieren"
 
 msgid "Automatic agent updates"
-msgstr "Automatische Agentupdates"
+msgstr "Automatische Agentenupdates"
 
 msgid "Automatic detection (Python 3 > Python 2)"
 msgstr "Automatische Erkennung (Python 3 > Python 2)"
@@ -7438,7 +7437,7 @@ msgid "Average size growth"
 msgstr "Durschnittliches Größenwachstum"
 
 msgid "Average slave sync time"
-msgstr "Durchschnittliche Slave-Synczeit"
+msgstr "Durchschnittliche Remote-Synczeit"
 
 msgid "Average speed of backup"
 msgstr "Durchschnittliche Geschwindigkeit der Sicherung"
@@ -8182,9 +8181,8 @@ msgstr "Unten"
 msgid "Bottom (lowest) N"
 msgstr "Bottom (niedrigste) N"
 
-#, fuzzy
 msgid "Bottom level suite"
-msgstr "Keine Schwellwerte"
+msgstr "Suite der untersten Ebene"
 
 msgid "Bounce buffers"
 msgstr "Bounce-Puffer"
@@ -8771,11 +8769,11 @@ msgid ""
 "make it possible for the remote site to communicate with the central site on "
 "behalf of the agent updater."
 msgstr ""
-"Standardmäßig kommuniziert der Agent Updater mit der Agent Bakery der "
+"Standardmäßig kommuniziert der Agent Updater mit der Agentenbäckerei der "
 "Zentralinstanz, um den Agenten zu aktualisieren. Wenn Sie möchten, dass der "
-"Agenten-Updater seinen Agenten von seiner Remote-Instanz abholt, müssen Sie "
-"diese Option konfigurieren. Somit kann die Remote-Instanz im Namen des "
-"Agenten-Updaters mit der Zentrtalinstanz kommunizieren kann."
+"Agent Updater seinen Agenten von seiner Remote-Instanz abholt, müssen Sie "
+"diese Option konfigurieren. Somit kann die Remote-Instanz im Namen des Agent "
+"Updaters mit der Zentralinstanz kommunizieren kann."
 
 #, python-format
 msgid ""
@@ -8825,7 +8823,7 @@ msgstr ""
 "Benutzer standardmäßig alle fünf Minuten. Das Intervall kann für jede "
 "Verbindung individuell in den <a href=\"wato.py?mode=ldap_config\""
 ">connection settings</a>. Achtung: Die Synchronisierung wird in verteilten "
-"Umgebungen standardmäßig nur auf der Master-Instanz durchgeführt.<br>Die "
+"Umgebungen standardmäßig nur auf der Zentralinstanz durchgeführt.<br>Die "
 "Remote-Instanzen führen keine automatische Synchronisation mit den "
 "konfigurierten Verbindungen durch. Allerdings können Sie jede Instanz so "
 "konfigurieren, dass sie die Nutzer mit allen konfigurierten oder nur "
@@ -9428,7 +9426,7 @@ msgid "CPU resources: DaemonSet"
 msgstr "CPU-Ressourcen: DaemonSet"
 
 msgid "CPU resources: Deployment"
-msgstr "CPU-Ressourcen: Deployment"
+msgstr "CPU-Ressourcen: Verteilung"
 
 msgid "CPU resources: Namespace"
 msgstr "CPU-Ressourcen: Namespace"
@@ -10122,9 +10120,8 @@ msgstr "Überprüfung von Zertifikaten"
 msgid "Certificate Key File"
 msgstr "Zertifikatsschlüsseldatei"
 
-#, fuzzy
 msgid "Certificate age"
-msgstr "Zertifikatskette"
+msgstr "Alter des Zertifikats"
 
 msgid "Certificate and key file"
 msgstr "Zertifikat- und Schlüsseldatei"
@@ -10270,7 +10267,7 @@ msgstr "LDAP-Verbindung %s geändert"
 
 #, python-format
 msgid "Changed alert handler rule %d"
-msgstr "Alerthandlerregel %d geändert"
+msgstr "Alert Handler-Regel %d geändert"
 
 msgid "Changed entries"
 msgstr "Geänderte Einträge"
@@ -10714,7 +10711,7 @@ msgstr ""
 "Auswählen um multiprocessing zu deaktivieren. Nur zum Debuggen empfohlen."
 
 msgid "Check timeout for services (Microcore)"
-msgstr "Check-Timeout für Services (Microcore)"
+msgstr "Check-Timeout für Services (Micro Core)"
 
 msgid "Check type"
 msgstr "Check-Typ"
@@ -11039,80 +11036,62 @@ msgstr ""
 msgid "Checkmk with times performance data"
 msgstr "Checkmk mit Zeitleistungsdaten"
 
-#, fuzzy
 msgid "Checkmk: BI: Bytes"
-msgstr "Checkmk: BI"
+msgstr "Checkmk: BI: Bytes"
 
-#, fuzzy
 msgid "Checkmk: BI: Requests"
-msgstr "Checkmk: BI"
+msgstr "Checkmk: BI: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: BI: Secs"
-msgstr "Checkmk: BI"
+msgstr "Checkmk: BI: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: Dashboards: Bytes"
-msgstr "Checkmk: Übersichten"
+msgstr "Checkmk: Dashboards: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Dashboards: Requests"
-msgstr "Checkmk: Übersichten"
+msgstr "Checkmk: Dashboards: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Dashboards: Secs"
-msgstr "Checkmk: Übersichten"
+msgstr "Checkmk: Dashboards: Sekunden"
 
 msgid "Checkmk: Message"
 msgstr "Checkmk: Nachricht"
 
-#, fuzzy
 msgid "Checkmk: Other: Bytes"
-msgstr "Checkmk: Sonstige"
+msgstr "Checkmk: Sonstige: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Other: Requests"
-msgstr "Checkmk: Sonstige"
+msgstr "Checkmk: Sonstige: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Other: Secs"
-msgstr "Checkmk: Sonstige"
+msgstr "Checkmk: Sonstige: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: Sidebar elements: Bytes"
-msgstr "Checkmk: Seitenleistenelemente"
+msgstr "Checkmk: Seitenleistenelemente: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Sidebar elements: Requests"
-msgstr "Checkmk: Seitenleistenelemente"
+msgstr "Checkmk: Seitenleistenelemente: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Sidebar elements: Secs"
-msgstr "Checkmk: Seitenleistenelemente"
+msgstr "Checkmk: Seitenleistenelemente: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: Views: Bytes"
-msgstr "Checkmk: Ansichten"
+msgstr "Checkmk: Ansichten: Bytes"
 
-#, fuzzy
 msgid "Checkmk: Views: Requests"
-msgstr "Checkmk: Ansichten"
+msgstr "Checkmk: Ansichten: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: Views: Secs"
-msgstr "Checkmk: Ansichten"
+msgstr "Checkmk: Ansichten: Sekunden"
 
-#, fuzzy
 msgid "Checkmk: WATO: Bytes"
-msgstr "Checkmk: WATO"
+msgstr "Checkmk: WATO: Bytes"
 
-#, fuzzy
 msgid "Checkmk: WATO: Requests"
-msgstr "Checkmk: WATO"
+msgstr "Checkmk: WATO: Anfragen"
 
-#, fuzzy
 msgid "Checkmk: WATO: Secs"
-msgstr "Checkmk: WATO"
+msgstr "Checkmk: WATO: Sekunden"
 
 #, python-format
 msgid "Checkmk: Your license expires %s"
@@ -11239,8 +11218,8 @@ msgid ""
 "&gt;."
 msgstr ""
 "Wählen Sie hier einen Namen. Wenn Sie <tt>foo</tt> eintragen, wird der "
-"Sektionsheader und somit der Name des benötigten Check-Plugins "
-"&lt;&lt;&lt;winperf_foo&gt;&gt;&gt; sein."
+"Sektionsheader und somit der Name des benötigten Check-Plugins &lt;&lt;&lt;"
+"winperf_foo&gt;&gt;&gt; sein."
 
 msgid "Choose all"
 msgstr "Alle auswählen"
@@ -12288,9 +12267,9 @@ msgid ""
 "the check raise warning/critical states if the time is equal to or above the "
 "configured levels."
 msgstr ""
-"Vergleicht die Zeit, die der Slave hinter dem Master her sein kann. Diese "
-"Regel setzt den Check auf WARN/CRIT, wenn diese Zeit gleich oder über den "
-"eingestellten Leveln liegt."
+"Vergleicht die Zeit, welche die Remote-Instanz hinter der Zentralinstanz her "
+"sein kann. Diese Regel setzt den Check auf WARN/CRIT, wenn diese Zeit gleich "
+"oder über den eingestellten Leveln liegt."
 
 msgid "Compatibility"
 msgstr "Kompatibilität"
@@ -12482,7 +12461,7 @@ msgid "Configuration of the Datadog special agent."
 msgstr "Konfiguration des Datadog-Spezialagenten."
 
 msgid "Configuration of update plugin"
-msgstr "Konfiguration des Updateplugins"
+msgstr "Konfiguration des Update-Plugins"
 
 #, python-format
 msgid ""
@@ -12499,7 +12478,7 @@ msgid ""
 "Configuration, status, and status history data of the CMC (Checkmk "
 "Microcore); cmcdump output of the status and config."
 msgstr ""
-"Konfiguration, Status und Status-History des CMC (Checkmk Microcore); "
+"Konfiguration, Status und Status-History des CMC (Checkmk Micro Core); "
 "cmcdump-Ausgabe des Status und der Konfiguration."
 
 msgid "Configure"
@@ -12540,8 +12519,8 @@ msgid ""
 "because this URL is likely different for every remote site."
 msgstr ""
 "Konfigurieren Sie eine alternative URL für die Verbindung vom Host zur "
-"Remote-Agent-Bakery. Wenn hier nicht konfiguriert, wird stattdessen die URL "
-"aus der verteilten Monitoring Konfiguration verwendet. In vielen Fällen "
+"Remote-Agentenbäckerei. Wenn hier nicht konfiguriert, wird stattdessen die "
+"URL aus der verteilten Monitoring Konfiguration verwendet. In vielen Fällen "
 "sollten Sie dies als standortspezifische globale Einstellung in der "
 "verteilten Überwachungskonfiguration vornehmen, da diese URL wahrscheinlich "
 "für jede entfernte Instanz anders ist."
@@ -12550,7 +12529,7 @@ msgid "Configure compliance state checking"
 msgstr "Konfigurieren Sie die Überprüfung des Compliance State"
 
 msgid "Configure custom agent file deployments"
-msgstr "Benutzerdefinierte Agenten-Dateieinsätze konfigurieren"
+msgstr "Benutzerdefinierte Agentendatei-Verteilung konfigurieren"
 
 msgid "Configure discovery of single interfaces"
 msgstr "Konfiguriere die Erkennung von Einzel-Interfaces"
@@ -12781,8 +12760,8 @@ msgid ""
 "monitoring site needs to be %sconfigured to listen on this port%s."
 msgstr ""
 "Konfigurieren Sie den Port, an den die Echtzeitdaten gesendet werden sollen. "
-"Der Microcore der Monitoring-Instanz muss so %s konfiguriert werden, dass er "
-"auf diesem Port %s lauscht."
+"Der Micro Core der Monitoring-Instanz muss so %s konfiguriert werden, dass "
+"er auf diesem Port %s lauscht."
 
 msgid "Configure the target mode for the system."
 msgstr "Den Zielzustand für das System einstellen."
@@ -12991,7 +12970,7 @@ msgid "Connect to remote sites"
 msgstr "Zu Remote-Instanzen verbinden"
 
 msgid "Connect to site url"
-msgstr ""
+msgstr "Mit Instanz-URL verbinden"
 
 msgid ""
 "Connect to the LDAP server with a SSL encrypted connection. The <a href="
@@ -13102,7 +13081,7 @@ msgid "Connection to central agent bakery"
 msgstr "Verbindung zur zentralen Agentenbäckerei"
 
 msgid "Connection to remote agent bakery"
-msgstr "Verbindung zur entfernten Agentenbäckerei"
+msgstr "Verbindung zur Remote-Agentenbäckerei"
 
 msgid "Connection to the REST API"
 msgstr "Verbindung zur REST API"
@@ -13310,9 +13289,8 @@ msgstr "Enthält korrupte Datei %s"
 msgid "Contains: %d %s and %d %s"
 msgstr "Enthält: %d %s und %d %s"
 
-#, fuzzy
 msgid "Content"
-msgstr "Inhalte"
+msgstr "Inhalt"
 
 msgid "Content elements"
 msgstr "Inhaltselemente"
@@ -13442,13 +13420,13 @@ msgid "Coordinates"
 msgstr "Koordinaten"
 
 msgid "Copied rules from master"
-msgstr "Regeln vom Master kopiert"
+msgstr "Regeln von Zentralinstanz kopiert"
 
 msgid "Copied secret to clipboard"
 msgstr "Geheimnis (Secret) in die Zwischenablage kopiert"
 
 msgid "Copied the event rules from the master into the local configuration"
-msgstr "Ereignisregeln vom Master in lokale Konfiguration kopiert"
+msgstr "Ereignisregeln von Zentralinstanz in lokale Konfiguration kopiert"
 
 msgid "Copies a view to a dashboard element"
 msgstr "Kopiert eine Ansicht in ein Dashboardelement"
@@ -13854,7 +13832,7 @@ msgid "Create a copy of this aggregation"
 msgstr "Erstellen Sie eine Kopie dieser Aggregation"
 
 msgid "Create a copy of this alert handler rule"
-msgstr "Kopie dieser Alerthandlerregel erzeugen"
+msgstr "Kopie dieser Alert Handler-Regel erzeugen"
 
 msgid "Create a copy of this connection"
 msgstr "Diese Verbindung kopieren"
@@ -14096,7 +14074,7 @@ msgid "Created new LDAP connection"
 msgstr "Neue LDAP-Verbindung erstellt"
 
 msgid "Created new alert handler rule"
-msgstr "Neue Alerthandlerregel erzeugt"
+msgstr "Neue Alert Handler-Regel erzeugt"
 
 #, python-format
 msgid "Created new connection to site %s"
@@ -14411,7 +14389,7 @@ msgid "Current Users"
 msgstr "Aktuelle Benutzer"
 
 msgid "Current agent update status of all registered hosts."
-msgstr "Aktueller Agentupdatestatus von allen registrierten Hosts."
+msgstr "Aktueller Agentenupdate-Status von allen registrierten Hosts."
 
 msgid "Current check attempt"
 msgstr "Aktueller Check-Versuch"
@@ -15026,7 +15004,7 @@ msgid "DNS name or IP address of target notification spooler"
 msgstr "DNS-Name oder IP-Adresse des Ziel-Alarmspoolers"
 
 msgid "DNS name or IP address of update server"
-msgstr "DNS-Name oder IP-Adresse des Updateservers"
+msgstr "DNS-Name oder IP-Adresse des Update-Servers"
 
 msgid "DNS policy"
 msgstr "DNS-Policy"
@@ -15526,8 +15504,8 @@ msgstr ""
 "Lieber Checkmk-Benutzer,<br><br>Sie haben noch %s in Ihrem Checkmk-"
 "Testzeitraum für die Instanz '%s' übrig.<br><br>%s jetzt, um Checkmk weiter "
 "so wie heute nutzen zu können. Falls Sie bereits eine Lizenz besitzen, geben "
-"Sie bitte Ihre Lizenzdaten auf der Checkmk-Lizenzierungsseite "
-"ein.<br><br>Andernfalls wird Ihr Checkmk nach Ablauf des Testzeitraums "
+"Sie bitte Ihre Lizenzdaten auf der Checkmk-Lizenzierungsseite ein."
+"<br><br>Andernfalls wird Ihr Checkmk nach Ablauf des Testzeitraums "
 "automatisch in den Lizenzstatus 'Free' umgewandelt. In diesem Lizenzstatus "
 "müssen Sie die Anzahl der Services von %s auf %s reduzieren, um die maximale "
 "Servicegrenze von Checkmk im Lizenzstatus 'Free' zu erfüllen.<br><br>Mit "
@@ -15721,7 +15699,6 @@ msgstr "Standard auf weniger anzeigen"
 msgid "Default to show more"
 msgstr "Standard auf mehr anzeigen"
 
-#, fuzzy
 msgid "Default topic"
 msgstr "Standardthema"
 
@@ -16106,7 +16083,7 @@ msgid "Delete job #%d"
 msgstr "Prozess #%d löschen"
 
 msgid "Delete last alert handler rule"
-msgstr "Letzte Alerthandlerregel löschen"
+msgstr "Letzte Alert Handler-Regel löschen"
 
 msgid "Delete messages"
 msgstr "Nachrichten löschen"
@@ -16215,7 +16192,7 @@ msgid "Delete this aggregation"
 msgstr "Dieses Aggregat löschen"
 
 msgid "Delete this alert handler rule"
-msgstr "Diese Alerthandlerregel löschen"
+msgstr "Diese Alert Handler-Regel löschen"
 
 msgid "Delete this annotation"
 msgstr "Diese Anmerkung löschen"
@@ -16465,259 +16442,261 @@ msgid "Deploy %s"
 msgstr "%s verteilen"
 
 msgid "Deploy AD-Replication plugin"
-msgstr "Plugin für AD-Replikation ausrollen"
+msgstr "Plugin für AD-Replikation verteilen"
 
 msgid "Deploy Arcserve plugin"
-msgstr "Arcserve-Plugin ausrollen"
+msgstr "Arcserve-Plugin verteilen"
 
 msgid "Deploy DB2 memory plugin"
-msgstr "Das DB2 memory Plugin ausrollen"
+msgstr "DB2 memory Plugin verteilen"
 
 msgid "Deploy IBM MQ plugin"
-msgstr "Das IBM MQ-Plugin ausrollen"
+msgstr "IBM MQ-Plugin verteilen"
 
 msgid "Deploy IBM WebSphere MQ plugin"
-msgstr "Das IBM WebSphere Plugin ausrollen"
+msgstr "IBM WebSphere Plugin verteilen"
 
 msgid "Deploy ISC DHCP-Daemon plugin"
-msgstr "Das ISC DHCP-Daemon-Plugin ausrollen"
+msgstr "ISC DHCP-Daemon-Plugin verteilen"
 
 msgid "Deploy Inotify plugin"
-msgstr "INotify Plugin ausrollen"
+msgstr "INotify Plugin verteilen"
 
 msgid "Deploy Kaspersky Anti-Virus plugin"
-msgstr "Das Kaspersky Anti-Virus Plugin ausrollen"
+msgstr "Kaspersky Anti-Virus Plugin verteilen"
 
 msgid "Deploy LVM plugin"
-msgstr "Das LVM-Plugin ausrollen"
+msgstr "LVM-Plugin verteilen"
 
 msgid "Deploy Linux filesystem quota plugin"
-msgstr "Das Linux filesystem quota Plugin ausrollen"
+msgstr "Linux filesystem quota Plugin verteilen"
 
 msgid "Deploy MS Office 365 plugin"
-msgstr "Das MS Office 365-Plugin ausrollen"
+msgstr "MS Office 365-Plugin verteilen"
 
 msgid "Deploy MSSQL Server plugin"
-msgstr "Das MSSQL-Server-Plugin ausrollen"
+msgstr "MSSQL-Server-Plugin verteilen"
 
 msgid "Deploy MTR plugin asynchronously"
 msgstr "MTR-Plugin asynchron verteilen"
 
 msgid "Deploy Mailman plugin"
-msgstr "Das Mailman Plugin ausrollen"
+msgstr "Mailman Plugin verteilen"
 
 msgid "Deploy MegaRAID plugin"
-msgstr "MegaRAID-Plugin ausrollen"
+msgstr "MegaRAID-Plugin verteilen"
 
 msgid "Deploy NFS4 exports plugin"
-msgstr "Das NFS4 exports Plugin ausrollen"
+msgstr "NFS4 exports Plugin verteilen"
 
 msgid "Deploy ORACLE databases plugin"
 msgstr "ORACLE-Datenbank-Plugin verteilen"
 
 msgid "Deploy OpenHardwareMonitor (headless)"
-msgstr "OpenHardwareMonitor (GUI-los) ausrollen"
+msgstr "OpenHardwareMonitor (kopflos) verteilen"
 
 msgid "Deploy Remote Desktop Licenses plugin"
-msgstr "Remote Desktop Lizenzen Plugin ausrollen"
+msgstr "Remote Desktop Lizenzen Plugin verteilen"
 
 msgid "Deploy Robotmk Scheduler and Agent Plugin"
-msgstr "Verteile Robotmk Scheduler und Agentenplugin"
+msgstr "Robotmk Scheduler und Agentenplugin verteilen"
 
 msgid "Deploy SMART plugin"
-msgstr "Das SMART Plugin ausrollen"
+msgstr "SMART Plugin verteilen"
 
 msgid "Deploy SUSEConnect plugin"
-msgstr "Das SUSEConnect Plugin"
+msgstr "SUSEConnect Plugin verteilen"
 
 msgid "Deploy StorCLI plugin"
-msgstr "Das StorCLI-Plugin ausrollen"
+msgstr "StorCLI-Plugin verteilen"
 
 msgid "Deploy Symantec Anti Virus plugin"
-msgstr "Das Symantec Anti Virus Plugin ausrollen"
+msgstr "Symantec Anti Virus Plugin verteilen"
 
 msgid "Deploy Unitrends plugins"
-msgstr "Die Unitrends Plugins ausrollen"
+msgstr "Unitrends Plugins verteilen"
 
 msgid "Deploy VxVM plugin"
-msgstr "Das VxVM Plugin ausrollen"
+msgstr "VxVM Plugin verteilen"
 
 msgid "Deploy Windows License plugin"
-msgstr "Bereitstellung des Windows-Lizenz-Plugins"
+msgstr "Windows-Lizenz-Plugin verteilen"
 
 msgid "Deploy Windows McAfee AV client plugin"
-msgstr "Das Windows McAfee AV Clientplugin ausrollen"
+msgstr "Windows McAfee AV Clientplugin verteilen"
 
 msgid "Deploy Windows Multipath plugin"
-msgstr "Das Windows Multipath Plugin ausrollen"
+msgstr "Windows Multipath Plugin verteilen"
 
 msgid "Deploy Windows Printer Queue plugin"
-msgstr "Das Windowsdrucker-Plugin ausrollen"
+msgstr "Windows-Druckerwarteschlange-Plugin verteilen"
 
 msgid "Deploy Windows Updates plugin"
-msgstr "Das Windows Updates ausrollen"
+msgstr "Windows Updates Plugin verteilen"
 
 msgid "Deploy Zorp plugin"
-msgstr "Das Zorp-Plugin ausrollen"
+msgstr "Zorp-Plugin verteilen"
 
 msgid "Deploy agents"
-msgstr "Agenten bereitstellen"
+msgstr "Agenten verteilen"
 
 msgid "Deploy batch file plugin - recommended for WinXP / Win2k upwards"
 msgstr ""
-"Batch-Version des Plugins ausrollen (für Windows XP, Windows 2000 aufwärts)"
+"Batch-Version des Plugins verteilen - empfohlen für Windows XP / Windows "
+"2000 aufwärts"
 
 msgid "Deploy custom files with agent"
-msgstr "Benutzerdefinierte Dateien mit Agent ausrollen"
+msgstr "Benutzerdefinierte Dateien mit Agent verteilen"
 
 msgid "Deploy iptables plugin"
-msgstr "Das iptables Plugins ausrollen"
+msgstr "iptables Plugin verteilen"
 
 msgid "Deploy logged in users plugin"
-msgstr "Plugin für eingeloggte Benutzer ausrollen"
+msgstr "Plugin für eingeloggte Benutzer verteilen"
 
 msgid "Deploy mk_mongodb.py with authentication."
-msgstr "Verteilen Sie mk_mongodb.py mit Authentifizierung."
+msgstr "mk_mongodb.py mit Authentifizierung verteilen."
 
 msgid "Deploy mk_mongodb.py without authentication."
-msgstr "Setzen Sie mk_mongodb.py ohne Authentifizierung ein."
+msgstr "mk_mongodb.py ohne Authentifizierung verteilen."
 
 msgid "Deploy plugin for Citrix XenApp"
-msgstr "Plugin für Citrix XenApp ausrollen"
+msgstr "Plugin für Citrix XenApp verteilen"
 
 msgid "Deploy plugin for Citrix licenses"
-msgstr "Plugin für Citrix-Lizenzen ausrollen"
+msgstr "Plugin für Citrix-Lizenzen verteilen"
 
 msgid "Deploy plugin for DAG"
-msgstr "Plugin für DAG bereitstellen"
+msgstr "Plugin für DAG verteilen"
 
 msgid "Deploy plugin for DB2"
-msgstr "Plugin für DB2 ausrollen"
+msgstr "Plugin für DB2 verteilen"
 
 msgid "Deploy plugin for Hyper-V VM Guest Information"
-msgstr "Plugin für Hyper-V VM Gastinformationen ausrollen"
+msgstr "Plugin für Hyper-V VM Gastinformationen verteilen"
 
 msgid "Deploy plugin for Hyper-V VMs"
-msgstr "Plugin für Hyper-V VMs ausrollen"
+msgstr "Plugin für Hyper-V VMs verteilen"
 
 msgid "Deploy plugin for JAR signatures"
-msgstr "Plugin für JAR-Signaturen ausrollen"
+msgstr "Plugin für JAR-Signaturen verteilen"
 
 msgid "Deploy plugin for MS Exchange database latency"
-msgstr "Deploy Plugin für MS Exchange Datenbank-Latenzzeiten"
+msgstr "Plugin für MS Exchange Datenbank-Latenzzeiten verteilen"
 
 msgid "Deploy plugin for MS IIS Application Pool States"
-msgstr "Plugin für MS IIS Application Pool States bereitstellen"
+msgstr "Plugin für MS IIS Application Pool States verteilen"
 
 msgid "Deploy plugin for NFS IO Stats"
-msgstr "Plugin für NFS IO Stats bereitstellen"
+msgstr "Plugin für NFS IO Stats verteilen"
 
 msgid "Deploy plugin for Veeam backup status"
-msgstr "Plugin für den Veeam Backup-Status bereitstellen"
+msgstr "Plugin für den Veeam Backup-Status verteilen"
 
 msgid "Deploy plugin for Windows DHCP pools"
-msgstr "Plugin für Windows DHCP pools ausrollen"
+msgstr "Plugin für Windows DHCP pools verteilen"
 
 msgid "Deploy plugin for Windows System Info"
-msgstr "Plugins für Windows Systeminfo ausrollen"
+msgstr "Plugins für Windows Systeminfo verteilen"
 
 msgid "Deploy plugin for Windows Task Scheduler"
-msgstr "Plugin für Windows Task-Scheduler ausrollen"
+msgstr "Plugin für Windows Task-Scheduler verteilen"
 
 msgid "Deploy plugin for Windows broadcom bonding"
-msgstr "Plugin für Windows Broadcom-Bonding ausrollen"
+msgstr "Plugin für Windows Broadcom-Bonding verteilen"
 
 msgid "Deploy plugin that updates agent automatically"
-msgstr "Plugin, das Agenten automatisch aktualisiert, ausrollen"
+msgstr "Plugin, das Agenten automatisch aktualisiert, verteilen"
 
 msgid "Deploy powershell plugin - recommended for Win2k8 upwards"
 msgstr ""
-"Powershell-Version des Plugins ausrollen (für Windows 2008 und aufwärts)"
+"Powershell-Version des Plugins verteilen - empfohlen für Windows 2008 und "
+"aufwärts"
 
 #, python-format
 msgid "Deploy the %s plugin and its configuration"
-msgstr "Das %s Plugin mit Konfiguration ausrollen"
+msgstr "Das %s Plugin mit Konfiguration verteilen"
 
 #, python-format
 msgid "Deploy the %s plugin without configuration"
-msgstr "Das %s Plugin ohne Konfiguration ausrollen"
+msgstr "Das %s Plugin ohne Konfiguration verteilen"
 
 msgid "Deploy the APT plugin"
-msgstr "Das APT-Plugin ausrollen"
+msgstr "Das APT-Plugin verteilen"
 
 msgid "Deploy the Checkmk CUPS queues plugin"
-msgstr "Das Checkmk CUPS Queues Plugin ausrollen"
+msgstr "Das Checkmk CUPS Queues Plugin verteilen"
 
 msgid "Deploy the Checkmk EMC ScaleIO plugin"
-msgstr "Das Checkmk EMC ScaleIO Plugin ausrollen"
+msgstr "Das Checkmk EMC ScaleIO Plugin verteilen"
 
 msgid "Deploy the Checkmk Inventory plugin"
-msgstr "Bereitstellen des Checkmk Inventory Plugins"
+msgstr "Das Checkmk Inventory Plugin verteilen"
 
 msgid "Deploy the Checkmk object counts plugin"
-msgstr "Das Checkmk-Instanzobjekte-Plugin ausrollen"
+msgstr "Das Checkmk-Objektzählungs-Plugin verteilen"
 
 msgid "Deploy the Jolokia plugin"
-msgstr "Das Jolokia Plugin ausrollen"
+msgstr "Das Jolokia Plugin verteilen"
 
 msgid "Deploy the MySQL plugin"
-msgstr "Das MySQL Plugin ausrollen"
+msgstr "Das MySQL Plugin verteilen"
 
 msgid "Deploy the PostgreSQL plugin"
-msgstr "Das PostgresQL-Plugin ausrollen"
+msgstr "Das PostgresQL-Plugin verteilen"
 
 msgid "Deploy the SAP HANA plugin"
-msgstr "Das SAP HANA-Plugin ausrollen"
+msgstr "Das SAP HANA-Plugin verteilen"
 
 msgid "Deploy the SAP R/3 plugin"
-msgstr "Das SAP R/3 Plugin ausrollen"
+msgstr "Das SAP R/3 Plugin verteilen"
 
 msgid "Deploy the SAP router plugin"
-msgstr "Das SAP-Router-Plugin ausrollen"
+msgstr "Das SAP-Router-Plugin verteilen"
 
 msgid "Deploy the SSH daemon configuration plugin"
-msgstr "Das SSH Daemon Konfigurationsplugin ausrollen"
+msgstr "Das SSH Daemon Konfigurationsplugin verteilen"
 
 msgid "Deploy the TSM plugin"
-msgstr "Das TSM Plugin ausrollen"
+msgstr "Das TSM Plugin verteilen"
 
 msgid "Deploy the Zypper plugin"
-msgstr "Das Zypper Plugin ausrollen"
+msgstr "Das Zypper Plugin verteilen"
 
 msgid ""
 "Deploy the agent plugin <tt>mk_postgres</tt>. This will create information "
 "necessary for all <tt>postgres_*</tt> checks"
 msgstr ""
-"Rollen sie das Agentenplugin <tt>mk_postgress</tt> aus. Dies erstellt "
+"Verteilen Sie das Agentenplugin <tt>mk_postgress</tt>. Dies erstellt "
 "Informationen, die für die Überwachung aller <tt>postgres_*</tt> Checks "
 "notwendig sind"
 
 msgid "Deploy the agent plugin <tt>mk_sshd_config</tt>."
-msgstr "Das Agentenplugin <tt>mk_sshd_config</tt> ausrollen."
+msgstr "Das Agentenplugin <tt>mk_sshd_config</tt> verteilen."
 
 msgid "Deploy the agent plugin <tt>mk_suseconnect</tt>."
-msgstr "Das Agentenplugin <tt>mk_suseconnect</tt> ausrollen."
+msgstr "Das Agentenplugin <tt>mk_suseconnect</tt> verteilen."
 
 msgid "Deploy the agent plugin <tt>zorp</tt> on your target system."
-msgstr "Rolle das Agentenplugin <tt>zorp</tt> auf Ihrem Zielsystem aus."
+msgstr "Das Agentenplugin <tt>zorp</tt> auf Ihrem Zielsystem verteilen."
 
 msgid "Deploy the docker container plugin"
-msgstr "Das Docker Container Plugin ausrollen"
+msgstr "Das Docker Container Plugin verteilen"
 
 msgid "Deploy the docker plugin"
-msgstr "Das Docker Plugin ausrollen"
+msgstr "Das Docker Plugin verteilen"
 
 msgid "Deploy the mk_filehandler plugin"
 msgstr "mk_filehandler-Plugin verteilen"
 
 msgid "Deploy the netstat plugin"
-msgstr "Bereitstellen des netstat-Plugins"
+msgstr "Das netstat-Plugin verteilen"
 
 msgid "Deploy the nvidia_smi agent plugin"
-msgstr "nvidia_smi Agenten-Plugin bereitstellen"
+msgstr "nvidia_smi Agenten-Plugin verteilen"
 
 msgid "Deploy the plesk plugins"
-msgstr "Die plesk Plugins ausrollen"
+msgstr "Die plesk Plugins verteilen"
 
 msgid "Deploy without authentication."
 msgstr "Ohne Authentifizierung verteilen."
@@ -16726,7 +16705,7 @@ msgid "Deployment"
 msgstr "Verteilung"
 
 msgid "Deployment problems"
-msgstr "Probleme beim Deployment"
+msgstr "Probleme bei der Verteilung"
 
 msgid ""
 "Deployment status of host {} is corrupted. Consider deleting the "
@@ -16738,7 +16717,7 @@ msgstr ""
 "{} neu zu registrieren. Ausnahme: {}"
 
 msgid "Deployments"
-msgstr "Deployments"
+msgstr "Verteilung"
 
 msgid "Deprecated"
 msgstr "Veraltet"
@@ -17140,9 +17119,8 @@ msgstr ""
 "Keine automatische Benutzersynchronisation (nutze Benutzer der "
 "Zentralinstanz)"
 
-#, fuzzy
 msgid "Disable bulkwalks"
-msgstr "Alle deaktivieren"
+msgstr "Bulk Walks deaktivieren"
 
 msgid "Disable certificate validation"
 msgstr "Zertifikatsüberprüfung deaktivieren"
@@ -17445,9 +17423,8 @@ msgstr "Festplatte prozentuale Nutzung"
 msgid "Disk read"
 msgstr "Platte lesend"
 
-#, fuzzy
 msgid "Disk read I/O operations"
-msgstr "Lesevorgänge auf der Festplatte"
+msgstr "Festplatten-Lese-E/A-Vorgänge"
 
 msgid "Disk read latency"
 msgstr "Latenz beim Lesen der Festplatte"
@@ -17476,9 +17453,8 @@ msgstr "Festplattenauslastung"
 msgid "Disk write"
 msgstr "Platte schreibend"
 
-#, fuzzy
 msgid "Disk write I/O operations"
-msgstr "Schreibvorgänge auf der Festplatte"
+msgstr "Festplatten-Schreib-E/A-Vorgänge"
 
 msgid "Disk write latency"
 msgstr "Latenz beim Schreiben der Festplatte"
@@ -17926,91 +17902,91 @@ msgid "Do not create hosts"
 msgstr "Hosts nicht erstellen"
 
 msgid "Do not deploy AD-Replication plugin"
-msgstr "Plugin für AD-Replikation nicht ausrollen"
+msgstr "Plugin für AD-Replikation nicht verteilen"
 
 msgid "Do not deploy Check SQL Server plugin"
 msgstr "Check SQL-Server-Plugin nicht verteilen"
 
 msgid "Do not deploy DB2 memory plugin"
-msgstr "Das DB2 memory Plugin nicht ausrollen"
+msgstr "Das DB2 memory Plugin nicht verteilen"
 
 msgid "Do not deploy IBM WebSphere MQ plugin"
-msgstr "Das IBM WebSphere MQ Plugin nicht ausrollen"
+msgstr "Das IBM WebSphere MQ Plugin nicht verteilen"
 
 msgid "Do not deploy ISC DHCP-Daemon plugin"
-msgstr "Das ISC DHCP-Daemon Plugin nicht ausrollen"
+msgstr "Das ISC DHCP-Daemon Plugin nicht verteilen"
 
 msgid "Do not deploy Inotify plugin"
-msgstr "INotify Plugin nicht ausrollen"
+msgstr "INotify Plugin nicht verteilen"
 
 msgid "Do not deploy Kaspersky Anti-Virus plugin"
-msgstr "Das Kaspersky Anti-Virus Plugin nicht ausrollen"
+msgstr "Das Kaspersky Anti-Virus Plugin nicht verteilen"
 
 msgid "Do not deploy LVM plugin"
-msgstr "Das LVM-Plugin nicht ausrollen"
+msgstr "Das LVM-Plugin nicht verteilen"
 
 msgid "Do not deploy Linux filesystem quota plugin"
-msgstr "Das Linux filesystem quota Plugin nicht ausrollen"
+msgstr "Das Linux filesystem quota Plugin nicht verteilen"
 
 msgid "Do not deploy MTR plugin"
 msgstr "MTR-Plugin nicht verteilen"
 
 msgid "Do not deploy Mailman plugin"
-msgstr "Das Mailman Plugin nicht ausrollen"
+msgstr "Das Mailman Plugin nicht verteilen"
 
 msgid "Do not deploy NFS4 exports plugin"
-msgstr "Das NFS4 exports Plugin nicht ausrollen"
+msgstr "Das NFS4 exports Plugin nicht verteilen"
 
 msgid "Do not deploy ORACLE databases plugin"
 msgstr "ORACLE-Datenbank-Plugin nicht verteilen"
 
 msgid "Do not deploy OpenHardwareMonitor (headless)"
-msgstr "OpenHardwareMonitor (ohne GUI) nicht ausrollen"
+msgstr "OpenHardwareMonitor (ohne GUI) nicht verteilen"
 
 msgid "Do not deploy Remote Desktop Licenses plugin"
-msgstr "Remote Desktop Lizenzen Plugin nicht ausrollen"
+msgstr "Remote Desktop Lizenzen Plugin nicht verteilen"
 
 msgid "Do not deploy Robotmk"
 msgstr "Robotmk nicht verteilen"
 
 msgid "Do not deploy SMART plugin"
-msgstr "Das SMART Plugin nicht ausrollen"
+msgstr "Das SMART Plugin nicht verteilen"
 
 msgid "Do not deploy SUSEConnect plugin"
-msgstr "Das SUSEConnect Plugin nicht ausrollen"
+msgstr "Das SUSEConnect Plugin nicht verteilen"
 
 msgid "Do not deploy Symantec Anti Virus plugin"
-msgstr "Das Symantec Anti Virus Plugin nicht ausrollen"
+msgstr "Das Symantec Anti Virus Plugin nicht verteilen"
 
 msgid "Do not deploy Unitrends plugins"
-msgstr "Die Unitrends Plugins nicht ausrollen"
+msgstr "Die Unitrends Plugins nicht verteilen"
 
 msgid "Do not deploy VxVM plugin"
-msgstr "Das VxVM Plugin nicht ausrollen"
+msgstr "Das VxVM Plugin nicht verteilen"
 
 msgid "Do not deploy Windows License plugin"
-msgstr "Windows-Lizenz-Plugin nicht bereitstellen"
+msgstr "Windows-Lizenz-Plugin nicht verteilen"
 
 msgid "Do not deploy Windows McAfee AV client plugin"
-msgstr "Das Windows McAfee AV Clientplugin nicht ausrollen"
+msgstr "Das Windows McAfee AV Clientplugin nicht verteilen"
 
 msgid "Do not deploy Windows Multipath plugin"
-msgstr "Das Windows Multipath Plugin nicht ausrollen"
+msgstr "Das Windows Multipath Plugin nicht verteilen"
 
 msgid "Do not deploy Windows Printer Queue plugin"
-msgstr "Das Windowsdrucker-Plugin nicht ausrollen"
+msgstr "Das Windows-Druckerwarteschlange-Plugin nicht verteilen"
 
 msgid "Do not deploy Windows Updates plugin"
-msgstr "Das Windows Updates-Plugin nicht ausrollen"
+msgstr "Das Windows Updates-Plugin nicht verteilen"
 
 msgid "Do not deploy automatic agent update plugin"
-msgstr "Plugin für automatische Agentenupdates nicht ausrollen"
+msgstr "Plugin für automatisches Agentenupdate nicht verteilen"
 
 msgid "Do not deploy iptables plugin"
-msgstr "Das iptables Plugin nicht ausrollen"
+msgstr "Das iptables Plugin nicht verteilen"
 
 msgid "Do not deploy logged in users plugin"
-msgstr "Plugins für angemeldete Benutzer nicht ausrollen"
+msgstr "Plugins für angemeldete Benutzer nicht verteilen"
 
 msgid "Do not deploy mk_mongodb.py plugin"
 msgstr "Das Plugin mk_mongodb.py nicht verteilen"
@@ -18019,146 +17995,146 @@ msgid "Do not deploy plugin"
 msgstr "Plugin nicht verteilen"
 
 msgid "Do not deploy plugin for Citrix XenApp"
-msgstr "Plugin für Citrix XenApp nicht ausrollen"
+msgstr "Plugin für Citrix XenApp nicht verteilen"
 
 msgid "Do not deploy plugin for Citrix licenses"
-msgstr "Plugin für Citrix-Lizenzen nicht ausrollen"
+msgstr "Plugin für Citrix-Lizenzen nicht verteilen"
 
 msgid "Do not deploy plugin for DAG"
-msgstr "Plugin für DAG nicht einsetzen"
+msgstr "Plugin für DAG nicht verteilen"
 
 msgid "Do not deploy plugin for Hyper-V VM Guest Information"
-msgstr "Plugin für Hyper-V VM Gastinformationen nicht ausrollen"
+msgstr "Plugin für Hyper-V VM Gastinformationen nicht verteilen"
 
 msgid "Do not deploy plugin for Hyper-V VMs"
-msgstr "Plugin für Hyper-V VMs nicht ausrollen"
+msgstr "Plugin für Hyper-V VMs nicht verteilen"
 
 msgid "Do not deploy plugin for JAR signatures"
-msgstr "Plugin für JAR-Signaturen nicht ausrollen"
+msgstr "Plugin für JAR-Signaturen nicht verteilen"
 
 msgid "Do not deploy plugin for MS Exchange database latency"
-msgstr "Das Plugin für MS Exchange Datenbank-Latenzzeiten nicht bereitstellen"
+msgstr "Das Plugin für MS Exchange Datenbank-Latenzzeiten nicht verteilen"
 
 msgid "Do not deploy plugin for MS IIS Application Pool States"
 msgstr "Plugin für MS IIS Application Pool States nicht verteilen"
 
 msgid "Do not deploy plugin for MS Office 365"
-msgstr "Das MS Office 365-Plugin nicht ausrollen"
+msgstr "Das MS Office 365-Plugin nicht verteilen"
 
 msgid "Do not deploy plugin for Microsoft SQL Server"
-msgstr "Plugin für Microsoft SQL-Server nicht ausrollen"
+msgstr "Plugin für Microsoft SQL-Server nicht verteilen"
 
 msgid "Do not deploy plugin for NFS IO Stats"
-msgstr "Kein Plugin für NFS IO Stats bereitstellen"
+msgstr "Kein Plugin für NFS IO Stats verteilen"
 
 msgid "Do not deploy plugin for Veeam backup status"
-msgstr "Plugin für den Veeam-Backup-Status nicht bereitstellen"
+msgstr "Plugin für den Veeam-Backup-Status nicht verteilen"
 
 msgid "Do not deploy plugin for Windows DHCP pools"
-msgstr "Plugins für Windows DHCP pools nicht ausrollen"
+msgstr "Plugins für Windows DHCP pools nicht verteilen"
 
 msgid "Do not deploy plugin for Windows System Info"
-msgstr "Plugins für Windows Systeminfo nicht ausrollen"
+msgstr "Plugins für Windows Systeminfo nicht verteilen"
 
 msgid "Do not deploy plugin for Windows Task Scheduler"
-msgstr "Plugin für Windows Task-Scheduler nicht ausrollen"
+msgstr "Plugin für Windows Task-Scheduler nicht verteilen"
 
 msgid "Do not deploy plugin for Windows broadcom bonding"
-msgstr "Plugin für Windows Broadcom-Bonding nicht ausrollen"
+msgstr "Plugin für Windows Broadcom-Bonding nicht verteilen"
 
 msgid "Do not deploy plugin for Windows interfaces"
-msgstr "Nicht für Windows Interfaces ausrollen"
+msgstr "Plugin nicht für Windows Interfaces verteilen"
 
 #, python-format
 msgid "Do not deploy the %s plugin"
-msgstr "Das %s Plugin nicht ausrollen"
+msgstr "Das %s Plugin nicht verteilen"
 
 msgid "Do not deploy the APT plugin"
-msgstr "Das APT-Plugin nicht ausrollen"
+msgstr "Das APT-Plugin nicht verteilen"
 
 msgid "Do not deploy the Apache Status plugin"
-msgstr "Das Apache Status Plugin nicht ausrollen"
+msgstr "Das Apache Status Plugin nicht verteilen"
 
 msgid "Do not deploy the Arcserve plugin"
-msgstr "Arcserve-Plugin nicht ausrollen"
+msgstr "Arcserve-Plugin nicht verteilen"
 
 msgid "Do not deploy the Checkmk CUPS queues plugin"
-msgstr "Das Checkmk CUPS Queues Plugin nicht ausrollen"
+msgstr "Das Checkmk CUPS Queues Plugin nicht verteilen"
 
 msgid "Do not deploy the Checkmk EMC ScaleIO plugin"
-msgstr "Das Checkmk EMC ScaleIO Plugin nicht ausrollen"
+msgstr "Das Checkmk EMC ScaleIO Plugin nicht verteilen"
 
 msgid "Do not deploy the Checkmk Inventory plugin"
-msgstr "Das Checkmk Inventory Plugin nicht ausrollen"
+msgstr "Das Checkmk Inventory Plugin nicht verteilen"
 
 msgid "Do not deploy the Checkmk site objects plugin"
-msgstr "Das Plugin für die Checkmk-Instanzobjekte nicht ausrollen"
+msgstr "Das Plugin für die Checkmk-Instanzobjekte nicht verteilen"
 
 msgid "Do not deploy the DB2 plugin"
-msgstr "Das DB2 Plugin nicht ausrollen"
+msgstr "Das DB2 Plugin nicht verteilen"
 
 msgid "Do not deploy the DNS client plugin"
-msgstr "Das DNS client Plugin nicht ausrollen"
+msgstr "Das DNS client Plugin nicht verteilen"
 
 msgid "Do not deploy the IBM MQ plugin"
-msgstr "Das IBM MQ Plugin nicht ausrollen"
+msgstr "Das IBM MQ Plugin nicht verteilen"
 
 msgid "Do not deploy the Jolokia plugin"
-msgstr "Das Jolokia Plugin nicht ausrollen"
+msgstr "Das Jolokia Plugin nicht verteilen"
 
 msgid "Do not deploy the MegaRAID plugin"
-msgstr "MegaRAID-Plugin nicht ausrollen"
+msgstr "MegaRAID-Plugin nicht verteilen"
 
 msgid "Do not deploy the MySQL plugin"
-msgstr "Das MySQL Plugin nicht ausrollen"
+msgstr "Das MySQL Plugin nicht verteilen"
 
 msgid "Do not deploy the NGINX Status plugin"
-msgstr "Das NGINX Status Plugin nicht ausrollen"
+msgstr "Das NGINX Status Plugin nicht verteilen"
 
 msgid "Do not deploy the PostgreSQL plugin"
-msgstr "Das PostgreSQL Plugin nicht ausrollen"
+msgstr "Das PostgreSQL Plugin nicht verteilen"
 
 msgid "Do not deploy the Redis plugin"
-msgstr "Das Redis Plugin nicht ausrollen"
+msgstr "Das Redis Plugin nicht verteilen"
 
 msgid "Do not deploy the SAP HANA plugin"
-msgstr "Das SAP HANA-Plugin nicht ausrollen"
+msgstr "Das SAP HANA-Plugin nicht verteilen"
 
 msgid "Do not deploy the SAP R/3 plugin"
-msgstr "Das SAP R/3 Plugin nicht ausrollen"
+msgstr "Das SAP R/3 Plugin nicht verteilen"
 
 msgid "Do not deploy the SAP router plugin"
-msgstr "Das SAP-Router-Plugin nicht ausrollen"
+msgstr "Das SAP-Router-Plugin nicht verteilen"
 
 msgid "Do not deploy the SSH daemon configuration plugin"
-msgstr "Das SSH Daemon Konfigurationsplugin nicht ausrollen"
+msgstr "Das SSH Daemon Konfigurationsplugin nicht verteilen"
 
 msgid "Do not deploy the StorCLI plugin"
-msgstr "Das StorCLI-Plugin nicht ausrollen"
+msgstr "Das StorCLI-Plugin nicht verteilen"
 
 msgid "Do not deploy the TSM plugin"
-msgstr "Das TSM Plugin nicht ausrollen"
+msgstr "Das TSM Plugin nicht verteilen"
 
 msgid "Do not deploy the Zypper plugin"
-msgstr "Das Zypper Plugin nicht ausrollen"
+msgstr "Das Zypper Plugin nicht verteilen"
 
 msgid "Do not deploy the docker container plugin"
-msgstr "Das Docker Container Plugin nicht ausrollen"
+msgstr "Das Docker Container Plugin nicht verteilen"
 
 msgid "Do not deploy the docker plugin"
-msgstr "Das Docker Plugin nicht ausrollen"
+msgstr "Das Docker Plugin nicht verteilen"
 
 msgid "Do not deploy the mk_filehandler plugin"
 msgstr "mk_filehandler-Plugin nicht verteilen"
 
 msgid "Do not deploy the netstat plugin"
-msgstr "Das Netstat-Plugin nicht bereitstellen"
+msgstr "Das Netstat-Plugin nicht verteilen"
 
 msgid "Do not deploy the nvidia_smi agent plugin"
 msgstr "nvidia_smi Agenten-Plugin nicht verteilen"
 
 msgid "Do not deploy the plesk plugins"
-msgstr "Die plesk Plugins nicht ausrollen"
+msgstr "Die plesk Plugins nicht verteilen"
 
 msgid "Do not deploy."
 msgstr "Nicht verteilen."
@@ -18199,7 +18175,7 @@ msgid ""
 "your hosts without setting any of the other parameters."
 msgstr ""
 "Vergessen Sie nicht, das Plugin zu aktivieren (d. h. mit oder ohne "
-"Konfiguration in mindestens einer Ihrer Regeln einzusetzen). Es kann "
+"Konfiguration in mindestens einer Ihrer Regeln zu verteilen). Es kann "
 "sinnvoll sein, Regeln zu erstellen, die nur teilweise ausgefüllt sind. Da "
 "die Ausführung der Regel <i>pro Parameter</i> erfolgt, können Sie zum "
 "Beispiel eine Regel am Anfang Ihrer Liste erstellen, welche die Aktivierung "
@@ -19139,7 +19115,7 @@ msgstr "Ansichten Bearbeiten"
 
 #, python-format
 msgid "Edit alert handler rule %d"
-msgstr "Alerthandlerregel %d editieren"
+msgstr "Alert Handler-Regel %d editieren"
 
 msgid "Edit all maps"
 msgstr "Alle Karten bearbeiten"
@@ -19349,8 +19325,7 @@ msgstr "Regeln in diesem Paket bearbeiten"
 
 msgid "Edit the ruleset \"Deploy custom files with agent\"."
 msgstr ""
-"Den Regelsatz \"Benutzerdefinierte Dateien mit Agent bereitstellen\" "
-"bearbeiten."
+"Den Regelsatz \"Benutzerdefinierte Dateien mit Agent verteilen\" bearbeiten."
 
 msgid "Edit the user password"
 msgstr "Bearbeite Benutzerpasswort"
@@ -19369,7 +19344,7 @@ msgid "Edit this aggregation"
 msgstr "Dieses Aggregat editieren"
 
 msgid "Edit this alert handler rule"
-msgstr "Alerthandlerregel editieren"
+msgstr "Alert Handler-Regel editieren"
 
 msgid "Edit this annotation"
 msgstr "Diese Anmerkung editieren"
@@ -19706,13 +19681,11 @@ msgstr "Livestatus über das Netzwerk (TCP) verfügbar machen"
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH (LOGIN) ein"
 
-#, fuzzy
 msgid "Enable SNMPv2c for hosts"
-msgstr "Aktivieren von SNMPv2c und Bulk Walk für Hosts"
+msgstr "Aktivierung von SNMPv2c für Hosts"
 
-#, fuzzy
 msgid "Enable SNMPv2c for management boards"
-msgstr "Aktivieren von SNMPv2c und Bulk Walk für Management-Boards"
+msgstr "Aktivierung von SNMPv2c für Management-Boards"
 
 msgid "Enable TLS"
 msgstr "TLS einschalten"
@@ -19733,7 +19706,7 @@ msgid "Enable and disable notifications on hosts and services"
 msgstr "Alarme von Hosts/Services ein/aus"
 
 msgid "Enable automatic agent updates"
-msgstr "Automatische Agentupdates aktivieren"
+msgstr "Automatische Agentenupdates aktivieren"
 
 msgid "Enable automatic host key acceptance (OpenSSH version >= 7.6)"
 msgstr ""
@@ -19849,7 +19822,7 @@ msgid "Enable replication"
 msgstr "Replikation aktivieren"
 
 msgid "Enable replication from a master"
-msgstr "Replikation von einem Master ein"
+msgstr "Replikation von einer Zentralinstanz aktivieren"
 
 msgid "Enable row shading"
 msgstr "Zeilenschattierung einschalten"
@@ -19970,8 +19943,9 @@ msgid ""
 "Enabling this option will create detailed log entries for all replication "
 "activities of the slave. If disabled only problems will be logged."
 msgstr ""
-"Mit dieser Option werden detaillierte Logeinträge für alle Replikationen des "
-"Slaves erzeugt. Wenn abgeschaltet, dann werden nur Probleme protokolliert."
+"Mit dieser Option werden detaillierte Logeinträge für alle Replikationen der "
+"Remote-Instanz erzeugt. Wenn abgeschaltet, dann werden nur Probleme "
+"protokolliert."
 
 msgid ""
 "Enabling this option will result in an additional service for every RMON-"
@@ -21251,9 +21225,8 @@ msgstr "Genaue Übereinstimmung"
 msgid "Explicit number"
 msgstr "Explizite Zahl"
 
-#, fuzzy
 msgid "Explicit port number"
-msgstr "Explizite Zahl"
+msgstr "Explizite Port-Nummer"
 
 msgid "Explicit range"
 msgstr "Expliziter Bereich"
@@ -21604,8 +21577,8 @@ msgid ""
 "Failed to deploy configuration: \"%s\". Please note that the site "
 "configuration has been synchronized partially."
 msgstr ""
-"Fehler beim Synchronisieren der Konfiguration: \"%s\". Bitte beachten Sie, "
-"dass die Instanz-Konfiguration nur teilweise synchronisiert wurde."
+"Fehler beim Verteilen der Konfiguration: \"%s\". Bitte beachten Sie, dass "
+"die Instanz-Konfiguration nur teilweise synchronisiert wurde."
 
 #, python-format
 msgid "Failed to determine origin rule of %s / %s"
@@ -21823,7 +21796,7 @@ msgid "Fallback email address for notifications"
 msgstr "Fallback-E-Mail-Adresse für Benachrichtigungen"
 
 msgid "Fallback if master comes back within"
-msgstr "Zurück wenn Master wiederkommt innerhalb"
+msgstr "Zurück wenn Zentralinstanz wiederkommt innerhalb"
 
 msgid "Fallback notification email format"
 msgstr "Rückfall-Format der Benachrichtigung-E-Mail"
@@ -22676,19 +22649,19 @@ msgid ""
 "helper processes for fetching the needed information from the monitored "
 "systems. The size of this pool is configured here."
 msgstr ""
-"Für die Durchführung von Checkmk-basierten Checks hält der Microkernel einen "
-"Pool von spezialisierten Hilfsprozessen vor, um die benötigten Informationen "
-"von den überwachten Systemen zu holen. Die Größe dieses Pools wird hier "
-"konfiguriert."
+"Für die Durchführung von Checkmk-basierten Checks hält der Micro Core einen "
+"Pool von spezialisierten Helper-Prozessen vor, um die benötigten "
+"Informationen von den überwachten Systemen zu holen. Die Größe dieses Pools "
+"wird hier konfiguriert."
 
 msgid ""
 "For running Checkmk based checks the Microcore keeps a pool of specialized "
 "helper processes for interpreting and evaluating the information gathered by "
 "the fetcher helpers."
 msgstr ""
-"Für die Durchführung von Checkmk-basierten Checks hält der Microcore einen "
-"Pool von spezialisierten Hilfsprozessen vor, welche die von den "
-"Abfragehelfern gesammelten Informationen interpretieren und auswerten."
+"Für die Durchführung von Checkmk-basierten Checks hält der Micro Core einen "
+"Pool von spezialisierten Helper-Prozessen vor, welche die von den Fetcher-"
+"Helpern gesammelten Informationen interpretieren und auswerten."
 
 msgid ""
 "For running Checkmk based checks via the Micro Core keeps a pool of "
@@ -22807,7 +22780,8 @@ msgid "Force separate events for different <b>hosts</b>"
 msgstr "Erzwinge getrennte Ereignisse für unterschiedliche <b>Hosts</b>"
 
 msgid "Force separate events for different <b>match groups</b>"
-msgstr "Erzwinge getrennte Ereignisse für unterschiedliche <b>Match-Gruppen</b>"
+msgstr ""
+"Erzwinge getrennte Ereignisse für unterschiedliche <b>Match-Gruppen</b>"
 
 msgid ""
 "Force the user to choose a password that contains characters from at least "
@@ -22857,9 +22831,8 @@ msgstr "Vorhersage bis"
 msgid "Forecast model parametrization"
 msgstr "Parametrisierung des Vorhersagemodells"
 
-#, fuzzy
 msgid "Forks"
-msgstr "Netzwerke"
+msgstr "Gabelungen"
 
 msgid "Form factor"
 msgstr "Formfaktor"
@@ -24884,15 +24857,15 @@ msgid ""
 "Here you can deploy a plugin for monitoring the quarantine queue, tasks and "
 "updates of Kaspersky Anti Virus."
 msgstr ""
-"Dieses Plugin überwacht den Quarantänebereich, die Prozesse und die Updates "
-"von Kaspersky Anti Virus."
+"Hier können Sie ein Plugin zur Überwachung der Quarantäne-Warteschlange, der "
+"Aufgaben und der Updates von Kaspersky Anti Virus verteilen."
 
 msgid ""
 "Here you can deploy a plugin for monitoring the quarantine queue, tasks and "
 "updates of Symantec Anti Virus."
 msgstr ""
-"Dieses Plugin überwacht den Quarantänebereich, die Prozesse und die Updates "
-"von Symantec Anti Virus."
+"Hier können Sie ein Plugin zur Überwachung der Quarantäne-Warteschlange, der "
+"Aufgaben und der Updates von Symantec Anti Virus verteilen."
 
 msgid ""
 "Here you can enter a list of explicit host names that the rule should or "
@@ -24972,8 +24945,8 @@ msgid ""
 msgstr ""
 "Hier können Sie CA- oder selbstsignierte Zertifikate angeben, die bei der "
 "Registrierung oder Aktualisierung zusammen mit der URL der Remote-Instanz an "
-"den kontaktierenden Agent-Updater gesendet werden. Diese Liste wird vom "
-"Agent-Updater verwendet, um HTTPS-Verbindungen zu Checkmk-Instanzen zu "
+"den kontaktierenden Agent Updater gesendet werden. Diese Liste wird vom "
+"Agent Updater verwendet, um HTTPS-Verbindungen zu Checkmk-Instanzen zu "
 "verifizieren."
 
 msgid ""
@@ -24991,7 +24964,7 @@ msgid ""
 "Here you can see all hosts that have sent a negative status to the "
 "deployment server."
 msgstr ""
-"Hier sehen Sie alle Hosts, die eine negative Antwort an den Updateserver "
+"Hier sehen Sie alle Hosts, die eine negative Antwort an den Verteilserver "
 "gesendet haben."
 
 #, python-format
@@ -25266,9 +25239,10 @@ msgid ""
 "new rollout to a known list of five hosts, then these five should appear "
 "here at latest after one configured update interval."
 msgstr ""
-"Hier bekommen Sie Rückmeldung zu kürzlichen Agentupdates. Wenn Sie z.B. ein "
-"Update auf eine Liste von fünf Hosts begrenzen wollen, dann sollten diese "
-"fünf Hosts spätestens nach einem konfgurierten Updateintervall erscheinen."
+"Hier erhalten Sie eine Rückmeldung über die letzten Agent-Rollouts. Wenn Sie "
+"z.B. einen neuen Rollout auf eine bekannte Liste von fünf Hosts beschränken, "
+"dann sollten diese fünf spätestens nach einem konfigurierten Update-"
+"Intervall hier erscheinen."
 
 msgid ""
 "Here you have to use macros which are defined above below <tt>Macros for "
@@ -25638,9 +25612,8 @@ msgstr "Host existiert bereits"
 msgid "Host and Service Events"
 msgstr "Host/Service-Ereignisse"
 
-#, fuzzy
 msgid "Host and service checks"
-msgstr "Host- und Servicechecks"
+msgstr "Host- und Service-Checks"
 
 msgid "Host and service configuration rule"
 msgstr "Host-/Service-Konfigurationsregel"
@@ -25684,16 +25657,16 @@ msgid "Host check latency"
 msgstr "Hostlatenzzeitcheck"
 
 msgid "Host check rate"
-msgstr "Hostcheckrate"
+msgstr "Host-Check Rate"
 
 msgid "Host check type"
 msgstr "Host-Check-Typ"
 
 msgid "Host checks"
-msgstr "Hostchecks"
+msgstr "Host-Checks"
 
 msgid "Host checks and smart pings"
-msgstr "Hostchecks und SMART-Pings"
+msgstr "Host-Checks und SMART-Pings"
 
 msgid "Host comments"
 msgstr "Hostkommentare"
@@ -25808,13 +25781,13 @@ msgid "Host has a baked agent"
 msgstr "Host hat einen gebackenen Agenten"
 
 msgid "Host has deployment error"
-msgstr "Host hat Updatefehler"
+msgstr "Host hat Verteilungsfehler"
 
 msgid "Host has downloaded an agent"
 msgstr "Host hat einen Agenten heruntergeladen"
 
 msgid "Host has registered for deployment"
-msgstr "Host ist für Updates registriert"
+msgstr "Host ist für Verteilung registriert"
 
 msgid "Host has software package"
 msgstr "Host hat Softwarepaket"
@@ -26188,7 +26161,7 @@ msgid "Hostname/IP address of Event Console:"
 msgstr "Hostname/IP Adresse der Event Console:"
 
 msgid "Hostname/IP address of Master Event Console:"
-msgstr "Hostname/IP Adresse der Master Event Console:"
+msgstr "Hostname/IP Adresse der Zentral Event Console:"
 
 #, python-format
 msgid "Hostname: %s"
@@ -26241,7 +26214,7 @@ msgid ""
 "This is only useful if you have filesystem quotas setup on the host."
 msgstr ""
 "Auf über diese Regel konfigurierte Hosts wird das <tt>lnx_quota</tt>-Plugin "
-"ausgerollt. Dies ist nur nützlich, wenn Sie auf dem Host Dateisystem-"
+"verteilt. Dies ist nur nützlich, wenn Sie auf dem Host Dateisystem-"
 "Kontingente einsetzen."
 
 msgid ""
@@ -26249,18 +26222,18 @@ msgid ""
 "deployed."
 msgstr ""
 "Hosts, die mit dieser Regel konfiguriert wurden, erhalten das "
-"<tt>mk_filehandler</tt>-Plugin."
+"<tt>mk_filehandler</tt>-Plugin verteilt."
 
 msgid ""
 "Hosts configured via this rule get the <tt>mk_iptables</tt> plugin deployed."
 msgstr ""
-"Über diese Regel wird das <tt>mk_iptables</tt>-Plugin auf Hosts installiert."
+"Über diese Regel wird das <tt>mk_iptables</tt>-Plugin auf Hosts verteilt."
 
 msgid ""
 "Hosts configured via this rule get the <tt>mk_logins</tt> plugin deployed."
 msgstr ""
 "Auf über diese Regel konfigurierte Hosts wird das <tt>mk_logins</tt>-Plugin "
-"ausgerollt."
+"verteilt."
 
 msgid ""
 "Hosts configured via this rule get the <tt>smart</tt> plugin deployed. "
@@ -26268,17 +26241,17 @@ msgid ""
 "will be monitored for temperature and errors."
 msgstr ""
 "Auf mit dieser Regel konfigurierten Hosts wird das <tt>smart</tt>-Plugin "
-"ausgerollt. Vorausgesetzt, dass <tt>smartmontools</tt> installiert ist, "
-"werden Ihre lokalen Festplatten auf Temperatur und Fehler überwacht."
+"verteilt. Vorausgesetzt, dass <tt>smartmontools</tt> installiert ist, werden "
+"Ihre lokalen Festplatten auf Temperatur und Fehler überwacht."
 
 msgid ""
 "Hosts configured via this rule get the plugin <tt>db2_mem</tt> deployed. "
 "This will create one service for the memory consumption of every running DB2 "
 "instance found on the system."
 msgstr ""
-"Mit dieser Regel können das Plugin <tt>db2_mem</tt> ausbringen. Es sorgt "
-"dafür, dass ein neuer Service für den Speicherverbrauch jeder DB2-Instanz "
-"auf dem System erzeugt wird."
+"Hosts, die über diese Regel konfiguriert werden, erhalten das Plugin "
+"<tt>db2_mem</tt> verteilt. Dadurch wird ein Dienst für den Speicherverbrauch "
+"jeder auf dem System gefundenen laufenden DB2-Instanz erstellt."
 
 msgid "Hosts forced to use 'if' instead of 'if64'"
 msgstr "Zwinge Hosts 'if' anstatt 'if64' zu verwenden"
@@ -26468,9 +26441,8 @@ msgstr "Hotspare-Hub"
 msgid "Huge Pages"
 msgstr "Huge Pages"
 
-#, fuzzy
 msgid "Huge pages"
-msgstr "Huge Pages"
+msgstr "Große Seiten"
 
 msgid "Huge pages free"
 msgstr "Freie Huge Pages"
@@ -26980,7 +26952,7 @@ msgid ""
 "overwrite the default service state. This will help you to reduce above "
 "warnings during the update process of your Checkmk sites and agents."
 msgstr ""
-"Wenn eine Checkmk-Site auf eine neuere Version aktualisiert wird, die "
+"Wenn eine Checkmk-Instanz auf eine neuere Version aktualisiert wird, die "
 "Agenten einiger Hosts aber nicht, dann kann in den Details des "
 "<i>Check_MK</i>-Services die Warnung <i>Unerwartet erlaubte IP-Bereiche</i> "
 "angezeigt werden und der Service-Zustand ändert sich auf <i>WARN</i> "
@@ -27097,7 +27069,7 @@ msgid ""
 "allows for baking agent packages for hosts which will be created in this "
 "folder in the future, usually via the auto registration."
 msgstr ""
-"Wenn aktiviert, wird die Agent Bakery ein generisches Agentenpaket für "
+"Wenn aktiviert, wird die Agentenbäckerei ein generisches Agentenpaket für "
 "diesen Ordner backen. In der Konfiguration werden alle Regeln "
 "berücksichtigt, die bedingungslos auf alle Hosts im Ordner passen. Dieses "
 "Paket wird auch dann erstellt, wenn der Ordner leer ist.\n"
@@ -27716,14 +27688,14 @@ msgid ""
 "%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-Inventory / Do "
 "hardware/software Inventory</a>."
 msgstr ""
-"Diese Option bringt das Agenten-Plugin <tt>mk_inventory</tt> auf Linux-"
-"Rechern aus. Es sammelt Informationen über installierte Hardware und "
-"Software und macht diese Informationen in der Oberfläche von Checkmk "
-"sichtbar. Auch ist ein Export in andere System möglich. <b>Hinweis:</b> Um "
-"die Inventurisierung tatsächlich zu nutzen, müssen Sie für die gewünschten "
-"Hosts zusätzlich eine Regel anlegen im Regelsatz <a href='wato.py?"
-"varname=active_checks%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-"
-"Inventur / Hardware/Software-Inventur aktivieren</a>."
+"Diese Option verteilt das Agenten-Plugin <tt>mk_inventory</tt> auf Linux-"
+"Rechern. Es sammelt Informationen über installierte Hardware und Software "
+"und macht diese Informationen in der Oberfläche von Checkmk sichtbar. Auch "
+"ist ein Export in andere System möglich. <b>Hinweis:</b> Um die "
+"Inventurisierung tatsächlich zu nutzen, müssen Sie für die gewünschten Hosts "
+"zusätzlich eine Regel anlegen im Regelsatz <a href='wato."
+"py?varname=active_checks%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/"
+"Software-Inventur / Hardware/Software-Inventur aktivieren</a>."
 
 msgid ""
 "If you activate this option, then the agent plugin <tt>apache_status</tt> "
@@ -27731,9 +27703,10 @@ msgid ""
 "be one new service with detailed statistics of the current number of clients "
 "and processes and their various states."
 msgstr ""
-"Mit dieser Option aktivieren Sie das Plugin <tt>apache_status</tt>. Für jede "
-"Apache-Instanz entsteht dadurch ein neuer Service, die Statistiken über die "
-"Anzahl und Art der aktuellen Benutzer und Prozesse anzeigt."
+"Wenn Sie diese Option aktivieren, dann wird das Agenten-Plugin "
+"<tt>apache_status</tt> verteilt. Für jede konfigurierte oder erkannte Apache-"
+"Instanz gibt es einen neuen Dienst mit detaillierten Statistiken über die "
+"aktuelle Anzahl von Clients und Prozessen und ihre verschiedenen Zustände."
 
 msgid ""
 "If you activate this option, then the agent plugin <tt>mk_redis</tt> will be "
@@ -27741,7 +27714,7 @@ msgid ""
 "instances."
 msgstr ""
 "Wenn Sie diese Option aktivieren, wird das Agentplugin <tt>mk_redis</tt> "
-"ausgerollt. Sie können mehrere Instanzen konfigurieren, oder laufende "
+"verteilt. Sie können mehrere Instanzen konfigurieren, oder laufende "
 "Instanzen automatisch erkennen."
 
 msgid ""
@@ -27750,10 +27723,10 @@ msgid ""
 "be one new service with detailed statistics of the current number of clients "
 "and processes and their various states."
 msgstr ""
-"Mit dieser Option aktivieren Sie das Agentenplugin <tt>nginx_status</tt>. "
-"Für jede konfigurierte oder automatisch erkannte Instanz von NGINX wird ein "
-"Service erzeugt mit einer detailierten Statistik über die aktuelle Anzahl "
-"von Benutzer und Prozessen in deren verschiedenen Zuständen."
+"Wenn Sie diese Option aktivieren, wird das Agent-Plugin <tt>nginx_status</"
+"tt> verteilt. Für jede konfigurierte oder erkannte NGINX-Instanz gibt es "
+"einen neuen Dienst mit detaillierten Statistiken über die aktuelle Anzahl "
+"von Clients und Prozessen und ihre verschiedenen Zustände."
 
 #, python-format
 msgid ""
@@ -27791,10 +27764,10 @@ msgid ""
 "the allowed IP addresses reported by the agent. This is done during "
 "monitoring by the 'Check_MK' service."
 msgstr ""
-"Wenn Sie die Agent Bakery verwenden, wird die Konfiguration verwendet, um "
+"Wenn Sie die Agentenbäckerei verwenden, wird die Konfiguration verwendet, um "
 "den Netzwerkzugriff auf die gebackenen Agenten zu beschränken. Auf Linux ist "
 "eine systemd-Installation >= systemd 235 oder eine xinetd-Installation "
-"notwendig. Beachtne Sie, dass der Agent nicht erreichbar ist, wenn ein Linux-"
+"notwendig. Beachten Sie, dass der Agent nicht erreichbar ist, wenn ein Linux-"
 "Host diese Anforderungen nicht erfüllt, d. h. das Aktivieren eines Services, "
 "der die IP-Beschränkung nicht realisieren kann, wird bei der Agenten-"
 "Installation verhindert, siehe „Checkmk Agent Netzwerk-Service (Linux)“ "
@@ -28032,8 +28005,9 @@ msgid ""
 "enable event processing if the master is for the configured number of "
 "seconds unreachable."
 msgstr ""
-"Wenn Sie diese Option aktivieren, dann übernimmt der Slave automatisch wenn "
-"der Master eine konfigurierbare Zeit von Sekunden nicht erreichbar ist."
+"Wenn Sie diese Option aktivieren, dann übernimmt die Remote-Instanz "
+"automatisch, wenn die Zentralinstanz eine konfigurierbare Zeit von Sekunden "
+"nicht erreichbar ist."
 
 msgid ""
 "If you enable this option, then Checkmk will not directly Python-bytecompile "
@@ -28469,7 +28443,7 @@ msgstr ""
 "schieben Sie sie einfach in den Unterordner <tt>plugins</tt> des "
 "Installationsverzeichnisses Ihres Agenten. <i>Lokale Checks</i> "
 "funktionieren genauso, werden aber in <tt>local</tt> installiert. Von der "
-"Agentenbäckerei ausgerollte Plugins werden vom MSI-Installer in dasselbe "
+"Agentenbäckerei verteilte Plugins werden vom MSI-Installer in dasselbe "
 "Verzeichnis installiert. Dieser Regelsatz schränkt die Dateiendungen ein, "
 "die der Agent ausführen wird. Dies vermeidet beispielsweise die Ausführung "
 "eines Notepads, wenn eine Datei mit der Endung <tt>.txt</tt> gefunden wird. "
@@ -28691,17 +28665,14 @@ msgstr "Image-Pull-Richtlinie"
 msgid "Image size"
 msgstr "Bildgröße"
 
-#, fuzzy
 msgid "Image: Bytes"
-msgstr "Bilder"
+msgstr "Bild: Bytes"
 
-#, fuzzy
 msgid "Image: Requests"
-msgstr "LIST-Anfragen"
+msgstr "Bild: Anfragen"
 
-#, fuzzy
 msgid "Image: Secs"
-msgstr "Bilder"
+msgstr "Bild: Sekunden"
 
 msgid "Images"
 msgstr "Bilder"
@@ -28875,12 +28846,12 @@ msgid ""
 "connections\", the agent updater will ignore the update URL provided by the "
 "agent bakery."
 msgstr ""
-"Bei \"Registrierung und Fallback\" verwendet der Agenten-Updater diese "
+"Bei \"Registrierung und Fallback\" verwendet der Agent Updater diese "
 "Informationen nur bei der Registrierung und verlässt sich danach auf die von "
 "der Agentenbäckerei bereitgestellte Update-URL. Wenn die Verbindung "
-"fehlschlägt, verwendet der Agenten-Updater diese Informationen zusätzlich "
-"als Fallback. Bei \"Für alle Verbindungen verwenden\" ignoriert der Agenten-"
-"Updater die von der Agenten-Bäckerei bereitgestellte Update-URL."
+"fehlschlägt, verwendet der Agent Updater diese Informationen zusätzlich als "
+"Fallback. Bei \"Für alle Verbindungen verwenden\" ignoriert der Agent "
+"Updater die von der Agentenbäckerei bereitgestellte Update-URL."
 
 msgid "In case of an error"
 msgstr "Im Falle eines Fehlers"
@@ -28979,6 +28950,11 @@ msgid ""
 "page now. Each site is being represented by a single image which is first "
 "shown gray and then fills to green during synchronisation."
 msgstr ""
+"Damit Ihre Änderungen auf allen Remote-Instanzen verfügbar sind, muss Ihr "
+"Benutzerprofil auf die Remote-Instanzen repliziert werden. Dies geschieht "
+"jetzt auf dieser Seite. Jede Instanz wird durch ein einzelnes Bild "
+"dargestellt, das zunächst grau ist und sich dann während der "
+"Synchronisierung grün färbt."
 
 msgid ""
 "In order to avoid large timeouts in case of oversized history logfiles the "
@@ -30213,7 +30189,6 @@ msgstr "Ungültiger Parameter %r: %s"
 msgid "Invalid pass phrase"
 msgstr "Ungültige Passphrase"
 
-#, fuzzy
 msgid "Invalid passphrase"
 msgstr "Ungültige Passphrase"
 
@@ -30430,7 +30405,7 @@ msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Inventur der Linux-Kernel-Konfiguration (sysctl)"
 
 msgid "Inventory of all deployed agent plugins and their versions"
-msgstr "Bestand aller eingesetzten Agenten-Plugins und ihrer Versionen"
+msgstr "Bestand aller verteilten Agenten-Plugins und ihrer Versionen"
 
 msgid "Inventory of host"
 msgstr "Hostinventar"
@@ -31331,13 +31306,13 @@ msgid "Last completed duration"
 msgstr "Letzte abgeschlossene Dauer"
 
 msgid "Last contact of agent updater"
-msgstr "Letzter Kontakt vom Agentupdater"
+msgstr "Letzter Kontakt vom Agentenupdater"
 
 msgid "Last day of last month"
 msgstr "Letzter Tag im Monat"
 
 msgid "Last download of agent updater"
-msgstr "Letzter Download vom Agentupdater"
+msgstr "Letzter Download vom Agentenupdater"
 
 msgid "Last error log"
 msgstr "Letztes Fehlerprotokoll"
@@ -32749,7 +32724,6 @@ msgstr "Livestatus-Verbindungen"
 msgid "Livestatus connects"
 msgstr "Livestatus-Verbindungen"
 
-#, fuzzy
 msgid "Livestatus connects and requests"
 msgstr "Livestatus-Verbindungen und -Anfragen"
 
@@ -32790,7 +32764,6 @@ msgstr "Livestatus Proxy Protokollierung"
 msgid "Livestatus requests"
 msgstr "Livestatus-Anfragen"
 
-#, fuzzy
 msgid "Livestatus requests per connection"
 msgstr "Livestatus-Anfragen pro Verbindung"
 
@@ -34414,7 +34387,7 @@ msgstr ""
 "liegen"
 
 msgid "Master Event Console"
-msgstr "Master Event Console"
+msgstr "Zentral Event Console"
 
 msgid "Master control"
 msgstr "Master control"
@@ -34693,7 +34666,7 @@ msgid "Max. size"
 msgstr "Maximale Größe"
 
 msgid "Max. time behind the master"
-msgstr "Max. Zeit hinter dem Master"
+msgstr "Max. Zeit hinter der Zentralinstanz"
 
 msgid "Max. waiting time for a connection."
 msgstr "Maximale Zeit, die auf eine Verbindung gewartet wird."
@@ -35339,7 +35312,7 @@ msgid "Memory resources: DaemonSet"
 msgstr "Speicher-Ressourcen: DaemonSet"
 
 msgid "Memory resources: Deployment"
-msgstr "Speicherressourcen: Deployment"
+msgstr "Speicherressourcen: Verteilung"
 
 msgid "Memory resources: Namespace"
 msgstr "Speicherressourcen: Namespace"
@@ -36744,41 +36717,32 @@ msgstr "NagVis-Karte"
 msgid "NagVis maps"
 msgstr "NagVis-Karten"
 
-#, fuzzy
 msgid "NagVis: AJAX: Bytes"
-msgstr "NagVis: AJAX"
+msgstr "NagVis: AJAX: Bytes"
 
-#, fuzzy
 msgid "NagVis: AJAX: Requests"
-msgstr "NagVis: AJAX"
+msgstr "NagVis: AJAX: Anfragen"
 
-#, fuzzy
 msgid "NagVis: AJAX: Secs"
-msgstr "NagVis: AJAX"
+msgstr "NagVis: AJAX: Sekunden"
 
-#, fuzzy
 msgid "NagVis: Other: Bytes"
-msgstr "NagVis: Sonstiges"
+msgstr "NagVis: Sonstiges: Bytes"
 
-#, fuzzy
 msgid "NagVis: Other: Requests"
-msgstr "NagVis: Sonstiges"
+msgstr "NagVis: Sonstiges: Anfragen"
 
-#, fuzzy
 msgid "NagVis: Other: Secs"
-msgstr "NagVis: Sonstiges"
+msgstr "NagVis: Sonstiges: Sekunden"
 
-#, fuzzy
 msgid "NagVis: Sidebar element: Bytes"
-msgstr "NagVis: Seitenleistenelement"
+msgstr "NagVis: Seitenleistenelement: Bytes"
 
-#, fuzzy
 msgid "NagVis: Sidebar element: Requests"
-msgstr "NagVis: Seitenleistenelement"
+msgstr "NagVis: Seitenleistenelement: Anfragen"
 
-#, fuzzy
 msgid "NagVis: Sidebar element: Secs"
-msgstr "NagVis: Seitenleistenelement"
+msgstr "NagVis: Seitenleistenelement: Sekunden"
 
 msgid "Nagios"
 msgstr "Nagios"
@@ -36834,7 +36798,7 @@ msgid "Name of Channel"
 msgstr "Name des Kanals"
 
 msgid "Name of Checkmk site of update server"
-msgstr "Name der Checkmk-Instanz des Updateservers"
+msgstr "Name der Checkmk-Instanz des Update-Servers"
 
 msgid "Name of HAproxy Frontend"
 msgstr "Name des HAproxy Frontends"
@@ -38720,7 +38684,7 @@ msgstr "Anzahl der aktiven Benutzer"
 
 #, python-format
 msgid "Number of agents that have registered for updates: %d"
-msgstr "Anzahl Agenten, die sich für Updates registiert haben: %d"
+msgstr "Anzahl Agenten, die sich für Updates registriert haben: %d"
 
 msgid "Number of alerts in defined timespan lower level"
 msgstr "Untergrenze für die Anzahl der Alerts in einer bestimmten Zeitspanne"
@@ -38970,7 +38934,6 @@ msgstr "Anzahl der Meldungen in definierter Zeitspannenuntergrenze"
 msgid "Number of messages in defined timespan upper level"
 msgstr "Anzahl der Meldungen in definierter Obergrenze der Zeitspanne"
 
-#, fuzzy
 msgid "Number of monitored hosts and services"
 msgstr "Anzahl überwachter Hosts und Services"
 
@@ -39317,21 +39280,17 @@ msgstr "Nutanix VM-Speicherverbrauch"
 msgid "Nutanix single VM State"
 msgstr "Nutanix single VM Status"
 
-#, fuzzy
 msgid "Nutanix: Containers"
-msgstr "# Container"
+msgstr "Nutanix: Container"
 
-#, fuzzy
 msgid "Nutanix: Prism Alerts"
-msgstr "Nutanix Prism-Alarme"
+msgstr "Nutanix: Prism-Alarme"
 
-#, fuzzy
 msgid "Nutanix: Prism Cluster"
-msgstr "Nutanix Prism-Alarme"
+msgstr "Nutanix: Prism-Cluster"
 
-#, fuzzy
 msgid "Nutanix: Storage Pools"
-msgstr "Speicherpools"
+msgstr "Nutanix: Speicherpools"
 
 msgid "Nvidia"
 msgstr "Nvidia"
@@ -40262,7 +40221,7 @@ msgid ""
 "Optionally provide protocol, server and site for agent registration and/or "
 "updates. If not entered here, you can provide it on registration."
 msgstr ""
-"Geben Sie optional Protokoll, Server und Standort für die "
+"Geben Sie optional Protokoll, Server und Instanz für die "
 "Agentenregistrierung und/oder Updates an. Wenn Sie diese Daten hier nicht "
 "eingeben, können Sie sie bei der Registrierung angeben."
 
@@ -40408,18 +40367,6 @@ msgstr "Organisations-ID"
 msgid "Organisation Name"
 msgstr "Name der Organisation"
 
-msgid "Organisation device statuses"
-msgstr "Status der Organisationsgeräte"
-
-msgid "Organisation licenses overview"
-msgstr "Übersicht über Organisationslizenzen"
-
-msgid "Organisation sensor readings"
-msgstr "Messwerte der Organisationssensoren"
-
-msgid "Organisations"
-msgstr "Organisationen"
-
 msgid "Organization"
 msgstr "Organisation"
 
@@ -40429,8 +40376,24 @@ msgstr "Organisation (O)"
 msgid "Organization Name"
 msgstr "Name der Organisation"
 
+#, fuzzy
+msgid "Organization device statuses"
+msgstr "Status der Organisationsgeräte"
+
+#, fuzzy
+msgid "Organization licenses overview"
+msgstr "Übersicht über Organisationslizenzen"
+
+#, fuzzy
+msgid "Organization sensor readings"
+msgstr "Messwerte der Organisationssensoren"
+
 msgid "Organizational unit (OU)"
 msgstr "Organisationseinheit (OU)"
+
+#, fuzzy
+msgid "Organizations"
+msgstr "Organisation"
 
 msgid "Organize your hosts in groups independent of the tree structure."
 msgstr ""
@@ -40514,17 +40477,14 @@ msgstr "Andere Services"
 msgid "Other speed in bits per second"
 msgstr "Andere Geschwindigkeit in bits pro Sekunde"
 
-#, fuzzy
 msgid "Other: Bytes"
-msgstr "Andere Hosts"
+msgstr "Anderes: Bytes"
 
-#, fuzzy
 msgid "Other: Requests"
-msgstr "Anfragen"
+msgstr "Anderes: Anfragen"
 
-#, fuzzy
 msgid "Other: Secs"
-msgstr "Andere Services"
+msgstr "Anderes: Sekunden"
 
 msgid ""
 "Otherwise counting will start from one with a new event for the next rule "
@@ -41111,17 +41071,14 @@ msgstr "Seitegröße"
 msgid "Page size to expect"
 msgstr "Zu erwartende Seitengröße"
 
-#, fuzzy
 msgid "Page swap"
-msgstr "Page Swap In"
+msgstr "Seitenwechsel"
 
-#, fuzzy
 msgid "Page swap in"
-msgstr "Page Swap In"
+msgstr "Seitenwechsel in"
 
-#, fuzzy
 msgid "Page swap out"
-msgstr "Page Swap Out"
+msgstr "Seitenwechsel aus"
 
 msgid "Page tables"
 msgstr "Seitentabellen"
@@ -42457,7 +42414,7 @@ msgstr ""
 "Bitte geben Sie ein Automatisierungspasswort mit mindestens 10 Zeichen ein."
 
 msgid "Please enter the Multisite URL of the slave site."
-msgstr "Bitte geben Sie die Multisite URL der Slave-Instanz ein."
+msgstr "Bitte geben Sie die Multisite URL der Remote-Instanz ein."
 
 msgid ""
 "Please enter the complete shell command including path name and arguments to "
@@ -42959,7 +42916,7 @@ msgid "Pod resources: DaemonSet"
 msgstr "Pod-Ressourcen: DaemonSet"
 
 msgid "Pod resources: Deployment"
-msgstr "Pod-Ressourcen: Deployment"
+msgstr "Pod-Ressourcen: Verteilung"
 
 msgid "Pod resources: Namespace"
 msgstr "Pod-Ressourcen: Namespace"
@@ -44094,17 +44051,14 @@ msgstr "RAM + Swap"
 msgid "RAM + Swap used"
 msgstr "RAM + Swap belegt"
 
-#, fuzzy
 msgid "RAM + swap installed"
-msgstr "Gesamtes RAM + installierter Swapspeicher"
+msgstr "installierter RAM + Swap"
 
-#, fuzzy
 msgid "RAM + swap overview"
 msgstr "RAM + Swap Übersicht"
 
-#, fuzzy
 msgid "RAM + swap used"
-msgstr "RAM + Swap belegt"
+msgstr "RAM + Swap genutzt"
 
 msgid "RAM free"
 msgstr "RAM frei"
@@ -44115,13 +44069,11 @@ msgstr "RAM frei (gemittelt)"
 msgid "RAM installed"
 msgstr "installierter RAM"
 
-#, fuzzy
 msgid "RAM usage"
-msgstr "benutzter RAM"
+msgstr "RAM-Auslastung"
 
-#, fuzzy
 msgid "RAM usage (averaged)"
-msgstr "benutzter RAM (gemittelt)"
+msgstr "RAM-Auslastung (gemittelt)"
 
 msgid "RAM used"
 msgstr "benutzter RAM"
@@ -44502,7 +44454,7 @@ msgid "Read recovery latency"
 msgstr "Recovery-Leselatenz"
 
 msgid "Read replica per master"
-msgstr "Replikat pro Master lesen"
+msgstr "Replikat pro Zentralinstanz lesen"
 
 msgid "Read retransmission"
 msgstr "Leseretransmission"
@@ -44882,10 +44834,11 @@ msgid ""
 "for the host in question. Please note that these agents might contain "
 "confidential information such as passwords."
 msgstr ""
-"Alle Hosts registrieren und Monitoring-Agenten, die mit der Agent Bakery "
-"erstellt wurden, herunterladen, selbst wenn man nicht der Kontakt für den "
-"betreffenden Host ist. Achtung: Diese können vertrauliche Informationen wie "
-"z.B. Passwörter enthalten."
+"Registrieren Sie alle Hosts in der Agentenbäckerei und laden Sie alle "
+"Monitoring-Agenten herunter, die mit der Agentenbäckerei erstellt wurden, "
+"auch wenn Sie kein Kontakt für den betreffenden Host sind. Bitte beachten "
+"Sie, dass diese Agenten vertrauliche Informationen wie Passwörter enthalten "
+"können."
 
 msgid "Register an authentication device before generating backup codes."
 msgstr ""
@@ -44910,10 +44863,10 @@ msgid ""
 "note that these agents might contain confidential information such as "
 "passwords."
 msgstr ""
-"Hosts bei der Agent Bakery registrieren und Monitoring-Agenten, die mit der "
-"Agent Bakery erstellt wurden, herunterladen, wenn man Kontakt für den "
-"betreffenden Host ist. Achtung: Diese können vertrauliche Informationen wie "
-"z.B. Passwörter enthalten."
+"Registrieren Sie Hosts, für die Sie ein Kontakt sind, und laden Sie dann "
+"Monitoring-Agenten herunter, die mit der Agentenbäckerei für diese Hosts "
+"erstellt worden sind. Bitte beachten Sie, dass diese Agenten vertrauliche "
+"Informationen wie Passwörter enthalten können."
 
 msgid "Register managed existing host"
 msgstr "Einen vorhandenen, verwalteten Host registrieren"
@@ -45174,10 +45127,10 @@ msgid "Remote Temperature"
 msgstr "Ferntemperatur"
 
 msgid "Remote alert handler to run"
-msgstr "Remote-Alerthandler, der ausgeführt werden soll"
+msgstr "Remote-Alert Handler, der ausgeführt werden soll"
 
 msgid "Remote alert handlers (Linux)"
-msgstr "Remote-Alerthandler (Linux)"
+msgstr "Remote-Alert Handler (Linux)"
 
 #, python-format
 msgid "Remote automation tried to sync pending changes but failed: %s"
@@ -45554,8 +45507,8 @@ msgid ""
 "etc. for inserting the first, second etc matching group."
 msgstr ""
 "Ersetzen Sie den Hostnamen durch diesen Text. Wenn Sie im Text Gruppen in "
-"Klammern haben, die übereinstimmen sollen, können Sie die Platzhalter <tt>\\1"
-"</tt>, <tt>\\2</tt> usw. verwenden, um die erste, zweite usw. passende "
+"Klammern haben, die übereinstimmen sollen, können Sie die Platzhalter <tt>"
+"\\1</tt>, <tt>\\2</tt> usw. verwenden, um die erste, zweite usw. passende "
 "Gruppe einzufügen."
 
 msgid ""
@@ -45603,7 +45556,7 @@ msgid "Replicate Event Console config"
 msgstr "Eventkonsolen-Konfiguration replizieren"
 
 msgid "Replicate Event Console configuration to this site"
-msgstr ""
+msgstr "Event Console Konfiguration auf diese Instanz replizieren"
 
 msgid "Replicate extensions"
 msgstr "Erweiterungen replizieren"
@@ -46674,8 +46627,8 @@ msgid ""
 "of check plugins and services. Additionally, the discovery of individual "
 "check plugins like for example the interface check plugin can be customized."
 msgstr ""
-"Regeln, welche die Service-Erkennung beeinflussen. Diese Regeln erlauben "
-"z.B. die Ausführung einer periodischen Service-Erkennung oder die "
+"Regeln, welche die Service-Erkennung beeinflussen. Diese Regeln erlauben z."
+"B. die Ausführung einer periodischen Service-Erkennung oder die "
 "Deaktivierung von Checks und Services. Zusätzlich kann die Erkennung "
 "individueller Checks wie z.B. des Interface Checks angepasst werden."
 
@@ -46853,9 +46806,8 @@ msgstr "Laufzeit"
 msgid "Runtime run queue"
 msgstr "Laufzeit-Warteschlange"
 
-#, fuzzy
 msgid "Runtime-Timeout ratio"
-msgstr "Regelzugriffe (Verhältnis)"
+msgstr "Laufzeit-Timeout-Verhältnis"
 
 msgid "Rx"
 msgstr "Rx"
@@ -47376,9 +47328,8 @@ msgstr "Speichern & testen"
 msgid "Save & view folder"
 msgstr "Speichern & Ordner anzeigen"
 
-#, fuzzy
 msgid "Save & view list"
-msgstr "Speichern & Ordner anzeigen"
+msgstr "Liste speichern & ansehen"
 
 msgid "Save as new layout for this aggregation"
 msgstr "Als neues Layout für diese Aggregation speichern"
@@ -47536,17 +47487,14 @@ msgstr "Skriptmuster"
 msgid "Scripts to integrate Nagios plugis"
 msgstr "Skripte, um Nagios Plugins zu integrieren"
 
-#, fuzzy
 msgid "Scripts: Bytes"
-msgstr "Skripttyp"
+msgstr "Skripte: Bytes"
 
-#, fuzzy
 msgid "Scripts: Requests"
-msgstr "%s Anfragen"
+msgstr "Skripte: Anfragen"
 
-#, fuzzy
 msgid "Scripts: Secs"
-msgstr "Skripten"
+msgstr "Skripte: Sekunden"
 
 msgid "Search"
 msgstr "Suche"
@@ -47831,7 +47779,7 @@ msgid "Sections to send"
 msgstr "Zu sendende Sektionen"
 
 msgid "Secure Agent Updater"
-msgstr "Sicherer Agentenupdater"
+msgstr "Sicherer Agent Updater"
 
 msgid "Secure GUI (HTTP)"
 msgstr "Abgesicherte Oberfläche (HTTP)"
@@ -48231,7 +48179,7 @@ msgid "Selection of alarms"
 msgstr "Auswahl der Alarme"
 
 msgid "Selection of hosts to activate agent updates for"
-msgstr "Auswahl von Hosts, für die Aktivierung der Updates"
+msgstr "Auswahl von Hosts, für die Aktivierung der Agentenupdates"
 
 msgid "Selection of multiple host groups"
 msgstr "Auswahl von mehreren Hostgruppen"
@@ -48268,9 +48216,8 @@ msgstr "HTTP POST Daten senden"
 msgid "Send custom notification"
 msgstr "Individuellen Alarm senden"
 
-#, fuzzy
 msgid "Send data"
-msgstr "Enddatum"
+msgstr "Daten senden"
 
 msgid "Send email"
 msgstr "E-Mail senden"
@@ -48480,7 +48427,7 @@ msgid "Service (regex)"
 msgstr "Service (regex)"
 
 msgid "Service Checks"
-msgstr "Servicechecks"
+msgstr "Service-Checks"
 
 msgid "Service Comments"
 msgstr "Service-Kommentare"
@@ -48573,37 +48520,37 @@ msgid "Service availability"
 msgstr "Service-Verfügbarkeit"
 
 msgid "Service check command"
-msgstr "Servicecheck Befehl"
+msgstr "Service-Check Befehl"
 
 msgid "Service check command expanded"
-msgstr "Servicecheck Befehl erweitert"
+msgstr "Service-Check Befehl erweitert"
 
 msgid "Service check commands"
-msgstr "Servicecheck-Befehle"
+msgstr "Service-Check Befehle"
 
 msgid "Service check duration"
-msgstr "Servicecheck Dauer"
+msgstr "Service-Check Dauer"
 
 msgid "Service check durations"
-msgstr "Servicecheck Dauern"
+msgstr "Service-Check Dauern"
 
 msgid "Service check latency"
-msgstr "Servicecheck Latenz"
+msgstr "Service-Check Latenz"
 
 msgid "Service check period"
-msgstr "Servicecheck Periode"
+msgstr "Service-Check Periode"
 
 msgid "Service check rate"
-msgstr "Servicecheckrate"
+msgstr "Service-Check Rate"
 
 msgid "Service check timeout (Microcore)"
-msgstr "Servicecheck Timeout (Microcore)"
+msgstr "Service-Check Timeout (Micro Core)"
 
 msgid "Service check type"
-msgstr "Servicecheck Typ"
+msgstr "Service-Check Typ"
 
 msgid "Service checks"
-msgstr "Servicechecks"
+msgstr "Service-Checks"
 
 msgid "Service contact (regex)"
 msgstr "Service-Kontakt (regex)"
@@ -49589,7 +49536,7 @@ msgstr ""
 "Einstellungen für Zertifikate, die auf registrierte Agenten ausgestellt sind."
 
 msgid "Settings for host checks via Smart PING"
-msgstr "Einstellungen für die Hostchecks via Smart-PING"
+msgstr "Einstellungen für die Host-Checks via Smart-PING"
 
 msgid "Settings for incident state in case of acknowledgement"
 msgstr "Einstellungen für den Ereignisstatus im Falle einer Quittierung"
@@ -50673,36 +50620,29 @@ msgstr "Der Filter für die Dateigröße muss das Format [OPERATOR][INT] haben."
 msgid "Size growth per minute"
 msgstr "Größenwachstum pro Minute"
 
-#, fuzzy
 msgid "Size of Agents"
-msgstr "Größe der Lizenzierung"
+msgstr "Größe der Agenten"
 
-#, fuzzy
 msgid "Size of Core"
-msgstr "Größe der Logdateien"
+msgstr "Größe des Kerns"
 
-#, fuzzy
 msgid "Size of History"
-msgstr "Größe der RRDs"
+msgstr "Größe der History"
 
-#, fuzzy
 msgid "Size of Inventory"
-msgstr "Inventarisierung"
+msgstr "Größe des Inventars"
 
-#, fuzzy
 msgid "Size of Local"
-msgstr "Größe der Logdateien"
+msgstr "Größe von Lokal"
 
-#, fuzzy
 msgid "Size of PNP4Nagios"
-msgstr "Spooldateien von PNP4Nagios"
+msgstr "Größe von PNP4Nagios"
 
 msgid "Size of RRDs"
 msgstr "Größe der RRDs"
 
-#, fuzzy
 msgid "Size of Tmp"
-msgstr "Größe der RRDs"
+msgstr "Größe von Tmp"
 
 msgid "Size of active mail queue"
 msgstr "Größe der Active-Mailqueue"
@@ -50814,7 +50754,7 @@ msgid "Slab (Various smaller caches)"
 msgstr "Slab (Verschiedene kleinere Caches)"
 
 msgid "Slave usage bytes across all pools"
-msgstr "Slave Byte Nutzung über alle Pools"
+msgstr "Remote Byte Nutzung über alle Pools"
 
 #, no-python-format
 msgid ""
@@ -50845,11 +50785,11 @@ msgid ""
 "configured with <i>Normal check interval for host checks</i> (or <i>Retry "
 "check interval for host checks</i> while the host is in soft non-UP state). "
 msgstr ""
-"Smart-PING ist die Standardmethode für Hostchecks, wenn sie den Checkmk "
+"Smart-PING ist die Standardmethode für Host-Checks, wenn sie den Checkmk "
 "Micro Core verwenden. Der Kern sendet in regelmäßigen Abständen ICMP Echo "
 "Requests (PING) an jeden Host. Die Rate ist einstellbar mit <i>Normales "
-"Checkintervall für Hostchecks</i> (oder <i>Wiederholinterval für Hostchecks</"
-"i> solange der Host in einem weichen nicht-OK-Zustand ist). "
+"Checkintervall für Host-Checks</i> (oder <i>Wiederholinterval für Host-"
+"Checks</i> solange der Host in einem weichen nicht-OK-Zustand ist). "
 
 msgid "Smarthosts"
 msgstr "Smarthosts"
@@ -50930,7 +50870,6 @@ msgstr ""
 "Füllstand zurück, anstatt den verbleibenden. In diesem Fall ist es möglich, "
 "die Füllstände umzudrehen, um dieses Verhalten zu behandeln"
 
-#, fuzzy
 msgid ""
 "Some SNMPv2c/v3 capable devices do not properly support \"bulkwalk\" "
 "queries. For those you can disable \"bulkwalk\" queries with this ruleset. "
@@ -50938,11 +50877,11 @@ msgid ""
 "feasible (e.g. limiting the bulk size), as bulk walks are much more "
 "performant."
 msgstr ""
-"Einige SNMPv2c/v3-fähige Geräte sind fehlerhaft, wenn sie mit Bulk Walks "
-"abgefragt werden. In solchen Fällen können Sie die Bulk Walks mit diesem "
-"Regelset deaktivieren. Bitte beachten Sie, dass Sie dies nur tun sollten, "
+"Einige SNMPv2c/v3-fähige Geräte unterstützen \"Bulk Walk\"-Abfragen nicht "
+"richtig. Für diese Geräte können Sie \"Bulk Walk\"-Abfragen mit diesem "
+"Regelsatz deaktivieren. Bitte beachten Sie, dass Sie dies nur tun sollten, "
 "wenn kein anderer Ansatz möglich ist (z. B. Begrenzung der Bulk-Größe), da "
-"Bulk Walks wesentlich leistungsfähiger sind."
+"Bulk Walks viel leistungsfähiger sind."
 
 msgid ""
 "Some agent commands or plugins may follow the environment variable TMPDIR "
@@ -50953,7 +50892,7 @@ msgid ""
 msgstr ""
 "Einige Agentenbefehle oder Plugins folgen der Umgebungsvariablen TMPDIR für "
 "die Speicherung temporärer Dateien. Aus bestimmten Gründen kann es sinnvoll "
-"sein, diesen Pfad anzupassen. Insbesondere der Agent-Updater funktioniert "
+"sein, diesen Pfad anzupassen. Insbesondere der Agent Updater funktioniert "
 "nicht mit einem \"/tmp\"-Verzeichnis, das mit einem \"noexec\"-Flag "
 "gemountet ist. Bitte beachten Sie, dass der Checkmk-Agent keine automatische "
 "Bereinigung in diesem benutzerdefinierten Pfad vornimmt."
@@ -51735,8 +51674,9 @@ msgid ""
 "master in <i>Access to event status via TCP</i>."
 msgstr ""
 "Legen Sie den Hostnamen oder die IP Adresse der Master Event Console fest "
-"von der Sie replizieren möchten. Die Port-Nummer muss dieselbe sein wie am "
-"Master im Abschnitt <i>Zugriff auf Ereignis Status über TCP</i> eingestellt."
+"von der Sie replizieren möchten. Die Port-Nummer muss dieselbe sein wie an "
+"der Zentralinstanz im Abschnitt <i>Zugriff auf Ereignis Status über TCP</i> "
+"eingestellt."
 
 msgid ""
 "Specify the host to which the resulting service will be assigned to. The "
@@ -51963,9 +51903,9 @@ msgstr ""
 "jeweiligen Service werden die Level für den Metrikwert nur dann angewendet, "
 "wenn die Metrikbezeichnung mit der in der benutzerdefinierten Prometheus-"
 "Service-Definition angegebenen Bezeichnung übereinstimmt. Level für den "
-"benutzerdefinierten Prometheus-Check können an zwei Stellen definiert werden:"
-" in der Prometheus Datasource-Regel und hier. Der Regelsatz hier hat immer "
-"Vorrang vor den in der Datasource-Regel definierten Level."
+"benutzerdefinierten Prometheus-Check können an zwei Stellen definiert "
+"werden: in der Prometheus Datasource-Regel und hier. Der Regelsatz hier hat "
+"immer Vorrang vor den in der Datasource-Regel definierten Level."
 
 msgid ""
 "Specify upper and/or lower levels for the queried PromQL value. This option "
@@ -52305,60 +52245,47 @@ msgstr "Status (ST)"
 msgid "State (severity) of event"
 msgstr "Ereignis-Status (Schwere)"
 
-#, fuzzy
 msgid "State BOUND"
-msgstr "Status %s"
+msgstr "Status BOUND"
 
-#, fuzzy
 msgid "State CLOSED"
-msgstr "CLOSED"
+msgstr "Status CLOSED"
 
-#, fuzzy
 msgid "State CLOSE_WAIT"
-msgstr "CLOSE_WAIT"
+msgstr "Status CLOSE_WAIT"
 
-#, fuzzy
 msgid "State CLOSING"
-msgstr "CLOSING"
+msgstr "Status CLOSING"
 
-#, fuzzy
 msgid "State ESTABLISHED"
-msgstr "ESTABLISHED"
+msgstr "Status ESTABLISHED"
 
-#, fuzzy
 msgid "State FIN_WAIT1"
-msgstr "FIN_WAIT1"
+msgstr "Status FIN_WAIT1"
 
-#, fuzzy
 msgid "State FIN_WAIT2"
-msgstr "FIN_WAIT2"
+msgstr "Status FIN_WAIT2"
 
-#, fuzzy
 msgid "State IDLE"
-msgstr "Instanz ID"
+msgstr "Status IDLE"
 
-#, fuzzy
 msgid "State LAST_ACK"
-msgstr "LAST_ACK"
+msgstr "Status LAST_ACK"
 
-#, fuzzy
 msgid "State LISTEN"
-msgstr "Status (ST)"
+msgstr "Status LISTEN"
 
 msgid "State Retention Interval"
 msgstr "Interval für Statusbeibehaltung"
 
-#, fuzzy
 msgid "State SYN_RECV"
-msgstr "SYN_RECV"
+msgstr "Status SYN_RECV"
 
-#, fuzzy
 msgid "State SYN_SENT"
-msgstr "SYN_SENT"
+msgstr "Status SYN_SENT"
 
-#, fuzzy
 msgid "State TIME_WAIT"
-msgstr "TIME_WAIT"
+msgstr "Status TIME_WAIT"
 
 msgid "State and Count of Processes"
 msgstr "Status und Anzahl von Prozessen"
@@ -52452,7 +52379,7 @@ msgid "State if agent deployment is disabled for host"
 msgstr "Status, wenn die Agentenverteilung für den Host deaktiviert ist"
 
 msgid "State if agent deployment is globally disabled"
-msgstr "Status, wenn der Agenteneinsatz global deaktiviert ist"
+msgstr "Status, wenn die Agentenverteilung global deaktiviert ist"
 
 msgid "State if at least one blocked session"
 msgstr ""
@@ -53428,17 +53355,14 @@ msgstr "Stil"
 msgid "Style of connection lines"
 msgstr "Stil der Verbindungsverzweigungen"
 
-#, fuzzy
 msgid "Styles: Bytes"
-msgstr "Stile"
+msgstr "Stile: Bytes"
 
-#, fuzzy
 msgid "Styles: Requests"
-msgstr "%s Anfragen"
+msgstr "Stile: Anfragen"
 
-#, fuzzy
 msgid "Styles: Secs"
-msgstr "Stile"
+msgstr "Stile: Sekunden"
 
 msgid ""
 "Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available as "
@@ -53532,9 +53456,9 @@ msgid ""
 "discovery</a> in order to auto-configure all services to be checked on this "
 "host."
 msgstr ""
-"Der Host wurde erfolgreich angelegt. Nun sollten Sie eine <a href=\"%s\""
-">Service-Erkennung</a> durchführen, damit alle Services, die auf diesem Host "
-"geprüft werden sollen, automatisch eingerichtet werden."
+"Der Host wurde erfolgreich angelegt. Nun sollten Sie eine <a href=\"%s"
+"\">Service-Erkennung</a> durchführen, damit alle Services, die auf diesem "
+"Host geprüft werden sollen, automatisch eingerichtet werden."
 
 #, python-format
 msgid "Successfully deleted %d hosts"
@@ -53583,9 +53507,8 @@ msgstr "Vorgeschlagene Tutorial Videos"
 msgid "Suite"
 msgstr "Suite"
 
-#, fuzzy
 msgid "Suite ID"
-msgstr "Instanz ID"
+msgstr "Suite-ID"
 
 msgid "Suite runtime"
 msgstr "Suite Laufzeit"
@@ -53751,7 +53674,7 @@ msgid "Switch port statistics"
 msgstr "Switchportstatistiken"
 
 msgid "Switch slave replication mode"
-msgstr "Replikations Modus des Slave umschalten"
+msgstr "Replikationsmodus der Remote-Instanz umschalten"
 
 msgid "Switch to Takeover mode!"
 msgstr "In Übernahme-Modus umschalten!"
@@ -54056,11 +53979,10 @@ msgid "TCP connect"
 msgstr "TCP Connect"
 
 msgid "TCP connect timeout for connecting to the master"
-msgstr "TCP Verbindungstimeout für Verbindung zum Master"
+msgstr "TCP Verbindungstimeout für Verbindung zur Zentralinstanz"
 
-#, fuzzy
 msgid "TCP connection states"
-msgstr "TCP-Verbindungsstatus"
+msgstr "TCP-Verbindungsstati"
 
 msgid "TCP connection statistics"
 msgstr "TCP-Verbindungsstatistiken"
@@ -54303,7 +54225,7 @@ msgid "Take n'th worst state for n = "
 msgstr "Nehme den n. -schlechtesten Zustand mit n = "
 
 msgid "Takeover after a master downtime of"
-msgstr "Übernahme durchführen wenn Master-Downtime Zeit ist"
+msgstr "Übernahme durchführen wenn Zentral-Wartungszeit ist"
 
 msgid "Takeover!"
 msgstr "Übernahme!"
@@ -54510,9 +54432,8 @@ msgstr "Testverifizierung"
 msgid "Testing"
 msgstr "Test läuft"
 
-#, fuzzy
 msgid "Tests"
-msgstr "Test"
+msgstr "Tests"
 
 msgid "Text"
 msgstr "Text"
@@ -54652,13 +54573,13 @@ msgid ""
 "HTTPS. This can be configured using the ruleset <a href=\"%s\">Agent updater "
 "(Linux, Windows)</a>."
 msgstr ""
-"Der Agent-Updater kommuniziert mit der Agentenbäckerei um Informationen über "
-"die zu installierenden Agenten zu erfragen, den Agenten selbst "
-"herunterzuladen und den Update-Status an die Agentenbäckerei zu übermitteln. "
-"Dies kann entweder über HTTP oder HTTPS realisiert werden. Um "
-"sicherzustellen, dass die Daten sicher übertragen werden, wird dringend "
-"empfohlen HTTPS zu verwenden. Dies kann mit Hilfe der Regelkette <a href=\"%s"
-"\">Agent-Updater (Linux, Windows)</a> konfiguriert werden."
+"Der Agent Updater kommuniziert mit der Agentenbäckerei, um Informationen "
+"über die zu installierenden Agenten und den Agenten selbst abzurufen und den "
+"Aktualisierungsstatus an die Bäckerei zu melden. Dies kann entweder über "
+"HTTP oder HTTPS erfolgen. Um einen sicheren Transport der Daten zu "
+"gewährleisten, wird die Verwendung von HTTPS dringend empfohlen. Dies kann "
+"über den Regelsatz <a href=\"%s\">Agent Updater (Linux, Windows)</a> "
+"konfiguriert werden."
 
 msgid "The Amazon Resource Name (ARN) of the role to assume."
 msgstr "Der Amazon Ressource Name (ARN) der Rolle die eingenommen werden soll."
@@ -55232,6 +55153,10 @@ msgid ""
 "there are multiple execution attempts, the thresholds apply to the longest "
 "runtime. "
 msgstr ""
+"Das Verhältnis zwischen Laufzeit und Zeitüberschreitung wird berechnet als "
+"<i>Laufzeit * 100 / Zeitüberschreitung</i>. Diese Schwellwerte gelten für "
+"die Laufzeit eines einzelnen Ausführungsversuchs. Gibt es mehrere "
+"Ausführungsversuche, gelten die Schwellwerte für die längste Laufzeit. "
 
 msgid ""
 "The SAML login button on the login page will display this name. Choose a "
@@ -55935,7 +55860,7 @@ msgid ""
 "local site. But this may make the host be monitored from multiple sites."
 msgstr ""
 "Die konfigurierte Instanz ist dieser Instanz nicht bekannt. Wenn Sie dies in "
-"einer Remote-Instanze in einer verteilten Umgebung konfigurieren, ist dies "
+"einer Remote-Instanz in einer verteilten Umgebung konfigurieren, ist dies "
 "möglicherweise ein Host einer anderen Instanz. Wenn Sie diesen Host "
 "bearbeiten wollen, müssen Sie zunächst das Instanz-Attribut auf die lokale "
 "Instanz setzen. Dies kann allerdings dazu führen, dass der Host von mehreren "
@@ -57167,9 +57092,9 @@ msgstr ""
 msgid "The maximum age of the last backup."
 msgstr "Maximales Alter für letzte Sicherung."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The maximum allowed length is %s."
-msgstr "Der maximal erlaubte Wert ist %s."
+msgstr "Die maximal erlaubte Länge ist %s."
 
 #, python-format
 msgid "The maximum allowed number of regex groups is %s."
@@ -57290,9 +57215,9 @@ msgstr ""
 "des resultierenden Dienstes angezeigt. Der Metrikname wird als Bezeichnung "
 "genommen, wenn nichts angegeben wurde."
 
-#, fuzzy, python-format
+#, python-format
 msgid "The minimum allowed length is %s."
-msgstr "Der minimal erlaubte Wert ist %s."
+msgstr "Die minimal erlaubte Länge ist %s."
 
 #, python-format
 msgid "The minimum allowed number of regex groups is %s."
@@ -57477,6 +57402,9 @@ msgid ""
 "If the macro is not defined or does not represent an integer, config "
 "generation will fail."
 msgstr ""
+"Der Name des Makros (einschließlich der '$'s), das die Portnummer enthält. "
+"Wenn das Makro nicht definiert ist oder nicht für eine ganze Zahl steht, "
+"schlägt die Generierung der Konfiguration fehl."
 
 msgid ""
 "The name of the memory pool in the format 'INSTANCE Memory Pool POOLNAME'"
@@ -57978,10 +57906,10 @@ msgid ""
 "deployed, since only one of them will produce data, depending on the install "
 "Mailman version."
 msgstr ""
-"Die Plugins <tt>mailman2_lists</tt> (Mailman 2) und <tt>mailman3_lists</tt> "
-"(Mailman 3) überwachen Mailman Mailing-Listen. Wenn diese Option aktiviert "
-"ist, werden beide Plugins eingesetzt, da je nach installierter Mailman-"
-"Version nur eines von ihnen Daten erzeugt."
+"Die Plugins <tt>mailman2_lists</tt> (Mailman 2) und <tt>mailman3_lists</tt> ("
+"Mailman 3) überwachen Mailman Mailing-Listen. Wenn diese Option aktiviert "
+"ist, werden beide Plugins verteilt, da je nach installierter Mailman-Version "
+"nur eines von ihnen Daten erzeugt."
 
 msgid ""
 "The plugins in this list will be called such that they will create real-time "
@@ -58289,9 +58217,9 @@ msgstr ""
 "sicherer, da keine Anmeldedaten gespeichert werden müssen, außer im Agent "
 "intern. Wenn Sie den <i>Benutzermodus</i> verwenden, werden die angegebenen "
 "Anmeldeinformationen auf allen Checkmk-Servern gespeichert, auf die diese "
-"Konfiguration angewendet wird. Die Anmeldeinformationen werden auch in die "
-"Agentenbäckerei-Pakete eingebacken, verteilt und mit ihnen auf dem "
-"Zielsystem installiert. Wir empfehlen dringend, wann immer möglich den "
+"Konfiguration angewendet wird. Die Anmeldeinformationen (im Klartext) werden "
+"auch in die Agentenbäckerei-Pakete eingebacken, verteilt und mit ihnen auf "
+"dem Zielsystem installiert. Wir empfehlen dringend, wann immer möglich den "
 "<i>Gruppenmodus</i> zu verwenden."
 
 msgid "The rule is only applied to hosts directly in or below this folder."
@@ -58579,7 +58507,7 @@ msgid ""
 msgstr ""
 "Die Signaturschlüssel werden auf der Festplatte mit dieser Passphrase "
 "verschlüsselt abgelegt. Die Passphrase selbst wird nirgendwo gespeichert. "
-"Wenn sie verlorengeht, werden Sie keine neuen Agenten mehr mit diesem "
+"Wenn sie verloren geht, werden Sie keine neuen Agenten mehr mit diesem "
 "Schlüssel signieren können. Dies kann bedeuten, dass Sie alle Agenten "
 "manuell mit einem neuen Schlüssel aktualisieren müssen!"
 
@@ -58594,6 +58522,7 @@ msgstr "Die Instanz-ID muss mit der dem Instanznamen exakt übereinstimmen."
 
 msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
+"Die Instanz-ID darf nur aus Buchstaben, Ziffern und dem Unterstrich bestehen."
 
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr ""
@@ -59880,14 +59809,14 @@ msgid ""
 "remote alert handlers (Linux)</a> in the Agent Bakery for settings this up "
 "correctly."
 msgstr ""
-"Dieser Alerthandler erlaubt die entfernte Ausführung von Skripten und "
+"Dieser Alert Handler erlaubt die entfernte Ausführung von Skripten und "
 "Programmen auf Linuxsystemen via SSH. Um das höchstmögliche "
 "Sicherheitsniveau zu erreichen, wird der Handler nicht direkt aufgerufen, "
 "sondern zunächst das Skript <tt>mk-remote-alert-handler</tt>. Dieser kleine "
 "Wrapper erlaubt nur die Ausführung von ganz bestimmten vorkonfigurierten "
 "Skripten und verhindert so das Einschleusen von Befehlen durch einen "
 "möglichen Angreifer. Bitte verwenden Sie zum korrekten Aufsetzen den "
-"Regelsatz <a href='%s'>Remote-Alerthandler installieren (Linux)</a> in der "
+"Regelsatz <a href='%s'>Remote-Alert Handler installieren (Linux)</a> in der "
 "Agentenbäckerei."
 
 #, python-format
@@ -59932,7 +59861,7 @@ msgid ""
 msgstr ""
 "Damit schalten Sie die Replikation ab ohne Ihre Einstellungen zu verlieren. "
 "Wenn Sie dieses Kästchen ankreuzen, dann erfolgt keine Replikation und die "
-"Event Console agiert als ihr eigener Master."
+"Event Console agiert als ihre eigene Zentralinstanz."
 
 msgid ""
 "This attribute is mandatory and there is no value defined in the host list "
@@ -60523,13 +60452,13 @@ msgid ""
 "However, this might be the right choice for experienced users or users that "
 "want to run the agent updater on architectures like ARM, ppc or others."
 msgstr ""
-"Dies ist im Wesentlichen das rohe Updater-Skript des Agenten, das in den "
+"Dies ist im Wesentlichen das rohe Agent Updater-Skript, das in den "
 "Binärversionen verpackt wird. Sie müssen sich selbst um die Abhängigkeiten "
 "kümmern. Das Skript erfordert eine Installation von Python 3.4 (oder höher) "
 "und die passenden Python-Pakete \"requests\", \"PySocks\" und \"cryptography"
 "\" auf den Zielhosts. Die Anforderungen können sich eventuell ohne "
 "Ankündigung ändern. Dies könnte dennoch die richtige Wahl für erfahrene "
-"Benutzer oder Benutzer sein, die den Agenten-Updater auf Architekturen wie "
+"Benutzer oder Benutzer sein, die den Agent Updater auf Architekturen wie "
 "ARM, ppc oder anderen ausführen möchten."
 
 msgid ""
@@ -60550,7 +60479,7 @@ msgid ""
 "This is only relevant when agent updates are globally enabled. Otherwise, "
 "configured host conditions are not tested and won't yield an error message."
 msgstr ""
-"Dies ist nur relevant, wenn Agenten-Aktualisierungen global aktiviert sind. "
+"Dies ist nur relevant, wenn Agentenupdates global aktiviert sind. "
 "Andernfalls werden die konfigurierten Host-Bedingungen nicht getestet und "
 "führen nicht zu einer Fehlermeldung."
 
@@ -60619,7 +60548,7 @@ msgid ""
 msgstr ""
 "Dies ist das Geheimnis, das zur Verschlüsselung der Echtzeitdaten verwendet "
 "wird. Sie müssen dies korrekt konfigurieren, auch wenn Sie die Bäckerei "
-"nicht zur Bereitstellung des Agenten verwenden."
+"nicht zur Verteilung des Agenten verwenden."
 
 msgid ""
 "This is the uid of the sensor you want to display in the 7-segment display, "
@@ -60662,7 +60591,7 @@ msgid ""
 msgstr ""
 "Diese Liste zeigt die in %s verfügbaren Handler. Wenn Sie ohne "
 "Agentenbäckerei arbeiten kann diese Liste leer sein. Geben Sie dann den "
-"Namen des Remote-Alerthandlers manuell an."
+"Namen des Remote-Alert Handlers manuell an."
 
 msgid ""
 "This list shows you the first 10 rows from your CSV file in the way the "
@@ -61416,7 +61345,7 @@ msgid ""
 "This permission is needed for creating alert handlers, which automatically "
 "execute custom scripts upon monitoring alerts."
 msgstr ""
-"Diese Berechtigung wird für das Erstellen von Alerthandlern benötigt, die "
+"Diese Berechtigung wird für das Erstellen von Alert Handlern benötigt, die "
 "automatisch benutzerdefinierte Skripte, ausgelöst durch Alerts im "
 "Monitoring, ausführen."
 
@@ -61458,9 +61387,9 @@ msgid ""
 "This permission is only useful if the Event Console is setup as a "
 "replication slave. It allows a manual switch between sync and takeover mode."
 msgstr ""
-"Diese Berechtigung ist nur sinnvoll wenn die Event Console als Replikations-"
-"Slave konfiguriert wurde. Damit kann manuell zwischen Synchronisation und "
-"Kontroll-Modus umgeschaltet werden."
+"Diese Berechtigung ist nur sinnvoll wenn die Event Console als Replikation "
+"konfiguriert wurde. Damit kann manuell zwischen Synchronisation und Kontroll-"
+"Modus umgeschaltet werden."
 
 msgid "This permissions allows full control of the automatic agent updates."
 msgstr ""
@@ -61608,9 +61537,10 @@ msgid ""
 "server on Windows. This only supports the German version of Arcserve, since "
 "the log messages are in localized language."
 msgstr ""
-"Dieses Plugin überwacht Backups von Arcserve unter Windows. Allerdings wird "
-"aktuell nur die deutsche Version unterstützt, da Arcserver seine "
-"Logmeldungen in der Landessprache schreibt."
+"Dieses Plugin überwacht Arcserve-Backups, indem es ein Plugin für den "
+"Arcserve-Server unter Windows verteilt. Es unterstützt nur die deutsche "
+"Version von Arcserve, da die Log-Meldungen in lokalisierter Sprache "
+"vorliegen."
 
 msgid "This plugin monitors Citrix sessions and server load on Window hosts."
 msgstr ""
@@ -61809,14 +61739,14 @@ msgid ""
 "*)$<br>In manual check groups are aggregated"
 msgstr ""
 "Diese Regex muss mit dem <i>Anfang</i> der vollständigen textuellen "
-"Beschreibung des Prozesses einschließlich der Argumente "
-"übereinstimmen.<br>Wenn Sie Gruppen benutzen, werden diese während der "
-"Prozesserkennung aufgelöst, z.B. (py.*) wird auf python, python_dev und "
-"python_test zutreffen und 3 Services erzeugen. Während der Check-Ausführung "
-"werden alle Prozesse zusammen aggregiert, weil python ein Bestandteil von "
-"python_test und python_dev ist. Wenn dies nicht dem gewünschten Verhalten "
-"entspricht, nutzen Sie die Trenner '$' oder '\\b' in Ihrem Ausdruck, z.B. "
-"(py.*)$<br>Bei statischen Check werden Gruppen aggregiert"
+"Beschreibung des Prozesses einschließlich der Argumente übereinstimmen."
+"<br>Wenn Sie Gruppen benutzen, werden diese während der Prozesserkennung "
+"aufgelöst, z.B. (py.*) wird auf python, python_dev und python_test zutreffen "
+"und 3 Services erzeugen. Während der Check-Ausführung werden alle Prozesse "
+"zusammen aggregiert, weil python ein Bestandteil von python_test und "
+"python_dev ist. Wenn dies nicht dem gewünschten Verhalten entspricht, nutzen "
+"Sie die Trenner '$' oder '\\b' in Ihrem Ausdruck, z.B. (py.*)$<br>Bei "
+"statischen Check werden Gruppen aggregiert"
 
 msgid "This regex must match the <i>beginning</i> of the complete username"
 msgstr ""
@@ -61995,20 +61925,20 @@ msgstr ""
 "Mit dieser Regel können Sie Ihre eigenen Dateien und Ordner zum Agentenpaket "
 "hinzufügen. Alles, was Sie tun müssen, ist, sie unter <i>%s/local/share/"
 "check_mk/agents/custom mit</i> den folgenden Einschränkungen zu platzieren. "
-"Erstellen Sie für jedes Paket, das Sie bereitstellen möchten, ein "
+"Erstellen Sie für jedes Paket, das Sie verteilen möchten, ein "
 "Unterverzeichnis. Diese Pakete werden in dieser Regel als Listenauswahl "
 "angezeigt. Innerhalb eines Paketordners können Sie die folgenden Unterordner "
 "erstellen: <i>lib</i>, <i>bin</i>, <i>var</i>, <i>config</i>. Diese Ordner "
-"sind die logischen Zielpfade für die Dateien. Wenn Sie zum Beispiel "
-"<i>mypackage/lib/myfolder/myfile</i> in das <i>custom</i>-Verzeichnis legen. "
+"sind die logischen Zielpfade für die Dateien. Wenn Sie zum Beispiel <i>"
+"mypackage/lib/myfolder/myfile</i> in das <i>custom</i>-Verzeichnis legen. "
 "Diese Regel wird mypackage als Listenauswahloption anzeigen. Der Unterordner "
 "<i>lib</i> wird in <i>/usr/lib/check_mk_agent</i> aufgelöst, wenn ein Linux-"
 "Agent mit der Standardkonfiguration verwendet wird. Am Ende wird die Datei "
-"unter <i>/usr/lib/check_mk_agent/myfolder/myfile</i> zu finden sein. "
-"Hinweis: Wenn Sie den Windows-Agenten verwenden, zeigen alle logischen Pfade "
-"auf denselben Ort - das Installationsverzeichnis des Agenten. Es können "
-"mehrere Regeln gelten, das bedeutet, dass die Pakete mehrerer Regeln "
-"zusammengeführt werden."
+"unter <i>/usr/lib/check_mk_agent/myfolder/myfile</i> zu finden sein. Hinweis:"
+" Wenn Sie den Windows-Agenten verwenden, zeigen alle logischen Pfade auf "
+"denselben Ort - das Installationsverzeichnis des Agenten. Es können mehrere "
+"Regeln gelten, das bedeutet, dass die Pakete mehrerer Regeln zusammengeführt "
+"werden."
 
 #, python-format
 msgid ""
@@ -62120,7 +62050,7 @@ msgstr ""
 "Diese Regel erlaubt, Level für spezifische Inotify-Änderungen zu setzen. Es "
 "können jedoch nur Operationen überwacht werden, die im Inotify-Plugin auch "
 "aktiviert sind. Es wird empfohlen, diese Level mit der Konfigurationsregel "
-"in der Agent Bakery abzugleichen. "
+"in der Agentenbäckerei abzugleichen. "
 
 msgid ""
 "This rule allows you to set limits for the maximum number of DB2 connections"
@@ -62766,7 +62696,7 @@ msgstr ""
 "signiert ist.<br><b>Hinweis<sup>1</sup>:</b> Dieser Update-Mechanismus ist "
 "in den Agenten selbst integriert. Nach der Aktivierung dieser Funktion ist "
 "also mindestens eine weitere manuelle Aktualisierung des Agenten "
-"erforderlich.<br><b>Hinweis<sup>2</sup>:</b> Nach der Bereitstellung dieses "
+"erforderlich.<br><b>Hinweis<sup>2</sup>:</b> Nach der Verteilung dieses "
 "neuen Plugins müssen Sie es einmal manuell aufrufen, um den Agenten auf "
 "Ihrem Update-Server zu registrieren. Rufen Sie <tt>cmk-update-agent -H "
 "<i>HOST</i></tt> (UNIX) oder <tt>check_mk_agent.exe updater register -H "
@@ -62825,9 +62755,9 @@ msgstr ""
 "Benachrichtigungen auslösen sollen. Bitte beachten Sie, dass mehrere andere "
 "Filter ebenfalls erfüllt sein müssen, damit die Benachrichtigungen "
 "schließlich verschickt werden können.<br><br>Bitte beachten Sie: Es gibt "
-"einen Unterschied zwischen dem Microcore und Nagios, wenn Sie einen Host "
+"einen Unterschied zwischen dem Micro Core und Nagios, wenn Sie einen Host "
 "haben, der keine passende Regel in diesem Regelsatz hat. In diesem Fall "
-"sendet der Microcore keine UNREACHABLE-Benachrichtigungen, während der "
+"sendet der Micro Core keine UNREACHABLE-Benachrichtigungen, während der "
 "Nagios-Kern UNREACHABLE-Benachrichtigungen senden würde. Um dieses Verhalten "
 "anzugleichen, erstellen Sie eine Regel für alle Ihre Hosts und konfigurieren "
 "Sie diese so, dass sie entweder UNREACHABLE-Benachrichtigungen sendet oder "
@@ -62939,7 +62869,7 @@ msgstr ""
 msgid ""
 "This ruleset is for deploying two plugins for monitoring Unitrends software."
 msgstr ""
-"Dieser Regelsatz ist für den Einsatz von zwei Plugins zur Überwachung der "
+"Dieser Regelsatz ist für die Verteilung von zwei Plugins zur Überwachung der "
 "Unitrends-Software gedacht."
 
 msgid ""
@@ -63595,10 +63525,10 @@ msgid ""
 "the requests python library on the host running the plugin <b>and</b> the "
 "WAR file on the JVMs."
 msgstr ""
-"Hiermit wird das Checkmk-Agenten-Plugin <tt>mk_jolokia</tt> bereitgestellt "
-"und konfiguriert. Um dies zu nutzen, benötigen Sie die Datei Jolokia <tt>."
-"war</tt> aus der <a href='http://www.jolokia.org/index.html'>Jolokia Project "
-"Homepage</a>, die in Ihren JVMs eingesetzt wird. Derzeit werden mindestens "
+"Hiermit wird das Checkmk-Agenten-Plugin <tt>mk_jolokia</tt> verteilt und "
+"konfiguriert. Um dies zu nutzen, benötigen Sie die Datei Jolokia <tt>.war</"
+"tt> aus der <a href='http://www.jolokia.org/index.html'>Jolokia Project "
+"Homepage</a>, die in Ihren JVMs verteilt wird. Derzeit werden mindestens "
 "Tomcat, JBoss und BEA Weblogic unterstützt. Beachten Sie: Das Checkmk "
 "<tt>mk_jolokia</tt> Plugin benötigt sowohl die Requests-Python-Bibliothek "
 "auf dem Host, auf dem das Plugin läuft, <b>als auch</b> die WAR-Datei auf "
@@ -63615,7 +63545,7 @@ msgid ""
 "default.  Use the FQDN in the query if HOSTNAME is not set, other the short "
 "hostname."
 msgstr ""
-"Dadurch wird das Checkmk-Agent-Plugin <tt>mk_sap_hana</tt> installiert und "
+"Dadurch wird das Checkmk-Agent-Plugin <tt>mk_sap_hana</tt> verteilt und "
 "konfiguriert. Damit dieses Plugin funktioniert, müssen Sie Standard-"
 "Anmeldeinformationen, die für alle Datenbanken verwendet werden, oder "
 "Anmeldeinformationen pro Datenbank konfigurieren. Um Anmeldedaten zu "
@@ -63633,7 +63563,7 @@ msgid ""
 "have to to determine the path to sapgenpse. It's recommended to run the "
 "plugin asynchronously."
 msgstr ""
-"Dieser Regelsatz sorgt für das Ausrollen und Konfigurieren des "
+"Dieser Regelsatz sorgt für die Verteilung und Konfiguration des "
 "<tt>mk_saprouter</tt>-Plugins. Das Plugin läuft in der Umgebung des "
 "angegebenen Benutzers. Außerdem müssen Sie den Pfad zu sapgenpse bestimmen. "
 "Es wird empfohlen, das Plugin asynchron auszuführen."
@@ -63644,7 +63574,7 @@ msgid ""
 "environment. Furthermore you have to to determine host tags or service check "
 "commands."
 msgstr ""
-"Dieser Regelsatz sorgt für das Ausrollen und Konfigurieren des Checkmk "
+"Dieser Regelsatz sorgt für die Verteilung und Konfiguration des Checkmk "
 "Agenten-Plugin <tt>mk_site_object_counts</tt>. Das Plugin läuft in der "
 "Umgebung des angegebenen Benutzers. Außerdem müssen Sie Host-Tags oder "
 "Service-Check-Befehle angeben."
@@ -63654,7 +63584,7 @@ msgid ""
 "check <tt>apt</tt> on DEB-based hosts (like Debian and Ubuntu) and monitor "
 "pending normal and security updates."
 msgstr ""
-"Rollt das Agentenplugin <tt>mk_apt</tt> aus. Dies aktiviert den Check "
+"Dies verteilt das Agentenplugin <tt>mk_apt</tt>. Dies aktiviert den Check "
 "<tt>apt</tt> auf Debian-basierten Hosts (z.B. Debian und Ubuntu) und "
 "überwacht ausstehende normale und Sicherheitsupdates."
 
@@ -63670,18 +63600,17 @@ msgid ""
 "translation rules</a> to avoid name collisions if containers with the same "
 "name exist on multiple docker nodes."
 msgstr ""
-"Dadurch wird das Agent-Plugin <tt>mk_docker.py</tt> bereitgestellt. Sie "
-"können wählen, ob Sie den Knoten und/oder die einzelnen Container überwachen "
-"möchten. Dieses Plugin erfordert, dass die Python-Bibliothek "
-"'docker' (mindestens Version 2.0.0) auf dem überwachten System installiert "
-"ist, was mit dem Befehl '<tt>pip install docker</tt>' erreicht werden kann. "
-"ACHTUNG: <tt>pip install docker-py</tt> installiert möglicherweise eine "
-"veraltete, inkompatible Version der gleichen Bibliothek. Wenn Sie die "
-"Container mehrerer Docker-Knoten überwachen möchten, empfehlen wir dringend, "
-"<a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation"
-"\">Piggyback-Übersetzungsregeln</a> einzurichten, um Namenskollisionen zu "
-"vermeiden, wenn Container mit demselben Namen auf mehreren Docker-Knoten "
-"existieren."
+"Dadurch wird das Agent-Plugin <tt>mk_docker.py</tt> verteilt. Sie können "
+"wählen, ob Sie den Knoten und/oder die einzelnen Container überwachen "
+"möchten. Dieses Plugin erfordert, dass die Python-Bibliothek 'docker' ("
+"mindestens Version 2.0.0) auf dem überwachten System installiert ist, was "
+"mit dem Befehl '<tt>pip install docker</tt>' erreicht werden kann. ACHTUNG: "
+"<tt>pip install docker-py</tt> installiert möglicherweise eine veraltete, "
+"inkompatible Version der gleichen Bibliothek. Wenn Sie die Container "
+"mehrerer Docker-Knoten überwachen möchten, empfehlen wir dringend, <a href="
+"\"wato.py?mode=edit_ruleset&varname=piggyback_translation\">Piggyback-"
+"Übersetzungsregeln</a> einzurichten, um Namenskollisionen zu vermeiden, wenn "
+"Container mit demselben Namen auf mehreren Docker-Knoten existieren."
 
 msgid "This will deploy the agent plugin <tt>mk_mongodb.py</tt>."
 msgstr "Dadurch wird das Agent-Plugin <tt>mk_mongodb.py</tt> verteilt."
@@ -63692,8 +63621,8 @@ msgid ""
 "MySQL databases. On Windows, the plugin will look for service names "
 "containing the strings <tt>MySQL</tt> or <tt>MariaDB</tt>"
 msgstr ""
-"Rollt das Agentenplugin <tt>mk_mysql</tt> auf Linuxsystemen und <tt>mk_mysql."
-"vbs</tt> auf Windowssystemen aus, um verschiedene Aspekte von MySQL-"
+"Verteilt das Agentenplugin <tt>mk_mysql</tt> auf Linuxsystemen und "
+"<tt>mk_mysql.vbs</tt> auf Windowssystemen, um verschiedene Aspekte von MySQL-"
 "Datenbanken zu überwachen. Unter Windows sucht das Plugin nach Dienstnamen, "
 "welche die Zeichenketten <tt>MySQL</tt> oder <tt>MariaDB</tt> enthalten"
 
@@ -63701,7 +63630,7 @@ msgid ""
 "This will deploy the agent plugin <tt>mk_nfsiostat</tt> to check various "
 "client side NFS IO stats."
 msgstr ""
-"Hiermit wird das Agenten-Plugin <tt>mk_nfsiostat</tt> bereitgestellt, um "
+"Hiermit wird das Agenten-Plugin <tt>mk_nfsiostat</tt> verteilt, um "
 "verschiedene clientseitige NFS IO-Statistiken zu überprüfen."
 
 msgid ""
@@ -63716,7 +63645,7 @@ msgid ""
 "This will deploy the agent plugin <tt>mk_tsm</tt>. It will provide several "
 "checks concerning TSM."
 msgstr ""
-"Dies rollt das Agentenplugin <tt>mk_tsm</tt> aus, das mehrere Checks für TSM "
+"Dies verteilt das Agentenplugin <tt>mk_tsm</tt>, das mehrere Checks für TSM "
 "versorgt."
 
 msgid ""
@@ -63724,23 +63653,23 @@ msgid ""
 "check <tt>zypper</tt> on SUSE Linux hosts and monitor normal and security "
 "updates."
 msgstr ""
-"Dies rollt das Agentenplugin <tt>mk_zypper</tt> aus. Dies aktiviert den "
-"Check <tt>zypper</tt> auf SUSE Linux Hosts und überwacht normale und "
+"Dies verteilt das Agentenplugin <tt>mk_zypper</tt>. Dies aktiviert den Check "
+"<tt>zypper</tt> auf SUSE Linux Hosts und überwacht normale und "
 "Sicherheitsupdates."
 
 msgid ""
 "This will deploy the agent plugin <tt>nvidia_smi</tt> used for monitoring "
 "Nvidia GPUs."
 msgstr ""
-"Dies rollt das Agenten-Plugin <tt>nvidia_smi</tt> aus, das für das "
-"Monitoring von Nvidia GPUs genutzt wird."
+"Dies verteilt das Agenten-Plugin <tt>nvidia_smi</tt>, das für das Monitoring "
+"von Nvidia GPUs genutzt wird."
 
 msgid ""
 "This will deploy the two agent plugins <tt>plesk_backup</tt> and "
 "<tt>plesk_domain</tt>, used for monitoring Plesk."
 msgstr ""
-"Dies rollt die beiden Agentenplugins <tt>plesk_backup</tt> und "
-"<tt>plesk_domain</tt> aus, die Plesk überwachen."
+"Dies verteilt die beiden Agentenplugins <tt>plesk_backup</tt> und "
+"<tt>plesk_domain</tt>, die Plesk überwachen."
 
 msgid "This will replace your local configuration"
 msgstr "Dies ersetzt Ihre lokale Konfiguration"
@@ -64443,12 +64372,12 @@ msgstr ""
 "jedoch als Downgrade angesehen werden. Um dies zu vermeiden, kann diese "
 "Option aktiviert werden. Es wird dann eine immer höhere <i>Bake revision</i> "
 "zum Versionierungsschema hinzugefügt.<br><i>Warnung:</i>Wenn diese Option "
-"aktiviert ist, muss die Bäckerei Agentenpaketsignaturen ungültig machen, die "
-"normalerweise beim Backen gültig bleiben würden. Sie müssen diese "
-"anschließend manuell erneut eintragen, oder immer <i>Backen und signieren</"
-"i> verwenden.<br>Aktivieren Sie diese Option nur, wenn Sie tatsächlich auf "
-"das erwähnte Downgrade-Problem stoßen. Dies sollte bei automatischen Updates "
-"über den Agent Updater nicht der Fall sein."
+"aktiviert ist, muss die Agentenbäckerei Agentenpaketsignaturen ungültig "
+"machen, die normalerweise beim Backen gültig bleiben würden. Sie müssen "
+"diese anschließend manuell erneut eintragen, oder immer <i>Backen und "
+"signieren</i> verwenden.<br>Aktivieren Sie diese Option nur, wenn Sie "
+"tatsächlich auf das erwähnte Downgrade-Problem stoßen. Dies sollte bei "
+"automatischen Updates über den Agent Updater nicht der Fall sein."
 
 msgid ""
 "To make the querying source transparent for the requested web server, the "
@@ -64602,9 +64531,8 @@ msgstr "Top-Anwendungs-Traffic: Ansicht des letzten Tages"
 msgid "Top application traffic: last hour view"
 msgstr "Top-Anwendungs-Traffic: Ansicht der letzten Stunde"
 
-#, fuzzy
 msgid "Top level suite"
-msgstr "Name der obersten Ebene der Suite (%s)"
+msgstr "Suite der obersten Ebene"
 
 #, python-format
 msgid "Top level suite name (%s)"
@@ -66970,7 +66898,7 @@ msgid "UDP packets"
 msgstr "UDP-Pakete"
 
 msgid "UDP port the Microcore is listening on"
-msgstr "UDP-Port, auf dem der Microcore horcht"
+msgstr "UDP-Port, auf dem der Micro Core horcht"
 
 msgid "UDP port to listen to"
 msgstr "UDP-Port, auf dem gehorcht werden soll"
@@ -67229,7 +67157,8 @@ msgid "Un"
 msgstr "Un"
 
 msgid "Unable to analyze matching, because \"service\" parameter is missing"
-msgstr "Analyse des Abgleichs nicht möglich, da der Parameter \"service\" fehlt"
+msgstr ""
+"Analyse des Abgleichs nicht möglich, da der Parameter \"service\" fehlt"
 
 #, python-format
 msgid "Unable to authenticate with LDAP (%s)"
@@ -67840,10 +67769,10 @@ msgstr "Aktualisierungen werden ... erwartet"
 
 #, python-format
 msgid "Updates will be <b>disabled</b> for this host: %s"
-msgstr "Agentenupdates werden für diesen Host <b>abgeschaltet</b>: %s"
+msgstr "Updates werden für diesen Host <b>deaktiviert</b>: %s"
 
 msgid "Updates will be enabled for this host."
-msgstr "Agentenupdates werden für diesen Host aktiviert."
+msgstr "Updates werden für diesen Host aktiviert."
 
 msgid "Updating of search index started"
 msgstr "Aktualisierung des Suchindex gestartet"
@@ -68915,9 +68844,8 @@ msgstr ""
 msgid "Use local FQDN"
 msgstr "Lokalen FQDN benutzen"
 
-#, fuzzy
 msgid "Use macro to determine port number"
-msgstr "Kurze Darstellung dieser Zahl verwenden"
+msgstr "Makro zur Ermittlung der Portnummer verwenden"
 
 msgid "Use manually created ORACLE password wallet"
 msgstr "Manuell erzeugtes ORACLE Passwort-Wallet verwenden"
@@ -69315,7 +69243,7 @@ msgstr ""
 "geprüft werden soll. Bitte hier den Hostnamen angeben, z. B. my_rabbitmq."
 "com. Wenn nicht gesetzt, wird der zugewiesene Host als Instanz verwendet."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Use this rule to enable the use of SNMP verison 2c instead of the default "
 "SNMP version 1. Checkmk defaults to SNMPv1 in order to support as many "
@@ -69326,15 +69254,16 @@ msgid ""
 "some buggy devices do not properly support \"bulkwalk\" queries. For those "
 "you may want to try disabling them using the ruleset \"%s\"."
 msgstr ""
-"Checkmk ist standardmäßig auf SNMPv1 eingestellt, um so viele Geräte wie "
-"möglich zu unterstützen. In der Praxis unterstützen die meisten SNMP-Geräte "
-"auch SNMPv2c, das zwei Vorteile hat: Es unterstützt 64-Bit-Zähler und Bulk "
-"Walk, was CPU- und Netzwerkressourcen spart und leistungsfähiger ist. "
-"Verwenden Sie diese Regel, um SNMPv2c für so viele Geräte wie möglich zu "
-"konfigurieren. Bitte beachten Sie jedoch, dass einige Geräte, die SNMPv2c "
-"unterstützen, fehlerhaft sein können. In solchen Fällen sollten Sie "
-"versuchen, den Bulk Walk zu deaktivieren, indem Sie das Regelset \"Bulk "
-"Walks auf SNMPv2c/v3 deaktivieren\" verwenden."
+"Verwenden Sie diese Regel, um die Verwendung der SNMP-Version 2c anstelle "
+"der Standard-SNMP-Version 1 zu aktivieren. Checkmk verwendet standardmäßig "
+"SNMPv1, um so viele Geräte wie möglich zu unterstützen. In der Praxis "
+"unterstützen die meisten SNMP-Geräte auch SNMPv2c, was zwei Vorteile hat: Es "
+"unterstützt 64-Bit-Zähler und die \"Bulkwalk\"-Abfrage, die schneller ist "
+"und CPU- und Netzwerkressourcen spart. Verwenden Sie diese Regel, um SNMPv2c "
+"für so viele Geräte wie möglich zu konfigurieren. Beachten Sie jedoch, dass "
+"einige fehlerhafte Geräte \"bulkwalk\"-Abfragen nicht richtig unterstützen. "
+"Für diese sollten Sie versuchen, sie mit dem Regelsatz \"%s\" zu "
+"deaktivieren."
 
 #, python-format
 msgid "Use this ruleset to assign <a href=\"%s\">%s</a> to services."
@@ -69699,7 +69628,7 @@ msgid "User that performed action (regex)"
 msgstr "Benutzer, der Aktion ausführte (regex)"
 
 msgid "User to run handler as"
-msgstr "Benutzer, unter dem der Alerthandler läuft"
+msgstr "Benutzer, unter dem der Alert Handler läuft"
 
 msgid "User who performed action"
 msgstr "Benutzer der Aktion ausführt"
@@ -69729,7 +69658,7 @@ msgid "Users"
 msgstr "Benutzer"
 
 msgid "Users are allowed to directly login into the Web GUI of this site"
-msgstr ""
+msgstr "Die Benutzer können sich direkt in die Web-GUI dieser Instanz einloggen"
 
 msgid "Users can change this attribute in their personal settings"
 msgstr ""
@@ -69863,7 +69792,7 @@ msgid ""
 "Using this option you can override the globally configured setting for check "
 "timeouts for individual services."
 msgstr ""
-"Mit Hilfe dieser Option können Sie den global konfigurierten Servicecheck-"
+"Mit Hilfe dieser Option können Sie den global konfigurierten Service-Check "
 "Timeout überschreiben."
 
 msgid ""
@@ -70726,7 +70655,7 @@ msgstr ""
 "länger angezeigt wird, wurde der Startvorgang unterbrochen."
 
 msgid "Waiting for new master initialization"
-msgstr "Warte auf initialisierung des neuen Masters"
+msgstr "Warte auf Initialisierung der neuen Zentralinstanz"
 
 msgid "Waiting for other switches to come online"
 msgstr "Warte auf andere Switche online zu gehen"
@@ -71132,7 +71061,7 @@ msgid ""
 "controller) provided by Checkmk are precompressed and won't benefit from "
 "enabling compression."
 msgstr ""
-"Wenn diese Funktion aktiviert ist, komprimiert die Agenten-Bäckerei die "
+"Wenn diese Funktion aktiviert ist, komprimiert die Agentenbäckerei die "
 "meisten Agentenpakete. Die Komprimierung gilt für .deb-Pakete, .rpm-Pakete "
 "und für alle .tar.gz-Pakete, die beim Backen von Agenten entstehen. Hinweis: "
 "Um Namensänderungen bei den Paketen zu vermeiden, haben die unkomprimierten "
@@ -72108,7 +72037,7 @@ msgstr ""
 "Wann immer eine Serverkomponente von Checkmk eine SSL-Verbindung eröffnet, "
 "nutzt Checkmk die hier konfigurierten CA-Zertifikate, um die Authentizität "
 "des Zielservers zu verifizieren. Diese werden beispielsweise genutzt, wenn "
-"Setup eine Replikation zu einer Slave-Instanz durchführt, oder Spezial-"
+"Setup eine Replikation zu einer Remote-Instanz durchführt, oder Spezial-"
 "Agenten über HTTPS kommunizieren. Die hier konfigurierten CA-Zertifikate "
 "werden unter %s gespeichert."
 
@@ -72463,6 +72392,8 @@ msgid ""
 "With this option turned on all Livestatus queries made by Multisite in order "
 "to render views are being displayed."
 msgstr ""
+"Wenn diese Option aktiviert ist, werden alle Livestatus-Abfragen, die von "
+"Multisites zum Erstellen von Ansichten gemacht werden, angezeigt."
 
 msgid ""
 "With this option you can define if icons in the navigation bar should show a "
@@ -72683,9 +72614,9 @@ msgstr ""
 "<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
 "<tt>Check_MK inventory</tt>, und <tt>Check_MK HW/SW Inventory</tt> sind "
 "ausgenommen. <b>Achtung:</b><ul><li> Downtimes und andere konfigurierten "
-"Regeln, die mit diesen Services übereinstimmen, müssen angepasst werden. "
-"</li><li>Performance-Daten und Graphen beginnen für den übersetzen Service "
-"von neuem. </li><li>Konfigurierte Check-Parameter behalten weiterhin ihre "
+"Regeln, die mit diesen Services übereinstimmen, müssen angepasst werden. </"
+"li><li>Performance-Daten und Graphen beginnen für den übersetzen Service von "
+"neuem. </li><li>Konfigurierte Check-Parameter behalten weiterhin ihre "
 "Funktionalität und müssen nicht angepasst werden. </li><li>Dieser neue "
 "Regelsatz übersetzt auch den Item-Teil der Service-Beschreibung. D.h. dass "
 "nach einer solchen Übersetzung das Objekt verloren gegangen sein könnte, "
@@ -73170,11 +73101,11 @@ msgstr ""
 "Hier können Sie eine beliebige Anzahl an Ausdrücken eingeben, die "
 "nacheinander abgearbeitet werden und nach dem ersten Treffer abbricht. Bitte "
 "geben Sie im ersten Feld einen regulären Ausdruck an. Dieser Ausdruck sollte "
-"mindestens einen geklammerten Unterausdruck enthalten - z.B. "
-"<tt>vm_(.*)_proc</tt>. Im zweiten Feld geben Sie dann den übersetzen %s an "
-"und können Sie auf den Text, der auf den Klammerausdruck passt, mit <tt>\\1</"
-"tt> beziehen. Der zweite Klammerausdruck wird mit <tt>\\2</tt> angegeben, "
-"usw. Beispiel: <tt>\\1.example.org</tt> "
+"mindestens einen geklammerten Unterausdruck enthalten - z.B. <tt>vm_(."
+"*)_proc</tt>. Im zweiten Feld geben Sie dann den übersetzen %s an und können "
+"Sie auf den Text, der auf den Klammerausdruck passt, mit <tt>\\1</tt> "
+"beziehen. Der zweite Klammerausdruck wird mit <tt>\\2</tt> angegeben, usw. "
+"Beispiel: <tt>\\1.example.org</tt> "
 
 msgid ""
 "You can add any number of expressions here which are executed succesively "
@@ -73279,15 +73210,15 @@ msgid ""
 "You can configure lower thresholds for the versions of the currently "
 "deployed agent plugins."
 msgstr ""
-"Sie können niedrigere Schwellwerte für die Versionen der aktuell "
-"bereitgestellten Agent-Plugins konfigurieren."
+"Sie können niedrigere Schwellwerte für die Versionen der aktuell verteilten "
+"Agent-Plugins konfigurieren."
 
 msgid ""
 "You can configure lower thresholds for the versions of the currently "
 "deployed local checks."
 msgstr ""
-"Sie können niedrigere Schwellwerte für die Versionen der aktuell "
-"bereitgestellten lokalen Checks konfigurieren."
+"Sie können niedrigere Schwellwerte für die Versionen der aktuell verteilten "
+"lokalen Checks konfigurieren."
 
 #, python-format
 msgid ""
@@ -73502,9 +73433,9 @@ msgstr ""
 "Sie können die Regel nur für bestimmte Services der angegebenen Hosts gelten "
 "lassen. Dazu tragen Sie hier <b>Elemente</b> ein, auf welche die Regel "
 "begrenzt werden soll. <b>Tipp:</b> Achten Sie darauf, dass Sie nur den "
-"Artikel und nicht die vollständige Service-Beschreibung eingeben. "
-"<b>Hinweis:</b> Die Übereinstimmung wird vom <u>Wortanfang</u> aus gesucht. "
-"Auch reguläre Ausdrücke sind möglich. Ein <tt>$</tt> am Ende führt zu einer "
+"Artikel und nicht die vollständige Service-Beschreibung eingeben. <b>Hinweis:"
+"</b> Die Übereinstimmung wird vom <u>Wortanfang</u> aus gesucht. Auch "
+"reguläre Ausdrücke sind möglich. Ein <tt>$</tt> am Ende führt zu einer "
 "genauen Auswertung."
 
 msgid ""
@@ -73517,8 +73448,8 @@ msgid ""
 msgstr ""
 "Sie können auch Instanzen von Datenbanken, die sich auf einem anderen Server "
 "befinden, überwachen. Das kann hilfreich sein, falls Sie ORACLE Datenbanken "
-"auf Windowssystemen überwachen möchten, ohne das mk_oracle für Windows "
-"auszurollen. Jede Remote-Instanz muss eine eindeutige ID haben, welche auch "
+"auf Windowssystemen überwachen möchten, ohne das mk_oracle für Windows zu "
+"verteilen. Jede Remote-Instanz muss eine eindeutige ID haben, welche auch "
 "die gleiche wie die SID sein kann. Diese ID wird dann als Referenz für die "
 "anderen Konfiguration benutzt, wie z.B. für <i>das Login für ausgewählte "
 "Datenbanken</i> oder <i>Sektionen, die ausgeschlossen werden sollen</i>."
@@ -73621,10 +73552,10 @@ msgid ""
 "communicating only with authentic update servers."
 msgstr ""
 "Sie können optional CA- oder selbstsignierte Zertifikate bereitstellen, die "
-"vom Agent-Updater zur Überprüfung ausgehender HTTPS-Verbindungen verwendet "
+"vom Agent Updater zur Überprüfung ausgehender HTTPS-Verbindungen verwendet "
 "werden. Indem Sie hier gültige Zertifikate bereitstellen, wird "
-"sichergestellt, dass der Agenten-Updater nur mit authentischen Update-"
-"Servern kommuniziert."
+"sichergestellt, dass der Agent Updater nur mit authentischen Update-Servern "
+"kommuniziert."
 
 msgid ""
 "You can provide an optional comment for the current activation. This can be "
@@ -74237,15 +74168,16 @@ msgstr "Sie haben nicht die Berechtigung, den Host umzubenennen"
 
 #, python-format
 msgid "You have %d <a href=\"%s\">rules</a> for deploying the update plugin"
-msgstr "Sie haben %d <a href=\"%s\">Regeln</a> um das Updateplugin auszurollen"
+msgstr ""
+"Sie haben %d <a href=\"%s\">Regeln</a> um das Update-Plugin zu verteilen"
 
 #, python-format
 msgid "You have %d baked agents containing the update plugin"
-msgstr "Sie haben %d gebackene Agenten, die das Update Plugin beinhalten"
+msgstr "Sie haben %d gebackene Agenten, die das Update-Plugin beinhalten"
 
 #, python-format
 msgid "You have %d rules for deploying the update plugin"
-msgstr "Sie haben %d Regeln für die Bereitstellung des Update-Plugins"
+msgstr "Sie haben %d Regeln für die Verteilung des Update-Plugins"
 
 #, python-format
 msgid "You have %d users configured"
@@ -74263,7 +74195,7 @@ msgid ""
 "You have an agent updater rule configured that enables use of plain text "
 "HTTP. Consider enabling HTTPS."
 msgstr ""
-"Sie haben eine Agent-Updater-Regel konfiguriert, die HTTP im Klartext nutzt. "
+"Sie haben eine Agent Updater-Regel konfiguriert, die HTTP im Klartext nutzt. "
 "Es wird empfohlen HTTPS zu verwenden."
 
 #, python-format
@@ -74457,7 +74389,6 @@ msgstr ""
 "Ihr entsprechender Text enthält zu viele Untergruppen von regulären "
 "Ausdrücken. Erlaubt sind maximal neun."
 
-#, fuzzy
 msgid ""
 "You may choose to enforce the usage of a specific TLS version. Either by "
 "pinning to exactly the selected version, or by also allowing higher "
@@ -74467,9 +74398,12 @@ msgid ""
 "This requires a direct call via <i>Integrate Nagios plugins.</i>"
 msgstr ""
 "Sie können die Verwendung einer bestimmten TLS-Version erzwingen. Entweder "
-"durch die Festlegung auf genau die gewählte Version oder indem Sie auch "
+"durch die Festlegung auf genau die ausgewählte Version oder indem Sie auch "
 "höhere Versionen zulassen. Bitte beachten Sie, dass Checkmk SSLv3 oder SSLv2 "
-"nicht mehr unterstützt, da sie als unsicher gelten."
+"überhaupt nicht unterstützt. TLS 1.0 und 1.1 wird von dem zugrunde liegenden "
+"Plug-in unterstützt, aber nicht von diesem Regelsatz, da das Plug-in mit "
+"einer unsicheren Konfiguration von OpenSSL 3 aufgerufen werden muss. Dies "
+"erfordert einen direkten Aufruf über <i>Nagios Plugins integrieren.</i>"
 
 msgid ""
 "You may enforce a specific version if you need to test the compatibility "
@@ -74663,8 +74597,8 @@ msgid ""
 "the access data to the update server."
 msgstr ""
 "Sie müssen <a href=\"%s\">Regeln</a> anlegen. Dabei können Sie "
-"konfigurieren, ob der Agentenupdater in die Agenten mit reingebacken werden "
-"soll. Außerdem müssen Sie die Zugangsdaten des Updateservers angeben."
+"konfigurieren, ob der Agent Updater in die Agenten mit eingebacken werden "
+"soll. Außerdem müssen Sie die Zugangsdaten des Update-Servers angeben."
 
 msgid ""
 "You need to enter at least one CA. Otherwise no SSL connection can be made."
@@ -75161,7 +75095,7 @@ msgid "ago"
 msgstr "vor"
 
 msgid "alert handler rule"
-msgstr "Alerthandler-Regel"
+msgstr "Alert Handler-Regel"
 
 msgid "alerts"
 msgstr "Alarme"
@@ -75525,6 +75459,10 @@ msgstr "automatisch erkennen"
 msgid "detections/s"
 msgstr "Erkennungen"
 
+#, fuzzy
+msgid "deviceModel and serialNumber"
+msgstr "Gerät und Sensorname verwenden"
+
 msgid "devices"
 msgstr "Geräte"
 
@@ -75614,6 +75552,14 @@ msgstr "Echo"
 
 msgid "email addresses: "
 msgstr "Email-Adressen: "
+
+#, fuzzy
+msgid "emailAddress"
+msgstr "Emailadresse"
+
+#, fuzzy
+msgid "emailAddress and serialNumber"
+msgstr "E-Mail-Adresse"
 
 msgid "empty"
 msgstr "leer"
@@ -75791,6 +75737,9 @@ msgstr "gruppieren nach"
 
 msgid "groups"
 msgstr "Gruppen"
+
+msgid "guid"
+msgstr ""
 
 msgid "h"
 msgstr "h"
@@ -76163,7 +76112,7 @@ msgid "master"
 msgstr "Master"
 
 msgid "master / standalone"
-msgstr "Master / unabhängig"
+msgstr "zentral / unabhängig"
 
 msgid "matchExpressions"
 msgstr "matchExpressions"
@@ -76755,6 +76704,10 @@ msgstr "Alarme an Kontakt-Gruppen senden:"
 msgid "send only every"
 msgstr "Sende nur jede"
 
+#, fuzzy
+msgid "serialNumber"
+msgstr "Seriennummer"
+
 msgid "service"
 msgid_plural "services"
 msgstr[0] "Service"
@@ -76952,6 +76905,14 @@ msgstr "zwei Ebenen"
 
 msgid "uPnP configuration enabled"
 msgstr "uPnP-Konfiguration aktiviert"
+
+#, fuzzy
+msgid "uid"
+msgstr "Build"
+
+#, fuzzy
+msgid "uid and serialNumber"
+msgstr "Seriennummer"
 
 msgid "unknown"
 msgstr "unbekannt"
@@ -77157,6 +77118,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Organisations"
+#~ msgstr "Organisationen"
 
 #~ msgid "CONNECT"
 #~ msgstr "CONNECT"

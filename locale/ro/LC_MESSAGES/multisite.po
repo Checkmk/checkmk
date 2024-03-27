@@ -40644,18 +40644,6 @@ msgstr "ID-ul organizației"
 msgid "Organisation Name"
 msgstr "Numele organizației"
 
-msgid "Organisation device statuses"
-msgstr "Starea dispozitivelor de organizare"
-
-msgid "Organisation licenses overview"
-msgstr "Prezentare generală a licențelor de organizare"
-
-msgid "Organisation sensor readings"
-msgstr "Citiri ale senzorilor de organizare"
-
-msgid "Organisations"
-msgstr "Organizații"
-
 msgid "Organization"
 msgstr "Organizația"
 
@@ -40665,8 +40653,24 @@ msgstr "Organizație (O)"
 msgid "Organization Name"
 msgstr "Numele organizației"
 
+#, fuzzy
+msgid "Organization device statuses"
+msgstr "Starea dispozitivelor de organizare"
+
+#, fuzzy
+msgid "Organization licenses overview"
+msgstr "Prezentare generală a licențelor de organizare"
+
+#, fuzzy
+msgid "Organization sensor readings"
+msgstr "Citiri ale senzorilor de organizare"
+
 msgid "Organizational unit (OU)"
 msgstr "Unitate organizațională (OU)"
+
+#, fuzzy
+msgid "Organizations"
+msgstr "Organizația"
 
 msgid "Organize your hosts in groups independent of the tree structure."
 msgstr ""
@@ -75938,6 +75942,10 @@ msgstr "detectează automat"
 msgid "detections/s"
 msgstr "detecții/s"
 
+#, fuzzy
+msgid "deviceModel and serialNumber"
+msgstr "Utilizați numele dispozitivului și al senzorului"
+
 msgid "devices"
 msgstr "dispozitive"
 
@@ -76028,6 +76036,14 @@ msgstr "echo"
 
 msgid "email addresses: "
 msgstr "adrese de e-mail: "
+
+#, fuzzy
+msgid "emailAddress"
+msgstr "Adresa de e-mail"
+
+#, fuzzy
+msgid "emailAddress and serialNumber"
+msgstr "Atributul adresei de e-mail"
 
 msgid "empty"
 msgstr "gol"
@@ -76206,6 +76222,9 @@ msgstr "grup de"
 
 msgid "groups"
 msgstr "grupuri"
+
+msgid "guid"
+msgstr ""
 
 msgid "h"
 msgstr "h"
@@ -77176,6 +77195,10 @@ msgstr "trimiteți notificări ale grupului de contact:"
 msgid "send only every"
 msgstr "trimite numai la fiecare"
 
+#, fuzzy
+msgid "serialNumber"
+msgstr "Număr de serie"
+
 msgid "service"
 msgid_plural "services"
 msgstr[0] "serviciu"
@@ -77375,6 +77398,14 @@ msgstr "doua nivele"
 
 msgid "uPnP configuration enabled"
 msgstr "Configurație uPnP activată"
+
+#, fuzzy
+msgid "uid"
+msgstr "Construiți"
+
+#, fuzzy
+msgid "uid and serialNumber"
+msgstr "Număr de serie"
 
 msgid "unknown"
 msgstr "necunoscut"
@@ -77581,6 +77612,9 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Organisations"
+#~ msgstr "Organizații"
 
 #~ msgid "CONNECT"
 #~ msgstr "CONEXIUNE"

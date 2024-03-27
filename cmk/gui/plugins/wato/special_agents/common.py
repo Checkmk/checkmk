@@ -31,11 +31,18 @@ def prometheus_connection() -> Migrate[TextInput]:
         match value:
             case ("url_custom", {"url_address": str(v)}):
                 return v
-            case str(v):
-                return v
-        raise MKUserError(
-            None, _("The options IP Address and Host name have been removed - Werk #14573.")
-        )
+            case ("host_name" | "ip_address" as macro_vs, dict() as settings):
+                macro = "$HOSTNAME$" if macro_vs == "host_name" else "$HOSTADDRESS$"
+                port = settings.get("port")
+                port_suffix = f":{port}/" if port is not None else "/"
+                path_prefix = settings.get("path_prefix")
+                path_part = f"{path_prefix}/" if path_prefix else ""
+                base_prefix = settings.get("base_prefix") or ""
+                return f"{base_prefix}{macro}{port_suffix}{path_part}"
+            case str(v) as already_migrated:
+                return already_migrated
+
+        raise ValueError("An error has occured while migrating the ruleset.")
 
     return Migrate(valuespec=valuespec, migrate=migrate)  # type: ignore[arg-type]
 

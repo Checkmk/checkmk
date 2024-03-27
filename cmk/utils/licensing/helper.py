@@ -75,3 +75,7 @@ def get_licensed_state_file_path() -> Path:
 
 def get_state_file_created_file_path() -> Path:
     return paths.licensing_dir / "state_file_created"
+
+
+def get_state_change_path() -> Path:
+    return paths.licensing_dir / "state_change"

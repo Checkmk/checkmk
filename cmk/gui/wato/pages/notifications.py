@@ -302,8 +302,9 @@ class ABCNotificationsMode(ABCEventsMode):
                     elif what == "miss":
                         html.icon("rulenmatch", _("This rule does not match: %s") % reason)
 
+                table.cell("#", css=["narrow nowrap"])
+
                 if show_buttons and self._actions_allowed(rule):
-                    table.cell("#", css=["narrow nowrap"])
                     html.write_text(nr)
                     table.cell(_("Actions"), css=["buttons"])
                     links = self._rule_links(rule, nr, profilemode, userid)

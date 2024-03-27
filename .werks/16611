@@ -1,0 +1,15 @@
+Title: notifications: Crash on config page when rule exists with missing permissions
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1711532390
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+When a user tries to access the notification setup page where
+a rule is listed for which the user does not have access rights,
+the page would crash making any changes impossible.
+
+With this werk, the table generation is fixed and the page will
+no longer crash the GUI.

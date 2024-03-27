@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from playwright.sync_api import Error, expect, Locator, Page
+from typing import overload
+
+from playwright.sync_api import Error, expect, FrameLocator, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.playwright.helpers import Keys, LocatorHelper
@@ -12,8 +14,17 @@ from tests.testlib.playwright.helpers import Keys, LocatorHelper
 class MainMenu(LocatorHelper):
     """functionality to find items from the main menu"""
 
-    def locator(self, selector: str = "xpath=.") -> Locator:
-        return self.page.locator("#check_mk_navigation").locator(selector)
+    @overload
+    def locator(self, selector: None = None) -> Locator: ...
+
+    @overload
+    def locator(self, selector: str) -> Locator: ...
+
+    def locator(self, selector: str | None = None) -> Locator:
+        _loc = self.page.locator("#check_mk_navigation")
+        if selector is None:
+            return _loc
+        return _loc.locator(selector)
 
     @property
     def main_page(self) -> Locator:
@@ -144,8 +155,17 @@ class MainMenu(LocatorHelper):
 class MainArea(LocatorHelper):
     """functionality to find items from the main area"""
 
-    def locator(self, selector: str = "xpath=.") -> Locator:
-        return self.page.frame_locator("iframe[name='main']").locator(selector)
+    @overload
+    def locator(self, selector: None = None) -> FrameLocator: ...
+
+    @overload
+    def locator(self, selector: str) -> Locator: ...
+
+    def locator(self, selector: str | None = None) -> Locator | FrameLocator:
+        _loc = self.page.frame_locator("iframe[name='main']")
+        if selector is None:
+            return _loc
+        return _loc.locator(selector)
 
     def check_page_title(self, title: str) -> None:
         """check the page title"""

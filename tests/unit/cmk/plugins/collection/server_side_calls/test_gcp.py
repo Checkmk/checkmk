@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 import time_machine
 
-from cmk.plugins.collection.server_side_calls.gcp import special_agent_gcp
+from cmk.plugins.gcp.server_side_calls.gcp import special_agent_gcp
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret
 
 pytestmark = pytest.mark.checks

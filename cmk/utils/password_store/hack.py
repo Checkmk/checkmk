@@ -29,7 +29,6 @@ HACK_AGENTS = {
     "mobileiron": True,
     "netapp_ontap": True,
     "prism": True,
-    "prometheus": True,  # TODO: revert SSC
     "proxmox_ve": True,
     "pure_storage_fa": True,
     "three_par": True,

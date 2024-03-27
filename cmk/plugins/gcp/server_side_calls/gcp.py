@@ -5,13 +5,12 @@
 
 
 import datetime
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator
 
 from pydantic import BaseModel, Field
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    HTTPProxy,
     replace_macros,
     Secret,
     SpecialAgentCommand,
@@ -39,7 +38,6 @@ class Params(BaseModel):
 def agent_gcp_arguments(
     params: Params,
     host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     today = datetime.date.today()
     args: list[str | Secret] = [

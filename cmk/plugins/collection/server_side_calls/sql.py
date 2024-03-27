@@ -13,7 +13,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     replace_macros,
     Secret,
 )
@@ -38,7 +37,8 @@ class SQLParams(BaseModel):
 
 
 def generate_sql_command(
-    params: SQLParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: SQLParams,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:  # pylint: disable=too-many-branches
     args: list[str | Secret] = []
 

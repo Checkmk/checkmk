@@ -14,7 +14,7 @@ HOST_CONFIG = HostConfig(
 
 def test_azure_status_argument_parsing() -> None:
     param_dict = {"regions": ["eastus", "centralus", "northcentralus"]}
-    commands = list(special_agent_azure_status(param_dict, HOST_CONFIG, {}))
+    commands = list(special_agent_azure_status(param_dict, HOST_CONFIG))
 
     assert len(commands) == 1
     assert commands[0] == SpecialAgentCommand(

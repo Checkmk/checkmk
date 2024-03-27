@@ -74,4 +74,4 @@ HOST_CONFIG = HostConfig(
 def test_agent_jenkins_arguments_password_store(
     params: Mapping[str, object], expected_result: Sequence[SpecialAgentCommand]
 ) -> None:
-    assert list(special_agent_jenkins(params, HOST_CONFIG, {})) == expected_result
+    assert list(special_agent_jenkins(params, HOST_CONFIG)) == expected_result

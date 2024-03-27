@@ -4,13 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Iterator, Mapping, Sequence
+from typing import Iterator, Sequence
 
 from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import (
     HostConfig,
-    HTTPProxy,
     replace_macros,
     Secret,
     SpecialAgentCommand,
@@ -30,7 +29,6 @@ class JenkinsParams(BaseModel):
 def agent_jenkins_config(
     params: JenkinsParams,
     host_config: HostConfig,
-    _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
     args: list[str | Secret] = [
         "-P",

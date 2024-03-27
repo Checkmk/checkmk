@@ -66,6 +66,5 @@ def test_commands_function(
                 alias="host",
                 ipv4_config=IPv4Config(address=host_ip_address),
             ),
-            {},
         )
     ) == [SpecialAgentCommand(command_arguments=expected_arguments)]

@@ -32,7 +32,6 @@ def test_check_sql_simple_ok_case() -> None:
             "text": "my_additional_text",
         },
         MINIMAL_HOST_CONFIG,
-        {},
     )
     assert command.command_arguments == [
         "--hostname=ipaddress",
@@ -54,7 +53,6 @@ def test_check_sql_port_macro_missing() -> None:
                 "port": ("macro", "$missing$"),
             },
             MINIMAL_HOST_CONFIG,
-            {},
         )
 
 
@@ -70,7 +68,6 @@ def test_check_sql_port_macro_invalid() -> None:
                 ipv4_config=IPv4Config(address="ipaddress"),
                 macros={"invalid": "nan"},
             ),
-            {},
         )
 
 
@@ -85,7 +82,6 @@ def test_check_sql_port_macro_replaced() -> None:
             ipv4_config=IPv4Config(address="ipaddress"),
             macros={"$my_port$": "5432"},
         ),
-        {},
     )
     assert command.command_arguments == [
         "--hostname=ipaddress",

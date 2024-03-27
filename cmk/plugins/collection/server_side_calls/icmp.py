@@ -13,7 +13,6 @@ from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,
-    HTTPProxy,
     IPAddressFamily,
     IPv4Config,
     IPv6Config,
@@ -172,7 +171,8 @@ def generate_single_address_services(
 
 
 def generate_icmp_services(
-    params: ICMPParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
+    params: ICMPParams,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:
     multiple_services = params.multiple_services
     common_args = get_common_arguments(params)

@@ -38,7 +38,6 @@ def test_check_cmk_inv_argument_parsing(
                 name="unittest_name",
                 ipv4_config=IPv4Config(address="unittest_address"),
             ),
-            {},
         )
     )
     assert len(commands) == 1

@@ -32,7 +32,8 @@ class Params(BaseModel):
 
 
 def commands_function(
-    params: Params, host_config: HostConfig, _http_proxies: object
+    params: Params,
+    host_config: HostConfig,
 ) -> Iterator[ActiveCheckCommand]:
     args: list[str | Secret] = ["-q", params.pattern, "-t", str(params.timerange)]
 

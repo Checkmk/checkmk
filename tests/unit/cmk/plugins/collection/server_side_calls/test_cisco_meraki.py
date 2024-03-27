@@ -30,7 +30,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        Secret(0),
+                        Secret(0).unsafe(),
                     ]
                 )
             ],
@@ -48,7 +48,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "--proxy",
                         "abc:8567",
                     ]
@@ -68,7 +68,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "--proxy",
                         "FROM_ENVIRONMENT",
                     ]
@@ -88,7 +88,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "--proxy",
                         "NO_PROXY",
                     ]
@@ -108,7 +108,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "--proxy",
                         "proxy.com",
                     ]
@@ -128,7 +128,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "--proxy",
                         "FROM_ENVIRONMENT",
                     ]
@@ -145,7 +145,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "--sections",
                         "licenses-overview",
                         "device-statuses",
@@ -163,7 +163,7 @@ HTTP_PROXIES = {"my_proxy": HTTPProxy(id="my_proxy", name="My Proxy", url="proxy
                 SpecialAgentCommand(
                     command_arguments=[
                         "testhost",
-                        Secret(0),
+                        Secret(0).unsafe(),
                         "--orgs",
                         "org1",
                         "org2",

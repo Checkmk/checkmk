@@ -38,7 +38,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 from cmk.base.config import ConfigCache
-from cmk.base.ip_lookup import AddressFamily
+from cmk.base.ip_lookup import IPStackConfig
 
 from ._api import Source
 from ._sources import (
@@ -109,7 +109,7 @@ class _Builder:
         self,
         host_name: HostName,
         ipaddress: HostAddress | None,
-        address_family: AddressFamily,
+        ip_stack_config: IPStackConfig,
         *,
         simulation_mode: bool,
         config_cache: ConfigCache,
@@ -134,7 +134,7 @@ class _Builder:
         self.host_name: Final = host_name
         self.config_cache: Final = config_cache
         self.ipaddress: Final = ipaddress
-        self.address_family: Final = address_family
+        self.ip_stack_config: Final = ip_stack_config
         self.simulation_mode: Final = simulation_mode
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
@@ -265,7 +265,7 @@ class _Builder:
             )
             return
 
-        if self.address_family is AddressFamily.NO_IP:
+        if self.ip_stack_config is IPStackConfig.NO_IP:
             return
 
         if self.ipaddress is None:
@@ -289,7 +289,7 @@ class _Builder:
         )
 
     def _initialize_mgmt_boards(self) -> None:
-        if self.address_family is AddressFamily.NO_IP:
+        if self.ip_stack_config is IPStackConfig.NO_IP:
             return
 
         protocol = self.config_cache.management_protocol(self.host_name)
@@ -362,7 +362,7 @@ class _Builder:
                     )
                 )
             case HostAgentConnectionMode.PULL:
-                if self.address_family is AddressFamily.NO_IP:
+                if self.ip_stack_config is IPStackConfig.NO_IP:
                     return
                 if self.ipaddress is None:
                     self._add(MissingIPSource(self.host_name, self.ipaddress, "agent"))
@@ -386,7 +386,7 @@ class _Builder:
 def make_sources(
     host_name: HostName,
     ipaddress: HostAddress | None,
-    address_family: AddressFamily,
+    address_family: IPStackConfig,
     *,
     config_cache: ConfigCache,
     is_cluster: bool,

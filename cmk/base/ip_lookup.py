@@ -30,7 +30,7 @@ _enforce_localhost = False
 
 
 @enum.unique
-class AddressFamily(enum.IntFlag):
+class IPStackConfig(enum.IntFlag):
     NO_IP = enum.auto()
     IPv4 = enum.auto()
     IPv6 = enum.auto()
@@ -39,7 +39,7 @@ class AddressFamily(enum.IntFlag):
 
 class IPLookupConfig(NamedTuple):
     hostname: HostName
-    address_family: AddressFamily
+    ip_stack_config: IPStackConfig
     is_snmp_host: bool
     snmp_backend: SNMPBackendEnum
     default_address_family: socket.AddressFamily
@@ -418,7 +418,7 @@ def _annotate_family(
     ]
 ]:
     for host_config in ip_lookup_configs:
-        if AddressFamily.IPv4 in host_config.address_family:
+        if IPStackConfig.IPv4 in host_config.ip_stack_config:
             yield host_config.hostname, host_config, socket.AddressFamily.AF_INET
-        if AddressFamily.IPv6 in host_config.address_family:
+        if IPStackConfig.IPv6 in host_config.ip_stack_config:
             yield host_config.hostname, host_config, socket.AddressFamily.AF_INET6

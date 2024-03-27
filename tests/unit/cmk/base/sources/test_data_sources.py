@@ -12,7 +12,7 @@ from cmk.utils.hostaddress import HostAddress
 from cmk.fetchers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.base.ip_lookup import AddressFamily
+from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import make_sources
 
 
@@ -104,7 +104,7 @@ def test_host_config_creates_passing_source_sources(
         for source in make_sources(
             hostname,
             HostAddress("127.0.0.1"),
-            AddressFamily.IPv4,
+            IPStackConfig.IPv4,
             config_cache=config_cache,
             is_cluster=False,
             simulation_mode=True,

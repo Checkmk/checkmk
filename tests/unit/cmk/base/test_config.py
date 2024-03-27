@@ -45,7 +45,7 @@ import cmk.base.config as config
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ip_address_of
-from cmk.base.ip_lookup import AddressFamily
+from cmk.base.ip_lookup import IPStackConfig
 
 from cmk.agent_based.v1 import HostLabel
 
@@ -275,7 +275,7 @@ def test_is_ipv4_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert (AddressFamily.IPv4 in config_cache.address_family(hostname)) is result
+    assert (IPStackConfig.IPv4 in config_cache.ip_stack_config(hostname)) is result
 
 
 @pytest.mark.parametrize(
@@ -294,7 +294,7 @@ def test_is_ipv6_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert (AddressFamily.IPv6 in config_cache.address_family(hostname)) is result
+    assert (IPStackConfig.IPv6 in config_cache.ip_stack_config(hostname)) is result
 
 
 @pytest.mark.parametrize(
@@ -313,7 +313,7 @@ def test_is_ipv4v6_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert (config_cache.address_family(hostname) is AddressFamily.DUAL_STACK) is result
+    assert (config_cache.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK) is result
 
 
 def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
@@ -343,17 +343,17 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert config_cache.default_address_family(localhost) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(localhost) is AddressFamily.IPv4
+    assert config_cache.ip_stack_config(localhost) is IPStackConfig.IPv4
     assert ip_address_of(config_cache, localhost, socket.AddressFamily.AF_INET) == "127.0.0.1"
     assert ip_address_of(config_cache, localhost, socket.AddressFamily.AF_INET6) == "::1"
 
     assert config_cache.default_address_family(no_ip) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(no_ip) is AddressFamily.NO_IP
+    assert config_cache.ip_stack_config(no_ip) is IPStackConfig.NO_IP
     assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET) is None
     assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET6) is None
 
     assert config_cache.default_address_family(dual_stack) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(dual_stack) is AddressFamily.DUAL_STACK
+    assert config_cache.ip_stack_config(dual_stack) is IPStackConfig.DUAL_STACK
     assert (
         ip_address_of(config_cache, dual_stack, socket.AddressFamily.AF_INET)
         == _FALLBACK_ADDRESS_IPV4
@@ -364,12 +364,12 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert config_cache.default_address_family(cluster) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(cluster) is AddressFamily.IPv4  # That's strange
+    assert config_cache.ip_stack_config(cluster) is IPStackConfig.IPv4  # That's strange
     assert ip_address_of(config_cache, cluster, socket.AddressFamily.AF_INET) == ""
     assert ip_address_of(config_cache, cluster, socket.AddressFamily.AF_INET6) == ""
 
     assert config_cache.default_address_family(bad_host) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(bad_host) is AddressFamily.IPv4  # That's strange
+    assert config_cache.ip_stack_config(bad_host) is IPStackConfig.IPv4  # That's strange
     assert (
         ip_address_of(config_cache, bad_host, socket.AddressFamily.AF_INET)
         == _FALLBACK_ADDRESS_IPV4
@@ -380,7 +380,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert config_cache.default_address_family(undiscoverable) is socket.AddressFamily.AF_INET
-    assert config_cache.address_family(undiscoverable) is AddressFamily.IPv4  # That's strange
+    assert config_cache.ip_stack_config(undiscoverable) is IPStackConfig.IPv4  # That's strange
     assert (
         ip_address_of(config_cache, undiscoverable, socket.AddressFamily.AF_INET)
         == _FALLBACK_ADDRESS_IPV4
@@ -449,7 +449,7 @@ def test_is_no_ip_host(
     ts = Scenario()
     ts.add_host(hostname, tags)
     config_cache = ts.apply(monkeypatch)
-    assert (config_cache.address_family(hostname) is AddressFamily.NO_IP) is result
+    assert (config_cache.ip_stack_config(hostname) is IPStackConfig.NO_IP) is result
 
 
 @pytest.mark.parametrize(

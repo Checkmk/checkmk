@@ -555,7 +555,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         for source in sources.make_sources(
             hostname,
             ipaddress,
-            ConfigCache.address_family(hostname),
+            ConfigCache.ip_stack_config(hostname),
             config_cache=config_cache,
             is_cluster=False,
             simulation_mode=config.simulation_mode,

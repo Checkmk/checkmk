@@ -42,6 +42,7 @@ def main() {
     def cloud_targets = ["amazon-ebs", "azure-arm"]
     def build_cloud_images = params.BUILD_CLOUD_IMAGES
     def publish_cloud_images = params.PUBLISH_IN_MARKETPLACE
+    def packer_envvars = ['CHECKPOINT_DISABLE=1', "PACKER_CONFIG_DIR=${checkout_dir}/packer/.packer"]
 
     currentBuild.description = (
         """
@@ -61,7 +62,7 @@ def main() {
                     // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
                     sh("packer init .")
                     // https://developer.hashicorp.com/packer/docs/configure#environment-variables-usable-for-packer
-                    withEnv(['CHECKPOINT_DISABLE=1', "PACKER_CONFIG_DIR=${checkout_dir}/packer/.packer"]){
+                    withEnv(packer_envvars){
                         // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
                         sh("packer init .");
                     }
@@ -139,7 +140,7 @@ def create_build_stages(cloud_targets, env_secret_map, build_images) {
                 raiseOnError: true,
             ) {
                 withCredentials(env_secret_map["secrets"]) {
-                    withEnv(env_secret_map["env"]) {
+                    withEnv(env_secret_map["env"] + packer_envvars) {
                         dir("${checkout_dir}/packer") {
                             sh("""
                                    packer build -only="checkmk-ansible.${target}.builder" .;

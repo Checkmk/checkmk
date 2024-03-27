@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from tests.testlib.site import Site
-from tests.testlib.utils import run, wait_until
+from tests.testlib.utils import execute, run, wait_until
 
 from cmk.utils.hostaddress import HostName
 
@@ -269,3 +269,15 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
     raise AssertionError(
         f"Now waiting {waiting_cycles*waiting_time} seconds for baking job to finish, giving up..."
     )
+
+
+def remove_agent_cache() -> None:
+    logger.info("Removing agent cache...")
+    with execute(
+        ["rm", "/var/lib/check_mk_agent/cache/*"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    ) as p:
+        rc = p.wait()
+        p_out, p_err = p.communicate()
+        assert rc == 0, f"Failed to remove agent cache.\nSTDOUT: {p_out}\nSTDERR: {p_err}"

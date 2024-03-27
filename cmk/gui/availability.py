@@ -12,7 +12,7 @@ import time
 from collections.abc import Callable, Iterator
 from typing import Any, Literal, NamedTuple
 
-from livestatus import LivestatusOutputFormat, lq_logic, lqencode, OnlySites, SiteId
+from livestatus import lq_logic, lqencode, OnlySites, Query, QuerySpecification, SiteId
 
 import cmk.utils.dateutils as dateutils
 import cmk.utils.paths
@@ -24,6 +24,7 @@ from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
 from cmk.gui.bi import BIManager
+from cmk.gui.data_source import query_livestatus
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -978,9 +979,6 @@ def get_availability_rawdata(
     else:
         av_filter += "Filter: service_description =\n"
 
-    query = "GET statehist\n" + av_filter
-    query += "Timelimit: %d\n" % avoptions["timelimit"]
-
     # Add Columns needed for object identification
     columns = ["host_name", "service_description"]
 
@@ -1010,17 +1008,24 @@ def get_availability_rawdata(
     if avoptions["grouping"] not in [None, "host"]:
         columns.append(avoptions["grouping"])
 
-    query += "Columns: %s\n" % " ".join(columns)
-    query += filterheaders
+    headers = av_filter
+    headers += "Timelimit: %d\n" % avoptions["timelimit"]
+    headers += filterheaders
     logrow_limit = avoptions["logrow_limit"]
 
-    with (
-        sites.only_sites(only_sites),
-        sites.prepend_site(),
-        sites.set_limit(logrow_limit or None),
-        CPUTracker() as fetch_rows_tracker,
-    ):
-        data = sites.live().query(query)
+    with CPUTracker() as fetch_rows_tracker:
+        data = query_livestatus(
+            Query(
+                QuerySpecification(
+                    table="statehist",
+                    columns=columns,
+                    headers=headers,
+                )
+            ),
+            only_sites=only_sites,
+            limit=logrow_limit or None,
+            auth_domain="read",
+        )
 
     columns = ["site"] + columns
     spans: list[AVSpan] = [dict(zip(columns, span)) for span in data]
@@ -2437,14 +2442,7 @@ def get_bi_leaf_history(
         "in_service_period",
     ]
 
-    query = (
-        "GET statehist\n"
-        + "Columns: "
-        + " ".join(columns)
-        + "\n"
-        + "Filter: time >= %d\nFilter: time < %d\n" % time_range
-    )
-
+    headers = "Filter: time >= %d\nFilter: time < %d\n" % time_range
     # Create a specific filter. We really only want the services and hosts
     # of the aggregation in question. That prevents status changes
     # irrelevant services from introducing new phases.
@@ -2462,19 +2460,24 @@ def get_bi_leaf_history(
         timeline_containers.append(timeline_container)
 
     for host, services in by_host.items():
-        query += "Filter: host_name = %s\n" % host
-        query += lq_logic("Filter: service_description = ", list(services), "Or")
-        query += "And: 2\n"
+        headers += "Filter: host_name = %s\n" % host
+        headers += lq_logic("Filter: service_description = ", list(services), "Or")
+        headers += "And: 2\n"
     if len(hosts) != 1:
-        query += "Or: %d\n" % len(hosts)
+        headers += "Or: %d\n" % len(hosts)
 
-    with (
-        sites.output_format(LivestatusOutputFormat.JSON),
-        sites.only_sites(list(only_sites)),
-        sites.prepend_site(),
-        sites.set_limit(livestatus_limit),
-    ):
-        data = sites.live().query(query)
+    data = query_livestatus(
+        Query(
+            QuerySpecification(
+                table="statehist",
+                columns=columns,
+                headers=headers,
+            )
+        ),
+        only_sites=list(only_sites),
+        limit=livestatus_limit,
+        auth_domain="read",
+    )
 
     if not data:
         return [], [], 0

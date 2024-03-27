@@ -25,6 +25,11 @@ def parse_arguments(argv):
     parser.add_argument(
         "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
     )
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="The configuration is passed as repr object. This option will change in the future.",
+    )
 
     args = parser.parse_args(argv)
     return args
@@ -129,7 +134,7 @@ def main(argv=None):
         argv = sys.argv[1:]
     args = parse_arguments(argv)
     try:
-        config = ast.literal_eval(sys.stdin.read())
+        config = ast.literal_eval(args.config)
         session = generate_api_session(extract_connection_args(config))
         api_client = AlertmanagerAPI(session)
         alertmanager_rules_section(api_client, config)

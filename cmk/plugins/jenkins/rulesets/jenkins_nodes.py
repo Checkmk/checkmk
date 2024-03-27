@@ -124,7 +124,7 @@ def _parameter_valuespec_jenkins_nodes() -> Dictionary:
                         # megabytes and the conversion to bytes had been performed inside the
                         # check itself.
                         # We convert the value to comply with megabytes values of the new API.
-                        scale=1000 * 1000,
+                        scale=1000,
                     ),
                 )
             ),

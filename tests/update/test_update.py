@@ -80,7 +80,8 @@ def test_update(  # pylint: disable=too-many-branches
 
         # OMD status service turning into CRIT after the update (looks like for performance reasons)
         # See CMK-16608. TODO: restore service after ticket is done.
-        base_data[hostname].pop(f"OMD {test_site.id} status")
+        if (omd_status_service := f"OMD {test_site.id} status") in base_data[hostname]:
+            base_data[hostname].pop(omd_status_service)
 
         base_ok_services[hostname] = get_services_with_status(base_data[hostname], 0)
         # used in debugging mode

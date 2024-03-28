@@ -121,7 +121,7 @@ class Query:
         return self.__method + " " + self.method_arg
 
 
-def filter_operator_in(a: Any, b: Any) -> bool:
+def filter_operator_in(a: str, b: Iterable[str]) -> bool:
     """Implemented as a named function, as it is used in a second filter
     cmk.ec.main: StatusTableEvents._enumerate
     not implemented as regex/IGNORECASE due to performance"""
@@ -248,7 +248,7 @@ class QueryGET(Query):
             self.table.column_indices.get(column_name) for column_name in self.requested_columns
         ]
 
-    def filter_row(self, row: Sequence[Any]) -> bool:
+    def filter_row(self, row: Sequence[object]) -> bool:
         return all(f.predicate(row[self.table.column_indices[f.column_name]]) for f in self.filters)
 
 

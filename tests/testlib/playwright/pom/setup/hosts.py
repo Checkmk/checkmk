@@ -68,6 +68,27 @@ class SetupHost(CmkPage):
 class HostProperties(SetupHost):
     "Represents page 'setup -> Hosts -> <host name>'"
 
+    popup_menus: list[str] = [
+        "Host",
+        "Display",
+        "Help",
+    ]
+
+    # Text of links seen on GUI
+    links: list[str] = [
+        r"Save & run service discovery",
+        r"Save & view folder",
+        r"Save & run connection tests",
+        r"Update site DNS cache",
+    ]
+
+    properties: list[str] = [
+        r"Monitoring agents",
+        r"Custom attributes",
+        r"Management board",
+        r"Creation / Locking",
+    ]
+
     def __init__(
         self,
         page: Page,

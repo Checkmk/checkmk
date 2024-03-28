@@ -96,13 +96,22 @@ from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 
 from . import builtin_display_hints
-from .registry import inventory_displayhints, InventoryHintSpec
-
-PaintResult = tuple[str, str | HTML]
-PaintFunction = Callable[[Any], PaintResult]
+from .registry import (
+    inv_paint_funtions,
+    inventory_displayhints,
+    InventoryHintSpec,
+    InvPaintFunction,
+    PaintFunction,
+    PaintResult,
+)
 
 _PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
-_PAINT_FUNCTIONS: dict[str, PaintFunction] = {}
+
+
+def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
+    for k, v in mapping.items():
+        if k.startswith(_PAINT_FUNCTION_NAME_PREFIX) and callable(v):
+            inv_paint_funtions.register(InvPaintFunction(name=k, func=v))
 
 
 def register(
@@ -112,6 +121,10 @@ def register(
     painter_option_registry: PainterOptionRegistry,
     multisite_builtin_views_: dict[ViewName, ViewSpec],
 ) -> None:
+    register_inv_paint_functions(
+        # Do no overwrite paint functions from plugins
+        {k: v for k, v in globals().items() if k not in inv_paint_funtions}
+    )
     builtin_display_hints.register(inventory_displayhints)
     page_registry.register_page_handler("ajax_inv_render_tree", ajax_inv_render_tree)
     data_source_registry_.register(DataSourceInventoryHistory)
@@ -135,21 +148,6 @@ def register(
             "inv_hosts_ports": _INV_VIEW_HOST_PORTS,
         }
     )
-
-
-def update_paint_functions(mapping: Mapping[str, Any]) -> None:
-    # Update paint functions from
-    # 1. views (local web plugins are loaded including display hints and paint functions)
-    # 2. here
-    _PAINT_FUNCTIONS.update(
-        {k: v for k, v in mapping.items() if k.startswith(_PAINT_FUNCTION_NAME_PREFIX)}
-    )
-
-
-def _get_paint_function_from_globals(paint_name: str) -> PaintFunction:
-    # Do not overwrite local paint functions
-    update_paint_functions({k: v for k, v in globals().items() if k not in _PAINT_FUNCTIONS})
-    return _PAINT_FUNCTIONS[_PAINT_FUNCTION_NAME_PREFIX + paint_name]
 
 
 class MultipleInventoryTreesError(Exception):
@@ -610,8 +608,9 @@ CmpInvValue = TypeVar("CmpInvValue", bound=_Comparable)
 def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
     # FIXME At the moment  we need it to get tdclass: Clean this up one day.
     if "paint" in raw_hint:
-        data_type = raw_hint["paint"]
-        return data_type, _get_paint_function_from_globals(data_type)
+        name = raw_hint["paint"]
+        inv_paint_funtion = inv_paint_funtions[_PAINT_FUNCTION_NAME_PREFIX + name]
+        return name, inv_paint_funtion["func"]
 
     return "str", inv_paint_generic
 

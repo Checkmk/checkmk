@@ -31,7 +31,7 @@ from cmk.gui.visuals.type import VisualTypeRegistry
 from . import icon, inventory
 from .command import register_legacy_command
 from .icon import Icon, icon_and_action_registry
-from .inventory import register_table_views_and_columns, update_paint_functions
+from .inventory import register_inv_paint_functions, register_table_views_and_columns
 from .sorter import register_sorter, register_sorters, sorter_registry
 from .store import multisite_builtin_views
 from .view_choices import format_view_title
@@ -48,7 +48,7 @@ def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("views", globals())
-    update_paint_functions(globals())
+    register_inv_paint_functions(globals())
 
     utils.load_web_plugins("icons", globals())
     utils.load_web_plugins("perfometer", globals())

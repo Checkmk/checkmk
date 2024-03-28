@@ -62,7 +62,7 @@ def default_config() -> ConfigFromWATO:
         eventsocket_queue_len=10,
         hostname_translation=TranslationOptions(),
         archive_orphans=False,
-        archive_mode="file",
+        archive_mode="sqlite",
         translate_snmptraps=False,
         snmp_credentials=[
             SNMPCredential(

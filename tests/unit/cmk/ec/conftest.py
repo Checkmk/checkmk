@@ -58,7 +58,7 @@ def fixture_config() -> Config:
 def fixture_history(settings: ec.Settings, config: Config) -> FileHistory:
     history = create_history(
         settings,
-        config,
+        {**config, "archive_mode": "file"},
         logging.getLogger("cmk.mkeventd"),
         StatusTableEvents.columns,
         StatusTableHistory.columns,

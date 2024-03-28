@@ -494,20 +494,6 @@ def _get_value_at_timestamp(pin_time: int, rrddata: TimeSeries) -> TimeSeriesVal
 #   '----------------------------------------------------------------------'
 
 
-_MAX_NUM_LABELS: Final = 8
-
-
-def _compute_num_labels(min_y: float, max_y: float) -> tuple[NumLabelRange, NumLabelRange]:
-    if abs(min_y) == abs(max_y):
-        return NumLabelRange(2, 4), NumLabelRange(2, 4)
-    min_max_num_labels = round(_MAX_NUM_LABELS * abs(min_y) / (abs(min_y) + abs(max_y)))
-    max_max_num_labels = _MAX_NUM_LABELS - min_max_num_labels
-    return (
-        NumLabelRange(round(min_max_num_labels / 3.0), min_max_num_labels),
-        NumLabelRange(round(max_max_num_labels / 3.0), max_max_num_labels),
-    )
-
-
 def _make_formatter(
     formatter_ident: Literal[
         "Decimal", "SI", "IEC", "StandardScientific", "EngineeringScientific", "Time"
@@ -535,6 +521,20 @@ def _make_formatter(
             return EngineeringScientificFormatter(symbol, precision)
         case "Time":
             return TimeFormatter(symbol, precision)
+
+
+_MAX_NUM_LABELS: Final = 8
+
+
+def _compute_num_labels(min_y: float, max_y: float) -> tuple[NumLabelRange, NumLabelRange]:
+    if abs(min_y) == abs(max_y):
+        return NumLabelRange(2, 4), NumLabelRange(2, 4)
+    min_max_num_labels = round(_MAX_NUM_LABELS * abs(min_y) / (abs(min_y) + abs(max_y)))
+    max_max_num_labels = _MAX_NUM_LABELS - min_max_num_labels
+    return (
+        NumLabelRange(round(min_max_num_labels / 3.0), min_max_num_labels),
+        NumLabelRange(round(max_max_num_labels / 3.0), max_max_num_labels),
+    )
 
 
 def _render_labels_from_api(

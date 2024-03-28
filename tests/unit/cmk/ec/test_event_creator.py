@@ -11,9 +11,12 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
+from cmk.utils.hostaddress import HostName
+
 from cmk.ec.event import (
     _split_syslog_nonnil_sd_and_message,
     create_event_from_syslog_message,
+    Event,
     parse_iso_8601_timestamp,
     parse_rfc5424_syslog_info,
     parse_syslog_info,
@@ -187,6 +190,24 @@ from cmk.ec.event import (
                 "text": "message....",
                 "time": 1365162571,
             },
+        ),
+        (
+            pytest.param(
+                b"<133>2023-09-29 18:41:55 host 51890 message....",
+                Event(
+                    application="",
+                    core_host=None,
+                    facility=16,
+                    host=HostName("host"),
+                    host_in_downtime=False,
+                    ipaddress="127.0.0.1",
+                    pid=51890,
+                    priority=5,
+                    text="message....",
+                    time=1696005715.0,
+                ),
+                id="Variant 11: TP-Link T1500G-8T 2.0",
+            )
         ),
         (
             # Variant 6: syslog message without date / host:

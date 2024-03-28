@@ -150,6 +150,12 @@ def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
     2016 May 26 15:41:47 IST XYZ Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up
     year month day hh:mm:ss timezone HOSTNAME KeyAgent:
 
+    Variant 11: TP-Link T1500G-8T 2.0
+        - space separated date and time instead of "T"
+        - no ": " between header and message
+        - https://github.com/rsyslog/rsyslog/issues/5148
+    <133>2023-09-29 18:41:55 host 51890 Login the web by user on web (x.x.x.x).....
+
     FIXME: Would be better to parse the syslog messages in another way:
     Split the message by the first ":", then split the syslog header part
     and detect which information are present. Take a look at the syslog RFCs
@@ -191,6 +197,14 @@ def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
         event["host"] = HostName(host)
         event["time"] = parse_iso_8601_timestamp(timestamp)
         event.update(parse_syslog_info(rest))
+
+    # Variant 11
+    elif line[10] == " " and line[19] == " ":
+        date, time, host, pid, rest = line.split(" ", 4)
+        event["host"] = HostName(host)
+        event["pid"] = int(pid)
+        event["time"] = parse_iso_8601_timestamp(f"{date}T{time}")
+        event["text"] = rest
 
     # Variant 9
     elif len(line) > 24 and line[12] == "T":

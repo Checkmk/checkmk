@@ -1028,6 +1028,13 @@ section_nvidia() {
     fi
 }
 
+section_nvidia_smi() {
+    if inpath nvidia-smi; then
+        echo '<<<nvidia_smi:sep(9)>>>'
+        nvidia-smi -q -x
+    fi
+} 
+
 section_drbd() {
     if [ -z "${IS_DOCKERIZED}" ] && [ -z "${IS_LXC_CONTAINER}" ] && [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
@@ -2115,6 +2122,8 @@ run_purely_synchronous_sections() {
     [ -z "${MK_SKIP_OPENVPN}" ] && _log_section_time section_openvpn
 
     [ -z "${MK_SKIP_NVIDIA}" ] && _log_section_time section_nvidia
+
+    [ -z "${MK_SKIP_NVIDIA_SMI}" ] && _log_section_time section_nvidia_smi
 
     [ -z "${MK_SKIP_DRBD}" ] && _log_section_time section_drbd
 

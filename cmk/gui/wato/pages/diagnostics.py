@@ -5,7 +5,7 @@
 
 import tarfile
 import uuid
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from pathlib import Path
 
 from livestatus import SiteId
@@ -48,6 +48,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
 )
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -133,7 +134,7 @@ class ModeDiagnostics(WatoMode):
     def title(self) -> str:
         return _("Support diagnostics")
 
-    def page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Diagnostics"),
             breadcrumb,
@@ -448,9 +449,8 @@ class ModeDiagnostics(WatoMode):
             )
         return elements
 
-    def _get_component_specific_checkmk_files_elements(  # type: ignore[no-untyped-def]
-        self,
-        component,
+    def _get_component_specific_checkmk_files_elements(
+        self, component: str
     ) -> list[tuple[str, ValueSpec]]:
         elements = []
         config_files = [
@@ -681,7 +681,9 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
             job_interface.send_result_message(_("Creating dump file failed"))
 
 
-def _merge_results(site, results) -> CreateDiagnosticsDumpResult:  # type: ignore[no-untyped-def]
+def _merge_results(
+    site: SiteId, results: Sequence[CreateDiagnosticsDumpResult]
+) -> CreateDiagnosticsDumpResult:
     output: str = ""
     tarfile_created: bool = False
     tarfile_paths: list[str] = []
@@ -712,7 +714,7 @@ def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str) -> str:
     return tarfile_localpath
 
 
-def _join_sub_tars(tarfile_paths: list[str]) -> str:
+def _join_sub_tars(tarfile_paths: Sequence[str]) -> str:
     tarfile_path = _create_file_path()
     with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
         for filepath in tarfile_paths:

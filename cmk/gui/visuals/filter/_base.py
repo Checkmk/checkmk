@@ -261,7 +261,7 @@ class FilterTime(Filter):
             is_show_more=is_show_more,
         )
 
-    def display(self, value: FilterHTTPVariables):  # type: ignore[no-untyped-def]
+    def display(self, value: FilterHTTPVariables) -> None:
         html.open_table(class_="filtertime")
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
             varprefix = self.ident + "_" + what

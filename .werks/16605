@@ -1,0 +1,11 @@
+Title: check_wmi_webservices: fix CurrentConnections monitoring
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1712040247
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+The CurrentConnections metric was calculated "per second".
+We now directly show the number of connections returned by the service.

@@ -53,6 +53,7 @@ from ._migrations import (
     migrate_to_lower_float_levels,
     migrate_to_lower_integer_levels,
     migrate_to_password,
+    migrate_to_proxy,
     migrate_to_upper_float_levels,
     migrate_to_upper_integer_levels,
 )
@@ -62,7 +63,6 @@ from ._preconfigured import (
     MonitoredService,
     Password,
     Proxy,
-    ProxyModelT,
     ProxySchema,
     TimePeriod,
 )
@@ -102,6 +102,7 @@ __all__ = [
     "migrate_to_float_simple_levels",
     "migrate_to_integer_simple_levels",
     "migrate_to_password",
+    "migrate_to_proxy",
     "MonitoredHost",
     "MonitoredService",
     "MatchingScope",
@@ -113,7 +114,6 @@ __all__ = [
     "PredictiveLevels",
     "Prefill",
     "Proxy",
-    "ProxyModelT",
     "ProxySchema",
     "RegularExpression",
     "ServiceState",

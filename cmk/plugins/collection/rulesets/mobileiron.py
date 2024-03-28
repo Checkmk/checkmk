@@ -13,6 +13,7 @@ from cmk.rulesets.v1.form_specs import (
     List,
     MatchingScope,
     migrate_to_password,
+    migrate_to_proxy,
     Password,
     Proxy,
     RegularExpression,
@@ -74,7 +75,7 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
                 ),
                 required=True,
             ),
-            "proxy": DictElement(parameter_form=Proxy(), required=False),
+            "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy), required=False),
             "partition": DictElement(
                 parameter_form=List(
                     element_template=String(),

@@ -10,10 +10,9 @@ from cmk.base.config import special_agent_info
 
 
 def agent_alertmanager_arguments(
-    params: Mapping[str, object], hostname: str, ipaddress: str | None
+    params: Mapping[str, object], _hostname: str, _ipaddress: str | None
 ) -> Sequence[str]:
-    alertmanager_params = {**params, "host_address": ipaddress, "host_name": hostname}
-    return ["--config", repr(alertmanager_params)]
+    return ["--config", repr(params)]
 
 
 special_agent_info["alertmanager"] = agent_alertmanager_arguments

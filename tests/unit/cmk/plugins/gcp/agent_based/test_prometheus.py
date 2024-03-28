@@ -50,8 +50,6 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                     },
                 ),
                 "protocol": "https",
-                "host_address": "1.2.3.4",
-                "host_name": "prometheus",
             },
             {
                 "auth": ("user", "very_secret"),
@@ -96,8 +94,6 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                 ),
                 "verify-cert": True,
                 "protocol": "https",
-                "host_address": "1.2.3.4",
-                "host_name": "prometheus",
             },
             {
                 "api_url": "https://later1.2.3.4:9876/somewhere./api/v1/",

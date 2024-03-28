@@ -12,7 +12,6 @@ from cmk.gui.valuespec import (
     DictionaryEntry,
     ListOf,
     Migrate,
-    NetworkPort,
     RegExp,
     TextInput,
 )
@@ -89,18 +88,6 @@ def api_request_authentication() -> DictionaryEntry:
             ],
         ),
     )
-
-
-def api_request_connection_elements(  # type: ignore[no-untyped-def]
-    help_text: str, default_port: int
-):
-    return [
-        ("port", NetworkPort(title=_("Port"), default_value=default_port)),
-        (
-            "path-prefix",
-            TextInput(title=_("Custom path prefix"), help=help_text, allow_empty=False),
-        ),
-    ]
 
 
 def filter_kubernetes_namespace_element():

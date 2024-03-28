@@ -148,6 +148,7 @@ class SQLiteHistory(History):
         self._event_columns = event_columns
         self._history_columns = history_columns
         self._last_housekeeping = 0.0
+        self._page_size = 4096
 
         if isinstance(self._settings.database, Path):
             self._settings.database.parent.mkdir(parents=True, exist_ok=True)
@@ -166,6 +167,7 @@ class SQLiteHistory(History):
         with self.conn as connection:
             for pragma_string in SQLITE_PRAGMAS:
                 connection.execute(pragma_string)
+            self._page_size = connection.execute("PRAGMA page_size").fetchone()[0]
 
         with self.conn as connection:
             cur = connection.cursor()
@@ -272,8 +274,17 @@ class SQLiteHistory(History):
                 cur = connection.cursor()
                 cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
             # should be executed outside of the transaction
-            self.conn.execute("VACUUM;")
+            self._vacuum()
             self._last_housekeeping = now
+
+    def _vacuum(self):
+        """Run VACUUM command only if the free pages in DB are greater than 50 Mb."""
+        with self.conn as connection:
+            freelist_count = connection.execute("PRAGMA freelist_count").fetchone()[0]
+            freelist_size = freelist_count * self._page_size
+
+        if freelist_size > 50 * 1024 * 1024:
+            self.conn.execute("VACUUM;")
 
     def close(self) -> None:
         """Explicitly close the connection to the sqlite database.

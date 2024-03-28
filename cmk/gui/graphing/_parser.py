@@ -39,12 +39,6 @@ def _find_prefix_power(use_prefix: str, prefixes: Sequence[tuple[int, int, str]]
 
 
 @dataclass(frozen=True)
-class NumLabelRange:
-    left: int
-    right: int
-
-
-@dataclass(frozen=True)
 class Label:
     position: int | float
     text: str
@@ -135,28 +129,24 @@ class NotationFormatter:
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         raise NotImplementedError()
 
-    def render_y_labels(
-        self, max_y: int | float, num_label_range: NumLabelRange
-    ) -> Sequence[Label]:
+    def render_y_labels(self, max_y: int | float, mean_num_labels: float) -> Sequence[Label]:
         assert max_y >= 0
-        if max_y == 0:
+        assert mean_num_labels >= 0
+        if max_y == 0 or mean_num_labels == 0:
             return []
 
         if max_y < 1:
             atoms = self._compute_small_y_label_atoms(max_y)
         else:  # max_y >= 1
-            max_y = math.ceil(max_y)
             atoms = self._compute_large_y_label_atoms(max_y)
 
-        if possible_atoms := [
-            (a, int(q))
-            for a in atoms
-            if num_label_range.left <= (q := max_y // a) <= num_label_range.right
-        ]:
-            # Take the entry with the smallest amount of labels.
-            atom, quotient = min(possible_atoms, key=lambda t: t[1])
+        if sorted_atoms_by_distance := sorted(
+            [(a, q) for a in atoms if (q := int(max_y // a))],
+            key=lambda t: abs(t[1] - mean_num_labels),
+        ):
+            atom, quotient = sorted_atoms_by_distance[0]
         else:
-            atom = max_y / num_label_range.right
+            atom = max_y / mean_num_labels
             quotient = int(max_y / atom)
 
         first = self._preformat(atom)[0]
@@ -305,7 +295,7 @@ class IECFormatter(NotationFormatter):
 
     def _compute_large_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]:
         exponent = math.floor(math.log2(max_y))
-        return [pow(2, e) for e in range(1, exponent + 1)]
+        return [pow(2, e) for e in range(exponent + 1)]
 
 
 class StandardScientificFormatter(NotationFormatter):

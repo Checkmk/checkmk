@@ -526,7 +526,13 @@ def _make_formatter(
 _MAX_NUM_LABELS: Final = 8
 
 
-def _compute_num_labels(min_y: float, max_y: float) -> tuple[NumLabelRange, NumLabelRange]:
+def _compute_single_num_labels() -> NumLabelRange:
+    return NumLabelRange(3, _MAX_NUM_LABELS)
+
+
+def _compute_bidirectional_num_labels(
+    min_y: float, max_y: float
+) -> tuple[NumLabelRange, NumLabelRange]:
     if abs(min_y) == abs(max_y):
         return NumLabelRange(2, 4), NumLabelRange(2, 4)
     min_max_num_labels = round(_MAX_NUM_LABELS * abs(min_y) / (abs(min_y) + abs(max_y)))
@@ -553,11 +559,19 @@ def _render_labels_from_api(
 ) -> Sequence[VerticalAxisLabel]:
     match min_y >= 0, max_y >= 0:
         case True, True:
-            labels = list(formatter.render_y_labels(max_y, NumLabelRange(3, _MAX_NUM_LABELS)))
+            labels = list(
+                formatter.render_y_labels(
+                    max_y,
+                    _compute_single_num_labels(),
+                )
+            )
         case True, False:
             raise ValueError((min_y, max_y))
         case False, True:
-            min_y_num_label_range, max_y_num_label_range = _compute_num_labels(min_y, max_y)
+            min_y_num_label_range, max_y_num_label_range = _compute_bidirectional_num_labels(
+                min_y,
+                max_y,
+            )
             labels = [
                 Label(-1 * l.position, l.text if mirrored else f"-{l.text}")
                 for l in formatter.render_y_labels(abs(min_y), min_y_num_label_range)
@@ -565,7 +579,10 @@ def _render_labels_from_api(
         case False, False:
             labels = [
                 Label(-1 * l.position, l.text)
-                for l in formatter.render_y_labels(abs(max_y), NumLabelRange(3, _MAX_NUM_LABELS))
+                for l in formatter.render_y_labels(
+                    abs(max_y),
+                    _compute_single_num_labels(),
+                )
             ]
 
     return sorted(

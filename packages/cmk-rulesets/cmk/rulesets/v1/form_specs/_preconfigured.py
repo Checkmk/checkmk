@@ -21,16 +21,12 @@ class ProxySchema(enum.StrEnum):
     SOCKS5H = "socks5h"
 
 
-ProxyModelT = (
-    tuple[Literal["environment"], Literal["environment"]]
-    | tuple[Literal["no_proxy"], None]
-    | tuple[Literal["global"], str]
-    | tuple[Literal["url"], str]
-)
-
-
 @dataclass(frozen=True, kw_only=True)
-class Proxy(FormSpec[ProxyModelT]):
+class Proxy(
+    FormSpec[
+        tuple[Literal["environment_proxy", "no_proxy", "global_proxy", "url_proxy"], str, None]
+    ]
+):
     """Specifies a form for configuring a proxy
 
     Args:

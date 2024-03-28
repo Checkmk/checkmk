@@ -18,6 +18,7 @@ from cmk.rulesets.v1.form_specs import (
     LevelDirection,
     List,
     MatchingScope,
+    migrate_to_proxy,
     Password,
     Proxy,
     RegularExpression,
@@ -401,7 +402,7 @@ def _valuespec_connection() -> Dictionary:
                     },
                 ),
             ),
-            "proxy": DictElement(parameter_form=Proxy()),
+            "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy)),
             "redirects": DictElement(
                 parameter_form=SingleChoice(
                     title=Title("How to handle redirects"),

@@ -9,9 +9,9 @@
 
 set -e
 
-REPO_DIR="$(git rev-parse --show-toplevel)"
+CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
 
-# in case of worktrees $REPO_DIR might not contain the actual repository clone
+# in case of worktrees $CHECKOUT_ROOT might not contain the actual repository clone
 GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
 CMD="${*:-bash}"
@@ -25,36 +25,13 @@ mkdir -p "${DOCKER_CONF_PATH}"
 # native builds. Maybe in the future this script should not be executed in
 # a CI environment (since those come with their own containerization solutions)
 # rendering this distinction unnessesary.
-if [ "$USER" != "jenkins" ]; then
-    # Create directories which otherwise would get created by root
-    # rendering the native build broken
-    mkdir -p "${REPO_DIR}/.venv"
-    mkdir -p "${REPO_DIR}/omd/build"
-    mkdir -p "${REPO_DIR}/build_user_home/"
-
-    if [ ! -d "${REPO_DIR}/.docker_workspace/venv" ]; then
-        CMD="touch ${REPO_DIR}/Pipfile.lock; ${CMD[*]}"
-    fi
-
-    # Create directories for build artifacts which we want to have separated
-    # in native and containerized builds
-    # Here might be coming more, you keep an open eye, too, please
-
-    mkdir -p "${REPO_DIR}/.docker_workspace/venv"
-    mkdir -p "${REPO_DIR}/.docker_workspace/omd_build"
-    mkdir -p "${REPO_DIR}/.docker_workspace/home"
-    DOCKER_LOCAL_ARGS="
-        -v "${REPO_DIR}/.docker_workspace/venv:${REPO_DIR}/.venv" \
-        -v "${REPO_DIR}/.docker_workspace/omd_build:${REPO_DIR}/omd/build" \
-        -v "${REPO_DIR}/.docker_workspace/home:${REPO_DIR}/build_user_home/" \
-        -e HOME="${REPO_DIR}/build_user_home/" \
-        "
-
-    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${REPO_DIR}/build_user_home/.docker"
-else
+if [ "$USER" == "jenkins" ]; then
+    #
+    # CI
+    #
     # Needed for .cargo which is shared between workspaces
     SHARED_CARGO_FOLDER="${HOME}/shared_cargo_folder"
-    LOCAL_CARGO_FOLDER="${REPO_DIR}/shared_cargo_folder"
+    LOCAL_CARGO_FOLDER="${CHECKOUT_ROOT}/shared_cargo_folder"
     mkdir -p "${SHARED_CARGO_FOLDER}" # in case it does not exist yet
     mkdir -p "${LOCAL_CARGO_FOLDER}"  # will be created with root-ownership instead
     CARGO_JENKINS_MOUNT="-v ${SHARED_CARGO_FOLDER}:${LOCAL_CARGO_FOLDER}"
@@ -65,18 +42,41 @@ else
     REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
 
     DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${DOCKER_CONF_PATH}"
+else
+    #
+    # LOCAL
+    #
+    # Create directories which otherwise would get created by root
+    # rendering the native build broken
+    mkdir -p "${CHECKOUT_ROOT}/.venv"
+    mkdir -p "${CHECKOUT_ROOT}/omd/build"
+    mkdir -p "${CHECKOUT_ROOT}/build_user_home/"
+
+    if [ ! -d "${CHECKOUT_ROOT}/.docker_workspace/venv" ]; then
+        CMD="touch ${CHECKOUT_ROOT}/Pipfile.lock; ${CMD[*]}"
+    fi
+
+    # Create directories for build artifacts which we want to have separated
+    # in native and containerized builds
+    # Here might be coming more, you keep an open eye, too, please
+
+    mkdir -p "${CHECKOUT_ROOT}/.docker_workspace/venv"
+    mkdir -p "${CHECKOUT_ROOT}/.docker_workspace/omd_build"
+    mkdir -p "${CHECKOUT_ROOT}/.docker_workspace/home"
+    DOCKER_LOCAL_ARGS="
+        -v "${CHECKOUT_ROOT}/.docker_workspace/venv:${CHECKOUT_ROOT}/.venv" \
+        -v "${CHECKOUT_ROOT}/.docker_workspace/omd_build:${CHECKOUT_ROOT}/omd/build" \
+        -v "${CHECKOUT_ROOT}/.docker_workspace/home:${CHECKOUT_ROOT}/build_user_home/" \
+        -e HOME="${CHECKOUT_ROOT}/build_user_home/" \
+        "
+
+    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${CHECKOUT_ROOT}/build_user_home/.docker"
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
-"${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}" --check
-: "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
+"${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}" --check
+: "${IMAGE_ID:="$("${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
-
-# Limit CPU weight to 1/4 and used CPUs to N-CPUs - 2 in order to keep system usable
-: "${DOCKER_RESOURCE_FLAGS:="\
-    --cpu-shares=256 \
-    --cpuset-cpus="0-$(($(nproc) - 2))" \
-    "}"
 
 if [ -t 0 ]; then
     echo "Running in Docker container from image ${IMAGE_ID} (cmd=${CMD}) (workdir=${PWD})"
@@ -85,11 +85,10 @@ fi
 # shellcheck disable=SC2086
 docker run -a stdout -a stderr \
     --rm \
-    ${DOCKER_RESOURCE_FLAGS} \
     ${TERMINAL_FLAG} \
     --init \
-    -u "${UID}:$(id -g)" \
-    -v "${REPO_DIR}:${REPO_DIR}" \
+    -u "$(id -u):$(id -g)" \
+    -v "${CHECKOUT_ROOT}:${CHECKOUT_ROOT}" \
     -v "${GIT_COMMON_DIR}:${GIT_COMMON_DIR}" \
     ${CARGO_JENKINS_MOUNT} \
     ${DOCKER_LOCAL_ARGS} \

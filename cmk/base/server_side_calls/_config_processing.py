@@ -103,7 +103,7 @@ def _processed_config_value(
                     return _replace_password(passwd_id, None)
                 case "explicit_password", str(passwd_id), str(value):
                     return _replace_password(passwd_id, value)
-                case "global" | "environment" | "url" | "no_proxy", str() | None:
+                case "global_proxy" | "environment_proxy" | "url_proxy" | "no_proxy", str(), None:
                     if proxy_config is not None:
                         return ReplacementResult(
                             value=_replace_proxies(params, proxy_config),
@@ -136,11 +136,13 @@ def _replace_password(
 
 
 def _replace_proxies(
-    proxy_params: tuple[Literal["global", "environment", "url", "no_proxy"], str | None],
+    proxy_params: tuple[
+        Literal["global_proxy", "environment_proxy", "url_proxy", "no_proxy"], str, None
+    ],
     proxy_config: ProxyConfig,
 ) -> URLProxy | NoProxy | EnvProxy:
     match proxy_params:
-        case ("global", str(proxy_id)):
+        case ("global_proxy", str(proxy_id), None):
             try:
                 global_proxy = proxy_config.global_proxies[proxy_id]
                 return URLProxy(url=global_proxy["proxy_url"])
@@ -150,11 +152,11 @@ def _replace_proxies(
                     " does not exist."
                 )
                 return EnvProxy()
-        case ("environment", str()):
+        case ("environment_proxy", str(), None):
             return EnvProxy()
-        case ("url", str(url)):
+        case ("url_proxy", str(url), None):
             return URLProxy(url=url)
-        case ("no_proxy", None):
+        case ("no_proxy", str(), None):
             return NoProxy()
         case _:
             raise ValueError(f"Invalid proxy configuration: {proxy_config}")

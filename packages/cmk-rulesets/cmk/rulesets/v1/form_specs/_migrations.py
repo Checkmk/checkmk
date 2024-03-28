@@ -284,3 +284,38 @@ def migrate_to_password(
             return "stored_password", password_store_id, password
 
     raise TypeError(f"Could not migrate {model!r} to Password.")
+
+
+def migrate_to_proxy(  # pylint: disable=too-many-return-statements
+    model: object,
+) -> tuple[Literal["environment_proxy", "no_proxy", "global_proxy", "url_proxy"], str, None]:
+    """
+    Transform a previous proxy configuration to a model of the `Proxy` FormSpec.
+    Previous configurations are transformed in the following way:
+        ("global", <global-proxy-id>) -> ("global_proxy", <global-proxy-id>, None)
+        ("environment", "environment") -> ("environment_proxy", "", None)
+        ("url", <url>) -> ("url_proxy", <url>, None)
+        ("no_proxy", None) -> ("no_proxy", "", None)
+
+    Args:
+        model: Old value presented to the consumers to be migrated
+    """
+    match model:
+        case "global", str(global_proxy_id):
+            return "global_proxy", global_proxy_id, None
+        case "environment", "environment":
+            return "environment_proxy", "", None
+        case "url", str(url):
+            return "url_proxy", url, None
+        case "no_proxy", None:
+            return "no_proxy", "", None
+        case "global_proxy", str(global_proxy_id), None:
+            return "global_proxy", global_proxy_id, None
+        case "environment_proxy", str(), None:
+            return "environment_proxy", "", None
+        case "url_proxy", str(url), None:
+            return "url_proxy", url, None
+        case "no_proxy", str(), None:
+            return "no_proxy", "", None
+
+    raise TypeError(f"Could not migrate {model!r} to Proxy.")

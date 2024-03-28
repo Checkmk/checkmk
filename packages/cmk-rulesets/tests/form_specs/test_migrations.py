@@ -13,6 +13,7 @@ from cmk.rulesets.v1.form_specs import (
     migrate_to_lower_float_levels,
     migrate_to_lower_integer_levels,
     migrate_to_password,
+    migrate_to_proxy,
     migrate_to_upper_float_levels,
     migrate_to_upper_integer_levels,
 )
@@ -531,3 +532,36 @@ def test_migrate_to_password(
 ) -> None:
     assert migrate_to_password(old) == new
     assert migrate_to_password(new) == new
+
+
+@pytest.mark.parametrize(
+    ["old", "new"],
+    [
+        pytest.param(
+            ("environment", "environment"),
+            ("environment_proxy", "", None),
+            id="migrate explicit password",
+        ),
+        pytest.param(
+            ("no_proxy", None),
+            ("no_proxy", "", None),
+            id="migrate stored password",
+        ),
+        pytest.param(
+            ("global", "global-proxy-id"),
+            ("global_proxy", "global-proxy-id", None),
+            id="already migrated explicit password",
+        ),
+        pytest.param(
+            ("url", "proxy_url"),
+            ("url_proxy", "proxy_url", None),
+            id="already migrated stored password",
+        ),
+    ],
+)
+def test_migrate_to_proxy(
+    old: object,
+    new: tuple[Literal["environment_proxy", "no_proxy", "global_proxy", "url_proxy"], str, None],
+) -> None:
+    assert migrate_to_proxy(old) == new
+    assert migrate_to_proxy(new) == new

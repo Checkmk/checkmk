@@ -1469,9 +1469,39 @@ def _make_levels_default_value(
     raise NotImplementedError()  # should never happen.
 
 
+def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
+    match value:
+        case "environment_proxy", str(), None:
+            return "environment", "environment"
+        case "no_proxy", str(), None:
+            return "no_proxy", None
+        case "global_proxy", str(global_proxy_id), None:
+            return "global", global_proxy_id
+        case "url_proxy", str(url), None:
+            return "url", url
+
+    raise ValueError(value)
+
+
+def _transform_proxy_back(
+    value: tuple[str, str]
+) -> tuple[Literal["environment_proxy", "no_proxy", "global_proxy", "url_proxy"], str, None]:
+    match value:
+        case "environment", "environment":
+            return "environment_proxy", "", None
+        case "no_proxy", None:
+            return "no_proxy", "", None
+        case "global", str(global_proxy_id):
+            return "global_proxy", global_proxy_id, None
+        case "url", str(url):
+            return "url_proxy", url, None
+
+    raise ValueError(value)
+
+
 def _convert_to_legacy_http_proxy(
     to_convert: ruleset_api_v1.form_specs.Proxy, localizer: Callable[[str], str]
-) -> legacy_valuespecs.CascadingDropdown:
+) -> legacy_valuespecs.Transform:
     allowed_schemas = {s.value for s in to_convert.allowed_schemas}
 
     def _global_proxy_choices() -> legacy_valuespecs.DropdownChoiceEntries:
@@ -1482,56 +1512,60 @@ def _convert_to_legacy_http_proxy(
             if urllib.parse.urlparse(p["proxy_url"]).scheme in allowed_schemas
         ]
 
-    return legacy_valuespecs.CascadingDropdown(
-        title=ruleset_api_v1.Title("HTTP proxy").localize(localizer),
-        default_value=("environment", "environment"),
-        choices=[
-            (
-                "environment",
-                ruleset_api_v1.Title("Use from environment").localize(localizer),
-                legacy_valuespecs.FixedValue(
-                    value="environment",
-                    help=ruleset_api_v1.Help(
-                        "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
-                        "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
-                        "Have a look at the python requests module documentation for further information. Note "
-                        "that these variables must be defined as a site-user in ~/etc/environment and that "
-                        "this might affect other notification methods which also use the requests module."
-                    ).localize(localizer),
-                    totext=ruleset_api_v1.Label(
-                        "Use proxy settings from the process environment. This is the default."
-                    ).localize(localizer),
+    return Transform(
+        legacy_valuespecs.CascadingDropdown(
+            title=ruleset_api_v1.Title("HTTP proxy").localize(localizer),
+            default_value=("environment", "environment"),
+            choices=[
+                (
+                    "environment",
+                    ruleset_api_v1.Title("Use from environment").localize(localizer),
+                    legacy_valuespecs.FixedValue(
+                        value="environment",
+                        help=ruleset_api_v1.Help(
+                            "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
+                            "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
+                            "Have a look at the python requests module documentation for further information. Note "
+                            "that these variables must be defined as a site-user in ~/etc/environment and that "
+                            "this might affect other notification methods which also use the requests module."
+                        ).localize(localizer),
+                        totext=ruleset_api_v1.Label(
+                            "Use proxy settings from the process environment. This is the default."
+                        ).localize(localizer),
+                    ),
                 ),
-            ),
-            (
-                "no_proxy",
-                ruleset_api_v1.Title("Connect without proxy").localize(localizer),
-                legacy_valuespecs.FixedValue(
-                    value=None,
-                    totext=ruleset_api_v1.Label(
-                        "Connect directly to the destination instead of using a proxy."
-                    ).localize(localizer),
+                (
+                    "no_proxy",
+                    ruleset_api_v1.Title("Connect without proxy").localize(localizer),
+                    legacy_valuespecs.FixedValue(
+                        value=None,
+                        totext=ruleset_api_v1.Label(
+                            "Connect directly to the destination instead of using a proxy."
+                        ).localize(localizer),
+                    ),
                 ),
-            ),
-            (
-                "global",
-                ruleset_api_v1.Title("Use globally configured proxy").localize(localizer),
-                legacy_valuespecs.DropdownChoice(
-                    choices=_global_proxy_choices,
-                    sorted=True,
+                (
+                    "global",
+                    ruleset_api_v1.Title("Use globally configured proxy").localize(localizer),
+                    legacy_valuespecs.DropdownChoice(
+                        choices=_global_proxy_choices,
+                        sorted=True,
+                    ),
                 ),
-            ),
-            (
-                "url",
-                ruleset_api_v1.Title("Use explicit proxy settings").localize(localizer),
-                legacy_valuespecs.Url(
-                    title=ruleset_api_v1.Title("Proxy URL").localize(localizer),
-                    default_scheme="http",
-                    allowed_schemes=allowed_schemas,
+                (
+                    "url",
+                    ruleset_api_v1.Title("Use explicit proxy settings").localize(localizer),
+                    legacy_valuespecs.Url(
+                        title=ruleset_api_v1.Title("Proxy URL").localize(localizer),
+                        default_scheme="http",
+                        allowed_schemes=allowed_schemas,
+                    ),
                 ),
-            ),
-        ],
-        sorted=False,
+            ],
+            sorted=False,
+        ),
+        forth=_transform_proxy_forth,
+        back=_transform_proxy_back,
     )
 
 

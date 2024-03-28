@@ -56,6 +56,7 @@ HACK_CHECKS = {
     "ssh": False,  # has no secret
     "traceroute": False,  # has no secret
     "uniserv": False,  # has no secret
+    "ldap": True,
 }
 
 

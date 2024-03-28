@@ -6,7 +6,6 @@
 import datetime
 import logging
 from collections.abc import Mapping
-from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -385,7 +384,7 @@ from cmk.ec.event import (
         ),
     ],
 )
-def test_create_event_from_syslog_message(data: bytes, expected: Mapping[str, Any]) -> None:
+def test_create_event_from_syslog_message(data: bytes, expected: Mapping[str, object]) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
 
@@ -416,7 +415,7 @@ def test_create_event_from_syslog_message(data: bytes, expected: Mapping[str, An
     ],
 )
 def test_create_event_from_syslog_message_with_DST(
-    data: bytes, expected: Mapping[str, Any]
+    data: bytes, expected: Mapping[str, object]
 ) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
@@ -453,7 +452,7 @@ def test_create_event_from_syslog_message_with_DST(
     ],
 )
 def test_create_event_from_syslog_message_without_DST(
-    data: bytes, expected: Mapping[str, Any]
+    data: bytes, expected: Mapping[str, object]
 ) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
@@ -519,7 +518,7 @@ def test_create_event_from_syslog_message_without_DST(
         ),
     ],
 )
-def test_parse_syslog_info(line: str, expected_result: Mapping[str, Any]) -> None:
+def test_parse_syslog_info(line: str, expected_result: Mapping[str, object]) -> None:
     assert parse_syslog_info(line) == expected_result
 
 
@@ -563,7 +562,7 @@ def test_parse_syslog_info(line: str, expected_result: Mapping[str, Any]) -> Non
         ),
     ],
 )
-def test_parse_rfc5424_syslog_info(line: str, expected_result: Mapping[str, Any]) -> None:
+def test_parse_rfc5424_syslog_info(line: str, expected_result: Mapping[str, object]) -> None:
     # this is currently needed because we do not use the timezone information from the log message
 
     with time_machine.travel(

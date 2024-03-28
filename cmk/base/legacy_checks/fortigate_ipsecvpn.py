@@ -55,9 +55,9 @@ def check_fortigate_ipsecvpn(item, params, info):
 
     long_output = []
     for title, tunnels in [
-        ("Down and not ignored", set(tunnels_down) - set(tunnels_ignored)),
-        ("Down", tunnels_down),
-        ("Ignored", tunnels_ignored),
+        ("Down and not ignored", sorted(set(tunnels_down) - set(tunnels_ignored))),
+        ("Down", sorted(tunnels_down)),
+        ("Ignored", sorted(tunnels_ignored)),
     ]:
         if tunnels:
             long_output.append("%s:" % title)

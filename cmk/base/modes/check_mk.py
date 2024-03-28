@@ -23,6 +23,7 @@ import livestatus
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.log as log
+import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.store as store

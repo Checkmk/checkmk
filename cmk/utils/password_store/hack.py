@@ -50,13 +50,14 @@ HACK_CHECKS = {
     "ftp": False,  # has no secret
     "httpv2": False,  # yay!
     "icmp": False,  # has no secret
+    "ldap": True,
     "mkevents": False,  # has no secret
     "notify_count": False,  # has no secret
+    "smtp": True,
     "sql": True,
     "ssh": False,  # has no secret
     "traceroute": False,  # has no secret
     "uniserv": False,  # has no secret
-    "ldap": True,
 }
 
 

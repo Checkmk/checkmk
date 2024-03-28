@@ -150,9 +150,7 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
     power_readings_element = "gpu_power_readings"
     if xml.find(f"gpu/{ power_readings_element }") is None:
         power_readings_element = "power_readings"
-    has_power_management = (
-        xml.find(f"gpu/{ power_readings_element }/power_management") is not None
-    )
+    has_power_management = xml.find(f"gpu/{ power_readings_element }/power_management") is not None
     return Section(
         timestamp=(
             datetime.strptime(timestamp, "%a %b %d %H:%M:%S %Y")

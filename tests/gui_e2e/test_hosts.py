@@ -10,13 +10,10 @@ from faker import Faker
 from playwright.sync_api import expect
 
 from tests.testlib.playwright.pom.dashboard import LoginPage
+from tests.testlib.playwright.pom.setup.hosts import HostDetails, HostProperties
 from tests.testlib.playwright.timeouts import TIMEOUT_ACTIVATE_CHANGES_MS
 
-
-class TestHost:
-    def __init__(self) -> None:
-        self.name: str = f"test_host_{Faker().first_name()}"
-        self.ip: str = "127.0.0.1"
+TEST_HOST = HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1")
 
 
 class TestHosts:
@@ -44,7 +41,7 @@ class TestHosts:
 
     def test_navigate_to_host_properties(self, logged_in_page: LoginPage) -> None:
         # Setup
-        host = TestHost()
+        host = TEST_HOST
         self._create_host(logged_in_page, host)
         # Test-body
         logged_in_page.main_menu.setup_hosts.click()
@@ -68,21 +65,20 @@ class TestHosts:
         # Cleanup
         self._delete_host(logged_in_page, host)
 
-    def test_create_and_delete_a_host(self, logged_in_page: LoginPage, is_chromium: bool) -> None:
-        """Creates a host and deletes it afterwards. Calling order of static methods
-        is therefore essential!
-        """
-        host = TestHost()
-        self._create_host(logged_in_page, host)
-
-        logged_in_page.main_menu.monitor_all_hosts.click()
-        logged_in_page.select_host(host.name)
-
-        self._delete_host(logged_in_page, host)
+    def test_create_and_delete_a_host(self, logged_in_page: LoginPage) -> None:
+        """Validate creation and deletes of a host."""
+        # create Host
+        host = HostProperties(logged_in_page.page, host=TEST_HOST)
+        # validate
+        host.main_menu.monitor_all_hosts.click()
+        host.page.wait_for_url(url=re.compile(quote_plus("view_name=allhost")), wait_until="load")
+        host.select_host(host.details.name)
+        # Cleanup: delete host
+        host.delete_host()
 
     def test_reschedule(self, logged_in_page: LoginPage, is_chromium: bool) -> None:
         """reschedules a check"""
-        host = TestHost()
+        host = TEST_HOST
         self._create_host(logged_in_page, host)
 
         logged_in_page.main_menu.monitor_all_hosts.click()
@@ -101,7 +97,7 @@ class TestHosts:
         self._delete_host(logged_in_page, host)
 
     @staticmethod
-    def _create_host(logged_in_page: LoginPage, host: TestHost) -> None:
+    def _create_host(logged_in_page: LoginPage, host: HostDetails) -> None:
         """Creates a host by starting from a logged in page."""
         logged_in_page.main_menu.setup_hosts.click()
         logged_in_page.main_area.get_suggestion("Add host").click()
@@ -119,7 +115,7 @@ class TestHosts:
         logged_in_page.expect_success_state()
 
     @staticmethod
-    def _delete_host(logged_in_page: LoginPage, host: TestHost) -> None:
+    def _delete_host(logged_in_page: LoginPage, host: HostDetails) -> None:
         """Deletes the former created host by starting from a logged in page."""
         logged_in_page.main_menu.setup_hosts.click()
 

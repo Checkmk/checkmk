@@ -199,7 +199,8 @@ class CmkPage(LocatorHelper):
         timeout_navigation: int | None = None,
     ) -> None:
         super().__init__(page, timeout_assertions, timeout_navigation)
-        self.url: str
+        self._url_pattern: str  # pattern of URL to be expected, used for validation.
+        self.url: str  # URL of the page.
         self.main_menu = MainMenu(self.page)
         self.main_area = MainArea(self.page)
         self.sidebar = Sidebar(self.page)
@@ -240,3 +241,11 @@ class CmkPage(LocatorHelper):
     def get_link(self, name: str, exact: bool = True) -> Locator:
         """Returns a web-element from the `main_area`, which is a `link`."""
         return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)
+
+    def goto(self, url: str, event: str = "load") -> None:
+        """Override `Page.goto`. Additionally, wait for the page to `load`, by default.
+
+        The `event` to be expected can be changed.
+        """
+        with self.page.expect_event(event) as _:
+            self.page.goto(url)

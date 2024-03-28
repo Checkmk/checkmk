@@ -5,8 +5,7 @@
 
 from typing import overload
 
-from playwright.sync_api import Error, expect, FrameLocator, Locator, Page
-from playwright.sync_api import TimeoutError as PWTimeoutError
+from playwright.sync_api import expect, FrameLocator, Locator, Page
 
 from tests.testlib.playwright.helpers import Keys, LocatorHelper
 
@@ -238,46 +237,6 @@ class CmkPage(LocatorHelper):
     def press_keyboard(self, key: Keys) -> None:
         self.page.keyboard.press(str(key.value))
 
-    def click_and_wait(
-        self,
-        locator: Locator,
-        navigate: bool = False,
-        expected_locator: Locator | None = None,
-        reload_on_error: bool = False,
-        max_tries: int = 10,
-    ) -> None:
-        """Wait until the specified locator could be clicked.
-        After a successful click, wait until the current URL has changed and is loaded
-        or an expected locator is found.
-        """
-        url = self.page.url
-        clicked = False
-
-        for _ in range(max_tries):
-            if not clicked:
-                try:
-                    locator.click()
-                    clicked = True
-                except PWTimeoutError:
-                    pass
-
-            if clicked:
-                try:
-                    if navigate:
-                        expect(self.page).not_to_have_url(url)
-                    if expected_locator:
-                        expect(expected_locator).to_be_visible()
-                    self.page.wait_for_load_state("networkidle")
-                    return
-                except AssertionError:
-                    pass
-
-            try:
-                if reload_on_error:
-                    self.page.reload(wait_until="networkidle")
-            except Error:
-                continue
-
-        raise AssertionError(
-            "Current URL did not change, expected locator not found or page failed to reload."
-        )
+    def get_link(self, name: str, exact: bool = True) -> Locator:
+        """Returns a web-element from the `main_area`, which is a `link`."""
+        return self.main_area.locator().get_by_role(role="link", name=name, exact=exact)

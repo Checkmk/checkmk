@@ -12,8 +12,8 @@ import time_machine
 
 from cmk.gui.graphing._artwork import (
     _areastack,
+    _compute_bidirectional_num_labels,
     _compute_graph_t_axis,
-    _compute_num_labels,
     _compute_v_axis_min_max,
     _halfstep_interpolation,
     _t_axis_labels_seconds,
@@ -676,13 +676,13 @@ def test_compute_graph_t_axis(
         ),
     ],
 )
-def test__compute_num_labels(
+def test__compute_bidirectional_num_labels(
     min_y: int | float,
     max_y: int | float,
     expected_min_num_label_range: NumLabelRange,
     expected_max_num_label_range: NumLabelRange,
 ) -> None:
-    assert _compute_num_labels(min_y, max_y) == (
+    assert _compute_bidirectional_num_labels(min_y, max_y) == (
         expected_min_num_label_range,
         expected_max_num_label_range,
     )

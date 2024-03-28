@@ -191,30 +191,52 @@ set echo on
 $LESS_THAN = '<'
 
 Function should_exclude($exclude, $section) {
-    return (($exclude -Match "ALL") -or ($exclude -Match $section))
+     return (($exclude -Match "ALL") -or ($exclude -Match $section))
 }
 
-Function plugin_runs_as_local_system_user() {
-    return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+function Test-Administrator {
+     return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 }
 
-Function is_owned_by_local_system_user($filePath) {
-    $acl = Get-Acl -Path $filePath
+<#
+    .SYNOPSIS
+        Checks that file is safe to run by administrator.
+    .DESCRIPTION
+        If non-admin users have Writem, Modify or Full Control to the file
+        then returns error with detailed description.
+#>
+function Invoke-SafetyCheck( [String]$file ) {
+     $admin_groups = "BUILTIN\Administrators", "NT AUTHORITY\SYSTEM"
+     $forbidden_rights = @("Modify", "FullControl", "Write")
+     try {
+          $acl = Get-Acl $file -ErrorAction Stop
+          $access = $acl.Access
+          $admins = Get-LocalGroupMember -Group Administrators
 
-    # SID for the "NT AUTHORITY\SYSTEM" account
-    $systemSid = "S-1-5-18"
+          foreach ($entry in $access ) {
+               $entity = $entry.IdentityReference.ToString()
+               if ( $admin_groups.contains($entity)) {
+                    # predefined admin groups are safe
+                    continue
+               }
+               if ( $Null -ne $($admins.Name -like "$entity") ) {
+                    # administrators are safe too
+                    continue
+               }
 
-    $ntAccount = New-Object System.Security.Principal.NTAccount($acl.Owner)
-    $ownerSid = $ntAccount.Translate([System.Security.Principal.SecurityIdentifier])
-
-    return ($ownerSid.Value -eq $systemSid)
-}
-
-Function safe_execution_possible($path) {
-    if (-not(plugin_runs_as_local_system_user)) {
-        return $true
-    }
-    return is_owned_by_local_system_user($path)
+               # check for forbidden rights
+               $rights = $entry.FileSystemRights.ToString()
+               $forbidden_rights |
+               Foreach-Object {
+                    if ($rights -match $_) {
+                         return "Safe execution is not possible: $entity has '$_' access to '$file'"
+                    }
+               }
+          }
+     }
+     catch {
+          return "Safe execution is not possible: '$_' during check '$file'"
+     }
 }
 
 Function get_dbversion_database ($ORACLE_HOME) {
@@ -244,7 +266,7 @@ function is_async_running ($fullPath) {
      $command_line = (Get-WmiObject -Query "SELECT CommandLine FROM Win32_Process WHERE ProcessID = $proc_pid").commandline
 
      if ($command_line -like "*$fullPath*") {
-         return $true
+          return $true
      }
 
      # The process to the PID cannot be found, so remove also the proc file
@@ -542,16 +564,16 @@ Function sqlcall {
                if (-not(is_async_running($fullPath))) {
 
                     $command = {
-                        param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
-                        $res = ("$sql" | & $oracle_home"\bin\sqlplus" -s -L $sql_connect)
-                        if ($LastExitCode -eq 0) {
-                            $res | Set-Content $path
-                        }
-                        else {
-                        $stripped_res = '$sql_sid|FAILURE|' + $res | select-string -pattern 'ERROR'
-                        '<<<oracle_instance:sep(124)>>>' | Set-Content $path
-                        $stripped_res | Add-Content $path
-                        }
+                         param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
+                         $res = ("$sql" | & $oracle_home"\bin\sqlplus" -s -L $sql_connect)
+                         if ($LastExitCode -eq 0) {
+                              $res | Set-Content $path
+                         }
+                         else {
+                              $stripped_res = '$sql_sid|FAILURE|' + $res | select-string -pattern 'ERROR'
+                              '<<<oracle_instance:sep(124)>>>' | Set-Content $path
+                              $stripped_res | Add-Content $path
+                         }
                     }
 
                     # This escaping is needed as it seems the here string attribute gets lost or has no effect when passing the
@@ -1685,7 +1707,7 @@ Function sql_systemparameter {
         from v$system_parameter, v$instance i
         where name not like '!_%' ESCAPE '!';
 '@
- echo $query_systemparameter
+     echo $query_systemparameter
 }
 
 
@@ -2222,6 +2244,7 @@ $ORIG_ASYNC_SECTIONS = $ASYNC_SECTIONS
 $the_count = ($list_inst | measure-object).count
 # we only continue if an Oracle instance is running
 if ($the_count -gt 0) {
+     $is_admin = Test-Administrator
      # loop through each instance
      ForEach ($inst in $list_inst) {
           # get the real instance name
@@ -2232,21 +2255,25 @@ if ($the_count -gt 0) {
           # in some environments HKLM:\SYSTEM\CurrentControlSet\services\OracleService{ORACLE_SID}
           # wasn't present, see SUP-10065
           try {
-              $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
-              $val = (Get-ItemProperty -Path $key).ImagePath
+               $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
+               $val = (Get-ItemProperty -Path $key).ImagePath
           }
           catch {
-              $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleASMService' + $ORACLE_SID
-              $val = (Get-ItemProperty -Path $key).ImagePath
+               $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleASMService' + $ORACLE_SID
+               $val = (Get-ItemProperty -Path $key).ImagePath
           }
-          $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4)
+          #  $val may contain c:\path\to\file or "c:\path\to\file" or "c:\path\to\file" PARAM
+          $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4).Trim('"')
 
-          if (-not(safe_execution_possible($ORACLE_HOME + "\bin\sqlplus.exe"))) {
-              echo "<<<oracle_instance:sep(124)>>>"
-              echo "$ORACLE_SID|FAILURE|A safe execution of $ORACLE_HOME\bin\sqlplus cannot be guaranteed. Either you need to run the checkmk agent as non-system user (by using the rule 'Run plugins and local checks using non-system account' or disallow modifications to the sqlplus by non-system users."
-              continue
+          if ($is_admin) {
+               # administartors should use only safe binary
+               $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\sqlplus.exe")
+               if ($Null -ne $result) {
+                    Write-Output "<<<oracle_instance:sep(124)>>>"
+                    Write-Output "$ORACLE_SID|FAILURE|$result. Either run the plugin as a user using the rule 'Run plugins and local checks using non-system account' or disable 'Write', 'Modify' and 'Full control' access to the $path by non-admin users."
+                    continue
+               }
           }
-
           # reset errors found for this instance to zero
           $ERROR_FOUND = 0
 

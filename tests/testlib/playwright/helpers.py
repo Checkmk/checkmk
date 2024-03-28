@@ -8,9 +8,11 @@
 import re
 from abc import ABC, abstractmethod
 from enum import Enum
+from pprint import pformat
 from re import Pattern
 
-from playwright.sync_api import expect, Locator, Page
+from playwright.sync_api import Error, expect, Frame, Locator, Page
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.playwright.timeouts import TIMEOUT_ASSERTIONS, TIMEOUT_NAVIGATION
 
@@ -77,6 +79,56 @@ class LocatorHelper(ABC):
 
     def get_attribute_label(self, attribute: str) -> Locator:
         return self.locator(f"#attr_{attribute} label")
+
+    def click_and_wait(
+        self,
+        locator: Frame | Locator | Page,
+        navigate: bool = False,
+        expected_locator: Locator | None = None,
+        reload_on_error: bool = False,
+        max_tries: int = 10,
+        **click_kwargs: dict[str, bool | float | int | str] | None,
+    ) -> None:
+        """Wait until the specified locator could be clicked.
+
+        After a successful click, wait until the current URL has changed and is loaded
+        or an expected locator is found.
+        """
+        latest_excp: Exception
+        _page = locator if isinstance(locator, Page) else locator.page
+        url = _page.url
+        clicked = False
+
+        for _ in range(max_tries):
+            if not clicked:
+                try:
+                    locator.click(**click_kwargs)  # type: ignore[arg-type]
+                    clicked = True
+                except PWTimeoutError as excp:
+                    latest_excp = excp
+
+            if clicked:
+                _page.wait_for_load_state(state="load")
+                try:
+                    if navigate:
+                        expect(_page).not_to_have_url(url)
+                    if expected_locator:
+                        expect(expected_locator).to_be_visible()
+                    return
+                except AssertionError as excp:
+                    latest_excp = excp
+
+            try:
+                if reload_on_error:
+                    self.page.reload(wait_until="load")
+            except Error as excp:
+                latest_excp = excp
+                continue
+
+        raise AssertionError(
+            "Current URL did not change; expected locator not found or page failed to reload."
+            f"Latest exception:\n{pformat(latest_excp)}\n"
+        )
 
 
 class Keys(Enum):

@@ -27,8 +27,11 @@ from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.type_defs import CustomAttr
-from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
+from cmk.gui.watolib.custom_attributes import (
+    CustomAttrSpecs,
+    CustomHostAttrSpec,
+    save_custom_attrs_to_mk_file,
+)
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
@@ -474,42 +477,46 @@ def test_openapi_bulk_with_failed(
 
 
 @pytest.fixture(name="custom_host_attribute")
-def _custom_host_attribute():
-    attr: CustomAttr = {
-        "name": "foo",
-        "title": "bar",
-        "help": "foo",
-        "topic": "topic",
-        "type": "TextAscii",
-        "add_custom_macro": False,
-        "show_in_table": False,
-    }
-    with custom_host_attribute_ctx({"host": [attr]}):
+def _custom_host_attribute() -> Iterator[None]:
+    attr = CustomHostAttrSpec(
+        {
+            "name": "foo",
+            "title": "bar",
+            "help": "foo",
+            "topic": "topic",
+            "type": "TextAscii",
+            "add_custom_macro": False,
+            "show_in_table": False,
+        }
+    )
+    with custom_host_attribute_ctx({"user": [], "host": [attr]}):
         yield
 
 
 @pytest.fixture(name="custom_host_attribute_basic_topic")
-def _custom_host_attribute_with_basic_topic():
-    attr: CustomAttr = {
-        "name": "foo",
-        "title": "bar",
-        "help": "foo",
-        "topic": "basic",
-        "type": "TextAscii",
-        "add_custom_macro": False,
-        "show_in_table": False,
-    }
-    with custom_host_attribute_ctx({"host": [attr]}):
+def _custom_host_attribute_with_basic_topic() -> Iterator[None]:
+    attr = CustomHostAttrSpec(
+        {
+            "name": "foo",
+            "title": "bar",
+            "help": "foo",
+            "topic": "basic",
+            "type": "TextAscii",
+            "add_custom_macro": False,
+            "show_in_table": False,
+        }
+    )
+    with custom_host_attribute_ctx({"user": [], "host": [attr]}):
         yield
 
 
 @contextlib.contextmanager
-def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]) -> Iterator[None]:
+def custom_host_attribute_ctx(attrs: CustomAttrSpecs) -> Iterator[None]:
     try:
         save_custom_attrs_to_mk_file(attrs)
         yield
     finally:
-        save_custom_attrs_to_mk_file({})
+        save_custom_attrs_to_mk_file({"user": [], "host": []})
 
 
 def test_openapi_host_created_timestamp(clients: ClientRegistry) -> None:
@@ -544,7 +551,7 @@ def test_openapi_host_has_deleted_custom_attributes(clients: ClientRegistry) -> 
     clients.HostConfig.edit(host_name="example.com", attributes={"foo": "bar"})
 
     # Try to get it with the attribute already deleted
-    with custom_host_attribute_ctx({}):
+    with custom_host_attribute_ctx({"user": [], "host": []}):
         resp = clients.HostConfig.get(host_name="example.com")
 
         # foo will still show up in the response, even though it is deleted.

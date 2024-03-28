@@ -665,16 +665,6 @@ class ViewProcessTracking:
     duration_view_render: Snapshot = Snapshot.null()
 
 
-class CustomAttr(TypedDict):
-    title: str
-    help: str
-    name: str
-    topic: str
-    type: str
-    add_custom_macro: bool
-    show_in_table: bool
-
-
 class Key(BaseModel):
     certificate: str
     private_key: str

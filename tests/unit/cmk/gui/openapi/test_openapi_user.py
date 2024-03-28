@@ -34,7 +34,11 @@ from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import UserObject, UserRole
 from cmk.gui.userdb import ConnectorType
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
-from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
+from cmk.gui.watolib.custom_attributes import (
+    CustomUserAttrSpec,
+    save_custom_attrs_to_mk_file,
+    update_user_custom_attrs,
+)
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
@@ -971,13 +975,13 @@ def test_openapi_new_user_with_non_existing_role(clients: ClientRegistry) -> Non
 
 
 @contextmanager
-def custom_user_attributes_ctx(attrs: list[Mapping[str, str | bool]]) -> Iterator:
+def custom_user_attributes_ctx(attrs: list[CustomUserAttrSpec]) -> Iterator:
     try:
-        save_custom_attrs_to_mk_file({"user": attrs})
+        save_custom_attrs_to_mk_file({"user": attrs, "host": []})
         update_user_custom_attrs(datetime.datetime.today())
         yield
     finally:
-        save_custom_attrs_to_mk_file({})
+        save_custom_attrs_to_mk_file({"user": attrs, "host": []})
 
 
 def add_default_customer_in_managed_edition(params: dict[str, Any]) -> None:
@@ -998,14 +1002,18 @@ def test_openapi_custom_attributes_of_user(
     username = "rob_halford"
 
     # TODO: Ask what to do with attributes creation
-    attr: Mapping[str, str | bool] = {
-        "name": "judas",
-        "title": "judas",
-        "help": "help",
-        "topic": "basic",
-        "type": "TextAscii",
-        "user_editable": True,
-    }
+    attr = CustomUserAttrSpec(
+        {
+            "name": "judas",
+            "title": "judas",
+            "help": "help",
+            "topic": "basic",
+            "type": "TextAscii",
+            "show_in_table": False,
+            "add_custom_macro": False,
+            "user_editable": True,
+        }
+    )
 
     with custom_user_attributes_ctx([attr]):
         clients.User.create(
@@ -1037,14 +1045,18 @@ def test_openapi_custom_attributes_of_user(
 def test_edit_custom_attributes_of_user(_mock: None, clients: ClientRegistry) -> None:
     username = "rob_halford"
 
-    attr: Mapping[str, str | bool] = {
-        "name": "judas",
-        "title": "judas",
-        "help": "help",
-        "topic": "basic",
-        "type": "TextAscii",
-        "user_editable": True,
-    }
+    attr = CustomUserAttrSpec(
+        {
+            "name": "judas",
+            "title": "judas",
+            "help": "help",
+            "topic": "basic",
+            "type": "TextAscii",
+            "show_in_table": False,
+            "add_custom_macro": False,
+            "user_editable": True,
+        }
+    )
 
     with custom_user_attributes_ctx([attr]):
         clients.User.create(

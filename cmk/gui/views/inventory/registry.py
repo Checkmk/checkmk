@@ -4,9 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, Callable
 
 from typing_extensions import TypedDict
+
+from cmk.utils.plugin_registry import Registry
+
+from cmk.gui.utils.html import HTML
 
 
 class InventoryHintSpec(TypedDict, total=False):
@@ -23,3 +27,20 @@ class InventoryHintSpec(TypedDict, total=False):
 
 InventoryHintRegistry = dict[str, InventoryHintSpec]
 inventory_displayhints: InventoryHintRegistry = {}
+
+
+PaintResult = tuple[str, str | HTML]
+PaintFunction = Callable[[Any], PaintResult]
+
+
+class InvPaintFunction(TypedDict):
+    name: str
+    func: PaintFunction
+
+
+class InvPaintFunctions(Registry[InvPaintFunction]):
+    def plugin_name(self, instance: InvPaintFunction) -> str:
+        return instance["name"]
+
+
+inv_paint_funtions = InvPaintFunctions()

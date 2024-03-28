@@ -1621,7 +1621,10 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
 
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)
-    return notify.do_notify(options, args)
+    config_cache = config.get_config_cache()
+    return notify.do_notify(
+        options, args, host_parameters_cb=config_cache.notification_plugin_parameters
+    )
 
 
 modes.register(

@@ -2459,7 +2459,10 @@ class AutomationNotificationReplay(Automation):
 
     def execute(self, args: list[str]) -> NotificationReplayResult:
         nr = args[0]
-        notify.notification_replay_backlog(int(nr))
+        notify.notification_replay_backlog(
+            config.get_config_cache().notification_plugin_parameters,
+            int(nr),
+        )
         return NotificationReplayResult()
 
 
@@ -2473,7 +2476,11 @@ class AutomationNotificationAnalyse(Automation):
 
     def execute(self, args: list[str]) -> NotificationAnalyseResult:
         nr = args[0]
-        return NotificationAnalyseResult(notify.notification_analyse_backlog(int(nr)))
+        return NotificationAnalyseResult(
+            notify.notification_analyse_backlog(
+                config.get_config_cache().notification_plugin_parameters, int(nr)
+            )
+        )
 
 
 automations.register(AutomationNotificationAnalyse())
@@ -2487,7 +2494,13 @@ class AutomationNotificationTest(Automation):
     def execute(self, args: list[str]) -> NotificationTestResult:
         context = json.loads(args[0])
         dispatch = args[1]
-        return NotificationTestResult(notify.notification_test(context, dispatch == "True"))
+        return NotificationTestResult(
+            notify.notification_test(
+                context,
+                config.get_config_cache().notification_plugin_parameters,
+                dispatch=dispatch == "True",
+            )
+        )
 
 
 automations.register(AutomationNotificationTest())

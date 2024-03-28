@@ -5,7 +5,7 @@
 """Default configuration settings for the Checkmk GUI"""
 
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, Sequence, TypedDict
 
 from livestatus import SiteConfigurations
 
@@ -66,6 +66,13 @@ def make_default_user_profile() -> UserSpec:
 
 
 ActivateChangesCommentMode = Literal["enforce", "optional", "disabled"]
+
+
+class VirtualHostTreeSpec(TypedDict):
+    id: str
+    title: str
+    exclude_empty_tag_choices: bool
+    tree_spec: Sequence[str]
 
 
 @dataclass
@@ -309,7 +316,7 @@ class CREConfig:
     escape_plugin_output: bool = True
 
     # Virtual host trees for the "Virtual Host Trees" snapin
-    virtual_host_trees: list = field(default_factory=list)
+    virtual_host_trees: Sequence[VirtualHostTreeSpec] = field(default_factory=list)
 
     # Target URL for sending crash reports to
     crash_report_url: str = "https://crash.checkmk.com"

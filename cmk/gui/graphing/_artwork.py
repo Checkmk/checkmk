@@ -522,7 +522,7 @@ def _make_formatter(
             return TimeFormatter(symbol, precision)
 
 
-def _render_labels_from_api(
+def _compute_labels_from_api(
     formatter: (
         DecimalFormatter
         | SIFormatter
@@ -536,49 +536,30 @@ def _render_labels_from_api(
     *,
     min_y: float,
     max_y: float,
-) -> Sequence[VerticalAxisLabel]:
+) -> Sequence[Label]:
     abs_min_y = abs(min_y)
     abs_max_y = abs(max_y)
     match min_y >= 0, max_y >= 0:
         case True, True:
-            labels = list(
-                formatter.render_y_labels(
-                    max(abs_min_y, abs_max_y),
-                    height_ex / 4.0 + 1,
-                )
-            )
-        case True, False:
-            raise ValueError((min_y, max_y))
+            return formatter.render_y_labels(max(abs_min_y, abs_max_y), height_ex / 4.0 + 1)
         case False, True:
             if mirrored or abs_min_y == abs_max_y:
-                labels_ = formatter.render_y_labels(
-                    max(abs_min_y, abs_max_y),
-                    height_ex / 8.0 + 1,
-                )
-                labels = [Label(-1 * l.position, l.text) for l in labels_] + list(labels_)
-            else:
-                mean_num_labels = height_ex / 4.0 + 1
-                min_mean_num_labels = round(mean_num_labels * abs_min_y / (abs_min_y + abs_max_y))
-                max_mean_num_labels = mean_num_labels - min_mean_num_labels
-                labels = [
-                    Label(-1 * l.position, f"-{l.text}")
-                    for l in formatter.render_y_labels(abs_min_y, min_mean_num_labels)
-                ] + list(formatter.render_y_labels(abs_max_y, max_mean_num_labels))
+                labels = formatter.render_y_labels(max(abs_min_y, abs_max_y), height_ex / 8.0 + 1)
+                return [Label(-1 * l.position, l.text) for l in labels] + list(labels)
+            mean_num_labels = height_ex / 4.0 + 1
+            min_mean_num_labels = round(mean_num_labels * abs_min_y / (abs_min_y + abs_max_y))
+            max_mean_num_labels = mean_num_labels - min_mean_num_labels
+            return [
+                Label(-1 * l.position, f"-{l.text}")
+                for l in formatter.render_y_labels(abs_min_y, min_mean_num_labels)
+            ] + list(formatter.render_y_labels(abs_max_y, max_mean_num_labels))
         case False, False:
-            labels = [
+            return [
                 Label(-1 * l.position, l.text)
-                for l in formatter.render_y_labels(
-                    max(abs_min_y, abs_max_y),
-                    height_ex / 4.0 + 1,
-                )
+                for l in formatter.render_y_labels(max(abs_min_y, abs_max_y), height_ex / 4.0 + 1)
             ]
-    return sorted(
-        [
-            VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
-            for label in [Label(0, "0")] + list(labels)
-        ],
-        key=lambda v: v.position,
-    )
+        case _:
+            raise ValueError((min_y, max_y))
 
 
 class _VAxisMinMax(NamedTuple):
@@ -705,13 +686,19 @@ def _compute_graph_v_axis(
     )
 
     if formatter_ident := unit.get("formatter_ident"):
-        rendered_labels = _render_labels_from_api(
-            _make_formatter(formatter_ident, unit["symbol"]),
-            height_ex,
-            mirrored,
-            min_y=v_axis_min_max.min_value,
-            max_y=v_axis_min_max.max_value,
-        )
+        rendered_labels: Sequence[VerticalAxisLabel] = [
+            VerticalAxisLabel(position=label.position, text=label.text, line_width=2)
+            for label in [Label(0, "0")]
+            + list(
+                _compute_labels_from_api(
+                    _make_formatter(formatter_ident, unit["symbol"]),
+                    height_ex,
+                    mirrored,
+                    min_y=v_axis_min_max.min_value,
+                    max_y=v_axis_min_max.max_value,
+                )
+            )
+        ]
         max_label_length = max(len(l.text) for l in rendered_labels)
         graph_unit = None
     else:

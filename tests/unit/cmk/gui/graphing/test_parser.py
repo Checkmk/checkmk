@@ -13,7 +13,6 @@ from cmk.gui.graphing._parser import (
     EngineeringScientificFormatter,
     IECFormatter,
     Label,
-    NumLabelRange,
     parse_or_add_unit,
     SIFormatter,
     StandardScientificFormatter,
@@ -565,10 +564,11 @@ def test_js_render_unit_notation(unit: metrics.Unit, expected: str) -> None:
             123456.789,
             "Time",
             [
-                Label(28800, "8 h"),
-                Label(57600, "16 h"),
+                Label(21600, "6 h"),
+                Label(43200, "12 h"),
+                Label(64800, "18 h"),
                 Label(86400, "24 h"),
-                Label(115200, "32 h"),
+                Label(108000, "30 h"),
             ],
             id="time-large",
         ),
@@ -602,4 +602,4 @@ def test_render_y_labels(
     expected_labels: Sequence[Label],
 ) -> None:
     assert formatter.ident() == expected_ident
-    assert formatter.render_y_labels(max_y, NumLabelRange(4, 8)) == expected_labels
+    assert formatter.render_y_labels(max_y, 5) == expected_labels

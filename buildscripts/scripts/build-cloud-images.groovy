@@ -73,7 +73,7 @@ def main() {
                     }
                 }
             }
-            parallel(create_build_stages(cloud_targets, env_secret_map, build_cloud_images));
+            parallel(create_build_stages(cloud_targets, env_secret_map, build_cloud_images, packer_envvars));
         }
     }
 
@@ -135,7 +135,7 @@ def build_env_secret_map(cmk_version, ami, azure) {
     ];
 }
 
-def create_build_stages(cloud_targets, env_secret_map, build_images) {
+def create_build_stages(cloud_targets, env_secret_map, build_images, packer_envvars) {
     return cloud_targets.collectEntries { target ->
         [("Building target ${target}"): {
             smart_stage(

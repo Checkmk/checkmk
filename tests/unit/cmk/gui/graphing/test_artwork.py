@@ -12,7 +12,6 @@ import time_machine
 
 from cmk.gui.graphing._artwork import (
     _areastack,
-    _compute_bidirectional_num_labels,
     _compute_graph_t_axis,
     _compute_v_axis_min_max,
     _halfstep_interpolation,
@@ -22,7 +21,6 @@ from cmk.gui.graphing._artwork import (
     TimeAxis,
     TimeAxisLabel,
 )
-from cmk.gui.graphing._parser import NumLabelRange
 from cmk.gui.graphing._utils import SizeEx
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
@@ -599,90 +597,3 @@ def test_compute_graph_t_axis(
             )
             == expected_result
         )
-
-
-@pytest.mark.parametrize(
-    "min_y, max_y, expected_min_num_label_range, expected_max_num_label_range",
-    [
-        pytest.param(
-            1,
-            1,
-            NumLabelRange(2, 4),
-            NumLabelRange(2, 4),
-            id="50:50",
-        ),
-        pytest.param(
-            1,
-            2,
-            NumLabelRange(1, 3),
-            NumLabelRange(2, 5),
-            id="third",
-        ),
-        pytest.param(
-            1,
-            3,
-            NumLabelRange(1, 2),
-            NumLabelRange(2, 6),
-            id="fourth",
-        ),
-        pytest.param(
-            1,
-            4,
-            NumLabelRange(1, 2),
-            NumLabelRange(2, 6),
-            id="fifth",
-        ),
-        pytest.param(
-            1,
-            5,
-            NumLabelRange(0, 1),
-            NumLabelRange(2, 7),
-            id="sixth",
-        ),
-        pytest.param(
-            1,
-            6,
-            NumLabelRange(0, 1),
-            NumLabelRange(2, 7),
-            id="seventh",
-        ),
-        pytest.param(
-            1,
-            7,
-            NumLabelRange(0, 1),
-            NumLabelRange(2, 7),
-            id="eighth",
-        ),
-        pytest.param(
-            1,
-            8,
-            NumLabelRange(0, 1),
-            NumLabelRange(2, 7),
-            id="ninth",
-        ),
-        pytest.param(
-            1,
-            9,
-            NumLabelRange(0, 1),
-            NumLabelRange(2, 7),
-            id="tenth",
-        ),
-        pytest.param(
-            0,
-            10,
-            NumLabelRange(0, 0),
-            NumLabelRange(3, 8),
-            id="0-10",
-        ),
-    ],
-)
-def test__compute_bidirectional_num_labels(
-    min_y: int | float,
-    max_y: int | float,
-    expected_min_num_label_range: NumLabelRange,
-    expected_max_num_label_range: NumLabelRange,
-) -> None:
-    assert _compute_bidirectional_num_labels(min_y, max_y) == (
-        expected_min_num_label_range,
-        expected_max_num_label_range,
-    )

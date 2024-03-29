@@ -152,7 +152,7 @@ class CommandReschedule(Command):
         return PermissionActionReschedule
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_additions(
@@ -163,7 +163,7 @@ class CommandReschedule(Command):
     ) -> HTML:
         return HTML("<br><br>") + "Spreading: %s minutes" % request.var("_resched_spread")
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.write_text(_("Spread over") + " ")
         html.text_input(
@@ -258,7 +258,7 @@ class CommandNotifications(Command):
         return PermissionActionNotifications
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_additions(
@@ -281,7 +281,7 @@ class CommandNotifications(Command):
             return "question"
         return "warning"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_enable_notifications", _("Enable"), cssclass="border_hot")
         html.button("_disable_notifications", _("Disable"), cssclass="border_hot")
@@ -363,13 +363,13 @@ class CommandToggleActiveChecks(Command):
         return PermissionActionEnableChecks
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
         return "warning"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_enable_checks", _("Enable"), cssclass="border_hot")
         html.button("_disable_checks", _("Disable"), cssclass="border_hot")
@@ -443,13 +443,13 @@ class CommandTogglePassiveChecks(Command):
         return PermissionActionEnableChecks
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
         return "warning"
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_enable_passive_checks", _("Enable"), cssclass="border_hot")
         html.button("_disable_passive_checks", _("Disable"), cssclass="border_hot")
@@ -526,10 +526,10 @@ class CommandClearModifiedAttributes(Command):
         return PermissionActionClearModifiedAttributes
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_clear_modattr", _("Reset attributes"), cssclass="hot")
         html.button("_cancel", _("Cancel"))
@@ -631,7 +631,7 @@ class CommandFakeCheckResult(Command):
         return PermissionActionFakeChecks
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     @property
@@ -666,7 +666,7 @@ class CommandFakeCheckResult(Command):
 
         return [(0, _("OK")), (1, _("Warning")), (2, _("Critical")), (3, _("Unknown"))]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         self._render_test_notification_tip()
 
         html.open_div(class_="group")
@@ -804,14 +804,14 @@ class CommandCustomNotification(Command):
         return PermissionActionCustomNotification
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
     @property
     def is_show_more(self) -> bool:
         return True
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_cusnot_comment",
@@ -950,7 +950,7 @@ class CommandAcknowledge(Command):
         return CommandGroupAcknowledge
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "aggr"]
 
     def confirm_dialog_additions(
@@ -992,7 +992,7 @@ class CommandAcknowledge(Command):
             class_="confirm_block",
         )
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         submit_id = "_acknowledge"
         html.open_div(class_="group")
         html.text_input(
@@ -1226,7 +1226,7 @@ class CommandRemoveAcknowledgments(Command):
         return CommandGroupAcknowledge
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "aggr"]
 
     @property
@@ -1331,10 +1331,10 @@ class CommandAddComment(Command):
         return PermissionActionAddComment
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_comment",
@@ -1493,7 +1493,7 @@ class CommandScheduleDowntimes(Command):
         return CommandGroupDowntimes
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "aggr"]
 
     def user_confirm_options(
@@ -1510,7 +1510,7 @@ class CommandScheduleDowntimes(Command):
             ]
         return super().user_confirm_options(len_rows, cmdtag)
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         if self._adhoc_downtime_configured():
             self._render_adhoc_comment(what)
         self._render_comment()
@@ -2122,7 +2122,7 @@ class CommandRemoveDowntime(Command):
         return CommandGroupDowntimes
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["host", "service", "downtime"]
 
     # we only want to show the button and shortcut in the explicit downtime
@@ -2153,7 +2153,7 @@ class CommandRemoveDowntime(Command):
             self.deny_js_function,
         )
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.button("_remove_downtimes", _("Remove"))
 
     def _action(  # pylint: disable=too-many-arguments
@@ -2237,7 +2237,7 @@ class CommandRemoveComments(Command):
         return PermissionActionAddComment
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["comment"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
@@ -2253,7 +2253,7 @@ class CommandRemoveComments(Command):
             return HTML(_("Total comments: %d") % len_action_rows)
         return HTML(_("Author: %s") % row["comment_author"])
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_delete_comments", _("Delete"), cssclass="hot")
         html.button("_cancel", _("Cancel"))

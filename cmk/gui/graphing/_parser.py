@@ -140,14 +140,11 @@ class NotationFormatter:
         else:  # max_y >= 1
             atoms = self._compute_large_y_label_atoms(max_y)
 
-        if sorted_atoms_by_distance := sorted(
-            [(a, q) for a in atoms if (q := int(max_y // a))],
-            key=lambda t: abs(t[1] - mean_num_labels),
-        ):
-            atom, quotient = sorted_atoms_by_distance[0]
+        if possible_atoms := [(a, q) for a in atoms if (q := int(max_y // a))]:
+            atom, quotient = min(possible_atoms, key=lambda t: abs(t[1] - mean_num_labels))
         else:
-            atom = max_y / mean_num_labels
-            quotient = int(max_y / atom)
+            atom = int(max_y / mean_num_labels)
+            quotient = int(max_y // atom)
 
         first = self._preformat(atom)[0]
         return [

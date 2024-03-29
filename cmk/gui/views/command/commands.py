@@ -11,7 +11,6 @@ import livestatus
 
 import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
-from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
@@ -2095,39 +2094,6 @@ def time_interval_end(
     if time_value == "next_year":
         return time.mktime((now.tm_year, 12, 31, 23, 59, 59, 0, 0, now.tm_isdst)) + 1
     return None
-
-
-def time_interval_to_human_readable(next_time_interval, prefix):
-    """Generate schedule downtime text from next time interval information
-
-    Args:
-        next_time_interval:
-            string representing the next time interval. Can either be a periodic interval or the
-            duration value
-        prefix:
-            prefix for the downtime title
-
-    Examples:
-        >>> time_interval_to_human_readable("next_day", "schedule an immediate downtime")
-        '<b>schedule an immediate downtime until 24:00:00</b>?'
-        >>> time_interval_to_human_readable("next_year", "schedule an immediate downtime")
-        '<b>schedule an immediate downtime until end of year</b>?'
-
-    Returns:
-        string representing the schedule downtime title
-    """
-    downtime_titles = {
-        "next_day": _("<b>%s until 24:00:00</b>?"),
-        "next_week": _("<b>%s until sunday night</b>?"),
-        "next_month": _("<b>%s until end of month</b>?"),
-        "next_year": _("<b>%s until end of year</b>?"),
-    }
-    try:
-        title = downtime_titles[next_time_interval]
-    except KeyError:
-        duration = int(next_time_interval)
-        title = _("<b>%%s of %s length</b>?") % SecondsRenderer.detailed_str(duration)
-    return title % prefix
 
 
 class CommandRemoveDowntime(Command):

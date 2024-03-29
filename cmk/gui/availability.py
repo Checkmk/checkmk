@@ -75,7 +75,7 @@ from cmk.bi.lib import (
     NodeComputeResult,
     NodeResultBundle,
 )
-from cmk.bi.trees import BICompiledAggregation, BICompiledRule
+from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = Literal["host", "service", "bi"]
@@ -2345,7 +2345,6 @@ def _increment_month(tst: time.struct_time) -> time.struct_time:
 #   '----------------------------------------------------------------------'
 
 BIAggregationGroupTitle = str
-BIAggregationTree = dict[str, Any]
 BIAggregationTitle = str
 BITreeState = Any
 BITimelineEntry = Any
@@ -2414,7 +2413,7 @@ class TimelineContainer:
             "aggr_compiled_aggregation"
         ]
         self.aggr_compiled_branch: BICompiledRule = self._aggr_row["aggr_compiled_branch"]
-        self.aggr_tree: BIAggregationTree = self._aggr_row["aggr_tree"]
+        self.aggr_tree: CompiledAggrTree = self._aggr_row["aggr_tree"]
         self.aggr_group: BIAggregationGroupTitle = self._aggr_row["aggr_group"]
 
         # Data fetched from livestatus query
@@ -2725,7 +2724,7 @@ def _get_timewarp_state(node_compute_result_bundle, timeline_container):
 
 
 def create_bi_timeline_entry(
-    tree: BIAggregationTree,
+    tree: CompiledAggrTree,
     aggr_group: BIAggregationGroupTitle,
     from_time: AVTimeStamp,
     until_time: AVTimeStamp,

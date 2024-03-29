@@ -5,7 +5,7 @@
 
 import time
 from collections.abc import Sequence
-from typing import Any, Literal, Protocol
+from typing import Literal, Protocol
 
 import livestatus
 
@@ -38,6 +38,8 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.view_utils import render_cre_upgrade_button
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
+
+from cmk.bi.trees import CompiledAggrLeaf, CompiledAggrRule, CompiledAggrTree
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec
 from .group import CommandGroup, CommandGroupRegistry
@@ -1518,7 +1520,7 @@ class CommandScheduleDowntimes(Command):
         self._render_advanced_options(what)
         self._render_confirm_buttons(what)
 
-    def _render_adhoc_comment(self, what) -> None:  # type: ignore[no-untyped-def]
+    def _render_adhoc_comment(self, what: str) -> None:
         adhoc_duration = active_config.adhoc_downtime.get("duration")
         adhoc_comment = active_config.adhoc_downtime.get("comment", "")
         html.open_div(class_="group")
@@ -1668,7 +1670,7 @@ class CommandScheduleDowntimes(Command):
             f'cmk.utils.update_time("time__down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
         )
 
-    def _render_advanced_options(self, what) -> None:  # type: ignore[no-untyped-def]
+    def _render_advanced_options(self, what: str) -> None:
         html.open_div(class_="group")
         html.open_div(class_="down_advanced")
         with foldable_container(
@@ -1688,7 +1690,7 @@ class CommandScheduleDowntimes(Command):
         html.close_div()
         html.close_div()
 
-    def _render_confirm_buttons(self, what) -> None:  # type: ignore[no-untyped-def]
+    def _render_confirm_buttons(self, what: str) -> None:
         html.open_div(class_="group")
         tooltip_submission_disabled = _("Enter a comment to schedule downtime")
         open_submit_button_container_div(tooltip=tooltip_submission_disabled)
@@ -1780,7 +1782,7 @@ class CommandScheduleDowntimes(Command):
             downtime = DowntimeSchedule(start_time, end_time, mode, delayed_duration, comment)
             cmdtag, specs, len_action_rows = self._downtime_specs(cmdtag, row, action_rows, spec)
             if "aggr_tree" in row:  # BI mode
-                node = row["aggr_tree"]
+                node: CompiledAggrTree = row["aggr_tree"]
                 return (
                     _bi_commands(downtime, node),
                     self.confirm_dialog_options(
@@ -2032,7 +2034,7 @@ class CommandScheduleDowntimes(Command):
         return bool(active_config.adhoc_downtime and active_config.adhoc_downtime.get("duration"))
 
 
-def _bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]:
+def _bi_commands(downtime: DowntimeSchedule, node: CompiledAggrTree) -> Sequence[CommandSpec]:
     """Generate the list of downtime command strings for the BI module"""
     commands_aggr = []
     for site, host, service in _find_all_leaves(node):
@@ -2046,17 +2048,17 @@ def _bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]
     return commands_aggr
 
 
-def _find_all_leaves(  # type: ignore[no-untyped-def]
-    node,
+def _find_all_leaves(
+    node: CompiledAggrRule | CompiledAggrLeaf,
 ) -> list[tuple[livestatus.SiteId | None, HostName, ServiceName | None]]:
-    # leaf node
+    # From BICompiledLeaf (see also eval_result_node)
     if node["type"] == 1:
         site, host = node["host"]
         return [(livestatus.SiteId(site), host, node.get("service"))]
 
-    # rule node
+    # From BICompiledRule (see also eval_result_node)
     if node["type"] == 2:
-        entries: list[Any] = []
+        entries: list[tuple[livestatus.SiteId | None, HostName, ServiceName | None]] = []
         for n in node["nodes"]:
             entries += _find_all_leaves(n)
         return entries

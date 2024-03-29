@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple, NotRequired, Sequence, TypedDict
 
 from marshmallow import fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema
@@ -33,6 +33,7 @@ from cmk.bi.lib import (
     BIStates,
     CompiledNodeKind,
     create_nested_schema_for_class,
+    FrozenMarker,
     NodeComputeResult,
     NodeIdentifierInfo,
     NodeResultBundle,
@@ -50,6 +51,46 @@ from cmk.bi.node_vis import (
 from cmk.bi.rule_interface import BIRuleProperties
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import HostState
+
+
+class CompiledAggrRule(TypedDict):
+    type: Literal[2]
+    frozen_marker: FrozenMarker | None
+    title: str
+    docu_url: str
+    rule_id: str
+    reqhosts: Sequence[tuple[SiteId, HostName]]
+    nodes: list[CompiledAggrRule | CompiledAggrLeaf]
+    rule_layout_style: dict[str, Any]
+    icon: NotRequired[str]
+
+
+class CompiledAggrLeaf(TypedDict):
+    type: Literal[1]
+    frozen_marker: FrozenMarker | None
+    host: tuple[SiteId, HostName]
+    service: NotRequired[ServiceName]
+    reqhosts: Sequence[tuple[SiteId, HostName]]
+    title: str
+
+
+class CompiledAggrTree(TypedDict):
+    type: Literal[2]
+    frozen_marker: FrozenMarker | None
+    title: str
+    docu_url: str
+    rule_id: str
+    reqhosts: Sequence[tuple[SiteId, HostName]]
+    nodes: list[CompiledAggrRule | CompiledAggrLeaf]
+    rule_layout_style: dict[str, Any]
+    icon: NotRequired[str]
+    aggr_group_tree: list[str]
+    aggr_type: Literal["multi"]
+    aggregation_id: str
+    downtime_aggr_warn: bool
+    use_hard_states: bool
+    node_visualization: dict[str, Any]
+
 
 #   .--Leaf----------------------------------------------------------------.
 #   |                         _                __                          |
@@ -608,44 +649,64 @@ class BICompiledAggregation:
         response["tree"] = response["aggr_tree"]
         return response
 
-    def create_aggr_tree(self, bi_compiled_branch: BICompiledRule) -> dict:
-        response = self.eval_result_node(bi_compiled_branch)
-        response["aggr_group_tree"] = self.groups.names
-        response["aggr_group_tree"] += ["/".join(x) for x in self.groups.paths]
-        response["aggr_type"] = "multi"
-        response["aggregation_id"] = self.id
-        response["downtime_aggr_warn"] = self.computation_options.escalate_downtimes_as_warn
-        response["use_hard_states"] = self.computation_options.use_hard_states
-        response["node_visualization"] = self.aggregation_visualization
-        return response
+    def create_aggr_tree(self, bi_compiled_branch: BICompiledRule) -> CompiledAggrTree:
+        result = CompiledAggrTree(
+            {
+                "type": 2,
+                "frozen_marker": bi_compiled_branch.frozen_marker,
+                "title": bi_compiled_branch.properties.title,
+                "docu_url": bi_compiled_branch.properties.docu_url,
+                "rule_id": bi_compiled_branch.id,
+                "reqhosts": list(bi_compiled_branch.required_hosts),
+                "nodes": list(map(self.eval_result_node, bi_compiled_branch.nodes)),
+                "rule_layout_style": bi_compiled_branch.node_visualization,
+                "aggr_group_tree": self.groups.names + ["/".join(x) for x in self.groups.paths],
+                "aggr_type": "multi",
+                "aggregation_id": self.id,
+                "downtime_aggr_warn": self.computation_options.escalate_downtimes_as_warn,
+                "use_hard_states": self.computation_options.use_hard_states,
+                "node_visualization": self.aggregation_visualization,
+            }
+        )
+        if bi_compiled_branch.properties.icon:
+            result["icon"] = bi_compiled_branch.properties.icon
+        return result
 
-    def eval_result_node(self, node: ABCBICompiledNode) -> dict[str, Any]:
-        result: dict[str, Any] = {"frozen_marker": node.frozen_marker}
+    def eval_result_node(self, node: ABCBICompiledNode) -> CompiledAggrLeaf | CompiledAggrRule:
         if isinstance(node, BICompiledLeaf):
-            result["type"] = 1
-            result["host"] = (node.site_id, node.host_name)
-            if node.service_description:
-                result["service"] = node.service_description
-
-            result["reqhosts"] = list(node.required_hosts)
-            result["title"] = (
-                node.host_name
-                if node.service_description is None
-                else f"{node.host_name} - {node.service_description}"
+            leaf = CompiledAggrLeaf(
+                {
+                    "type": 1,
+                    "frozen_marker": node.frozen_marker,
+                    "host": (node.site_id, node.host_name),
+                    "reqhosts": list(node.required_hosts),
+                    "title": (
+                        node.host_name
+                        if node.service_description is None
+                        else f"{node.host_name} - {node.service_description}"
+                    ),
+                }
             )
-            return result
+            if node.service_description:
+                leaf["service"] = node.service_description
+            return leaf
 
         if isinstance(node, BICompiledRule):
-            result["type"] = 2
-            result["title"] = node.properties.title
-            result["docu_url"] = node.properties.docu_url
-            result["rule_id"] = node.id
-            result["reqhosts"] = list(node.required_hosts)
-            result["nodes"] = list(map(self.eval_result_node, node.nodes))
-            result["rule_layout_style"] = node.node_visualization
+            rule = CompiledAggrRule(
+                {
+                    "type": 2,
+                    "frozen_marker": node.frozen_marker,
+                    "title": node.properties.title,
+                    "docu_url": node.properties.docu_url,
+                    "rule_id": node.id,
+                    "reqhosts": list(node.required_hosts),
+                    "nodes": list(map(self.eval_result_node, node.nodes)),
+                    "rule_layout_style": node.node_visualization,
+                }
+            )
             if node.properties.icon:
-                result["icon"] = node.properties.icon
-            return result
+                rule["icon"] = node.properties.icon
+            return rule
 
         raise NotImplementedError("Unknown node type %r" % node)
 

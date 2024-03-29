@@ -36,12 +36,17 @@
 #         Dec  8 11:43:00.227: Standby to BecomingActive, active peer xxx has timed out, no arp reply from active in 250ms
 #         Mar 16 10:13:33.248: Active to RelinquishingActive
 
+from collections.abc import Mapping
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2 import StringTable
 
-def acme_sbc_parse_function(string_table):
+Section = tuple[Mapping[str, str], Mapping[str, str]]
+
+
+def acme_sbc_parse_function(string_table: StringTable) -> Section:
     states = {}
     settings = {}
     for line in string_table:

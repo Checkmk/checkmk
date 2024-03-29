@@ -7,8 +7,10 @@
 
 import functools
 import time
+from collections.abc import Callable, Mapping
+from typing import TypeVar
 
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import check_levels, CheckResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
     get_value_store,
@@ -32,20 +34,13 @@ _AZURE_METRIC_FMT = {
 }
 
 
-def get_data_or_go_stale(check_function):
-    """Variant of get_parsed_item_data that raises MKCounterWrapped
-    if data is not found.
-    """
+_Data = TypeVar("_Data")
 
-    @functools.wraps(check_function)
-    def wrapped_check_function(item, params, parsed):
-        if not isinstance(parsed, dict):
-            return 3, "Wrong usage of decorator: parsed is not a dict"
-        if item not in parsed or not parsed[item]:
-            raise IgnoreResultsError("Data not present at the moment")
-        return check_function(item, params, parsed[item])
 
-    return wrapped_check_function
+def get_data_or_go_stale(item: str, section: Mapping[str, _Data]) -> _Data:
+    if resource := section.get(item):
+        return resource
+    raise IgnoreResultsError("Data not present at the moment")
 
 
 def check_azure_metric(  # pylint: disable=too-many-locals

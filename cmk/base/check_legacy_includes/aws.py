@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import functools
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from typing import TypeVar
 
 from cmk.base.check_api import check_levels, CheckResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
@@ -210,22 +210,11 @@ def check_aws_metrics(
         raise IgnoreResultsError("Currently no data from AWS")
 
 
-def aws_get_parsed_item_data(check_function: Callable) -> Callable:
-    """
-    Modified version of get_parsed_item_data which lets services go stale instead of UNKN if the
-    item is not found.
-    """
+_Data = TypeVar("_Data")
 
-    @functools.wraps(check_function)
-    def wrapped_check_function(item, params, parsed):
-        if not isinstance(parsed, dict):
-            return (
-                3,
-                "Wrong usage of decorator function 'aws_get_parsed_item_data': parsed is "
-                "not a dict",
-            )
-        if item not in parsed:
-            raise IgnoreResultsError("Currently no data from AWS")
-        return check_function(item, params, parsed[item])
 
-    return wrapped_check_function
+def get_data_or_go_stale(item: str, section: Mapping[str, _Data]) -> _Data:
+    try:
+        return section[item]
+    except KeyError:
+        raise IgnoreResultsError("Currently no data from AWS")

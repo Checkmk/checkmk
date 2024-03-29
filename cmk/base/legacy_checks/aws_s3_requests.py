@@ -8,9 +8,9 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
-    aws_get_parsed_item_data,
     check_aws_http_errors,
     check_aws_metrics,
+    get_data_or_go_stale,
     inventory_aws_generic,
 )
 from cmk.base.config import check_info
@@ -54,8 +54,8 @@ def parse_aws_s3(string_table):
 #   '----------------------------------------------------------------------'
 
 
-@aws_get_parsed_item_data
-def check_aws_s3_requests(item, params, metrics):
+def check_aws_s3_requests(item, params, section):
+    metrics = get_data_or_go_stale(item, section)
     all_requests_rate = metrics.get("AllRequests")
     if all_requests_rate is None:
         raise IgnoreResultsError("Currently no data from AWS")
@@ -113,8 +113,8 @@ check_info["aws_s3_requests"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@aws_get_parsed_item_data
-def check_aws_s3_http_errors(item, params, metrics):
+def check_aws_s3_http_errors(item, params, section):
+    metrics = get_data_or_go_stale(item, section)
     return check_aws_http_errors(
         params.get("levels_load_balancers", params),
         metrics,
@@ -147,8 +147,8 @@ check_info["aws_s3_requests.http_errors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@aws_get_parsed_item_data
-def check_aws_s3_latency(item, params, metrics):
+def check_aws_s3_latency(item, params, section):
+    metrics = get_data_or_go_stale(item, section)
     metric_infos = []
     for key, title, perf_key in [
         ("TotalRequestLatency", "Total request latency", "aws_request_latency"),
@@ -201,8 +201,8 @@ check_info["aws_s3_requests.latency"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@aws_get_parsed_item_data
-def check_aws_s3_traffic_stats(item, params, metrics):
+def check_aws_s3_traffic_stats(item, params, section):
+    metrics = get_data_or_go_stale(item, section)
     return check_aws_metrics(
         [
             {
@@ -241,8 +241,8 @@ check_info["aws_s3_requests.traffic_stats"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@aws_get_parsed_item_data
-def check_aws_s3_select_object(item, params, metrics):
+def check_aws_s3_select_object(item, params, section):
+    metrics = get_data_or_go_stale(item, section)
     return check_aws_metrics(
         [
             {

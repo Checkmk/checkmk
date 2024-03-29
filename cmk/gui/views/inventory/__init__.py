@@ -253,7 +253,7 @@ class PainterInventoryTree(Painter):
 
 
 class ABCRowTable(RowTable):
-    def __init__(self, info_names, add_host_columns) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, info_names: Sequence[str], add_host_columns: Sequence[ColumnName]) -> None:
         super().__init__()
         self._info_names = info_names
         self._add_host_columns = add_host_columns
@@ -264,7 +264,7 @@ class ABCRowTable(RowTable):
         cells: Sequence[Cell],
         columns: Sequence[ColumnName],
         context: VisualContext,
-        headers: str,
+        _unused_headers: str,
         only_sites: OnlySites,
         limit: object,
         all_active_filters: Sequence[Filter],
@@ -272,11 +272,11 @@ class ABCRowTable(RowTable):
         self._add_declaration_errors()
 
         # Create livestatus filter for filtering out hosts
-        host_columns = (
-            ["host_name"]
-            + list({c for c in columns if c.startswith("host_") and c != "host_name"})
-            + self._add_host_columns
-        )
+        host_columns = [
+            "host_name",
+            *{c for c in columns if c.startswith("host_") and c != "host_name"},
+            *self._add_host_columns,
+        ]
 
         query = "GET hosts\n"
         query += "Columns: " + (" ".join(host_columns)) + "\n"
@@ -297,7 +297,7 @@ class ABCRowTable(RowTable):
         data = self._get_raw_data(only_sites, query)
 
         # Now create big table of all inventory entries of these hosts
-        headers = ["site"] + host_columns
+        headers = ["site", *host_columns]
         rows = []
         for row in data:
             hostrow: Row = dict(zip(headers, row))
@@ -2030,7 +2030,7 @@ class PainterInvhistChanged(Painter):
     def ident(self) -> str:
         return "invhist_changed"
 
-    def title(self, cell: Cell):  # type: ignore[no-untyped-def]
+    def title(self, cell: Cell) -> str:
         return _("Changed entries")
 
     def short_title(self, cell: Cell) -> str:

@@ -25,6 +25,7 @@ for path in [
     "/var/lib/dhcp/db/dhcpd.leases",
     "/var/lib/dhcp/dhcpd.leases",
     "/var/lib/dhcpd/dhcpd.leases",  # CentOS
+    "/var/dhcpd/var/db/dhcpd.leases", # OPNsense
 ]:
     if os.path.exists(path):
         leases_file = path
@@ -43,6 +44,10 @@ def get_pid():
         # workaround for bug in sysvinit-utils in debian buster
         # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926896
         cmd = "ps aux | grep -w [d]hcpd | awk {'printf (\"%s \", $2)'}"
+
+    if "freebsd" in platform.platform().lower():
+        # workaround for freebsd
+        cmd = "ps aux | grep -w \"[d]hcpd\" | awk '{print $2}'"
 
     # This produces a false warning in Bandit, claiming there was no failing test for this nosec.
     # The warning is a bug in Bandit: https://github.com/PyCQA/bandit/issues/942

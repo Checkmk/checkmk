@@ -95,16 +95,16 @@ class CentralSiteModel(SiteModel):
     replication: None
     timeout: int = Field(ge=0, default=10)
     proxy: _Proxy | None
-    secret: str = OMITTED_FIELD
 
 
 class RemoteSiteModel(SiteModel):
     alias: str = Field(min_length=1)
     socket: TCP4 | TCP6 | UNIX
     timeout: int = Field(ge=0, default=2)
-    status_host: tuple[str, str] | None
-    user_sync: USER_SYNC
+    status_host: tuple[str, str] | None = OMITTED_FIELD
+    user_sync: USER_SYNC | None = OMITTED_FIELD
     customer: str = OMITTED_FIELD
+    secret: str = OMITTED_FIELD
 
 
 def validate_sites(sites: dict) -> dict[SiteId, CentralSiteModel | RemoteSiteModel]:

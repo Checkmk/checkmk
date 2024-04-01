@@ -19,7 +19,7 @@ from typing import final, NewType
 
 import requests
 import urllib3
-from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
+from pydantic import BaseModel, ConfigDict, RootModel, ValidationError
 
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
@@ -65,13 +65,11 @@ HTTPResponse = tuple[Query, HTTPResult]
 
 
 @final
-class NoUsageConfig(BaseModel):
+class NoUsageConfig(BaseModel, frozen=True):
     pass
 
 
-class SessionConfig(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
+class SessionConfig(BaseModel, frozen=True):
     token: str
     usage_proxy: str
     usage_read_timeout: int
@@ -135,8 +133,10 @@ _AllConfigs = CollectorSessionConfig | PrometheusSessionConfig | NoUsageConfig
 
 
 def parse_session_config(arguments: argparse.Namespace) -> _AllConfigs:
-    adapter = TypeAdapter(_AllConfigs)
-    return adapter.validate_python(arguments.__dict__)  # type: ignore[arg-type, return-value]
+    class _Parser(RootModel[_AllConfigs]):
+        root: _AllConfigs
+
+    return _Parser.model_validate(arguments.__dict__).root
 
 
 def parse_api_session_config(arguments: argparse.Namespace) -> APISessionConfig:

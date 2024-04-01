@@ -15,7 +15,7 @@ import sys
 import time
 
 conf_file = None
-for path in ["/etc/dhcpd.conf", "/etc/dhcp/dhcpd.conf", "/usr/local/etc/dhcpd.conf"]:
+for path in ["/etc/dhcpd.conf", "/etc/dhcp/dhcpd.conf", "/var/dhcpd/etc/dhcpd.conf", "/usr/local/etc/dhcpd.conf"]:
     if os.path.exists(path):
         conf_file = path
         break
@@ -25,7 +25,7 @@ for path in [
     "/var/lib/dhcp/db/dhcpd.leases",
     "/var/lib/dhcp/dhcpd.leases",
     "/var/lib/dhcpd/dhcpd.leases",  # CentOS
-    "/var/dhcpd/var/db/dhcpd.leases", # OPNsense
+    "/var/dhcpd/var/db/dhcpd.leases",  # OPNsense
 ]:
     if os.path.exists(path):
         leases_file = path

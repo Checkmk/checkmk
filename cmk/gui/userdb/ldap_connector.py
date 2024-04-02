@@ -176,7 +176,7 @@ def _get_ad_locator():
     import six
     from activedirectory.protocol.netlogon import Client as NetlogonClient  # type: ignore[import]
 
-    class FasterDetectLocator(activedirectory.Locator):
+    class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc]
         def _detect_site(self, domain):
             """Detect our site using the netlogon protocol.
             This modified function only changes the number of parallel queried servers from 3 to 60

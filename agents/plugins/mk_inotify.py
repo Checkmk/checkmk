@@ -237,7 +237,7 @@ map_events = {
 }
 
 
-class NotifyEventHandler(pyinotify.ProcessEvent):
+class NotifyEventHandler(pyinotify.ProcessEvent):  # type: ignore[misc]
     def process_IN_MOVED_TO(self, event):
         do_output("movedto", event)
 

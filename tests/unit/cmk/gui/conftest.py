@@ -299,7 +299,7 @@ def with_automation_user(request_context: None, load_config: None) -> Iterator[t
         yield user
 
 
-class WebTestAppForCMK(webtest.TestApp):
+class WebTestAppForCMK(webtest.TestApp):  # type: ignore[misc]
     """A webtest.TestApp class with helper functions for automation user APIs"""
 
     def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]

@@ -37,7 +37,7 @@ VarBinds = Iterable[VarBind]
 
 class SNMPTrapParser:
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
-    class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
+    class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):  # type: ignore[misc]
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
     def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:

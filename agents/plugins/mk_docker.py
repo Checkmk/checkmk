@@ -262,7 +262,7 @@ class ParallelDfCall:
             return json.loads(file_.read())
 
 
-class MKDockerClient(docker.DockerClient):
+class MKDockerClient(docker.DockerClient):  # type: ignore[misc]
     """a docker.DockerClient that caches containers and node info"""
 
     API_VERSION = "auto"

@@ -70,7 +70,7 @@ def register(mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditTimeperiod)
 
 
-class ICalEvent(Event):
+class ICalEvent(Event):  # type: ignore[misc]
     def __init__(self, event: Event):
         super().__init__(**event)
         self.time_ranges: list[tuple[str, str]] = []

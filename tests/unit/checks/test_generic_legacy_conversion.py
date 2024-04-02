@@ -720,8 +720,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "hitachi_hnas_quorumdevice",
         "hitachi_hnas_temp",
         "hitachi_hnas_vnode",
-        "hitachi_hus_dkc",
-        "hitachi_hus_dku",
         "hitachi_hus_status",
         "hivemanager_devices",
         "hivemanager_ng_devices",

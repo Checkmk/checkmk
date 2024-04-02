@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from functools import partial
 from typing import TypeVar
 
@@ -2238,3 +2238,330 @@ def test_level_conversion(
     legacy_levels: legacy_valuespecs.Dictionary,
 ) -> None:
     _compare_specs(_convert_to_legacy_levels(api_levels, _), legacy_levels)
+
+
+@pytest.mark.parametrize(
+    ["input_elements", "consumer_model", "form_model"],
+    [
+        pytest.param(
+            {
+                "a": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+                "b": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+                "c": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                ),
+            },
+            {"a": 1, "b": 2, "c": 3},
+            {"DictGroup(title=Title('Group title'), help_text=None)": {"a": 1, "b": 2}, "c": 3},
+            id="some elements grouped, some not",
+        ),
+        pytest.param(
+            {
+                "a": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+                "b": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(
+                        title=api_v1.Title("Group title"), help_text=api_v1.Help("Help text")
+                    ),
+                ),
+            },
+            {"a": 1, "b": 2},
+            {
+                "DictGroup(title=Title('Group title'), help_text=None)": {"a": 1},
+                "DictGroup(title=Title('Group title'), help_text=Help('Help text'))": {"b": 2},
+            },
+            id="different groups",
+        ),
+        pytest.param(
+            {
+                "a": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Integer(),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+                "b": api_v1.form_specs.DictElement(
+                    parameter_form=api_v1.form_specs.Dictionary(
+                        elements={
+                            "a_nested": api_v1.form_specs.DictElement(
+                                parameter_form=api_v1.form_specs.Integer(),
+                                group=api_v1.form_specs.DictGroup(
+                                    title=api_v1.Title("Nested group title")
+                                ),
+                            ),
+                            "b_nested": api_v1.form_specs.DictElement(
+                                parameter_form=api_v1.form_specs.Integer(),
+                                group=api_v1.form_specs.DictGroup(
+                                    title=api_v1.Title("Nested group title")
+                                ),
+                            ),
+                            "c_nested": api_v1.form_specs.DictElement(
+                                parameter_form=api_v1.form_specs.Integer(),
+                            ),
+                        }
+                    ),
+                    group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+                ),
+            },
+            {"a": 1, "b": {"a_nested": 2, "b_nested": 3, "c_nested": 4}},
+            {
+                "DictGroup(title=Title('Group title'), help_text=None)": {
+                    "a": 1,
+                    "b": {
+                        "DictGroup(title=Title('Nested group title'), help_text=None)": {
+                            "a_nested": 2,
+                            "b_nested": 3,
+                        },
+                        "c_nested": 4,
+                    },
+                },
+            },
+            id="groups in nested dictionary",
+        ),
+    ],
+)
+def test_dictionary_groups_datamodel_transformation(
+    input_elements: Mapping[str, api_v1.form_specs.DictElement],
+    consumer_model: Mapping[str, object],
+    form_model: Mapping[str, object],
+) -> None:
+    to_convert = api_v1.form_specs.Dictionary(elements=input_elements)
+
+    converted = _convert_to_legacy_valuespec(to_convert, _)
+    assert isinstance(converted, legacy_valuespecs.Transform)
+
+    assert converted.to_valuespec(consumer_model) == form_model
+    assert converted.from_valuespec(form_model) == consumer_model
+
+
+@pytest.mark.parametrize(
+    ["to_convert", "expected"],
+    [
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(parameter_form=api_v1.form_specs.Integer()),
+                    "b": api_v1.form_specs.DictElement(parameter_form=api_v1.form_specs.Integer()),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        ("a", legacy_valuespecs.Integer()),
+                        ("b", legacy_valuespecs.Integer()),
+                    ]
+                )
+            ),
+            id="no groups/dictelement props",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'), help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABC'), help_text=None)"],
+                ),
+            ),
+            id="no dictelement props",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        required=False,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        required=True,
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'), help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                required_keys=["b"],
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABC'), help_text=None)"],
+                ),
+            ),
+            id="some required dictelements/vertical rendering",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        required=True,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        required=True,
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'), help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                required_keys=["a", "b"],
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABC'), help_text=None)"],
+                ),
+            ),
+            id="all required dictelements",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        render_only=True,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'), help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                hidden_keys=["a"],
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABC'), help_text=None)"],
+                ),
+            ),
+            id="render_only dictelements",
+        ),
+    ],
+)
+def test_dictionary_groups_dict_element_properties(
+    to_convert: api_v1.form_specs.Dictionary, expected: legacy_valuespecs.Dictionary
+) -> None:
+    _compare_specs(_convert_to_legacy_valuespec(to_convert, _), expected)
+
+
+@pytest.mark.parametrize(
+    ["to_convert", "value_to_migrate", "expected"],
+    [
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "a_nested": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Integer(), required=True
+                                ),
+                            }
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+                migrate=lambda x: {"a": {"a_nested": x["a"]["a_nested"] * 2}, "b": x["b"] * 2},  # type: ignore[index]
+            ),
+            {"a": {"a_nested": 1}, "b": 2},
+            {"a": {"a_nested": 2}, "b": 4},
+            id="outermost migration",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "a_nested": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Integer(
+                                        migrate=lambda x: x * 2  # type: ignore[operator]
+                                    ),
+                                    required=True,
+                                )
+                            }
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+            ),
+            {"a": {"a_nested": 1}, "b": 2},
+            {"a": {"a_nested": 2}, "b": 2},
+            id="migration in group",
+        ),
+    ],
+)
+def test_dictionary_groups_migrate(
+    to_convert: api_v1.form_specs.Dictionary, value_to_migrate: object, expected: object
+) -> None:
+    converted = _convert_to_legacy_valuespec(to_convert, _)
+    assert converted.transform_value(value_to_migrate) == expected

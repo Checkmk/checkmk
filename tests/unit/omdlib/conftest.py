@@ -9,7 +9,6 @@ import pytest
 from pytest import MonkeyPatch
 
 import omdlib
-from omdlib.contexts import SiteContext
 from omdlib.version_info import VersionInfo
 
 
@@ -21,15 +20,3 @@ def omd_base_path(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
 @pytest.fixture()
 def version_info() -> VersionInfo:
     return VersionInfo(omdlib.__version__)
-
-
-@pytest.fixture()
-def site_context(tmp_path: Path, monkeypatch: MonkeyPatch) -> SiteContext:
-    monkeypatch.setattr(SiteContext, "dir", property(lambda s: f"{tmp_path}/omd/sites/{s.name}"))
-    monkeypatch.setattr(
-        SiteContext,
-        "real_dir",
-        property(lambda s: f"{tmp_path}/opt/omd/sites/{s.name}"),
-    )
-
-    return SiteContext("unit")

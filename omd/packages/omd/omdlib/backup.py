@@ -15,6 +15,7 @@ import sys
 import tarfile
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from types import TracebackType
 from typing import BinaryIO
 
 from omdlib.contexts import SiteContext
@@ -209,7 +210,12 @@ class RRDSocket(contextlib.AbstractContextManager):
         ):
             raise Exception(f"Error while processing rrdcached command ({cmd}): {msg}")
 
-    def __exit__(self, exc_type: object, exc_value: object, exc_tb: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         self._resume_all_rrds()
         if self._sock is not None:
             self._sock.close()

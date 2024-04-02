@@ -15,7 +15,7 @@ import time
 from collections.abc import Collection, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, TracebackType
 from typing import Any, Final
 
 import pytest
@@ -197,7 +197,12 @@ class WatchLog:
 
         return self
 
-    def __exit__(self, *_exc_info: object) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         if self._tail_process is not None:
             for c in Process(self._tail_process.pid).children(recursive=True):
                 if c.name() == "tail":

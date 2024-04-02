@@ -16,6 +16,7 @@ from collections.abc import Generator, Iterable, MutableSequence
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
+from types import TracebackType
 from typing import NamedTuple
 from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urlsplit, urlunsplit
 
@@ -52,7 +53,12 @@ class Progress:
         self.done_total = 0
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore[no-untyped-def]
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         logger.info(
             "%d done in %.3f secs %s",
             self.done_total,
@@ -466,7 +472,7 @@ class Crawler:
             else:
                 self.handle_new_reference(url, referer_url=referer_url)
 
-    def check_logs(self, url: Url, logs: Iterable[str]):  # type: ignore[no-untyped-def]
+    def check_logs(self, url: Url, logs: Iterable[str]) -> None:
         accepted_logs = [
             "Missing object for SimpleBar initiation.",
         ]

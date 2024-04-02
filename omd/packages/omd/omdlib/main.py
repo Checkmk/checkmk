@@ -1911,7 +1911,7 @@ def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
 
 def main_help(
     version_info: VersionInfo,
-    site: AbstractSiteContext,
+    _site: object,
     global_opts: GlobalOptions | None = None,
     args: Arguments | None = None,
     options: CommandOptions | None = None,
@@ -2016,7 +2016,7 @@ def use_update_alternatives() -> bool:
 
 def main_version(
     version_info: VersionInfo,
-    site: AbstractSiteContext,
+    _site: object,
     global_opts: GlobalOptions,
     args: Arguments,
     options: CommandOptions,

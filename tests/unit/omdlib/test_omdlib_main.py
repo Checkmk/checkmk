@@ -67,25 +67,20 @@ def test_hostname() -> None:
     assert omdlib.main.hostname() == os.popen("hostname").read().strip()
 
 
-def test_main_help(
-    site_context: SiteContext, capsys: pytest.CaptureFixture[str], version_info: VersionInfo
-) -> None:
-    omdlib.main.main_help(version_info, site_context)
+def test_main_help(capsys: pytest.CaptureFixture[str], version_info: VersionInfo) -> None:
+    omdlib.main.main_help(version_info, object())
     stdout = capsys.readouterr()[0]
     assert "omd COMMAND -h" in stdout
 
 
 def test_main_version_of_current_site(
-    site_context: SiteContext,
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
     version_info: VersionInfo,
 ) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
     global_opts = omdlib.main.default_global_options()
-    args: omdlib.main.Arguments = []
-    options: CommandOptions = {}
-    omdlib.main.main_version(version_info, site_context, global_opts, args, options)
+    omdlib.main.main_version(version_info, object(), global_opts, [], {})
 
     stdout = capsys.readouterr()[0]
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"

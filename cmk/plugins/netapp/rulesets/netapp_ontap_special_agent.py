@@ -8,6 +8,7 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
     Dictionary,
+    migrate_to_password,
     MultipleChoice,
     MultipleChoiceElement,
     Password,
@@ -46,6 +47,7 @@ def _formspec_netapp_ontap() -> Dictionary:
                     custom_validate=[
                         LengthInRange(min_value=1),
                     ],
+                    migrate=migrate_to_password,
                 ),
                 required=True,
             ),

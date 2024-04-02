@@ -22,7 +22,6 @@ TEMP_CONTEXT_DIR=$(mktemp -d)
 trap 'rm -rf "${TEMP_CONTEXT_DIR}"' EXIT
 IIDFILE="${TEMP_CONTEXT_DIR}/iidfile.txt"
 
-"${CHECKOUT_ROOT}/defines/dev-images/populate-build-context.sh" "${TEMP_CONTEXT_DIR}"
 if [ -n "${VERBOSE}" ]; then
     echo >&2 "Create reference image"
     echo >&2 " - REFERENCE_IMAGE_DISTRO:.... '${REFERENCE_IMAGE_DISTRO}'"
@@ -32,7 +31,9 @@ if [ -n "${VERBOSE}" ]; then
     echo >&2 " - build image based on image: '${BASE_BUILD_IMAGE}'"
 fi
 
-docker build \
+"${CHECKOUT_ROOT}/defines/dev-images/populate-build-context.sh" "${TEMP_CONTEXT_DIR}"
+"${CHECKOUT_ROOT}/scripts/decent-output" 2 \
+    docker build \
     --iidfile "${IIDFILE}" \
     --build-arg BASE_BUILD_IMAGE="${BASE_BUILD_IMAGE}" \
     --build-context scripts="${CHECKOUT_ROOT}/buildscripts/infrastructure/build-nodes/scripts" \

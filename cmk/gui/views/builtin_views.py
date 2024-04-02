@@ -5615,7 +5615,12 @@ builtin_views["it_efficiency_servers_cpumem_nutanix"] = {
     "topic": "it_efficiency",
     "description": _l("Measure the CPU and Memory efficiency of your Nutanix servers\n"),
     "datasource": "hosts",
-    "context": {},
+    "context": {
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/nutanix/object:control_plane"],
+            object_type="host",
+        )
+    },
     "painters": [
         ColumnSpec(
             name="host",

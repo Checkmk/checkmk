@@ -56,6 +56,7 @@ HACK_CHECKS = {
     "smtp": True,
     "sql": True,
     "ssh": False,  # has no secret
+    "tcp": False,  # has no secret
     "traceroute": False,  # has no secret
     "uniserv": False,  # has no secret
 }

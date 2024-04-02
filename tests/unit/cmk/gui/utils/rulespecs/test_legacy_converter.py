@@ -2565,3 +2565,70 @@ def test_dictionary_groups_migrate(
 ) -> None:
     converted = _convert_to_legacy_valuespec(to_convert, _)
     assert converted.transform_value(value_to_migrate) == expected
+
+
+@pytest.mark.parametrize(
+    ["to_convert", "value_to_validate"],
+    [
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "a_nested": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Integer(), required=True
+                                ),
+                            }
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "c": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+                custom_validate=(api_v1.form_specs.validators.LengthInRange(max_value=2),),
+            ),
+            {"a": {"a_nested": 1}, "b": 2, "c": 3},
+            id="outermost validation",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Dictionary(
+                            elements={
+                                "a_nested": api_v1.form_specs.DictElement(
+                                    parameter_form=api_v1.form_specs.Integer(
+                                        custom_validate=(
+                                            api_v1.form_specs.validators.NumberInRange(min_value=1),
+                                        )
+                                    ),
+                                    required=True,
+                                )
+                            },
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+            ),
+            {"a": {"a_nested": 0}, "b": 2},
+            id="validation in group",
+        ),
+    ],
+)
+def test_dictionary_groups_validate(
+    to_convert: api_v1.form_specs.Dictionary, value_to_validate: object
+) -> None:
+    converted = _convert_to_legacy_valuespec(to_convert, _)
+    with pytest.raises(MKUserError):
+        converted.validate_value(value_to_validate, "")

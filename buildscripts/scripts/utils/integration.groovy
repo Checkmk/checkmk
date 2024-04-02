@@ -22,7 +22,7 @@ def run_make_targets(Map args) {
     def download_dir = "downloaded_packages_for_integration_tests";
     // TODO: this should be done by the top level scripts
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside(
+        docker_reference_image().inside(
             "--group-add=${args.DOCKER_GROUP_ID} \
             --ulimit nofile=1024:1024 \
             --env HOME=/home/jenkins \

@@ -6,7 +6,7 @@ def main() {
     dir("${checkout_dir}") {
         stage("Update") {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                docker_image_from_alias("IMAGE_TESTING").inside() {
+                docker_reference_image().inside() {
                     sh("make -C doc/documentation htmlhelp");
                 }
             }

@@ -8,7 +8,7 @@ def main() {
     def relative_result_path = "results/junit-resilience.xml"
     def result_path = "${checkout_dir}/${relative_result_path}";
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+        docker_reference_image().inside(docker_args) {
             stage('run test-unit-resilience') {
                 dir("${checkout_dir}") {
                     try {

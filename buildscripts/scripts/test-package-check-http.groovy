@@ -4,7 +4,7 @@
 
 def main() {
     dir("${checkout_dir}") {
-        docker_image_from_alias("IMAGE_TESTING").inside() {
+        docker_reference_image().inside() {
             stage('Test Package check-http') {
                 sh("packages/check-http/run --setup-environment --clean --all --features=reqwest/native-tls-vendored");
             }

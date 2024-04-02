@@ -45,10 +45,10 @@ def main() {
         """.stripMargin());
 
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside(
+        docker_reference_image().inside(
             "${docker_args} --group-add=${docker_group_id} -v /var/run/docker.sock:/var/run/docker.sock") {
             // TODO: check why this doesn't work
-            // docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+            // docker_reference_image().inside(docker_args) {
 
             dir("${checkout_dir}") {
                 sh("""

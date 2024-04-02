@@ -65,7 +65,7 @@ def main() {
     shout("build image");
 
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
+        docker_reference_image().inside("${docker_args}") {
             withCredentials([
                 usernamePassword(
                     credentialsId: registry_credentials_id(EDITION),

@@ -82,7 +82,7 @@ def main() {
 
     stage("Send mails") {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
+            docker_reference_image().inside("${docker_args}") {
                 withCredentials([
                     sshUserPrivateKey(credentialsId: "ssh-git-gerrit-jenkins", keyFileVariable: 'keyfile', usernameVariable: 'user')
                 ]) {

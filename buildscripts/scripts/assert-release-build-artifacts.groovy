@@ -7,7 +7,8 @@ def main() {
         check_job_parameters([
             "VERSION_TO_CHECK",
         ])
-        docker_image_from_alias("IMAGE_TESTING").inside("-v \$HOME/.cmk-credentials:\$HOME/.cmk-credentials -v /var/run/docker.sock:/var/run/docker.sock --group-add=${get_docker_group_id()}") {
+        docker_reference_image().inside(
+                "-v \$HOME/.cmk-credentials:\$HOME/.cmk-credentials -v /var/run/docker.sock:/var/run/docker.sock --group-add=${get_docker_group_id()}") {
             withEnv(["PYTHONUNBUFFERED=1"]) {
                 dir("${checkout_dir}") {
                     sh(script: """scripts/run-pipenv run \

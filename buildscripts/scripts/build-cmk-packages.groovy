@@ -117,7 +117,7 @@ def main() {
     if (params.DEPLOY_TO_WEBSITE_ONLY) {
         // This stage is used only by bauwelt/bw-release in order to publish an already built release
         stage('Deploying previously build version to website only') {
-            docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+            docker_reference_image().inside(docker_args) {
                 artifacts_helper.deploy_to_website(cmk_version_rc_aware);
                 artifacts_helper.cleanup_rc_candidates_of_version(cmk_version_rc_aware);
             }
@@ -130,7 +130,7 @@ def main() {
         cleanup_directory("${WORKSPACE}/versions");
         cleanup_directory("${WORKSPACE}/agents");
         sh("rm -rf ${WORKSPACE}/${bazel_log_prefix}*");
-        docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+        docker_reference_image().inside(docker_args) {
             dir("${checkout_dir}") {
                 sh("make buildclean");
                 versioning.configure_checkout_folder(EDITION, cmk_version);
@@ -181,7 +181,7 @@ def main() {
                         /// must take place in $WORKSPACE since we need to
                         /// access $WORKSPACE/agents
                         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                            docker_image_from_alias("IMAGE_TESTING").inside(
+                            docker_reference_image().inside(
                                 "${docker_args} --group-add=${docker_group_id} -v /var/run/docker.sock:/var/run/docker.sock") {
                                 build_linux_agent_updater(agent, EDITION, branch_version, docker_registry_no_http);
                             }
@@ -202,7 +202,7 @@ def main() {
     }
 
     shout("create_source_package");
-    docker_image_from_alias("IMAGE_TESTING").inside("${mount_reference_repo_dir} --ulimit nofile=2048:2048") {
+    docker_reference_image().inside("${mount_reference_repo_dir} --ulimit nofile=2048:2048") {
         // TODO creates stages
         create_source_package(WORKSPACE, checkout_dir, cmk_version);
 
@@ -311,7 +311,7 @@ def main() {
                     }
                 }
 
-                docker_image_from_alias("IMAGE_TESTING").inside(
+                docker_reference_image().inside(
                         "${docker_args} -v ${checkout_dir}:${checkout_dir}:ro") {
                     def package_name = get_package_name(distro_dir, distro_package_type(distro), EDITION, cmk_version);
                     def build_package_path = "${distro_dir}/${package_name}";
@@ -356,7 +356,7 @@ def main() {
                 |""".stripMargin());
         def exclude_pattern = versioning.get_internal_artifacts_pattern();
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
+            docker_reference_image().inside("${docker_args} ${mount_reference_repo_dir}") {
                 assert_no_dirty_files(checkout_dir);
                 artifacts_helper.download_version_dir(
                     upload_path,
@@ -610,7 +610,7 @@ def build_package(package_type, build_dir, env) {
     dir(build_dir) {
         // TODO: THIS MUST GO AWAY ASAP
         // Backgroud:
-        // * currently we're building protobuf during source packaging (make dist) in IMAGE_TESTING.
+        // * currently we're building protobuf during source packaging (make dist) in reference container.
         // * then, we're simply rsyncing the whole workspace in the different distro workspaces (including the protoc)
         // * as protobuf exists then in the intermediate_install, it will be used (and not obtained from a correct
         //   cache key, including DISTRO information...)

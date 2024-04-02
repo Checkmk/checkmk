@@ -56,7 +56,7 @@ def main() {
             sh("""
                 rm -rf temp-build-context
                 mkdir temp-build-context
-                defines/populate-build-context.sh temp-build-context
+                defines/dev-images/populate-build-context.sh temp-build-context
             """);
         }
     }
@@ -132,6 +132,19 @@ def main() {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    /// build and use reference image in order to check if it's working at all
+    /// and to fill caches
+    stage("Use reference image") {
+        show_duration("check reference image") {
+            docker_reference_image().inside() {
+                sh("""
+                    echo Hello from reference image
+                    cat /etc/os-release
+                """);
             }
         }
     }

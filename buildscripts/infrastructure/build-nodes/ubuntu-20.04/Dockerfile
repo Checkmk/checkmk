@@ -16,14 +16,11 @@ RUN apt-get update \
     dialog \
     git \
     graphviz \
-    libenchant1c2a \
     librrd-dev \
     libsasl2-dev \
     libxml2 \
     make \
     nullmailer \
-    php7.4-common \
-    python-dev \
     python3-pip \
     rrdtool \
     strace \
@@ -39,16 +36,13 @@ RUN apt-get update \
     build-essential \
     bison \
     curl \
-    default-jdk \
     devscripts \
     dnsutils \
-    dpatch \
     flex \
     gawk \
     gettext \
     git-buildpackage \
     gtk-doc-tools \
-    golang-go \
     iputils-ping \
     joe \
     libc6-dbg \
@@ -76,7 +70,6 @@ RUN apt-get update \
     libtool \
     libxml2-dev \
     libxmlsec1-dev \
-    msitools \
     openssh-client \
     patch \
     rpcbind \
@@ -86,7 +79,6 @@ RUN apt-get update \
     texinfo \
     tk-dev \
     uuid-dev \
-    upx-ucl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building in seperate container
@@ -178,33 +170,7 @@ RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
 RUN /opt/install-bazel.sh link-only
-
-# Exclusively for this distro at the moment, because it is used by several CI
-# jobs for special tasks (checking out git, "make dist", orchestrating other
-# containers, ...). Scripts should be usable with other Ubuntu versions.
-COPY --from=scripts install-docker.sh /opt/
-RUN /opt/install-docker.sh
-
-COPY --from=scripts install-make-dist-deps.sh /opt/
-RUN /opt/install-make-dist-deps.sh
-
-COPY --from=scripts install-nodejs.sh /opt/
-RUN /opt/install-nodejs.sh
-
-COPY --from=scripts \
-    install-clang.sh \
-    install-iwyu.sh \
-    /opt/
-
-RUN /opt/install-clang.sh
-
-COPY --from=scripts install-shellcheck.sh /opt/
-RUN /opt/install-shellcheck.sh
-
 RUN /opt/install-rust-cargo.sh link-only
-
-COPY --from=scripts  install-musl-tools.sh /opt/
-RUN /opt/install-musl-tools.sh
 
 # Install non cached dependencies
 COPY --from=scripts install-pipenv.sh /opt/
@@ -213,25 +179,9 @@ RUN /opt/install-pipenv.sh
 COPY --from=omd_distros "${DISTRO_MK_FILE}" /opt/
 COPY --from=scripts install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh
-# Set symlinks again in order to fix /usr/bin/as
-# which might break during install-cmk-dependencies.sh.
-# More context is in /opt/install-gnu-toolchain.sh.
-RUN /opt/install-gnu-toolchain.sh link-only
 
 COPY --from=scripts install-patchelf.sh /opt/
 RUN /opt/install-patchelf.sh
-
-COPY --from=scripts install-packer.sh /opt/
-RUN /opt/install-packer.sh
-
-COPY --from=scripts install-aws-cli.sh /opt/
-RUN /opt/install-aws-cli.sh
-
-COPY --from=scripts install-buildifier.sh /opt/
-RUN /opt/install-buildifier.sh
-
-# save a massive 108kB of space
-RUN rm /opt/*.sh /opt/strip_binaries /opt/*.mk
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

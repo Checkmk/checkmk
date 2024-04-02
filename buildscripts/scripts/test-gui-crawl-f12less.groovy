@@ -63,7 +63,7 @@ def main() {
 
     stage("Prepare workspace") {
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            docker_image_from_alias("IMAGE_TESTING").inside(
+            docker_reference_image().inside(
                 "--group-add=${get_docker_group_id()} \
                 --ulimit nofile=1024:1024 \
                 --env HOME=/home/jenkins \

@@ -29,7 +29,7 @@ def main() {
 
     stage("Compile werks") {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
+            docker_reference_image().inside("${docker_args}") {
                 dir("${checkout_dir}") {
                     /* groovylint-disable LineLength */
                     sh("""
@@ -59,7 +59,7 @@ def main() {
 
     stage("Validate HTML") {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
+            docker_reference_image().inside("${docker_args}") {
                 dir("${checkout_dir}") {
                     try {
                         /* groovylint-disable LineLength */

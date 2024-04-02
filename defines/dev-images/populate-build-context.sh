@@ -6,7 +6,7 @@
 
 set -e
 
-REPO_ROOT="$(cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null 2>&1 && pwd)"
+REPO_ROOT="$(cd "$(dirname "$(dirname "$(dirname "${BASH_SOURCE[0]}")")")" >/dev/null 2>&1 && pwd)"
 
 cp \
     "${REPO_ROOT}/defines.make" \

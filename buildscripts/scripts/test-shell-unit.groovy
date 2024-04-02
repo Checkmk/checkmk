@@ -6,7 +6,7 @@ def main() {
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside("--ulimit nofile=1024:1024 --init") {
+        docker_reference_image().inside("--ulimit nofile=1024:1024 --init") {
             dir("${checkout_dir}") {
                 test_jenkins_helper.execute_test([
                     name: "test-shell-unit",

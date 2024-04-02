@@ -59,7 +59,7 @@ def main() {
 
     // Build Phase
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside() {
+        docker_reference_image().inside() {
             smart_stage(
                 name: 'Packer init',
                 condition: build_cloud_images,
@@ -79,7 +79,7 @@ def main() {
 
     // Publish Phase
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside() {
+        docker_reference_image().inside() {
             dir("${checkout_dir}") {
                 // As we're using the same .venv for multiple cloud targets in parallel, we need to make sure the
                 // .venv is up-to-date before parallelisation. Otherwise one process may fail due to a invalid .venv.

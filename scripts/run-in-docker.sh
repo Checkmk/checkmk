@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# The test image is selected automatically, but can still be set via
-# environment. e.g. for master:
-# export IMAGE_ID="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
+# Runs attached command in a Docker container.
+# By default the 'reference image' will be used to create the container, but this
+# behavior can be customized using either @IMAGE_ALIAS or @IMAGE_ID as follows:
+#   run-in-docker.sh <CMD>                                     will use reference image
+#   IMAGE_ALIAS=IMAGE_CENTOS_8 run-in-docker.sh <CMD>          will use dereferenced image alias IMAGE_CENTOS_8
+#   IMAGE_ID=ubuntu-20.04:2.3.0-latest run-in-docker.sh <CMD>  will use provided image id directly
 
 set -e
 
@@ -16,8 +19,8 @@ GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
 CMD="${*:-bash}"
 
-# Make the registry login available within the container, e.g. for agent plugin unit tests which are pulling
-# images from the registry within IMAGE_TESTING
+# Make the registry login available within the container, e.g. for agent plugin unit tests
+# which are pulling images from the registry within sandbox containers
 DOCKER_CONF_PATH="${HOME}/.docker"
 mkdir -p "${DOCKER_CONF_PATH}"
 
@@ -73,9 +76,14 @@ else
     DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${CHECKOUT_ROOT}/build_user_home/.docker"
 fi
 
-: "${IMAGE_ALIAS:=IMAGE_TESTING}"
-"${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}" --check
-: "${IMAGE_ID:="$("${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
+: "${IMAGE_ID:="$(
+    if [ -n "${IMAGE_ALIAS}" ]; then
+        "${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}"
+    else
+        "$CHECKOUT_ROOT"/defines/dev-images/reference-image-id
+    fi
+)"}"
+
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 
 if [ -t 0 ]; then

@@ -4,7 +4,7 @@
 
 def main() {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside('--ulimit nofile=1024:1024 --init') {
+        docker_reference_image().inside('--ulimit nofile=1024:1024 --init') {
             try {
                 stage('run Bandit') {
                     dir("${checkout_dir}") {

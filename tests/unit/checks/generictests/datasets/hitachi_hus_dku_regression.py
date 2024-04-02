@@ -18,11 +18,10 @@ checks = {
             "210221",
             {},
             [
-                (
-                    0,
-                    "OK: Power Supply: no error, Fan: no error, Environment: no error, Drive: no error",
-                    [],
-                )
+                (0, "Power Supply: no error", []),
+                (0, "Fan: no error", []),
+                (0, "Environment: no error", []),
+                (0, "Drive: no error", []),
             ],
         )
     ]

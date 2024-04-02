@@ -18,11 +18,14 @@ checks = {
             "210221",
             {},
             [
-                (
-                    0,
-                    "OK: Processor: no error, Internal Bus: no error, Cache: no error, Shared Memory: no error, Power Supply: no error, Battery: no error, Fan: no error, Environment: no error",
-                    [],
-                )
+                (0, "Processor: no error", []),
+                (0, "Internal Bus: no error", []),
+                (0, "Cache: no error", []),
+                (0, "Shared Memory: no error", []),
+                (0, "Power Supply: no error", []),
+                (0, "Battery: no error", []),
+                (0, "Fan: no error", []),
+                (0, "Environment: no error", []),
             ],
         )
     ]

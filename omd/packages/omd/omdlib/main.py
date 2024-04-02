@@ -2146,7 +2146,7 @@ def main_create(
         fstab_verify(site)
     else:
         create_site_dir(site)
-        add_to_fstab(site, tmpfs_size=options.get("tmpfs-size"))
+        add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
 
     config_settings: Config = {}
     if "no-autostart" in options:
@@ -2571,7 +2571,7 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
 
     # Entry for tmps in /etc/fstab
     if not reuse:
-        add_to_fstab(new_site, tmpfs_size=options.get("tmpfs-size"))
+        add_to_fstab(new_site.name, new_site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
 
     # Needed by the post-rename-site script
     putenv("OLD_OMD_SITE", old_site.name)
@@ -3687,7 +3687,7 @@ def postprocess_restore_as_root(
         command_type = CommandType.restore_existing_site
     else:
         command_type = CommandType.restore_as_new_site
-        add_to_fstab(site, tmpfs_size=options.get("tmpfs-size"))
+        add_to_fstab(site.name, site.real_tmp_dir, tmpfs_size=options.get("tmpfs-size"))
 
     finalize_site(version_info, site, command_type, "apache-reload" in options)
 

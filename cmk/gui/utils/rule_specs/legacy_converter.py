@@ -448,20 +448,6 @@ class _LegacyDictKeyProps:
     hidden: list[str]
 
 
-def _extract_dictionary_key_props(
-    dic_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
-) -> _LegacyDictKeyProps:
-    key_props = _LegacyDictKeyProps(required=[], hidden=[])
-
-    for key, dic_elem in dic_elements.items():
-        if dic_elem.required:
-            key_props.required.append(key)
-        if dic_elem.render_only:
-            key_props.hidden.append(key)
-
-    return key_props
-
-
 def _convert_to_inner_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
@@ -815,26 +801,42 @@ def _convert_to_legacy_regular_expression(
 
 def _convert_to_legacy_dictionary(
     to_convert: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
-) -> legacy_valuespecs.Dictionary:
-    elements = [
-        (key, _convert_to_legacy_valuespec(elem.parameter_form, localizer))
-        for key, elem in to_convert.elements.items()
-    ]
-    legacy_key_props = _extract_dictionary_key_props(to_convert.elements)
-    return legacy_valuespecs.Dictionary(
-        elements=elements,
-        title=_localize_optional(to_convert.title, localizer),
-        help=_localize_optional(to_convert.help_text, localizer),
-        empty_text=_localize_optional(to_convert.no_elements_text, localizer),
-        required_keys=legacy_key_props.required,
-        ignored_keys=to_convert.deprecated_elements,
-        hidden_keys=legacy_key_props.hidden,
-        validate=(
-            _convert_to_legacy_validation(to_convert.custom_validate, localizer)
-            if to_convert.custom_validate is not None
-            else None
+) -> legacy_valuespecs.Transform:
+    ungrouped_element_key_props, ungrouped_elements = _get_ungrouped_elements(
+        to_convert.elements, localizer
+    )
+
+    return legacy_valuespecs.Transform(
+        legacy_valuespecs.Dictionary(
+            elements=list(ungrouped_elements),
+            title=_localize_optional(to_convert.title, localizer),
+            help=_localize_optional(to_convert.help_text, localizer),
+            empty_text=_localize_optional(to_convert.no_elements_text, localizer),
+            required_keys=ungrouped_element_key_props.required,
+            ignored_keys=list(to_convert.deprecated_elements),
+            hidden_keys=ungrouped_element_key_props.hidden,
+            validate=(
+                _convert_to_legacy_validation(to_convert.custom_validate, localizer)
+                if to_convert.custom_validate is not None
+                else None
+            ),
         ),
     )
+
+
+def _get_ungrouped_elements(
+    dict_elements_map: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    localizer: Callable[[str], str],
+) -> tuple[_LegacyDictKeyProps, list[tuple[str, legacy_valuespecs.ValueSpec]]]:
+    element_key_props = _LegacyDictKeyProps(required=[], hidden=[])
+    elements = []
+    for key, dict_element in dict_elements_map.items():
+        elements.append((key, _convert_to_legacy_valuespec(dict_element.parameter_form, localizer)))
+        if dict_element.required:
+            element_key_props.required.append(key)
+        if dict_element.render_only:
+            element_key_props.hidden.append(key)
+    return element_key_props, elements
 
 
 def _convert_to_legacy_monitoring_state(

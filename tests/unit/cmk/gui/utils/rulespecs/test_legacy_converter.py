@@ -91,7 +91,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.Dictionary(elements={}),
-            legacy_valuespecs.Dictionary(elements=[]),
+            legacy_valuespecs.Transform(legacy_valuespecs.Dictionary(elements=[])),
             id="minimal Dictionary",
         ),
         pytest.param(
@@ -111,18 +111,20 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 deprecated_elements=("old_key", "another_old_key"),
                 no_elements_text=api_v1.Message("No elements specified"),
             ),
-            legacy_valuespecs.Dictionary(
-                elements=[
-                    ("key_req", legacy_valuespecs.MonitoringState(title=_("title"))),
-                    ("key_read_only", legacy_valuespecs.MonitoringState(title=_("title"))),
-                ],
-                title=_("Configuration title"),
-                help=_("Helpful description"),
-                empty_text=_("No elements specified"),
-                required_keys=["key_req"],
-                show_more_keys=[],
-                hidden_keys=["key_read_only"],
-                ignored_keys=["old_key", "another_old_key"],
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        ("key_req", legacy_valuespecs.MonitoringState(title=_("title"))),
+                        ("key_read_only", legacy_valuespecs.MonitoringState(title=_("title"))),
+                    ],
+                    title=_("Configuration title"),
+                    help=_("Helpful description"),
+                    empty_text=_("No elements specified"),
+                    required_keys=["key_req"],
+                    show_more_keys=[],
+                    hidden_keys=["key_read_only"],
+                    ignored_keys=["old_key", "another_old_key"],
+                )
             ),
             id="Dictionary",
         ),
@@ -425,7 +427,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.form_specs.List(element_template=api_v1.form_specs.Dictionary(elements={})),
             legacy_valuespecs.ListOf(
-                valuespec=legacy_valuespecs.Dictionary(elements=[]),
+                valuespec=legacy_valuespecs.Transform(legacy_valuespecs.Dictionary(elements=[])),
                 add_label="Add new entry",
                 del_label="Remove this entry",
                 text_if_empty="No entries",
@@ -452,11 +454,13 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 no_element_label=api_v1.Label("No items"),
             ),
             legacy_valuespecs.ListOf(
-                valuespec=legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key1", legacy_valuespecs.TextInput(placeholder="", size=35)),
-                        ("key2", legacy_valuespecs.Integer(unit="km")),
-                    ]
+                valuespec=legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key1", legacy_valuespecs.TextInput(placeholder="", size=35)),
+                            ("key2", legacy_valuespecs.Integer(unit="km")),
+                        ]
+                    )
                 ),
                 title="list title",
                 help="list help",
@@ -1065,10 +1069,12 @@ def test_convert_to_legacy_rulespec_group(
                 item_spec=lambda: legacy_valuespecs.TextInput(
                     title=_("item title"), allow_empty=False
                 ),
-                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
-                    ],
+                parameter_valuespec=lambda: legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                        ],
+                    )
                 ),
                 match_type="dict",
                 create_manual_check=False,
@@ -1097,10 +1103,12 @@ def test_convert_to_legacy_rulespec_group(
                 check_group_name="test_rulespec",
                 group=legacy_wato_groups.RulespecGroupCheckParametersApplications,
                 title=lambda: _("rulespec title"),
-                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
-                    ],
+                parameter_valuespec=lambda: legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                        ],
+                    )
                 ),
                 match_type="dict",
                 create_manual_check=False,
@@ -1139,10 +1147,12 @@ def test_convert_to_legacy_rulespec_group(
                     empty_text=_("The minimum allowed length is 1."),
                     validate=lambda x, y: None,  # text only checks it's not None.
                 ),
-                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
-                    ],
+                parameter_valuespec=lambda: legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                        ],
+                    )
                 ),
                 match_type="dict",
             ),
@@ -1198,10 +1208,12 @@ def test_convert_to_legacy_rulespec_group(
                 check_group_name="test_rulespec",
                 group=legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications,
                 title=lambda: _("rulespec title"),
-                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
-                    elements=[
-                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
-                    ],
+                parameter_valuespec=lambda: legacy_valuespecs.Transform(
+                    legacy_valuespecs.Dictionary(
+                        elements=[
+                            ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                        ],
+                    )
                 ),
                 match_type="dict",
             ),

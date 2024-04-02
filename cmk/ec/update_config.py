@@ -46,7 +46,7 @@ def history_files_to_sqlite(omd_root: Path, logger: logging.Logger) -> None:
 
     history_sqlite = create_history_raw(
         settings,
-        {**config, "archive_mode": "sqlite"},
+        config | {"archive_mode": "sqlite"},
         logger,
         StatusTableEvents.columns,
         StatusTableHistory.columns,

@@ -2455,13 +2455,14 @@ def test_dictionary_groups_datamodel_transformation(
                                     ("b", legacy_valuespecs.Integer()),
                                 ],
                                 required_keys=["a", "b"],
+                                horizontal=True,
                             ),
                         ),
                     ],
                     required_keys=["DictGroup(title=Title('ABC'), help_text=None)"],
                 ),
             ),
-            id="all required dictelements",
+            id="all required dictelements/horizontal rendering",
         ),
         pytest.param(
             api_v1.form_specs.Dictionary(

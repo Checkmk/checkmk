@@ -986,6 +986,14 @@ def _get_ungrouped_elements(
     return element_key_props, elements
 
 
+def _get_grouped_dict_orientation(
+    elements: Sequence[tuple[str, legacy_valuespecs.ValueSpec]], key_props: _LegacyDictKeyProps
+) -> bool:
+    return set(key_props.required) == {elem[0] for elem in elements} and not any(
+        isinstance(elem[1], legacy_valuespecs.Dictionary) for elem in elements
+    )
+
+
 def _make_group_as_nested_dict(
     dict_group: ruleset_api_v1.form_specs.DictGroup,
     dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
@@ -1002,6 +1010,7 @@ def _make_group_as_nested_dict(
         help=_localize_optional(dict_group.help_text, localizer),
         required_keys=group_key_props.required,
         hidden_keys=group_key_props.hidden,
+        horizontal=_get_grouped_dict_orientation(elements, group_key_props),
     )
 
 

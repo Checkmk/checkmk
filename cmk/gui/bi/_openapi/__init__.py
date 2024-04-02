@@ -371,7 +371,7 @@ def _aggregation_state(
                 "output": node_result_bundle.actual_result.output,
                 "hosts": required_hosts,
                 "acknowledged": node_result_bundle.actual_result.acknowledged,
-                "in_downtime": node_result_bundle.actual_result.downtime_state != 0,
+                "in_downtime": node_result_bundle.actual_result.in_downtime != 0,
                 "in_service_period": node_result_bundle.actual_result.in_service_period,
                 "infos": collect_infos(node_result_bundle, is_single_host_aggregation),
             }

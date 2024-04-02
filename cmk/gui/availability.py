@@ -2740,7 +2740,7 @@ def create_bi_timeline_entry(
         "service_description": tree["title"],
         "in_notification_period": 1,
         "in_service_period": node_compute_result.in_service_period,
-        "in_downtime": node_compute_result.downtime_state > 0,
+        "in_downtime": node_compute_result.in_downtime,
         "in_host_downtime": 0,
         "host_down": 0,
         "is_flapping": 0,
@@ -2789,7 +2789,7 @@ def _compute_node_result_bundle(
     if not results:
         # The aggregation did not find any hosts or services. Return "Not yet monitored"
         return NodeResultBundle(
-            NodeComputeResult(-1, 0, False, _("Not yet monitored"), True, {}, {}),
+            NodeComputeResult(-1, False, False, _("Not yet monitored"), True, {}, {}),
             None,
             [],
             None,

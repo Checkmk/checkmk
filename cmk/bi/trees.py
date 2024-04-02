@@ -139,7 +139,7 @@ class BICompiledLeaf(ABCBICompiledNode):
                 return NodeResultBundle(
                     NodeComputeResult(
                         3,
-                        0,
+                        False,
                         False,
                         f"{'Host ' if self.service_description is None else 'Service'} not found",
                         False,
@@ -153,9 +153,7 @@ class BICompiledLeaf(ABCBICompiledNode):
             return None
 
         # Downtime
-        downtime_state = 0
-        if entity.scheduled_downtime_depth != 0 or host_downtime_depth > 0:
-            downtime_state = 1 if computation_options.escalate_downtimes_as_warn else 2
+        in_downtime = entity.scheduled_downtime_depth != 0 or host_downtime_depth > 0
 
         # State
         if entity.has_been_checked:
@@ -177,7 +175,7 @@ class BICompiledLeaf(ABCBICompiledNode):
                 _ = bi_status_fetcher.sites_callback.translate
                 assumed_result = NodeComputeResult(
                     int(assumed_state),
-                    downtime_state,
+                    in_downtime,
                     bool(entity.acknowledged),
                     _("Assumed to be %s") % self._get_state_name(assumed_state),
                     entity.in_service_period,
@@ -188,7 +186,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         return NodeResultBundle(
             NodeComputeResult(
                 state,
-                downtime_state,
+                in_downtime,
                 bool(entity.acknowledged),
                 entity.plugin_output,
                 bool(entity.in_service_period),
@@ -385,10 +383,10 @@ class BICompiledRule(ABCBICompiledNode):
         state = self.aggregation_function.aggregate([result.state for result in results])
 
         downtime_state = self.aggregation_function.aggregate(
-            [result.downtime_state for result in results]
+            [2 if result.in_downtime else 0 for result in results]
         )
-        if downtime_state > 0:
-            downtime_state = 1 if computation_options.escalate_downtimes_as_warn else 2
+        minimum_downtime_state = 1 if computation_options.escalate_downtimes_as_warn else 2
+        in_downtime = downtime_state >= minimum_downtime_state
 
         is_acknowledged = False
         if state != 0:
@@ -408,7 +406,7 @@ class BICompiledRule(ABCBICompiledNode):
 
         return NodeComputeResult(
             state,
-            downtime_state,
+            in_downtime,
             is_acknowledged,
             # TODO: fix str casting in later commit
             self.properties.state_messages.get(str(state), ""),
@@ -569,7 +567,7 @@ class BICompiledAggregation:
             return {
                 "state": item.state,
                 "acknowledged": item.acknowledged,
-                "in_downtime": item.downtime_state > 0,
+                "in_downtime": item.in_downtime,
                 "in_service_period": item.in_service_period,
                 "output": item.output,
             }

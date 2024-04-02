@@ -43,7 +43,7 @@ def test_sample_config_networking_rule(
     assert computed_tree is not None
     assert computed_tree.assumed_result is None
     assert computed_tree.actual_result.state == 1
-    assert computed_tree.actual_result.downtime_state == 0
+    assert computed_tree.actual_result.in_downtime is False
     assert not computed_tree.actual_result.acknowledged
     assert computed_tree.actual_result.in_service_period
 
@@ -62,7 +62,7 @@ def test_sample_config_networking_rule(
     assert computed_tree is not None
     assert computed_tree.assumed_result is not None
     assert computed_tree.assumed_result.state == 0
-    assert computed_tree.assumed_result.downtime_state == 0
+    assert computed_tree.assumed_result.in_downtime is False
     assert not computed_tree.assumed_result.acknowledged
     assert computed_tree.assumed_result.in_service_period
 

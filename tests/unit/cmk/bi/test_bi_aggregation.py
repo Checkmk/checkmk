@@ -32,13 +32,13 @@ def test_load_aggregation_integrity(bi_packs_sample_config) -> None:  # type: ig
 
 
 @pytest.mark.parametrize(
-    "status_data, expected_state, expected_acknowledgment, expected_downtime_state, "
+    "status_data, expected_state, expected_acknowledgment, expected_in_downtime, "
     "expected_computed_branches, expected_service_period",
     [
-        (sample_config.bi_status_rows, 1, False, 0, 2, True),
-        (sample_config.bi_acknowledgment_status_rows, 1, True, 0, 1, True),
-        (sample_config.bi_downtime_status_rows, 1, False, 2, 1, True),
-        (sample_config.bi_service_period_status_rows, 1, False, 0, 1, False),
+        (sample_config.bi_status_rows, 1, False, False, 2, True),
+        (sample_config.bi_acknowledgment_status_rows, 1, True, False, 1, True),
+        (sample_config.bi_downtime_status_rows, 1, False, True, 1, True),
+        (sample_config.bi_service_period_status_rows, 1, False, False, 1, False),
     ],
 )
 def test_compute_aggregation(
@@ -49,7 +49,7 @@ def test_compute_aggregation(
     status_data,
     expected_state,
     expected_acknowledgment,
-    expected_downtime_state,
+    expected_in_downtime,
     expected_computed_branches,
     expected_service_period,
 ):
@@ -72,5 +72,5 @@ def test_compute_aggregation(
     # Host heute -> General state -> Check_MK -> Check_MK Discovery (state warn / acknowledged)
     assert actual_result.state == expected_state
     assert actual_result.acknowledged == expected_acknowledgment
-    assert actual_result.downtime_state == expected_downtime_state
+    assert actual_result.in_downtime == expected_in_downtime
     assert actual_result.in_service_period == expected_service_period

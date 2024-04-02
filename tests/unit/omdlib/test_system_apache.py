@@ -54,7 +54,14 @@ def test_register_with_system_apache(
 ) -> None:
     apache_config.parent.mkdir(parents=True)
 
-    register_with_system_apache(version_info, site_context, apache_reload=True)
+    register_with_system_apache(
+        version_info,
+        site_context.name,
+        site_context.dir,
+        site_context.conf["APACHE_TCP_ADDR"],
+        site_context.conf["APACHE_TCP_PORT"],
+        True,
+    )
 
     content = apache_config.read_bytes()
     assert (
@@ -75,11 +82,18 @@ def test_unregister_from_system_apache(
     reload_apache: MagicMock,
 ) -> None:
     apache_config.parent.mkdir(parents=True)
-    register_with_system_apache(version_info, site_context, apache_reload=True)
+    register_with_system_apache(
+        version_info,
+        site_context.name,
+        site_context.dir,
+        site_context.conf["APACHE_TCP_ADDR"],
+        site_context.conf["APACHE_TCP_PORT"],
+        True,
+    )
     assert apache_config.exists()
     reload_apache.reset_mock()
 
-    unregister_from_system_apache(version_info, site_context, apache_reload=True)
+    unregister_from_system_apache(version_info, site_context.name, apache_reload=True)
     assert not apache_config.exists()
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
 
@@ -90,7 +104,14 @@ def test_delete_apache_hook(
     site_context: SiteContext,
 ) -> None:
     apache_config.parent.mkdir(parents=True)
-    register_with_system_apache(version_info, site_context, apache_reload=True)
+    register_with_system_apache(
+        version_info,
+        site_context.name,
+        site_context.dir,
+        site_context.conf["APACHE_TCP_ADDR"],
+        site_context.conf["APACHE_TCP_PORT"],
+        True,
+    )
     assert apache_config.exists()
 
     delete_apache_hook(site_context.name)
@@ -111,10 +132,16 @@ def test_is_apache_hook_up_to_date(
     site_context: SiteContext,
 ) -> None:
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(site_context, apache_hook_version())
+    create_apache_hook(
+        site_context.name,
+        site_context.dir,
+        site_context.conf["APACHE_TCP_ADDR"],
+        site_context.conf["APACHE_TCP_PORT"],
+        apache_hook_version(),
+    )
     assert apache_config.exists()
 
-    assert is_apache_hook_up_to_date(site_context) is True
+    assert is_apache_hook_up_to_date(site_context.name) is True
 
 
 def test_is_apache_hook_up_to_date_not_readable(
@@ -122,12 +149,18 @@ def test_is_apache_hook_up_to_date_not_readable(
     site_context: SiteContext,
 ) -> None:
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(site_context, apache_hook_version())
+    create_apache_hook(
+        site_context.name,
+        site_context.dir,
+        site_context.conf["APACHE_TCP_ADDR"],
+        site_context.conf["APACHE_TCP_PORT"],
+        apache_hook_version(),
+    )
     assert apache_config.exists()
     apache_config.chmod(0o200)
 
     with pytest.raises(PermissionError):
-        is_apache_hook_up_to_date(site_context)
+        is_apache_hook_up_to_date(site_context.name)
 
 
 def test_is_apache_hook_up_to_date_outdated(
@@ -135,10 +168,16 @@ def test_is_apache_hook_up_to_date_outdated(
     site_context: SiteContext,
 ) -> None:
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(site_context, 0)
+    create_apache_hook(
+        site_context.name,
+        site_context.dir,
+        site_context.conf["APACHE_TCP_ADDR"],
+        site_context.conf["APACHE_TCP_PORT"],
+        0,
+    )
     assert apache_config.exists()
 
-    assert is_apache_hook_up_to_date(site_context) is False
+    assert is_apache_hook_up_to_date(site_context.name) is False
 
 
 def test_has_old_apache_hook_in_site(
@@ -149,7 +188,7 @@ def test_has_old_apache_hook_in_site(
     with apache_config.open("w") as f:
         f.write(f"Include /omd/sites/{site_context.name}/etc/apache/mode.conf")
 
-    assert is_apache_hook_up_to_date(site_context) is False
+    assert is_apache_hook_up_to_date(site_context.name) is False
 
 
 def test_has_apache_hook_in_site(
@@ -161,7 +200,7 @@ def test_has_apache_hook_in_site(
         f.write(f"Include /omd/sites/{site_context.name}/etc/apache/mode.conf")
     assert apache_config.exists()
 
-    assert is_apache_hook_up_to_date(site_context) is False
+    assert is_apache_hook_up_to_date(site_context.name) is False
 
 
 def test_create_apache_hook_world_readable(
@@ -169,5 +208,11 @@ def test_create_apache_hook_world_readable(
     site_context: SiteContext,
 ) -> None:
     apache_config.parent.mkdir(parents=True)
-    create_apache_hook(site_context, 0)
+    create_apache_hook(
+        site_context.name,
+        site_context.dir,
+        site_context.conf["APACHE_TCP_ADDR"],
+        site_context.conf["APACHE_TCP_PORT"],
+        0,
+    )
     assert apache_config.stat().st_mode & stat.S_IROTH

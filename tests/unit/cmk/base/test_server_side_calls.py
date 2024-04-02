@@ -165,6 +165,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line="echo --arg1 arument1 --host_alias $HOSTALIAS$",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg1 arument1 --host_alias $HOSTALIAS$",
+                    detected_executable="echo",
                 ),
             ],
             id="one_active_service_legacy_plugin",
@@ -200,6 +201,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line='echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2',
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg1 arument1 --host_alias $HOSTALIAS$",
+                    detected_executable="echo",
                 ),
             ],
             id="host_with_invalid_address_legacy_plugin",
@@ -229,6 +231,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line="echo --arg1 arument1 --host_alias myalias",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg1 arument1 --host_alias myalias",
+                    detected_executable="echo",
                 ),
             ],
             id="macros_replaced_legacy_plugin",
@@ -264,6 +267,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line='echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2',
                     params={"name": "myHTTPName on $HOSTALIAS$"},
                     expanded_args="--arg1 arument1 --host_alias $HOSTALIAS$",
+                    detected_executable="echo",
                 ),
             ],
             id="http_active_service_legacy_plugin",
@@ -297,6 +301,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line="echo --arg1 argument1",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg1 argument1",
+                    detected_executable="echo",
                 ),
                 ActiveServiceData(
                     plugin_name="my_active_check",
@@ -306,6 +311,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line="echo --arg2 argument2",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg2 argument2",
+                    detected_executable="echo",
                 ),
             ],
             id="multiple_active_services_legacy_plugin",
@@ -339,6 +345,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line="echo --arg1 argument1",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg1 argument1",
+                    detected_executable="echo",
                 ),
             ],
             id="multiple_services_with_the_same_description_legacy_plugin",
@@ -383,6 +390,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line="check_my_active_check --arg1 argument1",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg1 argument1",
+                    detected_executable="check_my_active_check",
                 ),
                 ActiveServiceData(
                     plugin_name="my_active_check",
@@ -392,6 +400,7 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line="check_my_active_check --arg2 argument2",
                     params={"description": "My active check", "param1": "param1"},
                     expanded_args="--arg2 argument2",
+                    detected_executable="check_my_active_check",
                 ),
             ],
             id="multiple_services",
@@ -458,6 +467,7 @@ def argument_function_with_exception(*args, **kwargs):
                         "password": ("stored_password", "stored_password", ""),
                     },
                     expanded_args="--pwstore=1@9@stored_password '--secret=**********'",
+                    detected_executable="check_my_active_check",
                 ),
             ],
             id="one_service_password_store",
@@ -520,7 +530,9 @@ def test_get_active_service_data_password_with_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        ActiveCheck, "_get_command", lambda self, pn, cl: ("check_mk_active-check_path", cl)
+        ActiveCheck,
+        "_get_command",
+        lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
     )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", True)
     active_check = ActiveCheck(
@@ -561,6 +573,7 @@ def test_get_active_service_data_password_with_hack(
                 "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
             },
             expanded_args="--pwstore=4@1@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
+            detected_executable="/path/to/check_test_check",
         ),
     ]
 
@@ -569,7 +582,9 @@ def test_get_active_service_data_password_without_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        ActiveCheck, "_get_command", lambda self, pn, cl: ("check_mk_active-check_path", cl)
+        ActiveCheck,
+        "_get_command",
+        lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
     )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", False)
     active_check = ActiveCheck(
@@ -610,6 +625,7 @@ def test_get_active_service_data_password_without_hack(
                 "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
             },
             expanded_args="--password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd\\!}'",
+            detected_executable="/path/to/check_test_check",
         ),
     ]
 
@@ -844,6 +860,7 @@ def test_test_get_active_service_data_crash_with_debug(
                         "password": ("stored_password", "stored_password", ""),
                     },
                     expanded_args="--pwstore=2@0@stored_password --password " "'***'",
+                    detected_executable="check_my_active_check",
                 ),
             ],
             '\nWARNING: The stored password "stored_password" used by host "myhost" does not exist (anymore).\n',

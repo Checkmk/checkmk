@@ -305,13 +305,12 @@ class ModeFolder(WatoMode):
         )
 
     def _page_menu_entries_hosts_in_folder(self) -> Iterator[PageMenuEntry]:
+        is_enabled = bool(self._folder.has_hosts())
         if (
             not self._folder.locked_hosts()
             and user.may("wato.manage_hosts")
             and self._folder.permissions.may("write")
         ):
-            is_enabled = bool(self._folder.has_hosts())
-
             yield PageMenuEntry(
                 title=_("Add host"),
                 icon_name="new",

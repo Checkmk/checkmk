@@ -215,11 +215,11 @@ function Invoke-SafetyCheck( [String]$file ) {
 
           foreach ($entry in $access ) {
                $entity = $entry.IdentityReference.ToString()
-               if ( $admin_groups.contains($entity)) {
+               if ( $admin_groups -contains $entity ) {
                     # predefined admin groups are safe
                     continue
                }
-               if ( $Null -ne $($admins.Name -like "$entity") ) {
+               if ( $admins.Name -contains "$entity" ) {
                     # administrators are safe too
                     continue
                }

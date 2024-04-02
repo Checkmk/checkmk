@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from keyword import iskeyword
 from typing import Any, Generic, Mapping, Sequence
 
-from .._localize import Label, Message, Title
+from .._localize import Help, Label, Message, Title
 from ._base import DefaultValue, FormSpec, InputHint, ModelT
 
 
@@ -76,6 +76,21 @@ class CascadingSingleChoice(FormSpec[tuple[str, object]]):
 
 
 @dataclass(frozen=True, kw_only=True)
+class DictGroup:
+    """Specification for a group of dictionary elements that are more closely related thematically
+    than the other elements. A group is identified by its title and help text.
+    """
+
+    title: Title | None = None
+    help_text: Help | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class NoGroup:
+    """Default group for dictionary elements that don't belong to any group"""
+
+
+@dataclass(frozen=True, kw_only=True)
 class DictElement(Generic[ModelT]):
     """Specifies an element of a dictionary form.
 
@@ -93,6 +108,10 @@ class DictElement(Generic[ModelT]):
     """
     render_only: bool = False
     """Element that can't be edited. Can be used to store the discovered parameters."""
+
+    group: DictGroup | NoGroup = NoGroup()
+    """Group this element belongs to. Elements of the same group are displayed together without
+    affecting the data model."""
 
 
 @dataclass(frozen=True, kw_only=True)  # type: ignore[misc]

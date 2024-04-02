@@ -5,10 +5,11 @@
 import dataclasses
 import enum
 import urllib.parse
-from collections.abc import Iterable, Mapping, Sequence
+from collections import defaultdict
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, assert_never, Callable, Literal, TypeVar
+from typing import Any, assert_never, Callable, Literal, Self, TypeVar
 
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
@@ -447,6 +448,13 @@ class _LegacyDictKeyProps:
     required: list[str]
     hidden: list[str]
 
+    @classmethod
+    def from_elements(cls, elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]) -> Self:
+        return cls(
+            required=[key for key, element in elements.items() if element.required],
+            hidden=[key for key, element in elements.items() if element.render_only],
+        )
+
 
 def _convert_to_inner_legacy_valuespec(
     to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
@@ -799,20 +807,136 @@ def _convert_to_legacy_regular_expression(
     return legacy_valuespecs.RegExp(mode=mode, case_sensitive=True, **converted_kwargs)
 
 
+def _get_group_keys(
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+) -> Sequence[str]:
+    return [
+        repr(elem.group)
+        for elem in dict_elements.values()
+        if not isinstance(elem.group, ruleset_api_v1.form_specs.NoGroup)
+    ]
+
+
+def _make_group_keys_dict(
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+) -> dict:
+    # to render the groups in a nicer way the group names are required keys, so have to exist per
+    # default
+    return {key: {} for key in _get_group_keys(dict_elements)}
+
+
+def _get_packed_value(
+    nested_form: ruleset_api_v1.form_specs.FormSpec,
+    value_to_pack: object,
+    packed_dict: dict,
+) -> object:
+    match nested_form, value_to_pack:
+        case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_pack:
+            return _pack_dict_groups(dict_form.elements, dict_to_pack, packed_dict)
+        case (ruleset_api_v1.form_specs.Dictionary(), _) | (_, dict()):
+            raise TypeError(
+                f"Type of value {type(value_to_pack)} does not match the form spec {type(nested_form)}"
+            )
+    return value_to_pack
+
+
+def _pack_dict_groups(
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    dict_to_pack: Mapping[str, object],
+    packed_dict: dict,
+) -> MutableMapping[str, object]:
+    for key_to_pack, value_to_pack in dict_to_pack.items():
+
+        nested_packed_dict = {}
+        if isinstance(
+            (nested_form := dict_elements[key_to_pack].parameter_form),
+            ruleset_api_v1.form_specs.Dictionary,
+        ):
+            nested_packed_dict = _make_group_keys_dict(nested_form.elements)
+
+        if isinstance(
+            (group := dict_elements[key_to_pack].group), ruleset_api_v1.form_specs.NoGroup
+        ):
+            packed_dict[key_to_pack] = _get_packed_value(
+                nested_form, value_to_pack, nested_packed_dict
+            )
+        else:
+            packed_dict[repr(group)][key_to_pack] = _get_packed_value(
+                nested_form, value_to_pack, nested_packed_dict
+            )
+    return packed_dict
+
+
+def _transform_dict_groups_forth(
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+) -> Callable[[Mapping[str, object]], Mapping[str, object]]:
+    def _forth(value: Mapping[str, object]) -> Mapping[str, object]:
+        if not set(_get_group_keys(dict_elements)).isdisjoint(value.keys()):  # already transformed
+            return value
+
+        return _pack_dict_groups(dict_elements, value, _make_group_keys_dict(dict_elements))
+
+    return _forth
+
+
+def _get_unpacked_value(
+    nested_form: ruleset_api_v1.form_specs.FormSpec, value_to_unpack: object
+) -> object:
+    match nested_form, value_to_unpack:
+        case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_unpack:
+            return _unpack_dict_group(dict_form.elements, dict_to_unpack)
+        case (ruleset_api_v1.form_specs.Dictionary(), _) | (_, dict()):
+            raise TypeError(
+                f"Type of value {type(value_to_unpack)} does not match the form spec {type(nested_form)}"
+            )
+    return value_to_unpack
+
+
+def _unpack_dict_group(
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    dict_to_unpack: Mapping[str, object],
+) -> Mapping[str, object]:
+    if not isinstance(dict_to_unpack, dict):
+        return dict_to_unpack
+
+    unpacked_dict = {}
+    for key_to_unpack, value_to_unpack in dict_to_unpack.items():
+        if key_to_unpack in _get_group_keys(dict_elements):
+            for grouped_key_to_unpack, grouped_value_to_unpack in value_to_unpack.items():
+                unpacked_dict[grouped_key_to_unpack] = _get_unpacked_value(
+                    dict_elements[grouped_key_to_unpack].parameter_form, grouped_value_to_unpack
+                )
+        else:
+            unpacked_dict[key_to_unpack] = _get_unpacked_value(
+                dict_elements[key_to_unpack].parameter_form, value_to_unpack
+            )
+    return unpacked_dict
+
+
+def _transform_dict_group_back(
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+) -> Callable[[Mapping[str, object]], Mapping[str, object]]:
+    def _back(value: Mapping[str, object]) -> Mapping[str, object]:
+        return _unpack_dict_group(dict_elements, value)
+
+    return _back
+
+
 def _convert_to_legacy_dictionary(
     to_convert: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Transform:
     ungrouped_element_key_props, ungrouped_elements = _get_ungrouped_elements(
         to_convert.elements, localizer
     )
+    grouped_elements_map = _group_elements(to_convert.elements, localizer)
 
     return legacy_valuespecs.Transform(
         legacy_valuespecs.Dictionary(
-            elements=list(ungrouped_elements),
+            elements=list(ungrouped_elements) + list(grouped_elements_map.items()),
             title=_localize_optional(to_convert.title, localizer),
             help=_localize_optional(to_convert.help_text, localizer),
             empty_text=_localize_optional(to_convert.no_elements_text, localizer),
-            required_keys=ungrouped_element_key_props.required,
+            required_keys=ungrouped_element_key_props.required + list(grouped_elements_map.keys()),
             ignored_keys=list(to_convert.deprecated_elements),
             hidden_keys=ungrouped_element_key_props.hidden,
             validate=(
@@ -821,6 +945,8 @@ def _convert_to_legacy_dictionary(
                 else None
             ),
         ),
+        back=_transform_dict_group_back(to_convert.elements),
+        forth=_transform_dict_groups_forth(to_convert.elements),
     )
 
 
@@ -828,15 +954,57 @@ def _get_ungrouped_elements(
     dict_elements_map: Mapping[str, ruleset_api_v1.form_specs.DictElement],
     localizer: Callable[[str], str],
 ) -> tuple[_LegacyDictKeyProps, list[tuple[str, legacy_valuespecs.ValueSpec]]]:
-    element_key_props = _LegacyDictKeyProps(required=[], hidden=[])
-    elements = []
-    for key, dict_element in dict_elements_map.items():
-        elements.append((key, _convert_to_legacy_valuespec(dict_element.parameter_form, localizer)))
-        if dict_element.required:
-            element_key_props.required.append(key)
-        if dict_element.render_only:
-            element_key_props.hidden.append(key)
+    element_key_props = _LegacyDictKeyProps.from_elements(
+        {
+            key: element
+            for key, element in dict_elements_map.items()
+            if isinstance(element.group, ruleset_api_v1.form_specs.NoGroup)
+        },
+    )
+    elements = [
+        (key, _convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
+        for key, dict_element in dict_elements_map.items()
+        if isinstance(dict_element.group, ruleset_api_v1.form_specs.NoGroup)
+    ]
     return element_key_props, elements
+
+
+def _make_group_as_nested_dict(
+    dict_group: ruleset_api_v1.form_specs.DictGroup,
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    localizer: Callable[[str], str],
+) -> legacy_valuespecs.Dictionary:
+    group_key_props = _LegacyDictKeyProps.from_elements(dict_elements)
+    elements = [
+        (key, _convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
+        for key, dict_element in dict_elements.items()
+    ]
+    return legacy_valuespecs.Dictionary(
+        elements=elements,
+        title=_localize_optional(dict_group.title, localizer),
+        help=_localize_optional(dict_group.help_text, localizer),
+        required_keys=group_key_props.required,
+        hidden_keys=group_key_props.hidden,
+    )
+
+
+def _group_elements(
+    dict_elements_map: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    localizer: Callable[[str], str],
+) -> Mapping[str, legacy_valuespecs.Dictionary]:
+    grouped_dict_elements_map: dict[
+        ruleset_api_v1.form_specs.DictGroup,
+        dict[str, ruleset_api_v1.form_specs.DictElement],
+    ] = defaultdict(dict)
+
+    for key, dict_element in dict_elements_map.items():
+        if isinstance(dict_element.group, ruleset_api_v1.form_specs.DictGroup):
+            grouped_dict_elements_map[dict_element.group][key] = dict_element
+
+    return {
+        repr(g): _make_group_as_nested_dict(g, group_elements, localizer)
+        for g, group_elements in grouped_dict_elements_map.items()
+    }
 
 
 def _convert_to_legacy_monitoring_state(

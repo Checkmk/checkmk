@@ -33,10 +33,12 @@ from ._composed import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
     DictElement,
+    DictGroup,
     Dictionary,
     List,
     MultipleChoice,
     MultipleChoiceElement,
+    NoGroup,
 )
 from ._levels import (
     LevelDirection,
@@ -77,6 +79,7 @@ __all__ = [
     "DataSize",
     "DefaultValue",
     "DictElement",
+    "DictGroup",
     "Dictionary",
     "FieldSize",
     "FileUpload",
@@ -109,6 +112,7 @@ __all__ = [
     "MultilineText",
     "MultipleChoice",
     "MultipleChoiceElement",
+    "NoGroup",
     "Password",
     "Percentage",
     "PredictiveLevels",

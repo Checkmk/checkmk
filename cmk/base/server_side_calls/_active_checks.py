@@ -72,6 +72,8 @@ def _get_host_address_config(
     )
 
 
+# This class can probably be consolidated to have fewer fields.
+# But it's close to the release and I don't dare to touch it.
 @dataclass(frozen=True)
 class ActiveServiceData:
     plugin_name: str
@@ -81,6 +83,7 @@ class ActiveServiceData:
     command_line: str
     params: Mapping[str, object]
     expanded_args: str
+    detected_executable: str
 
 
 @dataclass(frozen=True)
@@ -220,7 +223,9 @@ class ActiveCheck:
 
             existing_descriptions[description] = plugin_name
 
-            command, exec_command_line = self._get_command(plugin_name, command_line)
+            command, detected_exectutable, exec_command_line = self._get_command(
+                plugin_name, command_line
+            )
 
             yield ActiveServiceData(
                 plugin_name=plugin_name,
@@ -230,9 +235,10 @@ class ActiveCheck:
                 command_line=exec_command_line,
                 params=params,
                 expanded_args=self.escape_func(args),
+                detected_executable=detected_exectutable,
             )
 
-    def _get_command(self, plugin_name: str, command_line: str) -> tuple[str, str]:
+    def _get_command(self, plugin_name: str, command_line: str) -> tuple[str, str, str]:
         # TODO: check why/if we need this. Couldn't we have for example an active check that
         # queries some RestAPI?
         # This may be a leftover from a time where we would try to replace these in a macro?
@@ -240,14 +246,14 @@ class ActiveCheck:
             command = "check-mk-custom"
             command_line = 'echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2'
 
-            return command, command_line
+            return command, "echo", command_line
 
         command = f"check_mk_active-{plugin_name}"
         executable, *args = command_line.split(None, 1)
         detected_executable = _autodetect_plugin(
             executable, self._modules.get(plugin_name.removeprefix("check_"))
         )
-        return command, " ".join((detected_executable, *args))
+        return command, detected_executable, " ".join((detected_executable, *args))
 
     @staticmethod
     def _old_active_http_check_service_description(params: Mapping[str, object]) -> str:

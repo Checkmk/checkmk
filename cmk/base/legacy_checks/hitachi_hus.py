@@ -109,6 +109,7 @@ check_info["hitachi_hus_dkc"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "hm700"),
         contains(".1.3.6.1.2.1.1.1.0", "hm800"),
         contains(".1.3.6.1.2.1.1.1.0", "hm850"),
+        contains(".1.3.6.1.2.1.1.1.0", "hm900"),
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.116.5.11.4.1.1.6.1",
@@ -126,6 +127,7 @@ check_info["hitachi_hus_dku"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "hm700"),
         contains(".1.3.6.1.2.1.1.1.0", "hm800"),
         contains(".1.3.6.1.2.1.1.1.0", "hm850"),
+        contains(".1.3.6.1.2.1.1.1.0", "hm900"),
     ),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.116.5.11.4.1.1.7.1",

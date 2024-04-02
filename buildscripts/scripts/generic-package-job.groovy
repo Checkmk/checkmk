@@ -43,6 +43,10 @@ def main() {
             artifacts: "${output_file}",
             fingerprint: true,
         );
+        setCustomBuildProperty(
+            key: "path_hashes",
+            value: directory_hashes([PACKAGE_PATH])
+        );
     }
 }
 

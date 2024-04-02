@@ -1,6 +1,7 @@
 #!groovy
 
 /// file: trigger-packages.groovy
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def build_stages(packages_file) {
     def packages = load_json(packages_file);
@@ -14,16 +15,19 @@ def build_stages(packages_file) {
                     stage(p.name) {
                         catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
                             def job = upstream_build(
-                                force_build: true,
                                 download: false,
                                 relative_job_name: "builders/build-cmk-package",
+                                dependency_paths: [p.path],
                                 build_params: [
                                     "PACKAGE_PATH":  p.path,
                                     "SECRET_VARS": p.sec_vars.join(","),
                                     "COMMAND_LINE": p.command_line,
-                                    "CUSTOM_GIT_REF": cmd_output("git rev-parse HEAD"),
-                                ]
+                                ],
+                                build_params_no_check: ["CUSTOM_GIT_REF": cmd_output("git rev-parse HEAD")],
                             )
+                            if (!job.new_build.asBoolean()) {
+                                Utils.markStageSkippedForConditional("${p.name}");
+                            }
                             if (job.result != "SUCCESS") {
                                 notify.notify_maintainer_of_package(p.maintainers, p.name, "${job.url}" + "console")
                                 throw new Exception("Job ${p.name} failed");

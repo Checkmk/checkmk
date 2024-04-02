@@ -102,29 +102,8 @@ def check_hitachi_hus(item, _no_params, section):
     if (data := section.get(item)) is None:
         return
 
-    ok_states = []
-    warn_states = []
-    crit_states = []
-    unknown_states = []
-
     for prop in data:
-        if prop.state == 0:
-            ok_states.append(f"{prop.label}: {prop.description}")
-        if prop.state == 1:
-            warn_states.append(f"{prop.label}: {prop.description}")
-        if prop.state == 2:
-            crit_states.append(f"{prop.label}: {prop.description}")
-        if prop.state == 3:
-            unknown_states.append(f"{prop.label}: {prop.description}")
-
-    for state, states, text in [
-        (0, ok_states, "OK"),
-        (3, unknown_states, "UNKNOWN"),
-        (1, warn_states, "WARN"),
-        (2, crit_states, "CRIT"),
-    ]:
-        if states:
-            yield state, "{}: {}".format(text, ", ".join(states))
+        yield prop.state, f"{prop.label}: {prop.description}"
 
 
 check_info["hitachi_hus_dkc"] = LegacyCheckDefinition(

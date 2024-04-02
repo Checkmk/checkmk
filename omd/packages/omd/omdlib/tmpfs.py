@@ -174,11 +174,6 @@ def unmount_tmpfs_without_save(  # pylint: disable=too-many-branches
     return False
 
 
-# Extracted to separate function to be able to monkeypatch the path for tests
-def fstab_path() -> Path:
-    return Path("/etc/fstab")
-
-
 def _unmount(tmp_dir: str) -> bool:
     return subprocess.call(["umount", tmp_dir]) == 0
 
@@ -199,13 +194,15 @@ def _tmpfs_is_managed_by_node(site_name: str, tmp_dir: str) -> bool:
     ) in [1, 32]
 
 
-def add_to_fstab(site: SiteContext, tmpfs_size: str | None = None) -> None:
-    if not (path_fstab := fstab_path()).exists():
+def add_to_fstab(
+    site: SiteContext, tmpfs_size: str | None = None, fstab_path: Path = Path("/etc/fstab")
+) -> None:
+    if not fstab_path.exists():
         return  # Don't do anything in case there is no fstab
 
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
     mountpoint = site.real_tmp_dir
-    sys.stdout.write(f"Adding {mountpoint} to {path_fstab}.\n")
+    sys.stdout.write(f"Adding {mountpoint} to {fstab_path}.\n")
 
     # No size option: using up to 50% of the RAM
     sizespec = ""
@@ -213,10 +210,10 @@ def add_to_fstab(site: SiteContext, tmpfs_size: str | None = None) -> None:
         sizespec = ",size=%s" % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
-    previous_fstab = path_fstab.read_text()
+    previous_fstab = fstab_path.read_text()
     complete_last_line = previous_fstab and not previous_fstab.endswith("\n")
 
-    with path_fstab.open(mode="a+") as fstab:
+    with fstab_path.open(mode="a+") as fstab:
         if complete_last_line:
             fstab.write("\n")
 
@@ -225,22 +222,22 @@ def add_to_fstab(site: SiteContext, tmpfs_size: str | None = None) -> None:
         )
 
 
-def remove_from_fstab(site: SiteContext) -> None:
-    if not (path_fstab := fstab_path()).exists():
+def remove_from_fstab(site: SiteContext, fstab_path: Path = Path("/etc/fstab")) -> None:
+    if not fstab_path.exists():
         return  # Don't do anything in case there is no fstab
 
     mountpoint = site.tmp_dir
-    sys.stdout.write(f"Removing {mountpoint} from {path_fstab}...")
+    sys.stdout.write(f"Removing {mountpoint} from {fstab_path}...")
 
     with (
-        (path_new_fstab := Path(str(path_fstab) + ".new")).open(mode="w") as newtab,
-        path_fstab.open() as current_fstab,
+        (path_new_fstab := Path(str(fstab_path) + ".new")).open(mode="w") as newtab,
+        fstab_path.open() as current_fstab,
     ):
         for line in current_fstab:
             if "uid=%s," % site.name in line and mountpoint in line:
                 continue
             newtab.write(line)
-    path_new_fstab.rename(path_fstab)
+    path_new_fstab.rename(fstab_path)
     ok()
 
 

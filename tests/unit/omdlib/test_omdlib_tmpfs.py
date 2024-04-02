@@ -9,62 +9,57 @@ from pathlib import Path
 
 import pytest
 
-import omdlib.tmpfs
 from omdlib.contexts import SiteContext
 from omdlib.tmpfs import _restore_tmpfs_dump, add_to_fstab, save_tmpfs_dump
 from omdlib.utils import delete_directory_contents
 
 
-@pytest.fixture(name="tmp_fstab")
-def fixture_tmp_fstab(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    fstab_path = tmp_path / "fstab"
-    monkeypatch.setattr(omdlib.tmpfs, "fstab_path", lambda: fstab_path)
-    return fstab_path
-
-
 @pytest.mark.usefixtures("site_context")
-def test_add_to_fstab_not_existing(tmp_fstab: Path, site_context: SiteContext) -> None:
-    assert not tmp_fstab.exists()
-    add_to_fstab(site_context)
-    assert not tmp_fstab.exists()
+def test_add_to_fstab_not_existing(tmp_path: Path, site_context: SiteContext) -> None:
+    fstab_path = tmp_path / "fstab"
+    assert not fstab_path.exists()
+    add_to_fstab(site_context, None, fstab_path)
+    assert not fstab_path.exists()
 
 
-def test_add_to_fstab(tmp_path: Path, tmp_fstab: Path, site_context: SiteContext) -> None:
-    tmp_fstab.open("w", encoding="utf-8").write("# system fstab bla\n")
-    add_to_fstab(site_context)
-    assert tmp_fstab.open().read() == (
+def test_add_to_fstab(tmp_path: Path, site_context: SiteContext) -> None:
+    fstab_path = tmp_path / "fstab"
+    fstab_path.open("w", encoding="utf-8").write("# system fstab bla\n")
+    add_to_fstab(site_context, None, fstab_path)
+    assert fstab_path.open().read() == (
         "# system fstab bla\n"
         "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=751,uid=unit,gid=unit 0 0\n"
         % tmp_path
     )
 
 
-def test_add_to_fstab_with_size(tmp_path: Path, tmp_fstab: Path, site_context: SiteContext) -> None:
-    tmp_fstab.open("w", encoding="utf-8").write("# system fstab bla\n")
-    add_to_fstab(site_context, tmpfs_size="1G")
-    assert tmp_fstab.open().read() == (
+def test_add_to_fstab_with_size(tmp_path: Path, site_context: SiteContext) -> None:
+    fstab_path = tmp_path / "fstab"
+    fstab_path.open("w", encoding="utf-8").write("# system fstab bla\n")
+    add_to_fstab(site_context, tmpfs_size="1G", fstab_path=fstab_path)
+    assert fstab_path.open().read() == (
         "# system fstab bla\n"
         "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=751,uid=unit,gid=unit,size=1G 0 0\n"
         % tmp_path
     )
 
 
-def test_add_to_fstab_no_newline_at_end(
-    tmp_path: Path, tmp_fstab: Path, site_context: SiteContext
-) -> None:
-    tmp_fstab.open("w", encoding="utf-8").write("# system fstab bla")
-    add_to_fstab(site_context)
-    assert tmp_fstab.open().read() == (
+def test_add_to_fstab_no_newline_at_end(tmp_path: Path, site_context: SiteContext) -> None:
+    fstab_path = tmp_path / "fstab"
+    fstab_path.open("w", encoding="utf-8").write("# system fstab bla")
+    add_to_fstab(site_context, None, fstab_path)
+    assert fstab_path.open().read() == (
         "# system fstab bla\n"
         "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=751,uid=unit,gid=unit 0 0\n"
         % tmp_path
     )
 
 
-def test_add_to_fstab_empty(tmp_path: Path, tmp_fstab: Path, site_context: SiteContext) -> None:
-    tmp_fstab.open("w", encoding="utf-8").write("")
-    add_to_fstab(site_context)
-    assert tmp_fstab.open().read() == (
+def test_add_to_fstab_empty(tmp_path: Path, site_context: SiteContext) -> None:
+    fstab_path = tmp_path / "fstab"
+    fstab_path.open("w", encoding="utf-8").write("")
+    add_to_fstab(site_context, None, fstab_path)
+    assert fstab_path.open().read() == (
         "tmpfs  %s/opt/omd/sites/unit/tmp tmpfs noauto,user,mode=751,uid=unit,gid=unit 0 0\n"
         % tmp_path
     )

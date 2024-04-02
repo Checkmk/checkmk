@@ -918,7 +918,25 @@ class UpdateRuleObject(base.BaseSchema):
     conditions = fields.Nested(
         Conditions,
         description="Conditions.",
-        example={},
+        example={
+            "host_name": {"match_on": ["host1", "host2"], "operator": "one_of"},
+            "host_tags": [{"key": "criticality", "operator": "is", "value": "prod"}],
+            "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+            "service_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+            "host_label_groups": [
+                {
+                    "operator": "and",
+                    "label_group": [{"operator": "and", "label": "os:windows"}],
+                }
+            ],
+            "service_label_groups": [
+                {
+                    "operator": "and",
+                    "label_group": [{"operator": "and", "label": "os:windows"}],
+                }
+            ],
+            "service_description": {"match_on": ["foo1", "bar2"], "operator": "none_of"},
+        },
     )
 
 

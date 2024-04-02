@@ -27,7 +27,7 @@ from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 def _validate_regex_choices(value: Mapping[str, object]) -> None:
     """At least one device type should be monitored."""
 
-    if not any(regex in value for regex in ["android-regex", "ios-regex", "other-regex"]):
+    if not {"android_regex", "ios_regex", "other_regex"}.intersection(value):
         raise ValidationError(
             Message(
                 "Please activate the monitoring of at least one device type: Android, iOS or other devices"

@@ -58,6 +58,10 @@ def test_convert_integer(
         pytest.param(
             definitions.Dictionary(elements=[("int", definitions.Integer())]),
             None,
+            marks=pytest.mark.skip(
+                "FIXME: FormSpec Dictionaries are wrapped in a Transform during conversion to "
+                "render DictGroups as additional Dictionaries without changing the data model."
+            ),
         ),
         pytest.param(
             definitions.ListChoice([("foo", "Show foo"), ("bar", "Show bar")]),

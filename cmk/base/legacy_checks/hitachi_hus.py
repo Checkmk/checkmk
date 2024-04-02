@@ -31,6 +31,14 @@ from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
 # .1.3.6.1.4.1.116.5.11.4.1.1.7.1.5 1
 
 
+_DETECT_HUS = any_of(
+    contains(".1.3.6.1.2.1.1.1.0", "hm700"),
+    contains(".1.3.6.1.2.1.1.1.0", "hm800"),
+    contains(".1.3.6.1.2.1.1.1.0", "hm850"),
+    contains(".1.3.6.1.2.1.1.1.0", "hm900"),
+)
+
+
 def parse_hitachi_hus(string_table: StringTable) -> StringTable:
     return string_table
 
@@ -105,12 +113,7 @@ def check_hitachi_hus(item, _no_params, info):
 
 check_info["hitachi_hus_dkc"] = LegacyCheckDefinition(
     parse_function=parse_hitachi_hus,
-    detect=any_of(
-        contains(".1.3.6.1.2.1.1.1.0", "hm700"),
-        contains(".1.3.6.1.2.1.1.1.0", "hm800"),
-        contains(".1.3.6.1.2.1.1.1.0", "hm850"),
-        contains(".1.3.6.1.2.1.1.1.0", "hm900"),
-    ),
+    detect=_DETECT_HUS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.116.5.11.4.1.1.6.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
@@ -123,12 +126,7 @@ check_info["hitachi_hus_dkc"] = LegacyCheckDefinition(
 
 check_info["hitachi_hus_dku"] = LegacyCheckDefinition(
     parse_function=parse_hitachi_hus,
-    detect=any_of(
-        contains(".1.3.6.1.2.1.1.1.0", "hm700"),
-        contains(".1.3.6.1.2.1.1.1.0", "hm800"),
-        contains(".1.3.6.1.2.1.1.1.0", "hm850"),
-        contains(".1.3.6.1.2.1.1.1.0", "hm900"),
-    ),
+    detect=_DETECT_HUS,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.116.5.11.4.1.1.7.1",
         oids=["1", "2", "3", "4", "5"],

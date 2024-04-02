@@ -53,7 +53,6 @@ def test_detect_spec_dedup(
         ("fjdarye_pcie_flash_modules", "fjdarye_pools_150"),
         ("gude_humidity", "gude_temp"),
         ("h3c_lanswitch_cpu", "h3c_lanswitch_sensors"),
-        ("hitachi_hus_dkc", "hitachi_hus_dku"),
         ("hp_fan", "hp_psu"),
         ("hp_hh3c_fan", "hp_hh3c_power"),
         ("hp_mcs_sensors", "hp_mcs_system"),

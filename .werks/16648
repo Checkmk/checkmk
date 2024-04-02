@@ -1,0 +1,9 @@
+Title: Hitachi HUS DKU / Hitachi HUS DKC: Hardware State: Discover HM900 devices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1712052841
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+

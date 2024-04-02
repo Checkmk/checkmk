@@ -30,6 +30,7 @@ def scan_hitachi_hus(oid):
         "hm700" in oid(".1.3.6.1.2.1.1.1.0").lower()
         or "hm800" in oid(".1.3.6.1.2.1.1.1.0").lower()
         or "hm850" in oid(".1.3.6.1.2.1.1.1.0").lower()
+        or "hm900" in oid(".1.3.6.1.2.1.1.1.0").lower()
     )
 
 

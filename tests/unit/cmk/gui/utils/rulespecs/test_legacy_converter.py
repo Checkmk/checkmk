@@ -1609,11 +1609,7 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
             raise api_v1.form_specs.validators.ValidationError(api_v1.Message("Duplicate elements"))
 
     v1_api_list = api_v1.form_specs.List(
-        element_template=api_v1.form_specs.Dictionary(
-            elements={
-                "key1": api_v1.form_specs.DictElement(parameter_form=api_v1.form_specs.String())
-            }
-        ),
+        element_template=api_v1.form_specs.String(),
         custom_validate=(_v1_custom_list_validate,),
     )
 

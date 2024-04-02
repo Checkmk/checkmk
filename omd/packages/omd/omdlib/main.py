@@ -2314,7 +2314,14 @@ def finalize_site(
     # the root user, so load the site config again. Otherwise e.g. changed
     # APACHE_TCP_PORT would not be recognized
     site.load_config(load_defaults(site))
-    register_with_system_apache(version_info, site, apache_reload)
+    register_with_system_apache(
+        version_info,
+        site.name,
+        site.dir,
+        site.conf["APACHE_TCP_ADDR"],
+        site.conf["APACHE_TCP_PORT"],
+        apache_reload,
+    )
 
 
 def finalize_site_as_user(
@@ -2374,7 +2381,7 @@ def main_rm(
     # Needs to be cleaned up before removing the site directory. Otherwise a
     # parallel restart / reload of the apache may fail, because the apache hook
     # refers to a not existing site apache config.
-    unregister_from_system_apache(version_info, site, apache_reload="apache-reload" in options)
+    unregister_from_system_apache(version_info, site.name, apache_reload="apache-reload" in options)
 
     if not reuse:
         remove_from_fstab(site)
@@ -2419,7 +2426,7 @@ def main_disable(
     stop_if_not_stopped(site)
     unmount_tmpfs(site, kill="kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
-    unregister_from_system_apache(version_info, site, apache_reload=False)
+    unregister_from_system_apache(version_info, site.name, apache_reload=False)
 
 
 def main_enable(
@@ -2433,7 +2440,14 @@ def main_enable(
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
-    register_with_system_apache(version_info, site, apache_reload=False)
+    register_with_system_apache(
+        version_info,
+        site.name,
+        site.dir,
+        site.conf["APACHE_TCP_ADDR"],
+        site.conf["APACHE_TCP_PORT"],
+        False,
+    )
 
 
 def main_update_apache_config(
@@ -2445,9 +2459,16 @@ def main_update_apache_config(
 ) -> None:
     site.load_config(load_defaults(site))
     if _is_apache_enabled(site):
-        register_with_system_apache(version_info, site, apache_reload=True)
+        register_with_system_apache(
+            version_info,
+            site.name,
+            site.dir,
+            site.conf["APACHE_TCP_ADDR"],
+            site.conf["APACHE_TCP_PORT"],
+            True,
+        )
     else:
-        unregister_from_system_apache(version_info, site, apache_reload=True)
+        unregister_from_system_apache(version_info, site.name, apache_reload=True)
 
 
 def _is_apache_enabled(site: SiteContext) -> bool:
@@ -2872,7 +2893,7 @@ def main_update(  # pylint: disable=too-many-branches
         bail_out("Aborted.")
 
     try:
-        hook_up_to_date = is_apache_hook_up_to_date(site)
+        hook_up_to_date = is_apache_hook_up_to_date(site.name)
     except PermissionError:
         # In case the hook can not be read, assume the hook needs to be updated
         hook_up_to_date = False

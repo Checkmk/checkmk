@@ -126,7 +126,7 @@ class NagiosConfig:
         self.servicegroups_to_define: set[ServicegroupName] = set()
         self.contactgroups_to_define: set[ContactgroupName] = set()
         self.checknames_to_define: set[CheckPluginName] = set()
-        self.active_checks_to_define: set[str] = set()
+        self.active_checks_to_define: dict[str, str] = {}
         self.custom_commands_to_define: set[CoreCommandName] = set()
         self.hostcheck_commands_to_define: list[tuple[CoreCommand, str]] = []
 
@@ -533,7 +533,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
             _extra_service_conf_of(cfg, config_cache, hostname, service_data.description)
         )
 
-        cfg.active_checks_to_define.add(service_data.plugin_name)
+        cfg.active_checks_to_define[service_data.plugin_name] = service_data.detected_executable
         active_services.append(service_spec)
 
     if actchecks:
@@ -855,18 +855,18 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
             )
 
     # active_checks
-    for acttype in cfg.active_checks_to_define:
+    for acttype, detected_executable in cfg.active_checks_to_define.items():
         command_line = (
             act_info["command_line"]
             if (act_info := config.active_check_info.get(acttype)) is not None
-            else f"check_{acttype} $ARG1$"
+            else f"{detected_executable} $ARG1$"
         )
         cfg.write(
             format_nagios_object(
                 "command",
                 {
-                    "command_name": "check_mk_active-%s" % acttype,
-                    "command_line": core_config.autodetect_plugin(command_line),
+                    "command_name": f"check_mk_active-{acttype}",
+                    "command_line": command_line,
                 },
             )
         )

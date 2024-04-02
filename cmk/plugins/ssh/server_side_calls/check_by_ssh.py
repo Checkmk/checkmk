@@ -45,7 +45,7 @@ def check_by_ssh_command(
 
     args += ["-C", "%s" % replace_macros(params[0], host_config.macros)]
     if "port" in settings:
-        args += ["-p", settings["port"]]
+        args += ["-p", str(settings["port"])]
     if "ip_version" in settings:
         if settings["ip_version"] == "ipv4":
             args.append("-4")

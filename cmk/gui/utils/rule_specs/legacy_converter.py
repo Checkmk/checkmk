@@ -922,6 +922,21 @@ def _transform_dict_group_back(
     return _back
 
 
+def _convert_to_dict_legacy_validation(
+    v1_validate_funcs: Iterable[Callable[[Mapping[str, object]], object]],
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    localizer: Callable[[str], str],
+) -> Callable[[Mapping[str, object], str], None]:
+    def wrapper(value: Mapping[str, object], var_prefix: str) -> None:
+        unpacked_value = _unpack_dict_group(dict_elements, value)
+        try:
+            _ = [v1_validate_func(unpacked_value) for v1_validate_func in v1_validate_funcs]
+        except ruleset_api_v1.form_specs.validators.ValidationError as e:
+            raise MKUserError(var_prefix, e.message.localize(localizer))
+
+    return wrapper
+
+
 def _convert_to_legacy_dictionary(
     to_convert: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.Transform:
@@ -940,7 +955,9 @@ def _convert_to_legacy_dictionary(
             ignored_keys=list(to_convert.deprecated_elements),
             hidden_keys=ungrouped_element_key_props.hidden,
             validate=(
-                _convert_to_legacy_validation(to_convert.custom_validate, localizer)
+                _convert_to_dict_legacy_validation(
+                    to_convert.custom_validate, to_convert.elements, localizer
+                )
                 if to_convert.custom_validate is not None
                 else None
             ),

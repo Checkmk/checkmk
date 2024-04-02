@@ -28,7 +28,6 @@ from omdlib.version_info import VersionInfo
 import cmk.utils.tty as tty
 
 
-# TODO: Use site context?
 def tmpfs_mounted(sitename: str) -> bool:
     # Problem here: if /omd is a symbolic link somewhere else,
     # then in /proc/mounts the physical path will appear and be
@@ -195,14 +194,16 @@ def _tmpfs_is_managed_by_node(site_name: str, tmp_dir: str) -> bool:
 
 
 def add_to_fstab(
-    site: SiteContext, tmpfs_size: str | None = None, fstab_path: Path = Path("/etc/fstab")
+    site_name: str,
+    site_real_tmp_dir: str,
+    tmpfs_size: str | None = None,
+    fstab_path: Path = Path("/etc/fstab"),
 ) -> None:
     if not fstab_path.exists():
         return  # Don't do anything in case there is no fstab
 
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
-    mountpoint = site.real_tmp_dir
-    sys.stdout.write(f"Adding {mountpoint} to {fstab_path}.\n")
+    sys.stdout.write(f"Adding {site_real_tmp_dir} to {fstab_path}.\n")
 
     # No size option: using up to 50% of the RAM
     sizespec = ""
@@ -218,7 +219,7 @@ def add_to_fstab(
             fstab.write("\n")
 
         fstab.write(
-            f"tmpfs  {mountpoint} tmpfs noauto,user,mode=751,uid={site.name},gid={site.name}{sizespec} 0 0\n"
+            f"tmpfs  {site_real_tmp_dir} tmpfs noauto,user,mode=751,uid={site_name},gid={site_name}{sizespec} 0 0\n"
         )
 
 

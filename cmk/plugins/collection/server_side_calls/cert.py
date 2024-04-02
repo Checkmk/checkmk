@@ -45,7 +45,7 @@ class ServiceDescription(BaseModel):
 
 
 class Issuer(BaseModel):
-    common_name: str
+    common_name: str | None = None
     organization: str | None = None
     org_unit: str | None = None
     state: str | None = None
@@ -53,7 +53,7 @@ class Issuer(BaseModel):
 
 
 class Subject(BaseModel):
-    common_name: str
+    common_name: str | None = None
     organization: str | None = None
     org_unit: str | None = None
     pubkey_algorithm: PubKey | None = None
@@ -205,9 +205,9 @@ def _signature_algorithm_args(signature_algorithm: SignatureAlgorithm) -> Iterat
 
 
 def _issuer_args(issuer: Issuer) -> Iterator[str]:
-    yield "--issuer-cn"
-    yield issuer.common_name
-
+    if (common_name := issuer.common_name) is not None:
+        yield "--subject-cn"
+        yield common_name
     if (org := issuer.organization) is not None:
         yield "--issuer-o"
         yield org
@@ -223,9 +223,9 @@ def _issuer_args(issuer: Issuer) -> Iterator[str]:
 
 
 def _subject_args(subject: Subject) -> Iterator[str]:
-    yield "--subject-cn"
-    yield subject.common_name
-
+    if (common_name := subject.common_name) is not None:
+        yield "--subject-cn"
+        yield common_name
     if (org := subject.organization) is not None:
         yield "--subject-o"
         yield org

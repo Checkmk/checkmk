@@ -152,7 +152,6 @@ def _valuespec_specific_values() -> Dictionary:
                     elements={
                         "common_name": DictElement[str](
                             parameter_form=String(title=Title("Common name (CN)")),
-                            required=True,
                         ),
                         "organization": DictElement[str](
                             parameter_form=String(title=Title("Organization (O)"))
@@ -180,7 +179,6 @@ def _valuespec_specific_values() -> Dictionary:
                     elements={
                         "common_name": DictElement[str](
                             parameter_form=String(title=Title("Common name (CN)")),
-                            required=True,
                         ),
                         "organization": DictElement[str](
                             parameter_form=String(title=Title("Organization (O)"))

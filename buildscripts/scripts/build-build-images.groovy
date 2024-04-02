@@ -51,6 +51,15 @@ def main() {
         |${distros}
         |""".stripMargin());
 
+    stage("Prepare workspace") {
+        dir("${checkout_dir}") {
+            sh("""
+                rm -rf temp-build-context
+                mkdir temp-build-context
+                defines/populate-build-context.sh temp-build-context
+            """);
+        }
+    }
 
     withCredentials([
         usernamePassword(
@@ -71,12 +80,6 @@ def main() {
                             "IMAGE_${real_distro_name[distro].toUpperCase().replaceAll('\\.', '_').replaceAll('-', '_')}")
                     }()
                 ]};
-                sh("""
-                    cp defines.make static_variables.bzl package_versions.bzl .bazelversion omd/strip_binaries \
-                    buildscripts/infrastructure/build-nodes/scripts
-
-                    cp omd/distros/*.mk buildscripts/infrastructure/build-nodes/scripts
-                """);
             }
         }
 
@@ -88,6 +91,9 @@ def main() {
                         def image_name = "${distro}:${vers_tag}";
                         def distro_mk_file_name = "${real_distro_name[distro].toUpperCase().replaceAll('-', '_')}.mk";
                         def docker_build_args = (""
+                            + " --build-context scripts=buildscripts/infrastructure/build-nodes/scripts"
+                            + " --build-context omd_distros=omd/distros"
+
                             + " --build-arg DISTRO_IMAGE_BASE='${distro_base_image_id[distro]}'"
                             + " --build-arg DISTRO_MK_FILE='${distro_mk_file_name}'"
                             + " --build-arg DISTRO='${distro}'"
@@ -99,14 +105,15 @@ def main() {
                             + " --build-arg NEXUS_USERNAME='${NEXUS_USERNAME}'"
                             + " --build-arg NEXUS_PASSWORD='${NEXUS_PASSWORD}'"
                             + " --build-arg ARTIFACT_STORAGE='${ARTIFACT_STORAGE}'"
-                            + " -f '${distro}/Dockerfile'"
-                            + " ."
+
+                            + " -f 'buildscripts/infrastructure/build-nodes/${distro}/Dockerfile'"
+                            + " temp-build-context"
                         );
 
                         if (params.BUILD_IMAGE_WITHOUT_CACHE) {
                             docker_build_args = "--no-cache " + docker_build_args;
                         }
-                        dir("${checkout_dir}/buildscripts/infrastructure/build-nodes") {
+                        dir("${checkout_dir}") {
                             docker.build(image_name, docker_build_args);
                         }
                     }

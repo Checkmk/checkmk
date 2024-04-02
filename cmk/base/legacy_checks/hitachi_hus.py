@@ -39,6 +39,16 @@ _DETECT_HUS = any_of(
 )
 
 
+_HUS_MAP_STATES = {
+    "0": (3, "unknown"),
+    "1": (0, "no error"),
+    "2": (2, "acute"),
+    "3": (2, "serious"),
+    "4": (1, "moderate"),
+    "5": (1, "service"),
+}
+
+
 def parse_hitachi_hus(string_table: StringTable) -> StringTable:
     return string_table
 
@@ -51,14 +61,6 @@ def inventory_hitachi_hus(info):
 
 def check_hitachi_hus(item, _no_params, info):
     # Maps for hitachi hus components
-    hus_map_states = {
-        "0": (3, "unknown"),
-        "1": (0, "no error"),
-        "2": (2, "acute"),
-        "3": (2, "serious"),
-        "4": (1, "moderate"),
-        "5": (1, "service"),
-    }
 
     ok_states = []
     warn_states = []
@@ -91,7 +93,7 @@ def check_hitachi_hus(item, _no_params, info):
             continue
 
         for what, device_state in zip(component, line[1:]):
-            state, state_readable = hus_map_states[device_state]
+            state, state_readable = _HUS_MAP_STATES[device_state]
             if state == 0:
                 ok_states.append(f"{what}: {state_readable}")
             if state == 1:

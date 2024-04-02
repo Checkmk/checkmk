@@ -65,7 +65,7 @@ class BIStates:
 
 class NodeComputeResult(NamedTuple):
     state: int
-    downtime_state: int
+    in_downtime: bool
     acknowledged: bool
     output: str
     in_service_period: bool

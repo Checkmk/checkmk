@@ -173,7 +173,7 @@ class NodeVisualizationBIDataMapper:
         node_data["type_specific"]["core"].update(
             {
                 "state": actual_result.state,
-                "in_downtime": actual_result.downtime_state > 0,
+                "in_downtime": actual_result.in_downtime,
                 "acknowledged": actual_result.acknowledged,
             }
         )

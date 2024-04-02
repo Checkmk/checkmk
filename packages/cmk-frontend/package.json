@@ -22,7 +22,8 @@
     "build-watch": "WEBPACK_MODE=quick ENTERPRISE=yes MANAGED=no npx webpack --mode development --watch",
     "test-eslint": "eslint --max-warnings 0 --no-color './src/js/**/*.{j,t}s'",
     "test-tsc": "tsc",
-    "test-prettier": "prettier  --check --no-color --ignore-path ./.prettierignore --loglevel warn '{src/**/,}*.{js,ts,scss}'"
+    "test-prettier": "prettier  --check --no-color --ignore-path ./.prettierignore --loglevel warn '{src/**/,}*.{js,ts,scss}'",
+    "prettier": "prettier  --write --no-color --ignore-path ./.prettierignore --loglevel warn '{src/**/,}*.{js,ts,scss}'"
   },
   "repository": {
     "type": "git",

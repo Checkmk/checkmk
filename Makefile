@@ -121,7 +121,7 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files cmk-fr
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 cmk-frontend:
-	cd packages/cmk-frontend && ./run all
+	cd packages/cmk-frontend && ./run --setup-environment --all
 
 frontend-vue:
 	cd packages/cmk-frontend-vue && ./run

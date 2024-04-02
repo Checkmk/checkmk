@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import AnyStr
 
 import cmk.utils.paths as paths
-from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 
@@ -63,16 +62,12 @@ class _LocalSecret(ABC):
 
         self.regenerate()
 
-    @staticmethod
-    def _generate_secret() -> Secret:
-        return Secret.generate(32)
-
     def regenerate(self) -> None:
         """generate new secret and store it
 
         this does not care if the secret already exists"""
 
-        self.secret = self._generate_secret()
+        self.secret = Secret.generate(32)
         # TODO: mkdir is probably not really required here, just some cmc test failing.
         #       Better way would be to fix the test setup.
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -125,32 +120,6 @@ class SiteInternalSecret(_LocalSecret):
     def check(self, other: Secret) -> bool:
         """Check if a given secret is the same as this one in a timing attack safe manner"""
         return self.secret.compare(other)
-
-
-class DistributedSetupSecret(_LocalSecret):
-    """Used to authenticate between central and remote site
-
-    This secret exists for a very long time
-    It was introduced with `2dbfd0772c3e` in 2011... Back than it was `get_random_string(32)`
-    Recently (2.2.0) the generation was changed to use secrets.token_urlsafe
-
-    Since we never rotated it we still might receive random_string(32) secrets, therefore we use
-    string secrets for now.
-    """
-
-    @property
-    def path(self) -> Path:
-        return Path(paths.var_dir) / "wato" / "automation_secret.mk"
-
-    @staticmethod
-    def _generate_secret() -> Secret:
-        return Secret(secrets.token_urlsafe(32).encode("utf-8"))
-
-    def read(self) -> Password:
-        return Password(self.secret.reveal().decode("utf-8"))
-
-    def check(self, other: Password) -> bool:
-        return self.read() == other
 
 
 class AutomationUserSecret:

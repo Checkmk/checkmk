@@ -233,6 +233,9 @@ class ActiveCheck:
             )
 
     def _get_command(self, plugin_name: str, command_line: str) -> tuple[str, str]:
+        # TODO: check why/if we need this. Couldn't we have for example an active check that
+        # queries some RestAPI?
+        # This may be a leftover from a time where we would try to replace these in a macro?
         if self.host_attrs["address"] in ["0.0.0.0", "::"]:
             command = "check-mk-custom"
             command_line = 'echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2'
@@ -240,9 +243,11 @@ class ActiveCheck:
             return command, command_line
 
         command = f"check_mk_active-{plugin_name}"
-        return command, _autodetect_plugin(
-            command_line, self._modules.get(plugin_name.removeprefix("check_"))
+        executable, *args = command_line.split(None, 1)
+        detected_executable = _autodetect_plugin(
+            executable, self._modules.get(plugin_name.removeprefix("check_"))
         )
+        return command, " ".join((detected_executable, *args))
 
     @staticmethod
     def _old_active_http_check_service_description(params: Mapping[str, object]) -> str:
@@ -371,22 +376,18 @@ class ActiveCheck:
             yield ActiveServiceDescription(active_check.name, desc, params)
 
 
-def _autodetect_plugin(command_line: str, module_name: str | None, *fallbacks: Path) -> str:
+def _autodetect_plugin(command: str, module_name: str | None) -> str:
     # This condition can only be true in the legacy case.
     # Remove it when possible!
-    if command_line[0] in ["$", "/"]:
-        return command_line
+    if command.startswith(("$", "/")):
+        return command
 
     libexec_paths = (family_libexec_dir(module_name),) if module_name else ()
     nagios_paths = (
         cmk.utils.paths.local_lib_dir / "nagios/plugins",
         Path(cmk.utils.paths.lib_dir, "nagios/plugins"),
     )
-    # When the above case is gone, we can probably pull this
-    # function up the callstack and won't have to to do this
-    # join - split - rejoin dance.
-    plugin_name, *args = command_line.split(None, 1)
-    if (full_path := discover_executable(plugin_name, *libexec_paths, *nagios_paths)) is None:
-        return command_line
+    if (full_path := discover_executable(command, *libexec_paths, *nagios_paths)) is None:
+        return command
 
-    return " ".join((str(full_path), *args))
+    return str(full_path)

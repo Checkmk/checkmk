@@ -485,27 +485,7 @@ def _convert_to_inner_legacy_valuespec(
             return _convert_to_legacy_regular_expression(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.Dictionary():
-            elements = [
-                (key, _convert_to_legacy_valuespec(elem.parameter_form, localizer))
-                for key, elem in to_convert.elements.items()
-            ]
-
-            legacy_key_props = _extract_dictionary_key_props(to_convert.elements)
-
-            return legacy_valuespecs.Dictionary(
-                elements=elements,
-                title=_localize_optional(to_convert.title, localizer),
-                help=_localize_optional(to_convert.help_text, localizer),
-                empty_text=_localize_optional(to_convert.no_elements_text, localizer),
-                required_keys=legacy_key_props.required,
-                ignored_keys=to_convert.deprecated_elements,
-                hidden_keys=legacy_key_props.hidden,
-                validate=(
-                    _convert_to_legacy_validation(to_convert.custom_validate, localizer)
-                    if to_convert.custom_validate is not None
-                    else None
-                ),
-            )
+            return _convert_to_legacy_dictionary(to_convert, localizer)
 
         case ruleset_api_v1.form_specs.SingleChoice():
             return _convert_to_legacy_dropdown_choice(to_convert, localizer)
@@ -831,6 +811,30 @@ def _convert_to_legacy_regular_expression(
             assert_never(other_match)
 
     return legacy_valuespecs.RegExp(mode=mode, case_sensitive=True, **converted_kwargs)
+
+
+def _convert_to_legacy_dictionary(
+    to_convert: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Dictionary:
+    elements = [
+        (key, _convert_to_legacy_valuespec(elem.parameter_form, localizer))
+        for key, elem in to_convert.elements.items()
+    ]
+    legacy_key_props = _extract_dictionary_key_props(to_convert.elements)
+    return legacy_valuespecs.Dictionary(
+        elements=elements,
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
+        empty_text=_localize_optional(to_convert.no_elements_text, localizer),
+        required_keys=legacy_key_props.required,
+        ignored_keys=to_convert.deprecated_elements,
+        hidden_keys=legacy_key_props.hidden,
+        validate=(
+            _convert_to_legacy_validation(to_convert.custom_validate, localizer)
+            if to_convert.custom_validate is not None
+            else None
+        ),
+    )
 
 
 def _convert_to_legacy_monitoring_state(

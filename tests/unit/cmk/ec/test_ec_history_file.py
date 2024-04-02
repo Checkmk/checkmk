@@ -63,9 +63,7 @@ def test_current_history_period(config: Config) -> None:
         assert _current_history_period(config=config) == 1549929600
 
     with time_machine.travel(datetime.datetime.fromtimestamp(1550000000.0, tz=ZoneInfo("CET"))):
-        assert (
-            _current_history_period(config={**config, "history_rotation": "weekly"}) == 1549843200
-        )
+        assert _current_history_period(config=config | {"history_rotation": "weekly"}) == 1549843200
 
 
 def test_convert_history_line() -> None:

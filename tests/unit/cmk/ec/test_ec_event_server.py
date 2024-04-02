@@ -39,7 +39,7 @@ def test_event_rewrite(
     Event server rewrite_event() method should change event state
     even if incomplete StatePatterns are given in rule["State"].
     """
-    config_rule_packs: Config = {**config, "rule_packs": [ec.default_rule_pack([RULE])]}
+    config_rule_packs: Config = config | {"rule_packs": [ec.default_rule_pack([RULE])]}
     history = create_history(
         settings,
         config_rule_packs,

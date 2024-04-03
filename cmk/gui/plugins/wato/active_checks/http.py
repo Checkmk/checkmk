@@ -157,7 +157,7 @@ def _validate_active_check_http_name(value: str, varprefix: str) -> None:
 def _valuespec_active_checks_http() -> Migrate:
     return Migrate(
         Dictionary(
-            title=_("Check HTTP service"),
+            title=_("Check HTTP service (deprecated)"),
             help=_(
                 "Check HTTP/HTTPS service using the plugin <tt>check_http</tt> "
                 "from the standard Monitoring Plugins. "
@@ -165,6 +165,8 @@ def _valuespec_active_checks_http() -> Migrate:
                 "It can test normal (HTTP) and secure (HTTPS) servers, follow "
                 "redirects, search for strings and regular expressions, check "
                 "connection times, and report on certificate expiration times."
+                " Please note that this plug-in is deprecated and shall not "
+                'be used anymore. Please use the new "Check HTTP web service" instead.'
             ),
             elements=[
                 (

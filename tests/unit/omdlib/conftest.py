@@ -9,14 +9,8 @@ import pytest
 from pytest import MonkeyPatch
 
 import omdlib
-from omdlib.version_info import VersionInfo
 
 
 @pytest.fixture(autouse=True)
 def omd_base_path(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(omdlib.utils, "omd_base_path", lambda: str(tmp_path))
-
-
-@pytest.fixture()
-def version_info() -> VersionInfo:
-    return VersionInfo(omdlib.__version__)

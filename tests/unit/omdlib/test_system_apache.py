@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
+import omdlib
 from omdlib.system_apache import (
     apache_hook_version,
     create_apache_hook,
@@ -23,14 +24,9 @@ from omdlib.system_apache import (
 from omdlib.version_info import VersionInfo
 
 
-@pytest.fixture(autouse=True)
-def fake_version_info(version_info: VersionInfo) -> None:
+def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
+    version_info = VersionInfo(omdlib.__version__)
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
-
-
-def test_register_with_system_apache(
-    tmp_path: Path, version_info: VersionInfo, mocker: MockerFixture
-) -> None:
     reload_apache = mocker.patch("subprocess.call", return_value=0)
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
@@ -49,9 +45,9 @@ def test_register_with_system_apache(
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
 
 
-def test_unregister_from_system_apache(
-    tmp_path: Path, version_info: VersionInfo, mocker: MockerFixture
-) -> None:
+def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) -> None:
+    version_info = VersionInfo(omdlib.__version__)
+    version_info.APACHE_CTL = "/usr/sbin/apachectl"
     reload_apache = mocker.patch("subprocess.call", return_value=0)
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
@@ -64,7 +60,9 @@ def test_unregister_from_system_apache(
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
 
 
-def test_delete_apache_hook(tmp_path: Path, version_info: VersionInfo) -> None:
+def test_delete_apache_hook(tmp_path: Path) -> None:
+    version_info = VersionInfo(omdlib.__version__)
+    version_info.APACHE_CTL = "/usr/sbin/apachectl"
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
     register_with_system_apache(version_info, "unit", str(tmp_path), "127.0.0.1", "5000", True)
@@ -74,7 +72,9 @@ def test_delete_apache_hook(tmp_path: Path, version_info: VersionInfo) -> None:
     assert not apache_config.exists()
 
 
-def test_delete_apache_hook_not_existing(tmp_path: Path, version_info: VersionInfo) -> None:
+def test_delete_apache_hook_not_existing(tmp_path: Path) -> None:
+    version_info = VersionInfo(omdlib.__version__)
+    version_info.APACHE_CTL = "/usr/sbin/apachectl"
     apache_config = tmp_path / "omd/apache/unit.conf"
     delete_apache_hook("unit")
     assert not apache_config.exists()

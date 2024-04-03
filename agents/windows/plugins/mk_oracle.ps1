@@ -107,6 +107,11 @@ $CACHE_MAXAGE = 600
 #   $EXCLUDE_mysid="sessions logswitches"
 #
 
+function Test-Administrator {
+     return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+}
+
+$is_admin = Test-Administrator
 Function debug_echo {
      Param(
           [Parameter(Mandatory = $True, Position = 1)]
@@ -116,6 +121,25 @@ Function debug_echo {
      if ($DEBUG -gt 0) {
           $MYTIME = Get-Date -Format o
           echo "${MYTIME} DEBUG:${error_message}"
+     }
+     # log to a %PROGRAMDATA%\cmk_oracle_plugin-{%USERNAME%}{user|admin}.log if PROGRAMDATA/Temp/cmk_enable_oracle_logging exists
+     try {
+          $temp = Join-Path -Path $env:PROGRAMDATA -ChildPath "Temp"
+          if (Test-Path (Join-Path -Path $temp -ChildPath "cmk_enable_oracle_logging")) {
+               $MYTIME = Get-Date -Format o
+               if ($is_admin) {
+                    $mode = "admin"
+               }
+               else {
+                    $mode = "user"
+               }
+               $user_name = (whoami).replace("\", ",")
+               $log_file = Join-Path -Path $temp -ChildPath "cmk_oracle_plugin-{$user_name}{$mode}.log"
+               Add-Content -Path $log_file -Value "${MYTIME} [LOG] ${error_message}"
+          }
+     }
+     catch {
+          # do nothing on "surprise"
      }
 }
 
@@ -127,14 +151,24 @@ if (!$MK_CONFDIR) {
      $MK_CONFDIR = "C:\ProgramData\checkmk\agent\config"
 }
 
-# directory for tempfiles
 $MK_TEMPDIR = $env:MK_TEMPDIR
+if ($is_admin) {
+     debug_echo "Admin mode"
+     $MK_TEMPDIR = $env:MK_TEMPDIR
+}
+else {
+     debug_echo "User mode"
+     $MK_TEMPDIR = $env:TEMP
+}
+
 
 # To execute the script standalone in the environment of the installed agent
 if (!$MK_TEMPDIR) {
      $MK_TEMPDIR = "C:\ProgramData\checkmk\agent\tmp"
 }
 
+debug_echo "MK_TEMPDIR = $MK_TEMPDIR"
+debug_echo "MK_CONFDIR = $MK_CONFDIR"
 
 # Source the optional configuration file for this agent plugin
 $CONFIG_FILE = "${MK_CONFDIR}\mk_oracle_cfg.ps1"
@@ -192,10 +226,6 @@ $LESS_THAN = '<'
 
 Function should_exclude($exclude, $section) {
      return (($exclude -Match "ALL") -or ($exclude -Match $section))
-}
-
-function Test-Administrator {
-     return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 }
 
 <#
@@ -289,10 +319,7 @@ Function sqlcall {
           [int]$run_async,
 
           [Parameter(Mandatory = $True, Position = 4)]
-          [string]$sqlsid,
-
-          [Parameter(Mandatory = $True, Position = 5)]
-          [string]$oracle_home
+          [string]$sqlsid
      )
      ################################################################################
      # Meaning of parameters in function sqlcall
@@ -501,7 +528,7 @@ Function sqlcall {
      if ($run_async -eq 0) {
           $SKIP_DOUBLE_ERROR = 0
           try {
-               $res = ( $THE_SQL | & $oracle_home"\bin\sqlplus" -L -s "$SQL_CONNECT")
+               $res = ( $THE_SQL | sqlplus -L -s "$SQL_CONNECT")
                if ($LastExitCode -eq 0) {
                     # we only show the output if there was no error...
                     $res | Set-Content $fullpath
@@ -565,7 +592,7 @@ Function sqlcall {
 
                     $command = {
                          param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
-                         $res = ("$sql" | & $oracle_home"\bin\sqlplus" -s -L $sql_connect)
+                         $res = ("$sql" | sqlplus -s -L $sql_connect)
                          if ($LastExitCode -eq 0) {
                               $res | Set-Content $path
                          }
@@ -2244,7 +2271,6 @@ $ORIG_ASYNC_SECTIONS = $ASYNC_SECTIONS
 $the_count = ($list_inst | measure-object).count
 # we only continue if an Oracle instance is running
 if ($the_count -gt 0) {
-     $is_admin = Test-Administrator
      # loop through each instance
      ForEach ($inst in $list_inst) {
           # get the real instance name
@@ -2266,7 +2292,7 @@ if ($the_count -gt 0) {
           $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4).Trim('"')
 
           if ($is_admin) {
-               # administartors should use only safe binary
+               # administrators should use only safe binary
                $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\sqlplus.exe")
                if ($Null -ne $result) {
                     Write-Output "<<<oracle_instance:sep(124)>>>"
@@ -2337,7 +2363,7 @@ if ($the_count -gt 0) {
                     debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple SQL"
                     $ERROR_FOUND = 0
                     if ($THE_SQL) {
-                         sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -run_async 0 -sqlsid $inst_name -oracle_home $ORACLE_HOME
+                         sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -run_async 0 -sqlsid $inst_name
                     }
                }
 
@@ -2373,7 +2399,7 @@ if ($the_count -gt 0) {
                          }
                          debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple asyn SQL"
                          if ("$THE_SQL") {
-                              sqlcall -sql_message "async_SQLs" -sqltext "$THE_SQL" -run_async 1 -sqlsid $inst_name -oracle_home $ORACLE_HOME
+                              sqlcall -sql_message "async_SQLs" -sqltext "$THE_SQL" -run_async 1 -sqlsid $inst_name
                          }
                     }
                }

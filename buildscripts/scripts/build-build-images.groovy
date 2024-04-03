@@ -120,7 +120,9 @@ def main() {
                 images.each { distro, image ->
                     if (image) {
                         image.push();
-                        image.push("${branch_name}-latest");
+                        if (branch_name ==~ /master|\d\.\d\.\d/) {
+                            image.push("${branch_name}-latest");
+                        }
                     }
                 }
             }

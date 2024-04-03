@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import enum
 from collections.abc import Callable
-from typing import assert_never
+from dataclasses import dataclass, field
+from typing import assert_never, Self
 
 
 class _Operation(enum.Enum):
@@ -16,6 +17,7 @@ class _Operation(enum.Enum):
     ADD = enum.auto()
 
 
+@dataclass(frozen=True)
 class Title:
     """
     Create a localizable string
@@ -56,15 +58,8 @@ class Title:
 
     """
 
-    def __init__(
-        self,
-        arg: str | Title,
-        /,
-        *,
-        modifier: tuple[_Operation, tuple[str | Title, ...]] | None = None,
-    ) -> None:
-        self._arg = arg
-        self._modifier = modifier
+    _arg: str | Self
+    _modifier: tuple[_Operation, tuple[str | Self, ...]] | None = field(kw_only=True, default=None)
 
     def __repr__(self) -> str:
         return (
@@ -92,13 +87,13 @@ class Title:
             case _:
                 assert_never(operation)
 
-    def __add__(self, other: Title) -> Title:
-        return Title(self, modifier=(_Operation.ADD, (other,)))
+    def __add__(self, other: Self) -> Self:
+        return self.__class__(self, _modifier=(_Operation.ADD, (other,)))
 
-    def __mod__(self, other: str | Title | tuple[str | Title, ...]) -> Title:
-        return Title(
-            self, modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,))
+    def __mod__(self, other: str | Self | tuple[str | Self, ...]) -> Self:
+        return self.__class__(
+            self, _modifier=(_Operation.MOD, other if isinstance(other, tuple) else (other,))
         )
 
-    def __rmod__(self, other: Title) -> Title:
-        return Title(other, modifier=(_Operation.MOD, (self,)))
+    def __rmod__(self, other: Self) -> Self:
+        return self.__class__(other, _modifier=(_Operation.MOD, (self,)))

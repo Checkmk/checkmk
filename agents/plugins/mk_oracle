@@ -605,7 +605,7 @@ set_ora_env() {
                 crsctl_path="${crs_home}"/bin/crsctl
                 EXECUTION_MODE="$(get_binary_execution_mode "$crsctl_path" "$(get_binary_owner "$crsctl_path")")"
                 # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
-                ORACLE_HOME=$($EXECUTION_MODE "\"${crsctl_path}\" stat res -p -w \"((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))\"" | grep -m1 ^ORACLE_HOME= | cut -d= -f2)
+                ORACLE_HOME=$($EXECUTION_MODE "\"${crsctl_path}\" stat res -p -w \"((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))\" | grep -m1 ^ORACLE_HOME= | cut -d= -f2")
             fi
         else
             # Single Instance with oratab

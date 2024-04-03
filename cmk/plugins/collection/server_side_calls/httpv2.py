@@ -260,12 +260,13 @@ def _merge_settings(
 def generate_http_services(
     params: Sequence[HttpEndpoint], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveCheckCommand]:
+    macros = host_config.macros
     for endpoint in params:
         protocol = "HTTPS" if endpoint.url.startswith("https://") else "HTTP"
         prefix = f"{protocol} " if endpoint.service_name.prefix is ServicePrefix.AUTO else ""
-        endpoint.url = replace_macros(endpoint.url, host_config.macros)
+        endpoint.url = replace_macros(endpoint.url, macros)
         yield ActiveCheckCommand(
-            service_description=f"{prefix}{endpoint.service_name.name}",
+            service_description=f"{prefix}{replace_macros(endpoint.service_name.name, macros)}",
             command_arguments=list(_command_arguments(endpoint, http_proxies)),
         )
 

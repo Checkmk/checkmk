@@ -100,7 +100,8 @@ def declare_notification_plugin_permissions() -> None:
 
 def user_script_choices(what: str) -> list[tuple[str, str]]:
     scripts = load_user_scripts(what)
-    choices = [(name, info["title"]) for (name, info) in scripts.items()]
+    # Don't add skel README file
+    choices = [(name, info["title"]) for (name, info) in scripts.items() if name != "README"]
     choices = [(k, _u(v)) for k, v in sorted(choices, key=lambda x: x[1])]
     return choices
 

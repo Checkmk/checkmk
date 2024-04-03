@@ -109,8 +109,10 @@ def size_trend(
     Result(state=<State.CRIT: 2>, summary='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)')
     Metric('trend_hoursleft', 37.0)
     """
+    if (range_levels := levels.get("trend_range")) is None:
+        return
 
-    range_sec = levels["trend_range"] * SEC_PER_H
+    range_sec = range_levels * SEC_PER_H
     timestamp = timestamp or time.time()
 
     mb_per_sec = get_rate(value_store, "%s.delta" % value_store_key, timestamp, used_mb)

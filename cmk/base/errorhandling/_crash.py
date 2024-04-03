@@ -145,7 +145,7 @@ class CheckCrashReport(CrashReportWithAgentOutput):
 
 
 def _read_snmp_info(hostname: str) -> bytes | None:
-    cache_path = Path(cmk.utils.paths.data_source_cache_dir, "snmp", hostname)
+    cache_path = Path(cmk.utils.paths.snmpwalks_dir, hostname)
     try:
         with cache_path.open(mode="rb") as f:
             return f.read()

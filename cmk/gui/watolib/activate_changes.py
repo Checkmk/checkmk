@@ -160,6 +160,14 @@ FileFilterFunc = Callable[[str], bool] | None
 ActivationSource = Literal["GUI", "REST API", "INTERNAL"]
 
 
+class SiteReplicationStatus(TypedDict, total=False):
+    last_activation: ActivationId | None
+    current_activation: ActivationId | None
+    current_source: ActivationSource | None
+    current_user_id: UserId | None
+    times: dict[str, float]
+
+
 class MKLicensingError(Exception):
     pass
 
@@ -308,7 +316,7 @@ def get_replication_paths() -> list[ReplicationPath]:
 
 
 # If the site is not up-to-date, synchronize it first.
-def sync_changes_before_remote_automation(site_id):
+def sync_changes_before_remote_automation(site_id: SiteId) -> None:
     manager = ActivateChangesManager()
     manager.load()
 
@@ -338,7 +346,7 @@ def sync_changes_before_remote_automation(site_id):
         )
 
 
-def _load_site_replication_status(site_id, lock=False):
+def _load_site_replication_status(site_id: SiteId, lock: bool = False) -> SiteReplicationStatus:
     return store.load_object_from_file(
         _site_replication_status_path(site_id),
         default={},
@@ -346,7 +354,7 @@ def _load_site_replication_status(site_id, lock=False):
     )
 
 
-def _save_site_replication_status(site_id, repl_status):
+def _save_site_replication_status(site_id: SiteId, repl_status: SiteReplicationStatus) -> None:
     store.save_object_to_file(_site_replication_status_path(site_id), repl_status, pretty=False)
 
 
@@ -362,7 +370,7 @@ def _update_replication_status(site_id, vars_):
         _save_site_replication_status(site_id, repl_status)
 
 
-def clear_site_replication_status(site_id):
+def clear_site_replication_status(site_id: SiteId) -> None:
     try:
         os.unlink(_site_replication_status_path(site_id))
     except FileNotFoundError:
@@ -371,11 +379,11 @@ def clear_site_replication_status(site_id):
     ActivateChanges().confirm_site_changes(site_id)
 
 
-def _site_replication_status_path(site_id):
+def _site_replication_status_path(site_id: SiteId) -> str:
     return f"{var_dir}replication_status_{site_id}.mk"
 
 
-def _load_replication_status(lock=False):
+def _load_replication_status(lock: bool = False) -> dict[SiteId, SiteReplicationStatus]:
     return {
         site_id: _load_site_replication_status(site_id, lock=lock)
         for site_id in active_config.sites
@@ -441,7 +449,7 @@ def _mark_running(site_activation_state: SiteActivationState) -> None:
     _set_result(site_activation_state, PHASE_STARTED, _("Started"))
 
 
-def _is_currently_activating(site_rep_status) -> bool:  # type: ignore[no-untyped-def]
+def _is_currently_activating(site_rep_status: SiteReplicationStatus) -> bool:
     current_activation_id = site_rep_status.get("current_activation")
     if not current_activation_id:
         return False
@@ -969,18 +977,18 @@ def activate_remote_changes(
 
 class ActivateChanges:
     def __init__(self) -> None:
-        self._repstatus: dict = {}
+        self._repstatus: dict[SiteId, SiteReplicationStatus] = {}
 
         # Changes grouped by site
-        self._changes_by_site: dict = {}
+        self._changes_by_site: dict[SiteId, Sequence[ChangeSpec]] = {}
 
         # Changes grouped by site up until a specific activation id
-        self._changes_by_site_until: dict = {}
+        self._changes_by_site_until: dict[SiteId, list[ChangeSpec]] = {}
 
         # A list of changes ordered by time and grouped by the change.
         # Each change contains a list of affected sites.
-        self._all_changes: list[tuple[str, dict]] = []
-        self._pending_changes: list[tuple[str, dict]] = []
+        self._all_changes: list[tuple[str, ChangeSpec]] = []
+        self._pending_changes: list[tuple[str, ChangeSpec]] = []
         super().__init__()
 
     def load(self):
@@ -990,8 +998,8 @@ class ActivateChanges:
     def _load_changes(self):
         self._changes_by_site = {}
 
-        active_changes: dict[str, dict[str, Any]] = {}
-        pending_changes: dict[str, dict[str, Any]] = {}
+        active_changes: dict[str, ChangeSpec] = {}
+        pending_changes: dict[str, ChangeSpec] = {}
 
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         # pylint: disable=not-an-iterable
@@ -1184,19 +1192,19 @@ class ActivateChanges:
         return self._changes_by_site_until[site_id]
 
 
-def has_been_activated(change) -> bool:  # type: ignore[no-untyped-def]
+def has_been_activated(change: ChangeSpec) -> bool:
     return change.get("has_been_activated", False)
 
 
-def prevent_discard_changes(change) -> bool:  # type: ignore[no-untyped-def]
+def prevent_discard_changes(change: ChangeSpec) -> bool:
     return change.get("prevent_discard_changes", False)
 
 
-def is_foreign_change(change) -> bool:  # type: ignore[no-untyped-def]
+def is_foreign_change(change: ChangeSpec) -> bool:
     return change["user_id"] and change["user_id"] != user.id
 
 
-def affects_all_sites(change) -> bool:  # type: ignore[no-untyped-def]
+def affects_all_sites(change: ChangeSpec) -> bool:
     return not set(change["affected_sites"]).symmetric_difference(set(activation_sites()))
 
 

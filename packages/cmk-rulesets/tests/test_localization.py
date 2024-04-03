@@ -7,7 +7,8 @@ from typing import Final
 
 import pytest
 
-from cmk.graphing.v1 import Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1._localize import _Localizable
 
 _TRANSLATABLE_STRINGS: Final = {
     "The ruleset '%s' has been replaced by '%s'": "%s heißt jetzt %s",
@@ -25,23 +26,26 @@ def _localizer(string: str) -> str:
     return _TRANSLATABLE_STRINGS[string]
 
 
-class TestTitle:
-    def test_mod_tuple(self) -> None:
+class TestLocalizable:
+    @pytest.mark.parametrize(["localizable"], [(Title,), (Message,), (Label,), (Help,)])
+    def test_mod_tuple(self, localizable: type[_Localizable]) -> None:
         assert (
-            Title("The ruleset '%s' has been replaced by '%s'")
+            localizable("The ruleset '%s' has been replaced by '%s'")
             % (
-                Title("Old rule"),
-                Title("Fancy new rule"),
+                localizable("Old rule"),
+                localizable("Fancy new rule"),
             )
         ).localize(_localizer) == "Raider heißt jetzt Twix"
 
-    def test_mod_string(self) -> None:
-        assert (Title("The host %r does not exist") % "horst").localize(
+    @pytest.mark.parametrize(["localizable"], [(Title,), (Message,), (Label,), (Help,)])
+    def test_mod_string(self, localizable: type[_Localizable]) -> None:
+        assert (localizable("The host %r does not exist") % "horst").localize(
             _localizer
         ) == "'horst' gibbet nich"
 
-    def test_add(self) -> None:
-        assert (Title("One sentence. ") + Title("Another sentence.")).localize(
+    @pytest.mark.parametrize(["localizable"], [(Title,), (Message,), (Label,), (Help,)])
+    def test_add(self, localizable: type[_Localizable]) -> None:
+        assert (localizable("One sentence. ") + localizable("Another sentence.")).localize(
             _localizer
         ) == "blahblah"
 
@@ -66,3 +70,7 @@ class TestTitle:
     )
     def test_eq(self, title1: Title, title2: Title, expected_equality: bool) -> None:
         assert (title1 == title2) is expected_equality
+
+    @pytest.mark.parametrize(["localizable"], [(Title,), (Message,), (Label,), (Help,)])
+    def test_repr(self, localizable: type[_Localizable]) -> None:
+        assert repr(localizable("abc")) == f"{localizable.__name__}('abc')"

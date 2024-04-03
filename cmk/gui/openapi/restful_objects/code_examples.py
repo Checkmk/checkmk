@@ -111,6 +111,7 @@ request = urllib.request.Request(
             indent(skip_lines=1, spaces=4) }}).encode('utf-8'),
     {%- endif %}
 )
+# Will raise an HTTPError if status code is >= 400
 resp = urllib.request.urlopen(request)
 {{ formatted_if_statement }}
 """
@@ -632,19 +633,26 @@ def formatted_if_statement_for_responses(
 
     """
     formatted_str = ""
+    target_requests = "requests" == code_example
+    status_code_field = "status_code" if target_requests else "status"
+    retrieve_data_code = (
+        "    pprint.pprint(resp.json())\n"
+        if target_requests
+        else "    pprint.pprint(json.loads(resp.read().decode()))\n"
+    )
     for status_code in sorted(expected_response_status_codes):
         if status_code < 400:
             if len(formatted_str) == 0:
-                formatted_str += f"if resp.status_code == {status_code}:\n"
+                formatted_str += f"if resp.{status_code_field} == {status_code}:\n"
             else:
-                formatted_str += f"elif resp.status_code == {status_code}:\n"
+                formatted_str += f"elif resp.{status_code_field} == {status_code}:\n"
 
             if status_code == 200:
                 if downloadable:
                     formatted_str += "    file_name = resp.headers['content-disposition'].split('filename=')[1].strip('\"')\n"
                     formatted_str += "    with open(file_name, 'wb') as out_file:\n"
 
-                    if code_example == "requests":
+                    if target_requests:
                         formatted_str += "        resp.raw.decode_content = True\n"
                         formatted_str += "        shutil.copyfileobj(resp.raw, out_file)\n"
                     else:
@@ -653,14 +661,16 @@ def formatted_if_statement_for_responses(
                     formatted_str += "    print('Done')\n"
 
                 else:
-                    formatted_str += "    pprint.pprint(resp.json())\n"
+                    formatted_str += retrieve_data_code
             elif status_code == 204:
                 formatted_str += "    print('Done')\n"
             elif status_code == 302:
                 formatted_str += "    print('Redirected to', resp.headers['location'])\n"
 
-    formatted_str += "else:\n"
-    formatted_str += "    raise RuntimeError(pprint.pformat(resp.json()))\n"
+    if target_requests:
+        formatted_str += "else:\n"
+        formatted_str += "    raise RuntimeError(pprint.pformat(resp.json()))\n"
+
     return formatted_str
 
 

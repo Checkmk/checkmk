@@ -17,7 +17,7 @@ class ShowParentChildTopology(Icon):
 
     @classmethod
     def title(cls) -> str:
-        return _("Network topology")
+        return _("Host parent/child topology")
 
     def host_columns(self):
         return ["name"]
@@ -33,4 +33,4 @@ class ShowParentChildTopology(Icon):
             [("host_regex", f"{row['host_name']}$"), ("topology_mesh_depth", 0)],
             filename="parent_child_topology.py",
         )
-        return "aggr", _("Host Parent/Child topology"), url
+        return "aggr", _("Host parent/child topology"), url

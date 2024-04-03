@@ -13,7 +13,6 @@ import json
 import re
 from typing import Any, cast, NamedTuple, TypeAlias
 
-import black
 import jinja2
 from apispec import APISpec
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
@@ -500,25 +499,31 @@ def code_samples(  # type: ignore[no-untyped-def]
     return result
 
 
-def format_nicely(obj: object) -> str:
-    """Format the object nicely.
+def format_nicely(value: Any, indent_level: int = 0) -> str:
+    if isinstance(value, dict):
+        out = "{\n"
+        indent_prefix = (indent_level + 1) * 4 * " "
+        for key, val in value.items():
+            out += f"{indent_prefix}{format_nicely(key)}: {format_nicely(val, indent_level + 1)},\n"
+        return f"{out}{indent_level * 4 * ' '}}}"
 
-    Examples:
+    if isinstance(value, list):
+        if (
+            len(list_str := ", ".join(format_nicely(v) for v in value)) < 35
+            and "\n" not in list_str
+        ):
+            return f"[{list_str}]"
 
-        While this should format in a stable manner, I'm not quite sure about it.
+        out = "[\n"
+        indent_prefix = (indent_level + 1) * 4 * " "
+        for val in value:
+            out += f"{indent_prefix}{format_nicely(val, indent_level + 1)},\n"
+        return f"{out}{indent_level * 4 * ' '}]"
 
-        >>> format_nicely({'password': 'foo', 'username': 'bar'})
-        '{"password": "foo", "username": "bar"}\\n'
+    if isinstance(value, str):
+        return json.dumps(value)
 
-    Args:
-        obj:
-            A python object, which gets represented as valid Python-code when a str() is applied.
-
-    Returns:
-        A string of the object, formatted nicely.
-
-    """
-    return black.format_str(str(obj), mode=black.Mode(line_length=50))  # type: ignore[attr-defined]
+    return repr(value)
 
 
 def _get_schema(schema: str | type[Schema] | None) -> Schema | None:

@@ -186,7 +186,6 @@ lxml = "==4.9.3"  # used via beautifulsoup4 as a parser and in the agent_netapp 
 grpcio = "*"
 google-api-python-client = "*"  # use rest api to query big query for gcp cost monitoring
 setproctitle = "==1.3.2"  # used by mkbench/dcd/liveproxyd
-black = "*"
 meraki = "==1.41.0"  # used by special agent Cisco Meraki
 feedparser = "==6.0.10"  # used by special agent Microsoft Azure Status
 pysaml2 = "~=7.4"  # used by SSO via SAML2.0

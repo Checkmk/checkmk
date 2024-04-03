@@ -259,7 +259,7 @@ function Invoke-SafetyCheck( [String]$file ) {
                $forbidden_rights |
                Foreach-Object {
                     if ($rights -match $_) {
-                         return "Safe execution is not possible: $entity has '$_' access to '$file'"
+                         return "$entity has '$_' access permissions '$file'"
                     }
                }
           }
@@ -2293,10 +2293,11 @@ if ($the_count -gt 0) {
 
           if ($is_admin) {
                # administrators should use only safe binary
-               $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\sqlplus.exe")
+               $path = $ORACLE_HOME + "\bin\sqlplus.exe"
+               $result = Invoke-SafetyCheck($path)
                if ($Null -ne $result) {
                     Write-Output "<<<oracle_instance:sep(124)>>>"
-                    Write-Output "$ORACLE_SID|FAILURE|$result. Either run the plugin as a user using the rule 'Run plugins and local checks using non-system account' or disable 'Write', 'Modify' and 'Full control' access to the $path by non-admin users."
+                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the '$path' by non-admin users. Alternatively, you can try to run the plugin as a user using the rule 'Run plugins and local checks using non-system account'"
                     continue
                }
           }

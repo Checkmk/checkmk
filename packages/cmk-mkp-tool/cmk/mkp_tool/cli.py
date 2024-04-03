@@ -82,6 +82,7 @@ def partial(wrappee: _SiteExclusiveHandlerFunction, site_context: SiteContext) -
     ) -> int:
         return wrappee(site_context, args, path_config, persisting_function)
 
+    wrapped.__doc__ = wrappee.__doc__
     return wrapped
 
 

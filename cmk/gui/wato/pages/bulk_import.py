@@ -303,8 +303,10 @@ class ModeBulkImport(WatoMode):
                         # Remove host_name from attributes
                         del entry["host_name"]
                         _host_name = HostName(attr_value)
-
-                    if attr_name != "alias":
+                    elif attr_name in ("-", ""):
+                        # Don't import / No select
+                        del entry[attr_name]
+                    elif attr_name != "alias":
                         host_attribute_inst = host_attributes[attr_name]
 
                         if not attr_value.isascii():

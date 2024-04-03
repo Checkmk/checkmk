@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import importlib
 import os
+import sys
 from collections import defaultdict
-from collections.abc import Callable, Hashable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
@@ -119,7 +120,7 @@ def plugins_local_path() -> Path:
 
     Currently there is always exactly one.
     """
-    return Path(next(_writable_module_paths(CMK_PLUGINS)))
+    return Path(_first_writable_safe_python_path(), *CMK_PLUGINS.split("."))
 
 
 def addons_plugins_local_path() -> Path:
@@ -127,12 +128,15 @@ def addons_plugins_local_path() -> Path:
 
     Currently there is always exactly one.
     """
-    return Path(next(_writable_module_paths(CMK_ADDONS_PLUGINS)))
+    return Path(_first_writable_safe_python_path(), *CMK_ADDONS_PLUGINS.split("."))
 
 
-def _writable_module_paths(m_name: str) -> Iterator[str]:
-    """Return the writable module paths"""
-    return (p for p in importlib.import_module(m_name).__path__ if os.access(p, os.W_OK))
+def _first_writable_safe_python_path() -> str:
+    """Return the best guess for the `local` path
+
+    It's the first writable path in sys.path, omitting '.'.
+    """
+    return next(p for p in sys.path if p and os.access(p, os.W_OK))
 
 
 _T = TypeVar("_T")

@@ -13,6 +13,7 @@ import livestatus
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
+from cmk.utils.user import UserId
 
 import cmk.gui.sites as sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
@@ -225,12 +226,14 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
     def __init__(
         self,
         dashboard_name: DashboardName,
+        dashboard_owner: UserId,
         dashboard: DashboardConfig,
         dashlet_id: DashletId,
         dashlet: T,
     ) -> None:
         super().__init__(
             dashboard_name=dashboard_name,
+            dashboard_owner=dashboard_owner,
             dashboard=dashboard,
             dashlet_id=dashlet_id,
             dashlet=dashlet,

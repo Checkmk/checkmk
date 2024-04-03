@@ -126,8 +126,9 @@ class EditDashletPage(Page):
 
         def dashlet_info_handler(dashlet_spec: DashletConfig) -> SingleInfos:
             assert isinstance(self._ident, int)
+            assert user.id is not None
             dashlet_type = dashlet_registry[dashlet_spec["type"]]
-            dashlet = dashlet_type(self._board, self._dashboard, self._ident, dashlet_spec)
+            dashlet = dashlet_type(self._board, user.id, self._dashboard, self._ident, dashlet_spec)
             return dashlet.infos()
 
         context_specs = visuals.get_context_specs(

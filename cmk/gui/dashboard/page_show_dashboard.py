@@ -65,7 +65,11 @@ from .dashlet import (
     StaticTextDashlet,
     StaticTextDashletConfig,
 )
-from .store import get_permitted_dashboards, load_dashboard_with_cloning
+from .store import (
+    get_permitted_dashboards,
+    get_permitted_dashboards_by_owners,
+    load_dashboard_with_cloning,
+)
 from .type_defs import DashboardConfig, DashboardName
 
 __all__ = ["page_dashboard", "ajax_dashlet", "AjaxInitialDashboardFilters"]
@@ -85,7 +89,16 @@ def page_dashboard() -> None:
     if not name:
         name = _get_default_dashboard_name()
         request.set_var("name", name)  # make sure that URL context is always complete
-    draw_dashboard(name)
+
+    # If no owner is set, prioritize the user's own dashboard over the builtin ones
+    owner = (
+        UserId(o)
+        if (o := request.get_ascii_input("owner")) is not None
+        else (
+            user.id if user.id in get_permitted_dashboards_by_owners()[name] else UserId.builtin()
+        )
+    )
+    draw_dashboard(name, owner)
 
 
 def _get_default_dashboard_name() -> str:
@@ -110,7 +123,7 @@ def _get_default_dashboard_name() -> str:
 
 
 # Actual rendering function
-def draw_dashboard(name: DashboardName) -> None:
+def draw_dashboard(name: DashboardName, owner: UserId) -> None:
     mode = "display"
     if request.var("edit") == "1":
         mode = "edit"
@@ -137,7 +150,7 @@ def draw_dashboard(name: DashboardName) -> None:
         set(board["mandatory_context_filters"]), board["context"]
     )
 
-    dashlets = _get_dashlets(name, board)
+    dashlets = _get_dashlets(name, owner, board)
 
     missing_single_infos: set[InfoName] = set()
     unconfigured_single_infos: set[InfoName] = set()
@@ -216,13 +229,13 @@ cmk.dashboard.register_event_handlers();
     html.body_end()  # omit regular footer with status icons, etc.
 
 
-def _get_dashlets(name: DashboardName, board: DashboardConfig) -> list[Dashlet]:
+def _get_dashlets(name: DashboardName, owner: UserId, board: DashboardConfig) -> list[Dashlet]:
     """Return dashlet instances of the dashboard"""
     dashlets: list[Dashlet] = []
     for nr, dashlet_spec in enumerate(board["dashlets"]):
         try:
             dashlet_type = get_dashlet_type(dashlet_spec)
-            dashlet = dashlet_type(name, board, nr, dashlet_spec)
+            dashlet = dashlet_type(name, owner, board, nr, dashlet_spec)
         except KeyError as e:
             info_text = (
                 _(
@@ -231,9 +244,9 @@ def _get_dashlets(name: DashboardName, board: DashboardConfig) -> list[Dashlet]:
                 )
                 % e
             )
-            dashlet = _fallback_dashlet(name, board, dashlet_spec, nr, info_text=info_text)
+            dashlet = _fallback_dashlet(name, owner, board, dashlet_spec, nr, info_text=info_text)
         except Exception:
-            dashlet = _fallback_dashlet(name, board, dashlet_spec, nr)
+            dashlet = _fallback_dashlet(name, owner, board, dashlet_spec, nr)
 
         dashlets.append(dashlet)
 
@@ -372,6 +385,7 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | s
 
 def _fallback_dashlet(
     name: DashboardName,
+    owner: UserId,
     board: DashboardConfig,
     dashlet_spec: DashletConfig,
     dashlet_id: int,
@@ -381,6 +395,7 @@ def _fallback_dashlet(
     initialized"""
     return StaticTextDashlet(
         name,
+        owner,
         board,
         dashlet_id,
         StaticTextDashletConfig(
@@ -700,7 +715,11 @@ def _extend_display_dropdown(
 class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
     def _get_context(self, page_name: str) -> VisualContext:
         dashboard_name = page_name
-        board = load_dashboard_with_cloning(get_permitted_dashboards(), dashboard_name, edit=False)
+        board = load_dashboard_with_cloning(
+            get_permitted_dashboards(),
+            dashboard_name,
+            edit=False,
+        )
         board = _add_context_to_dashboard(board)
 
         # For the topology dashboard filters are retrieved from a corresponding view context.
@@ -1096,11 +1115,12 @@ def draw_dashlet(dashlet: Dashlet, content: HTML | str, title: HTML | str) -> No
 def ajax_dashlet() -> None:
     """Render the inner HTML of a dashlet"""
     name = request.get_ascii_input_mandatory("name", "")
+    owner = UserId(request.get_ascii_input_mandatory("owner", ""))
     if not name:
         raise MKUserError("name", _("The name of the dashboard is missing."))
 
     try:
-        board = get_permitted_dashboards()[name]
+        board = get_permitted_dashboards_by_owners()[name][owner]
     except KeyError:
         raise MKUserError("name", _("The requested dashboard does not exist."))
 
@@ -1124,11 +1144,11 @@ def ajax_dashlet() -> None:
     dashlet = None
     try:
         dashlet_type = get_dashlet_type(dashlet_spec)
-        dashlet = dashlet_type(name, board, ident, dashlet_spec)
+        dashlet = dashlet_type(name, owner, board, ident, dashlet_spec)
         _title, content = _render_dashlet(board, dashlet, is_update=True, mtime=mtime)
     except Exception as e:
         if dashlet is None:
-            dashlet = _fallback_dashlet(name, board, dashlet_spec, ident)
+            dashlet = _fallback_dashlet(name, owner, board, dashlet_spec, ident)
         content = render_dashlet_exception_content(dashlet, e)
 
     html.write_html(HTML(content))

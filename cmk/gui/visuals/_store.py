@@ -436,13 +436,27 @@ def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
                 raise
 
 
-# Get the list of visuals which are available to the user
-# (which could be retrieved with get_visual)
-def available(  # pylint: disable=too-many-branches
+def available(
     what: VisualTypeName,
     all_visuals: dict[tuple[UserId, VisualName], TVisual],
 ) -> dict[VisualName, TVisual]:
-    visuals = {}
+    visuals: dict[VisualName, TVisual] = {}
+    for n, _visuals in available_by_owner(what, all_visuals).items():
+        for u, v in _visuals.items():
+            if user.id == u:
+                visuals[n] = v
+            if u == UserId.builtin() and n not in visuals:
+                visuals[n] = v
+    return visuals
+
+
+# Get the list of visuals which are available to the user
+# (which could be retrieved with get_visual)
+def available_by_owner(  # pylint: disable=too-many-branches
+    what: VisualTypeName,
+    all_visuals: dict[tuple[UserId, VisualName], TVisual],
+) -> dict[VisualName, dict[UserId, TVisual]]:
+    visuals: dict[VisualName, dict[UserId, TVisual]] = {}
     permprefix = what[:-1]
 
     def restricted_visual(visualname: VisualName) -> bool:
@@ -457,7 +471,8 @@ def available(  # pylint: disable=too-many-branches
     if user.may("general.edit_" + what):
         for (u, n), visual in all_visuals.items():
             if u == user.id:
-                visuals[n] = visual
+                visuals.setdefault(n, {})
+                visuals[n][u] = visual
 
     # 2. visuals of special users allowed to globally override built-in visuals
     for (u, n), visual in all_visuals.items():
@@ -469,12 +484,14 @@ def available(  # pylint: disable=too-many-branches
             and user.may("general.see_user_" + what)
             and not restricted_visual(n)
         ):
-            visuals[n] = visual
+            visuals.setdefault(n, {})
+            visuals[n][u] = visual
 
     # 3. Built-in visuals, if allowed.
     for (u, n), visual in all_visuals.items():
-        if u == UserId.builtin() and n not in visuals and user.may(f"{permprefix}.{n}"):
-            visuals[n] = visual
+        if u == UserId.builtin() and user.may(f"{permprefix}.{n}"):
+            visuals.setdefault(n, {})
+            visuals[n][u] = visual
 
     # 4. other users visuals, if public. Still make sure we honor permission
     #    for built-in visuals. Also the permission "general.see_user_visuals" is
@@ -488,7 +505,8 @@ def available(  # pylint: disable=too-many-branches
                 and user_may(u, "general.publish_" + what)
                 and not restricted_visual(n)
             ):
-                visuals[n] = visual
+                visuals.setdefault(n, {})
+                visuals[n][u] = visual
 
     # 5. packaged visuals
     if user.may("general.see_packaged_" + what) and n not in visuals:
@@ -496,7 +514,8 @@ def available(  # pylint: disable=too-many-branches
             if not visual["packaged"]:
                 continue
             if not restricted_packaged_visual(n):
-                visuals[n] = visual
+                visuals.setdefault(n, {})
+                visuals[n][u] = visual
 
     return visuals
 
@@ -541,5 +560,4 @@ def get_permissioned_visual(
 
     if visual := permitted_visuals.get(item):
         return visual
-
     raise MKUserError("%s_name" % what, _("The requested %s %s does not exist") % (what, item))

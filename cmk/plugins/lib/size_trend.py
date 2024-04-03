@@ -82,8 +82,10 @@ def size_trend(
     Yields:
       Result- and Metric- instances for the trend computation.
     """
+    if (range_levels := levels.get("trend_range")) is None:
+        return
 
-    range_sec = levels["trend_range"] * SEC_PER_H
+    range_sec = range_levels * SEC_PER_H
     timestamp = timestamp or time.time()
 
     mb_per_sec = get_rate(value_store, "%s.delta" % value_store_key, timestamp, used_mb)

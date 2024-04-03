@@ -20,6 +20,8 @@ from cmk.rulesets.v1.form_specs import (
     List,
     SimpleLevels,
     SimpleLevelsConfigModel,
+    SingleChoice,
+    SingleChoiceElement,
     String,
     TimeMagnitude,
     TimeSpan,
@@ -287,6 +289,45 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
         custom_validate=(validators.LengthInRange(min_value=1),),
         element_template=Dictionary(
             elements={
+                "service_name": DictElement(
+                    parameter_form=Dictionary(
+                        title=Title("Service description"),
+                        elements={
+                            "prefix": DictElement(
+                                parameter_form=SingleChoice(
+                                    title=Title("Prefix"),
+                                    help_text=Help(
+                                        "The prefix is automatically to each service to be able to organize them. The prefix is static and will be CERT. Alternatively, you may choose to not use the prefix option."
+                                    ),
+                                    elements=[
+                                        SingleChoiceElement(
+                                            name="auto",
+                                            title=Title('Use "CERT as prefix"'),
+                                        ),
+                                        SingleChoiceElement(
+                                            name="none",
+                                            title=Title("Do not use a prefix"),
+                                        ),
+                                    ],
+                                    prefill=DefaultValue("auto"),
+                                ),
+                                required=True,
+                            ),
+                            "name": DictElement(
+                                parameter_form=String(
+                                    title=Title("Name"),
+                                    help_text=Help(
+                                        "The name is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
+                                    ),
+                                    custom_validate=(validators.LengthInRange(min_value=1),),
+                                    prefill=InputHint("My CERT service"),
+                                ),
+                                required=True,
+                            ),
+                        },
+                    ),
+                    required=True,
+                ),
                 "address": DictElement[str](
                     parameter_form=String(
                         title=Title("Host address or name"),

@@ -24,6 +24,11 @@ class LevelsType(StrEnum):
     FIXED = "fixed"
 
 
+class ServicePrefix(StrEnum):
+    AUTO = "auto"
+    NONE = "none"
+
+
 FloatLevels = (
     tuple[Literal[LevelsType.NO_LEVELS], None]
     | tuple[Literal[LevelsType.FIXED], tuple[float, float]]
@@ -32,6 +37,11 @@ FloatLevels = (
 SignatureAlgorithm = tuple[str, tuple[str, str]]
 
 PubKey = tuple[str, str]
+
+
+class ServiceDescription(BaseModel):
+    prefix: ServicePrefix
+    name: str
 
 
 class Issuer(BaseModel):
@@ -75,6 +85,7 @@ class StandardSettings(Settings):
 
 
 class CertEndpoint(BaseModel):
+    service_name: ServiceDescription
     address: str
     port: int | None = None
     individual_settings: Settings | None = None
@@ -89,6 +100,7 @@ def parse_cert_params(raw_params: Mapping[str, object]) -> Sequence[CertEndpoint
     params = RawParams.model_validate(raw_params)
     return [
         CertEndpoint(
+            service_name=connection.service_name,
             address=connection.address,
             port=connection.port if connection.port else params.standard_settings.port,
             individual_settings=_merge_settings(
@@ -111,10 +123,12 @@ def _merge_settings(standard: StandardSettings, individual: Settings | None) -> 
 def generate_cert_services(
     params: Sequence[CertEndpoint], host_config: HostConfig
 ) -> Iterator[ActiveCheckCommand]:
+    macros = host_config.macros
     for endpoint in params:
-        endpoint.address = replace_macros(endpoint.address, host_config.macros)
+        prefix = "CERT " if endpoint.service_name.prefix is ServicePrefix.AUTO else ""
+        endpoint.address = replace_macros(endpoint.address, macros)
         yield ActiveCheckCommand(
-            service_description=f"Cert {endpoint.address}",
+            service_description=f"{prefix}{replace_macros(endpoint.service_name.name, macros)}",
             command_arguments=list(_command_arguments(endpoint)),
         )
 

@@ -16,6 +16,7 @@ def main() {
         "PUBLISH_IMAGES",
         "OVERRIDE_DISTROS",
         "BUILD_IMAGE_WITHOUT_CACHE",
+        "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",
     ]);
 
     check_environment_variables([
@@ -27,7 +28,7 @@ def main() {
     def all_distros = versioning.get_distros(override: "all")
     def distros = versioning.get_distros(edition: "all", use_case: "all", override: OVERRIDE_DISTROS);
 
-    def vers_tag = versioning.get_docker_tag(scm, checkout_dir);
+    def vers_tag = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD ?: versioning.get_docker_tag(scm, checkout_dir);
     def branch_name = versioning.safe_branch_name(scm);
     def branch_version = versioning.get_branch_version(checkout_dir);
     def publish_images = PUBLISH_IMAGES=='true';  // FIXME should be case sensitive

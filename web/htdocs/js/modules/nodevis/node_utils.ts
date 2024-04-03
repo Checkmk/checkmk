@@ -6,6 +6,7 @@
 
 import * as d3 from "d3";
 import {ForceOptions, SimulationForce} from "nodevis/force_utils";
+import * as texts from "nodevis/texts";
 import {
     ContextMenuElement,
     CoreInfo,
@@ -267,26 +268,33 @@ export class AbstractGUINode implements TypeWithName {
         return "";
     }
 
+    _get_hostname_and_service(): [string, string] {
+        const core_info = get_core_info(this.node)!;
+        return [core_info.hostname, core_info.service || ""];
+    }
+
     get_context_menu_elements(): ContextMenuElement[] {
         const elements: ContextMenuElement[] = [];
         const core_info = this.node.data.type_specific.core;
         if (!core_info) return elements;
+
+        const [hostname, service] = this._get_hostname_and_service();
         elements.push({
-            text: "Details of Host",
+            text: texts.get("host_details"),
             href:
                 "view.py?host=" +
-                encodeURIComponent(core_info.hostname) +
+                encodeURIComponent(hostname) +
                 "&view_name=host",
             img: "themes/facelift/images/icon_status.svg",
         });
-        if (core_info.service && core_info.service != "") {
+        if (service && service != "") {
             elements.push({
-                text: "Details of Service",
+                text: texts.get("service_details"),
                 href:
                     "view.py?host=" +
-                    encodeURIComponent(core_info.hostname) +
+                    encodeURIComponent(hostname) +
                     "&service=" +
-                    encodeURIComponent(core_info.service) +
+                    encodeURIComponent(service) +
                     "&view_name=service",
                 img: "themes/facelift/images/icon_status.svg",
             });

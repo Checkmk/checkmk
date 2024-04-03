@@ -69,6 +69,8 @@ const default_lookup = {
     unknown_host: "Unknown host",
     host: "Host",
     service: "Service",
+    host_details: "Host details",
+    service_details: "Service details",
 };
 
 export type TranslationKey = keyof typeof default_lookup;

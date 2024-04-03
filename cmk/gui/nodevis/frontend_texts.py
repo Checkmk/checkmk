@@ -66,4 +66,6 @@ def get_texts() -> dict[str, str]:
         "unknown_host": _("Unknown host"),
         "host": _("Host"),
         "service": _("Service"),
+        "host_details": _("Host details"),
+        "service_details": _("Service details"),
     }

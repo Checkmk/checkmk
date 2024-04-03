@@ -472,27 +472,6 @@ class TopologyService extends TopologyCoreEntity {
         );
     }
 
-    override get_context_menu_elements() {
-        const elements =
-            TopologyCoreEntity.prototype.get_context_menu_elements.call(this);
-        const [hostname, service] = this._get_hostname_and_service();
-        elements[0] = {
-            text: "Details of Service",
-            href:
-                "view.py?host=" +
-                encodeURIComponent(hostname) +
-                "&view_name=service&service=" +
-                encodeURIComponent(service),
-            img: "themes/facelift/images/icon_status.svg",
-        };
-        return elements;
-    }
-
-    _get_hostname_and_service(): [string, string] {
-        const core_info = get_core_info(this.node)!;
-        return [core_info.hostname, core_info.service!];
-    }
-
     override _get_node_type_specific_force(
         force_name: SimulationForce,
         force_options: TopologyForceOptions

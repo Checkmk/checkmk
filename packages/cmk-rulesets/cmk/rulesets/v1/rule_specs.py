@@ -272,7 +272,6 @@ class AgentConfig:
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
         name: Identifier of the rule spec
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
         help_text: Description to help the user with the configuration
@@ -281,7 +280,6 @@ class AgentConfig:
     title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
-    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None

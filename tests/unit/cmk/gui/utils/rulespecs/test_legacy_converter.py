@@ -1285,7 +1285,6 @@ def test_convert_to_legacy_rulespec_group(
                 name="test_rulespec",
                 title=api_v1.Title("rulespec title"),
                 topic=api_v1.rule_specs.Topic.AGENT_PLUGINS,
-                eval_type=api_v1.rule_specs.EvalType.MERGE,
                 parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
                 help_text=api_v1.Help("help text"),
             ),

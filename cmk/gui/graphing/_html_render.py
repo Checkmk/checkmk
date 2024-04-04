@@ -165,8 +165,8 @@ def _render_graph_html(
         "cmk.graphs.create_graph(%s, %s, %s, %s);"
         % (
             json.dumps(html_code),
-            graph_artwork.model_dump_json(),
-            graph_render_config.model_dump_json(),
+            json.dumps(graph_artwork.model_dump()),
+            json.dumps(graph_render_config.model_dump()),
             json.dumps(_graph_ajax_context(graph_artwork, graph_data_range, graph_render_config)),
         )
     )
@@ -796,9 +796,9 @@ def _render_graph_container_html(
     output += HTMLWriter.render_javascript(
         "cmk.graphs.load_graph_content(%s, %s, %s, %s)"
         % (
-            graph_recipe.model_dump_json(),
-            graph_data_range.model_dump_json(),
-            graph_render_config.model_dump_json(),
+            json.dumps(graph_recipe.model_dump()),
+            json.dumps(graph_data_range.model_dump()),
+            json.dumps(graph_render_config.model_dump()),
             json.dumps(graph_display_id),
         )
     )

@@ -19,18 +19,6 @@ export type d3Selection = d3.Selection<any, unknown, any, unknown>;
 export type d3SelectionDiv = d3.Selection<HTMLDivElement, null, any, unknown>;
 export type d3SelectionSvg = d3.Selection<SVGSVGElement, null, any, any>;
 export type d3SelectionG = d3.Selection<SVGGElement, null, any, any>;
-export type d3SelectionSvgText = d3.Selection<
-    SVGTextElement,
-    unknown,
-    any,
-    any
->;
-export type d3NodeSelection = d3.Selection<
-    SVGGElement,
-    NodevisNode,
-    SVGGElement,
-    any
->;
 
 export type DatasourceType = "bi_aggregations" | "topology";
 export class NodevisWorld {
@@ -284,13 +272,27 @@ export interface CoreInfo {
 export interface LineConfig {
     thickness?: number;
     color?: string;
+    tooltip?: string;
+}
+
+export type QuickinfoEntry = {
+    name: string;
+    value: string;
+    css_classes?: string[];
+};
+
+export type Quickinfo = QuickinfoEntry[];
+
+export interface Tooltip {
+    html?: string;
+    quickinfo?: Quickinfo;
 }
 
 export interface LinkConfig {
     type: "default";
     css?: string;
     line_config?: LineConfig;
-    link_info?: string;
+    tooltip?: Tooltip;
     topology_classes?: [string, boolean][];
 }
 

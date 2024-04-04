@@ -16,7 +16,6 @@ import {AbstractLink, link_type_class_registry} from "nodevis/link_utils";
 import {TopologyNode} from "nodevis/node_types";
 import {
     AbstractGUINode,
-    BasicQuickinfo,
     get_core_info,
     get_custom_node_settings,
     node_type_class_registry,
@@ -30,11 +29,13 @@ import {
     NodevisNode,
     NodevisWorld,
     OverlaysConfig,
+    QuickinfoEntry,
 } from "nodevis/type_defs";
 import {
     RadioGroupOption,
     render_radio_group,
     render_save_delete,
+    show_tooltip,
 } from "nodevis/utils";
 import {Viewport} from "nodevis/viewport";
 
@@ -507,7 +508,7 @@ class TopologyUnknownHost extends TopologyHost {
         return "topology_unknown_host";
     }
 
-    override _get_basic_quickinfo(): BasicQuickinfo[] {
+    override _get_basic_quickinfo(): QuickinfoEntry[] {
         return [
             {
                 name: texts.get("unknown_host"),
@@ -537,7 +538,7 @@ class TopologyUnknownService extends TopologyService {
         return "topology_unknown_service";
     }
 
-    override _get_basic_quickinfo(): BasicQuickinfo[] {
+    override _get_basic_quickinfo(): QuickinfoEntry[] {
         return [
             {
                 name: texts.get("unknown_service"),
@@ -681,43 +682,27 @@ class NetworkLink extends AbstractLink {
             line.style("stroke-dasharray", "none");
             line.on("mouseover", event => {
                 this.highlight_connection(new Set<string>());
-                this._show_link_info(
+                show_tooltip(
                     event,
-                    this._link_data.config.link_info
-                        ? [this._link_data.config.link_info]
-                        : []
+                    this._link_data.config.tooltip || {},
+                    this._world.viewport
                 );
             })
                 .on("mouseout", event => {
                     this.hide_connection(new Set<string>());
-                    this._show_link_info(event, []);
+                    show_tooltip(event, {}, this._world.viewport);
                 })
                 .on("mousemove", event => {
-                    this._show_link_info(
+                    show_tooltip(
                         event,
-                        this._link_data.config.link_info
-                            ? [this._link_data.config.link_info]
-                            : []
+                        this._link_data.config.tooltip || {},
+                        this._world.viewport
                     );
                 });
         });
         this._set_topology_classes();
         this._set_link_class();
         this._adjust_line_style();
-    }
-
-    _show_link_info(event: {layerX: number; layerY: number}, info: string[]) {
-        this._world.viewport
-            .get_nodes_layer()
-            .get_div_selection()
-            .selectAll("label.link_info")
-            .data(info)
-            .join("label")
-            .classed("link_info", true)
-            .text(d => d)
-            .style("position", "absolute")
-            .style("left", event.layerX + 20 + "px")
-            .style("top", event.layerY - 10 + "px");
     }
 }
 

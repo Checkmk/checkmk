@@ -10,27 +10,18 @@ import * as texts from "nodevis/texts";
 import {
     ContextMenuElement,
     CoreInfo,
+    d3SelectionDiv,
     d3SelectionG,
     NodevisNode,
     NodevisWorld,
+    QuickinfoEntry,
 } from "nodevis/type_defs";
 import {
     AbstractClassRegistry,
+    add_basic_quickinfo,
     DefaultTransition,
     TypeWithName,
 } from "nodevis/utils";
-
-type d3SelectionQuickinfo = d3.Selection<
-    HTMLDivElement,
-    string,
-    HTMLDivElement,
-    any
->;
-export type BasicQuickinfo = {
-    name: string;
-    value: string;
-    css_classes?: string[];
-};
 
 export class AbstractGUINode implements TypeWithName {
     _world: NodevisWorld;
@@ -52,7 +43,7 @@ export class AbstractGUINode implements TypeWithName {
         SVGGElement,
         any
     > | null;
-    _quickinfo_selection: d3SelectionQuickinfo | null;
+    _quickinfo_selection: d3SelectionDiv | null;
 
     constructor(world: NodevisWorld, node: NodevisNode) {
         this._world = world;
@@ -88,7 +79,7 @@ export class AbstractGUINode implements TypeWithName {
         return this._text_selection;
     }
 
-    quickinfo_selection(): d3SelectionQuickinfo {
+    quickinfo_selection(): d3SelectionDiv {
         if (this._quickinfo_selection == null)
             throw Error("Missing text selection for node " + this.id());
         return this._quickinfo_selection;
@@ -166,12 +157,17 @@ export class AbstractGUINode implements TypeWithName {
             return;
         }
 
-        let is_host_text = true;
+        let is_host_text = false;
         let is_service_text = false;
+        let is_other_text = false;
         const core_info = this.node.data.type_specific.core;
-        if (core_info) {
-            is_service_text = !!core_info.service;
-            is_host_text = !is_service_text;
+        if (this.node.data.node_type != "topology_site") {
+            if (core_info) {
+                is_service_text = !!core_info.service;
+                is_host_text = !is_service_text;
+            } else {
+                is_other_text = true;
+            }
         }
 
         if (this._text_selection == null) {
@@ -186,6 +182,7 @@ export class AbstractGUINode implements TypeWithName {
                 .classed("noselect", true)
                 .classed("host_text", is_host_text)
                 .classed("service_text", is_service_text)
+                .classed("other_text", is_other_text)
                 .attr(
                     "transform",
                     "translate(" +
@@ -405,7 +402,7 @@ export class AbstractGUINode implements TypeWithName {
             .get_nodes_layer()
             .get_div_selection()
             .selectAll<HTMLDivElement, string>("div.quickinfo")
-            .data<string>([this.node.data.id], d => d);
+            .data([null]);
         div_selection.exit().remove();
         this._quickinfo_selection = div_selection
             .enter()
@@ -457,39 +454,13 @@ export class AbstractGUINode implements TypeWithName {
         return;
     }
 
-    _get_basic_quickinfo(): BasicQuickinfo[] {
+    _get_basic_quickinfo(): QuickinfoEntry[] {
         return [];
     }
 
     _show_table_quickinfo() {
-        const table_selection = this.quickinfo_selection()
-            .selectAll<HTMLTableSectionElement, string>("body table tbody")
-            .data([this.id()], d => d);
-        const table = table_selection
-            .enter()
-            .append("body")
-            .append("table")
-            .classed("data", true)
-            .classed("single", true)
-            .append("tbody")
-            .merge(table_selection);
-
-        let even = "even";
         const quickinfo = this._get_basic_quickinfo();
-        const rows = table.selectAll("tr").data(quickinfo).enter().append("tr");
-        rows.each(function () {
-            this.setAttribute("class", even.concat("0 data"));
-            even = even == "even" ? "odd" : "even";
-        });
-        rows.append("td")
-            .classed("left", true)
-            .text(d => d.name);
-        rows.append("td")
-            .text(d => d.value)
-            .each((d, idx, tds) => {
-                const td = d3.select(tds[idx]);
-                if (d.css_classes) td.classed(d.css_classes.join(" "), true);
-            });
+        add_basic_quickinfo(this.quickinfo_selection(), quickinfo);
         this.update_quickinfo_position();
     }
 
@@ -527,19 +498,18 @@ export class AbstractGUINode implements TypeWithName {
             );
 
         const icon_url = this._get_icon_url();
-        this.selection()
+        const icon_object = this.selection()
             .selectAll<SVGImageElement, string>("g image.main_icon")
             .data(icon_url ? [icon_url] : [], d => d)
-            .join(enter =>
-                enter
-                    .append("g")
-                    .attr("transform", "translate(-24,-24)")
-                    .append("svg:image")
-                    .classed("main_icon", true)
-            )
+            .enter()
+            .append("g")
+            .attr("transform", "translate(-24,-24)")
+            .append("svg:image")
+            .classed("main_icon", true)
             .attr("xlink:href", d => d)
             .attr("width", 24)
             .attr("height", 24);
+        icon_object.append("title").text(texts.get("icon_in_monitoring"));
     }
 
     _get_icon_url(): string | null {
@@ -662,16 +632,6 @@ export class AbstractGUINode implements TypeWithName {
         force_options: ForceOptions
     ): number {
         return force_options[force_name];
-    }
-
-    _get_explicit_force_option(force_name: string): number | null {
-        const explicit_force_options = this.node.data.explicit_force_options;
-        if (explicit_force_options == null) return null;
-
-        if (explicit_force_options[force_name]) {
-            return explicit_force_options[force_name];
-        }
-        return null;
     }
 
     simulation_end_actions(): void {

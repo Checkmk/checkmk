@@ -16,7 +16,10 @@ import {
     InputRangeOptions,
     NodeConfig,
     NodevisNode,
+    Quickinfo,
+    Tooltip,
 } from "nodevis/type_defs";
+import {Viewport} from "nodevis/viewport";
 
 // TODO: remove or fix logging
 export function log(level: number, ...args: any[]) {
@@ -606,4 +609,70 @@ export function bound_monitoring_host(node: NodevisNode): string | null {
     if (!core_info) return null;
     if (core_info.hostname && !core_info.service) return core_info.hostname;
     return null;
+}
+
+export function add_basic_quickinfo(
+    into_selection: d3SelectionDiv,
+    quickinfo: Quickinfo
+): void {
+    const table = into_selection
+        .selectAll<HTMLTableSectionElement, string>("body table tbody")
+        .data([null])
+        .join(enter =>
+            enter
+                .append("body")
+                .append("table")
+                .classed("data", true)
+                .classed("single", true)
+                .append("tbody")
+        );
+
+    let even = "even";
+    const rows = table.selectAll("tr").data(quickinfo).enter().append("tr");
+    rows.each(function () {
+        this.setAttribute("class", even.concat("0 data"));
+        even = even == "even" ? "odd" : "even";
+    });
+    rows.append("td")
+        .classed("left", true)
+        .text(d => d.name);
+    rows.append("td")
+        .text(d => d.value)
+        .each((d, idx, tds) => {
+            const td = d3.select(tds[idx]);
+            if (d.css_classes) td.classed(d.css_classes.join(" "), true);
+        });
+}
+
+export function show_tooltip(
+    event: {layerX: number; layerY: number},
+    tooltip: Tooltip,
+    viewport: Viewport
+) {
+    const viewport_size = viewport.get_size();
+
+    let info = "";
+    if (tooltip.html) info = tooltip.html;
+    if (tooltip.quickinfo) {
+        const div = d3.select<HTMLDivElement, null>(
+            document.createElement("div")
+        );
+        add_basic_quickinfo(div, tooltip.quickinfo);
+        info += div.html();
+    }
+
+    viewport
+        .get_nodes_layer()
+        .get_div_selection()
+        .selectAll("label.link_info")
+        .data(info ? [info] : [])
+        .join(enter =>
+            enter
+                .append("label")
+                .classed("link_info", true)
+                .html(d => d)
+                .style("position", "absolute")
+        )
+        .style("left", event.layerX + 10 + "px")
+        .style("bottom", viewport_size.height - event.layerY + 30 + "px");
 }

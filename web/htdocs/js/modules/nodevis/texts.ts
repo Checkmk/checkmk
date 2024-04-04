@@ -36,8 +36,9 @@ const default_lookup = {
     zoom_fit: "Fit to screen",
     show: "Show",
     hide: "Hide",
-    host_labels: "hostname",
-    service_labels: "service name",
+    host_labels: "host names",
+    service_labels: "service names",
+    other_labels: "other names",
     icons: "Icons",
     line_style: "Line style",
     round: "Round",
@@ -71,6 +72,10 @@ const default_lookup = {
     service: "Service",
     host_details: "Host details",
     service_details: "Service details",
+    icon_in_monitoring: "Icon in monitoring",
+    can_grow_here: "Double-click to grow further",
+    growth_stops_here: "Growth stops here",
+    growth_continues_here: "Growth continues here",
 };
 
 export type TranslationKey = keyof typeof default_lookup;

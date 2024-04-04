@@ -179,6 +179,11 @@ tr.range_input {
 }
 
 div.node_vis {
+  label.link_info {
+    background-color: $bg-color-secondary;
+    padding: 3px;
+  }
+
   img.tick {
     content: url("images/icon_tick.svg") !important;
   }
@@ -208,6 +213,10 @@ div.node_vis {
   }
 
   g#nodes.hide_service_labels text.service_text {
+    display: none;
+  }
+
+  g#nodes.hide_other_labels text.other_text {
     display: none;
   }
 

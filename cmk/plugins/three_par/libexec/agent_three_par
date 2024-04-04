@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.special_agents.agent_3par import main
+from cmk.plugins.three_par.lib.special_agent import main
 
 if __name__ == "__main__":
     sys.exit(main())

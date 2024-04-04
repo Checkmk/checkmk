@@ -106,7 +106,7 @@ export function set_dashboard_properties(properties: DashboardPropertiesAPI) {
         number,
         string | undefined | (() => void)
     > = {};
-    for (const key in Object.keys(on_resize_dashlets)) {
+    for (const key in on_resize_dashlets) {
         tmp_on_resize_dashlets[key] = eval(on_resize_dashlets[key]!);
     }
 

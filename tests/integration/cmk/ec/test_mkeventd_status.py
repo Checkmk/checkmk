@@ -8,6 +8,7 @@ import time
 
 import pytest
 
+from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-def test_command_reload(site: Site, ec) -> None:  # type: ignore[no-untyped-def]
+def test_command_reload(site: Site, ec: CMKEventConsole) -> None:
     live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
@@ -32,10 +33,11 @@ def test_command_reload(site: Site, ec) -> None:  # type: ignore[no-untyped-def]
 
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_status_table_via_core(site: Site, ec, via_core: bool) -> None:  # type: ignore[no-untyped-def]
+def test_status_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) -> None:
     live = site.live if via_core else ec.status
+    assert isinstance(live, CMKEventConsoleStatus)
     prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc("GET %sstatus\n" % prefix)
+    result = live.query_table_assoc(f"GET {prefix}status\n".encode("utf-8"))
     assert len(result) == 1
 
     status = result[0]
@@ -80,10 +82,11 @@ def test_status_table_via_core(site: Site, ec, via_core: bool) -> None:  # type:
 
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_rules_table_via_core(site: Site, ec, via_core: bool) -> None:  # type: ignore[no-untyped-def]
+def test_rules_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) -> None:
     live = site.live if via_core else ec.status
+    assert isinstance(live, CMKEventConsoleStatus)
     prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc("GET %srules\n" % prefix)
+    result = live.query_table_assoc(f"GET {prefix}rules\n".encode("utf-8"))
     assert isinstance(result, list)
     # assert len(result) == 0
     # TODO: Add some rule before the test and then check the existing

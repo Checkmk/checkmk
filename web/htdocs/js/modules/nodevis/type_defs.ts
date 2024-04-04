@@ -273,12 +273,13 @@ export interface LineConfig {
     thickness?: number;
     color?: string;
     tooltip?: string;
+    css_styles?: [string, any][];
 }
 
 export type QuickinfoEntry = {
     name: string;
     value: string;
-    css_classes?: string[];
+    css_styles?: [string, any][];
 };
 
 export type Quickinfo = QuickinfoEntry[];
@@ -290,7 +291,6 @@ export interface Tooltip {
 
 export interface LinkConfig {
     type: "default";
-    css?: string;
     line_config?: LineConfig;
     tooltip?: Tooltip;
     topology_classes?: [string, boolean][];

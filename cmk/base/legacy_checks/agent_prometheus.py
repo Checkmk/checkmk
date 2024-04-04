@@ -10,9 +10,10 @@ from cmk.base.config import special_agent_info
 
 
 def agent_prometheus_arguments(
-    params: Mapping[str, object], _hostname: str, _ipaddress: str | None
+    params: Mapping[str, object], hostname: str, ipaddress: str | None
 ) -> Sequence[str]:
-    return ["--config", repr(params)]
+    prometheus_params = {**params, "host_address": ipaddress, "host_name": hostname}
+    return ["--config", repr(prometheus_params)]
 
 
 special_agent_info["prometheus"] = agent_prometheus_arguments

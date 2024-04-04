@@ -46,7 +46,7 @@ def connection(
     opt_port: int,
     opt_timeout: float,
     opt_look_for_keys: bool,
-) -> paramiko.SSHClient:
+) -> paramiko.sftp_client.SFTPClient:
 
     # The typing says that the connect method requires a hostname. Previously we passed None to it
     # if the argument was not set and paramiko did not check for that but passed it to
@@ -65,7 +65,7 @@ def connection(
         timeout=opt_timeout,
         look_for_keys=opt_look_for_keys,
     )
-    return client
+    return client.open_sftp()
 
 
 class PathDict(TypedDict, total=False):
@@ -93,7 +93,7 @@ def get_paths(
         put_filename = opt_put_local.split("/")[-1]
         paths["put_filename"] = put_filename
         paths["local_put_path"] = f"{omd_root}/{opt_put_local}"
-        if len(opt_put_remote) > 0:  # type: ignore[arg-type]
+        if opt_put_remote:
             paths["remote_put_path"] = f"{working_dir}/{opt_put_remote}/{put_filename}"
         else:
             paths["remote_put_path"] = f"{working_dir}/{put_filename}"
@@ -102,7 +102,7 @@ def get_paths(
         get_filename = opt_get_remote.split("/")[-1]
         paths["get_filename"] = get_filename
         paths["remote_get_path"] = f"{working_dir}/{opt_get_remote}"
-        if len(opt_get_local) > 0:  # type: ignore[arg-type]
+        if opt_get_local:
             paths["local_get_path"] = f"{omd_root}/{opt_get_local}/{get_filename}"
         else:
             paths["local_get_path"] = f"{omd_root}/{get_filename}"
@@ -124,25 +124,23 @@ def file_available(
     return filename in sftp.listdir(f"{working_dir}/{opt_put_remote}")
 
 
-def create_testfile(paths: PathDict) -> None:
-    path = paths["local_put_path"]
-    if not os.path.isfile(path):
-        with open(path, "w") as f:
-            f.write("This is a test by Check_MK\n")
+def create_testfile(path: str) -> None:
+    if os.path.isfile(path):
+        return
+    with open(path, "w") as f:
+        f.write("This is a test by Check_MK\n")
 
 
-def put_file(sftp: paramiko.sftp_client.SFTPClient, paths: PathDict) -> None:
-    sftp.put(paths["local_put_path"], paths["remote_put_path"])
+def put_file(sftp: paramiko.sftp_client.SFTPClient, source: str, destination: str) -> None:
+    sftp.put(source, destination)
 
 
-def get_file(sftp: paramiko.sftp_client.SFTPClient, paths: PathDict) -> None:
-    sftp.get(paths["remote_get_path"], paths["local_get_path"])
+def get_file(sftp: paramiko.sftp_client.SFTPClient, source: str, destination: str) -> None:
+    sftp.get(source, destination)
 
 
-def get_timestamp(
-    sftp: paramiko.sftp_client.SFTPClient, paths: PathDict
-) -> paramiko.sftp_attr.SFTPAttributes:
-    return sftp.stat(paths["timestamp_path"])
+def get_timestamp(sftp: paramiko.sftp_client.SFTPClient, paths: PathDict) -> int | None:
+    return sftp.stat(paths["timestamp_path"]).st_mtime
 
 
 def output_check_result(s: str) -> None:
@@ -248,16 +246,17 @@ def parse_arguments(sys_args: None | list[str]) -> Args:  # pylint: disable=too-
     )
 
 
-def _main(sys_args: None | list[str] = None) -> tuple[int, str]:
+def run_check(  # pylint: disable=too-many-branches
+    sys_args: None | list[str] = None,
+) -> tuple[int, str]:
     args = parse_arguments(sys_args)
 
     messages = []
     states = []
     try:  # Establish connection
-        client = connection(
+        sftp = connection(
             args.host, args.user, args.pass_, args.port, args.timeout, args.look_for_keys
         )
-        sftp = client.open_sftp()
         messages.append("Login successful")
         states.append(0)
     except Exception:
@@ -267,6 +266,9 @@ def _main(sys_args: None | list[str] = None) -> tuple[int, str]:
 
     # Let's prepare for some other tests...
     omd_root = os.getenv("OMD_ROOT")
+    if omd_root is None:
+        sys.stderr.write("This check must be executed from within a site\n")
+        sys.exit(1)
 
     sftp.chdir(".")
     working_dir = sftp.getcwd()
@@ -281,14 +283,19 @@ def _main(sys_args: None | list[str] = None) -> tuple[int, str]:
         omd_root,
         working_dir,
     )
-    testfile_remote = True
 
     # .. and eventually execute them!
     try:  # Put a file to the server
         if args.put_local is not None:
-            create_testfile(paths)
-            testfile_remote = file_available(args.put_local, args.put_remote, sftp, working_dir)
-            put_file(sftp, paths)
+            create_testfile(paths["local_put_path"])
+            testfile_already_present = file_available(
+                args.put_local, args.put_remote, sftp, working_dir
+            )
+
+            put_file(sftp, paths["local_put_path"], paths["remote_put_path"])
+            if not testfile_already_present:
+                sftp.remove(paths["remote_put_path"])
+
             states.append(0)
             messages.append("Successfully put file to SFTP server")
     except Exception:
@@ -299,7 +306,7 @@ def _main(sys_args: None | list[str] = None) -> tuple[int, str]:
 
     try:  # Get a file from the server
         if args.get_remote is not None:
-            get_file(sftp, paths)
+            get_file(sftp, paths["remote_get_path"], paths["local_get_path"])
             states.append(0)
             messages.append("Successfully got file from SFTP server")
     except Exception:
@@ -310,12 +317,10 @@ def _main(sys_args: None | list[str] = None) -> tuple[int, str]:
 
     try:  # Get timestamp of a remote file
         if args.timestamp is not None:
-            file_stats = get_timestamp(sftp, paths)
+            timestamp = get_timestamp(sftp, paths)
             states.append(0)
             messages.append(
-                "Timestamp of {} is: {}".format(
-                    paths["timestamp_filename"], time.ctime(file_stats.st_mtime)
-                )
+                "Timestamp of {} is: {}".format(paths["timestamp_filename"], time.ctime(timestamp))
             )
     except Exception:
         if args.verbose:
@@ -323,15 +328,11 @@ def _main(sys_args: None | list[str] = None) -> tuple[int, str]:
         states.append(2)
         messages.append("Could not get timestamp of file! (!!)")
 
-    # Remove useless files
-    if not testfile_remote:
-        sftp.remove(paths["remote_put_path"])
-
     return max(states), ", ".join(messages)
 
 
 def main() -> int:
     replace_passwords()
-    exitcode, info = _main()
+    exitcode, info = run_check()
     output_check_result(info)
     return exitcode

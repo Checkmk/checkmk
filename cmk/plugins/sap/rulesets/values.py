@@ -85,7 +85,6 @@ def _formspec_inventory_sap_values():
 rule_spec_inventory_sap_values = rule_specs.DiscoveryParameters(
     title=Title("SAP R/3 single value discovery"),
     name="inventory_sap_values",
-    eval_type=rule_specs.EvalType.ALL,
     parameter_form=_formspec_inventory_sap_values,
     topic=rule_specs.Topic.GENERAL,
 )

@@ -23,7 +23,6 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.rule_specs import (
     CheckParameters,
     DiscoveryParameters,
-    EvalType,
     HostAndItemCondition,
     HostCondition,
     Topic,
@@ -114,7 +113,6 @@ def _discovery_parameters_form_alertmanager():
 
 rule_spec_discovery_alertmanager = DiscoveryParameters(
     topic=Topic.GENERAL,
-    eval_type=EvalType.MERGE,
     name="discovery_alertmanager",
     parameter_form=_discovery_parameters_form_alertmanager,
     title=Title("Alertmanager discovery"),

@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
     DefaultValue,
     DictElement,
     Dictionary,
@@ -12,12 +15,18 @@ from cmk.rulesets.v1.form_specs import (
     MultipleChoice,
     MultipleChoiceElement,
     Password,
-    SingleChoice,
-    SingleChoiceElement,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+
+
+def _migrate_element_names(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Invalid value {value} for Netapp Ontap")
+    if "no-cert-check" in value:
+        value["no_cert_check"] = value.pop("no-cert-check")
+    return value
 
 
 def _formspec_netapp_ontap() -> Dictionary:
@@ -44,29 +53,15 @@ def _formspec_netapp_ontap() -> Dictionary:
                 parameter_form=Password(
                     help_text=Help("The password of the user."),
                     title=Title("Password of the user"),
-                    custom_validate=[
-                        LengthInRange(min_value=1),
-                    ],
+                    custom_validate=(LengthInRange(min_value=1),),
                     migrate=migrate_to_password,
                 ),
                 required=True,
             ),
             "no_cert_check": DictElement(
-                parameter_form=SingleChoice(
-                    title=Title("SSL certificate verification"),
-                    help_text=Help(
-                        "Here you can configure whether the SSL certificate should get verified."
-                    ),
-                    elements=[
-                        SingleChoiceElement(
-                            name="verify_cert", title=Title("Verify the certificate")
-                        ),
-                        SingleChoiceElement(
-                            name="no_cert_check",
-                            title=Title("Ignore certificate errors (unsecure)"),
-                        ),
-                    ],
-                    prefill=DefaultValue("verify_cert"),
+                parameter_form=BooleanChoice(
+                    title=Title("Skip TLS certificate verification"),
+                    prefill=DefaultValue(False),
                 ),
                 required=True,
             ),
@@ -86,6 +81,7 @@ def _formspec_netapp_ontap() -> Dictionary:
                 ),
             ),
         },
+        migrate=_migrate_element_names,
     )
 
 

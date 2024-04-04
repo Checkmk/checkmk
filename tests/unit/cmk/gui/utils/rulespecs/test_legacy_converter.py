@@ -910,7 +910,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         ),
         pytest.param(
             api_v1.form_specs.TimePeriod(),
-            legacy_timeperiods.TimeperiodSelection(),
+            legacy_valuespecs.Transform(legacy_timeperiods.TimeperiodSelection()),
             id="minimal TimePeriod",
         ),
         pytest.param(
@@ -918,9 +918,11 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Title("title"),
                 help_text=api_v1.Help("help text"),
             ),
-            legacy_timeperiods.TimeperiodSelection(
-                title="title",
-                help="help text",
+            legacy_valuespecs.Transform(
+                legacy_timeperiods.TimeperiodSelection(
+                    title="title",
+                    help="help text",
+                ),
             ),
             id="TimePeriod",
         ),

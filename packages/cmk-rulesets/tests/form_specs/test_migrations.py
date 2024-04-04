@@ -14,6 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     migrate_to_lower_integer_levels,
     migrate_to_password,
     migrate_to_proxy,
+    migrate_to_time_period,
     migrate_to_upper_float_levels,
     migrate_to_upper_integer_levels,
 )
@@ -565,3 +566,26 @@ def test_migrate_to_proxy(
 ) -> None:
     assert migrate_to_proxy(old) == new
     assert migrate_to_proxy(new) == new
+
+
+@pytest.mark.parametrize(
+    ["old", "new"],
+    [
+        pytest.param(
+            "24X7",
+            ("cmk_postprocessed", "stored_time_period", "24X7"),
+            id="migrate time period",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "stored_time_period", "24X7"),
+            ("cmk_postprocessed", "stored_time_period", "24X7"),
+            id="already migrated time period",
+        ),
+    ],
+)
+def test_migrate_to_time_period(
+    old: object,
+    new: tuple[Literal["cmk_postprocessed"], Literal["stored_time_period"], str],
+) -> None:
+    assert migrate_to_time_period(old) == new
+    assert migrate_to_time_period(new) == new

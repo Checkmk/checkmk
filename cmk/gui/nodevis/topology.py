@@ -765,6 +765,9 @@ class GenericNetworkDataGenerator(ABCTopologyNodeDataGenerator):
             if icon := image_metadata.get(icon_type):
                 result.setdefault("node_images", {})[icon_type] = theme.detect_icon_path(icon, "")
 
+        if tooltip := node.metadata.get("tooltip"):
+            result["tooltip"] = tooltip
+
         if custom_settings := self._topology_configuration.frontend.custom_node_settings.get(
             node.id
         ):

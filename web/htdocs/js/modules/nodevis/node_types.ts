@@ -5,21 +5,19 @@
  */
 
 import * as d3 from "d3";
-import {
-    AbstractGUINode,
-    BasicQuickinfo,
-    node_type_class_registry,
-} from "nodevis/node_utils";
+import {AbstractGUINode, node_type_class_registry} from "nodevis/node_utils";
 import * as texts from "nodevis/texts";
 import {
     ContextMenuElement,
     d3SelectionG,
     NodevisNode,
     NodevisWorld,
+    QuickinfoEntry,
 } from "nodevis/type_defs";
 import {
     bound_monitoring_host,
     SearchFilters,
+    show_tooltip,
     TypeWithName,
 } from "nodevis/utils";
 
@@ -62,6 +60,25 @@ export class TopologyNode extends AbstractGUINode {
         }
 
         this.update_growth_indicators();
+
+        this.selection()
+            .on("mouseover.tooltip", event => {
+                show_tooltip(
+                    event,
+                    this.node.data.type_specific.tooltip || {},
+                    this._world.viewport
+                );
+            })
+            .on("mouseout.tooltip", event => {
+                show_tooltip(event, {}, this._world.viewport);
+            })
+            .on("mousemove.tooltip", event => {
+                show_tooltip(
+                    event,
+                    this.node.data.type_specific.tooltip || {},
+                    this._world.viewport
+                );
+            });
     }
 
     override update_node_data(node: NodevisNode, selection: d3SelectionG) {
@@ -105,6 +122,8 @@ export class TopologyNode extends AbstractGUINode {
                     .attr("height", 16)
                     .attr("x", -8)
                     .attr("y", 0)
+                    .append("title")
+                    .text(texts.get("can_grow_here"))
             );
 
         // Growth forbidden
@@ -123,6 +142,8 @@ export class TopologyNode extends AbstractGUINode {
                     .attr("height", 16)
                     .attr("x", -28)
                     .attr("y", 0)
+                    .append("title")
+                    .text(texts.get("growth_stops_here"))
             );
 
         // Growth continue
@@ -141,6 +162,8 @@ export class TopologyNode extends AbstractGUINode {
                     .attr("height", 16)
                     .attr("x", -28)
                     .attr("y", 0)
+                    .append("title")
+                    .text(texts.get("growth_continues_here"))
             );
     }
 
@@ -358,8 +381,8 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
         return "bi_leaf";
     }
 
-    override _get_basic_quickinfo(): BasicQuickinfo[] {
-        const quickinfo: BasicQuickinfo[] = [];
+    override _get_basic_quickinfo(): QuickinfoEntry[] {
+        const quickinfo: QuickinfoEntry[] = [];
 
         const core_info = this.node.data.type_specific.core;
         quickinfo.push({
@@ -428,8 +451,8 @@ export class BIAggregatorNode extends AbstractGUINode {
         return "bi_aggregator";
     }
 
-    override _get_basic_quickinfo(): BasicQuickinfo[] {
-        const quickinfo: BasicQuickinfo[] = [];
+    override _get_basic_quickinfo(): QuickinfoEntry[] {
+        const quickinfo: QuickinfoEntry[] = [];
         quickinfo.push({name: "Rule Title", value: this.node.data.name});
         quickinfo.push({
             name: "State",

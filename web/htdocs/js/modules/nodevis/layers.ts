@@ -310,11 +310,14 @@ export class LayeredNodesLayer extends FixLayer {
         const hide_service_labels = nodes_class_list.contains(
             "hide_service_labels"
         );
+        const hide_other_labels =
+            nodes_class_list.contains("hide_other_labels");
         const hide_icons = nodes_class_list.contains("hide_icons");
 
         const data: [TranslationKey, boolean][] = [
             ["host_labels", !hide_host_labels],
             ["service_labels", !hide_service_labels],
+            ["other_labels", !hide_other_labels],
             ["icons", !hide_icons],
         ];
         const elements: ContextMenuElement[] = [];

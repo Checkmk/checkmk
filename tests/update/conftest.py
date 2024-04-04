@@ -145,7 +145,11 @@ def _get_site(  # pylint: disable=too-many-branches
     """Install or update the test site with the given version.
 
     An update installation is done automatically when an optional base_site is given.
-    By default, both installing and updating is done directly via spawn_expect_process()."""
+    By default, both installing and updating is done directly via spawn_expect_process().
+    """
+    prefix = "update_"
+    sitename = "central"
+
     update = base_site is not None and base_site.exists()
     update_conflict_mode = "keepold"
     min_version = CMKVersion(
@@ -161,12 +165,12 @@ def _get_site(  # pylint: disable=too-many-branches
             current_base_branch_name(),
             current_branch_version(),
         ),
-        prefix="update_",
+        prefix=prefix,
         update=update,
         update_conflict_mode=update_conflict_mode,
         enforce_english_gui=False,
     )
-    site = sf.get_existing_site("central")
+    site = sf.get_existing_site(sitename)
 
     logger.info("Site exists: %s", site.exists())
     if site.exists() and not update:
@@ -220,7 +224,7 @@ def _get_site(  # pylint: disable=too-many-branches
 
         else:  # use SiteFactory for non-interactive site creation
             try:
-                site = sf.get_site("central", auto_restart_httpd=True)
+                site = sf.get_site(sitename, auto_restart_httpd=True)
             except Exception as e:
                 if f"Version {version.version} could not be installed" in str(e):
                     pytest.skip(

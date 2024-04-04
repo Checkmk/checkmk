@@ -16,11 +16,7 @@ ROOT=/omd/sites/$SITE
 
 (cd ../../packages/livestatus && ONLY_COPY=1 ./.f12)
 
-# TODO(sp): we do not need it here
-echo Building rrdtool library...
-LANG=C make -j4 -C ../../omd rrdtool-build-library >/dev/null
-
-sudo install -vD build/src/libneb.so "$ROOT/lib/mk-livestatus/livestatus.o"
+install -vD build/src/libneb.so "$ROOT/lib/mk-livestatus/livestatus.o"
 
 if [ -z "$ONLY_COPY" ]; then
     echo "Restarting site $SITE"

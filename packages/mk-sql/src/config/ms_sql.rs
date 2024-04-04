@@ -13,7 +13,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-use yaml_rust::YamlLoader;
+use yaml_rust2::YamlLoader;
 
 #[derive(PartialEq, Debug)]
 pub struct Config {

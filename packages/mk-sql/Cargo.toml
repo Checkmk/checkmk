@@ -32,7 +32,7 @@ log = { version = "0.4" }
 clap = { version = "4.1.*", features = [
   "derive",
 ] } # replace with 4.4.2 if rutsc >= 1.70
-yaml-rust = "0.4.5"
+yaml-rust2 = "0.8.0"
 lazy_static = { version = "1.4" }
 futures = { version = "0.3.25" }
 # used for New Types derives, may be removed

@@ -27,6 +27,11 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("ajax_sidebar_position")(ModeAjaxCycleSidebarPosition)
     page_registry.register_page("ajax_set_dashboard_start_url")(ModeAjaxSetStartURL)
 
+    if cmk_version.edition() == cmk_version.Edition.CSE:
+        page_registry.register_page("ajax_saas_onboarding_button_toggle")(
+            ModeAjaxCycleSaasOnboardingButtonToggle
+        )
+
 
 def _get_current_theme_title() -> str:
     return [title for theme_id, title in theme.theme_choices if theme_id == theme.get()][0]
@@ -39,6 +44,17 @@ def _get_sidebar_position() -> str:
     )
 
     return sidebar_position or "right"
+
+
+def _get_saas_onboarding_visibility_status() -> str:
+    assert user.id is not None
+    saas_onboarding_button_toggle = load_custom_attr(
+        user_id=user.id,
+        key="ui_saas_onboarding_button_toggle",
+        parser=lambda x: x,
+    )
+
+    return saas_onboarding_button_toggle or "visible"
 
 
 def _sidebar_position_title(stored_value: str) -> str:
@@ -70,6 +86,23 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
             button_title=_sidebar_position_title(_get_sidebar_position()),
         ),
     ]
+
+    if cmk_version.edition() == cmk_version.Edition.CSE:
+        quick_items.append(
+            TopicMenuItem(
+                name="saas_onboarding_button_toggle",
+                title=_("Onboarding button toggle"),
+                url='javascript:cmk.sidebar.toggle_user_attribute("ajax_saas_onboarding_button_toggle.py")',
+                target="",
+                sort_index=30,
+                icon="sidebar_position",
+                button_title=(
+                    _("Visible")
+                    if _get_saas_onboarding_visibility_status() == "visible"
+                    else _("Invisible")
+                ),
+            ),
+        )
 
     items = [
         TopicMenuItem(
@@ -181,6 +214,18 @@ class ModeAjaxCycleSidebarPosition(AjaxPage):
         _set_user_attribute(
             "ui_sidebar_position",
             None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left",
+        )
+        return {}
+
+
+class ModeAjaxCycleSaasOnboardingButtonToggle(AjaxPage):
+    """AJAX handler for quick access option 'Onboarding button toggle" in user menu"""
+
+    def page(self) -> PageResult:
+        check_csrf_token()
+        _set_user_attribute(
+            "ui_saas_onboarding_button_toggle",
+            ("visible" if _get_saas_onboarding_visibility_status() == "invisible" else "invisible"),
         )
         return {}
 

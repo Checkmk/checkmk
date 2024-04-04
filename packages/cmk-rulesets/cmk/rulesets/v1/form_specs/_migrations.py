@@ -319,3 +319,23 @@ def migrate_to_proxy(  # pylint: disable=too-many-return-statements
             return "no_proxy", "", None
 
     raise TypeError(f"Could not migrate {model!r} to Proxy.")
+
+
+def migrate_to_time_period(
+    model: object,
+) -> tuple[Literal["cmk_postprocessed"], Literal["stored_time_period"], str]:
+    """
+    Transform a previous time period configuration to a model of the `TimePeriod` FormSpec.
+    Previous configurations are transformed in the following way:
+        <time-period> -> ("time_period", "preconfigured", <time-period>)
+
+    Args:
+        model: Old value presented to the consumers to be migrated
+    """
+    match model:
+        case str(time_period):
+            return "cmk_postprocessed", "stored_time_period", time_period
+        case "cmk_postprocessed", "stored_time_period", str(time_period):
+            return "cmk_postprocessed", "stored_time_period", time_period
+
+    raise TypeError(f"Could not migrate {model!r} to TimePeriod.")

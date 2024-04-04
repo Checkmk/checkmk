@@ -2011,10 +2011,31 @@ def _convert_to_legacy_text_area(
     )
 
 
+def _transform_timeperiod_forth(value: object) -> str | None:
+    match value:
+        case "cmk_postprocessed", "stored_time_period", str(time_period):
+            return time_period
+        # time_period is None when adding a new rule
+        case "cmk_postprocessed", "stored_time_period", None:
+            return None
+
+    raise ValueError(value)
+
+
+def _transform_timeperiod_back(
+    value: str,
+) -> tuple[Literal["cmk_postprocessed"], Literal["stored_time_period"], str]:
+    return "cmk_postprocessed", "stored_time_period", value
+
+
 def _convert_to_legacy_timeperiod_selection(
     to_convert: ruleset_api_v1.form_specs.TimePeriod, localizer: Callable[[str], str]
-) -> legacy_timeperiods.TimeperiodSelection:
-    return legacy_timeperiods.TimeperiodSelection(
-        title=_localize_optional(to_convert.title, localizer),
-        help=_localize_optional(to_convert.help_text, localizer),
+) -> legacy_valuespecs.Transform:
+    return legacy_valuespecs.Transform(
+        legacy_timeperiods.TimeperiodSelection(
+            title=_localize_optional(to_convert.title, localizer),
+            help=_localize_optional(to_convert.help_text, localizer),
+        ),
+        back=_transform_timeperiod_back,
+        forth=_transform_timeperiod_forth,
     )

@@ -5,12 +5,12 @@
 use crate::utils::read_file;
 use anyhow::{anyhow, Result};
 use std::path::{Path, PathBuf};
-use yaml_rust::YamlLoader;
-pub type Yaml = yaml_rust::yaml::Yaml;
+use yaml_rust2::YamlLoader;
+pub type Yaml = yaml_rust2::yaml::Yaml;
 
 pub mod trace_tools {
     use std::io::{self, Write};
-    use yaml_rust::{Yaml, YamlEmitter};
+    use yaml_rust2::{Yaml, YamlEmitter};
     #[allow(dead_code)]
     pub fn dump_yaml(yaml: &Yaml) -> String {
         let mut writer = String::new();
@@ -158,7 +158,7 @@ fn to_bool(value: &str) -> Result<bool> {
 
 #[cfg(test)]
 pub mod test_tools {
-    use yaml_rust::{Yaml, YamlLoader};
+    use yaml_rust2::{Yaml, YamlLoader};
     pub fn create_yaml(source: &str) -> Yaml {
         YamlLoader::load_from_str(source).expect("fix test string!")[0].clone()
     }

@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 use std::process::Output;
 use tempfile::NamedTempFile;
 use tempfile::{Builder, TempDir};
-use yaml_rust::YamlLoader;
+use yaml_rust2::YamlLoader;
 
 pub fn run_bin() -> Command {
     Command::cargo_bin("mk-sql").unwrap()

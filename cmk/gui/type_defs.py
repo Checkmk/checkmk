@@ -201,6 +201,7 @@ class UserSpec(TypedDict, total=False):
     start_url: str | None
     two_factor_credentials: TwoFactorCredentials
     ui_sidebar_position: Any  # TODO: Improve this
+    ui_saas_onboarding_button_toggle: Literal["visible", "invisible"]
     ui_theme: Any  # TODO: Improve this
     user_id: UserId
     user_scheme_serial: int

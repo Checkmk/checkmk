@@ -40,6 +40,10 @@ def register(user_attribute_registry: UserAttributeRegistry) -> None:
     user_attribute_registry.register(UIBasicAdvancedToggle)
 
 
+def saas_register(saas_user_attribute_registry: UserAttributeRegistry) -> None:
+    saas_user_attribute_registry.register(UISaaSOnboardingButtonToggle)
+
+
 class TemperatureUnitUserAttribute(UserAttribute):
     @classmethod
     def name(cls) -> str:
@@ -259,6 +263,24 @@ class UISidebarPosition(UserAttribute):
             title=_("Sidebar position"),
             # FIXME: Why isn't this simply a bool instead of an Optional[Literal["left"]]?
             choices=[(None, _("Right")), ("left", _("Left"))],
+        )
+
+    def domain(self) -> str:
+        return "multisite"
+
+
+class UISaaSOnboardingButtonToggle(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "ui_saas_onboarding_button_toggle"
+
+    def topic(self) -> str:
+        return "interface"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Onboarding button toggle"),
+            choices=[("visible", _("Visible")), ("invisible", _("Invisible"))],
         )
 
     def domain(self) -> str:

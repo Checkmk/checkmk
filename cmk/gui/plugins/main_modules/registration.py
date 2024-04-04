@@ -198,6 +198,7 @@ def register() -> None:
             main_module_registry,
             permission_registry,
         )
+
     mobile.register(layout_registry)
     userdb_registration.register(
         page_registry,
@@ -207,6 +208,10 @@ def register() -> None:
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
     )
+
+    if edition() is Edition.CSE:
+        userdb_registration.saas_register(user_attribute_registry)
+
     wato_registration.register(
         page_registry,
         painter_registry,

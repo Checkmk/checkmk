@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 from keyword import iskeyword
-from typing import ClassVar, Literal, Sequence, TypeVar
+from typing import ClassVar, Literal, TypeVar
 
 from .._localize import Label, Message, Title
 from ._base import DefaultValue, FormSpec, InputHint, Prefill

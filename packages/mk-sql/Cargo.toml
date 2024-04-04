@@ -29,8 +29,8 @@ anyhow = "1.0.75"
 # tokio-macros = "2.1.0"
 flexi_logger = { version = "0.27", default-features = false } # extension for log to allow log redirection
 log = { version = "0.4" }
-clap = { version = "<4.5", features = ["derive"] }  # needs rustc >= 1.74
-yaml-rust = "0.4.5"
+clap = { version = "<4.5", features = ["derive"] }            # needs rustc >= 1.74
+yaml-rust2 = "0.8.0"
 lazy_static = { version = "1.4" }
 futures = { version = "0.3.25" }
 # used for New Types derives, may be removed
@@ -43,4 +43,4 @@ derive_more = { version = "0.99", features = [
 
 [dev-dependencies]
 tempfile = { version = "3.10.1" }
-assert_cmd = { version = "<2.0.14" }  # needs rustc >= 1.73
+assert_cmd = { version = "<2.0.14" } # needs rustc >= 1.73

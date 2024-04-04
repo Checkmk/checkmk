@@ -32,5 +32,4 @@ rule_spec_rmon_discovery = rule_specs.DiscoveryParameters(
     title=Title("RMON statistics"),
     topic=rule_specs.Topic.GENERAL,
     parameter_form=_parameter_form_discover_rmon,
-    eval_type=rule_specs.EvalType.MERGE,
 )

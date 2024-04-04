@@ -35,7 +35,6 @@ def _form_inventory_fujitsu_ca_ports() -> form_specs.Dictionary:
 rule_spec_inventory_fujitsu_ca_ports = rule_specs.DiscoveryParameters(
     title=Title("Fujitsu storage CA port discovery"),
     topic=rule_specs.Topic.GENERAL,
-    eval_type=rule_specs.EvalType.MERGE,
     name="inventory_fujitsu_ca_ports",
     parameter_form=_form_inventory_fujitsu_ca_ports,
 )

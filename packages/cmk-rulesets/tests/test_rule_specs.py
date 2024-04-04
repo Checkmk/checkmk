@@ -84,7 +84,6 @@ from cmk.rulesets.v1.rule_specs import (
                 "title": Title("ABC"),
                 "topic": Topic.APPLICATIONS,
                 "parameter_form": lambda: Dictionary(elements={}),  # type: ignore[misc]
-                "eval_type": EvalType.MERGE,
             },
             id="DiscoveryParameters",
         ),

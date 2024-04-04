@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
-from typing import Literal
 
 from pydantic import BaseModel
 
@@ -14,7 +13,7 @@ from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, Sp
 class NetappOntapParams(BaseModel):
     username: str
     password: Secret
-    no_cert_check: Literal["verify_cert", "no_cert_check"]
+    no_cert_check: bool
 
 
 def generate_netapp_ontap_command(
@@ -27,7 +26,7 @@ def generate_netapp_ontap_command(
     args += ["--username", params.username]
     args += ["--password", params.password.unsafe()]
 
-    if params.no_cert_check == "no_cert_check":
+    if params.no_cert_check:
         args += ["--no-cert-check"]
 
     yield SpecialAgentCommand(command_arguments=args)

@@ -228,6 +228,14 @@ Function should_exclude($exclude, $section) {
      return (($exclude -Match "ALL") -or ($exclude -Match $section))
 }
 
+function Test-DomainSid([string]$sid) {
+     $domain_sid_pattern = "S-1-5-(.*)-51[2,9]"
+     ($sid -match $domain_sid_pattern)[0]
+     # TODO(sk): check whether domain is valid, matches[1] contains domain id
+     # it is highly unlikely that domain id will mismatch
+     # still we may check it, but in the future
+}
+
 <#
     .SYNOPSIS
         Checks that file is safe to run by administrator.
@@ -262,12 +270,16 @@ function Invoke-SafetyCheck( [String]$file ) {
           foreach ($entry in $actors ) {
                $name = $entry.name
                $sid = $entry.sid
-               if ( $admin_sids -match $sid ) {
+               if ( $admin_sids -contains $sid ) {
                     # predefined admin groups are safe
                     continue
                }
+               if (Test-DomainSid $sid) {
+                    # 'Domain Admins' and 'Enterprise Admins' are safe too
+                    continue
+               }
                if ( $admins.Name -contains "$name" ) {
-                    # administrators are safe too
+                    # members of local admin groups are safe
                     continue
                }
 

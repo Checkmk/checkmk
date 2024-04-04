@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Generic, Literal, TypedDict, TypeVar
+from typing import Generic, Literal, TypedDict, TypeVar
 
 from .._localize import Help, Title
 from ._base import DefaultValue, FormSpec, Prefill

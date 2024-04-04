@@ -5,9 +5,10 @@
 
 """FormSpecs that can be composed of other FormSpecs"""
 
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from keyword import iskeyword
-from typing import Any, Generic, Mapping, Sequence
+from typing import Any, Generic
 
 from .._localize import Help, Label, Message, Title
 from ._base import DefaultValue, FormSpec, InputHint, ModelT

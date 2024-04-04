@@ -13,6 +13,7 @@ from datetime import datetime
 from typing import Any, NamedTuple, overload
 
 import cmk.utils.store as store
+from cmk.utils.hostaddress import HostName
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, NotifyAnalysisInfo
 from cmk.utils.statename import host_state_name, service_state_name
@@ -24,6 +25,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
 import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
+from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -97,7 +99,7 @@ from cmk.gui.watolib.check_mk_automations import (
     notification_test,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, Host, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
@@ -818,6 +820,10 @@ class ModeNotifications(ABCNotificationsMode):
             except Exception as e:
                 raise MKUserError(None, "Failed to parse context from request.") from e
 
+            self._add_missing_host_context(context)
+            if context["WHAT"] == "SERVICE":
+                self._add_missing_service_context(context)
+
             return (
                 context,
                 notification_test(
@@ -825,6 +831,41 @@ class ModeNotifications(ABCNotificationsMode):
                 ).result,
             )
         return None, None
+
+    def _add_missing_host_context(self, context: NotificationContext) -> None:
+        """We don't want to transport all possible informations via HTTP vars
+        so we enrich the context after fetching all user defined options"""
+        hostname = context["HOSTNAME"]
+        resp = sites.live().query(
+            "GET hosts\nColumns: custom_variables groups contact_groups\nFilter: host_name = %s\n"
+            % hostname
+        )
+        if len(resp) < 1:
+            raise MKUserError(
+                None,
+                _("Host '%s' is not known in the activated monitoring configuration") % hostname,
+            )
+        context["HOSTTAGS"] = resp[0][0].get("TAGS")
+        context["HOSTGROUPNAMES"] = ",".join(resp[0][1])
+        context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][2])
+        if host := Host.host(HostName(hostname)):
+            context["OMD_SITE"] = host.site_id()
+
+    def _add_missing_service_context(self, context: NotificationContext) -> None:
+        hostname = context["HOSTNAME"]
+        resp = sites.live().query(
+            "GET services\nColumns: groups contact_groups check_command\nFilter: host_name = %s\nFilter: service_description = %s"
+            % (hostname, context["SERVICEDESC"])
+        )
+        if len(resp) < 1:
+            raise MKUserError(
+                None,
+                _("Host '%s' is not known in the activated monitoring configuration") % hostname,
+            )
+
+        context["SERVICEGROUPNAMES"] = ",".join(resp[0][0])
+        context["SERVICECONTACTGROUPNAMES"] = ",".join(resp[0][1])
+        context["SERVICECHECKCOMMAND"] = resp[0][2]
 
     def _show_no_fallback_contact_warning(self):
         if not self._fallback_mail_contacts_configured():

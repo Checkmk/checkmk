@@ -1620,13 +1620,49 @@ class _LevelDynamicChoice(enum.StrEnum):
     PREDICTIVE = "predictive"
 
 
+LevelsConfigLegacyModel = (
+    ruleset_api_v1.form_specs.SimpleLevelsConfigModel | tuple[Literal["predictive"], object]
+)
+
+LevelsConfigModel = (
+    ruleset_api_v1.form_specs.SimpleLevelsConfigModel
+    | tuple[Literal["cmk_postprocessed"], Literal["predictive_levels"], object]
+)
+
+
+def _transform_levels_forth(value: object) -> LevelsConfigLegacyModel:
+    match value:
+        case "no_levels", None:
+            return "no_levels", None
+        case "fixed", tuple(fixed_levels):
+            return "fixed", fixed_levels
+        case "cmk_postprocessed", "predictive_levels", predictive_levels:
+            return "predictive", predictive_levels
+
+    raise ValueError(value)
+
+
+def _transform_levels_back(
+    value: LevelsConfigLegacyModel,
+) -> LevelsConfigModel:
+    match value:
+        case "no_levels", None:
+            return "no_levels", None
+        case "fixed", tuple(fixed_levels):
+            return "fixed", fixed_levels
+        case "predictive", predictive_levels:
+            return "cmk_postprocessed", "predictive_levels", predictive_levels
+
+    raise ValueError(value)
+
+
 def _convert_to_legacy_levels(
     to_convert: (
         ruleset_api_v1.form_specs.Levels[_NumberT]
         | ruleset_api_v1.form_specs.SimpleLevels[_NumberT]
     ),
     localizer: Callable[[str], str],
-) -> legacy_valuespecs.CascadingDropdown:
+) -> legacy_valuespecs.Transform:
     choices: list[tuple[str, str, legacy_valuespecs.ValueSpec]] = [
         (
             _LevelDynamicChoice.NO_LEVELS.value,
@@ -1682,11 +1718,15 @@ def _convert_to_legacy_levels(
         case ruleset_api_v1.form_specs.Integer() | ruleset_api_v1.form_specs.DataSize():
             prefill_value = to_convert.prefill_fixed_levels.value
 
-    return legacy_valuespecs.CascadingDropdown(
-        title=_localize_optional(to_convert.title, localizer),
-        help=_localize_optional(to_convert.help_text, localizer),
-        choices=choices,
-        default_value=_make_levels_default_value(to_convert, prefill_value),
+    return legacy_valuespecs.Transform(
+        legacy_valuespecs.CascadingDropdown(
+            title=_localize_optional(to_convert.title, localizer),
+            help=_localize_optional(to_convert.help_text, localizer),
+            choices=choices,
+            default_value=_make_levels_default_value(to_convert, prefill_value),
+        ),
+        back=_transform_levels_back,
+        forth=_transform_levels_forth,
     )
 
 

@@ -221,7 +221,8 @@ def test_prediction_injection() -> None:
     )
     p: dict[str, object] = {
         "levels_upper": (
-            "predictive",
+            "cmk_postprocessed",
+            "predictive_levels",
             {
                 "__reference_metric__": "my_reference_metric",
                 "__direction__": "upper",

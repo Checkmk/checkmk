@@ -67,7 +67,8 @@ def test_migrate_memory_abs_used(key: Literal["memory", "pagefile"]) -> None:
         key: {
             "abs_used": {
                 "lower": (
-                    "predictive",
+                    "cmk_postprocessed",
+                    "predictive_levels",
                     {
                         "period": "minute",
                         "horizon": 4,
@@ -76,7 +77,8 @@ def test_migrate_memory_abs_used(key: Literal["memory", "pagefile"]) -> None:
                     },
                 ),
                 "upper": (
-                    "predictive",
+                    "cmk_postprocessed",
+                    "predictive_levels",
                     {
                         "period": "minute",
                         "horizon": 4,
@@ -104,7 +106,8 @@ def test_migrate_memory_abs_used_no_lower(key: Literal["memory", "pagefile"]) ->
             "abs_used": {
                 "lower": ("no_levels", None),
                 "upper": (
-                    "predictive",
+                    "cmk_postprocessed",
+                    "predictive_levels",
                     {
                         "period": "minute",
                         "horizon": 4,

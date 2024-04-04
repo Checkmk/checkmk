@@ -2789,7 +2789,22 @@ EOM
         echo "<<<<${MK_PIGGYBACK_HOST}>>>>"
     fi
 
-    EXECUTION_MODE="$(get_binary_execution_mode "$SQLPLUS" "$(get_binary_owner "$SQLPLUS")")"
+    EXECUTION_USER="$(get_binary_owner "$SQLPLUS")"
+    EXECUTION_MODE="$(get_binary_execution_mode "$SQLPLUS" "$EXECUTION_USER")"
+
+    if ! $EXECUTION_MODE "test -r \"${TNS_ADMIN}/sqlnet.ora\""; then
+        # we can not read sqlnet.ora!
+        # set_ora_env already checked that the file exists
+        # and we want to transport a meaningful error message to the ui and in logging
+        local sqlnet_ora_error="${TNS_ADMIN}/sqlnet.ora can not be read by user \"${EXECUTION_USER}\"! Either use 'sqlnet.ora permission group' bakery rule, or directly modify permissions of the file."
+        logging -c -e "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "$sqlnet_ora_error"
+
+        echo '<<<oracle_instance:sep(124)>>>'
+        echo "$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|$sqlnet_ora_error"
+        exit 1
+
+    fi
+
     if output=$(echo "$pipe_input" | $EXECUTION_MODE "\"$SQLPLUS\" -L -s /nolog"); then
         echo -e "$output"
 

@@ -249,6 +249,7 @@ def _convert_to_legacy_match_type(
         case (
             ruleset_api_v1.rule_specs.AgentConfig()
             | ruleset_api_v1.rule_specs.InventoryParameters()
+            | ruleset_api_v1.rule_specs.NotificationParameters()
         ):
             return "dict"
         case other:

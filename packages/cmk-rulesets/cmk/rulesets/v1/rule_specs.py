@@ -88,14 +88,14 @@ def _validate_name(name: str) -> None:
 class Host:
     """Specifies rule configurations for hosts
 
-    Instaneces of this class will only be picked up by Checkmk if their names start with
+    Instances of this class will only be picked up by Checkmk if their names start with
     ``rule_spec_``.
 
     Args:
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        eval_type: How the rules of this RuleSpec are meant to be evaluated in respect to each other
         name: Identifier of the rule spec
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
         help_text: Description to help the user with the configuration
@@ -124,7 +124,7 @@ class Service:  # pylint: disable=too-many-instance-attributes
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        eval_type: How the rules of this RuleSpec are meant to be evaluated in respect to each other
         name: Identifier of the rule spec
         condition: Which targets should be configurable in the rule condition
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
@@ -326,7 +326,7 @@ class AgentAccess:
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        eval_type: How the rules of this RuleSpec are meant to be evaluated in respect to each other
         name: Identifier of the rule spec
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
         help_text: Description to help the user with the configuration
@@ -355,7 +355,6 @@ class NotificationParameters:
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
         name: Identifier of the rule spec
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
         help_text: Description to help the user with the configuration
@@ -364,7 +363,6 @@ class NotificationParameters:
     title: Title
     topic: Topic | CustomTopic
     parameter_form: Callable[[], Dictionary]
-    eval_type: EvalType
     name: str
     is_deprecated: bool = False
     help_text: Help | None = None
@@ -384,7 +382,7 @@ class SNMP:
         title: Human readable title
         topic: Categorization of the rule
         parameter_form: Configuration specification
-        eval_type: How the rules of this RuleSpec are evaluated in respect to each other
+        eval_type: How the rules of this RuleSpec are meant to be evaluated in respect to each other
         name: Identifier of the rule spec
         is_deprecated: Flag to indicate whether this rule is deprecated and should no longer be used
         help_text: Description to help the user with the configuration

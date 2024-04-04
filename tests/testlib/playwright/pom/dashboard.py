@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
+from typing import Literal, override
 from urllib.parse import urljoin, urlsplit
 
 from playwright.sync_api import Page, Response
@@ -30,6 +30,11 @@ class LoginPage(CmkPage):
             self.site_url = "".join(urlsplit(self.page.url)[0:2])
         self.username = ""
         self.password = ""
+
+    # TODO: implement the method in CMK-16737.
+    @override
+    def navigate(self) -> str:
+        return "dummy"
 
     def login(self, username: str = "", password: str = "") -> None:
         """login to cmk"""

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from abc import abstractmethod
 from typing import overload
 
 from playwright.sync_api import expect, FrameLocator, Locator, Page
@@ -199,11 +200,19 @@ class CmkPage(LocatorHelper):
         timeout_navigation: int | None = None,
     ) -> None:
         super().__init__(page, timeout_assertions, timeout_navigation)
-        self._url_pattern: str  # pattern of URL to be expected, used for validation.
-        self.url: str  # URL of the page.
         self.main_menu = MainMenu(self.page)
         self.main_area = MainArea(self.page)
         self.sidebar = Sidebar(self.page)
+        self._url: str = self.navigate()
+
+    @abstractmethod
+    def navigate(self) -> str:
+        """Navigate to the page.
+
+        Navigation steps are performed relative to the parent page.
+        Returns URL of the page.
+        """
+        return ""
 
     def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator(selector)

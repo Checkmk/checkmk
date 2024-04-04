@@ -22,6 +22,7 @@ def fixture_host(logged_in_page: LoginPage) -> Iterator[HostProperties]:
         HostDetails(name=f"test_host_{Faker().first_name()}", ip="127.0.0.1"),
     )
     yield _host
+    _host.navigate()
     _host.delete_host()
 
 
@@ -48,6 +49,7 @@ def test_create_and_delete_a_host(logged_in_page: LoginPage) -> None:
     host.page.wait_for_url(url=re.compile(quote_plus("view_name=allhost")), wait_until="load")
     host.select_host(host.details.name)
     # Cleanup: delete host
+    _ = host.navigate()
     host.delete_host()
 
 

@@ -67,12 +67,6 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
                 return response
 
             user_id = session.user.ident
-            if requested_file_name(request) != "user_change_pw":
-                if change_reason := userdb.need_to_change_pw(user_id, datetime.now()):
-                    raise HTTPRedirect(
-                        f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"
-                    )
-
             two_factor_ok = requested_file_name(request) in (
                 "user_login_two_factor",
                 "user_webauthn_login_begin",
@@ -87,6 +81,12 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
                 raise HTTPRedirect(
                     "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
                 )
+
+            if not two_factor_ok and requested_file_name(request) != "user_change_pw":
+                if change_reason := userdb.need_to_change_pw(user_id, datetime.now()):
+                    raise HTTPRedirect(
+                        f"user_change_pw.py?_origtarget={urlencode(makeuri(request, []))}&reason={change_reason}"
+                    )
 
             # When displaying the crash report message, the user authentication context
             # has already been left. We need to preserve this information to be able to

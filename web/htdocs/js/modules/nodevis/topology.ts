@@ -603,7 +603,12 @@ class NetworkLink extends AbstractLink {
     highlight_connection(traversed_ids: Set<string>) {
         if (traversed_ids.has(this.id())) return;
         traversed_ids.add(this.id());
-        this.selection().classed("highlight", true);
+
+        this.selection().each((_d, idx, nodes) => {
+            const line = d3.select(nodes[idx]);
+            if (line.classed("halo_line")) return;
+            line.classed("highlight", true);
+        });
         [
             this._link_data.source.data.id,
             this._link_data.target.data.id,
@@ -671,6 +676,11 @@ class NetworkLink extends AbstractLink {
         }
         if (line_config.color) {
             this.selection().style("stroke", line_config.color);
+        }
+        if (line_config.css_styles) {
+            line_config.css_styles.forEach(style => {
+                this.selection().style(style[0], style[1]);
+            });
         }
     }
 

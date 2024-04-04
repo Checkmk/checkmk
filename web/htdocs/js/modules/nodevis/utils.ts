@@ -640,7 +640,10 @@ export function add_basic_quickinfo(
         .text(d => d.value)
         .each((d, idx, tds) => {
             const td = d3.select(tds[idx]);
-            if (d.css_classes) td.classed(d.css_classes.join(" "), true);
+            if (d.css_styles)
+                d.css_styles.forEach(style => {
+                    td.style(style[0], style[1]);
+                });
         });
 }
 

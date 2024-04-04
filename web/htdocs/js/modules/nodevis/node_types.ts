@@ -456,7 +456,6 @@ export class BIAggregatorNode extends AbstractGUINode {
         quickinfo.push({name: "Rule Title", value: this.node.data.name});
         quickinfo.push({
             name: "State",
-            css_classes: ["state", "svcstate", "state" + this.node.data.state],
             value: this._state_to_text(this.node.data.state),
         });
         quickinfo.push({name: "Pack ID", value: this.node.data.rule_id.pack});

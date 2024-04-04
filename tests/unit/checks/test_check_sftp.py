@@ -16,7 +16,12 @@ pytestmark = pytest.mark.checks
     "params,expected_args",
     [
         pytest.param(
-            {"host": "foo", "user": "bar", "secret": ("password", "baz"), "look_for_keys": True},
+            {
+                "host": "foo",
+                "user": "bar",
+                "secret": ("password", "baz"),
+                "look_for_keys": True,
+            },
             [
                 "--host=foo",
                 "--user=bar",

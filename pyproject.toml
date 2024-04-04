@@ -137,6 +137,7 @@ disable_memoryview_promotion = true
 
 [[tool.mypy.overrides]]
 module = [
+  "cmk.active_checks.check_sftp",
   "cmk.cee.bakery.*",
   "cmk.gui.background_job.*",
   "cmk.gui.mobile.views",

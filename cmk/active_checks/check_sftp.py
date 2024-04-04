@@ -7,13 +7,14 @@ import getopt
 import os
 import sys
 import time
+from typing import NamedTuple, NoReturn, TypedDict
 
 import paramiko
 
 from cmk.utils.password_store import replace_passwords
 
 
-def usage():
+def usage() -> NoReturn:
     sys.stderr.write(
         """
 USAGE: check_sftp [OPTIONS] HOST
@@ -38,7 +39,22 @@ OPTIONS:
     sys.exit(1)
 
 
-def connection(opt_host, opt_user, opt_pass, opt_port, opt_timeout, opt_look_for_keys):
+def connection(
+    opt_host: str | None,
+    opt_user: str | None,
+    opt_pass: str | None,
+    opt_port: int,
+    opt_timeout: float,
+    opt_look_for_keys: bool,
+) -> paramiko.SSHClient:
+
+    # The typing says that the connect method requires a hostname. Previously we passed None to it
+    # if the argument was not set and paramiko did not check for that but passed it to
+    # socket.getaddrinfo which assumes localhost.
+    # I suggest we just be explicit about the default value here.
+    if opt_host is None:
+        opt_host = "localhost"
+
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec B507
     client.connect(
@@ -52,21 +68,32 @@ def connection(opt_host, opt_user, opt_pass, opt_port, opt_timeout, opt_look_for
     return client
 
 
+class PathDict(TypedDict, total=False):
+    put_filename: str
+    get_filename: str
+    local_get_path: str
+    local_put_path: str
+    remote_get_path: str
+    remote_put_path: str
+    timestamp_filename: str
+    timestamp_path: str
+
+
 def get_paths(
-    opt_put_local,
-    opt_get_local,
-    opt_put_remote,
-    opt_get_remote,
-    opt_timestamp,
-    omd_root,
-    working_dir,
-):
-    paths = {}
+    opt_put_local: str | None,
+    opt_get_local: str | None,
+    opt_put_remote: str | None,
+    opt_get_remote: str | None,
+    opt_timestamp: str | None,
+    omd_root: str | None,
+    working_dir: str,
+) -> PathDict:
+    paths: PathDict = {}
     if opt_put_local:
         put_filename = opt_put_local.split("/")[-1]
         paths["put_filename"] = put_filename
         paths["local_put_path"] = f"{omd_root}/{opt_put_local}"
-        if len(opt_put_remote) > 0:
+        if len(opt_put_remote) > 0:  # type: ignore[arg-type]
             paths["remote_put_path"] = f"{working_dir}/{opt_put_remote}/{put_filename}"
         else:
             paths["remote_put_path"] = f"{working_dir}/{put_filename}"
@@ -75,7 +102,7 @@ def get_paths(
         get_filename = opt_get_remote.split("/")[-1]
         paths["get_filename"] = get_filename
         paths["remote_get_path"] = f"{working_dir}/{opt_get_remote}"
-        if len(opt_get_local) > 0:
+        if len(opt_get_local) > 0:  # type: ignore[arg-type]
             paths["local_get_path"] = f"{omd_root}/{opt_get_local}/{get_filename}"
         else:
             paths["local_get_path"] = f"{omd_root}/{get_filename}"
@@ -87,35 +114,57 @@ def get_paths(
     return paths
 
 
-def file_available(opt_put_local, opt_put_remote, sftp, working_dir):
+def file_available(
+    opt_put_local: str,
+    opt_put_remote: str | None,
+    sftp: paramiko.sftp_client.SFTPClient,
+    working_dir: str,
+) -> bool:
     filename = opt_put_local.split("/")[-1]
     return filename in sftp.listdir(f"{working_dir}/{opt_put_remote}")
 
 
-def create_testfile(paths):
+def create_testfile(paths: PathDict) -> None:
     path = paths["local_put_path"]
     if not os.path.isfile(path):
         with open(path, "w") as f:
             f.write("This is a test by Check_MK\n")
 
 
-def put_file(sftp, paths):
+def put_file(sftp: paramiko.sftp_client.SFTPClient, paths: PathDict) -> None:
     sftp.put(paths["local_put_path"], paths["remote_put_path"])
 
 
-def get_file(sftp, paths):
+def get_file(sftp: paramiko.sftp_client.SFTPClient, paths: PathDict) -> None:
     sftp.get(paths["remote_get_path"], paths["local_get_path"])
 
 
-def get_timestamp(sftp, paths):
+def get_timestamp(
+    sftp: paramiko.sftp_client.SFTPClient, paths: PathDict
+) -> paramiko.sftp_attr.SFTPAttributes:
     return sftp.stat(paths["timestamp_path"])
 
 
-def output_check_result(s):
+def output_check_result(s: str) -> None:
     sys.stdout.write("%s\n" % s)
 
 
-def parse_arguments(sys_args):  # pylint: disable=too-many-branches
+class Args(NamedTuple):
+    host: None | str
+    user: None | str
+    pass_: None | str
+    port: int
+    get_remote: None | str
+    get_local: None | str
+    put_local: None | str
+    put_remote: None | str
+    timestamp: None | str
+    timeout: float
+    verbose: bool
+    look_for_keys: bool
+
+
+def parse_arguments(sys_args: None | list[str]) -> Args:  # pylint: disable=too-many-branches
     if sys_args is None:
         sys_args = sys.argv[1:]
 
@@ -183,7 +232,7 @@ def parse_arguments(sys_args):  # pylint: disable=too-many-branches
         elif opt in ["-v", "--verbose"]:
             opt_verbose = True
 
-    return (
+    return Args(
         opt_host,
         opt_user,
         opt_pass,
@@ -199,44 +248,36 @@ def parse_arguments(sys_args):  # pylint: disable=too-many-branches
     )
 
 
-def _main(sys_args=None):
-    (
-        opt_host,
-        opt_user,
-        opt_pass,
-        opt_port,
-        opt_get_remote,
-        opt_get_local,
-        opt_put_local,
-        opt_put_remote,
-        opt_timestamp,
-        opt_timeout,
-        opt_verbose,
-        opt_look_for_keys,
-    ) = parse_arguments(sys_args)
+def _main(sys_args: None | list[str] = None) -> tuple[int, str]:
+    args = parse_arguments(sys_args)
 
     messages = []
     states = []
     try:  # Establish connection
-        client = connection(opt_host, opt_user, opt_pass, opt_port, opt_timeout, opt_look_for_keys)
+        client = connection(
+            args.host, args.user, args.pass_, args.port, args.timeout, args.look_for_keys
+        )
         sftp = client.open_sftp()
         messages.append("Login successful")
         states.append(0)
     except Exception:
-        if opt_verbose:
+        if args.verbose:
             raise
         return 2, "Connection failed!"
 
     # Let's prepare for some other tests...
     omd_root = os.getenv("OMD_ROOT")
+
     sftp.chdir(".")
     working_dir = sftp.getcwd()
+    assert working_dir is not None  # help mypy -- we just set it above, see getcwd() docs
+
     paths = get_paths(
-        opt_put_local,
-        opt_get_local,
-        opt_put_remote,
-        opt_get_remote,
-        opt_timestamp,
+        args.put_local,
+        args.get_local,
+        args.put_remote,
+        args.get_remote,
+        args.timestamp,
         omd_root,
         working_dir,
     )
@@ -244,31 +285,31 @@ def _main(sys_args=None):
 
     # .. and eventually execute them!
     try:  # Put a file to the server
-        if opt_put_local is not None:
+        if args.put_local is not None:
             create_testfile(paths)
-            testfile_remote = file_available(opt_put_local, opt_put_remote, sftp, working_dir)
+            testfile_remote = file_available(args.put_local, args.put_remote, sftp, working_dir)
             put_file(sftp, paths)
             states.append(0)
             messages.append("Successfully put file to SFTP server")
     except Exception:
-        if opt_verbose:
+        if args.verbose:
             raise
         states.append(2)
         messages.append("Could not put file to SFTP server! (!!)")
 
     try:  # Get a file from the server
-        if opt_get_remote is not None:
+        if args.get_remote is not None:
             get_file(sftp, paths)
             states.append(0)
             messages.append("Successfully got file from SFTP server")
     except Exception:
-        if opt_verbose:
+        if args.verbose:
             raise
         states.append(2)
         messages.append("Could not get file from SFTP server! (!!)")
 
     try:  # Get timestamp of a remote file
-        if opt_timestamp is not None:
+        if args.timestamp is not None:
             file_stats = get_timestamp(sftp, paths)
             states.append(0)
             messages.append(
@@ -277,7 +318,7 @@ def _main(sys_args=None):
                 )
             )
     except Exception:
-        if opt_verbose:
+        if args.verbose:
             raise
         states.append(2)
         messages.append("Could not get timestamp of file! (!!)")

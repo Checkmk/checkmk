@@ -756,7 +756,7 @@ class Endpoint:
                 outbound = response_schema().dump(data)
             except ValidationError as exc:
                 raise RestAPIResponseException(
-                    title="Mismatch between endpoint and internal data format. ",
+                    title="Mismatch between endpoint and internal data format.",
                     detail="This could be due to invalid or outdated configuration, or be an error of the implementation. "
                     "Please check your *.mk files in case you have modified them by hand and run cmk-update-config. "
                     "If the problem persists afterwards, please report a bug.",

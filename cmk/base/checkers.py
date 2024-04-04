@@ -834,11 +834,15 @@ def inject_prediction_params_recursively(
     rid of the recursion).
     """
     match params:
-        case "predictive", {
-            "__reference_metric__": str(metric),
-            "__direction__": "upper" | "lower" as direction,
-        }:
-            return _get_prediction_and_levels(params[1], injected_p, metric, direction)
+        case (
+            "cmk_postprocessed",
+            "predictive_levels",
+            {
+                "__reference_metric__": str(metric),
+                "__direction__": "upper" | "lower" as direction,
+            },
+        ):
+            return _get_prediction_and_levels(params[2], injected_p, metric, direction)
         case tuple():
             return tuple(inject_prediction_params_recursively(v, injected_p) for v in params)
         case list():

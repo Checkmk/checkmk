@@ -83,7 +83,10 @@ SimpleLevelsConfigModel = (
 
 
 LevelsConfigModel = (
-    SimpleLevelsConfigModel[_NumberT] | tuple[Literal["predictive"], _PredictiveLevelsT[_NumberT]]
+    SimpleLevelsConfigModel[_NumberT]
+    | tuple[
+        Literal["cmk_postprocessed"], Literal["predictive_levels"], _PredictiveLevelsT[_NumberT]
+    ]
 )
 
 

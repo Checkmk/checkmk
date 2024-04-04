@@ -50,7 +50,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
         ),
         pytest.param(
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (ntype(10), ntype(20))),
@@ -60,7 +61,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             ),
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (ntype(10), ntype(20))),
@@ -72,7 +74,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
         ),
         pytest.param(
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("relative", (10.0, 20.0)),
@@ -82,7 +85,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             ),
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("relative", (10.0, 20.0)),
@@ -94,7 +98,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
         ),
         pytest.param(
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("stdev", (10.0, 20.0)),
@@ -104,7 +109,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             ),
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("stdev", (10.0, 20.0)),
@@ -116,7 +122,8 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
         ),
         pytest.param(
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10.0, 20.0)),
@@ -185,7 +192,8 @@ def _to_lower_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (ntype(10), ntype(20))),
@@ -205,7 +213,8 @@ def _to_lower_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("relative", (10.0, 20.0)),
@@ -225,7 +234,8 @@ def _to_lower_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("stdev", (10.0, 20.0)),
@@ -250,7 +260,8 @@ def _to_upper_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (ntype(10), ntype(20))),
@@ -270,7 +281,8 @@ def _to_upper_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("relative", (10.0, 20.0)),
@@ -290,7 +302,8 @@ def _to_upper_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("stdev", (10.0, 20.0)),
@@ -316,7 +329,8 @@ def _to_upper_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10.0, 20.0)),
@@ -349,7 +363,8 @@ def test_migrate_to_upper_float_levels(
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10.0, 20.0)),
@@ -382,7 +397,8 @@ def test_migrate_to_lower_float_levels(
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10, 20)),
@@ -416,7 +432,8 @@ def test_migrate_to_lower_integer_levels(
             },
             does_not_raise(),
             (
-                "predictive",
+                "cmk_postprocessed",
+                "predictive_levels",
                 {
                     "horizon": 90,
                     "levels": ("absolute", (10, 20)),
@@ -449,7 +466,8 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_absolute() -> None:
     old = {"horizon": 90, "levels_upper": ("absolute", (1.0, 2.0)), "period": "wday"}
     scale = 1024**3
     new = (
-        "predictive",
+        "cmk_postprocessed",
+        "predictive_levels",
         {
             "horizon": 90,
             "period": "wday",
@@ -470,7 +488,8 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_relative() -> None:
     }
     scale = 1024**3
     new = (
-        "predictive",
+        "cmk_postprocessed",
+        "predictive_levels",
         {
             "horizon": 90,
             "levels": ("relative", (10.0, 20.0)),
@@ -491,7 +510,8 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_stdev() -> None:
     }
     scale = 1024**3
     new = (
-        "predictive",
+        "cmk_postprocessed",
+        "predictive_levels",
         {
             "horizon": 90,
             "levels": ("stdev", (2.0, 4.0)),

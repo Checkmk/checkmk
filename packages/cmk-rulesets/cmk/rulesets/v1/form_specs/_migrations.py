@@ -122,7 +122,7 @@ def _migrate_to_levels(
                 )
             ) is None:
                 return "no_levels", None
-            return "predictive", pred_levels
+            return "cmk_postprocessed", "predictive_levels", pred_levels
 
         case _:
             raise TypeError(
@@ -141,13 +141,13 @@ def _parse_already_migrated(
         case ("fixed", (int(w), int(c)) | (float(w), float(c))):
             return "fixed", (ntype(w), ntype(c))
 
-        case ("predictive", val_dict):
+        case ("cmk_postprocessed", "predictive_levels", val_dict):
             # do not scale, but for the typing we still need to parse.
             if (
                 pred_levels := _parse_to_predictive_levels(val_dict, 1.0, ntype, level_dir)
             ) is None:
                 return "no_levels", None
-            return "predictive", pred_levels
+            return "cmk_postprocessed", "predictive_levels", pred_levels
     return None
 
 
@@ -222,12 +222,13 @@ def _migrate_to_simple_levels(
         ):
             return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
-        case ("predictive", val_dict) | val_dict if isinstance(val_dict, dict):
+        case ("cmk_postprocessed", "predictive_levels", val_dict) | val_dict if isinstance(
+            val_dict, dict
+        ):
             raise TypeError(
                 f"Could not migrate {model!r} to SimpleLevelsConfigModel. "
                 "Consider using Levels instead of SimpleLevels."
             )
-
         case _:
             raise TypeError(f"Could not migrate {model!r} to SimpleLevelsConfigModel.")
 

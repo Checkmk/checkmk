@@ -236,36 +236,53 @@ Function should_exclude($exclude, $section) {
         then returns error with detailed description.
 #>
 function Invoke-SafetyCheck( [String]$file ) {
-     $admin_groups = "BUILTIN\Administrators", "NT AUTHORITY\SYSTEM"
+     $admin_sids = @(
+          "S-1-5-18", # SYSTEM
+          "S-1-5-32-544" # Administrators
+     )
      $forbidden_rights = @("Modify", "FullControl", "Write")
+     class Actor {
+          [string]$name
+          [string]$sid
+          [string]$rights
+     }
      try {
           $acl = Get-Acl $file -ErrorAction Stop
           $access = $acl.Access
           $admins = Get-LocalGroupMember -Group Administrators
+          $actors = $access | ForEach-Object {
+               $a = [Actor]::new()
+               $AdObj = New-Object System.Security.Principal.NTAccount -ArgumentList $_.IdentityReference
+               $a.name = $AdObj
+               $a.sid = $AdObj.Translate([System.Security.Principal.SecurityIdentifier])
+               $a.rights = $_.FileSystemRights.ToString()
+               $a
+          }
 
-          foreach ($entry in $access ) {
-               $entity = $entry.IdentityReference.ToString()
-               if ( $admin_groups -contains $entity ) {
+          foreach ($entry in $actors ) {
+               $name = $entry.name
+               $sid = $entry.sid
+               if ( $admin_sids -match $sid ) {
                     # predefined admin groups are safe
                     continue
                }
-               if ( $admins.Name -contains "$entity" ) {
+               if ( $admins.Name -contains "$name" ) {
                     # administrators are safe too
                     continue
                }
 
                # check for forbidden rights
-               $rights = $entry.FileSystemRights.ToString()
+               $rights = $entry.rights
                $forbidden_rights |
                Foreach-Object {
                     if ($rights -match $_) {
-                         return "$entity has '$_' access permissions '$file'"
+                         return "$name has '$_' access permissions '$file'"
                     }
                }
           }
      }
      catch {
-          return "Safe execution is not possible: '$_' during check '$file'"
+          return "Exception '$_' during check '$file'"
      }
 }
 

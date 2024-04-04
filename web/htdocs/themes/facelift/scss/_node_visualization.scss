@@ -200,6 +200,8 @@ div.node_vis {
     position: absolute;
     left: 12px;
     top: 12px;
+    padding: 4px;
+    background-color: rgba($bg-color-secondary, 0.8);
 
     div {
       display: inline-block;
@@ -225,8 +227,6 @@ div.node_vis {
 
   table#overlay_configuration {
     margin-top: 12px;
-    background-color: $bg-color-secondary;
-    opacity: 0.95;
   }
 
   g#nodes img.unknown {
@@ -239,7 +239,6 @@ div.node_vis {
   div.radio_group {
     display: flex;
     align-items: center;
-    opacity: 0.95;
     background-color: $bg-color-secondary;
     label.title {
       width: 80px;

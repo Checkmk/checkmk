@@ -4043,7 +4043,7 @@ _BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES = {
 }
 
 
-def _boil_down_agent_rules(
+def boil_down_agent_rules(
     *, defaults: Mapping[str, Any], rulesets: Mapping[str, Any]
 ) -> Mapping[str, Any]:
     boiled_down = {**defaults}
@@ -4054,7 +4054,16 @@ def _boil_down_agent_rules(
         if not entries:
             continue
 
-        match_type = _BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES.get(varname, _Matchtype.FIRST)
+        if (
+            len(entries) > 0
+            and isinstance(first_entry := entries[0], dict)
+            and (cmk_match_type := first_entry.get("cmk-match-type", None)) is not None
+        ):
+            # new Ruleset API will use merge as default match_type
+            match_type = _Matchtype(cmk_match_type)
+        else:
+            match_type = _BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES.get(varname, _Matchtype.FIRST)
+
         if match_type is _Matchtype.FIRST:
             boiled_down[varname] = entries[0]
         elif match_type is _Matchtype.LIST:
@@ -4064,7 +4073,12 @@ def _boil_down_agent_rules(
             # Compare #14868
             boiled_down[varname] = {
                 **defaults.get(varname, {}),
-                **{k: v for entry in entries[::-1] for k, v in entry.items()},
+                **{
+                    k: v
+                    for entry in entries[::-1]
+                    for k, v in entry.items()
+                    if k != "cmk-match-type"
+                },
             }
         elif match_type is _Matchtype.ALL:
             boiled_down[varname] = entries
@@ -4217,7 +4231,7 @@ class CEEConfigCache(ConfigCache):
     def agent_config(self, host_name: HostName, default: Mapping[str, Any]) -> Mapping[str, Any]:
         def _impl() -> Mapping[str, Any]:
             return {
-                **_boil_down_agent_rules(
+                **boil_down_agent_rules(
                     defaults=default,
                     rulesets=self.matched_agent_config_entries(host_name),
                 ),
@@ -4338,7 +4352,7 @@ class CEEConfigCache(ConfigCache):
         yield from (
             (
                 match_path,
-                _boil_down_agent_rules(
+                boil_down_agent_rules(
                     defaults=defaults,
                     rulesets={
                         varname: CEEConfigCache._get_values_for_generic_agent(ruleset, match_path)

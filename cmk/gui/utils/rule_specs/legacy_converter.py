@@ -73,11 +73,8 @@ def convert_to_legacy_rulespec(
                 localizer,
             )
         case ruleset_api_v1.rule_specs.AgentConfig():
-            return _convert_to_legacy_host_rule_spec_rulespec(
-                to_convert,
-                legacy_rulespec_groups.RulespecGroupMonitoringAgents,
-                localizer,
-                config_scope_prefix=RuleGroup.AgentConfig,
+            return _convert_to_legacy_agent_config_rule_spec(
+                to_convert, legacy_rulespec_groups.RulespecGroupMonitoringAgents, localizer
             )
         case ruleset_api_v1.rule_specs.CheckParameters():
             return _convert_to_legacy_check_parameter_rulespec(to_convert, edition_only, localizer)
@@ -249,7 +246,10 @@ def _convert_to_legacy_match_type(
             return "all"
         case ruleset_api_v1.rule_specs.SpecialAgent():
             return "first"
-        case ruleset_api_v1.rule_specs.InventoryParameters():
+        case (
+            ruleset_api_v1.rule_specs.AgentConfig()
+            | ruleset_api_v1.rule_specs.InventoryParameters()
+        ):
             return "dict"
         case other:
             return "dict" if other.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
@@ -258,7 +258,6 @@ def _convert_to_legacy_match_type(
 def _convert_to_legacy_host_rule_spec_rulespec(
     to_convert: (
         ruleset_api_v1.rule_specs.ActiveCheck
-        | ruleset_api_v1.rule_specs.AgentConfig
         | ruleset_api_v1.rule_specs.AgentAccess
         | ruleset_api_v1.rule_specs.Host
         | ruleset_api_v1.rule_specs.NotificationParameters
@@ -279,6 +278,49 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
+    )
+
+
+def _convert_to_legacy_agent_config_rule_spec(
+    to_convert: ruleset_api_v1.rule_specs.AgentConfig,
+    legacy_main_group: type[legacy_rulespecs.RulespecGroup],
+    localizer: Callable[[str], str],
+) -> legacy_rulespecs.HostRulespec:
+    return legacy_rulespecs.HostRulespec(
+        group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
+        name=RuleGroup.AgentConfig(to_convert.name),
+        valuespec=partial(
+            _tranform_agent_config_rule_spec_match_type, to_convert.parameter_form(), localizer
+        ),
+        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
+        is_deprecated=to_convert.is_deprecated,
+        match_type=_convert_to_legacy_match_type(to_convert),
+    )
+
+
+def _add_agent_config_match_type_key(value: object) -> object:
+    if isinstance(value, dict):
+        value["cmk-match-type"] = "dict"
+        return value
+
+    raise TypeError(value)
+
+
+def _remove_agent_config_match_type_key(value: object) -> object:
+    if isinstance(value, dict):
+        value.pop("cmk-match-type", None)
+        return value
+
+    raise TypeError(value)
+
+
+def _tranform_agent_config_rule_spec_match_type(
+    parameter_form: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ValueSpec:
+    return Transform(
+        _convert_to_legacy_valuespec(parameter_form, localizer),
+        forth=_add_agent_config_match_type_key,
+        back=_remove_agent_config_match_type_key,
     )
 
 
@@ -558,9 +600,9 @@ def _convert_to_legacy_valuespec(
             if isinstance(to_convert, ruleset_api_v1.form_specs.CascadingSingleChoice)
             else to_convert.migrate
         )
-        return legacy_valuespecs.Migrate(
+        return legacy_valuespecs.Transform(
             valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
-            migrate=migrate_func,
+            forth=migrate_func,
         )
     return _convert_to_inner_legacy_valuespec(to_convert, localizer)
 

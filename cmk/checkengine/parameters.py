@@ -26,7 +26,7 @@ __all__ = [
 
 
 class Parameters(ParametersTypeAlias):
-    """Parameter objects are used to pass parameters to plugin functions"""
+    """Parameter objects are used to pass parameters to plug-in functions"""
 
     def __init__(self, data: ParametersTypeAlias) -> None:
         self._data = dict(data)

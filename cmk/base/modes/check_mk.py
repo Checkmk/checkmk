@@ -1913,7 +1913,7 @@ def _extract_plugin_selection(
             inventory_plugin_names,
         )
 
-    raise NotImplementedError(f"unknown plugin name {type_}")
+    raise NotImplementedError(f"unknown plug-in name {type_}")
 
 
 _DiscoveryOptions = TypedDict(

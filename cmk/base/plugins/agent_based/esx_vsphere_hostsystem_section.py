@@ -38,7 +38,7 @@ def parse_esx_vsphere_hostsystem(string_table: StringTable) -> Section:
 def host_label_function(section: Section) -> HostLabelGenerator:
     """
     For some reason all docs for the same host label have to be identical.
-    Here we only set this to server because this plugin is executed on
+    Here we only set this to server because this plug-in is executed on
     ESXi piggy back data.
 
     Labels:

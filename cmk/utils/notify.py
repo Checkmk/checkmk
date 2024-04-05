@@ -85,7 +85,7 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         spec = hostname
         state = context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]
-    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plugin output.
+    # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plug-in output.
     return "{}: {};{};{};{};{}".format(
         what,
         contact,

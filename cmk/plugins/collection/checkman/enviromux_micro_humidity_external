@@ -4,7 +4,7 @@ catalog: hw/environment/nti
 license: GPLv2
 distribution: check_mk
 description:
- This check plugin monitors the humidity of external sensors attached to
+ This check plug-in monitors the humidity of external sensors attached to
  NTI Enviromux Micro-T devices.
 
 item:

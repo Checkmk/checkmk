@@ -294,7 +294,7 @@ def _transformed_params(
         if isinstance(params, dict):
             return {str(k): v for k, v in params.items()}
         raise TypeError(
-            f"Migration missing: {params=} for plugin '{str(plugin_name)}' (expected type dict)"
+            f"Migration missing: {params=} for plug-in '{str(plugin_name)}' (expected type dict)"
         )
 
     try:
@@ -302,7 +302,7 @@ def _transformed_params(
         assert new_params or not params, "non-empty params vanished"
     except Exception as exc:
         raise ValueError(
-            f"Migration failed: {params=} for plugin '{str(plugin_name)}': {exc}"
+            f"Migration failed: {params=} for plug-in '{str(plugin_name)}': {exc}"
         ) from exc
 
     return new_params

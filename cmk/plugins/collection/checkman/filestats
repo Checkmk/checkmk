@@ -13,7 +13,7 @@ description:
  as the agent needs to know the information about
  which files need to be sent.
 
- The required python plugin mk_filestats is configured
+ The required python plug-in mk_filestats is configured
  via {filestats.cfg} located in the {$MK_CONFDIR}
  (usually {/etc/check_mk/filestats.cfg}).
  To add file groups to the check, add one

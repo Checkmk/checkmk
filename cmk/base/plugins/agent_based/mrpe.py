@@ -47,7 +47,7 @@ def parse_mrpe(string_table: StringTable) -> MRPESection:
         try:
             state = State(int(raw_state))
         except ValueError:
-            line.insert(0, "Invalid plugin status '%s'. Output is:" % raw_state)
+            line.insert(0, "Invalid plug-in status '%s'. Output is:" % raw_state)
             state = State.UNKNOWN
 
         # convert to original format by joining and splitting at \1 (which replaced \n)

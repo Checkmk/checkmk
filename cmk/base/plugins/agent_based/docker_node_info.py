@@ -14,7 +14,7 @@ from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, S
 def parse_docker_node_info(string_table: StringTable) -> docker.NodeInfoSection:
     loaded: dict = {}
     # docker_node_info section may be present multiple times,
-    # this is how the docker agent plugin reports errors.
+    # this is how the docker agent plug-in reports errors.
     # Key 'Unknown' is present if there is a python exception
     # key 'Critical' is present if the python docker lib is not found
     string_table_iter = iter(string_table)

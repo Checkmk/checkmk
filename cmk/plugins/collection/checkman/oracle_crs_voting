@@ -4,8 +4,8 @@ catalog: app/oracle
 license: GPLv2
 distribution: check_mk
 description:
- This check needs the agent pluing mk_oracle_crs from our plugin directory.
- After copying to the agent plugin directory, Checkmk will find an existing
+ This check needs the agent pluing mk_oracle_crs from our plug-in directory.
+ After copying to the agent plug-in directory, Checkmk will find an existing
  voting disk and generates a service for it.
 
  The check counts the number of existing voring disks.

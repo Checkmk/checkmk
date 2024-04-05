@@ -1383,7 +1383,7 @@ class AutomationAnalyseServices(Automation):
 
             plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
             if plugin is None:
-                # plugin can only be None if we looked for the "Unimplemented check..." description.
+                # plug-in can only be None if we looked for the "Unimplemented check..." description.
                 # In this case we can run into the 'not found' case below.
                 continue
 

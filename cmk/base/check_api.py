@@ -217,7 +217,7 @@ def check_levels(  # pylint: disable=too-many-branches
              Dict containing "upper" or "levels_upper_min" as key -> upper level checking.
              Dict containing "lower" and "upper"/"levels_upper_min" as key ->
              lower and upper level checking.
-    unit:    unit to be displayed in the plugin output.
+    unit:    unit to be displayed in the plug-in output.
              Be aware: if a (builtin) human_readable_func is stated which already
              provides a unit info, then this unit is not necessary. An additional
              unit info is useful if a rate is calculated, eg.

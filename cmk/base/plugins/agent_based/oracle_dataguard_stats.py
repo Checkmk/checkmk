@@ -28,7 +28,7 @@ def parse_oracle_dataguard_stats(string_table: StringTable) -> Section:
             instance["dgstat"][dgstat_parm] = dgstat_value
 
         if len(line) >= 6:
-            # new plugin output with switchover_status
+            # new plug-in output with switchover_status
             instance["switchover_status"] = line[5]
 
         if len(line) >= 13:

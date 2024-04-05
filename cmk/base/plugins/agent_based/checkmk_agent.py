@@ -421,7 +421,7 @@ def _check_plugins(
 ) -> CheckResult:
     yield Result(
         state=State.OK,
-        summary=f"Agent plugins: {len(section.plugins)}",
+        summary=f"Agent plug-ins: {len(section.plugins)}",
     )
     yield Result(
         state=State.OK,
@@ -431,7 +431,7 @@ def _check_plugins(
         section.plugins,
         params.get("versions_plugins"),
         params.get("exclude_pattern_plugins"),
-        "Agent plugin",
+        "Agent plug-in",
     )
     yield from _check_versions_and_duplicates(
         section.local_checks,

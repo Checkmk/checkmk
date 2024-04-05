@@ -22,7 +22,7 @@ SECTION: Final = {
         name=None,
         state=State.UNKNOWN,
         info=[
-            "Invalid plugin status '§$%'. Output is: Output1|the_foo=1;2;3;4;5",
+            "Invalid plug-in status '§$%'. Output is: Output1|the_foo=1;2;3;4;5",
             "more output|the_bar=42",
             "the_gee=23 output|the_bad=U;0;;0;1",
         ],
@@ -102,8 +102,8 @@ def test_check_mrpe() -> None:
     assert list(check_mrpe("Mutliliner", SECTION)) == [
         Result(
             state=State.UNKNOWN,
-            summary="Invalid plugin status '§$%'. Output is: Output1",
-            details="Invalid plugin status '§$%'. Output is: Output1\nmore output",
+            summary="Invalid plug-in status '§$%'. Output is: Output1",
+            details="Invalid plug-in status '§$%'. Output is: Output1\nmore output",
         ),
         Metric("the_foo", 1, levels=(2, 3), boundaries=(4, 5)),
         Metric("the_bar", 42),

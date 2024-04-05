@@ -7,10 +7,10 @@ description:
  This check monitors the total and active number as well as the size and
  reclaimable size of containers, images, local volumes, and build cache.
 
- To make this check work the agent plugin {{mk_docker.py}} has to be installed.
+ To make this check work the agent plug-in {{mk_docker.py}} has to be installed.
  If you are using agent bakery rules, you must enable "Fully monitor the docker node"
  in the section "Docker node" (which is the default).
- If you are configuring the plugin via the configuration file, make sure you
+ If you are configuring the plug-in via the configuration file, make sure you
  do not skip the section "docker_node_disk_usage" (again the default setting is fine).
 
 item:

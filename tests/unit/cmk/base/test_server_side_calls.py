@@ -816,7 +816,7 @@ def test_test_get_active_service_data_crash_with_debug(
             HostName("myhost"),
             HOST_ATTRS,
             [],
-            "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plugin is missing an argument function or a service description\n",
+            "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plug-in is missing an argument function or a service description\n",
             id="invalid_plugin_info",
         ),
         pytest.param(
@@ -1139,7 +1139,7 @@ def test_get_active_service_descriptions(
             HostName("myhost"),
             HOST_ATTRS,
             [],
-            "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plugin is missing an argument function or a service description\n",
+            "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plug-in is missing an argument function or a service description\n",
             id="invalid_plugin_info",
         ),
     ],
@@ -1365,7 +1365,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 arg;1", None)],
-            id="legacy plugin string args",
+            id="legacy plug-in string args",
         ),
         pytest.param(
             {},
@@ -1375,7 +1375,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
-            id="legacy plugin list args",
+            id="legacy plug-in list args",
         ),
         pytest.param(
             {},
@@ -1385,7 +1385,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0", None)],
-            id="legacy plugin TestSpecialAgentConfiguration",
+            id="legacy plug-in TestSpecialAgentConfiguration",
         ),
         pytest.param(
             {},
@@ -1399,7 +1399,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
-            id="legacy plugin TestSpecialAgentConfiguration, escaped arg",
+            id="legacy plug-in TestSpecialAgentConfiguration, escaped arg",
         ),
         pytest.param(
             {},
@@ -1413,7 +1413,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path list0 list1", None)],
-            id="legacy plugin TestSpecialAgentConfiguration, arg list",
+            id="legacy plug-in TestSpecialAgentConfiguration, arg list",
         ),
         pytest.param(
             {},
@@ -1427,7 +1427,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path arg0 'arg;1'", "stdin_blob")],
-            id="legacy plugin with stdin, escaped arg",
+            id="legacy plug-in with stdin, escaped arg",
         ),
         pytest.param(
             {},
@@ -1441,7 +1441,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             HOST_CONFIG,
             {},
             [SpecialAgentCommandLine("agent_path list0 list1", "stdin_blob")],
-            id="legacy plugin with stdin",
+            id="legacy plug-in with stdin",
         ),
         pytest.param(
             {},
@@ -1451,7 +1451,7 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
             HOST_CONFIG_WITH_MACROS,
             {},
             [SpecialAgentCommandLine("agent_path -h 'test_host' -a '127.0.0.1'", None)],
-            id="legacy plugin with macros",
+            id="legacy plug-in with macros",
         ),
         pytest.param(
             {

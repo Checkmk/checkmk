@@ -943,7 +943,7 @@ def _flatten(data: Sequence[_Block]) -> _Block:
                 found_windows_if=False,
                 found_mk_dhcp_enabled=True,
             ),
-            id="single interface with legacy plugin data, status and mac",
+            id="single interface with legacy plug-in data, status and mac",
         )
     ],
 )
@@ -981,7 +981,7 @@ def test_parse_winperf_if_ex(
                 found_windows_if=False,
                 found_mk_dhcp_enabled=True,
             ),
-            id="single interface with legacy plugin data and pseudo counter",
+            id="single interface with legacy plug-in data and pseudo counter",
         ),
         pytest.param(
             MULTIPLY_INTERFACES_INPUT,
@@ -1040,7 +1040,7 @@ def test_parse_winperf_if_ex(
                 found_windows_if=True,
                 found_mk_dhcp_enabled=False,
             ),
-            id="multiple interfaces with legacy plugin data",
+            id="multiple interfaces with legacy plug-in data",
         ),
     ],
 )

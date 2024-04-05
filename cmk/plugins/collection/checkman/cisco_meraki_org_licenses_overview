@@ -4,13 +4,13 @@ catalog: os/services
 license: GPLv2
 distribution: check_mk
 description:
- This check plugin monitors the status, expiration date and the number of
+ This check plug-in monitors the status, expiration date and the number of
  licensed devices of each type.
 
- In order to make this check plugin work you have to configure the ruleset of
+ In order to make this check plug-in work you have to configure the ruleset of
  the special agent {{Cisco Meraki}}.
 
- The check plugin can be configured via the corresponding WATO rule {{Cisco
+ The check plug-in can be configured via the corresponding WATO rule {{Cisco
  Meraki Organisation Licenses Overview}}.
 
 item:

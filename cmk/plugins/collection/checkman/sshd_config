@@ -14,7 +14,7 @@ description:
  Expected values for the relevant parameters can be configured
  using the associated WATO rule.
 
- For this check the agent plugin mk_sshd_config needs to be
+ For this check the agent plug-in mk_sshd_config needs to be
  installed.
 
 discovery:

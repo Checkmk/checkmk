@@ -42,7 +42,7 @@ def render_plugin_type(plugin_type: CachedPluginType) -> str:
         case CachedPluginType.MRPE:
             return "MRPE plugin"
         case CachedPluginType.PLUGIN:
-            return "Agent plugin"
+            return "Agent plug-in"
         case CachedPluginType.LOCAL:
             return "Local check"
         case CachedPluginType.ORACLE:

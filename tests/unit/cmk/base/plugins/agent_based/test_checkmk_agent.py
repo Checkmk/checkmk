@@ -572,14 +572,14 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 3",
+                    summary="Agent plug-ins: 3",
                 ),
                 Result(
                     state=State.OK,
                     summary="Local checks: 0",
                 ),
             ],
-            id="agent plugins only",
+            id="agent plug-ins only",
         ),
         pytest.param(
             {},
@@ -609,7 +609,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 0",
+                    summary="Agent plug-ins: 0",
                 ),
                 Result(
                     state=State.OK,
@@ -692,7 +692,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 4",
+                    summary="Agent plug-ins: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -700,19 +700,19 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    notice="Agent plugin 'plugin1': 2.1.0i1",
+                    notice="Agent plug-in 'plugin1': 2.1.0i1",
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Agent plugin 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
+                    summary="Agent plug-in 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
                 ),
                 Result(
                     state=State.UNKNOWN,
-                    summary="Agent plugin 'custom_plugin3': unable to parse version '??'",
+                    summary="Agent plug-in 'custom_plugin3': unable to parse version '??'",
                 ),
                 Result(
                     state=State.OK,
-                    notice="Agent plugin 'custom_plugin4': no version specified",
+                    notice="Agent plug-in 'custom_plugin4': no version specified",
                 ),
                 Result(
                     state=State.OK,
@@ -809,7 +809,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 4",
+                    summary="Agent plug-ins: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -817,11 +817,11 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.OK,
-                    notice="Agent plugin 'plugin1': 2.1.0i1",
+                    notice="Agent plug-in 'plugin1': 2.1.0i1",
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Agent plugin 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
+                    summary="Agent plug-in 'plugin2': 2.0.0p20 (warn/crit below 2.0.0p21/2.0.0p15)",
                 ),
                 Result(
                     state=State.OK,
@@ -885,7 +885,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 3",
+                    summary="Agent plug-ins: 3",
                 ),
                 Result(
                     state=State.OK,
@@ -893,7 +893,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Agent plugin plugin1: found 2 times",
+                    summary="Agent plug-in plugin1: found 2 times",
                     details="Consult the hardware/software inventory for a complete list of files",
                 ),
                 Result(
@@ -966,7 +966,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             [
                 Result(
                     state=State.OK,
-                    summary="Agent plugins: 4",
+                    summary="Agent plug-ins: 4",
                 ),
                 Result(
                     state=State.OK,
@@ -974,7 +974,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Agent plugin plugin1: found 2 times",
+                    summary="Agent plug-in plugin1: found 2 times",
                     details="Consult the hardware/software inventory for a complete list of files",
                 ),
                 Result(
@@ -1185,7 +1185,7 @@ def test_certificate_validity(
                 Result(
                     state=State.WARN,
                     summary="Timed out plugin(s): some_plugin",
-                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 123s, PID: 4711) - "
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plug-in, Timeout: 123s, PID: 4711) - "
                     "Corresponding output is outdated and/or dropped.",
                 ),
             ],
@@ -1248,7 +1248,7 @@ def test_certificate_validity(
                 Result(
                     state=State.WARN,
                     summary="Timed out plugin(s): some_plugin, other_process",
-                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 7200s, PID: 1234), "
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plug-in, Timeout: 7200s, PID: 1234), "
                     "other_process (Timeout: 7200s, PID: 1234) - Corresponding output is outdated and/or dropped.",
                 ),
                 Result(

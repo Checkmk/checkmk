@@ -308,7 +308,7 @@ class FixPluginLegacy:
     def __init__(self, fixed_register: FixRegister) -> None:
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
 
-        assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
+        assert isinstance(fixed_register, FixRegister)  # make sure plug-ins are loaded
 
         self.check_info = {
             k: v

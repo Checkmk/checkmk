@@ -262,7 +262,7 @@ def _get_needed_plugin_names(
         if name not in ssc_api_special_agents
     }
 
-    # Collect the needed check plugin names using the host check table.
+    # Collect the needed check plug-in names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:
     # In those cases, the module attribute will be `None`, so nothing will
     # be imported; BUT: we need it in the list, because it must be considered
@@ -307,8 +307,8 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> str | Non
     if not check_plugin_name.is_management_name():
         return None
 
-    # See if me must include a legacy plugin from which we derived the given one:
-    # A management plugin *could have been* created on the fly, from a 'regular' legacy
+    # See if me must include a legacy plug-in from which we derived the given one:
+    # A management plug-in *could have been* created on the fly, from a 'regular' legacy
     # check plugin. In this case, we must load that.
     plugin = agent_based_register.get_check_plugin(check_plugin_name)
     if not plugin or plugin.location is not None:
@@ -377,7 +377,7 @@ def _get_required_legacy_check_sections(
     inventory_plugin_names: set[InventoryPluginName],
 ) -> set[str]:
     """
-    new style plugin may have a dependency to a legacy check
+    new style plug-in may have a dependency to a legacy check
     """
     required_legacy_check_sections = set()
     for section in agent_based_register.get_relevant_raw_sections(

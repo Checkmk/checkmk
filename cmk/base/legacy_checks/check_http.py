@@ -224,7 +224,7 @@ def _url_args(  # pylint: disable=too-many-branches
         args += ["-M", settings["max_age"]]
 
     # FIXME: This option is deprecated. According to the monitoring-plugins
-    # the "urlize" plugin should be used.
+    # the "urlize" plug-in should be used.
     if settings.get("urlize"):
         args.append("-L")
 

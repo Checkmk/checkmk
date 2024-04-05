@@ -201,7 +201,7 @@ def test_check_regression(item, params, expected):
                 (
                     1,
                     "Received multiple filestats per single file service. Please check agent "
-                    "plugin configuration (mk_filestats). For example, if there are multiple "
+                    "plug-in configuration (mk_filestats). For example, if there are multiple "
                     "non-utf-8 filenames, then they may be mapped to the same file service.",
                 ),
                 (0, "Size: 3.80 kB", [("size", 3804, None, None)]),
@@ -231,7 +231,7 @@ def test_check_single_duplicate_file() -> None:
         (
             1,
             "Received multiple filestats per single file service. Please check agent "
-            "plugin configuration (mk_filestats). For example, if there are multiple "
+            "plug-in configuration (mk_filestats). For example, if there are multiple "
             "non-utf-8 filenames, then they may be mapped to the same file service.",
         ),
         (0, "Size: 0 B", [("size", 0, None, None)]),

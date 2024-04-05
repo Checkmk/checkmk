@@ -67,7 +67,7 @@ def test_missing_data_single() -> None:
     # we want to map a specific service with a certain service name to be OK, although data is
     # missing:
     # create rule "Status of the Checkmk service"
-    # check "State if specific check plugins receive no monitoring data"
+    # check "State if specific check plug-ins receive no monitoring data"
     # specify regex "not$" and "OK"
 
     assert [
@@ -80,7 +80,7 @@ def test_missing_data_single() -> None:
                 make_aggregated_result(name="data_received", data_received=True),
             ],
             ExitSpec(specific_missing_sections=[("not$", 0)]),
-            # this is a bug: we miss data for a single plugin (not), mapped this plugin to be
+            # this is a bug: we miss data for a single plug-in (not), mapped this plug-in to be
             # ok, but in summary we return a warning:
         )
     ] == [

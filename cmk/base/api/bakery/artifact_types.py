@@ -54,23 +54,23 @@ def _validate_lines(lines: Iterable[str]) -> None:
 class Plugin:
     """File artifact that represents a Checkmk agent plugin
 
-    The specified plugin file will be deployed to the Checkmk agent's plugin directory as
+    The specified plug-in file will be deployed to the Checkmk agent's plug-in directory as
     a callable plugin.
 
     Args:
         base_os: The target operating system.
-        source: Path of the plugin file, relative to the plugin source directory on the Checkmk site.
+        source: Path of the plug-in file, relative to the plug-in source directory on the Checkmk site.
             This usually consists only of the filename.
-        target: Target path, relative to the plugin directory within the agent's file tree
-            on the target system. If omitted, the plugin will be deployed under it's
+        target: Target path, relative to the plug-in directory within the agent's file tree
+            on the target system. If omitted, the plug-in will be deployed under it's
             relative source path/filename.
-        interval: Caching interval in seconds. The plugin will only be executed by the
+        interval: Caching interval in seconds. The plug-in will only be executed by the
             agent after the caching interval is elapsed.
         asynchronous: Relevant for Windows Agent. Don't wait for termination of the plugin's
             process if True. An existent interval will always result in asynchronous execution.
-        timeout: Relevant for Windows Agent. Maximum waiting time for a plugin to terminate.
+        timeout: Relevant for Windows Agent. Maximum waiting time for a plug-in to terminate.
         retry_count: Relevant for Windows Agent. Maximum number of retried executions after a
-            failed plugin execution.
+            failed plug-in execution.
     """
 
     def __init__(
@@ -128,7 +128,7 @@ class SystemBinary:
         base_os: The target operating system.
         source: Path of the file, relative to the agent source directory on the Checkmk site.
         target: Target path, relative to the binart directory on the target system. If omitted,
-            the plugin will be deployed under it's relative source path/filename.
+            the plug-in will be deployed under it's relative source path/filename.
     """
 
     def __init__(self, *, base_os: OS, source: Path, target: Path | None = None) -> None:
@@ -158,7 +158,7 @@ class PluginConfig:
     The resulting configuration file will be placed to the agent's config directory (by default,
     '/etc/check_mk', configurable in WATO) and is meant to be read by the corresponding plugin.
     It's content is unrestricted (apart from the fact that it must be passed as a list of 'str's),
-    so it's up to the consuming plugin to process it correctly.
+    so it's up to the consuming plug-in to process it correctly.
 
     Args:
         base_os: The target operating system.
@@ -322,7 +322,7 @@ def _validate_windows_config_content(content: WindowsConfigContent) -> None:
 class WindowsConfigEntry:
     """Config Entry for the Windows Agent yaml file (check_mk.install.yml)
 
-    It's up to the consuming plugin to read the config entry correctly from the
+    It's up to the consuming plug-in to read the config entry correctly from the
     yaml file. However, unlike the approach via PluginConfig, config entries described
     here will be accessible consistently via the python yaml module.
 

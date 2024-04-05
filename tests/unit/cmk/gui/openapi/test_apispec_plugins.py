@@ -138,7 +138,7 @@ def test_apispec_plugin_string_to_string_dict(spec: APISpec) -> None:
 
 
 def test_apispec_plugin_parameters(spec: APISpec) -> None:
-    # Different code paths are executed here. We need to make sure our plugin handles this.
+    # Different code paths are executed here. We need to make sure our plug-in handles this.
     spec.components.parameter('var', 'path', {'description': "Some path variable"})
 
 

@@ -7,7 +7,7 @@ description:
  This check works on the number of threads running in a JVM.
  time.
 
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server.
 
  This check does not have configurable levels.

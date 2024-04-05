@@ -16,9 +16,9 @@ def test_detect_spec_dedup(
     This means that they currently are detecting the same devices, but they might get out
     of sync.
 
-    If this test turns red, the set of plugins that share the same detection spec has changed.
+    If this test turns red, the set of plug-ins that share the same detection spec has changed.
     This means that
-     a) You have deduplicated code, such that plugins now share the same (not only "equal"!)
+     a) You have deduplicated code, such that plug-ins now share the same (not only "equal"!)
         detection spec. That is good, remove them from the list below!
      b) You accidently changed a detect specification where you should have changed all of them,
         or you can share a spec with another plugin. -> please turn this situation into a)!

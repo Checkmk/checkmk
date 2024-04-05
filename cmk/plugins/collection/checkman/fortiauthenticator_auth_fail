@@ -4,7 +4,7 @@ catalog: hw/network/fortinet
 license: GPLv2
 distribution: check_mk
 description:
- This check plugin monitors the amount of authentication failures within
+ This check plug-in monitors the amount of authentication failures within
  the last 5 minutes on Fortinet FortiAuthenticator systems. The
  corresponding service ("Authentication Failures") goes {WARN} or {CRIT} if
  the amount of failures exceeds configurable levels (rule "Fortinet

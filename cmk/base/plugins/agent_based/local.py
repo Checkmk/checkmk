@@ -80,7 +80,7 @@ def _sanitize_state(raw_state: str) -> tuple[int | str, str]:
         "3": (3, ""),
         "P": ("P", ""),
     }
-    return state_mapping.get(raw_state, (3, f"Invalid plugin status {raw_state}."))
+    return state_mapping.get(raw_state, (3, f"Invalid plug-in status {raw_state}."))
 
 
 def _parse_perfentry(entry: str) -> Perfdata:

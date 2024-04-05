@@ -199,7 +199,7 @@ def _load_plugins(logger: logging.Logger) -> None:
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
         ),
     ):
-        logger.error("Error in action plugin %s: %s\n", plugin, exc)
+        logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if debug.enabled():
             raise exc
 
@@ -213,7 +213,7 @@ def _load_pre_plugins() -> None:
             else load_plugins_with_exceptions("cmk.update_config.cee.plugins.pre_actions")
         ),
     ):
-        sys.stderr.write(f"Error in pre action plugin {plugin}: {exc}\n")
+        sys.stderr.write(f"Error in pre action plug-in {plugin}: {exc}\n")
         if debug.enabled():
             raise exc
 

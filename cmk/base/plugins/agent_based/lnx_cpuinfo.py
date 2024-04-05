@@ -15,7 +15,7 @@ Section = Mapping[str, str | int]
 
 def parse_lnx_cpuinfo(string_table: StringTable) -> Section:
     """
-    The parse / inventorize separation in this plugin is a result of a brainless migration --
+    The parse / inventorize separation in this plug-in is a result of a brainless migration --
     feel free to improve it.
     """
     node: dict[str, str | int] = {}

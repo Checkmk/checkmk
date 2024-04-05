@@ -230,7 +230,7 @@ def check_oracle_rman(
     else:
         yield Result(
             state=State.CRIT,
-            summary="no COMPLETED backup found in last 14 days (very old plugin in use?)",
+            summary="no COMPLETED backup found in last 14 days (very old plug-in in use?)",
         )
 
 

@@ -160,7 +160,7 @@ def test_default_config_from_plugins() -> None:
     # precondition is a more cleanly separated structure.
 
     if is_enterprise_repo():
-        # CEE plugins are added when the CEE plugins for WATO are available, i.e.
+        # CEE plug-ins are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [
             "agent_deployment_enabled",
@@ -190,7 +190,7 @@ def test_default_config_from_plugins() -> None:
         ]
 
     if is_managed_repo():
-        # CME plugins are added when the CEE plugins for WATO are available, i.e.
+        # CME plug-ins are added when the CEE plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [
             "customers",

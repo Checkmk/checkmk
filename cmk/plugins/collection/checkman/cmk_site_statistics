@@ -9,7 +9,7 @@ description:
  well as metrics recording the number of hosts which are UP, DOWN, in
  downtime and unreachable.
 
- Similarly, for services, the plugin reports the total number of services,
+ Similarly, for services, the plug-in reports the total number of services,
  the number of services which are not OK and metrics recording the number
  of services which are OK, in downtime, on down hosts, WARNING, UNKNOWN and
  CRITICAL.

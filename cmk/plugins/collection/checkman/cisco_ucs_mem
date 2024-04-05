@@ -16,7 +16,7 @@ description:
  "missing", "equippedNotPrimary", "equippedSlave" or "equippedDiscInProgress".
  When the presence state is "missing", all other data will be ignored.
 
- Additionally, the plugin checks and reports memory faults reported by the device.
+ Additionally, the plug-in checks and reports memory faults reported by the device.
  Acknowledged faults will be reported as {OK}. Otherwise, the monitoring state depends on
  the fault severity: "major" and "critical" are reported as {CRITICAL}, "warning" and
  "minor" as {WARNING} and "cleared" and "info" as {OK}.

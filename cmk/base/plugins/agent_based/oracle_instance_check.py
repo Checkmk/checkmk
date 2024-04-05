@@ -74,7 +74,7 @@ def check_oracle_instance(item: str, params: _Params, section: Section) -> Check
         )
         return
 
-    # Handle old oracle agent plugin output
+    # Handle old oracle agent plug-in output
     if instance.old_agent:
         yield Result(state=State.OK, summary=f"Status {instance.openmode}")
         yield Result(state=State.OK, summary=f"Version {instance.version}")

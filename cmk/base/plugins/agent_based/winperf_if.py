@@ -203,8 +203,8 @@ def _is_first_line(line: Sequence[str]) -> bool:
 
 def parse_winperf_if(string_table: StringTable) -> SectionCounters:
     # There used to be only a single winperf_if-section which contained both the native agent data
-    # and plugin data which is now located in the sections winperf_if_... For compatibily reasons,
-    # we still handle this case by filtering out the plugin data and advising the user to update
+    # and plug-in data which is now located in the sections winperf_if_... For compatibily reasons,
+    # we still handle this case by filtering out the plug-in data and advising the user to update
     # the agent.
     (
         string_table_filtered,
@@ -289,7 +289,7 @@ class AdditionalIfData(NamedTuple):
 
 SectionExtended = Collection[AdditionalIfData]
 
-# TODO(sk): remove this after deprecation of the corresponding plugin winperf_if.ps1
+# TODO(sk): remove this after deprecation of the corresponding plug-in winperf_if.ps1
 # NOTE: this case os for command `Get-WmiObject Win32_NetworkAdapter`
 # Windows NetConnectionStatus Table to ifOperStatus Table
 # 1 up
@@ -637,13 +637,13 @@ def _check_deprecated_plugins(
     if windows_if:
         yield Result(
             state=State.CRIT,
-            summary="Detected deprecated version of plugin 'windows_if.ps1' or 'wmic_if.bat' "
+            summary="Detected deprecated version of plug-in 'windows_if.ps1' or 'wmic_if.bat' "
             "(bakery ruleset 'Network interfaces on Windows'). Please update the agent plugin.",
         )
     if mk_dhcp_enabled:
         yield Result(
             state=State.CRIT,
-            summary="Detected deprecated version of plugin 'mk_dhcp_enabled.bat'. Please update "
+            summary="Detected deprecated version of plug-in 'mk_dhcp_enabled.bat'. Please update "
             "the agent plugin.",
         )
 
@@ -718,7 +718,7 @@ def inventory_winperf_if(
     )
 
 
-# TODO: make this plugin use the inventory ruleset inv_if
+# TODO: make this plug-in use the inventory ruleset inv_if
 register.inventory_plugin(
     name="winperf_if",
     sections=[

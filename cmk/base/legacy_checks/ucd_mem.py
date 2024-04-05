@@ -54,7 +54,7 @@ def check_ucd_mem(_no_item, params, parsed):
             yield params.get("swap_errors", 0), "Swap error: %s" % parsed["error_swap_msg"]
 
 
-# This check plugin uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
+# This check plug-in uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
 check_info["ucd_mem"] = LegacyCheckDefinition(
     service_name="Memory",
     discovery_function=inventory_ucd_mem,

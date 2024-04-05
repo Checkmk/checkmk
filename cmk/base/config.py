@@ -649,7 +649,7 @@ def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
 
 
 def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None:
-    # Pre 1.7.0 check plugin names may have dots or dashes (one case) in them.
+    # Pre 1.7.0 check plug-in names may have dots or dashes (one case) in them.
     # Now they don't, and we have to translate all variables that may use them:
     if "service_descriptions" in global_dict:
         global_dict["service_descriptions"] = {
@@ -1317,7 +1317,7 @@ NEGATE = tuple_rulesets.NEGATE
 check_info: dict[object, object] = (
     {}
 )  # want: dict[str, LegacyCheckDefinition], but don't trust the plugins!
-# for nagios config: keep track which plugin lives where
+# for nagios config: keep track which plug-in lives where
 legacy_check_plugin_files: dict[str, str] = {}
 # Lookup for legacy names
 legacy_check_plugin_names: dict[CheckPluginName, str] = {}
@@ -1404,7 +1404,7 @@ def load_checks(
         try:
             check_context = new_check_context(get_check_api_context)
 
-            # Make a copy of known plugin names, we need to track them for nagios config generation
+            # Make a copy of known plug-in names, we need to track them for nagios config generation
             known_checks = {str(k) for k in check_info}
             known_agents = {str(k) for k in special_agent_info}
 
@@ -1416,7 +1416,7 @@ def load_checks(
             raise
 
         except Exception as e:
-            console.error("Error in plugin file %s: %s\n", f, e)
+            console.error("Error in plug-in file %s: %s\n", f, e)
             if cmk.utils.debug.enabled():
                 raise
             continue
@@ -1486,7 +1486,7 @@ class _PYCHeader:
 
 
 def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
-    """Loads the given check or check include plugin into the given
+    """Loads the given check or check include plug-in into the given
     check context.
 
     To improve loading speed the files are not read directly. The files are
@@ -1543,7 +1543,7 @@ def _precompiled_plugin_path(path: str) -> str:
 
 
 AUTO_MIGRATION_ERR_MSG = (
-    "Failed to auto-migrate legacy plugin to %s: %s\n"
+    "Failed to auto-migrate legacy plug-in to %s: %s\n"
     "Please refer to Werk 10601 for more information.\n"
 )
 
@@ -1576,7 +1576,7 @@ def _extract_agent_and_snmp_sections(
             )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:
             # NOTE: missing section pugins may lead to missing data for a check plugin
-            #       *or* to more obscure errors, when a check/inventory plugin will be
+            #       *or* to more obscure errors, when a check/inventory plug-in will be
             #       passed un-parsed data unexpectedly.
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(exc) from exc
@@ -1615,7 +1615,7 @@ def _extract_check_plugins(
                 # implemented here instead of the agent based register so that new API code does not
                 # need to include any handling of legacy cases
                 raise ValueError(
-                    f"Legacy check plugin still exists for check plugin {check_plugin_name}. "
+                    f"Legacy check plug-in still exists for check plug-in {check_plugin_name}. "
                     "Please remove legacy plugin."
                 )
             agent_based_register.add_check_plugin(
@@ -2287,7 +2287,7 @@ class ConfigCache:
 
         Note: We need to reverse the order of the enforced services.
         Users assume that earlier rules have precedence over later ones.
-        Important if there are two rules for a host with the same combination of plugin name
+        Important if there are two rules for a host with the same combination of plug-in name
         and item.
         """
         with contextlib.suppress(KeyError):

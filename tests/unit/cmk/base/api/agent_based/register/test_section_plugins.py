@@ -181,7 +181,7 @@ def test_create_snmp_section_plugin_single_tree() -> None:
     )
 
     assert plugin.trees == [single_tree]
-    # the plugin only specified a single tree (not a list),
+    # the plug-in only specified a single tree (not a list),
     # so a wrapper should unpack the argument:
     assert plugin.parse_function([[["A", "B"]]]) == [["A", "B"]]
 

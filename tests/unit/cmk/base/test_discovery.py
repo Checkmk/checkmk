@@ -2096,6 +2096,6 @@ def test_make_discovery_diff() -> None:
     ) == (
         "Removed host label: 'foo:bar'.\n"
         "Added host label: 'gee:boo'.\n"
-        "Removed service: Check plugin 'norris' / item 'chuck'.\n"
-        "Added service: Check plugin 'chan'."
+        "Removed service: Check plug-in 'norris' / item 'chuck'.\n"
+        "Added service: Check plug-in 'chan'."
     )

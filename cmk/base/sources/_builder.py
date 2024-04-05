@@ -228,7 +228,7 @@ class _Builder:
             # that are populated by the Check API upon loading the plugins.
             #
             # It is there, when the plugins are loaded, that we should
-            # make the plugin store.  However, it is not clear whether
+            # make the plug-in store.  However, it is not clear whether
             # the API would let us register hooks to accomplish that.
             #
             # The current solution is brittle in that there is not guarantee

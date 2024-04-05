@@ -12,7 +12,7 @@ description:
  Since every system has a different behaviour there are no default
  values set to avoid false alarms.
 
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this plugin, Jolokia and the agent plug-in need to be installed
  on the monitored server (ore the special agent must be configured).
 
 item:

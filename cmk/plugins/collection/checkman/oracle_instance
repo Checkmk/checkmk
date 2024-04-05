@@ -18,7 +18,7 @@ description:
  is only working when the connection is established with 'sysdba'. Otherwise
  the rule for logins is always CRITICAL.
 
- This check requires the new agent plugin mk_oracle from our plugin directory.
+ This check requires the new agent plug-in mk_oracle from our plug-in directory.
 
  You can find a description for a basic configuration below. More details for
  special setups will be available on the homepage of the Checkmk project.

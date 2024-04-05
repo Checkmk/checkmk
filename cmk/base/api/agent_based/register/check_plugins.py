@@ -42,7 +42,7 @@ def _validate_service_name(plugin_name: CheckPluginName, service_name: str) -> N
         raise ValueError(
             "service name and description inconsistency: Please neither have your plugins "
             "name start with %r, nor the description with %r. In the rare case that you want to "
-            "implement a check plugin explicitly designed for management boards (and nothing else),"
+            "implement a check plug-in explicitly designed for management boards (and nothing else),"
             " you must do both of the above."
             % (CheckPluginName.MANAGEMENT_PREFIX, MANAGEMENT_DESCR_PREFIX)
         )

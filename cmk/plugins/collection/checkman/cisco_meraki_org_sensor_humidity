@@ -4,9 +4,9 @@ catalog: os/services
 license: GPLv2
 distribution: check_mk
 description:
- This check plugin monitors the sensor humidity.
+ This check plug-in monitors the sensor humidity.
 
- In order to make this check plugin work you have to configure the ruleset for
+ In order to make this check plug-in work you have to configure the ruleset for
  the special agent {{Cisco Meraki}}.
 
 item:

@@ -53,7 +53,7 @@ def parse_tsm_stagingpools(string_table: type_defs.StringTable) -> SECTION:
 
     for line in string_table:
         add_item(line[0:3])
-        # The agent plugin sometimes seems to mix two lines together some
+        # The agent plug-in sometimes seems to mix two lines together some
         # times. Detect and fix that.
         if len(line) == 6:
             add_item(line[3:])

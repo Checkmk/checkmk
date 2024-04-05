@@ -152,8 +152,8 @@ def _sanitize_string_table(string_table: StringTable) -> StringTable:
     return sanitized_string_table
 
 
-# Check that the apt section is in valid format of mk_apt plugin and not
-# from the apt agent plugin which can be found on the Checkmk exchange.
+# Check that the apt section is in valid format of mk_apt plug-in and not
+# from the apt agent plug-in which can be found on the Checkmk exchange.
 def _data_is_valid(string_table: StringTable) -> bool:
     if not string_table:
         return False

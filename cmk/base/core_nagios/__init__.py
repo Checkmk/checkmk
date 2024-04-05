@@ -14,6 +14,7 @@ from ._create_config import (
     NagiosConfig,
     NagiosCore,
 )
+from ._host_check_config import HostCheckConfig
 from ._precompile_host_checks import dump_precompiled_hostcheck, HostCheckStore
 
 __all__ = [
@@ -25,5 +26,6 @@ __all__ = [
     "NagiosConfig",
     "NagiosCore",
     "dump_precompiled_hostcheck",
+    "HostCheckConfig",
     "HostCheckStore",
 ]

@@ -257,7 +257,7 @@ function Invoke-SafetyCheck( [String]$file ) {
      try {
           $acl = Get-Acl $file -ErrorAction Stop
           $access = $acl.Access
-          $admins = Get-LocalGroupMember -Group Administrators
+          $admins = Get-LocalGroupMember -SID "S-1-5-32-544"
           $actors = $access | ForEach-Object {
                $a = [Actor]::new()
                $AdObj = New-Object System.Security.Principal.NTAccount -ArgumentList $_.IdentityReference

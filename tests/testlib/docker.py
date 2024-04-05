@@ -506,14 +506,6 @@ def checkmk_install_agent(
         install_agent_rc == 0
     ), f"Error during agent installation: {install_agent_output.decode('utf-8')}"
 
-    logger.info("Installing mk_oracle.cfg")
-    setup_agent_rc, setup_agent_output = app.exec_run(
-        """bash -c 'cp -f "/opt/oracle/oraenv/mk_oracle.cfg" "/etc/check_mk/mk_oracle.cfg"'""",
-        user="root",
-        privileged=True,
-    )
-    assert setup_agent_rc == 0, f"Error during agent setup: {setup_agent_output.decode('utf-8')}"
-
 
 def checkmk_register_agent(
     app: docker.models.containers.Container,

@@ -82,9 +82,7 @@ def do_event_actions(
     event: Event,
     is_cancelling: bool,
 ) -> None:
-    """
-    Execute a list of actions on an event that has just been opened or cancelled.
-    """
+    """Execute a list of actions on an event that has just been opened or cancelled."""
     table = config["action"]
     for aname in actions:
         if aname == "@NOTIFY":
@@ -464,9 +462,8 @@ def _add_infos_from_monitoring_host(
 def _add_contacts_from_rule(context: ECEventContext, event: Event, logger: Logger) -> None:
     """
     Add contact information from the rule, but only if the
-    host is unknown or if contact groups in rule have precedence
+    host is unknown or if contact groups in rule have precedence.
     """
-
     contact_groups = event.get("contact_groups")
     if (
         contact_groups is not None

@@ -49,7 +49,7 @@ class HostConfig:
             )
 
     def _update_cache_after_core_restart(self) -> bool:
-        """Once the core reports a restart update the cache
+        """Once the core reports a restart update the cache.
 
         Returns:
             False in case the update failed, otherwise True.

@@ -14,7 +14,7 @@ from .core_queries import query_timeperiods_in
 
 # TODO: Replace this with cmk.utils.timeperiod
 class TimePeriods:
-    """Time Periods are used in rule conditions"""
+    """Time Periods are used in rule conditions."""
 
     def __init__(self, logger: Logger) -> None:
         self._logger = logger

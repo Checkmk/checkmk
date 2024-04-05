@@ -230,7 +230,8 @@ class StructuredData(dict[StructuredDataID, StructuredDataParameters]):
 
 class SyslogMessage:
     """Represents a syslog message which can be sent to the EC. Sticks to the Syslog Message Format,
-    see https://tools.ietf.org/html/rfc5424."""
+    see https://tools.ietf.org/html/rfc5424.
+    """
 
     _CHECKMK_SD_ID = StructuredDataID("Checkmk@18662")
     _ENCODING = "utf-8"

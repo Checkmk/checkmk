@@ -124,7 +124,8 @@ class Query:
 def filter_operator_in(a: str, b: Iterable[str]) -> bool:
     """Implemented as a named function, as it is used in a second filter
     cmk.ec.main: StatusTableEvents._enumerate
-    not implemented as regex/IGNORECASE due to performance"""
+    not implemented as regex/IGNORECASE due to performance.
+    """
     return a.lower() in (e.lower() for e in b)
 
 
@@ -208,7 +209,8 @@ class QueryGET(Query):
         """Examples:
         id = 17
         name ~= This is some .* text
-        host_name ="""
+        host_name =
+        """
         parts = textspec.split(None, 2)
         if len(parts) == 2:
             parts.append("")

@@ -55,9 +55,7 @@ class RulePackType(Enum):
 
     @staticmethod
     def type_of(rule_pack: ECRulePack, id_to_mkp: dict[Any, Any]) -> "RulePackType":
-        """
-        Returns the type of rule pack for a given rule pack ID to MKP mapping.
-        """
+        """Returns the type of rule pack for a given rule pack ID to MKP mapping."""
         is_proxy = isinstance(rule_pack, MkpRulePackProxy)
         is_packaged = id_to_mkp.get(rule_pack.get("id")) is not None
 
@@ -174,7 +172,8 @@ def _load_config(  # pylint: disable=too-many-branches
 # TODO: GUI stuff, used only in cmk.gui.mkeventd.helpers.eventd_configuration()
 def load_config() -> ConfigFromWATO:
     """WATO needs all configured rule packs and other stuff - especially the central site in
-    distributed setups."""
+    distributed setups.
+    """
     return _load_config(
         [cmk.utils.paths.ec_main_config_file]
         + sorted(cmk.utils.paths.ec_config_dir.glob("**/*.mk"))
@@ -184,7 +183,8 @@ def load_config() -> ConfigFromWATO:
 # Used only by ourselves in by cmk.ec.main.load_configuration()
 def load_active_config(settings: Settings) -> ConfigFromWATO:
     """The EC itself only uses (active) rule packs from the active config dir. Active rule packs
-    are filtered rule packs, especially in distributed managed setups."""
+    are filtered rule packs, especially in distributed managed setups.
+    """
     return _load_config(sorted(settings.paths.active_config_dir.value.glob("**/*.mk")))
 
 
@@ -197,7 +197,7 @@ def save_active_config(
     Copy main configuration file from
         etc/check_mk/mkeventd.mk
     to
-        var/mkeventd/active_config/mkeventd.mk
+        var/mkeventd/active_config/mkeventd.mk.
 
     Copy all config files recursively from
         etc/check_mk/mkeventd.d
@@ -206,7 +206,6 @@ def save_active_config(
 
     The rules.mk is handled separately: save filtered rule_packs; see werk 16012.
     """
-
     active_config_dir = create_paths(cmk.utils.paths.omd_root).active_config_dir.value
     try:
         shutil.rmtree(str(active_config_dir))
@@ -234,7 +233,8 @@ def save_active_config(
 
 def load_rule_packs() -> Sequence[ECRulePack]:
     """Returns all rule packs (including MKP rule packs) of a site. Proxy objects
-    in the rule packs are already bound to the referenced object."""
+    in the rule packs are already bound to the referenced object.
+    """
     return load_config()["rule_packs"]
 
 
@@ -263,7 +263,7 @@ def export_rule_pack(rule_pack: ECRulePack, pretty_print: bool, path: Path) -> N
     of a MkpRulePackProxy the representation of the underlying rule
     pack is used.
     The name of the .mk file is determined by the ID of the rule pack,
-    i.e. the rule pack 'test' will be saved as 'test.mk'
+    i.e. the rule pack 'test' will be saved as 'test.mk'.
     """
     if isinstance(rule_pack, MkpRulePackProxy):
         if rule_pack.rule_pack is None:
@@ -281,9 +281,7 @@ mkp_rule_packs['{rule_pack['id']}'] = \\
 
 
 def override_rule_pack_proxy(rule_pack_nr: int, rule_packs: list[ECRulePack]) -> None:
-    """
-    Replaces a MkpRulePackProxy by a working copy of the underlying rule pack.
-    """
+    """Replaces a MkpRulePackProxy by a working copy of the underlying rule pack."""
     proxy = rule_packs[rule_pack_nr]
     if not isinstance(proxy, MkpRulePackProxy):
         raise TypeError(

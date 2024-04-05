@@ -269,6 +269,7 @@ def start_checkmk(
             c.exec_run(["omd", "start"], user=site_id)
         else:
             c.remove(force=True)
+            raise docker.errors.NotFound(name)
     except (docker.errors.NotFound, docker.errors.NullResource):
         c = client.containers.run(image=_image.id, detach=True, **kwargs)
         logger.info("Starting container %s from image %s", c.short_id, _image.short_id)

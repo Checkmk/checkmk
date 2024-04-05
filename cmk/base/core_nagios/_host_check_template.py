@@ -20,10 +20,9 @@ import cmk.base.config as config
 import cmk.base.obsolete_output as out
 import cmk.base.utils
 from cmk.base.api.agent_based.register import register_plugin_by_type
+from cmk.base.core_nagios import HostCheckConfig
 
 from cmk.discover_plugins import PluginLocation
-
-from ._host_check_config import HostCheckConfig
 
 # This will be replaced by the config genreration, when the template is instanciated.
 CONFIG = HostCheckConfig(

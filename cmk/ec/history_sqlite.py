@@ -2,7 +2,7 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""EC History sqlite backend"""
+"""EC History sqlite backend."""
 import itertools
 import json
 import sqlite3
@@ -83,7 +83,6 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
     Used in SQLiteHistory.get() method.
     Always return all columns, since they are filtered elsewhere.
     """
-
     query_columns: set[str] = set()
     query_conditions: list[str] = []
     query_arguments: list[object] = []
@@ -215,7 +214,8 @@ class SQLiteHistory(History):
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
         """Add a single entry to the history table.
 
-        No need to include the line column, as it is autoincremented."""
+        No need to include the line column, as it is autoincremented.
+        """
         with self.conn as connection:
             cur = connection.cursor()
             cur.execute(

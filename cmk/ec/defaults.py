@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Defaults for rule pack and configuration"""
+"""Defaults for rule pack and configuration."""
 
 import logging
 from collections.abc import Collection
@@ -22,7 +22,7 @@ from .config import (
 
 
 def default_rule_pack(rules: Collection[Rule]) -> ECRulePackSpec:
-    """Returns the default rule pack"""
+    """Returns the default rule pack."""
     return ECRulePackSpec(
         id="default",
         title=_("Default rule pack"),
@@ -32,7 +32,7 @@ def default_rule_pack(rules: Collection[Rule]) -> ECRulePackSpec:
 
 
 def default_config() -> ConfigFromWATO:
-    """Returns the default configuration"""
+    """Returns the default configuration."""
     return ConfigFromWATO(
         rules=[],  # old pre 1.2.7i1 format. Only used if rule_packs is empty
         rule_packs=[],  # new format with rule packs

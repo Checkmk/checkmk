@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Functions for the cmk-update-config to be used in cmk/update_config/plugins/actions/ec_history.py"""
+"""Functions for the cmk-update-config to be used in cmk/update_config/plugins/actions/ec_history.py."""
 
 import logging
 import time

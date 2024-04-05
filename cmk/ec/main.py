@@ -192,7 +192,6 @@ def create_history(
     history_columns: Columns,
 ) -> History:
     """Factory for History objects based on the current configuration, optionally augmented with timing information."""
-
     history = create_history_raw(settings, config, logger, event_columns, history_columns)
     return TimedHistory(history) if logger.isEnabledFor(DEBUG) else history
 
@@ -206,7 +205,6 @@ def allowed_ip(
     Takes care of mapped ipv6->ipv4 and ipv4->mapped_ipv6.
     This is needed because the access_list could contain ipv4/ipv6/ipv6mapped.
     """
-
     if any(ip in entry for entry in access_list):
         return True
 
@@ -230,7 +228,6 @@ def unmap_ipv4_address(ip_address: str) -> str:
     >>> unmap_ipv4_address('::FFFF:192.0.2.128')
     '192.0.2.128'
     """
-
     try:
         host = ipaddress.ip_address(ip_address)
     except ValueError:
@@ -1582,7 +1579,6 @@ class EventServer(ECServerThread):
         self, ty: LimitKind, event: Event, host_config: HostInfo | None
     ) -> bool:
         """Returns False if the event has been created and actions should be performed on that event."""
-
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
 
         limit, action = self._get_event_limit(ty, event, host_config)
@@ -1652,7 +1648,7 @@ class EventServer(ECServerThread):
         )
 
     def _get_rule_event_limit(self, rule_id: str | None) -> tuple[int, str]:
-        """Prefer the rule individual limit for by_rule limit (in case there is some)"""
+        """Prefer the rule individual limit for by_rule limit (in case there is some)."""
         if rule_limit := self._rule_by_id.get(rule_id, Rule()).get("event_limit"):
             return rule_limit["limit"], rule_limit["action"]
 
@@ -1662,7 +1658,7 @@ class EventServer(ECServerThread):
         )
 
     def _get_host_event_limit(self, host_config: HostInfo | None) -> tuple[int, str]:
-        """Prefer the host individual limit for by_host limit (in case there is some)"""
+        """Prefer the host individual limit for by_host limit (in case there is some)."""
         host_limit = (
             None if host_config is None else host_config.custom_variables.get("EC_EVENT_LIMIT")
         )
@@ -2165,7 +2161,7 @@ class StatusServer(ECServerThread):
         Only GET queries have customizable output formats. COMMAND is always
         a dictionary and COMMAND is always None and always output as "python"
         TODO: We should probably nuke these silly cases. Currently the allowed type
-        of the response depends on the value of query. :-/
+        of the response depends on the value of query. :-/.
         """
         if not isinstance(query, QueryGET):
             self._answer_query_python(client_socket, response)
@@ -2299,7 +2295,7 @@ class StatusServer(ECServerThread):
         self._logger.info("Opened new logfile")
 
     def handle_command_flush(self) -> None:
-        """Erase our current state and history!"""
+        """Erase our current state and history!."""
         self._history.flush()
         self._event_status.flush()
         self._event_status.save_status()
@@ -3371,7 +3367,7 @@ def reload_configuration(
 
 
 def main() -> None:
-    """Main entry and option parsing"""
+    """Main entry and option parsing."""
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")
     settings = create_settings(cmk_version.__version__, cmk.utils.paths.omd_root, sys.argv)

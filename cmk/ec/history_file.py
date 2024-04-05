@@ -301,8 +301,8 @@ def parse_history_file_python(
 
     To avoid slurping the whole file in memory this generator yields chunks of entries.
     This is not faster than the grep approach(parse_history_file()), but it's more memory efficient
-    and does not need to fork a subprocess and other cmk specific stuff."""
-
+    and does not need to fork a subprocess and other cmk specific stuff.
+    """
     with open(path, "rb") as f:
         for chunk in itertools.batched(f, 100_000):
             entries = []

@@ -161,7 +161,6 @@ def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
     and detect which information are present. Take a look at the syslog RFCs
     for details.
     """
-
     event = _make_event(line, ipaddress)
     # Variant 2,2a,3,4,5,6,7,7a,8
     if line.startswith("<"):
@@ -397,9 +396,7 @@ def parse_iso_8601_timestamp(timestamp: str) -> float:
 
 
 def fix_broken_sophos_timestamp(timestamp: str) -> str:
-    """
-    Sophos firewalls use a braindead non-standard timestamp format with funny separators and without a timezone.
-    """
+    """Sophos firewalls use a braindead non-standard timestamp format with funny separators and without a timezone."""
     # Step 1: Fix separator between date and time
     timestamp = timestamp.replace("-", "T", 1)
     # Step 2: Fix separators between date parts
@@ -423,7 +420,7 @@ def remove_leading_bom(message: str) -> str:
 
 
 def split_syslog_structured_data_and_message(sd_and_message: str) -> tuple[str | None, str]:
-    """Split a string containing structured data and the message into the two parts"""
+    """Split a string containing structured data and the message into the two parts."""
     if sd_and_message.startswith("["):
         return _split_syslog_nonnil_sd_and_message(sd_and_message)
     nil_value = "-"  # SyslogMessage.nilvalue()
@@ -448,7 +445,7 @@ def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> tuple[str, str]:
 
 
 def parse_syslog_message_structured_data(structured_data: str) -> tuple[dict[str, str], str]:
-    """Checks if the structured data contains Checkmk-specific data and extracts it if found"""
+    """Checks if the structured data contains Checkmk-specific data and extracts it if found."""
     checkmk_id = "Checkmk@18662"
     if not (checkmk_elements := findall(rf"\[{checkmk_id}.*?(?<!\\)\]", structured_data)):
         return {}, structured_data
@@ -470,7 +467,7 @@ def _unescape_parsed_struc(parsed_structured_data: Mapping[str, str]) -> dict[st
 
 
 def _unescape_structured_data_value(v: str, /) -> str:
-    """Undo the escaping done in cmk.ec.forward.StructuredDataValue"""
+    """Undo the escaping done in cmk.ec.forward.StructuredDataValue."""
     v_unescaped = v
     for escaped_char in ("\\", '"', "]"):
         v_unescaped = v_unescaped.replace(rf"\{escaped_char}", escaped_char)
@@ -483,8 +480,8 @@ def scrub_string(s: str) -> str:
     necessary, because there are a bunch of bytes which are not contained in any
     valid UTF-8 string, but following Murphy's Law, those are not used in
     Checkmk. To keep backwards compatibility with old history files, we have no
-    choice and continue to do it wrong... :-/"""
-
+    choice and continue to do it wrong... :-/.
+    """
     return s.translate(_scrub_string_unicode_table)
 
 

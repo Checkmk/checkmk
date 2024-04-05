@@ -141,7 +141,6 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
 
 def _current_history_period(config: Config) -> int:
     """Return timestamp of the beginning of the current history period."""
-
     today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     return int(

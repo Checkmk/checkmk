@@ -281,7 +281,7 @@ class SQLiteHistory(History):
         And performs a vacuum to shrink the database file.
         """
         now = time.time()
-        if now - self._last_housekeeping > 3600:
+        if now - self._last_housekeeping > self._config["sqlite_housekeeping_interval"]:
             delta = now - timedelta(days=self._config["history_lifetime"]).total_seconds()
             with self.conn as connection:
                 cur = connection.cursor()
@@ -296,7 +296,7 @@ class SQLiteHistory(History):
             freelist_count = connection.execute("PRAGMA freelist_count").fetchone()[0]
             freelist_size = freelist_count * self._page_size
 
-        if freelist_size > 50 * 1024 * 1024:
+        if freelist_size > self._config["sqlite_freelist_size"]:
             self.conn.execute("VACUUM;")
 
     def close(self) -> None:

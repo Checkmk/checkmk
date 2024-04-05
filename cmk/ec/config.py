@@ -337,6 +337,8 @@ class ConfigFromWATO(TypedDict):
     rule_optimizer: bool
     rule_packs: Sequence[ECRulePack]
     rules: Collection[Rule]
+    sqlite_housekeeping_interval: int
+    sqlite_freelist_size: int
     snmp_credentials: Iterable[SNMPCredential]
     socket_queue_len: int
     statistics_interval: int

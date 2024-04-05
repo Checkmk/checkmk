@@ -53,6 +53,8 @@ def default_config() -> ConfigFromWATO:
         log_messages=False,
         retention_interval=60,
         housekeeping_interval=60,
+        sqlite_housekeeping_interval=3600,  # seconds ValueSpec Age
+        sqlite_freelist_size=50 * 1024 * 1024,  # bytes ValueSpec FIlesize
         statistics_interval=5,
         history_lifetime=365,  # days
         history_rotation="daily",

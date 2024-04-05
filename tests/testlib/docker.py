@@ -263,9 +263,11 @@ def start_checkmk(
     try:
         c: docker.models.containers.Container = client.containers.get(name)
         if os.getenv("REUSE") == "1":
+            logger.info("Reusing existing container %s", c.short_id)
             c.start()
             c.exec_run(["omd", "start"], user=site_id)
         else:
+            logger.info("Removing existing container %s", c.short_id)
             c.remove(force=True)
             raise docker.errors.NotFound(name)
     except (docker.errors.NotFound, docker.errors.NullResource):

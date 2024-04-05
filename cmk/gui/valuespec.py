@@ -6117,7 +6117,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
                 html.help(vs.help())
                 html.close_td()
                 html.open_td(class_="dictright")
-            else:
+            elif label:
                 html.br()
 
             html.open_div(

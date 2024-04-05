@@ -865,7 +865,7 @@ def _create_nagios_config_commands(cfg: NagiosConfig) -> None:
     # active_checks
     for acttype, detected_executable in cfg.active_checks_to_define.items():
         command_line = (
-            act_info["command_line"]
+            core_config.autodetect_plugin(act_info["command_line"])
             if (act_info := config.active_check_info.get(acttype)) is not None
             else f"{detected_executable} $ARG1$"
         )

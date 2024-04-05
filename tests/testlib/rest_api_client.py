@@ -2731,6 +2731,16 @@ class ParentScanClient(RestApiClient):
 
 @dataclasses.dataclass
 class ClientRegistry:
+    """Overall client registry for all available endpoint family clients.
+
+    Guidelines for individual clients:
+        1) Keep in mind that this is a test client rather than a user client.
+        This implies that not all fields must be made available as function arguments. This
+        applies especially to nested fields where a top-level dict definition should be enough.
+        Take a look at the 'performance_settings' of the ParentScan.start method.
+
+    """
+
     Licensing: LicensingClient
     ActivateChanges: ActivateChangesClient
     User: UserClient

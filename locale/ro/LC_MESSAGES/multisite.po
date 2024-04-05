@@ -878,12 +878,6 @@ msgstr "(încorporat)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(implicit este %r pentru %s/TLS)"
 
-msgid "(deprecated) Host name"
-msgstr "(depreciat) Numele gazdei"
-
-msgid "(deprecated) IP Address"
-msgstr "(depreciat) Adresa IP"
-
 msgid "(disabled)"
 msgstr "(dezactivat)"
 
@@ -1966,18 +1960,6 @@ msgstr ""
 "<tt>TNS_ADMIN</tt> de folosit pentru <tt>sqlnet.ora</tt> și <tt>tnsnames."
 "ora</tt> %s."
 
-msgid ""
-"<tt>robot.yaml</tt> is the configuration file inside a RCC compatible robot "
-"suite. If the <i>target</i> is a <tt>.robot</tt> file, the file path for "
-"<tt>robot.yaml</tt> is relative to that file. If <i>target</i> is a folder, "
-"the file path for <tt>robot.yaml</tt> is relative to that folder's content."
-msgstr ""
-"<tt>robot.yaml</tt> este fișierul de configurare dintr-o suită de roboți "
-"compatibilă cu RCC. În cazul în care <i>target</i> este un fișier <tt>."
-"robot</tt>, calea de acces la <tt>robot.yaml</tt> este relativă la acel "
-"fișier. Dacă <i>target</i> este un dosar, calea fișierului <tt>robot.yaml</"
-"tt> este relativă la conținutul dosarului respectiv."
-
 #, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
 msgstr ""
@@ -2899,6 +2881,11 @@ msgstr "Numărul absolut de conexiuni inactive"
 
 msgid "Absolute number of incoming connections"
 msgstr "Numărul absolut de conexiuni primite"
+
+msgid ""
+"Absolute path to the directory of all suites on the Windows host, for "
+"example \"C:\\robot\"."
+msgstr ""
 
 msgid "Absolute used commit charge"
 msgstr "Absolut folosit comiterea taxei"
@@ -8077,6 +8064,17 @@ msgstr ""
 "nod în parte. Cel mai bun rezultat va determina starea generală a "
 "serviciului grupat."
 
+#, fuzzy
+msgid "Beta Trial"
+msgstr "Serial"
+
+#, fuzzy
+msgid "Beta phase: too many services"
+msgstr "Vezi toate gazdele și serviciile"
+
+msgid "BigQuery table ID"
+msgstr ""
+
 msgid "Biggest input buffer"
 msgstr "Cel mai mare buffer de intrare"
 
@@ -10566,9 +10564,6 @@ msgstr "Verificați și WARN"
 msgid "Check and display only"
 msgstr "Doar verificare și afișare"
 
-msgid "Check certificate"
-msgstr "Verificați certificatul"
-
 msgid "Check certificate validity"
 msgstr "Verificați valabilitatea certificatului"
 
@@ -10783,9 +10778,6 @@ msgstr "Tipuri de cecuri"
 msgid "Check uniserv service"
 msgstr "Verificați serviciul uniserv"
 
-msgid "Check validity"
-msgstr "Verificați valabilitatea"
-
 msgid "Check version of Checkmk agent"
 msgstr "Verificați versiunea agentului Checkmk"
 
@@ -10894,6 +10886,10 @@ msgstr "Checkmk Prezentare generală"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Prezentare generală a serverului Checkmk"
+
+#, fuzzy
+msgid "Checkmk SaaS Beta"
+msgstr "Agent Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Bara laterală Checkmk"
@@ -11889,6 +11885,18 @@ msgstr "Cloud"
 
 msgid "Cloud Based Environments"
 msgstr "Mediile bazate pe cloud"
+
+#, fuzzy
+msgid "Cloud Functions"
+msgstr "Conexiuni Active"
+
+#, fuzzy
+msgid "Cloud Run"
+msgstr "Cloud"
+
+#, fuzzy
+msgid "Cloud SQL"
+msgstr "Adresă"
 
 msgid "Cloud based environments"
 msgstr "Mediile bazate pe cloud"
@@ -13598,6 +13606,10 @@ msgstr "Fișiere corupte în Spool"
 msgid "Cosmic"
 msgstr "Cosmic"
 
+#, fuzzy
+msgid "Costs"
+msgstr "Gazde"
+
 msgid "Costs and usage (CE)"
 msgstr "Costuri și utilizare (CE)"
 
@@ -14651,9 +14663,6 @@ msgstr "Custom Time Span:"
 
 msgid "Custom URL"
 msgstr "URL personalizat"
-
-msgid "Custom URL base prefix"
-msgstr "Prefix de bază URL personalizat"
 
 msgid "Custom URL prefix"
 msgstr "Prefix URL personalizat"
@@ -16498,6 +16507,13 @@ msgstr "Demonstrație"
 msgid "Deny"
 msgstr "Refuzați"
 
+msgid ""
+"Depending on how a Robot Framework suite is written, the keywords directly "
+"below the test level are describing the test logic, completely decoupled "
+"from the implementation technology (so-called \"high-level keywords\"). "
+"Enable this option to get a graph for each high-level keyword."
+msgstr ""
+
 #, python-format
 msgid ""
 "Depending on the chosen datasource, a %s can list <i>multiple</i> or "
@@ -16519,11 +16535,12 @@ msgstr ""
 "o singură gazdă sau de a alege manual tipul de obiecte pe care doriți să le "
 "restricționați."
 
+#, fuzzy
 msgid ""
 "Depending on the libraries used in a suite, building its Python environment "
 "for the very first time can take some minutes. This setting ensures that a "
 "hanging/failing environment creation for a single suite does not block the "
-"scheduling phase of other suites. "
+"scheduling phase of other suites."
 msgstr ""
 "În funcție de bibliotecile utilizate într-o suită, crearea mediului Python "
 "pentru prima dată poate dura câteva minute. Această setare asigură că o "
@@ -17998,9 +18015,6 @@ msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr ""
 "Nu verificați vechimea tabelelor care nu au fost niciodată analizate/vacuate"
 
-msgid "Do not check certificate"
-msgstr "Nu verificați certificatul"
-
 msgid "Do not check the node"
 msgstr "Nu verificați nodul"
 
@@ -18892,6 +18906,16 @@ msgstr ""
 "configurație.<br>Datele de performanță (RRD) și arhiva de inventar HW/SW nu "
 "sunt niciodată șterse în timpul ștergerii gazdei. Ele sunt șterse automat "
 "doar atunci când activați această opțiune și după perioada configurată."
+
+#, python-format
+msgid ""
+"During the beta phase, the number of services is limited to %s but you would "
+"have %s services after activating your changes."
+msgstr ""
+
+#, python-format
+msgid "During the beta phase, the number of services is limited to %s."
+msgstr ""
 
 msgid "During this time period no monitoring data is available"
 msgstr "În această perioadă de timp nu sunt disponibile date de monitorizare"
@@ -22231,6 +22255,10 @@ msgstr "Nivelurile discurilor Filer (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Fișiere"
 
+#, fuzzy
+msgid "Filestore"
+msgstr "Spațiu liber exact"
+
 msgid "Filesystem"
 msgstr "Sistem de fișiere"
 
@@ -23342,6 +23370,10 @@ msgstr "GC rulează"
 msgid "GC runs rate"
 msgstr "Rata de alergare GC"
 
+#, fuzzy
+msgid "GCE Storage"
+msgstr "Dimensiunea Maxima"
+
 msgid "GCP Cost"
 msgstr "Costul BPC"
 
@@ -23625,6 +23657,10 @@ msgstr "Obțineți fișierul de pe serverul SFTP"
 msgid "Get header only"
 msgstr "Obține doar antetul"
 
+#, fuzzy
+msgid "Getting started"
+msgstr "Starea rezultată"
+
 #, no-python-format
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -23731,6 +23767,10 @@ msgstr "Platforma Google Cloud (GCP)"
 
 msgid "Google Cloud Platform (GCP) Status"
 msgstr "Starea Google Cloud Platform (GCP)"
+
+#, fuzzy
+msgid "Google Cloud Storage (GCS)"
+msgstr "Platforma Google Cloud (GCP)"
 
 msgid "Google Compute Engine (GCE)"
 msgstr "Google Compute Engine (GCE)"
@@ -24259,6 +24299,10 @@ msgstr "Versiunea HTTP"
 msgid "HTTP web service endpoints to monitor"
 msgstr "Punctele finale ale serviciului web HTTP pentru monitorizare"
 
+#, fuzzy
+msgid "HTTP(S) load balancer"
+msgstr "Solicitări GCP/HTTP(S) load balancer"
+
 msgid "HTTP, TCP, Email, ..."
 msgstr "HTTP, TCP, e-mail, ..."
 
@@ -24735,6 +24779,10 @@ msgstr ""
 "Aici puteți configura dacă și cum este înregistrată crearea fișierelor RRD "
 "(în fișierul jurnal var/log/cmc.log)."
 
+#, fuzzy
+msgid "Here you can configure whether the SSL certificate should get verified."
+msgstr "Aici puteți defini cu ce prioritate trebuie creat cazul."
+
 msgid ""
 "Here you can configure whether the performance counters should get queried. "
 "This can save quite a lot of CPU load on larger systems."
@@ -24906,15 +24954,6 @@ msgid ""
 msgstr ""
 "Aici puteți defini starea incidentului în cazul unei confirmări finale a "
 "gazdei sau a unei probleme de serviciu."
-
-msgid ""
-"Here you can define the time range to query, eg. the last x minutes from "
-"now. The query will then check for the count of log messages in the defined "
-"range. Default is 1 minute."
-msgstr ""
-"Aici puteți defini intervalul de timp de interogare, de exemplu, ultimele x "
-"minute din acest moment. Interogarea va verifica apoi numărul de mesaje de "
-"jurnal din intervalul definit. Valoarea implicită este de 1 minut."
 
 msgid ""
 "Here you can define tree configurations for the snapin <i>Virtual Host-"
@@ -25331,9 +25370,10 @@ msgstr ""
 "Aici puteți specifica nivelurile totale de utilizare a memoriei pentru "
 "gazdele grupate."
 
+#, fuzzy
 msgid ""
 "Here you can specify upper levels for the number of infections detected by "
-"the McAfee Gateway Antimalware Engine."
+"Antimalware Engine."
 msgstr ""
 "Aici puteți specifica nivelurile superioare pentru numărul de infecții "
 "detectate de McAfee Gateway Antimalware Engine."
@@ -27431,6 +27471,11 @@ msgid "If state changes OR on recovery (OK/UP)"
 msgstr "Dacă se schimbă starea SAU la revenire (OK/UP)"
 
 msgid ""
+"If tests fail, entire suites can be repeated completely or only individual "
+"tests (incrementally)."
+msgstr ""
+
+msgid ""
 "If that user does not have the permission <i>See all events</i> then this "
 "permission controls whether he/she can see events that are not related to a "
 "host in the monitoring and that do not have been assigned specific contact "
@@ -27522,6 +27567,12 @@ msgstr ""
 "potrivește, atunci evenimentele create cu această regulă vor fi anulate "
 "automat (în cazul în care gazda, aplicația, instalația și grupurile de "
 "corespondență se potrivesc)."
+
+msgid ""
+"If the same Robot Framework suite is executed several times but with "
+"different parameters, this field is used to differentiate them. (Example: DE "
+"and EN when testing two language versions of a website.)"
+msgstr ""
 
 msgid "If the status is non-OK or a magic factor is set"
 msgstr "În cazul în care starea nu este OK sau este setat un factor magic"
@@ -29590,6 +29641,17 @@ msgstr "Mărimea incrementului"
 msgid "Incremental"
 msgstr "Incremental"
 
+msgid ""
+"Incremental<br>On each iteration, Robotmk will re-execute only the failed "
+"tests. In the end, the best and last result per test will be merged into the "
+"overall state. Choose this mode if the tests within the robot suite do not "
+"depend on each other, but can be executed separately.<br><br>Complete<br>On "
+"each iteration, Robotmk will re-execute always the entire suite. In the end, "
+"the final result is taken from the last or PASSed suite execution. Choose "
+"this mode if the tests within the robot suite are related to each other and "
+"their execution order is also crucial."
+msgstr ""
+
 msgid "Index"
 msgstr "Index"
 
@@ -30108,7 +30170,8 @@ msgstr ""
 "Eroare internă: %s\n"
 "%s"
 
-msgid "Internal suite_id"
+#, fuzzy
+msgid "Internal rmk_id"
 msgstr "Interne suite_id"
 
 msgid "Internal user"
@@ -33006,9 +33069,6 @@ msgstr "Balansatoare de sarcină Grupuri țintă"
 msgid "Load balancers target groups"
 msgstr "Balansatoare de sarcină Grupuri țintă"
 
-msgid "Load environment variables from file"
-msgstr "Încărcați variabilele de mediu din fișier"
-
 msgid "Load in a new window / tab"
 msgstr "Încărcați într-o fereastră / filă nouă"
 
@@ -35332,12 +35392,6 @@ msgstr "Setări de timp McAfee Anti-Virus"
 msgid "McAfee email gateway bridge"
 msgstr "Podul gateway-ului de e-mail McAfee"
 
-msgid "McAfee web gateway miscellaneous"
-msgstr "McAfee web gateway diverse"
-
-msgid "McAfee web gateway statistics"
-msgstr "Statisticile gateway-ului web McAfee"
-
 #, python-format
 msgid "Mean %s"
 msgstr "Media %s"
@@ -35614,6 +35668,10 @@ msgstr "Utilizarea memoriei: Cluster"
 
 msgid "Memory warning at"
 msgstr "Avertizare de memorie la"
+
+#, fuzzy
+msgid "Memorystore Redis"
+msgstr "cereri"
 
 msgid "Merge even if there is an acknowledged event"
 msgstr "Îmbinare chiar dacă există un eveniment recunoscut"
@@ -37168,6 +37226,11 @@ msgstr "Numele mașinii virtuale"
 msgid "Name of the VM/HostSystem"
 msgstr "Numele sistemului VM/HostSystem"
 
+msgid ""
+"Name of the application to be tested here. This name can be chosen "
+"arbitrarily and be used multiple times."
+msgstr ""
+
 msgid "Name of the band, e.g. 5 GHz"
 msgstr "Denumirea benzii, de exemplu, 5 GHz"
 
@@ -37544,9 +37607,6 @@ msgstr "Monitorizarea rețelei"
 
 msgid "Network out"
 msgstr "Rețea afară"
-
-msgid "Network scan"
-msgstr "Scanarea rețelei"
 
 msgid "Network specification"
 msgstr "Specificația rețelei"
@@ -41686,6 +41746,16 @@ msgstr "Cale de acces la directorul temporar (va fi creat)"
 msgid "Path to test suite"
 msgstr "Calea către suita de testare"
 
+msgid ""
+"Path to the Robot Framework suite folder or directly to a specific `.robot` "
+"file, relative to the base directory."
+msgstr ""
+
+msgid ""
+"Path to the `robot.yaml` configuration file inside a RCC compatible robot "
+"suite, relative to the base directory."
+msgstr ""
+
 msgid "Path to unix socket"
 msgstr "Calea către socket-ul unix"
 
@@ -43886,9 +43956,6 @@ msgstr ""
 "Țintele Prometheus Scrape (includ exportatorii Prometheus) pentru a prelua "
 "informații din"
 
-msgid "Prometheus connection option"
-msgstr "Opțiunea de conectare Prometheus"
-
 msgid "Prometheus custom service"
 msgstr "Serviciul personalizat Prometheus"
 
@@ -44377,22 +44444,13 @@ msgstr "RAM utilizat"
 msgid "RAM used (averaged)"
 msgstr "RAM utilizată (medie)"
 
-msgid ""
-"RCC compatible suites can be started with <a href=\"https://robocorp.com/"
-"docs/development-guide/variables-and-secrets/configuring-robots-using-"
-"environment-variables#setting-environment-variables-locally-in-your-robot"
-"\">custom local environment variables</a>. This setting allows the setting "
-"of a JSON path to a variable file relative to the robot base directory."
-msgstr ""
-"Suitele compatibile cu RCC pot fi pornite cu <a href=\"https://robocorp.com/"
-"docs/development-guide/variables-and-secrets/configuring-robots-using-"
-"environment-variables#setting-environment-variables-locally-in-your-robot"
-"\">variabile de mediu locale personalizate</a>. Această setare permite "
-"setarea unei căi JSON către un fișier de variabile în raport cu directorul "
-"de bază al robotului."
-
 msgid "RCC profile configuration"
 msgstr "Configurația profilului RCC"
+
+#, fuzzy, python-format
+msgid ""
+"RCC profile configuration (%s because Robotmk Core MKP has been installed)"
+msgstr "Utilizați SSL pentru conexiune."
 
 msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
@@ -44433,6 +44491,9 @@ msgstr "REWRITE"
 
 msgid "RMAN Backups"
 msgstr "Copii de rezervă RMAN"
+
+msgid "RMK ID"
+msgstr ""
 
 msgid "RMON packets per second"
 msgstr "Pachete RMON pe secundă"
@@ -46719,10 +46780,12 @@ msgstr "Robotmk Teste"
 msgid "Robotmk logs"
 msgstr "Jurnalele Robotmk"
 
-msgid "Robotmk suite status"
+#, fuzzy
+msgid "Robotmk suite"
 msgstr "Starea suitei Robotmk"
 
-msgid "Robotmk tests"
+#, fuzzy
+msgid "Robotmk test"
 msgstr "Testele Robotmk"
 
 msgid "Role"
@@ -51660,15 +51723,6 @@ msgid "Specific version"
 msgstr "Versiune specifică"
 
 msgid ""
-"Specifies a URL path prefix, which is prepended to API calls to the "
-"Prometheus API. If this option is not relevant for your installation, please "
-"leave it unchecked."
-msgstr ""
-"Specifică un prefix de cale URL, care este adăugat la apelurile API către "
-"API Prometheus. Dacă această opțiune nu este relevantă pentru instalarea "
-"dumneavoastră, vă rugăm să o lăsați necompletată."
-
-msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
 "This is e.g. useful if you use the ip address or the hostname as base "
 "address but require some additional prefix to make the correct API call. Use "
@@ -51679,18 +51733,6 @@ msgstr ""
 "numele de gazdă ca adresă de bază, dar aveți nevoie de un prefix suplimentar "
 "pentru a efectua apelul API corect. Utilizați opțiunea Custom URL (URL "
 "personalizat) dacă trebuie să specificați un URL API mai complex."
-
-msgid ""
-"Specifies a prefix, which is prepended to the hostname or base address. This "
-"is an exotic option, which is kept for legacy reasons. Consider using a "
-"custom URL instead. If this option is not relevant for your installation, "
-"please leave it unchecked."
-msgstr ""
-"Specifică un prefix, care este adăugat înainte de numele de gazdă sau adresa "
-"de bază. Aceasta este o opțiune exotică, care este păstrată din motive "
-"tradiționale. Luați în considerare utilizarea unei adrese URL personalizate "
-"în schimb. Dacă această opțiune nu este relevantă pentru instalația dvs., vă "
-"rugăm să o lăsați debifată."
 
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
@@ -51725,6 +51767,13 @@ msgstr ""
 msgid "Specifies the default line style"
 msgstr "Specifică stilul de linie implicit"
 
+msgid ""
+"Specifies the maximum time that the scheduler allows for a robot framework "
+"execution. This time, multiplied by the number of repeated executions, may "
+"not be greater in total with all other suites in this group than the group "
+"execution interval."
+msgstr ""
+
 msgid "Specifies whether password authentication is allowed"
 msgstr "Specifică dacă este permisă autentificarea cu parolă"
 
@@ -51743,6 +51792,13 @@ msgstr "Specificați etichetele pachetelor RPM (Linux)"
 
 msgid "Specify URL prefix"
 msgstr "Specificați prefixul URL"
+
+#, fuzzy
+msgid "Specify a URL to connect to your server. Do not include the protocol."
+msgstr ""
+"Specificați o adresă URL personalizată pentru a vă conecta la server. Nu "
+"includeți protocolul. Această opțiune suprascrie toate opțiunile "
+"disponibile, cum ar fi portul și alte prefixe URL."
 
 msgid ""
 "Specify a custom URL to connect to your server. Do not include the protocol. "
@@ -51882,10 +51938,12 @@ msgstr ""
 "la care se aplică nivelurile de tensiune. Lista este sortată automat la "
 "salvare."
 
+#, fuzzy
 msgid ""
-"Specify here whether Robotmk's working directory on the target host should "
-"be cleaned up either after a certain time or after a certain number of test "
-"executions."
+"Specify here whether the working directory of Robotmk (by default under `C:"
+"\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) on the "
+"target host should be cleaned up either after a certain time or after a "
+"certain number of test executions."
 msgstr ""
 "Specificați aici dacă directorul de lucru al Robotmk de pe gazda țintă "
 "trebuie curățat după un anumit timp sau după un anumit număr de execuții de "
@@ -53937,13 +53995,6 @@ msgstr "Adăugați sufixul"
 
 msgid "Suggested tutorial videos"
 msgstr "Videoclipuri tutorial sugerate"
-
-msgid "Suite"
-msgstr "Suita"
-
-#, fuzzy
-msgid "Suite ID"
-msgstr "ID-ul sitului"
 
 msgid "Suite runtime"
 msgstr "Durata de execuție a suitei"
@@ -57260,6 +57311,13 @@ msgstr ""
 "astfel db2wps8:WPSCOMT8.USERSPACE1"
 
 msgid ""
+"The interval at which an execution group is executed. The execution interval "
+"of the group must be greater than the sum of the maximum runtimes of all "
+"suites in the group. The maximum runtime of a suite is calculated as "
+"follows: `\"environment_setup_timeout\" x (1 + \"max_reexecutions\")`"
+msgstr ""
+
+msgid ""
 "The interval the connection will be executed to check the available "
 "piggyback and update the configuration."
 msgstr ""
@@ -58152,11 +58210,6 @@ msgstr ""
 "Opțiunea de a utiliza o comandă personalizată poate fi configurată numai cu "
 "permisiunea \"Can add or modify executables\"."
 
-msgid "The options IP Address and Host name are deprecated - Werk 14573."
-msgstr ""
-"Opțiunile IP Address (Adresă IP) și Host name (Nume gazdă) sunt depășite - "
-"Werk 14573."
-
 msgid "The organisation ID"
 msgstr "ID-ul organizației"
 
@@ -58248,6 +58301,10 @@ msgstr ""
 "monitorizare. Acest lucru este necesar deoarece procesul de monitorizare "
 "trebuie să aibă acces la parola necriptată pentru a o furniza pentru "
 "autentificarea cu sistemele la distanță."
+
+#, fuzzy
+msgid "The password of the user."
+msgstr "Parola utilizatorului"
 
 msgid "The password or API key of the user."
 msgstr "Parola sau cheia API a utilizatorului."
@@ -59398,6 +59455,10 @@ msgstr ""
 msgid "The username that should be used for accessing the Jira API."
 msgstr "Numele de utilizator care trebuie utilizat pentru accesarea API Jira."
 
+#, fuzzy
+msgid "The username that should be used for accessing the NetApp API."
+msgstr "Numele de utilizator care trebuie utilizat pentru accesarea API Jira."
+
 msgid "The username that should be used for accessing the RabbitMQ API."
 msgstr ""
 "Numele de utilizator care trebuie utilizat pentru accesarea API RabbitMQ."
@@ -59845,12 +59906,11 @@ msgstr "Aceste noduri nu se află în agregarea înghețată"
 msgid "These nodes are only in the frozen aggregation"
 msgstr "Aceste noduri se află doar în agregarea înghețată"
 
+#, fuzzy
 msgid ""
 "These options allow specifying the most common command line parameters for "
-"the Robot Framework.In order to use other parameters (see <a href=\"https://"
-"robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#all-"
-"command-line-options\">All command line options</a>), you can use the option "
-"<i>Arguments file</i>."
+"the Robot Framework. In order to use other parameters, you can use the "
+"option \"Arguments file\""
 msgstr ""
 "Aceste opțiuni permit specificarea celor mai comuni parametri de linie de "
 "comandă pentru Robot Framework.Pentru a utiliza alți parametri (a se vedea "
@@ -67182,6 +67242,9 @@ msgstr ""
 msgid "Trial period ended: Reduce your number of services"
 msgstr "Perioada de probă s-a încheiat: Reduceți numărul de servicii"
 
+msgid "Trial time is undefined during the beta phase"
+msgstr ""
+
 #, python-format
 msgid "Tried to register incompatible rulespec: %r"
 msgstr "A încercat să înregistreze o specificație de reguli incompatibilă: %r."
@@ -67481,6 +67544,10 @@ msgstr "Prefixul URL"
 
 msgid "URL prefix for links to Checkmk"
 msgstr "Prefixul URL pentru legăturile către Checkmk"
+
+#, fuzzy
+msgid "URL server address"
+msgstr "Adresa serverului URL personalizat"
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
 msgstr "URL către HiveManagerNG, de exemplu https://cloud.aerohive.com"
@@ -68113,6 +68180,10 @@ msgstr "Până la sfârșitul acestei luni"
 
 msgid "Until end of year"
 msgstr "Până la sfârșitul anului"
+
+#, fuzzy
+msgid "Until you reduce the number of services, 'Activate changes' is blocked."
+msgstr "Licența a expirat: 'Activarea modificărilor' este blocată"
 
 msgid "Untitled setting"
 msgstr "Untitled setting"
@@ -69077,12 +69148,6 @@ msgstr "Utilizați HTTP/2"
 msgid "Use Hard States"
 msgstr "Utilizați stări dure"
 
-msgid "Use IP Address of assigned host"
-msgstr "Utilizați adresa IP a gazdei alocate"
-
-msgid "Use IP address of assigned host"
-msgstr "Utilizați adresa IP a gazdei alocate"
-
 msgid "Use IPMItool"
 msgstr "Utilizați IPMItool"
 
@@ -69308,9 +69373,6 @@ msgstr "Utilizați titlul graficului"
 
 msgid "Use host address"
 msgstr "Utilizați adresa gazdă"
-
-msgid "Use host name of assigned host"
-msgstr "Utilizați numele de gazdă al gazdei alocate"
 
 msgid "Use hostname"
 msgstr "Utilizați numele de gazdă"
@@ -71453,6 +71515,10 @@ msgstr "Servere Web (IIS)"
 msgid "Web Services"
 msgstr "Servicii Web"
 
+#, fuzzy
+msgid "Web gateway miscellaneous"
+msgstr "McAfee web gateway diverse"
+
 msgid "Web gateway miscellaneous statistics"
 msgstr "Statistici diverse ale gateway-ului web"
 
@@ -72799,9 +72865,10 @@ msgstr ""
 "Cu ServiceNow puteți crea diferite tipuri de probleme de management, în "
 "prezent sunt acceptate indicii și cazuri."
 
+#, fuzzy
 msgid ""
-"With the help of the <a href=https://github.com/robocorp/rcc>rcc binary</a>, "
-"the robotmk scheduler can generate the Python environments required for the "
+"With the help of the [rcc](https://github.com/robocorp/rcc) binary, the "
+"robotmk scheduler can generate the Python environments required for the "
 "execution of Robot Framework suites. This eliminates the need to install and "
 "configure Python and all of its library packages on the target hosts. RCC "
 "environments are only built when the scheduler is started."
@@ -74079,10 +74146,6 @@ msgstr ""
 "poate fi util pentru a documenta motivul pentru care au fost efectuate "
 "modificările pe care le activați."
 
-msgid "You can search indices for defined patterns in defined fieldnames."
-msgstr ""
-"Puteți căuta indici pentru modele definite în nume de câmpuri definite."
-
 #, python-format
 msgid ""
 "You can select either from the shipped images or upload your own images. "
@@ -74577,6 +74640,13 @@ msgstr "Nu vă puteți șterge propriul cont!"
 
 msgid "You cannot do replication with the local site."
 msgstr "Nu puteți face replicare cu site-ul local."
+
+#, fuzzy
+msgid ""
+"You cannot do this renaming since the following host names would be invalid:"
+msgstr ""
+"Nu puteți face această redenumire, deoarece următoarele nume de gazdă ar "
+"intra în coliziune:"
 
 msgid ""
 "You cannot do this renaming since the following host names would collide:"
@@ -76552,9 +76622,6 @@ msgstr "lockwaits/sec"
 msgid "log file %s on all hosts"
 msgstr "fișier jurnal %s pe toate gazdele"
 
-msgid "log messages"
-msgstr "mesaje de jurnal"
-
 msgid "log switches / hour"
 msgstr "comutatoare de jurnal / oră"
 
@@ -77549,9 +77616,6 @@ msgstr "saptamana"
 msgid "weekly"
 msgstr "saptamanal"
 
-msgid "weeks"
-msgstr "săptămâni"
-
 msgid "width"
 msgstr "latime"
 
@@ -77612,6 +77676,126 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "McAfee web gateway statistics"
+#~ msgstr "Statisticile gateway-ului web McAfee"
+
+#~ msgid "Check certificate"
+#~ msgstr "Verificați certificatul"
+
+#~ msgid "Check validity"
+#~ msgstr "Verificați valabilitatea"
+
+#~ msgid "Do not check certificate"
+#~ msgstr "Nu verificați certificatul"
+
+#~ msgid "Load environment variables from file"
+#~ msgstr "Încărcați variabilele de mediu din fișier"
+
+#~ msgid ""
+#~ "RCC compatible suites can be started with <a href=\"https://robocorp.com/"
+#~ "docs/development-guide/variables-and-secrets/configuring-robots-using-"
+#~ "environment-variables#setting-environment-variables-locally-in-your-robot"
+#~ "\">custom local environment variables</a>. This setting allows the "
+#~ "setting of a JSON path to a variable file relative to the robot base "
+#~ "directory."
+#~ msgstr ""
+#~ "Suitele compatibile cu RCC pot fi pornite cu <a href=\"https://robocorp."
+#~ "com/docs/development-guide/variables-and-secrets/configuring-robots-using-"
+#~ "environment-variables#setting-environment-variables-locally-in-your-robot"
+#~ "\">variabile de mediu locale personalizate</a>. Această setare permite "
+#~ "setarea unei căi JSON către un fișier de variabile în raport cu "
+#~ "directorul de bază al robotului."
+
+#~ msgid "Suite"
+#~ msgstr "Suita"
+
+#~ msgid "(deprecated) Host name"
+#~ msgstr "(depreciat) Numele gazdei"
+
+#~ msgid "(deprecated) IP Address"
+#~ msgstr "(depreciat) Adresa IP"
+
+#~ msgid "Custom URL base prefix"
+#~ msgstr "Prefix de bază URL personalizat"
+
+#~ msgid "Prometheus connection option"
+#~ msgstr "Opțiunea de conectare Prometheus"
+
+#~ msgid ""
+#~ "Specifies a URL path prefix, which is prepended to API calls to the "
+#~ "Prometheus API. If this option is not relevant for your installation, "
+#~ "please leave it unchecked."
+#~ msgstr ""
+#~ "Specifică un prefix de cale URL, care este adăugat la apelurile API către "
+#~ "API Prometheus. Dacă această opțiune nu este relevantă pentru instalarea "
+#~ "dumneavoastră, vă rugăm să o lăsați necompletată."
+
+#~ msgid ""
+#~ "Specifies a prefix, which is prepended to the hostname or base address. "
+#~ "This is an exotic option, which is kept for legacy reasons. Consider "
+#~ "using a custom URL instead. If this option is not relevant for your "
+#~ "installation, please leave it unchecked."
+#~ msgstr ""
+#~ "Specifică un prefix, care este adăugat înainte de numele de gazdă sau "
+#~ "adresa de bază. Aceasta este o opțiune exotică, care este păstrată din "
+#~ "motive tradiționale. Luați în considerare utilizarea unei adrese URL "
+#~ "personalizate în schimb. Dacă această opțiune nu este relevantă pentru "
+#~ "instalația dvs., vă rugăm să o lăsați debifată."
+
+#~ msgid "The options IP Address and Host name are deprecated - Werk 14573."
+#~ msgstr ""
+#~ "Opțiunile IP Address (Adresă IP) și Host name (Nume gazdă) sunt depășite "
+#~ "- Werk 14573."
+
+#~ msgid "Use IP Address of assigned host"
+#~ msgstr "Utilizați adresa IP a gazdei alocate"
+
+#~ msgid "Use IP address of assigned host"
+#~ msgstr "Utilizați adresa IP a gazdei alocate"
+
+#~ msgid "Use host name of assigned host"
+#~ msgstr "Utilizați numele de gazdă al gazdei alocate"
+
+#~ msgid ""
+#~ "<tt>robot.yaml</tt> is the configuration file inside a RCC compatible "
+#~ "robot suite. If the <i>target</i> is a <tt>.robot</tt> file, the file "
+#~ "path for <tt>robot.yaml</tt> is relative to that file. If <i>target</i> "
+#~ "is a folder, the file path for <tt>robot.yaml</tt> is relative to that "
+#~ "folder's content."
+#~ msgstr ""
+#~ "<tt>robot.yaml</tt> este fișierul de configurare dintr-o suită de roboți "
+#~ "compatibilă cu RCC. În cazul în care <i>target</i> este un fișier <tt>."
+#~ "robot</tt>, calea de acces la <tt>robot.yaml</tt> este relativă la acel "
+#~ "fișier. Dacă <i>target</i> este un dosar, calea fișierului <tt>robot."
+#~ "yaml</tt> este relativă la conținutul dosarului respectiv."
+
+#~ msgid ""
+#~ "Here you can define the time range to query, eg. the last x minutes from "
+#~ "now. The query will then check for the count of log messages in the "
+#~ "defined range. Default is 1 minute."
+#~ msgstr ""
+#~ "Aici puteți defini intervalul de timp de interogare, de exemplu, ultimele "
+#~ "x minute din acest moment. Interogarea va verifica apoi numărul de mesaje "
+#~ "de jurnal din intervalul definit. Valoarea implicită este de 1 minut."
+
+#~ msgid "Network scan"
+#~ msgstr "Scanarea rețelei"
+
+#, fuzzy
+#~| msgid "Site ID"
+#~ msgid "Suite ID"
+#~ msgstr "ID-ul sitului"
+
+#~ msgid "You can search indices for defined patterns in defined fieldnames."
+#~ msgstr ""
+#~ "Puteți căuta indici pentru modele definite în nume de câmpuri definite."
+
+#~ msgid "log messages"
+#~ msgstr "mesaje de jurnal"
+
+#~ msgid "weeks"
+#~ msgstr "săptămâni"
 
 #~ msgid "Organisations"
 #~ msgstr "Organizații"
@@ -79812,14 +79996,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgstr "Notificari"
 
 #, fuzzy
-#~ msgid "Cloud Functions"
-#~ msgstr "Conexiuni Active"
-
-#, fuzzy
-#~ msgid "Cloud SQL"
-#~ msgstr "Adresă"
-
-#, fuzzy
 #~ msgid "Do you really want to delete the selected MIBs?"
 #~ msgstr "O agregare legată de un singur element"
 
@@ -79849,18 +80025,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgid ""
 #~ "Do you really want to remove the TLS registration of the selected hosts?"
 #~ msgstr "O agregare legată de un singur element"
-
-#, fuzzy
-#~ msgid "Filestore"
-#~ msgstr "Spațiu liber exact"
-
-#, fuzzy
-#~ msgid "GCE Storage"
-#~ msgstr "Dimensiunea Maxima"
-
-#, fuzzy
-#~ msgid "Memorystore Redis"
-#~ msgstr "cereri"
 
 #, fuzzy
 #~ msgid "Connection timeout (seconds)"

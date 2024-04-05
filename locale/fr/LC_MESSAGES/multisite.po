@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-03-20 07:00+0000\n"
+"PO-Revision-Date: 2024-04-05 05:57+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/"
 "software/fr/>\n"
@@ -878,12 +878,6 @@ msgstr "(intégré)"
 #, python-format
 msgid "(default is %r for %s/TLS)"
 msgstr "(la valeur par défaut est %r pour %s/TLS)"
-
-msgid "(deprecated) Host name"
-msgstr "(obsolète) Nom d'hôte"
-
-msgid "(deprecated) IP Address"
-msgstr "(obsolète) Adresse IP"
 
 msgid "(disabled)"
 msgstr "(désactivé)"
@@ -1982,16 +1976,10 @@ msgstr ""
 "<tt>TNS_ADMIN</tt> à utiliser pour <tt>sqlnet.ora</tt> et <tt>tnsnames.ora</"
 "tt> %s"
 
-msgid ""
-"<tt>robot.yaml</tt> is the configuration file inside a RCC compatible robot "
-"suite. If the <i>target</i> is a <tt>.robot</tt> file, the file path for "
-"<tt>robot.yaml</tt> is relative to that file. If <i>target</i> is a folder, "
-"the file path for <tt>robot.yaml</tt> is relative to that folder's content."
-msgstr ""
-
-#, fuzzy, python-format
+#, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
-msgstr "<u>Info</u> : Les temps d'arrêt s'appliquent également aux services."
+msgstr ""
+"<u>Info</u> : Les temps d'arrêt s'appliquent également aux services de %s."
 
 msgid "<u>Info</u>: Downtime does not apply to host."
 msgstr "<u>Info</u> : Le temps d'arrêt ne s'applique pas à l'hôte."
@@ -2916,6 +2904,11 @@ msgstr "Nombre absolu de connexions inactives"
 
 msgid "Absolute number of incoming connections"
 msgstr "Nombre absolu de connexions entrantes"
+
+msgid ""
+"Absolute path to the directory of all suites on the Windows host, for "
+"example \"C:\\robot\"."
+msgstr ""
 
 #, fuzzy
 msgid "Absolute used commit charge"
@@ -7919,7 +7912,7 @@ msgid "Backup codes"
 msgstr "Modes de sauvegarde"
 
 msgid "Backup codes left:"
-msgstr "Codes de sauvegarde restants"
+msgstr "Codes de sauvegarde restants :"
 
 msgid "Backup configured"
 msgstr "Sauvegarde configurée"
@@ -8169,6 +8162,17 @@ msgstr ""
 "Best : La fonction de vérification du plugin sera appliquée à chaque nœud "
 "individuel. Le meilleur résultat déterminera l'état général du service en "
 "cluster."
+
+#, fuzzy
+msgid "Beta Trial"
+msgstr "Série"
+
+#, fuzzy
+msgid "Beta phase: too many services"
+msgstr "Voir tous les hôtes et services"
+
+msgid "BigQuery table ID"
+msgstr ""
 
 msgid "Biggest input buffer"
 msgstr "Le plus grand tampon d'entrée"
@@ -8553,7 +8557,6 @@ msgstr "Règles et agrégations de Business Intelligence"
 msgid "Business reporting"
 msgstr "Rapports d'activité"
 
-#, fuzzy
 msgid ""
 "Business time series display seasonalities as a result of the human "
 "behaviors they represent. 5-day working weeks can produce higher loads and "
@@ -8561,13 +8564,11 @@ msgid ""
 "year. Seasonality are these periodic oscillations of the time series."
 msgstr ""
 "Les séries chronologiques des entreprises présentent des saisonnalités en "
-"raison des comportements\n"
-"humains qu'elles représentent. Les semaines de travail de 5 jours peuvent "
-"produire des charges plus élevées et\n"
-"répétitives sur chaque semaine. Alors que les vacances peuvent produire des "
-"effets qui se répètent\n"
-"chaque année. La saisonnalité est cette oscillation périodique de la série "
-"temporelle."
+"raison des comportements humains qu'elles représentent. Les semaines de "
+"travail de 5 jours peuvent produire des charges plus élevées et répétitives "
+"sur chaque semaine. Alors que les vacances peuvent produire des effets qui "
+"se répètent chaque année. La saisonnalité est cette oscillation périodique "
+"de la série temporelle."
 
 msgid "Busy and idle servers"
 msgstr "Serveurs occupés et inactifs"
@@ -10655,10 +10656,6 @@ msgid "Check and display only"
 msgstr "Contrôle et affichage uniquement"
 
 #, fuzzy
-msgid "Check certificate"
-msgstr "Certificat CA"
-
-#, fuzzy
 msgid "Check certificate validity"
 msgstr "Validité du certificat de site"
 
@@ -10877,10 +10874,6 @@ msgstr "Types de contrôle"
 msgid "Check uniserv service"
 msgstr "Vérifier le service uniserv"
 
-#, fuzzy
-msgid "Check validity"
-msgstr "Vérifier int."
-
 msgid "Check version of Checkmk agent"
 msgstr "Vérifier la version de l'agent Checkmk"
 
@@ -10990,6 +10983,10 @@ msgstr "Aperçu de Checkmk"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "Checkmk Aperçu du serveur Checkmk"
+
+#, fuzzy
+msgid "Checkmk SaaS Beta"
+msgstr "Agent de contrôle"
 
 msgid "Checkmk Sidebar"
 msgstr "Barre latérale Checkmk"
@@ -11993,6 +11990,16 @@ msgstr "Nuage"
 
 msgid "Cloud Based Environments"
 msgstr "Environnements en nuage"
+
+msgid "Cloud Functions"
+msgstr "Fonctions du nuage"
+
+#, fuzzy
+msgid "Cloud Run"
+msgstr "Nuage"
+
+msgid "Cloud SQL"
+msgstr "Cloud SQL"
 
 msgid "Cloud based environments"
 msgstr "Environnements basés sur les nuages"
@@ -13739,6 +13746,10 @@ msgstr "Fichiers corrompus dans le Spool"
 msgid "Cosmic"
 msgstr "Cosmic"
 
+#, fuzzy
+msgid "Costs"
+msgstr "Hôtes"
+
 msgid "Costs and usage (CE)"
 msgstr "Coûts et utilisation (CE)"
 
@@ -13787,17 +13798,18 @@ msgstr "Couchbase vBuckets"
 msgid "Couchbase: Cache"
 msgstr "Couchbase : Cache"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Could not connect to the license server (%s). Please retry again later. If "
 "this error persists, please contact the Checkmk support. You also need to "
 "make sure that your Checkmk can reach the license server. Please check your "
 "firewall and proxy settings."
 msgstr ""
-"La connexion avec le serveur de licences (%s) a échoué. Vous devez vous "
-"assurer que votre Checkmk peut atteindre le serveur de licences. Veuillez "
-"vérifier les paramètres de votre pare-feu et de votre proxy."
-"<br><br>Détails : %s"
+"Impossible de se connecter au serveur de licences (%s). Veuillez réessayer "
+"plus tard. Si cette erreur persiste, veuillez contacter le support Checkmk. "
+"Vous devez également vous assurer que votre Checkmk peut atteindre le "
+"serveur de licences. Veuillez vérifier les paramètres de votre pare-feu et "
+"de votre proxy."
 
 #, python-format
 msgid "Could not convert perfometer to dict format: %r. Ignoring this one."
@@ -13834,9 +13846,9 @@ msgstr ""
 "spécifier quels services de vos nœuds doivent être ajoutés au cluster. Ceci "
 "est fait en utilisant le jeu de règles <a href=\"%s\">%s</a>."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Could not find the group \"%s\" specified for role %s"
-msgstr "Impossible de trouver le groupe spécifié pour le rôle %s"
+msgstr "Impossible de trouver le groupe \"%s\" spécifié pour le rôle %s"
 
 #, python-format
 msgid ""
@@ -14799,9 +14811,6 @@ msgstr "Personnalisé Durée de vie :"
 
 msgid "Custom URL"
 msgstr "URL personnalisée"
-
-msgid "Custom URL base prefix"
-msgstr "Préfixe de base de l'URL personnalisé"
 
 msgid "Custom URL prefix"
 msgstr "Préfixe d'URL personnalisé"
@@ -16660,6 +16669,13 @@ msgstr "Démonstration"
 msgid "Deny"
 msgstr ""
 
+msgid ""
+"Depending on how a Robot Framework suite is written, the keywords directly "
+"below the test level are describing the test logic, completely decoupled "
+"from the implementation technology (so-called \"high-level keywords\"). "
+"Enable this option to get a graph for each high-level keyword."
+msgstr ""
+
 #, python-format
 msgid ""
 "Depending on the chosen datasource, a %s can list <i>multiple</i> or "
@@ -16685,7 +16701,7 @@ msgid ""
 "Depending on the libraries used in a suite, building its Python environment "
 "for the very first time can take some minutes. This setting ensures that a "
 "hanging/failing environment creation for a single suite does not block the "
-"scheduling phase of other suites. "
+"scheduling phase of other suites."
 msgstr ""
 
 msgid ""
@@ -18169,10 +18185,6 @@ msgstr "Ne pas vérifier"
 msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr "Ne pas vérifier l'âge des tables jamais analysées/vidées"
 
-#, fuzzy
-msgid "Do not check certificate"
-msgstr "Certificat de routeur SAP"
-
 msgid "Do not check the node"
 msgstr "Ne pas vérifier le nœud"
 
@@ -19085,6 +19097,16 @@ msgstr ""
 "(RRD) et les archives d'inventaire HW/SW ne sont jamais supprimées lors de "
 "la suppression d'un hôte. Elles ne sont supprimées automatiquement que "
 "lorsque vous activez cette option et après la période configurée."
+
+#, python-format
+msgid ""
+"During the beta phase, the number of services is limited to %s but you would "
+"have %s services after activating your changes."
+msgstr ""
+
+#, python-format
+msgid "During the beta phase, the number of services is limited to %s."
+msgstr ""
 
 msgid "During this time period no monitoring data is available"
 msgstr "Pendant cette période, aucune donnée de surveillance n'est disponible"
@@ -22451,6 +22473,9 @@ msgstr "Niveaux de disques de filer (NetApp, IBM SVC)"
 msgid "Files"
 msgstr "Fichiers"
 
+msgid "Filestore"
+msgstr "Filestore"
+
 msgid "Filesystem"
 msgstr "Système de fichiers"
 
@@ -23579,6 +23604,10 @@ msgstr "Les courses GC"
 msgid "GC runs rate"
 msgstr "Taux de runs GC"
 
+#, fuzzy
+msgid "GCE Storage"
+msgstr "Stockage"
+
 msgid "GCP Cost"
 msgstr "Coût du PCG"
 
@@ -23864,6 +23893,10 @@ msgstr "Obtenir un fichier du serveur SFTP"
 msgid "Get header only"
 msgstr ""
 
+#, fuzzy
+msgid "Getting started"
+msgstr "État résultant"
+
 #, no-python-format
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -23973,6 +24006,9 @@ msgstr "Plateforme Google Cloud (GCP)"
 
 msgid "Google Cloud Platform (GCP) Status"
 msgstr "Statut de Google Cloud Platform (GCP)"
+
+msgid "Google Cloud Storage (GCS)"
+msgstr "Google Cloud Storage (GCS)"
 
 msgid "Google Compute Engine (GCE)"
 msgstr "Google Compute Engine (GCE)"
@@ -24519,6 +24555,10 @@ msgstr "Version LDAP"
 msgid "HTTP web service endpoints to monitor"
 msgstr "Services de BPC à surveiller"
 
+#, fuzzy
+msgid "HTTP(S) load balancer"
+msgstr "Équilibreurs de charge"
+
 msgid "HTTP, TCP, Email, ..."
 msgstr "HTTP, TCP, Email, ..."
 
@@ -25004,6 +25044,10 @@ msgstr ""
 "Ici, vous pouvez configurer si et comment la création des fichiers RRD est "
 "enregistrée (dans le fichier journal var/log/cmc.log)"
 
+#, fuzzy
+msgid "Here you can configure whether the SSL certificate should get verified."
+msgstr "Vous pouvez définir ici avec quelle priorité le cas doit être créé."
+
 msgid ""
 "Here you can configure whether the performance counters should get queried. "
 "This can save quite a lot of CPU load on larger systems."
@@ -25178,17 +25222,6 @@ msgid ""
 msgstr ""
 "Ici, vous pouvez définir l'état de l'incident en cas de fin d'accusé de "
 "réception de l'hôte ou de problème de service."
-
-#, fuzzy
-msgid ""
-"Here you can define the time range to query, eg. the last x minutes from "
-"now. The query will then check for the count of log messages in the defined "
-"range. Default is 1 minute."
-msgstr ""
-"Ici, vous pouvez définir la plage de temps à interroger, par exemple, les x "
-"dernières minutes à partir de maintenant. La requête vérifiera alors le "
-"nombre de messages de journal dans la plage définie. La valeur par défaut "
-"est de 1 minute."
 
 msgid ""
 "Here you can define tree configurations for the snapin <i>Virtual Host-"
@@ -25616,9 +25649,10 @@ msgstr ""
 "Ici, vous pouvez spécifier les niveaux d'utilisation de la mémoire totale "
 "pour les hôtes en cluster."
 
+#, fuzzy
 msgid ""
 "Here you can specify upper levels for the number of infections detected by "
-"the McAfee Gateway Antimalware Engine."
+"Antimalware Engine."
 msgstr ""
 "Vous pouvez spécifier ici des niveaux supérieurs pour le nombre d'infections "
 "détectées par le moteur antimalware de McAfee Gateway."
@@ -27735,6 +27769,11 @@ msgstr ""
 msgid "If state changes OR on recovery (OK/UP)"
 msgstr ""
 
+msgid ""
+"If tests fail, entire suites can be repeated completely or only individual "
+"tests (incrementally)."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If that user does not have the permission <i>See all events</i> then this "
@@ -27827,6 +27866,12 @@ msgstr ""
 "événements créés avec cette règle seront automatiquement annulés (si l'hôte, "
 "l'application, l'installation et les groupes de correspondance "
 "correspondent)."
+
+msgid ""
+"If the same Robot Framework suite is executed several times but with "
+"different parameters, this field is used to differentiate them. (Example: DE "
+"and EN when testing two language versions of a website.)"
+msgstr ""
 
 msgid "If the status is non-OK or a magic factor is set"
 msgstr "Si le statut est non-OK ou si un facteur magique est défini"
@@ -29890,6 +29935,17 @@ msgstr "Taille de l'incrément"
 msgid "Incremental"
 msgstr "#Incréments"
 
+msgid ""
+"Incremental<br>On each iteration, Robotmk will re-execute only the failed "
+"tests. In the end, the best and last result per test will be merged into the "
+"overall state. Choose this mode if the tests within the robot suite do not "
+"depend on each other, but can be executed separately.<br><br>Complete<br>On "
+"each iteration, Robotmk will re-execute always the entire suite. In the end, "
+"the final result is taken from the last or PASSed suite execution. Choose "
+"this mode if the tests within the robot suite are related to each other and "
+"their execution order is also crucial."
+msgstr ""
+
 msgid "Index"
 msgstr "Index"
 
@@ -30409,7 +30465,7 @@ msgstr ""
 "%s"
 
 #, fuzzy
-msgid "Internal suite_id"
+msgid "Internal rmk_id"
 msgstr "Utilisateur interne"
 
 msgid "Internal user"
@@ -30644,9 +30700,9 @@ msgstr ""
 msgid "Invalid host name"
 msgstr "Nom d'hôte non valide"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid host name: %s"
-msgstr "Nom d'hôte non valide"
+msgstr "Nom d'hôte non valide : %s"
 
 #, fuzzy, python-format
 msgid "Invalid host or IP address. IPv4: %s, IPv6: %s"
@@ -31899,9 +31955,9 @@ msgid "Last user synchronization ran into an exception: "
 msgstr ""
 "La dernière synchronisation de l'utilisateur a rencontré une exception : "
 
-#, fuzzy, python-format
+#, python-format
 msgid "Last verification %s"
-msgstr "Échec de la dernière vérification"
+msgstr "La dernière vérification %s"
 
 #, fuzzy
 msgid "Last verification failed"
@@ -33353,10 +33409,6 @@ msgstr "Équilibreurs de charge Groupes cibles"
 #, fuzzy
 msgid "Load balancers target groups"
 msgstr "Équilibreurs de charge Groupes cibles"
-
-#, fuzzy
-msgid "Load environment variables from file"
-msgstr "Utiliser les variables d'environnement de l'hôte"
 
 msgid "Load in a new window / tab"
 msgstr "Charger dans une nouvelle fenêtre / un nouvel onglet"
@@ -35721,12 +35773,6 @@ msgstr "Paramètres de temps de McAfee Anti-Virus"
 msgid "McAfee email gateway bridge"
 msgstr "Passerelle de messagerie McAfee"
 
-msgid "McAfee web gateway miscellaneous"
-msgstr "Passerelle web McAfee, divers"
-
-msgid "McAfee web gateway statistics"
-msgstr "Statistiques de la passerelle web McAfee"
-
 #, python-format
 msgid "Mean %s"
 msgstr "Moyenne %s"
@@ -35762,9 +35808,9 @@ msgstr ""
 msgid "Measurement unit"
 msgstr "Unité de mesure"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Measurement: %s"
-msgstr "Unité de mesure"
+msgstr "Unité de mesure : %s"
 
 msgid "Mechanical"
 msgstr "Mécanique"
@@ -36010,6 +36056,9 @@ msgstr "Utilisation de la mémoire : Cluster"
 
 msgid "Memory warning at"
 msgstr "Alerte mémoire à"
+
+msgid "Memorystore Redis"
+msgstr "Memorystore Redis"
 
 msgid "Merge even if there is an acknowledged event"
 msgstr "Fusionner même s'il y a un événement reconnu"
@@ -37571,6 +37620,11 @@ msgstr "Nom de la VM"
 msgid "Name of the VM/HostSystem"
 msgstr "Nom de la VM/Système hôte"
 
+msgid ""
+"Name of the application to be tested here. This name can be chosen "
+"arbitrarily and be used multiple times."
+msgstr ""
+
 msgid "Name of the band, e.g. 5 GHz"
 msgstr "Nom de la bande, par exemple 5 GHz"
 
@@ -37941,9 +37995,6 @@ msgstr "Surveillance du réseau"
 
 msgid "Network out"
 msgstr "Sortie de réseau"
-
-msgid "Network scan"
-msgstr "Analyse du réseau"
 
 msgid "Network specification"
 msgstr "Spécification du réseau"
@@ -42145,6 +42196,16 @@ msgstr "Chemin vers le répertoire temporaire (qui sera créé)"
 msgid "Path to test suite"
 msgstr "Chemin vers le fichier .env"
 
+msgid ""
+"Path to the Robot Framework suite folder or directly to a specific `.robot` "
+"file, relative to the base directory."
+msgstr ""
+
+msgid ""
+"Path to the `robot.yaml` configuration file inside a RCC compatible robot "
+"suite, relative to the base directory."
+msgstr ""
+
 msgid "Path to unix socket"
 msgstr "Chemin d'accès au socket unix"
 
@@ -42566,11 +42627,9 @@ msgstr "Niveaux de pourcentage%s"
 msgid "Perf-O-Meter"
 msgstr "Perf-O-Mètre"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Perf-O-Meter %r must contain exactly two definitions, not %d"
-msgstr ""
-"Le Perf-O-Meter de type 'dual' doit contenir exactement deux définitions, et "
-"non %d"
+msgstr "Le Perf-O-Meter %r doit contenir exactement deux définitions, et non %d"
 
 msgid "Perf-O-Meter of type 'dual' must only contain plain Perf-O-Meters"
 msgstr ""
@@ -44387,9 +44446,6 @@ msgstr ""
 "les cibles Prometheus Scrape (y compris les exportateurs Prometheus) pour "
 "récupérer des informations à partir des éléments suivants"
 
-msgid "Prometheus connection option"
-msgstr "Option de connexion à Prometheus"
-
 msgid "Prometheus custom service"
 msgstr "Service personnalisé Prometheus"
 
@@ -44883,17 +44939,14 @@ msgstr "RAM utilisée"
 msgid "RAM used (averaged)"
 msgstr "Lire l'exe moyen"
 
-msgid ""
-"RCC compatible suites can be started with <a href=\"https://robocorp.com/"
-"docs/development-guide/variables-and-secrets/configuring-robots-using-"
-"environment-variables#setting-environment-variables-locally-in-your-robot"
-"\">custom local environment variables</a>. This setting allows the setting "
-"of a JSON path to a variable file relative to the robot base directory."
-msgstr ""
-
 #, fuzzy
 msgid "RCC profile configuration"
 msgstr "Configuration à distance"
+
+#, fuzzy, python-format
+msgid ""
+"RCC profile configuration (%s because Robotmk Core MKP has been installed)"
+msgstr "Utiliser RCC pour l'exécution isolée (%s dans Robotmk Core)"
 
 msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
@@ -44933,6 +44986,9 @@ msgstr "REWRITE"
 
 msgid "RMAN Backups"
 msgstr "Sauvegardes RMAN"
+
+msgid "RMK ID"
+msgstr ""
 
 msgid "RMON packets per second"
 msgstr "Paquets RMON par seconde"
@@ -47266,11 +47322,11 @@ msgid "Robotmk logs"
 msgstr "Journaux de RobotMK"
 
 #, fuzzy
-msgid "Robotmk suite status"
+msgid "Robotmk suite"
 msgstr "Statut du site"
 
 #, fuzzy
-msgid "Robotmk tests"
+msgid "Robotmk test"
 msgstr "Soumettre un rapport"
 
 msgid "Role"
@@ -47402,11 +47458,10 @@ msgstr ""
 "La règle ne s'applique qu'aux hôtes situés directement dans ou sous ce "
 "dossier."
 
-#, fuzzy
 msgid "Rule only applies to hosts matching the label conditions. "
 msgstr ""
 "La règle ne s'applique qu'aux hôtes correspondant aux conditions de "
-"l'étiquette."
+"l'étiquette. "
 
 msgid ""
 "Rule only applies to hosts that meet all of the host tag conditions listed "
@@ -48203,7 +48258,7 @@ msgid "Saturday"
 msgstr "Samedi"
 
 msgid "Save"
-msgstr "Sauvez"
+msgstr "Sauver"
 
 #, python-format
 msgid "Save & go to %s"
@@ -52224,15 +52279,6 @@ msgid "Specific version"
 msgstr "Version spécifique"
 
 msgid ""
-"Specifies a URL path prefix, which is prepended to API calls to the "
-"Prometheus API. If this option is not relevant for your installation, please "
-"leave it unchecked."
-msgstr ""
-"Spécifie un préfixe de chemin d'accès à l'URL, qui est ajouté aux appels à "
-"l'API Prometheus. Si cette option n'est pas pertinente pour votre "
-"installation, ne la cochez pas."
-
-msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
 "This is e.g. useful if you use the ip address or the hostname as base "
 "address but require some additional prefix to make the correct API call. Use "
@@ -52243,17 +52289,6 @@ msgstr ""
 "d'hôte comme adresse de base, mais que vous avez besoin d'un préfixe "
 "supplémentaire pour effectuer l'appel d'API correct. Utilisez l'option URL "
 "personnalisée si vous devez spécifier une URL d'API plus complexe."
-
-msgid ""
-"Specifies a prefix, which is prepended to the hostname or base address. This "
-"is an exotic option, which is kept for legacy reasons. Consider using a "
-"custom URL instead. If this option is not relevant for your installation, "
-"please leave it unchecked."
-msgstr ""
-"Spécifie un préfixe, qui est ajouté au nom d'hôte ou à l'adresse de base. Il "
-"s'agit d'une option exotique, conservée pour des raisons d'héritage. "
-"Envisagez plutôt d'utiliser une URL personnalisée. Si cette option n'est pas "
-"pertinente pour votre installation, laissez-la décochée."
 
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
@@ -52290,6 +52325,13 @@ msgstr ""
 msgid "Specifies the default line style"
 msgstr "Spécifie le style de ligne par défaut"
 
+msgid ""
+"Specifies the maximum time that the scheduler allows for a robot framework "
+"execution. This time, multiplied by the number of repeated executions, may "
+"not be greater in total with all other suites in this group than the group "
+"execution interval."
+msgstr ""
+
 msgid "Specifies whether password authentication is allowed"
 msgstr "Spécifie si l'authentification par mot de passe est autorisée"
 
@@ -52309,6 +52351,13 @@ msgstr "Spécifier les étiquettes des paquets RPM (Linux)"
 
 msgid "Specify URL prefix"
 msgstr "Spécifier le préfixe de l'URL"
+
+#, fuzzy
+msgid "Specify a URL to connect to your server. Do not include the protocol."
+msgstr ""
+"Indiquez une URL personnalisée pour vous connecter à votre serveur. "
+"N'incluez pas le protocole. Cette option remplace toutes les options "
+"disponibles telles que le port et les autres préfixes d'URL."
 
 msgid ""
 "Specify a custom URL to connect to your server. Do not include the protocol. "
@@ -52454,9 +52503,10 @@ msgstr ""
 "automatiquement lors de la sauvegarde."
 
 msgid ""
-"Specify here whether Robotmk's working directory on the target host should "
-"be cleaned up either after a certain time or after a certain number of test "
-"executions."
+"Specify here whether the working directory of Robotmk (by default under `C:"
+"\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) on the "
+"target host should be cleaned up either after a certain time or after a "
+"certain number of test executions."
 msgstr ""
 
 #, python-format
@@ -54500,13 +54550,6 @@ msgstr "Ajouter un suffixe"
 
 msgid "Suggested tutorial videos"
 msgstr "Vidéos tutorielles suggérées"
-
-msgid "Suite"
-msgstr ""
-
-#, fuzzy
-msgid "Suite ID"
-msgstr "ID du site"
 
 #, fuzzy
 msgid "Suite runtime"
@@ -57877,6 +57920,13 @@ msgstr ""
 "combinés comme ceci db2wps8:WPSCOMT8.USERSPACE1"
 
 msgid ""
+"The interval at which an execution group is executed. The execution interval "
+"of the group must be greater than the sum of the maximum runtimes of all "
+"suites in the group. The maximum runtime of a suite is calculated as "
+"follows: `\"environment_setup_timeout\" x (1 + \"max_reexecutions\")`"
+msgstr ""
+
+msgid ""
 "The interval the connection will be executed to check the available "
 "piggyback and update the configuration."
 msgstr ""
@@ -58767,9 +58817,6 @@ msgstr ""
 "L'option d'utiliser une commande personnalisée ne peut être configurée "
 "qu'avec l'autorisation \"Peut ajouter ou modifier des exécutables\"."
 
-msgid "The options IP Address and Host name are deprecated - Werk 14573."
-msgstr "Les options Adresse IP et Nom d'hôte sont obsolètes - Werk 14573."
-
 msgid "The organisation ID"
 msgstr "L'identifiant de l'organisation"
 
@@ -58863,6 +58910,10 @@ msgstr ""
 "surveillance. Ceci est généralement nécessaire car le processus de "
 "surveillance doit avoir accès au mot de passe non crypté car il doit le "
 "soumettre pour s'authentifier auprès des systèmes distants."
+
+#, fuzzy
+msgid "The password of the user."
+msgstr "Mot de passe de l'utilisateur"
 
 msgid "The password or API key of the user."
 msgstr "Le mot de passe ou la clé API de l'utilisateur."
@@ -60012,6 +60063,10 @@ msgstr ""
 msgid "The username that should be used for accessing the Jira API."
 msgstr "Le nom d'utilisateur qui doit être utilisé pour accéder à l'API Jira."
 
+#, fuzzy
+msgid "The username that should be used for accessing the NetApp API."
+msgstr "Le nom d'utilisateur qui doit être utilisé pour accéder à l'API Jira."
+
 msgid "The username that should be used for accessing the RabbitMQ API."
 msgstr ""
 "Le nom d'utilisateur qui doit être utilisé pour accéder à l'API RabbitMQ."
@@ -60463,10 +60518,8 @@ msgstr "Ces nœuds se trouvent uniquement dans l'agrégation gelée"
 
 msgid ""
 "These options allow specifying the most common command line parameters for "
-"the Robot Framework.In order to use other parameters (see <a href=\"https://"
-"robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#all-"
-"command-line-options\">All command line options</a>), you can use the option "
-"<i>Arguments file</i>."
+"the Robot Framework. In order to use other parameters, you can use the "
+"option \"Arguments file\""
 msgstr ""
 
 msgid ""
@@ -68327,6 +68380,9 @@ msgstr ""
 msgid "Trial period ended: Reduce your number of services"
 msgstr ""
 
+msgid "Trial time is undefined during the beta phase"
+msgstr ""
+
 #, python-format
 msgid "Tried to register incompatible rulespec: %r"
 msgstr "A essayé d'enregistrer des règles incompatibles : %r"
@@ -68629,6 +68685,10 @@ msgstr "Préfixe de l'URL"
 
 msgid "URL prefix for links to Checkmk"
 msgstr "Préfixe d'URL pour les liens vers Checkmk"
+
+#, fuzzy
+msgid "URL server address"
+msgstr "Adresse URL personnalisée du serveur"
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
 msgstr "URL vers HiveManagerNG, par exemple https://cloud.aerohive.com"
@@ -69270,6 +69330,9 @@ msgstr "Jusqu'à la fin du mois"
 
 msgid "Until end of year"
 msgstr "Jusqu'à la fin de l'année"
+
+msgid "Until you reduce the number of services, 'Activate changes' is blocked."
+msgstr ""
 
 msgid "Untitled setting"
 msgstr "Cadre sans titre"
@@ -70257,12 +70320,6 @@ msgstr "utiliser SSL/HTTPS"
 msgid "Use Hard States"
 msgstr "Utiliser les états durs"
 
-msgid "Use IP Address of assigned host"
-msgstr "Utiliser l'adresse IP de l'hôte assigné"
-
-msgid "Use IP address of assigned host"
-msgstr "Utiliser l'adresse IP de l'hôte assigné"
-
 msgid "Use IPMItool"
 msgstr "Utiliser IPMItool"
 
@@ -70494,9 +70551,6 @@ msgstr "Utiliser le titre du graphique"
 
 msgid "Use host address"
 msgstr "Utiliser l'adresse de l'hôte"
-
-msgid "Use host name of assigned host"
-msgstr "Utiliser le nom d'hôte de l'hôte assigné"
 
 msgid "Use hostname"
 msgstr "Utiliser le nom d'hôte"
@@ -70768,13 +70822,12 @@ msgstr ""
 "Utilisez cette condition pour sélectionner les hôtes en fonction des "
 "étiquettes de service configurées."
 
-#, fuzzy
 msgid ""
 "Use this condition to select services based on the configured service "
 "labels. "
 msgstr ""
 "Utilisez cette condition pour sélectionner les services en fonction des "
-"étiquettes de service configurées."
+"étiquettes de service configurées. "
 
 msgid "Use this custom start URL"
 msgstr "Utilisez cette URL de démarrage personnalisée"
@@ -72667,6 +72720,10 @@ msgstr "Serveurs web (IIS)"
 msgid "Web Services"
 msgstr "Services Web"
 
+#, fuzzy
+msgid "Web gateway miscellaneous"
+msgstr "Passerelle web McAfee, divers"
+
 msgid "Web gateway miscellaneous statistics"
 msgstr "Statistiques diverses de la passerelle Web"
 
@@ -74029,8 +74086,8 @@ msgstr ""
 "actuellement supportés sont les indicents et les cas."
 
 msgid ""
-"With the help of the <a href=https://github.com/robocorp/rcc>rcc binary</a>, "
-"the robotmk scheduler can generate the Python environments required for the "
+"With the help of the [rcc](https://github.com/robocorp/rcc) binary, the "
+"robotmk scheduler can generate the Python environments required for the "
 "execution of Robot Framework suites. This eliminates the need to install and "
 "configure Python and all of its library packages on the target hosts. RCC "
 "environments are only built when the scheduler is started."
@@ -75344,11 +75401,6 @@ msgstr ""
 "Cela peut être utile pour documenter la raison pour laquelle les changements "
 "que vous activez ont été effectués."
 
-msgid "You can search indices for defined patterns in defined fieldnames."
-msgstr ""
-"Vous pouvez rechercher dans les index des modèles définis dans des noms de "
-"champs définis."
-
 #, python-format
 msgid ""
 "You can select either from the shipped images or upload your own images. "
@@ -75860,6 +75912,13 @@ msgstr "Vous ne pouvez pas supprimer votre propre compte !"
 
 msgid "You cannot do replication with the local site."
 msgstr "Vous ne pouvez pas faire de réplication avec le site local."
+
+#, fuzzy
+msgid ""
+"You cannot do this renaming since the following host names would be invalid:"
+msgstr ""
+"Vous ne pouvez pas effectuer ce renommage car les noms d'hôtes suivants "
+"entreraient en collision :"
 
 msgid ""
 "You cannot do this renaming since the following host names would collide:"
@@ -77849,9 +77908,6 @@ msgstr "lockwaits/sec"
 msgid "log file %s on all hosts"
 msgstr "fichier journal %s sur tous les hôtes"
 
-msgid "log messages"
-msgstr "messages de journal"
-
 msgid "log switches / hour"
 msgstr "commutations de journaux / heure"
 
@@ -78854,9 +78910,6 @@ msgstr "semaine"
 msgid "weekly"
 msgstr "hebdomadaire"
 
-msgid "weeks"
-msgstr "semaines"
-
 msgid "width"
 msgstr "largeur"
 
@@ -78917,6 +78970,107 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "McAfee web gateway statistics"
+#~ msgstr "Statistiques de la passerelle web McAfee"
+
+#, fuzzy
+#~| msgid "CA certificate"
+#~ msgid "Check certificate"
+#~ msgstr "Certificat CA"
+
+#, fuzzy
+#~| msgid "Check int."
+#~ msgid "Check validity"
+#~ msgstr "Vérifier int."
+
+#, fuzzy
+#~| msgid "SAP router certificate"
+#~ msgid "Do not check certificate"
+#~ msgstr "Certificat de routeur SAP"
+
+#, fuzzy
+#~| msgid "Use environment variables from host"
+#~ msgid "Load environment variables from file"
+#~ msgstr "Utiliser les variables d'environnement de l'hôte"
+
+#~ msgid "(deprecated) Host name"
+#~ msgstr "(obsolète) Nom d'hôte"
+
+#~ msgid "(deprecated) IP Address"
+#~ msgstr "(obsolète) Adresse IP"
+
+#~ msgid "Custom URL base prefix"
+#~ msgstr "Préfixe de base de l'URL personnalisé"
+
+#~ msgid "Prometheus connection option"
+#~ msgstr "Option de connexion à Prometheus"
+
+#~ msgid ""
+#~ "Specifies a URL path prefix, which is prepended to API calls to the "
+#~ "Prometheus API. If this option is not relevant for your installation, "
+#~ "please leave it unchecked."
+#~ msgstr ""
+#~ "Spécifie un préfixe de chemin d'accès à l'URL, qui est ajouté aux appels "
+#~ "à l'API Prometheus. Si cette option n'est pas pertinente pour votre "
+#~ "installation, ne la cochez pas."
+
+#~ msgid ""
+#~ "Specifies a prefix, which is prepended to the hostname or base address. "
+#~ "This is an exotic option, which is kept for legacy reasons. Consider "
+#~ "using a custom URL instead. If this option is not relevant for your "
+#~ "installation, please leave it unchecked."
+#~ msgstr ""
+#~ "Spécifie un préfixe, qui est ajouté au nom d'hôte ou à l'adresse de base. "
+#~ "Il s'agit d'une option exotique, conservée pour des raisons d'héritage. "
+#~ "Envisagez plutôt d'utiliser une URL personnalisée. Si cette option n'est "
+#~ "pas pertinente pour votre installation, laissez-la décochée."
+
+#~ msgid "The options IP Address and Host name are deprecated - Werk 14573."
+#~ msgstr "Les options Adresse IP et Nom d'hôte sont obsolètes - Werk 14573."
+
+#~ msgid "Use IP Address of assigned host"
+#~ msgstr "Utiliser l'adresse IP de l'hôte assigné"
+
+#~ msgid "Use IP address of assigned host"
+#~ msgstr "Utiliser l'adresse IP de l'hôte assigné"
+
+#~ msgid "Use host name of assigned host"
+#~ msgstr "Utiliser le nom d'hôte de l'hôte assigné"
+
+#, fuzzy
+#~| msgid ""
+#~| "Here you can define the timerange to query, eg. the last x minutes from "
+#~| "now. The query will then check for the count of log messages in the "
+#~| "defined range. Default is 1 minute."
+#~ msgid ""
+#~ "Here you can define the time range to query, eg. the last x minutes from "
+#~ "now. The query will then check for the count of log messages in the "
+#~ "defined range. Default is 1 minute."
+#~ msgstr ""
+#~ "Ici, vous pouvez définir la plage de temps à interroger, par exemple, les "
+#~ "x dernières minutes à partir de maintenant. La requête vérifiera alors le "
+#~ "nombre de messages de journal dans la plage définie. La valeur par défaut "
+#~ "est de 1 minute."
+
+#~ msgid "Network scan"
+#~ msgstr "Analyse du réseau"
+
+#, fuzzy
+#~| msgid "Site ID"
+#~ msgid "Suite ID"
+#~ msgstr "ID du site"
+
+#~ msgid "You can search indices for defined patterns in defined fieldnames."
+#~ msgstr ""
+#~ "Vous pouvez rechercher dans les index des modèles définis dans des noms "
+#~ "de champs définis."
+
+#~ msgid "log messages"
+#~ msgstr "messages de journal"
+
+#~ msgid "weeks"
+#~ msgstr "semaines"
 
 #~ msgid "Organisations"
 #~ msgstr "Organisations"
@@ -81584,12 +81738,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #~ msgid "Cannot be a certificate chain"
 #~ msgstr "Chaîne de certificats"
 
-#~ msgid "Cloud Functions"
-#~ msgstr "Fonctions du nuage"
-
-#~ msgid "Cloud SQL"
-#~ msgstr "Cloud SQL"
-
 #, python-format
 #~ msgid "Do you really want to delete the selected %s?"
 #~ msgstr "Voulez-vous vraiment supprimer les %s sélectionnés ?"
@@ -81628,25 +81776,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #~ msgstr ""
 #~ "Voulez-vous vraiment réinitialiser cette variable de configuration à sa "
 #~ "valeur par défaut ?"
-
-#~ msgid "Filestore"
-#~ msgstr "Filestore"
-
-#, fuzzy
-#~| msgid "Storage"
-#~ msgid "GCE Storage"
-#~ msgstr "Stockage"
-
-#~ msgid "Google Cloud Storage (GCS)"
-#~ msgstr "Google Cloud Storage (GCS)"
-
-#, fuzzy
-#~| msgid "Load balancers"
-#~ msgid "HTTP(S) load balancer"
-#~ msgstr "Équilibreurs de charge"
-
-#~ msgid "Memorystore Redis"
-#~ msgstr "Memorystore Redis"
 
 #, fuzzy
 #~| msgid "Connect timeout (seconds)"

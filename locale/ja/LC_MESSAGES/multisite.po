@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-02-21 07:00+0000\n"
+"PO-Revision-Date: 2024-04-03 06:00+0000\n"
 "Last-Translator: hiroko toguchi <toguchi@jtc-i.co.jp>\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "software/ja/>\n"
@@ -870,12 +870,6 @@ msgstr "(組み込み)"
 #, python-format
 msgid "(default is %r for %s/TLS)"
 msgstr "(デフォルトは %r for %s/TLS)"
-
-msgid "(deprecated) Host name"
-msgstr "Kube-state-metrics"
-
-msgid "(deprecated) IP Address"
-msgstr "送信元IPアドレス"
 
 msgid "(disabled)"
 msgstr "(無効)"
@@ -1907,13 +1901,6 @@ msgid ""
 msgstr ""
 "<tt>sqlnet.ora</tt> と <tt>tnsnames.ora</tt> %sに使用する<tt>TNS_ADMIN</tt>"
 
-msgid ""
-"<tt>robot.yaml</tt> is the configuration file inside a RCC compatible robot "
-"suite. If the <i>target</i> is a <tt>.robot</tt> file, the file path for "
-"<tt>robot.yaml</tt> is relative to that file. If <i>target</i> is a folder, "
-"the file path for <tt>robot.yaml</tt> is relative to that folder's content."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
 msgstr "<u>注意</u>: ダウンタイムは、サービスにも適用されます。"
@@ -2809,6 +2796,11 @@ msgstr "アイドル接続の絶対数"
 
 msgid "Absolute number of incoming connections"
 msgstr "着信接続の絶対数"
+
+msgid ""
+"Absolute path to the directory of all suites on the Windows host, for "
+"example \"C:\\robot\"."
+msgstr ""
 
 #, fuzzy
 msgid "Absolute used commit charge"
@@ -7899,6 +7891,17 @@ msgstr ""
 "ベスト：プラグインのチェック機能は、個々のノードそれぞれに適用されます。一番"
 "良い結果が、クラスタ化されたサービス全体の状態を決定します。"
 
+#, fuzzy
+msgid "Beta Trial"
+msgstr "シリアル"
+
+#, fuzzy
+msgid "Beta phase: too many services"
+msgstr "全てのホストとサービスを表示"
+
+msgid "BigQuery table ID"
+msgstr ""
+
 msgid "Biggest input buffer"
 msgstr "最大入力バッファ"
 
@@ -10289,10 +10292,6 @@ msgid "Check and display only"
 msgstr "チェックして表示するだけ"
 
 #, fuzzy
-msgid "Check certificate"
-msgstr "CA証明書"
-
-#, fuzzy
 msgid "Check certificate validity"
 msgstr "サイト証明書の有効性"
 
@@ -10506,10 +10505,6 @@ msgstr "タイプを確認する"
 msgid "Check uniserv service"
 msgstr "uniservサービスを確認する"
 
-#, fuzzy
-msgid "Check validity"
-msgstr "Check int."
-
 msgid "Check version of Checkmk agent"
 msgstr "Checkmkエージェントのバージョンを確認する"
 
@@ -10621,6 +10616,10 @@ msgstr "Checkmkの概要"
 
 msgid "Checkmk Overview of Checkmk Server"
 msgstr "CheckmkサーバーのCheckmk概要"
+
+#, fuzzy
+msgid "Checkmk SaaS Beta"
+msgstr "Checkmkエージェント"
 
 msgid "Checkmk Sidebar"
 msgstr "Checkmkサイドバー"
@@ -11582,6 +11581,16 @@ msgstr "クラウド"
 
 msgid "Cloud Based Environments"
 msgstr "クラウドベースの環境"
+
+msgid "Cloud Functions"
+msgstr "クラウド機能"
+
+#, fuzzy
+msgid "Cloud Run"
+msgstr "クラウド"
+
+msgid "Cloud SQL"
+msgstr "Cloud SQL"
 
 msgid "Cloud based environments"
 msgstr "クラウドベースの環境"
@@ -13253,6 +13262,10 @@ msgstr "スプール内の破損したファイル"
 msgid "Cosmic"
 msgstr "コズミック"
 
+#, fuzzy
+msgid "Costs"
+msgstr "ホスト"
+
 msgid "Costs and usage (CE)"
 msgstr "コストと使用量(CE)"
 
@@ -13972,7 +13985,7 @@ msgid "Critical after "
 msgstr "後にクリティカル "
 
 msgid "Critical area"
-msgstr "重要な領域"
+msgstr "クリティカルエリア"
 
 msgid "Critical at"
 msgstr "でクリティカル"
@@ -14283,9 +14296,6 @@ msgstr "カスタムタイムスパン:"
 
 msgid "Custom URL"
 msgstr "カスタムURL"
-
-msgid "Custom URL base prefix"
-msgstr "カスタムURL基本プレフィックス"
 
 msgid "Custom URL prefix"
 msgstr "カスタムURLプレフィックス"
@@ -16110,6 +16120,13 @@ msgstr "デモンストレーション"
 msgid "Deny"
 msgstr "拒否"
 
+msgid ""
+"Depending on how a Robot Framework suite is written, the keywords directly "
+"below the test level are describing the test logic, completely decoupled "
+"from the implementation technology (so-called \"high-level keywords\"). "
+"Enable this option to get a graph for each high-level keyword."
+msgstr ""
+
 #, python-format
 msgid ""
 "Depending on the chosen datasource, a %s can list <i>multiple</i> or "
@@ -16133,7 +16150,7 @@ msgid ""
 "Depending on the libraries used in a suite, building its Python environment "
 "for the very first time can take some minutes. This setting ensures that a "
 "hanging/failing environment creation for a single suite does not block the "
-"scheduling phase of other suites. "
+"scheduling phase of other suites."
 msgstr ""
 
 msgid ""
@@ -17575,10 +17592,6 @@ msgid "Do not check age of never analyzed/vacuumed tables"
 msgstr ""
 "分析/バキュームされたことがないテーブルの経過日数をチェックしないでください"
 
-#, fuzzy
-msgid "Do not check certificate"
-msgstr "SAPルーター証明書"
-
 msgid "Do not check the node"
 msgstr "ノードを確認しない"
 
@@ -18468,6 +18481,16 @@ msgstr ""
 "フォーマンスデータ(RRD)とHW/SWインベントリアーカイブは、ホストの削除中に削除"
 "されることはありません。これらは、このオプションを有効にした場合、および構成"
 "された期間が経過した後にのみ自動的に削除されます。"
+
+#, python-format
+msgid ""
+"During the beta phase, the number of services is limited to %s but you would "
+"have %s services after activating your changes."
+msgstr ""
+
+#, python-format
+msgid "During the beta phase, the number of services is limited to %s."
+msgstr ""
 
 msgid "During this time period no monitoring data is available"
 msgstr "この期間中、監視データは利用できません"
@@ -21756,6 +21779,9 @@ msgstr "ファイラーディスクレベル(NetApp、IBM SVC)"
 msgid "Files"
 msgstr "ファイル"
 
+msgid "Filestore"
+msgstr "ファイルストア"
+
 msgid "Filesystem"
 msgstr "ファイルシステム"
 
@@ -22848,6 +22874,10 @@ msgstr "GCが実行されます"
 msgid "GC runs rate"
 msgstr "GC実行率"
 
+#, fuzzy
+msgid "GCE Storage"
+msgstr "ストレージ"
+
 msgid "GCP Cost"
 msgstr "GCP コスト"
 
@@ -23135,6 +23165,10 @@ msgstr "SFTPサーバーからファイルを取得する"
 msgid "Get header only"
 msgstr ""
 
+#, fuzzy
+msgid "Getting started"
+msgstr "結果の状態"
+
 #, no-python-format
 msgid ""
 "Give FPGA utilization levels in percent. The possible range is from 0% to "
@@ -23239,6 +23273,9 @@ msgstr "Google Cloud Platform (GCP)"
 
 msgid "Google Cloud Platform (GCP) Status"
 msgstr "Google Cloud Platform (GCP)のステータス"
+
+msgid "Google Cloud Storage (GCS)"
+msgstr "Google Cloudストレージ (GCS)"
 
 msgid "Google Compute Engine (GCE)"
 msgstr "Google Compute Engine (GCE)"
@@ -23778,6 +23815,10 @@ msgstr "LDAPバージョン"
 msgid "HTTP web service endpoints to monitor"
 msgstr "監視するGCPサービス"
 
+#, fuzzy
+msgid "HTTP(S) load balancer"
+msgstr "ロードバランサー"
+
 msgid "HTTP, TCP, Email, ..."
 msgstr "HTTP、TCP、Eメール、..。"
 
@@ -24240,6 +24281,11 @@ msgstr ""
 "ここで、RRDファイルの作成がログに記録されるかどうかとその方法を構成できます"
 "(ログファイルvar/log/cmc.logに)"
 
+#, fuzzy
+msgid "Here you can configure whether the SSL certificate should get verified."
+msgstr ""
+"ここで、どのような優先順位でケースを作成するかを定義することができます。"
+
 msgid ""
 "Here you can configure whether the performance counters should get queried. "
 "This can save quite a lot of CPU load on larger systems."
@@ -24401,15 +24447,6 @@ msgid ""
 msgstr ""
 "ここでは、ホストまたはサービスの問題の確認応答が終了した場合のインシデントの"
 "状態を定義できます。"
-
-#, fuzzy
-msgid ""
-"Here you can define the time range to query, eg. the last x minutes from "
-"now. The query will then check for the count of log messages in the defined "
-"range. Default is 1 minute."
-msgstr ""
-"ここで、クエリする時間範囲を定義できます。今から最後のx分。次に、クエリは定義"
-"された範囲内のログメッセージの数をチェックします。デフォルトは1分です。"
 
 msgid ""
 "Here you can define tree configurations for the snapin <i>Virtual Host-"
@@ -24809,9 +24846,10 @@ msgid "Here you can specify the total memory usage levels for clustered hosts."
 msgstr ""
 "ここでは、クラスター化されたホストの合計メモリ使用量レベルを指定できます。"
 
+#, fuzzy
 msgid ""
 "Here you can specify upper levels for the number of infections detected by "
-"the McAfee Gateway Antimalware Engine."
+"Antimalware Engine."
 msgstr ""
 "ここでは、McAfee Gateway Antimalware Engineによって検出された感染数の上位レベ"
 "ルを指定できます。"
@@ -26872,6 +26910,11 @@ msgstr ""
 "状態が変化した場合 または コアが再起動した場合 または 回復した場合（OK/UP）"
 
 msgid ""
+"If tests fail, entire suites can be repeated completely or only individual "
+"tests (incrementally)."
+msgstr ""
+
+msgid ""
 "If that user does not have the permission <i>See all events</i> then this "
 "permission controls whether he/she can see events that are not related to a "
 "host in the monitoring and that do not have been assigned specific contact "
@@ -26955,6 +26998,12 @@ msgstr ""
 "ていないか、そのテキストも一致する場合、このルールで作成されたイベントは自動"
 "的にキャンセルされます(ホスト、アプリケーション、ファシリティ、および一致グ"
 "ループが一致する場合)。"
+
+msgid ""
+"If the same Robot Framework suite is executed several times but with "
+"different parameters, this field is used to differentiate them. (Example: DE "
+"and EN when testing two language versions of a website.)"
+msgstr ""
 
 msgid "If the status is non-OK or a magic factor is set"
 msgstr "ステータスがOKでないか、マジックファクターが設定されている場合"
@@ -28908,6 +28957,17 @@ msgstr "インクリメントサイズ"
 msgid "Incremental"
 msgstr "#インクリメント"
 
+msgid ""
+"Incremental<br>On each iteration, Robotmk will re-execute only the failed "
+"tests. In the end, the best and last result per test will be merged into the "
+"overall state. Choose this mode if the tests within the robot suite do not "
+"depend on each other, but can be executed separately.<br><br>Complete<br>On "
+"each iteration, Robotmk will re-execute always the entire suite. In the end, "
+"the final result is taken from the last or PASSed suite execution. Choose "
+"this mode if the tests within the robot suite are related to each other and "
+"their execution order is also crucial."
+msgstr ""
+
 msgid "Index"
 msgstr "インデックス"
 
@@ -29415,7 +29475,7 @@ msgstr ""
 "%s"
 
 #, fuzzy
-msgid "Internal suite_id"
+msgid "Internal rmk_id"
 msgstr "内部ユーザー"
 
 msgid "Internal user"
@@ -32271,10 +32331,6 @@ msgstr "ロードバランサーのターゲットグループ"
 msgid "Load balancers target groups"
 msgstr "ロードバランサーのターゲットグループ"
 
-#, fuzzy
-msgid "Load environment variables from file"
-msgstr "ホストからの環境変数を使用する"
-
 msgid "Load in a new window / tab"
 msgstr "新しいウィンドウ/タブにロード"
 
@@ -34570,12 +34626,6 @@ msgstr "マカフィーアンチウイルス時間設定"
 msgid "McAfee email gateway bridge"
 msgstr "McAfeeメールゲートウェイブリッジ"
 
-msgid "McAfee web gateway miscellaneous"
-msgstr "マカフィーウェブゲートウェイミスク"
-
-msgid "McAfee web gateway statistics"
-msgstr "McAfee Webゲートウェイ統計"
-
 #, python-format
 msgid "Mean %s"
 msgstr "平均 %s"
@@ -34850,6 +34900,9 @@ msgstr "メモリ使用率: クラスター"
 
 msgid "Memory warning at"
 msgstr "メモリに関する警告"
+
+msgid "Memorystore Redis"
+msgstr "メモリストア Redis"
 
 msgid "Merge even if there is an acknowledged event"
 msgstr "確認済みのイベントがある場合でもマージ"
@@ -36380,6 +36433,11 @@ msgstr "VMの名前"
 msgid "Name of the VM/HostSystem"
 msgstr "VM/HostSystemの名前"
 
+msgid ""
+"Name of the application to be tested here. This name can be chosen "
+"arbitrarily and be used multiple times."
+msgstr ""
+
 msgid "Name of the band, e.g. 5 GHz"
 msgstr "バンドの名前(例:5 GHz)"
 
@@ -36742,9 +36800,6 @@ msgstr "ネットワーク監視"
 
 msgid "Network out"
 msgstr "ネットワーク out"
-
-msgid "Network scan"
-msgstr "ネットワークスキャン"
 
 msgid "Network specification"
 msgstr "ネットワーク仕様"
@@ -40803,6 +40858,16 @@ msgstr "一時ディレクトリへのパス(作成されます)"
 msgid "Path to test suite"
 msgstr ".envファイルへのパス"
 
+msgid ""
+"Path to the Robot Framework suite folder or directly to a specific `.robot` "
+"file, relative to the base directory."
+msgstr ""
+
+msgid ""
+"Path to the `robot.yaml` configuration file inside a RCC compatible robot "
+"suite, relative to the base directory."
+msgstr ""
+
 msgid "Path to unix socket"
 msgstr "unixソケットへのパス"
 
@@ -42958,9 +43023,6 @@ msgstr ""
 "情報を取得するためのPrometheus スクレープターゲット(Prometheus Exportersを含"
 "む)"
 
-msgid "Prometheus connection option"
-msgstr "Prometheus接続オプション"
-
 msgid "Prometheus custom service"
 msgstr "プロメテウスカスタムサービス"
 
@@ -43446,17 +43508,15 @@ msgstr "使用されるRAM"
 msgid "RAM used (averaged)"
 msgstr "平均的なexeファイルを読む"
 
-msgid ""
-"RCC compatible suites can be started with <a href=\"https://robocorp.com/"
-"docs/development-guide/variables-and-secrets/configuring-robots-using-"
-"environment-variables#setting-environment-variables-locally-in-your-robot"
-"\">custom local environment variables</a>. This setting allows the setting "
-"of a JSON path to a variable file relative to the robot base directory."
-msgstr ""
-
 #, fuzzy
 msgid "RCC profile configuration"
 msgstr "リモート設定"
+
+#, fuzzy, python-format
+msgid ""
+"RCC profile configuration (%s because Robotmk Core MKP has been installed)"
+msgstr ""
+"分離実行にはRCCを使用（Robotmk Core MKPがインストールされているので%s）"
 
 msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
@@ -43496,6 +43556,9 @@ msgstr "リライト"
 
 msgid "RMAN Backups"
 msgstr "RMANバックアップ"
+
+msgid "RMK ID"
+msgstr ""
 
 msgid "RMON packets per second"
 msgstr "1秒あたりのRMONパケット"
@@ -45777,11 +45840,11 @@ msgid "Robotmk logs"
 msgstr "RobotMKのログ"
 
 #, fuzzy
-msgid "Robotmk suite status"
+msgid "Robotmk suite"
 msgstr "サイトステータス"
 
 #, fuzzy
-msgid "Robotmk tests"
+msgid "Robotmk test"
 msgstr "Robotmk"
 
 msgid "Role"
@@ -50579,15 +50642,6 @@ msgid "Specific version"
 msgstr "特定のバージョン"
 
 msgid ""
-"Specifies a URL path prefix, which is prepended to API calls to the "
-"Prometheus API. If this option is not relevant for your installation, please "
-"leave it unchecked."
-msgstr ""
-"Prometheus APIへのAPI呼び出しの前に付加されるURLパスプレフィックスを指定しま"
-"す。このオプションがインストールに関係しない場合は、オフのままにしてくださ"
-"い。"
-
-msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
 "This is e.g. useful if you use the ip address or the hostname as base "
 "address but require some additional prefix to make the correct API call. Use "
@@ -50598,17 +50652,6 @@ msgstr ""
 "API呼び出しを行うために追加のプレフィックスが必要な場合に役立ちます。より複雑"
 "なAPI URLを指定する必要がある場合は、カスタムURLオプションを使用してくださ"
 "い。"
-
-msgid ""
-"Specifies a prefix, which is prepended to the hostname or base address. This "
-"is an exotic option, which is kept for legacy reasons. Consider using a "
-"custom URL instead. If this option is not relevant for your installation, "
-"please leave it unchecked."
-msgstr ""
-"ホスト名またはベースアドレスの前に付加するプレフィックスを指定します。これは"
-"エキゾチックなオプションで、レガシーな理由のために残されています。代わりにカ"
-"スタム URL を使用することを検討してください。このオプションがインストールに関"
-"係ない場合は、チェックを外したままにしてください。"
 
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
@@ -50641,6 +50684,13 @@ msgstr ""
 msgid "Specifies the default line style"
 msgstr "デフォルトの線種を指定します"
 
+msgid ""
+"Specifies the maximum time that the scheduler allows for a robot framework "
+"execution. This time, multiplied by the number of repeated executions, may "
+"not be greater in total with all other suites in this group than the group "
+"execution interval."
+msgstr ""
+
 msgid "Specifies whether password authentication is allowed"
 msgstr "パスワード認証を許可するかどうかを指定します"
 
@@ -50659,6 +50709,13 @@ msgstr "RPMパッケージタグの指定(Linux)"
 
 msgid "Specify URL prefix"
 msgstr "URLプレフィックスを指定します"
+
+#, fuzzy
+msgid "Specify a URL to connect to your server. Do not include the protocol."
+msgstr ""
+"サーバーに接続するためのカスタムURLを指定します。プロトコルを含めないでくださ"
+"い。このオプションは、ポートやその他のURLプレフィックスなどの使用可能なすべて"
+"のオプションを上書きします。"
 
 msgid ""
 "Specify a custom URL to connect to your server. Do not include the protocol. "
@@ -50790,9 +50847,10 @@ msgstr ""
 "動的にソートされます。"
 
 msgid ""
-"Specify here whether Robotmk's working directory on the target host should "
-"be cleaned up either after a certain time or after a certain number of test "
-"executions."
+"Specify here whether the working directory of Robotmk (by default under `C:"
+"\\ProgramData\\checkmk\\agent\\robotmk_output\\working\\suites\\`) on the "
+"target host should be cleaned up either after a certain time or after a "
+"certain number of test executions."
 msgstr ""
 
 #, python-format
@@ -52764,13 +52822,6 @@ msgstr "サフィックスを追加する"
 
 msgid "Suggested tutorial videos"
 msgstr "推奨されるチュートリアルビデオ"
-
-msgid "Suite"
-msgstr "スイート"
-
-#, fuzzy
-msgid "Suite ID"
-msgstr "サイトID"
 
 #, fuzzy
 msgid "Suite runtime"
@@ -55930,6 +55981,13 @@ msgstr ""
 "なります。 db2wps8:WPSCOMT8.USERSPACE1"
 
 msgid ""
+"The interval at which an execution group is executed. The execution interval "
+"of the group must be greater than the sum of the maximum runtimes of all "
+"suites in the group. The maximum runtime of a suite is calculated as "
+"follows: `\"environment_setup_timeout\" x (1 + \"max_reexecutions\")`"
+msgstr ""
+
+msgid ""
 "The interval the connection will be executed to check the available "
 "piggyback and update the configuration."
 msgstr ""
@@ -56756,9 +56814,6 @@ msgstr ""
 "カスタムコマンドを使用するオプションは、\"実行可能ファイルを追加または変更で"
 "きます\"という権限でのみ構成できます。"
 
-msgid "The options IP Address and Host name are deprecated - Werk 14573."
-msgstr "IP AddressとHost nameのオプションは非推奨です - Werk 14573。"
-
 msgid "The organisation ID"
 msgstr "組織のID"
 
@@ -56847,6 +56902,10 @@ msgstr ""
 "れは通常、監視プロセスがリモートシステムで認証するためにパスワードを送信する"
 "必要があるため、暗号化されていないパスワードにアクセスする必要があるために必"
 "要です。"
+
+#, fuzzy
+msgid "The password of the user."
+msgstr "ユーザーのパスワード"
 
 msgid "The password or API key of the user."
 msgstr "ユーザーのパスワードまたはAPIキー。"
@@ -57939,6 +57998,10 @@ msgstr ""
 msgid "The username that should be used for accessing the Jira API."
 msgstr "Jira APIへのアクセスに使用する必要があるユーザー名。"
 
+#, fuzzy
+msgid "The username that should be used for accessing the NetApp API."
+msgstr "Jira APIへのアクセスに使用する必要があるユーザー名。"
+
 msgid "The username that should be used for accessing the RabbitMQ API."
 msgstr "RabbitMQ APIへのアクセスに使用する必要のあるユーザー名。"
 
@@ -58367,10 +58430,8 @@ msgstr "これらのノードは、凍結されたアグリゲーションにの
 
 msgid ""
 "These options allow specifying the most common command line parameters for "
-"the Robot Framework.In order to use other parameters (see <a href=\"https://"
-"robotframework.org/robotframework/latest/RobotFrameworkUserGuide.html#all-"
-"command-line-options\">All command line options</a>), you can use the option "
-"<i>Arguments file</i>."
+"the Robot Framework. In order to use other parameters, you can use the "
+"option \"Arguments file\""
 msgstr ""
 
 msgid ""
@@ -65910,6 +65971,9 @@ msgstr "試用期間終了： 分散セットアップ不可"
 msgid "Trial period ended: Reduce your number of services"
 msgstr "試用期間終了： サービスの数を減らしてください"
 
+msgid "Trial time is undefined during the beta phase"
+msgstr ""
+
 #, python-format
 msgid "Tried to register incompatible rulespec: %r"
 msgstr "互換性のないrulespecを登録しようとしました: %r"
@@ -66212,6 +66276,10 @@ msgstr "URLプレフィックス"
 
 msgid "URL prefix for links to Checkmk"
 msgstr "CheckmkへのリンクのURLプレフィックス"
+
+#, fuzzy
+msgid "URL server address"
+msgstr "カスタムURLサーバーアドレス"
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
 msgstr "HiveManagerNGへのURL(例: https://cloud.aerohive.com)"
@@ -66833,6 +66901,10 @@ msgstr "今月末まで"
 
 msgid "Until end of year"
 msgstr "年末まで"
+
+#, fuzzy
+msgid "Until you reduce the number of services, 'Activate changes' is blocked."
+msgstr "ライセンスの有効期限切れ：「 変更を有効にする」がブロックされています"
 
 msgid "Untitled setting"
 msgstr "無題の設定"
@@ -67772,12 +67844,6 @@ msgstr "SSL/HTTPSを使用する"
 msgid "Use Hard States"
 msgstr "ハードステートを使用する"
 
-msgid "Use IP Address of assigned host"
-msgstr "割り当てられたホストの IP アドレスを使用"
-
-msgid "Use IP address of assigned host"
-msgstr "割り当てられたホストの IP アドレスを使用"
-
 msgid "Use IPMItool"
 msgstr "IPMItoolを使用する"
 
@@ -68001,9 +68067,6 @@ msgstr "グラフタイトルを使用する"
 
 msgid "Use host address"
 msgstr "ホストアドレスを使用する"
-
-msgid "Use host name of assigned host"
-msgstr "割り当てられたホストのホスト名を使用"
 
 msgid "Use hostname"
 msgstr "ホスト名を使用する"
@@ -70076,6 +70139,10 @@ msgstr "Webサーバー(IIS)"
 msgid "Web Services"
 msgstr "ウェブサービス"
 
+#, fuzzy
+msgid "Web gateway miscellaneous"
+msgstr "マカフィーウェブゲートウェイミスク"
+
 msgid "Web gateway miscellaneous statistics"
 msgstr "Webゲートウェイのその他の統計"
 
@@ -71336,8 +71403,8 @@ msgstr ""
 "されているのは、インシデント管理とケース管理です。"
 
 msgid ""
-"With the help of the <a href=https://github.com/robocorp/rcc>rcc binary</a>, "
-"the robotmk scheduler can generate the Python environments required for the "
+"With the help of the [rcc](https://github.com/robocorp/rcc) binary, the "
+"robotmk scheduler can generate the Python environments required for the "
 "execution of Robot Framework suites. This eliminates the need to install and "
 "configure Python and all of its library packages on the target hosts. RCC "
 "environments are only built when the scheduler is started."
@@ -72560,10 +72627,6 @@ msgstr ""
 "現在のアクティベーションに対してオプションのコメントを提供できます。これは、"
 "アクティブ化した変更が行われた理由を文書化するのに役立ちます。"
 
-msgid "You can search indices for defined patterns in defined fieldnames."
-msgstr ""
-"定義されたフィールド名で定義されたパターンのインデックスを検索できます。"
-
 #, python-format
 msgid ""
 "You can select either from the shipped images or upload your own images. "
@@ -73022,6 +73085,11 @@ msgstr "自分のアカウントを削除することはできません！"
 
 msgid "You cannot do replication with the local site."
 msgstr "ローカルサイトでレプリケーションを行うことはできません。"
+
+#, fuzzy
+msgid ""
+"You cannot do this renaming since the following host names would be invalid:"
+msgstr "次のホスト名が衝突するため、この名前変更を行うことはできません。"
 
 msgid ""
 "You cannot do this renaming since the following host names would collide:"
@@ -74952,9 +75020,6 @@ msgstr "ロック待機/秒"
 msgid "log file %s on all hosts"
 msgstr "すべてのホストのログファイル %s"
 
-msgid "log messages"
-msgstr "ログメッセージ"
-
 msgid "log switches / hour"
 msgstr "ログスイッチ/時間"
 
@@ -75946,9 +76011,6 @@ msgstr "週"
 msgid "weekly"
 msgstr "毎週"
 
-msgid "weeks"
-msgstr "数週間"
-
 msgid "width"
 msgstr "幅"
 
@@ -76009,6 +76071,108 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "McAfee web gateway statistics"
+#~ msgstr "McAfee Webゲートウェイ統計"
+
+#, fuzzy
+#~| msgid "CA certificate"
+#~ msgid "Check certificate"
+#~ msgstr "CA証明書"
+
+#, fuzzy
+#~| msgid "Check int."
+#~ msgid "Check validity"
+#~ msgstr "Check int."
+
+#, fuzzy
+#~| msgid "SAP router certificate"
+#~ msgid "Do not check certificate"
+#~ msgstr "SAPルーター証明書"
+
+#, fuzzy
+#~| msgid "Use environment variables from host"
+#~ msgid "Load environment variables from file"
+#~ msgstr "ホストからの環境変数を使用する"
+
+#~ msgid "Suite"
+#~ msgstr "スイート"
+
+#~ msgid "(deprecated) Host name"
+#~ msgstr "Kube-state-metrics"
+
+#~ msgid "(deprecated) IP Address"
+#~ msgstr "送信元IPアドレス"
+
+#~ msgid "Custom URL base prefix"
+#~ msgstr "カスタムURL基本プレフィックス"
+
+#~ msgid "Prometheus connection option"
+#~ msgstr "Prometheus接続オプション"
+
+#~ msgid ""
+#~ "Specifies a URL path prefix, which is prepended to API calls to the "
+#~ "Prometheus API. If this option is not relevant for your installation, "
+#~ "please leave it unchecked."
+#~ msgstr ""
+#~ "Prometheus APIへのAPI呼び出しの前に付加されるURLパスプレフィックスを指定し"
+#~ "ます。このオプションがインストールに関係しない場合は、オフのままにしてくだ"
+#~ "さい。"
+
+#~ msgid ""
+#~ "Specifies a prefix, which is prepended to the hostname or base address. "
+#~ "This is an exotic option, which is kept for legacy reasons. Consider "
+#~ "using a custom URL instead. If this option is not relevant for your "
+#~ "installation, please leave it unchecked."
+#~ msgstr ""
+#~ "ホスト名またはベースアドレスの前に付加するプレフィックスを指定します。これ"
+#~ "はエキゾチックなオプションで、レガシーな理由のために残されています。代わり"
+#~ "にカスタム URL を使用することを検討してください。このオプションがインス"
+#~ "トールに関係ない場合は、チェックを外したままにしてください。"
+
+#~ msgid "The options IP Address and Host name are deprecated - Werk 14573."
+#~ msgstr "IP AddressとHost nameのオプションは非推奨です - Werk 14573。"
+
+#~ msgid "Use IP Address of assigned host"
+#~ msgstr "割り当てられたホストの IP アドレスを使用"
+
+#~ msgid "Use IP address of assigned host"
+#~ msgstr "割り当てられたホストの IP アドレスを使用"
+
+#~ msgid "Use host name of assigned host"
+#~ msgstr "割り当てられたホストのホスト名を使用"
+
+#, fuzzy
+#~| msgid ""
+#~| "Here you can define the timerange to query, eg. the last x minutes from "
+#~| "now. The query will then check for the count of log messages in the "
+#~| "defined range. Default is 1 minute."
+#~ msgid ""
+#~ "Here you can define the time range to query, eg. the last x minutes from "
+#~ "now. The query will then check for the count of log messages in the "
+#~ "defined range. Default is 1 minute."
+#~ msgstr ""
+#~ "ここで、クエリする時間範囲を定義できます。今から最後のx分。次に、クエリは"
+#~ "定義された範囲内のログメッセージの数をチェックします。デフォルトは1分で"
+#~ "す。"
+
+#~ msgid "Network scan"
+#~ msgstr "ネットワークスキャン"
+
+#, fuzzy
+#~| msgid "Site ID"
+#~ msgid "Suite ID"
+#~ msgstr "サイトID"
+
+#~ msgid "You can search indices for defined patterns in defined fieldnames."
+#~ msgstr ""
+#~ "定義されたフィールド名で定義されたパターンのインデックスを検索できます。"
+
+#~ msgid "log messages"
+#~ msgstr "ログメッセージ"
+
+#~ msgid "weeks"
+#~ msgstr "数週間"
 
 #~ msgid "Organisations"
 #~ msgstr "組織"
@@ -78533,12 +78697,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ msgid "Cannot be a certificate chain"
 #~ msgstr "証明書チェーン"
 
-#~ msgid "Cloud Functions"
-#~ msgstr "クラウド機能"
-
-#~ msgid "Cloud SQL"
-#~ msgstr "Cloud SQL"
-
 #, python-format
 #~ msgid "Do you really want to delete the selected %s?"
 #~ msgstr "選択した %sを本当に削除しますか？"
@@ -78573,25 +78731,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ "Do you really want to reset this configuration variable back to its "
 #~ "default value?"
 #~ msgstr "この構成変数をデフォルト値にリセットしますか?"
-
-#~ msgid "Filestore"
-#~ msgstr "ファイルストア"
-
-#, fuzzy
-#~| msgid "Storage"
-#~ msgid "GCE Storage"
-#~ msgstr "ストレージ"
-
-#~ msgid "Google Cloud Storage (GCS)"
-#~ msgstr "Google Cloudストレージ (GCS)"
-
-#, fuzzy
-#~| msgid "Load balancers"
-#~ msgid "HTTP(S) load balancer"
-#~ msgstr "ロードバランサー"
-
-#~ msgid "Memorystore Redis"
-#~ msgstr "メモリストア Redis"
 
 #, fuzzy
 #~| msgid "Connect timeout (seconds)"

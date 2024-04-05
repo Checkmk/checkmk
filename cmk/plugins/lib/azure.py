@@ -76,8 +76,22 @@ Section = Mapping[str, Resource]
 
 
 def parse_azure_datetime(datetime_string: str) -> datetime:
-    datetime_string = datetime_string.strip("Z").split(".")[0]
-    return datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%S")
+    """Return the datetime object from the parsed string.
+
+    >>> parse_azure_datetime("2022-02-02T12:00:00.000Z")
+    datetime.datetime(2022, 2, 2, 12, 0)
+
+    >>> parse_azure_datetime("2022-02-02T12:00:00.000")
+    datetime.datetime(2022, 2, 2, 12, 0)
+
+    >>> parse_azure_datetime("2022-02-02T12:00:00.123")
+    datetime.datetime(2022, 2, 2, 12, 0)
+
+    >>> parse_azure_datetime("2022-02-02T12:00:00")
+    datetime.datetime(2022, 2, 2, 12, 0)
+
+    """
+    return datetime.fromisoformat(datetime_string).replace(microsecond=0, tzinfo=None)
 
 
 #   .--Parse---------------------------------------------------------------.

@@ -6,9 +6,12 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator, ValidationError
 
 from cmk.utils.dateutils import weekday_ids
+from cmk.utils.i18n import _
+
+from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
 
 ALIASES = list[str]
 TIME_RANGE = tuple[str, str]
@@ -105,4 +108,7 @@ def validate_timeperiods(timeperiods: dict[str, Any]) -> None:
 
 
 def validate_timeperiod(name: str, timeperiod: dict) -> None:
-    TimePeriod(name=name, **timeperiod)
+    try:
+        TimePeriod(name=name, **timeperiod)
+    except ValidationError as exc:
+        raise MKConfigError(_("Error: passwords.mk validation %s") % exc.errors())

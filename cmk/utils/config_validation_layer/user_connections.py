@@ -5,10 +5,13 @@
 
 from typing import Literal, NewType, Sequence
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from typing_extensions import TypedDict
 
 from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
+from cmk.utils.i18n import _
+
+from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
 
 # these need to be written to a .mk file, so a more complex type like Path will lead to problems
 PrivateKeyPath = NewType("PrivateKeyPath", str)
@@ -186,7 +189,10 @@ class SAMLConnectionModel(BaseModel):
 
 def validate_user_connections(connections: list) -> None:
     for connection in connections:
-        if connection["type"] == "ldap":
-            LDAPConnectionModel(**connection)
-        elif connection["type"] == "saml2":
-            SAMLConnectionModel(**connection)
+        try:
+            if connection["type"] == "ldap":
+                LDAPConnectionModel(**connection)
+            elif connection["type"] == "saml2":
+                SAMLConnectionModel(**connection)
+        except ValidationError as exc:
+            raise MKConfigError(_("Error: user_connections.mk validation %s") % exc.errors())

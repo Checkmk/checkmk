@@ -9,7 +9,11 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal, NewType
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, model_validator, ValidationError
+
+from cmk.utils.i18n import _
+
+from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
 
 
 class BuiltInUserRoleValues(Enum):
@@ -64,5 +68,8 @@ class UserRoles(BaseModel):
         return {RoleID(k): getattr(self, k) for k in self.model_dump()}
 
 
-def validate_userroles(userroles: dict) -> UserRolesMap:
-    return UserRoles(**userroles).get_user_role_map()
+def validate_userroles(userroles: dict) -> None:
+    try:
+        UserRoles(**userroles).get_user_role_map()
+    except ValidationError as exc:
+        raise MKConfigError(_("Error: roles.mk validation %s") % exc.errors())

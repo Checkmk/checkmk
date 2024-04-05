@@ -79,7 +79,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
     }
 
     override update_gui() {
-        if (!this._data || this._data.total.count == 0) return;
+        if (!this._data) return;
 
         this.resize();
         const parts = this._data.parts;
@@ -131,9 +131,10 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
             .attr("class", d => "hexagon " + d.css_class);
 
         // render table
+        const total_parts = parts.length > 0 ? parts.concat(this._data.total) : [];
         const table = this._table_div
             .selectAll("table")
-            .data([parts.concat(this._data.total)])
+            .data([total_parts])
             .join("table");
         const rows = table
             .selectAll("tr")

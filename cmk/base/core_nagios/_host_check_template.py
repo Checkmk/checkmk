@@ -5,9 +5,21 @@
 
 
 import sys
+from importlib import import_module
 
-# we need to import these here, before we can define HostCheckConfig!
+import cmk.utils.debug
+import cmk.utils.log
+from cmk.utils.config_path import LATEST_CONFIG
+from cmk.utils.exceptions import MKTerminate
 from cmk.utils.hostaddress import HostAddress, HostName
+
+from cmk.checkengine.submitters import get_submitter
+
+import cmk.base.check_api as check_api
+import cmk.base.config as config
+import cmk.base.obsolete_output as out
+import cmk.base.utils
+from cmk.base.api.agent_based.register import register_plugin_by_type
 
 from cmk.discover_plugins import PluginLocation
 
@@ -45,21 +57,6 @@ def main() -> int:
             os.remove(CONFIG.dst)
             py_compile.compile(CONFIG.src, CONFIG.dst, CONFIG.dst, True)
             os.chmod(CONFIG.dst, 0o700)
-
-    from importlib import import_module
-
-    import cmk.utils.debug
-    import cmk.utils.log
-    from cmk.utils.config_path import LATEST_CONFIG
-    from cmk.utils.exceptions import MKTerminate
-
-    from cmk.checkengine.submitters import get_submitter
-
-    import cmk.base.check_api as check_api
-    import cmk.base.config as config
-    import cmk.base.obsolete_output as out
-    import cmk.base.utils
-    from cmk.base.api.agent_based.register import register_plugin_by_type
 
     for location in CONFIG.locations:
         module = import_module(location.module)

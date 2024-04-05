@@ -103,6 +103,8 @@ docker run -a stdout -a stderr \
     ${REFERENCE_CLONE_MOUNT} \
     ${DOCKER_CONF_JENKINS_MOUNT} \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
+    -v "/etc/passwd:/etc/passwd:ro" \
+    -v "/etc/group:/etc/group:ro" \
     --group-add="$(getent group docker | cut -d: -f3)" \
     -w "${PWD}" \
     -e BANDIT_OUTPUT_ARGS \

@@ -93,6 +93,7 @@ def main() {
                         def docker_build_args = (""
                             + " --build-context scripts=buildscripts/infrastructure/build-nodes/scripts"
                             + " --build-context omd_distros=omd/distros"
+                            + " --build-context dev_images=defines/dev-images"
 
                             + " --build-arg DISTRO_IMAGE_BASE='${distro_base_image_id[distro]}'"
                             + " --build-arg DISTRO_MK_FILE='${distro_mk_file_name}'"

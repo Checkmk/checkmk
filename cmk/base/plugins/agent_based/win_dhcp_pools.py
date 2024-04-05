@@ -230,7 +230,7 @@ def check_win_dhcp_pools_stats(section: Section) -> CheckResult:
                 yield from check_levels(
                     get_rate(value_store, key, this_time, value),
                     metric_name=key,
-                    render_func=lambda f: "{int(f)}/s",
+                    render_func=lambda f: f"{f:.0f}/s",
                     label=key,
                 )
 

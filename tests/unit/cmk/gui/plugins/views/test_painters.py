@@ -1775,6 +1775,36 @@ def _painter_name_spec(painter_ident):
         return painter_ident, {"uuid": "e13957f5-1b0b-43a7-a452-3bff7187542e"}
     if painter_ident == "svc_metrics_forecast":
         return painter_ident, {"uuid": "3c659189-29f3-411a-8456-6a07fdae4d51"}
+    if painter_ident == "sla_fixed":
+        return painter_ident, {
+            "layout_options": {"full_title": False, "hide_subresults": False, "summary": "off"},
+            "sla_config": (
+                "sla_configuration_1",
+                {
+                    "service_outage_count_painter": {"display_type": "timespan"},
+                    "service_state_percentage_painter": {
+                        "display_type": "timespan",
+                        "float_precision": 0,
+                    },
+                },
+            ),
+            "timerange_spec": "m1",
+        }
+    if painter_ident == "sla_specific":
+        return painter_ident, {
+            "layout_options": {"full_title": False, "hide_subresults": False, "summary": "off"},
+            "sla_config": (
+                "sla_configuration_1",
+                {
+                    "service_outage_count_painter": {"display_type": "timespan"},
+                    "service_state_percentage_painter": {
+                        "display_type": "timespan",
+                        "float_precision": 0,
+                    },
+                },
+            ),
+            "timerange_spec": "m1",
+        }
     return painter_ident, {}
 
 

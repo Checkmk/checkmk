@@ -372,7 +372,7 @@ class ABCNotificationsMode(ABCEventsMode):
 
                 table.cell(_("Type"), css=["narrow"])
                 if notify_method[1] is None:
-                    html.icon("cross_bg_white", _("Cancel notifications for this plugin type"))
+                    html.icon("cross_bg_white", _("Cancel notifications for this plug-in type"))
                 else:
                     html.icon("checkmark", _("Create a notification"))
 
@@ -469,7 +469,7 @@ class ABCNotificationsMode(ABCEventsMode):
         return infos
 
     def _actions_allowed(self, rule):
-        # In case a notification plugin does not exist anymore the permission is completely missing.
+        # In case a notification plug-in does not exist anymore the permission is completely missing.
         permission_name = "notification_plugin.%s" % rule["notify_plugin"][0]
         return permission_name not in permissions.permission_registry or user.may(permission_name)
 
@@ -2176,7 +2176,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     varprefix + "_p_notify_plugin",
                     _(
                         "Legacy ASCII Emails do not support bulking. You can either disable notification "
-                        "bulking or choose another notification plugin which allows bulking."
+                        "bulking or choose another notification plug-in which allows bulking."
                     ),
                 )
 

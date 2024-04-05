@@ -59,7 +59,7 @@ def load_plugins() -> None:
     for cmd_spec in multisite_commands:
         register_legacy_command(cmd_spec)
 
-    # Needs to be executed after all plugins (built-in and local) are loaded
+    # Needs to be executed after all plug-ins (built-in and local) are loaded
     register_table_views_and_columns()
 
     # TODO: Kept for compatibility with pre 1.6 plugins
@@ -91,15 +91,15 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
 
     This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our built-in plugin have been changed to directly import from the .utils module. We add these old
-    names to remain compatible with 3rd party plugins for now.
+    Our built-in plug-in have been changed to directly import from the .utils module. We add these old
+    names to remain compatible with 3rd party plug-ins for now.
 
-    In the moment we define an official plugin API, we can drop this and require all plugins to
+    In the moment we define an official plug-in API, we can drop this and require all plug-ins to
     switch to the new API. Until then let's not bother the users with it.
 
     CMK-12228
     """
-    # Needs to be a local import to not influence the regular plugin loading order
+    # Needs to be a local import to not influence the regular plug-in loading order
     import cmk.gui.data_source as data_source
     import cmk.gui.exporter as exporter
     import cmk.gui.painter.v0.base as painter_base

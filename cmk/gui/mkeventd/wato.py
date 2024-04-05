@@ -4792,7 +4792,7 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
                 "event console. <b>Note</b>: you still need to create a rule "
                 "matching those messages in order to have events created. <b>Note (2)</b>: "
                 "If you are using the Checkmk Micro Core then this setting is deprecated. "
-                "Please use the notification plugin <i>Forward Notification to Event Console</i> instead."
+                "Please use the notification plug-in <i>Forward Notification to Event Console</i> instead."
             ),
         )
 

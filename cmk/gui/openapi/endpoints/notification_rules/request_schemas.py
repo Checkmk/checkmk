@@ -760,7 +760,7 @@ class PluginName(BaseSchema):
     plugin_name = fields.String(
         enum=list(get_args(BuiltInPluginNames)),
         required=True,
-        description="The plugin name.",
+        description="The plug-in name.",
         example="mail",
     )
 
@@ -1008,7 +1008,7 @@ class GraphsPerNotificationOneOfSchema(CheckboxOneOfSchema):
 class BulkNotificationsWithGraphs(Checkbox):
     value = fields.Integer(
         required=True,
-        description="Sets a limit for the number of notifications in a bulk for which graphs are displayed. If you do not use bulk notifications this option is ignored. Note that each graph increases the size of the mail and takes time to renderon the monitoring server. Therefore, large bulks may exceed the maximum size for attachements or the plugin may run into a timeout so that a failed notification is produced",
+        description="Sets a limit for the number of notifications in a bulk for which graphs are displayed. If you do not use bulk notifications this option is ignored. Note that each graph increases the size of the mail and takes time to renderon the monitoring server. Therefore, large bulks may exceed the maximum size for attachements or the plug-in may run into a timeout so that a failed notification is produced",
         example=5,
     )
 
@@ -2018,7 +2018,7 @@ class PluginSelector(OneOfSchema):
 class PluginNameBuiltInOrCustom(BaseSchema):
     plugin_name = fields.String(
         required=True,
-        description="The plugin name.",
+        description="The plug-in name.",
         example="mail",
     )
 
@@ -2061,7 +2061,7 @@ class NonRegisteredCustomPlugin(BaseSchema):
 class CustomPlugin(BaseSchema):
     plugin_name = fields.String(
         required=True,
-        description="The custom plugin name",
+        description="The custom plug-in name",
         example="mail",
     )
 

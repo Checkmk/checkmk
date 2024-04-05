@@ -521,7 +521,7 @@ class LDAPSyncPluginAttrubuteSelector(LDAPCheckboxSelector):
 
 class LDAPSyncPluginNestedOtherConnectionsRequest(LDAPCheckboxEnabledRequest):
     handle_nested = fields.Boolean(
-        description="Once you enable this option, this plugin will not only handle direct group"
+        description="Once you enable this option, this plug-in will not only handle direct group"
         " memberships, instead it will also dig into nested groups and treat the members of those"
         " groups as contact group members as well. Please mind that this feature might increase "
         "the execution time of your LDAP sync.",
@@ -712,7 +712,7 @@ class LDAPSyncPluginsRequest(BaseSchema):
     )
     authentication_expiration = fields.Nested(
         LDAPSyncPluginAttrubuteSelector,
-        description="This plugin when enabled fetches all information which is needed to check whether "
+        description="This plug-in when enabled fetches all information which is needed to check whether "
         "or not an already authenticated user should be deauthenticated, e.g. because the password has "
         "changed in LDAP or the account has been locked.",
         load_default={"state": "disabled"},
@@ -745,7 +745,7 @@ class LDAPSyncPluginsRequest(BaseSchema):
     )
     pager = fields.Nested(
         LDAPSyncPluginAttrubuteSelector,
-        description="When enabled, this plugin synchronizes a field of the users LDAP account to the pager"
+        description="When enabled, this plug-in synchronizes a field of the users LDAP account to the pager"
         " attribute of the Setup user accounts, which is then forwarded to the monitoring core and can be"
         " used for notifications. By default the LDAP attribute mobile is used.",
         load_default={"state": "disabled"},
@@ -788,14 +788,14 @@ class LDAPSyncPluginsRequest(BaseSchema):
     )
     contact_group_membership = fields.Nested(
         LDAPSyncPluginGroupsToContactGroupsSelector,
-        description="This plugin allows you to synchronize group memberships of the LDAP user account into"
+        description="This plug-in allows you to synchronize group memberships of the LDAP user account into"
         " the contact groups of the Checkmk user account. This allows you to use the group based permissions"
         " of your LDAP directory in Checkmk.",
         load_default={"state": "disabled"},
     )
     groups_to_custom_user_attributes = fields.Nested(
         LDAPSyncPluginGroupsToAttributesSelector,
-        description="This plugin allows you to synchronize group memberships of the LDAP user account into "
+        description="This plug-in allows you to synchronize group memberships of the LDAP user account into "
         "the custom attributes of the Checkmk user account. This allows you to use the group based permissions"
         " of your LDAP directory in Checkmk.",
         load_default={"state": "disabled"},
@@ -931,7 +931,7 @@ class LDAPConnectionConfigRequest(BaseSchema):
     )
     sync_plugins = fields.Nested(
         ldap_sync_plugins_request_schema(),
-        description="The LDAP sync plugins configuration",
+        description="The LDAP sync plug-ins configuration",
         example={},
         load_default={},
     )

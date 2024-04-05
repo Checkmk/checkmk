@@ -75,7 +75,7 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
                     exec(code, globalvars)  # nosec B102 # BNS:aee528
 
             except Exception as e:
-                logger.exception("Failed to load plugin %s: %s", file_path, e)
+                logger.exception("Failed to load plug-in %s: %s", file_path, e)
                 add_failed_plugin(file_path.with_suffix(".py"), forwhat, file_path.stem, e)
 
 

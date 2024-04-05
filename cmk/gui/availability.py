@@ -338,7 +338,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
                     ("show_alias", _("Display the host alias")),
                     ("use_display_name", _("Use alternative display name for services")),
                     ("omit_buttons", _("Do not display icons for history and timeline")),
-                    ("omit_timeline_plugin_output", _("Do not display plugin output in timeline")),
+                    ("omit_timeline_plugin_output", _("Do not display plug-in output in timeline")),
                 ]
                 + long_output_labelling
                 + [
@@ -2814,7 +2814,7 @@ def _compute_status_info(
             state,  # state
             True,  # has_been_checked
             state,  # host hard state
-            state_output[1],  # plugin output
+            state_output[1],  # plug-in output
             state_output[2],  # in_downtime
             state_output[3],  # in_service_period
             False,  # acknowledged

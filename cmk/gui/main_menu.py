@@ -129,7 +129,7 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
             items=[
                 TopicMenuItem(
                     name="plugin_api_introduction",
-                    title=_("Check plugin API introduction"),
+                    title=_("Check plug-in API introduction"),
                     url=doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
                     target="_blank",
                     sort_index=10,

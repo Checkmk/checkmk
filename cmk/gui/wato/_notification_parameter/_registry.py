@@ -44,7 +44,7 @@ class NotificationParameterRegistry(Registry[type[NotificationParameter]]):
 notification_parameter_registry = NotificationParameterRegistry()
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def register_notification_parameters(scriptname, valuespec):
     parameter_class = type(
         "NotificationParameter%s" % scriptname.title(),

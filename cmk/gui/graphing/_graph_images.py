@@ -50,7 +50,7 @@ from ._utils import get_graph_data_from_livestatus
 # TODO: Migrate this to a real AjaxPage
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
 # of a host or service.
-#    # Needed by mail notification plugin (-> no authentication from localhost)
+#    # Needed by mail notification plug-in (-> no authentication from localhost)
 class AjaxGraphImagesForNotifications(Page):
     @classmethod
     def ident(cls) -> str:

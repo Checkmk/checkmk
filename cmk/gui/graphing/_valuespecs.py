@@ -316,7 +316,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
     ident = "monitored_metrics"
 
     def __init__(self, **kwargs: Any) -> None:
-        # Customer's metrics from local checks or other custom plugins will now appear as metric
+        # Customer's metrics from local checks or other custom plug-ins will now appear as metric
         # options extending the registered metric names on the system. Thus assuming the user
         # only selects from available options we skip the input validation(invalid_choice=None)
         # Since it is not possible anymore on the backend to collect the host & service hints

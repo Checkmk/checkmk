@@ -214,17 +214,17 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
 
 
 class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
-    """Executes the livestatus search plugins and collects results
+    """Executes the livestatus search plug-ins and collects results
 
     It cares about aggregating the queries of different filters together to a single livestatus
     query (see _generate_livestatus_command) in case they are given with "used_filters".
 
-    Based on all the given plugin selection expressions it decides which one to use. There is only a
-    single table selected and queried! This means that incompatible search plugins in a single
+    Based on all the given plug-in selection expressions it decides which one to use. There is only a
+    single table selected and queried! This means that incompatible search plug-ins in a single
     search query (e.g. service group and host name) are not both executed.
 
     Based on the used_filters it selects a livestatus table to query. Then it constructs the
-    livestatus query with the help of all search plugins that support searching the previously
+    livestatus query with the help of all search plug-ins that support searching the previously
     selected table.
     """
 
@@ -575,7 +575,7 @@ class QuicksearchManager:
                 )
             ]
 
-        # No explicit filters specified by search expression. Execute the quicksearch plugins in
+        # No explicit filters specified by search expression. Execute the quicksearch plug-ins in
         # the order they are configured to let them answer the query.
         return [
             self._make_conductor(
@@ -588,9 +588,9 @@ class QuicksearchManager:
 
     @staticmethod
     def _find_search_object_expressions(query: SearchQuery) -> list[tuple[str, int]]:
-        """Extract a list of search plugin expressions from the search query
+        """Extract a list of search plug-in expressions from the search query
 
-        The returned list contains the name of the search plugin and the character
+        The returned list contains the name of the search plug-in and the character
         at which the search starts
         """
 

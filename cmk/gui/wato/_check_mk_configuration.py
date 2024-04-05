@@ -3786,9 +3786,9 @@ def PluginCommandLine() -> ValueSpec:
         title=_("Command line"),
         help=_(
             "Please enter the complete shell command including path name and arguments to execute. "
-            "If the plugin you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
+            "If the plug-in you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
             "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
-            "just configure the plugin file name as command <tt>check_foobar</tt>."
+            "just configure the plug-in file name as command <tt>check_foobar</tt>."
         )
         + monitoring_macro_help(),
         size="max",
@@ -4794,18 +4794,18 @@ def _valuespec_clustered_services_config():
                     _(
                         "Native: Use the cluster check function implemented by the check plugin. "
                         "If it is available, it is probably the best choice, as it implements logic "
-                        "specifically designed for the check plugin in question. Implementing it is "
+                        "specifically designed for the check plug-in in question. Implementing it is "
                         "optional however, so this might not be available (a warning will be displayed). "
-                        "Consult the plugins manpage for details about its cluster behaviour."
+                        "Consult the plug-ins manpage for details about its cluster behaviour."
                     ),
                     _(
-                        "Failover: The check function of the plugin will be applied to each individual "
+                        "Failover: The check function of the plug-in will be applied to each individual "
                         "node. The worst outcome will determine the overall state of the clustered "
                         "service. However only one node is supposed to send data, any additional nodes "
                         "results will least trigger a WARNING state."
                     ),
                     _(
-                        "Worst: The check function of the plugin will be applied to each individual node. "
+                        "Worst: The check function of the plug-in will be applied to each individual node. "
                         "The worst outcome will determine the overall state of the clustered service."
                     ),
                     _(
@@ -5271,7 +5271,7 @@ def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
         title=_("Escape HTML in host output (Dangerous to deactivate - read help)"),
         help=_(
             "By default, for security reasons, the GUI does not interpret any HTML "
-            "code received from external sources, like plugin output or log messages. "
+            "code received from external sources, like plug-in output or log messages. "
             "If you are really sure what you are doing and need to have HTML code, like "
             "links rendered, disable this option. Be aware, you might open the way "
             "for several injection attacks."
@@ -5899,7 +5899,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                                 "missing_sections",
                                 MonitoringState(
                                     default_value=1,
-                                    title=_("State if check plugins received no monitoring data"),
+                                    title=_("State if check plug-ins received no monitoring data"),
                                 ),
                             ),
                             (
@@ -5911,7 +5911,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                                                 help=_(
                                                     'In addition to setting the generic "Missing monitoring '
                                                     'data" state above you can specify a regex pattern to '
-                                                    "match specific check plugins and give them an individual "
+                                                    "match specific check plug-ins and give them an individual "
                                                     "state in case they receive no monitoring data. Note that "
                                                     "the first match is used."
                                                 ),
@@ -5922,7 +5922,7 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                                         orientation="horizontal",
                                     ),
                                     title=_(
-                                        "State if specific check plugins receive no monitoring data."
+                                        "State if specific check plug-ins receive no monitoring data."
                                     ),
                                 ),
                             ),
@@ -6070,7 +6070,7 @@ def _valuespec_piggyback_translation():
     return HostnameTranslation(
         title=_("Hostname translation for piggybacked hosts"),
         help=_(
-            "Some agents or agent plugins send data not only for the queried host but also "
+            "Some agents or agent plug-ins send data not only for the queried host but also "
             "for other hosts &quot;piggyback&quot; with their own data. This is the case "
             "for the vSphere special agent and the SAP R/3 plugin, for example. The hostnames "
             "that these agents send must match your hostnames in your monitoring configuration. "
@@ -6148,7 +6148,7 @@ def _valuespec_snmp_fetch_interval():
                 title=_("Section"),
                 help=_(
                     "You can only configure section names here, but not choose individual "
-                    "check plugins. The reason for this is that the check plugins "
+                    "check plugins. The reason for this is that the check plug-ins "
                     "themselves are not aware whether or not they are processing SNMP based "
                     "data."
                 ),
@@ -6177,9 +6177,9 @@ def _valuespec_snmp_config_agent_sections() -> Dictionary:
         help=_(
             "This option allows to omit individual sections from being fetched at all. "
             "As a result, associated Checkmk services may be entirely missing. "
-            "However, some check plugins process multiple sections and their behavior may "
+            "However, some check plug-ins process multiple sections and their behavior may "
             "change if one of them is excluded. In such cases, you may want to disable "
-            "individual sections, instead of the check plugin itself. "
+            "individual sections, instead of the check plug-in itself. "
             "Furthermore, SNMP sections can supersede other SNMP sections in order to "
             "prevent duplicate services. By excluding a section which supersedes another one, "
             "the superseded section might become available. One such use case is the enforcing "

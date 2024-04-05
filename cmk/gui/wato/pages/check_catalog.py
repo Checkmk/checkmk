@@ -79,7 +79,7 @@ class ModeCheckPlugins(WatoMode):
     def page(self) -> None:
         html.help(
             _(
-                "This catalog of check plugins gives you a complete listing of all plugins "
+                "This catalog of check plug-ins gives you a complete listing of all plug-ins "
                 "that are shipped with your Checkmk installation. It also allows you to "
                 "access the rule sets for configuring the parameters of the checks and to "
                 "manually create services in case you cannot or do not want to rely on the "
@@ -123,7 +123,7 @@ class ModeCheckPluginSearch(WatoMode):
         self._titles = man_pages.CATALOG_TITLES
 
     def title(self) -> str:
-        return "{}: {}".format(_("Check plugins matching"), self._search)
+        return "{}: {}".format(_("Check plug-ins matching"), self._search)
 
     def page(self) -> None:
         search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")
@@ -515,7 +515,7 @@ class ModeCheckManPage(WatoMode):
     # We could simply detect on how many hosts and services this plugin
     # is currently in use (Livestatus query) and display this information
     # together with a link for searching. Then we can remove the dumb context
-    # button, that will always be shown - even if the plugin is not in use.
+    # button, that will always be shown - even if the plug-in is not in use.
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if self._check_plugin_name.startswith("check_"):
             command = "check_mk_active-" + self._check_plugin_name[6:]

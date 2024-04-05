@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-# TODO FIXME: Change attribute sync plugins to classes. The current dict
+# TODO FIXME: Change attribute sync plug-ins to classes. The current dict
 # based approach is not very readable. Classes/objects make it a lot
 # easier to understand the mechanics.
 
@@ -995,7 +995,7 @@ class LDAPUserConnector(UserConnector):
     # create an alternating match filter to match that attribute when searching by DNs.
     # In OpenLDAP the distinguishedname is no user attribute, therefor it can not be used
     # as filter expression. We have to do one ldap query per group. Maybe, in the future,
-    # we change the role sync plugin parameters to snapins to make this part a little easier.
+    # we change the role sync plug-in parameters to snapins to make this part a little easier.
     def _get_direct_group_memberships(self, filters: list[str], filt_attr: str) -> GroupMemberships:
         groups: GroupMemberships = {}
         filt = self._ldap_filter("groups")
@@ -1547,9 +1547,9 @@ def _unescape_dn(dn):
 #   |          /_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/            |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | The LDAP User Connector provides some kind of plugin mechanism to    |
+#   | The LDAP User Connector provides some kind of plug-in mechanism to    |
 #   | modulize which ldap attributes are synchronized and how they are     |
-#   | synchronized into Checkmk. The standard attribute plugins           |
+#   | synchronized into Checkmk. The standard attribute plug-ins           |
 #   | are defnied here.                                                    |
 #   '----------------------------------------------------------------------'
 
@@ -1607,7 +1607,7 @@ class LDAPAttributePlugin(abc.ABC):
             title=self.title,
             help=self.help,
             value={},
-            totext=_("This synchronization plugin has no parameters."),
+            totext=_("This synchronization plug-in has no parameters."),
         )
 
     # Dictionary(
@@ -1619,7 +1619,7 @@ class LDAPAttributePlugin(abc.ABC):
 
     @property
     def multisite_attributes(self) -> list[str]:
-        """When a plugin introduces new user attributes, it should declare the output target for
+        """When a plug-in introduces new user attributes, it should declare the output target for
         this attribute. It can either be written to the multisites users.mk or the check_mk
         contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
         contacts.mk file."""
@@ -1627,7 +1627,7 @@ class LDAPAttributePlugin(abc.ABC):
 
     @property
     def non_contact_attributes(self) -> list[str]:
-        """When a plugin introduces new user attributes, it should declare the output target for
+        """When a plug-in introduces new user attributes, it should declare the output target for
         this attribute. It can either be written to the multisites users.mk or the check_mk
         contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
         contacts.mk file."""
@@ -1671,7 +1671,7 @@ def ldap_attribute_plugins_elements(connection):
 
 
 def register_user_attribute_sync_plugins() -> None:
-    """Register sync plugins for all custom user attributes (assuming simple data types)"""
+    """Register sync plug-ins for all custom user attributes (assuming simple data types)"""
     # Remove old user attribute plugins
     for ident, plugin_class in list(ldap_attribute_plugin_registry.items()):
         plugin = plugin_class()
@@ -1806,7 +1806,7 @@ def _group_membership_parameters():
             FixedValue(
                 title=_("Handle nested group memberships (Active Directory only at the moment)"),
                 help=_(
-                    "Once you enable this option, this plugin will not only handle direct "
+                    "Once you enable this option, this plug-in will not only handle direct "
                     "group memberships, instead it will also dig into nested groups and treat "
                     "the members of those groups as contact group members as well. Please mind "
                     "that this feature might increase the execution time of your LDAP sync."
@@ -1983,7 +1983,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
     @property
     def help(self):
         return _(
-            "This plugin fetches all information which are needed to check whether or "
+            "This plug-in fetches all information which are needed to check whether or "
             "not an already authenticated user should be deauthenticated, e.g. because "
             "the password has changed in LDAP or the account has been locked."
         )
@@ -2103,7 +2103,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
     @property
     def help(self):
         return _(
-            "This plugin synchronizes a field of the users LDAP account to the pager attribute "
+            "This plug-in synchronizes a field of the users LDAP account to the pager attribute "
             "of the Setup user accounts, which is then forwarded to the monitoring core and can be used "
             "for notifications. By default the LDAP attribute <tt>mobile</tt> is used."
         )
@@ -2332,7 +2332,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
                             "Specify the groups to control the value of a given user attribute. If a user is "
                             "not a member of a group, the attribute will be left at it's default value. When "
                             "a single attribute is set by multiple groups and a user is member of multiple "
-                            "of these groups, the later plugin in the list will override the others."
+                            "of these groups, the later plug-in in the list will override the others."
                         ),
                         allow_empty=False,
                     ),
@@ -2429,7 +2429,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         return {"roles": roles}
 
     def fetch_needed_groups_for_groups_to_roles(self, connection, params):
-        # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
+        # Load the needed LDAP groups, which match the DNs mentioned in the role sync plug-in config
         ldap_groups = {}
         for connection_id, group_dns in self._get_groups_to_fetch(connection, params).items():
             conn = get_connection(connection_id)
@@ -2528,7 +2528,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                         "Handle nested group memberships (Active Directory only at the moment)"
                     ),
                     help=_(
-                        "Once you enable this option, this plugin will not only handle direct "
+                        "Once you enable this option, this plug-in will not only handle direct "
                         "group memberships, instead it will also dig into nested groups and treat "
                         "the members of those groups as contact group members as well. Please mind "
                         "that this feature might increase the execution time of your LDAP sync."

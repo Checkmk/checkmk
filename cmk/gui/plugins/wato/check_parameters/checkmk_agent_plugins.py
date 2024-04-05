@@ -31,7 +31,7 @@ def _parameter_valuespec_checkmk_agent_plugins():
                     title=_("Required minimal versions"),
                     help=_(
                         "You can configure lower thresholds for the versions of the currently "
-                        "deployed agent plugins and local checks."
+                        "deployed agent plug-ins and local checks."
                     ),
                     elements=[
                         TextInput(title=_("Warning at"), validate=_validate_version),

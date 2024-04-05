@@ -1231,7 +1231,7 @@ def register_log_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         RegexFilter(
-            title=_l("Log: plugin output (regex)"),
+            title=_l("Log: plug-in output (regex)"),
             sort_index=202,
             info="log",
             query_filter=query_filters.TextQuery(

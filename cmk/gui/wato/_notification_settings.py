@@ -154,8 +154,8 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Age(
-            title=_("Notification plugin timeout"),
-            help=_("After the configured time notification plugins are being interrupted."),
+            title=_("Notification plug-in timeout"),
+            help=_("After the configured time notification plug-ins are being interrupted."),
             minvalue=1,
         )
 

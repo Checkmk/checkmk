@@ -305,7 +305,7 @@ class CREConfig:
     # appear in a stale state
     staleness_threshold: float = 1.5
 
-    # Escape HTML in plugin output / log messages
+    # Escape HTML in plug-in output / log messages
     escape_plugin_output: bool = True
 
     # Virtual host trees for the "Virtual Host Trees" snapin

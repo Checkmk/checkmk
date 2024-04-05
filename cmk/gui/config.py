@@ -151,7 +151,7 @@ def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
 # for *each* HTTP request.
 # FIXME: Optimize this to cache the config etc. until either the config files or plugins
 # have changed. We could make this being cached for multiple requests just like the
-# plugins of other modules. This may save significant time in case of small requests like
+# plug-ins of other modules. This may save significant time in case of small requests like
 # the graph ajax page or similar.
 def load_config() -> None:
     # Set default values for all user-changable configuration settings
@@ -254,7 +254,7 @@ def _get_default_config_from_legacy_plugins() -> dict[str, Any]:
 
 
 def _get_default_config_from_module_plugins() -> dict[str, Any]:
-    """Plugins from the config plugin package are loaded here
+    """Plugins from the config plug-in package are loaded here
 
     These are `cmk.gui.plugins.config`, `cmk.gui.cee.plugins.config` and
     `cmk.gui.cme.plugins.config`.

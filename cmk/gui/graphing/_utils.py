@@ -520,7 +520,7 @@ class AutomaticDict(OrderedDict[str, RawGraphTemplate]):
         self._item_index = start_index or 0
 
     def append(self, item: RawGraphTemplate) -> None:
-        # Avoid duplicate graph definitions in case the metric plugins are loaded multiple times.
+        # Avoid duplicate graph definitions in case the metric plug-ins are loaded multiple times.
         # Otherwise, we get duplicate graphs in the UI.
         if self._item_already_appended(item):
             return

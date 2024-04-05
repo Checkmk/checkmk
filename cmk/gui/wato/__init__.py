@@ -174,7 +174,7 @@ from .pages._simple_modes import SimpleModeType as SimpleModeType
 from .pages._tile_menu import TileMenuRenderer as TileMenuRenderer
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
-# calls in the Setup plugin context
+# calls in the Setup plug-in context
 subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
 subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
 subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name

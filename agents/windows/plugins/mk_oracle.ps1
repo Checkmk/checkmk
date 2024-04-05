@@ -244,6 +244,10 @@ function Test-DomainSid([string]$sid) {
         then returns error with detailed description.
 #>
 function Invoke-SafetyCheck( [String]$file ) {
+     if (-not (Test-Path -path $file)) {
+          return
+     }
+
      $admin_sids = @(
           "S-1-5-18", # SYSTEM
           "S-1-5-32-544" # Administrators
@@ -2322,11 +2326,16 @@ if ($the_count -gt 0) {
 
           if ($is_admin) {
                # administrators should use only safe binary
-               $path = $ORACLE_HOME + "\bin\sqlplus.exe"
-               $result = Invoke-SafetyCheck($path)
+               $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\sqlplus.exe")
+               if ($Null -eq $result) {
+                    $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\tnsping.exe")
+               }
+               if ($Null -eq $result) {
+                    $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\crsctl.exe")
+               }
                if ($Null -ne $result) {
                     Write-Output "<<<oracle_instance:sep(124)>>>"
-                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the '$path' by non-admin users. Alternatively, you can try to run the plugin as a user using the rule 'Run plugins and local checks using non-system account'"
+                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Alternatively, you can try to run the plugin as a user using the rule 'Run plugins and local checks using non-system account'"
                     continue
                }
           }

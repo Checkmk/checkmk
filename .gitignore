@@ -77,7 +77,6 @@ tests/var/*
 tests/results/*
 tests/.hypothesis/
 /results
-/buildscripts/infrastructure/build-nodes/scripts/defines.make
 /buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
 /bazel-*
 

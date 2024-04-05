@@ -46,11 +46,6 @@ def main() -> int:
             py_compile.compile(CONFIG.src, CONFIG.dst, CONFIG.dst, True)
             os.chmod(CONFIG.dst, 0o700)
 
-    # Remove precompiled directory from sys.path.
-    # Leaving it in the path makes problems when host names (name of precompiled files) are equal to
-    # python module names like "random"
-    sys.path.pop(0)
-
     from importlib import import_module
 
     import cmk.utils.debug

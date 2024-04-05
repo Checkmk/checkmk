@@ -192,7 +192,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
                 perfdata.append(("backup_age", oldest_backup_age))
         else:
             # create a 'dummy' performance data with 0
-            # => The age from plugin is only valid when a datafile is in backup mode!
+            # => The age from plug-in is only valid when a datafile is in backup mode!
             perfdata.append(("backup_age", 0))
 
         return state, infotext, perfdata

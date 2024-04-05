@@ -381,7 +381,7 @@ def _get_expected_paths(
     # precondition is a more cleanly separated structure.
 
     if is_enterprise_repo() and edition is cmk_version.Edition.CRE:
-        # CEE paths are added when the CEE plugins for WATO are available, i.e.
+        # CEE paths are added when the CEE plug-ins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected_paths += [
             "etc/check_mk/dcd.d",
@@ -396,7 +396,7 @@ def _get_expected_paths(
         ]
 
     if is_managed_repo() and edition is not cmk_version.Edition.CME:
-        # CME paths are added when the CME plugins for WATO are available, i.e.
+        # CME paths are added when the CME plug-ins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected_paths += [
             "local/share",

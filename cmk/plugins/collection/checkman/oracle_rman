@@ -11,7 +11,7 @@ description:
  FULL/INCREMENTAL Backups.
  A rule is required for generating notifications.
 
- there is a specific behavior for DB_INCR_1. The plugin could miss
+ there is a specific behavior for DB_INCR_1. The plug-in could miss
  the information for a DB_INCR_1 backup after a delete obsolete in RMAN.
  The check reports the age for the last DB_INCR_0 for this situation.
  This is required for a DB_INCR_0 each monday and a

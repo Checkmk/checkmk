@@ -202,7 +202,7 @@ register.check_plugin(
     name="windows_intel_bonding",
     # unfortunately, this one is written with lower 'i' :-(
     service_name="Bonding interface %s",
-    # This plugin is not discovered since version 2.2
+    # This plug-in is not discovered since version 2.2
     discovery_function=never_discover,
     check_function=check_bonding,
     check_ruleset_name="bonding",

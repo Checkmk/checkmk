@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check allows to monitor the number of requests on web application servers.
 
- To use this check, Jolokia and the {mk_jolokia} agent plugin need to be installed
+ To use this check, Jolokia and the {mk_jolokia} agent plug-in need to be installed
  on the monitored server.
 
  The check returns {WARN}/{CRIT} if the number of requests is outside the given

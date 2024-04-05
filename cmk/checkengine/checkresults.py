@@ -15,7 +15,7 @@ from cmk.utils.metrics import MetricName
 __all__ = ["ActiveCheckResult", "MetricTuple", "ServiceCheckResult", "state_markers"]
 
 
-# Symbolic representations of states in plugin output
+# Symbolic representations of states in plug-in output
 # TODO(ml): Should probably be of type enum::int -> str
 state_markers = ("", "(!)", "(!!)", "(?)")
 
@@ -42,11 +42,11 @@ class ServiceCheckResult:
 
     @classmethod
     def received_no_data(cls) -> ServiceCheckResult:
-        return cls(3, "Check plugin received no monitoring data")
+        return cls(3, "Check plug-in received no monitoring data")
 
     @classmethod
     def check_not_implemented(cls) -> ServiceCheckResult:
-        return cls(3, "Check plugin not implemented")
+        return cls(3, "Check plug-in not implemented")
 
     @classmethod
     def cluster_received_no_data(cls, nodes: Sequence[HostName]) -> ServiceCheckResult:

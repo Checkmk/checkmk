@@ -437,7 +437,7 @@ def check_diskstat_dict(
             label="Latency",
         )
 
-    # All the other metrics are currently not output in the plugin output - simply because
+    # All the other metrics are currently not output in the plug-in output - simply because
     # of their amount. They are present as performance data and will shown in graphs.
 
     # Send everything as performance data now. Sort keys alphabetically

@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 ###################################################
-# plugin to retrieve data from tinkerforge devices.
+# plug-in to retrieve data from tinkerforge devices.
 #
-# please note that for this plugin to work, the tinkerforge api has to be installed
+# please note that for this plug-in to work, the tinkerforge api has to be installed
 #  (included in OMD, otherwise get it from http://download.tinkerforge.com/bindings/python/)
 # Also, if the tinkerforge device is connected directly to the computer via usb,
 # the brick deamon has to be installed and running: http://download.tinkerforge.com/tools/brickd/)
@@ -23,7 +23,7 @@
 # segment_display_brightness = 2      # brightness of the 7-segment display (0-7)
 #
 # to find the uid of a sensor, either use brickv or run the plugin
-# manually. plugin output looks like this:
+# manually. plug-in output looks like this:
 #   temperature,Ab3d5F.a.xyz,2475
 # xyz is the uid you're looking for. It's always the last of the dot-separated sensor path
 # (Ab3d5F is the id of the master brick to which the sensor is connected, a is the port

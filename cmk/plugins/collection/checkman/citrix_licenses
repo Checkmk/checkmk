@@ -9,7 +9,7 @@ item:
 
 description:
  This check monitors the number of used licenses for several citrix
- applications. You need the plugin {citrix_license.vbs} to be installed
+ applications. You need the plug-in {citrix_license.vbs} to be installed
  on your windows agent.
 
 discovery:

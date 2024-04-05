@@ -98,7 +98,7 @@ def discover_modules(
     modules: Iterable[ModuleType] | None = None,
     ls: Callable[[str], Iterable[str]] = _ls_defensive,
 ) -> Iterable[str]:
-    """Discover all potetial plugin modules blow `modules`.
+    """Discover all potetial plug-in modules blow `modules`.
 
     Returned iterable should be deduplicated.
     """
@@ -168,7 +168,7 @@ class Collector(Generic[_PluginType]):
         plugin_prefixes: Mapping[type[_PluginType], str],
         raise_errors: bool,
     ) -> None:
-        # Transform plugin types / prefixes to the data structure we
+        # Transform plug-in types / prefixes to the data structure we
         # need for this algorithm.
         # We pass them differently to help the type inference along.
         # Other approaches require even worse explicit type annotations
@@ -224,7 +224,7 @@ class Collector(Generic[_PluginType]):
             if (existing := self._unique_plugins.get(key)) is not None:
                 self._handle_error(
                     ValueError(
-                        f"{location}: plugin '{value.name}' already defined at {existing[0]}"
+                        f"{location}: plug-in '{value.name}' already defined at {existing[0]}"
                     )
                 )
 

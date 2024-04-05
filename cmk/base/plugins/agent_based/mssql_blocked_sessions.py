@@ -79,8 +79,8 @@ def check_mssql_blocked_sessions(
     if item == "":
         yield Result(
             state=State.UNKNOWN,
-            summary="MSSQL agent plugin prior to Checkmk version 1.6 is no longer supported. "
-            "Please upgrade your agent plugin to a newer version (see Werk 6140)",
+            summary="MSSQL agent plug-in prior to Checkmk version 1.6 is no longer supported. "
+            "Please upgrade your agent plug-in to a newer version (see Werk 6140)",
         )
         return
     if (data := section.get(item)) is None:

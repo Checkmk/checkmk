@@ -856,7 +856,7 @@ def event_match_plugin_output(
         else:
             output = context["HOSTOUTPUT"]
         if not r.search(output):
-            return "The expression '{}' cannot be found in the plugin output '{}'".format(
+            return "The expression '{}' cannot be found in the plug-in output '{}'".format(
                 rule["match_plugin_output"],
                 output,
             )
@@ -877,7 +877,7 @@ def event_match_checktype(
         plugin = command[9:]
         allowed = rule["match_checktype"]
         if plugin not in allowed:
-            return "The Check_MK plugin '{}' is not on the list of allowed plugins ({})".format(
+            return "The Check_MK plug-in '{}' is not on the list of allowed plugins ({})".format(
                 plugin,
                 ", ".join(allowed),
             )

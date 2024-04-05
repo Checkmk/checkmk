@@ -11,8 +11,8 @@ _VT = TypeVar("_VT")
 
 # TODO: Refactor all plugins to one way of telling the registry it's name.
 #       for example let all use a static/class method .name().
-#       We could standardize this by making all plugin classes inherit
-#       from a plugin base class instead of "object".
+#       We could standardize this by making all plug-in classes inherit
+#       from a plug-in base class instead of "object".
 
 
 class Registry(Mapping[str, _VT]):

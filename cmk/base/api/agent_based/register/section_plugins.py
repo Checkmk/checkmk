@@ -332,13 +332,13 @@ def validate_section_supersedes(all_supersedes: dict[SectionName, set[SectionNam
         implicitly = transitively - explicitly
         if name in implicitly:
             raise ValueError(
-                "Section plugin '%s' implicitly supersedes section(s) %s. "
+                "Section plug-in '%s' implicitly supersedes section(s) %s. "
                 "This leads to a cyclic superseding!"
                 % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )
         if implicitly:
             raise ValueError(
-                "Section plugin '%s' implicitly supersedes section(s) %s. "
+                "Section plug-in '%s' implicitly supersedes section(s) %s. "
                 "You must add those to the supersedes keyword argument."
                 % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )

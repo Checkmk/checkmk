@@ -179,7 +179,7 @@ def check_multipath(  # pylint: disable=too-many-branches
     if (mmap := _get_item_data(item, section)) is None:
         return
 
-    # If the item is the alias, then show the UUID in the plugin output.
+    # If the item is the alias, then show the UUID in the plug-in output.
     # If the item is the UUID, then vice versa.
     if item == mmap.uuid and mmap.alias:
         aliasinfo = "(%s): " % mmap.alias

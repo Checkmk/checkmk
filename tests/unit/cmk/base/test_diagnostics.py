@@ -364,7 +364,7 @@ def test_diagnostics_element_checkmk_overview() -> None:
         "Number of hosts, services, CMK Helper, Live Helper, "
         "Helper usage; State of daemons: Apache, Core, Crontag, "
         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-        "(Agent plugin mk_inventory needs to be installed)"
+        "(Agent plug-in mk_inventory needs to be installed)"
     )
 
 

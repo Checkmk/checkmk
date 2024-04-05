@@ -36,7 +36,7 @@ def find_plugins(
     discover something.
 
     We have to consider both the host, and the management board as source
-    type. Note that the determination of the plugin names is not quite
+    type. Note that the determination of the plug-in names is not quite
     symmetric: For the host, we filter out all management plugins,
     for the management board we create management variants from all
     plugins that are not already designed for management boards.
@@ -189,7 +189,7 @@ def _discover_plugins_services(
             raise
         if on_error is OnError.WARN:
             console.warning(
-                f"  Exception in discovery function of check plugin '{check_plugin_name}': {e}"
+                f"  Exception in discovery function of check plug-in '{check_plugin_name}': {e}"
             )
 
 

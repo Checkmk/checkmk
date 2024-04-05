@@ -265,7 +265,7 @@ def _validate_rule_spec_usage() -> ActiveCheckResult:
         if plugin.name not in referenced_ruleset_names:
             errors.append(
                 f"{type(plugin).__name__} rule set '{plugin.name}' is not used anywhere. Ensure "
-                f"the correct spelling at the referencing plugin or deprecate the ruleset"
+                f"the correct spelling at the referencing plug-in or deprecate the ruleset"
             )
     return to_result(ValidationStep.RULE_SPEC_USED, errors)
 

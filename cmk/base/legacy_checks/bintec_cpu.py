@@ -36,7 +36,7 @@ def check_bintec_cpu(_no_item, params, info):
     yield from check_cpu_util(util, params)
 
 
-# Migration NOTE: Create a separate section, but a common check plugin for
+# Migration NOTE: Create a separate section, but a common check plug-in for
 # tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!

@@ -804,7 +804,7 @@ class AWSSection(DataCache):
                 logging.info("%s: Result is empty or None", self.name)
                 continue
 
-            # In the related check plugin aws.include we parse these results and
+            # In the related check plug-in aws.include we parse these results and
             # extend list of json-loaded results, except for labels sections.
             self._validate_result_content(result.content)
 

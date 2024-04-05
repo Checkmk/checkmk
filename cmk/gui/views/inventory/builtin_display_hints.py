@@ -675,7 +675,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.checkmk-agent.localdirectory": {"title": _l("Local directory")},
         ".software.applications.checkmk-agent.agentcontroller": {"title": _l("Agent Controller")},
         ".software.applications.checkmk-agent.plugins:": {
-            "title": _l("Agent plugins"),
+            "title": _l("Agent plug-ins"),
             "keyorder": ["name", "version", "cache_interval"],
         },
         ".software.applications.checkmk-agent.plugins:*.name": {"title": _l("Name")},

@@ -690,8 +690,8 @@ def test_create_nagios_servicedefs_active_check(
             "\n",
             "\n"
             "WARNING: ERROR: Duplicate service description (active check) 'My description' for host 'my_host'!\n"
-            " - 1st occurrence: check plugin / item: active(my_active_check) / 'My description'\n"
-            " - 2nd occurrence: check plugin / item: active(my_active_check2) / None\n"
+            " - 1st occurrence: check plug-in / item: active(my_active_check) / 'My description'\n"
+            " - 2nd occurrence: check plug-in / item: active(my_active_check2) / None\n"
             "\n",
             id="duplicate_descriptions",
         ),

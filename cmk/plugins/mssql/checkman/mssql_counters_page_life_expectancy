@@ -9,7 +9,7 @@ description:
  Expectancy". By default, the check returns a WARN state if the PLE falls below
  350 seconds, and a CRIT state if it falls below 300 seconds.
 
- The prerequisite for this check is that the mssql.vbs agent plugin is
+ The prerequisite for this check is that the mssql.vbs agent plug-in is
  installed on the host. Please refer to the online documentation for
  installation instructions.
 

@@ -5,8 +5,8 @@ license: GPLv2
 distribution: check_mk
 description:
  Unitrends is an enterprise class backup solution.
- This check needs the {unitrends_replication} plugin installed on the unitrends server
- in order to work. The plugin will deliver a complete list of all replication entries and
+ This check needs the {unitrends_replication} plug-in installed on the unitrends server
+ in order to work. The plug-in will deliver a complete list of all replication entries and
  her status
 
  As long all of the jobs are succsessful the check returns a {OK} state. In each other

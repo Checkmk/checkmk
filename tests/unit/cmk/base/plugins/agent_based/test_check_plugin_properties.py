@@ -48,7 +48,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRe
 
     (Returning something falsey usually means nothing will be discovered!)
 
-    Since this was the behaviour for *almost* every plugin we maintain this test
+    Since this was the behaviour for *almost* every plug-in we maintain this test
     with a list of known exceptions, to ensure the old behaviour is not changed.
 
     However: There is nothing wrong with not returning None, in principle.
@@ -93,8 +93,8 @@ def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
     """
     This is a sanity test for registered inventory and check plugins. It ensures that plugins
     have a non trivial section. Trivial sections may be created accidentally e.g. if a typo
-    is introduced in the section or plugin name during the migration to the new API. If a
-    trivial section without a parse_function is sufficient for your plugin you have to add it
+    is introduced in the section or plug-in name during the migration to the new API. If a
+    trivial section without a parse_function is sufficient for your plug-in you have to add it
     to the known exceptions below.
     """
     known_exceptions: set[ParsedSectionName] = set()  # currently no exceptions!
@@ -135,7 +135,7 @@ def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
         f"{plugin}: {', '.join(str(s) for s in sections)}"
         for plugin, sections in plugins_with_trivial_sections.items()
     )
-    assert 0, f"""Found new plugins with trivial sections:
+    assert 0, f"""Found new plug-ins with trivial sections:
 PLUGIN - TRIVIAL SECTIONS'
 ----------------
 {msg}"""

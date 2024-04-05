@@ -56,7 +56,7 @@ def _output_check_result(
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="check_disk_smb",
-        description="""Check SMB Disk plugin for monitoring""",
+        description="""Check SMB Disk plug-in for monitoring""",
     )
 
     parser.add_argument(

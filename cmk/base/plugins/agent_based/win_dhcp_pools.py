@@ -69,7 +69,7 @@ Section = Sequence[tuple[str, ...]]
 
 # Attention:
 #
-# Tried to get the win-agent plugin to report always in utf-8, unfortunately without luck.
+# Tried to get the win-agent plug-in to report always in utf-8, unfortunately without luck.
 # ...that's the reason why french translations with special characters must get provided like here.
 
 _WIN_DHCP_POOLS_STATS_TRANSLATE = {
@@ -176,7 +176,7 @@ def check_win_dhcp_pools(item: str, params: Mapping[str, Any], section: Section)
         state=State.OK,
         summary="Values are averaged",
         details=(
-            "All values are averaged, as the Windows DHCP plugin collects statistics, "
+            "All values are averaged, as the Windows DHCP plug-in collects statistics, "
             "not real-time measurements"
         ),
     )

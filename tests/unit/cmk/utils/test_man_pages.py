@@ -154,7 +154,7 @@ def test_manpage_files(all_pages: Mapping[str, man_pages.ManPage]) -> None:
 
 
 def test_cmk_plugins_families_manpages() -> None:
-    """All v2 style check plugins should have the manpages in their families folder."""
+    """All v2 style check plug-ins should have the manpages in their families folder."""
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )

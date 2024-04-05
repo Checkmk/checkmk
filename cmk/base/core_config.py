@@ -100,8 +100,8 @@ def duplicate_service_warning(
 ) -> None:
     return config_warnings.warn(
         "ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
-        " - 1st occurrence: check plugin / item: %s / %r\n"
-        " - 2nd occurrence: check plugin / item: %s / %r\n"
+        " - 1st occurrence: check plug-in / item: %s / %r\n"
+        " - 2nd occurrence: check plug-in / item: %s / %r\n"
         % (checktype, description, host_name, *first_occurrence, *second_occurrence)
     )
 

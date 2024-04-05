@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This checks if the tasks Real-time protection and System EventManger are running.
  Otherwise a critical state will be triggered.
- You need to install the plugin {kaspersky_av} into the {plugins} directory of your agent.
+ You need to install the plug-in {kaspersky_av} into the {plugins} directory of your agent.
 
 item:
  Name of the job

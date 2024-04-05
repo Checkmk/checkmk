@@ -232,7 +232,7 @@ def test_regex_parser(
                 errors={
                     "cached(1556005301,300)": local.LocalError(
                         output="node_1 cached(1556005301,300) foo",
-                        reason="Invalid plugin status node_1.",
+                        reason="Invalid plug-in status node_1.",
                     )
                 },
                 data={},

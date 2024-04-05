@@ -178,7 +178,7 @@ def optional_freeze_time(dataset):
 def run(check_info, dataset):
     """Run all possible tests on 'dataset'"""
     checklist = checkhandler.get_applicables(dataset.checkname, check_info)
-    assert checklist, f"Found no check plugin for {dataset.checkname!r}"
+    assert checklist, f"Found no check plug-in for {dataset.checkname!r}"
 
     immu = Immutables()
 

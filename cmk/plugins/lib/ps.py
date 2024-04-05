@@ -560,7 +560,7 @@ def unused_value_remover(
 ) -> Generator[dict[str, tuple[float, float]], None, None]:
     """Remove all values that remain unchanged
 
-    This plugin uses the process IDs in the keys to persist values.
+    This plug-in uses the process IDs in the keys to persist values.
     This would lead to a lot of orphaned values if we used the value store directly.
     Thus we use a single dictionary and only store the values that have been used.
     """

@@ -148,7 +148,7 @@ def _commandline_discovery_on_host(
     # host name for get_host_values{_merged,} calls in the legacy checks.
 
     for plugin_name in skip:
-        console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
+        console.vverbose(f"  Skip ignored check plug-in name {plugin_name!r}\n")
 
     try:
         discovered_services = discover_services(

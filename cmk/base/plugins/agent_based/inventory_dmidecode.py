@@ -84,7 +84,7 @@ def parse_dmidecode(string_table: StringTable) -> Section:
     subsections = []
     current_lines: StringTable = []  # these will not be used
     for line in string_table:
-        # Windows plugin keeps tabs and has no separator
+        # Windows plug-in keeps tabs and has no separator
         if len(line) == 1:
             parts = line[0].replace("\t", ":").split(":")
             line = [x.strip() for x in parts]

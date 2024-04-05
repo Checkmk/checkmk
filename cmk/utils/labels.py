@@ -61,7 +61,7 @@ class ServiceLabel(_Label):
 class HostLabel(_Label):
     """Representing a host label in Checkmk during runtime
 
-    Besides the label itself it keeps the information which plugin discovered the host label
+    Besides the label itself it keeps the information which plug-in discovered the host label
     """
 
     __slots__ = ("plugin_name",)

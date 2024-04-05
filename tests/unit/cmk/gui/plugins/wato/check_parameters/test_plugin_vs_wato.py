@@ -297,7 +297,7 @@ class ErrorReporter:
         ("inventory", "lnx_sysctl", "lnx_sysctl"),
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
-        # type # plugin # wato
+        # type # plug-in # wato
         (
             "check",
             "apc_ats_output",
@@ -640,12 +640,12 @@ class ErrorReporter:
         self._failed |= True
 
     def run_tests(self, plugin: PluginProtocol, wato: WatoProtocol) -> None:
-        # try to load the plugin defaults into wato ruleset
+        # try to load the plug-in defaults into wato ruleset
         exception = wato.validate_parameter(plugin.get_default_parameters())
         if exception:
             self._report_error_loading_defaults(plugin, wato, exception)
 
-        # see if both plugin and wato have the same idea about items
+        # see if both plug-in and wato have the same idea about items
         if isinstance(plugin, PluginCheck) and isinstance(wato, WatoCheck):
             if wato.has_item() != plugin.has_item():
                 self._report_check_item_requirements(plugin, wato)
@@ -659,7 +659,7 @@ class ErrorReporter:
             f"{plugin.get_description()} and {wato.get_description()} have different item requirements:"
         )
         print("    wato   handles item:", wato.has_item())
-        print("    plugin handles items:", plugin.has_item())
+        print("    plug-in handles items:", plugin.has_item())
         self._failed |= True
 
     def _report_error_loading_defaults(
@@ -686,7 +686,7 @@ class ErrorReporter:
 
     def test_for_vanished_known_problems(self) -> None:
         """
-        Generally test_plugin_vs_wato makes sure that the plugin default values
+        Generally test_plugin_vs_wato makes sure that the plug-in default values
         matches the structure of the wato ruleset.
 
         This particular test makes sure that the known defects defined in the

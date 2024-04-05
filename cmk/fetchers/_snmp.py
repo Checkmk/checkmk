@@ -45,7 +45,7 @@ class WalkCache(
     which means it deduplicates fetch operations across section definitions.
 
     The fetched data is always saved to a file *if* the respective OID is marked as being cached
-    by the plugin using `OIDCached` (that is: if the save_to_cache attribute of the OID object
+    by the plug-in using `OIDCached` (that is: if the save_to_cache attribute of the OID object
     is true).
     """
 

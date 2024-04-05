@@ -7,7 +7,7 @@ description:
  This check allows you to monitor the amount of active and idle connections to a database.
  You can configure limits for the absolute connection count or percentual
  limits in respect to the maximum allowed active and idle connections.
- This check relies on data reported by the agent-side plugin {mk_postgres}
+ This check relies on data reported by the agent-side plug-in {mk_postgres}
 
 item:
  Name of the category and the name of the database

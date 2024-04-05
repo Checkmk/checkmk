@@ -99,7 +99,7 @@ def test_request_memoize_request_integration(
 
 
 def test_request_memoize_unregister() -> None:
-    # Make sure request-start hooks are still called, after plugin hooks are
+    # Make sure request-start hooks are still called, after plug-in hooks are
     # unregistered. In previous versions unregister_plugin_hooks also
     # unregistered hooks used by memoize.
 

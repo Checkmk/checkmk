@@ -5,7 +5,7 @@
 """
 The McAfee Web Gateway has been rebranded to Skyhigh Secure Web Gateway with its release 12.2.2.
 Where possibile the "McAfee" string has been removed in favor of more generic therms.
-The old plugin names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
+The old plug-in names, value_store dict keys, and ruleset names have been kept for compatibility/history-keeping reasons.
 """
 
 from cmk.base.plugins.agent_based.agent_based_api import v1

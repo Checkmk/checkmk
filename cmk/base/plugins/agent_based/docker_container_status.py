@@ -48,7 +48,7 @@ def parse_docker_container_status(string_table: StringTable) -> Section:
     specific JSON data. However, since docker containers are often piggyback hosts, it can happen
     that we get the concatenated agent output from multiple parent hosts in Checkmk (SUP-10582).
     This happens if a container with the same name runs on multiple docker hosts and if the docker
-    agent plugin is configured to use the container name as piggyback host name. Even though this is
+    agent plug-in is configured to use the container name as piggyback host name. Even though this is
     of course unwanted, we 'parse' this data here, s.t. in the check functions, we can inform the user
     about this issue.
     """
@@ -241,7 +241,7 @@ def check_docker_container_status(section: Section) -> CheckResult:
             details="This docker container apparently exists on multiple parent hosts. This should be "
             "reflected in the fact that this host has multiple piggyback sources, see the output of the "
             "Check_MK service. Hence, no definitive information on the container can be displayed. To "
-            "resolve this situation, you have two options: 1. configure the docker agent plugin to use "
+            "resolve this situation, you have two options: 1. configure the docker agent plug-in to use "
             "the container IDs as host names, 2. use the ruleset 'Hostname translation for piggybacked "
             "hosts' to create unique host names for the affected containers.",
         )

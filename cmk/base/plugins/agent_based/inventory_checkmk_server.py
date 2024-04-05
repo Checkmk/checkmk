@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # README: HISTORICAL HINT
-# This inventory plugin used to be split-up into the inventory plugins "livestatus_status",
+# This inventory plug-in used to be split-up into the inventory plugins "livestatus_status",
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple
 # sections, this split-up is not necessary anymore and therefore the plugins were merged.
 

@@ -28,7 +28,7 @@ from cmk.base.config import FilterMode, HostCheckTable
 
 @pytest.fixture(autouse=True, scope="module")
 def _use_fix_register(fix_register):
-    """These tests modify the plugin registry. Make sure to load it first."""
+    """These tests modify the plug-in registry. Make sure to load it first."""
 
 
 def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:

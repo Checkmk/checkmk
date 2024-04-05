@@ -10,7 +10,7 @@ description:
  A synchronization state of HEALTHY maps to {OK},
  while a synchronization state of NOT_HEALTHY maps to {CRIT}.
 
- This check needs the Checkmk mssql.vbs plugin installed in
+ This check needs the Checkmk mssql.vbs plug-in installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 

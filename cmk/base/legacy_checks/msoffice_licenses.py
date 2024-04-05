@@ -59,7 +59,7 @@ def check_msoffice_licenses(item, params, parsed):
         else:
             warn_abs, crit_abs = warn, crit
 
-        # the agent plugin also gathers the last 3 unused licenses with no
+        # the agent plug-in also gathers the last 3 unused licenses with no
         # active licenses. To handle this, we only output consumed licenses for
         # licenses with active ones
         yield check_levels(

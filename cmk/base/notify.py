@@ -1318,7 +1318,7 @@ def rbn_emails_contacts(emails: list[str]) -> list[str]:
 # 2: Cannot send, retry does not make sense
 
 
-# Add the plugin parameters to the envinroment. We have two types of parameters:
+# Add the plug-in parameters to the envinroment. We have two types of parameters:
 # - list, the legacy style. This will lead to PARAMETERS_1, ...
 # - dict, the new style for scripts with WATO rule. This will lead to
 #         PARAMETER_FOO_BAR for a dict key named "foo_bar".
@@ -1352,7 +1352,7 @@ def path_to_notification_script(plugin_name: NotificationPluginNameStr) -> str |
         path = cmk.utils.paths.notifications_dir / plugin_name
 
     if not path.exists():
-        logger.info("Notification plugin '%s' not found", plugin_name)
+        logger.info("Notification plug-in '%s' not found", plugin_name)
         logger.info("  not in %s", cmk.utils.paths.notifications_dir)
         logger.info("  and not in %s", cmk.utils.paths.local_notifications_dir)
         return None
@@ -1403,7 +1403,7 @@ def call_notification_script(
 
         with Timeout(
             config.notification_plugin_timeout,
-            message="Notification plugin timed out",
+            message="Notification plug-in timed out",
         ) as timeout_guard:
             try:
                 while True:
@@ -1418,7 +1418,7 @@ def call_notification_script(
                         out.output(line)
             except MKTimeout:
                 plugin_log(
-                    "Notification plugin did not finish within %d seconds. Terminating."
+                    "Notification plug-in did not finish within %d seconds. Terminating."
                     % config.notification_plugin_timeout
                 )
                 p.kill()
@@ -1882,7 +1882,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many
 
     if bulk_context:  # otherwise: only corrupted files
         # Per default the uuids are sorted chronologically from oldest to newest
-        # Therefore the notification plugin also shows the oldest entry first
+        # Therefore the notification plug-in also shows the oldest entry first
         # The following configuration option allows to reverse the sorting
         if isinstance(old_params, dict) and old_params.get("bulk_sort_order") == "newest_first":
             bulk_context.reverse()
@@ -1936,7 +1936,7 @@ def call_bulk_notification_script(
 ) -> tuple[NotificationResultCode, list[str]]:
     path = path_to_notification_script(plugin_name)
     if not path:
-        raise MKGeneralException("Notification plugin %s not found" % plugin_name)
+        raise MKGeneralException("Notification plug-in %s not found" % plugin_name)
 
     timed_out = False
     # Protocol: The script gets the context on standard input and
@@ -1957,7 +1957,7 @@ def call_bulk_notification_script(
             )
         except subprocess.TimeoutExpired:
             logger.info(
-                "Notification plugin did not finish within %d seconds. Terminating.",
+                "Notification plug-in did not finish within %d seconds. Terminating.",
                 config.notification_plugin_timeout,
             )
             p.kill()

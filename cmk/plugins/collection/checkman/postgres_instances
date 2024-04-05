@@ -8,7 +8,7 @@ description:
 
  If instance is running, service status is OK, otherwise CRIT.
 
- This check needs the Checkmk mk_postgres plugin installed in the agent.
+ This check needs the Checkmk mk_postgres plug-in installed in the agent.
 
 item:
  Name of the database in upper case letters

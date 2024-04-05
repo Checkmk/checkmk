@@ -384,17 +384,17 @@ def _make_diff(
                 *(f"Added host label: '{l.label}'." for l in labels_new),
                 *(
                     (
-                        f"Removed service: Check plugin '{DiscoveredService.check_plugin_name(s)}'."
+                        f"Removed service: Check plug-in '{DiscoveredService.check_plugin_name(s)}'."
                         if DiscoveredService.item(s) is None
-                        else f"Removed service: Check plugin '{DiscoveredService.check_plugin_name(s)}' / item '{DiscoveredService.item(s)}'."
+                        else f"Removed service: Check plug-in '{DiscoveredService.check_plugin_name(s)}' / item '{DiscoveredService.item(s)}'."
                     )
                     for s in services_vanished
                 ),
                 *(
                     (
-                        f"Added service: Check plugin '{DiscoveredService.check_plugin_name(s)}'."
+                        f"Added service: Check plug-in '{DiscoveredService.check_plugin_name(s)}'."
                         if DiscoveredService.item(s) is None
-                        else f"Added service: Check plugin '{DiscoveredService.check_plugin_name(s)}' / item '{DiscoveredService.item(s)}'."
+                        else f"Added service: Check plug-in '{DiscoveredService.check_plugin_name(s)}' / item '{DiscoveredService.item(s)}'."
                     )
                     for s in services_new
                 ),
@@ -652,7 +652,7 @@ def _get_node_services(
     # host name for get_host_values{_merged,} calls in the legacy checks.
 
     for plugin_name in skip:
-        console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
+        console.vverbose(f"  Skip ignored check plug-in name {plugin_name!r}\n")
 
     autocheck_store = AutochecksStore(host_name)
     try:
@@ -797,7 +797,7 @@ def _get_cluster_services(
         console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
 
         for plugin_name in skip:
-            console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
+            console.vverbose(f"  Skip ignored check plug-in name {plugin_name!r}\n")
 
         autocheck_store = AutochecksStore(node)
         discovered_services = discover_services(

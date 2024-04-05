@@ -30,6 +30,14 @@ def _update_disable_notifications(user_spec: UserSpec) -> None:
         user_spec["disable_notifications"] = {"disable": True} if disable_notifications else {}
 
 
+def _add_missing_locked_attr(user_spec: UserSpec) -> None:
+    """Until 2.3 the LDAP user connector did not set the locked attribute in all cases"""
+    if "locked" in user_spec:
+        return
+    user_spec.setdefault("locked", False)
+    return
+
+
 def _update_user_attributes(logger: Logger, users: Users) -> Users:
     """
     With version 1.6.0 we deprecated boolean disable_notifications. SUP-17012
@@ -43,6 +51,7 @@ def _update_user_attributes(logger: Logger, users: Users) -> Users:
             changed_user_specs = True
             del user_spec["language"]
         _update_disable_notifications(user_spec)
+        _add_missing_locked_attr(user_spec)
 
     if changed_user_specs:
         logger.log(

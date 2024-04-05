@@ -2027,7 +2027,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
                     "locked": True,
                     "serial": user.get("serial", 0) + 1,
                 }
-            if not locked_in_ad and locked_in_cmk:
+            if not locked_in_ad:
                 return {
                     "locked": False,
                 }

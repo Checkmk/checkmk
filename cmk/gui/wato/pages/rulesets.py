@@ -382,7 +382,7 @@ class ModeRuleSearch(ABCRulesetMode):
 
     def _set_title_help_and_doc_reference(self) -> None:
         if self._page_type is PageType.DeprecatedRulesets:
-            self._title = _("Search rules: Deprecated Rulesets")
+            self._title = _("Rule search: Deprecated Rulesets")
             self._help = _(
                 "Here you can see a list of all deprecated rulesets (which are not used by Checkmk anymore). If "
                 "you have defined some rules here, you might have to migrate the rules to their successors. Please "
@@ -393,7 +393,7 @@ class ModeRuleSearch(ABCRulesetMode):
             }
 
         elif self._page_type is PageType.IneffectiveRules:
-            self._title = _("Search rules: Rulesets with ineffective rules")
+            self._title = _("Rule search: Rulesets with ineffective rules")
             self._help = _(
                 "The following rulesets contain rules that do not match to any of the existing hosts."
             )
@@ -402,14 +402,14 @@ class ModeRuleSearch(ABCRulesetMode):
             }
 
         elif self._page_type is PageType.UsedRulesets:
-            self._title = _("Search rules: Used rulesets")
+            self._title = _("Rule search: Used rulesets")
             self._help = _("Non-empty rulesets")
             self._doc_references = {
                 DocReference.WATO_RULES_IN_USE: _("Rule sets in use"),
             }
 
         elif self._page_type is PageType.RuleSearch:
-            self._title = _("Search rules")
+            self._title = _("Rule search")
             self._help = None
             self._doc_references = {
                 DocReference.WATO_RULES: _("Host and service parameters"),

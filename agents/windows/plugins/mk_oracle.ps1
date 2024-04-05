@@ -107,6 +107,11 @@ $CACHE_MAXAGE = 600
 #   $EXCLUDE_mysid="sessions logswitches"
 #
 
+function Test-Administrator {
+     return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+}
+
+$is_admin = Test-Administrator
 Function debug_echo {
      Param(
           [Parameter(Mandatory = $True, Position = 1)]
@@ -116,6 +121,25 @@ Function debug_echo {
      if ($DEBUG -gt 0) {
           $MYTIME = Get-Date -Format o
           echo "${MYTIME} DEBUG:${error_message}"
+     }
+     # log to a %PROGRAMDATA%\cmk_oracle_plugin-{%USERNAME%}{user|admin}.log if PROGRAMDATA/Temp/cmk_enable_oracle_logging exists
+     try {
+          $temp = Join-Path -Path $env:PROGRAMDATA -ChildPath "Temp"
+          if (Test-Path (Join-Path -Path $temp -ChildPath "cmk_enable_oracle_logging")) {
+               $MYTIME = Get-Date -Format o
+               if ($is_admin) {
+                    $mode = "admin"
+               }
+               else {
+                    $mode = "user"
+               }
+               $user_name = (whoami).replace("\", ",")
+               $log_file = Join-Path -Path $temp -ChildPath "cmk_oracle_plugin-{$user_name}{$mode}.log"
+               Add-Content -Path $log_file -Value "${MYTIME} [LOG] ${error_message}"
+          }
+     }
+     catch {
+          # do nothing on "surprise"
      }
 }
 
@@ -127,14 +151,24 @@ if (!$MK_CONFDIR) {
      $MK_CONFDIR = "C:\ProgramData\checkmk\agent\config"
 }
 
-# directory for tempfiles
 $MK_TEMPDIR = $env:MK_TEMPDIR
+if ($is_admin) {
+     debug_echo "Admin mode"
+     $MK_TEMPDIR = $env:MK_TEMPDIR
+}
+else {
+     debug_echo "User mode"
+     $MK_TEMPDIR = $env:TEMP
+}
+
 
 # To execute the script standalone in the environment of the installed agent
 if (!$MK_TEMPDIR) {
      $MK_TEMPDIR = "C:\ProgramData\checkmk\agent\tmp"
 }
 
+debug_echo "MK_TEMPDIR = $MK_TEMPDIR"
+debug_echo "MK_CONFDIR = $MK_CONFDIR"
 
 # Source the optional configuration file for this agent plugin
 $CONFIG_FILE = "${MK_CONFDIR}\mk_oracle_cfg.ps1"
@@ -191,30 +225,81 @@ set echo on
 $LESS_THAN = '<'
 
 Function should_exclude($exclude, $section) {
-    return (($exclude -Match "ALL") -or ($exclude -Match $section))
+     return (($exclude -Match "ALL") -or ($exclude -Match $section))
 }
 
-Function plugin_runs_as_local_system_user() {
-    return (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
+function Test-DomainSid([string]$sid) {
+     $domain_sid_pattern = "S-1-5-(.*)-51[2,9]"
+     ($sid -match $domain_sid_pattern)[0]
+     # TODO(sk): check whether domain is valid, matches[1] contains domain id
+     # it is highly unlikely that domain id will mismatch
+     # still we may check it, but in the future
 }
 
-Function is_owned_by_local_system_user($filePath) {
-    $acl = Get-Acl -Path $filePath
+<#
+    .SYNOPSIS
+        Checks that file is safe to run by administrator.
+    .DESCRIPTION
+        If non-admin users have Writem, Modify or Full Control to the file
+        then returns error with detailed description.
+#>
+function Invoke-SafetyCheck( [String]$file ) {
+     if (-not (Test-Path -path $file)) {
+          return
+     }
 
-    # SID for the "NT AUTHORITY\SYSTEM" account
-    $systemSid = "S-1-5-18"
+     $admin_sids = @(
+          "S-1-5-18", # SYSTEM
+          "S-1-5-32-544" # Administrators
+     )
+     $forbidden_rights = @("Modify", "FullControl", "Write")
+     class Actor {
+          [string]$name
+          [string]$sid
+          [string]$rights
+     }
+     try {
+          $acl = Get-Acl $file -ErrorAction Stop
+          $access = $acl.Access
+          $admins = Get-LocalGroupMember -SID "S-1-5-32-544"
+          $actors = $access | ForEach-Object {
+               $a = [Actor]::new()
+               $AdObj = New-Object System.Security.Principal.NTAccount -ArgumentList $_.IdentityReference
+               $a.name = $AdObj
+               $a.sid = $AdObj.Translate([System.Security.Principal.SecurityIdentifier])
+               $a.rights = $_.FileSystemRights.ToString()
+               $a
+          }
 
-    $ntAccount = New-Object System.Security.Principal.NTAccount($acl.Owner)
-    $ownerSid = $ntAccount.Translate([System.Security.Principal.SecurityIdentifier])
+          foreach ($entry in $actors ) {
+               $name = $entry.name
+               $sid = $entry.sid
+               if ( $admin_sids -contains $sid ) {
+                    # predefined admin groups are safe
+                    continue
+               }
+               if (Test-DomainSid $sid) {
+                    # 'Domain Admins' and 'Enterprise Admins' are safe too
+                    continue
+               }
+               if ( $admins.Name -contains "$name" ) {
+                    # members of local admin groups are safe
+                    continue
+               }
 
-    return ($ownerSid.Value -eq $systemSid)
-}
-
-Function safe_execution_possible($path) {
-    if (-not(plugin_runs_as_local_system_user)) {
-        return $true
-    }
-    return is_owned_by_local_system_user($path)
+               # check for forbidden rights
+               $rights = $entry.rights
+               $forbidden_rights |
+               Foreach-Object {
+                    if ($rights -match $_) {
+                         return "$name has '$_' access permissions '$file'"
+                    }
+               }
+          }
+     }
+     catch {
+          return "Exception '$_' during check '$file'"
+     }
 }
 
 Function get_dbversion_database ($ORACLE_HOME) {
@@ -244,7 +329,7 @@ function is_async_running ($fullPath) {
      $command_line = (Get-WmiObject -Query "SELECT CommandLine FROM Win32_Process WHERE ProcessID = $proc_pid").commandline
 
      if ($command_line -like "*$fullPath*") {
-         return $true
+          return $true
      }
 
      # The process to the PID cannot be found, so remove also the proc file
@@ -267,10 +352,7 @@ Function sqlcall {
           [int]$run_async,
 
           [Parameter(Mandatory = $True, Position = 4)]
-          [string]$sqlsid,
-
-          [Parameter(Mandatory = $True, Position = 5)]
-          [string]$oracle_home
+          [string]$sqlsid
      )
      ################################################################################
      # Meaning of parameters in function sqlcall
@@ -479,7 +561,7 @@ Function sqlcall {
      if ($run_async -eq 0) {
           $SKIP_DOUBLE_ERROR = 0
           try {
-               $res = ( $THE_SQL | & $oracle_home"\bin\sqlplus" -L -s "$SQL_CONNECT")
+               $res = ( $THE_SQL | sqlplus -L -s "$SQL_CONNECT")
                if ($LastExitCode -eq 0) {
                     # we only show the output if there was no error...
                     $res | Set-Content $fullpath
@@ -542,16 +624,16 @@ Function sqlcall {
                if (-not(is_async_running($fullPath))) {
 
                     $command = {
-                        param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
-                        $res = ("$sql" | & $oracle_home"\bin\sqlplus" -s -L $sql_connect)
-                        if ($LastExitCode -eq 0) {
-                            $res | Set-Content $path
-                        }
-                        else {
-                        $stripped_res = '$sql_sid|FAILURE|' + $res | select-string -pattern 'ERROR'
-                        '<<<oracle_instance:sep(124)>>>' | Set-Content $path
-                        $stripped_res | Add-Content $path
-                        }
+                         param([string]$sql_connect, [string]$sql, [string]$path, [string]$sql_sid)
+                         $res = ("$sql" | sqlplus -s -L $sql_connect)
+                         if ($LastExitCode -eq 0) {
+                              $res | Set-Content $path
+                         }
+                         else {
+                              $stripped_res = '$sql_sid|FAILURE|' + $res | select-string -pattern 'ERROR'
+                              '<<<oracle_instance:sep(124)>>>' | Set-Content $path
+                              $stripped_res | Add-Content $path
+                         }
                     }
 
                     # This escaping is needed as it seems the here string attribute gets lost or has no effect when passing the
@@ -1683,7 +1765,7 @@ Function sql_systemparameter {
         from v$system_parameter, v$instance i
         where name not like '!_%' ESCAPE '!';
 '@
- echo $query_systemparameter
+     echo $query_systemparameter
 }
 
 
@@ -2230,21 +2312,31 @@ if ($the_count -gt 0) {
           # in some environments HKLM:\SYSTEM\CurrentControlSet\services\OracleService{ORACLE_SID}
           # wasn't present, see SUP-10065
           try {
-              $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
-              $val = (Get-ItemProperty -Path $key).ImagePath
+               $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
+               $val = (Get-ItemProperty -Path $key).ImagePath
           }
           catch {
-              $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleASMService' + $ORACLE_SID
-              $val = (Get-ItemProperty -Path $key).ImagePath
+               $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleASMService' + $ORACLE_SID
+               $val = (Get-ItemProperty -Path $key).ImagePath
           }
-          $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4)
+          #  $val may contain c:\path\to\file or "c:\path\to\file" or "c:\path\to\file" PARAM
+          $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4).Trim('"')
 
-          if (-not(safe_execution_possible($ORACLE_HOME + "\bin\sqlplus.exe"))) {
-              echo "<<<oracle_instance:sep(124)>>>"
-              echo "$ORACLE_SID|FAILURE|A safe execution of $ORACLE_HOME\bin\sqlplus cannot be guaranteed. Either you need to run the checkmk agent as non-system user (by using the rule 'Run plugins and local checks using non-system account' or disallow modifications to the sqlplus by non-system users."
-              continue
+          if ($is_admin) {
+               # administrators should use only safe binary
+               $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\sqlplus.exe")
+               if ($Null -eq $result) {
+                    $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\tnsping.exe")
+               }
+               if ($Null -eq $result) {
+                    $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\crsctl.exe")
+               }
+               if ($Null -ne $result) {
+                    Write-Output "<<<oracle_instance:sep(124)>>>"
+                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Alternatively, you can try to run the plugin as a user using the rule 'Run plugins and local checks using non-system account'"
+                    continue
+               }
           }
-
           # reset errors found for this instance to zero
           $ERROR_FOUND = 0
 
@@ -2308,7 +2400,7 @@ if ($the_count -gt 0) {
                     debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple SQL"
                     $ERROR_FOUND = 0
                     if ($THE_SQL) {
-                         sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -run_async 0 -sqlsid $inst_name -oracle_home $ORACLE_HOME
+                         sqlcall -sql_message "sync_SQLs" -sqltext "$THE_SQL" -run_async 0 -sqlsid $inst_name
                     }
                }
 
@@ -2344,7 +2436,7 @@ if ($the_count -gt 0) {
                          }
                          debug_echo "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX now calling multiple asyn SQL"
                          if ("$THE_SQL") {
-                              sqlcall -sql_message "async_SQLs" -sqltext "$THE_SQL" -run_async 1 -sqlsid $inst_name -oracle_home $ORACLE_HOME
+                              sqlcall -sql_message "async_SQLs" -sqltext "$THE_SQL" -run_async 1 -sqlsid $inst_name
                          }
                     }
                }

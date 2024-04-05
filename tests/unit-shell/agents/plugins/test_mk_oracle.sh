@@ -28,6 +28,7 @@ EOF
 
 setup_su() {
     # Fake su oracle -c "CMD"
+    # shellcheck disable=SC2317 # overwritten function called indirectly
     su() {
         if [[ "$1" == "oracle" && "$2" == "-c" ]]; then
             shift 2

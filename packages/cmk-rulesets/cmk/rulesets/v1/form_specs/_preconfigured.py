@@ -24,7 +24,11 @@ class ProxySchema(enum.StrEnum):
 @dataclass(frozen=True, kw_only=True)
 class Proxy(
     FormSpec[
-        tuple[Literal["environment_proxy", "no_proxy", "global_proxy", "url_proxy"], str, None]
+        tuple[
+            Literal["cmk_postprocessed"],
+            Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+            str,
+        ]
     ]
 ):
     """Specifies a form for configuring a proxy

@@ -560,29 +560,53 @@ def test_migrate_to_password(
     [
         pytest.param(
             ("environment", "environment"),
-            ("environment_proxy", "", None),
-            id="migrate explicit password",
+            ("cmk_postprocessed", "environment_proxy", ""),
+            id="migrate environment proxy",
         ),
         pytest.param(
             ("no_proxy", None),
-            ("no_proxy", "", None),
-            id="migrate stored password",
+            ("cmk_postprocessed", "no_proxy", ""),
+            id="migrate no proxy",
         ),
         pytest.param(
             ("global", "global-proxy-id"),
-            ("global_proxy", "global-proxy-id", None),
-            id="already migrated explicit password",
+            ("cmk_postprocessed", "stored_proxy", "global-proxy-id"),
+            id="migrate stored proxy",
         ),
         pytest.param(
             ("url", "proxy_url"),
-            ("url_proxy", "proxy_url", None),
-            id="already migrated stored password",
+            ("cmk_postprocessed", "explicit_proxy", "proxy_url"),
+            id="migrate explicit proxy",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "environment_proxy", ""),
+            ("cmk_postprocessed", "environment_proxy", ""),
+            id="already migrated environment proxy",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "no_proxy", ""),
+            ("cmk_postprocessed", "no_proxy", ""),
+            id="already migrated no proxy",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "stored_proxy", "global-proxy-id"),
+            ("cmk_postprocessed", "stored_proxy", "global-proxy-id"),
+            id="already migrated stored proxy",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "explicit_proxy", "proxy_url"),
+            ("cmk_postprocessed", "explicit_proxy", "proxy_url"),
+            id="already migrated explicit proxy",
         ),
     ],
 )
 def test_migrate_to_proxy(
     old: object,
-    new: tuple[Literal["environment_proxy", "no_proxy", "global_proxy", "url_proxy"], str, None],
+    new: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+        str,
+    ],
 ) -> None:
     assert migrate_to_proxy(old) == new
     assert migrate_to_proxy(new) == new

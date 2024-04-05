@@ -30,7 +30,7 @@ class PreprocessingResult:
         ...             'pure_storage_fa',
         ...             [
         ...                 {
-        ...                     'api_token': ('explicit_password', ':uuid:1234', 'knubblwubbl'),
+        ...                     'api_token': ('cmk_postprocessed','explicit_password', (':uuid:1234', 'knubblwubbl')),
         ...                     'timeout': 5.0,
         ...                 },
         ...             ],
@@ -99,10 +99,10 @@ def _processed_config_value(
             )
         case tuple():
             match params:
-                case "stored_password", str(passwd_id), str():
-                    return _replace_password(passwd_id, None)
-                case "explicit_password", str(passwd_id), str(value):
-                    return _replace_password(passwd_id, value)
+                case ("cmk_postprocessed", "stored_password", value):
+                    return _replace_password(value[0], None)
+                case ("cmk_postprocessed", "explicit_password", value):
+                    return _replace_password(*value)
                 case (
                     "cmk_postprocessed",
                     "stored_proxy" | "environment_proxy" | "explicit_proxy" | "no_proxy",

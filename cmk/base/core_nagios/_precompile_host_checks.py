@@ -43,6 +43,13 @@ from cmk.discover_plugins import PluginLocation
 
 from ._host_check_config import HostCheckConfig
 
+_TEMPLATE_FILE = Path(__file__).parent / "_host_check_template.py"
+
+_INSTANTIATION_PATTERN = re.compile(
+    f" = {HostCheckConfig.__name__}\\(.*?\n\\)",
+    re.DOTALL,
+)
+
 
 class HostCheckStore:
     """Caring about persistence of the precompiled host check files"""
@@ -235,11 +242,13 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         hostname=hostname,
     )
 
-    return re.sub(
-        f" = {HostCheckConfig.__name__}(.*\n)",
+    template = _TEMPLATE_FILE.read_text()
+    if (m_placeholder := _INSTANTIATION_PATTERN.search(template)) is None:
+        raise ValueError(f"broken template at: {_TEMPLATE_FILE})")
+
+    return template.replace(
+        m_placeholder.group(0),
         f" = {host_check_config!r}",
-        (Path(__file__).parent / "_host_check_template.py").read_text(),
-        re.DOTALL,
     )
 
 

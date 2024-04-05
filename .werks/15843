@@ -1,0 +1,29 @@
+Title: mk_oracle(ps1): Follow-up to privilege escalation fix
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1712314947
+Edition: cre
+Level: 2
+Version: 2.2.0p25
+
+You might be affected by this Werk if you use <tt>mk_oracle</tt> on Windows.
+
+Werk <a href="https://checkmk.com/werk/16232">Werk #16232</a> introduced a 
+regression, thereby disrupting Oracle monitoring on Windows.
+
+This Werk addresses above mentioned issue that affects versions 2.1.0p41, 
+2.2.0p24, and 2.3.0b4.
+
+Since this release, Oracle monitoring on Windows is fully supported under 
+condition you use an account without administrator rights or the certain 
+executable binaries, <tt>sqlplus.exe</tt>, <tt>tnsping.exe</tt> and, if 
+presented, <tt>crsctl.exe</tt> are write-protected, with the possible 
+exception being the Administrator.
+
+If you are unable or prefer not to use an unprivileged account then you may 
+need to adjust permissions for above mentioned binaries: remove <tt>Write</tt>, 
+<tt>Full Control</tt> and <tt>Modify</tt> permissions for any non-Administrator 
+user and group.
+
+More information about can be found at <a href="https://checkmk.atlassian.net/wiki/x/AQA1B">here</a>.

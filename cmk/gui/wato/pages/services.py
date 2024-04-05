@@ -1923,7 +1923,7 @@ def _page_menu_entry_show_discovered_labels(host: Host, options: DiscoveryOption
 
 def _page_menu_entry_show_plugin_names(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show plugin names"),
+        title=_("Show plug-in names"),
         icon_name="toggle_on" if options.show_plugin_names else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(

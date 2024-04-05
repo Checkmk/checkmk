@@ -66,7 +66,7 @@ Ident = tuple[str, str]
 def main(args: Sequence[str]) -> int:
     main_modules.load_plugins()
     if errors := get_failed_plugins():
-        raise Exception(f"The following errors occured during plugin loading: {errors}")
+        raise Exception(f"The following errors occured during plug-in loading: {errors}")
 
     with gui_context(), SuperUserContext():
         for target in get_args(EndpointTarget):

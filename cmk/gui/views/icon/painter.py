@@ -119,7 +119,7 @@ def _paint_icons(
 ) -> CellSpec:
     """Paint column with various icons
 
-    The icons use a plugin based mechanism so it is possible to register own icon "handlers".
+    The icons use a plug-in based mechanism so it is possible to register own icon "handlers".
     """
     output = HTML()
     for icon in toplevel_icons:

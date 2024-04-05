@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # List of modules for main menu and Setup snapin. These modules are
-# defined in a plugin because they contain cmk.gui.i18n strings.
+# defined in a plug-in because they contain cmk.gui.i18n strings.
 # fields: mode, title, icon, permission, help
 
 import time
@@ -1097,7 +1097,7 @@ class MainModuleAgentsWindows(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Downloads Checkmk agent and plugins for Windows")
+        return _("Downloads Checkmk agent and plug-ins for Windows")
 
     @property
     def sort_index(self) -> int:
@@ -1131,7 +1131,7 @@ class MainModuleAgentsLinux(ABCMainModule):
 
     @property
     def description(self) -> str:
-        return _("Downloads Checkmk agent and plugins for Linux")
+        return _("Downloads Checkmk agent and plug-ins for Linux")
 
     @property
     def sort_index(self) -> int:

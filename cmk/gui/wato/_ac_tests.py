@@ -627,11 +627,11 @@ class ACTestEscapeHTMLDisabled(ACTest):
             "code received from external sources, like service output or log messages. "
             "But there are specific reasons to deactivate this security feature. E.g. when "
             "you want to display the HTML output produced by a specific check plugin."
-            "Disabling the escaping also allows the plugin to execute not only HTML, but "
+            "Disabling the escaping also allows the plug-in to execute not only HTML, but "
             "also Javascript code in the context of your browser. This makes it possible to "
             "execute arbitrary Javascript, even for injection attacks.<br>"
             "For this reason, you should only disable this for a small, very specific number of "
-            "services, to be sure that not every random check plugin is able to produce code "
+            "services, to be sure that not every random check plug-in is able to produce code "
             "which your browser interprets."
         )
 
@@ -845,7 +845,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
             '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk helpers</a></li>'
             "</ul>"
             "</p>"
@@ -904,7 +904,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
             '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk fetchers</a></li>'
             "</ul>"
             "</p>"
@@ -978,7 +978,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
             '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_checker_helpers">number of Checkmk checkers</a></li>'
             "</ul>"
             "</p>"
@@ -1082,7 +1082,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Check which checks / plug-ins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
             '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_check_helpers">number of check helpers</a></li>'
             "</ul>"
             "</p>"
@@ -1250,9 +1250,9 @@ class ACTestDeprecatedCheckPlugins(ACTest):
 
     def help(self) -> str:
         return _(
-            "The check plugin API for plugins in <tt>%s</tt> is deprecated."
+            "The check plug-in API for plug-ins in <tt>%s</tt> is deprecated."
             " Plugin files in this folder are still considered, but the API they are using may change at any time without notice."
-            " Please migrate the plugins to the new API."
+            " Please migrate the plug-ins to the new API."
             " More information can be found in our <a href='%s'>User Guide</a>."
         ) % (
             "/".join(local_checks_dir.parts[-4:]),
@@ -1267,13 +1267,13 @@ class ACTestDeprecatedCheckPlugins(ACTest):
             if plugin_files := list(local_checks_dir.iterdir()):
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d check plugins using the deprecated API: %s")
+                    text=_("%d check plug-ins using the deprecated API: %s")
                     % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
                 )
                 return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No check plugins using the deprecated API")
+            state=ACResultState.OK, text=_("No check plug-ins using the deprecated API")
         )
 
 
@@ -1286,9 +1286,9 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
 
     def help(self) -> str:
         return _(
-            "The old inventory plugin API has been removed in Checkmk version 2.2."
+            "The old inventory plug-in API has been removed in Checkmk version 2.2."
             " Plugin files in <tt>'%s'</tt> are ignored."
-            " Please migrate the plugins to the new API."
+            " Please migrate the plug-ins to the new API."
         ) % str(local_inventory_dir)
 
     def is_relevant(self) -> bool:
@@ -1299,13 +1299,13 @@ class ACTestDeprecatedInventoryPlugins(ACTest):
             if plugin_files := list(local_inventory_dir.iterdir()):
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=_("%d ignored HW/SW inventory plugins found: %s")
+                    text=_("%d ignored HW/SW inventory plug-ins found: %s")
                     % (len(plugin_files), ", ".join(f.name for f in plugin_files)),
                 )
                 return
 
         yield ACSingleResult(
-            state=ACResultState.OK, text=_("No ignored HW/SW inventory plugins found")
+            state=ACResultState.OK, text=_("No ignored HW/SW inventory plug-ins found")
         )
 
 

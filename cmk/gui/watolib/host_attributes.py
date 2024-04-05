@@ -1106,7 +1106,7 @@ class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
         return True
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def TextAttribute(
     name: str,
     title: str,
@@ -1136,7 +1136,7 @@ def TextAttribute(
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def NagiosTextAttribute(  # type: ignore[no-untyped-def]
     name: str,
     nag_name: str,
@@ -1169,7 +1169,7 @@ def NagiosTextAttribute(  # type: ignore[no-untyped-def]
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def FixedTextAttribute(
     name: str, title: str, help_txt: str | None = None
 ) -> type[ABCHostAttributeFixedText]:
@@ -1187,7 +1187,7 @@ def FixedTextAttribute(
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def ValueSpecAttribute(name: str, vs: ValueSpec) -> type[ABCHostAttributeValueSpec]:
     return type(
         "HostAttributeValueSpec%s" % name.title(),
@@ -1201,7 +1201,7 @@ def ValueSpecAttribute(name: str, vs: ValueSpec) -> type[ABCHostAttributeValueSp
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def NagiosValueSpecAttribute(
     name: str, nag_name: str, vs: ValueSpec
 ) -> type[ABCHostAttributeNagiosValueSpec]:
@@ -1219,7 +1219,7 @@ def NagiosValueSpecAttribute(
     )
 
 
-# TODO: Kept for pre 1.6 plugin compatibility
+# TODO: Kept for pre 1.6 plug-in compatibility
 def EnumAttribute(
     name: str,
     title: str,

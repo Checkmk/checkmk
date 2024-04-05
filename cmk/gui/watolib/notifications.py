@@ -83,7 +83,7 @@ def load_notification_rules(lock: bool = False) -> list[EventRule]:
     filename = wato_root_dir() + "notifications.mk"
     notification_rules = store.load_from_mk_file(filename, "notification_rules", [], lock=lock)
 
-    # Convert to new plugin configuration format
+    # Convert to new plug-in configuration format
     for rule in notification_rules:
         if "notify_method" in rule:
             method = rule["notify_method"]

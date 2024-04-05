@@ -239,10 +239,10 @@ class ABCEventsMode(WatoMode, abc.ABC):
             (
                 "match_plugin_output",
                 RegExp(
-                    title=_("Match check plugin output"),
+                    title=_("Match check plug-in output"),
                     help=_(
                         "This text is a regular expression that is being searched in the output "
-                        "of the check plugins that produced the alert. It is not a prefix but an infix match."
+                        "of the check plug-ins that produced the alert. It is not a prefix but an infix match."
                     ),
                     size=40,
                     mode=RegExp.prefix,

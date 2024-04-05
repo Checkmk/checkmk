@@ -314,7 +314,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=_("spec label"),
                 placeholder="myname",
                 help=_(
-                    "help text This field supports the use of macros. The corresponding plugin replaces the macros with the actual values."
+                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values."
                 ),
                 validate=_legacy_custom_text_validate,
                 allow_empty=False,
@@ -914,7 +914,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 monospaced=True,
                 title=_("my title"),
                 help=_(
-                    "help text This field supports the use of macros. The corresponding plugin replaces the macros with the actual values."
+                    "help text This field supports the use of macros. The corresponding plug-in replaces the macros with the actual values."
                 ),
                 label=_("label"),
                 default_value="default text",

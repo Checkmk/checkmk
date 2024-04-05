@@ -215,7 +215,7 @@ def _parameter_valuespec_checkmk_agent():
                             MonitoringState(
                                 title=_("Monitoring state in case of version parsing failure"),
                                 help=_(
-                                    "The monitoring state in case the version of an agent plugin "
+                                    "The monitoring state in case the version of an agent plug-in "
                                     "is unparsable."
                                 ),
                                 default_value=3,

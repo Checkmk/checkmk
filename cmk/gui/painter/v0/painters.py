@@ -573,7 +573,7 @@ class PainterSvcPluginOutput(Painter):
         return _("Summary")
 
     def list_title(self, cell: Cell) -> str:
-        return _("Summary (Previously named: Status details or plugin output)")
+        return _("Summary (Previously named: Status details or plug-in output)")
 
     @property
     def columns(self) -> Sequence[ColumnName]:
@@ -1956,7 +1956,7 @@ class PainterHostPluginOutput(Painter):
         return _("Summary")
 
     def list_title(self, cell):
-        return _("Summary (Previously named: Status details or plugin output)")
+        return _("Summary (Previously named: Status details or plug-in output)")
 
     @property
     def columns(self) -> Sequence[ColumnName]:

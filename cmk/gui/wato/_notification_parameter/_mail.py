@@ -115,7 +115,7 @@ class NotificationParameterMail(NotificationParameter):
                             "are displayed. If you do not use bulk notifications this option is ignored. "
                             "Note that each graph increases the size of the mail and takes time to render"
                             "on the monitoring server. Therefore, large bulks may exceed the maximum "
-                            "size for attachements or the plugin may run into a timeout so that a failed "
+                            "size for attachements or the plug-in may run into a timeout so that a failed "
                             "notification is produced."
                         ),
                         default_value=5,

@@ -145,10 +145,12 @@ def main() {
     ///       https://review.lan.tribe29.com/c/check_mk/+/34634
     ///       Anyway this whole upload/download mayhem hopfully evaporates with
     ///       bazel..
-    shout("pull packages");
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        distros.each { distro ->
-            docker.image("${distro}:${docker_tag}").pull();
+    shout("pull build images");
+    stage("Pull build images") {
+        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+            distros.each { distro ->
+                docker.image("${distro}:${docker_tag}").pull();
+            }
         }
     }
 

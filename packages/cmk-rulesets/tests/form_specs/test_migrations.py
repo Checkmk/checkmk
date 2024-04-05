@@ -528,28 +528,55 @@ def test_migrate_to_upper_integer_levels_scaled_predictive_stdev() -> None:
     [
         pytest.param(
             ("password", "secret-password"),
-            ("explicit_password", "throwaway-id", "secret-password"),
+            ("cmk_postprocessed", "explicit_password", ("throwaway-id", "secret-password")),
             id="migrate explicit password",
         ),
         pytest.param(
             ("store", "password_1"),
-            ("stored_password", "password_1", ""),
+            ("cmk_postprocessed", "stored_password", ("password_1", "")),
             id="migrate stored password",
         ),
         pytest.param(
             ("explicit_password", "067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
-            ("explicit_password", "067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
-            id="already migrated explicit password",
+            (
+                "cmk_postprocessed",
+                "explicit_password",
+                ("067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+            ),
+            id="old 3-tuple explicit password",
         ),
         pytest.param(
             ("stored_password", "password_1", ""),
-            ("stored_password", "password_1", ""),
+            ("cmk_postprocessed", "stored_password", ("password_1", "")),
+            id="old 3-tuple stored password",
+        ),
+        pytest.param(
+            (
+                "cmk_postprocessed",
+                "explicit_password",
+                ("067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+            ),
+            (
+                "cmk_postprocessed",
+                "explicit_password",
+                ("067408f0-d390-4dcc-ae3c-966f278ace7d", "abc"),
+            ),
+            id="already migrated explicit password",
+        ),
+        pytest.param(
+            ("cmk_postprocessed", "stored_password", ("password_1", "")),
+            ("cmk_postprocessed", "stored_password", ("password_1", "")),
             id="already migrated stored password",
         ),
     ],
 )
 def test_migrate_to_password(
-    old: object, new: tuple[Literal["explicit_password", "stored_password"], str, str]
+    old: object,
+    new: tuple[
+        Literal["cmk_postprocessed"],
+        Literal["explicit_password", "stored_password"],
+        tuple[str, str],
+    ],
 ) -> None:
     assert migrate_to_password(old) == new
     assert migrate_to_password(new) == new

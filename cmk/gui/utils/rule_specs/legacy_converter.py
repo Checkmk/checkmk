@@ -1950,9 +1950,9 @@ def _convert_to_legacy_monitored_service_description(
 
 def _transform_password_forth(value: object) -> tuple[str, str]:
     match value:
-        case "explicit_password", str(), str(password):
+        case "cmk_postprocessed", "explicit_password", (str(), str(password)):
             return "password", password
-        case "stored_password", str(password_store_id), str():
+        case "cmk_postprocessed", "stored_password", (str(password_store_id), str()):
             return "store", password_store_id
 
     raise ValueError(value)
@@ -1960,12 +1960,14 @@ def _transform_password_forth(value: object) -> tuple[str, str]:
 
 def _transform_password_back(
     value: tuple[str, str]
-) -> tuple[Literal["explicit_password", "stored_password"], str, str]:
+) -> tuple[
+    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
+]:
     match value:
         case "password", str(password):
-            return "explicit_password", ad_hoc_password_id(), password
+            return "cmk_postprocessed", "explicit_password", (ad_hoc_password_id(), password)
         case "store", str(password_store_id):
-            return "stored_password", password_store_id, ""
+            return "cmk_postprocessed", "stored_password", (password_store_id, "")
 
     raise ValueError(value)
 

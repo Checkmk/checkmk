@@ -264,25 +264,36 @@ def migrate_to_float_simple_levels(
 
 def migrate_to_password(
     model: object,
-) -> tuple[Literal["explicit_password", "stored_password"], str, str]:
+) -> tuple[
+    Literal["cmk_postprocessed"], Literal["explicit_password", "stored_password"], tuple[str, str]
+]:
     """
     Transform a previous password configuration represented by ("password", <password>) or
     ("store", <password-store-id>) to a model of the `Password` FormSpec, represented by
-    ("explicit_password", <password-id>, <password>) or
-    ("stored_password", <password-store-id>, "").
+    ("cmk_postprocessed", "explicit_password", (<password-id>, <password>)) or
+    ("cmk_postprocessed", "stored_password", (<password-store-id>, "")).
 
     Args:
         model: Old value presented to the consumers to be migrated
     """
     match model:
+        # old password format
         case "password", str(password):
-            return "explicit_password", "throwaway-id", password
+            return "cmk_postprocessed", "explicit_password", ("throwaway-id", password)
         case "store", str(password_store_id):
-            return "stored_password", password_store_id, ""
+            return "cmk_postprocessed", "stored_password", (password_store_id, "")
+
+        # password format released in 2.3.0 beta
         case "explicit_password", str(password_id), str(password):
-            return "explicit_password", password_id, password
+            return "cmk_postprocessed", "explicit_password", (password_id, password)
         case "stored_password", str(password_store_id), str(password):
-            return "stored_password", password_store_id, password
+            return "cmk_postprocessed", "stored_password", (password_store_id, password)
+
+        # already migrated passwords
+        case "cmk_postprocessed", "explicit_password", (str(password_id), str(password)):
+            return "cmk_postprocessed", "explicit_password", (password_id, password)
+        case "cmk_postprocessed", "stored_password", (str(password_store_id), str(password)):
+            return "cmk_postprocessed", "stored_password", (password_store_id, password)
 
     raise TypeError(f"Could not migrate {model!r} to Password.")
 

@@ -427,7 +427,11 @@ def argument_function_with_exception(*args, **kwargs):
                     [
                         {
                             "description": "My active check",
-                            "password": ("stored_password", "stored_password", ""),
+                            "password": (
+                                "cmk_postprocessed",
+                                "stored_password",
+                                ("stored_password", ""),
+                            ),
                         }
                     ],
                 ),
@@ -466,7 +470,11 @@ def argument_function_with_exception(*args, **kwargs):
                     command_line="check_my_active_check --pwstore=1@9@stored_password '--secret=**********'",
                     params={
                         "description": "My active check",
-                        "password": ("stored_password", "stored_password", ""),
+                        "password": (
+                            "cmk_postprocessed",
+                            "stored_password",
+                            ("stored_password", ""),
+                        ),
                     },
                     expanded_args="--pwstore=1@9@stored_password '--secret=**********'",
                     detected_executable="check_my_active_check",
@@ -557,7 +565,11 @@ def test_get_active_service_data_password_with_hack(
                     [
                         {
                             "description": "My active check",
-                            "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
+                            "password": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                (":uuid:1234", "p4ssw0rd!"),
+                            ),
                         }
                     ],
                 )
@@ -572,7 +584,7 @@ def test_get_active_service_data_password_with_hack(
             command_line="check_test_check --pwstore=4@1@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
             params={
                 "description": "My active check",
-                "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
+                "password": ("cmk_postprocessed", "explicit_password", (":uuid:1234", "p4ssw0rd!")),
             },
             expanded_args="--pwstore=4@1@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
             detected_executable="/path/to/check_test_check",
@@ -609,7 +621,11 @@ def test_get_active_service_data_password_without_hack(
                     [
                         {
                             "description": "My active check",
-                            "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
+                            "password": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                (":uuid:1234", "p4ssw0rd!"),
+                            ),
                         }
                     ],
                 )
@@ -624,7 +640,7 @@ def test_get_active_service_data_password_without_hack(
             command_line="check_test_check --password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd!}'",
             params={
                 "description": "My active check",
-                "password": ("explicit_password", ":uuid:1234", "p4ssw0rd!"),
+                "password": ("cmk_postprocessed", "explicit_password", (":uuid:1234", "p4ssw0rd!")),
             },
             expanded_args="--password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd\\!}'",
             detected_executable="/path/to/check_test_check",
@@ -810,7 +826,11 @@ def test_test_get_active_service_data_crash_with_debug(
                     [
                         {
                             "description": "My active check",
-                            "password": ("stored_password", "stored_password", ""),
+                            "password": (
+                                "cmk_postprocessed",
+                                "stored_password",
+                                ("stored_password", ""),
+                            ),
                         }
                     ],
                 ),
@@ -859,7 +879,11 @@ def test_test_get_active_service_data_crash_with_debug(
                     "'***'",
                     params={
                         "description": "My active check",
-                        "password": ("stored_password", "stored_password", ""),
+                        "password": (
+                            "cmk_postprocessed",
+                            "stored_password",
+                            ("stored_password", ""),
+                        ),
                     },
                     expanded_args="--pwstore=2@0@stored_password --password " "'***'",
                     detected_executable="check_my_active_check",
@@ -998,7 +1022,11 @@ def test_get_active_service_data_warnings(
                     [
                         {
                             "description": "My active check",
-                            "password": ("explicit_password", ":uuid:1234", "myp4ssw0rd"),
+                            "password": (
+                                "cmk_postprocessed",
+                                "explicit_password",
+                                (":uuid:1234", "myp4ssw0rd"),
+                            ),
                         }
                     ],
                 ),
@@ -1038,7 +1066,11 @@ def test_get_active_service_data_warnings(
                     description="My service",
                     params={
                         "description": "My active check",
-                        "password": ("explicit_password", ":uuid:1234", "myp4ssw0rd"),
+                        "password": (
+                            "cmk_postprocessed",
+                            "explicit_password",
+                            (":uuid:1234", "myp4ssw0rd"),
+                        ),
                     },
                 ),
             ],
@@ -1564,7 +1596,8 @@ def test_iter_special_agent_commands_stored_password_with_hack(
     )
     assert list(
         special_agent.iter_special_agent_commands(
-            "test_agent", {"password": ("explicit_password", ":uuid:1234", "p4ssw0rd!")}
+            "test_agent",
+            {"password": ("cmk_postprocessed", "explicit_password", (":uuid:1234", "p4ssw0rd!"))},
         )
     ) == [
         SpecialAgentCommandLine(
@@ -1592,7 +1625,8 @@ def test_iter_special_agent_commands_stored_password_without_hack(
     )
     assert list(
         special_agent.iter_special_agent_commands(
-            "test_agent", {"password": ("explicit_password", ":uuid:1234", "p4ssw0rd!")}
+            "test_agent",
+            {"password": ("cmk_postprocessed", "explicit_password", (":uuid:1234", "p4ssw0rd!"))},
         )
     ) == [
         SpecialAgentCommandLine(

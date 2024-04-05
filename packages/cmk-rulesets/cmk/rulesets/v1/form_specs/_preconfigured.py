@@ -65,7 +65,15 @@ class MonitoredService(FormSpec[str]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class Password(FormSpec[tuple[Literal["explicit_password", "stored_password"], str, str]]):
+class Password(
+    FormSpec[
+        tuple[
+            Literal["cmk_postprocessed"],
+            Literal["explicit_password", "stored_password"],
+            tuple[str, str],
+        ]
+    ]
+):
     """Specifies a form for configuring passwords (explicit or from password store)"""
 
 

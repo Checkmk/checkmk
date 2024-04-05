@@ -53,11 +53,21 @@ TABLE_COLUMNS: Final = (
     "match_groups_syslog_application",
 )
 
+INDEXED_COLUMNS: Final = (
+    "time",
+    "id",
+    "host",
+)
+
 SQLITE_PRAGMAS = {
     "PRAGMA journal_mode=WAL;": "WAL mode for concurrent reads and writes",
     "PRAGMA synchronous = NORMAL;": "Writes should not blocked by reads",
     "PRAGMA busy_timeout = 2000;": "2 seconds timeout for busy handler. Avoids database is locked errors",
 }
+
+SQLITE_INDEXES = [
+    f"CREATE INDEX IF NOT EXISTS idx_{column} ON history ({column});" for column in INDEXED_COLUMNS
+]
 
 
 def configure_sqlite_types() -> None:
@@ -201,10 +211,13 @@ class SQLiteHistory(History):
                         orig_host TEXT,
                         contact_groups_precedence TEXT,
                         core_host TEXT,
-                        host_in_downtime BOOL,
+                        host_in_downtime BOOL,  
                         match_groups_syslog_application JSON
                     );"""
             )
+        with self.conn as connection:
+            for index_statement in SQLITE_INDEXES:
+                connection.execute(index_statement)
 
     def flush(self) -> None:
         """Drop the history table."""

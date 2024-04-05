@@ -289,34 +289,38 @@ def migrate_to_password(
 
 def migrate_to_proxy(  # pylint: disable=too-many-return-statements
     model: object,
-) -> tuple[Literal["environment_proxy", "no_proxy", "global_proxy", "url_proxy"], str, None]:
+) -> tuple[
+    Literal["cmk_postprocessed"],
+    Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+    str,
+]:
     """
     Transform a previous proxy configuration to a model of the `Proxy` FormSpec.
     Previous configurations are transformed in the following way:
-        ("global", <global-proxy-id>) -> ("global_proxy", <global-proxy-id>, None)
-        ("environment", "environment") -> ("environment_proxy", "", None)
-        ("url", <url>) -> ("url_proxy", <url>, None)
-        ("no_proxy", None) -> ("no_proxy", "", None)
+        ("global", <stored-proxy-id>) -> ("cmk_postprocessed", "stored_proxy", <stored-proxy-id>)
+        ("environment", "environment") -> ("cmk_postprocessed", "environment_proxy", "")
+        ("url", <url>) -> ("cmk_postprocessed", "explicit_proxy", <url>)
+        ("no_proxy", None) -> ("cmk_postprocessed", "no_proxy", "")
 
     Args:
         model: Old value presented to the consumers to be migrated
     """
     match model:
-        case "global", str(global_proxy_id):
-            return "global_proxy", global_proxy_id, None
+        case "global", str(stored_proxy_id):
+            return "cmk_postprocessed", "stored_proxy", stored_proxy_id
         case "environment", "environment":
-            return "environment_proxy", "", None
+            return "cmk_postprocessed", "environment_proxy", ""
         case "url", str(url):
-            return "url_proxy", url, None
+            return "cmk_postprocessed", "explicit_proxy", url
         case "no_proxy", None:
-            return "no_proxy", "", None
-        case "global_proxy", str(global_proxy_id), None:
-            return "global_proxy", global_proxy_id, None
-        case "environment_proxy", str(), None:
-            return "environment_proxy", "", None
-        case "url_proxy", str(url), None:
-            return "url_proxy", url, None
-        case "no_proxy", str(), None:
-            return "no_proxy", "", None
+            return "cmk_postprocessed", "no_proxy", ""
+        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
+            return "cmk_postprocessed", "stored_proxy", stored_proxy_id
+        case "cmk_postprocessed", "environment_proxy", str():
+            return "cmk_postprocessed", "environment_proxy", ""
+        case "cmk_postprocessed", "explicit_proxy", str(url):
+            return "cmk_postprocessed", "explicit_proxy", url
+        case "cmk_postprocessed", "no_proxy", str():
+            return "cmk_postprocessed", "no_proxy", ""
 
     raise TypeError(f"Could not migrate {model!r} to Proxy.")

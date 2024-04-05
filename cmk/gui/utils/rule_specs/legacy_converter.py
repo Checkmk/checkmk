@@ -1762,30 +1762,32 @@ def _make_levels_default_value(
 
 def _transform_proxy_forth(value: object) -> tuple[str, str | None]:
     match value:
-        case "environment_proxy", str(), None:
+        case "cmk_postprocessed", "environment_proxy", str():
             return "environment", "environment"
-        case "no_proxy", str(), None:
+        case "cmk_postprocessed", "no_proxy", str():
             return "no_proxy", None
-        case "global_proxy", str(global_proxy_id), None:
-            return "global", global_proxy_id
-        case "url_proxy", str(url), None:
+        case "cmk_postprocessed", "stored_proxy", str(stored_proxy_id):
+            return "global", stored_proxy_id
+        case "cmk_postprocessed", "explicit_proxy", str(url):
             return "url", url
 
     raise ValueError(value)
 
 
-def _transform_proxy_back(
-    value: tuple[str, str]
-) -> tuple[Literal["environment_proxy", "no_proxy", "global_proxy", "url_proxy"], str, None]:
+def _transform_proxy_back(value: tuple[str, str]) -> tuple[
+    Literal["cmk_postprocessed"],
+    Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+    str,
+]:
     match value:
         case "environment", "environment":
-            return "environment_proxy", "", None
+            return "cmk_postprocessed", "environment_proxy", ""
         case "no_proxy", None:
-            return "no_proxy", "", None
-        case "global", str(global_proxy_id):
-            return "global_proxy", global_proxy_id, None
+            return "cmk_postprocessed", "no_proxy", ""
+        case "global", str(stored_proxy_id):
+            return "cmk_postprocessed", "stored_proxy", stored_proxy_id
         case "url", str(url):
-            return "url_proxy", url, None
+            return "cmk_postprocessed", "explicit_proxy", url
 
     raise ValueError(value)
 

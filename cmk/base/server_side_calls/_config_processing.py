@@ -103,7 +103,11 @@ def _processed_config_value(
                     return _replace_password(passwd_id, None)
                 case "explicit_password", str(passwd_id), str(value):
                     return _replace_password(passwd_id, value)
-                case "global_proxy" | "environment_proxy" | "url_proxy" | "no_proxy", str(), None:
+                case (
+                    "cmk_postprocessed",
+                    "stored_proxy" | "environment_proxy" | "explicit_proxy" | "no_proxy",
+                    str(),
+                ):
                     if proxy_config is not None:
                         return ReplacementResult(
                             value=_replace_proxies(params, proxy_config),
@@ -137,12 +141,14 @@ def _replace_password(
 
 def _replace_proxies(
     proxy_params: tuple[
-        Literal["global_proxy", "environment_proxy", "url_proxy", "no_proxy"], str, None
+        Literal["cmk_postprocessed"],
+        Literal["environment_proxy", "no_proxy", "stored_proxy", "explicit_proxy"],
+        str,
     ],
     proxy_config: ProxyConfig,
 ) -> URLProxy | NoProxy | EnvProxy:
     match proxy_params:
-        case ("global_proxy", str(proxy_id), None):
+        case ("cmk_postprocessed", "stored_proxy", str(proxy_id)):
             try:
                 global_proxy = proxy_config.global_proxies[proxy_id]
                 return URLProxy(url=global_proxy["proxy_url"])
@@ -152,11 +158,11 @@ def _replace_proxies(
                     " does not exist."
                 )
                 return EnvProxy()
-        case ("environment_proxy", str(), None):
+        case ("cmk_postprocessed", "environment_proxy", str()):
             return EnvProxy()
-        case ("url_proxy", str(url), None):
+        case ("cmk_postprocessed", "explicit_proxy", str(url)):
             return URLProxy(url=url)
-        case ("no_proxy", str(), None):
+        case ("cmk_postprocessed", "no_proxy", str()):
             return NoProxy()
         case _:
             raise ValueError(f"Invalid proxy configuration: {proxy_config}")

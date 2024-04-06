@@ -235,7 +235,7 @@ class PainterInventoryTree(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, request=self.request)
+            tree_renderer.show(tree, self.request)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -1262,7 +1262,7 @@ def _paint_host_inventory_tree(
     )
 
     with output_funnel.plugged():
-        tree_renderer.show(tree, request=request)
+        tree_renderer.show(tree, request)
         code = HTML(output_funnel.drain())
 
     return "invtree", code
@@ -2000,7 +2000,7 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, request=self.request)
+            tree_renderer.show(tree, self.request)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -2388,7 +2388,7 @@ def ajax_inv_render_tree() -> None:
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
-    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(tree, request=request)
+    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(tree, request)
 
 
 class TreeRenderer:
@@ -2436,8 +2436,8 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_table(  # pylint: disable=redefined-outer-name
-        self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints, *, request: Request
+    def _show_table(
+        self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints, request_: Request
     ) -> None:
         if hints.table_hint.view_spec:
             # Link to Multisite view with exactly this table
@@ -2445,7 +2445,7 @@ class TreeRenderer:
                 HTMLWriter.render_a(
                     _("Open this table for filtering / sorting"),
                     href=makeuri_contextless(
-                        request,
+                        request_,
                         [
                             (
                                 "view_name",
@@ -2492,8 +2492,8 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_node(  # pylint: disable=redefined-outer-name
-        self, node: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints, *, request: Request
+    def _show_node(
+        self, node: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints, request_: Request
     ) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
         with foldable_container(
@@ -2518,20 +2518,18 @@ class TreeRenderer:
             ),
         ) as is_open:
             if is_open:
-                self.show(node, request=request)
+                self.show(node, request_)
 
-    def show(  # pylint: disable=redefined-outer-name
-        self, tree: ImmutableTree | ImmutableDeltaTree, *, request: Request
-    ) -> None:
+    def show(self, tree: ImmutableTree | ImmutableDeltaTree, request_: Request) -> None:
         hints = DISPLAY_HINTS.get_tree_hints(tree.path)
 
         if tree.attributes:
             self._show_attributes(tree.attributes, hints)
 
         if tree.table:
-            self._show_table(tree.table, hints, request=request)
+            self._show_table(tree.table, hints, request_)
 
         for name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node, hints.get_node_hints(name), request=request)
+                self._show_node(node, hints.get_node_hints(name), request_)

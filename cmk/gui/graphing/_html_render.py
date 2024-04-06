@@ -675,11 +675,11 @@ def _save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
 
 
 def forget_manual_vertical_zoom() -> None:
-    user_range = load_user_graph_data_range()
+    graph_data_range = load_user_graph_data_range()
     _save_user_graph_data_range(
         GraphDataRange(
-            time_range=user_range.time_range,
-            step=user_range.step,
+            time_range=graph_data_range.time_range,
+            step=graph_data_range.step,
         )
     )
 

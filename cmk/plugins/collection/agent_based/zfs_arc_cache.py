@@ -228,15 +228,25 @@
 # [...]
 # }
 
+from collections.abc import Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-# mypy: disable-error-code="arg-type"
-from cmk.agent_based.v2 import render
+Section = Mapping[str, int]
 
 
-def parse_zfs_arc_cache(string_table):
+def parse_zfs_arc_cache(string_table: StringTable) -> Section:
     parsed = {}
     for line in string_table:
         if not (len(line) >= 3 and line[1] == "=" and line[2].isdigit()):
@@ -252,6 +262,12 @@ def parse_zfs_arc_cache(string_table):
     return parsed
 
 
+agent_section_zfs_arc_cache = AgentSection(
+    name="zfs_arc_cache",
+    parse_function=parse_zfs_arc_cache,
+)
+
+
 #   .--cache---------------------------------------------------------------.
 #   |                                     _                                |
 #   |                       ___ __ _  ___| |__   ___                       |
@@ -262,53 +278,54 @@ def parse_zfs_arc_cache(string_table):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_zfs_arc_cache(parsed):
-    if parsed.get("hits") and parsed.get("misses"):
-        return [(None, None)]
-    return []
+def inventory_zfs_arc_cache(section: Section) -> DiscoveryResult:
+    if section.get("hits") and section.get("misses"):
+        yield Service()
 
 
-def check_zfs_arc_cache(_no_item, _no_params, parsed):
+def check_zfs_arc_cache(section: Section) -> CheckResult:
     # Solaris >= 11.3 do not provide these data pretech_*data
     for key in ["", "prefetch_data_", "prefetch_metadata_"]:
-        if "%shits" % key in parsed and "%smisses" % key in parsed:
-            total_hits_misses = parsed["%shits" % key] + parsed["%smisses" % key]
+        if "%shits" % key in section and "%smisses" % key in section:
+            total_hits_misses = section["%shits" % key] + section["%smisses" % key]
             human_key = key.replace("_", " ")
 
             if total_hits_misses:
-                hit_ratio = float(parsed["%shits" % key]) / total_hits_misses * 100
-                yield 0, f"{human_key.title()}Hit Ratio: {hit_ratio:0.2f}%", [
-                    ("%shit_ratio" % key, hit_ratio, None, None, 0, 100)
-                ]
+                hit_ratio = float(section["%shits" % key]) / total_hits_misses * 100
+                yield Result(
+                    state=State.OK, summary=f"{human_key.title()}Hit Ratio: {hit_ratio:0.2f}%"
+                )
+                yield Metric("%shit_ratio" % key, hit_ratio, boundaries=(0, 100))
 
             else:
-                yield 0, "No %sHits or Misses" % human_key, [
-                    ("%shit_ratio" % key, 0, None, None, 0, 100)
-                ]
+                yield Result(state=State.OK, summary="No %sHits or Misses" % human_key)
 
     # size
-    if "size" in parsed:
-        size_bytes = parsed["size"]
+    if "size" in section:
+        size_bytes = section["size"]
         size_readable = render.bytes(size_bytes)
-        yield 0, "Cache size: %s" % size_readable, [("size", float(size_bytes), None, None, 0)]
+        yield Result(state=State.OK, summary="Cache size: %s" % size_readable)
+        yield Metric("size", float(size_bytes), boundaries=(0, None))
 
     # arc_meta
     # these values may be missing, this is ok too
     # in this case just do not report these values
-    if "arc_meta_used" in parsed and "arc_meta_limit" in parsed and "arc_meta_max" in parsed:
-        yield 0, "Arc Meta {} used, Limit {}, Max {}".format(
-            render.bytes(parsed["arc_meta_used"]),
-            render.bytes(parsed["arc_meta_limit"]),
-            render.bytes(parsed["arc_meta_max"]),
-        ), [
-            ("arc_meta_used", float(parsed["arc_meta_used"]), None, None, 0),
-            ("arc_meta_limit", float(parsed["arc_meta_limit"]), None, None, 0),
-            ("arc_meta_max", float(parsed["arc_meta_max"]), None, None, 0),
-        ]
+    if "arc_meta_used" in section and "arc_meta_limit" in section and "arc_meta_max" in section:
+        yield Result(
+            state=State.OK,
+            summary="Arc Meta {} used, Limit {}, Max {}".format(
+                render.bytes(section["arc_meta_used"]),
+                render.bytes(section["arc_meta_limit"]),
+                render.bytes(section["arc_meta_max"]),
+            ),
+        )
+        yield Metric("arc_meta_used", float(section["arc_meta_used"]), boundaries=(0, None))
+        yield Metric("arc_meta_limit", float(section["arc_meta_limit"]), boundaries=(0, None))
+        yield Metric("arc_meta_max", float(section["arc_meta_max"]), boundaries=(0, None))
 
 
-check_info["zfs_arc_cache"] = LegacyCheckDefinition(
-    parse_function=parse_zfs_arc_cache,
+check_plugin_zfs_arc_cache = CheckPlugin(
+    name="zfs_arc_cache",
     service_name="ZFS arc cache",
     discovery_function=inventory_zfs_arc_cache,
     check_function=check_zfs_arc_cache,
@@ -325,42 +342,31 @@ check_info["zfs_arc_cache"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_zfs_arc_cache_l2(parsed):
+def inventory_zfs_arc_cache_l2(section: Section) -> DiscoveryResult:
     # if l2_size == 0 there is no l2 cache available at all
-    if "l2_size" in parsed and parsed["l2_size"] > 0:
-        return [(None, None)]
-    return []
+    if "l2_size" in section and section["l2_size"] > 0:
+        yield Service()
 
 
-def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):
-    status = 0
-    perfdata = []
-    message = "ZFS arc cache L2:"
-
+def check_zfs_arc_cache_l2(section: Section) -> CheckResult:
     # hit ratio
-    if "l2_hits" in parsed and "l2_misses" in parsed:
-        l2_hit_ratio = float(parsed["l2_hits"]) / (parsed["l2_hits"] + parsed["l2_misses"]) * 100
-        message += " L2 hit ratio: %0.2f%%" % l2_hit_ratio
-        perfdata.append(("l2_hit_ratio", l2_hit_ratio, None, None, 0, 100))
-
+    if "l2_hits" in section and "l2_misses" in section:
+        l2_hit_ratio = float(section["l2_hits"]) / (section["l2_hits"] + section["l2_misses"]) * 100
+        yield Result(state=State.OK, summary="L2 hit ratio: %0.2f%%" % l2_hit_ratio)
+        yield Metric("l2_hit_ratio", l2_hit_ratio, boundaries=(0, 100))
     else:
-        message += " no info about L2 hit ratio available"
-        perfdata.append(("l2_hit_ratio", 0, None, None, 0, 100))
-        status = 3
+        yield Result(state=State.UNKNOWN, summary="No info about L2 hit ratio available")
 
     # size
-    if "l2_size" in parsed:
-        message += ", L2 size: %s" % render.bytes(parsed["l2_size"])
-        perfdata.append(("l2_size", float(parsed["l2_size"]), None, None, 0))
+    if "l2_size" in section:
+        yield Result(state=State.OK, summary="L2 size: %s" % render.bytes(section["l2_size"]))
+        yield Metric("l2_size", float(section["l2_size"]), boundaries=(0, None))
     else:
-        message += ", no info about L2 size available"
-        perfdata.append(("l2_size", 0, None, None, 0))
-        status = 3
-
-    return status, message, perfdata
+        yield Result(state=State.UNKNOWN, summary="No info about L2 size available")
 
 
-check_info["zfs_arc_cache.l2"] = LegacyCheckDefinition(
+check_plugin_zfs_arc_cache_l2 = CheckPlugin(
+    name="zfs_arc_cache_l2",
     service_name="ZFS arc cache L2",
     sections=["zfs_arc_cache"],
     discovery_function=inventory_zfs_arc_cache_l2,

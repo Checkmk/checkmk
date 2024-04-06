@@ -286,7 +286,6 @@ class ErrorReporter:
         ("check", "vbox_guest", "vm_state"),
         ("check", "win_netstat", "tcp_connections"),
         ("check", "wmic_process", "wmic_process"),
-        ("check", "zerto_vpg_rpo", "zerto_vpg_rpo"),
         ("check", "zertificon_mail_queues", "zertificon_mail_queues"),
         ("check", "zpool_status", "zpool_status"),
         ("discovery", "fileinfo", "fileinfo_groups"),

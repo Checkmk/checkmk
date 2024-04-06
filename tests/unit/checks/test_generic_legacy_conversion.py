@@ -1419,12 +1419,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "wut_webtherm",
         "wut_webtherm.pressure",
         "wut_webtherm.humidity",
-        "zebra_model",
-        "zebra_printer_status",
-        "zerto_vpg_rpo",
-        "zfs_arc_cache",
-        "zfs_arc_cache.l2",
-        "zorp_connections",
     }
     current_legacy_checks = set(fix_plugin_legacy.check_info)
 

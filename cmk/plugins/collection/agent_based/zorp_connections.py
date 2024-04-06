@@ -2,19 +2,31 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 """Zorp FW - connections
 This check displays individual connections returned by
   zorpctl szig -r zorp.stats.active_connections
 It sums up all connections and checks against configurable maximum values.
 """
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.base.check_api import check_levels, LegacyCheckDefinition
-from cmk.base.config import check_info
+from cmk.agent_based.v1 import check_levels  # we have to migrate the ruleset to use v2
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+
+Section = Mapping[str, int]
 
 
-def parse_zorp_connections(string_table):
+def parse_zorp_connections(string_table: StringTable) -> Section:
     """Creates dict name -> connections
     from string_table =
     [["Instance <name>:", "walking"], ["zorp.stats.active_connections:", "<Number|'None'>"],
@@ -27,29 +39,32 @@ def parse_zorp_connections(string_table):
     }
 
 
-def check_zorp_connections(item, params, parsed):
+def check_zorp_connections(params: Mapping[str, Any], section: Section) -> CheckResult:
     """List number of connections for each connection type and check against
     total number of connections"""
-    if not parsed:
+    if not section:
         return
 
-    yield from ((0, "%s: %d" % elem) for elem in parsed.items())
+    yield from (Result(state=State.OK, summary="%s: %d" % elem) for elem in section.items())
 
-    yield check_levels(
-        sum(parsed.values()),
-        "connections",
-        params.get("levels"),
-        infoname="Total connections",
-        human_readable_func=int,
+    yield from check_levels(
+        sum(section.values()),
+        metric_name="connections",
+        levels_upper=params.get("levels"),
+        label="Total connections",
+        render_func=lambda x: f"{x:.0f}",
     )
 
 
-def discover_zorp_connections(parsed):
-    return [(None, {})]
+def discover_zorp_connections(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-check_info["zorp_connections"] = LegacyCheckDefinition(
-    parse_function=parse_zorp_connections,
+agent_section_zorp_connections = AgentSection(
+    name="zorp_connections", parse_function=parse_zorp_connections
+)
+check_plugin_zorp_connections = CheckPlugin(
+    name="zorp_connections",
     service_name="Zorp Connections",
     discovery_function=discover_zorp_connections,
     check_function=check_zorp_connections,

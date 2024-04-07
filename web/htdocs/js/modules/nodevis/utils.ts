@@ -641,9 +641,9 @@ export function add_basic_quickinfo(
         .each((d, idx, tds) => {
             const td = d3.select(tds[idx]);
             if (d.css_styles)
-                d.css_styles.forEach(style => {
-                    td.style(style[0], style[1]);
-                });
+                for (const [key, value] of Object.entries(d.css_styles)) {
+                    td.style(key, value);
+                }
         });
 }
 

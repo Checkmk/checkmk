@@ -273,13 +273,13 @@ export interface LineConfig {
     thickness?: number;
     color?: string;
     tooltip?: string;
-    css_styles?: [string, any][];
+    css_styles?: Record<string, any>;
 }
 
 export type QuickinfoEntry = {
     name: string;
     value: string;
-    css_styles?: [string, any][];
+    css_styles?: Record<string, any>;
 };
 
 export type Quickinfo = QuickinfoEntry[];

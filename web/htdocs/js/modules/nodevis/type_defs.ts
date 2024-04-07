@@ -267,6 +267,8 @@ export interface CoreInfo {
     hostname: string;
     service?: string;
     state?: number;
+    acknowledged?: boolean;
+    in_downtime?: boolean;
 }
 
 export interface LineConfig {

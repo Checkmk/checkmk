@@ -164,7 +164,8 @@ export class AbstractGUINode implements TypeWithName {
         if (this.node.data.node_type != "topology_site") {
             if (core_info) {
                 is_service_text = !!core_info.service;
-                is_host_text = !is_service_text;
+                if (!core_info.hostname) is_other_text = true;
+                else is_host_text = !is_service_text;
             } else {
                 is_other_text = true;
             }

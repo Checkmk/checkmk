@@ -678,9 +678,9 @@ class NetworkLink extends AbstractLink {
             this.selection().style("stroke", line_config.color);
         }
         if (line_config.css_styles) {
-            line_config.css_styles.forEach(style => {
-                this.selection().style(style[0], style[1]);
-            });
+            for (const [key, value] of Object.entries(line_config.css_styles)) {
+                this.selection().style(key, value);
+            }
         }
     }
 

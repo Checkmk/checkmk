@@ -44,6 +44,7 @@ from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
@@ -983,7 +984,7 @@ class Ruleset:
                 continue
 
             if not rule.matches_host_and_item(
-                folder_from_request(folder.name(), hostname),
+                folder_from_request(request.var("folder"), hostname),
                 hostname,
                 svc_desc_or_item,
                 svc_desc,

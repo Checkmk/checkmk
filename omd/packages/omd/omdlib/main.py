@@ -26,7 +26,7 @@ import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from enum import auto, Enum
 from pathlib import Path
-from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn
+from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn, Sequence
 from uuid import uuid4
 
 import psutil
@@ -2018,8 +2018,8 @@ def main_version(
     _version_info: object,
     _site: object,
     _global_opts: object,
-    args: Arguments,
-    options: CommandOptions,
+    args: Sequence[str],
+    options: Mapping[str, str | None],
 ) -> None:
     if len(args) > 0:
         site = SiteContext(args[0])
@@ -2042,8 +2042,8 @@ def main_versions(
     _version_info: object,
     _site: object,
     _global_opts: object,
-    args: Arguments,
-    options: CommandOptions,
+    args: Sequence[str],
+    options: Mapping[str, str | None],
 ) -> None:
     for v in omd_versions():
         if v == default_version() and "bare" not in options:

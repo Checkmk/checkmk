@@ -172,3 +172,40 @@ def test_jolokia_escape_path_separator() -> None:
         == "Catalina:J2EEApplication=none,J2EEServer=none,WebModule=*localhost/docs,j2eeType=Servlet,name=default"
     )
     assert data["attribute"] == "requestCount"
+
+
+def test_parse_fetched_data_v2_0_2() -> None:
+    data = {
+        "agent": "2.0.2",
+        "protocol": "7.2",
+        "details": {
+            "agent_version": "2.0.2",
+            "agent_id": "192.168.0.221-21185-5ce94d31-servlet",
+            "server_product": "tomcat",
+            "server_vendor": "Apache",
+            "server_version": "10.1.16",
+            "secured": True,
+            "url": "http://192.168.0.221:8080/jolokia",
+        },
+    }
+    product, version, agentversion = mk_jolokia._parse_fetched_data(data)
+    assert product == "tomcat"
+    assert version == "10.1.16"
+    assert agentversion == "2.0.2"
+
+
+def test_parse_fetched_data_v1_2_0() -> None:
+    data = {
+        "protocol": "7.1",
+        "agent": "1.2.0",
+        "info": {
+            "product": "glassfish",
+            "vendor": "Oracle",
+            "version": "4.0",
+            "extraInfo": {"amxBooted": False},
+        },
+    }
+    product, version, agentversion = mk_jolokia._parse_fetched_data(data)
+    assert product == "glassfish"
+    assert version == "4.0"
+    assert agentversion == "1.2.0"

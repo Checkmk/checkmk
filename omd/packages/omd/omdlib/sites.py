@@ -5,11 +5,10 @@
 
 import os
 import sys
-from typing import Iterable
+from typing import Iterable, Mapping
 
 import omdlib
 from omdlib.contexts import SiteContext
-from omdlib.type_defs import CommandOptions
 from omdlib.version import default_version
 
 import cmk.utils.tty as tty
@@ -20,7 +19,7 @@ def main_sites(
     _site: object,
     _global_opts: object,
     _args: object,
-    options: CommandOptions,
+    options: Mapping[str, str | None],
 ) -> None:
     if sys.stdout.isatty() and "bare" not in options:
         sys.stdout.write("SITE             VERSION          COMMENTS\n")

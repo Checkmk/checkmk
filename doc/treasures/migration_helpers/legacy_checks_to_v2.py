@@ -170,6 +170,9 @@ class AddImportsTransformer(cst.CSTTransformer):
                     cst.parse_statement("from collections.abc import Iterable, Mapping"),
                     cst.parse_statement("from typing import Any"),
                     cst.parse_statement(
+                        "from cmk.agent_based.v1 import check_levels  # we can only use v2 after migrating the ruleset!"
+                    ),
+                    cst.parse_statement(
                         "from cmk.agent_based.v2 import Service, DiscoveryResult, CheckResult,"
                         " Result, State, Metric, AgentSection, SNMPSection, SimpleSNMPSection, CheckPlugin",
                     ),

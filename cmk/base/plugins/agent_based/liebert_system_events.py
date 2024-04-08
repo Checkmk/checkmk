@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import TypedDict
 
-from cmk.plugins.lib.liebert import DETECT_LIEBERT, parse_liebert_without_unit
+from cmk.plugins.liebert.agent_based.lib import DETECT_LIEBERT, parse_liebert_without_unit
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

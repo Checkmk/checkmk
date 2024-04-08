@@ -60,6 +60,7 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.sites import all_sites, main_sites
 from omdlib.skel_permissions import (
     get_skel_permissions,
     load_skel_permissions_from,
@@ -244,11 +245,6 @@ def site_name() -> str:
 
 def is_root() -> bool:
     return os.getuid() == 0
-
-
-def all_sites() -> Iterable[str]:
-    basedir = os.path.join(omdlib.utils.omd_base_path(), "omd/sites")
-    return sorted([s for s in os.listdir(basedir) if os.path.isdir(os.path.join(basedir, s))])
 
 
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
@@ -2019,34 +2015,6 @@ def main_setversion(
 
 def use_update_alternatives() -> bool:
     return os.path.exists("/var/lib/dpkg/alternatives/omd")
-
-
-def main_sites(
-    _version_info: object,
-    _site: object,
-    _global_opts: object,
-    _args: object,
-    options: CommandOptions,
-) -> None:
-    if sys.stdout.isatty() and "bare" not in options:
-        sys.stdout.write("SITE             VERSION          COMMENTS\n")
-    for sitename in all_sites():
-        site = SiteContext(sitename)
-        tags = []
-        if "bare" in options:
-            sys.stdout.write("%s\n" % site.name)
-        else:
-            disabled = site.is_disabled()
-            v = site.version
-            if v is None:
-                v = "(none)"
-                tags.append("empty site dir")
-            elif v == default_version():
-                tags.append("default version")
-            if disabled:
-                tags.append(tty.bold + tty.red + "disabled" + tty.normal)
-            sys.stdout.write("%-16s %-16s %s " % (site.name, v, ", ".join(tags)))
-            sys.stdout.write("\n")
 
 
 # Bail out if name for new site is not valid (needed by create/mv/cp)

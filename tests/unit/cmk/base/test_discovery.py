@@ -1967,12 +1967,13 @@ def test__discover_services_on_cluster(
         providers=scenario.providers,
         plugins=DiscoveryPluginMapper(ruleset_matcher=ruleset_matcher),
         ignore_plugin=lambda *args, **kw: False,
+        ignore_service=lambda *args, **kw: False,
         get_effective_host=lambda *args, **kw: scenario.parent,
         get_service_description=functools.partial(config.service_description, ruleset_matcher),
         on_error=OnError.RAISE,
     )
 
-    services = set(discovered_services)
+    services = set(discovered_services[scenario.parent])
 
     assert services == discovery_test_case.expected_services
 

@@ -2015,9 +2015,9 @@ def use_update_alternatives() -> bool:
 
 
 def main_version(
-    version_info: VersionInfo,
+    _version_info: object,
     _site: object,
-    global_opts: GlobalOptions,
+    _global_opts: object,
     args: Arguments,
     options: CommandOptions,
 ) -> None:
@@ -2039,9 +2039,9 @@ def main_version(
 
 
 def main_versions(
-    version_info: VersionInfo,
-    site: AbstractSiteContext,
-    global_opts: GlobalOptions,
+    _version_info: object,
+    _site: object,
+    _global_opts: object,
     args: Arguments,
     options: CommandOptions,
 ) -> None:

@@ -19,7 +19,6 @@ import omdlib
 import omdlib.main
 import omdlib.utils
 from omdlib.contexts import RootContext, SiteContext
-from omdlib.type_defs import CommandOptions
 from omdlib.version_info import VersionInfo
 
 from cmk.utils import version
@@ -76,70 +75,44 @@ def test_main_help(capsys: pytest.CaptureFixture[str], version_info: VersionInfo
 def test_main_version_of_current_site(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    version_info: VersionInfo,
 ) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
-    global_opts = omdlib.main.default_global_options()
-    omdlib.main.main_version(version_info, object(), global_opts, [], {})
+    omdlib.main.main_version(object(), object(), object(), [], {})
 
     stdout = capsys.readouterr()[0]
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
 
 
 def test_main_version_root(
-    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, version_info: VersionInfo
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
-    global_opts = omdlib.main.default_global_options()
-    args: omdlib.main.Arguments = []
-    options: CommandOptions = {}
-    omdlib.main.main_version(version_info, RootContext(), global_opts, args, options)
+    omdlib.main.main_version(object(), object(), object(), [], {})
 
     stdout = capsys.readouterr()[0]
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
 
 
-def test_main_version_root_not_existing_site(version_info: VersionInfo) -> None:
+def test_main_version_root_not_existing_site() -> None:
     with pytest.raises(SystemExit, match="No such site: testsite"):
-        omdlib.main.main_version(
-            version_info,
-            RootContext(),
-            omdlib.main.default_global_options(),
-            ["testsite"],
-            {},
-        )
+        omdlib.main.main_version(object(), object(), object(), ["testsite"], {})
 
 
-def test_main_version_root_specific_site_broken_version(
-    tmp_path: Path, version_info: VersionInfo
-) -> None:
+def test_main_version_root_specific_site_broken_version(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     with pytest.raises(SystemExit, match="Failed to determine site version"):
-        omdlib.main.main_version(
-            version_info,
-            RootContext(),
-            omdlib.main.default_global_options(),
-            ["testsite"],
-            {},
-        )
+        omdlib.main.main_version(object(), object(), object(), ["testsite"], {})
 
 
 def test_main_version_root_specific_site(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    version_info: VersionInfo,
 ) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
-    omdlib.main.main_version(
-        version_info,
-        RootContext(),
-        omdlib.main.default_global_options(),
-        ["testsite"],
-        {},
-    )
+    omdlib.main.main_version(object(), object(), object(), ["testsite"], {})
 
     stdout = capsys.readouterr()[0]
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
@@ -149,18 +122,11 @@ def test_main_version_root_specific_site_bare(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    version_info: VersionInfo,
 ) -> None:
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
-    omdlib.main.main_version(
-        version_info,
-        RootContext(),
-        omdlib.main.default_global_options(),
-        ["testsite"],
-        {"bare": None},
-    )
+    omdlib.main.main_version(object(), object(), object(), ["testsite"], {"bare": None})
 
     stdout = capsys.readouterr()[0]
     assert stdout == "1.2.3p4\n"
@@ -170,15 +136,12 @@ def test_main_versions(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    version_info: VersionInfo,
 ) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/default").symlink_to("1.6.0p4")
-    omdlib.main.main_versions(
-        version_info, RootContext(), omdlib.main.default_global_options(), [], {}
-    )
+    omdlib.main.main_versions(object(), object(), object(), [], {})
 
     stdout = capsys.readouterr()[0]
     assert stdout == "1.2.3p4\n1.6.0p14\n1.6.0p4 (default)\n"
@@ -188,19 +151,12 @@ def test_main_versions_bare(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    version_info: VersionInfo,
 ) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/default").symlink_to("1.6.0p4")
-    omdlib.main.main_versions(
-        version_info,
-        RootContext(),
-        omdlib.main.default_global_options(),
-        [],
-        {"bare": None},
-    )
+    omdlib.main.main_versions(object(), object(), object(), [], {"bare": None})
 
     stdout = capsys.readouterr()[0]
     assert stdout == "1.2.3p4\n1.6.0p14\n1.6.0p4\n"

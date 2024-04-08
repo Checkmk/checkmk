@@ -2022,10 +2022,10 @@ def use_update_alternatives() -> bool:
 
 
 def main_sites(
-    version_info: VersionInfo,
-    site: AbstractSiteContext,
-    global_opts: GlobalOptions,
-    args: Arguments,
+    _version_info: object,
+    _site: object,
+    _global_opts: object,
+    _args: object,
     options: CommandOptions,
 ) -> None:
     if sys.stdout.isatty() and "bare" not in options:

@@ -18,7 +18,7 @@ from pytest_mock import MockerFixture
 import omdlib
 import omdlib.main
 import omdlib.utils
-from omdlib.contexts import RootContext, SiteContext
+from omdlib.contexts import SiteContext
 from omdlib.version_info import VersionInfo
 
 from cmk.utils import version
@@ -76,7 +76,6 @@ def test_main_sites(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-    version_info: VersionInfo,
 ) -> None:
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
@@ -107,9 +106,7 @@ def test_main_sites(
     tmp_path.joinpath("omd/sites/disabled").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/disabled/version").symlink_to("../../versions/1.6.0p4")
 
-    omdlib.main.main_sites(
-        version_info, RootContext(), omdlib.main.default_global_options(), [], {}
-    )
+    omdlib.main.main_sites(object(), object(), object(), [], {})
 
     stdout = _strip_ansi(capsys.readouterr()[0])
     assert (

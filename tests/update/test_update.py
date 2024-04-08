@@ -8,7 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.agent import register_controller, wait_until_host_receives_data
+from tests.testlib.agent import (
+    register_controller,
+    wait_for_agent_cache_omd_status,
+    wait_until_host_receives_data,
+)
 from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name, get_services_with_status
 from tests.testlib.version import CMKVersion, version_from_env
@@ -81,9 +85,7 @@ def test_update(  # pylint: disable=too-many-branches
         #   Related: CMK-13774
         # * The 'Postfix Queue' has been renamed into 'Postfix Queue default'
         #   See Werk #16377 or commit daf9d3ab9a5e9d698733f0af345d88120de863f0
-        # * OMD status service turning into CRIT after the update (looks like for performance
-        #   reasons) See CMK-16608. TODO: restore service after ticket is done.
-        for changed_service in ["Postfix status", "Postfix Queue", f"OMD {test_site.id} status"]:
+        for changed_service in ["Postfix status", "Postfix Queue"]:
             if changed_service in base_data[hostname]:
                 base_data[hostname].pop(changed_service)
 
@@ -116,6 +118,12 @@ def test_update(  # pylint: disable=too-many-branches
 
     target_data = {}
     target_ok_services = {}
+
+    # services such as 'omd status' rely on cache data:
+    # wait for the cache to be up-to-date and reschedule services
+    wait_for_agent_cache_omd_status(test_site)
+    for hostname in hostnames:
+        test_site.schedule_check(hostname, "Check_MK", 0)
 
     for hostname in hostnames:
         target_site.reschedule_services(hostname)

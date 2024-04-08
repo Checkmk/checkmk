@@ -560,7 +560,7 @@ class ModeCheckManPage(WatoMode):
         html.close_tr()
 
         html.open_tr()
-        html.th(_("Name of plugin"))
+        html.th(_("Name of plug-in"))
         html.open_td()
         html.tt(self._check_plugin_name)
         html.close_td()

@@ -1255,7 +1255,7 @@ def test_certificate_validity(
                     state=State.WARN,
                     summary="Termination failed: my_local_check, destroy_db",
                     details="Cached plugins(s) that failed to be terminated after timeout: "
-                    "my_local_check (Local check, Timeout: 7200s, PID: 1234), destroy_db (mk_oracle plugin, Timeout: 123s, PID: 4711) - "
+                    "my_local_check (Local check, Timeout: 7200s, PID: 1234), destroy_db (mk_oracle plug-in, Timeout: 123s, PID: 4711) - "
                     "Dysfunctional until successful termination.",
                 ),
             ],

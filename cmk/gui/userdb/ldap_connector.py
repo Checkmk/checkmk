@@ -1586,7 +1586,7 @@ class LDAPAttributePlugin(abc.ABC):
 
     @abc.abstractmethod
     def needed_attributes(self, connection: LDAPUserConnector, params: dict) -> list[str]:
-        """Gathers the LDAP user attributes that are needed by this plugin"""
+        """Gathers the LDAP user attributes that are needed by this plug-in"""
         raise NotImplementedError()
 
     @abc.abstractmethod

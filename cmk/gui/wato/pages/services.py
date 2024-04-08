@@ -1108,7 +1108,7 @@ class DiscoveryPageRenderer:
 
         if self._options.show_plugin_names:
             table.cell(
-                _("Check plugin"),
+                _("Check plug-in"),
                 HTMLWriter.render_a(content=ctype, href=manpage_url),
                 css=["plugins"],
             )

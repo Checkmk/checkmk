@@ -40,13 +40,13 @@ class CachedPluginType(StrEnum):
 def render_plugin_type(plugin_type: CachedPluginType) -> str:
     match plugin_type:
         case CachedPluginType.MRPE:
-            return "MRPE plugin"
+            return "MRPE plug-in"
         case CachedPluginType.PLUGIN:
             return "Agent plug-in"
         case CachedPluginType.LOCAL:
             return "Local check"
         case CachedPluginType.ORACLE:
-            return "mk_oracle plugin"
+            return "mk_oracle plug-in"
 
 
 class CachedPlugin(NamedTuple):

@@ -595,7 +595,7 @@ def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
         "piggyback-pig": _("Piggyback information for other hosts"),
         "autochecks": _("Disovered services of the host"),
         "host-labels": _("Disovered host labels of the host"),
-        "logwatch": _("Logfile information of logwatch plugin"),
+        "logwatch": _("Logfile information of logwatch plug-in"),
         "snmpwalk": _("A stored SNMP walk"),
         "rrd": _("RRD databases with performance data"),
         "rrdcached": _("RRD updates in journal of RRD Cache"),

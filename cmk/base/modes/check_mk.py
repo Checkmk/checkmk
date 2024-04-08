@@ -2701,7 +2701,7 @@ def register_mode_inventory_as_check(
             ),
             argument=True,
             argument_descr="HOST",
-            short_help="Do HW/SW-Inventory, behave like check plugin",
+            short_help="Do HW/SW-Inventory, behave like check plug-in",
             sub_options=[
                 *_FETCHER_OPTIONS,
                 _SNMP_BACKEND_OPTION,

@@ -11,18 +11,19 @@ ENV \
 RUN apt-get update
 
 # golang-go: needed for install-buildifier.sh
-# msitools:  needef for `msiinfo` in test source package
+# msitools:  needed for `msiinfo` in test source package
+# libenchant1c2a:  needed for building the software architecture as we're using sphinxcontrib.spelling
 
 # Those are still unclear:
 #   php7.4-common
-#   libenchant1c2a
 #   default-jdk
 #   upx-ucl
 #   dpatch
 
 RUN apt-get install -y \
     golang-go \
-    msitools
+    msitools \
+    libenchant1c2a
 
 # Despite files needed for builds might already be available in build images
 # copy them again, in case they changed

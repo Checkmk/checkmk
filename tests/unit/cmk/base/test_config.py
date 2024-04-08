@@ -349,8 +349,6 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
 
     assert config_cache.default_address_family(no_ip) is socket.AddressFamily.AF_INET
     assert config_cache.ip_stack_config(no_ip) is IPStackConfig.NO_IP
-    assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET) is None
-    assert ip_address_of(config_cache, no_ip, socket.AddressFamily.AF_INET6) is None
 
     assert config_cache.default_address_family(dual_stack) is socket.AddressFamily.AF_INET
     assert config_cache.ip_stack_config(dual_stack) is IPStackConfig.DUAL_STACK

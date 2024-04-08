@@ -114,12 +114,20 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         add_txt = ""
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
-    ipaddress = _ip_address_for_dump_host(
-        config_cache, hosts_config, hostname, family=config_cache.default_address_family(hostname)
+    ip_stack_config = ConfigCache.ip_stack_config(hostname)
+    ipaddress = (
+        None
+        if ip_stack_config is IPStackConfig.NO_IP
+        else _ip_address_for_dump_host(
+            config_cache,
+            hosts_config,
+            hostname,
+            family=config_cache.default_address_family(hostname),
+        )
     )
 
     addresses: str | None = ""
-    if ConfigCache.ip_stack_config(hostname) is not IPStackConfig.DUAL_STACK:
+    if ip_stack_config is not IPStackConfig.DUAL_STACK:
         addresses = ipaddress
     else:
         try:

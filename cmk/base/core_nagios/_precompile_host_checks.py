@@ -187,23 +187,25 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     # `config.ipv6addresses` later.
     # But maybe it is in fact not a problem, because `config.lookup_ip_address` happens to never
     # return `None` the way we call it here.
+    ip_stack_config = ConfigCache.ip_stack_config(hostname)
     needed_ipaddresses: dict[HostName, HostAddress | None] = {}
     needed_ipv6addresses: dict[HostName, HostAddress | None] = {}
     if hostname in config_cache.hosts_config.clusters:
         assert config_cache.nodes(hostname)
         for node in config_cache.nodes(hostname):
-            if IPStackConfig.IPv4 in ConfigCache.ip_stack_config(node):
+            node_ip_stack_config = ConfigCache.ip_stack_config(node)
+            if IPStackConfig.IPv4 in node_ip_stack_config:
                 needed_ipaddresses[node] = config.lookup_ip_address(
                     config_cache, node, family=socket.AddressFamily.AF_INET
                 )
 
-            if IPStackConfig.IPv6 in ConfigCache.ip_stack_config(node):
+            if IPStackConfig.IPv6 in node_ip_stack_config:
                 needed_ipv6addresses[node] = config.lookup_ip_address(
                     config_cache, node, family=socket.AddressFamily.AF_INET6
                 )
 
         try:
-            if IPStackConfig.IPv4 in ConfigCache.ip_stack_config(hostname):
+            if IPStackConfig.IPv4 in ip_stack_config:
                 needed_ipaddresses[hostname] = config.lookup_ip_address(
                     config_cache, hostname, family=socket.AddressFamily.AF_INET
                 )
@@ -211,19 +213,19 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
             pass
 
         try:
-            if IPStackConfig.IPv6 in ConfigCache.ip_stack_config(hostname):
+            if IPStackConfig.IPv6 in ip_stack_config:
                 needed_ipv6addresses[hostname] = config.lookup_ip_address(
                     config_cache, hostname, family=socket.AddressFamily.AF_INET6
                 )
         except Exception:
             pass
     else:
-        if IPStackConfig.IPv4 in ConfigCache.ip_stack_config(hostname):
+        if IPStackConfig.IPv4 in ip_stack_config:
             needed_ipaddresses[hostname] = config.lookup_ip_address(
                 config_cache, hostname, family=socket.AddressFamily.AF_INET
             )
 
-        if IPStackConfig.IPv6 in ConfigCache.ip_stack_config(hostname):
+        if IPStackConfig.IPv6 in ip_stack_config:
             needed_ipv6addresses[hostname] = config.lookup_ip_address(
                 config_cache, hostname, family=socket.AddressFamily.AF_INET6
             )

@@ -527,6 +527,7 @@ def _execute_discovery(
     ip_address = (
         None
         if host_name in hosts_config.clusters
+        or ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP
         # We *must* do the lookup *before* calling `get_host_attributes()`
         # because...  I don't know... global variables I guess.  In any case,
         # doing it the other way around breaks one integration test.
@@ -1855,6 +1856,8 @@ class AutomationDiagHost(Automation):
         file_cache_options = FileCacheOptions()
 
         if not ipaddress:
+            if ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP:
+                raise MKGeneralException("Host is configured as No-IP host: %s" % host_name)
             try:
                 resolved_address = config.lookup_ip_address(config_cache, host_name)
             except Exception:
@@ -2337,7 +2340,12 @@ class AutomationGetAgentOutput(Automation):
         info = b""
 
         try:
-            ipaddress = config.lookup_ip_address(config_cache, hostname)
+            ip_stack_config = ConfigCache.ip_stack_config(hostname)
+            ipaddress = (
+                None
+                if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
+                else config.lookup_ip_address(config_cache, hostname)
+            )
             check_interval = config_cache.check_mk_check_interval(hostname)
             oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
             stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
@@ -2353,7 +2361,7 @@ class AutomationGetAgentOutput(Automation):
                 for source in sources.make_sources(
                     hostname,
                     ipaddress,
-                    ConfigCache.ip_stack_config(hostname),
+                    ip_stack_config,
                     config_cache=config_cache,
                     is_cluster=hostname in hosts_config.clusters,
                     simulation_mode=config.simulation_mode,

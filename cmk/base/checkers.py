@@ -78,6 +78,7 @@ from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAP
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
+from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import make_parser, make_sources, Source
 
 from cmk.agent_based.prediction_backend import (
@@ -294,11 +295,28 @@ class CMKFetcher:
             # address is unknown). When called as non keepalive ipaddress may be None or
             # is already an address (2nd argument)
             hosts = [
-                (host_name, ip_address or config.lookup_ip_address(self.config_cache, host_name))
+                (
+                    host_name,
+                    (ip_stack_config := ConfigCache.ip_stack_config(host_name)),
+                    ip_address
+                    or (
+                        None
+                        if ip_stack_config is IPStackConfig.NO_IP
+                        else config.lookup_ip_address(self.config_cache, host_name)
+                    ),
+                )
             ]
         else:
             hosts = [
-                (node, config.lookup_ip_address(self.config_cache, node))
+                (
+                    node,
+                    (ip_stack_config := ConfigCache.ip_stack_config(node)),
+                    (
+                        None
+                        if ip_stack_config is IPStackConfig.NO_IP
+                        else config.lookup_ip_address(self.config_cache, node)
+                    ),
+                )
                 for node in self.config_cache.nodes(host_name)
             ]
 
@@ -315,7 +333,7 @@ class CMKFetcher:
                 make_sources(
                     current_host_name,
                     current_ip_address,
-                    ConfigCache.ip_stack_config(current_host_name),
+                    current_ip_stack_config,
                     config_cache=self.config_cache,
                     is_cluster=current_host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(
@@ -338,7 +356,7 @@ class CMKFetcher:
                     ca_store=ca_store,
                     site_crt=site_crt,
                 )
-                for current_host_name, current_ip_address in hosts
+                for current_host_name, current_ip_stack_config, current_ip_address in hosts
             ),
             simulation=self.simulation_mode,
             file_cache_options=self.file_cache_options,

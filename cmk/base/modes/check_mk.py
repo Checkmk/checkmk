@@ -537,7 +537,12 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         if hostname in hosts_config.clusters:
             raise MKBailOut("Can not be used with cluster hosts")
 
-        ipaddress = config.lookup_ip_address(config_cache, hostname)
+        ip_stack_config = ConfigCache.ip_stack_config(hostname)
+        ipaddress = (
+            None
+            if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
+            else config.lookup_ip_address(config_cache, hostname)
+        )
         check_interval = config_cache.check_mk_check_interval(hostname)
         oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
         stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
@@ -555,7 +560,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         for source in sources.make_sources(
             hostname,
             ipaddress,
-            ConfigCache.ip_stack_config(hostname),
+            ip_stack_config,
             config_cache=config_cache,
             is_cluster=False,
             simulation_mode=config.simulation_mode,
@@ -1033,6 +1038,9 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
     stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
 
     for hostname in (HostName(hn) for hn in hostnames):
+        if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
+            raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
+
         ipaddress = config.lookup_ip_address(config_cache, hostname)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
@@ -1123,6 +1131,8 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
     assert hostnames
     stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
     for hostname in (HostName(hn) for hn in hostnames):
+        if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
+            raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
         ipaddress = config.lookup_ip_address(config_cache, hostname)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)

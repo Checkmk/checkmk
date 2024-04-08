@@ -1765,11 +1765,6 @@ def lookup_ip_address(
     *,
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
 ) -> HostAddress | None:
-    if ConfigCache.ip_stack_config(host_name) is IPStackConfig.NO_IP:
-        # TODO(ml): [IPv6] Silently override the `family` parameter.  Where
-        # that is necessary, the callers are highly unlikely to handle IPv6
-        # and DUAL_STACK correctly.
-        return None
     if family is None:
         family = config_cache.default_address_family(host_name)
     return ip_lookup.lookup_ip_address(
@@ -1821,7 +1816,7 @@ def get_ssc_host_config(
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
     primary_family = config_cache.default_address_family(host_name)
-    hosts_ip_stack = config_cache.ip_stack_config(host_name)
+    ip_stack_config = config_cache.ip_stack_config(host_name)
     additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
         host_name
     )
@@ -1834,7 +1829,7 @@ def get_ssc_host_config(
                 address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET),
                 additional_addresses=additional_addresses_ipv4,
             )
-            if ip_lookup.IPStackConfig.IPv4 in hosts_ip_stack
+            if ip_lookup.IPStackConfig.IPv4 in ip_stack_config
             else None
         ),
         ipv6_config=(
@@ -1842,7 +1837,7 @@ def get_ssc_host_config(
                 address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET6),
                 additional_addresses=additional_addresses_ipv6,
             )
-            if ip_lookup.IPStackConfig.IPv6 in hosts_ip_stack
+            if ip_lookup.IPStackConfig.IPv6 in ip_stack_config
             else None
         ),
         primary_family=_get_ssc_ip_family(primary_family),
@@ -3595,8 +3590,9 @@ class ConfigCache:
         attrs = {
             "_NODENAMES": " ".join(sorted_nodes),
         }
+        ip_stack_config = ConfigCache.ip_stack_config(hostname)
         node_ips_4 = []
-        if IPStackConfig.IPv4 in ConfigCache.ip_stack_config(hostname):
+        if IPStackConfig.IPv4 in ip_stack_config:
             family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] = (
                 socket.AddressFamily.AF_INET
             )
@@ -3608,7 +3604,7 @@ class ConfigCache:
                     node_ips_4.append(ip_lookup.fallback_ip_for(family))
 
         node_ips_6 = []
-        if IPStackConfig.IPv6 in ConfigCache.ip_stack_config(hostname):
+        if IPStackConfig.IPv6 in ip_stack_config:
             family = socket.AddressFamily.AF_INET6
             for h in sorted_nodes:
                 addr = ip_address_of(self, h, family)

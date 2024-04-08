@@ -2024,13 +2024,13 @@ def main_version(
     if len(args) > 0:
         site = SiteContext(args[0])
         if not site.exists():
-            bail_out("No such site: %s" % site.name)
+            sys.exit("No such site: %s" % site.name)
         version = site.version
     else:
         version = omdlib.__version__
 
     if version is None:
-        bail_out("Failed to determine site version")
+        sys.exit("Failed to determine site version")
 
     if "bare" in options:
         sys.stdout.write(version + "\n")

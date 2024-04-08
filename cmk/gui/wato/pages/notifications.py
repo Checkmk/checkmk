@@ -13,7 +13,6 @@ from datetime import datetime
 from typing import Any, NamedTuple, overload
 
 import cmk.utils.store as store
-from cmk.utils.hostaddress import HostName
 from cmk.utils.notify import NotificationContext
 from cmk.utils.notify_types import EventRule, NotifyAnalysisInfo
 from cmk.utils.statename import host_state_name, service_state_name
@@ -99,7 +98,7 @@ from cmk.gui.watolib.check_mk_automations import (
     notification_test,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, Host, make_action_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notifications import (
     load_notification_rules,
@@ -854,8 +853,6 @@ class ModeNotifications(ABCNotificationsMode):
         context["HOSTTAGS"] = resp[0][0].get("TAGS")
         context["HOSTGROUPNAMES"] = ",".join(resp[0][1])
         context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][2])
-        if host := Host.host(HostName(hostname)):
-            context["OMD_SITE"] = host.site_id()
 
     def _add_missing_service_context(self, context: NotificationContext) -> None:
         hostname = context["HOSTNAME"]

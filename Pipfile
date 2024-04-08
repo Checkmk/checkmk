@@ -110,9 +110,9 @@ paramiko = "*"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
 ply = "==3.11"  # needed by pysmi, python-active-directory
-pysmi-lextudio = "==1.1.13"  # needed by pysnmp
-pysnmp-lextudio = "==5.0.31"  # needed by Event Console
-snmpsim-lextudio = "*"  # needed by pysnmp integration tests
+pysmi-lextudio = "==1.4.3"  # needed by pysnmp
+pysnmp-lextudio = "==6.1.2"  # needed by Event Console
+snmpsim-lextudio = "==1.1.0"  # needed by pysnmp integration tests
 urllib3 = "~=1.26.15"  # needed by requests
 pyopenssl = "*"
 pbr = "==5.11.1"  # needed by jira

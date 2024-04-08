@@ -51,6 +51,7 @@ from cmk.utils.notify import (
 from cmk.utils.notify_types import (
     Contact,
     ContactName,
+    EnrichedEventContext,
     EventContext,
     EventRule,
     HostEventType,
@@ -311,6 +312,12 @@ def notify_notify(
         notification rule.
     :param analyse:
     """
+    enriched_context = events.complete_raw_context(
+        raw_context,
+        with_dump=config.notification_logging <= 10,
+        contacts_needed=True,
+    )
+
     if not analyse:
         store_notification_backlog(raw_context)
 
@@ -318,8 +325,8 @@ def notify_notify(
     if analyse:
         logger.info(
             "Analysing notification (%s) context with %s variables",
-            events.find_host_service_in_context(raw_context),
-            len(raw_context),
+            events.find_host_service_in_context(enriched_context),
+            len(enriched_context),
         )
     else:
         logger.info(
@@ -330,36 +337,31 @@ def notify_notify(
 
     # Add some further variable for the conveniance of the plugins
 
-    logger.debug(events.render_context_dump(raw_context))
+    logger.debug(events.render_context_dump(enriched_context))
 
-    raw_context["LOGDIR"] = notification_logdir
-    events.complete_raw_context(
-        raw_context,
-        with_dump=config.notification_logging <= 10,
-        contacts_needed=True,
-    )
+    enriched_context["LOGDIR"] = notification_logdir
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
         create_spoolfile(
             logger,
             Path(notification_spooldir),
-            NotificationForward({"context": raw_context, "forward": True}),
+            NotificationForward({"context": enriched_context, "forward": True}),
         )
 
     if config.notification_spooling != "remote":
-        return locally_deliver_raw_context(raw_context, analyse=analyse, dispatch=dispatch)
+        return locally_deliver_raw_context(enriched_context, analyse=analyse, dispatch=dispatch)
     return None
 
 
 def locally_deliver_raw_context(
-    raw_context: EventContext,
+    enriched_context: EnrichedEventContext,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
     try:
         logger.debug("Preparing rule based notifications")
-        return notify_rulebased(raw_context, analyse=analyse, dispatch=dispatch)
+        return notify_rulebased(enriched_context, analyse=analyse, dispatch=dispatch)
 
     except Exception:
         if cmk.utils.debug.enabled():
@@ -438,7 +440,7 @@ def notify_keepalive() -> None:
 
 
 def notify_rulebased(
-    raw_context: EventContext,
+    enriched_context: EnrichedEventContext,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo:
@@ -460,7 +462,7 @@ def notify_rulebased(
     for rule in config.notification_rules + user_notification_rules():
         contact_info = _get_contact_info_text(rule)
 
-        why_not = rbn_match_rule(rule, raw_context, analyse)
+        why_not = rbn_match_rule(rule, enriched_context, analyse)
         if why_not:
             logger.log(log.VERBOSE, contact_info)
             logger.log(log.VERBOSE, " -> does not match: %s", why_not)
@@ -471,11 +473,11 @@ def notify_rulebased(
             num_rule_matches += 1
 
             notifications, rule_info = _create_notifications(
-                raw_context, rule, notifications, rule_info
+                enriched_context, rule, notifications, rule_info
             )
 
     plugin_info = _process_notifications(
-        raw_context, notifications, num_rule_matches, analyse, dispatch
+        enriched_context, notifications, num_rule_matches, analyse, dispatch
     )
 
     return rule_info, plugin_info
@@ -488,12 +490,12 @@ def _get_contact_info_text(rule: EventRule) -> str:
 
 
 def _create_notifications(
-    raw_context: EventContext,
+    enriched_context: EnrichedEventContext,
     rule: EventRule,
     notifications: Notifications,
     rule_info: list[NotifyRuleInfo],
 ) -> tuple[Notifications, list[NotifyRuleInfo]]:
-    contacts = rbn_rule_contacts(rule, raw_context)
+    contacts = rbn_rule_contacts(rule, enriched_context)
     contactstxt = ", ".join(contacts)
 
     plugin_name, plugin_parameters = rule["notify_plugin"]
@@ -550,7 +552,7 @@ def _create_notifications(
         bulk = rbn_get_bulk_params(rule)
 
         final_parameters = rbn_finalize_plugin_parameters(
-            raw_context["HOSTNAME"], plugin_name, plugin_parameters
+            enriched_context["HOSTNAME"], plugin_name, plugin_parameters
         )
         notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 
@@ -559,7 +561,7 @@ def _create_notifications(
 
 
 def _process_notifications(  # pylint: disable=too-many-branches
-    raw_context: EventContext,
+    enriched_context: EnrichedEventContext,
     notifications: Notifications,
     num_rule_matches: int,
     analyse: bool,
@@ -579,9 +581,9 @@ def _process_notifications(  # pylint: disable=too-many-branches
 
                 plugin_name, fallback_params = config.notification_fallback_format
                 fallback_params = rbn_finalize_plugin_parameters(
-                    raw_context["HOSTNAME"], plugin_name, fallback_params
+                    enriched_context["HOSTNAME"], plugin_name, fallback_params
                 )
-                plugin_context = create_plugin_context(raw_context, fallback_params)
+                plugin_context = create_plugin_context(enriched_context, fallback_params)
                 rbn_add_contact_information(plugin_context, fallback_contacts)
                 plugin_contexts = (
                     [plugin_context]
@@ -611,7 +613,7 @@ def _process_notifications(  # pylint: disable=too-many-branches
             )
 
             try:
-                plugin_context = create_plugin_context(raw_context, params)
+                plugin_context = create_plugin_context(enriched_context, params)
                 rbn_add_contact_information(plugin_context, contacts)
 
                 split_contexts = (
@@ -841,7 +843,7 @@ def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
 
 def rbn_match_rule(
     rule: EventRule,
-    context: EventContext,
+    enriched_context: EnrichedEventContext,
     analyse: bool = False,
 ) -> str | None:
     return events.apply_matchers(
@@ -859,7 +861,7 @@ def rbn_match_rule(
             rbn_match_timeperiod,
         ],
         rule,
-        context,
+        enriched_context,
         analyse,
     )
 
@@ -1323,10 +1325,10 @@ def rbn_emails_contacts(emails: list[str]) -> list[str]:
 # - dict, the new style for scripts with WATO rule. This will lead to
 #         PARAMETER_FOO_BAR for a dict key named "foo_bar".
 def create_plugin_context(
-    raw_context: EventContext, params: list | NotifyPluginParams
+    enriched_context: EnrichedEventContext, params: list | NotifyPluginParams
 ) -> NotificationContext:
     plugin_context = NotificationContext({})
-    plugin_context.update(cast(Mapping[str, str], raw_context))  # Make a real copy
+    plugin_context.update(cast(Mapping[str, str], enriched_context))  # Make a real copy
     events.add_to_event_context(plugin_context, "PARAMETER", params)
     return plugin_context
 

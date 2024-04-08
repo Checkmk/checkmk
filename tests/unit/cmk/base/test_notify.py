@@ -13,6 +13,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.notify_types import (
     ContactName,
+    EnrichedEventContext,
     EventContext,
     NotificationContext,
     NotifyPluginParams,
@@ -59,7 +60,7 @@ def test_raw_context_from_env_pipe_decoding(
 
 
 @pytest.mark.parametrize(
-    "raw_context,params,expected",
+    "enriched_context,params,expected",
     [
         (
             {},
@@ -81,11 +82,11 @@ def test_raw_context_from_env_pipe_decoding(
     ],
 )
 def test_create_plugin_context(
-    raw_context: EventContext,
+    enriched_context: EnrichedEventContext,
     params: NotifyPluginParams | list[object],
     expected: NotificationContext,
 ) -> None:
-    assert notify.create_plugin_context(raw_context, params) == expected
+    assert notify.create_plugin_context(enriched_context, params) == expected
 
 
 @pytest.fixture(name="user_groups")

@@ -1,0 +1,13 @@
+Title: jolokia_info: Support Version 2.0
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1712568535
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Jolokia 2.0 was released 2023-12-19. With the release some changes to the Jolokia Protocol have been
+introduced. If a user installed this version of Jolokia, the check plugin <code>jolokia_info</code> showed
+<code>unknown</code> instead of the product information. After updating the agent plugin <code>mk_jolokia.py</code>, the
+correct information will be shown again.

@@ -14,7 +14,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from typing import cast, Literal, TypeAlias, TypeVar
 
 import pydantic
-from kubernetes import client  # type: ignore[import]
+from kubernetes import client  # type: ignore[import-untyped]
 
 from . import transform_json
 from .schemata import api

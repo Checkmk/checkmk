@@ -9,7 +9,7 @@ import logging
 import os
 from pathlib import Path
 
-import docker  # type: ignore[import]
+import docker  # type: ignore[import-untyped]
 import pytest
 import requests
 import requests.exceptions

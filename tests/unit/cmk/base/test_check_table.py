@@ -570,7 +570,7 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
     assert len(chk_table) == 1
     # assert static checks won
     effective_params = chk_table[ServiceID(plugin_name, item)].parameters.evaluate(lambda _: True)
-    assert effective_params["source"] == "static"  # type: ignore[index,call-overload]
+    assert effective_params["source"] == "static"
 
 
 @pytest.mark.parametrize(

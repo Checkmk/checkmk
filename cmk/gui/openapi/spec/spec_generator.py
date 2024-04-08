@@ -397,7 +397,7 @@ from collections.abc import Iterator, Sequence
 from typing import Any, get_args, TypedDict
 
 import apispec
-import apispec_oneofschema  # type: ignore[import]
+import apispec_oneofschema  # type: ignore[import-untyped]
 import openapi_spec_validator
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin

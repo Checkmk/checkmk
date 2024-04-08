@@ -28,11 +28,11 @@ from pathlib import Path
 from textwrap import wrap
 from typing import Literal, NewType, overload, Protocol
 
-from reportlab.lib.units import mm  # type: ignore[import]
-from reportlab.lib.utils import ImageReader  # type: ignore[import]
+from reportlab.lib.units import mm  # type: ignore[import-untyped]
+from reportlab.lib.utils import ImageReader  # type: ignore[import-untyped]
 
 # Import software from reportlab (thanks to them!)
-from reportlab.pdfgen import canvas  # type: ignore[import]
+from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
 from six import ensure_str
 from typing_extensions import TypedDict
 

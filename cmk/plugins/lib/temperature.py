@@ -140,10 +140,9 @@ def _migrate_params(params: TempParamType) -> TempParamDict:
     # Convert legacy tuple params into new dict
     if isinstance(params, tuple):
         if len(params) == 4:
-            # mypy doesn't handle this tuple slicing very well.
             params = {
                 "levels": params[:2],
-                "levels_lower": params[2:],  # type: ignore[typeddict-item]
+                "levels_lower": params[2:],
             }
         else:
             params = {"levels": params[:2]}

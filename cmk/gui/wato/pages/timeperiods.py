@@ -11,9 +11,9 @@ import time
 from collections.abc import Collection
 from datetime import date, datetime, timedelta
 
-import recurring_ical_events  # type: ignore[import]
-from icalendar import Calendar, Event  # type: ignore[import]
-from icalendar.prop import vDDDTypes  # type: ignore[import]
+import recurring_ical_events  # type: ignore[import-untyped]
+from icalendar import Calendar, Event  # type: ignore[import-untyped]
+from icalendar.prop import vDDDTypes  # type: ignore[import-untyped]
 
 import cmk.utils.dateutils as dateutils
 from cmk.utils.timeperiod import builtin_timeperiods, load_timeperiods, timeperiod_spec_alias

@@ -539,7 +539,7 @@ def _get_wafv2_web_acls(
                     _byte_convert_statement(s)
 
     for acl in web_acls:
-        for rule in acl["Rules"]:  # type: ignore[index]
+        for rule in acl["Rules"]:
             _byte_convert_statement(rule["Statement"])
 
     return web_acls

@@ -16,10 +16,7 @@ from email.message import EmailMessage
 from pathlib import Path
 from typing import NamedTuple
 
-from git.exc import (  # type: ignore[attr-defined] # BadName is defined in gitdb, but does not provide type hints
-    BadName,
-    GitCommandError,
-)
+from git.exc import BadName, GitCommandError
 from git.objects.blob import Blob
 from git.objects.commit import Commit
 from git.repo import Repo

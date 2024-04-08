@@ -14,7 +14,7 @@ from typing import Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
 from zlib import compress
 
 import pytest
-from pyghmi.exceptions import IpmiException  # type: ignore[import]
+from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
 from pytest import MonkeyPatch
 
 import cmk.utils.resulttype as result

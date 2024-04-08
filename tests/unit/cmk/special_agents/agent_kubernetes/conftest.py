@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from kubernetes import client  # type: ignore[import]
-from kubernetes.client import ApiClient  # type: ignore[import]
+from kubernetes import client  # type: ignore[import-untyped]
+from kubernetes.client import ApiClient  # type: ignore[import-untyped]
 
 
 def kubernetes_api_client():

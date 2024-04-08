@@ -70,7 +70,7 @@ if cmk_version.edition() in [
     cmk_version.Edition.CCE,
     cmk_version.Edition.CSE,
 ]:
-    from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
+    from cmk.base.cee.diagnostics import (  # type: ignore[import,unused-ignore]  # pylint: disable=no-name-in-module,import-error
         cmc_specific_attrs,
     )
 else:

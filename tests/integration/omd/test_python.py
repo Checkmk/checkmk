@@ -11,7 +11,7 @@ from subprocess import check_output
 from typing import NamedTuple, NewType
 
 import pytest
-from pipfile import Pipfile  # type: ignore[import]
+from pipfile import Pipfile  # type: ignore[import-untyped]
 from semver import VersionInfo
 
 from tests.testlib import repo_path

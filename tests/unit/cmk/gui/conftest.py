@@ -20,7 +20,7 @@ from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
-import webtest  # type: ignore[import]
+import webtest  # type: ignore[import-untyped]
 from flask import Flask
 from mypy_extensions import KwArg
 from pytest_mock import MockerFixture

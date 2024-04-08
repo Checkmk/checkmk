@@ -7,7 +7,7 @@
 
 from collections.abc import Iterable
 
-import astroid  # type: ignore[import]
+import astroid  # type: ignore[import-untyped]
 import pytest
 from pylint.lint import PyLinter
 

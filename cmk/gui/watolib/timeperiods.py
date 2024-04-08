@@ -82,7 +82,7 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
     _load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
 
-def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: ignore[no-untyped-def]
+def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:
     existing_timeperiods = _load_timeperiods()
     if name not in existing_timeperiods:
         raise TimePeriodNotFoundError()
@@ -92,7 +92,7 @@ def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: i
     _changes.add_change("edit-timeperiods", _("Modified time period %s") % name)
 
 
-def create_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: ignore[no-untyped-def]
+def create_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:
     existing_timeperiods = _load_timeperiods()
     if name in existing_timeperiods:
         raise TimePeriodAlreadyExistsError()

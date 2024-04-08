@@ -54,7 +54,7 @@ if (
     sys.exit(1)
 
 try:
-    import docker  # type: ignore[import]
+    import docker  # type: ignore[import-untyped]
 except ImportError:
     sys.stdout.write(
         "<<<docker_node_info:sep(124)>>>\n"

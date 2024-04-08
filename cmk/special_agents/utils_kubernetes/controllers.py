@@ -6,7 +6,7 @@
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
-from kubernetes import client  # type: ignore[import]
+from kubernetes import client  # type: ignore[import-untyped]
 
 from cmk.special_agents.utils_kubernetes.schemata import api
 

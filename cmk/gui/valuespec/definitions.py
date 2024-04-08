@@ -3468,7 +3468,7 @@ HostStateValue = Literal[0, 1, 2]
 
 
 class HostState(DropdownChoice):
-    def __init__(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+    def __init__(  # pylint: disable=redefined-builtin
         self,
         # DropdownChoice
         sorted: bool = False,

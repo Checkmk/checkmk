@@ -43,9 +43,9 @@ from pathlib import Path
 from typing import cast, IO, Literal
 
 # docs: http://www.python-ldap.org/doc/html/index.html
-import ldap  # type: ignore[import]
-import ldap.filter  # type: ignore[import]
-from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
+import ldap  # type: ignore[import-untyped]
+import ldap.filter  # type: ignore[import-untyped]
+from ldap.controls import SimplePagedResultsControl  # type: ignore[import-untyped]
 from six import ensure_str
 
 import cmk.utils.password_store as password_store
@@ -172,9 +172,9 @@ GroupMemberships = dict[DistinguishedName, dict[str, str | list[str]]]
 
 
 def _get_ad_locator():
-    import activedirectory  # type: ignore[import] # pylint: disable=import-error
+    import activedirectory  # type: ignore[import-untyped] # pylint: disable=import-error
     import six
-    from activedirectory.protocol.netlogon import Client as NetlogonClient  # type: ignore[import]
+    from activedirectory.protocol import netlogon  # type: ignore[import-untyped]
 
     class FasterDetectLocator(activedirectory.Locator):  # type: ignore[misc]
         def _detect_site(self, domain):
@@ -187,16 +187,16 @@ def _get_ad_locator():
             servers = self._order_dns_srv(answer)
             addresses = self._extract_addresses_from_srv(servers)
             replies = []
-            netlogon = NetlogonClient()
+            client = netlogon.Client()
             max_servers_parallel = 60
             for i in range(0, len(addresses), max_servers_parallel):
                 for addr in addresses[i : i + max_servers_parallel]:
                     self.m_logger.debug("NetLogon query to %s", addr[0])
                     try:
-                        netlogon.query(addr, domain)
+                        client.query(addr, domain)
                     except Exception:
                         continue
-                replies += netlogon.call()
+                replies += client.call()
                 self.m_logger.debug("%d replies", len(replies))
                 if len(replies) >= 1:
                     break

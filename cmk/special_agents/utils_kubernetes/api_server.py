@@ -15,7 +15,7 @@ from dataclasses import dataclass
 
 import pydantic
 import requests
-from kubernetes import client  # type: ignore[import]
+from kubernetes import client  # type: ignore[import-untyped]
 
 from cmk.special_agents.utils_kubernetes import query
 from cmk.special_agents.utils_kubernetes.controllers import (

@@ -743,7 +743,7 @@ def get_schema_from_precalculated_schemas(
     PRECALCULATED_SCHEMAS[schema_name] = schema_cls.from_dict(
         schema_fields,
         name=schema_name,
-    )  # type: ignore
+    )
     return PRECALCULATED_SCHEMAS[schema_name]
 
 

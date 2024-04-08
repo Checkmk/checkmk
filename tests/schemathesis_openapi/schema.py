@@ -8,7 +8,7 @@ from re import match
 from typing import Any, Iterator
 
 import schemathesis
-from schemathesis import DataGenerationMethod  # type: ignore[attr-defined]
+from schemathesis import DataGenerationMethod
 from schemathesis.specs.openapi import schemas
 
 from tests.testlib.site import get_site_factory, Site

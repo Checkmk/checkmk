@@ -20,7 +20,7 @@ __version__ = "2.4.0b1"
 try:
     import configparser
 except ImportError:  # Python 2
-    import ConfigParser as configparser  # type: ignore[import,no-redef]
+    import ConfigParser as configparser  # type: ignore[import-not-found,no-redef]
 
 import glob
 import os

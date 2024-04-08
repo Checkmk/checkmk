@@ -152,7 +152,7 @@ class AbstractFormSpecVisitor:
             if self._do_validate:
                 _log_indent(f"  validate {node.__class__.__name__}")
                 try:
-                    custom_validate = node.custom_validate  # type: ignore[attr-defined]
+                    custom_validate = node.custom_validate
                 except Exception:
                     # Basic exception handling -> TODO: inspect, etc.
                     # Not every formspec has a custom validate callable

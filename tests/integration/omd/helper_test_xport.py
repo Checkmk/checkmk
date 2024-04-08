@@ -6,7 +6,7 @@
 import ast
 import sys
 
-import rrdtool  # type: ignore[import]
+import rrdtool  # type: ignore[import-not-found]
 
 rrd_database, qstart, qend = ast.literal_eval(sys.stdin.read())
 

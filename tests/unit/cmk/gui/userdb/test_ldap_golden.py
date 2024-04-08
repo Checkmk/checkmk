@@ -13,7 +13,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 from unittest.mock import ANY, MagicMock
 
-import ldap  # type: ignore[import]
+import ldap  # type: ignore[import-untyped]
 import pytest
 from pytest_mock import MockerFixture
 

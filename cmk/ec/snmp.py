@@ -10,18 +10,18 @@ from pathlib import Path
 from typing import Any
 
 import pyasn1.error
-import pysnmp.debug  # type: ignore[import]
-import pysnmp.entity.config  # type: ignore[import]
-import pysnmp.entity.engine  # type: ignore[import]
-import pysnmp.entity.rfc3413.ntfrcv  # type: ignore[import]
-import pysnmp.proto.api  # type: ignore[import]
-import pysnmp.proto.errind  # type: ignore[import]
-import pysnmp.proto.rfc1155  # type: ignore[import]
-import pysnmp.proto.rfc1902  # type: ignore[import]
-import pysnmp.smi.builder  # type: ignore[import]
-import pysnmp.smi.error  # type: ignore[import]
-import pysnmp.smi.rfc1902  # type: ignore[import]
-import pysnmp.smi.view  # type: ignore[import]
+import pysnmp.debug  # type: ignore[import-untyped]
+import pysnmp.entity.config  # type: ignore[import-untyped]
+import pysnmp.entity.engine  # type: ignore[import-untyped]
+import pysnmp.entity.rfc3413.ntfrcv  # type: ignore[import-untyped]
+import pysnmp.proto.api  # type: ignore[import-untyped]
+import pysnmp.proto.errind  # type: ignore[import-untyped]
+import pysnmp.proto.rfc1155  # type: ignore[import-untyped]
+import pysnmp.proto.rfc1902  # type: ignore[import-untyped]
+import pysnmp.smi.builder  # type: ignore[import-untyped]
+import pysnmp.smi.error  # type: ignore[import-untyped]
+import pysnmp.smi.rfc1902  # type: ignore[import-untyped]
+import pysnmp.smi.view  # type: ignore[import-untyped]
 from pyasn1.type.base import SimpleAsn1Type
 
 import cmk.utils.paths

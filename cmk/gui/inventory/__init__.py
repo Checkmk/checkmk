@@ -16,7 +16,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal, NamedTuple
 
-import dicttoxml  # type: ignore[import]
+import dicttoxml  # type: ignore[import-untyped]
 from typing_extensions import TypedDict
 
 import livestatus

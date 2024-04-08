@@ -15,7 +15,7 @@ from typing import NamedTuple
 from unittest import mock
 
 import pytest
-from exchangelib import Message as EWSMessage  # type: ignore[import]
+from exchangelib import Message as EWSMessage  # type: ignore[import-untyped]
 
 from tests.testlib import import_module_hack
 

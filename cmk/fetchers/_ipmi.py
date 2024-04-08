@@ -10,14 +10,14 @@ from collections.abc import Iterable
 from dataclasses import astuple, dataclass
 from typing import Final, Self, TYPE_CHECKING
 
-import pyghmi.constants as ipmi_const  # type: ignore[import]
-from pyghmi.exceptions import IpmiException  # type: ignore[import]
+import pyghmi.constants as ipmi_const  # type: ignore[import-untyped]
+from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
 from typing_extensions import TypedDict
 
 if TYPE_CHECKING:
     # The remaining pyghmi imports are expensive (60 ms for all of them together).
-    import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
-    import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
+    import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import-untyped]
+    import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import-untyped]
 
 from six import ensure_binary
 
@@ -194,7 +194,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         # initialize a new session every cycle.
         # We also don't want to reuse sockets or other things from previous calls.
 
-        import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import]
+        import pyghmi.ipmi.private.session as ipmi_session  # type: ignore[import-untyped]
 
         ipmi_session.iothread.join()
         ipmi_session.iothread = None

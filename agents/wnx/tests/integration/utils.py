@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Final, NamedTuple
 
-import telnetlib3  # type: ignore[import]
+import telnetlib3  # type: ignore[import-untyped]
 import yaml
 
 # check_mk section, example of output

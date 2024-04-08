@@ -23,7 +23,7 @@ except ImportError:
     pass
 
 try:
-    import MySQLdb  # type: ignore[import] # pylint: disable=import-error
+    import MySQLdb  # type: ignore[import-untyped] # pylint: disable=import-error
 except ImportError as e:
     sys.stdout.write(
         "<<<plesk_backups>>>\n%s. Please install missing module via pip install <module>." % e

@@ -6,11 +6,11 @@ import importlib.util
 import os
 import os.path
 import types
-from importlib._bootstrap_external import SourceFileLoader  # type: ignore[import]
+from importlib._bootstrap_external import SourceFileLoader  # type: ignore[import-not-found]
 
 import flask
 import pytest
-import webtest  # type: ignore[import]
+import webtest  # type: ignore[import-untyped]
 from flask import request
 from werkzeug.test import create_environ
 

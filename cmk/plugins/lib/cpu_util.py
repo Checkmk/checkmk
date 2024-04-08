@@ -136,7 +136,7 @@ def check_cpu_util(
         yield Metric(
             "util",
             util,
-            levels=levels if isinstance(levels, tuple) else None,  # type: ignore[arg-type]
+            levels=levels if isinstance(levels, tuple) else None,
             boundaries=(0, perf_max),
         )
         value_checked = get_average(

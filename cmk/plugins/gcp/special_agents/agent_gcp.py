@@ -19,8 +19,8 @@ from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3.types import Aggregation as GoogleAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
 from google.oauth2 import service_account  # type: ignore[import-untyped]
-from googleapiclient.discovery import build, Resource  # type: ignore[import]
-from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import]
+from googleapiclient.discovery import build, Resource  # type: ignore[import-untyped]
+from googleapiclient.http import HttpError, HttpRequest  # type: ignore[import-untyped]
 
 # Those are enum classes defined in the Aggregation class. Not nice but works
 Aligner = GoogleAggregation.Aligner

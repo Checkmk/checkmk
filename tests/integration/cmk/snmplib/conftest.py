@@ -16,7 +16,7 @@ from typing import NamedTuple
 
 import psutil
 import pytest
-from pysnmp.hlapi import (  # type: ignore[import]
+from pysnmp.hlapi import (  # type: ignore[import-untyped]
     CommunityData,
     ContextData,
     getCmd,

@@ -18,16 +18,16 @@ from html import escape as html_escape
 from pathlib import Path
 from typing import Any, cast, overload, TypeVar
 
-from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import]
-from pysmi.compiler import MibCompiler  # type: ignore[import]
-from pysmi.error import PySmiError  # type: ignore[import]
-from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import]
-from pysmi.reader.callback import CallbackReader  # type: ignore[import]
-from pysmi.reader.localfile import FileReader  # type: ignore[import]
-from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore[import]
-from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import]
-from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
-from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import]
+from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import-untyped]
+from pysmi.compiler import MibCompiler  # type: ignore[import-untyped]
+from pysmi.error import PySmiError  # type: ignore[import-untyped]
+from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import-untyped]
+from pysmi.reader.callback import CallbackReader  # type: ignore[import-untyped]
+from pysmi.reader.localfile import FileReader  # type: ignore[import-untyped]
+from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore[import-untyped]
+from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import-untyped]
+from pysmi.searcher.stub import StubSearcher  # type: ignore[import-untyped]
+from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import-untyped]
 
 from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 

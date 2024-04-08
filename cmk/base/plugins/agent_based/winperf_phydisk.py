@@ -39,7 +39,7 @@ class GetRateErrorCounter(GetRateError):
     """
 
 
-def update_value_and_calc_rate(  # type: ignore[misc]
+def update_value_and_calc_rate(
     value_store: MutableMapping[str, Any],
     key: str,
     *,
@@ -91,7 +91,7 @@ def update_value_and_calc_rate(  # type: ignore[misc]
     """
     try:
         data_point = DataPoint(timestamp, value)
-        prev = update_store(value_store, key, data_point)  # type: ignore[misc]
+        prev = update_store(value_store, key, data_point)
         return calc_rate(prev, new=data_point, raise_overflow=raise_overflow)
     except GetRateError as e:
         raise type(e)(f"At {key!r}: {str(e)}")
@@ -105,7 +105,7 @@ class DataPoint(NamedTuple):
 
 
 # TODO(sk): typing must be improved i.e. value_store must be statically typed
-def update_store(  # type: ignore[misc]
+def update_store(
     value_store: MutableMapping[str, Any],
     key: str,
     data_point: DataPoint,

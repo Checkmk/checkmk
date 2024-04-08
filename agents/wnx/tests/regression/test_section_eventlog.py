@@ -12,7 +12,7 @@ import winreg  # pylint: disable=import-error
 from itertools import chain, repeat
 
 import pytest
-import win32evtlog  # type: ignore[import]  # pylint: disable=import-error
+import win32evtlog  # type: ignore[import-not-found]  # pylint: disable=import-error
 
 from .local import assert_subprocess, host, local_test, user_dir
 

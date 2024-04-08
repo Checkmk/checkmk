@@ -771,8 +771,7 @@ class PageEditBackupJob:
                     "target",
                     DropdownChoice(
                         title=_("Target"),
-                        # TODO: understand why mypy complains
-                        choices=self.backup_target_choices(config),  # type: ignore[misc]
+                        choices=self.backup_target_choices(config),
                         validate=lambda target_id, varprefix: self._validate_target(
                             config,
                             target_id,

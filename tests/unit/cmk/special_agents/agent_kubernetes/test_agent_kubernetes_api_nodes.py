@@ -5,7 +5,7 @@
 import datetime
 
 import pydantic
-from kubernetes import client  # type: ignore[import]
+from kubernetes import client  # type: ignore[import-untyped]
 from pydantic import ConfigDict
 
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse

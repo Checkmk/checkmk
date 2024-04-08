@@ -349,8 +349,7 @@ def cluster_check_netscaler_vserver(
         params,
         [
             {
-                # mypy unfortunately only accepts string literals as valid keys for TypedDicts
-                **node_section[item],  # type: ignore[misc]
+                **node_section[item],
                 "node": node_name,
             }
             for node_name, node_section in section.items()

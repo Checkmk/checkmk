@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from webtest import TestResponse  # type: ignore[import]
+from webtest import TestResponse  # type: ignore[import-untyped]
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from kubernetes import client  # type: ignore[import]
+from kubernetes import client  # type: ignore[import-untyped]
 
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 

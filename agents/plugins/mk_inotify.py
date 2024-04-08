@@ -14,7 +14,7 @@ import time
 try:
     import configparser
 except ImportError:  # Python 2
-    import ConfigParser as configparser  # type: ignore[import,no-redef]
+    import ConfigParser as configparser  # type: ignore[import-not-found,no-redef]
 
 try:
     from typing import Any  # noqa: F401 # pylint: disable=unused-import
@@ -23,7 +23,7 @@ except ImportError:
 
 try:
     # TODO: We should probably ship this package.
-    import pyinotify  # type: ignore[import] # pylint: disable=import-error
+    import pyinotify  # type: ignore[import-not-found] # pylint: disable=import-error
 except ImportError:
     sys.stderr.write("Error: Python plugin pyinotify is not installed\n")
     sys.exit(1)

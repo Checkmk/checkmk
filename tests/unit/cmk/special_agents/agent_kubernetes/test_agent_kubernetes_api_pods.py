@@ -9,7 +9,7 @@ import datetime
 from unittest import TestCase
 
 from dateutil.tz import tzutc
-from kubernetes import client  # type: ignore[import]
+from kubernetes import client  # type: ignore[import-untyped]
 
 from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 

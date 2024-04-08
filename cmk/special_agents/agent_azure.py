@@ -23,7 +23,7 @@ from multiprocessing import Lock, Process, Queue
 from queue import Empty as QueueEmpty
 from typing import Any, Literal, NamedTuple
 
-import msal  # type: ignore[import]
+import msal  # type: ignore[import-untyped]
 import requests
 
 from cmk.utils import password_store

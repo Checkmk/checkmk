@@ -28,7 +28,7 @@ def main() {
     def output_file = PACKAGE_PATH.split("/")[-1] + ".log"
     dir(checkout_dir) {
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            docker_image_from_alias("IMAGE_TESTING").inside() {
+            docker_reference_image().inside() {
                 withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
                     helper.execute_test([
                         name       : PACKAGE_PATH,

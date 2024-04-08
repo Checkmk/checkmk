@@ -7,7 +7,7 @@ def build_stages(packages_file) {
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
 
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_image_from_alias("IMAGE_TESTING").inside() {
+        docker_reference_image().inside() {
             sh("make .venv")
             parallel packages.collectEntries { p ->
                 [("${p.name}"): {
@@ -40,7 +40,7 @@ def build_stages(packages_file) {
 def preparation(packages_file) {
     stage("Preparation") {
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            docker_image_from_alias("IMAGE_TESTING").inside() {
+            docker_reference_image().inside() {
                 sh("rm -rf results; mkdir results")
                 sh("buildscripts/scripts/collect_packages.py packages > ${packages_file}");
             }

@@ -18,7 +18,6 @@ import omdlib
 import omdlib.main
 import omdlib.utils
 from omdlib.contexts import SiteContext
-from omdlib.version_info import VersionInfo
 
 from cmk.utils import version
 
@@ -60,8 +59,8 @@ def test_hostname() -> None:
     assert omdlib.main.hostname() == os.popen("hostname").read().strip()
 
 
-def test_main_help(capsys: pytest.CaptureFixture[str], version_info: VersionInfo) -> None:
-    omdlib.main.main_help(version_info, object())
+def test_main_help(capsys: pytest.CaptureFixture[str]) -> None:
+    omdlib.main.main_help(object(), object())
     stdout = capsys.readouterr()[0]
     assert "omd COMMAND -h" in stdout
 

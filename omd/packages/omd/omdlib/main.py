@@ -1913,9 +1913,9 @@ def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
 
 
 def main_help(
-    version_info: VersionInfo,
+    _version_info: object,
     _site: object,
-    global_opts: GlobalOptions | None = None,
+    _global_opts: object = None,
     args: Arguments | None = None,
     options: CommandOptions | None = None,
 ) -> None:

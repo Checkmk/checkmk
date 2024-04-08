@@ -26,9 +26,9 @@ import time
 import traceback
 import uuid
 from collections.abc import Mapping, Sequence
-from functools import cache
+from functools import cache, partial
 from pathlib import Path
-from typing import Any, cast, Literal, overload
+from typing import Any, Callable, cast, Literal, overload
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -208,6 +208,8 @@ Available commands:
 def do_notify(  # pylint: disable=too-many-branches
     options: dict[str, bool],
     args: list[str],
+    *,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
 ) -> int | None:
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
@@ -243,25 +245,25 @@ def do_notify(  # pylint: disable=too-many-branches
         # -> mknotifyd deletes this file
         if notify_mode == "spoolfile":
             filename = args[1]
-            return handle_spoolfile(filename)
+            return handle_spoolfile(filename, host_parameters_cb)
 
         if keepalive and keepalive.enabled():
-            notify_keepalive()
+            notify_keepalive(host_parameters_cb)
         elif notify_mode == "replay":
             try:
                 replay_nr = int(args[1])
             except (IndexError, ValueError):
                 replay_nr = 0
-            notify_notify(raw_context_from_backlog(replay_nr))
+            notify_notify(raw_context_from_backlog(replay_nr), host_parameters_cb)
         elif notify_mode == "test":
             assert isinstance(args[0], dict)
-            notify_notify(EventContext(args[0]))
+            notify_notify(EventContext(args[0]), host_parameters_cb)
         elif notify_mode == "stdin":
-            notify_notify(events.raw_context_from_string(sys.stdin.read()))
+            notify_notify(events.raw_context_from_string(sys.stdin.read()), host_parameters_cb)
         elif notify_mode == "send-bulks":
             send_ripe_bulks()
         else:
-            notify_notify(raw_context_from_env(os.environ))
+            notify_notify(raw_context_from_env(os.environ), host_parameters_cb)
 
     except Exception:
         crash_dir = Path(cmk.utils.paths.var_dir) / "notify"
@@ -299,6 +301,8 @@ def convert_legacy_configuration() -> None:
 
 def notify_notify(
     raw_context: EventContext,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    *,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
@@ -350,18 +354,24 @@ def notify_notify(
         )
 
     if config.notification_spooling != "remote":
-        return locally_deliver_raw_context(enriched_context, analyse=analyse, dispatch=dispatch)
+        return locally_deliver_raw_context(
+            enriched_context, host_parameters_cb, analyse=analyse, dispatch=dispatch
+        )
     return None
 
 
 def locally_deliver_raw_context(
     enriched_context: EnrichedEventContext,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    *,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo | None:
     try:
         logger.debug("Preparing rule based notifications")
-        return notify_rulebased(enriched_context, analyse=analyse, dispatch=dispatch)
+        return notify_rulebased(
+            enriched_context, host_parameters_cb, analyse=analyse, dispatch=dispatch
+        )
 
     except Exception:
         if cmk.utils.debug.enabled():
@@ -371,24 +381,33 @@ def locally_deliver_raw_context(
     return None
 
 
-def notification_replay_backlog(nr: int) -> None:
+def notification_replay_backlog(
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    nr: int,
+) -> None:
     global notify_mode
     notify_mode = "replay"
     _initialize_logging()
     raw_context = raw_context_from_backlog(nr)
-    notify_notify(raw_context)
+    notify_notify(raw_context, host_parameters_cb)
 
 
-def notification_analyse_backlog(nr: int) -> NotifyAnalysisInfo | None:
+def notification_analyse_backlog(
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    nr: int,
+) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "replay"
     _initialize_logging()
     raw_context = raw_context_from_backlog(nr)
-    return notify_notify(raw_context, analyse=True)
+    return notify_notify(raw_context, host_parameters_cb, analyse=True)
 
 
 def notification_test(
-    raw_context: NotificationContext, dispatch: bool
+    raw_context: NotificationContext,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    *,
+    dispatch: bool,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "test"
@@ -399,7 +418,7 @@ def notification_test(
     raw_context["CONTACTS"] = ",".join(contacts) if contacts else "?"
     plugin_context = EventContext({})
     plugin_context.update(cast(EventContext, raw_context))
-    return notify_notify(plugin_context, analyse=True, dispatch=dispatch)
+    return notify_notify(plugin_context, host_parameters_cb, analyse=True, dispatch=dispatch)
 
 
 # .
@@ -417,10 +436,12 @@ def notification_test(
 
 
 # TODO: Make use of the generic do_keepalive() mechanism?
-def notify_keepalive() -> None:
+def notify_keepalive(
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+) -> None:
     cmk.base.utils.register_sigint_handler()
     events.event_keepalive(
-        event_function=notify_notify,
+        event_function=partial(notify_notify, host_parameters_cb=host_parameters_cb),
         call_every_loop=send_ripe_bulks,
         loop_interval=config.notification_bulk_interval,
     )
@@ -441,6 +462,8 @@ def notify_keepalive() -> None:
 
 def notify_rulebased(
     enriched_context: EnrichedEventContext,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    *,
     analyse: bool = False,
     dispatch: bool = False,
 ) -> NotifyAnalysisInfo:
@@ -473,11 +496,20 @@ def notify_rulebased(
             num_rule_matches += 1
 
             notifications, rule_info = _create_notifications(
-                enriched_context, rule, notifications, rule_info
+                enriched_context,
+                rule,
+                notifications,
+                rule_info,
+                host_parameters_cb,
             )
 
     plugin_info = _process_notifications(
-        enriched_context, notifications, num_rule_matches, analyse, dispatch
+        enriched_context,
+        notifications,
+        num_rule_matches,
+        host_parameters_cb,
+        analyse=analyse,
+        dispatch=dispatch,
     )
 
     return rule_info, plugin_info
@@ -494,6 +526,7 @@ def _create_notifications(
     rule: EventRule,
     notifications: Notifications,
     rule_info: list[NotifyRuleInfo],
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
 ) -> tuple[Notifications, list[NotifyRuleInfo]]:
     contacts = rbn_rule_contacts(rule, enriched_context)
     contactstxt = ", ".join(contacts)
@@ -552,7 +585,7 @@ def _create_notifications(
         bulk = rbn_get_bulk_params(rule)
 
         final_parameters = rbn_finalize_plugin_parameters(
-            enriched_context["HOSTNAME"], plugin_name, plugin_parameters
+            enriched_context["HOSTNAME"], plugin_name, host_parameters_cb, plugin_parameters
         )
         notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
 
@@ -564,6 +597,8 @@ def _process_notifications(  # pylint: disable=too-many-branches
     enriched_context: EnrichedEventContext,
     notifications: Notifications,
     num_rule_matches: int,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    *,
     analyse: bool,
     dispatch: bool = False,
 ) -> list[NotifyPluginInfo]:
@@ -581,7 +616,7 @@ def _process_notifications(  # pylint: disable=too-many-branches
 
                 plugin_name, fallback_params = config.notification_fallback_format
                 fallback_params = rbn_finalize_plugin_parameters(
-                    enriched_context["HOSTNAME"], plugin_name, fallback_params
+                    enriched_context["HOSTNAME"], plugin_name, host_parameters_cb, fallback_params
                 )
                 plugin_context = create_plugin_context(enriched_context, fallback_params)
                 rbn_add_contact_information(plugin_context, fallback_contacts)
@@ -681,6 +716,7 @@ def rbn_fallback_contacts() -> Contacts:
 def rbn_finalize_plugin_parameters(
     hostname: HostName,
     plugin_name: NotificationPluginNameStr,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     rule_parameters: NotifyPluginParamsList,
 ) -> NotifyPluginParamsList: ...
 
@@ -689,19 +725,22 @@ def rbn_finalize_plugin_parameters(
 def rbn_finalize_plugin_parameters(
     hostname: HostName,
     plugin_name: NotificationPluginNameStr,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     rule_parameters: NotifyPluginParamsDict,
 ) -> NotifyPluginParamsDict: ...
 
 
 def rbn_finalize_plugin_parameters(
-    hostname: HostName, plugin_name: NotificationPluginNameStr, rule_parameters: NotifyPluginParams
+    hostname: HostName,
+    plugin_name: NotificationPluginNameStr,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    rule_parameters: NotifyPluginParams,
 ) -> NotifyPluginParams:
     # Right now we are only able to finalize notification plugins with dict parameters..
     if not isinstance(rule_parameters, dict):
         return rule_parameters
 
-    config_cache = config.get_config_cache()
-    parameters = dict(config_cache.notification_plugin_parameters(hostname, plugin_name)).copy()
+    parameters = dict(host_parameters_cb(hostname, plugin_name)).copy()
     parameters.update(rule_parameters)
 
     # Added in 2.0.0b8. Applies if no value is set either in the notification rule
@@ -1490,7 +1529,10 @@ def notification_script_env(plugin_context: NotificationContext) -> PluginNotifi
 # 2. Notifications for async local delivery. Contain key "plugin"
 # 3. Notifications that *were* forwarded (e.g. received from a slave). Contain neither of both.
 # Spool files of type 1 are not handled here!
-def handle_spoolfile(spoolfile: str) -> int:
+def handle_spoolfile(
+    spoolfile: str,
+    host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
     data = None
@@ -1525,8 +1567,8 @@ def handle_spoolfile(spoolfile: str) -> int:
             events.find_host_service_in_context(raw_context),
         )
 
-        store_notification_backlog(data["context"])
-        locally_deliver_raw_context(data["context"])
+        store_notification_backlog(raw_context)
+        locally_deliver_raw_context(raw_context, host_parameters_cb)
         # TODO: It is a bug that we don't transport result information and monitoring history
         # entries back to the origin site. The intermediate or final results should be sent back to
         # the origin site. Also log_to_history calls should not log the entries to the local

@@ -658,24 +658,6 @@ def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], s
     )
 
 
-def _make_long_inventory_title(
-    long_title: str, *, node_type: Literal["node", "attribute", "table", "column"]
-) -> str:
-    # This long title with topic 'Inventory' is used for painters, sorters and filters.
-    if node_type == "node":
-        title_prefix = _("Inventory node")
-    elif node_type == "attribute":
-        title_prefix = _("Inventory attribute")
-    elif node_type == "table":
-        title_prefix = _("Inventory table")
-    elif node_type == "column":
-        title_prefix = _("Inventory column")
-    else:
-        raise ValueError(node_type)
-
-    return f"{title_prefix}: {long_title}"
-
-
 def _make_table_view_name_of_host(view_name: str) -> str:
     return f"{view_name}_of_host"
 
@@ -692,7 +674,7 @@ class NodeDisplayHint:
 
     @property
     def long_inventory_title(self) -> str:
-        return _make_long_inventory_title(self.long_title, node_type="node")
+        return _("Inventory node: %s") % self.long_title
 
     @classmethod
     def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
@@ -743,7 +725,7 @@ class TableViewSpec:
 
     @property
     def long_inventory_title(self) -> str:
-        return _make_long_inventory_title(self.long_title, node_type="table")
+        return _("Inventory table: %s") % self.long_title
 
 
 KeyOrder = Sequence[str]
@@ -792,7 +774,7 @@ class ColumnDisplayHint:
 
     @property
     def long_inventory_title(self) -> str:
-        return _make_long_inventory_title(self.long_title, node_type="column")
+        return _("Inventory column: %s") % self.long_title
 
     @classmethod
     def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> ColumnDisplayHint:
@@ -864,7 +846,7 @@ class AttributeDisplayHint:
 
     @property
     def long_inventory_title(self) -> str:
-        return _make_long_inventory_title(self.long_title, node_type="attribute")
+        return _("Inventory attribute: %s") % self.long_title
 
     @classmethod
     def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> AttributeDisplayHint:

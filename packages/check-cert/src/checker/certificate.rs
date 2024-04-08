@@ -87,6 +87,14 @@ pub struct Config {
     max_validity: Option<Duration>,
 }
 
+fn handle_empty(s: &str) -> &str {
+    if s.trim().is_empty() {
+        "empty"
+    } else {
+        s
+    }
+}
+
 pub fn check(der: &[u8], config: Config) -> Collection {
     let cert = match X509Certificate::from_der(der) {
         Ok((_rem, cert)) => cert,
@@ -103,7 +111,12 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                     format!("{}: {}", name, value),
                 )
             } else {
-                SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
             }
         }),
         check_subject_alt_names(cert.subject_alternative_name(), config.subject_alt_names),
@@ -113,7 +126,12 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             if expected == value {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
-                SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
             }
         }),
         config.subject_ou.map(|expected| {
@@ -122,7 +140,12 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             if expected == value {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
-                SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
             }
         }),
         check_serial(cert.raw_serial_as_string(), config.serial),
@@ -132,7 +155,12 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             if expected == value {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
-                SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
             }
         }),
         config.issuer_o.map(|expected| {
@@ -141,7 +169,12 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             if expected == value {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
-                SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
             }
         }),
         config.issuer_ou.map(|expected| {
@@ -150,7 +183,12 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             if expected == value {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
-                SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
             }
         }),
         config.issuer_st.map(|expected| {
@@ -159,7 +197,12 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             if expected == value {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
-                SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
             }
         }),
         config.issuer_c.map(|expected| {
@@ -168,7 +211,12 @@ pub fn check(der: &[u8], config: Config) -> Collection {
             if expected == value {
                 SimpleCheckResult::notice(format!("{}: {}", name, value))
             } else {
-                SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
+                SimpleCheckResult::warn(format!(
+                    "{} is {} but expected {}",
+                    name,
+                    handle_empty(value),
+                    expected
+                ))
             }
         }),
         check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm),

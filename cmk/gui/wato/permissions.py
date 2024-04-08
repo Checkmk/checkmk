@@ -615,11 +615,11 @@ permission_registry.register(
         title=_l("Add or modify executables"),
         description=_l(
             "There are different places in Checkmk where an admin can use the GUI to add "
-            "executable code to Checkmk. For example when configuring "
+            "executable code to a Checkmk site or agent. For example when configuring "
             "datasource programs, the user inserts a command line for gathering monitoring data. "
             "This command line is then executed during monitoring by Checkmk. Another example is "
             "the upload of extension packages (MKPs). All these functions have in "
-            "common that the user provides data that is executed by Checkmk. "
+            "common that the user provides data that is executed by Checkmk or the agent. "
             'If you want to ensure that your Setup users cannot "inject" arbitrary executables '
             "into your Checkmk installation, you only need to remove this permission for them. "
             "This permission is needed in addition to the other component related permissions. "

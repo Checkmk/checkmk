@@ -1,0 +1,16 @@
+Title: Disallow python_plugins and lnx_remote_alert_handlers agent config options for users without the "add_or_modify_executables" permission
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1710499061
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Without the "add_or_modify_executables" permission users do not have the right
+to change any executable run by checkmk, either on the site or via the agent.
+The agent config options "python_plugins" and "lnx_remote_alert_handlers" have
+not yet checked for that permission.
+
+In the UI "python_plugins" and "lnx_remote_alert_handlers are called
+"Python agent plugin execution (UNIX)" and "Remote alert handler (Linux)" respectively.

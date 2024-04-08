@@ -139,6 +139,8 @@ def may_edit_ruleset(varname: str) -> bool:
         "agent_config:agent_paths",
         "agent_config:runas",
         "agent_config:only_from",
+        "agent_config:python_plugins",
+        "agent_config:lnx_remote_alert_handlers",
     ]:
         return user.may("wato.rulesets") and user.may("wato.add_or_modify_executables")
     if varname == "agent_config:custom_files":

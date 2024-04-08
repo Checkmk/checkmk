@@ -282,86 +282,86 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     """
     post_discovery_services = {}
     for check_transition, discovered_services_with_nodes in services.items():
-        if check_transition == "new":
-            if settings.add_new_services:
-                new = {
-                    DiscoveredService.id(s.service): s
-                    for s in discovered_services_with_nodes
-                    if service_filters.new(
-                        get_service_description(host_name, *DiscoveredService.id(s.service))
-                    )
-                }
-                result.self_new += len(new)
-                post_discovery_services.update(new)
+        match check_transition:
+            case "new":
+                if settings.add_new_services:
+                    new = {
+                        DiscoveredService.id(s.service): s
+                        for s in discovered_services_with_nodes
+                        if service_filters.new(
+                            get_service_description(host_name, *DiscoveredService.id(s.service))
+                        )
+                    }
+                    result.self_new += len(new)
+                    post_discovery_services.update(new)
 
-        elif (  # pylint: disable=consider-using-in
-            check_transition == "unchanged" or check_transition == "ignored"
-        ):
-            # keep currently existing valid services in any case
-            post_discovery_services.update(
-                (DiscoveredService.id(s.service), s) for s in discovered_services_with_nodes
-            )
-            result.self_kept += len(discovered_services_with_nodes)
-
-        elif check_transition == "changed":
-            for entry in discovered_services_with_nodes:
-                service = entry.service
-                assert service.previous is not None and service.new is not None
-                new_entry = AutocheckServiceWithNodes(
-                    service=DiscoveredItem[AutocheckEntry](
-                        new=AutocheckEntry(
-                            check_plugin_name=DiscoveredService.check_plugin_name(service),
-                            item=DiscoveredService.item(service),
-                            parameters=(
-                                service.new.parameters
-                                if settings.update_changed_service_parameters
-                                else service.previous.parameters
-                            ),
-                            service_labels=(
-                                service.new.service_labels
-                                if settings.update_changed_service_labels
-                                else service.previous.service_labels
-                            ),
-                        ),
-                        previous=service.previous,
-                    ),
-                    nodes=entry.nodes,
-                )
-                post_discovery_services[DiscoveredService.id(service)] = new_entry
-                if new_entry.service.new != new_entry.service.previous:
-                    result.self_changed += 1
-                else:
-                    result.self_kept += 1
-
-        elif check_transition == "vanished":
-            # keep item, if we are currently only looking for new services
-            # otherwise fix it: remove ignored and non-longer existing services
-            for entry in discovered_services_with_nodes:
-                if settings.remove_vanished_services and service_filters.vanished(
-                    get_service_description(host_name, *DiscoveredService.id(entry.service))
-                ):
-                    result.self_removed += 1
-                else:
-                    post_discovery_services[DiscoveredService.id(entry.service)] = entry
-
-                    result.self_kept += 1
-
-        else:
-            if check_transition != "clustered_vanished" or keep_clustered_vanished_services:
-                # Silently keep clustered services
+            case "unchanged" | "ignored":
+                # keep currently existing valid services in any case
                 post_discovery_services.update(
                     (DiscoveredService.id(s.service), s) for s in discovered_services_with_nodes
                 )
-            if check_transition == "clustered_new":
-                result.clustered_new += len(discovered_services_with_nodes)
-            elif check_transition == "clustered_old":
-                result.clustered_old += len(discovered_services_with_nodes)
-            elif check_transition == "clustered_vanished":
-                result.clustered_vanished += len(discovered_services_with_nodes)
-            elif check_transition == "clustered_ignored":
-                result.clustered_ignored += len(discovered_services_with_nodes)
-            else:
-                assert_never(check_transition)
+                result.self_kept += len(discovered_services_with_nodes)
+
+            case "changed":
+                for entry in discovered_services_with_nodes:
+                    service = entry.service
+                    assert service.previous is not None and service.new is not None
+                    new_entry = AutocheckServiceWithNodes(
+                        service=DiscoveredItem[AutocheckEntry](
+                            new=AutocheckEntry(
+                                check_plugin_name=DiscoveredService.check_plugin_name(service),
+                                item=DiscoveredService.item(service),
+                                parameters=(
+                                    service.new.parameters
+                                    if settings.update_changed_service_parameters
+                                    else service.previous.parameters
+                                ),
+                                service_labels=(
+                                    service.new.service_labels
+                                    if settings.update_changed_service_labels
+                                    else service.previous.service_labels
+                                ),
+                            ),
+                            previous=service.previous,
+                        ),
+                        nodes=entry.nodes,
+                    )
+                    post_discovery_services[DiscoveredService.id(service)] = new_entry
+                    if new_entry.service.new != new_entry.service.previous:
+                        result.self_changed += 1
+                    else:
+                        result.self_kept += 1
+
+            case "vanished":
+                # keep item, if we are currently only looking for new services
+                # otherwise fix it: remove ignored and non-longer existing services
+                for entry in discovered_services_with_nodes:
+                    if settings.remove_vanished_services and service_filters.vanished(
+                        get_service_description(host_name, *DiscoveredService.id(entry.service))
+                    ):
+                        result.self_removed += 1
+                    else:
+                        post_discovery_services[DiscoveredService.id(entry.service)] = entry
+
+                        result.self_kept += 1
+
+            case _:
+                if check_transition != "clustered_vanished" or keep_clustered_vanished_services:
+                    # Silently keep clustered services
+                    post_discovery_services.update(
+                        (DiscoveredService.id(s.service), s) for s in discovered_services_with_nodes
+                    )
+                match check_transition:
+                    case "clustered_new":
+                        result.clustered_new += len(discovered_services_with_nodes)
+                    case "clustered_old":
+                        result.clustered_old += len(discovered_services_with_nodes)
+                    case "clustered_vanished":
+                        result.clustered_vanished += len(discovered_services_with_nodes)
+                    case "clustered_ignored":
+                        result.clustered_ignored += len(discovered_services_with_nodes)
+                    case _:
+                        assert_never(check_transition)
 
     return post_discovery_services
 

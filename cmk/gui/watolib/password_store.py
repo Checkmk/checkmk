@@ -14,7 +14,7 @@ import cmk.gui.userdb as userdb
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Choices
-from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 
 
@@ -102,3 +102,7 @@ def passwordstore_choices() -> Choices:
         (ident, pw["title"])
         for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()
     ]
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(PasswordStore())

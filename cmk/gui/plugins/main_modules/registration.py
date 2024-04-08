@@ -81,6 +81,7 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.wato import registration as wato_registration
+from cmk.gui.watolib import password_store
 from cmk.gui.watolib import registration as watolib_registration
 from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
@@ -97,6 +98,7 @@ from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_re
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
+from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
 
@@ -272,6 +274,8 @@ def register() -> None:
     openapi_registration.register(endpoint_registry, job_registry)
     sites.ConnectionClass = MultiSiteConnection
     customer.CustomerAPIClass = customer.CustomerAPIStub
+
+    password_store.register(config_file_registry)
 
 
 register()

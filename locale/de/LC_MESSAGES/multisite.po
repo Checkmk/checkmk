@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-04-05 05:57+0000\n"
+"PO-Revision-Date: 2024-04-08 13:11+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -4504,7 +4504,7 @@ msgid ""
 "and complete the dialog.<br>If everything is correct, you will receive the "
 "verification response file now containing your subscription details."
 msgstr ""
-"Nach dem Download laden Sie den Lizenznutzungsbericht in das Checkmk-"
+"Nach dem Download laden Sie die Verifizierungsanfrage in das Checkmk-"
 "Kundenportal hoch.<br>Navigieren Sie im Kundenportal zu 'Subskription' und "
 "wählen Sie Ihre aktive Subskription aus. Klicken Sie auf \"Hochladen\" unter "
 "\"Lizenzinformationen hochladen\" und füllen Sie den Dialog aus.<br>Wenn "
@@ -12820,7 +12820,7 @@ msgstr ""
 
 #, python-format
 msgid "Configure your preferred way of license verification in %s"
-msgstr "Konfigurieren Sie Ihre bevorzugte Art der Lizenzverifikation in %s"
+msgstr "Konfigurieren Sie Ihre bevorzugte Art der Lizenzverifizierung in %s"
 
 msgid "Configured API integrations and Checkmk agent"
 msgstr "Konfigurierte API-Integrationen und Checkmk-Agent"
@@ -13033,8 +13033,8 @@ msgstr "Verbindung"
 msgid "Connection ID"
 msgstr "Verbindungs-ID"
 
-msgid "Connection details"
-msgstr "Verbindungsdetails"
+msgid "Connection buildup"
+msgstr "Verbindungsaufbau"
 
 msgid "Connection dropped late"
 msgstr "Verbindung spät fallen gelassen"
@@ -15494,12 +15494,12 @@ msgid ""
 "them.<br><br>Sincerely, your Checkmk Server"
 msgstr ""
 "Lieber Checkmk-Benutzer,<br><br>Die Lizenz für Ihre Checkmk-Instanz \"%s\" "
-"läuft %s ab. Nach Ablauf der Frist können Sie keine \"Änderungen aktivieren\""
-".<br><br>Wenn Sie Ihre Lizenz noch nicht verlängert haben, kontaktieren Sie "
-"bitte das Checkmk-Vertriebsteam unter %s, um sicherzustellen, dass Ihre "
+"läuft %s ab. Nach Ablauf der Frist können Sie keine \"Änderungen aktivieren"
+"\".<br><br>Wenn Sie Ihre Lizenz noch nicht verlängert haben, kontaktieren "
+"Sie bitte das Checkmk-Vertriebsteam unter %s, um sicherzustellen, dass Ihre "
 "Lizenz rechtzeitig verlängert wird.<br><br>Wenn Sie Ihre Lizenz über einen "
-"Checkmk-Partner oder -Reseller erworben haben, kontaktieren Sie "
-"diesen.<br><br>Mit freundlichen Grüßen Ihr Checkmk-Server"
+"Checkmk-Partner oder -Reseller erworben haben, kontaktieren Sie diesen."
+"<br><br>Mit freundlichen Grüßen Ihr Checkmk-Server"
 
 #, python-format
 msgid ""
@@ -15515,8 +15515,8 @@ msgstr ""
 "Lieber Checkmk-Benutzer,<br><br>Sie haben noch %s in Ihrem Checkmk-"
 "Testzeitraum für die Instanz '%s' übrig.<br><br>%s jetzt, um Checkmk weiter "
 "so wie heute nutzen zu können. Falls Sie bereits eine Lizenz besitzen, geben "
-"Sie bitte Ihre Lizenzdaten auf der Checkmk-Lizenzierungsseite "
-"ein.<br><br>Andernfalls wird Ihr Checkmk nach Ablauf des Testzeitraums "
+"Sie bitte Ihre Lizenzdaten auf der Checkmk-Lizenzierungsseite ein."
+"<br><br>Andernfalls wird Ihr Checkmk nach Ablauf des Testzeitraums "
 "automatisch in den Lizenzstatus 'Free' umgewandelt. In diesem Lizenzstatus "
 "müssen Sie die Anzahl der Services von %s auf %s reduzieren, um die maximale "
 "Servicegrenze von Checkmk im Lizenzstatus 'Free' zu erfüllen.<br><br>Mit "
@@ -17120,7 +17120,7 @@ msgid "Disable SSL certificate validation"
 msgstr "SSL-Zertifikatsüberprüfung deaktivieren"
 
 msgid "Disable SSL certificate verification"
-msgstr "Zertifikatsprüfung deaktivieren"
+msgstr "SSL Zertifikatsverifizierung deaktivieren"
 
 msgid "Disable TLS/SSL"
 msgstr "TLS/SSL deaktivieren"
@@ -18379,9 +18379,6 @@ msgstr "DOCSIS ausgehende Kanäle"
 msgid "Docsis Upstream Channels"
 msgstr "DOCSIS eingehende Kanäle"
 
-msgid "Document body"
-msgstr "Dokumentkörper"
-
 msgid "Document count delta"
 msgstr "Dokument Count-Delta"
 
@@ -18503,6 +18500,9 @@ msgstr "DotNet (.Net) Runtime Speicher-Level"
 
 msgid "Double Integer (DINT)"
 msgstr "Doppelte Ganzzahl (DINT)"
+
+msgid "Double-click to grow further"
+msgstr ""
 
 msgid "Down"
 msgstr "Down"
@@ -20051,8 +20051,8 @@ msgstr "Verschlüsselt"
 msgid ""
 "Encrypted connections to this site are made without certificate verification."
 msgstr ""
-"Verschlüsselte Verbindungen zu dieser Instanz werden ohne Zertifikatsprüfung "
-"hergestellt."
+"Verschlüsselte Verbindungen zu dieser Instanz werden ohne "
+"Zertifikatsverifizierung hergestellt."
 
 msgid "Encrypted private keys are not supported"
 msgstr "Verschlüsselte private Schlüssel werden nicht unterstützt"
@@ -22678,8 +22678,9 @@ msgid ""
 "For offline verification, we need to verify your subscription in the "
 "customer portal. To do this, you must first download a verification request."
 msgstr ""
-"Für die Offline-Übermittlung müssen wir Ihre Subskription im Kundenportal "
-"prüfen. Zu diesem Zweck müssen Sie zunächst eine Prüfanfrage herunterladen."
+"Für die Offline-Verifizierung müssen wir Ihre Subskription im Kundenportal "
+"prüfen. Zu diesem Zweck müssen Sie zunächst eine Verifizierungsanfrage "
+"herunterladen."
 
 msgid ""
 "For running Checkmk based checks the Microcore keeps a pool of specialized "
@@ -24007,9 +24008,17 @@ msgstr "Wachsend"
 msgid "Growth"
 msgstr "Wachstum"
 
+#, fuzzy
+msgid "Growth continues here"
+msgstr "Hier nicht mehr fortfahren"
+
 #, python-format
 msgid "Growth interrupted %d/%d"
 msgstr "Wachstum verhindert %d/%d"
+
+#, fuzzy
+msgid "Growth stops here"
+msgstr "Wachstumstrend"
 
 msgid "Growth trend"
 msgstr "Wachstumstrend"
@@ -24653,10 +24662,6 @@ msgstr ""
 "Hier können Sie konfigurieren ob und wie die Erzeugung von RRD-Dateien "
 "geloggt wird (im Logfile var/log/cmc.log)"
 
-msgid "Here you can configure whether the SSL certificate should get verified."
-msgstr ""
-"Hier können Sie konfigurieren, ob das SSL-Zertifikat überprüft werden soll."
-
 msgid ""
 "Here you can configure whether the performance counters should get queried. "
 "This can save quite a lot of CPU load on larger systems."
@@ -25248,13 +25253,12 @@ msgstr ""
 "Hier können Sie die Level für den gesamten Speicherverbrauch von "
 "geclusterten Hosts angeben."
 
-#, fuzzy
 msgid ""
 "Here you can specify upper levels for the number of infections detected by "
 "Antimalware Engine."
 msgstr ""
 "Hier können Sie Obergrenzen für die Anzahl der Infizierungen festlegen, die "
-"durch die McAfee Gateway Anti-Malware Engine aufgedeckt wurden."
+"durch die Anti-Malware Engine aufgedeckt wurden."
 
 msgid ""
 "Here you can specify which contact groups shall have precedence when both, "
@@ -25545,6 +25549,10 @@ msgstr "Host-/Service-Verlauf"
 msgid "Host & service problems"
 msgstr "Host-/Service-Probleme"
 
+#, python-format
+msgid "Host '%s' is not known in the activated monitoring configuration"
+msgstr "Host '%s' ist in der aktivierten Monitoring-Konfiguration nicht bekannt"
+
 msgid "Host Address"
 msgstr "Host-Adresse"
 
@@ -25591,9 +25599,6 @@ msgstr "Host-Labels"
 #, python-format
 msgid "Host Name %s"
 msgstr "Host-Name %s"
-
-msgid "Host Parent/Child topology"
-msgstr "Host Eltern/Kind Topologie"
 
 msgid "Host Problems (unhandled)"
 msgstr "Hostprobleme (unbehandelt)"
@@ -25749,6 +25754,10 @@ msgstr "ID des benutzerdefinierten Host Feldes"
 
 msgid "Host customer"
 msgstr "Host Kunde"
+
+#, fuzzy
+msgid "Host details"
+msgstr "Host-Details"
 
 msgid "Host diagnostic"
 msgstr "Host-Diagnose"
@@ -25966,6 +25975,10 @@ msgstr ""
 
 msgid "Host overview"
 msgstr "Hostübersicht"
+
+#, fuzzy
+msgid "Host parent/child topology"
+msgstr "Host Eltern/Kind Topologie"
 
 msgid "Host performance data"
 msgstr "Leistungsdaten von Host"
@@ -26888,6 +26901,10 @@ msgstr "Symbolbild für Hosts in Status GUI"
 
 msgid "Icon image for services in status GUI"
 msgstr "Symbolbild für Services in Status GUI"
+
+#, fuzzy
+msgid "Icon in monitoring"
+msgstr "Suche in Überwachen"
 
 msgid "Icons"
 msgstr "Symbole"
@@ -29265,7 +29282,7 @@ msgid ""
 msgstr ""
 "Wählen Sie in diesem Formular mit „Datei auswählen“ die Datei mit der "
 "Verifizierungsantwort aus, die Sie im Kundenportal heruntergeladen haben. "
-"Klicken Sie auf „Antwort hochladen“, um die Überprüfung abzuschließen."
+"Klicken Sie auf „Antwort hochladen“, um die Verifizierung abzuschließen."
 
 msgid ""
 "In this interval the event daemon will save its state to disk, so that you "
@@ -30781,14 +30798,17 @@ msgstr "Januar"
 msgid "Java pool size"
 msgstr "Java-Poolgröße"
 
+msgid "Jenkins"
+msgstr "Jenkins"
+
+msgid "Jenkins connection"
+msgstr "Jenkins Verbindung"
+
 msgid "Jenkins instance to query."
 msgstr "Abzufragende Jenkins-Instanz."
 
 msgid "Jenkins jobs"
 msgstr "Jenkins Jobs"
-
-msgid "Jenkins jobs and builds"
-msgstr "Jenkins Jobs und Builds"
 
 msgid "Jenkins nodes"
 msgstr "Jenkins Knoten"
@@ -31468,7 +31488,7 @@ msgid "Last successful sync %d seconds ago."
 msgstr "Letzte erfolgreiche Synchronisation vor %d Sekunden."
 
 msgid "Last successful verification"
-msgstr "Letzte erfolgreiche Verifikation"
+msgstr "Letzte erfolgreiche Verifizierung"
 
 msgid "Last synchronization result"
 msgstr "Letztes Synchronisationsergebnis"
@@ -32302,14 +32322,14 @@ msgid "License usage submission"
 msgstr "Übermittlung der Lizenznutzung"
 
 msgid "License verification"
-msgstr "Lizenzprüfung"
+msgstr "Lizenzverifizierung"
 
 msgid "License verification failed"
-msgstr "Lizenzverifikation fehlgeschlagen"
+msgstr "Lizenzverifizierung fehlgeschlagen"
 
 msgid "License verification failed: 'Activate changes' is blocked"
 msgstr ""
-"Lizenzverifikation fehlgeschlagen: 'Änderungen aktivieren' ist blockiert"
+"Lizenzverifizierung fehlgeschlagen: 'Änderungen aktivieren' ist blockiert"
 
 msgid "Licensed"
 msgstr "Lizenziert"
@@ -36166,6 +36186,9 @@ msgstr "Überwachen"
 msgid "Monitor & Graph Lanes"
 msgstr "Überwachung & Graphen für einzelne Lanes"
 
+msgid "Monitor (min. 1)"
+msgstr "Monitor (min. 1)"
+
 msgid "Monitor Android devices"
 msgstr "Überwache Android-Geräte"
 
@@ -37757,7 +37780,7 @@ msgid "No levels on inodes"
 msgstr "Keine Level auf Inodes"
 
 msgid "No license verification performed yet"
-msgstr "Noch keine Lizenzprüfung durchgeführt"
+msgstr "Noch keine Lizenzverifizierung durchgeführt"
 
 msgid "No logging"
 msgstr "Kein Loggen"
@@ -39843,13 +39866,13 @@ msgid "Online submission"
 msgstr "Online-Übertragung"
 
 msgid "Online verification"
-msgstr "Online-Prüfung"
+msgstr "Online-Verifizierung"
 
 msgid "Online verification procedure was not successful"
-msgstr "Online-Prüfung war nicht erfolgreich"
+msgstr "Online-Verifizierungsprozedur war nicht erfolgreich"
 
 msgid "Online verification procedure was successful"
-msgstr "Online-Prüfung war erfolgreich"
+msgstr "Online-Verifizierungsprozedur war erfolgreich"
 
 msgid "Only A-Z, a-z, 0-9 and minus (-) are allowed."
 msgstr "Nur A-Z, a-z, 0-9 und Minus (-) sind erlaubt."
@@ -41486,7 +41509,6 @@ msgstr ""
 "Pfad zum Ordner der Robot Framework-Suite oder direkt zu einer bestimmten `."
 "robot`-Datei, relativ zum Basisverzeichnis."
 
-#, fuzzy
 msgid ""
 "Path to the `robot.yaml` configuration file inside a RCC compatible robot "
 "suite, relative to the base directory."
@@ -42653,8 +42675,8 @@ msgid ""
 "Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
 "details."
 msgstr ""
-"Weitere Einzelheiten entnehmen Sie bitte dem [dashboards#host_problems"
-"|Checkmk-Benutzerhandbuch]."
+"Weitere Einzelheiten entnehmen Sie bitte dem [dashboards#host_problems|"
+"Checkmk-Benutzerhandbuch]."
 
 msgid ""
 "Please remove entry \"All sites\" from selected sites, if you want to select "
@@ -42680,6 +42702,9 @@ msgstr "Bitte wählen Sie einen Service"
 
 msgid "Please select at least one element"
 msgstr "Bitte wählen Sie mindestens ein Element aus"
+
+msgid "Please select at least one item to monitor"
+msgstr "Bitte wählen Sie mindestens ein zu überwachendes Element aus"
 
 msgid "Please select at least one messaging method."
 msgstr "Bitte wählen Sie mindestens eine Benachrichtigungsmethode aus."
@@ -45907,7 +45932,8 @@ msgid "Requests in Processing"
 msgstr "Aktuell bearbeitete Anfragen"
 
 msgid "Requests node, cluster and indice data from a Graylog instance."
-msgstr "Fordert Knoten-, Cluster- und Index-Daten von einer Graylog-Instanz an."
+msgstr ""
+"Fordert Knoten-, Cluster- und Index-Daten von einer Graylog-Instanz an."
 
 msgid "Requests per connection"
 msgstr "Requests pro Verbindung"
@@ -46659,6 +46685,18 @@ msgstr "Darstellung der Regel: %s"
 msgid "Rule search"
 msgstr "Regelsuche"
 
+#, fuzzy
+msgid "Rule search: Deprecated Rulesets"
+msgstr "Suche Regeln: Veraltete Regelketten"
+
+#, fuzzy
+msgid "Rule search: Rulesets with ineffective rules"
+msgstr "Suche Regeln: Regelketten mit nicht wirksamen Regeln"
+
+#, fuzzy
+msgid "Rule search: Used rulesets"
+msgstr "Suche Regeln: Verwendete Regelketten"
+
 msgid "Rule sets in use"
 msgstr "Genutzte Regelsätze"
 
@@ -47327,7 +47365,7 @@ msgid "SSL certificate validation is disabled"
 msgstr "SSL-Zertifikatsüberprüfung ist deaktiviert"
 
 msgid "SSL certificate verification"
-msgstr "SSL Zertifikats Überprüfung"
+msgstr "SSL Zertifikatsverifizierung"
 
 msgid "SSL connections"
 msgstr "SSL-Verbindungen"
@@ -47713,18 +47751,6 @@ msgstr "Nach Metriken suchen"
 #, python-format
 msgid "Search results for folder %s"
 msgstr "Suchergebnisse für den Ordner %s"
-
-msgid "Search rules"
-msgstr "Suche nach Regeln"
-
-msgid "Search rules: Deprecated Rulesets"
-msgstr "Suche Regeln: Veraltete Regelketten"
-
-msgid "Search rules: Rulesets with ineffective rules"
-msgstr "Suche Regeln: Regelketten mit nicht wirksamen Regeln"
-
-msgid "Search rules: Used rulesets"
-msgstr "Suche Regeln: Verwendete Regelketten"
 
 msgid "Search rulesets"
 msgstr "Suche nach Regelsätzen"
@@ -48685,6 +48711,10 @@ msgstr "Service-Beschreibung: "
 
 msgid "Service descriptions"
 msgstr "Service-Beschreibungen"
+
+#, fuzzy
+msgid "Service details"
+msgstr "BI Servicedetails"
 
 msgid "Service discovery"
 msgstr "Service-Erkennung"
@@ -50775,6 +50805,9 @@ msgstr "Größe, Alter und Anzahl von Dateigruppen"
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Größe, Alter und Anzahl von Dateigruppen (mk_filestats)"
 
+msgid "Skip TLS certificate verification"
+msgstr "TLS Zertifikatsverifizierung überspringen"
+
 msgid "Skip exceeding messages, create one critical message"
 msgstr "Übrige Nachrichten auslassen, eine kritische Nachricht erstellen"
 
@@ -52265,7 +52298,7 @@ msgid "Start type"
 msgstr "Starttyp"
 
 msgid "Start verification"
-msgstr "Start der Überprüfung"
+msgstr "Start der Verifizierung"
 
 msgid "Start!"
 msgstr "Start!"
@@ -53589,9 +53622,6 @@ msgstr "Anfrage-ID erfolgreich geprüft"
 
 msgid "Successfully verified signature"
 msgstr "Signaturen erfolgreich geprüft"
-
-msgid "Suffix"
-msgstr "Suffix"
 
 msgid "Suggested tutorial videos"
 msgstr "Vorgeschlagene Tutorial Videos"
@@ -55336,18 +55366,22 @@ msgstr ""
 "enden. Lassen Sie das <tt>/nagvis/</tt> im Präfix weg."
 
 msgid ""
-"The URL to monitor. This URL should include the protocol (HTTP or HTTPS), "
-"the full address and, if needed, also the port the endpoint should not be "
-"monitoring using a standard port (80 or 443). Please note, that "
-"authentication must not added here as it exposes sensible information. "
-"Please add a potential authentication in the connection details."
+"The URL to monitor. This URL must include the protocol (HTTP or HTTPS), the "
+"full address and, if needed, also the port the endpoint if using a non "
+"standard port. The URL may also include query parameters or anchors. You may "
+"use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS$ "
+"or $HOSTADDRESS$. Please note, that authentication must not be added here as "
+"it exposes sensible information. Use 'authentication' in the connection "
+"buildup options, instead. "
 msgstr ""
-"Die zu überwachende URL. Diese URL sollte das Protokoll (HTTP oder HTTPS), "
-"die vollständige Adresse und, falls erforderlich, auch den Port enthalten, "
-"den der Endpunkt nicht über einen Standardport (80 oder 443) überwachen "
-"soll. Bitte beachten Sie, dass die Authentifizierung hier nicht hinzugefügt "
-"werden darf, da sie sensible Informationen preisgibt. Bitte fügen Sie eine "
-"mögliche Authentifizierung in den Verbindungsdetails hinzu."
+"Die zu überwachende URL. Diese URL muss das Protokoll (HTTP oder HTTPS), die "
+"vollständige Adresse und, falls erforderlich, auch den Port des Endpunkts "
+"enthalten, wenn ein Nicht-Standard-Port verwendet wird. Die URL kann auch "
+"Abfrageparameter oder Anker enthalten. Sie können in diesem Feld Makros "
+"verwenden. Die gebräuchlichsten sind $HOSTNAME$, $HOSTALIAS$ oder "
+"$HOSTADDRESS$. Bitte beachten Sie, dass die Authentifizierung hier nicht "
+"hinzugefügt werden darf, da sie sensible Informationen preisgibt. Verwenden "
+"Sie stattdessen 'authentication' in den Optionen für den Verbindungsaufbau. "
 
 msgid "The User Base DN could be found."
 msgstr "Der Basis-DN für die Benutzer wurde gefunden."
@@ -57401,6 +57435,15 @@ msgstr ""
 "Die meiste CPU-Leistung wird vom Eventlog-Monitoring und den "
 "Leistungszählern benötigt."
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk."
+msgstr ""
+"Der Name ist der individuelle Teil der verwendeten Service-Beschreibung. "
+"Wählen Sie einen für Menschen lesbaren und eindeutigen Titel, damit Sie "
+"Ihren Service später in Checkmk finden können."
+
 msgid "The name of the Data Proxy"
 msgstr "Der Name des Datenproxies"
 
@@ -58044,6 +58087,15 @@ msgstr ""
 
 msgid "The power supply sensor name as shown in the service"
 msgstr "Der Name des Netzteilsensors, wie er im Service angezeigt wird"
+
+msgid ""
+"The prefix is automatically to each service to be able to organize them. The "
+"prefix is static and will be CERT. Alternatively, you may choose to not use "
+"the prefix option."
+msgstr ""
+"Das Präfix wird automatisch zu jedem Service hinzugefügt, um ihn zu "
+"organisieren. Das Präfix ist statisch und lautet CERT. Alternativ können Sie "
+"die Präfix-Option auch nicht verwenden."
 
 msgid ""
 "The prefix is automatically to each service to be able to organize them. The "
@@ -58752,15 +58804,6 @@ msgstr ""
 "Das Suffix .new ist ein reserviertes Stichwort und kann nicht als "
 "Aggregations-ID verwendet werden"
 
-msgid ""
-"The suffix is the individual part of the used service description. Choose a "
-"human readable and unique title to be able to find your service later in "
-"Checkmk."
-msgstr ""
-"Das Suffix ist der individuelle Teil der verwendeten Service-Beschreibung. "
-"Wählen Sie einen für Menschen lesbaren und eindeutigen Titel, damit Sie "
-"Ihren Service später in Checkmk finden können."
-
 msgid "The synchronization finished."
 msgstr "Die Synchronisierung ist abgeschlossen."
 
@@ -59198,7 +59241,8 @@ msgid "The vault name"
 msgstr "Der Name des Tresors"
 
 msgid "The verification cannot be started due to missing CA certificate"
-msgstr "Die Prüfung kann nicht gestartet werden, da CA-Zertifikate fehlen"
+msgstr ""
+"Die Verifizierung kann nicht gestartet werden, da das CA-Zertifikat fehlt"
 
 #, python-format
 msgid "The version of this site is not a %s"
@@ -59811,14 +59855,13 @@ msgid ""
 msgstr ""
 "Diese URL wird beim Klicken auf die Aktion / das Icon geöffnet. Sie können "
 "einige Makros innerhalb der URL benutzen, die für jedes Objekt dynamisch "
-"ersetzt werden. Diese sind:<br><ul><li>$HOSTNAME$: Enthält den Host-"
-"Namen</li><li>$HOSTNAME_URL_ENCODED$: Wie oben, allerdings URL-"
-"Codiert</li><li>$SERVICEDESC$: Enthält die Service-Beschreibung (falls dies "
-"ein Service ist)</li><li>$SERVICEDESC_URL_ENCODED$: Wie oben, allerdings URL-"
-"Codiert</li><li>$HOSTADDRESS$:enthält die Netzwerkadresse des "
-"Hosts</li><li>$HOSTADDRESS_URL_ENCODED$: Wie oben, allerdings URL-"
-"Codiert</li><li>$USER_ID$: Die Benutzer-ID des aktuell aktiven "
-"Benutzers</li></ul>"
+"ersetzt werden. Diese sind:<br><ul><li>$HOSTNAME$: Enthält den Host-Namen</"
+"li><li>$HOSTNAME_URL_ENCODED$: Wie oben, allerdings URL-Codiert</li><li>"
+"$SERVICEDESC$: Enthält die Service-Beschreibung (falls dies ein Service "
+"ist)</li><li>$SERVICEDESC_URL_ENCODED$: Wie oben, allerdings URL-Codiert</"
+"li><li>$HOSTADDRESS$:enthält die Netzwerkadresse des Hosts</li><li>"
+"$HOSTADDRESS_URL_ENCODED$: Wie oben, allerdings URL-Codiert</li><li>$USER_ID"
+"$: Die Benutzer-ID des aktuell aktiven Benutzers</li></ul>"
 
 msgid "This URL ist not allowed to be used as bookmark"
 msgstr "Diese URL darf nicht als Lesezeichen benutzt werden"
@@ -67480,7 +67523,7 @@ msgid "Unblended costs"
 msgstr "Ungemischte Kosten"
 
 msgid "Unbound license: Skip request ID verification"
-msgstr "Ungebundene Lizenz: ID-Prüfungsanfrage überspringen"
+msgstr "Ungebundene Lizenz: Anfrage der ID-Verifizierung überspringen"
 
 msgid "Unclassified"
 msgstr "Nicht klassifiziert"
@@ -68637,6 +68680,9 @@ msgstr "Details zur Verwendung"
 
 msgid "Usage levels"
 msgstr "Auslastungslevel"
+
+msgid "Use \"CERT as prefix\""
+msgstr "\"CERT als Präfix\" verwenden"
 
 msgid "Use \"Checkmk Automation\" user"
 msgstr "Benutzer \"Checkmk Automation\" verwenden"
@@ -71053,9 +71099,8 @@ msgstr "Webserver (IIS)"
 msgid "Web Services"
 msgstr "Webservices"
 
-#, fuzzy
 msgid "Web gateway miscellaneous"
-msgstr "Diverse McAfee Webgateway-Statistiken"
+msgstr "Web-Gateway Diverses"
 
 msgid "Web gateway miscellaneous statistics"
 msgstr "sonstige Webgateway-Statistiken"
@@ -74962,7 +75007,7 @@ msgid ""
 "Your license verification failed and Checkmk is currently unlicensed. Until "
 "you verify your license, 'Activate changes' is blocked."
 msgstr ""
-"Ihre Lizenzüberprüfung ist fehlgeschlagen und Checkmk ist derzeit nicht "
+"Ihre Lizenzverifizierung ist fehlgeschlagen und Checkmk ist derzeit nicht "
 "lizenziert. Bis Sie Ihre Lizenz verifiziert haben, ist \"Änderungen "
 "aktivieren\" blockiert."
 
@@ -75923,11 +75968,12 @@ msgstr "Der Host ist UP und hat keine Service-Probleme"
 msgid "host is up but has services in warning state"
 msgstr "Der Host ist UP, aber Services sind im Warnzustand"
 
+#, fuzzy
+msgid "host names"
+msgstr "Vhost Name"
+
 msgid "host tags"
 msgstr "Host Tags"
-
-msgid "hostname"
-msgstr "Host-Name"
 
 msgid "hostname will be ignored when agent_hash is given."
 msgstr "Host-Name wird ignoriert, wenn agent_hash angegeben wird."
@@ -76554,6 +76600,10 @@ msgstr "andere CTIO-Fehler"
 msgid "other hosts"
 msgstr "andere Hosts"
 
+#, fuzzy
+msgid "other names"
+msgstr "Name des Knotens"
+
 msgid ""
 "our socket has closed; we are in the process of tearing down the connection"
 msgstr ""
@@ -76833,7 +76883,8 @@ msgstr[1] "Services"
 msgid "service in %s state"
 msgstr "Service im Zustand %s"
 
-msgid "service name"
+#, fuzzy
+msgid "service names"
 msgstr "Service-Name"
 
 msgid "services"
@@ -77228,6 +77279,30 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Search rules"
+#~ msgstr "Suche nach Regeln"
+
+#~ msgid "hostname"
+#~ msgstr "Host-Name"
+
+#~ msgid "Connection details"
+#~ msgstr "Verbindungsdetails"
+
+#~ msgid "Document body"
+#~ msgstr "Dokumentkörper"
+
+#~ msgid ""
+#~ "Here you can configure whether the SSL certificate should get verified."
+#~ msgstr ""
+#~ "Hier können Sie konfigurieren, ob das SSL-Zertifikat überprüft werden "
+#~ "soll."
+
+#~ msgid "Jenkins jobs and builds"
+#~ msgstr "Jenkins Jobs und Builds"
+
+#~ msgid "Suffix"
+#~ msgstr "Suffix"
 
 #~ msgid "McAfee web gateway statistics"
 #~ msgstr "McAfee Webgateway-Statistiken"

@@ -13128,8 +13128,8 @@ msgid "Connection ID"
 msgstr "Verbinding ID"
 
 #, fuzzy
-msgid "Connection details"
-msgstr "Verbindingstests"
+msgid "Connection buildup"
+msgstr "Verbindingstijd"
 
 msgid "Connection dropped late"
 msgstr "Verbinding laat verbroken"
@@ -18492,10 +18492,6 @@ msgstr "Docsis Stroomafwaartse Kanalen"
 msgid "Docsis Upstream Channels"
 msgstr "Docsis Stroomopwaartse Kanalen"
 
-#, fuzzy
-msgid "Document body"
-msgstr "Documentatie"
-
 msgid "Document count delta"
 msgstr "Aantal documenten delta"
 
@@ -18620,6 +18616,9 @@ msgstr "DotNet (.Net) runtime geheugen niveaus"
 
 msgid "Double Integer (DINT)"
 msgstr "Dubbel geheel getal (DINT)"
+
+msgid "Double-click to grow further"
+msgstr ""
 
 msgid "Down"
 msgstr "Down"
@@ -24146,9 +24145,17 @@ msgstr "Groeien"
 msgid "Growth"
 msgstr "Groei"
 
+#, fuzzy
+msgid "Growth continues here"
+msgstr "Docker node container niveaus"
+
 #, python-format
 msgid "Growth interrupted %d/%d"
 msgstr "Groei onderbroken %d/%d"
+
+#, fuzzy
+msgid "Growth stops here"
+msgstr "Groeitrend"
 
 msgid "Growth trend"
 msgstr "Groeitrend"
@@ -24811,11 +24818,6 @@ msgid ""
 msgstr ""
 "Hier kunt u instellen of en hoe het aanmaken van RRD-bestanden wordt gelogd "
 "(in het logbestand var/log/cmc.log)"
-
-#, fuzzy
-msgid "Here you can configure whether the SSL certificate should get verified."
-msgstr ""
-"Hier kunt u bepalen met welke prioriteit de zaak moet worden aangemaakt."
 
 msgid ""
 "Here you can configure whether the performance counters should get queried. "
@@ -25694,6 +25696,10 @@ msgstr "Gastheer & service geschiedenis"
 msgid "Host & service problems"
 msgstr "Problemen met hosts en diensten"
 
+#, fuzzy, python-format
+msgid "Host '%s' is not known in the activated monitoring configuration"
+msgstr "%s niet bekend in de actieve monitoring configuratie"
+
 msgid "Host Address"
 msgstr "Gastheer Adres"
 
@@ -25741,9 +25747,6 @@ msgstr "Gastheer Etiketten"
 #, python-format
 msgid "Host Name %s"
 msgstr "Hostnaam %s"
-
-msgid "Host Parent/Child topology"
-msgstr "Gastheer Ouder-Kind topologie"
 
 msgid "Host Problems (unhandled)"
 msgstr "Host Problemen (niet afgehandeld)"
@@ -25903,6 +25906,10 @@ msgstr "Host aangepast veld ID"
 
 msgid "Host customer"
 msgstr "Gastheer klant"
+
+#, fuzzy
+msgid "Host details"
+msgstr "Gastheer Details"
 
 #, fuzzy
 msgid "Host diagnostic"
@@ -26126,6 +26133,10 @@ msgstr ""
 
 msgid "Host overview"
 msgstr "Overzicht gastheren"
+
+#, fuzzy
+msgid "Host parent/child topology"
+msgstr "Gastheer Ouder-Kind topologie"
 
 msgid "Host performance data"
 msgstr "Prestatiegegevens van de gastheer"
@@ -27062,6 +27073,10 @@ msgstr "Icoon afbeelding voor hosts in status GUI"
 
 msgid "Icon image for services in status GUI"
 msgstr "Icoon afbeelding voor diensten in status GUI"
+
+#, fuzzy
+msgid "Icon in monitoring"
+msgstr "Zoeken in Toezicht"
 
 msgid "Icons"
 msgstr "Pictogrammen"
@@ -30941,14 +30956,19 @@ msgstr "Januari"
 msgid "Java pool size"
 msgstr "Java pool grootte"
 
+#, fuzzy
+msgid "Jenkins"
+msgstr "Jenkins banen"
+
+#, fuzzy
+msgid "Jenkins connection"
+msgstr "in behandeling zijnde verbindingen"
+
 msgid "Jenkins instance to query."
 msgstr "Jenkins instantie om te bevragen."
 
 msgid "Jenkins jobs"
 msgstr "Jenkins banen"
-
-msgid "Jenkins jobs and builds"
-msgstr "Jenkins jobs en builds"
 
 msgid "Jenkins nodes"
 msgstr "Jenkins knooppunten"
@@ -36408,6 +36428,10 @@ msgstr "Monitor"
 
 msgid "Monitor & Graph Lanes"
 msgstr "Monitor & Grafiek Lanen"
+
+#, fuzzy
+msgid "Monitor (min. 1)"
+msgstr "Toezicht"
 
 msgid "Monitor Android devices"
 msgstr "Monitor Android-apparaten"
@@ -42979,6 +43003,10 @@ msgstr "Selecteer een dienst"
 msgid "Please select at least one element"
 msgstr "Selecteer ten minste één element"
 
+#, fuzzy
+msgid "Please select at least one item to monitor"
+msgstr "Selecteer ten minste één element"
+
 msgid "Please select at least one messaging method."
 msgstr "Kies ten minste één berichtmethode."
 
@@ -46992,6 +47020,18 @@ msgstr "Weergave van de regel: %s"
 msgid "Rule search"
 msgstr "Regel zoeken"
 
+#, fuzzy
+msgid "Rule search: Deprecated Rulesets"
+msgstr "Zoek regels: Afgeschreven regelsets"
+
+#, fuzzy
+msgid "Rule search: Rulesets with ineffective rules"
+msgstr "Zoek regels: Regelsets met ineffectieve regels"
+
+#, fuzzy
+msgid "Rule search: Used rulesets"
+msgstr "Zoek regels: Gebruikte regelsets"
+
 msgid "Rule sets in use"
 msgstr "Gebruikte regelsets"
 
@@ -48075,18 +48115,6 @@ msgstr "Prestatiegegevens zoeken"
 msgid "Search results for folder %s"
 msgstr "Zoekresultaten voor map %s"
 
-msgid "Search rules"
-msgstr "Zoek regels"
-
-msgid "Search rules: Deprecated Rulesets"
-msgstr "Zoek regels: Afgeschreven regelsets"
-
-msgid "Search rules: Rulesets with ineffective rules"
-msgstr "Zoek regels: Regelsets met ineffectieve regels"
-
-msgid "Search rules: Used rulesets"
-msgstr "Zoek regels: Gebruikte regelsets"
-
 msgid "Search rulesets"
 msgstr "Zoek regelsets"
 
@@ -49044,6 +49072,10 @@ msgstr "Service omschrijving: "
 
 msgid "Service descriptions"
 msgstr "Dienstbeschrijvingen"
+
+#, fuzzy
+msgid "Service details"
+msgstr "Details BI-dienst"
 
 msgid "Service discovery"
 msgstr "Ontdekken van diensten"
@@ -51132,6 +51164,10 @@ msgstr "Grootte, leeftijd en aantal bestandsgroepen"
 
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Grootte, leeftijd en aantal bestandsgroepen (mk_filestats)"
+
+#, fuzzy
+msgid "Skip TLS certificate verification"
+msgstr "SSL-certificaat verificatie"
 
 msgid "Skip exceeding messages, create one critical message"
 msgstr "Overslaan van berichten, één kritiek bericht maken"
@@ -53961,10 +53997,6 @@ msgstr "Verzoek-ID met succes geverifieerd"
 msgid "Successfully verified signature"
 msgstr "Succesvol geverifieerde handtekening"
 
-#, fuzzy
-msgid "Suffix"
-msgstr "Suffix toevoegen"
-
 msgid "Suggested tutorial videos"
 msgstr "Voorgestelde instructievideo's"
 
@@ -55743,11 +55775,13 @@ msgstr ""
 "schuine streep. Laat de <tt>/nagvis/</tt> weg uit de prefix."
 
 msgid ""
-"The URL to monitor. This URL should include the protocol (HTTP or HTTPS), "
-"the full address and, if needed, also the port the endpoint should not be "
-"monitoring using a standard port (80 or 443). Please note, that "
-"authentication must not added here as it exposes sensible information. "
-"Please add a potential authentication in the connection details."
+"The URL to monitor. This URL must include the protocol (HTTP or HTTPS), the "
+"full address and, if needed, also the port the endpoint if using a non "
+"standard port. The URL may also include query parameters or anchors. You may "
+"use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS$ "
+"or $HOSTADDRESS$. Please note, that authentication must not be added here as "
+"it exposes sensible information. Use 'authentication' in the connection "
+"buildup options, instead. "
 msgstr ""
 
 msgid "The User Base DN could be found."
@@ -57783,6 +57817,12 @@ msgstr ""
 "De meeste CPU-prestaties zijn nodig voor de Eventlog-bewaking en de "
 "prestatietellers."
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk."
+msgstr ""
+
 msgid "The name of the Data Proxy"
 msgstr "De naam van de Data Proxy"
 
@@ -58416,6 +58456,12 @@ msgstr ""
 
 msgid "The power supply sensor name as shown in the service"
 msgstr "De naam van de voedingssensor zoals aangegeven in de service"
+
+msgid ""
+"The prefix is automatically to each service to be able to organize them. The "
+"prefix is static and will be CERT. Alternatively, you may choose to not use "
+"the prefix option."
+msgstr ""
 
 msgid ""
 "The prefix is automatically to each service to be able to organize them. The "
@@ -59098,12 +59144,6 @@ msgid ""
 msgstr ""
 "Het achtervoegsel .new is een gereserveerd sleutelwoord en kan niet worden "
 "gebruikt als aggregatie-id"
-
-msgid ""
-"The suffix is the individual part of the used service description. Choose a "
-"human readable and unique title to be able to find your service later in "
-"Checkmk."
-msgstr ""
 
 msgid "The synchronization finished."
 msgstr "De synchronisatie is voltooid."
@@ -69489,6 +69529,10 @@ msgstr "Gebruik Details"
 msgid "Usage levels"
 msgstr "Gebruiksniveaus"
 
+#, fuzzy
+msgid "Use \"CERT as prefix\""
+msgstr "Gebruik een namespace voorvoegsel"
+
 msgid "Use \"Checkmk Automation\" user"
 msgstr "Gebruik \"Checkmk Automation\" gebruiker"
 
@@ -76761,12 +76805,12 @@ msgstr "host is up en heeft geen service problemen"
 msgid "host is up but has services in warning state"
 msgstr "host is up maar heeft diensten in waarschuwingsstatus"
 
+#, fuzzy
+msgid "host names"
+msgstr "Vhost naam"
+
 msgid "host tags"
 msgstr "hostlabels"
-
-#, fuzzy
-msgid "hostname"
-msgstr "Vhost naam"
 
 msgid "hostname will be ignored when agent_hash is given."
 msgstr "hostname zal worden genegeerd wanneer agent_hash is gegeven."
@@ -77407,6 +77451,10 @@ msgstr "andere CTIO-fouten"
 msgid "other hosts"
 msgstr "andere gastheren"
 
+#, fuzzy
+msgid "other names"
+msgstr "Knooppuntnamen"
+
 msgid ""
 "our socket has closed; we are in the process of tearing down the connection"
 msgstr ""
@@ -77690,7 +77738,7 @@ msgid "service in %s state"
 msgstr "service in %s state"
 
 #, fuzzy
-msgid "service name"
+msgid "service names"
 msgstr "Naam van de dienst"
 
 msgid "services"
@@ -78091,6 +78139,39 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Search rules"
+#~ msgstr "Zoek regels"
+
+#, fuzzy
+#~| msgid "Vhost name"
+#~ msgid "hostname"
+#~ msgstr "Vhost naam"
+
+#, fuzzy
+#~| msgid "Connection tests"
+#~ msgid "Connection details"
+#~ msgstr "Verbindingstests"
+
+#, fuzzy
+#~| msgid "Documentation"
+#~ msgid "Document body"
+#~ msgstr "Documentatie"
+
+#, fuzzy
+#~| msgid "Here you can define with which priority the case should be created."
+#~ msgid ""
+#~ "Here you can configure whether the SSL certificate should get verified."
+#~ msgstr ""
+#~ "Hier kunt u bepalen met welke prioriteit de zaak moet worden aangemaakt."
+
+#~ msgid "Jenkins jobs and builds"
+#~ msgstr "Jenkins jobs en builds"
+
+#, fuzzy
+#~| msgid "Add Suffix"
+#~ msgid "Suffix"
+#~ msgstr "Suffix toevoegen"
 
 #~ msgid "McAfee web gateway statistics"
 #~ msgstr "McAfee web gateway statistieken"

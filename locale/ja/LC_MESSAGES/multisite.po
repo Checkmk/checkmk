@@ -12775,8 +12775,8 @@ msgid "Connection ID"
 msgstr "接続ID"
 
 #, fuzzy
-msgid "Connection details"
-msgstr "接続テスト"
+msgid "Connection buildup"
+msgstr "接続時間"
 
 msgid "Connection dropped late"
 msgstr "接続が遅れて切断されました"
@@ -18062,10 +18062,6 @@ msgstr "Docsisダウンストリームチャネル"
 msgid "Docsis Upstream Channels"
 msgstr "Docsisアップストリームチャネル"
 
-#, fuzzy
-msgid "Document body"
-msgstr "ドキュメンテーション"
-
 msgid "Document count delta"
 msgstr "ドキュメント数のデルタ"
 
@@ -18189,6 +18185,9 @@ msgstr "DotNet (.Net)ランタイムメモリレベル"
 
 msgid "Double Integer (DINT)"
 msgstr "二重整数(DINT)"
+
+msgid "Double-click to grow further"
+msgstr ""
 
 msgid "Down"
 msgstr "ダウン"
@@ -23628,9 +23627,17 @@ msgstr "成長している"
 msgid "Growth"
 msgstr "拡張"
 
+#, fuzzy
+msgid "Growth continues here"
+msgstr "Dockerノードコンテナレベル"
+
 #, python-format
 msgid "Growth interrupted %d/%d"
 msgstr "拡張が中断された%d/%d"
+
+#, fuzzy
+msgid "Growth stops here"
+msgstr "成長傾向"
 
 msgid "Growth trend"
 msgstr "成長傾向"
@@ -24280,11 +24287,6 @@ msgid ""
 msgstr ""
 "ここで、RRDファイルの作成がログに記録されるかどうかとその方法を構成できます"
 "(ログファイルvar/log/cmc.logに)"
-
-#, fuzzy
-msgid "Here you can configure whether the SSL certificate should get verified."
-msgstr ""
-"ここで、どのような優先順位でケースを作成するかを定義することができます。"
 
 msgid ""
 "Here you can configure whether the performance counters should get queried. "
@@ -25140,6 +25142,10 @@ msgstr "ホストとサービスの履歴"
 msgid "Host & service problems"
 msgstr "ホストとサービスの問題"
 
+#, fuzzy, python-format
+msgid "Host '%s' is not known in the activated monitoring configuration"
+msgstr "%s が不明 アクティブ化された監視構成で"
+
 msgid "Host Address"
 msgstr "ホストアドレス"
 
@@ -25187,9 +25193,6 @@ msgstr "ホストラベル"
 #, python-format
 msgid "Host Name %s"
 msgstr "ホスト名 %s"
-
-msgid "Host Parent/Child topology"
-msgstr "ホストの親/子トポロジ"
 
 msgid "Host Problems (unhandled)"
 msgstr "ホストの問題(未処理)"
@@ -25347,6 +25350,10 @@ msgstr "ホストカスタムフィールドID"
 
 msgid "Host customer"
 msgstr "ホスト顧客"
+
+#, fuzzy
+msgid "Host details"
+msgstr "ホストの詳細"
 
 #, fuzzy
 msgid "Host diagnostic"
@@ -25568,6 +25575,10 @@ msgstr ""
 
 msgid "Host overview"
 msgstr "ホストの概要"
+
+#, fuzzy
+msgid "Host parent/child topology"
+msgstr "ホストの親/子トポロジ"
 
 msgid "Host performance data"
 msgstr "ホストのパフォーマンスデータ"
@@ -26489,6 +26500,10 @@ msgstr "ステータスGUIのホストのアイコンイメージ"
 
 msgid "Icon image for services in status GUI"
 msgstr "ステータスGUIのサービスのアイコン画像"
+
+#, fuzzy
+msgid "Icon in monitoring"
+msgstr "モニタリングで検索"
 
 msgid "Icons"
 msgstr "アイコン"
@@ -30233,14 +30248,19 @@ msgstr "1月"
 msgid "Java pool size"
 msgstr "Javaプールサイズ"
 
+#, fuzzy
+msgid "Jenkins"
+msgstr "Jenkinsのジョブ"
+
+#, fuzzy
+msgid "Jenkins connection"
+msgstr "保留中の接続"
+
 msgid "Jenkins instance to query."
 msgstr "クエリするJenkinsインスタンス。"
 
 msgid "Jenkins jobs"
 msgstr "Jenkinsのジョブ"
-
-msgid "Jenkins jobs and builds"
-msgstr "Jenkinsのジョブとビルド"
 
 msgid "Jenkins nodes"
 msgstr "Jenkinsノード"
@@ -35596,6 +35616,10 @@ msgstr "モニター"
 
 msgid "Monitor & Graph Lanes"
 msgstr "レーンの監視とグラフ化"
+
+#, fuzzy
+msgid "Monitor (min. 1)"
+msgstr "モニタリング"
 
 msgid "Monitor Android devices"
 msgstr "Android端末の監視"
@@ -42037,6 +42061,10 @@ msgstr "サービスを選択してください"
 msgid "Please select at least one element"
 msgstr "少なくとも1つの要素を選択してください"
 
+#, fuzzy
+msgid "Please select at least one item to monitor"
+msgstr "少なくとも1つの要素を選択してください"
+
 msgid "Please select at least one messaging method."
 msgstr "メッセージ送信方法を少なくとも1つ選択してください。"
 
@@ -46009,6 +46037,18 @@ msgstr "ルール表示 :%s"
 msgid "Rule search"
 msgstr "ルール検索"
 
+#, fuzzy
+msgid "Rule search: Deprecated Rulesets"
+msgstr "検索ルール:非推奨のルールセット"
+
+#, fuzzy
+msgid "Rule search: Rulesets with ineffective rules"
+msgstr "検索ルール:無効なルールを持つルールセット"
+
+#, fuzzy
+msgid "Rule search: Used rulesets"
+msgstr "検索ルール: 使用されるルールセット"
+
 msgid "Rule sets in use"
 msgstr "使用中のルールセット"
 
@@ -47080,18 +47120,6 @@ msgstr "パフォーマンスデータの検索"
 msgid "Search results for folder %s"
 msgstr "フォルダ %s の検索結果"
 
-msgid "Search rules"
-msgstr "検索ルール"
-
-msgid "Search rules: Deprecated Rulesets"
-msgstr "検索ルール:非推奨のルールセット"
-
-msgid "Search rules: Rulesets with ineffective rules"
-msgstr "検索ルール:無効なルールを持つルールセット"
-
-msgid "Search rules: Used rulesets"
-msgstr "検索ルール: 使用されるルールセット"
-
 msgid "Search rulesets"
 msgstr "ルールセットを検索する"
 
@@ -48022,6 +48050,10 @@ msgstr "サービスの説明: "
 
 msgid "Service descriptions"
 msgstr "サービスの説明"
+
+#, fuzzy
+msgid "Service details"
+msgstr "BIサービスの詳細"
 
 msgid "Service discovery"
 msgstr "サービスディスカバリ"
@@ -50071,6 +50103,10 @@ msgstr "ファイルグループのサイズ、経過時間、数"
 
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "ファイルグループのサイズ、経過時間、および数(mk_filestats)"
+
+#, fuzzy
+msgid "Skip TLS certificate verification"
+msgstr "SSL証明書の検証"
 
 msgid "Skip exceeding messages, create one critical message"
 msgstr "過剰なメッセージはスキップし、重要なメッセージは1つ作成する"
@@ -52816,10 +52852,6 @@ msgstr "リクエストIDの認証に成功"
 msgid "Successfully verified signature"
 msgstr "署名の検証に成功"
 
-#, fuzzy
-msgid "Suffix"
-msgstr "サフィックスを追加する"
-
 msgid "Suggested tutorial videos"
 msgstr "推奨されるチュートリアルビデオ"
 
@@ -54515,11 +54547,13 @@ msgstr ""
 "フィックスから<tt>/nagvis/</tt>を省きます。"
 
 msgid ""
-"The URL to monitor. This URL should include the protocol (HTTP or HTTPS), "
-"the full address and, if needed, also the port the endpoint should not be "
-"monitoring using a standard port (80 or 443). Please note, that "
-"authentication must not added here as it exposes sensible information. "
-"Please add a potential authentication in the connection details."
+"The URL to monitor. This URL must include the protocol (HTTP or HTTPS), the "
+"full address and, if needed, also the port the endpoint if using a non "
+"standard port. The URL may also include query parameters or anchors. You may "
+"use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS$ "
+"or $HOSTADDRESS$. Please note, that authentication must not be added here as "
+"it exposes sensible information. Use 'authentication' in the connection "
+"buildup options, instead. "
 msgstr ""
 
 msgid "The User Base DN could be found."
@@ -56428,6 +56462,12 @@ msgstr ""
 "最大のCPUパフォーマンスは、イベントログの監視とパフォーマンスカウンターによっ"
 "て必要とされます。"
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk."
+msgstr ""
+
 msgid "The name of the Data Proxy"
 msgstr "Data Proxyの名前"
 
@@ -57044,6 +57084,12 @@ msgstr ""
 
 msgid "The power supply sensor name as shown in the service"
 msgstr "サービスで表示される電源センサー名"
+
+msgid ""
+"The prefix is automatically to each service to be able to organize them. The "
+"prefix is static and will be CERT. Alternatively, you may choose to not use "
+"the prefix option."
+msgstr ""
 
 msgid ""
 "The prefix is automatically to each service to be able to organize them. The "
@@ -57693,12 +57739,6 @@ msgid ""
 msgstr ""
 "接尾辞.newは予約キーワードであり、アグリゲーションIDとして使用することはでき"
 "ません"
-
-msgid ""
-"The suffix is the individual part of the used service description. Choose a "
-"human readable and unique title to be able to find your service later in "
-"Checkmk."
-msgstr ""
 
 msgid "The synchronization finished."
 msgstr "同期終了。"
@@ -67772,6 +67812,10 @@ msgstr "使用方法詳細"
 msgid "Usage levels"
 msgstr "使用レベル"
 
+#, fuzzy
+msgid "Use \"CERT as prefix\""
+msgstr "名前空間プレフィックスを使用する"
+
 msgid "Use \"Checkmk Automation\" user"
 msgstr "\"Checkmk Automation\" ユーザーを使用する"
 
@@ -74757,12 +74801,12 @@ msgstr "ホストは稼働しており、サービスの問題はありません
 msgid "host is up but has services in warning state"
 msgstr "ホストは稼働していますが、サービスは警告状態にあります"
 
+#, fuzzy
+msgid "host names"
+msgstr "バーチャルホスト名"
+
 msgid "host tags"
 msgstr "ホストタグ"
-
-#, fuzzy
-msgid "hostname"
-msgstr "バーチャルホスト名"
 
 msgid "hostname will be ignored when agent_hash is given."
 msgstr "agent_hashが指定されている場合、ホスト名は無視されます。"
@@ -75395,6 +75439,10 @@ msgstr "その他のCTIOエラー"
 msgid "other hosts"
 msgstr "他のホスト"
 
+#, fuzzy
+msgid "other names"
+msgstr "ノード名"
+
 msgid ""
 "our socket has closed; we are in the process of tearing down the connection"
 msgstr "ソケットが閉じました;接続を切断する過程にあります"
@@ -75671,7 +75719,7 @@ msgid "service in %s state"
 msgstr "%s 状態のサービス"
 
 #, fuzzy
-msgid "service name"
+msgid "service names"
 msgstr "サービス名"
 
 msgid "services"
@@ -76071,6 +76119,39 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "Search rules"
+#~ msgstr "検索ルール"
+
+#, fuzzy
+#~| msgid "Vhost name"
+#~ msgid "hostname"
+#~ msgstr "バーチャルホスト名"
+
+#, fuzzy
+#~| msgid "Connection tests"
+#~ msgid "Connection details"
+#~ msgstr "接続テスト"
+
+#, fuzzy
+#~| msgid "Documentation"
+#~ msgid "Document body"
+#~ msgstr "ドキュメンテーション"
+
+#, fuzzy
+#~| msgid "Here you can define with which priority the case should be created."
+#~ msgid ""
+#~ "Here you can configure whether the SSL certificate should get verified."
+#~ msgstr ""
+#~ "ここで、どのような優先順位でケースを作成するかを定義することができます。"
+
+#~ msgid "Jenkins jobs and builds"
+#~ msgstr "Jenkinsのジョブとビルド"
+
+#, fuzzy
+#~| msgid "Add Suffix"
+#~ msgid "Suffix"
+#~ msgstr "サフィックスを追加する"
 
 #~ msgid "McAfee web gateway statistics"
 #~ msgstr "McAfee Webゲートウェイ統計"

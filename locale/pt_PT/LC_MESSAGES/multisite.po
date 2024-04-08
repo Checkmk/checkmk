@@ -13130,8 +13130,8 @@ msgid "Connection ID"
 msgstr "ID de conexão"
 
 #, fuzzy
-msgid "Connection details"
-msgstr "Testes de conexão"
+msgid "Connection buildup"
+msgstr "Tempo de ligação"
 
 msgid "Connection dropped late"
 msgstr "A conexão caiu tarde"
@@ -18490,10 +18490,6 @@ msgstr "Canais Docsis Downstream"
 msgid "Docsis Upstream Channels"
 msgstr "Docsis Upstream Canais"
 
-#, fuzzy
-msgid "Document body"
-msgstr "Documentação"
-
 msgid "Document count delta"
 msgstr "Delta de contagem de documentos"
 
@@ -18616,6 +18612,9 @@ msgstr "DotNet (.Net) níveis de memória de tempo de execução"
 
 msgid "Double Integer (DINT)"
 msgstr "Duplo Número Inteiro (DINT)"
+
+msgid "Double-click to grow further"
+msgstr ""
 
 msgid "Down"
 msgstr "Para baixo"
@@ -24144,9 +24143,17 @@ msgstr "Cultivo"
 msgid "Growth"
 msgstr "Crescimento"
 
+#, fuzzy
+msgid "Growth continues here"
+msgstr "Níveis de contentores dos nós de ancoragem"
+
 #, python-format
 msgid "Growth interrupted %d/%d"
 msgstr "Crescimento interrompido %d/%d"
+
+#, fuzzy
+msgid "Growth stops here"
+msgstr "Tendência de crescimento"
 
 msgid "Growth trend"
 msgstr "Tendência de crescimento"
@@ -24807,10 +24814,6 @@ msgid ""
 msgstr ""
 "Aqui você pode configurar se e como a criação de arquivos RRD está sendo "
 "logada (no arquivo de log var/log/cmc.log)"
-
-#, fuzzy
-msgid "Here you can configure whether the SSL certificate should get verified."
-msgstr "Aqui pode definir a prioridade com que o caso deve ser criado."
 
 msgid ""
 "Here you can configure whether the performance counters should get queried. "
@@ -25691,6 +25694,10 @@ msgstr "Histórico de serviços e hospedagem"
 msgid "Host & service problems"
 msgstr "Problemas de alojamento e serviços"
 
+#, fuzzy, python-format
+msgid "Host '%s' is not known in the activated monitoring configuration"
+msgstr "%s não conhecido na ativação de configurações de monitorização"
+
 msgid "Host Address"
 msgstr "Endereço de hospedagem"
 
@@ -25738,9 +25745,6 @@ msgstr "Rótulos do anfitrião"
 #, python-format
 msgid "Host Name %s"
 msgstr "Nome do anfitrião %s"
-
-msgid "Host Parent/Child topology"
-msgstr "Topologia do pai/mãe anfitrião/criança"
 
 msgid "Host Problems (unhandled)"
 msgstr "Problemas com o anfitrião (sem manuseio)"
@@ -25898,6 +25902,10 @@ msgstr "ID de campo personalizado do host"
 
 msgid "Host customer"
 msgstr "Cliente anfitrião"
+
+#, fuzzy
+msgid "Host details"
+msgstr "Detalhes do Anfitrião"
 
 #, fuzzy
 msgid "Host diagnostic"
@@ -26119,6 +26127,10 @@ msgstr ""
 
 msgid "Host overview"
 msgstr "Visão geral do anfitrião"
+
+#, fuzzy
+msgid "Host parent/child topology"
+msgstr "Topologia do pai/mãe anfitrião/criança"
 
 msgid "Host performance data"
 msgstr "Dados de desempenho do host"
@@ -27052,6 +27064,10 @@ msgstr "Imagem de ícone para anfitriões em status GUI"
 
 msgid "Icon image for services in status GUI"
 msgstr "Imagem de ícone para serviços em status GUI"
+
+#, fuzzy
+msgid "Icon in monitoring"
+msgstr "Pesquisa em Monitorização"
 
 msgid "Icons"
 msgstr "Ícones"
@@ -30917,14 +30933,19 @@ msgstr "Janeiro"
 msgid "Java pool size"
 msgstr "tamanho da piscina Java"
 
+#, fuzzy
+msgid "Jenkins"
+msgstr "empregos Jenkins"
+
+#, fuzzy
+msgid "Jenkins connection"
+msgstr "ligações pendentes"
+
 msgid "Jenkins instance to query."
 msgstr "Jenkins exemplo a consultar."
 
 msgid "Jenkins jobs"
 msgstr "empregos Jenkins"
-
-msgid "Jenkins jobs and builds"
-msgstr "Jenkins empregos e construções"
 
 msgid "Jenkins nodes"
 msgstr "nós de Jenkins"
@@ -36384,6 +36405,10 @@ msgstr "Monitor"
 
 msgid "Monitor & Graph Lanes"
 msgstr "Monitor & Pistas Gráficas"
+
+#, fuzzy
+msgid "Monitor (min. 1)"
+msgstr "Monitorização"
 
 msgid "Monitor Android devices"
 msgstr "Monitorizar dispositivos Android"
@@ -42928,6 +42953,10 @@ msgstr "Por favor, selecione um serviço"
 msgid "Please select at least one element"
 msgstr "Por favor, selecione pelo menos um elemento"
 
+#, fuzzy
+msgid "Please select at least one item to monitor"
+msgstr "Por favor, selecione pelo menos um elemento"
+
 msgid "Please select at least one messaging method."
 msgstr "Seleccione pelo menos um método de envio de mensagens."
 
@@ -46965,6 +46994,18 @@ msgstr "Representação de regras: %s"
 msgid "Rule search"
 msgstr "Pesquisa de regras"
 
+#, fuzzy
+msgid "Rule search: Deprecated Rulesets"
+msgstr "Regras de pesquisa: Conjuntos de Regras Depreciadas"
+
+#, fuzzy
+msgid "Rule search: Rulesets with ineffective rules"
+msgstr "Regras de pesquisa: Conjuntos de regras com regras ineficazes"
+
+#, fuzzy
+msgid "Rule search: Used rulesets"
+msgstr "Regras de pesquisa: Conjuntos de regras usadas"
+
 msgid "Rule sets in use"
 msgstr "Conjuntos de regras em utilização"
 
@@ -48053,18 +48094,6 @@ msgstr "Pesquisar dados de desempenho"
 msgid "Search results for folder %s"
 msgstr "Resultados da pesquisa por pasta %s"
 
-msgid "Search rules"
-msgstr "Regras de busca"
-
-msgid "Search rules: Deprecated Rulesets"
-msgstr "Regras de pesquisa: Conjuntos de Regras Depreciadas"
-
-msgid "Search rules: Rulesets with ineffective rules"
-msgstr "Regras de pesquisa: Conjuntos de regras com regras ineficazes"
-
-msgid "Search rules: Used rulesets"
-msgstr "Regras de pesquisa: Conjuntos de regras usadas"
-
 msgid "Search rulesets"
 msgstr "Conjuntos de regras de pesquisa"
 
@@ -49011,6 +49040,10 @@ msgstr "Descrição do serviço: "
 
 msgid "Service descriptions"
 msgstr "Descrição dos serviços"
+
+#, fuzzy
+msgid "Service details"
+msgstr "Detalhes do serviço de BI"
 
 msgid "Service discovery"
 msgstr "Descoberta de serviços"
@@ -51102,6 +51135,10 @@ msgstr "Tamanho, idade e contagem dos grupos de arquivos"
 
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Tamanho, idade e contagem dos grupos de ficheiros (mk_filestats)"
+
+#, fuzzy
+msgid "Skip TLS certificate verification"
+msgstr "verificação do certificado SSL"
 
 msgid "Skip exceeding messages, create one critical message"
 msgstr "Saltar mensagens excedentes, criar uma mensagem crítica"
@@ -53935,10 +53972,6 @@ msgstr "ID do pedido verificado com êxito"
 msgid "Successfully verified signature"
 msgstr "Assinatura verificada com sucesso"
 
-#, fuzzy
-msgid "Suffix"
-msgstr "Adicionar Sufixo"
-
 msgid "Suggested tutorial videos"
 msgstr "Vídeos tutoriais sugeridos"
 
@@ -55702,11 +55735,13 @@ msgstr ""
 "nagvis/</tt> do prefixo."
 
 msgid ""
-"The URL to monitor. This URL should include the protocol (HTTP or HTTPS), "
-"the full address and, if needed, also the port the endpoint should not be "
-"monitoring using a standard port (80 or 443). Please note, that "
-"authentication must not added here as it exposes sensible information. "
-"Please add a potential authentication in the connection details."
+"The URL to monitor. This URL must include the protocol (HTTP or HTTPS), the "
+"full address and, if needed, also the port the endpoint if using a non "
+"standard port. The URL may also include query parameters or anchors. You may "
+"use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS$ "
+"or $HOSTADDRESS$. Please note, that authentication must not be added here as "
+"it exposes sensible information. Use 'authentication' in the connection "
+"buildup options, instead. "
 msgstr ""
 
 msgid "The User Base DN could be found."
@@ -57733,6 +57768,12 @@ msgstr ""
 "A maior parte do desempenho da CPU é necessária para o monitoramento do "
 "Eventlog e os contadores de desempenho."
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk."
+msgstr ""
+
 msgid "The name of the Data Proxy"
 msgstr "O nome do Proxy de Dados"
 
@@ -58361,6 +58402,12 @@ msgstr ""
 
 msgid "The power supply sensor name as shown in the service"
 msgstr "O nome do sensor da fonte de alimentação como mostrado no serviço"
+
+msgid ""
+"The prefix is automatically to each service to be able to organize them. The "
+"prefix is static and will be CERT. Alternatively, you may choose to not use "
+"the prefix option."
+msgstr ""
 
 msgid ""
 "The prefix is automatically to each service to be able to organize them. The "
@@ -59042,12 +59089,6 @@ msgid ""
 msgstr ""
 "O sufixo .new é uma palavra-chave reservada e não pode ser utilizado como id "
 "de agregação"
-
-msgid ""
-"The suffix is the individual part of the used service description. Choose a "
-"human readable and unique title to be able to find your service later in "
-"Checkmk."
-msgstr ""
 
 msgid "The synchronization finished."
 msgstr "A sincronização terminou."
@@ -69405,6 +69446,10 @@ msgstr "Detalhes de utilização"
 msgid "Usage levels"
 msgstr "Níveis de utilização"
 
+#, fuzzy
+msgid "Use \"CERT as prefix\""
+msgstr "Use um prefixo do namespace"
+
 msgid "Use \"Checkmk Automation\" user"
 msgstr "Use o usuário \"Checkmk Automation"
 
@@ -76624,12 +76669,12 @@ msgstr "o anfitrião está activo e não tem problemas de serviço"
 msgid "host is up but has services in warning state"
 msgstr "o anfitrião está activo mas tem serviços em estado de aviso"
 
+#, fuzzy
+msgid "host names"
+msgstr "Nome do fantasma"
+
 msgid "host tags"
 msgstr "placas de acolhimento"
-
-#, fuzzy
-msgid "hostname"
-msgstr "Nome do fantasma"
 
 msgid "hostname will be ignored when agent_hash is given."
 msgstr "hostname será ignorado quando o agente_hash for dado."
@@ -77266,6 +77311,10 @@ msgstr "outros erros do CTIO"
 msgid "other hosts"
 msgstr "outros anfitriões"
 
+#, fuzzy
+msgid "other names"
+msgstr "Nomes de nós"
+
 msgid ""
 "our socket has closed; we are in the process of tearing down the connection"
 msgstr "a nossa tomada fechou; estamos no processo de demolir a ligação"
@@ -77545,7 +77594,7 @@ msgid "service in %s state"
 msgstr "serviço no estado de %s"
 
 #, fuzzy
-msgid "service name"
+msgid "service names"
 msgstr "Nome do serviço"
 
 msgid "services"
@@ -77947,6 +77996,38 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Search rules"
+#~ msgstr "Regras de busca"
+
+#, fuzzy
+#~| msgid "Vhost name"
+#~ msgid "hostname"
+#~ msgstr "Nome do fantasma"
+
+#, fuzzy
+#~| msgid "Connection tests"
+#~ msgid "Connection details"
+#~ msgstr "Testes de conexão"
+
+#, fuzzy
+#~| msgid "Documentation"
+#~ msgid "Document body"
+#~ msgstr "Documentação"
+
+#, fuzzy
+#~| msgid "Here you can define with which priority the case should be created."
+#~ msgid ""
+#~ "Here you can configure whether the SSL certificate should get verified."
+#~ msgstr "Aqui pode definir a prioridade com que o caso deve ser criado."
+
+#~ msgid "Jenkins jobs and builds"
+#~ msgstr "Jenkins empregos e construções"
+
+#, fuzzy
+#~| msgid "Add Suffix"
+#~ msgid "Suffix"
+#~ msgstr "Adicionar Sufixo"
 
 #~ msgid "McAfee web gateway statistics"
 #~ msgstr "Estatísticas do McAfee web gateway"

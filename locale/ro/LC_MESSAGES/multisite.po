@@ -13114,8 +13114,9 @@ msgstr "Conexiune"
 msgid "Connection ID"
 msgstr "ID-ul conexiunii"
 
-msgid "Connection details"
-msgstr "Detalii de conectare"
+#, fuzzy
+msgid "Connection buildup"
+msgstr "Timp de conectare"
 
 msgid "Connection dropped late"
 msgstr "Conexiune întreruptă târziu"
@@ -18486,9 +18487,6 @@ msgstr "Canalele din aval ale Docsis"
 msgid "Docsis Upstream Channels"
 msgstr "Canale în amonte Docsis"
 
-msgid "Document body"
-msgstr "Corpul documentului"
-
 msgid "Document count delta"
 msgstr "Numărul de documente delta"
 
@@ -18610,6 +18608,9 @@ msgstr "Nivelurile de memorie în timpul execuției DotNet (.Net)"
 
 msgid "Double Integer (DINT)"
 msgstr "Număr întreg dublu (DINT)"
+
+msgid "Double-click to grow further"
+msgstr ""
 
 msgid "Down"
 msgstr "Jos"
@@ -24126,9 +24127,17 @@ msgstr "În creștere"
 msgid "Growth"
 msgstr "Creștere"
 
+#, fuzzy
+msgid "Growth continues here"
+msgstr "Nu mai continuați aici"
+
 #, python-format
 msgid "Growth interrupted %d/%d"
 msgstr "Creștere întreruptă %d/%d"
+
+#, fuzzy
+msgid "Growth stops here"
+msgstr "Tendința de creștere"
 
 msgid "Growth trend"
 msgstr "Tendința de creștere"
@@ -24778,10 +24787,6 @@ msgid ""
 msgstr ""
 "Aici puteți configura dacă și cum este înregistrată crearea fișierelor RRD "
 "(în fișierul jurnal var/log/cmc.log)."
-
-#, fuzzy
-msgid "Here you can configure whether the SSL certificate should get verified."
-msgstr "Aici puteți defini cu ce prioritate trebuie creat cazul."
 
 msgid ""
 "Here you can configure whether the performance counters should get queried. "
@@ -25668,6 +25673,10 @@ msgstr "Gazdă & istoric de service"
 msgid "Host & service problems"
 msgstr "Gazdă & probleme de serviciu"
 
+#, fuzzy, python-format
+msgid "Host '%s' is not known in the activated monitoring configuration"
+msgstr "%s nu este cunoscut în configurația de monitorizare activată"
+
 msgid "Host Address"
 msgstr "Adresa gazdei"
 
@@ -25714,9 +25723,6 @@ msgstr "Etichete gazdă"
 #, python-format
 msgid "Host Name %s"
 msgstr "Nume gazdă %s"
-
-msgid "Host Parent/Child topology"
-msgstr "Topologia gazdă părinte/copil"
 
 msgid "Host Problems (unhandled)"
 msgstr "Probleme ale gazdei (netratate)"
@@ -25873,6 +25879,10 @@ msgstr "ID-ul câmpului personalizat al gazdei"
 
 msgid "Host customer"
 msgstr "Client gazdă"
+
+#, fuzzy
+msgid "Host details"
+msgstr "Detalii gazdă"
 
 msgid "Host diagnostic"
 msgstr "Diagnostic gazdă"
@@ -26091,6 +26101,10 @@ msgstr ""
 
 msgid "Host overview"
 msgstr "Prezentare generală a gazdei"
+
+#, fuzzy
+msgid "Host parent/child topology"
+msgstr "Topologia gazdă părinte/copil"
 
 msgid "Host performance data"
 msgstr "Date privind performanța gazdei"
@@ -27022,6 +27036,10 @@ msgstr "Imaginea pictogramei pentru gazde în status GUI"
 
 msgid "Icon image for services in status GUI"
 msgstr "Imaginea pictogramei pentru servicii în GUI de stare"
+
+#, fuzzy
+msgid "Icon in monitoring"
+msgstr "Căutare în Monitorizare"
 
 msgid "Icons"
 msgstr "Icoane"
@@ -30949,14 +30967,19 @@ msgstr "Ianuarie"
 msgid "Java pool size"
 msgstr "Dimensiunea bazinului Java"
 
+#, fuzzy
+msgid "Jenkins"
+msgstr "Locuri de muncă în Jenkins"
+
+#, fuzzy
+msgid "Jenkins connection"
+msgstr "conexiuni în așteptare"
+
 msgid "Jenkins instance to query."
 msgstr "Instanța Jenkins de interogat."
 
 msgid "Jenkins jobs"
 msgstr "Locuri de muncă în Jenkins"
-
-msgid "Jenkins jobs and builds"
-msgstr "Locuri de muncă Jenkins și construiește"
 
 msgid "Jenkins nodes"
 msgstr "Noduri Jenkins"
@@ -36370,6 +36393,10 @@ msgstr "Monitor"
 
 msgid "Monitor & Graph Lanes"
 msgstr "Monitor & Grafic benzi"
+
+#, fuzzy
+msgid "Monitor (min. 1)"
+msgstr "Monitorizare"
 
 msgid "Monitor Android devices"
 msgstr "Monitorizați dispozitivele Android"
@@ -42940,6 +42967,10 @@ msgstr "Vă rugăm să selectați un serviciu"
 msgid "Please select at least one element"
 msgstr "Vă rugăm să selectați cel puțin un element"
 
+#, fuzzy
+msgid "Please select at least one item to monitor"
+msgstr "Vă rugăm să selectați cel puțin un element"
+
 msgid "Please select at least one messaging method."
 msgstr "Vă rugăm să selectați cel puțin o metodă de mesagerie."
 
@@ -46952,6 +46983,18 @@ msgstr "Reprezentarea regulilor: %s"
 msgid "Rule search"
 msgstr "Căutarea regulilor"
 
+#, fuzzy
+msgid "Rule search: Deprecated Rulesets"
+msgstr "Reguli de căutare: Seturi de reguli depreciate"
+
+#, fuzzy
+msgid "Rule search: Rulesets with ineffective rules"
+msgstr "Reguli de căutare: Seturi de reguli cu reguli ineficiente"
+
+#, fuzzy
+msgid "Rule search: Used rulesets"
+msgstr "Reguli de căutare: Seturi de reguli utilizate"
+
 msgid "Rule sets in use"
 msgstr "Seturi de reguli în uz"
 
@@ -48022,18 +48065,6 @@ msgstr "Date privind performanța de căutare"
 msgid "Search results for folder %s"
 msgstr "Rezultate căutare pentru folderul %s"
 
-msgid "Search rules"
-msgstr "Reguli de căutare"
-
-msgid "Search rules: Deprecated Rulesets"
-msgstr "Reguli de căutare: Seturi de reguli depreciate"
-
-msgid "Search rules: Rulesets with ineffective rules"
-msgstr "Reguli de căutare: Seturi de reguli cu reguli ineficiente"
-
-msgid "Search rules: Used rulesets"
-msgstr "Reguli de căutare: Seturi de reguli utilizate"
-
 msgid "Search rulesets"
 msgstr "Seturi de reguli de căutare"
 
@@ -49006,6 +49037,10 @@ msgstr "Descrierea serviciului: "
 
 msgid "Service descriptions"
 msgstr "Descrieri de servicii"
+
+#, fuzzy
+msgid "Service details"
+msgstr "Detalii despre serviciul BI"
 
 msgid "Service discovery"
 msgstr "Descoperirea serviciilor"
@@ -51133,6 +51168,10 @@ msgstr "Mărimea, vârsta și numărul de grupuri de fișiere"
 
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Mărimea, vârsta și numărul de grupuri de fișiere (mk_filestats)"
+
+#, fuzzy
+msgid "Skip TLS certificate verification"
+msgstr "Verificarea certificatului SSL"
 
 msgid "Skip exceeding messages, create one critical message"
 msgstr "Treceți peste mesajele care depășesc, creați un mesaj critic"
@@ -53989,10 +54028,6 @@ msgstr "ID-ul cererii a fost verificat cu succes"
 msgid "Successfully verified signature"
 msgstr "Semnătură verificată cu succes"
 
-#, fuzzy
-msgid "Suffix"
-msgstr "Adăugați sufixul"
-
 msgid "Suggested tutorial videos"
 msgstr "Videoclipuri tutorial sugerate"
 
@@ -55751,11 +55786,13 @@ msgstr ""
 "trebuie să se termine cu o bară oblică. Omiteți <tt>/nagvis/</tt> din prefix."
 
 msgid ""
-"The URL to monitor. This URL should include the protocol (HTTP or HTTPS), "
-"the full address and, if needed, also the port the endpoint should not be "
-"monitoring using a standard port (80 or 443). Please note, that "
-"authentication must not added here as it exposes sensible information. "
-"Please add a potential authentication in the connection details."
+"The URL to monitor. This URL must include the protocol (HTTP or HTTPS), the "
+"full address and, if needed, also the port the endpoint if using a non "
+"standard port. The URL may also include query parameters or anchors. You may "
+"use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS$ "
+"or $HOSTADDRESS$. Please note, that authentication must not be added here as "
+"it exposes sensible information. Use 'authentication' in the connection "
+"buildup options, instead. "
 msgstr ""
 
 msgid "The User Base DN could be found."
@@ -57808,6 +57845,12 @@ msgstr ""
 "Cea mai mare performanță a procesorului este necesară pentru monitorizarea "
 "Eventlog și pentru contoarele de performanță."
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk."
+msgstr ""
+
 msgid "The name of the Data Proxy"
 msgstr "Numele proxy-ului de date"
 
@@ -58447,6 +58490,12 @@ msgid "The power supply sensor name as shown in the service"
 msgstr ""
 "Denumirea senzorului de alimentare cu energie electrică, așa cum este "
 "prezentată în service"
+
+msgid ""
+"The prefix is automatically to each service to be able to organize them. The "
+"prefix is static and will be CERT. Alternatively, you may choose to not use "
+"the prefix option."
+msgstr ""
 
 msgid ""
 "The prefix is automatically to each service to be able to organize them. The "
@@ -59134,12 +59183,6 @@ msgid ""
 msgstr ""
 "Sufixul .new este un cuvânt cheie rezervat și nu poate fi utilizat ca id de "
 "agregare."
-
-msgid ""
-"The suffix is the individual part of the used service description. Choose a "
-"human readable and unique title to be able to find your service later in "
-"Checkmk."
-msgstr ""
 
 msgid "The synchronization finished."
 msgstr "Sincronizarea s-a încheiat."
@@ -69077,6 +69120,10 @@ msgstr "Detalii de utilizare"
 msgid "Usage levels"
 msgstr "Niveluri de utilizare"
 
+#, fuzzy
+msgid "Use \"CERT as prefix\""
+msgstr "Utilizați un prefix de spațiu de nume"
+
 msgid "Use \"Checkmk Automation\" user"
 msgstr "Utilizați \"Checkmk Automation\" utilizator"
 
@@ -76359,11 +76406,12 @@ msgstr "gazda este în funcțiune și nu are probleme de serviciu"
 msgid "host is up but has services in warning state"
 msgstr "gazda este în funcțiune, dar are servicii în stare de avertizare"
 
+#, fuzzy
+msgid "host names"
+msgstr "Nume Vhost"
+
 msgid "host tags"
 msgstr "Etichete gazdă"
-
-msgid "hostname"
-msgstr "nume de gazdă"
 
 msgid "hostname will be ignored when agent_hash is given."
 msgstr "numele de gazdă va fi ignorat atunci când se indică agent_hash."
@@ -76994,6 +77042,10 @@ msgstr "alte erori CTIO"
 msgid "other hosts"
 msgstr "alte gazde"
 
+#, fuzzy
+msgid "other names"
+msgstr "Nume de noduri"
+
 msgid ""
 "our socket has closed; we are in the process of tearing down the connection"
 msgstr ""
@@ -77276,7 +77328,8 @@ msgstr[2] ""
 msgid "service in %s state"
 msgstr "serviciu în starea %s"
 
-msgid "service name"
+#, fuzzy
+msgid "service names"
 msgstr "Denumirea serviciului"
 
 msgid "services"
@@ -77676,6 +77729,32 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Search rules"
+#~ msgstr "Reguli de căutare"
+
+#~ msgid "hostname"
+#~ msgstr "nume de gazdă"
+
+#~ msgid "Connection details"
+#~ msgstr "Detalii de conectare"
+
+#~ msgid "Document body"
+#~ msgstr "Corpul documentului"
+
+#, fuzzy
+#~| msgid "Here you can define with which priority the case should be created."
+#~ msgid ""
+#~ "Here you can configure whether the SSL certificate should get verified."
+#~ msgstr "Aici puteți defini cu ce prioritate trebuie creat cazul."
+
+#~ msgid "Jenkins jobs and builds"
+#~ msgstr "Locuri de muncă Jenkins și construiește"
+
+#, fuzzy
+#~| msgid "Add Suffix"
+#~ msgid "Suffix"
+#~ msgstr "Adăugați sufixul"
 
 #~ msgid "McAfee web gateway statistics"
 #~ msgstr "Statisticile gateway-ului web McAfee"

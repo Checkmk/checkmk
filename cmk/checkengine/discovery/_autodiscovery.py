@@ -602,11 +602,15 @@ def get_host_services(
         }
     else:
         services = {
-            **_get_node_services(
+            **make_table(
                 host_name,
-                providers=providers,
-                plugins=plugins,
-                on_error=on_error,
+                _get_services_result(
+                    host_name,
+                    providers=providers,
+                    plugins=plugins,
+                    on_error=on_error,
+                    ignore_plugin=ignore_plugin,
+                ),
                 ignore_service=ignore_service,
                 ignore_plugin=ignore_plugin,
                 get_effective_host=get_effective_host,
@@ -628,18 +632,14 @@ def get_host_services(
     return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 
-# Do the actual work for a non-cluster host or node
-def _get_node_services(
+def _get_services_result(
     host_name: HostName,
     *,
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
-    ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    get_effective_host: Callable[[HostName, ServiceName], HostName],
-    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-) -> ServicesTable[_Transition]:
+) -> QualifiedDiscovery[AutocheckEntry]:
     candidates = find_plugins(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
@@ -662,20 +662,12 @@ def _get_node_services(
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
-    service_result = analyse_services(
+    return analyse_services(
         existing_services=autocheck_store.read(),
         discovered_services=discovered_services,
         run_plugin_names=EVERYTHING,
         forget_existing=False,
         keep_vanished=False,
-    )
-    return make_table(
-        host_name,
-        service_result,
-        ignore_service=ignore_service,
-        ignore_plugin=ignore_plugin,
-        get_effective_host=get_effective_host,
-        get_service_description=get_service_description,
     )
 
 
@@ -783,36 +775,13 @@ def _get_cluster_services(
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
     cluster_items: ServicesTable[_Transition] = {}  # actually _BasicTransition but typing...
-
     for node in cluster_nodes:
-        candidates = find_plugins(
-            # This call doesn't seem to depend on `node` so we could
-            # probably take it out of the loop to improve readability
-            # and performance.
-            providers,
-            [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
-        )
-        skip = {plugin_name for plugin_name in candidates if ignore_plugin(host_name, plugin_name)}
-        section.section_step("Executing discovery plugins (%d)" % len(candidates))
-        console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
-
-        for plugin_name in skip:
-            console.vverbose(f"  Skip ignored check plug-in name {plugin_name!r}\n")
-
-        autocheck_store = AutochecksStore(node)
-        discovered_services = discover_services(
+        entries = _get_services_result(
             node,
-            candidates - skip,
             providers=providers,
             plugins=plugins,
             on_error=on_error,
-        )
-        entries = analyse_services(
-            existing_services=autocheck_store.read(),
-            discovered_services=discovered_services,
-            run_plugin_names=EVERYTHING,
-            forget_existing=False,
-            keep_vanished=False,
+            ignore_plugin=ignore_plugin,
         )
         for check_source, entry in entries.chain_with_transition():
             cluster_items.update(

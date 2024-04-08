@@ -63,6 +63,7 @@ from .hosts_and_folders import (
 )
 from .objref import ObjectRef, ObjectRefType
 from .rulespecs import (
+    MatchType,
     Rulespec,
     rulespec_group_registry,
     rulespec_registry,
@@ -955,7 +956,7 @@ class Ruleset:
     def item_enum(self) -> DropdownChoiceEntries | None:
         return self.rulespec.item_enum
 
-    def match_type(self) -> str:
+    def match_type(self) -> MatchType:
         return self.rulespec.match_type
 
     def is_deprecated(self) -> bool:

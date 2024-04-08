@@ -13,11 +13,11 @@ import re
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import asdict
 from enum import auto, Enum
-from typing import Any, cast, overload
+from typing import Any, cast, Literal, overload, TypedDict
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.hostaddress import HostName
-from cmk.utils.labels import Labels
+from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets.conditions import (
     allow_host_label_conditions,
@@ -76,12 +76,9 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
 )
+from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, FixedValue
+from cmk.gui.valuespec import LabelGroups as VSLabelGroups
 from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    LabelGroups,
     ListChoice,
     ListOfStrings,
     RegExp,
@@ -126,6 +123,7 @@ from cmk.gui.watolib.rulesets import (
 from cmk.gui.watolib.rulespecs import (
     get_rulegroup,
     main_module_from_rulespec_group_name,
+    MatchType,
     Rulespec,
     rulespec_group_registry,
     rulespec_registry,
@@ -745,22 +743,27 @@ def _page_menu_entry_search_rules(
     )
 
 
-def _is_deprecated_rulesets_page(search_options) -> bool:  # type: ignore[no-untyped-def]
+def _is_deprecated_rulesets_page(search_options: SearchOptions) -> bool:
     return search_options.get("ruleset_deprecated") is True
 
 
-def _is_ineffective_rules_page(search_options) -> bool:  # type: ignore[no-untyped-def]
+def _is_ineffective_rules_page(search_options: SearchOptions) -> bool:
     return (
         search_options.get("ruleset_deprecated") is False
         and search_options.get("rule_ineffective") is True
     )
 
 
-def _is_used_rulesets_page(search_options) -> bool:  # type: ignore[no-untyped-def]
+def _is_used_rulesets_page(search_options: SearchOptions) -> bool:
     return (
         search_options.get("ruleset_deprecated") is False
         and search_options.get("ruleset_used") is True
     )
+
+
+class MatchState(TypedDict):
+    matched: bool
+    keys: set[str]
 
 
 class ModeEditRuleset(WatoMode):
@@ -1100,7 +1103,7 @@ class ModeEditRuleset(WatoMode):
         self._rule_listing(ruleset)
         self._create_form()
 
-    def _explain_match_type(self, match_type) -> None:  # type: ignore[no-untyped-def]
+    def _explain_match_type(self, match_type: MatchType) -> None:
         html.open_div(class_="matching_message")
         html.icon("toggle_details")
         html.b("%s: " % _("Matching"))
@@ -1128,7 +1131,7 @@ class ModeEditRuleset(WatoMode):
             html.div(_("There are no rules defined in this set."), class_="info")
             return
 
-        match_state: dict[str, bool | set] = {"matched": False, "keys": set()}
+        match_state = MatchState({"matched": False, "keys": set()})
         search_options: SearchOptions = ModeRuleSearchForm().search_options
 
         html.div("", id_="row_info")
@@ -1179,7 +1182,7 @@ class ModeEditRuleset(WatoMode):
         )
 
     @staticmethod
-    def _css_for_rule(search_options, rule: Rule) -> list[str]:  # type: ignore[no-untyped-def]
+    def _css_for_rule(search_options: SearchOptions, rule: Rule) -> list[str]:
         css = []
         if rule.is_disabled():
             css.append("disabled")
@@ -1189,14 +1192,14 @@ class ModeEditRuleset(WatoMode):
         if self._just_edited_rule and self._just_edited_rule.id == rule.id:
             html.focus_here()
 
-    def _show_rule_icons(  # type: ignore[no-untyped-def]
+    def _show_rule_icons(
         self,
         table: Table,
-        match_state,
-        folder,
+        match_state: MatchState,
+        folder: Folder,
         rule: Rule,
-        rulenr,
-        search_options,
+        rulenr: int,
+        search_options: SearchOptions,
         service_labels: Labels,
         analyse_rule_matching: bool,
     ) -> None:
@@ -1260,9 +1263,9 @@ class ModeEditRuleset(WatoMode):
             icon="delete",
         )
 
-    def _match(  # type: ignore[no-untyped-def]
+    def _match(
         self,
-        match_state,
+        match_state: MatchState,
         rule: Rule,
         service_labels: Labels,
     ) -> tuple[str, str]:
@@ -1345,8 +1348,8 @@ class ModeEditRuleset(WatoMode):
         execute_host_label_sync(self._hostname, site_id)
         g.setdefault("host_label_sync", {})[cache_id] = True
 
-    def _action_url(self, action, folder, rule_id) -> str:  # type: ignore[no-untyped-def]
-        vars_ = [
+    def _action_url(self, action: str, folder: Folder, rule_id: str) -> str:
+        vars_: HTTPVariables = [
             ("mode", request.var("mode", "edit_ruleset")),
             ("ruleset_back_mode", self._back_mode),
             ("varname", self._name),
@@ -1413,7 +1416,9 @@ class ModeEditRuleset(WatoMode):
     def _rule_conditions(self, rule: Rule) -> None:
         self._predefined_condition_info(rule)
         html.write_text(
-            VSExplicitConditions(rulespec=self._rulespec).value_to_html(rule.get_rule_conditions())
+            VSExplicitConditions(rulespec=self._rulespec, render="normal").value_to_html(
+                rule.get_rule_conditions()
+            )
         )
 
     def _predefined_condition_info(self, rule: Rule) -> None:
@@ -2000,7 +2005,7 @@ class ABCEditRuleMode(WatoMode):
 
     # TODO: refine type
     def _get_explicit_rule_conditions(self) -> Any:
-        vs = self._vs_explicit_conditions()
+        vs = self._vs_explicit_conditions(render="normal")
         conditions = vs.from_html_vars("explicit_conditions")
         vs.validate_value(conditions, "explicit_conditions")
         return conditions
@@ -2182,10 +2187,10 @@ class ABCEditRuleMode(WatoMode):
             # In case of validation problems render the input with default values
             vs.render_input("explicit_conditions", RuleConditions(host_folder=self._folder.path()))
 
-    def _vs_explicit_conditions(  # type: ignore[no-untyped-def]
-        self, **kwargs
+    def _vs_explicit_conditions(
+        self, render: Literal["normal", "form_part"]
     ) -> VSExplicitConditions:
-        return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
+        return VSExplicitConditions(rulespec=self._rulespec, render=render)
 
     def _vs_rule_options(self, rule: Rule, disabling: bool = True) -> Dictionary:
         return Dictionary(
@@ -2221,7 +2226,7 @@ class ABCEditRuleMode(WatoMode):
 class VSExplicitConditions(Transform):
     """Valuespec for editing a set of explicit rule conditions"""
 
-    def __init__(self, rulespec: Rulespec, **kwargs) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, rulespec: Rulespec, render: Literal["normal", "form_part"]) -> None:
         self._rulespec = rulespec
         super().__init__(
             valuespec=Dictionary(
@@ -2239,7 +2244,7 @@ class VSExplicitConditions(Transform):
                     (_("Service labels"), "condition explicit", ["service_label_groups"]),
                 ],
                 optional_keys=["explicit_hosts", "explicit_services"],
-                **kwargs,
+                render=render,
             ),
             to_valuespec=self._to_valuespec,
             from_valuespec=self._from_valuespec,
@@ -2404,8 +2409,8 @@ class VSExplicitConditions(Transform):
             )
         )
 
-    def _vs_host_label_condition(self) -> LabelGroups:
-        return LabelGroups(
+    def _vs_host_label_condition(self) -> VSLabelGroups:
+        return VSLabelGroups(
             show_empty_group_by_default=False,
             add_label=_("Add to condition"),
             title=_("Host labels"),
@@ -2413,8 +2418,8 @@ class VSExplicitConditions(Transform):
             + self._label_condition_help_text(),
         )
 
-    def _vs_service_label_condition(self) -> LabelGroups:
-        return LabelGroups(
+    def _vs_service_label_condition(self) -> VSLabelGroups:
+        return VSLabelGroups(
             show_empty_group_by_default=False,
             add_label=_("Add to condition"),
             title=_("Service labels"),
@@ -2626,8 +2631,11 @@ class RuleConditionRenderer:
     def _service_label_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         return self._label_conditions(conditions.service_label_groups, "service", _("Service"))
 
-    def _label_conditions(  # type: ignore[no-untyped-def]
-        self, label_conditions, object_type, object_title
+    def _label_conditions(
+        self,
+        label_conditions: LabelGroups,
+        object_type: Literal["service", "host"],
+        object_title: str,
     ) -> Iterable[HTML]:
         if not label_conditions:
             return

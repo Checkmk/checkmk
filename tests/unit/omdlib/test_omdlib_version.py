@@ -17,19 +17,9 @@ from omdlib.version import (
 )
 
 
-def test_main_version_of_current_site(
+def test_main_version_of_omd_tool(
     capsys: pytest.CaptureFixture[str],
     monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
-    main_version(object(), object(), object(), [], {})
-
-    stdout = capsys.readouterr()[0]
-    assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
-
-
-def test_main_version_root(
-    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(omdlib, "__version__", "1.2.3p4")
     main_version(object(), object(), object(), [], {})

@@ -51,6 +51,9 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
     )
     parser.add_argument(
+        "--path", default="", help="Add (sub) path to the URI, ie. <proto>://<host>:<port>/<path>"
+    )
+    parser.add_argument(
         "-m",
         "--sections",
         default=sections,
@@ -105,6 +108,9 @@ def agent_jenkins_main(args: Args) -> int:
 
 def handle_request(args, sections):
     url_base = f"{args.proto}://{args.hostname}:{args.port}"
+    if args.path:
+        url_base += f"/{args.path}"
+
     # labels = {}
 
     session = requests.Session()

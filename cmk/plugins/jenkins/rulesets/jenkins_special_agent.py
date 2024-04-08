@@ -17,8 +17,15 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, NetworkPort, ValidationError
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
+
+
+def _validate_sub_path(value: str) -> None:
+    if value.startswith("/"):
+        raise ValidationError(Message("Path is not allowed to start with '/'"))
+    if any(not p for p in value.split("/")):
+        raise ValidationError(Message("Path is not allowed to contain empty parts"))
 
 
 def _formspec_jenkins() -> Dictionary:
@@ -39,6 +46,16 @@ def _formspec_jenkins() -> Dictionary:
                     ],
                 ),
                 required=True,
+            ),
+            "path": DictElement(
+                parameter_form=String(
+                    title=Title("Path"),
+                    help_text=Help(
+                        "Add (sub) path to the URI, ie. <proto>://<host>:<port>/<path>."
+                    ),
+                    custom_validate=[LengthInRange(min_value=1), _validate_sub_path],
+                ),
+                required=False,
             ),
             "user": DictElement(
                 parameter_form=String(

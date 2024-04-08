@@ -26,7 +26,7 @@ import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from enum import auto, Enum
 from pathlib import Path
-from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn, Sequence
+from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn
 from uuid import uuid4
 
 import psutil
@@ -105,6 +105,13 @@ from omdlib.utils import (
     get_site_distributed_setup,
     replace_tags,
     SiteDistributedSetup,
+)
+from omdlib.version import (
+    default_version,
+    main_version,
+    main_versions,
+    omd_versions,
+    version_exists,
 )
 from omdlib.version_info import VersionInfo
 
@@ -2012,67 +2019,6 @@ def main_setversion(
 
 def use_update_alternatives() -> bool:
     return os.path.exists("/var/lib/dpkg/alternatives/omd")
-
-
-def main_version(
-    _version_info: object,
-    _site: object,
-    _global_opts: object,
-    args: Sequence[str],
-    options: Mapping[str, str | None],
-) -> None:
-    if len(args) > 0:
-        site = SiteContext(args[0])
-        if not site.exists():
-            sys.exit("No such site: %s" % site.name)
-        version = site.version
-    else:
-        version = omdlib.__version__
-
-    if version is None:
-        sys.exit("Failed to determine site version")
-
-    if "bare" in options:
-        sys.stdout.write(version + "\n")
-    else:
-        sys.stdout.write("OMD - Open Monitoring Distribution Version %s\n" % version)
-
-
-def main_versions(
-    _version_info: object,
-    _site: object,
-    _global_opts: object,
-    args: Sequence[str],
-    options: Mapping[str, str | None],
-) -> None:
-    for v in omd_versions():
-        if v == default_version() and "bare" not in options:
-            sys.stdout.write("%s (default)\n" % v)
-        else:
-            sys.stdout.write("%s\n" % v)
-
-
-def default_version() -> str:
-    return os.path.basename(
-        os.path.realpath(os.path.join(omdlib.utils.omd_base_path(), "omd/versions/default"))
-    )
-
-
-def omd_versions() -> Iterable[str]:
-    try:
-        return sorted(
-            [
-                v
-                for v in os.listdir(os.path.join(omdlib.utils.omd_base_path(), "omd/versions"))
-                if v != "default"
-            ]
-        )
-    except FileNotFoundError:
-        return []
-
-
-def version_exists(v: str) -> bool:
-    return v in omd_versions()
 
 
 def main_sites(

@@ -65,26 +65,6 @@ def main() {
             cmk_version: cmk_version,
         );
     }
-
-    conditional_stage("Trigger GitLab SaaS job", EDITION=="saas") {
-        print("Triggering GitLab job with Docker tag '${docker_tag}'");
-
-        withCredentials([
-            string(
-                credentialsId: "GITLAB_TRIGGER_TOKEN",
-                variable:"GITLAB_TRIGGER_TOKEN"),
-        ]) {
-            sh("""
-                curl -X POST \
-                --fail \
-                -F token=${GITLAB_TRIGGER_TOKEN} \
-                -F ref="main" \
-                -F variables[BUILD_CMK_TAG]="${cmk_version}" \
-                -F variables[BUILD_CSE]="true" \
-                https://gitlab.lan.checkmk.net/api/v4/projects/3/trigger/pipeline
-            """);
-        }
-    }
 }
 
 return this;

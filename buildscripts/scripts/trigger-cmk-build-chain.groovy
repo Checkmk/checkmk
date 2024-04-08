@@ -134,6 +134,13 @@ def main() {
         build(job: "${base_folder}/test-update", parameters: job_parameters);
     }
 
+    success &= smart_stage(
+            name: "Trigger Saas Gitlab jobs",
+            condition: success && edition == "saas",
+            raiseOnError: false,) {
+        build(job: "${base_folder}/saas-gitlab", parameters: job_parameters);
+    }
+
     currentBuild.result = success ? "SUCCESS" : "FAILURE";
 }
 

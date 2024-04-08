@@ -26,7 +26,8 @@ import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from enum import auto, Enum
 from pathlib import Path
-from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn
+from types import MappingProxyType
+from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn, Sequence
 from uuid import uuid4
 
 import psutil
@@ -1916,13 +1917,9 @@ def main_help(
     _version_info: object,
     _site: object,
     _global_opts: object = None,
-    args: Arguments | None = None,
-    options: CommandOptions | None = None,
+    args: Sequence[str] = (),
+    options: Mapping[str, str | None] = MappingProxyType({}),
 ) -> None:
-    if args is None:
-        args = []
-    if options is None:
-        options = {}
     sys.stdout.write(
         "Manage multiple monitoring sites comfortably with OMD. "
         "The Open Monitoring Distribution.\n"

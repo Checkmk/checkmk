@@ -26,7 +26,7 @@ class PredictiveLevels(Generic[_NumberT]):
     ...     reference_metric="mem_used_percent",
     ...     prefill_abs_diff=DefaultValue((5.0, 10.0)),
     ...     prefill_rel_diff=DefaultValue((10.0, 20.0)),
-    ...     prefill_stddev_diff=DefaultValue((2.0, 4.0)),
+    ...     prefill_stdev_diff=DefaultValue((2.0, 4.0)),
     ... )
 
     Arguments:
@@ -51,7 +51,7 @@ class PredictiveLevels(Generic[_NumberT]):
     """Value to pre-populate the form fields with when the levels depend on the
     relative difference to the predicted value. If None, the backend will decide whether to
     leave the field empty or to prefill it with a canonical value."""
-    prefill_stddev_diff: Prefill[tuple[float, float]] = DefaultValue((2.0, 4.0))
+    prefill_stdev_diff: Prefill[tuple[float, float]] = DefaultValue((2.0, 4.0))
     """Value to pre-populate the form fields with when the levels depend on
     the relation of the predicted value to the standard deviation. If None, the backend will
     decide whether to leave the field empty or to prefill it with a canonical value.

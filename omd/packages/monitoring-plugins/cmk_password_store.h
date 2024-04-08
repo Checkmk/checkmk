@@ -221,7 +221,7 @@ char *cmk_lookup_password(const char *pw_id)
     char pwfilepath[4096];  /* PATH_MAX from <linux/limits.h> */
     int ok = snprintf(
         pwfilepath, sizeof pwfilepath,
-        "%s/var/check_mk/stored_passwords", omd_root);
+        "%s/var/check_mk/core/helper_config/latest/stored_passwords", omd_root);
     if (ok < 0 || ok >= sizeof pwfilepath) {
         cmk_bail_out("stored_passwords path too long");
     }

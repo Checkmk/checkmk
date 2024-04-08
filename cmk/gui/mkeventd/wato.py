@@ -98,6 +98,7 @@ from cmk.gui.valuespec import (
     DictionaryModel,
     DropdownChoice,
     DualListChoice,
+    Filesize,
     FixedValue,
     Foldable,
     ID,
@@ -242,6 +243,8 @@ def register(
     config_var_registry.register(ConfigVariableEventConsoleNotifyRemoteHost)
     config_var_registry.register(ConfigVariableEventConsoleNotifyFacility)
     config_var_registry.register(ConfigVariableEventConsoleServiceLevels)
+    config_var_registry.register(ConfigVariableEventConsoleSqliteHousekeepingInterval)
+    config_var_registry.register(ConfigVariableEventConsoleSqliteFreelistSize)
 
     rulespec_group_registry.register(RulespecGroupEventConsole)
     rulespec_registry.register(ECEventLimitRulespec)
@@ -4026,6 +4029,50 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
                 "count periods that elapse. Here you can specify the regular interval "
                 "for that job."
             ),
+        )
+
+
+class ConfigVariableEventConsoleSqliteHousekeepingInterval(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupEventConsoleGeneric
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainEventConsole
+
+    def ident(self) -> str:
+        return "sqlite_housekeeping_interval"
+
+    def valuespec(self) -> ValueSpec:
+        return Age(
+            title=_("SQLite Housekeeping Interval"),
+            help=_(
+                "From time to time the Event Console SQLite database requires maintenance. "
+                "For example, it needs to clean up old data, optimize the database, and "
+                "defragment the data. Here you can specify the regular interval "
+                "for that job."
+            ),
+        )
+
+
+class ConfigVariableEventConsoleSqliteFreelistSize(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupEventConsoleGeneric
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainEventConsole
+
+    def ident(self) -> str:
+        return "sqlite_freelist_size"
+
+    def valuespec(self) -> ValueSpec:
+        return Filesize(
+            title=_("SQLite Freelist Size"),
+            help=_(
+                "For the SQLite database of the Event Console if the freelist size  "
+                "(size of deleted entries) reaches this number the database maintenance will be triggered. "
+            ),
+            minvalue=1 * 1024 * 1024,
+            maxvalue=100 * 1024 * 1024,
         )
 
 

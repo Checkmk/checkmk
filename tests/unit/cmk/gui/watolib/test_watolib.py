@@ -112,6 +112,8 @@ def test_registered_configvars() -> None:
         "history_rotation",
         "hostname_translation",
         "housekeeping_interval",
+        "sqlite_housekeeping_interval",
+        "sqlite_freelist_size",
         "http_proxies",
         "inventory_check_autotrigger",
         "inventory_check_interval",

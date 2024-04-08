@@ -8,7 +8,7 @@ def build_stages(packages_file) {
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
 
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_reference_image().inside() {
+        docker_reference_image().inside("${mount_reference_repo_dir}") {
             sh("make .venv")
             parallel packages.collectEntries { p ->
                 [("${p.name}"): {
@@ -17,7 +17,7 @@ def build_stages(packages_file) {
                             def job = upstream_build(
                                 download: false,
                                 relative_job_name: "builders/build-cmk-package",
-                                dependency_paths: [p.path],
+                                dependency_paths: [p.path] + p.dependencies,
                                 build_params: [
                                     "PACKAGE_PATH":  p.path,
                                     "SECRET_VARS": p.sec_vars.join(","),

@@ -17,6 +17,7 @@ class Package:
     command_line: str
     maintainers: list[str] = dataclasses.field(default_factory=lambda: [])
     sec_vars: list[str] = dataclasses.field(default_factory=lambda: [])
+    dependencies: list[str] = dataclasses.field(default_factory=lambda: [])
 
     def __post_init__(self):
         # Fallback for now...

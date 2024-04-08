@@ -42,7 +42,7 @@ def notify_maintainer_of_package(maintainers, package_name, build_url) {
     |    ${build_url}
     |""".stripMargin()),
         );
-    } catch (Exception exc) {
+    } catch (Exception exc) {    // groovylint-disable CatchException
         println("Could not sent mail to package owner - got ${exc}");
     }
 }

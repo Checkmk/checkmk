@@ -1862,7 +1862,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                     reference_metric="my_metric",
                     prefill_abs_diff=api_v1.form_specs.DefaultValue((5, 10)),
                     prefill_rel_diff=api_v1.form_specs.DefaultValue((50.0, 80.0)),
-                    prefill_stddev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
+                    prefill_stdev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
                 ),
             ),
             legacy_valuespecs.Transform(
@@ -1984,7 +1984,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                                         ),
                                                     ),
                                                     (
-                                                        "stddev",
+                                                        "stdev",
                                                         _("Standard deviation difference"),
                                                         legacy_valuespecs.Tuple(
                                                             elements=[
@@ -2068,7 +2068,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                     reference_metric="my_metric",
                     prefill_abs_diff=api_v1.form_specs.DefaultValue((5.0, 10.0)),
                     prefill_rel_diff=api_v1.form_specs.DefaultValue((50.0, 80.0)),
-                    prefill_stddev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
+                    prefill_stdev_diff=api_v1.form_specs.DefaultValue((2.0, 3.0)),
                 ),
                 title=api_v1.Title("Lower levels"),
             ),
@@ -2178,7 +2178,7 @@ def _get_legacy_fixed_levels_choice(at_or_below: str) -> tuple[str, str, legacy_
                                                         ),
                                                     ),
                                                     (
-                                                        "stddev",
+                                                        "stdev",
                                                         _("Standard deviation difference"),
                                                         legacy_valuespecs.Tuple(
                                                             elements=[

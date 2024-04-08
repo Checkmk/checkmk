@@ -1377,7 +1377,7 @@ def _get_fixed_levels_choice_element(
 class _PredictiveLevelDefinition(enum.StrEnum):
     ABSOLUTE = "absolute"
     RELATIVE = "relative"
-    STDDEV = "stddev"
+    STDEV = "stdev"
 
 
 def _get_level_computation_dropdown(
@@ -1407,8 +1407,8 @@ def _get_level_computation_dropdown(
     stddev_prefill: (
         tuple[float, float] | tuple[legacy_valuespecs.Sentinel, legacy_valuespecs.Sentinel]
     ) = (
-        to_convert.prefill_stddev_diff.value
-        if isinstance(to_convert.prefill_stddev_diff, ruleset_api_v1.form_specs.DefaultValue)
+        to_convert.prefill_stdev_diff.value
+        if isinstance(to_convert.prefill_stdev_diff, ruleset_api_v1.form_specs.DefaultValue)
         else (legacy_valuespecs.DEF_VALUE, legacy_valuespecs.DEF_VALUE)
     )
 
@@ -1464,7 +1464,7 @@ def _get_level_computation_dropdown(
                 ),
             ),
             (
-                _PredictiveLevelDefinition.STDDEV.value,
+                _PredictiveLevelDefinition.STDEV.value,
                 ruleset_api_v1.Title("Standard deviation difference").localize(localizer),
                 legacy_valuespecs.Tuple(
                     help=ruleset_api_v1.Help(

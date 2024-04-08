@@ -653,7 +653,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "paint": "cmk_label",
         },
         ".software.applications.check_mk.host_labels:*.plugin_name": {
-            "title": _l("Discovered by plugin"),
+            "title": _l("Discovered by plug-in"),
         },
         ".software.applications.checkmk-agent.": {
             "title": _l("Checkmk Agent"),

@@ -103,7 +103,7 @@ def get_host_label_ruleset(ruleset_name: RuleSetName) -> Sequence[RuleSpec]:
 
 
 def get_inventory_plugin(plugin_name: InventoryPluginName) -> InventoryPlugin | None:
-    """Returns the registered inventory plugin"""
+    """Returns the registered inventory plug-in"""
     return registered_inventory_plugins.get(plugin_name)
 
 

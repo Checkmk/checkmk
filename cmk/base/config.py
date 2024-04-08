@@ -1670,7 +1670,7 @@ def _extract_check_plugins(
             #       will be silently droppend on most (all?) occasions.
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(exc) from exc
-            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plugin", check_plugin_name))
+            errors.append(AUTO_MIGRATION_ERR_MSG % ("check plug-in", check_plugin_name))
 
     return errors
 

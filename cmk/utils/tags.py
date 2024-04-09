@@ -167,6 +167,11 @@ class AuxTagList:
                     _('You can not override the builtin auxiliary tag "%s".') % aux_tag.id
                 )
 
+            if builtin_config.tag_group_exists(TagGroupID(aux_tag.id)):
+                raise MKGeneralException(
+                    _('You can not override the builtin tag group "%s".') % aux_tag.id
+                )
+
             if aux_tag.id in seen:
                 raise MKGeneralException(_('Duplicate tag ID "%s" in auxiliary tags') % aux_tag.id)
 
@@ -491,6 +496,11 @@ class TagConfig:
         if builtin_config.tag_group_exists(tag_group.id):
             raise MKGeneralException(
                 _('You can not override the builtin tag group "%s".') % tag_group.id
+            )
+
+        if builtin_config.aux_tag_list.exists(TagID(tag_group.id)):
+            raise MKGeneralException(
+                _('You can not override the builtin auxiliary tag "%s".') % tag_group.id
             )
 
         if not tag_group.title:

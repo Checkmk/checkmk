@@ -770,8 +770,8 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         if self._new:
             # Inserts and verifies changed tag group
-            changed_hosttags_config.insert_tag_group(changed_tag_group)
             try:
+                changed_hosttags_config.insert_tag_group(changed_tag_group)
                 changed_hosttags_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)

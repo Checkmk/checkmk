@@ -527,19 +527,24 @@ def get_services_with_status(
     host_data: dict[str, ServiceInfo],
     service_status: int,
     skipped_services: list[str] | tuple[str, ...] = (),
-) -> set:
+) -> set[str]:
     """Return a set of services in the given status which are not in the 'skipped' list."""
-    services_list = set()
-    for service in host_data:
-        if host_data[service].state == service_status and service not in skipped_services:
-            services_list.add(service)
-
-    LOGGER.debug(
-        "%s service(s) found in state %s:\n%s",
-        len(services_list),
-        service_status,
-        pformat(services_list),
-    )
+    services_by_state: dict[int, dict[str, ServiceInfo]] = {}
+    for state in sorted({_.state for _ in host_data.values()}):
+        services_by_state[state] = {
+            service_name: service_info
+            for service_name, service_info in host_data.items()
+            if host_data[service_name].state == state
+        }
+    for state, services in services_by_state.items():
+        LOGGER.debug(
+            "%s service(s) found in state %s (%s):\n%s",
+            len(services),
+            state,
+            {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}.get(state, "UNDEFINED"),
+            pformat(services),
+        )
+    services_list = set(_ for _ in services_by_state[service_status] if _ not in skipped_services)
     return services_list
 
 

@@ -7,7 +7,7 @@ from cmk.graphing.v1 import metrics, Title
 
 UNIT_NUMBER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 UNIT_SECOND = metrics.Unit(metrics.TimeNotation())
-UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("1/s"))
+UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 UNIT_BYTES = metrics.Unit(metrics.IECNotation("B"))
 UNIT_BYTES_PER_SECOND = metrics.Unit(metrics.IECNotation("B/s"))
 UNIT_PERCENTAGE = metrics.Unit(metrics.DecimalNotation("%"))

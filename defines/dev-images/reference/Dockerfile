@@ -13,6 +13,7 @@ RUN apt-get update
 # golang-go: needed for install-buildifier.sh
 # msitools:  needed for `msiinfo` in test source package
 # libenchant1c2a:  needed for building the software architecture as we're using sphinxcontrib.spelling
+# default-jdk: needed for validating the compiled werks (see compile-all-werks.groovy)
 
 # Those are still unclear:
 #   php7.4-common
@@ -23,7 +24,8 @@ RUN apt-get update
 RUN apt-get install -y \
     golang-go \
     msitools \
-    libenchant1c2a
+    libenchant1c2a \
+    default-jdk
 
 # Despite files needed for builds might already be available in build images
 # copy them again, in case they changed
@@ -65,4 +67,3 @@ RUN /opt/install-aws-cli.sh
 
 COPY --from=scripts install-buildifier.sh /opt/
 RUN /opt/install-buildifier.sh
-

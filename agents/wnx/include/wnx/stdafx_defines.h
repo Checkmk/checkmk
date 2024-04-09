@@ -59,3 +59,4 @@
 #define NOMINMAX  // for Windows
 
 #define _SILENCE_CLANG_COROUTINE_MESSAGE  // clang coroutines
+#define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING

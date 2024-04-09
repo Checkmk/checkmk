@@ -288,6 +288,9 @@ class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
     def initial_size(cls):
         return (30, 18)
 
+    def infos(self) -> SingleInfos:
+        return ["host", "event"]
+
 
 S = TypeVar("S", bound=HostStats | ServiceStats | EventStats)
 

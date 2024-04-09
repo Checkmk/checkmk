@@ -133,7 +133,7 @@ def _add_scanned_hosts_to_folder(
     else:
         translation = TranslationOptions(
             {
-                "case": translate_names["case"],
+                "case": translate_names.get("case"),
                 "mapping": translate_names.get("mapping", []),
                 "drop_domain": translate_names.get("drop_domain", False),
                 "regex": translate_names.get("regex", []),

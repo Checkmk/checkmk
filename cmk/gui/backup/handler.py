@@ -45,6 +45,7 @@ from cmk.utils.backup.targets.remote_interface import (
 )
 from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
+from cmk.utils.certs import CertManagementEvent
 from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.exceptions import MKGeneralException
@@ -1835,6 +1836,10 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
     def _delete_confirm_title(self, nr: int) -> str:
         return _("Delete backup key #%d") % nr
 
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        return "backup encryption keys"
+
 
 class PageBackupEditKey(key_mgmt.PageEditKey):
     back_mode = "backup_keys"
@@ -1851,6 +1856,10 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
             "passphrase to decrypt the backup."
         )
 
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        return "backup encryption keys"
+
 
 class PageBackupUploadKey(key_mgmt.PageUploadKey):
     back_mode = "backup_keys"
@@ -1866,6 +1875,10 @@ class PageBackupUploadKey(key_mgmt.PageUploadKey):
             "encrypt a backup, you will need the private key part together with the "
             "passphrase to decrypt the backup."
         )
+
+    @property
+    def component_name(self) -> CertManagementEvent.ComponentType:
+        return "backup encryption keys"
 
 
 class PageBackupDownloadKey(key_mgmt.PageDownloadKey):

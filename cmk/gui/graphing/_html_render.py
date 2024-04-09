@@ -18,6 +18,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
+from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
@@ -629,9 +630,10 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
         step=step,
     )
 
-    # Persist the current data range for the graph editor
-    if graph_render_config.editing:
-        save_user_graph_data_range(graph_data_range)
+    # Persist the current data range for the graph editor.
+    # TODO Hack with hasattr (custom/forcast graph specs have an "id", others not)
+    if graph_render_config.editing and hasattr(graph_recipe.specification, "id"):
+        save_user_graph_data_range(graph_recipe.specification.id, graph_data_range)
 
     graph_artwork = compute_graph_artwork(
         graph_recipe,
@@ -655,20 +657,26 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def load_user_graph_data_range() -> GraphDataRange | None:
+def _user_graph_data_range_file_name(custom_graph_id: str) -> str:
+    return f"graph_range_{custom_graph_id}"
+
+
+def load_user_graph_data_range(custom_graph_id: str) -> GraphDataRange | None:
     return (
         GraphDataRange.model_validate(raw_range)
-        if (raw_range := user.load_file("graph_range", None))
+        if (raw_range := user.load_file(_user_graph_data_range_file_name(custom_graph_id), None))
         else None
     )
 
 
-def save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
-    user.save_file("graph_range", graph_data_range.model_dump())
+def save_user_graph_data_range(custom_graph_id: str, graph_data_range: GraphDataRange) -> None:
+    user.save_file(_user_graph_data_range_file_name(custom_graph_id), graph_data_range.model_dump())
 
 
-def remove_user_graph_data_range() -> None:
-    (profile_dir / user.ident / "graph_range.mk").unlink(missing_ok=True)
+def remove_user_graph_data_range(user_id: UserId, custom_graph_id: str) -> None:
+    (profile_dir / user_id / f"{_user_graph_data_range_file_name(custom_graph_id)}.mk").unlink(
+        missing_ok=True
+    )
 
 
 def _resolve_graph_recipe_with_error_handling(

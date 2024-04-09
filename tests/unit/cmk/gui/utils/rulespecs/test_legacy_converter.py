@@ -121,7 +121,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 },
                 title=api_v1.Title("Configuration title"),
                 help_text=api_v1.Help("Helpful description"),
-                deprecated_elements=("old_key", "another_old_key"),
+                ignored_elements=("old_key", "another_old_key"),
                 no_elements_text=api_v1.Message("No elements specified"),
             ),
             legacy_valuespecs.Transform(
@@ -380,7 +380,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     ),
                 ],
                 no_elements_text=api_v1.Message("No elements"),
-                deprecated_elements=(),
+                ignored_elements=(),
                 frozen=True,
                 title=api_v1.Title("title"),
                 label=api_v1.Label("label"),

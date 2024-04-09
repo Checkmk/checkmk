@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import Any, Literal
 
 import pytest
 
@@ -11,6 +12,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import BuiltinTagConfig
 
 
@@ -384,8 +386,17 @@ def test_openapi_host_tag_group_empty_tags(clients: ClientRegistry) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    "delete_options",
+    [
+        pytest.param({}, id="default"),
+        pytest.param({"repair": False}, id="explicit-no-repair"),
+        pytest.param({"mode": "abort"}, id="abort-mode"),
+    ],
+)
 def test_openapi_delete_dependant_host_tag(
     clients: ClientRegistry,
+    delete_options: dict[str, Any],
 ) -> None:
     clients.HostTagGroup.create(
         ident="group_id999",
@@ -399,13 +410,77 @@ def test_openapi_delete_dependant_host_tag(
     )
     resp = clients.HostTagGroup.delete(
         ident="group_id999",
-        repair=False,
         expect_ok=False,
+        **delete_options,
     ).assert_status_code(401)
 
     assert resp.json["detail"].startswith(
         "The host tag group you intend to delete is used in the following occurrences: hosts (example.com)."
     )
+
+
+@pytest.mark.parametrize("mode", ["delete", "remove"])
+def test_openapi_delete_host_tag_mode(
+    clients: ClientRegistry,
+    mode: Literal["delete", "remove"],
+) -> None:
+    clients.HostTagGroup.create(
+        ident="group_id999",
+        title="Kubernetes",
+        help_text="Kubernetes Pods",
+        tags=[{"id": "pod", "title": "Pod"}],
+    )
+    clients.HostConfig.create(
+        host_name="example.com",
+        attributes={"tag_group_id999": "pod"},
+    )
+    rule_resp = clients.Rule.create(
+        ruleset=RuleGroup.CheckgroupParameters("memory_percentage_used"),
+        value_raw="{'levels': (10.0, 5.0)}",
+        conditions={
+            "host_tags": [
+                {
+                    "key": "group_id999",
+                    "operator": "is",
+                    "value": "pod",
+                },
+            ]
+        },
+    )
+
+    clients.HostTagGroup.delete(
+        ident="group_id999",
+        mode=mode,
+    )
+
+    resp = clients.HostConfig.get("example.com")
+    assert "tag_group_id999" not in resp.json["extensions"]["attributes"]
+
+    if mode == "delete":
+        clients.Rule.get(rule_id=rule_resp.json["id"], expect_ok=False).assert_status_code(404)
+
+    else:  # mode == "remove"
+        resp = clients.Rule.get(rule_id=rule_resp.json["id"])
+        assert len(resp.json["extensions"]["conditions"]["host_tags"]) == 0
+
+
+def test_openapi_delete_host_tag_repair_and_mode_not_compatible(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostTagGroup.create(
+        ident="group_id999",
+        title="Kubernetes",
+        help_text="Kubernetes Pods",
+        tags=[{"id": "pod", "title": "Pod"}],
+    )
+    resp = clients.HostTagGroup.delete(
+        ident="group_id999",
+        repair=True,
+        mode="delete",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert resp.json["detail"].startswith("Cannot use both repair and mode")
 
 
 invalid_tag_group_ids = (

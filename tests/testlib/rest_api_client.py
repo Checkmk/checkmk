@@ -1293,10 +1293,22 @@ class HostTagGroupClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def delete(self, ident: str, repair: bool = False, expect_ok: bool = True) -> Response:
+    def delete(
+        self,
+        ident: str,
+        repair: bool | None = None,
+        mode: Literal["abort", "delete", "remove"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        params: dict[str, Any] = {}
+        if repair is not None:
+            params["repair"] = repair
+        if mode is not None:
+            params["mode"] = mode
         return self.request(
             "delete",
-            url=f"/objects/{self.domain}/{ident}?repair={repair}",
+            url=f"/objects/{self.domain}/{ident}",
+            query_params=params,
             expect_ok=expect_ok,
         )
 

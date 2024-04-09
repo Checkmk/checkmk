@@ -187,3 +187,14 @@ class DeleteHostTagGroup(BaseSchema):
         example=False,
         description="The host tag group can still be in use. Setting repair to True gives permission to automatically remove the tag from the affected hosts.",
     )
+    mode = fields.String(
+        enum=["abort", "delete", "remove", None],
+        required=False,
+        load_default=None,
+        example="delete",
+        description=(
+            "The host tag group can still be in use. Set mode to determine what should happen. "
+            "Either 'abort' the deletion, 'delete' affected rules or 'remove' the tag from "
+            "affected rules."
+        ),
+    )

@@ -16,6 +16,7 @@ from livestatus import MKLivestatusNotFoundError, SiteId
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.config import active_config
@@ -664,6 +665,10 @@ def load_user_graph_data_range() -> GraphDataRange | None:
 
 def save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
     user.save_file("graph_range", graph_data_range.model_dump())
+
+
+def remove_user_graph_data_range() -> None:
+    (profile_dir / user.ident / "graph_range.mk").unlink(missing_ok=True)
 
 
 def _resolve_graph_recipe_with_error_handling(

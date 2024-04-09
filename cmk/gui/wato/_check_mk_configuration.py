@@ -2559,7 +2559,7 @@ class ConfigVariableSessionManagement(ConfigVariable):
                             (
                                 "enforce_reauth",
                                 Age(
-                                    title=_("Enforce re-authentication after:"),
+                                    title=_("Enforce re-authentication after"),
                                     display=["minutes", "hours", "days"],
                                     minvalue=60,
                                     help=_(
@@ -2573,7 +2573,7 @@ class ConfigVariableSessionManagement(ConfigVariable):
                             (
                                 "enforce_reauth_warning_threshold",
                                 Age(
-                                    title=_("Advise re-authentication before termination:"),
+                                    title=_("Advise re-authentication before termination"),
                                     display=["minutes", "hours", "days"],
                                     minvalue=60,
                                     help=_(

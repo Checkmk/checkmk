@@ -30,6 +30,7 @@
 #pragma comment(lib, "iphlpapi.lib")
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::chrono_literals;
 
 namespace wtools {
@@ -2664,8 +2665,9 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group,
         return {};
     }
 
-    return prefix.empty() ? std::wstring{}
-                          : std::wstring{prefix} + group.data();
+    auto group_name = std::wstring{group};
+    rs::replace(group_name, ' ', '_');
+    return prefix.empty() ? std::wstring{} : std::wstring{prefix} + group_name;
 }
 
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {

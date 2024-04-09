@@ -20,6 +20,7 @@
 using namespace std::string_literals;
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 
 namespace {
 // Internal description of assorted counter params.
@@ -798,22 +799,31 @@ TEST(Wtools, GetServiceStatus) {
 }
 
 TEST(Wtools, InternalUsersDbIntegration) {
-    const auto group_name = SidToName(L"S-1-5-32-545", SidTypeGroup);
-    auto iu = std::make_unique<InternalUsersDb>();
-    auto [name, pwd] = iu->obtainUser(group_name);
-    if (!name.empty()) {
-        EXPECT_EQ(name, L"cmk_TST_"s + group_name);
-        EXPECT_EQ(iu->size(), 1U);
+    // Power Users
+    const auto group = SidToName(L"S-1-5-32-547", SidTypeGroup);
+    auto group_name = group;
+    rs::replace(group_name, ' ', '_');
 
-        auto [name_2, pwd_2] = iu->obtainUser(group_name);
-        EXPECT_TRUE(!name_2.empty());
-        EXPECT_EQ(name_2, L"cmk_TST_"s + group_name);
-        EXPECT_EQ(name, name_2);
-        EXPECT_EQ(iu->size(), 1U);
-        iu.reset();
-        const uc::LdapControl lc;
-        ASSERT_EQ(lc.userDel(name), uc::Status::absent);
+    auto iu = std::make_unique<InternalUsersDb>();
+    const auto nothing = iu->obtainUser(L"weird group");
+    EXPECT_TRUE(nothing.first.empty());
+
+    auto [name, pwd] = iu->obtainUser(group);
+    if (name.empty()) {
+        GTEST_SKIP() << "can't get user, admin rights?";
     }
+
+    EXPECT_EQ(name, L"cmk_TST_"s + group_name);
+    EXPECT_EQ(iu->size(), 1U);
+
+    auto [name_2, pwd_2] = iu->obtainUser(group);
+    EXPECT_TRUE(!name_2.empty());
+    EXPECT_EQ(name_2, L"cmk_TST_"s + group_name);
+    EXPECT_EQ(name, name_2);
+    EXPECT_EQ(iu->size(), 1U);
+    iu.reset();
+    const uc::LdapControl lc;
+    ASSERT_EQ(lc.userDel(name), uc::Status::absent);
 }
 
 TEST(Wtools, MakeSafeFolderIntegration) {

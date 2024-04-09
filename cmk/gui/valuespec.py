@@ -399,7 +399,7 @@ class FixedValue(ValueSpec[T]):
         return self._value
 
     def render_input(self, varprefix: str, value: T) -> None:
-        html.write_text(self.value_to_html(value))
+        html.span(self.value_to_html(value), class_="vs_floating_text")
 
     def value_to_html(self, value: T) -> ValueSpecText:
         if self._totext is not None:

@@ -87,9 +87,8 @@ class HostCheckStore:
         console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
 
-def precompile_hostchecks(config_path: VersionedConfigPath) -> None:
+def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: ConfigCache) -> None:
     console.verbose("Creating precompiled host check config...\n")
-    config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
 
     config.save_packed_config(config_path, config_cache)

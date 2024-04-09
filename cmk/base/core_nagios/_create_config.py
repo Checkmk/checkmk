@@ -8,7 +8,7 @@ import base64
 import itertools
 import socket
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from io import StringIO
 from typing import Any, cast, IO, Literal
 
@@ -69,6 +69,7 @@ class NagiosCore(core_config.MonitoringCore):
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
+        self._config_cache = config_cache
         self._create_core_config(config_path, licensing_handler, passwords)
         self._precompile_hostchecks(config_path)
 
@@ -88,10 +89,18 @@ class NagiosCore(core_config.MonitoringCore):
         """
 
         config_buffer = StringIO()
+        hosts_config = self._config_cache.hosts_config
         create_config(
             config_buffer,
             config_path,
-            hostnames=None,
+            self._config_cache,
+            hostnames=sorted(
+                {
+                    hn
+                    for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+                    if self._config_cache.is_active(hn) and self._config_cache.is_online(hn)
+                }
+            ),
             licensing_handler=licensing_handler,
             passwords=passwords,
         )
@@ -100,7 +109,7 @@ class NagiosCore(core_config.MonitoringCore):
 
     def _precompile_hostchecks(self, config_path: VersionedConfigPath) -> None:
         out.output("Precompiling host checks...")
-        precompile_hostchecks(config_path)
+        precompile_hostchecks(config_path, self._config_cache)
         out.output(tty.ok + "\n")
 
 
@@ -117,7 +126,7 @@ class NagiosCore(core_config.MonitoringCore):
 
 
 class NagiosConfig:
-    def __init__(self, outfile: IO[str], hostnames: list[HostName] | None) -> None:
+    def __init__(self, outfile: IO[str], hostnames: Sequence[HostName] | None) -> None:
         super().__init__()
         self._outfile = outfile
         self.hostnames = hostnames
@@ -147,43 +156,11 @@ def _validate_licensing(
 def create_config(
     outfile: IO[str],
     config_path: VersionedConfigPath,
-    hostnames: list[HostName] | None,
+    config_cache: ConfigCache,
+    hostnames: Sequence[HostName],
     licensing_handler: LicensingHandler,
     passwords: Mapping[str, str],
 ) -> None:
-    if config.host_notification_periods:
-        config_warnings.warn(
-            "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
-        )
-
-    if config.service_notification_periods:
-        config_warnings.warn(
-            "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
-        )
-
-    # Map service_period to _SERVICE_PERIOD. This field does not exist in Nagios.
-    # The CMC has this field natively.
-    if "service_period" in config.extra_host_conf:
-        config.extra_host_conf["_SERVICE_PERIOD"] = config.extra_host_conf["service_period"]
-        del config.extra_host_conf["service_period"]
-    if "service_period" in config.extra_service_conf:
-        config.extra_service_conf["_SERVICE_PERIOD"] = config.extra_service_conf["service_period"]
-        del config.extra_service_conf["service_period"]
-
-    config_cache = config.get_config_cache()
-
-    if hostnames is None:
-        hosts_config = config_cache.hosts_config
-        hostnames = sorted(
-            {
-                hn
-                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-                if config_cache.is_active(hn) and config_cache.is_online(hn)
-            }
-        )
-    else:
-        hostnames = sorted(hostnames)
-
     cfg = NagiosConfig(outfile, hostnames)
 
     _output_conf_header(cfg)
@@ -930,7 +907,7 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
             cfg.write(format_nagios_object("timeperiod", timeperiod_spec))
 
 
-def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: list[HostName]) -> None:
+def _create_nagios_config_contacts(cfg: NagiosConfig, hostnames: Sequence[HostName]) -> None:
     if config.contacts:
         cfg.write("\n# ------------------------------------------------------------\n")
         cfg.write("# Contact definitions (controlled by variable 'contacts')\n")

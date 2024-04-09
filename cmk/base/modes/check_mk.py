@@ -21,6 +21,7 @@ from typing_extensions import TypedDict
 import livestatus
 
 import cmk.utils.cleanup
+import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.password_store
@@ -1285,17 +1286,53 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_nagios_config(args: list[HostName]) -> None:
+def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
     from cmk.utils.config_path import VersionedConfigPath
 
     from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
 
+    hostnames = args if args else None
+
+    if config.host_notification_periods:
+        config_warnings.warn(
+            "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
+        )
+
+    if config.service_notification_periods:
+        config_warnings.warn(
+            "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
+        )
+
+    # Map service_period to _SERVICE_PERIOD. This field does not exist in Nagios.
+    # The CMC has this field natively.
+    if "service_period" in config.extra_host_conf:
+        config.extra_host_conf["_SERVICE_PERIOD"] = config.extra_host_conf["service_period"]
+        del config.extra_host_conf["service_period"]
+    if "service_period" in config.extra_service_conf:
+        config.extra_service_conf["_SERVICE_PERIOD"] = config.extra_service_conf["service_period"]
+        del config.extra_service_conf["service_period"]
+
+    config_cache = config.get_config_cache()
+
+    if hostnames is None:
+        hosts_config = config_cache.hosts_config
+        hostnames = sorted(
+            {
+                hn
+                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            }
+        )
+    else:
+        hostnames = sorted(hostnames)
+
     create_config(
         sys.stdout,
         next(VersionedConfigPath.current()),
-        args if len(args) else None,
-        get_licensing_handler_type().make(),
-        cmk.utils.password_store.load(),
+        config_cache,
+        hostnames=hostnames,
+        licensing_handler=get_licensing_handler_type().make(),
+        passwords=cmk.utils.password_store.load(),
     )
 
 

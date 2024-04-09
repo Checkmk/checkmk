@@ -95,10 +95,6 @@ def test_update(  # pylint: disable=too-many-branches
                 base_data[hostname].pop(data)
 
         base_ok_services[hostname] = get_services_with_status(base_data[hostname], 0)
-        # used in debugging mode
-        _ = get_services_with_status(base_data[hostname], 1)  # Warn
-        _ = get_services_with_status(base_data[hostname], 2)  # Crit
-        _ = get_services_with_status(base_data[hostname], 3)  # Unknown
 
         assert len(base_ok_services[hostname]) > 0
 
@@ -137,10 +133,6 @@ def test_update(  # pylint: disable=too-many-branches
         target_data[hostname] = target_site.get_host_services(hostname)
 
         target_ok_services[hostname] = get_services_with_status(target_data[hostname], 0)
-        # used in debugging mode
-        _ = get_services_with_status(target_data[hostname], 1)  # Warn
-        _ = get_services_with_status(target_data[hostname], 2)  # Crit
-        _ = get_services_with_status(target_data[hostname], 3)  # Unknown
 
         not_found_services = [
             service for service in base_data[hostname] if service not in target_data[hostname]

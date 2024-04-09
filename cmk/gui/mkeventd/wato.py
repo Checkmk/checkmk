@@ -4044,10 +4044,10 @@ class ConfigVariableEventConsoleSqliteHousekeepingInterval(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Age(
-            title=_("SQLite Housekeeping Interval"),
+            title=_("Event Console Housekeeping Interval"),
             help=_(
-                "From time to time the Event Console SQLite database requires maintenance. "
-                "For example, it needs to clean up old data, optimize the database, and "
+                "From time to time the Event Console history requires maintenance. "
+                "For example, it needs to clean up old data, optimize the storage and "
                 "defragment the data. Here you can specify the regular interval "
                 "for that job."
             ),
@@ -4066,10 +4066,10 @@ class ConfigVariableEventConsoleSqliteFreelistSize(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Filesize(
-            title=_("SQLite Freelist Size"),
+            title=_("Event Console History Fragmentation Limit Size"),
             help=_(
-                "For the SQLite database of the Event Console if the freelist size  "
-                "(size of deleted entries) reaches this number the database maintenance will be triggered. "
+                "Event Console History can become fragmented over time. So if the total"
+                "size of deleted entries reaches this number the Event Console History will be cleaned up. "
             ),
             minvalue=1 * 1024 * 1024,
             maxvalue=100 * 1024 * 1024,

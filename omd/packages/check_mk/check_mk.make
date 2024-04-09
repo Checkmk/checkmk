@@ -187,7 +187,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    -f \
 	    --invalidation-mode=checked-hash \
 	    -s "$(CHECK_MK_INSTALL_DIR)/lib/python3" \
-	    -o 0 -o 1 -o 2 -j0 \
 	    "$(CHECK_MK_INSTALL_DIR)/lib/python3/cmk"
 
 	# Provide the externally documented paths for Checkmk plugins

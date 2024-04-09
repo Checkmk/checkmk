@@ -45,7 +45,6 @@ $(PYTHON_INSTALL): $(PYTHON_INTERMEDIATE_INSTALL)
 	    -f \
 	    --invalidation-mode=checked-hash \
 	    -s "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/" \
-	    -o 0 -o 1 -o 2 -j0 \
 	    -x "bad_coding|badsyntax|test/test_lib2to3/data" \
 	    "$(DESTDIR)/$(OMD_ROOT)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/"
 

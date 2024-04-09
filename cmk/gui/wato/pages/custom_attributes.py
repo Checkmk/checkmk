@@ -100,11 +100,6 @@ class ModeEditCustomAttr(WatoMode, abc.ABC, Generic[_T_CustomAttrSpec]):
 
     @property
     @abc.abstractmethod
-    def _default_topic(self) -> str:
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
     def _macro_help(self) -> str:
         raise NotImplementedError()
 
@@ -304,17 +299,13 @@ class ModeEditCustomUserAttr(ModeEditCustomAttr[CustomUserAttrSpec]):
                 "type": "TextAscii",
                 "name": "",
                 "title": "",
-                "topic": self._default_topic,
+                "topic": "personal",
                 "help": "",
                 "show_in_table": False,
                 "add_custom_macro": False,
                 "user_editable": True,
             }
         )
-
-    @property
-    def _default_topic(self) -> str:
-        return "personal"
 
     @property
     def _macro_help(self) -> str:
@@ -390,16 +381,12 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
                 "type": "TextAscii",
                 "name": "",
                 "title": "",
-                "topic": self._default_topic,
+                "topic": "custom_attributes",
                 "help": "",
                 "show_in_table": False,
                 "add_custom_macro": False,
             }
         )
-
-    @property
-    def _default_topic(self) -> str:
-        return "custom_attributes"
 
     @property
     def _macro_help(self) -> str:

@@ -34,6 +34,13 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD)
 	find "$(PYTHON_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)" -type f | xargs chmod -x
 	# Fix sysconfigdata
 	$(SED) -i "s|/replace-me|$(PACKAGE_PYTHON_DESTDIR)|g" $(PACKAGE_PYTHON_SYSCONFIGDATA)
+	# set RPATH for all ELF binaries we find
+	find "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)" -maxdepth 2 -type f -exec file {} \; \
+	    | grep ELF | cut -d ':' -f1 \
+	    | xargs patchelf --set-rpath "\$$ORIGIN/../lib"
+	find "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/lib-dynload" -name "*.so" -exec file {} \; \
+	    | grep ELF | cut -d ':' -f1 \
+	    | xargs patchelf --set-rpath "\$$ORIGIN/../.."
 
 $(PYTHON_INSTALL): $(PYTHON_INTERMEDIATE_INSTALL)
 	$(RSYNC) -rl --perms $(PYTHON_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/

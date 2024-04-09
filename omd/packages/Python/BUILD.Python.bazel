@@ -33,10 +33,6 @@ out_binaries = [
 configure_make(
     name = "python",
     args = ["-j2"],
-    # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
-    # combined with foreign_cc/configure_make's RPATH agnosticness
-    #   see https://github.com/bazelbuild/rules_foreign_cc/issues/940
-    env={"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
     configure_command = "configure",
     configure_in_place = True,
     configure_options = [
@@ -45,7 +41,6 @@ configure_make(
         "CFLAGS='-Dredacted=\"redacted\"'",
         # Under sles, we need to pass ncursesw include dir explicitly... no idea why
         "CPPFLAGS='-I/usr/include/ncursesw'",
-        "LDFLAGS='-Wl,-rpath,${ORIGIN_VAR}/../lib,-rpath,${ORIGIN_VAR}/../..'",
         "--enable-optimizations",
         "--enable-shared",
         "--with-lto",
@@ -88,9 +83,9 @@ configure_make(
         sed -i "s|$BUILD_TMPDIR|$omd_prefix|g" $sysconfig_path;
 
         # Fix shebang of scripts
-        cd $bin_dir && \
+	cd $bin_dir && \
         ln -s python{pyMaj} python && \
-        sed -i 's|^#!'$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
+	sed -i 's|^#!'$py_install_dir'.*|#!/usr/bin/env python{pyMaj}|' 2to3 2to3-{pyMajMin} idle{pyMajMin} pydoc{pyMajMin};
 
         # Fix pip3 configuration by using own wrapper script
         # * PIP_TARGET currently has an issue when installing non-wheel packages, see https://github.com/pypa/pip/issues/8438

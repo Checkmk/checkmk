@@ -17,6 +17,7 @@ def main() {
         "PACKAGE_PATH",
         "SECRET_VARS",
         "COMMAND_LINE",
+        "DEPENDENCY_PATH_HASHES",
     ]);
 
     validate_parameters()
@@ -45,7 +46,7 @@ def main() {
         );
         setCustomBuildProperty(
             key: "path_hashes",
-            value: directory_hashes([PACKAGE_PATH])
+            value: DEPENDENCY_PATH_HASHES,
         );
     }
 }

@@ -1569,7 +1569,7 @@ filter_registry.register(
 
 filter_registry.register(
     TagFilter(
-        title=_l("Tags"),
+        title=_l("Service tags"),
         query_filter=query_filters.TagsQuery(object_type="service"),
         is_show_more=True,
     )

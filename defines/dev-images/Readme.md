@@ -26,6 +26,7 @@ export NEXUS_PASSWORD=...
     -t local-build-image-${DISTRO} \
     --build-context scripts=buildscripts/infrastructure/build-nodes/scripts \
     --build-context omd_distros=omd/distros \
+    --build-context dev_images=defines/dev-images \
     --build-arg DISTRO="${DISTRO}" \
     --build-arg DISTRO_MK_FILE="$(echo ${DISTRO^^} | sed 's/-/_/g').mk" \
     --build-arg DISTRO_IMAGE_BASE=$(buildscripts/docker_image_aliases/resolve.py "IMAGE_$(echo ${DISTRO^^} | sed "s/[-\.]/_/g")") \

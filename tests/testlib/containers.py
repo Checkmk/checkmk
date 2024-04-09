@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import os
 import re
+import shlex
 import subprocess
 import sys
 import tarfile
@@ -133,7 +134,7 @@ def execute_tests_in_container(
         )
 
         # Collect the test results located in /results of the container. The
-        # jenkins job will make it available as artifact later
+        # CI job will make it available as artifact later
         _copy_directory(container, Path("/results"), result_path)
 
         return exit_code
@@ -329,8 +330,10 @@ def _create_cmk_image(
         logger.info(
             "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
         )
-
-        _exec_run(container, ["mkdir", "-p", "/results"])
+        _exec_run(container, f"groupadd -g {os.getgid()} testuser")
+        _exec_run(container, f"useradd -m -u {os.getuid()} -g {os.getgid()} -s /bin/bash testuser")
+        _exec_run(container, "mkdir -p /home/testuser/.cache")
+        _exec_run(container, "mkdir -p /results")
 
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
@@ -449,15 +452,12 @@ def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) ->
 
 
 def _image_build_binds() -> Mapping[str, DockerBind]:
+    """This function is left here in case we need different handling for
+    image builds. Currently we don't"""
     if "WORKSPACE" in os.environ:
         logger.info("WORKSPACE set to %s", os.environ["WORKSPACE"])
-        return {
-            **_runtime_binds(),
-            os.path.join(os.environ["WORKSPACE"], "packages"): DockerBind(
-                bind="/packages", mode="ro"
-            ),
-        }
-    logger.info("WORKSPACE not set")
+    else:
+        logger.info("WORKSPACE not set")
     return _runtime_binds()
 
 
@@ -494,7 +494,7 @@ def _runtime_binds() -> Mapping[str, DockerBind]:
     }
 
 
-def _container_env(version: CMKVersion) -> dict[str, str]:
+def _container_env(version: CMKVersion) -> Mapping[str, str]:
     return {
         "LANG": "C",
         "PIPENV_PIPFILE": "/git/Pipfile",
@@ -537,18 +537,16 @@ def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:
 
 
 # pep-0692 is not yet finished in mypy...
-def _exec_run(c: docker.Container, cmd: list[str], check: bool = True, **kwargs) -> int:  # type: ignore[no-untyped-def]
-    if kwargs:
-        logger.info(
-            "Execute in container %s: %r (kwargs: %r)",
-            c.short_id,
-            subprocess.list2cmdline(cmd),
-            kwargs,
-        )
-    else:
-        logger.info("Execute in container %s: %r", c.short_id, subprocess.list2cmdline(cmd))
+def _exec_run(c: docker.Container, cmd: str | Sequence[str], check: bool = True, **kwargs) -> int:  # type: ignore[no-untyped-def]
+    cmd_list = shlex.split(cmd) if isinstance(cmd, str) else cmd
+    cmd_str = subprocess.list2cmdline(cmd_list)
 
-    result = container_exec(c, cmd, **kwargs)
+    if kwargs:
+        logger.info("Execute in container %s: %r (kwargs: %r)", c.short_id, cmd_str, kwargs)
+    else:
+        logger.info("Execute in container %s: %r", c.short_id, cmd_str)
+
+    result = container_exec(c, cmd_list, **kwargs)
 
     if kwargs.get("stream"):
         return result.communicate(line_prefix=b"%s: " % c.short_id.encode("ascii"))
@@ -562,7 +560,7 @@ def _exec_run(c: docker.Container, cmd: list[str], check: bool = True, **kwargs)
 
     returncode = result.poll()
     if check and returncode != 0:
-        raise RuntimeError(f"Command `{' '.join(cmd)}` returned with nonzero exit code")
+        raise RuntimeError(f"Command `{cmd_str}` returned with nonzero exit code")
     return returncode
 
 
@@ -695,7 +693,7 @@ def _prepare_git_overlay(container: docker.Container, lower_path: str, target_pa
         ],
     )
 
-    # target_path belongs to root, but its content belong to jenkins. Newer git versions don't like
+    # target_path belongs to root, but its content belong to testuser. Newer git versions don't like
     # that by default, so we explicitly say that this is ok.
     _exec_run(
         container,

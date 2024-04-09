@@ -78,3 +78,5 @@ RUN /opt/install-aws-cli.sh
 # timing: real 0m6.492s user 0m11.914s sys 0m1.146s
 COPY --from=scripts install-buildifier.sh /opt/
 RUN /opt/install-buildifier.sh
+
+COPY --from=dev_images entrypoint.sh /opt/

@@ -57,10 +57,10 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
     with_sudo = os.geteuid() == 0
 
     # In the CI the tests are started as root and snmpsimd needs to be started as
-    # "jenkins" user. We need to provide a tmp path which is writable by that user.
+    # "testuser" user. We need to provide a tmp path which is writable by that user.
     with TemporaryDirectory(prefix="snmpsim_") as d:
         if with_sudo:
-            shutil.chown(d, "jenkins", "jenkins")
+            shutil.chown(d, "testuser", "testuser")
 
         process_definitions = [
             _define_process(idx, auth, Path(d), snmp_data_dir, with_sudo)
@@ -88,16 +88,16 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
 def _define_process(index, auth, tmp_path, snmp_data_dir, with_sudo):
     port = 1337 + index
 
-    # The tests are executed as root user in the containerized environmen, which snmpsimd does not
-    # like. Switch the user context to the jenkins user to execute the daemon.
+    # The tests are executed as root user in the containerized environment, which snmpsimd does not
+    # like. Switch the user context to 'testuser' to execute the daemon.
     # When executed on a dev system, we run as lower privileged user and don't have to switch the
     # context.
-    sudo = ["sudo", "-u", "jenkins"] if with_sudo else []
+    sudo = ["sudo", "-u", "testuser"] if with_sudo else []
 
     proc_tmp_path = tmp_path / f"snmpsim{index}"
     proc_tmp_path.mkdir(parents=True, exist_ok=True)
     if with_sudo:
-        shutil.chown(proc_tmp_path, "jenkins", "jenkins")
+        shutil.chown(proc_tmp_path, "testuser", "testuser")
 
     return ProcessDef(
         with_sudo=with_sudo,

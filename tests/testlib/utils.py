@@ -192,8 +192,8 @@ def current_base_branch_name() -> str:
         ["git", "rev-list", "--max-count=30", branch_name], encoding="utf-8"
     )
     for commit in commits.strip().split("\n"):
-        # Asking for remote heads here, since the git repos checked out by jenkins do not create all
-        # the branches locally
+        # Asking for remote heads here, since the git repos checked out in CI
+        # do not create all branches locally
 
         # --format=%(refname): Is not supported by all distros :(
         #

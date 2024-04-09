@@ -68,6 +68,10 @@ class MainMenu(LocatorHelper):
         return self.monitor_menu("All hosts")
 
     @property
+    def setup_searchbar(self) -> Locator:
+        return self.setup_menu().locator("#mk_side_search_field_setup_search")
+
+    @property
     def setup_hosts(self) -> Locator:
         return self.setup_menu("Hosts")
 

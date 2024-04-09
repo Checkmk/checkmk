@@ -3,21 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import argparse
-import dataclasses
 import json
 import sys
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Iterator
 
 
-@dataclasses.dataclass
+@dataclass
 class Package:
     name: str
     path: str
     command_line: str
-    maintainers: list[str] = dataclasses.field(default_factory=lambda: [])
-    sec_vars: list[str] = dataclasses.field(default_factory=lambda: [])
-    dependencies: list[str] = dataclasses.field(default_factory=lambda: [])
+    maintainers: list[str] = field(default_factory=lambda: [])
+    sec_vars: list[str] = field(default_factory=lambda: [])
+    dependencies: list[str] = field(default_factory=lambda: [])
 
     def __post_init__(self):
         # Fallback for now...
@@ -57,7 +57,7 @@ def discover_packages(args: argparse.Namespace) -> Iterator[Package]:
 
 def main():
     args = parse_arguments()
-    print(json.dumps([dataclasses.asdict(p) for p in discover_packages(args)], indent=2))
+    print(json.dumps([asdict(p) for p in discover_packages(args)], indent=2))
 
 
 if __name__ == "__main__":

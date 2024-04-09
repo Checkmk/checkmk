@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """ Pre update checks, executed before any configuration is changed. """
 
+from logging import Logger
+
+from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
 
@@ -22,7 +25,7 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 class PreUpdateRulesets(PreUpdateAction):
     """Load all rulesets before the real update happens"""
 
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         try:
             with disable_redis(), gui_context(), SuperUserContext():
                 set_global_vars()
@@ -37,7 +40,7 @@ class PreUpdateRulesets(PreUpdateAction):
 
         with disable_redis(), gui_context(), SuperUserContext():
             set_global_vars()
-            result = _validate_rule_values(rulesets, conflict_mode)
+            result = _validate_rule_values(rulesets, conflict_mode, logger)
 
         if not result:
             raise MKUserError(None, "failed ruleset validation")
@@ -57,6 +60,7 @@ def _request_user_input_on_ruleset_exception(exc: Exception) -> str:
 def _validate_rule_values(
     all_rulesets: RulesetCollection,
     conflict_mode: ConflictMode,
+    logger: Logger,
 ) -> bool:
     rulesets_skip = {
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
@@ -77,12 +81,13 @@ def _validate_rule_values(
             continue
 
         for folder, index, rule in ruleset.get_rules():
+            logger.log(VERBOSE, f"Validating ruleset '{ruleset.name}' in folder '{folder.name()}'")
             try:
                 ruleset.rulespec.valuespec.validate_value(
                     rule.value,
                     "",
                 )
-            except MKUserError as e:
+            except (MKUserError, AssertionError, ValueError, TypeError) as e:
                 return (
                     conflict_mode is ConflictMode.ASK
                     and _request_user_input_on_invalid_rule(ruleset, folder, index, e).lower()
@@ -93,7 +98,7 @@ def _validate_rule_values(
 
 
 def _request_user_input_on_invalid_rule(
-    ruleset: Ruleset, folder: Folder, index: int, exception: MKUserError
+    ruleset: Ruleset, folder: Folder, index: int, exception: Exception
 ) -> str:
     return prompt(
         "WARNING: Invalid rule configuration detected\n"

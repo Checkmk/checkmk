@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from logging import Logger
 from typing import Final
 
 import cmk.utils.paths as paths
@@ -669,7 +670,7 @@ _DEPRECATED_CHECK_VARIABLES: Final = {
 class PreUpdateDeprecatedConfigurationStyle(PreUpdateAction):
     """Make sure users do not use .mk files to configure legacy check plguins"""
 
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD):
             return
         base_config.load_all_plugins(

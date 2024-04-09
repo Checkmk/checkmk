@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
+from logging import Logger
 from pathlib import Path
 
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
@@ -26,7 +27,7 @@ from cmk.update_config.registry import pre_update_action_registry, PreUpdateActi
 class PreUpdateAgentBasedPlugins(PreUpdateAction):
     """Load all agent based plugins before the real update happens"""
 
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         while self._disable_failure_and_reload_plugins(conflict_mode):
             pass
 

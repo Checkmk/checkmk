@@ -540,3 +540,100 @@ def test_openapi_identifiation_field(clients: ClientRegistry) -> None:
     res = clients.HostTagGroup.get(ident="test_group")
     assert "id" in res.json
     assert "id" in res.json["extensions"]["tags"][0]
+
+
+def test_id_already_in_use_by_custom_tag_group(clients: ClientRegistry) -> None:
+    custom_tag_group = "criticality"
+    clients.HostTagGroup.create(
+        ident=custom_tag_group,
+        title="tag_group_1",
+        tags=[
+            {"id": "prod", "title": "Production"},
+            {"id": "test", "title": "Testing site"},
+            {"id": "beta", "title": "Beta site"},
+        ],
+    )
+
+    custom_tag_group_resp = clients.HostTagGroup.create(
+        ident=custom_tag_group,
+        title="tag_group_2",
+        tags=[
+            {"id": "prod", "title": "Production"},
+            {"id": "test", "title": "Testing site"},
+            {"id": "beta", "title": "Beta site"},
+        ],
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert (
+        f"The specified tag group id is already in use: '{custom_tag_group}'"
+        in custom_tag_group_resp.json["fields"]["id"]
+    )
+
+
+def test_id_already_in_use_by_builtin_tag_group(clients: ClientRegistry) -> None:
+    builtin_tag_group = "agent"
+
+    builtin_tag_group_resp = clients.HostTagGroup.create(
+        ident=builtin_tag_group,
+        title="tag_group_3",
+        tags=[
+            {"id": "prod", "title": "Production"},
+            {"id": "test", "title": "Testing site"},
+            {"id": "beta", "title": "Beta site"},
+        ],
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert (
+        f"The specified tag group id is already in use: '{builtin_tag_group}'"
+        in builtin_tag_group_resp.json["fields"]["id"]
+    )
+
+
+def test_id_already_in_use_by_custom_aux_tag(clients: ClientRegistry) -> None:
+    custom_aux_tag = "interface"
+
+    clients.AuxTag.create(
+        tag_data={
+            "aux_tag_id": custom_aux_tag,
+            "title": "aux_tag_1",
+            "topic": "topic_1",
+        },
+    )
+
+    custom_aux_tag_resp = clients.HostTagGroup.create(
+        ident=custom_aux_tag,
+        title="tag_group_2",
+        tags=[
+            {"id": "prod", "title": "Production"},
+            {"id": "test", "title": "Testing site"},
+            {"id": "beta", "title": "Beta site"},
+        ],
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert (
+        f"The specified tag group id is already in use: '{custom_aux_tag}'"
+        in custom_aux_tag_resp.json["fields"]["id"]
+    )
+
+
+def test_id_in_use_by_builtin_aux_tag(clients: ClientRegistry) -> None:
+    builtin_aux_tag = "snmp"
+
+    builtin_aux_tag_resp = clients.HostTagGroup.create(
+        ident=builtin_aux_tag,
+        title="tag_group_4",
+        tags=[
+            {"id": "prod", "title": "Production"},
+            {"id": "test", "title": "Testing site"},
+            {"id": "beta", "title": "Beta site"},
+        ],
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    assert (
+        f"The specified tag group id is already in use: '{builtin_aux_tag}'"
+        in builtin_aux_tag_resp.json["fields"]["id"]
+    )

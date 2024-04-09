@@ -77,8 +77,8 @@ build_cmd = """
         REQUIREMENTS="{requirements}"
     else
         REQUIREMENTS=$$HOME/tmp/$(OUTS)
-        rm -rf $$REQUIREMENTS
-        mkdir -p $$REQUIREMENTS
+	rm -rf $$REQUIREMENTS
+	mkdir -p $$REQUIREMENTS
         echo "Copy package sources"
         echo "cp -r {requirements}/** $$REQUIREMENTS"
         cp -r {requirements}/** $$REQUIREMENTS
@@ -98,13 +98,7 @@ build_cmd = """
 
     # install requirements
     export CFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
-    # this is very likely not used at all..
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freedts/freedts/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug"
-
-    # this makes pip/Python generate hash-invalidated pyc files in later steps, see
-    #    https://reproducible-builds.org/docs/source-date-epoch/
-    export SOURCE_DATE_EPOCH="$${{SOURCE_DATE_EPOCH:-$$(date +%s)}}"
-
     {git_ssl_no_verify}\\
     $$PYTHON_EXECUTABLE -m pip install \\
      `: dont use precompiled things, build with our build env ` \\

@@ -96,7 +96,7 @@ config_setting(
 
 genrule(
     name = "python3-modules-modify",
-    srcs = ["@python"] + [
+    srcs = [
         "%s_compile" % module
         for module in all_requirements + [
             "agent-based",
@@ -109,9 +109,6 @@ genrule(
             "livestatus-client",
             "netapp-ontap",
         ]
-    ],
-    toolchains = [
-        "@rules_python//python:current_py_toolchain",
     ],
     outs = [
         "python3-modules",
@@ -149,35 +146,11 @@ genrule(
 
         # Fix rpath for all .so libs
         cd $(RULEDIR)/python3-modules/lib/
-        ls -alF $$(which patchelf)
-        for F in $$(find -name "*.so"); do
-            ls -alF $$F
-            chmod u+w,g+w $$F
-            patchelf --set-rpath \\
-                $$(echo $$F | sed 's|[^/]*/|../|g' | sed 's|\\.\\./|\\$$ORIGIN/|' | sed 's|[^/]*$$||') $$F ;
+        for F in $$(find -name "*.so");
+            do patchelf --set-rpath \\
+            $$(echo $$F | sed 's|[^/]*/|../|g' | sed 's|\\.\\./|\\$$ORIGIN/|' | sed 's|[^/]*$$||') $$F ;
         done
         cd -
-
-        echo "XXX ---"
-
-        echo "pwd:     $$(pwd)"
-        echo "RULEDIR: $(RULEDIR)"
-        echo "RPATH:   $$(objdump -x bazel-out/k8-fastbuild/bin/external/python/python/bin/python3)"
-        ls "$$(pwd)/bazel-out/k8-fastbuild/bin/external/python/python/lib"
-
-        echo "XXX ---"
-
-        # Pre-generate .pyc files for all generated Python modules
-        # explicitly select `checked-hash` rather than timestamp based validation
-        LD_LIBRARY_PATH="$$(pwd)/bazel-out/k8-fastbuild/bin/external/python/python/lib" \\
-        bazel-out/k8-fastbuild/bin/external/python/python/bin/python3 \\
-          -m compileall \\
-            -f \\
-            -s "$(RULEDIR)/python3-modules/lib/" \\
-            --invalidation-mode=checked-hash \\
-            "$(RULEDIR)/python3-modules/lib"
-
-        echo "XXX ---"
-        """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
+    """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
     visibility = ["//visibility:public"],
 )

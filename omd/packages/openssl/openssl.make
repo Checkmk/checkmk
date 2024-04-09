@@ -48,10 +48,9 @@ $(OPENSSL_CACHE_PKG_PROCESS): $(OPENSSL_INTERMEDIATE_INSTALL)
 .PHONY: $(OPENSSL_INSTALL)
 $(OPENSSL_INSTALL): $(OPENSSL_CACHE_PKG_PROCESS)
 	$(RSYNC) --recursive --links --perms "$(OPENSSL_INSTALL_DIR)/" "$(DESTDIR)$(OMD_ROOT)/"
-	#patchelf --set-rpath "\$$ORIGIN/../lib" \
-	#    "$(DESTDIR)$(OMD_ROOT)/bin/openssl" \
-	#    "$(DESTDIR)$(OMD_ROOT)/lib/libssl.so" \
-	#    "$(DESTDIR)$(OMD_ROOT)/lib/libssl.so.3" \
-	#    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so" \
-	#    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so.3"
-
+	patchelf --set-rpath "\$$ORIGIN/../lib" \
+	    "$(DESTDIR)$(OMD_ROOT)/bin/openssl" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libssl.so" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libssl.so.3" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so" \
+	    "$(DESTDIR)$(OMD_ROOT)/lib/libcrypto.so.3"

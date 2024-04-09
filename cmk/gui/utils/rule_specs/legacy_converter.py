@@ -1593,7 +1593,7 @@ def _get_predictive_levels_choice_element(
             **p,
             # The backend uses this information to compute the correct prediction.
             # The Transform ensures that an updated value in the ruleset plugin
-            # is reflecetd in the stored data after update.
+            # is reflected in the stored data after update.
             "__reference_metric__": to_convert.reference_metric,
             "__direction__": (
                 "upper"

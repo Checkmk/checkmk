@@ -194,7 +194,7 @@ def test_prediction_injection_legacy() -> None:
             },
         )
     }
-    assert checkers.inject_prediction_params_recursively(p, inject) == {
+    assert checkers.postprocess_configuration(p, inject) == {
         "pagefile": (
             "predictive",
             {
@@ -234,7 +234,7 @@ def test_prediction_injection() -> None:
             },
         ),
     }
-    assert checkers.inject_prediction_params_recursively(p, inject) == {
+    assert checkers.postprocess_configuration(p, inject) == {
         "levels_upper": (
             "predictive",
             ("my_reference_metric", *prediction),

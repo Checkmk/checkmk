@@ -817,7 +817,7 @@ def _final_read_only_check_parameters(
         # unwrapped by a decorator of the original check_function.
         wrap_parameters(
             (
-                inject_prediction_params_recursively(params, injected_p)
+                postprocess_configuration(params, injected_p)
                 if _needs_postprocessing(params)
                 else params
             ),
@@ -838,63 +838,65 @@ def _needs_postprocessing(params: object) -> bool:
     return False
 
 
-def inject_prediction_params_recursively(
+def postprocess_configuration(
     params: LegacyCheckParameters | Mapping[str, object],
     injected_p: InjectedParameters,
 ) -> LegacyCheckParameters | Mapping[str, object]:
-    """This currently supports two ways to handle predictive levels.
+    """Postprocess configuration parameters.
+
+    Parameters consisting of a 3-tuple with the first element being
+    "cmk_postprocessed" and the second one one of several known string constants
+    are postprocessed.
+
+    This currently supports two ways to handle predictive levels.
 
     The "__injected__" case is legacy, the other case is the new one.
-    Once the legacy case is removed, this can be simplified significantly.
+    Once the legacy case is removed, this can be simplified.
 
     Hopefully we can move this out of this scope entirely someday (and get
     rid of the recursion).
     """
     match params:
-        case (
-            "cmk_postprocessed",
-            "predictive_levels",
-            {
-                "__reference_metric__": str(metric),
-                "__direction__": "upper" | "lower" as direction,
-            } as p,
-        ):
-            if not isinstance(p, dict):  # to keep mypy happy
-                raise TypeError(p)
-            return _get_prediction_and_levels(p, injected_p, metric, direction)
+        case tuple(("cmk_postprocessed", "predictive_levels", value)):
+            return _postprocess_predictive_levels(value, injected_p)
         case tuple():
-            return tuple(inject_prediction_params_recursively(v, injected_p) for v in params)
+            return tuple(postprocess_configuration(v, injected_p) for v in params)
         case list():
-            return list(inject_prediction_params_recursively(v, injected_p) for v in params)
-        case dict():
+            return list(postprocess_configuration(v, injected_p) for v in params)
+        case dict():  # check for legacy predictive levels :-(
             return {
                 k: (
                     injected_p.model_dump()
                     if k == "__injected__"
-                    else inject_prediction_params_recursively(v, injected_p)
+                    else postprocess_configuration(v, injected_p)
                 )
                 for k, v in params.items()
             }
     return params
 
 
-def _get_prediction_and_levels(
-    params: dict, injected_p: InjectedParameters, metric: str, direction: Literal["upper", "lower"]
+def _postprocess_predictive_levels(
+    params: dict, injected_p: InjectedParameters
 ) -> tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]]:
-    return (
-        "predictive",
-        (
-            metric,
-            *lookup_predictive_levels(
-                metric,
-                direction,
-                PredictionParameters.model_validate(
-                    {k: v for k, v in params.items() if not k.startswith("__")}
+    match params:
+        case {
+            "__reference_metric__": str(metric),
+            "__direction__": "upper" | "lower" as direction,
+            **raw_prediction_params,
+        }:
+            return (
+                "predictive",
+                (
+                    metric,
+                    *lookup_predictive_levels(
+                        metric,
+                        direction,
+                        PredictionParameters.model_validate(raw_prediction_params),
+                        injected_p,
+                    ),
                 ),
-                injected_p,
-            ),
-        ),
-    )
+            )
+    raise ValueError(f"Invalid predictive levels: {params!r}")
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

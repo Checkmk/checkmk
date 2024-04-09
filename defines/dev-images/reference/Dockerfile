@@ -14,18 +14,20 @@ RUN apt-get update
 # msitools:  needed for `msiinfo` in test source package
 # libenchant1c2a:  needed for building the software architecture as we're using sphinxcontrib.spelling
 # default-jdk: needed for validating the compiled werks (see compile-all-werks.groovy)
+# lsb-release: needed for install_docker
 
 # Those are still unclear:
 #   php7.4-common
-#   default-jdk
 #   upx-ucl
 #   dpatch
 
 RUN apt-get install -y \
+    default-jdk-headless \
     golang-go \
-    msitools \
     libenchant1c2a \
-    default-jdk
+    lsb-release \
+    msitools \
+    wget
 
 # Despite files needed for builds might already be available in build images
 # copy them again, in case they changed

@@ -818,24 +818,23 @@ def _final_read_only_check_parameters(
         wrap_parameters(
             (
                 inject_prediction_params_recursively(params, injected_p)
-                if _contains_predictive_levels(params)
+                if _needs_postprocessing(params)
                 else params
             ),
         )
     )
 
 
-def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
-    if isinstance(params, (list, tuple)):
-        return any(_contains_predictive_levels(p) for p in params)
-
-    if isinstance(params, dict):
-        return (
-            "__injected__" in params
-            or "__reference_metric__" in params
-            or any(_contains_predictive_levels(p) for p in params.values())
-        )
-
+def _needs_postprocessing(params: object) -> bool:
+    match params:
+        case tuple(("cmk_postprocessed", str(), _)):
+            return True
+        case tuple() | list():
+            return any(_needs_postprocessing(p) for p in params)
+        case {"__injected__": _}:  # legacy "valuespec" case.
+            return True
+        case {**mapping}:
+            return any(_needs_postprocessing(p) for p in mapping.values())
     return False
 
 

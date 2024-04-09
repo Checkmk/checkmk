@@ -246,7 +246,8 @@ class ValueSpec(abc.ABC, Generic[T]):
         if isinstance(self._help, LazyString):
             return str(self._help)
 
-        assert isinstance(self._help, str)
+        if not isinstance(self._help, str):
+            raise ValueError(self._help)
         return self._help
 
     def allow_empty(self) -> bool:
@@ -767,7 +768,8 @@ class Filesize(Integer):
 
     def render_input(self, varprefix: str, value: int | None) -> None:
         # The value type is only Optional to be compatible with the base class
-        assert value is not None
+        if value is None:
+            raise TypeError(value)
         exp, count = self.get_exponent(value)
         self._renderer.text_input(varprefix + "_size", str(count))
         html.nbsp()
@@ -861,7 +863,8 @@ class LegacyDataSize(Integer):
 
     def render_input(self, varprefix: str, value: int | None) -> None:
         # The value type is only Optional to be compatible with the base class
-        assert value is not None
+        if value is None:
+            raise TypeError(value)
         selected_unit, scaled_value = self.scale_value(value)
         self._renderer.text_input(varprefix + "_size", str(scaled_value))
         html.nbsp()
@@ -1755,7 +1758,8 @@ class Url(TextInput):
         self._link_target = target
 
     def _validate_value(self, value: str, varprefix: str) -> None:
-        assert value is not None
+        if value is None:
+            raise TypeError(value)
         super()._validate_value(value, varprefix)
 
         if self._allow_empty and value == "":
@@ -3855,7 +3859,8 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             value: CascadingDropdownChoiceValue = (json_value[0], json_value[1])
             choice = self._choice_from_value(value)
             # we already know this will be with value, because we explicitly passed a value one line above
-            assert isinstance(choice, CascadingDropdownChoiceWithValue)
+            if not isinstance(choice, CascadingDropdownChoiceWithValue):
+                raise TypeError(choice)
             value = choice.vs.value_from_json(choice.value)
             return (choice.ident, value)
         # no value, just a ident:
@@ -3896,7 +3901,8 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         for nr, (val, _title, vs) in enumerate(choices):
             if value == val or (isinstance(value, tuple) and value[0] == val):
                 if vs:
-                    assert isinstance(value, tuple)
+                    if not isinstance(value, tuple):
+                        raise TypeError(value)
                     vs.validate_value(value[1], varprefix + "_%d" % nr)
                 return
         raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
@@ -4529,12 +4535,14 @@ class RelativeDate(OptionalDropdownChoice[int]):
         return self.default_value()
 
     def render_input(self, varprefix: str, value: int | None) -> None:
-        assert isinstance(value, (int, float))
+        if not isinstance(value, (int, float)):
+            raise TypeError(value)
         reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division
         super().render_input(varprefix, reldays)
 
     def value_to_html(self, value: int | None) -> ValueSpecText:
-        assert isinstance(value, (int, float))
+        if not isinstance(value, (int, float)):
+            raise TypeError(value)
         reldays = int((_round_date(value) - _today()) / seconds_per_day)  # fixed: true-division
         if reldays == -1:
             return _("yesterday")
@@ -5279,7 +5287,8 @@ class Timerange(CascadingDropdown):
 
             raise NotImplementedError()
 
-        assert isinstance(rangespec, str)
+        if not isinstance(rangespec, str):
+            raise TypeError(rangespec)
 
         if rangespec[0].isdigit():  # 4h, 400d
             count = int(rangespec[:-1])
@@ -5311,7 +5320,8 @@ class Timerange(CascadingDropdown):
         # day and week spans for historic data
         if rangespec[0] in ["d", "w"]:
             end_time = TimeHelper.add(prev_time, 1, rangespec[0])
-            assert isinstance(titles[1], str)
+            if not isinstance(titles[1], str):
+                raise TypeError(titles[1])
             title = _date_span(prev_time, end_time) if span > 1 else titles[1]
             return ComputedTimerange((int(prev_time), int(end_time)), title)
 
@@ -5875,7 +5885,8 @@ class Tuple(ValueSpec[TT]):
             el.validate_datatype(val, f"{varprefix}_{idx}")
 
     def transform_value(self, value: TT) -> TT:
-        assert isinstance(value, tuple), f"Tuple.transform_value() got a non-tuple: {value!r}"
+        if not isinstance(value, tuple):
+            raise TypeError(f"Tuple.transform_value() got a non-tuple: {value!r}")
         return tuple(vs.transform_value(value[index]) for index, vs in enumerate(self._elements))  # type: ignore[return-value]
 
 
@@ -6025,8 +6036,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if visible is None:
                 visible = param in value
             if two_columns:
-                assert isinstance(label, str)
-                label += ":"
+                label = f"{label}:"
                 colon_printed = True
             html.checkbox(
                 checkbox_varname,
@@ -6282,7 +6292,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
     def transform_value(self, value: DictionaryModel) -> DictionaryModel:
-        assert isinstance(value, dict), f"Dictionary.transform_value() got a non-dict: {value!r}"
+        if not isinstance(value, dict):
+            raise TypeError(f"Dictionary.transform_value() got a non-dict: {value!r}")
         return {
             **{
                 param: vs.transform_value(value[param])
@@ -6964,7 +6975,8 @@ class FileUpload(ValueSpec[FileUploadModel]):
     def _validate_value(self, value: FileUploadModel, varprefix: str) -> None:
         if not value:
             raise MKUserError(varprefix, _("Please select a file."))
-        assert isinstance(value, tuple)  # Hmmm...
+        if not isinstance(value, tuple):  # Hmmm...
+            raise TypeError(value)
 
         file_name, mime, content = value
 
@@ -7045,7 +7057,8 @@ class ImageUpload(FileUpload):
             # since latin_1 only uses one byte, we can use it for str->byte conversion
             value = value.encode("latin_1")
         if self._show_current_image and value:
-            assert isinstance(value, bytes)  # Hmmm...
+            if not isinstance(value, bytes):  # Hmmm...
+                raise TypeError(value)
             html.open_table()
             html.open_tr()
             html.td(_("Current image:"))
@@ -7067,7 +7080,8 @@ class ImageUpload(FileUpload):
         super()._validate_value(value, varprefix)
         if not value:
             raise MKUserError(varprefix, _("Please choose a PNG image."))
-        assert isinstance(value, tuple)  # Hmmm...
+        if not isinstance(value, tuple):  # Hmmm...
+            raise TypeError(value)
 
         content = value[2]
 

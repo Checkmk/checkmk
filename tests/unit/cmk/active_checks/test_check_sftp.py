@@ -298,3 +298,44 @@ def test_run_check_get_timestamp(
     assert message.startswith("Login successful, Timestamp of get_timestamp is:")
     assert connection_mock.stat_calls.pop() == "./get_timestamp"
     connection_mock.reset_mock()
+
+
+def test_run_check_failures(
+    omd_root_mock: None, create_testfile_mock: None, connection_mock: ConnectionMock
+) -> None:
+    state, message = run_check(
+        [
+            "--get-remote",
+            "get_remote",
+            "--put-local",
+            "tmp/sftp/put_local",
+            "--get-timestamp",
+            "get_timestamp",
+            "-v",
+        ]
+    )
+    assert state == 0
+    assert message.startswith(
+        "Login successful, Successfully put file to SFTP server, Successfully got file from SFTP server, Timestamp of get_timestamp is: "
+    )
+
+    with (
+        patch("cmk.active_checks.check_sftp.put_file", MagicMock(side_effect=Exception("Boom!"))),
+        patch("cmk.active_checks.check_sftp.get_file", MagicMock(side_effect=Exception("Boom!"))),
+        patch(
+            "cmk.active_checks.check_sftp.get_timestamp", MagicMock(side_effect=Exception("Boom!"))
+        ),
+    ):
+        assert run_check(
+            [
+                "--get-remote",
+                "get_remote",
+                "--put-local",
+                "put_local",
+                "--get-timestamp",
+                "get_timestamp",
+            ]
+        ) == (
+            2,
+            "Login successful, Could not put file to SFTP server! (!!), Could not get file from SFTP server! (!!), Could not get timestamp of file! (!!)",
+        )

@@ -139,8 +139,8 @@ def get_file(sftp: paramiko.sftp_client.SFTPClient, source: str, destination: st
     sftp.get(source, destination)
 
 
-def get_timestamp(sftp: paramiko.sftp_client.SFTPClient, paths: PathDict) -> int | None:
-    return sftp.stat(paths["timestamp_path"]).st_mtime
+def get_timestamp(sftp: paramiko.sftp_client.SFTPClient, path: str) -> int | None:
+    return sftp.stat(path).st_mtime
 
 
 def output_check_result(s: str) -> None:
@@ -252,13 +252,12 @@ def run_check(  # pylint: disable=too-many-branches
     args = parse_arguments(sys_args)
 
     messages = []
-    states = []
+    overall_state = 0
     try:  # Establish connection
         sftp = connection(
             args.host, args.user, args.pass_, args.port, args.timeout, args.look_for_keys
         )
         messages.append("Login successful")
-        states.append(0)
     except Exception:
         if args.verbose:
             raise
@@ -285,8 +284,8 @@ def run_check(  # pylint: disable=too-many-branches
     )
 
     # .. and eventually execute them!
-    try:  # Put a file to the server
-        if args.put_local is not None:
+    if args.put_local is not None:
+        try:  # Put a file to the server
             create_testfile(paths["local_put_path"])
             testfile_already_present = file_available(
                 args.put_local, args.put_remote, sftp, working_dir
@@ -296,39 +295,36 @@ def run_check(  # pylint: disable=too-many-branches
             if not testfile_already_present:
                 sftp.remove(paths["remote_put_path"])
 
-            states.append(0)
             messages.append("Successfully put file to SFTP server")
-    except Exception:
-        if args.verbose:
-            raise
-        states.append(2)
-        messages.append("Could not put file to SFTP server! (!!)")
+        except Exception:
+            if args.verbose:
+                raise
+            overall_state = max(overall_state, 2)
+            messages.append("Could not put file to SFTP server! (!!)")
 
-    try:  # Get a file from the server
-        if args.get_remote is not None:
+    if args.get_remote is not None:
+        try:  # Get a file from the server
             get_file(sftp, paths["remote_get_path"], paths["local_get_path"])
-            states.append(0)
             messages.append("Successfully got file from SFTP server")
-    except Exception:
-        if args.verbose:
-            raise
-        states.append(2)
-        messages.append("Could not get file from SFTP server! (!!)")
+        except Exception:
+            if args.verbose:
+                raise
+            overall_state = max(overall_state, 2)
+            messages.append("Could not get file from SFTP server! (!!)")
 
-    try:  # Get timestamp of a remote file
-        if args.timestamp is not None:
-            timestamp = get_timestamp(sftp, paths)
-            states.append(0)
+    if args.timestamp is not None:
+        try:  # Get timestamp of a remote file
+            timestamp = get_timestamp(sftp, paths["timestamp_path"])
             messages.append(
                 "Timestamp of {} is: {}".format(paths["timestamp_filename"], time.ctime(timestamp))
             )
-    except Exception:
-        if args.verbose:
-            raise
-        states.append(2)
-        messages.append("Could not get timestamp of file! (!!)")
+        except Exception:
+            if args.verbose:
+                raise
+            overall_state = max(overall_state, 2)
+            messages.append("Could not get timestamp of file! (!!)")
 
-    return max(states), ", ".join(messages)
+    return overall_state, ", ".join(messages)
 
 
 def main() -> int:

@@ -362,7 +362,7 @@ def test_perform_discovery_single_update(
                     state=1,
                     output=(
                         "Version: 2022.05.23, OS: linux, TLS is not activated on monitored host"
-                        " (see details)(!), Agent plugins: 0, Local checks: 0\nVersion:"
+                        " (see details)(!), Agent plug-ins: 0, Local checks: 0\nVersion:"
                         " 2022.05.23\nOS: linux\nThe hosts agent supports TLS, but it is not"
                         " being used.\nWe strongly recommend to enable TLS by registering the host"
                         " to the site (using the `cmk-agent-ctl register` command on the monitored"
@@ -372,7 +372,7 @@ def test_perform_discovery_single_update(
                         " site running Checkmk version 2.0 or earlier.\nIf you can not register"
                         ' the host, you can configure missing TLS to be OK in the setting "State'
                         ' in case of available but not enabled TLS" of the ruleset "Checkmk Agent'
-                        ' installation auditing".(!)\nAgent plugins: 0\nLocal checks: 0'
+                        ' installation auditing".(!)\nAgent plug-ins: 0\nLocal checks: 0'
                     ),
                     metrics=[],
                     old_labels={},
@@ -474,7 +474,7 @@ def test_perform_discovery_single_update(
                 state=1,
                 output=(
                     "Version: 2022.05.23, OS: linux, TLS is not activated on monitored host"
-                    " (see details)(!), Agent plugins: 0, Local checks: 0\nVersion: 2022.05.23\n"
+                    " (see details)(!), Agent plug-ins: 0, Local checks: 0\nVersion: 2022.05.23\n"
                     "OS: linux\nThe hosts agent supports TLS, but it is not being used.\n"
                     "We strongly recommend to enable TLS by registering the host to the site"
                     " (using the `cmk-agent-ctl register` command on the monitored host).\n"
@@ -484,7 +484,7 @@ def test_perform_discovery_single_update(
                     " running Checkmk version 2.0 or earlier.\nIf you can not register the host,"
                     ' you can configure missing TLS to be OK in the setting "State in case of'
                     ' available but not enabled TLS" of the ruleset "Checkmk Agent installation'
-                    ' auditing".(!)\nAgent plugins: 0\nLocal checks: 0'
+                    ' auditing".(!)\nAgent plug-ins: 0\nLocal checks: 0'
                 ),
                 metrics=[],
                 old_labels={},

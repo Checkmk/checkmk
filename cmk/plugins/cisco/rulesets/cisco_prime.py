@@ -32,6 +32,8 @@ def _migrate(value: object) -> Mapping[str, object]:
     if "basicauth" in value and isinstance(value["basicauth"], tuple):
         username, password = value.pop("basicauth")
         value["basicauth"] = {"username": username, "password": migrate_to_password(password)}
+    if "host" in value and value["host"] in ("ip_address", "host_name"):
+        value["host"] = (value.pop("host"), None)
     return value
 
 

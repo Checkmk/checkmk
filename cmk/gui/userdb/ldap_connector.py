@@ -480,7 +480,7 @@ class LDAPUserConnector(UserConnector):
             pass
 
     # Bind with the default credentials
-    def _default_bind(self, conn):
+    def _default_bind(self, conn: ldap.ldapobject.ReconnectLDAPObject | None) -> None:
         try:
             if "bind" in self._config:
                 bind_dn, password_id = self._config["bind"]
@@ -501,10 +501,15 @@ class LDAPUserConnector(UserConnector):
                 )
             )
 
-    def _bind(  # type: ignore[no-untyped-def]
-        self, user_dn, password_id: password_store.PasswordId, catch=True, conn=None
-    ):
+    def _bind(
+        self,
+        user_dn: str,
+        password_id: password_store.PasswordId,
+        catch: bool = True,
+        conn: ldap.ldapobject.ReconnectLDAPObject | None = None,
+    ) -> None:
         if conn is None:
+            assert self._ldap_obj is not None
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)
         try:
@@ -522,7 +527,7 @@ class LDAPUserConnector(UserConnector):
                 raise MKLDAPException(_("Unable to authenticate with LDAP (%s)") % e)
             raise
 
-    def servers(self):
+    def servers(self) -> list[str]:
         connect_params = self._get_connect_params()
         if self._uses_discover_nearest_server():
             servers = [self._discover_nearest_dc(connect_params["domain"])]
@@ -539,7 +544,7 @@ class LDAPUserConnector(UserConnector):
         # 'directory_type': ('ad', {'connect_to': ('discover', {'domain': 'corp.de'})}),
         return self._config["directory_type"][1]["connect_to"][1]
 
-    def use_ssl(self):
+    def use_ssl(self) -> bool:
         return "use_ssl" in self._config
 
     def active_plugins(self):

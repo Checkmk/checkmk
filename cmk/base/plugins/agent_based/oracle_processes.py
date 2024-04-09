@@ -53,6 +53,8 @@ def parse_oracle_processes(string_table: StringTable) -> SectionOracleProcesses:
         if ora_error.has_error:
             error_processes[line[0]] = ora_error
         else:
+            if len(line) < 3:
+                continue
             process = line[0]
             valid_oracle_processes[process] = OracleProcess(
                 name=process, processes_count=int(line[1]), processes_limit=int(line[2])

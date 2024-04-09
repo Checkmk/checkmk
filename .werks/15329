@@ -1,0 +1,15 @@
+Title: mk_oracle: fix two parse errors
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1712642491
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Due to fixes introduced with
+<a href="https://checkmk.com/werk/16232">Werk #16232</a> new error messages
+have been introduced to sections which previously had not to handle any errors.
+
+Now <tt>oracle_processes</tt> and <tt>oracle_recovery_area</tt> services can
+handle the new error messages.

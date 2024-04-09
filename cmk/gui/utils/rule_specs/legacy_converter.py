@@ -611,7 +611,7 @@ def _convert_to_legacy_valuespec(
 
 
 def _get_allow_empty_conf(
-    to_convert: ruleset_api_v1.form_specs.FormSpec[str], localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> Mapping[str, bool | str]:
     min_len_validator = None
     if to_convert.custom_validate is not None:
@@ -625,12 +625,9 @@ def _get_allow_empty_conf(
             None,
         )
 
-    return {
-        "allow_empty": min_len_validator is None,
-        "empty_text": (
-            min_len_validator.error_msg.localize(localizer) if min_len_validator is not None else ""
-        ),
-    }
+    if isinstance(min_len_validator, ruleset_api_v1.form_specs.validators.LengthInRange):
+        return {"allow_empty": False, "empty_text": min_len_validator.error_msg.localize(localizer)}
+    return {"allow_empty": True}
 
 
 def _convert_to_legacy_integer(
@@ -1244,6 +1241,7 @@ def _convert_to_legacy_list(
         "add_label": to_convert.add_element_label.localize(localizer),
         "del_label": to_convert.remove_element_label.localize(localizer),
         "text_if_empty": to_convert.no_element_label.localize(localizer),
+        **_get_allow_empty_conf(to_convert, localizer),
     }
 
     if to_convert.custom_validate is not None:
@@ -1999,6 +1997,7 @@ def _convert_to_legacy_list_choice(
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "default_value": to_convert.prefill.value,
+        **_get_allow_empty_conf(to_convert, localizer),
     }
 
     if to_convert.custom_validate is not None:

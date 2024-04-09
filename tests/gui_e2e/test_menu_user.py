@@ -5,10 +5,11 @@
 
 from playwright.sync_api import expect
 
+from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.dashboard import LoginPage
 
 
-def test_user_color_theme(logged_in_page: LoginPage) -> None:
+def test_user_color_theme(logged_in_page: LoginPage, credentials: CmkCredentials) -> None:
     default_label = str(logged_in_page.main_menu.user_color_theme_button.get_attribute("value"))
     default_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
     logged_in_page.main_menu.user_color_theme_button.click()
@@ -20,7 +21,7 @@ def test_user_color_theme(logged_in_page: LoginPage) -> None:
 
     # logging out and logging in to make sure the value is saved
     logged_in_page.logout()
-    logged_in_page.login()
+    logged_in_page.login(credentials)
     saved_label = logged_in_page.main_menu.user_color_theme_button.get_attribute("value")
     saved_value = str(logged_in_page.page.locator("body").get_attribute("data-theme"))
     assert saved_label == changed_label, "Saved color theme is not properly displayed!"
@@ -34,7 +35,7 @@ def test_user_color_theme(logged_in_page: LoginPage) -> None:
     assert reverted_value == default_value, "Reverted color theme is not properly reflected!"
 
 
-def test_user_sidebar_position(logged_in_page: LoginPage) -> None:
+def test_user_sidebar_position(logged_in_page: LoginPage, credentials: CmkCredentials) -> None:
     default_label = str(
         logged_in_page.main_menu.user_sidebar_position_button.get_attribute("value")
     )
@@ -48,7 +49,7 @@ def test_user_sidebar_position(logged_in_page: LoginPage) -> None:
 
     # logging out and logging in to make sure the value is saved
     logged_in_page.logout()
-    logged_in_page.login()
+    logged_in_page.login(credentials)
     saved_label = str(logged_in_page.main_menu.user_sidebar_position_button.get_attribute("value"))
     saved_value = str(logged_in_page.sidebar.locator().get_attribute("class"))
     assert saved_label == changed_label, "Saved sidebar position is not properly displayed!"

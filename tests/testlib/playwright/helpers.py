@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from pprint import pformat
 from re import Pattern
+from typing import NamedTuple
 
 from playwright.sync_api import Error, expect, Frame, Locator, Page
 from playwright.sync_api import TimeoutError as PWTimeoutError
@@ -140,3 +141,8 @@ class Keys(Enum):
     ArrowDown = "ArrowDown"
     ArrowLeft = "ArrowLeft"
     ArrowRight = "ArrowRight"
+
+
+class CmkCredentials(NamedTuple):
+    username: str
+    password: str

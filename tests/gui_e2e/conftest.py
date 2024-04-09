@@ -51,3 +51,13 @@ def logged_in_mobile(
 ) -> LoginPage:
     page = context_mobile.new_page()
     return _log_in(page, test_site, credentials, mobile_device=True)
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--update-rules",
+        action="store_true",
+        default=False,
+        help="Store updated rule output as static references: rules already stored as reference"
+        "are updated and new ones are added.",
+    )

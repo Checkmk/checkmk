@@ -46,7 +46,7 @@ def main() {
         );
         setCustomBuildProperty(
             key: "path_hashes",
-            value: DEPENDENCY_PATH_HASHES,
+            value: directory_hashes(DEPENDENCY_PATH_HASHES.split(",").grep().collect {keyvalue -> keyvalue.split("=")[0]}),
         );
     }
 }

@@ -196,12 +196,17 @@ RUN /opt/install-patchelf.sh
 # simply solve this by pre-creating the empty file here.
 RUN touch /etc/fstab
 
+# Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
+# jobs will be executed as this user in the container
+RUN groupadd -g 1000 jenkins \
+    && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
+
+RUN mkdir -p /home/jenkins/.cache/ \
+    && chown jenkins:jenkins /home/jenkins/.cache/
+
 ARG VERS_TAG
 RUN echo "${VERS_TAG}" > /version.txt
 
 ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
     com.tribe29.image_type="build-image"
-
-COPY --from=dev_images entrypoint.sh /opt/
-ENTRYPOINT ["/opt/entrypoint.sh"]

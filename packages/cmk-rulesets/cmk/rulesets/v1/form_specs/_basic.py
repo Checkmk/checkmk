@@ -456,8 +456,11 @@ class SingleChoice(FormSpec[str]):
     If a DefaultValue is used, it must be one of the elements names.
     If an InputHint is used, its title will be shown as a placeholder in the input field, requiring
     the user to make a choice."""
-    deprecated_elements: tuple[str, ...] | None = None
-    """Elements that can still be present in old user configurations, but are no longer offered."""
+    ignored_elements: tuple[str, ...] = ()
+    """Elements that can not be configured, but aren't removed from rules if they are present.
+    They might be ignored when rendering the ruleset.
+    You can use these to deprecate elements, to avoid breaking the old configurations.
+    """
     invalid_element_validation: InvalidElementValidator | None = None
     """Validate if the selected value is still offered as a choice."""
 
@@ -466,4 +469,8 @@ class SingleChoice(FormSpec[str]):
         if isinstance(self.prefill, DefaultValue) and self.prefill.value not in valid:
             raise ValueError(
                 f"Invalid default: {self.prefill.value!r}, choose from {', '.join(valid)}"
+            )
+        if offenders := valid.intersection(self.ignored_elements):
+            raise ValueError(
+                f"Elements are marked as 'ignored' but still present: {', '.join(offenders)}"
             )

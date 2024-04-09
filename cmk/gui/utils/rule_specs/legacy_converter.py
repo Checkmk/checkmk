@@ -994,7 +994,7 @@ def _convert_to_legacy_dictionary(
             help=_localize_optional(to_convert.help_text, localizer),
             empty_text=_localize_optional(to_convert.no_elements_text, localizer),
             required_keys=ungrouped_element_key_props.required + list(grouped_elements_map.keys()),
-            ignored_keys=list(to_convert.deprecated_elements),
+            ignored_keys=list(to_convert.ignored_elements),
             hidden_keys=ungrouped_element_key_props.hidden,
             validate=(
                 _convert_to_dict_legacy_validation(
@@ -1117,6 +1117,7 @@ def _convert_to_legacy_dropdown_choice(
         "help": _localize_optional(to_convert.help_text, localizer),
         "empty_text": _localize_optional(to_convert.no_elements_text, localizer),
         "read_only": to_convert.frozen,
+        "deprecated_choices": to_convert.ignored_elements,
     }
 
     match to_convert.prefill:
@@ -1140,9 +1141,6 @@ def _convert_to_legacy_dropdown_choice(
         converted_kwargs["invalid_choice_error"] = _localize_optional(
             to_convert.invalid_element_validation.error_msg, localizer
         )
-
-    if to_convert.deprecated_elements is not None:
-        converted_kwargs["deprecated_choices"] = to_convert.deprecated_elements
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(

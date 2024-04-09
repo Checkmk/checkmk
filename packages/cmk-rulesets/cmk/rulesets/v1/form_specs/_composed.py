@@ -137,14 +137,20 @@ class Dictionary(FormSpec[Mapping[str, object]]):
     no_elements_text: Message = Message("(no parameters)")
     """Text to show if no elements are specified"""
 
-    deprecated_elements: tuple[str, ...] = ()
-    """Elements that can no longer be configured, but aren't removed from the old rules that
-    already have them configured. Can be used when deprecating elements, to avoid breaking the
-    old configurations."""
+    ignored_elements: tuple[str, ...] = ()
+    """Elements that can no longer be configured, but aren't removed from rules if they are present.
+    They might be ignored when rendering the ruleset.
+    You can use these to deprecate elements, to avoid breaking the old configurations.
+    """
 
     def __post_init__(self) -> None:
-        for key in self.elements:  # type: ignore[misc]
+        current_elements = set(self.elements)  # type: ignore[misc]
+        for key in current_elements:
             _validate_name(key)
+        if offenders := current_elements.intersection(self.ignored_elements):
+            raise ValueError(
+                f"Elements are marked as 'ignored' but still present: {', '.join(offenders)}"
+            )
 
 
 @dataclass(frozen=True, kw_only=True)

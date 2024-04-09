@@ -630,7 +630,7 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
 
     # Persist the current data range for the graph editor
     if graph_render_config.editing:
-        _save_user_graph_data_range(graph_data_range)
+        save_user_graph_data_range(graph_data_range)
 
     graph_artwork = compute_graph_artwork(
         graph_recipe,
@@ -670,18 +670,8 @@ def load_user_graph_data_range() -> GraphDataRange:
     )
 
 
-def _save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
+def save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
     user.save_file("graph_range", graph_data_range.model_dump())
-
-
-def forget_manual_vertical_zoom() -> None:
-    graph_data_range = load_user_graph_data_range()
-    _save_user_graph_data_range(
-        GraphDataRange(
-            time_range=graph_data_range.time_range,
-            step=graph_data_range.step,
-        )
-    )
 
 
 def _resolve_graph_recipe_with_error_handling(

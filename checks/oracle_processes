@@ -37,6 +37,9 @@ def check_oracle_processes(item, params, info):
             elif isinstance(err, tuple):
                 return err
 
+            if len(line) < 3:
+                continue
+
             processes_num = int(line[1])
             processes_max = int(line[2])
             processes_pct = float(processes_num) / float(processes_max) * 100

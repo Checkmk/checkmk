@@ -13,7 +13,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Any, Literal, NamedTuple, Protocol, TypeVar
+from typing import Any, Literal, NamedTuple
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -101,8 +101,10 @@ from .registry import (
     inventory_displayhints,
     InventoryHintSpec,
     InvPaintFunction,
+    InvValue,
     PaintFunction,
     PaintResult,
+    SortFunction,
 )
 
 _PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
@@ -588,22 +590,6 @@ def inv_paint_service_status(status: str) -> PaintResult:
 #   |                  |_|            |___/                                |
 #   '----------------------------------------------------------------------'
 
-# TODO This protocol can also be used in cmk.utils.structured_data.py
-
-
-class _Comparable(Protocol):
-    @abc.abstractmethod
-    def __eq__(self, other: object) -> bool: ...
-
-    @abc.abstractmethod
-    def __lt__(self, other: CmpInvValue) -> bool: ...
-
-    @abc.abstractmethod
-    def __gt__(self, other: CmpInvValue) -> bool: ...
-
-
-CmpInvValue = TypeVar("CmpInvValue", bound=_Comparable)
-
 
 def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
     # FIXME At the moment  we need it to get tdclass: Clean this up one day.
@@ -615,15 +601,12 @@ def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction
     return "str", inv_paint_generic
 
 
-SortFunction = Callable[[CmpInvValue, CmpInvValue], int]
-
-
 def _make_sort_function(raw_hint: InventoryHintSpec) -> SortFunction:
     return _decorate_sort_function(raw_hint.get("sort", _cmp_inv_generic))
 
 
 def _decorate_sort_function(sort_function: SortFunction) -> SortFunction:
-    def wrapper(val_a: CmpInvValue | None, val_b: CmpInvValue | None) -> int:
+    def wrapper(val_a: InvValue | None, val_b: InvValue | None) -> int:
         if val_a is None:
             return 0 if val_b is None else -1
 
@@ -635,7 +618,7 @@ def _decorate_sort_function(sort_function: SortFunction) -> SortFunction:
     return wrapper
 
 
-def _cmp_inv_generic(val_a: CmpInvValue, val_b: CmpInvValue) -> int:
+def _cmp_inv_generic(val_a: InvValue, val_b: InvValue) -> int:
     return (val_a > val_b) - (val_a < val_b)
 
 

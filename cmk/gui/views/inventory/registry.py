@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
+import abc
 from collections.abc import Sequence
-from typing import Any, Callable
+from typing import Any, Callable, Protocol, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -14,6 +17,22 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 
 
+class _Comparable(Protocol):
+    # TODO This protocol can also be used in cmk.utils.structured_data.py
+    @abc.abstractmethod
+    def __eq__(self, other: object) -> bool: ...
+
+    @abc.abstractmethod
+    def __lt__(self, other: InvValue) -> bool: ...
+
+    @abc.abstractmethod
+    def __gt__(self, other: InvValue) -> bool: ...
+
+
+InvValue = TypeVar("InvValue", bound=_Comparable)
+SortFunction = Callable[[InvValue, InvValue], int]
+
+
 class InventoryHintSpec(TypedDict, total=False):
     title: str | LazyString
     short: str | LazyString
@@ -21,7 +40,7 @@ class InventoryHintSpec(TypedDict, total=False):
     paint: str
     view: str
     keyorder: Sequence[str]
-    sort: Any
+    sort: SortFunction
     filter: Any
     is_show_more: bool
 

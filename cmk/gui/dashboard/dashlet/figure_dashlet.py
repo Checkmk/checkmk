@@ -30,7 +30,7 @@ __all__ = ["FigureDashletPage", "ABCFigureDashlet"]
 class FigureDashletPage(AjaxPage):
     def page(self) -> PageResult:
         dashboard_name = request.get_ascii_input_mandatory("name")
-        dashboard_owner = UserId(request.get_ascii_input_mandatory("owner"))
+        dashboard_owner = request.get_validated_type_input_mandatory(UserId, "owner")
         try:
             dashboard = get_permitted_dashboards_by_owners()[dashboard_name][dashboard_owner]
         except KeyError:

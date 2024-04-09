@@ -33,6 +33,7 @@ from cmk.update_config.update_state import format_warning, UpdateActionState
 
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "checkgroup_parameters:fileinfo-groups": "checkgroup_parameters:fileinfo_groups_checking",
+    "checkgroup_parameters:robotmk_suite": "checkgroup_parameters:robotmk_plan",
     "static_checks:fileinfo-groups": "static_checks:fileinfo_groups_checking",
     "checkgroup_parameters:if": "checkgroup_parameters:interfaces",
     "static_checks:if": "static_checks:interfaces",

@@ -1032,7 +1032,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "top_level_suite_name",
                 "bottom_level_suite_name",
                 "test_name",
-                "rmk_id",
+                "plan_id",
                 "test_item",
             ],
             "view": "invsyntheticmonitoring",
@@ -1042,7 +1042,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.synthetic_monitoring.tests:*.top_level_suite_name": {"title": _l("Top level suite")},
         ".software.applications.synthetic_monitoring.tests:*.bottom_level_suite_name": {"title": _l("Bottom level suite")},
         ".software.applications.synthetic_monitoring.tests:*.test_name": {"title": _l("Test")},
-        ".software.applications.synthetic_monitoring.tests:*.rmk_id": {"title": _l("RMK ID")},
+        ".software.applications.synthetic_monitoring.tests:*.plan_id": {"title": _l("Plan ID")},
         ".software.applications.synthetic_monitoring.tests:*.test_item": {"title": _l("Item")},
         ".software.applications.mobileiron.": {
             "title": _l("Mobileiron"),

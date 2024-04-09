@@ -28,7 +28,7 @@ def _credentials(test_site: Site) -> CmkCredentials:
     return CmkCredentials(username=ADMIN_USER, password=test_site.admin_password)
 
 
-def log_in(log_in_url: str, page: Page, test_site: Site, credentials: CmkCredentials) -> LoginPage:
+def _log_in(log_in_url: str, page: Page, test_site: Site, credentials: CmkCredentials) -> LoginPage:
     page.goto(log_in_url)
     ppage = LoginPage(page, site_id=test_site.id, site_url=log_in_url)
     ppage.login(credentials)
@@ -37,7 +37,7 @@ def log_in(log_in_url: str, page: Page, test_site: Site, credentials: CmkCredent
 
 @pytest.fixture(name="logged_in_page")
 def logged_in(test_site: Site, page: Page, credentials: CmkCredentials) -> LoginPage:
-    return log_in(test_site.internal_url, page, test_site, credentials)
+    return _log_in(test_site.internal_url, page, test_site, credentials)
 
 
 @pytest.fixture(name="logged_in_page_mobile")
@@ -45,4 +45,4 @@ def logged_in_mobile(
     test_site: Site, context_mobile: BrowserContext, credentials: CmkCredentials
 ) -> LoginPage:
     page = context_mobile.new_page()
-    return log_in(test_site.internal_url_mobile, page, test_site, credentials)
+    return _log_in(test_site.internal_url_mobile, page, test_site, credentials)

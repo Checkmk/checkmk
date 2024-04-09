@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Literal, override
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin
 
 from playwright.sync_api import Page, Response
 
@@ -19,16 +19,13 @@ class LoginPage(CmkPage):
         self,
         page: Page,
         site_id: str,
-        site_url: str | None = None,
+        site_url: str,
         timeout_assertions: int | None = None,
         timeout_navigation: int | None = None,
     ) -> None:
         super().__init__(page, timeout_assertions, timeout_navigation)
         self.site_id = site_id
-        if site_url:
-            self.site_url = site_url
-        else:
-            self.site_url = "".join(urlsplit(self.page.url)[0:2])
+        self.site_url = site_url
 
     # TODO: implement the method in CMK-16737.
     @override

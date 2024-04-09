@@ -62,8 +62,8 @@ def test_cookie_flags(
 ) -> None:
     """tests for 3.4.X"""
     page = context.new_page()
-    page.goto(test_site.internal_url)
-    ppage = LoginPage(page, site_id=test_site.id)
+    page.goto(url := test_site.internal_url)
+    ppage = LoginPage(page, site_id=test_site.id, site_url=url)
     ppage.login(credentials)
 
     cookie = context.cookies()[0]
@@ -75,4 +75,4 @@ def test_cookie_flags(
         assert cookie["sameSite"] == "Lax"
 
     # V3.4.5
-    assert cookie["path"] == "/gui_e2e_central/"
+    assert cookie["path"] == f"/{test_site.id}/"

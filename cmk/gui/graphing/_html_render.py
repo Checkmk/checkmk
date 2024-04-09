@@ -654,19 +654,11 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def load_user_graph_data_range() -> GraphDataRange:
+def load_user_graph_data_range() -> GraphDataRange | None:
     return (
         GraphDataRange.model_validate(raw_range)
-        if (
-            raw_range := user.load_file(
-                "graph_range",
-                None,
-            )
-        )
-        else GraphDataRange(
-            time_range=(int(time.time() - 86400), int(time.time())),
-            step="86400:80000",
-        )
+        if (raw_range := user.load_file("graph_range", None))
+        else None
     )
 
 

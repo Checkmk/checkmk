@@ -8,6 +8,7 @@ from urllib.parse import urljoin, urlsplit
 
 from playwright.sync_api import Page, Response
 
+from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.navigation import CmkPage
 
 
@@ -28,25 +29,17 @@ class LoginPage(CmkPage):
             self.site_url = site_url
         else:
             self.site_url = "".join(urlsplit(self.page.url)[0:2])
-        self.username = ""
-        self.password = ""
 
     # TODO: implement the method in CMK-16737.
     @override
     def navigate(self) -> str:
         return "dummy"
 
-    def login(self, username: str = "", password: str = "") -> None:
-        """login to cmk"""
-        if not username:
-            username = self.username
-        if not password:
-            password = self.password
-        self.page.locator("#input_user").fill(username)
-        self.page.locator("#input_pass").fill(password)
+    def login(self, credentials: CmkCredentials) -> None:
+        """Login to Checkmk GUI."""
+        self.page.locator("#input_user").fill(credentials.username)
+        self.page.locator("#input_pass").fill(credentials.password)
         self.page.locator("#_login").click()
-        self.username = username
-        self.password = password
 
     def logout(self) -> None:
         self.main_menu.user_logout.click()

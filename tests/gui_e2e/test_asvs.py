@@ -12,6 +12,7 @@ See:
 - https://owasp.org/www-project-application-security-verification-standard/"""
 from playwright.sync_api import BrowserContext
 
+from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.dashboard import LoginPage
 from tests.testlib.site import Site
 
@@ -24,21 +25,21 @@ def _change_password(page: LoginPage, old_password: str, new_password: str) -> N
     page.main_area.check_success("Successfully changed password.")
 
 
-def test_v2_1_5(test_site: Site, logged_in_page: LoginPage) -> None:
+def test_v2_1_5(test_site: Site, logged_in_page: LoginPage, credentials: CmkCredentials) -> None:
     """Verify users can change their password."""
 
     page = logged_in_page
-    _change_password(page, "cmk", "not-cmk-really-not")
+    _change_password(page, credentials.password, "not-cmk-really-not")
     page.logout()
 
     # check old password, shouldn't work anymore
-    page.login("cmkadmin", "cmk")
+    page.login(credentials)
     page.check_error("Incorrect username or password. Please try again.")
 
     # changing it back for other tests
     test_site.reset_admin_password()
 
-    page.login("cmkadmin", "cmk")
+    page.login(credentials)
     page.main_area.check_page_title("Main dashboard")
 
 
@@ -56,15 +57,14 @@ def test_password_truncation_error(logged_in_page: LoginPage) -> None:
     )
 
 
-def test_cookie_flags(context: BrowserContext, test_site: Site, is_chromium: bool) -> None:
+def test_cookie_flags(
+    context: BrowserContext, test_site: Site, is_chromium: bool, credentials: CmkCredentials
+) -> None:
     """tests for 3.4.X"""
-    username = "cmkadmin"
-    password = "cmk"
-
     page = context.new_page()
     page.goto(test_site.internal_url)
     ppage = LoginPage(page, site_id=test_site.id)
-    ppage.login(username, password)
+    ppage.login(credentials)
 
     cookie = context.cookies()[0]
     # V3.4.2

@@ -51,6 +51,8 @@ from cmk.utils.version import Edition, Version
 
 logger = logging.getLogger(__name__)
 
+ADMIN_USER: Final[str] = "cmkadmin"
+AUTOMATION_USER: Final[str] = "automation"
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
 
 
@@ -89,7 +91,7 @@ class Site:
         self.openapi = CMKOpenApiSession(
             host=self.http_address,
             port=self.apache_port if self.exists() else 80,
-            user="automation" if self.exists() else "cmkadmin",
+            user=AUTOMATION_USER if self.exists() else ADMIN_USER,
             password=self.get_automation_secret() if self.exists() else self.admin_password,
             site=self.id,
         )
@@ -561,7 +563,7 @@ class Site:
 
     def reset_admin_password(self, new_password: str | None = None) -> None:
         self.check_output(
-            ["cmk-passwd", "-i", "cmkadmin"], input=new_password or self.admin_password
+            ["cmk-passwd", "-i", ADMIN_USER], input=new_password or self.admin_password
         )
 
     def listdir(self, rel_path: str) -> list[str]:
@@ -685,7 +687,7 @@ class Site:
 
         self.openapi.port = self.apache_port
         self.openapi.set_authentication_header(
-            user="automation", password=self.get_automation_secret()
+            user=AUTOMATION_USER, password=self.get_automation_secret()
         )
         # set the sites timezone according to TZ
         self.set_timezone(os.getenv("TZ", ""))
@@ -1045,12 +1047,12 @@ class Site:
         r = web.get("user_profile.py")
         assert "Edit profile" in r.text, "Body: %s" % r.text
 
-        if (user := self.openapi.get_user("cmkadmin")) is None:
+        if (user := self.openapi.get_user(ADMIN_USER)) is None:
             raise Exception("User cmkadmin not found!")
         user_spec, etag = user
         user_spec["language"] = "en"
         user_spec.pop("enforce_password_change", None)
-        self.openapi.edit_user("cmkadmin", user_spec, etag)
+        self.openapi.edit_user(ADMIN_USER, user_spec, etag)
 
         # Verify the language is as expected now
         r = web.get("user_profile.py", allow_redirect_to_login=True)

@@ -833,11 +833,18 @@ def _cluster_service_entry(
             --> from a cluster perspective it is therefore changed/unchanged it only moved from one
             node to another
 
+    Service labels for clustered services:
+        * cluster service should inherit the labels of services from all of its nodes
+        * label values take priority according to the order of the nodes: first come first serve
+        * we assume that the order of the node never changes
+        * we must merge labels for both the new and old autochecks
+
     """
     if host_name != services_cluster:
         return  # not part of this host
 
     if current_recorded_entry is None:
+        # first encounter of the service
         yield DiscoveredService.id(entry), ServicesTableEntry(
             transition=node_transition,
             autocheck=entry,
@@ -854,6 +861,19 @@ def _cluster_service_entry(
     match accumulated_transition, node_transition:
         case "unchanged" | "changed", _not_relevant:
             # unchanged/changed always preconditions a service's preexistence
+            # we only update the labels
+            assert existing_autocheck_entry.new is not None
+            assert existing_autocheck_entry.previous is not None
+            yield DiscoveredService.id(entry), ServicesTableEntry(
+                transition=accumulated_transition,
+                autocheck=DiscoveredItem[AutocheckEntry](
+                    new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
+                    previous=_autocheck_with_merged_labels(
+                        existing_autocheck_entry.previous, entry.previous
+                    ),
+                ),
+                hosts=nodes_with_service,
+            )
             return
         case "new", "unchanged" | "changed" | "vanished":
             # turns out the service already existed and is not really new
@@ -866,6 +886,7 @@ def _cluster_service_entry(
             # --> node1 service will be taken (first node appearance wins)
             assert existing_autocheck_entry.new is not None
             assert entry.previous is not None
+            assert existing_autocheck_entry.new is not None
             yield DiscoveredService.id(entry), ServicesTableEntry(
                 transition=(
                     "changed"
@@ -873,19 +894,30 @@ def _cluster_service_entry(
                     else "unchanged"
                 ),
                 autocheck=DiscoveredItem[AutocheckEntry](
-                    new=existing_autocheck_entry.new,
-                    previous=entry.previous,
+                    new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
+                    previous=existing_autocheck_entry.previous,
                 ),
                 hosts=nodes_with_service,
             )
         case "new", "new":
             # still new, first new node appearance wins so we keep the existing entry
+            # we only update the labels of the new entry
+            assert existing_autocheck_entry.new is not None
+            yield DiscoveredService.id(entry), ServicesTableEntry(
+                transition=accumulated_transition,
+                autocheck=DiscoveredItem[AutocheckEntry](
+                    new=_autocheck_with_merged_labels(existing_autocheck_entry.new, entry.new),
+                    previous=existing_autocheck_entry.previous,
+                ),
+                hosts=nodes_with_service,
+            )
             return
         case "vanished", "unchanged" | "changed" | "new":
             # turns out the service is not vanished but moved to another node or was already
             # present before
             assert current_recorded_entry.autocheck.previous is not None
             assert entry.new is not None
+            assert existing_autocheck_entry.previous is not None
             yield DiscoveredService.id(entry), ServicesTableEntry(
                 transition=(
                     "changed"
@@ -894,13 +926,49 @@ def _cluster_service_entry(
                 ),
                 autocheck=DiscoveredItem[AutocheckEntry](
                     new=entry.new,
-                    previous=current_recorded_entry.autocheck.previous,
+                    previous=_autocheck_with_merged_labels(
+                        existing_autocheck_entry.previous, entry.previous
+                    ),
                 ),
                 hosts=nodes_with_service,
             )
         case "vanished", "vanished":
-            # still vanished, first vanished node appearance wins so we keep the existing entry
+            # still vanished, first vanished node appearance wins so we keep the existing entry but
+            # look for new labels
+            assert existing_autocheck_entry.previous is not None
+            yield DiscoveredService.id(entry), ServicesTableEntry(
+                transition=accumulated_transition,
+                autocheck=DiscoveredItem[AutocheckEntry](
+                    new=existing_autocheck_entry.new,
+                    previous=_autocheck_with_merged_labels(
+                        existing_autocheck_entry.previous, entry.previous
+                    ),
+                ),
+                hosts=nodes_with_service,
+            )
             return
+
+
+def _autocheck_with_merged_labels(
+    governing_autocheck: AutocheckEntry, completing_autocheck: AutocheckEntry | None
+) -> AutocheckEntry:
+    """Merge service labels of two autochecks
+
+    The service labels of the preceding autocheck are merged with the service labels of the current
+    where the first appearance of a label wins.
+    """
+    if completing_autocheck is None:
+        return governing_autocheck
+
+    return AutocheckEntry(
+        check_plugin_name=governing_autocheck.check_plugin_name,
+        item=governing_autocheck.item,
+        parameters=governing_autocheck.parameters,
+        service_labels={
+            **completing_autocheck.service_labels,
+            **governing_autocheck.service_labels,
+        },
+    )
 
 
 def _changed_service(service: AutocheckEntry, compare_service: AutocheckEntry) -> bool:

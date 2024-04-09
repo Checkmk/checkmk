@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from logging import Logger
 from pathlib import Path
 
 from cmk.utils.exceptions import MKGeneralException
@@ -37,7 +38,7 @@ def _get_package_id(package_map: Mapping[Path, PackageID], rel_path: str) -> Pac
 class PreUpdateUIExtensions(PreUpdateAction):
     """Load all web plugins before the real update happens"""
 
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         main_modules.load_plugins()
         path_config = get_path_config()
         package_store = PACKAGE_STORE

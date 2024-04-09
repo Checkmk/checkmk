@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from logging import Logger
+
 from cmk.gui.exceptions import MKUserError
 
 from cmk.update_config.plugins.pre_actions.utils import (
@@ -19,7 +21,7 @@ from ..lib.autochecks import rewrite_yielding_errors
 class PreUpdateAgentBasedPlugins(PreUpdateAction):
     """Load all agent based plugins before the real update happens"""
 
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         for error in rewrite_yielding_errors(write=False):
             if continue_per_users_choice(
                 conflict_mode,

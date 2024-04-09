@@ -29,6 +29,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 import cmk.utils.store as store
+from cmk.utils.config_validation_layer.notification_rules import validate_notification_rules
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
     EventRule,
@@ -91,10 +92,12 @@ def load_notification_rules(lock: bool = False) -> list[EventRule]:
             del rule["notify_method"]
             rule["notify_plugin"] = (plugin, method)
 
+    validate_notification_rules(notification_rules)
     return notification_rules
 
 
 def save_notification_rules(rules: list[EventRule]) -> None:
+    validate_notification_rules(rules)
     store.mkdir(wato_root_dir())
     store.save_to_mk_file(
         wato_root_dir() + "notifications.mk",

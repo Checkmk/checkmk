@@ -1242,6 +1242,7 @@ CASE_STATE_TYPE = Literal[
     "closed",
     "open",
     "awaiting_info",
+    "resolved",
 ]
 
 

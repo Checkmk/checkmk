@@ -647,7 +647,7 @@ def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
         # TODO Do we still need this?
         return title
 
-    return lambda word: title
+    return lambda word: str(title)
 
 
 def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], str]:
@@ -707,7 +707,7 @@ class TableViewSpec:
             return None
 
         if view_name := _get_table_view_name(path, raw_hint):
-            title = raw_hint.get("title", "")
+            title = str(raw_hint.get("title", ""))
             return TableViewSpec(
                 # This seems to be important for the availability of GUI elements, such as filters,
                 # sorter, etc. in related contexts (eg. data source inv*).
@@ -782,7 +782,7 @@ class ColumnDisplayHint:
         title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
-            short=raw_hint.get("short"),
+            short=None if (short := raw_hint.get("short")) is None else str(short),
             _long_title_function=_make_long_title_function(title, path),
             paint_function=paint_function,
             sort_function=_make_sort_function(raw_hint),
@@ -854,7 +854,7 @@ class AttributeDisplayHint:
         title = _make_title_function(raw_hint)(key)
         return cls(
             title=title,
-            short=raw_hint.get("short"),
+            short=None if (short := raw_hint.get("short")) is None else str(short),
             _long_title_function=_make_long_title_function(title, path),
             data_type=data_type,
             paint_function=paint_function,

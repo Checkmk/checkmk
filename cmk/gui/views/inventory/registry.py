@@ -11,11 +11,12 @@ from typing_extensions import TypedDict
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 
 
 class InventoryHintSpec(TypedDict, total=False):
-    title: Any
-    short: Any
+    title: str | LazyString
+    short: str | LazyString
     icon: str
     paint: str
     view: str

@@ -524,3 +524,7 @@ class EventStatsDashlet(ABCFigureDashlet):
     @classmethod
     def initial_size(cls):
         return (30, 18)
+
+    @classmethod
+    def infos(cls) -> List[str]:
+        return ["host", "event"]

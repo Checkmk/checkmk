@@ -1,0 +1,14 @@
+Title: Fix event statistics dashlet filters
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1712656769
+Edition: cre
+Level: 1
+Version: 2.1.0p42
+
+For the dashlet "Event statistics" you were able to configure "Host" and
+"Service" Context/Search filter.
+
+The "Service" filter had no effect and is now replaced with the "Event Console
+event" filter option.

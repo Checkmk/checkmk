@@ -468,7 +468,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
 
     def _basic_elements(self, id_title):
         if self._new:
-            vs_id = ID(
+            vs_id: TextInput | FixedValue = ID(
                 title=id_title,
                 size=60,
                 allow_empty=False,

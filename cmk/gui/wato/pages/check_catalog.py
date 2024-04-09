@@ -231,7 +231,7 @@ class ModeCheckPluginTopic(WatoMode):
         self._path: tuple[str, ...] = tuple(self._topic.split("/"))  # e.g. [ "hw", "network" ]
 
         for comp in self._path:
-            ID().validate_value(comp, None)  # Beware against code injection!
+            ID().validate_value(comp, "")  # Beware against code injection!
 
         self._manpages = _get_check_catalog(discover_families(raise_errors=False), self._path)
         self._titles = man_pages.CATALOG_TITLES

@@ -234,13 +234,13 @@ class RowTableEC(RowTableLivestatus):
 # This should be handled in the core, but the core does not know anything about
 # the "mkeventd.seeall" permissions. So it is simply not possible to do this on
 # core level at the moment.
-def _ec_filter_host_information_of_not_permitted_hosts(rows):
+def _ec_filter_host_information_of_not_permitted_hosts(rows: Rows) -> None:
     if user.may("mkeventd.seeall"):
         return  # Don't remove anything. The user may see everything
 
     user_groups = set(user.contact_groups)
 
-    def is_contact(row) -> bool:  # type: ignore[no-untyped-def]
+    def is_contact(row: Row) -> bool:
         return bool(user_groups.intersection(row["host_contact_groups"]))
 
     if rows:
@@ -1278,7 +1278,7 @@ PermissionECUpdateContact = Permission(
 
 class ECCommand(Command):
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["event"]
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
@@ -1326,7 +1326,7 @@ class CommandECUpdateEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECUpdateEvent
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_table(border="0", cellpadding="0", cellspacing="3")
         if user.may("mkeventd.update_comment"):
             html.open_tr()
@@ -1418,6 +1418,8 @@ class CommandECChangeState(ECCommand):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
+        value = MonitoringState().from_html_vars("_mkeventd_state")
+        assert value is not None
         return HTML(
             "<br><br>"
             + _("New state: %s")
@@ -1426,10 +1428,10 @@ class CommandECChangeState(ECCommand):
                 1: _("WARN"),
                 2: _("CRIT"),
                 3: _("UNKNOWN"),
-            }[MonitoringState().from_html_vars("_mkeventd_state")]
+            }[value]
         )
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         MonitoringState(label="Select new event state").render_input("_mkeventd_state", 2)
         html.br()
         html.br()
@@ -1484,7 +1486,7 @@ class CommandECCustomAction(ECCommand):
     def permission(self) -> Permission:
         return PermissionECCustomActions
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         for action_id, title in action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title, cssclass="border_hot")
@@ -1536,7 +1538,7 @@ class CommandECArchiveEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.open_div(class_="group")
         html.button("_delete_event", _("Archive Event"), cssclass="hot")
         html.button("_cancel", _("Cancel"))
@@ -1583,7 +1585,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return PermissionECArchiveEventsOfHost
 
     @property
-    def tables(self):
+    def tables(self) -> list[str]:
         return ["service"]
 
     def confirm_dialog_additions(
@@ -1602,7 +1604,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML("")
 
-    def render(self, what) -> None:  # type: ignore[no-untyped-def]
+    def render(self, what: str) -> None:
         html.help(
             _(
                 "Note: With this command you can archive all events of one host. "
@@ -1655,7 +1657,7 @@ class SorterServicelevel(Sorter):
         return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 
 
-def cmp_simple_state(column, ra, rb):
+def cmp_simple_state(column: ColumnName, ra: Row, rb: Row) -> int:
     a = ra.get(column, -1)
     b = rb.get(column, -1)
     if a == 3:

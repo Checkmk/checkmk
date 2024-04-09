@@ -63,6 +63,7 @@ from cmk.gui.valuespec import (
     Percentage,
     Timerange,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.view_utils import CSSClass
 
@@ -77,9 +78,9 @@ from cmk.bi.lib import (
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 
 AVMode = str  # TODO: Improve this type
-AVObjectType = Literal["host", "service", "bi"]  # TODO: Improve this type
+AVObjectType = Literal["host", "service", "bi"]
 AVOptions = dict[str, Any]  # TODO: Improve this type
-AVOptionValueSpecs = list  # TODO: Be more specific here
+AVOptionValueSpecs = list[tuple[str, Literal["double", "single"], bool, ValueSpec]]
 AVBIObjectSpec = tuple[None, None, str]
 AVHostOrServiceObjectSpec = tuple[SiteId, HostName, ServiceName]
 AVObjectSpec = None | AVBIObjectSpec | AVHostOrServiceObjectSpec
@@ -150,7 +151,7 @@ AVTimelineRow = tuple[AVSpan, AVTimelineStateName]
 AVTimelineRows = list[AVTimelineRow]
 AVTimelineStates = dict[AVTimelineStateName, int]
 AVTimelineStatistics = dict[AVTimelineStateName, tuple[int, int, int]]
-AVTimelineStyle = str
+AVTimelineStyle = Literal["standalone", "inline"]
 
 
 # Example for annotations:
@@ -202,7 +203,7 @@ class AvailabilityColumns:
         self.service = self._service_availability_columns()
         self.bi = self._bi_availability_columns()
 
-    def __getitem__(self, key) -> list[ColumnSpec]:  # type: ignore[no-untyped-def]
+    def __getitem__(self, key: str) -> list[ColumnSpec]:
         return getattr(self, key)
 
     def _host_availability_columns(self) -> list[ColumnSpec]:
@@ -2405,7 +2406,7 @@ def get_timeline_containers(
 
 # Not a real class, more a struct
 class TimelineContainer:
-    def __init__(self, aggr_row) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, aggr_row: Row) -> None:
         self._aggr_row = aggr_row
 
         # PUBLIC accessible data

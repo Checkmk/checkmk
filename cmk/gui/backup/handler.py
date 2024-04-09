@@ -728,7 +728,7 @@ class PageEditBackupJob:
 
     def vs_backup_job(self, config: Config) -> Dictionary:
         if self._new:
-            ident_attr = [
+            ident_attr: list[tuple[str, TextInput | FixedValue]] = [
                 (
                     "ident",
                     ID(
@@ -1680,7 +1680,7 @@ class PageEditBackupTarget:
 
     def vs_backup_target(self, config: Config) -> Dictionary:
         if self._new:
-            ident_attr = [
+            ident_attr: list[tuple[str, TextInput | FixedValue]] = [
                 (
                     "ident",
                     ID(

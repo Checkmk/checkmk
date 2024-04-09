@@ -81,7 +81,14 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
-from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
+from cmk.gui.valuespec import (
+    Alternative,
+    DualListChoice,
+    EmailAddress,
+    FixedValue,
+    TextInput,
+    UserID,
+)
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
@@ -1305,7 +1312,7 @@ class ModeEditUser(WatoMode):
         # ID
         forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
         if self._is_new_user:
-            vs_user_id = UserID(allow_empty=False, size=73)
+            vs_user_id: TextInput | FixedValue = UserID(allow_empty=False, size=73)
         else:
             vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)

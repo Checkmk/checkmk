@@ -1053,7 +1053,7 @@ class UUID(TextInput):
         html.hidden_field(varprefix, value, add_var=True)
 
 
-def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def ID(  # pylint: disable=redefined-builtin
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1073,7 +1073,7 @@ def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str] | None = None,
-):
+) -> TextInput:
     """Internal ID as used in many places (for contact names, group name, an so on)"""
     return TextInput(
         label=label,
@@ -1102,7 +1102,7 @@ def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     )
 
 
-def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def UserID(  # pylint: disable=redefined-builtin
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1121,7 +1121,7 @@ def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
-):
+) -> TextInput:
     """Internal ID as used in many places (for contact names, group name, an so on)"""
 
     def _validate(userid_str: str, varprefix: str) -> None:
@@ -1271,7 +1271,7 @@ class RegExp(TextInput):
 
         return " ".join("%s" % h for h in help_text)
 
-    def _css_classes(self, case_sensitive: bool, mode: str | None):  # type: ignore[no-untyped-def]
+    def _css_classes(self, case_sensitive: bool, mode: str | None) -> str:
         classes = ["text", "regexp"]
 
         if case_sensitive is True:
@@ -1527,15 +1527,15 @@ def _validate_hostname(text: str | None, varprefix: str) -> None:
         ) from exception
 
 
-def Hostname(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def Hostname(  # pylint: disable=redefined-builtin
     # TextInput
-    allow_empty=False,
+    allow_empty: bool = False,
     # ValueSpec
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     size: int = 38,
-):
+) -> TextInput:
     """A host name with or without domain part. Also allow IP addresses"""
     return TextInput(
         size=size,
@@ -3169,7 +3169,7 @@ class DropdownChoice(ValueSpec[T | None]):
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
-    def option_id(val) -> str:  # type: ignore[no-untyped-def]
+    def option_id(val: object) -> str:
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
     def _validate_value(self, value: T | None, varprefix: str) -> None:
@@ -3417,7 +3417,7 @@ MonitoringStateValue = Literal[0, 1, 2, 3]
 
 
 # TODO: Rename to ServiceState() or something like this
-def MonitoringState(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def MonitoringState(  # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -3438,7 +3438,7 @@ def MonitoringState(  # type: ignore[no-untyped-def] # pylint: disable=redefined
     default_value: ValueSpecDefault[int] = 0,  # NOTE: Different!
     validate: ValueSpecValidateFunc[int | None] | None = None,
     deprecated_choices: Sequence[int] = (),
-):
+) -> DropdownChoice[int]:
     """Special convenience variant for monitoring states"""
     return DropdownChoice[int](
         choices=[
@@ -4421,7 +4421,7 @@ def _today() -> int:
 _sorted = sorted
 
 
-def Weekday(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def Weekday(  # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -4442,7 +4442,7 @@ def Weekday(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str | None] | None = None,
     deprecated_choices: Sequence[str] = (),
-):
+) -> DropdownChoice:
     return DropdownChoice(
         choices=_sorted(dateutils.weekdays().items()),
         sorted=sorted,
@@ -6119,7 +6119,9 @@ class Dictionary(ValueSpec[DictionaryModel]):
             forms.end()
 
     @staticmethod
-    def _normalize_header(header):
+    def _normalize_header(
+        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]
+    ) -> tuple[str, str | None, Sequence[str]]:
         if isinstance(header, tuple):
             if len(header) == 2:
                 return header[0], None, header[1]
@@ -6141,8 +6143,13 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if param in section_elements
         )
 
-    def render_input_form_header(  # type: ignore[no-untyped-def]
-        self, varprefix, value, title, section_elements, css
+    def render_input_form_header(
+        self,
+        varprefix: str,
+        value: DictionaryModel,
+        title: str,
+        section_elements: Sequence[str],
+        css: str | None,
     ) -> None:
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
@@ -8146,8 +8153,8 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
-def SchedulePeriod(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
-    from_end=True,
+def SchedulePeriod(  # pylint: disable=redefined-builtin
+    from_end: bool = True,
     # CascadingDropdown
     label: str | None = None,
     separator: str = ", ",

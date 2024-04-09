@@ -408,7 +408,9 @@ class ModeBIEditPack(ABCBIMode):
 
     def _vs_pack(self) -> Dictionary:
         if self._bi_pack:
-            id_element = FixedValue(title=_("Pack ID"), value=self.bi_pack.id)
+            id_element: FixedValue | TextInput = FixedValue(
+                title=_("Pack ID"), value=self.bi_pack.id
+            )
         else:
             id_element = ID(
                 title=_("BI pack ID"),

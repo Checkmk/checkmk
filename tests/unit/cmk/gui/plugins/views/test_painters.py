@@ -434,6 +434,7 @@ def test_registered_painters() -> None:
         "inv_software_applications_oracle_systemparameter",
         "inv_software_applications_oracle_tablespaces",
         "inv_software_applications_synthetic_monitoring",
+        "inv_software_applications_synthetic_monitoring_plans",
         "inv_software_applications_synthetic_monitoring_tests",
         "inv_software_applications_vmwareesx",
         "inv_software_bios",

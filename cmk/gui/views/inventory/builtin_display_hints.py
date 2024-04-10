@@ -1024,6 +1024,17 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.kube.pod.pod_ip": {"title": _l("Pod IP")},
         ".software.applications.kube.pod.qos_class": {"title": _l("QoS class")},
         ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic Monitoring")},
+        ".software.applications.synthetic_monitoring.plans:": {
+            "title": _l("Plans"),
+            "keyorder": [
+                "application",
+                "variant",
+                "plan_id",
+            ],
+        },
+        ".software.applications.synthetic_monitoring.plans:*.application": {"title": _l("Application")},
+        ".software.applications.synthetic_monitoring.plans:*.variant": {"title": _l("Variant")},
+        ".software.applications.synthetic_monitoring.plans:*.plan_id": {"title": _l("Plan ID")},
         ".software.applications.synthetic_monitoring.tests:": {
             "title": _l("Tests"),
             "keyorder": [

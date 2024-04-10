@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 
 
 @dataclass
@@ -46,7 +46,7 @@ class VueText(VueBase):
 
 @dataclass
 class Model:
-    all_schemas: List[VueSchema] | None = None
+    all_schemas: list[VueSchema] | None = None
 
 
 @dataclass
@@ -66,7 +66,7 @@ class VueDictionaryElement:
 
 @dataclass
 class VueDictionary(VueBase):
-    elements: List[VueDictionaryElement]
+    elements: list[VueDictionaryElement]
     vue_type: str = "dictionary"
 
 

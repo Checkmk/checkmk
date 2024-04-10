@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, NotRequired, Type, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 from livestatus import SiteId
 
@@ -44,7 +44,7 @@ class UnitInfo(TypedDict):
     color: NotRequired[str]
     graph_unit: NotRequired[Callable[[list[float]], tuple[str, list[str]]]]
     description: NotRequired[str]
-    valuespec: NotRequired[Type[ValueSpec]]
+    valuespec: NotRequired[type[ValueSpec]]
     conversion: NotRequired[Callable[[float], float]]
     perfometer_render: NotRequired[Callable[[float], str]]
     formatter_ident: NotRequired[

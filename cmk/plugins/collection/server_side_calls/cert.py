@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
-from typing import Final, List, Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel
 
@@ -71,7 +71,7 @@ class CertificateDetails(BaseModel):
     signature_algorithm: SignatureAlgorithm | None = None
     issuer: Issuer | None = None
     subject: Subject | None = None
-    altnames: List[str] | None = None
+    altnames: list[str] | None = None
 
 
 class Settings(BaseModel):

@@ -30,7 +30,7 @@ Downtime object can have the following relations:
 import datetime as dt
 import json
 from collections.abc import Callable, Mapping
-from typing import Any, Literal, Tuple
+from typing import Any, Literal
 
 from livestatus import SiteId
 
@@ -528,7 +528,7 @@ def modify_host_downtime(params: Mapping[str, Any]) -> Response:
 
 def _generate_target_downtimes_query(
     find_type: FindByType, body: Mapping[str, Any]
-) -> Tuple[QueryExpression, SiteId | None]:
+) -> tuple[QueryExpression, SiteId | None]:
     site_id: SiteId | None = None
 
     if find_type == "query":

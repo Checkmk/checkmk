@@ -155,7 +155,9 @@ ObjectMacros = dict[str, AnyStr]
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
-SSCRules = Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+LegacySSCConfigModel = object
+
+SSCRules = Sequence[tuple[str, Sequence[Mapping[str, object] | LegacySSCConfigModel]]]
 
 
 class FilterMode(enum.Enum):
@@ -2687,7 +2689,7 @@ class ConfigCache:
 
     def special_agents(self, host_name: HostName) -> SSCRules:
         def special_agents_impl() -> SSCRules:
-            matched: list[tuple[str, Sequence[Mapping[str, object]]]] = []
+            matched: list[tuple[str, Sequence[Mapping[str, object] | LegacySSCConfigModel]]] = []
             # Previous to 1.5.0 it was not defined in which order the special agent
             # rules overwrite each other. When multiple special agents were configured
             # for a single host a "random" one was picked (depending on the iteration
@@ -2739,16 +2741,28 @@ class ConfigCache:
             if self.is_active(hn) and self.is_online(hn)
         }
 
-        def _gather_secrets_from(
-            rules_function: Callable[
-                [HostName], Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+        def _filter_newstyle_ssc_rule(
+            unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel]
+        ) -> Sequence[Mapping[str, object]]:
+            return [
+                r for r in unfiltered if isinstance(r, dict) and all(isinstance(k, str) for k in r)
             ]
+
+        def _compose_filtered_ssc_rules(
+            rules: SSCRules,
+        ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
+            return [(name, _filter_newstyle_ssc_rule(unfiltered)) for name, unfiltered in rules]
+
+        def _gather_secrets_from(
+            rules_function: Callable[[HostName], SSCRules]
         ) -> Mapping[str, str]:
             return {
                 id_: secret
                 for host in all_active_hosts
                 for id_, secret in (
-                    PreprocessingResult.from_config(rules_function(host))
+                    PreprocessingResult.from_config(
+                        _compose_filtered_ssc_rules(rules_function(host))
+                    )
                 ).ad_hoc_secrets.items()
             }
 

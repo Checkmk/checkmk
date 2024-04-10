@@ -42,10 +42,10 @@ class HostAddressConfiguration:
 @dataclass(frozen=True)
 class PluginInfo:
     command_line: str
-    argument_function: Callable[[Mapping[str, object]], Sequence[str]] | None = None
-    service_description: Callable[[Mapping[str, object]], str] | None = None
+    argument_function: Callable[[object], Sequence[str]] | None = None
+    service_description: Callable[[object], str] | None = None
     service_generator: (
-        Callable[[HostAddressConfiguration, Mapping[str, object]], Iterator[tuple[str, str]]] | None
+        Callable[[HostAddressConfiguration, object], Iterator[tuple[str, str]]] | None
     ) = None
 
 
@@ -81,7 +81,7 @@ class ActiveServiceData:
     command: str
     command_display: str
     command_line: str
-    params: Mapping[str, object]
+    params: object
     expanded_args: str
     detected_executable: str
 
@@ -90,7 +90,15 @@ class ActiveServiceData:
 class ActiveServiceDescription:
     plugin_name: str
     description: ServiceName
-    params: Mapping[str, object]
+    params: Mapping[str, object] | object
+
+
+def _ensure_mapping_str_object(values: Sequence[object]) -> Sequence[Mapping[str, object]]:
+    # for the new API, we can be sure that there are only Mappings.
+    for value in values:
+        if not isinstance(value, dict):
+            raise TypeError(value)
+    return values  # type: ignore[return-value]
 
 
 class ActiveCheck:
@@ -121,7 +129,7 @@ class ActiveCheck:
         self._use_new_descriptions_for = use_new_descriptions_for
 
     def get_active_service_data(
-        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
     ) -> Iterator[ActiveServiceData]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
@@ -149,8 +157,8 @@ class ActiveCheck:
     def _get_service_iterator(
         self,
         plugin_name: str,
-        plugin_params: Sequence[Mapping[str, object]],
-    ) -> Iterator[tuple[str, str, str, Mapping[str, object]]] | None:
+        plugin_params: Sequence[Mapping[str, object] | object],
+    ) -> Iterator[tuple[str, str, str, object]] | None:
         if (plugin_info_dict := self._legacy_plugins.get(plugin_name)) is not None:
             plugin_info = PluginInfo(
                 command_line=plugin_info_dict["command_line"],
@@ -160,6 +168,7 @@ class ActiveCheck:
             )
             return self._iterate_legacy_services(plugin_name, plugin_info, plugin_params)
 
+        plugin_params = _ensure_mapping_str_object(plugin_params)
         if (active_check := self._plugins.get(plugin_name)) is not None:
             return self._iterate_services(active_check, plugin_params)
 
@@ -188,8 +197,8 @@ class ActiveCheck:
         self,
         plugin_name: str,
         plugin_info: PluginInfo,
-        plugin_params: Sequence[Mapping[str, object]],
-    ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
+        plugin_params: Sequence[object],
+    ) -> Iterator[tuple[str, str, str, object]]:
         for params in plugin_params:
             for desc, args in self._iter_active_check_services(plugin_name, plugin_info, params):
                 args_without_macros = replace_macros(args, self.host_config.macros)
@@ -199,7 +208,7 @@ class ActiveCheck:
     def _get_service_data(
         self,
         plugin_name: str,
-        service_iterator: Iterator[tuple[str, str, str, Mapping[str, object]]],
+        service_iterator: Iterator[tuple[str, str, str, object]],
     ) -> Iterator[ActiveServiceData]:
         existing_descriptions: dict[str, str] = {}
 
@@ -260,13 +269,15 @@ class ActiveCheck:
         self,
         plugin_name: str,
         plugin_info: PluginInfo,
-        params: Mapping[str, object],
+        params: object,
     ) -> ServiceName:
         if not plugin_info.service_description:
             raise InvalidPluginInfoError
 
         if plugin_name == "http" and plugin_name not in self._use_new_descriptions_for:
-            description_with_macros = self._old_active_http_check_service_description(params)
+            description_with_macros = self._old_active_http_check_service_description(
+                _ensure_mapping_str_object((params,))[0]
+            )
         else:
             description_with_macros = plugin_info.service_description(params)
 
@@ -280,7 +291,7 @@ class ActiveCheck:
         self,
         plugin_name: str,
         plugin_info: PluginInfo,
-        params: Mapping[str, object],
+        params: object,
     ) -> Iterator[tuple[str, str]]:
         if plugin_info.service_generator:
             host_config = _get_host_address_config(self.host_name, self.host_attrs)
@@ -303,7 +314,7 @@ class ActiveCheck:
         yield description, arguments
 
     def get_active_service_descriptions(
-        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object] | object]]]
     ) -> Iterator[ActiveServiceDescription]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
@@ -334,7 +345,7 @@ class ActiveCheck:
     def _get_service_description_iterator(
         self,
         plugin_name: str,
-        plugin_params: Sequence[Mapping[str, object]],
+        plugin_params: Sequence[Mapping[str, object] | object],
     ) -> Iterator[ActiveServiceDescription] | None:
         if (plugin_info_dict := self._legacy_plugins.get(plugin_name)) is not None:
             plugin_info = PluginInfo(
@@ -347,6 +358,7 @@ class ActiveCheck:
                 plugin_name, plugin_info, plugin_params
             )
 
+        plugin_params = _ensure_mapping_str_object(plugin_params)
         if (active_check := self._plugins.get(plugin_name)) is not None:
             return self._iterate_service_descriptions(active_check, plugin_params)
 
@@ -356,7 +368,7 @@ class ActiveCheck:
         self,
         plugin_name: str,
         plugin_info: PluginInfo,
-        plugin_params: Sequence[Mapping[str, object]],
+        plugin_params: Sequence[Mapping[str, object] | object],
     ) -> Iterator[ActiveServiceDescription]:
         for params in plugin_params:
             if plugin_info.service_generator:

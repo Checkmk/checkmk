@@ -1137,7 +1137,12 @@ def _register_table_views_and_columns() -> None:
         _register_node_painter("_".join(ident), hints, painter_options=painter_options)
 
         for key, attr_hint in hints.attribute_hints.items():
-            _register_attribute_column("_".join(ident + (key,)), attr_hint, hints.abc_path, key)
+            _register_attribute_column(
+                "_".join(ident + (key,)),
+                attr_hint,
+                hints.abc_path,
+                SDKey(key),
+            )
 
         _register_table_view(hints)
 
@@ -1230,7 +1235,7 @@ def _export_node_for_csv() -> str | HTML:
 
 
 def _register_attribute_column(
-    name: str, hint: AttributeDisplayHint, path: SDPath, key: str
+    name: str, hint: AttributeDisplayHint, path: SDPath, key: SDKey
 ) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
@@ -1291,7 +1296,7 @@ def _register_attribute_column(
         columns=["host_inventory", "host_structured_status"],
         hint=hint,
         value_extractor=lambda row: row["host_inventory"].get_attribute(
-            inventory_path.path, inventory_path.key or ""
+            inventory_path.path, inventory_path.key
         ),
     )
 
@@ -1314,7 +1319,7 @@ def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDVal
 
 
 def _paint_host_inventory_attribute(
-    row: Row, path: SDPath, key: str, hint: AttributeDisplayHint
+    row: Row, path: SDPath, key: SDKey, hint: AttributeDisplayHint
 ) -> CellSpec:
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
@@ -1333,7 +1338,7 @@ def _paint_host_inventory_column(row: Row, column: str, hint: ColumnDisplayHint)
         return "", ""
     return _compute_cell_spec(
         _InventoryTreeValueInfo(
-            column,
+            SDKey(column),
             row[column],
             row.get("_".join([column, "retention_interval"])),
         ),
@@ -2367,10 +2372,11 @@ class TreeRenderer:
         self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
     ) -> None:
         sorted_pairs: Sequence[_InventoryTreeValueInfo] | Sequence[_DeltaTreeValueInfo]
+        key_order = [SDKey(k) for k in hints.attributes_hint.key_order]
         if isinstance(attributes, ImmutableAttributes):
-            sorted_pairs = _sort_pairs(attributes, hints.attributes_hint.key_order)
+            sorted_pairs = _sort_pairs(attributes, key_order)
         else:
-            sorted_pairs = _sort_delta_pairs(attributes, hints.attributes_hint.key_order)
+            sorted_pairs = _sort_delta_pairs(attributes, key_order)
 
         html.open_table()
         for value_info in sorted_pairs:
@@ -2406,7 +2412,7 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns = _make_columns(table.rows, hints.table_hint.key_order)
+        columns = _make_columns(table.rows, [SDKey(k) for k in hints.table_hint.key_order])
         sorted_rows: (
             Sequence[Sequence[_InventoryTreeValueInfo]] | Sequence[Sequence[_DeltaTreeValueInfo]]
         )

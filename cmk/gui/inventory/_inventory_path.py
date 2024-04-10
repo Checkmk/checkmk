@@ -22,7 +22,7 @@ class TreeSource(Enum):
 class InventoryPath:
     path: SDPath
     source: TreeSource
-    key: SDKey | None = None
+    key: SDKey = SDKey("")
 
     @classmethod
     def parse(cls, raw_path: str) -> InventoryPath:
@@ -58,7 +58,7 @@ class InventoryPath:
         return InventoryPath(
             path=sanitized_path,
             source=source,
-            key=path[-1],
+            key=SDKey(path[-1]),
         )
 
     @staticmethod

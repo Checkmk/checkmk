@@ -44,7 +44,7 @@ from cmk.utils.hostaddress import HostName
 SDNodeName = NewType("SDNodeName", str)
 SDPath = tuple[SDNodeName, ...]
 
-SDKey = str
+SDKey = NewType("SDKey", str)
 SDValue = int | float | str | bool | None
 SDRowIdent = tuple[SDValue, ...]
 
@@ -809,7 +809,7 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
 
             if all(isinstance(v, (int, float, str, bool)) or v is None for v in value):
                 if w := ", ".join(str(v) for v in value if v):
-                    raw_pairs.setdefault(key, w)
+                    raw_pairs.setdefault(SDKey(key), w)
                 continue
 
             if all(not isinstance(v, (list, dict)) for row in value for v in row.values()):
@@ -831,7 +831,7 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
                 raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
 
         elif isinstance(value, (int, float, str, bool)) or value is None:
-            raw_pairs.setdefault(key, value)
+            raw_pairs.setdefault(SDKey(key), value)
 
         else:
             raise TypeError(value)

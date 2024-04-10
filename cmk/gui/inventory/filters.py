@@ -197,9 +197,7 @@ def _filter_by_host_inventory(
             return bool(
                 regex.search(
                     str(
-                        row["host_inventory"].get_attribute(
-                            inventory_path.path, inventory_path.key or ""
-                        )
+                        row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key)
                     )
                 )
             )
@@ -277,9 +275,7 @@ def _filter_in_host_inventory_range(
 ) -> Callable[[Row, str, query_filters.MaybeBounds], bool]:
     def row_filter(row: Row, column: str, bounds: query_filters.MaybeBounds) -> bool:
         if not isinstance(
-            invdata := row["host_inventory"].get_attribute(
-                inventory_path.path, inventory_path.key or ""
-            ),
+            invdata := row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key),
             (int, float),
         ):
             return False
@@ -430,9 +426,7 @@ class FilterInvBool(FilterOption):
 # Filter tables
 def inside_inventory(inventory_path: InventoryPath) -> Callable[[bool, Row], bool]:
     def keep_row(on: bool, row: Row) -> bool:
-        return (
-            row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key or "") is on
-        )
+        return row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key) is on
 
     return keep_row
 

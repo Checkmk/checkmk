@@ -107,8 +107,16 @@ def _make_filter_choices_from_permitted_paths(
     return [
         SDFilterChoice(
             path=parse_visible_raw_path(entry["visible_raw_path"]),
-            pairs=a[-1] if isinstance(a := entry.get("attributes", "all"), tuple) else a,
-            columns=c[-1] if isinstance(c := entry.get("columns", "all"), tuple) else c,
+            pairs=(
+                [SDKey(a) for a in attributes[-1]]
+                if isinstance(attributes := entry.get("attributes", "all"), tuple)
+                else attributes
+            ),
+            columns=(
+                [SDKey(c) for c in columns[-1]]
+                if isinstance(columns := entry.get("columns", "all"), tuple)
+                else columns
+            ),
             nodes=(
                 [SDNodeName(n) for n in nodes[-1]]
                 if isinstance(nodes := entry.get("nodes", "all"), tuple)
@@ -625,18 +633,18 @@ def _make_filter_choices_from_api_request_paths(
     api_request_paths: Sequence[str],
 ) -> Sequence[SDFilterChoice]:
     def _make_filter_choice(inventory_path: InventoryPath) -> SDFilterChoice:
-        if inventory_path.key is None:
+        if inventory_path.key:
             return SDFilterChoice(
                 path=inventory_path.path,
-                pairs="all",
-                columns="all",
-                nodes="all",
+                pairs=[inventory_path.key],
+                columns=[inventory_path.key],
+                nodes="nothing",
             )
         return SDFilterChoice(
             path=inventory_path.path,
-            pairs=[inventory_path.key],
-            columns=[inventory_path.key],
-            nodes="nothing",
+            pairs="all",
+            columns="all",
+            nodes="all",
         )
 
     return [_make_filter_choice(InventoryPath.parse(raw_path)) for raw_path in api_request_paths]

@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.structured_data import ImmutableTree, SDFilterChoice, SDNodeName
+from cmk.utils.structured_data import ImmutableTree, SDFilterChoice, SDKey, SDNodeName
 
 import cmk.gui.inventory
 from cmk.gui.inventory import (
@@ -64,7 +64,7 @@ from cmk.gui.type_defs import Row
             InventoryPath(
                 path=(SDNodeName("hardware"), SDNodeName("cpu")),
                 source=TreeSource.attributes,
-                key="model",
+                key=SDKey("model"),
             ),
             "cpu",
         ),
@@ -94,7 +94,7 @@ from cmk.gui.type_defs import Row
             InventoryPath(
                 path=(SDNodeName("software"), SDNodeName("packages")),
                 source=TreeSource.table,
-                key="name",
+                key=SDKey("name"),
             ),
             "packages",
         ),
@@ -103,7 +103,7 @@ from cmk.gui.type_defs import Row
             InventoryPath(
                 path=(SDNodeName("software"), SDNodeName("packages")),
                 source=TreeSource.table,
-                key="name",
+                key=SDKey("name"),
             ),
             "packages",
         ),
@@ -118,7 +118,7 @@ from cmk.gui.type_defs import Row
                     SDNodeName("devices"),
                 ),
                 source=TreeSource.table,
-                key="speed",
+                key=SDKey("speed"),
             ),
             "devices",
         ),
@@ -127,7 +127,7 @@ from cmk.gui.type_defs import Row
             InventoryPath(
                 path=(SDNodeName("path"), SDNodeName("*"), SDNodeName("to"), SDNodeName("node")),
                 source=TreeSource.attributes,
-                key="key",
+                key=SDKey("key"),
             ),
             "node",
         ),
@@ -174,7 +174,7 @@ def test_parse_tree_path(
             },
             SDFilterChoice(
                 path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs=["key"],
+                pairs=[SDKey("key")],
                 columns="all",
                 nodes="all",
             ),
@@ -187,7 +187,7 @@ def test_parse_tree_path(
             SDFilterChoice(
                 path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
-                columns=["key"],
+                columns=[SDKey("key")],
                 nodes="all",
             ),
         ),
@@ -261,8 +261,8 @@ def test__make_filter_choices_from_permitted_paths(
             ".path.to.node:*.key",
             SDFilterChoice(
                 path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs=["key"],
-                columns=["key"],
+                pairs=[SDKey("key")],
+                columns=[SDKey("key")],
                 nodes="nothing",
             ),
         ),
@@ -270,8 +270,8 @@ def test__make_filter_choices_from_permitted_paths(
             ".path.to.node.key",
             SDFilterChoice(
                 path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                pairs=["key"],
-                columns=["key"],
+                pairs=[SDKey("key")],
+                columns=[SDKey("key")],
                 nodes="nothing",
             ),
         ),

@@ -225,12 +225,12 @@ def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
     tree = MutableTree()
     tree.add(
         path=_SDPATH_CLUSTER,
-        pairs=[{"is_cluster": True}],
+        pairs=[{SDKey("is_cluster"): True}],
     )
     tree.add(
         path=_SDPATH_CLUSTER_NODES,
-        key_columns=["name"],
-        rows=[{"name": name} for name in nodes],
+        key_columns=[SDKey("name")],
+        rows=[{SDKey("name"): name} for name in nodes],
     )
     return tree
 
@@ -277,7 +277,7 @@ def _inventorize_real_host(
     if trees.inventory:
         trees.inventory.add(
             path=_SDPATH_CLUSTER,
-            pairs=[{"is_cluster": False}],
+            pairs=[{SDKey("is_cluster"): False}],
         )
 
     return trees, update_result
@@ -449,18 +449,33 @@ def _collect_item(item: Attributes | TableRow, collection: ItemDataCollection) -
     match item:
         case Attributes():
             if item.inventory_attributes:
-                collection.inventory_pairs.append(item.inventory_attributes)
+                collection.inventory_pairs.append(
+                    {SDKey(k): v for k, v in item.inventory_attributes.items()}
+                )
             if item.status_attributes:
-                collection.status_data_pairs.append(item.status_attributes)
+                collection.status_data_pairs.append(
+                    {SDKey(k): v for k, v in item.status_attributes.items()}
+                )
 
         case TableRow():
             # TableRow provides:
             #   - key_columns: {"kc": "kc-val", ...}
             #   - rows: [{"c": "c-val", ...}, ...]
-            collection.key_columns.extend(item.key_columns)
-            collection.inventory_rows.append({**item.key_columns, **item.inventory_columns})
+            key_columns = {SDKey(k): v for k, v in item.key_columns.items()}
+            collection.key_columns.extend(key_columns)
+            collection.inventory_rows.append(
+                {
+                    **key_columns,
+                    **{SDKey(k): v for k, v in item.inventory_columns.items()},
+                }
+            )
             if item.status_columns:
-                collection.status_data_rows.append({**item.key_columns, **item.status_columns})
+                collection.status_data_rows.append(
+                    {
+                        **key_columns,
+                        **{SDKey(k): v for k, v in item.status_columns.items()},
+                    }
+                )
 
         case other_type:
             assert_never(other_type)
@@ -517,18 +532,22 @@ def _may_update(
         choices = choices_by_path.setdefault(
             path, SDRetentionFilterChoices(path=path, interval=entry["interval"])
         )
-        if choices_for_attributes := entry.get("attributes"):
+        if attributes := entry.get("attributes"):
             choices.add_pairs_choice(
-                choice=a[-1] if isinstance(a := choices_for_attributes, tuple) else a,
+                choice=(
+                    [SDKey(a) for a in attributes[-1]]
+                    if isinstance(attributes, tuple)
+                    else attributes
+                ),
                 cache_info=(
                     (now, 0)
                     if (ci := cache_info_by_path_and_type.get((path, "Attributes"))) is None
                     else ci
                 ),
             )
-        elif choices_for_columns := entry.get("columns"):
+        elif columns := entry.get("columns"):
             choices.add_columns_choice(
-                choice=c[-1] if isinstance(c := choices_for_columns, tuple) else c,
+                choice=[SDKey(c) for c in columns[-1]] if isinstance(columns, tuple) else columns,
                 cache_info=(
                     (now, 0)
                     if (ci := cache_info_by_path_and_type.get((path, "TableRow"))) is None
@@ -567,7 +586,7 @@ def _check_fetched_data_or_trees(
         if len(inventory_tree) == 1 and isinstance(
             inventory_tree.get_attribute(
                 _SDPATH_CLUSTER,
-                "is_cluster",
+                SDKey("is_cluster"),
             ),
             bool,
         ):

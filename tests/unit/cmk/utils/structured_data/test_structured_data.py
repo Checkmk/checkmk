@@ -25,6 +25,7 @@ from cmk.utils.structured_data import (
     parse_visible_raw_path,
     RetentionInterval,
     SDFilterChoice,
+    SDKey,
     SDNodeName,
     SDPath,
     SDRetentionFilterChoices,
@@ -83,23 +84,23 @@ def _create_filled_mut_tree() -> MutableTree:
     root = MutableTree()
     root.add(
         path=(SDNodeName("path-to-nta"), SDNodeName("nt")),
-        key_columns=["nt0"],
+        key_columns=[SDKey("nt0")],
         rows=[
-            {"nt0": "NT 00", "nt1": "NT 01"},
-            {"nt0": "NT 10", "nt1": "NT 11"},
+            {SDKey("nt0"): "NT 00", SDKey("nt1"): "NT 01"},
+            {SDKey("nt0"): "NT 10", SDKey("nt1"): "NT 11"},
         ],
     )
     root.add(
         path=(SDNodeName("path-to-nta"), SDNodeName("na")),
-        pairs=[{"na0": "NA 0", "na1": "NA 1"}],
+        pairs=[{SDKey("na0"): "NA 0", SDKey("na1"): "NA 1"}],
     )
     root.add(
         path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-        pairs=[{"ta0": "TA 0", "ta1": "TA 1"}],
-        key_columns=["ta0"],
+        pairs=[{SDKey("ta0"): "TA 0", SDKey("ta1"): "TA 1"}],
+        key_columns=[SDKey("ta0")],
         rows=[
-            {"ta0": "TA 00", "ta1": "TA 01"},
-            {"ta0": "TA 10", "ta1": "TA 11"},
+            {SDKey("ta0"): "TA 00", SDKey("ta1"): "TA 01"},
+            {SDKey("ta0"): "TA 10", SDKey("ta1"): "TA 11"},
         ],
     )
     return root
@@ -289,7 +290,12 @@ def test_deserialize_filled_delta_tree() -> None:
                     "Attributes": {},
                     "Nodes": {
                         SDNodeName("na"): {
-                            "Attributes": {"Pairs": {"na0": ("NA 0", None), "na1": ("NA 1", None)}},
+                            "Attributes": {
+                                "Pairs": {
+                                    SDKey("na0"): ("NA 0", None),
+                                    SDKey("na1"): ("NA 1", None),
+                                }
+                            },
                             "Nodes": {},
                             "Table": {},
                         },
@@ -297,21 +303,26 @@ def test_deserialize_filled_delta_tree() -> None:
                             "Attributes": {},
                             "Nodes": {},
                             "Table": {
-                                "KeyColumns": ["nt0"],
+                                "KeyColumns": [SDKey("nt0")],
                                 "Rows": [
-                                    {"nt0": ("NT 00", None), "nt1": ("NT 01", None)},
-                                    {"nt0": ("NT 10", None), "nt1": ("NT 11", None)},
+                                    {SDKey("nt0"): ("NT 00", None), SDKey("nt1"): ("NT 01", None)},
+                                    {SDKey("nt0"): ("NT 10", None), SDKey("nt1"): ("NT 11", None)},
                                 ],
                             },
                         },
                         SDNodeName("ta"): {
-                            "Attributes": {"Pairs": {"ta0": ("TA 0", None), "ta1": ("TA 1", None)}},
+                            "Attributes": {
+                                "Pairs": {
+                                    SDKey("ta0"): ("TA 0", None),
+                                    SDKey("ta1"): ("TA 1", None),
+                                }
+                            },
                             "Nodes": {},
                             "Table": {
-                                "KeyColumns": ["ta0"],
+                                "KeyColumns": [SDKey("ta0")],
                                 "Rows": [
-                                    {"ta0": ("TA 00", None), "ta1": ("TA 01", None)},
-                                    {"ta0": ("TA 10", None), "ta1": ("TA 11", None)},
+                                    {SDKey("ta0"): ("TA 00", None), SDKey("ta1"): ("TA 01", None)},
+                                    {SDKey("ta0"): ("TA 10", None), SDKey("ta1"): ("TA 11", None)},
                                 ],
                             },
                         },
@@ -361,7 +372,7 @@ def test_get_tree_not_empty() -> None:
 
     assert nta.path == ("path-to-nta",)
     assert nt.path == ("path-to-nta", "nt")
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("nt")), "foo") is None
+    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("nt")), SDKey("foo")) is None
     nt_rows = root.get_rows((SDNodeName("path-to-nta"), SDNodeName("nt")))
     for row in [
         {"nt0": "NT 00", "nt1": "NT 01"},
@@ -370,15 +381,15 @@ def test_get_tree_not_empty() -> None:
         assert row in nt_rows
 
     assert na.path == ("path-to-nta", "na")
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("na")), "na0") == "NA 0"
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("na")), "na1") == "NA 1"
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("na")), "foo") is None
+    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("na")), SDKey("na0")) == "NA 0"
+    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("na")), SDKey("na1")) == "NA 1"
+    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("na")), SDKey("foo")) is None
     assert not root.get_rows((SDNodeName("path-to-nta"), SDNodeName("na")))
 
     assert ta.path == ("path-to-nta", "ta")
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), "ta0") == "TA 0"
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), "ta1") == "TA 1"
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), "foo") is None
+    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta0")) == "TA 0"
+    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta1")) == "TA 1"
+    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("foo")) is None
     ta_rows = root.get_rows((SDNodeName("path-to-nta"), SDNodeName("ta")))
     for row in [
         {"ta0": "TA 00", "ta1": "TA 01"},
@@ -391,11 +402,11 @@ def test_add_or_rows() -> None:
     root = _create_filled_mut_tree()
     root.add(
         path=(SDNodeName("path-to-nta"), SDNodeName("node")),
-        pairs=[{"sn0": "SN 0", "sn1": "SN 1"}],
-        key_columns=["sn0"],
+        pairs=[{SDKey("sn0"): "SN 0", SDKey("sn1"): "SN 1"}],
+        key_columns=[SDKey("sn0")],
         rows=[
-            {"sn0": "SN 00", "sn1": "SN 01"},
-            {"sn0": "SN 10", "sn1": "SN 11"},
+            {SDKey("sn0"): "SN 00", SDKey("sn1"): "SN 01"},
+            {SDKey("sn0"): "SN 10", SDKey("sn1"): "SN 11"},
         ],
     )
     assert len(root) == 18
@@ -443,8 +454,8 @@ def test_filter_delta_tree_nt() -> None:
             [
                 SDFilterChoice(
                     path=(SDNodeName("path-to-nta"), SDNodeName("nt")),
-                    pairs=["nt1"],
-                    columns=["nt1"],
+                    pairs=[SDKey("nt1")],
+                    columns=[SDKey("nt1")],
                     nodes="nothing",
                 )
             ],
@@ -474,8 +485,8 @@ def test_filter_delta_tree_na() -> None:
             [
                 SDFilterChoice(
                     path=(SDNodeName("path-to-nta"), SDNodeName("na")),
-                    pairs=["na1"],
-                    columns=["na1"],
+                    pairs=[SDKey("na1")],
+                    columns=[SDKey("na1")],
                     nodes="nothing",
                 )
             ],
@@ -500,8 +511,8 @@ def test_filter_delta_tree_ta() -> None:
             [
                 SDFilterChoice(
                     path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-                    pairs=["ta1"],
-                    columns=["ta1"],
+                    pairs=[SDKey("ta1")],
+                    columns=[SDKey("ta1")],
                     nodes="nothing",
                 )
             ],
@@ -531,14 +542,14 @@ def test_filter_delta_tree_nta_ta() -> None:
             [
                 SDFilterChoice(
                     path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-                    pairs=["ta0"],
-                    columns=["ta0"],
+                    pairs=[SDKey("ta0")],
+                    columns=[SDKey("ta0")],
                     nodes="nothing",
                 ),
                 SDFilterChoice(
                     path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
                     pairs="nothing",
-                    columns=["ta1"],
+                    columns=[SDKey("ta1")],
                     nodes="nothing",
                 ),
             ],
@@ -602,8 +613,8 @@ def test_filter_delta_tree_nta_ta() -> None:
     ],
 )
 def test_difference_pairs(
-    previous_pairs: Mapping[str, str],
-    current_pairs: Mapping[str, str],
+    previous_pairs: Mapping[SDKey, str],
+    current_pairs: Mapping[SDKey, str],
     result: tuple[int, int, int],
 ) -> None:
     previous_tree = MutableTree()
@@ -670,15 +681,15 @@ def test_difference_pairs(
     ],
 )
 def test_difference_rows(
-    previous_rows: Sequence[Mapping[str, str | int]],
-    current_rows: Sequence[Mapping[str, str | int]],
+    previous_rows: Sequence[Mapping[SDKey, str | int]],
+    current_rows: Sequence[Mapping[SDKey, str | int]],
     result: tuple[int, int, int],
 ) -> None:
     previous_tree = MutableTree()
-    previous_tree.add(path=(), key_columns=["id"], rows=previous_rows)
+    previous_tree.add(path=(), key_columns=[SDKey("id")], rows=previous_rows)
 
     current_tree = MutableTree()
-    current_tree.add(path=(), key_columns=["id"], rows=current_rows)
+    current_tree.add(path=(), key_columns=[SDKey("id")], rows=current_rows)
 
     delta_tree = _make_immutable_tree(current_tree).difference(_make_immutable_tree(previous_tree))
     if any(result):
@@ -701,15 +712,15 @@ def test_difference_rows(
     ],
 )
 def test_difference_rows_keys(
-    previous_row: dict[str, str],
-    current_row: dict[str, str],
+    previous_row: Mapping[SDKey, str],
+    current_row: Mapping[SDKey, str],
     expected_keys: set[str],
 ) -> None:
     previous_tree = MutableTree()
-    previous_tree.add(path=(), key_columns=["id"], rows=[previous_row])
+    previous_tree.add(path=(), key_columns=[SDKey("id")], rows=[previous_row])
 
     current_tree = MutableTree()
-    current_tree.add(path=(), key_columns=["id"], rows=[current_row])
+    current_tree.add(path=(), key_columns=[SDKey("id")], rows=[current_row])
 
     delta_tree = _make_immutable_tree(current_tree).difference(_make_immutable_tree(previous_tree))
     assert {k for r in delta_tree.table.rows for k in r} == expected_keys
@@ -748,12 +759,17 @@ def test_filter_tree_paths_no_keys() -> None:
     filtered_root = filled_root.filter(filters)
 
     assert (
-        filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), "ta0") == "TA 0"
+        filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta0"))
+        == "TA 0"
     )
     assert (
-        filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), "ta1") == "TA 1"
+        filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta1"))
+        == "TA 1"
     )
-    assert filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), "foo") is None
+    assert (
+        filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("foo"))
+        is None
+    )
 
     rows = filtered_root.get_rows((SDNodeName("path-to-nta"), SDNodeName("ta")))
     assert len(rows) == 2
@@ -769,17 +785,21 @@ def test_filter_tree_paths_and_keys() -> None:
     filters = [
         SDFilterChoice(
             path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-            pairs=["ta1"],
-            columns=["ta1"],
+            pairs=[SDKey("ta1")],
+            columns=[SDKey("ta1")],
             nodes="all",
         ),
     ]
     filtered_root = filled_root.filter(filters)
 
     assert (
-        filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), "ta1") == "TA 1"
+        filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta1"))
+        == "TA 1"
     )
-    assert filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), "foo") is None
+    assert (
+        filtered_root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("foo"))
+        is None
+    )
 
     rows = filtered_root.get_rows((SDNodeName("path-to-nta"), SDNodeName("ta")))
     assert len(rows) == 2
@@ -794,19 +814,19 @@ def test_filter_tree_mixed() -> None:
     filled_root_ = _create_filled_mut_tree()
     filled_root_.add(
         path=(SDNodeName("path-to"), SDNodeName("another"), SDNodeName("node1")),
-        pairs=[{"ak11": "Another value 11", "ak12": "Another value 12"}],
+        pairs=[{SDKey("ak11"): "Another value 11", SDKey("ak12"): "Another value 12"}],
     )
     filled_root_.add(
         path=(SDNodeName("path-to"), SDNodeName("another"), SDNodeName("node2")),
-        key_columns=["ak21"],
+        key_columns=[SDKey("ak21")],
         rows=[
             {
-                "ak21": "Another value 211",
-                "ak22": "Another value 212",
+                SDKey("ak21"): "Another value 211",
+                SDKey("ak22"): "Another value 212",
             },
             {
-                "ak21": "Another value 221",
-                "ak22": "Another value 222",
+                SDKey("ak21"): "Another value 221",
+                SDKey("ak22"): "Another value 222",
             },
         ],
     )
@@ -820,8 +840,8 @@ def test_filter_tree_mixed() -> None:
         ),
         SDFilterChoice(
             path=(SDNodeName("path-to-nta"), SDNodeName("ta")),
-            pairs=["ta0"],
-            columns=["ta1"],
+            pairs=[SDKey("ta0")],
+            columns=[SDKey("ta1")],
             nodes="all",
         ),
     ]
@@ -879,7 +899,9 @@ def test_save_tree(tmp_path: Path) -> None:
     host_name = HostName("heute")
     target = tmp_path / "inventory" / str(host_name)
     tree = MutableTree()
-    tree.add(path=(SDNodeName("path-to"), SDNodeName("node")), pairs=[{"foo": 1, "bär": 2}])
+    tree.add(
+        path=(SDNodeName("path-to"), SDNodeName("node")), pairs=[{SDKey("foo"): 1, SDKey("bär"): 2}]
+    )
     tree_store = TreeStore(tmp_path / "inventory")
     tree_store.save(host_name=host_name, tree=tree)
 
@@ -1219,14 +1241,18 @@ def test_merge_with_empty_left_table() -> None:
     assert ImmutableTree().merge(
         ImmutableTree(
             table=ImmutableTable(
-                key_columns=["key-column"],
-                rows_by_ident={("Key Column",): {"key-column": "Key Column", "value": "Value"}},
+                key_columns=[SDKey("key_column")],
+                rows_by_ident={
+                    ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
+                },
             )
         )
     ) == ImmutableTree(
         table=ImmutableTable(
-            key_columns=["key-column"],
-            rows_by_ident={("Key Column",): {"key-column": "Key Column", "value": "Value"}},
+            key_columns=[SDKey("key_column")],
+            rows_by_ident={
+                ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
+            },
         )
     )
 
@@ -1234,13 +1260,17 @@ def test_merge_with_empty_left_table() -> None:
 def test_merge_with_empty_right_table() -> None:
     assert ImmutableTree(
         table=ImmutableTable(
-            key_columns=["key-column"],
-            rows_by_ident={("Key Column",): {"key-column": "Key Column", "value": "Value"}},
+            key_columns=[SDKey("key_column")],
+            rows_by_ident={
+                ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
+            },
         )
     ).merge(ImmutableTree()) == ImmutableTree(
         table=ImmutableTable(
-            key_columns=["key-column"],
-            rows_by_ident={("Key Column",): {"key-column": "Key Column", "value": "Value"}},
+            key_columns=[SDKey("key_column")],
+            rows_by_ident={
+                ("Key Column",): {SDKey("key_column"): "Key Column", SDKey("value"): "Value"}
+            },
         )
     )
 
@@ -1305,10 +1335,18 @@ def test_filter_real_tree(
                 SDFilterChoice(
                     path=(SDNodeName("networking"),),
                     pairs=(
-                        ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
+                        [
+                            SDKey("total_interfaces"),
+                            SDKey("total_ethernet_ports"),
+                            SDKey("available_ethernet_ports"),
+                        ]
                     ),
                     columns=(
-                        ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
+                        [
+                            SDKey("total_interfaces"),
+                            SDKey("total_ethernet_ports"),
+                            SDKey("available_ethernet_ports"),
+                        ]
                     ),
                     nodes="nothing",
                 ),
@@ -1330,8 +1368,8 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs=["admin_status"],
-                    columns=["admin_status"],
+                    pairs=[SDKey("admin_status")],
+                    columns=[SDKey("admin_status")],
                     nodes="nothing",
                 ),
             ],
@@ -1341,8 +1379,8 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs=["admin_status", "FOOBAR"],
-                    columns=["admin_status", "FOOBAR"],
+                    pairs=[SDKey("admin_status"), SDKey("FOOBAR")],
+                    columns=[SDKey("admin_status"), SDKey("FOOBAR")],
                     nodes="nothing",
                 ),
             ],
@@ -1352,8 +1390,8 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs=["admin_status", "oper_status"],
-                    columns=["admin_status", "oper_status"],
+                    pairs=[SDKey("admin_status"), SDKey("oper_status")],
+                    columns=[SDKey("admin_status"), SDKey("oper_status")],
                     nodes="nothing",
                 ),
             ],
@@ -1363,8 +1401,8 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=(SDNodeName("networking"), SDNodeName("interfaces")),
-                    pairs=["admin_status", "oper_status", "FOOBAR"],
-                    columns=["admin_status", "oper_status", "FOOBAR"],
+                    pairs=[SDKey("admin_status"), SDKey("oper_status"), SDKey("FOOBAR")],
+                    columns=[SDKey("admin_status"), SDKey("oper_status"), SDKey("FOOBAR")],
                     nodes="nothing",
                 ),
             ],
@@ -1546,9 +1584,9 @@ def test_update_from_previous_1() -> None:
     current_tree_ = MutableTree()
     current_tree_.add(
         path=(),
-        key_columns=["kc"],
+        key_columns=[SDKey("kc")],
         rows=[
-            {"kc": "KC", "c1": "C1: cur", "c3": "C3: only cur"},
+            {SDKey("kc"): "KC", SDKey("c1"): "C1: cur", SDKey("c3"): "C3: only cur"},
         ],
     )
     choices = SDRetentionFilterChoices(path=(), interval=6)
@@ -1593,13 +1631,13 @@ def test_update_from_previous_2() -> None:
     current_tree_ = MutableTree()
     current_tree_.add(
         path=(),
-        key_columns=["kc"],
+        key_columns=[SDKey("kc")],
         rows=[
-            {"kc": "KC", "c3": "C3: only cur"},
+            {SDKey("kc"): "KC", SDKey("c3"): "C3: only cur"},
         ],
     )
     choices = SDRetentionFilterChoices(path=(), interval=6)
-    choices.add_columns_choice(choice=["c2", "c3"], cache_info=(4, 5))
+    choices.add_columns_choice(choice=[SDKey("c2"), SDKey("c3")], cache_info=(4, 5))
 
     update_result = UpdateResult()
     current_tree_.update(

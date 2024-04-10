@@ -16,6 +16,7 @@ from cmk.utils.structured_data import (
     ImmutableTable,
     ImmutableTree,
     RetentionInterval,
+    SDNodeName,
     SDPath,
 )
 
@@ -1061,7 +1062,7 @@ def test_row_post_processor() -> None:
                 ColumnSpec(
                     name="invoradataguardstats_db_unique",
                     parameters=PainterParameters(
-                        path_to_table=("path-to", "ora-dataguard-stats"),
+                        path_to_table=(SDNodeName("path-to"), SDNodeName("ora-dataguard-stats")),
                         column_to_display="db_unique",
                         columns_to_match=[("sid", "$SID$")],
                     ),
@@ -1075,7 +1076,7 @@ def test_row_post_processor() -> None:
                 ColumnSpec(
                     name="invoraversions_edition",
                     parameters=PainterParameters(
-                        path_to_table=("path-to", "ora-versions"),
+                        path_to_table=(SDNodeName("path-to"), SDNodeName("ora-versions")),
                         column_to_display="edition",
                         columns_to_match=[("version", "$VERSION$")],
                     ),
@@ -1089,7 +1090,7 @@ def test_row_post_processor() -> None:
                 ColumnSpec(
                     name="invorafoobar_foo",
                     parameters=PainterParameters(
-                        path_to_table=("path-to", "ora-foobar"),
+                        path_to_table=(SDNodeName("path-to"), SDNodeName("ora-foobar")),
                         column_to_display="foo",
                         columns_to_match=[("bar", "$BAR$")],
                     ),
@@ -1103,7 +1104,7 @@ def test_row_post_processor() -> None:
                 ColumnSpec(
                     name="invoradataguardstats_role",
                     parameters=PainterParameters(
-                        path_to_table=("path-to", "ora-dataguard-stats"),
+                        path_to_table=(SDNodeName("path-to"), SDNodeName("ora-dataguard-stats")),
                         column_to_display="role",
                         columns_to_match=[("sid", "$BAZ$")],
                     ),
@@ -1117,7 +1118,7 @@ def test_row_post_processor() -> None:
                 ColumnSpec(
                     name="invunknown_column_name",
                     parameters=PainterParameters(
-                        path_to_table=("path-to", "somewhere-else"),
+                        path_to_table=(SDNodeName("path-to"), SDNodeName("somewhere-else")),
                         column_to_display="column_name",
                         columns_to_match=[("sid", "$SID$")],
                     ),

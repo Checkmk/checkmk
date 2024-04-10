@@ -26,6 +26,7 @@ from cmk.utils.structured_data import (
     parse_visible_raw_path,
     RawIntervalFromConfig,
     SDKey,
+    SDNodeName,
     SDPath,
     SDRetentionFilterChoices,
     SDValue,
@@ -57,6 +58,24 @@ __all__ = [
     "inventorize_status_data_of_real_host",
     "InventoryPlugin",
 ]
+
+
+_SDPATH_HARDWARE = (SDNodeName("hardware"),)
+_SDPATH_SOFTWARE = (SDNodeName("software"),)
+_SDPATH_SOFTWARE_PACKAGES = (SDNodeName("software"), SDNodeName("packages"))
+_SDPATH_CLUSTER = (
+    SDNodeName("software"),
+    SDNodeName("applications"),
+    SDNodeName("check_mk"),
+    SDNodeName("cluster"),
+)
+_SDPATH_CLUSTER_NODES = (
+    SDNodeName("software"),
+    SDNodeName("applications"),
+    SDNodeName("check_mk"),
+    SDNodeName("cluster"),
+    SDNodeName("nodes"),
+)
 
 
 class InventoryPluginName(ValidatedString):
@@ -205,11 +224,11 @@ def inventorize_cluster(
 def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
     tree = MutableTree()
     tree.add(
-        path=("software", "applications", "check_mk", "cluster"),
+        path=_SDPATH_CLUSTER,
         pairs=[{"is_cluster": True}],
     )
     tree.add(
-        path=("software", "applications", "check_mk", "cluster", "nodes"),
+        path=_SDPATH_CLUSTER_NODES,
         key_columns=["name"],
         rows=[{"name": name} for name in nodes],
     )
@@ -257,7 +276,7 @@ def _inventorize_real_host(
 
     if trees.inventory:
         trees.inventory.add(
-            path=("software", "applications", "check_mk", "cluster"),
+            path=_SDPATH_CLUSTER,
             pairs=[{"is_cluster": False}],
         )
 
@@ -400,7 +419,10 @@ def _create_trees_from_inventory_plugin_items(
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
             _collect_item(
-                item, collection_by_path.setdefault(tuple(item.path), ItemDataCollection())
+                item,
+                collection_by_path.setdefault(
+                    tuple(SDNodeName(p) for p in item.path), ItemDataCollection()
+                ),
             )
 
     inventory_tree = MutableTree()
@@ -544,7 +566,8 @@ def _check_fetched_data_or_trees(
         # In order to avoid a lot of "useless" warnings we check the following:
         if len(inventory_tree) == 1 and isinstance(
             inventory_tree.get_attribute(
-                ("software", "applications", "check_mk", "cluster"), "is_cluster"
+                _SDPATH_CLUSTER,
+                "is_cluster",
             ),
             bool,
         ):
@@ -576,13 +599,13 @@ def _check_trees(
 
     yield ActiveCheckResult(0, f"Found {len(inventory_tree)} inventory entries")
 
-    if parameters.sw_missing and inventory_tree.has_table(("software", "packages")):
+    if parameters.sw_missing and inventory_tree.has_table(_SDPATH_SOFTWARE_PACKAGES):
         yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
 
-    if previous_tree.get_tree(("software",)) != inventory_tree.get_tree(("software",)):
+    if previous_tree.get_tree(_SDPATH_SOFTWARE) != inventory_tree.get_tree(_SDPATH_SOFTWARE):
         yield ActiveCheckResult(parameters.sw_changes, "software changes")
 
-    if previous_tree.get_tree(("hardware",)) != inventory_tree.get_tree(("hardware",)):
+    if previous_tree.get_tree(_SDPATH_HARDWARE) != inventory_tree.get_tree(_SDPATH_HARDWARE):
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
 
     if status_data_tree:

@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 
-from cmk.utils.structured_data import SDKey, SDPath
+from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 
 class TreeSource(Enum):
@@ -64,7 +64,12 @@ class InventoryPath:
     @staticmethod
     def _sanitize_path(path: Sequence[str]) -> SDPath:
         # ":": Nested tables, see also lib/structured_data.py
-        return tuple(p for part in path for p in (part.split(":") if ":" in part else [part]) if p)
+        return tuple(
+            SDNodeName(p)
+            for part in path
+            for p in (part.split(":") if ":" in part else [part])
+            if p
+        )
 
     @property
     def node_name(self) -> str:

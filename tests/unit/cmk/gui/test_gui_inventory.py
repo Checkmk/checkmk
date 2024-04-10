@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.structured_data import ImmutableTree, SDFilterChoice
+from cmk.utils.structured_data import ImmutableTree, SDFilterChoice, SDNodeName
 
 import cmk.gui.inventory
 from cmk.gui.inventory import (
@@ -46,7 +46,7 @@ from cmk.gui.type_defs import Row
         (
             ".hardware.",
             InventoryPath(
-                path=("hardware",),
+                path=(SDNodeName("hardware"),),
                 source=TreeSource.node,
             ),
             "hardware",
@@ -54,7 +54,7 @@ from cmk.gui.type_defs import Row
         (
             ".hardware.cpu.",
             InventoryPath(
-                path=("hardware", "cpu"),
+                path=(SDNodeName("hardware"), SDNodeName("cpu")),
                 source=TreeSource.node,
             ),
             "cpu",
@@ -62,7 +62,7 @@ from cmk.gui.type_defs import Row
         (
             ".hardware.cpu.model",
             InventoryPath(
-                path=("hardware", "cpu"),
+                path=(SDNodeName("hardware"), SDNodeName("cpu")),
                 source=TreeSource.attributes,
                 key="model",
             ),
@@ -71,7 +71,7 @@ from cmk.gui.type_defs import Row
         (
             ".software.packages:",
             InventoryPath(
-                path=("software", "packages"),
+                path=(SDNodeName("software"), SDNodeName("packages")),
                 source=TreeSource.table,
             ),
             "packages",
@@ -79,7 +79,12 @@ from cmk.gui.type_defs import Row
         (
             ".hardware.memory.arrays:*.",
             InventoryPath(
-                ("hardware", "memory", "arrays", "*"),
+                (
+                    SDNodeName("hardware"),
+                    SDNodeName("memory"),
+                    SDNodeName("arrays"),
+                    SDNodeName("*"),
+                ),
                 source=TreeSource.node,
             ),
             "*",
@@ -87,7 +92,7 @@ from cmk.gui.type_defs import Row
         (
             ".software.packages:17.name",
             InventoryPath(
-                path=("software", "packages"),
+                path=(SDNodeName("software"), SDNodeName("packages")),
                 source=TreeSource.table,
                 key="name",
             ),
@@ -96,7 +101,7 @@ from cmk.gui.type_defs import Row
         (
             ".software.packages:*.name",
             InventoryPath(
-                path=("software", "packages"),
+                path=(SDNodeName("software"), SDNodeName("packages")),
                 source=TreeSource.table,
                 key="name",
             ),
@@ -105,7 +110,13 @@ from cmk.gui.type_defs import Row
         (
             ".hardware.memory.arrays:*.devices:*.speed",
             InventoryPath(
-                path=("hardware", "memory", "arrays", "*", "devices"),
+                path=(
+                    SDNodeName("hardware"),
+                    SDNodeName("memory"),
+                    SDNodeName("arrays"),
+                    SDNodeName("*"),
+                    SDNodeName("devices"),
+                ),
                 source=TreeSource.table,
                 key="speed",
             ),
@@ -114,7 +125,7 @@ from cmk.gui.type_defs import Row
         (
             ".path:*.to.node.key",
             InventoryPath(
-                path=("path", "*", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("*"), SDNodeName("to"), SDNodeName("node")),
                 source=TreeSource.attributes,
                 key="key",
             ),
@@ -138,7 +149,7 @@ def test_parse_tree_path(
                 "visible_raw_path": "path.to.node",
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
                 nodes="all",
@@ -150,10 +161,10 @@ def test_parse_tree_path(
                 "nodes": ("choices", ["node"]),
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
-                nodes=["node"],
+                nodes=[SDNodeName("node")],
             ),
         ),
         (
@@ -162,7 +173,7 @@ def test_parse_tree_path(
                 "attributes": ("choices", ["key"]),
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs=["key"],
                 columns="all",
                 nodes="all",
@@ -174,7 +185,7 @@ def test_parse_tree_path(
                 "columns": ("choices", ["key"]),
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns=["key"],
                 nodes="all",
@@ -186,7 +197,7 @@ def test_parse_tree_path(
                 "nodes": "nothing",
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
                 nodes="nothing",
@@ -198,7 +209,7 @@ def test_parse_tree_path(
                 "attributes": "nothing",
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="nothing",
                 columns="all",
                 nodes="all",
@@ -210,7 +221,7 @@ def test_parse_tree_path(
                 "columns": "nothing",
             },
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="nothing",
                 nodes="all",
@@ -231,7 +242,7 @@ def test__make_filter_choices_from_permitted_paths(
         (
             ".path.to.node.",
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
                 nodes="all",
@@ -240,7 +251,7 @@ def test__make_filter_choices_from_permitted_paths(
         (
             ".path.to.node:",
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs="all",
                 columns="all",
                 nodes="all",
@@ -249,7 +260,7 @@ def test__make_filter_choices_from_permitted_paths(
         (
             ".path.to.node:*.key",
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs=["key"],
                 columns=["key"],
                 nodes="nothing",
@@ -258,7 +269,7 @@ def test__make_filter_choices_from_permitted_paths(
         (
             ".path.to.node.key",
             SDFilterChoice(
-                path=("path", "to", "node"),
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 pairs=["key"],
                 columns=["key"],
                 nodes="nothing",

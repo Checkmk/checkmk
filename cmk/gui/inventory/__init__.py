@@ -32,6 +32,7 @@ from cmk.utils.structured_data import (
     parse_visible_raw_path,
     SDFilterChoice,
     SDKey,
+    SDNodeName,
     SDPath,
     SDRawTree,
 )
@@ -109,7 +110,11 @@ def _make_filter_choices_from_permitted_paths(
             path=parse_visible_raw_path(entry["visible_raw_path"]),
             pairs=a[-1] if isinstance(a := entry.get("attributes", "all"), tuple) else a,
             columns=c[-1] if isinstance(c := entry.get("columns", "all"), tuple) else c,
-            nodes=n[-1] if isinstance(n := entry.get("nodes", "all"), tuple) else n,
+            nodes=(
+                [SDNodeName(n) for n in nodes[-1]]
+                if isinstance(nodes := entry.get("nodes", "all"), tuple)
+                else nodes
+            ),
         )
         for entry in permitted_paths
         if entry

@@ -16,7 +16,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Generic, Literal, NamedTuple, Self, TypeVar
+from typing import Generic, Literal, NamedTuple, NewType, Self, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -43,7 +43,7 @@ from cmk.utils.hostaddress import HostName
 #   - inventory_delta_cache/HOSTNAME/TIMESTAMP_{TIMESTAMP,None}
 #   - status_data/HOSTNAME, status_data/HOSTNAME.gz
 
-SDNodeName = str
+SDNodeName = NewType("SDNodeName", str)
 SDPath = tuple[SDNodeName, ...]
 
 SDKey = str
@@ -201,7 +201,7 @@ class UpdateResult:
 
 
 def parse_visible_raw_path(raw_path: str) -> SDPath:
-    return tuple(part for part in raw_path.split(".") if part)
+    return tuple(SDNodeName(part) for part in raw_path.split(".") if part)
 
 
 #   .--helpers-------------------------------------------------------------.
@@ -803,7 +803,7 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
         if isinstance(value, dict):
             if not value:
                 continue
-            raw_nodes.setdefault(key, value)
+            raw_nodes.setdefault(SDNodeName(key), value)
 
         elif isinstance(value, list):
             if not value:
@@ -826,11 +826,11 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
                 #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
                 #       ...
                 #   ]
-                raw_tables.setdefault(key, value)
+                raw_tables.setdefault(SDNodeName(key), value)
                 continue
 
             for idx, entry in enumerate(value):
-                raw_nodes.setdefault(key, {}).setdefault(str(idx), entry)
+                raw_nodes.setdefault(SDNodeName(key), {}).setdefault(str(idx), entry)
 
         elif isinstance(value, (int, float, str, bool)) or value is None:
             raw_pairs.setdefault(key, value)

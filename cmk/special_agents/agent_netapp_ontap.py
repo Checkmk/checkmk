@@ -445,7 +445,7 @@ def fetch_fans(connection: HostConnection) -> Iterable[netapp_ontap_models.Shelf
     ):
         element_data = element.to_dict()
         list_id = element_data["id"]
-        fans = element_data["fans"]
+        fans = element_data.get("fans", [])
 
         for fan in fans:
             yield netapp_ontap_models.ShelfFanModel(
@@ -469,7 +469,7 @@ def fetch_psu(connection: HostConnection) -> Iterable[netapp_ontap_models.ShelfP
     ):
         element_data = element.to_dict()
         list_id = element_data["id"]
-        frus = element_data["frus"]
+        frus = element_data.get("frus", [])
 
         for fan in frus:
             yield netapp_ontap_models.ShelfPsuModel(
@@ -500,7 +500,7 @@ def fetch_temperatures(
     ):
         element_data = element.to_dict()
         list_id = element_data["id"]
-        temperatures = element_data["temperature_sensors"]
+        temperatures = element_data.get("temperature_sensors", [])
 
         for temp in temperatures:
             yield netapp_ontap_models.ShelfTemperatureModel(

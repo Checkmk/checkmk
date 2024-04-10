@@ -1,0 +1,13 @@
+Title: agent_netapp_ontap: handle shelves without elements
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1712751995
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+The agent did not handle the cases where shelves had no fans, temperature sensors or PSUs.
+This led to crashes during the agent execution.
+
+With this werk we now correctly handle these scenarios and the corresponding services are not discovered if no items are found.

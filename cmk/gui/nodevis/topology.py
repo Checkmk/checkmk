@@ -11,7 +11,7 @@ import time
 import traceback
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import livestatus
 
@@ -999,7 +999,7 @@ class Topology:
         self._growth_root_nodes = self._topology_configuration.frontend.growth_root_nodes_set.union(
             self._root_hostnames_from_core
         )
-        self._compare_to_topology: Optional[Topology] = None
+        self._compare_to_topology: Topology | None = None
         ds_config = self._topology_configuration.frontend.datasource_configuration
         used_datasource = enforce_datasource if enforce_datasource else ds_config.reference
         self._computed_layers = self._get_computed_layers(topology_data_dir / used_datasource)

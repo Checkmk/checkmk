@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, List, Optional, Union
+from typing import Any, List
 
 
 @dataclass
@@ -22,15 +22,15 @@ class VueBase:
 @dataclass
 class VueInteger(VueBase):
     vue_type: str = "integer"
-    label: Optional[str] = None
-    unit: Optional[str] = None
+    label: str | None = None
+    unit: str | None = None
 
 
 @dataclass
 class VueFloat(VueBase):
     vue_type: str = "float"
-    label: Optional[str] = None
-    unit: Optional[str] = None
+    label: str | None = None
+    unit: str | None = None
 
 
 @dataclass
@@ -41,19 +41,19 @@ class VueLegacyValuespec(VueBase):
 @dataclass
 class VueText(VueBase):
     vue_type: str = "text"
-    placeholder: Optional[str] = None
+    placeholder: str | None = None
 
 
 @dataclass
 class Model:
-    all_schemas: Optional[List[VueSchema]] = None
+    all_schemas: List[VueSchema] | None = None
 
 
 @dataclass
 class VueList(VueBase):
     vue_type: str = "list"
-    add_text: Optional[str] = None
-    vue_schema: Optional[VueSchema] = None
+    add_text: str | None = None
+    vue_schema: VueSchema | None = None
 
 
 @dataclass
@@ -70,4 +70,4 @@ class VueDictionary(VueBase):
     vue_type: str = "dictionary"
 
 
-VueSchema = Union[VueInteger, VueFloat, VueText, VueDictionary, VueList, VueLegacyValuespec]
+VueSchema = VueInteger | VueFloat | VueText | VueDictionary | VueList | VueLegacyValuespec

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.apc_ats import (
@@ -20,7 +20,7 @@ from cmk.base.config import check_info
 from cmk.agent_based.v2 import SNMPTree, StringTable
 
 
-def parse_apc_ats_status(info: StringTable) -> Optional[Status]:
+def parse_apc_ats_status(info: StringTable) -> Status | None:
     if len(info) == 1:
         return Status.from_raw(info[0])
     return None

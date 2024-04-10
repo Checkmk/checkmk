@@ -13,7 +13,7 @@
 
 import json
 import time
-from typing import Any, NamedTuple, NotRequired, Optional, TypedDict
+from typing import Any, NamedTuple, NotRequired, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -81,7 +81,7 @@ def check_jenkins_queue(params: ParamsDict, section: JenkinsQueue) -> CheckResul
 
 
 def _check_jenkins_queue(
-    params: ParamsDict, section: JenkinsQueue, now: Optional[int | float] = None
+    params: ParamsDict, section: JenkinsQueue, now: int | float | None = None
 ) -> CheckResult:
     yield from check_levels(
         len(section),

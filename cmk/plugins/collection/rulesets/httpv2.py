@@ -711,6 +711,11 @@ def _valuespec_endpoints() -> List:
                         prefill=InputHint(
                             "https://subdomain.domain.tld:port/path/to/filename?parameter=value#anchor"
                         ),
+                        custom_validate=(
+                            validators.Url(
+                                [validators.UrlProtocol.HTTP, validators.UrlProtocol.HTTPS],
+                            ),
+                        ),
                     ),
                     required=True,
                 ),

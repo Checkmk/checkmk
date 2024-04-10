@@ -195,7 +195,7 @@ def _tmpfs_is_managed_by_node(site_name: str, tmp_dir: str) -> bool:
 
 def add_to_fstab(
     site_name: str,
-    site_real_tmp_dir: str,
+    mount_point: str,
     tmpfs_size: str | None = None,
     fstab_path: Path = Path("/etc/fstab"),
 ) -> None:
@@ -203,7 +203,7 @@ def add_to_fstab(
         return  # Don't do anything in case there is no fstab
 
     # tmpfs                   /opt/omd/sites/b01/tmp  tmpfs   user,uid=b01,gid=b01 0 0
-    sys.stdout.write(f"Adding {site_real_tmp_dir} to {fstab_path}.\n")
+    sys.stdout.write(f"Adding {mount_point} to {fstab_path}.\n")
 
     # No size option: using up to 50% of the RAM
     sizespec = ""
@@ -219,7 +219,7 @@ def add_to_fstab(
             fstab.write("\n")
 
         fstab.write(
-            f"tmpfs  {site_real_tmp_dir} tmpfs noauto,user,mode=751,uid={site_name},gid={site_name}{sizespec} 0 0\n"
+            f"tmpfs  {mount_point} tmpfs noauto,user,mode=751,uid={site_name},gid={site_name}{sizespec} 0 0\n"
         )
 
 

@@ -12,7 +12,6 @@ from cmk.utils.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,
-    ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
     RetentionInterval,
@@ -66,12 +65,6 @@ from cmk.gui.views.store import multisite_builtin_views
 RAW_ROWS = [("this_site", "this_hostname")]
 RAW_ROWS2 = [("this_site", "this_hostname", "foobar")]
 
-INV_ROWS = [
-    {"sid": ("A", None), "value1": (1, None), "value2": (4, None)},
-    {"sid": ("B", None), "value1": (2, None), "value2": (5, None)},
-    {"sid": ("C", None), "value1": (3, None), "value2": (6, None)},
-]
-
 EXPECTED_INV_KEYS = [
     "site",
     "host_name",
@@ -81,12 +74,6 @@ EXPECTED_INV_KEYS = [
     "invtesttable_value1_retention_interval",
     "invtesttable_value2",
     "invtesttable_value2_retention_interval",
-]
-
-INV_HIST_ROWS = [
-    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, ImmutableDeltaTree()),
-    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, ImmutableDeltaTree()),
-    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, ImmutableDeltaTree()),
 ]
 
 EXPECTED_INV_HIST_KEYS = [
@@ -159,7 +146,6 @@ def test_query_row_table_inventory(monkeypatch: pytest.MonkeyPatch, view: View) 
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
     rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
@@ -173,7 +159,6 @@ def test_query_row_table_inventory_unknown_columns(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
     rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
@@ -185,7 +170,6 @@ def test_query_row_table_inventory_add_columns(monkeypatch: pytest.MonkeyPatch, 
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
-    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
     rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS + ["host_foo"])
@@ -195,7 +179,6 @@ def test_query_row_table_inventory_add_columns(monkeypatch: pytest.MonkeyPatch, 
 def test_query_row_table_inventory_history(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     row_table = RowTableInventoryHistory()
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
     rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
@@ -207,7 +190,6 @@ def test_query_row_table_inventory_history_unknown_columns(
 ) -> None:
     row_table = RowTableInventoryHistory()
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
-    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
     rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
@@ -219,7 +201,6 @@ def test_query_row_table_inventory_history_add_columns(
 ) -> None:
     row_table = RowTableInventoryHistory()
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
-    monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
     rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS + ["host_foo"])

@@ -13,7 +13,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Any, Literal, NamedTuple
+from typing import Literal, NamedTuple
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -311,16 +311,8 @@ class ABCRowTable(RowTable):
         with sites.only_sites(only_sites), sites.prepend_site():
             return sites.live().query(query)
 
+    @abc.abstractmethod
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
-        inv_data = self._get_inv_data(hostrow)
-        return self._prepare_rows(inv_data)
-
-    @abc.abstractmethod
-    def _get_inv_data(self, hostrow: Row) -> Any:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _prepare_rows(self, inv_data: Any) -> Iterable[Row]:
         raise NotImplementedError()
 
     def _add_declaration_errors(self) -> None:
@@ -1419,11 +1411,12 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(
-        self, hostrow: Row
-    ) -> Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]:
+    def _get_rows(self, hostrow: Row) -> Iterable[Row]:
+        if not (self._info_names and (info_name := self._info_names[0])):
+            return
+
         try:
-            return (
+            table_rows = (
                 inventory.load_filtered_and_merged_tree(hostrow)
                 .get_tree(self._inventory_path.path)
                 .table.rows_with_retentions
@@ -1436,21 +1429,14 @@ class RowTableInventory(ABCRowTable):
                     % inventory.get_short_inventory_filepath(hostrow.get("host_name", "")),
                 )
             )
-            return []
+            return
 
-    def _prepare_rows(
-        self, inv_data: Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]
-    ) -> Iterable[Row]:
-        if not (self._info_names and (info_name := self._info_names[0])):
-            return []
-        rows = []
-        for inv_row in inv_data:
+        for table_row in table_rows:
             row: dict[str, int | float | str | bool | RetentionInterval | None] = {}
-            for key, (value, retention_interval) in inv_row.items():
+            for key, (value, retention_interval) in table_row.items():
                 row["_".join([info_name, key])] = value
                 row["_".join([info_name, key, "retention_interval"])] = retention_interval
-            rows.append(row)
-        return rows
+            yield row
 
 
 class ABCDataSourceInventory(ABCDataSource):
@@ -1852,7 +1838,7 @@ class RowTableInventoryHistory(ABCRowTable):
         super().__init__(["invhist"], [])
         self._inventory_path = None
 
-    def _get_inv_data(self, hostrow: Row) -> Sequence[inventory.HistoryEntry]:
+    def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         hostname: HostName = hostrow["host_name"]
         history, corrupted_history_files = inventory.get_history(hostname)
         if corrupted_history_files:
@@ -1865,11 +1851,7 @@ class RowTableInventoryHistory(ABCRowTable):
                     % ", ".join(sorted(corrupted_history_files)),
                 )
             )
-
-        return history
-
-    def _prepare_rows(self, inv_data: Sequence[inventory.HistoryEntry]) -> Iterable[Row]:
-        for history_entry in inv_data:
+        for history_entry in history:
             yield {
                 "invhist_time": history_entry.timestamp,
                 "invhist_delta": history_entry.delta_tree,

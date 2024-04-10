@@ -9,8 +9,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime, timezone
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
-
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
     __version__,
@@ -55,11 +53,8 @@ def _expand_curly_address_notation(ip_addresses: str | Sequence[str]) -> list[st
         if word in expanded:
             continue
 
-        try:
-            prefix, tmp = word.split("{")
-            curly, suffix = tmp.split("}")
-        except ValueError:
-            raise MKGeneralException(f"could not expand {word!r}")
+        prefix, tmp = word.split("{")
+        curly, suffix = tmp.split("}")
         expanded.extend(f"{prefix}{i}{suffix}" for i in curly.split(","))
 
     return expanded

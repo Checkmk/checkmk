@@ -571,7 +571,7 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
         try:
             send_mail_smtp_impl(message, target, MailString(smarthost), from_address, context)
             success = True
-        except socket.timeout as e:
+        except TimeoutError as e:
             sys.stderr.write(f'timeout connecting to "{smarthost}": {str(e)}\n')
         except socket.gaierror as e:
             sys.stderr.write(f'socket error connecting to "{smarthost}": {str(e)}\n')
@@ -715,7 +715,7 @@ def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
     try:
         with urlopen(url, timeout=timeout) as opened_file:  # nosec B310 # BNS:28af27
             json_data = opened_file.read()
-    except socket.timeout:
+    except TimeoutError:
         if opt_debug:
             raise
         sys.stderr.write("ERROR: Timed out fetching graphs (%d sec)\nURL: %s\n" % url)

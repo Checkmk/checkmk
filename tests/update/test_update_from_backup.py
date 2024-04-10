@@ -210,7 +210,7 @@ def test_update_from_backup_demo(
     current_lost_services = {}
     missed_services = {}
 
-    with open(lost_services_path, "r") as json_file:
+    with open(lost_services_path) as json_file:
         known_lost_services = json.load(json_file)
 
     for hostname in target_hostnames:

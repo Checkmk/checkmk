@@ -1182,12 +1182,7 @@ def get_graph_templates(
     yield from explicit_templates
     yield from _get_implicit_graph_templates(
         translated_metrics,
-        set(
-            m.name
-            for gt in explicit_templates
-            for md in gt.metrics
-            for m in md.expression.metrics()
-        ),
+        {m.name for gt in explicit_templates for md in gt.metrics for m in md.expression.metrics()},
     )
 
 

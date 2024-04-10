@@ -80,9 +80,9 @@ def load_custom_attr(
         # These are only considered critical in case of pickled data
         # Files in the ~/var/check_mk/web/{username} do and WILL never contain pickled data
         try:
-            with open(str(attr_path), mode="r") as file_object:
+            with open(str(attr_path)) as file_object:
                 result = file_object.read()
-        except (FileNotFoundError, IOError):
+        except (FileNotFoundError, OSError):
             return None
     return None if result == "" else parser(result.strip())
 

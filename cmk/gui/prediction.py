@@ -227,13 +227,13 @@ def _make_prediction_title(meta: PredictionInfo) -> str:
     date_str = time.strftime("%Y-%m-%d", time.localtime(meta.valid_interval[0]))
     match meta.params.period:
         case "wday":
-            return "%s (%s)" % (date_str, _("day of the week"))
+            return "{} ({})".format(date_str, _("day of the week"))
         case "day":
-            return "%s (%s)" % (date_str, _("day of the month"))
+            return "{} ({})".format(date_str, _("day of the month"))
         case "hour":
-            return "%s (%s)" % (date_str, _("hour of the day"))
+            return "{} ({})".format(date_str, _("hour of the day"))
         case "minute":
-            return "%s (%s)" % (date_str, _("minute of the hour"))
+            return "{} ({})".format(date_str, _("minute of the hour"))
 
 
 def _make_legend(current_measurement: tuple[float, float] | None) -> Sequence[tuple[Color, str]]:

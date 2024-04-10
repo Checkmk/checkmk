@@ -1940,11 +1940,11 @@ class ConfigCache:
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
-            set(
+            {
                 hn
                 for hn in set(self.hosts_config.hosts).union(self.hosts_config.clusters)
                 if self.is_active(hn) and self.is_online(hn)
-            )
+            }
         )
 
         return self

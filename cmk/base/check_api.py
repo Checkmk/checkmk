@@ -246,12 +246,12 @@ def check_levels(  # pylint: disable=too-many-branches
     if human_readable_func is None:
 
         def render_func(x: float) -> str:
-            return "%.2f%s" % (x, unit_info)
+            return f"{x:.2f}{unit_info}"
 
     else:
 
         def render_func(x: float) -> str:
-            return "%s%s" % (human_readable_func(x), unit_info)
+            return f"{human_readable_func(x)}{unit_info}"
 
     if params and isinstance(params, dict):
         if not dsname:

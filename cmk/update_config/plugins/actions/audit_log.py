@@ -40,7 +40,7 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
         logger_msg = "Skipping update of audit log. Please review the errors and try 'cmk-update-config' again"
         try:
             self._split_file(wato_var_dir() / "log")
-        except IOError as e:
+        except OSError as e:
             logger.warning(logger_msg)
             raise MKException(
                 f"I/O error while updating existing audit log({e.errno}): {e.strerror}"

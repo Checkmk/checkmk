@@ -5,7 +5,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, NamedTuple, NotRequired, Sequence, TypedDict
+from collections.abc import Sequence
+from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
 
 from marshmallow import fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema

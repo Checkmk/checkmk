@@ -309,7 +309,7 @@ fn check_validity_not_after(
         None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
-            OutputType::Notice(format!(
+            OutputType::Summary(format!(
                 "Certificate expires in {} day(s) ({})",
                 time_to_expiration.whole_days(),
                 not_after

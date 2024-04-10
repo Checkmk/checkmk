@@ -181,9 +181,9 @@ def _build(
 
     assert "Healthcheck" in config
 
-    assert attrs["ContainerConfig"]["Entrypoint"] == ["/docker-entrypoint.sh"]
+    assert config["Entrypoint"] == ["/docker-entrypoint.sh"]
 
-    assert attrs["ContainerConfig"]["ExposedPorts"] == {
+    assert config["ExposedPorts"] == {
         "5000/tcp": {},
         "6557/tcp": {},
     }

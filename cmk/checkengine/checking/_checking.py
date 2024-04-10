@@ -22,7 +22,7 @@ from cmk.utils.timeperiod import check_timeperiod, TimeperiodName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
+from cmk.checkengine.checkresults import ActiveCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.inventory import (
@@ -91,8 +91,7 @@ def execute_checkmk_checks(
         )
     )
     submitter.submit(
-        Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
-        for s in service_results
+        Submittee(s.service.description, s.result, s.cache_info) for s in service_results
     )
 
     if run_plugin_names is EVERYTHING:
@@ -206,9 +205,8 @@ def check_host_services(
         if service.check_plugin_name not in check_plugins:
             yield AggregatedResult(
                 service=service,
-                submit=True,
                 data_received=True,
-                result=ServiceCheckResult.check_not_implemented(),
+                result=SubmittableServiceCheckResult.check_not_implemented(),
                 cache_info=None,
             )
         else:

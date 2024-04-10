@@ -52,6 +52,8 @@ from cmk.checkengine.checkresults import (
     MetricTuple,
     ServiceCheckResult,
     state_markers,
+    SubmittableServiceCheckResult,
+    UnsubmittableServiceCheckResult,
 )
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.exitspec import ExitSpec
@@ -533,20 +535,36 @@ def _get_check_function(
 
 
 def _aggregate_results(
-    subresults: tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+    subresults: tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]
 ) -> ServiceCheckResult:
     # Impedance matching part of `get_check_function()`.
-    perfdata, results = subresults
-    needs_marker = len(results) > 1
-    summaries: list[str] = []
+    ignore_results, metrics, results = subresults
+
+    if not ignore_results and not results:  # Check returned nothing
+        return SubmittableServiceCheckResult.item_not_found()
+
+    state = int(State.worst(*(r.state for r in results))) if results else 0
+    output = _aggregate_texts(ignore_results, results)
+
+    return (
+        UnsubmittableServiceCheckResult(state, output, metrics)
+        if ignore_results
+        else SubmittableServiceCheckResult(state, output, metrics)
+    )
+
+
+def _aggregate_texts(
+    ignore_results: Sequence[IgnoreResults],
+    results: Sequence[CheckFunctionResult],
+) -> str:
+    summaries = [t for e in ignore_results if (t := str(e))]
     details: list[str] = []
-    status = State.OK
+    needs_marker = len(results) > 1
 
     def _add_state_marker(result_str: str, state_marker: str) -> str:
         return result_str if state_marker in result_str else result_str + state_marker
 
     for result_ in results:
-        status = State.worst(status, result_.state)
         state_marker = state_markers[int(result_.state)] if needs_marker else ""
         if result_.summary:
             summaries.append(
@@ -562,17 +580,12 @@ def _aggregate_results(
             )
         )
 
-    # Empty list? Check returned nothing
-    if not details:
-        return ServiceCheckResult.item_not_found()
-
     if not summaries:
         count = len(details)
         summaries.append(
             "Everything looks OK - %d detail%s available" % (count, "" if count == 1 else "s")
         )
-    all_text = [", ".join(summaries)] + details
-    return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
+    return "\n".join([", ".join(summaries)] + details)
 
 
 def consume_check_results(
@@ -580,27 +593,26 @@ def consume_check_results(
     # creating invalid output.
     # Typing this as `CheckResult` will make linters complain about unreachable code.
     subresults: Iterable[object],
-) -> tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
+) -> tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
     """Impedance matching between the Check API and the Check Engine."""
     ignore_results: list[IgnoreResults] = []
     results: list[CheckFunctionResult] = []
     perfdata: list[MetricTuple] = []
-    for subr in subresults:
-        if isinstance(subr, IgnoreResults):
-            ignore_results.append(subr)
-        elif isinstance(subr, Metric):
-            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
-        elif isinstance(subr, CheckFunctionResult):
-            results.append(subr)
-        else:
-            raise TypeError(subr)
+    try:
+        for subr in subresults:
+            match subr:
+                case IgnoreResults():
+                    ignore_results.append(subr)
+                case Metric():
+                    perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+                case CheckFunctionResult():
+                    results.append(subr)
+                case _:
+                    raise TypeError(subr)
+    except IgnoreResultsError as exc:
+        return [IgnoreResults(str(exc))], perfdata, results
 
-    # Consume *all* check results, and *then* raise, if we encountered
-    # an IgnoreResults instance.
-    if ignore_results:
-        raise IgnoreResultsError(str(ignore_results[-1]))
-
-    return perfdata, results
+    return ignore_results, perfdata, results
 
 
 def _get_monitoring_data_kwargs(
@@ -613,7 +625,7 @@ def _get_monitoring_data_kwargs(
     *,
     cluster_nodes: Sequence[HostName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
-) -> tuple[Mapping[str, object], ServiceCheckResult]:
+) -> tuple[Mapping[str, object], UnsubmittableServiceCheckResult]:
     # Mapping[str, object] stands for either
     #  * Mapping[HostName, Mapping[str, ParsedSectionContent | None]] for clusters, or
     #  * Mapping[str, ParsedSectionContent | None] otherwise.
@@ -638,7 +650,7 @@ def _get_monitoring_data_kwargs(
                 nodes,
                 sections,
             ),
-            ServiceCheckResult.cluster_received_no_data([nk.hostname for nk in nodes]),
+            UnsubmittableServiceCheckResult.cluster_received_no_data([nk.hostname for nk in nodes]),
         )
 
     return (
@@ -647,7 +659,7 @@ def _get_monitoring_data_kwargs(
             HostKey(host_name, source_type),
             sections,
         ),
-        ServiceCheckResult.received_no_data(),
+        UnsubmittableServiceCheckResult.received_no_data(),
     )
 
 
@@ -733,7 +745,6 @@ def get_aggregated_result(
     if not section_kws:  # no data found
         return AggregatedResult(
             service=service,
-            submit=False,
             data_received=False,
             result=error_result,
             cache_info=None,
@@ -748,21 +759,12 @@ def get_aggregated_result(
 
     try:
         check_result = check_function(**item_kw, **params_kw, **section_kws)
-    except IgnoreResultsError as e:
-        msg = str(e) or "No service summary available"
-        return AggregatedResult(
-            service=service,
-            submit=False,
-            data_received=True,
-            result=ServiceCheckResult(output=msg),
-            cache_info=None,
-        )
     except MKTimeout:
         raise
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        check_result = ServiceCheckResult(
+        check_result = SubmittableServiceCheckResult(
             3,
             create_check_crash_dump(
                 host_name,
@@ -788,7 +790,6 @@ def get_aggregated_result(
 
     return AggregatedResult(
         service=service,
-        submit=True,
         data_received=True,
         result=check_result,
         cache_info=get_cache_info(

@@ -444,7 +444,7 @@ def fetch_fans(connection: HostConnection) -> Iterable[models.ShelfFanModel]:
     ):
         element_data = element.to_dict()
         list_id = element_data["id"]
-        fans = element_data["fans"]
+        fans = element_data.get("fans", [])
 
         for fan in fans:
             yield models.ShelfFanModel(
@@ -468,7 +468,7 @@ def fetch_psu(connection: HostConnection) -> Iterable[models.ShelfPsuModel]:
     ):
         element_data = element.to_dict()
         list_id = element_data["id"]
-        frus = element_data["frus"]
+        frus = element_data.get("frus", [])
 
         for fan in frus:
             yield models.ShelfPsuModel(
@@ -499,7 +499,7 @@ def fetch_temperatures(
     ):
         element_data = element.to_dict()
         list_id = element_data["id"]
-        temperatures = element_data["temperature_sensors"]
+        temperatures = element_data.get("temperature_sensors", [])
 
         for temp in temperatures:
             yield models.ShelfTemperatureModel(

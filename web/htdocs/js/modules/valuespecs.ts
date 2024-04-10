@@ -568,18 +568,76 @@ function listof_get_new_entry_html_code(
         oPrototype = document.getElementById(varprefix + "_prototype")!;
     }
 
+    const encoded_magic = encodeURIComponent(magic).replace("!", "%21");
+
     let html_code = oPrototype.innerHTML;
-    // replace the index for a specific first element vs
-    let re = new RegExp(magic + "_first_elem", "g");
-    html_code = html_code.replace(re, str_count);
-    // replace the magic
-    re = new RegExp(magic, "g");
-    html_code = html_code.replace(re, str_count);
+    // Replace the magic in simple strings
+    ["_entry_", "_indexof_", "_orig_indexof_", "_"].forEach(element => {
+        [magic, encoded_magic].forEach(magic => {
+            const old_name = varprefix + element + magic;
+            const new_name = varprefix + element + str_count;
+            html_code = html_code.replace(new RegExp(old_name, "g"), new_name);
+        });
+    });
 
-    // in some cases the magic might be URL encoded. Also replace these occurences.
-    re = new RegExp(encodeURIComponent(magic).replace("!", "%21"), "g");
+    // Complex magic replacements within functions
+    // Note: the listof_drop_handler will also work with a broken magic.. but we should convert it anyway
+    const complex_replacements: [string, string][] = [
+        [
+            "listof_drop_handler\\({&quot;cur_index&quot;: &quot;" +
+                magic +
+                "&quot;, &quot;varprefix&quot;: &quot;" +
+                varprefix +
+                "&quot;}",
+            "listof_drop_handler({&quot;cur_index&quot;: &quot;" +
+                str_count +
+                "&quot;, &quot;varprefix&quot;: &quot;" +
+                varprefix +
+                "&quot;}",
+        ],
+        [
+            "listof_drop_handler\\({&quot;cur_index&quot;: &quot;" +
+                encoded_magic +
+                "&quot;, &quot;varprefix&quot;: &quot;" +
+                varprefix +
+                "&quot;}",
+            "listof_drop_handler({&quot;cur_index&quot;: &quot;" +
+                str_count +
+                "&quot;, &quot;varprefix&quot;: &quot;" +
+                varprefix +
+                "&quot;}",
+        ],
+        [
+            "listof_delete\\(&quot;" +
+                varprefix +
+                "&quot;, &quot;" +
+                magic +
+                "&quot;\\)",
+            "listof_delete(&quot;" +
+                varprefix +
+                "&quot;, &quot;" +
+                str_count +
+                "&quot;)",
+        ],
+        [
+            "listof_delete\\(&quot;" +
+                varprefix +
+                "&quot;, &quot;" +
+                encoded_magic +
+                "&quot;\\)",
+            "listof_delete(&quot;" +
+                varprefix +
+                "&quot;, &quot;" +
+                str_count +
+                "&quot;)",
+        ],
+    ];
+    complex_replacements.forEach(element => {
+        const [key, replacement] = element;
+        html_code = html_code.replace(new RegExp(key, "g"), replacement);
+    });
 
-    return html_code.replace(re, str_count);
+    return html_code;
 }
 
 export function listof_delete(varprefix: string, nr: string) {

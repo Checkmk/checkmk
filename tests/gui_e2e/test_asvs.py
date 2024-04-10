@@ -10,7 +10,9 @@ Currently we aim for V4.0.3 L1
 
 See:
 - https://owasp.org/www-project-application-security-verification-standard/"""
+import pytest
 from playwright.sync_api import BrowserContext
+from playwright.sync_api import TimeoutError as PWTimeoutError
 
 from tests.testlib.playwright.helpers import CmkCredentials
 from tests.testlib.playwright.pom.dashboard import LoginPage
@@ -33,7 +35,8 @@ def test_v2_1_5(test_site: Site, logged_in_page: LoginPage, credentials: CmkCred
     page.logout()
 
     # check old password, shouldn't work anymore
-    page.login(credentials)
+    with pytest.raises(PWTimeoutError):
+        page.login(credentials)
     page.check_error("Incorrect username or password. Please try again.")
 
     # changing it back for other tests

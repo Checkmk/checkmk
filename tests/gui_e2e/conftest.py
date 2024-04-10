@@ -34,6 +34,7 @@ def _log_in(
     ppage = LoginPage(
         page,
         site_url=test_site.internal_url if not mobile_device else test_site.internal_url_mobile,
+        mobile_device=mobile_device,
     )
     ppage.login(credentials)
     return ppage

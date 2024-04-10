@@ -45,23 +45,19 @@ class PredictionQuerier:
         yield from (
             Path(prediction_file)
             for prediction_file in self.livestatus_connection.query_row(
-                (
-                    "GET services\n"
-                    "Columns: prediction_files\n"
-                    f"Filter: host_name = {self.host_name}\n"
-                    f"Filter: description = {self.service_name}"
-                )
+                "GET services\n"
+                "Columns: prediction_files\n"
+                f"Filter: host_name = {self.host_name}\n"
+                f"Filter: description = {self.service_name}"
             )[0]
         )
 
     def _query_prediction_file_content(self, relative_file_path: Path) -> bytes:
         return b"\n".join(
             self.livestatus_connection.query_row(
-                (
-                    "GET services\n"
-                    f"Columns: prediction_file:file:{relative_file_path}\n"
-                    f"Filter: host_name = {self.host_name}\n"
-                    f"Filter: description = {self.service_name}"
-                )
+                "GET services\n"
+                f"Columns: prediction_file:file:{relative_file_path}\n"
+                f"Filter: host_name = {self.host_name}\n"
+                f"Filter: description = {self.service_name}"
             )
         )

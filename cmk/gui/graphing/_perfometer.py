@@ -534,16 +534,14 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
         return first_segment.unit["render"](
             first_segment.value
             + sum(
-                (
-                    evaluate_quantity(s, self.translated_metrics).value
-                    for s in self.perfometer.segments[1:]
-                )
+                evaluate_quantity(s, self.translated_metrics).value
+                for s in self.perfometer.segments[1:]
             )
         )
 
     def get_sort_value(self) -> float:
         return sum(
-            (evaluate_quantity(s, self.translated_metrics).value for s in self.perfometer.segments)
+            evaluate_quantity(s, self.translated_metrics).value for s in self.perfometer.segments
         )
 
 

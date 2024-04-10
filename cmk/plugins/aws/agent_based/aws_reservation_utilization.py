@@ -61,7 +61,7 @@ def check_aws_reservation_utilization(params: UtilizationParams, section: Sectio
     if not section:
         raise IgnoreResultsError("Currently no data from AWS")
 
-    latest_date = max((date.fromisoformat(d) for d in section.keys())).strftime("%Y-%m-%d")
+    latest_date = max(date.fromisoformat(d) for d in section.keys()).strftime("%Y-%m-%d")
     data = section[latest_date]
 
     yield from check_levels(

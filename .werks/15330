@@ -1,0 +1,13 @@
+Title: mk_oracle: report failed login
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1712738280
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Due to fixes introduced with
+<a href="https://checkmk.com/werk/16234">Werk #16234</a> a failed login to the
+oracle database was not reported as critical, but the services were going
+stale. This is now fixed.

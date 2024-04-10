@@ -2765,7 +2765,9 @@ mk_ora_sqlplus() {
 
     start_time="$(perl -MTime::HiRes=time -wle 'print time')"
     read -r -d '' pipe_input <<EOM
+WHENEVER SQLERROR EXIT 1
 connect ${MK_DB_CONNECT}
+WHENEVER SQLERROR CONTINUE
 $(ora_session_environment)${function_stdin}
 EOM
     SQLPLUS=${ORACLE_HOME}/bin/sqlplus

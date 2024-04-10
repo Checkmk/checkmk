@@ -51,6 +51,7 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/os_platform",
     "cmk/os_name",
     "cmk/os_version",
+    "cmk/rmk/node_type",
     "cmk/vsphere_object",
     "cmk/vsphere_vcenter",
 }

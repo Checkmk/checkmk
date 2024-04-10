@@ -27,8 +27,14 @@ if [ -n "${VERBOSE}" ]; then
     echo >&2 " - REFERENCE_IMAGE_DISTRO:.... '${REFERENCE_IMAGE_DISTRO}'"
     echo >&2 " - BUILD_IMAGE_TAG:........... '${BUILD_IMAGE_TAG}'"
     echo >&2 " - DOCKER_REGISTRY_NO_HTTP:... '${DOCKER_REGISTRY_NO_HTTP}'"
+    echo >&2 " - PULL_BASE_IMAGE:........... '${PULL_BASE_IMAGE}'"
     echo >&2 " - populate build context at:. ${TEMP_CONTEXT_DIR}"
     echo >&2 " - build image based on image: '${BASE_BUILD_IMAGE}'"
+fi
+
+if [ -n "${PULL_BASE_IMAGE}" ]; then
+    "${CHECKOUT_ROOT}/scripts/decent-output" 2 \
+        docker pull "${BASE_BUILD_IMAGE}"
 fi
 
 "${CHECKOUT_ROOT}/defines/dev-images/populate-build-context.sh" "${TEMP_CONTEXT_DIR}"

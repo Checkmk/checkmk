@@ -18,7 +18,7 @@ docker_reference_image = { ->
     dir("${checkout_dir}") {
         docker.withRegistry(DOCKER_REGISTRY, "nexus") {
             return docker.image(
-                cmd_output("VERBOSE=1 ${checkout_dir}/defines/dev-images/reference-image-id")
+                cmd_output("VERBOSE=1 PULL_BASE_IMAGE=1 ${checkout_dir}/defines/dev-images/reference-image-id")
             );
         }
     }

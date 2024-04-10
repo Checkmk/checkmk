@@ -1630,6 +1630,8 @@ def _transform_levels_forth(value: object) -> LevelsConfigLegacyModel:
             return "no_levels", None
         case "fixed", tuple(fixed_levels):
             return "fixed", fixed_levels
+        case "predictive", dict(predictive_levels):  # format released in 2.3.0b3
+            return "predictive", predictive_levels
         case "cmk_postprocessed", "predictive_levels", predictive_levels:
             return "predictive", predictive_levels
 

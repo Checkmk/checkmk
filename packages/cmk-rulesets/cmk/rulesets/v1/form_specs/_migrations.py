@@ -112,7 +112,8 @@ def _migrate_to_levels(
         case (int(warn), int(crit)) | (float(warn), float(crit)):
             return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
-        case dict(val_dict):
+        # 2.2. format + format released in 2.3.0b3
+        case dict(val_dict) | ("predictive", dict(val_dict)):
             if (
                 pred_levels := _parse_to_predictive_levels(
                     val_dict,  # type: ignore[misc] # Expression type contains "Any"

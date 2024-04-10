@@ -13,6 +13,8 @@ from collections import defaultdict
 from collections.abc import Sequence
 from typing import DefaultDict, Final
 
+from tests.testlib.pytest_helpers.marks import skip_if_raw_edition
+
 from tests.unit.conftest import FixRegister
 
 from cmk.utils.sectionname import SectionName
@@ -64,6 +66,7 @@ KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
 }
 
 
+@skip_if_raw_edition
 def test_all_sections_have_host_labels_documented(
     fix_register: FixRegister,
 ) -> None:

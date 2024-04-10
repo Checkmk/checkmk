@@ -50,6 +50,33 @@ def _to_levels_test_cases(ntype: type[_NumberT]) -> list[NamedTuple]:
         ),
         pytest.param(
             (
+                "predictive",
+                {
+                    "period": "minute",
+                    "horizon": 90,
+                    "levels": ("absolute", (ntype(10), ntype(20))),
+                    "bound": (ntype(10), ntype(15)),
+                    "__reference_metric__": "pagefile_used",
+                    "__direction__": "upper",
+                },
+            ),
+            does_not_raise(),
+            (
+                "cmk_postprocessed",
+                "predictive_levels",
+                {
+                    "horizon": 90,
+                    "levels": ("absolute", (ntype(10), ntype(20))),
+                    "period": "minute",
+                    "bound": (ntype(10), ntype(15)),
+                    "__reference_metric__": "pagefile_used",
+                    "__direction__": "upper",
+                },
+            ),
+            id="2.3.0b3 format absolute predictive_levels",
+        ),
+        pytest.param(
+            (
                 "cmk_postprocessed",
                 "predictive_levels",
                 {

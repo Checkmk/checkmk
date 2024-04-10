@@ -3,7 +3,7 @@
 /// file: trigger-packages.groovy
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
-def build_stages(packages_file) {
+def build_stages(packages_file, force_build) {
     def packages = load_json(packages_file);
     def notify = load("${checkout_dir}/buildscripts/scripts/utils/notify.groovy");
 
@@ -17,6 +17,7 @@ def build_stages(packages_file) {
                             def job = upstream_build(
                                 download: false,
                                 relative_job_name: "builders/build-cmk-package",
+                                force_build: force_build,
                                 dependency_paths: [p.path] + p.dependencies,
                                 build_params: [
                                     "PACKAGE_PATH":  p.path,
@@ -54,13 +55,17 @@ def preparation(packages_file) {
 }
 
 def main() {
+    check_job_parameters([
+        "FORCE_BUILD",
+    ]);
+
     dir("${checkout_dir}") {
         def results_dir = "results"
         def packages_file = "${results_dir}/packages_generated.json"
 
         preparation(packages_file)
 
-        build_stages(packages_file);
+        build_stages(packages_file, params.FORCE_BUILD);
 
         show_duration("archiveArtifacts") {
             archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');

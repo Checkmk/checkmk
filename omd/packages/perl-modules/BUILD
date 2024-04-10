@@ -50,11 +50,8 @@ genrule(
         "perl_module_list_2.txt",
         "@Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz",
     ],
-    # Bazel does not support output directories anymore since version 7
-    # The safest and simpliest workaround for external packages is using archives
-    # https://stackoverflow.com/questions/51073133/bazel-genrule-that-outputs-a-directory
     outs = [
-        "perl-modules.tar",
+        "perl-modules",
     ],
     cmd = """
         mkdir perl-modules
@@ -66,8 +63,8 @@ genrule(
         FORCE=1 $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_1.txt));
         $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_2.txt));
         $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $(locations @Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz);
-	chmod u+w -R perl-modules
-	tar cf $@ perl-modules/{bin,lib}
+        mkdir -p $@
+        cp -r perl-modules/{bin,lib,man} $@
     """,
     visibility = ["//visibility:public"],
 )

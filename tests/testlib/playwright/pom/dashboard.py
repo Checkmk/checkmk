@@ -20,10 +20,12 @@ class LoginPage(CmkPage):
         self,
         page: Page,
         site_url: str,  # URL to one of the pages on Checkmk GUI
+        mobile_device: bool = False,
         timeout_assertions: int | None = None,
         timeout_navigation: int | None = None,
     ) -> None:
         self.site_url = site_url
+        self._mobile_device: bool = mobile_device
         self._logged_in: bool = False
         super().__init__(page, timeout_assertions, timeout_navigation)
 
@@ -31,26 +33,44 @@ class LoginPage(CmkPage):
     def navigate(self) -> str:
         """Navigate to login page, like a Checkmk GUI user.
 
-        Navigate to the `site_url` provided to `LoginPage`, which is redirected to the login page.
         Works ONLY when the user is logged out.
+        Navigate to the `site_url` provided to `LoginPage`.
+        `site_url` can refer to any Checkmk GUI page.
         Returns the URL of login page. Returns an empty-string when user is already logged in.
         """
-        _url: str = ""
         if not self._logged_in:
             self.page.goto(self.site_url, wait_until="load")
             expect(self.page).to_have_url(re.compile(r"login.py"))
             self._validate_credential_elements_on_page()
-            _url = self.page.url
-        return _url
+            return self.page.url
+        return ""
 
     def login(self, credentials: CmkCredentials) -> None:
-        """Login to Checkmk GUI."""
-        self.page.locator("#input_user").fill(credentials.username)
-        self.page.locator("#input_pass").fill(credentials.password)
-        self.page.locator("#_login").click()
+        """Login to Checkmk GUI.
+
+        By default, the credentials provided to `LoginPage` are used.
+        """
+        if not self._logged_in:
+            self.page.locator("#input_user").fill(credentials.username)
+            self.page.locator("#input_pass").fill(credentials.password)
+            self.page.locator("#_login").click()
+            self.page.wait_for_url(url=re.compile(self._target_path()), wait_until="load")
+            self._logged_in = True
+
+    def _target_path(self) -> str:
+        """Return path of the page, which will be navigated to after a successful login."""
+        # TODO: extend by adding functionality.
+        # Find the next page afte rlogin is successful.
+        if self._mobile_device:
+            return r"mobile"
+        return r"index.py"
 
     def logout(self) -> None:
-        self.main_menu.user_logout.click()
+        if self._logged_in:
+            self.main_menu.user_logout.click()
+            self.page.wait_for_url(url=re.compile("login.py$"), wait_until="load")
+            self._validate_credential_elements_on_page()
+            self._logged_in = False
 
     def _validate_credential_elements_on_page(self) -> None:
         expect(self.page.locator("#input_user")).to_be_visible()

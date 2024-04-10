@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from argparse import Namespace
+from collections.abc import Mapping
 from types import ModuleType
-from typing import Final, Mapping
+from typing import Final
 
 import pytest
 

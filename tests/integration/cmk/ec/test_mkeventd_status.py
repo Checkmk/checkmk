@@ -37,7 +37,7 @@ def test_status_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) 
     live = site.live if via_core else ec.status
     assert isinstance(live, CMKEventConsoleStatus)
     prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc(f"GET {prefix}status\n".encode("utf-8"))
+    result = live.query_table_assoc(f"GET {prefix}status\n".encode())
     assert len(result) == 1
 
     status = result[0]
@@ -86,7 +86,7 @@ def test_rules_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) -
     live = site.live if via_core else ec.status
     assert isinstance(live, CMKEventConsoleStatus)
     prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc(f"GET {prefix}rules\n".encode("utf-8"))
+    result = live.query_table_assoc(f"GET {prefix}rules\n".encode())
     assert isinstance(result, list)
     # assert len(result) == 0
     # TODO: Add some rule before the test and then check the existing

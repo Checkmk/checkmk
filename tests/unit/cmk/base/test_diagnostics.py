@@ -795,7 +795,7 @@ def test_diagnostics_element_crash_dumps_content(tmp_path):
 
     relative_path = cmk.utils.paths.crash_dir.relative_to(cmk.utils.paths.omd_root)
     test_filename = f"{test_uuid}.tar.gz"
-    assert filepath == tmppath.joinpath(relative_path).joinpath("%s/%s" % (category, test_filename))
+    assert filepath == tmppath.joinpath(relative_path).joinpath(f"{category}/{test_filename}")
 
     import tarfile
 

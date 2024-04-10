@@ -66,7 +66,7 @@ class BaseVersions:
 
     MIN_VERSION = get_min_version()
 
-    with open(Path(__file__).parent.resolve() / "base_versions.json", "r") as f:
+    with open(Path(__file__).parent.resolve() / "base_versions.json") as f:
         BASE_VERSIONS_STR = json.load(f)
 
     BASE_VERSIONS = [
@@ -84,7 +84,7 @@ class BaseVersions:
 class InteractiveModeDistros:
     @staticmethod
     def get_supported_distros():
-        with open(Path(__file__).parent.resolve() / "../../editions.yml", "r") as stream:
+        with open(Path(__file__).parent.resolve() / "../../editions.yml") as stream:
             yaml_file = yaml.safe_load(stream)
 
         return yaml_file["daily_extended"]

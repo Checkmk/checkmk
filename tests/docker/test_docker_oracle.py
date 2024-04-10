@@ -230,7 +230,7 @@ class OracleDatabase:
         logger.info(
             "Patching the Oracle plugin: Detect free edition + Use default TNS_ADMIN path..."
         )
-        with open(plugin_source_path, "r", encoding="UTF-8") as plugin_file:
+        with open(plugin_source_path, encoding="UTF-8") as plugin_file:
             plugin_script = plugin_file.read()
         # detect free edition
         plugin_script = plugin_script.replace(r"_pmon_'", r"_pmon_|^db_pmon_'")

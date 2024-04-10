@@ -13,9 +13,7 @@ import pprint
 import queue
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn, TYPE_CHECKING
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Literal, NoReturn, TYPE_CHECKING, TypedDict
 
 from cmk.utils import version
 
@@ -1539,7 +1537,7 @@ class DowntimeClient(RestApiClient):
 
     def delete(
         self,
-        delete_type: "FindByType",
+        delete_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
@@ -1573,7 +1571,7 @@ class DowntimeClient(RestApiClient):
 
     def modify(
         self,
-        modify_type: "FindByType",
+        modify_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
@@ -1617,7 +1615,7 @@ class DowntimeClient(RestApiClient):
     @staticmethod
     def _update_find_by_type(
         body: dict,
-        find_type: "FindByType",
+        find_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator
-from typing import Any, Generator, get_args, Literal
+from collections.abc import Generator, Iterator
+from typing import Any, get_args, Literal
 
 import pytest
 

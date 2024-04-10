@@ -225,7 +225,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
         # assert p.stdout is not None
         # output = p.stdout.read()
         output = "foobar"
-        raise Exception("snmpsimd died. Exit code: %s; output: %s" % (exitcode, output))
+        raise Exception(f"snmpsimd died. Exit code: {exitcode}; output: {output}")
 
     logger.debug("snmpsimd is running")
 

@@ -5,8 +5,8 @@
 
 import json
 import subprocess
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
 
 import pytest
 

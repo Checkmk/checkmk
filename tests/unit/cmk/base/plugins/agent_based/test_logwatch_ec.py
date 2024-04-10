@@ -723,7 +723,7 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
     assert len(messages_forwarded) == 0
 
     # now let's see if we have two spool files
-    assert set(f.name for f in spool_dir.iterdir()) == {
+    assert {f.name for f in spool_dir.iterdir()} == {
         "spool.1698768120.00",
         "spool.1698768180.00",
     }
@@ -758,7 +758,7 @@ def test_forward_tcp_message_update_old_spoolfiles() -> None:
             application="another_item",
         )
     # we expect two spool files in the host folder:
-    assert set(f.name for f in spool_dir.iterdir()) == {
+    assert {f.name for f in spool_dir.iterdir()} == {
         "spool.1698768120.00",
         "spool.1698768180.00",
     }

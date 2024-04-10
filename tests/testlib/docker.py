@@ -13,7 +13,7 @@ import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import docker  # type: ignore[import-untyped]
 import requests
@@ -225,7 +225,7 @@ def start_checkmk(
     name: str | None = None,
     hostname: str | None = None,
     environment: dict[str, str] | None = None,
-    ports: dict[str, Union[int, None, tuple[str, int] | list[int]]] | None = None,
+    ports: dict[str, int | None | tuple[str, int] | list[int]] | None = None,
     volumes: list[str] | None = None,
     volumes_from: list[str] | None = None,
 ) -> Iterator[docker.models.containers.Container]:

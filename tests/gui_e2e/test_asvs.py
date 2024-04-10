@@ -62,8 +62,7 @@ def test_cookie_flags(
 ) -> None:
     """tests for 3.4.X"""
     page = context.new_page()
-    page.goto(url := test_site.internal_url)
-    ppage = LoginPage(page, site_id=test_site.id, site_url=url)
+    ppage = LoginPage(page, site_url=test_site.internal_url)
     ppage.login(credentials)
 
     cookie = context.cookies()[0]

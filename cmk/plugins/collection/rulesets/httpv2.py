@@ -18,6 +18,7 @@ from cmk.rulesets.v1.form_specs import (
     LevelDirection,
     List,
     MatchingScope,
+    migrate_to_float_simple_levels,
     migrate_to_proxy,
     Password,
     Proxy,
@@ -589,6 +590,15 @@ def _valuespec_content() -> Dictionary:
     )
 
 
+def _migrate_beta_cert_levels(value: object) -> SimpleLevelsConfigModel[float]:
+    match value:
+        case ("validate", nested):
+            return migrate_to_float_simple_levels(nested)
+        case ("no_validation", _):
+            return "no_levels", None
+    return migrate_to_float_simple_levels(value)
+
+
 # This could change later, so we need to distinct between standard settings and
 # individual settings (currently referred as "shared_settings")
 def _valuespec_settings(is_standard: bool = True) -> Dictionary:
@@ -625,6 +635,7 @@ def _valuespec_settings(is_standard: bool = True) -> Dictionary:
                     level_direction=LevelDirection.LOWER,
                     prefill_fixed_levels=DefaultValue((40.0 * _DAY, 20.0 * _DAY)),
                     help_text=Help("Minimum number of days a certificate has to be valid."),
+                    migrate=_migrate_beta_cert_levels,
                 )
             ),
             "document": DictElement(parameter_form=_valuespec_document()),

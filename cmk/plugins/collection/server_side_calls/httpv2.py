@@ -191,7 +191,7 @@ class HttpSettings(BaseModel):
     connection: Connection | None = None
     response_time: FloatLevels | None = None
     server_response: ServerResponse | None = None
-    cert: FloatLevels | None = None
+    cert: FloatLevels = (LevelsType.NO_LEVELS, None)
     document: Document | None = None
     content: Content | None = None
 
@@ -271,8 +271,7 @@ def _command_arguments(endpoint: HttpEndpoint) -> Iterator[str | Secret]:
         yield from _response_time_arguments(response_time)
     if (server_response := settings.server_response) is not None:
         yield from _status_code_args(server_response)
-    if (cert := settings.cert) is not None:
-        yield from _cert_args(cert)
+    yield from _cert_args(settings.cert)
     if (document := settings.document) is not None:
         yield from _document_args(document)
     if (content := settings.content) is not None:

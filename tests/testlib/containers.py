@@ -74,12 +74,6 @@ def execute_tests_in_container(
                 docker.types.Ulimit(name="nofile", soft=2048, hard=2048),
             ],
             binds=_runtime_binds(),
-            # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
-            # docker daemon wide, but set some fixed local network which is not being routed.
-            # This makes it possible to use IPv6 on the "lo" interface. Externally IPv4 is used
-            sysctls={
-                "net.ipv6.conf.eth0.disable_ipv6": 1,
-            },
         ),
         stdin_open=True,
         tty=True,

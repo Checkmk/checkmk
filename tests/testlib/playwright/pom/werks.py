@@ -13,7 +13,7 @@ class Werks(LoginPage):
         self,
         ppage: LoginPage,
     ):
-        super().__init__(ppage.page, ppage.site_id, ppage.site_url)
+        super().__init__(ppage.page, ppage.site_url)
         self.click_and_wait(self.main_menu.help_werks, navigate=True)
         self.main_area.check_page_title(self.page_title)
         self.main_area.page.wait_for_load_state("networkidle")

@@ -31,9 +31,10 @@ def _credentials(test_site: Site) -> CmkCredentials:
 def _log_in(
     page: Page, test_site: Site, credentials: CmkCredentials, mobile_device: bool = False
 ) -> LoginPage:
-    log_in_url = test_site.internal_url if not mobile_device else test_site.internal_url_mobile
-    page.goto(log_in_url)
-    ppage = LoginPage(page, site_id=test_site.id, site_url=log_in_url)
+    ppage = LoginPage(
+        page,
+        site_url=test_site.internal_url if not mobile_device else test_site.internal_url_mobile,
+    )
     ppage.login(credentials)
     return ppage
 

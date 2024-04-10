@@ -10,21 +10,12 @@ from datetime import datetime, timezone
 from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
     __version__,
     parse_check_mk_version,
 )
-
-from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
-
-# We need config and host_name() because the "only_from" configuration is not a check parameter.
-# It is configured as an agent bakery rule, and controls the *deployment* of the only_from setting.
-# We want to use that very setting to check whether it is deployed correctly.
-# I currently see no better soluton than this API violation.
-from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 from cmk.plugins.lib.checkmk import (
     CachedPlugin,
@@ -79,10 +70,6 @@ def _is_daily_build_version(v: str) -> bool:
     return len(v) == 10 or "-" in v
 
 
-def _get_configured_only_from() -> None | str | list[str]:
-    return get_config_cache().only_from(HostName(host_name()))
-
-
 def discover_checkmk_agent(
     section_check_mk: CheckmkSection | None,
     section_checkmk_agent_plugins: PluginSection | None,
@@ -115,7 +102,7 @@ def _check_cmk_agent_installation(
     )
     yield from _check_only_from(
         agent_info.get("onlyfrom") if controller_info is None else controller_info.ip_allowlist,
-        _get_configured_only_from(),
+        params["only_from"],
         State(params["restricted_address_mismatch"]),
     )
     yield from _check_agent_update(
@@ -620,5 +607,11 @@ register.check_plugin(
         "agent_version_missmatch": 1,
         "restricted_address_mismatch": 1,
         "legacy_pull_mode": 1,
+        # This next entry will be postprocessed by the backend.
+        # The "only_from" configuration is not a check parameter but it is configured as an agent bakery rule,
+        # and controls the *deployment* of the only_from setting.
+        # We want to use that very setting to check whether it is deployed correctly.
+        # Don't try this hack at home, we are trained professionals.
+        "only_from": ("cmk_postprocessed", "only_from", None),
     },
 )

@@ -187,6 +187,20 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     )
 
 
+def test_only_from_injection() -> None:
+    inject = InjectedParameters(meta_file_path_template="", predictions={})
+    p: dict[str, object] = {
+        "outer": {
+            "inner": ("cmk_postprocessed", "only_from", None),
+        },
+    }
+    assert checkers.postprocess_configuration(p, inject, ["1.2.3.4"]) == {
+        "outer": {
+            "inner": ["1.2.3.4"],
+        },
+    }
+
+
 def test_prediction_injection_legacy() -> None:
     inject = InjectedParameters(meta_file_path_template="", predictions={})
     p: dict[str, object] = {
@@ -200,7 +214,7 @@ def test_prediction_injection_legacy() -> None:
             },
         )
     }
-    assert checkers.postprocess_configuration(p, inject) == {
+    assert checkers.postprocess_configuration(p, inject, []) == {
         "pagefile": (
             "predictive",
             {
@@ -240,7 +254,7 @@ def test_prediction_injection() -> None:
             },
         ),
     }
-    assert checkers.postprocess_configuration(p, inject) == {
+    assert checkers.postprocess_configuration(p, inject, []) == {
         "levels_upper": (
             "predictive",
             ("my_reference_metric", *prediction),

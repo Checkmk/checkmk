@@ -485,6 +485,10 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                         time.time(),
                     ),
                 ),
+                # Most of the following are only needed for individual plugins, actually.
+                # once we have all of them in this place, we might want to consider how
+                # to optimize these computations.
+                only_from=self.config_cache.only_from(host_name),
             )
 
         return CheckPlugin(
@@ -694,6 +698,7 @@ def get_aggregated_result(
     rtc_package: AgentRawData | None,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     snmp_backend: SNMPBackendEnum,
+    only_from: None | str | list[str],
 ) -> AggregatedResult:
     # Mostly API-specific error-handling around the check function.
     #
@@ -754,7 +759,9 @@ def get_aggregated_result(
     params_kw = (
         {}
         if plugin.check_default_parameters is None
-        else {"params": _final_read_only_check_parameters(service.parameters, injected_p)}
+        else {
+            "params": _final_read_only_check_parameters(service.parameters, injected_p, only_from)
+        }
     )
 
     try:
@@ -805,6 +812,7 @@ def get_aggregated_result(
 def _final_read_only_check_parameters(
     entries: TimespecificParameters | LegacyCheckParameters,
     injected_p: InjectedParameters,
+    only_from: None | str | list[str],
 ) -> Parameters:
     params = (
         entries.evaluate(timeperiod_active)
@@ -818,7 +826,7 @@ def _final_read_only_check_parameters(
         # unwrapped by a decorator of the original check_function.
         wrap_parameters(
             (
-                postprocess_configuration(params, injected_p)
+                postprocess_configuration(params, injected_p, only_from)
                 if _needs_postprocessing(params)
                 else params
             ),
@@ -842,6 +850,7 @@ def _needs_postprocessing(params: object) -> bool:
 def postprocess_configuration(
     params: LegacyCheckParameters | Mapping[str, object],
     injected_p: InjectedParameters,
+    only_from: None | str | list[str],
 ) -> LegacyCheckParameters | Mapping[str, object]:
     """Postprocess configuration parameters.
 
@@ -860,16 +869,18 @@ def postprocess_configuration(
     match params:
         case tuple(("cmk_postprocessed", "predictive_levels", value)):
             return _postprocess_predictive_levels(value, injected_p)
+        case tuple(("cmk_postprocessed", "only_from", _)):
+            return only_from
         case tuple():
-            return tuple(postprocess_configuration(v, injected_p) for v in params)
+            return tuple(postprocess_configuration(v, injected_p, only_from) for v in params)
         case list():
-            return list(postprocess_configuration(v, injected_p) for v in params)
+            return list(postprocess_configuration(v, injected_p, only_from) for v in params)
         case dict():  # check for legacy predictive levels :-(
             return {
                 k: (
                     injected_p.model_dump()
                     if k == "__injected__"
-                    else postprocess_configuration(v, injected_p)
+                    else postprocess_configuration(v, injected_p, only_from)
                 )
                 for k, v in params.items()
             }

@@ -41,7 +41,7 @@ if [ "$USER" == "jenkins" ]; then
 
     # We're using git reference clones, see also jenkins/global-defaults.yml in checkmk_ci.
     # That's why we need to mount the reference repos.
-    GIT_REFERENCE_CLONE_PATH="/home/jenkins/git_reference_clones/check_mk.git"
+    GIT_REFERENCE_CLONE_PATH="${HOME}/git_reference_clones/check_mk.git"
     REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
 
     DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${DOCKER_CONF_PATH}"
@@ -80,7 +80,7 @@ fi
     if [ -n "${IMAGE_ALIAS}" ]; then
         "${CHECKOUT_ROOT}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}"
     else
-        "$CHECKOUT_ROOT"/defines/dev-images/reference-image-id
+        "${CHECKOUT_ROOT}"/defines/dev-images/reference-image-id
     fi
 )"}"
 

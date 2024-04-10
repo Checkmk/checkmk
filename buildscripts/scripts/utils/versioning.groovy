@@ -101,7 +101,7 @@ def get_distros(Map args) {
     }
 
     /// read distros from edition.yml otherwise.
-    docker_reference_image().inside("${mount_reference_repo_dir}") {
+    inside_container() {
         dir("${checkout_dir}") {
             return cmd_output("""scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \
@@ -115,7 +115,7 @@ def get_distros(Map args) {
 }
 
 def get_internal_artifacts_pattern() {
-    docker_reference_image().inside("${mount_reference_repo_dir}") {
+    inside_container() {
         dir("${checkout_dir}") {
             return sh(script: """scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \
@@ -126,7 +126,6 @@ def get_internal_artifacts_pattern() {
             """, returnStdout: true).trim();
         }
     }
-
 }
 
 def get_branch_version(String git_dir=".") {

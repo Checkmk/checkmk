@@ -137,13 +137,24 @@ def main() {
     }
 
     /// build and use reference image in order to check if it's working at all
-    /// and to fill caches
+    /// and to fill caches. Also do some tests in order to check if permissions
+    /// are fine and everything gets cleaned up
     stage("Use reference image") {
-        show_duration("check reference image") {
-            docker_reference_image().inside() {
+        dir("${checkout_dir}") {
+            /// First check the bash script, since it yields more useful log output
+            /// in erroneous cases
+            show_duration("check reference image") {
+                sh("""
+                    ${checkout_dir}/scripts/run-in-docker.sh cat /etc/os-release
+                """);
+            }
+            /// also check the default way to use a container
+            inside_container() {
                 sh("""
                     echo Hello from reference image
                     cat /etc/os-release
+                    echo \$USER
+                    echo \$HOME
                 """);
             }
         }

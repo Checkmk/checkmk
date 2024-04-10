@@ -68,6 +68,8 @@ def execute_active_check_inventory(
 
     if result.no_data_or_files:
         AutoQueue(cmk.utils.paths.autoinventory_dir).add(host_name)
+    else:
+        AutoQueue(cmk.utils.paths.autoinventory_dir).remove(host_name)
 
     if not (result.processing_failed or result.no_data_or_files):
         save_tree_actions = _get_save_tree_actions(

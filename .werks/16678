@@ -1,0 +1,11 @@
+Title: HW-/SW-Inventory: Do not run autoinventory for inventorized hosts
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1712740134
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Previously hosts marked for inventorization were afterwards not unmarked, meaning they would be processed again everytime the autoinventory was running.
+This has been fixed.

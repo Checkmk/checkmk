@@ -5,11 +5,10 @@
 import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, NotRequired
+from typing import Any, NotRequired, TypedDict
 
 from dateutil import parser as date_parser
 from dateutil import tz
-from typing_extensions import TypedDict
 
 from cmk.plugins.lib.timesync import tolerance_check
 

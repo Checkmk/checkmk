@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Checkmk GUI"""
 
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal, Sequence, TypedDict
+from typing import Any, Literal, TypedDict
 
 from livestatus import SiteConfigurations
 

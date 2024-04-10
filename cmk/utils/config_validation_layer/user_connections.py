@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal, NewType, Sequence
+from collections.abc import Sequence
+from typing import Literal, NewType, TypedDict
 
 from pydantic import BaseModel, Field, ValidationError
-from typing_extensions import TypedDict
 
 from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 from cmk.utils.i18n import _

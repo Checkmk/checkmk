@@ -43,10 +43,8 @@ import sys
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypedDict
 from uuid import uuid4
-
-from typing_extensions import TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store

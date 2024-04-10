@@ -5,8 +5,8 @@
 """Modes for renaming one or multiple existing hosts"""
 
 import socket
-from collections.abc import Collection, Mapping, Sequence
-from typing import Any, Iterable
+from collections.abc import Collection, Iterable, Mapping, Sequence
+from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName

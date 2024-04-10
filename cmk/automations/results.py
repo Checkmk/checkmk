@@ -9,9 +9,7 @@ from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass
-from typing import Any, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict, TypeVar
 
 from cmk.utils import version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData

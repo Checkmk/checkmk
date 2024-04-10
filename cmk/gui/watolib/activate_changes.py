@@ -34,10 +34,9 @@ from datetime import datetime
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
-from typing import Any, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from setproctitle import setthreadtitle
-from typing_extensions import TypedDict
 
 from livestatus import SiteConfiguration, SiteId
 

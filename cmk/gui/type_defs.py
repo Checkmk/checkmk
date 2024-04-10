@@ -10,10 +10,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, NewType, NotRequired
+from typing import Any, Literal, NamedTuple, NewType, NotRequired, TypedDict
 
 from pydantic import BaseModel
-from typing_extensions import TypedDict
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey

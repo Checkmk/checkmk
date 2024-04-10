@@ -5,9 +5,9 @@
 
 import abc
 import math
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Callable, Final, Literal
+from typing import Final, Literal
 
 from cmk.graphing.v1 import metrics
 

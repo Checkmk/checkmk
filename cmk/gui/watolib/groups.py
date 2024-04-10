@@ -5,7 +5,8 @@
 
 import copy
 import re
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from typing import Any, Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.notify_types import EventRule

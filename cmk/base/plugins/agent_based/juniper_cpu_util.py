@@ -5,8 +5,7 @@
 
 from collections.abc import Mapping
 from time import time
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.lib.juniper import DETECT_JUNIPER

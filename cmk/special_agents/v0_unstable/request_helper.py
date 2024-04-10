@@ -11,11 +11,10 @@ import os
 import ssl
 from functools import reduce
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
-from typing import Any
+from typing import Any, TypedDict
 from urllib.request import build_opener, HTTPSHandler, Request
 
 from requests import Session
-from typing_extensions import TypedDict
 
 StringMap = dict[str, str]  # should be Mapping[] but we're not ready yet..
 

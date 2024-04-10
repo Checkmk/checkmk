@@ -16,9 +16,7 @@
 
 import time
 from collections.abc import Iterable, Mapping
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData, Section
 

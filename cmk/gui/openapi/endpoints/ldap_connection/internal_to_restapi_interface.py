@@ -5,9 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, cast, Literal
-
-from typing_extensions import get_args, TypedDict
+from typing import Any, cast, get_args, Literal, TypedDict
 
 from cmk.gui.userdb import (
     ACTIVE_DIR,

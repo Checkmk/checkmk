@@ -6,9 +6,7 @@
 import dataclasses
 import enum
 from collections.abc import Sequence
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from cmk.plugins.lib.kube import CountableNode, NodeCount
 

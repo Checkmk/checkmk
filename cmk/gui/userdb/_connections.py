@@ -5,9 +5,7 @@
 
 import os
 from collections.abc import Callable, Sequence
-from typing import Any, cast, Literal, NotRequired
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Literal, NotRequired, TypedDict
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store

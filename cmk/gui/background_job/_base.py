@@ -10,10 +10,9 @@ import shutil
 import signal
 import time
 from collections.abc import Callable
-from typing import NoReturn
+from typing import NoReturn, TypedDict
 
 import psutil
-from typing_extensions import TypedDict
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException

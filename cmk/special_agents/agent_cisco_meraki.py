@@ -12,10 +12,9 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 from pathlib import Path
-from typing import Final
+from typing import Final, TypedDict
 
 import meraki  # type: ignore[import-untyped]
-from typing_extensions import TypedDict
 
 from cmk.utils import password_store
 from cmk.utils.paths import tmp_dir

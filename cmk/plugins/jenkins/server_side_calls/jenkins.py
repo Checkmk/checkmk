@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Iterator, Sequence
+from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel
 

@@ -6,8 +6,9 @@
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 from enum import auto, StrEnum
-from typing import NamedTuple, Sequence
+from typing import NamedTuple
 
 import requests
 

@@ -5,9 +5,7 @@
 
 from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.plugins.lib import multipath
 

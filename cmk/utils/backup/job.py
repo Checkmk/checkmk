@@ -10,10 +10,9 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal, NotRequired
+from typing import Literal, NotRequired, TypedDict
 
 from pydantic import BaseModel
-from typing_extensions import TypedDict
 
 from .targets import TargetId
 

@@ -14,10 +14,10 @@ import logging
 import subprocess
 import sys
 import traceback
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from itertools import chain
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Literal
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE

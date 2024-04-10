@@ -11,11 +11,10 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import assert_never, Literal, NamedTuple, TypeVar
+from typing import assert_never, Literal, NamedTuple, TypedDict, TypeVar
 
 from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel
-from typing_extensions import TypedDict
 
 import cmk.utils.render
 

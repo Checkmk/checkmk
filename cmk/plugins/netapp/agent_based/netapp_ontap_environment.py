@@ -5,8 +5,8 @@
 
 
 import json
-from collections.abc import Mapping, MutableMapping
-from typing import Any, Callable
+from collections.abc import Callable, Mapping, MutableMapping
+from typing import Any
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (  # check_levels,

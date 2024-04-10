@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from cmk.plugins.lib.liebert import DETECT_LIEBERT, parse_liebert_without_unit
 

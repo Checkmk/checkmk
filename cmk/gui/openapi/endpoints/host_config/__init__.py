@@ -39,8 +39,8 @@ A host_config object can have the following relations present in `links`:
 """
 import itertools
 import operator
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Callable
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any
 from urllib.parse import urlparse
 
 from cmk.utils.hostaddress import HostName

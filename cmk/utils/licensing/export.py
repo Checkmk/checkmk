@@ -11,11 +11,10 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import auto, Enum
-from typing import Final, Literal, Protocol
+from typing import Final, Literal, Protocol, TypedDict
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
-from typing_extensions import TypedDict
 
 LicensingProtocolVersion: Final[str] = "3.0"
 

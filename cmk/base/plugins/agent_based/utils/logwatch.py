@@ -16,7 +16,8 @@
 import re
 from collections import Counter
 from collections.abc import Callable, Container, Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, Literal, NamedTuple, Pattern, TypedDict
+from re import Pattern
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 

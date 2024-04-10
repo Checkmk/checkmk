@@ -5,9 +5,7 @@
 
 from collections.abc import Mapping
 from enum import Enum
-from typing import NamedTuple
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, TypedDict
 
 from cmk.plugins.lib.aruba import DETECT_2930M
 from cmk.plugins.lib.temperature import check_temperature, TempParamDict, TempParamType

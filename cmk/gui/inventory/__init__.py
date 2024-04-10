@@ -14,10 +14,9 @@ import xml.dom.minidom
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, TypedDict
 
 import dicttoxml  # type: ignore[import-untyped]
-from typing_extensions import TypedDict
 
 import livestatus
 

@@ -6,9 +6,7 @@
 import json
 import re
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, TypedDict
 
 from cmk.utils.metrics import MetricName as MetricName_
 

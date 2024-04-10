@@ -11,10 +11,10 @@
 # Wrong naming oper_status has no "media disconnect" status
 # Bad typing dict[str,tuple[str,str]]  - is not typing at all
 
-from collections.abc import Collection, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Collection, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import asdict
 from functools import partial
-from typing import Any, Callable, Final, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv

@@ -16,9 +16,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Generic, Literal, NamedTuple, NewType, Self, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Generic, Literal, NamedTuple, NewType, Self, TypedDict, TypeVar
 
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName

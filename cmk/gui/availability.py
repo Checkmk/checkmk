@@ -9,8 +9,8 @@ import functools
 import itertools
 import os
 import time
-from collections.abc import Callable, Iterator
-from typing import Any, Generator, Literal, NamedTuple, Sequence
+from collections.abc import Callable, Generator, Iterator, Sequence
+from typing import Any, Literal, NamedTuple
 
 from livestatus import (
     LivestatusRow,

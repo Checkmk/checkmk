@@ -6,9 +6,7 @@
 import re
 import time
 from collections.abc import MutableMapping, Sequence
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

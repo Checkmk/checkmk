@@ -5,9 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TypeAlias
-
-from typing_extensions import TypedDict
+from typing import TypeAlias, TypedDict
 
 __all__ = [
     "allow_host_label_conditions",

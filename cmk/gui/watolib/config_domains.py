@@ -10,11 +10,11 @@ import signal
 import subprocess
 import traceback
 import warnings as warnings_module
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509 import Certificate, load_pem_x509_certificate

@@ -5,9 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Literal, NewType
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, NewType, TypedDict
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.timeperiod import TimeperiodName

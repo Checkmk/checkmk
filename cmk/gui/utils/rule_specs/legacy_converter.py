@@ -6,10 +6,10 @@ import dataclasses
 import enum
 import urllib.parse
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, assert_never, Callable, Literal, Self, TypeVar
+from typing import Any, assert_never, Literal, Self, TypeVar
 
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup

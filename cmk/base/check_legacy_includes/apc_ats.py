@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
+from collections.abc import Sequence
 from contextlib import suppress
-from typing import NamedTuple, Optional, Sequence
+from typing import NamedTuple, Optional
 
 from cmk.agent_based.v2 import any_of, equals
 

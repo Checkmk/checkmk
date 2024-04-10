@@ -6,10 +6,8 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Sequence
-from typing import Any, Callable, Protocol, TypeVar
-
-from typing_extensions import TypedDict
+from collections.abc import Callable, Sequence
+from typing import Any, Protocol, TypedDict, TypeVar
 
 from cmk.utils.plugin_registry import Registry
 

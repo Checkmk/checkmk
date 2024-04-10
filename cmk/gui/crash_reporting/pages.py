@@ -12,9 +12,7 @@ import tarfile
 import time
 import traceback
 from collections.abc import Iterator, Mapping
-from typing import Final
-
-from typing_extensions import TypedDict
+from typing import Final, TypedDict
 
 import livestatus
 from livestatus import SiteId

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shlex
-from collections.abc import Mapping, Sequence
-from typing import Callable, Iterable, Protocol
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Protocol
 
 import cmk.utils.config_warnings as config_warnings
 from cmk.utils import password_store

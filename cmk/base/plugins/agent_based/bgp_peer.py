@@ -94,9 +94,7 @@ This is the data we can extract
 """
 
 from collections.abc import Mapping, Sequence
-from typing import NamedTuple
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, TypedDict
 
 from cmk.plugins.lib.ip_format import clean_v4_address, clean_v6_address
 

@@ -5,8 +5,8 @@
 
 import logging
 import re
-from collections.abc import Mapping
-from typing import Any, Literal, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version

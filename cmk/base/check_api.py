@@ -17,8 +17,8 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 
 import socket
 import time
-from collections.abc import Callable
-from typing import Any, Generator, Literal
+from collections.abc import Callable, Generator
+from typing import Any, Literal
 
 import cmk.utils.debug as _debug
 

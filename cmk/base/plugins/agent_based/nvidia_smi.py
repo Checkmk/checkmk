@@ -6,11 +6,10 @@
 from collections.abc import Mapping
 from datetime import datetime
 from enum import Enum
-from typing import cast, Literal, TypeVar
+from typing import cast, Literal, TypedDict, TypeVar
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
-from typing_extensions import TypedDict
 
 from cmk.plugins.lib.memory import check_element
 from cmk.plugins.lib.temperature import check_temperature, TempParamType

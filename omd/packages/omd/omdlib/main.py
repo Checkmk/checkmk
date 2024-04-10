@@ -23,11 +23,11 @@ import sys
 import tarfile
 import time
 import traceback
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
 from types import MappingProxyType
-from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn, Sequence
+from typing import assert_never, BinaryIO, cast, Final, IO, Literal, NamedTuple, NoReturn
 from uuid import uuid4
 
 import psutil

@@ -8,8 +8,8 @@
 settings"""
 
 import abc
-from collections.abc import Collection, Iterable, Iterator
-from typing import Any, Callable, Final
+from collections.abc import Callable, Collection, Iterable, Iterator
+from typing import Any, Final
 
 from cmk.utils.exceptions import MKGeneralException
 

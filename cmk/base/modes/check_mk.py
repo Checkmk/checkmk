@@ -14,9 +14,7 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, overload, Protocol, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar
 
 import livestatus
 

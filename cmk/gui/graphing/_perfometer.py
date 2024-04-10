@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import abc
 import math
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, NotRequired, TypeAlias, TypedDict
+from typing import Any, Literal, NotRequired, TypeAlias, TypedDict
 
 from cmk.utils import plugin_registry
 from cmk.utils.exceptions import MKGeneralException

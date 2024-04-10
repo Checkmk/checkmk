@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum, unique
-from typing import Any, cast, Final, Mapping, MutableMapping, NamedTuple, Sequence
+from typing import Any, cast, Final, NamedTuple
 
 from cmk.plugins.lib import diskstat
 

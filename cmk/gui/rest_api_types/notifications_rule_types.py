@@ -6,9 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, cast, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Literal, TypedDict
 
 from cmk.utils.notify_types import (
     BuiltInPluginNames,

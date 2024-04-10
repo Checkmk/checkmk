@@ -6,8 +6,7 @@
 import abc
 import collections
 import json
-from collections.abc import Iterator
-from typing import Callable
+from collections.abc import Callable, Iterator
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version

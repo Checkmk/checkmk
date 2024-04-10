@@ -5,9 +5,7 @@
 
 import time
 from collections.abc import Callable, Mapping
-from typing import Any, Final
-
-from typing_extensions import TypedDict
+from typing import Any, Final, TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
 

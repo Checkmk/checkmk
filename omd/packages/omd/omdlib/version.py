@@ -5,7 +5,7 @@
 
 import os
 import sys
-from typing import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 import omdlib
 from omdlib.contexts import SiteContext

@@ -10,9 +10,7 @@ import time
 import uuid
 from logging import Logger
 from pathlib import Path
-from typing import Final, Literal, NewType
-
-from typing_extensions import TypedDict
+from typing import Final, Literal, NewType, TypedDict
 
 import livestatus
 

@@ -14,10 +14,9 @@ import functools
 import re
 import warnings
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, NotRequired
+from typing import Any, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

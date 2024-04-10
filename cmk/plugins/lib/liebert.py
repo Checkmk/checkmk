@@ -8,8 +8,6 @@ from typing import TypeVar
 
 from cmk.agent_based.v2 import startswith, StringTable
 
-from .temperature import to_celsius
-
 SystemSection = Mapping[str, str]
 
 DETECT_LIEBERT = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42")
@@ -104,5 +102,14 @@ def temperature_to_celsius(reading: float, unit: str) -> float:
     12.3
     >>> f"{temperature_to_celsius(40.1, 'deg F'):.2f}"
     '4.50'
+
     """
-    return to_celsius(reading, unit.replace("deg ", "").lower())
+    match unit.replace("deg ", "").lower():
+        case "c" | "%":
+            # '%' should probably be dealt with elsewhere...
+            return reading
+        case "f":
+            return (reading - 32) * (5.0 / 9.0)
+        case "k":
+            return reading - 273.15
+    raise ValueError(f"Unknown unit: {unit}")

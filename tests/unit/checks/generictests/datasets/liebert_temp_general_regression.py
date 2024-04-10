@@ -17,7 +17,7 @@ info = [
         "deg F",
         "Ambient Air Temperature",
         "21.1",
-        "def C",
+        "deg C",
     ],
     ["Free Cooling Utilization", "0.0", "%", "Return Fluid Temperature", "62.1", "deg F"],
     [

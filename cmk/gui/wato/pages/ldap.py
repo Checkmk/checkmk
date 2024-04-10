@@ -7,7 +7,7 @@
 import re
 from collections.abc import Collection
 from copy import deepcopy
-from typing import cast
+from typing import Any, Callable, cast
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -61,6 +61,7 @@ from cmk.gui.valuespec import (
     rule_option_elements,
     TextInput,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.wato.pages.userdb_common import (
     add_change,
@@ -91,7 +92,7 @@ def register(mode_registry: ModeRegistry) -> None:
 
 
 class LDAPConnectionValuespec(MigrateNotUpdated):
-    def __init__(self, new, connection_id) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, new: bool, connection_id: str | None) -> None:
         self._new = new
         self._connection_id = connection_id
         self._connection = get_connection(self._connection_id)
@@ -175,8 +176,8 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         return general_elements
 
-    def _connection_elements(self):
-        connection_elements = [
+    def _connection_elements(self) -> list[tuple[str, ValueSpec]]:
+        connection_elements: list[tuple[str, ValueSpec]] = [
             (
                 "directory_type",
                 CascadingDropdown(
@@ -405,8 +406,8 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
             optional_keys=[],
         )
 
-    def _user_elements(self):
-        user_elements = [
+    def _user_elements(self) -> list[tuple[str, ValueSpec]]:
+        user_elements: list[tuple[str, ValueSpec]] = [
             (
                 "user_dn",
                 LDAPDistinguishedName(
@@ -534,8 +535,8 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         return user_elements
 
-    def _group_elements(self):
-        group_elements = [
+    def _group_elements(self) -> list[tuple[str, ValueSpec]]:
+        group_elements: list[tuple[str, ValueSpec]] = [
             (
                 "group_dn",
                 LDAPDistinguishedName(
@@ -593,8 +594,8 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         return group_elements
 
-    def _other_elements(self):
-        other_elements = [
+    def _other_elements(self) -> list[tuple[str, ValueSpec]]:
+        other_elements: list[tuple[str, ValueSpec]] = [
             (
                 "active_plugins",
                 Dictionary(
@@ -630,7 +631,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         return other_elements
 
-    def _validate_ldap_connection(self, value, varprefix):
+    def _validate_ldap_connection(self, value: dict[str, Any], varprefix: str) -> None:
         for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():
             if role_id == "nested":
                 continue  # This is the option to enabled/disable nested group handling, not a role to DN entry
@@ -666,7 +667,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         varname, _("The configured DN does not match the group base DN.")
                     )
 
-    def _validate_ldap_connection_suffix(self, value, varprefix):
+    def _validate_ldap_connection_suffix(self, value: str, varprefix: str) -> None:
         for connection in active_config.user_connections:
             suffix = connection.get("suffix")
             if suffix is None:
@@ -731,7 +732,7 @@ class ModeEditLDAPConnection(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeLDAPConfig
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._connection_id = request.get_ascii_input("id")
         self._connection_cfg: LDAPConnectionTypedDict
 
@@ -914,7 +915,9 @@ class ModeEditLDAPConnection(WatoMode):
         html.close_table()
         html.close_div()
 
-    def _tests(self):
+    def _tests(
+        self,
+    ) -> list[tuple[str, Callable[[LDAPUserConnector, str], tuple[bool, str | None]]]]:
         return [
             (_("Connection"), self._test_connect),
             (_("User Base-DN"), self._test_user_base_dn),
@@ -924,13 +927,15 @@ class ModeEditLDAPConnection(WatoMode):
             (_("Sync-Plugin: Roles"), self._test_groups_to_roles),
         ]
 
-    def _test_connect(self, connection, address):
+    def _test_connect(self, connection: LDAPUserConnector, address: str) -> tuple[bool, str | None]:
         conn, msg = connection.connect_server(address)
         if conn:
             return (True, _("Connection established. The connection settings seem to be ok."))
         return (False, msg)
 
-    def _test_user_base_dn(self, connection, address):
+    def _test_user_base_dn(
+        self, connection: LDAPUserConnector, address: str
+    ) -> tuple[bool, str | None]:
         if not connection.has_user_base_dn_configured():
             return (False, _("The User Base DN is not configured."))
         connection.connect(enforce_new=True, enforce_server=address)
@@ -953,7 +958,9 @@ class ModeEditLDAPConnection(WatoMode):
             ),
         )
 
-    def _test_user_count(self, connection, address):
+    def _test_user_count(
+        self, connection: LDAPUserConnector, address: str
+    ) -> tuple[bool, str | None]:
         if not connection.has_user_base_dn_configured():
             return (False, _("The User Base DN is not configured."))
         connection.connect(enforce_new=True, enforce_server=address)
@@ -978,7 +985,9 @@ class ModeEditLDAPConnection(WatoMode):
             return (True, _("Found %d users for synchronization.") % len(ldap_users))
         return (False, msg)
 
-    def _test_group_base_dn(self, connection, address):
+    def _test_group_base_dn(
+        self, connection: LDAPUserConnector, address: str
+    ) -> tuple[bool, str | None]:
         if not connection.has_group_base_dn_configured():
             return (False, _("The Group Base DN is not configured, not fetching any groups."))
         connection.connect(enforce_new=True, enforce_server=address)
@@ -986,7 +995,9 @@ class ModeEditLDAPConnection(WatoMode):
             return (True, _("The Group Base DN could be found."))
         return (False, _("The Group Base DN could not be found."))
 
-    def _test_group_count(self, connection, address):
+    def _test_group_count(
+        self, connection: LDAPUserConnector, address: str
+    ) -> tuple[bool, str | None]:
         if not connection.has_group_base_dn_configured():
             return (False, _("The Group Base DN is not configured, not fetching any groups."))
         connection.connect(enforce_new=True, enforce_server=address)
@@ -1010,7 +1021,9 @@ class ModeEditLDAPConnection(WatoMode):
             return (True, _("Found %d groups for synchronization.") % len(ldap_groups))
         return (False, msg)
 
-    def _test_groups_to_roles(self, connection, address):
+    def _test_groups_to_roles(
+        self, connection: LDAPUserConnector, address: str
+    ) -> tuple[bool, str | None]:
         active_plugins = connection.active_plugins()
         if "groups_to_roles" not in active_plugins:
             return True, _("Skipping this test (Plugin is not enabled)")
@@ -1043,5 +1056,5 @@ class ModeEditLDAPConnection(WatoMode):
                 num_groups += 1
         return True, _("Found all %d groups.") % num_groups
 
-    def _valuespec(self):
+    def _valuespec(self) -> LDAPConnectionValuespec:
         return LDAPConnectionValuespec(self._new, self._connection_id)

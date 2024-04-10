@@ -32,6 +32,13 @@ class SpecialAgentCommandLine:
     stdin: str | None = None
 
 
+def _ensure_mapping_str_object(value: object) -> Mapping[str, object]:
+    # for the new API, we can be sure that there are only Mappings.
+    if not isinstance(value, dict):
+        raise TypeError(value)
+    return value  # type: ignore[return-value]
+
+
 class SpecialAgent:
     def __init__(
         self,
@@ -78,7 +85,7 @@ class SpecialAgent:
         return replace_macros(f"{path} {args}", self.host_config.macros)
 
     def _iter_legacy_commands(
-        self, agent_name: str, info_func: InfoFunc, params: Mapping[str, object]
+        self, agent_name: str, info_func: InfoFunc, params: object
     ) -> Iterator[SpecialAgentCommandLine]:
         agent_configuration = info_func(params, self.host_name, self.host_address)
 
@@ -110,13 +117,14 @@ class SpecialAgent:
             yield SpecialAgentCommandLine(f"{path} {args}", command.stdin)
 
     def iter_special_agent_commands(
-        self, agent_name: str, params: Mapping[str, object]
+        self, agent_name: str, params: Mapping[str, object] | object
     ) -> Iterator[SpecialAgentCommandLine]:
         try:
             if (info_func := self._legacy_plugins.get(agent_name)) is not None:
                 yield from self._iter_legacy_commands(agent_name, info_func, params)
 
             if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
+                params = _ensure_mapping_str_object(params)
                 yield from self._iter_commands(special_agent, params)
         except Exception as e:
             if cmk.utils.debug.enabled():

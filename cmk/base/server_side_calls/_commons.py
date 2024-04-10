@@ -27,9 +27,7 @@ SpecialAgentInfoFunctionResult = (  # or check.
     str | Sequence[str | int | float | tuple[str, str, str]] | SpecialAgentLegacyConfiguration
 )
 
-InfoFunc = Callable[
-    [Mapping[str, object], HostName, HostAddress | None], SpecialAgentInfoFunctionResult
-]
+InfoFunc = Callable[[object, HostName, HostAddress | None], SpecialAgentInfoFunctionResult]
 
 
 class ActiveCheckError(Exception):  # or agent

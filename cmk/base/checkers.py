@@ -818,9 +818,11 @@ def inject_prediction_params_recursively(
             {
                 "__reference_metric__": str(metric),
                 "__direction__": "upper" | "lower" as direction,
-            },
+            } as p,
         ):
-            return _get_prediction_and_levels(params[2], injected_p, metric, direction)
+            if not isinstance(p, dict):  # to keep mypy happy
+                raise TypeError(p)
+            return _get_prediction_and_levels(p, injected_p, metric, direction)
         case tuple():
             return tuple(inject_prediction_params_recursively(v, injected_p) for v in params)
         case list():

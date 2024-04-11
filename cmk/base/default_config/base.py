@@ -186,10 +186,18 @@ check_parameters: list[RuleSpec[Any]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
 # for HW/SW-Inventory
 inv_parameters: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
+
+
 # WATO variant for fully formalized checks
-active_checks: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
+# WATOs active check configurations are demanded to be Mapping[str, object] by the new ruleset API.
+# However: We still have legacy rulesets, which can be of any (basic python) type.
+active_checks: dict[str, list[RuleSpec[object]]] = {}
 # WATO variant for datasource_programs
-special_agents: dict[str, list[RuleSpec[Mapping[str, object]]]] = {}
+# WATOs special agent configurations are demanded to be Mapping[str, object] by the new ruleset API.
+# However: We still have legacy rulesets, which can be of any (basic python) type.
+special_agents: dict[str, list[RuleSpec[object]]] = {}
+
+
 # WATO variant for free-form custom checks without formalization
 custom_checks: list[RuleSpec[dict[Any, Any]]] = []
 all_hosts: list = []

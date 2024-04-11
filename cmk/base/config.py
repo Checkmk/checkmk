@@ -2355,7 +2355,10 @@ class ConfigCache:
                 return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
 
             # Convert legacy rules to current dict format (just like the valuespec)
-            return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
+            # we can only have None or a dict here, but mypy doesn't know that
+            return HWSWInventoryParameters.from_raw(
+                entries[0] if isinstance(entries[0], dict) else {}
+            )
 
         with contextlib.suppress(KeyError):
             return self.__hwsw_inventory_parameters[host_name]
@@ -2628,7 +2631,7 @@ class ConfigCache:
         """
 
         def make_active_checks() -> SSCRules:
-            configured_checks: list[tuple[str, Sequence[Mapping[str, object]]]] = []
+            configured_checks: list[tuple[str, Sequence[object]]] = []
             for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts

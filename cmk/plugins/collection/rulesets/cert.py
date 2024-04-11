@@ -289,13 +289,16 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
             elements={
                 "service_name": DictElement(
                     parameter_form=Dictionary(
-                        title=Title("Service description"),
+                        title=Title("Service name"),
                         elements={
                             "prefix": DictElement(
                                 parameter_form=SingleChoice(
                                     title=Title("Prefix"),
                                     help_text=Help(
-                                        "The prefix is automatically to each service to be able to organize them. The prefix is static and will be CERT. Alternatively, you may choose to not use the prefix option."
+                                        "The prefix is automatically attached to each service "
+                                        "name to be able to organize them. The prefix is static "
+                                        "and will be CERT. Alternatively, you may choose to not "
+                                        "use the prefix option."
                                     ),
                                     elements=[
                                         SingleChoiceElement(
@@ -315,10 +318,14 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                 parameter_form=String(
                                     title=Title("Name"),
                                     help_text=Help(
-                                        "The name is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
+                                        "The name is the individual part of the used service "
+                                        "description. Choose a human readable and unique "
+                                        "title to be able to find your service later in "
+                                        "Checkmk. You may use macros in this field. The most "
+                                        "common ones are $HOSTNAME$, $HOSTALIAS$ or $HOSTADDRESS$."
                                     ),
                                     custom_validate=(validators.LengthInRange(min_value=1),),
-                                    prefill=InputHint("My CERT service"),
+                                    prefill=InputHint("My service name"),
                                 ),
                                 required=True,
                             ),
@@ -331,12 +338,12 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                         title=Title("Host address or name"),
                         help_text=Help(
                             "You may enter any fully qualified domain name or valid "
-                            "IP address here. The name does must not contain any further "
+                            "IP address here. The name must not contain any further "
                             "information, like port or protocol. You may use macros in "
                             "this field. The most common ones are $HOSTNAME$, $HOSTALIAS$ "
                             "or $HOSTADDRESS$."
                         ),
-                        prefill=InputHint("my.host.tld | 192.168.0.73"),
+                        prefill=InputHint("my.host.tld or 192.168.0.73"),
                         custom_validate=(validators.LengthInRange(min_value=1),),
                     ),
                     required=True,

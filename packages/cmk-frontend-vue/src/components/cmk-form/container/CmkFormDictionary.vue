@@ -1,71 +1,38 @@
 <script setup lang="ts">
-import { onMounted, ref, onBeforeMount } from 'vue'
-import { extract_value, type ValueAndValidation } from '@/types'
+import { onBeforeMount } from 'vue'
 import CmkFormDispatcher from '../CmkFormDispatcher.vue'
-import { clicked_checkbox_label } from '@/utils'
-import type { VueDictionary, VueDictionaryElement } from '@/vue_types'
-
-const emit = defineEmits<{
-  (e: 'update-value', value: unknown): void
-}>()
+import { clicked_checkbox_label, type ValidationMessages } from '@/utils'
+import type { VueDictionary, VueDictionaryElement } from '@/vue_formspec_components'
 
 interface ElementFromProps {
   dict_config: VueDictionaryElement
   is_active: boolean
-  data: ValueAndValidation<unknown>
 }
-
 const props = defineProps<{
-  vueSchema: VueDictionary
-  data: ValueAndValidation<Record<string, ValueAndValidation<unknown>>>
+  spec: VueDictionary
+  validation: ValidationMessages
 }>()
 
-let component_value: { [name: string]: unknown } = {}
-const default_values = ref<Record<string, unknown>>({})
-const element_components = ref<{ [index: string]: unknown }>({})
-const element_active = ref<Record<string, boolean>>({})
+const data = defineModel('data', { type: Object, required: true })
+const default_values: Record<string, unknown> = {}
 
 onBeforeMount(() => {
-  component_value = {}
-  console.log('dict schema', props.vueSchema)
-  console.log('dict data', props.data)
-  const data = extract_value(props.data)
-  props.vueSchema.elements.forEach((element: VueDictionaryElement) => {
+  props.spec.elements.forEach((element: VueDictionaryElement) => {
     const key = element.ident
-    default_values.value[key] = element.default_value
-    if (key in data) {
-      component_value[key] = data[key]
-    } else if (element.required) {
-      component_value[key] = element.default_value
-    } else {
-      component_value[key] = undefined
-    }
+    default_values[key] = element.default_value
   })
 })
 
-onMounted(() => {
-  emit('update-value', component_value)
-})
-
+// TODO: computed
 function get_elements_from_props(): ElementFromProps[] {
   const elements: ElementFromProps[] = []
-  const data = extract_value(props.data)
-  props.vueSchema.elements.forEach((element: VueDictionaryElement) => {
+  props.spec.elements.forEach((element: VueDictionaryElement) => {
     elements.push({
       dict_config: element,
-      is_active:
-        element.ident in element_active.value
-          ? element_active.value[element.ident]
-          : element.required,
-      data: element.ident in data ? data[element.ident] : [default_values.value[element.ident], '']
+      is_active: element.ident in data.value ? true : element.required
     })
   })
   return elements
-}
-
-function update_key(key: string, new_value: unknown) {
-  component_value[key] = new_value
-  emit('update-value', component_value)
 }
 
 function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
@@ -73,16 +40,21 @@ function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
   if (!target) {
     return
   }
-
   clicked_checkbox_label(target as HTMLLabelElement)
+  if (key in data.value) delete data.value[key]
+  else data.value[key] = default_values[key]
+}
 
-  const dict_values = extract_value(props.data)
-  if (key in dict_values) {
-    component_value[key] = undefined
-  } else {
-    component_value[key] = dict_values[key]
-  }
-  emit('update-value', component_value)
+function get_validation_for_child(ident: string): ValidationMessages {
+  const child_messages: ValidationMessages = []
+  props.validation.forEach((msg) => {
+    if (msg.location[0] === ident)
+      child_messages.push({
+        location: msg.location.slice(1),
+        message: msg.message
+      })
+  })
+  return child_messages
 }
 </script>
 
@@ -94,7 +66,7 @@ function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
           <span class="checkbox">
             <input
               v-if="!dict_element.dict_config.required"
-              v-model="element_active[dict_element.dict_config.ident]"
+              v-model="dict_element.is_active"
               type="checkbox"
             />
             <label
@@ -109,15 +81,10 @@ function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
           <br />
           <div class="dictelement indent">
             <CmkFormDispatcher
-              v-if="dict_element.is_active"
-              :ref="
-                (el) => {
-                  element_components[dict_element.dict_config.ident] = el
-                }
-              "
-              :vue-schema="dict_element.dict_config.vue_schema"
-              :data="dict_element.data"
-              @update-value="(new_value) => update_key(dict_element.dict_config.ident, new_value)"
+              v-if="data[dict_element.dict_config.ident] !== undefined"
+              :spec="dict_element.dict_config.vue_schema"
+              :validation="get_validation_for_child(dict_element.dict_config.ident)"
+              v-model:data="data[dict_element.dict_config.ident]"
             />
           </div>
         </td>

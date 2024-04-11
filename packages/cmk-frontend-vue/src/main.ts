@@ -12,7 +12,7 @@ import 'core-js/stable'
 import { createApp } from 'vue'
 
 import D3Table from './views/D3Table.vue'
-import { CmkForm } from './components/cmk-form/'
+import { CmkRuleset } from './components/cmk-form/'
 import Table from './views/CmkTable.vue'
 
 function setup_vue() {
@@ -29,12 +29,11 @@ function setup_vue() {
     const vueApp = JSON.parse(vue_app_data)
 
     if (vueApp.app_name == 'form_spec') {
-      const app = createApp(CmkForm, {
-        form_spec: {
-          id: vueApp.id,
-          vue_schema: vueApp.vue_schema,
-          data: vueApp.data
-        }
+      const app = createApp(CmkRuleset, {
+        id: vueApp.id,
+        spec: vueApp.form_spec,
+        data: vueApp.model_value,
+        validation: vueApp.validation_messages
       })
       app.mount(div)
     } else if (vueApp.app_name == 'd3_table') {

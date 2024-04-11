@@ -19,6 +19,12 @@
         },
         "help": {
           "type": "string"
+        },
+        "validators": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         }
       },
       "required": ["title", "help"]

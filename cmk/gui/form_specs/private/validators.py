@@ -5,7 +5,7 @@
 import typing
 
 from cmk.rulesets.v1._localize import Message
-from cmk.rulesets.v1.form_specs import validators
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 
 T = typing.TypeVar("T")
 
@@ -35,4 +35,16 @@ class EnforceSuffix:
             suffix = self.suffix
 
         if not to_check.endswith(suffix):
-            raise validators.ValidationError(self.error_msg % suffix)
+            raise ValidationError(self.error_msg % suffix)
+
+
+class IsInteger:
+    def __init__(
+        self,
+        error_msg: Message = Message("Number is not an integer value."),
+    ) -> None:
+        self.error_msg = error_msg
+
+    def __call__(self, value: typing.Any) -> None:
+        if not isinstance(value, int):
+            raise ValidationError(self.error_msg)

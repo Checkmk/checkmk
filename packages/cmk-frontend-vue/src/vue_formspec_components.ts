@@ -45,12 +45,13 @@ export type VueLegacyValuespec = VueLegacyValuespec1 & {
 }
 export type VueLegacyValuespec1 = VueBase
 
-export interface VueTypes {
+export interface VueFormspecComponents {
   all_schemas?: VueSchema[]
 }
 export interface VueBase {
   title: string
   help: string
+  validators?: {}[]
 }
 export interface VueDictionaryElement {
   ident: string

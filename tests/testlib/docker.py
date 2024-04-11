@@ -446,7 +446,7 @@ def checkmk_docker_add_host(
 ) -> None:
     """Create a host in a Checkmk docker instance."""
     logger.info('Add host "%s" to Checkmk at %s...', hostname, ipv4)
-    checkmk_docker_api_request(
+    response = checkmk_docker_api_request(
         checkmk,
         "post",
         "/domain-types/host_config/collections/all",
@@ -459,6 +459,7 @@ def checkmk_docker_add_host(
             },
         },
     )
+    assert response.status_code == 200, f'Failed to add host "{hostname}" to Checkmk at {ipv4}!'
     checkmk_docker_activate_changes(checkmk)
 
 

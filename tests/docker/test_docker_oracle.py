@@ -167,6 +167,7 @@ class OracleDatabase:
             for command, msg in {
                 f"{self.INIT_CMD} start": "Starting Oracle database...",
                 f"{self.INIT_CMD} delete": "Dropping Oracle database...",
+                f"""/usr/bin/bash -c 'rm -rf "{self.DATA}/{self.SID}"'""": "Cleanup Oracle database...",
                 f"{self.INIT_CMD} configure": "Creating new Oracle database...",
             }.items():
                 logger.info(msg)

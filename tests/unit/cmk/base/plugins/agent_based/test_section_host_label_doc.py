@@ -13,13 +13,12 @@ from collections import defaultdict
 from collections.abc import Sequence
 from typing import DefaultDict, Final
 
-from tests.testlib.pytest_helpers.marks import skip_if_raw_edition
-
 from tests.unit.conftest import FixRegister
 
+import cmk.utils.version as cmk_version
 from cmk.utils.sectionname import SectionName
 
-ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",
     "cmk/azure/tag/{key}:{value}",
     "cmk/azure/vm:instance",
@@ -53,10 +52,19 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/os_platform",
     "cmk/os_name",
     "cmk/os_version",
-    "cmk/rmk/node_type",
     "cmk/vsphere_object",
     "cmk/vsphere_vcenter",
 }
+
+CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+    "cmk/rmk/node_type",
+}
+
+
+def all_documented_builtin_host_labels() -> set[str]:
+    if cmk_version.edition() is cmk_version.Edition.CRE:
+        return CRE_DOCUMENTED_BUILTIN_HOST_LABELS
+    return CEE_DOCUMENTED_BUILTIN_HOST_LABELS | CRE_DOCUMENTED_BUILTIN_HOST_LABELS
 
 
 KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
@@ -66,7 +74,6 @@ KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
 }
 
 
-@skip_if_raw_edition
 def test_all_sections_have_host_labels_documented(
     fix_register: FixRegister,
 ) -> None:
@@ -106,7 +113,7 @@ def test_all_sections_have_host_labels_documented(
             assert doc.header is not None, f"header in {section.name} not set"
             encountered_labels[doc.header][section.name] = doc.lines
 
-    assert ALL_DOCUMENTED_BUILTIN_HOST_LABELS == set(encountered_labels.keys())
+    assert all_documented_builtin_host_labels() == set(encountered_labels.keys())
 
     for label_name, section_to_lines in encountered_labels.items():
         if len({" ".join(lines) for lines in section_to_lines.values()}) != 1:
@@ -118,7 +125,7 @@ def test_all_sections_have_host_labels_documented(
 
 
 def test_builtin_labels_start_with_cmk() -> None:
-    assert all(l.startswith("cmk/") for l in ALL_DOCUMENTED_BUILTIN_HOST_LABELS)
+    assert all(l.startswith("cmk/") for l in all_documented_builtin_host_labels())
 
 
 class _TextSection:

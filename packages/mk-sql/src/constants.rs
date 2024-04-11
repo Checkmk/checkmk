@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-pub const VERSION: &str = "2.3.0b5";
+pub const VERSION: &str = "2.3.0b4";
 
 use lazy_static::lazy_static;
 use std::path::{Path, PathBuf};

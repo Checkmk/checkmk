@@ -27,6 +27,7 @@ from cmk.utils.structured_data import (
     ImmutableTable,
     ImmutableTree,
     RetentionInterval,
+    SDDeltaValue,
     SDKey,
     SDNodeName,
     SDPath,
@@ -2093,7 +2094,7 @@ multisite_builtin_views["inv_host_history"] = {
 
 
 def _make_columns(
-    rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]],
+    rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, SDDeltaValue]],
     key_order: Sequence[SDKey],
 ) -> Sequence[SDKey]:
     return list(key_order) + sorted({k for r in rows for k in r} - set(key_order))
@@ -2150,7 +2151,8 @@ def _sort_rows(
 
 class _DeltaTreeValueInfo(NamedTuple):
     key: SDKey
-    value: tuple[SDValue, SDValue]
+    old: SDValue
+    new: SDValue
 
 
 def _sort_delta_pairs(
@@ -2158,7 +2160,9 @@ def _sort_delta_pairs(
 ) -> Sequence[_DeltaTreeValueInfo]:
     sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
     return [
-        _DeltaTreeValueInfo(k, attributes.pairs[k]) for k in sorted_keys if k in attributes.pairs
+        _DeltaTreeValueInfo(k, attributes.pairs[k].old, attributes.pairs[k].new)
+        for k in sorted_keys
+        if k in attributes.pairs
     ]
 
 
@@ -2166,22 +2170,24 @@ def _sort_delta_rows(
     table: ImmutableDeltaTable, columns: Sequence[SDKey]
 ) -> Sequence[Sequence[_DeltaTreeValueInfo]]:
     def _sort_row(
-        row: Mapping[SDKey, tuple[SDValue, SDValue]], columns: Sequence[SDKey]
+        row: Mapping[SDKey, SDDeltaValue], columns: Sequence[SDKey]
     ) -> Sequence[_DeltaTreeValueInfo]:
-        return [_DeltaTreeValueInfo(c, row.get(c) or (None, None)) for c in columns]
+        return [
+            _DeltaTreeValueInfo(c, v.old, v.new)
+            for c in columns
+            for v in (row.get(c) or SDDeltaValue(None, None),)
+        ]
 
     min_type = _MinType()
 
-    def _sanitize(value: tuple[SDValue, SDValue]) -> tuple[_MinType | SDValue, _MinType | SDValue]:
-        return (
-            min_type if value[0] is None else value[0],
-            min_type if value[1] is None else value[1],
-        )
+    def _sanitize(value: SDDeltaValue) -> tuple[_MinType | SDValue, _MinType | SDValue]:
+        return (value.old or min_type, value.new or min_type)
 
     return [
         _sort_row(row, columns)
         for row in sorted(
-            table.rows, key=lambda r: tuple(_sanitize(r.get(c) or (None, None)) for c in columns)
+            table.rows,
+            key=lambda r: tuple(_sanitize(r.get(c) or SDDeltaValue(None, None)) for c in columns),
         )
         if not all(left == right for left, right in row.values())
     ]
@@ -2247,33 +2253,32 @@ def _show_value(
     hint: AttributeDisplayHint | ColumnDisplayHint,
 ) -> None:
     if isinstance(value_info, _DeltaTreeValueInfo):
-        _show_delta_value(value_info.value, hint)
+        _show_delta_value(value_info, hint)
         return
     html.write_html(_compute_cell_spec(value_info, hint)[1])
 
 
 def _show_delta_value(
-    value: tuple[SDValue, SDValue],
+    value_info: _DeltaTreeValueInfo,
     hint: AttributeDisplayHint | ColumnDisplayHint,
 ) -> None:
-    old, new = value
-    if old is None and new is not None:
+    if value_info.old is None and value_info.new is not None:
         html.open_span(class_="invnew")
-        html.write_html(_get_html_value(new, hint))
+        html.write_html(_get_html_value(value_info.new, hint))
         html.close_span()
-    elif old is not None and new is None:
+    elif value_info.old is not None and value_info.new is None:
         html.open_span(class_="invold")
-        html.write_html(_get_html_value(old, hint))
+        html.write_html(_get_html_value(value_info.old, hint))
         html.close_span()
-    elif old == new:
-        html.write_html(_get_html_value(old, hint))
-    elif old is not None and new is not None:
+    elif value_info.old == value_info.new:
+        html.write_html(_get_html_value(value_info.old, hint))
+    elif value_info.old is not None and value_info.new is not None:
         html.open_span(class_="invold")
-        html.write_html(_get_html_value(old, hint))
+        html.write_html(_get_html_value(value_info.old, hint))
         html.close_span()
         html.write_text(" → ")
         html.open_span(class_="invnew")
-        html.write_html(_get_html_value(new, hint))
+        html.write_html(_get_html_value(value_info.new, hint))
         html.close_span()
     else:
         raise NotImplementedError()
@@ -2440,7 +2445,7 @@ class TreeRenderer:
                 # TODO separate tdclass from rendered value
                 if isinstance(value_info, _DeltaTreeValueInfo):
                     tdclass, _rendered_value = column_hint.paint_function(
-                        value_info.value[0] or value_info.value[1]
+                        value_info.old or value_info.new
                     )
                 else:
                     tdclass, _rendered_value = column_hint.paint_function(value_info.value)

@@ -95,7 +95,9 @@ def page_dashboard() -> None:
         o
         if (o := request.get_validated_type_input(UserId, "owner")) is not None
         else (
-            user.id if user.id in get_permitted_dashboards_by_owners()[name] else UserId.builtin()
+            user.id
+            if user.id and user.id in get_permitted_dashboards_by_owners().get(name, [])
+            else UserId.builtin()
         )
     )
     draw_dashboard(name, owner)

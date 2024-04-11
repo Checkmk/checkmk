@@ -144,6 +144,7 @@ register.snmp_section(
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.1.0", "cisco adaptive security"),
         contains(".1.3.6.1.2.1.1.1.0", "vpn 3000 concentrator"),
+        contains(".1.3.6.1.2.1.1.1.0", "cisco firepower threat defense"),
     ),
     fetch=[
         SNMPTree(

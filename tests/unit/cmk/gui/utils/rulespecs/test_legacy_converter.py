@@ -2581,6 +2581,61 @@ def test_dictionary_groups_dict_element_properties(
             {"a": {"a_nested": 2}, "b": 2},
             id="migration in group",
         ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Levels(
+                            level_direction=api_v1.form_specs.LevelDirection.UPPER,
+                            form_spec_template=api_v1.form_specs.Integer(
+                                migrate=lambda x: x * 2  # type: ignore[operator]
+                            ),
+                            prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
+                            predictive=api_v1.form_specs.PredictiveLevels(
+                                reference_metric="my_metric",
+                                prefill_abs_diff=api_v1.form_specs.DefaultValue((5, 10)),
+                            ),
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+            ),
+            {
+                "a": (
+                    "cmk_postprocessed",
+                    "predictive_levels",
+                    {
+                        "__direction__": "upper",
+                        "__reference_metric__": "my_metric",
+                        "horizon": 90,
+                        "levels": ("absolute", (1, 2)),
+                        "period": "wday",
+                        "bound": None,
+                    },
+                ),
+                "b": 2,
+            },
+            {
+                "a": (
+                    "cmk_postprocessed",
+                    "predictive_levels",
+                    {
+                        "__direction__": "upper",
+                        "__reference_metric__": "my_metric",
+                        "horizon": 90,
+                        "levels": ("absolute", (2, 4)),
+                        "period": "wday",
+                        "bound": None,
+                    },
+                ),
+                "b": 2,
+            },
+            id="migration in non-Dictionary with group",
+        ),
     ],
 )
 def test_dictionary_groups_migrate(

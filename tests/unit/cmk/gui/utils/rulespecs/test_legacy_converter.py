@@ -28,6 +28,7 @@ from cmk.gui.utils.rule_specs.legacy_converter import (
     convert_to_legacy_rulespec,
 )
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import LegacyBinaryUnit, LegacyDataSize
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
@@ -1457,6 +1458,24 @@ def test_convert_to_legacy_rulespec_group(
                 match_type="first",
             ),
             id="SpecialAgentRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.SpecialAgent(
+                name="gcp",
+                title=api_v1.Title("rulespec title"),
+                topic=api_v1.rule_specs.Topic.CLOUD,
+                parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
+                help_text=api_v1.Help("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.SpecialAgents("gcp"),
+                group=legacy_wato_groups.RulespecGroupDatasourceProgramsCloud,
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="first",
+                doc_references={DocReference.GCP: _("Monitoring Google Cloud Platform (GCP)")},
+            ),
+            id="RuleSpec with doc_references",
         ),
     ],
 )

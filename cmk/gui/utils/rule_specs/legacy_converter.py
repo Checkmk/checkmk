@@ -22,6 +22,7 @@ from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import Transform
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
@@ -40,6 +41,46 @@ from cmk.gui.watolib.rulespecs import (
 from cmk.rulesets import v1 as ruleset_api_v1
 
 GENERATED_GROUP_PREFIX = "gen-"
+
+RULESET_DOC_REFERENCES_MAP = {
+    RuleGroup.SpecialAgents("aws"): {
+        DocReference.AWS: ruleset_api_v1.Title("Monitoring Amazon Web Services (AWS)")
+    },
+    RuleGroup.SpecialAgents("aws_status"): {
+        DocReference.AWS: ruleset_api_v1.Title("Monitoring Amazon Web Services (AWS)")
+    },
+    RuleGroup.SpecialAgents("azure"): {
+        DocReference.AZURE: ruleset_api_v1.Title("Monitoring Microsoft Azure")
+    },
+    RuleGroup.SpecialAgents("azure_status"): {
+        DocReference.AZURE: ruleset_api_v1.Title("Monitoring Microsoft Azure")
+    },
+    RuleGroup.SpecialAgents("gcp"): {
+        DocReference.GCP: ruleset_api_v1.Title("Monitoring Google Cloud Platform (GCP)")
+    },
+    RuleGroup.SpecialAgents("gcp_status"): {
+        DocReference.GCP: ruleset_api_v1.Title("Monitoring Google Cloud Platform (GCP)")
+    },
+    RuleGroup.SpecialAgents("kube"): {
+        DocReference.KUBERNETES: ruleset_api_v1.Title("Monitoring Kubernetes")
+    },
+    RuleGroup.SpecialAgents("prometheus"): {
+        DocReference.PROMETHEUS: ruleset_api_v1.Title("Integrating Prometheus")
+    },
+    RuleGroup.SpecialAgents("vsphere"): {
+        DocReference.VMWARE: ruleset_api_v1.Title("Monitoring VMWare ESXi")
+    },
+}
+
+
+def _get_doc_references(
+    ruleset_name: str, localizer: Callable[[str], str]
+) -> dict[DocReference, str] | None:
+    if (doc_ref_mapping := RULESET_DOC_REFERENCES_MAP.get(ruleset_name, None)) is None:
+        return None
+    return {
+        doc_reference: title.localize(localizer) for doc_reference, title in doc_ref_mapping.items()
+    }
 
 
 def _localize_optional(
@@ -281,6 +322,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
+        doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
     )
 
 
@@ -298,6 +340,7 @@ def _convert_to_legacy_agent_config_rule_spec(
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
+        doc_references=_get_doc_references(RuleGroup.AgentConfig(to_convert.name), localizer),
     )
 
 
@@ -344,6 +387,7 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         match_type=(
             "dict" if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
         ),
+        doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
     )
 
 

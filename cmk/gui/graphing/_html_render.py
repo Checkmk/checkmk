@@ -643,9 +643,10 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     )
 
     # Persist the current data range for the graph editor.
-    # TODO Hack with hasattr (custom/forcast graph specs have an "id", others not)
-    if graph_render_config.editing and hasattr(graph_recipe.specification, "id"):
-        save_user_graph_data_range(graph_recipe.specification.id, graph_data_range)
+    if graph_render_config.editing and (
+        specification_id := context.get("definition", {}).get("specification", {}).get("id")
+    ):
+        save_user_graph_data_range(specification_id, graph_data_range)
 
     graph_artwork = compute_graph_artwork(
         graph_recipe,

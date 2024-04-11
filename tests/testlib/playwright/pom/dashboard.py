@@ -5,7 +5,7 @@
 
 import re
 from typing import Literal, override
-from urllib.parse import urljoin
+from urllib.parse import parse_qs, urljoin, urlparse
 
 from playwright.sync_api import expect, Page, Response
 
@@ -54,16 +54,34 @@ class LoginPage(CmkPage):
             self.page.locator("#input_user").fill(credentials.username)
             self.page.locator("#input_pass").fill(credentials.password)
             self.page.locator("#_login").click()
-            self.page.wait_for_url(url=re.compile(self._target_path()), wait_until="load")
+            _url_pattern = re.escape(self._target_page())
+            self.page.wait_for_url(url=re.compile(_url_pattern), wait_until="load")
             self._logged_in = True
 
-    def _target_path(self) -> str:
-        """Return path of the page, which will be navigated to after a successful login."""
-        # TODO: extend by adding functionality.
-        # Find the next page afte rlogin is successful.
+    def _target_page(self) -> str:
+        """Returns the URL of the page to be navigated after successful login.
+
+        This URL is embedded within the login page's URL.
+        """
+
+        def _target_url_at(param: str, query: str) -> list[str]:
+            queries = parse_qs(query)
+            assert (
+                len(queries.get(param, [])) <= 1
+            ), f"Multiple instances of parameter: {param} found in {query}!"
+            return queries.get(param, [])
+
+        _url = "mobile.py" if self._mobile_device else "index.py"
+        try:
+            # parse target url within the query
+            _url = _target_url_at("_origtarget", urlparse(self._url).query)[-1]
+        except IndexError:
+            # empty list: no query found
+            return _url
         if self._mobile_device:
-            return r"mobile"
-        return r"index.py"
+            # parse target url within the "nested" query
+            _url = _target_url_at("start_url", urlparse(_url).query)[-1]
+        return _url
 
     def logout(self) -> None:
         if self._logged_in:

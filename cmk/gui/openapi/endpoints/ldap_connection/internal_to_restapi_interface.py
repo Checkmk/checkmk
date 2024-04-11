@@ -24,7 +24,7 @@ from cmk.gui.userdb import (
     ICONS_PER_ITEM,
     LDAPConnectionConfigDiscover,
     LDAPConnectionConfigFixed,
-    LDAPConnectionTypedDict,
+    LDAPUserConnectionConfig,
     load_connection_config,
     NAV_HIDE_ICONS_TITLE,
     OPEN_LDAP,
@@ -63,7 +63,7 @@ class GeneralProperties:
     disabled: bool
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> GeneralProperties:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> GeneralProperties:
         return cls(
             id=config["id"],
             description=config["description"],
@@ -172,7 +172,7 @@ class ConnectionConfig:
     suffix: str | None
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> ConnectionConfig:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> ConnectionConfig:
         return cls(
             directory_type=config["directory_type"],
             bind=config.get("bind"),
@@ -403,7 +403,7 @@ class Users:
     create_only_on_login: Literal[True] | None
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> Users:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> Users:
         return cls(
             user_dn=config["user_dn"],
             user_scope=config["user_scope"],
@@ -490,7 +490,7 @@ class Groups:
     group_member: str | None = None
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> Groups:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> Groups:
         return cls(
             group_dn=config["group_dn"],
             group_scope=config["group_scope"],
@@ -1026,7 +1026,7 @@ class SyncPlugins:
     active_plugins: ActivePlugins
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> SyncPlugins:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> SyncPlugins:
         return cls(active_plugins=config["active_plugins"])
 
     @classmethod
@@ -1156,7 +1156,7 @@ class Other:
     cache_livetime: int
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> Other:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> Other:
         return cls(cache_livetime=config["cache_livetime"])
 
     @classmethod
@@ -1200,7 +1200,7 @@ class LDAPConnectionInterface:
     other: Other
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> LDAPConnectionInterface:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> LDAPConnectionInterface:
         return cls(
             general_properties=GeneralProperties.from_mk_file_format(config),
             connection_config=ConnectionConfig.from_mk_file_format(config),
@@ -1242,7 +1242,7 @@ class LDAPConnectionInterface:
         }
         return r
 
-    def to_mk_format(self) -> LDAPConnectionTypedDict:
+    def to_mk_format(self) -> LDAPUserConnectionConfig:
         r: dict[str, Any] = {
             "id": self.general_properties.id,
             "description": self.general_properties.description,
@@ -1275,7 +1275,7 @@ class LDAPConnectionInterface:
             "create_only_on_login": self.users.create_only_on_login,
         }
 
-        c = cast(LDAPConnectionTypedDict, {k: v for k, v in r.items() if v is not None})
+        c = cast(LDAPUserConnectionConfig, {k: v for k, v in r.items() if v is not None})
         return c
 
 

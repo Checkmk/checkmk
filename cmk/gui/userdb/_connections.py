@@ -21,13 +21,13 @@ from cmk.gui.hooks import request_memoize
 from ._connector import ConnectorType, user_connector_registry, UserConnector
 
 
-class UserConnectionTypedDictBase(TypedDict):
+class UserConnectionConfig(TypedDict):
     id: str
     disabled: bool
 
 
-class UserConnection(UserConnectionTypedDictBase):
-    type: str
+class HtpasswdUserConnectionConfig(UserConnectionConfig):
+    type: Literal["htpasswd"]
 
 
 class Fixed(TypedDict):
@@ -124,7 +124,7 @@ OPEN_LDAP = tuple[Literal["openldap"], LDAPConnectionConfigFixed]
 ACTIVE_DIR = tuple[Literal["ad"], LDAPConnectionConfigFixed | LDAPConnectionConfigDiscover]
 
 
-class LDAPConnectionTypedDict(UserConnectionTypedDictBase):
+class LDAPUserConnectionConfig(UserConnectionConfig):
     description: str
     comment: str
     docu_url: str
@@ -162,7 +162,7 @@ class UserRoleMapping(TypedDict, total=False):
     agent_registration: list[str]
 
 
-class SAMLConnectionTypedDict(UserConnectionTypedDictBase):
+class SAMLUserConnectionConfig(UserConnectionConfig):
     name: str
     description: str
     comment: str
@@ -190,7 +190,7 @@ class SAMLConnectionTypedDict(UserConnectionTypedDictBase):
     customer: NotRequired[str]
 
 
-UserConnectionSpec = LDAPConnectionTypedDict | SAMLConnectionTypedDict
+ConfigurableUserConnectionSpec = LDAPUserConnectionConfig | SAMLUserConnectionConfig
 
 
 @request_memoize(maxsize=None)
@@ -247,25 +247,27 @@ def _get_connection_configs() -> list[dict[str, Any]]:
     return builtin_connections + active_config.user_connections
 
 
-_HTPASSWD_CONNECTION: UserConnection = {
-    "type": "htpasswd",
-    "id": "htpasswd",
-    "disabled": False,
-}
+_HTPASSWD_CONNECTION = HtpasswdUserConnectionConfig(
+    {
+        "type": "htpasswd",
+        "id": "htpasswd",
+        "disabled": False,
+    }
+)
 # The htpasswd connector is enabled by default and always executed first.
 # NOTE: This list may be appended to in edition specific registration functions.
-builtin_connections: list[UserConnection] = [_HTPASSWD_CONNECTION]
+builtin_connections: list[UserConnectionConfig] = [_HTPASSWD_CONNECTION]
 
 
-def get_ldap_connections() -> dict[str, LDAPConnectionTypedDict]:
+def get_ldap_connections() -> dict[str, LDAPUserConnectionConfig]:
     ldap_connections = cast(
-        dict[str, LDAPConnectionTypedDict],
+        dict[str, LDAPUserConnectionConfig],
         {c["id"]: c for c in active_config.user_connections if c["type"] == "ldap"},
     )
     return ldap_connections
 
 
-def get_active_ldap_connections() -> dict[str, LDAPConnectionTypedDict]:
+def get_active_ldap_connections() -> dict[str, LDAPUserConnectionConfig]:
     return {
         ldap_id: ldap_connection
         for ldap_id, ldap_connection in get_ldap_connections().items()
@@ -273,15 +275,15 @@ def get_active_ldap_connections() -> dict[str, LDAPConnectionTypedDict]:
     }
 
 
-def get_saml_connections() -> dict[str, SAMLConnectionTypedDict]:
+def get_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
     saml_connections = cast(
-        dict[str, SAMLConnectionTypedDict],
+        dict[str, SAMLUserConnectionConfig],
         {c["id"]: c for c in active_config.user_connections if c["type"] == "saml2"},
     )
     return saml_connections
 
 
-def get_active_saml_connections() -> dict[str, SAMLConnectionTypedDict]:
+def get_active_saml_connections() -> dict[str, SAMLUserConnectionConfig]:
     return {
         saml_id: saml_connection
         for saml_id, saml_connection in get_saml_connections().items()
@@ -327,7 +329,7 @@ def _multisite_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
-def load_connection_config(lock: bool = False) -> list[UserConnectionSpec]:
+def load_connection_config(lock: bool = False) -> list[ConfigurableUserConnectionSpec]:
     """Load the configured connections for the Setup
 
     Note:
@@ -342,7 +344,7 @@ def load_connection_config(lock: bool = False) -> list[UserConnectionSpec]:
 
 
 def save_connection_config(
-    connections: list[UserConnectionSpec], base_dir: str | None = None
+    connections: list[ConfigurableUserConnectionSpec], base_dir: str | None = None
 ) -> None:
     """Save the connections for the Setup
 

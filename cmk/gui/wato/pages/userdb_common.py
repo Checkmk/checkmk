@@ -31,7 +31,11 @@ from cmk.gui.page_menu import (
 from cmk.gui.site_config import get_login_sites, sitenames
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
-from cmk.gui.userdb import load_connection_config, save_connection_config, UserConnectionSpec
+from cmk.gui.userdb import (
+    ConfigurableUserConnectionSpec,
+    load_connection_config,
+    save_connection_config,
+)
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri_contextless
 from cmk.gui.watolib.audit_log import LogMessage
@@ -202,11 +206,12 @@ def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
     _changes.add_change(action_name, text, domains=[ConfigDomainGUI], sites=sites)
 
 
-def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
+def get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteId]:
     if cmk_version.edition() is cmk_version.Edition.CME:
         # TODO CMK-14203
         _customer_api = customer_api()
-        if _customer_api.is_global(customer := connection.get("customer", SCOPE_GLOBAL)):
+        customer: str | None = connection.get("customer", SCOPE_GLOBAL)
+        if _customer_api.is_global(customer):
             return sitenames()
         assert customer is not None
         return list(_customer_api.get_sites_of_customer(customer).keys())

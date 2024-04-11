@@ -29,7 +29,7 @@ from cmk.gui.userdb import (
     ACTIVE_DIR,
     get_connection,
     get_ldap_connections,
-    LDAPConnectionTypedDict,
+    LDAPUserConnectionConfig,
     load_connection_config,
     save_connection_config,
 )
@@ -734,7 +734,7 @@ class ModeEditLDAPConnection(WatoMode):
 
     def _from_vars(self) -> None:
         self._connection_id = request.get_ascii_input("id")
-        self._connection_cfg: LDAPConnectionTypedDict
+        self._connection_cfg: LDAPUserConnectionConfig
 
         if self._connection_id is None:
             if (clone_id := request.var("clone")) is not None:
@@ -810,7 +810,7 @@ class ModeEditLDAPConnection(WatoMode):
         }
 
         vs = self._valuespec()
-        connection_cfg = cast(LDAPConnectionTypedDict, vs.from_html_vars("connection"))
+        connection_cfg = cast(LDAPUserConnectionConfig, vs.from_html_vars("connection"))
         vs.validate_value(connection_cfg, "connection")
         connection_cfg["type"] = "ldap"
 

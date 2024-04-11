@@ -18,7 +18,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
-from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
@@ -28,7 +27,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.html import HTML
@@ -634,7 +633,7 @@ def _render_ajax_graph(context: Mapping[str, Any]) -> dict[str, Any]:
     if graph_render_config.editing and (
         specification_id := context.get("definition", {}).get("specification", {}).get("id")
     ):
-        save_user_graph_data_range(specification_id, graph_data_range)
+        UserGraphDataRangeStore(user).save(specification_id, graph_data_range)
 
     graph_artwork = compute_graph_artwork(
         graph_recipe,
@@ -662,22 +661,33 @@ def _user_graph_data_range_file_name(custom_graph_id: str) -> str:
     return f"graph_range_{custom_graph_id}"
 
 
-def load_user_graph_data_range(custom_graph_id: str) -> GraphDataRange | None:
-    return (
-        GraphDataRange.model_validate(raw_range)
-        if (raw_range := user.load_file(_user_graph_data_range_file_name(custom_graph_id), None))
-        else None
-    )
+class UserGraphDataRangeStore:
+    def __init__(self, user_: LoggedInUser) -> None:
+        self.user = user_
 
+    def save(self, custom_graph_id: str, graph_data_range: GraphDataRange) -> None:
+        self.user.save_file(
+            _user_graph_data_range_file_name(custom_graph_id),
+            graph_data_range.model_dump(),
+        )
 
-def save_user_graph_data_range(custom_graph_id: str, graph_data_range: GraphDataRange) -> None:
-    user.save_file(_user_graph_data_range_file_name(custom_graph_id), graph_data_range.model_dump())
+    def load(self, custom_graph_id: str) -> GraphDataRange | None:
+        return (
+            GraphDataRange.model_validate(raw_range)
+            if (
+                raw_range := self.user.load_file(
+                    _user_graph_data_range_file_name(custom_graph_id), None
+                )
+            )
+            else None
+        )
 
-
-def remove_user_graph_data_range(user_id: UserId, custom_graph_id: str) -> None:
-    (profile_dir / user_id / f"{_user_graph_data_range_file_name(custom_graph_id)}.mk").unlink(
-        missing_ok=True
-    )
+    def remove(self, custom_graph_id: str) -> None:
+        (
+            profile_dir
+            / self.user.ident
+            / f"{_user_graph_data_range_file_name(custom_graph_id)}.mk"
+        ).unlink(missing_ok=True)
 
 
 def _resolve_graph_recipe_with_error_handling(

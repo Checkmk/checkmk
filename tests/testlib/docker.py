@@ -445,6 +445,7 @@ def checkmk_docker_add_host(
     ipv4: str,
 ) -> None:
     """Create a host in a Checkmk docker instance."""
+    logger.info('Add host "%s" to Checkmk at %s...', hostname, ipv4)
     checkmk_docker_api_request(
         checkmk,
         "post",
@@ -468,6 +469,7 @@ def checkmk_docker_wait_for_services(
     attempts: int = 15,
 ) -> None:
     """Repeatedly discover services in a Checkmk docker instance until min_services are found."""
+    logger.info("Wait for service discovery...")
     for _ in range(attempts):
         if len(checkmk_docker_get_host_services(checkmk, hostname)) > min_services:
             break

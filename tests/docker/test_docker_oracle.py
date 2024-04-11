@@ -171,11 +171,14 @@ class OracleDatabase:
                 f"{self.INIT_CMD} configure": "Creating new Oracle database...",
             }.items():
                 logger.info(msg)
+                print("=" * 80)
+                print(f"$ {command} #{msg}")
                 _, output = self.container.exec_run(
                     command, environment=self.environment, user="root", privileged=True, stream=True
                 )
                 for chunk in output:
                     print(chunk.decode("UTF-8").strip())
+                print("=" * 80)
 
         logger.info("Forcing listener registration...")
         rc, _ = self.container.exec_run(
@@ -221,7 +224,7 @@ class OracleDatabase:
 
         checkmk_docker_wait_for_services(checkmk=self.checkmk, hostname=self.name, min_services=5)
 
-        logger.debug(self.container.logs().decode("utf-8").strip())
+        logger.info(self.container.logs().decode("utf-8").strip())
 
     def _install_oracle_plugin(self) -> None:
         plugin_source_path = repo_path() / "agents" / "plugins" / "mk_oracle"

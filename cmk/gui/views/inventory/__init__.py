@@ -335,7 +335,7 @@ def decorate_inv_paint(
 ) -> Callable[[PaintFunction], PaintFunction]:
     def decorator(f: PaintFunction) -> PaintFunction:
         def wrapper(v: str | int | float | bool | None) -> PaintResult:
-            if v in ["", None]:
+            if v == "" or v is None:
                 return "", ""
             if skip_painting_if_string and isinstance(v, str):
                 return "number", v

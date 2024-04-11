@@ -857,7 +857,13 @@ class LegacyDataSize(Integer):
             scaled, remainder = divmod(value, unit.value)
             if remainder == 0:
                 return unit, f"{scaled}"
-        raise ValueError("Invalid value: %r" % value)
+
+        # "0.5 GB" for instance.
+        # This might in fact change the value slightly, and/or look ugly.
+        # Try to do better in the native implementation.
+        # Compare to TimeSpan, which is an analogous construct when seen from cmk.rulesets.v1,
+        # but quite different in rendering / UX currently.
+        return (u := sorted_units[-1]), f"{value / u.value!r}"
 
     def render_input(self, varprefix: str, value: int | None) -> None:
         # This is utterly inconsistent with what TimeSpan does :-(

@@ -8,7 +8,6 @@ import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from shutil import rmtree
 from typing import Final
 
 import docker  # type: ignore[import-untyped]
@@ -267,9 +266,6 @@ class OracleDatabase:
         if os.getenv("CLEANUP", "1") == "1":
             self.container.stop(timeout=30)
             self.container.remove(force=True)
-            rmtree(self.DATA, ignore_errors=True)
-            if os.path.exists(self.DATA):
-                logger.warning('Database folder "%s" could not be removed!', self.DATA)
 
 
 @pytest.fixture(name="oracle", scope="session")

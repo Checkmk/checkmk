@@ -150,7 +150,8 @@ class OracleDatabase:
                 environment=self.environment,
                 detach=True,
                 shm_size="4G",
-                mem_limit="6G",
+                mem_reservation="6G",
+                mem_limit="8G",
                 memswap_limit="8G",
             )
         return container

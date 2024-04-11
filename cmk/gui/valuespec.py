@@ -861,21 +861,24 @@ class LegacyDataSize(Integer):
             ]
         )
 
-    def scale_value(self, value: int) -> tuple[LegacyBinaryUnit, int]:
+    def _scale_value(self, value: int) -> tuple[LegacyBinaryUnit, str]:
         sorted_units = sorted(self._units, key=lambda x: x.value)
         for unit in reversed(sorted_units):
             if value == 0:
-                return sorted_units[0], value
-            if value % unit.value == 0:
-                return unit, int(value / unit.value)
+                return sorted_units[0], "0"
+            scaled, remainder = divmod(value, unit.value)
+            if remainder == 0:
+                return unit, f"{scaled}"
         raise ValueError("Invalid value: %r" % value)
 
     def render_input(self, varprefix: str, value: int | None) -> None:
+        # This is utterly inconsistent with what TimeSpan does :-(
+
         # The value type is only Optional to be compatible with the base class
         if value is None:
             raise TypeError(value)
-        selected_unit, scaled_value = self.scale_value(value)
-        self._renderer.text_input(varprefix + "_size", str(scaled_value))
+        selected_unit, scaled_value = self._scale_value(value)
+        self._renderer.text_input(varprefix + "_size", scaled_value)
         html.nbsp()
         choices: Choices = [(str(unit.value), unit.name) for unit in self._units]
         html.dropdown(varprefix + "_unit", choices, deflt=str(selected_unit.value))
@@ -887,7 +890,7 @@ class LegacyDataSize(Integer):
         )
 
     def value_to_html(self, value: int) -> ValueSpecText:
-        selected_unit, scaled_value = self.scale_value(value)
+        selected_unit, scaled_value = self._scale_value(value)
         return f"{scaled_value} {selected_unit.name}"
 
     def value_to_json(self, value: int) -> JSONValue:

@@ -2333,7 +2333,7 @@ if ($the_count -gt 0) {
                }
                if ($Null -ne $result) {
                     Write-Output "<<<oracle_instance:sep(124)>>>"
-                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Alternatively, you can try to run the plugin as a user using the rule 'Run plugins and local checks using non-system account'"
+                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Also you may use the rule 'Run plugins and local checks using non-system account' to run plugin from another account, for example 'group: Administrators'"
                     continue
                }
           }

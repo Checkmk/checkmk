@@ -2342,16 +2342,13 @@ class ConfigCache:
             if host_name in self.hosts_config.clusters:
                 return HWSWInventoryParameters.from_raw({})
 
-            # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
-            rules = active_checks.get("cmk_inv")
-            if rules is None:
-                return HWSWInventoryParameters.from_raw({})
-
             # 'get_host_values' is already cached thus we can
             # use it after every check cycle.
-            entries = self.ruleset_matcher.get_host_values(host_name, rules)
-
-            if not entries:
+            if not (
+                entries := self.ruleset_matcher.get_host_values(
+                    host_name, active_checks.get("cmk_inv") or ()
+                )
+            ):
                 return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
 
             # Convert legacy rules to current dict format (just like the valuespec)

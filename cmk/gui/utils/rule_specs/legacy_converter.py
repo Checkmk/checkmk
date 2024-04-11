@@ -875,11 +875,8 @@ def _get_packed_value(
     match nested_form, value_to_pack:
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_pack:
             return _pack_dict_groups(dict_form.elements, dict_to_pack, packed_dict)
-        case (ruleset_api_v1.form_specs.Dictionary(), _) | (_, dict()):
-            raise TypeError(
-                f"Type of value {type(value_to_pack)} does not match the form spec {type(nested_form)}"
-            )
-    return value_to_pack
+        case _:
+            return value_to_pack
 
 
 def _pack_dict_groups(
@@ -927,11 +924,8 @@ def _get_unpacked_value(
     match nested_form, value_to_unpack:
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_unpack:
             return _unpack_dict_group(dict_form.elements, dict_to_unpack)
-        case (ruleset_api_v1.form_specs.Dictionary(), _) | (_, dict()):
-            raise TypeError(
-                f"Type of value {type(value_to_unpack)} does not match the form spec {type(nested_form)}"
-            )
-    return value_to_unpack
+        case _:
+            return value_to_unpack
 
 
 def _unpack_dict_group(

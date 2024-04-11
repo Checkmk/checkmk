@@ -38,6 +38,7 @@ from ._connections import (
     GroupsToAttributes,
     GroupsToContactGroups,
     GroupsToSync,
+    HtpasswdUserConnectionConfig,
     ICONS_PER_ITEM,
     LDAPConnectionConfigDiscover,
     LDAPConnectionConfigFixed,
@@ -56,12 +57,12 @@ from ._connections import (
     TEMP_UNIT,
     UI_SIDEBAR_POSITIONS,
     UI_THEME,
-    UserConnectionConfig,
 )
 from ._connector import (
     CheckCredentialsResult,
     ConnectorType,
     user_connector_registry,
+    UserConnectionConfig,
     UserConnector,
     UserConnectorRegistry,
 )
@@ -192,6 +193,7 @@ __all__ = [
     "SHOW_MODE",
     "START_URL",
     "SAMLUserConnectionConfig",
+    "HtpasswdUserConnectionConfig",
     "TEMP_UNIT",
     "update_config_based_user_attributes",
     "user_attribute_registry",

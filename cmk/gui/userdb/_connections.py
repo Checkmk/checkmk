@@ -18,12 +18,7 @@ from cmk.utils.config_validation_layer.user_connections import (
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 
-from ._connector import ConnectorType, user_connector_registry, UserConnector
-
-
-class UserConnectionConfig(TypedDict):
-    id: str
-    disabled: bool
+from ._connector import ConnectorType, user_connector_registry, UserConnectionConfig, UserConnector
 
 
 class HtpasswdUserConnectionConfig(UserConnectionConfig):
@@ -155,13 +150,6 @@ class LDAPUserConnectionConfig(UserConnectionConfig):
     type: Literal["ldap"]
 
 
-class UserRoleMapping(TypedDict, total=False):
-    user: list[str]
-    admin: list[str]
-    guest: list[str]
-    agent_registration: list[str]
-
-
 class SAMLUserConnectionConfig(UserConnectionConfig):
     name: str
     description: str
@@ -183,7 +171,9 @@ class SAMLUserConnectionConfig(UserConnectionConfig):
     user_alias_attribute_name: str
     email_attribute_name: str
     contactgroups_mapping: str
-    role_membership_mapping: Literal[False] | tuple[Literal[True], tuple[str, UserRoleMapping]]
+    role_membership_mapping: (
+        Literal[False] | tuple[Literal[True], tuple[str, Mapping[str, Sequence[str]]]]
+    )
     type: Literal["saml2"]
     version: Literal["1.0.0"]
     owned_by_site: str

@@ -15,7 +15,12 @@ from cmk.utils.user import UserId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb import CheckCredentialsResult, ConnectorType, UserConnector
+from cmk.gui.userdb import (
+    CheckCredentialsResult,
+    ConnectorType,
+    HtpasswdUserConnectionConfig,
+    UserConnector,
+)
 
 
 # Checkmk supports different authentication frontends for verifying the
@@ -48,7 +53,7 @@ def hash_password(password: Password) -> PasswordHash:
         raise MKUserError(None, "Password could not be hashed.")
 
 
-class HtpasswdUserConnector(UserConnector):
+class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
     @classmethod
     def type(cls) -> str:
         return ConnectorType.HTPASSWD
@@ -65,7 +70,7 @@ class HtpasswdUserConnector(UserConnector):
     def short_title(cls) -> str:
         return _("htpasswd")
 
-    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, cfg: HtpasswdUserConnectionConfig) -> None:
         super().__init__(cfg)
         self._htpasswd = Htpasswd(Path(cmk.utils.paths.htpasswd_file))
 

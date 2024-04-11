@@ -480,9 +480,13 @@ class ACTestOldDefaultCredentials(ACTest):
 
     def execute(self) -> Iterator[ACSingleResult]:
         if (
-            htpasswd.HtpasswdUserConnector({}).check_credentials(
-                UserId("omdadmin"), Password("omd")
-            )
+            htpasswd.HtpasswdUserConnector(
+                {
+                    "type": "htpasswd",
+                    "id": "htpasswd",
+                    "disabled": False,
+                }
+            ).check_credentials(UserId("omdadmin"), Password("omd"))
             == "omdadmin"
         ):
             yield ACSingleResult(

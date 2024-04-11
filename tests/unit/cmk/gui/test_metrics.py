@@ -57,11 +57,11 @@ def test_add_graphing_plugins() -> None:
         scalars=[
             ScalarDefinition(
                 WarningOf(Metric("active_connections")),
-                "Active connections",
+                "Warning of Active connections",
             ),
             ScalarDefinition(
                 CriticalOf(Metric("active_connections")),
-                "Active connections",
+                "Critical of Active connections",
             ),
         ],
         conflicting_metrics=(),

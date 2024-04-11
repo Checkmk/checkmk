@@ -210,14 +210,14 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=_("Warning of %s") % metric_["title"],
             )
         case metrics.CriticalOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=_("Critical of %s") % metric_["title"],
             )
         case metrics.MinimumOf():
             metric_ = get_extended_metric_info(quantity.metric_name)

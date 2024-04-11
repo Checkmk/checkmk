@@ -5,6 +5,7 @@
 
 RESOURCES="$(dirname "$(realpath -- "$0" || printf "%s" "$0")")"
 CONTROLLER_TARGET="${BIN_DIR:-/usr/bin}/cmk-agent-ctl"
+PREDEFINED_CONNECTIONS_PATH="/var/lib/cmk-agent/pre_configured_connections.json"
 
 _usage() {
     cat >&2 <<HERE
@@ -63,6 +64,16 @@ _systemd_version() {
 
 _need_ip_access_list() {
     grep -q '^IPAddressAllow=' "${ROOT}${RESOURCES}/check-mk-agent.socket.fallback"
+}
+
+_predefined_connection_not_present() {
+    if [ -e ${PREDEFINED_CONNECTIONS_PATH} ]; then
+        printf "A auto-registration rule was configured for this host!\n" >&2
+        printf "The agent controller does not support the legacy setup and therefore transport encryption and auto-registration are not available!\n" >&2
+        printf "Since this might be expected we abort here. If the legacy setup should really be used exclude this host from the rule that configures the auto-registration\n" >&2
+        return 1
+    fi
+    return 0
 }
 
 _deploy_controller() {
@@ -162,7 +173,7 @@ _deploy_systemd_units() {
 deploy() {
     _systemd_sufficient || return 1
     _deploy_controller && _deploy_systemd_units "" && return 0
-    _legacy_setup_supported && _deploy_systemd_units ".fallback" && return 0
+    _predefined_connection_not_present && _legacy_setup_supported && _deploy_systemd_units ".fallback" && return 0
     return 1
 }
 

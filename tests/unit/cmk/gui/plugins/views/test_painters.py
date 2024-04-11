@@ -327,7 +327,6 @@ def test_registered_painters() -> None:
         "inv_software_applications_check_mk_cluster",
         "inv_software_applications_check_mk_cluster_is_cluster",
         "inv_software_applications_check_mk_cluster_nodes",
-        "inv_software_applications_check_mk_host_labels",
         "inv_software_applications_check_mk_num_hosts",
         "inv_software_applications_check_mk_num_services",
         "inv_software_applications_check_mk_sites",

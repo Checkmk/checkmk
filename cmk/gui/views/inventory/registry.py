@@ -10,6 +10,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, Protocol, TypedDict, TypeVar
 
 from cmk.utils.plugin_registry import Registry
+from cmk.utils.structured_data import SDValue
 
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
@@ -48,7 +49,7 @@ inventory_displayhints: InventoryHintRegistry = {}
 
 
 PaintResult = tuple[str, str | HTML]
-PaintFunction = Callable[[Any], PaintResult]
+PaintFunction = Callable[[SDValue], PaintResult]
 
 
 class InvPaintFunction(TypedDict):

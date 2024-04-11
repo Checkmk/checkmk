@@ -641,20 +641,6 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "keyorder": ["name"],
         },
         ".software.applications.check_mk.cluster.nodes:*.name": {"title": _l("Node name")},
-        ".software.applications.check_mk.host_labels:": {
-            "title": _l("Discovered host labels"),
-            "keyorder": [
-                "label",
-                "plugin_name",
-            ],
-        },
-        ".software.applications.check_mk.host_labels:*.label": {
-            "title": _l("Label"),
-            "paint": "cmk_label",
-        },
-        ".software.applications.check_mk.host_labels:*.plugin_name": {
-            "title": _l("Discovered by plug-in"),
-        },
         ".software.applications.checkmk-agent.": {
             "title": _l("Checkmk Agent"),
             "keyorder": [

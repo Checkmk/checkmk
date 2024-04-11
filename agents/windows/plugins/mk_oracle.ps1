@@ -122,7 +122,7 @@ Function debug_echo {
           $MYTIME = Get-Date -Format o
           echo "${MYTIME} DEBUG:${error_message}"
      }
-     # log to a %PROGRAMDATA%\cmk_oracle_plugin-{%USERNAME%}{user|admin}.log if PROGRAMDATA/Temp/cmk_enable_oracle_logging exists
+     # log to a %PROGRAMDATA%\temp\cmk_oracle_plugin-{%USERNAME%}{user|admin}.log if PROGRAMDATA/Temp/cmk_enable_oracle_logging exists
      try {
           $temp = Join-Path -Path $env:PROGRAMDATA -ChildPath "Temp"
           if (Test-Path (Join-Path -Path $temp -ChildPath "cmk_enable_oracle_logging")) {
@@ -154,11 +154,9 @@ if (!$MK_CONFDIR) {
 $MK_TEMPDIR = $env:MK_TEMPDIR
 if ($is_admin) {
      debug_echo "Admin mode"
-     $MK_TEMPDIR = $env:MK_TEMPDIR
 }
 else {
      debug_echo "User mode"
-     $MK_TEMPDIR = $env:TEMP
 }
 
 
@@ -2324,7 +2322,7 @@ if ($the_count -gt 0) {
           #  $val may contain c:\path\to\file or "c:\path\to\file" or "c:\path\to\file" PARAM
           $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4).Trim('"')
 
-          if ($is_admin) {
+          if ($is_admin -and ($SKIP_ORACLE_SECURITY_CHECK -ne 1)) {
                # administrators should use only safe binary
                $result = Invoke-SafetyCheck($ORACLE_HOME + "\bin\sqlplus.exe")
                if ($Null -eq $result) {

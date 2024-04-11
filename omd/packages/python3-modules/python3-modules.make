@@ -28,10 +28,10 @@ ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
 endif
 
 $(PYTHON3_MODULES_BUILD):
-	$(OPTIONAL_BUILD_ARGS) $(BAZEL_BUILD) //omd/packages/python3-modules:python3-modules-modify
+	$(OPTIONAL_BUILD_ARGS) $(BAZEL_BUILD) //omd/packages/python3-modules:python3-modules.tar
 
 $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
-	$(RSYNC) --times $(PYTHON3_MODULES_BUILD_DIR)/ $(PYTHON3_MODULES_INSTALL_DIR)/
+	tar xf $(PYTHON3_MODULES_BUILD_DIR).tar -C $(INTERMEDIATE_INSTALL_BASE)/
 	# TODO: Investigate why this fix-up is needed
 	chmod +x $(PYTHON3_MODULES_INSTALL_DIR)/bin/*
 

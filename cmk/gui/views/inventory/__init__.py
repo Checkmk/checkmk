@@ -2469,7 +2469,12 @@ class TreeRenderer:
             for value_info in row:
                 column_hint = hints.get_column_hint(value_info.key)
                 # TODO separate tdclass from rendered value
-                tdclass, _rendered_value = column_hint.paint_function(value_info.value)
+                if isinstance(value_info, _DeltaTreeValueInfo):
+                    tdclass, _rendered_value = column_hint.paint_function(
+                        value_info.value[0] or value_info.value[1]
+                    )
+                else:
+                    tdclass, _rendered_value = column_hint.paint_function(value_info.value)
                 html.open_td(class_=tdclass)
                 _show_value(value_info, column_hint)
                 html.close_td()

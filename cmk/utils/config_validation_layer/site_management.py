@@ -6,15 +6,10 @@
 from ipaddress import IPv4Address, IPv6Address
 from typing import Literal
 
-from pydantic import BaseModel, Field, ValidationError
-
-from livestatus import SiteId
+from pydantic import BaseModel, Field, RootModel, ValidationError
 
 from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
-from cmk.utils.i18n import _
-from cmk.utils.site import omd_site
-
-from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 
 class SocketVerify(BaseModel):
@@ -110,17 +105,15 @@ class RemoteSiteModel(SiteModel):
     secret: str = OMITTED_FIELD
 
 
+SiteMapModel = RootModel[dict[str, CentralSiteModel | RemoteSiteModel]]
+
+
 def validate_sites(sites: dict) -> None:
-    for site_id, site in sites.items():
-        validate_site(site_id, site)
-
-
-def validate_site(site_id: SiteId, site: dict) -> None:
     try:
-        if site_id == omd_site() or site["socket"] == ("local", None):
-            CentralSiteModel(**site)
-        else:
-            RemoteSiteModel(**site)
-
+        SiteMapModel(sites)
     except ValidationError as exc:
-        raise MKConfigError(_("Error: sites.mk validation %s") % exc.errors())
+        raise ConfigValidationError(
+            which_file="sites.mk",
+            pydantic_error=exc,
+            original_data=sites,
+        )

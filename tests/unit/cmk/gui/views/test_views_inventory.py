@@ -8,6 +8,8 @@ from collections.abc import Sequence
 # No stub file
 import pytest
 
+from livestatus import LivestatusResponse, LivestatusRow, OnlySites
+
 from cmk.utils.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaAttributes,
@@ -62,9 +64,6 @@ from cmk.gui.views.inventory import (
 from cmk.gui.views.inventory.row_post_processor import _join_inventory_rows
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
-
-RAW_ROWS = [("this_site", "this_hostname")]
-RAW_ROWS2 = [("this_site", "this_hostname", "foobar")]
 
 EXPECTED_INV_KEYS = [
     "site",
@@ -141,67 +140,79 @@ def fixture_view() -> View:
     return View("invdockerimages", view_spec, view_spec["context"])
 
 
+class RowTableInventoryTest1(RowTableInventory):
+    @staticmethod
+    def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
+        return LivestatusResponse([LivestatusRow(["this_site", "this_hostname"])])
+
+
+class RowTableInventoryTest2(RowTableInventory):
+    @staticmethod
+    def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
+        return LivestatusResponse([LivestatusRow(["this_site", "this_hostname", "foobar"])])
+
+
+class RowTableInventoryHistoryTest1(RowTableInventoryHistory):
+    @staticmethod
+    def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
+        return LivestatusResponse([LivestatusRow(["this_site", "this_hostname"])])
+
+
+class RowTableInventoryHistoryTest2(RowTableInventoryHistory):
+    @staticmethod
+    def _get_raw_data(only_sites: OnlySites, query: str) -> LivestatusResponse:
+        return LivestatusResponse([LivestatusRow(["this_site", "this_hostname", "foobar"])])
+
+
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
-    row_table = RowTableInventory(
+def test_query_row_table_inventory(view: View) -> None:
+    row_table = RowTableInventoryTest1(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
-    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_unknown_columns(
-    monkeypatch: pytest.MonkeyPatch, view: View
-) -> None:
-    row_table = RowTableInventory(
+def test_query_row_table_inventory_unknown_columns(view: View) -> None:
+    row_table = RowTableInventoryTest1(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
-    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_add_columns(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
-    row_table = RowTableInventory(
+def test_query_row_table_inventory_add_columns(view: View) -> None:
+    row_table = RowTableInventoryTest2(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
-    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS + ["host_foo"])
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_history(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
-    row_table = RowTableInventoryHistory()
-    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
+def test_query_row_table_inventory_history(view: View) -> None:
+    row_table = RowTableInventoryHistoryTest1()
     rows, _len_rows = row_table.query(view.datasource, [], [], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_history_unknown_columns(
-    monkeypatch: pytest.MonkeyPatch, view: View
-) -> None:
-    row_table = RowTableInventoryHistory()
-    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
+def test_query_row_table_inventory_history_unknown_columns(view: View) -> None:
+    row_table = RowTableInventoryHistoryTest1()
     rows, _len_rows = row_table.query(view.datasource, [], ["foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_history_add_columns(
-    monkeypatch: pytest.MonkeyPatch, view: View
-) -> None:
-    row_table = RowTableInventoryHistory()
-    monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
+def test_query_row_table_inventory_history_add_columns(view: View) -> None:
+    row_table = RowTableInventoryHistoryTest2()
     rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS + ["host_foo"])

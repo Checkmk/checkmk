@@ -165,7 +165,7 @@ def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
 def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
     value_raw = """{
         "name": "Halli-gALLI",
-        "host": {"address": "mimi.ch", "virthost": "mimi.ch"},
+        "host": {"address": ("direct", "mimi.ch"), "virthost": "mimi.ch"},
         "mode": (
             "url",
             {

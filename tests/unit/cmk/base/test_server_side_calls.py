@@ -240,39 +240,45 @@ def argument_function_with_exception(*args, **kwargs):
         ),
         pytest.param(
             [
-                ("http", [{"name": "myHTTPName on $HOSTALIAS$"}]),
+                ("http", [{"name": "myHTTPName on my_host_alias"}]),
             ],
-            {
-                "http": {
-                    "command_line": "echo $ARG1$",
-                    "argument_function": lambda _: "--arg1 arument1 --host_alias $HOSTALIAS$",
-                    "service_description": lambda _: "HTTP myHTTPName on $HOSTALIAS$",
-                }
-            },
             {},
-            HostName("myhost"),
             {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "0.0.0.0",
-                "address": "0.0.0.0",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
+                PluginLocation(f"{__name__}", "httpv1"): ActiveCheckConfig(
+                    name="http",
+                    parameter_parser=lambda p: p,
+                    commands_function=lambda *_: (
+                        [
+                            ActiveCheckCommand(
+                                service_description="HTTP myHTTPName on my_host_alias",
+                                command_arguments=[
+                                    "--arg1",
+                                    "argument1",
+                                    "--arg2",
+                                    "argument2",
+                                ],
+                            ),
+                        ]
+                    ),
+                )
             },
+            HostName("myhost"),
+            HOST_ATTRS,
             HOST_CONFIG,
             {},
             [
                 ActiveServiceData(
                     plugin_name="http",
                     description="HTTP myHTTPName on my_host_alias",
-                    command="check-mk-custom",
-                    command_display="check-mk-custom!--arg1 arument1 --host_alias $HOSTALIAS$",
-                    command_line='echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2',
-                    params={"name": "myHTTPName on $HOSTALIAS$"},
-                    expanded_args="--arg1 arument1 --host_alias $HOSTALIAS$",
-                    detected_executable="echo",
+                    command="check_mk_active-http",
+                    command_display="check_mk_active-http!--arg1 argument1 --arg2 argument2",
+                    command_line="check_http --arg1 argument1 --arg2 argument2",
+                    params={"name": "myHTTPName on my_host_alias"},
+                    expanded_args="--arg1 argument1 --arg2 argument2",
+                    detected_executable="check_http",
                 ),
             ],
-            id="http_active_service_legacy_plugin",
+            id="http_active_service_plugin",
         ),
         pytest.param(
             [

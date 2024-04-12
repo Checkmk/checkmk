@@ -49,6 +49,7 @@ HACK_CHECKS = {
     "elasticsearch_query": False,
     "form_submit": False,  # has no secret
     "ftp": False,  # has no secret
+    "http": True,
     "httpv2": False,  # yay!
     "icmp": False,  # has no secret
     "ldap": True,

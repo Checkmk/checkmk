@@ -712,11 +712,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     Dim lastBackupDate, backup_type, backup_database, found_db_backups
     addOutput(sections("backup"))
     sqlString = "" & _
-        "DECLARE @HADRStatus sql_variant; " & _
         "DECLARE @SQLCommand nvarchar(max); " & _
-        "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
-        "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
-        "BEGIN " & _
         "SET @SQLCommand = ' " & _
             "SELECT " & _
             "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date, " & _
@@ -730,23 +726,6 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "  type, " & _
             "  database_name " & _
         "' " & _
-        "END " & _
-        "ELSE " & _
-        "BEGIN " & _
-        "SET @SQLCommand = ' " & _
-            "SELECT " & _
-            "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date," & _
-            "  b.type, " & _
-            "  database_name " & _
-            "FROM " & _
-            "  msdb.dbo.backupset b " & _
-            "WHERE " & _
-            "  UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
-            "GROUP BY " & _
-            "  type, " & _
-            "  database_name " & _
-        "' " & _
-        "END " & _
         "EXEC (@SQLCommand)"
     Set databaseResponse = databaseSession.queryDatabase("master", sqlString)
 

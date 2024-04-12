@@ -26,6 +26,7 @@ from tests.testlib.docker import (
     get_container_ip,
     resolve_image_alias,
 )
+from tests.testlib.pytest_helpers.marks import skip_if_not_enterprise_edition
 
 logger = logging.getLogger()
 
@@ -284,6 +285,7 @@ def _oracle(
     )
 
 
+@skip_if_not_enterprise_edition
 def test_docker_oracle(
     checkmk: docker.models.containers.Container,
     oracle: OracleDatabase,

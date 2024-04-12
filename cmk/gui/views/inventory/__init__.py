@@ -347,8 +347,9 @@ def decorate_inv_paint(
     return decorator
 
 
-@decorate_inv_paint()
 def inv_paint_generic(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if isinstance(value, float):
         return "number", "%.2f" % value
     if isinstance(value, int):
@@ -390,32 +391,36 @@ def inv_paint_bytes_rounded(value: SDValue) -> PaintResult:
     return "number", cmk.utils.render.fmt_bytes(value)
 
 
-@decorate_inv_paint()
 def inv_paint_number(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, (str, int, float)):
         raise ValueError(value)
     return "number", str(value)
 
 
-@decorate_inv_paint()
 def inv_paint_count(value: SDValue) -> PaintResult:
     # Similar to paint_number, but is allowed to
     # abbreviate things if numbers are very large
     # (though it doesn't do so yet)
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, (str, int, float)):
         raise ValueError(value)
     return "number", str(value)
 
 
-@decorate_inv_paint()
 def inv_paint_nic_speed(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, (str, int)):
         raise ValueError(value)
     return "number", cmk.utils.render.fmt_nic_speed(value)
 
 
-@decorate_inv_paint()
 def inv_paint_if_oper_status(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, int):
         raise ValueError(value)
     if value == 1:
@@ -431,22 +436,25 @@ def inv_paint_if_oper_status(value: SDValue) -> PaintResult:
     )
 
 
-@decorate_inv_paint()
 def inv_paint_if_admin_status(value: SDValue) -> PaintResult:
     # admin status can only be 1 or 2, matches oper status :-)
+    if value == "" or value is None:
+        return "", ""
     return inv_paint_if_oper_status(value)
 
 
-@decorate_inv_paint()
 def inv_paint_if_port_type(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, int):
         raise ValueError(value)
     type_name = interface_port_types().get(value, _("unknown"))
     return "", "%d - %s" % (value, type_name)
 
 
-@decorate_inv_paint()
 def inv_paint_if_available(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, bool):
         raise ValueError(value)
     return (
@@ -455,8 +463,9 @@ def inv_paint_if_available(value: SDValue) -> PaintResult:
     )
 
 
-@decorate_inv_paint()
 def inv_paint_mssql_is_clustered(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, bool):
         raise ValueError(value)
     return (
@@ -465,15 +474,17 @@ def inv_paint_mssql_is_clustered(value: SDValue) -> PaintResult:
     )
 
 
-@decorate_inv_paint()
 def inv_paint_mssql_node_names(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, str):
         raise ValueError(value)
     return "", value
 
 
-@decorate_inv_paint()
 def inv_paint_ipv4_network(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, str):
         raise ValueError(value)
     if value == "0.0.0.0/0":
@@ -481,8 +492,9 @@ def inv_paint_ipv4_network(value: SDValue) -> PaintResult:
     return "", value
 
 
-@decorate_inv_paint()
 def inv_paint_ip_address_type(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, str):
         raise ValueError(value)
     if value == "ipv4":
@@ -492,8 +504,9 @@ def inv_paint_ip_address_type(value: SDValue) -> PaintResult:
     return "", value
 
 
-@decorate_inv_paint()
 def inv_paint_route_type(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, str):
         raise ValueError(value)
     if value == "local":
@@ -531,8 +544,9 @@ def inv_paint_age(value: SDValue) -> PaintResult:
     return "number", cmk.utils.render.approx_age(value)
 
 
-@decorate_inv_paint()
 def inv_paint_bool(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, bool):
         raise ValueError(value)
     return "", (_("Yes") if value else _("No"))
@@ -580,15 +594,17 @@ def inv_paint_timestamp_as_age_days(value: SDValue) -> PaintResult:
     return css_class, "%d %s ago" % (int(age_days), _("days"))
 
 
-@decorate_inv_paint()
 def inv_paint_csv_labels(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, str):
         raise ValueError(value)
     return "labels", HTMLWriter.render_br().join(value.split(","))
 
 
-@decorate_inv_paint()
 def inv_paint_container_ready(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, str):
         raise ValueError(value)
     if value == "yes":
@@ -600,8 +616,9 @@ def inv_paint_container_ready(value: SDValue) -> PaintResult:
     return "if_state " + css_class, value
 
 
-@decorate_inv_paint()
 def inv_paint_service_status(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
     if not isinstance(value, str):
         raise ValueError(value)
     if value == "running":

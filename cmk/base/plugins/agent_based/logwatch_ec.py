@@ -352,32 +352,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
 
     # Check if the number of expected files matches the actual one
     if params["monitor_logfilelist"]:
-        if "expected_logfiles" not in params:
-            yield Result(
-                state=State.WARN,
-                summary=(
-                    "You enabled monitoring the list of forwarded logfiles. "
-                    "You need to redo service discovery."
-                ),
-            )
-        else:
-            expected = params["expected_logfiles"]
-            missing = [
-                *_get_missing_logfiles_from_attr(used_logfiles),
-                *(f for f in expected if f not in used_logfiles),
-            ]
-            if missing:
-                yield Result(
-                    state=State.WARN,
-                    summary="Missing logfiles: %s" % (", ".join(missing)),
-                )
-
-            exceeding = [f for f in used_logfiles if f not in expected]
-            if exceeding:
-                yield Result(
-                    state=State.WARN,
-                    summary="Newly appeared logfiles: %s" % (", ".join(exceeding)),
-                )
+        yield from _monitor_logile_list(used_logfiles, params.get("expected_logfiles"))
 
     # 3. create syslog message of each line
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasas
@@ -486,6 +461,37 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
             state=State.OK,
             summary="Reclassified %d messages through logwatch patterns (%d to IGNORE)"
             % (rclfd_total, rclfd_to_ignore),
+        )
+
+
+def _monitor_logile_list(
+    used_logfiles: UsedLogFiles,
+    expected_logfiles: Iterable[str] | None,
+) -> Iterable[Result]:
+    if expected_logfiles is None:
+        yield Result(
+            state=State.WARN,
+            summary=(
+                "You enabled monitoring the list of forwarded logfiles. "
+                "You need to redo service discovery."
+            ),
+        )
+        return
+    missing = [
+        *_get_missing_logfiles_from_attr(used_logfiles),
+        *(f for f in expected_logfiles if f not in used_logfiles),
+    ]
+    if missing:
+        yield Result(
+            state=State.WARN,
+            summary="Missing logfiles: %s" % (", ".join(missing)),
+        )
+
+    exceeding = [f for f in used_logfiles if f not in expected_logfiles]
+    if exceeding:
+        yield Result(
+            state=State.WARN,
+            summary="Newly appeared logfiles: %s" % (", ".join(exceeding)),
         )
 
 

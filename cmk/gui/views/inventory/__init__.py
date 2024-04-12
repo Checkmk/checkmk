@@ -331,22 +331,6 @@ class ABCRowTable(RowTable):
 #   '----------------------------------------------------------------------'
 
 
-def decorate_inv_paint(
-    skip_painting_if_string: bool = False,
-) -> Callable[[PaintFunction], PaintFunction]:
-    def decorator(f: PaintFunction) -> PaintFunction:
-        def wrapper(v: SDValue) -> PaintResult:
-            if v == "" or v is None:
-                return "", ""
-            if skip_painting_if_string and isinstance(v, str):
-                return "number", v
-            return f(v)
-
-        return wrapper
-
-    return decorator
-
-
 def inv_paint_generic(value: SDValue) -> PaintResult:
     if value == "" or value is None:
         return "", ""
@@ -359,15 +343,21 @@ def inv_paint_generic(value: SDValue) -> PaintResult:
     return "", escape_text("%s" % value)
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_hz(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, float):
         raise ValueError(value)
     return "number", cmk.utils.render.fmt_number_with_precision(value, drop_zeroes=False, unit="Hz")
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_bytes(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, int):
         raise ValueError(value)
     if value == 0:
@@ -375,15 +365,21 @@ def inv_paint_bytes(value: SDValue) -> PaintResult:
     return "number", cmk.utils.render.fmt_bytes(value, precision=0)
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_size(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, int):
         raise ValueError(value)
     return "number", cmk.utils.render.fmt_bytes(value)
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_bytes_rounded(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, int):
         raise ValueError(value)
     if value == 0:
@@ -514,31 +510,43 @@ def inv_paint_route_type(value: SDValue) -> PaintResult:
     return "", _("Gateway route")
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_volt(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, float):
         raise ValueError(value)
     return "number", "%.1f V" % value
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_date(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, int):
         raise ValueError(value)
     date_painted = time.strftime("%Y-%m-%d", time.localtime(value))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_date_and_time(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, int):
         raise ValueError(value)
     date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_age(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, float):
         raise ValueError(value)
     return "number", cmk.utils.render.approx_age(value)
@@ -552,15 +560,21 @@ def inv_paint_bool(value: SDValue) -> PaintResult:
     return "", (_("Yes") if value else _("No"))
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_timestamp_as_age(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, int):
         raise ValueError(value)
     return inv_paint_age(time.time() - value)
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
 def inv_paint_timestamp_as_age_days(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
     if not isinstance(value, int):
         raise ValueError(value)
 

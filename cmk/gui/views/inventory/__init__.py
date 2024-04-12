@@ -1233,7 +1233,7 @@ def _export_node_for_csv() -> str | HTML:
 
 
 def _register_attribute_column(
-    name: str, hint: AttributeDisplayHint, path: SDPath, key: SDKey
+    ident: str, hint: AttributeDisplayHint, path: SDPath, key: SDKey
 ) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
@@ -1241,7 +1241,7 @@ def _register_attribute_column(
 
     # Declare column painter
     register_painter(
-        name,
+        ident,
         {
             "title": long_inventory_title,
             # The short titles (used in column headers) may overlap for different painters, e.g.:
@@ -1268,7 +1268,7 @@ def _register_attribute_column(
             ),
             "printable": True,
             "load_inv": True,
-            "sorter": name,
+            "sorter": ident,
             "paint": lambda row: _paint_host_inventory_attribute(row, path, key, hint),
             "export_for_python": lambda row, cell: _compute_attribute_painter_data(row, path, key),
             "export_for_csv": lambda row, cell: (
@@ -1288,7 +1288,7 @@ def _register_attribute_column(
 
     # Declare sorter. It will detect numbers automatically
     _register_sorter(
-        ident=name,
+        ident=ident,
         long_inventory_title=long_inventory_title,
         load_inv=True,
         columns=["host_inventory", "host_structured_status"],
@@ -1299,7 +1299,7 @@ def _register_attribute_column(
     )
 
     # Declare filter. Sync this with _register_table_column()
-    filter_registry.register(hint.make_filter(name, inventory_path))
+    filter_registry.register(hint.make_filter(ident, inventory_path))
 
 
 def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:

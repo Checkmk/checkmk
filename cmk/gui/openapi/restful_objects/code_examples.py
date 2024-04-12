@@ -117,6 +117,7 @@ resp = urllib.request.urlopen(request)
 """
 
 CODE_TEMPLATE_CURL = """
+{%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
 #!/bin/bash
 
 # NOTE: We recommend all shell users to use the "httpie" examples instead.
@@ -134,9 +135,12 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 curl {%- if includes_redirect %} -L {%- endif %} \\
-{%- if query_params %}
+  {%- if query_params %}
   -G \\
-{%- endif %}
+  {%- endif %}
+  {%- if downloadable %}
+  -JO \\
+  {%- endif %}
   {%- if not includes_redirect %}
   --request {{ request_method | upper }} \\
   {%- endif %}

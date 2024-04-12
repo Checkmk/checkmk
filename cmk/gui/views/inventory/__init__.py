@@ -671,23 +671,23 @@ class TableViewSpec:
 
     @classmethod
     def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> TableViewSpec | None:
-        def _get_table_view_name(path: SDPath, raw_table_hint: InventoryHintSpec) -> str | None:
-            if "view" not in raw_table_hint:
-                return None
-            if (view_name := raw_table_hint["view"]).endswith("_of_host"):
-                return view_name[:-8]
+        def _parse_view_name(view_name: str) -> str:
+            if not view_name.startswith("inv"):
+                view_name = f"inv{view_name}"
+            if view_name.endswith("_of_host"):
+                view_name = view_name[:-8]
             return view_name
 
         if "*" in path:
             # See DYNAMIC-PATHS
             return None
 
-        if view_name := _get_table_view_name(path, raw_hint):
+        if view_name := raw_hint.get("view"):
             title = str(raw_hint.get("title", ""))
             return TableViewSpec(
                 # This seems to be important for the availability of GUI elements, such as filters,
                 # sorter, etc. in related contexts (eg. data source inv*).
-                view_name=view_name if view_name.startswith("inv") else f"inv{view_name}",
+                view_name=_parse_view_name(view_name),
                 title=title,
                 _long_title_function=_make_long_title_function(title, path[:-1]),
                 icon=raw_hint.get("icon"),

@@ -10,7 +10,7 @@ import cmk.gui.valuespec as vs
 from .utils import expect_validate_failure, expect_validate_success, request_var
 
 
-def get_tuple_vs(**kwargs) -> vs.Tuple[tuple[str, int, str, int]]:  # type: ignore[no-untyped-def]
+def get_tuple_vs() -> vs.Tuple[tuple[str, int, str, int]]:
     return vs.Tuple(
         elements=[
             vs.TextInput(),
@@ -18,7 +18,6 @@ def get_tuple_vs(**kwargs) -> vs.Tuple[tuple[str, int, str, int]]:  # type: igno
             vs.Password(default_value="z"),
             vs.Integer(minvalue=1),
         ],
-        **kwargs,
     )
 
 
@@ -26,7 +25,15 @@ class TestValueSpecTuple:
     def test_init(self) -> None:
         with pytest.raises(TypeError, match=" got an unexpected keyword argument 'default_value'"):
             # default_value was intentional removed
-            get_tuple_vs(default_value=None)
+            vs.Tuple(  # pylint: disable=unexpected-keyword-arg
+                elements=[
+                    vs.TextInput(),
+                    vs.Integer(),
+                    vs.Password(default_value="z"),
+                    vs.Integer(minvalue=1),
+                ],
+                default_value=None,
+            )  # type: ignore[call-arg]
 
     def test_validate(self) -> None:
         expect_validate_success(get_tuple_vs(), ("", 0, "", 1))

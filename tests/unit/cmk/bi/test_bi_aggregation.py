@@ -5,18 +5,26 @@
 
 import pytest
 
+from livestatus import LivestatusResponse, SiteId
+
 from cmk.bi.actions import BICallARuleAction
 from cmk.bi.aggregation import BIAggregation
+from cmk.bi.data_fetcher import BIStatusFetcher, BIStructureFetcher
+from cmk.bi.packs import BIAggregationPacks
+from cmk.bi.searcher import BISearcher
 
 from .bi_test_data import sample_config
 
 
-def test_load_aggregation_integrity(bi_packs_sample_config) -> None:  # type: ignore[no-untyped-def]
+def test_load_aggregation_integrity(bi_packs_sample_config: BIAggregationPacks) -> None:
     default_aggregation = bi_packs_sample_config.get_aggregation("default_aggregation")
+    assert default_aggregation is not None
     assert default_aggregation.id == "default_aggregation"
     assert default_aggregation.groups.names == ["Hosts"]
     assert not default_aggregation.computation_options.disabled
-    assert default_aggregation.node.action.rule_id == "host"
+    action = default_aggregation.node.action
+    assert isinstance(action, BICallARuleAction)
+    assert action.rule_id == "host"
 
     # Generate the schema for the default_aggregation and instantiate a new aggregation from it
     aggregation_schema = BIAggregation.schema()()
@@ -42,22 +50,23 @@ def test_load_aggregation_integrity(bi_packs_sample_config) -> None:  # type: ig
     ],
 )
 def test_compute_aggregation(
-    bi_packs_sample_config,
-    bi_structure_fetcher,
-    bi_searcher,
-    bi_status_fetcher,
-    status_data,
-    expected_state,
-    expected_acknowledgment,
-    expected_in_downtime,
-    expected_computed_branches,
-    expected_service_period,
-):
-    bi_structure_fetcher.add_site_data("heute", sample_config.bi_structure_states)
+    bi_packs_sample_config: BIAggregationPacks,
+    bi_structure_fetcher: BIStructureFetcher,
+    bi_searcher: BISearcher,
+    bi_status_fetcher: BIStatusFetcher,
+    status_data: LivestatusResponse,
+    expected_state: int,
+    expected_acknowledgment: bool,
+    expected_in_downtime: bool,
+    expected_computed_branches: int,
+    expected_service_period: bool,
+) -> None:
+    bi_structure_fetcher.add_site_data(SiteId("heute"), sample_config.bi_structure_states)
     bi_searcher.set_hosts(bi_structure_fetcher.hosts)
     bi_status_fetcher.states = bi_status_fetcher.create_bi_status_data(status_data)
 
     bi_aggregation = bi_packs_sample_config.get_aggregation("default_aggregation")
+    assert bi_aggregation is not None
     compiled_aggregation = bi_aggregation.compile(bi_searcher)
     # Compile aggregations based on structure data
     assert len(compiled_aggregation.branches) == 2

@@ -709,7 +709,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     ' which have at least one backup
     ' The last backup date is converted to UTC in the process by removing the timezone offset, given in 15 min
     ' intervals (or as 127 if unknown)
-    Dim lastBackupDate, backup_type, backup_machine_name, backup_database, found_db_backups
+    Dim lastBackupDate, backup_type, backup_database, found_db_backups
     addOutput(sections("backup"))
     sqlString = "" & _
         "DECLARE @HADRStatus sql_variant; " & _
@@ -721,7 +721,6 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "SELECT " & _
             "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date, " & _
             "  type, " & _
-            "  machine_name, " & _
             "  database_name " & _
             "FROM " & _
             "  msdb.dbo.backupset " & _
@@ -729,7 +728,6 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "  UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
             "GROUP BY " & _
             "  type, " & _
-            "  machine_name, " & _
             "  database_name " & _
         "' " & _
         "END " & _
@@ -739,7 +737,6 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "SELECT " & _
             "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date," & _
             "  b.type, " & _
-            "  b.machine_name, " & _
             "  database_name " & _
             "FROM " & _
             "  msdb.dbo.backupset b " & _
@@ -747,8 +744,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "  UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
             "GROUP BY " & _
             "  type, " & _
-            "  database_name, " & _
-            "  b.machine_name " & _
+            "  database_name " & _
         "' " & _
         "END " & _
         "EXEC (@SQLCommand)"
@@ -771,8 +767,6 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                If backup_type = "" Then
                    backup_type = "-"
                End If
-
-               backup_machine_name = Trim(record("machine_name"))
 
                If lastBackupDate <> "" Then
                    addOutput("MSSQL_" & instance_id & "|" & backup_database & _

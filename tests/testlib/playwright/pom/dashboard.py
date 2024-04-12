@@ -96,6 +96,7 @@ class LoginPage(CmkPage):
         expect(self.page.locator("#input_pass")).to_be_visible()
         expect(self.page.locator("#input_pass")).to_be_empty()
 
+    @override
     def go(
         self,
         url: str | None = None,

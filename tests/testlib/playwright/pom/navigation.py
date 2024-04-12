@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import abstractmethod
-from typing import overload
+from typing import Literal, overload
+from urllib.parse import urljoin
 
-from playwright.sync_api import expect, FrameLocator, Locator, Page
+from playwright.sync_api import expect, FrameLocator, Locator, Page, Response
 
 from tests.testlib.playwright.helpers import Keys, LocatorHelper
 
@@ -262,3 +263,16 @@ class CmkPage(LocatorHelper):
         """
         with self.page.expect_event(event) as _:
             self.page.goto(url)
+
+    def go(
+        self,
+        url: str,
+        wait_until: Literal["commit", "domcontentloaded", "load", "networkidle"] | None = None,
+        referer: str | None = None,
+    ) -> Response | None:
+        """Navigate using URLs relative to current page.
+
+        Note: `urljoin` is used to combine`url`s. Example,
+        joining `http://localhost/index.py` and `werk.py` results in `http://localhost/werk.py`.
+        """
+        return self.page.goto(urljoin(self._url, url), wait_until=wait_until, referer=referer)

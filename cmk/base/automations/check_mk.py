@@ -447,8 +447,8 @@ def _get_discovery_preview(
 
         return ServiceDiscoveryPreviewResult(
             output=buf.getvalue(),
-            # TODO: will be removed later when full information is returned to fronted
             check_table=check_preview.table[host_name],
+            nodes_check_table={h: t for h, t in check_preview.table.items() if h != host_name},
             host_labels=make_discovered_host_labels(check_preview.labels.present),
             new_labels=make_discovered_host_labels(
                 [l for l in check_preview.labels.new if l.name not in changed_labels]
@@ -625,11 +625,12 @@ def _execute_discovery(
         )
     return CheckPreview(
         table={
-            host_name: [
-                *passive_check_preview.table[host_name],
-                *_active_check_preview_rows(config_cache, host_name, ip_address_of),
-                *config_cache.custom_check_preview_rows(host_name),
+            h: [
+                *table,
+                *_active_check_preview_rows(config_cache, h, ip_address_of),
+                *config_cache.custom_check_preview_rows(h),
             ]
+            for h, table in passive_check_preview.table.items()
         },
         labels=passive_check_preview.labels,
         source_results=passive_check_preview.source_results,

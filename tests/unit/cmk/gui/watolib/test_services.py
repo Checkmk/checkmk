@@ -76,6 +76,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
             [HostName("heute")],
         ),
     ],
+    nodes_check_table={},
     host_labels={"cmk/check_mk_server": {"plugin_name": "labels", "value": "yes"}},
     output="output",
     new_labels={},
@@ -219,6 +220,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     found_on_nodes=[sample_host_name],
                 ),
             ],
+            nodes_check_table={},
             host_labels={
                 "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -283,6 +285,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 found_on_nodes=[sample_host_name],
             ),
         ],
+        nodes_check_table={},
         host_labels={
             "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
             "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -418,6 +421,7 @@ def test_perform_discovery_single_update(
                     found_on_nodes=[HostName("TODAY")],
                 ),
             ],
+            nodes_check_table={},
             host_labels={
                 "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -530,6 +534,7 @@ def test_perform_discovery_single_update(
                 found_on_nodes=[HostName("TODAY")],
             ),
         ],
+        nodes_check_table={},
         host_labels={
             "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
             "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -630,6 +635,7 @@ def test_perform_discovery_action_update_services(
                     found_on_nodes=[HostName("TODAY")],
                 ),
             ],
+            nodes_check_table={},
             host_labels={
                 "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -731,6 +737,7 @@ def test_perform_discovery_action_update_services(
                 found_on_nodes=[HostName("TODAY")],
             ),
         ],
+        nodes_check_table={},
         host_labels={
             "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
             "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -798,6 +805,7 @@ def test_perform_discovery_action_update_host_labels(
         return_value=ServiceDiscoveryPreviewResult(
             output="",
             check_table=[],
+            nodes_check_table={},
             host_labels={
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
             },
@@ -834,6 +842,7 @@ def test_perform_discovery_action_update_host_labels(
         },
         check_table_created=1654248127,
         check_table=[],
+        nodes_check_table={},
         host_labels={
             # "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
             "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},

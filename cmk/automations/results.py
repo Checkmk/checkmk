@@ -110,6 +110,7 @@ result_type_registry.register(DiscoveryPre22NameResult)
 class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     output: str
     check_table: Sequence[CheckPreviewEntry]
+    nodes_check_table: Mapping[HostName, Sequence[CheckPreviewEntry]]
     host_labels: DiscoveredHostLabelsDict
     new_labels: DiscoveredHostLabelsDict
     vanished_labels: DiscoveredHostLabelsDict
@@ -118,6 +119,21 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     source_results: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
+        if for_cmk_version < cmk_version.Version.from_str("2.4.0b1"):
+            raw = asdict(self)
+            raw.pop("nodes_check_table")
+            return SerializedResult(
+                repr(
+                    {
+                        **raw,
+                        "labels_by_host": {
+                            str(host_name): [label.serialize() for label in labels]
+                            for host_name, labels in self.labels_by_host.items()
+                        },
+                    }
+                )
+            )
+
         return self._serialize_as_dict()
 
     def _serialize_as_dict(self) -> SerializedResult:
@@ -140,6 +156,10 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
         return cls(
             output=raw["output"],
             check_table=[CheckPreviewEntry(**cpe) for cpe in raw["check_table"]],
+            nodes_check_table={
+                HostName(h): [CheckPreviewEntry(**cpe) for cpe in entries]
+                for h, entries in raw["nodes_check_table"].items()
+            },
             host_labels=raw["host_labels"],
             new_labels=raw["new_labels"],
             vanished_labels=raw["vanished_labels"],

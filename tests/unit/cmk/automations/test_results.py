@@ -132,6 +132,7 @@ class TestTryDiscoveryResult:
                     found_on_nodes=[],
                 )
             ],
+            nodes_check_table={},
             host_labels={},
             new_labels={},
             vanished_labels={},

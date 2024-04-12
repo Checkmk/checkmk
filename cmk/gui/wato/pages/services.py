@@ -332,7 +332,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
-                check_table=(), host_labels={}, new_labels={}, vanished_labels={}, changed_labels={}
+                check_table=(),
+                nodes_check_table={},
+                host_labels={},
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
             )
 
         if not discovery_result.check_table_created and previous_discovery_result:

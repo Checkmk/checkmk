@@ -397,6 +397,9 @@ def test_automation_try_inventory_host(site: Site) -> None:
     assert isinstance(result, results.ServiceDiscoveryPreviewResult)
     assert isinstance(result.output, str)
     assert isinstance(result.check_table, list)
+    assert isinstance(result.nodes_check_table, dict)
+    for _h, node_check_table in result.nodes_check_table.items():
+        assert isinstance(node_check_table, list)
 
 
 @pytest.mark.usefixtures("test_cfg")
@@ -409,6 +412,9 @@ def test_automation_discovery_preview_host(site: Site) -> None:
     assert isinstance(result, results.ServiceDiscoveryPreviewResult)
     assert isinstance(result.output, str)
     assert isinstance(result.check_table, list)
+    assert isinstance(result.nodes_check_table, dict)
+    for _h, node_check_table in result.nodes_check_table.items():
+        assert isinstance(node_check_table, list)
 
 
 @pytest.mark.usefixtures("test_cfg")

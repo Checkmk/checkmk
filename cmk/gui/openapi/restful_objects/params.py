@@ -169,7 +169,7 @@ def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Sche
         <fields.String(...)>
 
         >>> to_schema(to_openapi([{'name': fields.String(description="Foo")}], 'path'))
-        <class 'marshmallow.schema.GeneratedSchema'>
+        <class 'abc.GeneratedSchema'>
 
         >>> s = to_schema(
         ...     [
@@ -178,7 +178,7 @@ def to_schema(params: Sequence[RawParameter] | RawParameter | None) -> type[Sche
         ...     ],
         ... )
         >>> s
-        <class 'marshmallow.schema.GeneratedSchema'>
+        <class 'abc.GeneratedSchema'>
 
         All fields of all dicts are put into one Schema
 

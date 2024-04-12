@@ -1157,11 +1157,11 @@ def _register_table_views_and_columns() -> None:
 
 
 def _register_node_painter(
-    name: str, hints: DisplayHints, *, painter_options: PainterOptions
+    ident: str, hints: DisplayHints, *, painter_options: PainterOptions
 ) -> None:
     """Declares painters for (sub) trees on all host related datasources."""
     register_painter(
-        name,
+        ident,
         {
             "title": hints.node_hint.long_inventory_title,
             "short": hints.node_hint.title,
@@ -1185,7 +1185,7 @@ def _register_node_painter(
             # not look good for the HW/SW inventory tree
             "printable": False,
             "load_inv": True,
-            "sorter": name,
+            "sorter": ident,
             "paint": lambda row: _paint_host_inventory_tree(
                 row, hints.abc_path, painter_options=painter_options
             ),

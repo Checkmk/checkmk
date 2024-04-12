@@ -1031,6 +1031,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "variant",
                 "plan_id",
             ],
+            "view": "invsyntheticmonitoringplans",
         },
         ".software.applications.synthetic_monitoring.plans:*.application": {"title": _l("Application")},
         ".software.applications.synthetic_monitoring.plans:*.variant": {"title": _l("Variant")},

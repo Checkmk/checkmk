@@ -1146,7 +1146,7 @@ class ActivateChanges:
     def is_activate_needed_until(self, site_id: SiteId) -> bool:
         return self._is_activate_needed_specific_changes(self._changes_by_site_until[site_id])
 
-    def _last_activation_state(self, site_id: SiteId):  # type: ignore[no-untyped-def]
+    def _last_activation_state(self, site_id: SiteId) -> SiteActivationState:
         """This function returns the last known persisted activation state"""
         return store.load_object_from_file(
             ActivateChangesManager.persisted_site_state_path(site_id), default={}

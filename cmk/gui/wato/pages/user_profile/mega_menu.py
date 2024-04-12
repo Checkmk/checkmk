@@ -245,7 +245,7 @@ class ModeAjaxSetStartURL(AjaxPage):
         return {}
 
 
-def _set_user_attribute(key: str, value: str | None):  # type: ignore[no-untyped-def]
+def _set_user_attribute(key: str, value: str | None) -> None:
     assert user.id is not None
     user_id = user.id
 

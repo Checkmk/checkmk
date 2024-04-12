@@ -1,0 +1,16 @@
+Title: check_mailboxes: Fixed handling of error "Not allowed to access Non IPM folder."
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1712910849
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Due to a recent change in Microsoft 365, the access to Exchange mailbox folders via the active check <code>check_mailboxes</code> could fail with an error message like this:
+
+C+:
+Unhandled exception: ErrorAccessDenied('Not allowed to access Non IPM folder.')
+C-:
+
+With this werk we update the version of the package <code>exchangelib</code> to v5.2.1, fixing the respective error handling.

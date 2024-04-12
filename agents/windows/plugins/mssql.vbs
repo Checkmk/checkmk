@@ -754,7 +754,6 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "  LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id " & _
             "WHERE " & _
             "  (rep.is_local is null or rep.is_local = 1) " & _
-            "  AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') " & _
             "  AND UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
             "GROUP BY " & _
             "  type, " & _
@@ -792,7 +791,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                is_primary_replica = Trim(record("is_primary_replica"))
                backup_machine_name = Trim(record("machine_name"))
 
-               If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
+               If lastBackupDate <> "" Then
                    addOutput("MSSQL_" & instance_id & "|" & backup_database & _
                              "|" & Replace(lastBackupDate, " ", "|") & "+00:00" & "|" & backup_type)
                End If

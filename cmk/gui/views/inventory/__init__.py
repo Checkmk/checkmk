@@ -704,12 +704,9 @@ class TableViewSpec:
         return _("Inventory table: %s") % self.long_title
 
 
-KeyOrder = Sequence[str]
-
-
 @dataclass(frozen=True)
 class TableDisplayHint:
-    key_order: KeyOrder
+    key_order: Sequence[str]
     is_show_more: bool
     view_spec: TableViewSpec | None = None
 
@@ -718,7 +715,7 @@ class TableDisplayHint:
         cls,
         path: SDPath,
         raw_hint: InventoryHintSpec,
-        key_order: KeyOrder,
+        key_order: Sequence[str],
     ) -> TableDisplayHint:
         return cls(
             key_order=key_order,
@@ -799,10 +796,10 @@ class ColumnDisplayHint:
 
 @dataclass(frozen=True)
 class AttributesDisplayHint:
-    key_order: KeyOrder
+    key_order: Sequence[str]
 
     @classmethod
-    def from_raw(cls, key_order: KeyOrder) -> AttributesDisplayHint:
+    def from_raw(cls, key_order: Sequence[str]) -> AttributesDisplayHint:
         return cls(key_order=key_order)
 
 
@@ -1051,7 +1048,7 @@ class DisplayHints:
         return related_raw_hints_by_path
 
     @staticmethod
-    def _complete_key_order(key_order: KeyOrder, additional_keys: set[str]) -> KeyOrder:
+    def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> Sequence[str]:
         return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
 
     def _get_parent(self, path: SDPath) -> DisplayHints:

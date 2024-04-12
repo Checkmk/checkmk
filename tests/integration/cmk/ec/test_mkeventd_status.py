@@ -6,13 +6,9 @@
 import logging
 import time
 
-import pytest
-
-from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
+from tests.testlib.event_console import CMKEventConsole
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
-
-from livestatus import SingleSiteConnection
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +29,9 @@ def test_command_reload(site: Site, ec: CMKEventConsole) -> None:
     assert new_t > old_t
 
 
-@pytest.mark.parametrize(("via_core"), [True, False])
-@pytest.mark.skip("needs to be analyzed later...")
-def test_status_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) -> None:
-    live: CMKEventConsoleStatus | SingleSiteConnection = site.live if via_core else ec.status
-    prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc(f"GET {prefix}status\n")
+@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+def test_status_table_via_core(site: Site) -> None:
+    result = site.live.query_table_assoc("GET eventconsolestatus\n")
     assert len(result) == 1
 
     status = result[0]
@@ -81,12 +74,9 @@ def test_status_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) 
     assert isinstance(status["status_event_limit_overall"], int)
 
 
-@pytest.mark.parametrize(("via_core"), [True, False])
-@pytest.mark.skip("needs to be analyzed later...")
-def test_rules_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) -> None:
-    live: CMKEventConsoleStatus | SingleSiteConnection = site.live if via_core else ec.status
-    prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc(f"GET {prefix}rules\n")
+@skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
+def test_rules_table_via_core(site: Site) -> None:
+    result = site.live.query_table_assoc("GET eventconsolerules\n")
     assert isinstance(result, list)
     # assert len(result) == 0
     # TODO: Add some rule before the test and then check the existing

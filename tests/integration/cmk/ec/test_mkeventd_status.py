@@ -12,6 +12,8 @@ from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
 from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
+from livestatus import SingleSiteConnection
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,10 +36,9 @@ def test_command_reload(site: Site, ec: CMKEventConsole) -> None:
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
 def test_status_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) -> None:
-    live = site.live if via_core else ec.status
-    assert isinstance(live, CMKEventConsoleStatus)
+    live: CMKEventConsoleStatus | SingleSiteConnection = site.live if via_core else ec.status
     prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc(f"GET {prefix}status\n".encode())
+    result = live.query_table_assoc(f"GET {prefix}status\n")
     assert len(result) == 1
 
     status = result[0]
@@ -83,10 +84,9 @@ def test_status_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) 
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
 def test_rules_table_via_core(site: Site, ec: CMKEventConsole, via_core: bool) -> None:
-    live = site.live if via_core else ec.status
-    assert isinstance(live, CMKEventConsoleStatus)
+    live: CMKEventConsoleStatus | SingleSiteConnection = site.live if via_core else ec.status
     prefix = "eventconsole" if via_core else ""
-    result = live.query_table_assoc(f"GET {prefix}rules\n".encode())
+    result = live.query_table_assoc(f"GET {prefix}rules\n")
     assert isinstance(result, list)
     # assert len(result) == 0
     # TODO: Add some rule before the test and then check the existing

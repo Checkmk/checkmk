@@ -67,13 +67,13 @@ class CMKEventConsoleStatus:
         self._address = address
 
     # Copied from web/htdocs/mkeventd.py. Better move to some common lib.
-    def query(self, query: bytes) -> Any:
+    def query(self, query: str) -> Any:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         timeout = 10
 
         sock.settimeout(timeout)
         sock.connect(self._address)
-        sock.sendall(query)
+        sock.sendall(query.encode("utf-8"))
         sock.shutdown(socket.SHUT_WR)
 
         response_text = b""
@@ -85,7 +85,7 @@ class CMKEventConsoleStatus:
 
         return eval(response_text)  # pylint: disable=eval-used
 
-    def query_table_assoc(self, query: bytes) -> list[dict]:
+    def query_table_assoc(self, query: str) -> list[dict]:
         response = self.query(query)
         headers = response[0]
         result = []
@@ -93,5 +93,5 @@ class CMKEventConsoleStatus:
             result.append(dict(zip(headers, line)))
         return result
 
-    def query_value(self, query: bytes) -> Any:
+    def query_value(self, query: str) -> Any:
         return self.query(query)[0][0]

@@ -27,7 +27,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
 from cmk.gui.watolib.group_writer import save_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.gui.watolib.notifications import save_notification_rules
+from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
@@ -293,7 +293,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         rulesets.save_folder()
 
         notification_rules = [get_default_notification_rule()]
-        save_notification_rules(notification_rules)
+        NotificationRuleConfigFile().save(notification_rules, True)
 
     def _initial_global_settings(self) -> dict[str, Any]:
         settings = {

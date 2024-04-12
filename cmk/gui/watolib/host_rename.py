@@ -42,7 +42,7 @@ from .automations import do_remote_automation
 from .changes import add_change
 from .check_mk_automations import rename_hosts
 from .hosts_and_folders import call_hook_hosts_changed, Folder, folder_tree, Host
-from .notifications import load_notification_rules, save_notification_rules
+from .notifications import NotificationRuleConfigFile
 from .rulesets import FolderRulesets
 from .utils import rename_host_in_list
 
@@ -283,10 +283,10 @@ def _rename_host_in_event_rules(oldname: HostName, newname: HostName) -> list[st
                 actions += ["notify_user"] * num_changed
                 some_user_changed = True
 
-    nrules = load_notification_rules()
+    nrules = NotificationRuleConfigFile().load_for_modification()
     if num_changed := rename_in_event_rules(nrules, oldname, newname):
         actions += ["notify_global"] * num_changed
-        save_notification_rules(nrules)
+        NotificationRuleConfigFile().save(nrules, True)
 
     if some_user_changed:
         userdb.save_users(users, datetime.now())

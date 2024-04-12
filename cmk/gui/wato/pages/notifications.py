@@ -100,11 +100,7 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.notifications import (
-    load_notification_rules,
-    load_user_notification_rules,
-    save_notification_rules,
-)
+from cmk.gui.watolib.notifications import load_user_notification_rules, NotificationRuleConfigFile
 from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
@@ -708,7 +704,7 @@ class ModeNotifications(ABCNotificationsMode):
                 self._get_notification_rules(),
                 "notification",
                 _("notification rule"),
-                save_notification_rules,
+                NotificationRuleConfigFile().save,
             )
         return redirect(self.mode_url())
 
@@ -790,7 +786,7 @@ class ModeNotifications(ABCNotificationsMode):
         return context
 
     def _get_notification_rules(self):
-        return load_notification_rules()
+        return NotificationRuleConfigFile().load_for_reading()
 
     def _save_notification_display_options(self):
         user.save_file(
@@ -2245,10 +2241,12 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
         return ModeNotifications
 
     def _load_rules(self) -> list[EventRule]:
-        return load_notification_rules(lock=transactions.is_transaction())
+        if transactions.is_transaction():
+            return NotificationRuleConfigFile().load_for_modification()
+        return NotificationRuleConfigFile().load_for_reading()
 
     def _save_rules(self, rules: list[EventRule]) -> None:
-        save_notification_rules(rules)
+        NotificationRuleConfigFile().save(rules, True)
 
     def _user_id(self):
         return None

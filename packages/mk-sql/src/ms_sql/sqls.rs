@@ -188,11 +188,11 @@ EXEC (@SQLCommand)
 FROM sys.database_files WHERE type_desc = 'ROWS'";
 
     pub const DATABASES: &str = "SELECT name, \
-cast(DATABASEPROPERTYEX(name, 'Status') as varchar) AS Status, \
-  cast(DATABASEPROPERTYEX(name, 'Recovery') as varchar) AS Recovery, \
-  cast(DATABASEPROPERTYEX(name, 'IsAutoClose') as bigint) AS auto_close, \
-  cast(DATABASEPROPERTYEX(name, 'IsAutoShrink') as bigint) AS auto_shrink \
-FROM master.dbo.sysdatabases";
+  cast(state_desc as varchar) AS Status, \
+  cast(recovery_model_desc as varchar) AS Recovery, \
+  cast(is_auto_close_on as bigint) AS auto_close, \
+  cast(is_auto_shrink_on as bigint) AS auto_shrink \
+FROM sys.databases";
 
     pub const IS_CLUSTERED: &str =
         "SELECT cast( SERVERPROPERTY('IsClustered') as varchar) AS is_clustered";

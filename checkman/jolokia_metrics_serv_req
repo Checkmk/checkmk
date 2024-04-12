@@ -12,6 +12,8 @@ description:
  The check returns {WARN}/{CRIT} if the number of requests is outside the given
  ranges.
 
+ Both, version 1.7 and 2.0 of Jolokia are supported.
+
 item:
  The name of the application server instance as configured by the agent.
 

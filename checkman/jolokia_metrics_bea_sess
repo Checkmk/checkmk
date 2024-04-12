@@ -13,6 +13,8 @@ description:
  The check can alert if the {WARN}/{CRIT} thresholds for a configurable total
  is exceeded.
 
+ Both, version 1.7 and 2.0 of Jolokia are supported.
+
 item:
  The name of the application server instance as configured by the agent
  followed by the name of the application and the servlet inside it.

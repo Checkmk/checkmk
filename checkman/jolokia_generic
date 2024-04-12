@@ -19,6 +19,8 @@ description:
  of services always in UNKNOWN state), and is therefore strongly
  discouraged.
 
+ Both, version 1.7 and 2.0 of Jolokia are supported.
+
 item:
  The name of the instance and the MBean value
 

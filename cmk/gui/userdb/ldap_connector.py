@@ -40,7 +40,7 @@ import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import cast, IO, Literal
+from typing import Any, cast, IO, Literal
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import-untyped]
@@ -83,7 +83,13 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 
-from ._connections import active_connections, get_connection, get_ldap_connections
+from ._connections import (
+    active_connections,
+    ActivePlugins,
+    get_connection,
+    get_ldap_connections,
+    LDAPUserConnectionConfig,
+)
 from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, UserConnectorRegistry
 from ._roles import load_roles
 from ._user_attribute import get_user_attributes
@@ -217,7 +223,7 @@ def _get_ad_locator():
     return FasterDetectLocator()
 
 
-class LDAPUserConnector(UserConnector):
+class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
     connection_suffixes: dict[str, str] = {}
@@ -226,7 +232,7 @@ class LDAPUserConnector(UserConnector):
         super().__init__(cfg)
 
         self._ldap_obj: ldap.ldapobject.ReconnectLDAPObject | None = None
-        self._ldap_obj_config = None
+        self._ldap_obj_config: LDAPUserConnectionConfig | None = None
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id)
 
         self._num_queries = 0
@@ -500,15 +506,25 @@ class LDAPUserConnector(UserConnector):
     def use_ssl(self) -> bool:
         return "use_ssl" in self._config
 
-    def active_plugins(self):
+    def active_plugins(self) -> ActivePlugins:
         return self._config["active_plugins"]
 
-    def _active_sync_plugins(self) -> Iterator[tuple[str, dict, LDAPAttributePlugin]]:
+    def _active_sync_plugins(self) -> Iterator[tuple[str, dict[str, Any], LDAPAttributePlugin]]:
         for key, params in self._config["active_plugins"].items():
             try:
                 plugin = ldap_attribute_plugin_registry[key]()
             except KeyError:
                 continue
+            if not params:
+                params = {}
+            if not isinstance(params, dict):
+                raise TypeError(
+                    _(
+                        'The configuration of the LDAP attribute plugin "%s" is invalid. '
+                        "Please check the configuration."
+                    )
+                    % key
+                )
             yield key, params, plugin
 
     def _directory_type(self):
@@ -541,7 +557,7 @@ class LDAPUserConnector(UserConnector):
     def _get_user_dn(self) -> DistinguishedName:
         return self._replace_macros(self._config["user_dn"])
 
-    def _get_suffix(self) -> str:
+    def _get_suffix(self) -> str | None:
         return self._config.get("suffix")
 
     def _has_suffix(self) -> bool:
@@ -569,7 +585,7 @@ class LDAPUserConnector(UserConnector):
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
         attrs: set[str] = set()
         for _key, params, plugin in self._active_sync_plugins():
-            attrs.update(plugin.needed_attributes(self, params or {}))
+            attrs.update(plugin.needed_attributes(self, params))
         return list(attrs)
 
     def _object_exists(self, dn: DistinguishedName) -> bool:
@@ -1422,7 +1438,7 @@ class LDAPUserConnector(UserConnector):
         for key, params, plugin in self._active_sync_plugins():
             # sync_func doesn't expect UserSpec yet. In fact, it will access some LDAP-specific
             # attributes that aren't defined by UserSpec.
-            user.update(plugin.sync_func(self, key, params or {}, user_id, ldap_user, user))  # type: ignore
+            user.update(plugin.sync_func(self, key, params, user_id, ldap_user, user))  # type: ignore
 
     def _flush_caches(self):
         self._num_queries = 0
@@ -1616,7 +1632,9 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
 ldap_attribute_plugin_registry = LDAPAttributePluginRegistry()
 
 
-def ldap_attribute_plugins_elements(connection):
+def ldap_attribute_plugins_elements(
+    connection: LDAPUserConnector,
+) -> list[tuple[str, FixedValue | Dictionary]]:
     """Returns a list of pairs (key, parameters) of all available attribute plugins"""
     elements = []
     items = sorted(

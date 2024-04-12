@@ -95,7 +95,9 @@ class LDAPConnectionValuespec(Dictionary):
     def __init__(self, new: bool, connection_id: str | None) -> None:
         self._new = new
         self._connection_id = connection_id
-        self._connection = get_connection(self._connection_id)
+        connection = get_connection(self._connection_id)
+        assert isinstance(connection, LDAPUserConnector)
+        self._connection = connection
 
         general_elements = self._general_elements()
         connection_elements = self._connection_elements()

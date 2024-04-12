@@ -60,6 +60,7 @@ from cmk.gui.inventory.filters import (
     FilterInvtableInterfaceType,
     FilterInvtableOperStatus,
     FilterInvtableText,
+    FilterInvtableTimestampAsAge,
     FilterInvtableVersion,
     FilterInvText,
 )
@@ -792,6 +793,53 @@ class TableDisplayHint:
         )
 
 
+def _parse_column_display_hint_filter_class(
+    filter_class: (
+        None
+        | type[FilterInvText]
+        | type[FilterInvBool]
+        | type[FilterInvFloat]
+        | type[FilterInvtableAdminStatus]
+        | type[FilterInvtableAvailable]
+        | type[FilterInvtableIntegerRange]
+        | type[FilterInvtableInterfaceType]
+        | type[FilterInvtableOperStatus]
+        | type[FilterInvtableText]
+        | type[FilterInvtableTimestampAsAge]
+        | type[FilterInvtableVersion]
+    ),
+) -> (
+    type[FilterInvtableAdminStatus]
+    | type[FilterInvtableAvailable]
+    | type[FilterInvtableIntegerRange]
+    | type[FilterInvtableInterfaceType]
+    | type[FilterInvtableOperStatus]
+    | type[FilterInvtableText]
+    | type[FilterInvtableTimestampAsAge]
+    | type[FilterInvtableVersion]
+):
+    if not filter_class:
+        return FilterInvtableText
+    match filter_class.__name__:
+        case "FilterInvtableAdminStatus":
+            return FilterInvtableAdminStatus
+        case "FilterInvtableAvailable":
+            return FilterInvtableAvailable
+        case "FilterInvtableIntegerRange":
+            return FilterInvtableIntegerRange
+        case "FilterInvtableInterfaceType":
+            return FilterInvtableInterfaceType
+        case "FilterInvtableOperStatus":
+            return FilterInvtableOperStatus
+        case "FilterInvtableText":
+            return FilterInvtableText
+        case "FilterInvtableTimestampAsAge":
+            return FilterInvtableTimestampAsAge
+        case "FilterInvtableVersion":
+            return FilterInvtableVersion
+    raise TypeError(filter_class)
+
+
 @dataclass(frozen=True)
 class ColumnDisplayHint:
     title: str
@@ -800,12 +848,14 @@ class ColumnDisplayHint:
     paint_function: PaintFunction
     sort_function: SortFunction
     filter_class: (
-        type[FilterInvtableText]
-        | type[FilterInvtableVersion]
-        | type[FilterInvtableOperStatus]
-        | type[FilterInvtableAdminStatus]
+        type[FilterInvtableAdminStatus]
         | type[FilterInvtableAvailable]
+        | type[FilterInvtableIntegerRange]
         | type[FilterInvtableInterfaceType]
+        | type[FilterInvtableOperStatus]
+        | type[FilterInvtableText]
+        | type[FilterInvtableTimestampAsAge]
+        | type[FilterInvtableVersion]
     )
 
     @property
@@ -826,23 +876,20 @@ class ColumnDisplayHint:
             _long_title_function=_make_long_title_function(title, path),
             paint_function=paint_function,
             sort_function=_make_sort_function(raw_hint),
-            filter_class=(
-                FilterInvtableText
-                if (filter_class := raw_hint.get("filter")) is None
-                else filter_class
-            ),
+            filter_class=_parse_column_display_hint_filter_class(raw_hint.get("filter")),
         )
 
     def make_filter(
         self, table_view_name: str, column: str
     ) -> (
-        FilterInvtableText
-        | FilterInvtableVersion
-        | FilterInvtableOperStatus
-        | FilterInvtableAdminStatus
+        FilterInvtableAdminStatus
         | FilterInvtableAvailable
-        | FilterInvtableInterfaceType
         | FilterInvtableIntegerRange
+        | FilterInvtableInterfaceType
+        | FilterInvtableOperStatus
+        | FilterInvtableText
+        | FilterInvtableTimestampAsAge
+        | FilterInvtableVersion
     ):
         return self.filter_class(
             inv_info=table_view_name,

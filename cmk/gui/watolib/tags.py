@@ -8,7 +8,7 @@ import abc
 from collections.abc import Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, TypeVar
+from typing import Any, TypeVar
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -25,24 +25,21 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoConfigFile
 from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
 
 
-class TagConfigFile:
+class TagConfigFile(WatoConfigFile[TagConfigSpec]):
     """Handles loading the tag definitions from GUI tags.mk
 
     When saving the configuration it also writes out the tags.mk for the cmk.base world.
     """
 
     def __init__(self) -> None:
-        self._config_file_path: Final = Path(multisite_dir()) / "tags.mk"
-        self._config_variable: Final = "wato_tags"
-
-    def load_for_reading(self) -> TagConfigSpec:
-        return self._load_file(lock=False)
-
-    def load_for_modification(self) -> TagConfigSpec:
-        return self._load_file(lock=True)
+        super().__init__(
+            config_file_path=Path(multisite_dir()) / "tags.mk",
+            config_variable="wato_tags",
+        )
 
     def _load_file(self, lock: bool = False) -> TagConfigSpec:
         cfg = store.load_from_mk_file(
@@ -51,7 +48,7 @@ class TagConfigFile:
             default={},
             lock=lock,
         )
-        if not cfg:  # Initialize with empty default config
+        if not cfg:
             cfg = {"tag_groups": [], "aux_tags": []}
 
         validate_tags(cfg)
@@ -64,12 +61,15 @@ class TagConfigFile:
         _export_hosttags_to_php(cfg)
 
     def _save_gui_config(self, cfg: TagConfigSpec) -> None:
-        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_to_mk_file(self._config_file_path, self._config_variable, cfg)
+        super().save(cfg)
 
     def _save_base_config(self, cfg: TagConfigSpec) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(Path(wato_root_dir()) / "tags.mk", "tag_config", cfg)
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(TagConfigFile())
 
 
 def load_tag_config() -> TagConfig:

@@ -8,10 +8,8 @@ from typing import cast
 from pydantic import BaseModel, ValidationError
 
 from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
-from cmk.utils.i18n import _
+from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.tags import TagConfigSpec
-
-from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
 
 
 class BaseTagModel(BaseModel):
@@ -46,4 +44,8 @@ def validate_tags(tags: TagConfigSpec) -> None:
     try:
         WatoTags(**tags_dict)
     except ValidationError as exc:
-        raise MKConfigError(_("Error: tags.mk validation %s") % exc.errors())
+        raise ConfigValidationError(
+            which_file="tags.mk",
+            pydantic_error=exc,
+            original_data=tags,
+        )

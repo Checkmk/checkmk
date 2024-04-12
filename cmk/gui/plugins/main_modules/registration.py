@@ -84,6 +84,7 @@ from cmk.gui.wato import registration as wato_registration
 from cmk.gui.watolib import notifications as notifications_config
 from cmk.gui.watolib import password_store
 from cmk.gui.watolib import registration as watolib_registration
+from cmk.gui.watolib import tags as tag_config
 from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
@@ -283,6 +284,7 @@ def register() -> None:
 
     password_store.register(config_file_registry)
     notifications_config.register(config_file_registry)
+    tag_config.register(config_file_registry)
 
 
 register()

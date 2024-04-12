@@ -167,7 +167,7 @@ uvicorn = "==0.16.0"  # used for running agent-receiver server
 gunicorn= "==20.1.0" # used for running agent-receiver server
 agent-receiver = {editable = true, path = "./agent-receiver"}
 pysmb = "==1.2"  # used by SMB share special agent
-exchangelib = "==4.7.2"  # used by active checks for mail
+exchangelib = "==5.2.1"  # used by active checks for mail
 lxml = "==4.9.1"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 markdown = "==3.5.1"  # used for werk parsing
 

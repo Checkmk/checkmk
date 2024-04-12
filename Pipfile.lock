@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b8ae70ae10ed960ed5935af4329ad4f45360c7824789321153961d9cfa0d400d"
+            "sha256": "e157192f150b225705ce18bf2115a46691e791bf0fbcd96eeb0c262ff65c44de"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -335,12 +335,12 @@
         },
         "exchangelib": {
             "hashes": [
-                "sha256:66e3345a0a452c6f2d10c6b33f0da0598f50f2b0d848082e8d4cf47e89afdf0e",
-                "sha256:6d19f4d7235003166d89e4c95414af9ffbaa2e9a1d1402e90e8cda5281191fd2"
+                "sha256:8457cfb7dd43fd441c68a2b34152eab0e73167829fc2c5f5c5c2c8f68d8f2da8",
+                "sha256:c436d395d6235936194ffd71efbec2131d0d99e49dd70028d9ae5d69e0e6ee50"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==4.7.2"
+            "markers": "python_version >= '3.8'",
+            "version": "==5.2.1"
         },
         "fastapi": {
             "hashes": [
@@ -418,11 +418,11 @@
         },
         "itsdangerous": {
             "hashes": [
-                "sha256:2c2349112351b88699d8d4b6b075022c0808887cb7ad10069318a8b0bc88db44",
-                "sha256:5dbbc68b317e5e42f327f9021763545dc3fc3bfe22e6deb96aaf1fc38874156a"
+                "sha256:c6242fc49e35958c8b15141343aa660db5fc54d4f13a1db01a3f5891b98700ef",
+                "sha256:e0050c0b7da1eea53ffaf149c0cfbb5c6e2e2b69c4bef22c81fa6eb73e5f6173"
             ],
-            "markers": "python_version >= '3.7'",
-            "version": "==2.1.2"
+            "markers": "python_version >= '3.8'",
+            "version": "==2.2.0"
         },
         "jinja2": {
             "hashes": [
@@ -3166,11 +3166,11 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:961c026ac520bac5f69acb8ea063e8a4f071bcc9457b9c1f28f6b085c511583a",
-                "sha256:e08e13ecdca7a0bd53798f356d5831434afa5b07b93f0abdf0797b7a06ffe197"
+                "sha256:6e1281a57849c8a54da89ba82e5eb7c8937b9d057ff01aaf5bc9afaa3552e90f",
+                "sha256:fa7edb8428620518010928242ec17aa7132ae435319c29c1651d1cf4c4173aad"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==20.25.1"
+            "version": "==20.25.2"
         },
         "waitress": {
             "hashes": [

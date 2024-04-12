@@ -763,7 +763,7 @@ class ColumnDisplayHint:
         )
 
     def make_filter(
-        self, table_view_name: str, ident: str
+        self, table_view_name: str, column: str
     ) -> (
         FilterInvtableText
         | FilterInvtableVersion
@@ -776,11 +776,11 @@ class ColumnDisplayHint:
         if self.filter_class:
             return self.filter_class(
                 inv_info=table_view_name,
-                ident=ident,
+                ident=column,
                 title=self.long_title,
             )
 
-        if (ranged_table_filter_name := get_ranged_table_filter_name(ident)) is not None:
+        if (ranged_table_filter_name := get_ranged_table_filter_name(column)) is not None:
             return FilterInvtableIntegerRange(
                 inv_info=table_view_name,
                 ident=ranged_table_filter_name,
@@ -789,7 +789,7 @@ class ColumnDisplayHint:
 
         return FilterInvtableText(
             inv_info=table_view_name,
-            ident=ident,
+            ident=column,
             title=self.long_title,
         )
 

@@ -274,7 +274,7 @@ def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:
     )
 
 
-def remove_omd_status_cache() -> None:
+def _remove_omd_status_cache() -> None:
     logger.info("Removing omd status agent cache...")
     with execute(
         ["rm", "-f", str(OMD_STATUS_CACHE)],
@@ -315,7 +315,7 @@ def wait_for_agent_cache_omd_status(site: Site, max_count: int = 20, waiting_tim
                 cache_content,
             )
             # to force agent cache regeneration we remove the cache file
-            remove_omd_status_cache()
+            _remove_omd_status_cache()
 
         logger.info("Waiting for agent cache to be generated...")
         time.sleep(waiting_time)

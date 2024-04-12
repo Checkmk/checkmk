@@ -286,6 +286,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "invoratablespace",
         "invkernelconfig",
         "invswpac",
+        "invsyntheticmonitoringplans",
         "invsyntheticmonitoring",
     ]
     if cmk_version.edition() is cmk_version.Edition.CME:

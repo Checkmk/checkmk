@@ -287,7 +287,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "invkernelconfig",
         "invswpac",
         "invsyntheticmonitoringplans",
-        "invsyntheticmonitoring",
+        "invsyntheticmonitoringtests",
     ]
     if cmk_version.edition() is cmk_version.Edition.CME:
         expected += ["customer"]

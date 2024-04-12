@@ -311,7 +311,19 @@ def notify_notify(
         notification rule.
     :param analyse:
     """
-    if not analyse:
+    # For analyse mode it's necessary to complete the raw context *before"
+    # executing the analysis. Otherwise informations such as labels are lost.
+    # Two advantages:
+    # * Complete list of variables in GUI notifications context view (yeah!)
+    # * Correct results for all tests regarding variables coming out of complete_raw_context()
+    # Will be handled by EnrichedEventContext in 2.4
+    if analyse:
+        events.complete_raw_context(
+            raw_context,
+            with_dump=config.notification_logging <= 10,
+            contacts_needed=True,
+        )
+    else:
         store_notification_backlog(raw_context)
 
     logger.info("----------------------------------------------------------------------")
@@ -333,11 +345,12 @@ def notify_notify(
     logger.debug(events.render_context_dump(raw_context))
 
     raw_context["LOGDIR"] = notification_logdir
-    events.complete_raw_context(
-        raw_context,
-        with_dump=config.notification_logging <= 10,
-        contacts_needed=True,
-    )
+    if not analyse:
+        events.complete_raw_context(
+            raw_context,
+            with_dump=config.notification_logging <= 10,
+            contacts_needed=True,
+        )
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):

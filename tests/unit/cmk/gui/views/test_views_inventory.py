@@ -28,7 +28,7 @@ import cmk.gui.utils
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.http import request, response
-from cmk.gui.inventory.filters import FilterInvtableVersion
+from cmk.gui.inventory.filters import FilterInvtableText, FilterInvtableVersion
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
 from cmk.gui.painter.v0.base import JoinCell
@@ -561,7 +561,7 @@ def test_sort_deltatable_rows_displayhint(
                 short=None,
                 _long_title_function=lambda: "Key",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=None,
+                filter_class=FilterInvtableText,
             ),
         ),
         (
@@ -573,7 +573,7 @@ def test_sort_deltatable_rows_displayhint(
                 short=None,
                 _long_title_function=lambda: "Network interfaces ➤ Operational Status",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=None,
+                filter_class=FilterInvtableText,
             ),
         ),
         (
@@ -585,7 +585,7 @@ def test_sort_deltatable_rows_displayhint(
                 short=None,
                 _long_title_function=lambda: "Node ➤ Key",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=None,
+                filter_class=FilterInvtableText,
             ),
         ),
         (
@@ -597,7 +597,7 @@ def test_sort_deltatable_rows_displayhint(
                 short="CMC",
                 _long_title_function=lambda: "Checkmk sites ➤ CMC status",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=None,
+                filter_class=FilterInvtableText,
             ),
         ),
     ],
@@ -624,7 +624,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 short=None,
                 _long_title_function=lambda: "Foo ➤ Bar",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=None,
+                filter_class=FilterInvtableText,
             ),
         ),
         (
@@ -635,7 +635,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 short=None,
                 _long_title_function=lambda: "Software packages ➤ Package Version",
                 sort_function=_decorate_sort_function(cmp_version),
-                filter_class=None,
+                filter_class=FilterInvtableText,
             ),
         ),
         (
@@ -657,7 +657,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 short=None,
                 _long_title_function=lambda: "Network interfaces ➤ Index",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=None,
+                filter_class=FilterInvtableText,
             ),
         ),
         (
@@ -668,7 +668,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 short=None,
                 _long_title_function=lambda: "Network interfaces ➤ Operational Status",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
-                filter_class=None,
+                filter_class=FilterInvtableText,
             ),
         ),
     ],

@@ -62,7 +62,6 @@ from cmk.gui.inventory.filters import (
     FilterInvtableText,
     FilterInvtableVersion,
     FilterInvText,
-    get_ranged_table_filter_name,
 )
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry, register_painter
@@ -801,8 +800,7 @@ class ColumnDisplayHint:
     paint_function: PaintFunction
     sort_function: SortFunction
     filter_class: (
-        None
-        | type[FilterInvtableText]
+        type[FilterInvtableText]
         | type[FilterInvtableVersion]
         | type[FilterInvtableOperStatus]
         | type[FilterInvtableAdminStatus]
@@ -828,7 +826,11 @@ class ColumnDisplayHint:
             _long_title_function=_make_long_title_function(title, path),
             paint_function=paint_function,
             sort_function=_make_sort_function(raw_hint),
-            filter_class=raw_hint.get("filter"),
+            filter_class=(
+                FilterInvtableText
+                if (filter_class := raw_hint.get("filter")) is None
+                else filter_class
+            ),
         )
 
     def make_filter(
@@ -842,21 +844,7 @@ class ColumnDisplayHint:
         | FilterInvtableInterfaceType
         | FilterInvtableIntegerRange
     ):
-        if self.filter_class:
-            return self.filter_class(
-                inv_info=table_view_name,
-                ident=column,
-                title=self.long_title,
-            )
-
-        if (ranged_table_filter_name := get_ranged_table_filter_name(column)) is not None:
-            return FilterInvtableIntegerRange(
-                inv_info=table_view_name,
-                ident=ranged_table_filter_name,
-                title=self.long_title,
-            )
-
-        return FilterInvtableText(
+        return self.filter_class(
             inv_info=table_view_name,
             ident=column,
             title=self.long_title,

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Sequence
+from typing import Self
 
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.hostaddress import HostName
@@ -37,19 +38,19 @@ class ServiceCheckResult:
     metrics: Sequence[MetricTuple] = ()
 
     @classmethod
-    def item_not_found(cls) -> ServiceCheckResult:
+    def item_not_found(cls) -> Self:
         return cls(3, "Item not found in monitoring data")
 
     @classmethod
-    def received_no_data(cls) -> ServiceCheckResult:
-        return cls(3, "Check plug-in received no monitoring data")
-
-    @classmethod
-    def check_not_implemented(cls) -> ServiceCheckResult:
+    def check_not_implemented(cls) -> Self:
         return cls(3, "Check plug-in not implemented")
 
     @classmethod
-    def cluster_received_no_data(cls, nodes: Sequence[HostName]) -> ServiceCheckResult:
+    def received_no_data(cls) -> Self:
+        return cls(3, "Check plug-in received no monitoring data")
+
+    @classmethod
+    def cluster_received_no_data(cls, nodes: Sequence[HostName]) -> Self:
         node_hint = f"configured nodes: {', '.join(nodes)}" if nodes else "no nodes configured"
         return cls(3, f"Clustered service received no monitoring data ({node_hint})")
 

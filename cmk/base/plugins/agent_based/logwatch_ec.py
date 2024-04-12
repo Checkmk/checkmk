@@ -330,11 +330,6 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
             if item in node_data.logfiles:
                 used_logfiles[item].append((node_name, node_data.logfiles[item]["attr"]))
 
-        yield from logwatch.check_unreadable_files(
-            logwatch.get_unreadable_logfiles(item, parsed),
-            State(params["monitor_logfile_access_state"]),
-        )
-
     else:
         used_logfiles = defaultdict(list)
         # Filter logfiles if some should be excluded
@@ -344,11 +339,11 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
                     used_logfiles[name].append((node_name, data["attr"]))
         used_logfiles = dict(sorted(used_logfiles.items()))
 
-        for logfile in used_logfiles:
-            yield from logwatch.check_unreadable_files(
-                logwatch.get_unreadable_logfiles(logfile, parsed),
-                State(params["monitor_logfile_access_state"]),
-            )
+    for logfile in used_logfiles:
+        yield from logwatch.check_unreadable_files(
+            logwatch.get_unreadable_logfiles(logfile, parsed),
+            State(params["monitor_logfile_access_state"]),
+        )
 
     # Check if the number of expected files matches the actual one
     if params["monitor_logfilelist"]:

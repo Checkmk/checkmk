@@ -722,16 +722,15 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date, " & _
             "  type, " & _
             "  machine_name, " & _
-            "  sys.databases.name AS database_name " & _
+            "  database_name " & _
             "FROM " & _
             "  msdb.dbo.backupset " & _
-            "  LEFT OUTER JOIN sys.databases ON sys.databases.name = msdb.dbo.backupset.database_name " & _
             "WHERE " & _
             "  UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
             "GROUP BY " & _
             "  type, " & _
             "  machine_name, " & _
-            "  sys.databases.name " & _
+            "  database_name " & _
         "' " & _
         "END " & _
         "ELSE " & _
@@ -741,15 +740,14 @@ For Each instance_id In instances.Keys: Do ' Continue trick
             "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date," & _
             "  b.type, " & _
             "  b.machine_name, " & _
-            "  db.name AS database_name " & _
+            "  database_name " & _
             "FROM " & _
             "  msdb.dbo.backupset b " & _
-            "  LEFT OUTER JOIN sys.databases db ON b.database_name = db.name " & _
             "WHERE " & _
             "  UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
             "GROUP BY " & _
             "  type, " & _
-            "  db.name, " & _
+            "  database_name, " & _
             "  b.machine_name " & _
         "' " & _
         "END " & _

@@ -712,21 +712,17 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     Dim lastBackupDate, backup_type, backup_database, found_db_backups
     addOutput(sections("backup"))
     sqlString = "" & _
-        "DECLARE @SQLCommand nvarchar(max); " & _
-        "SET @SQLCommand = ' " & _
             "SELECT " & _
-            "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date, " & _
+            "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, '19700101', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), '19700101'), 120) AS last_backup_date, " & _
             "  type, " & _
             "  database_name " & _
             "FROM " & _
             "  msdb.dbo.backupset " & _
             "WHERE " & _
-            "  UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
+            "  UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY('Machinename') AS VARCHAR)) " & _
             "GROUP BY " & _
             "  type, " & _
-            "  database_name " & _
-        "' " & _
-        "EXEC (@SQLCommand)"
+            "  database_name "
     Set databaseResponse = databaseSession.queryDatabase("master", sqlString)
 
     Set found_db_backups = CreateObject("Scripting.Dictionary")

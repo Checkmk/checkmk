@@ -3,23 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import Counter
 
-from cmk.base.plugins.agent_based.utils.logwatch import reclassify
+from cmk.base.plugins.agent_based.utils.logwatch import reclassify, ReclassifyParameters
 
 
 def test_logwatch_reclassify() -> None:
-    patterns = {
-        "reclassify_patterns": [
-            ("3", r"\\Error", ""),
-            ("2", r"foobar", ""),
-            ("2", r"bla.blup.bob.exe\)", ""),
+    reclassify_params = ReclassifyParameters(
+        patterns=[
+            ("C", r"\\Error", ""),
+            ("W", r"foobar", ""),
+            ("W", r"bla.blup.bob.exe\)", ""),
         ],
-    }
-    counter: Counter[int] = Counter()
+        states={},
+    )
 
-    assert reclassify(counter, patterns, "fÖöbÄr", "0") == "0"
-    assert reclassify(counter, patterns, "foobar", "0") == "2"
-    assert reclassify(counter, patterns, r"\Error", "0") == "3"
-    assert reclassify(counter, patterns, r"\Error1337", "0") == "3"
-    assert reclassify(counter, patterns, "bla.blup.bob.exe)", "0") == "2"
+    assert reclassify(reclassify_params, "fÖöbÄr", "O") == "O"
+    assert reclassify(reclassify_params, "foobar", "O") == "W"
+    assert reclassify(reclassify_params, r"\Error", "O") == "C"
+    assert reclassify(reclassify_params, r"\Error1337", "O") == "C"
+    assert reclassify(reclassify_params, "bla.blup.bob.exe)", "O") == "W"

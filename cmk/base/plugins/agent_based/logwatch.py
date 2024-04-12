@@ -48,21 +48,6 @@ def _get_discovery_groups(params: AllParams) -> Sequence[list[tuple[str, Groupin
     return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
 
 
-def _compile_params(item: str) -> dict[str, Any]:
-    compiled_params: dict[str, Any] = {"reclassify_patterns": []}
-
-    for rule in logwatch.service_extra_conf(item):
-        if isinstance(rule, dict):
-            compiled_params["reclassify_patterns"].extend(rule["reclassify_patterns"])
-            if "reclassify_states" in rule:
-                # (mo) wondering during migration: doesn't this mean the last one wins?
-                compiled_params["reclassify_states"] = rule["reclassify_states"]
-        else:
-            compiled_params["reclassify_patterns"].extend(rule)
-
-    return compiled_params
-
-
 # New rule-stule logwatch_rules in WATO friendly consistent rule notation:
 #
 # logwatch_rules = [
@@ -151,7 +136,7 @@ def check_logwatch(
 
     yield from check_logwatch_generic(
         item=item,
-        patterns=_compile_params(item),
+        reclassify_parameters=logwatch.compile_reclassify_params(item),
         loglines=loglines,
         found=item in logwatch.discoverable_items(*section.values()),
         max_filesize=_LOGWATCH_MAX_FILESIZE,
@@ -293,7 +278,7 @@ def check_logwatch_groups(
 
     yield from check_logwatch_generic(
         item=item,
-        patterns=_compile_params(item),
+        reclassify_parameters=logwatch.compile_reclassify_params(item),
         loglines=loglines,
         found=True,
         max_filesize=_LOGWATCH_MAX_FILESIZE,
@@ -350,15 +335,14 @@ class LogwatchBlock:
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
     STATE_TO_STR = {0: "OK", 1: "WARN"}
 
-    def __init__(self, header, patterns) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, header: str, reclassify_parameters: logwatch.ReclassifyParameters) -> None:
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
         self.lines: list = []
         self.saw_lines = False
         self.last_worst_line = ""
-        self.counts: Counter[int] = Counter()  # matches of a certain pattern
         self.states_counter: Counter[str] = Counter()  # lines with a certain state
-        self._patterns = patterns or {}
+        self._reclassify_parameters = reclassify_parameters
 
     def finalize(self):
         state_str = LogwatchBlock.STATE_TO_STR.get(self.worst, "CRIT")
@@ -374,7 +358,7 @@ class LogwatchBlock:
             level, text = line.strip(), ""
 
         if reclassify:
-            level = logwatch.reclassify(self.counts, self._patterns, text, level)
+            level = logwatch.reclassify(self._reclassify_parameters, text, level)
 
         state_int = LogwatchBlock.CHAR_TO_STATE.get(level, -1)
         self.worst = max(state_int, self.worst)
@@ -441,10 +425,10 @@ def _logmsg_file_path(item: str) -> pathlib.Path:
     return logmsg_dir / item.replace("/", "\\")
 
 
-def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+def check_logwatch_generic(
     *,
     item: str,
-    patterns,
+    reclassify_parameters: logwatch.ReclassifyParameters,
     loglines: Iterable[str],
     found: bool,
     max_filesize: int,
@@ -464,8 +448,7 @@ def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=to
         "r+" if logmsg_file_exists else "w", encoding="utf-8"
     )
 
-    # TODO: repr() of a dict may change.
-    pattern_hash = hashlib.sha256(repr(patterns).encode()).hexdigest()
+    pattern_hash = hashlib.sha256(repr(reclassify_parameters).encode()).hexdigest()
     if not logmsg_file_exists:
         output_size = 0
         reclassify = True
@@ -476,7 +459,9 @@ def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=to
             yield _dropped_msg_result(max_filesize)
             return
 
-        block_collector.extend(_extract_blocks(logmsg_file_handle, patterns, reclassify))
+        block_collector.extend(
+            _extract_blocks(logmsg_file_handle, reclassify_parameters, reclassify)
+        )
 
         if reclassify:
             output_size = block_collector.size
@@ -490,7 +475,9 @@ def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=to
 
     # process new input lines - but only when there is some room left in the file
     block_collector.extend(
-        _extract_blocks([header, *loglines], patterns, True, limit=max_filesize - output_size)
+        _extract_blocks(
+            [header, *loglines], reclassify_parameters, True, limit=max_filesize - output_size
+        )
     )
 
     # when reclassifying, rewrite the whole file, otherwise append
@@ -559,12 +546,12 @@ def _truncate_way_too_large_result(
     return True
 
 
-def _extract_blocks(  # type: ignore[no-untyped-def]
+def _extract_blocks(
     lines: Iterable[str],
-    patterns,
+    reclassify_parameters: logwatch.ReclassifyParameters,
     reclassify: bool,
     *,
-    limit=float("inf"),
+    limit: float = float("inf"),
 ) -> Iterable[LogwatchBlock]:
     current_block = None
     for line in lines:
@@ -575,7 +562,7 @@ def _extract_blocks(  # type: ignore[no-untyped-def]
         if line.startswith("<<<") and line.endswith(">>>"):
             if current_block is not None:
                 yield current_block
-            current_block = LogwatchBlock(line, patterns)
+            current_block = LogwatchBlock(line, reclassify_parameters)
         elif current_block is not None:
             current_block.add_line(line, reclassify)
             limit -= len(line.encode("utf-8"))

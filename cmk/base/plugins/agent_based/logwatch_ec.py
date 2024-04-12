@@ -16,7 +16,7 @@
 import ast
 import socket
 import time
-from collections import Counter, defaultdict
+from collections import defaultdict
 from collections.abc import Container, Generator, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -367,38 +367,22 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     rclfd_total = 0
     rclfd_to_ignore = 0
 
-    logfile_reclassify_settings: dict[str, Any] = {}
-
-    def add_reclassify_settings(settings):
-        if isinstance(settings, dict):
-            logfile_reclassify_settings["reclassify_patterns"].extend(
-                settings.get("reclassify_patterns", [])
-            )
-            if "reclassify_states" in settings:
-                logfile_reclassify_settings["reclassify_states"] = settings["reclassify_states"]
-        else:  # legacy configuration
-            logfile_reclassify_settings["reclassify_patterns"].extend(settings)
+    reclassify = bool(params.get("logwatch_reclassify"))
 
     seen_batches = logwatch.update_seen_batches(value_store, parsed, used_logfiles)
     for logfile in used_logfiles:
         lines = _filter_accumulated_lines(parsed, logfile, seen_batches)
 
-        logfile_reclassify_settings["reclassify_patterns"] = []
-        logfile_reclassify_settings["reclassify_states"] = {}
-
         # Determine logwatch patterns specifically for this logfile
-        if params.get("logwatch_reclassify"):
-            logfile_settings = logwatch.service_extra_conf(logfile)
-            for settings in logfile_settings:
-                add_reclassify_settings(settings)
+        logfile_reclassify_settings = (
+            logwatch.compile_reclassify_params(logfile) if reclassify else None
+        )
 
         for line in lines:
             rclfd_level = None
             if logfile_reclassify_settings:
                 old_level, _text = line.split(" ", 1)
-                level = logwatch.reclassify(
-                    Counter(), logfile_reclassify_settings, line[2:], old_level
-                )
+                level = logwatch.reclassify(logfile_reclassify_settings, line[2:], old_level)
                 if level != old_level:
                     rclfd_total += 1
                     rclfd_level = level

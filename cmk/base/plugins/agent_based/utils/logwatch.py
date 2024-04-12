@@ -14,8 +14,8 @@
 #########################################################################################
 
 import re
-from collections import Counter
 from collections.abc import Callable, Container, Iterable, Mapping, MutableMapping, Sequence
+from dataclasses import dataclass
 from re import Pattern
 from typing import Any, Literal, NamedTuple, TypedDict
 
@@ -55,7 +55,7 @@ class DictLogwatchEc(TypedDict, total=False):
 ParameterLogwatchEc = Literal[""] | DictLogwatchEc
 
 
-def service_extra_conf(service: str) -> list:
+def _service_extra_conf(service: str) -> list:
     return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
         HostName(host_name()), service, cmk.base.config.logwatch_rules
     )
@@ -144,33 +144,53 @@ class LogFileFilter:
         return any(rgx.match(logfile) for rgx in self._expressions)
 
 
+@dataclass(frozen=True)
+class ReclassifyParameters:
+    patterns: Sequence[tuple[Literal["C", "W", "O", "I"], str, str]]
+    states: Mapping[Literal["c_to", "w_to", "o_to", "._to"], Literal["C", "W", "O", "I", "."]]
+
+
+def compile_reclassify_params(item: str) -> ReclassifyParameters:
+    patterns: list[tuple[Literal["C", "W", "O", "I"], str, str]] = []
+
+    for rule in _service_extra_conf(item):
+        if isinstance(rule, dict):
+            patterns.extend(rule["reclassify_patterns"])
+            if "reclassify_states" in rule:
+                # (mo) wondering during migration: doesn't this mean the last one wins?
+                states = rule["reclassify_states"]
+        else:
+            patterns.extend(rule)
+
+    return ReclassifyParameters(patterns, states)
+
+
+# the `str` is a hack to account for the poorly typed `old_level` below.
+_STATE_CHANGE_MAP: Mapping[str, Literal["c_to", "w_to", "o_to", "._to"]] = {
+    "C": "c_to",
+    "W": "w_to",
+    "O": "o_to",
+    ".": "._to",
+}
+
+
 def reclassify(
-    counts: Counter[int],
-    patterns: dict[str, Any],  # all I know right now :-(
+    reclassify_parameters: ReclassifyParameters,
     text: str,
     old_level: str,
 ) -> str:
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
-    for level, pattern, _ in patterns.get("reclassify_patterns", []):
+    for level, pattern, _ in reclassify_parameters.patterns:
         # not necessary to validate regex: already done by GUI
-        reg = regex(pattern, re.UNICODE)
-        if reg.search(text):
-            # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
-            # then we count how many times this pattern has already matched and
-            # assign the levels according to the number of matches of this pattern.
-            if isinstance(level, tuple):
-                warn, crit = level
-                newcount = counts[id(pattern)] + 1
-                counts[id(pattern)] = newcount
-                if newcount >= crit:
-                    return "C"
-                return "W" if newcount >= warn else "I"
+        if regex(pattern, re.UNICODE).search(text):
             return level
 
     # Reclassify state to another state
-    change_state_paramkey = ("%s_to" % old_level).lower()
-    return patterns.get("reclassify_states", {}).get(change_state_paramkey, old_level)
+    try:
+        return reclassify_parameters.states[_STATE_CHANGE_MAP[old_level.upper()]]
+    except KeyError:
+        return old_level
 
 
 def check_errors(cluster_section: Mapping[str | None, Section]) -> Iterable[Result]:

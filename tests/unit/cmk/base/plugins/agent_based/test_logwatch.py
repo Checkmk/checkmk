@@ -160,7 +160,11 @@ def test_check_single(
     monkeypatch: pytest.MonkeyPatch, log_name: str, expected_result: Iterable[Result]
 ) -> None:
     monkeypatch.setattr(logwatch, "get_value_store", lambda: {})
-    monkeypatch.setattr(logwatch, "_compile_params", lambda _item: [])
+    monkeypatch.setattr(
+        logwatch_,
+        logwatch_.compile_reclassify_params.__name__,
+        lambda _item: logwatch_.ReclassifyParameters((), {}),
+    )
     monkeypatch.setattr(logwatch, "host_name", lambda: "test-host")
 
     assert list(logwatch.check_logwatch_node(log_name, SECTION1)) == expected_result
@@ -268,7 +272,7 @@ def test_check_logwatch_generic_no_messages() -> None:
     assert list(
         logwatch.check_logwatch_generic(
             item=item,
-            patterns={},
+            reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
             loglines=[],
             found=True,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
@@ -291,7 +295,7 @@ def test_check_logwatch_generic_no_reclassify() -> None:
     assert list(
         logwatch.check_logwatch_generic(
             item=item,
-            patterns={},
+            reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
             loglines=lines,
             found=True,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
@@ -314,12 +318,13 @@ def test_check_logwatch_generic_with_reclassification() -> None:
     assert list(
         logwatch.check_logwatch_generic(
             item=item,
-            patterns={
-                "reclassify_patterns": [
+            reclassify_parameters=logwatch_.ReclassifyParameters(
+                patterns=[
                     ("C", ".*klingon.*", "galatic conflict"),
                     ("I", "123", ""),
                 ],
-            },
+                states={},
+            ),
             loglines=lines,
             found=True,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,
@@ -340,7 +345,7 @@ def test_check_logwatch_generic_missing() -> None:
     assert list(
         logwatch.check_logwatch_generic(
             item=item,
-            patterns={},
+            reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
             loglines=[],
             found=False,
             max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,

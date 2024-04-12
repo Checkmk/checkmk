@@ -90,6 +90,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
 	install -m 755 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
+	chmod 644 $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications/README
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
 	tar -c -C $(REPO_PATH)/web \

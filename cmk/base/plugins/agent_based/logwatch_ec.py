@@ -47,11 +47,15 @@ from .utils import logwatch
 
 _MAX_SPOOL_SIZE = 1024**2
 
-CHECK_DEFAULT_PARAMETERS: logwatch.ParameterLogwatchEc = {
+
+CHECK_DEFAULT_PARAMETERS: logwatch.PreDictLogwatchEc = {
     "facility": 17,  # default to "local1"
     "method": "",  # local site
     "monitor_logfilelist": False,
     "monitor_logfile_access_state": 2,
+    # This next entry will be postprocessed by the backend.
+    # Don't try this hack at home, we are trained professionals.
+    "service_level": ("cmk_postprocessed", "service_level", None),
 }
 
 
@@ -69,7 +73,6 @@ def check_logwatch_ec(
         None,
         params,
         {None: section},
-        service_level=logwatch.RulesetAccess.get_effective_service_level("logwatch_ec", None),
         value_store=get_value_store(),
         hostname=HostName(host_name()),
         message_forwarder=MessageForwarder(None, HostName(host_name())),
@@ -83,7 +86,6 @@ def cluster_check_logwatch_ec(
         None,
         params,
         {k: v for k, v in section.items() if v is not None},
-        service_level=logwatch.RulesetAccess.get_effective_service_level("logwatch_ec", None),
         value_store=get_value_store(),
         hostname=host_name(),
         message_forwarder=MessageForwarder(None, HostName(host_name())),
@@ -118,9 +120,6 @@ def check_logwatch_ec_single(
         item,
         params,
         {None: section},
-        service_level=logwatch.RulesetAccess.get_effective_service_level(
-            "logwatch_ec_single", item
-        ),
         value_store=get_value_store(),
         hostname=HostName(host_name()),
         message_forwarder=MessageForwarder(item, HostName(host_name())),
@@ -137,9 +136,6 @@ def cluster_check_logwatch_ec_single(
         item,
         params,
         {k: v for k, v in section.items() if v is not None},
-        service_level=logwatch.RulesetAccess.get_effective_service_level(
-            "logwatch_ec_single", item
-        ),
         value_store=get_value_store(),
         hostname=host_name(),
         message_forwarder=MessageForwarder(item, HostName(host_name())),
@@ -177,8 +173,8 @@ def logwatch_to_prio(level: str) -> int:
 
 def _logwatch_inventory_mode_rules(
     forward_settings: Sequence[logwatch.ParameterLogwatchEc],
-) -> tuple[Literal["no", "single", "groups"], logwatch.ParameterLogwatchEc]:
-    merged_rules: logwatch.ParameterLogwatchEc = {}
+) -> tuple[Literal["no", "single", "groups"], logwatch.CommonLogwatchEc]:
+    merged_rules: logwatch.CommonLogwatchEc = {}
     for rule in forward_settings[-1::-1]:
         if isinstance(rule, dict):
             for key, value in rule.items():
@@ -212,7 +208,7 @@ def discover_logwatch_ec_common(
         yield Service(parameters={"expected_logfiles": sorted(forwarded_logs)})
         return
 
-    single_log_params = logwatch.ParameterLogwatchEc()
+    single_log_params = logwatch.CommonLogwatchEc()
     for key in [
         "method",
         "facility",
@@ -284,7 +280,6 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     params: logwatch.ParameterLogwatchEc,
     parsed: logwatch.ClusterSection,
     *,
-    service_level: int,
     value_store: MutableMapping[str, Any],
     hostname: str,
     message_forwarder: MessageForwarderProto,
@@ -373,7 +368,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
                     host_name=hostname,
                     application=logfile,
                     text=line[2:],
-                    service_level=service_level,
+                    service_level=params["service_level"],
                 )
             )
             forwarded_logfiles.add(logfile)

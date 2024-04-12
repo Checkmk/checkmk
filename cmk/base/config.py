@@ -3177,6 +3177,18 @@ class ConfigCache:
         entries = self.ruleset_matcher.get_host_values(hostname, host_service_levels)
         return entries[0] if entries else None
 
+    def effective_service_level(
+        self,
+        host: HostName,
+        service_name: ServiceName,
+    ) -> int:
+        """Get the service level that applies to the current service."""
+        service_level = self.service_level_of_service(host, service_name)
+        if service_level is not None:
+            return service_level
+
+        return self.service_level(host) or 0
+
     def _snmp_credentials(self, host_name: HostName | HostAddress) -> SNMPCredentials:
         """Determine SNMP credentials for a specific host
 

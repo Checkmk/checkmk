@@ -21,8 +21,6 @@ from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
-from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
-
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
@@ -43,9 +41,7 @@ class Section(NamedTuple):
 SyslogConfig = tuple[Literal["tcp"], dict] | tuple[Literal["udp"], dict]
 
 
-class ParameterLogwatchEc(TypedDict):
-    """Parameters as created by the 'logwatch_ec' ruleset"""
-
+class CommonLogwatchEc(TypedDict):
     method: NotRequired[Literal["", "spool:"] | str | SyslogConfig]
     facility: NotRequired[int]
     restrict_logfiles: NotRequired[list[str]]
@@ -54,6 +50,16 @@ class ParameterLogwatchEc(TypedDict):
     logwatch_reclassify: NotRequired[bool]
     monitor_logfile_access_state: NotRequired[Literal[0, 1, 2, 3]]
     separate_checks: NotRequired[bool]
+
+
+class PreDictLogwatchEc(CommonLogwatchEc):
+    service_level: tuple[Literal["cmk_postprocessed"], Literal["service_level"], None]
+
+
+class ParameterLogwatchEc(CommonLogwatchEc):
+    """Parameters as created by the 'logwatch_ec' ruleset"""
+
+    service_level: int
 
 
 _StateMap = Mapping[Literal["c_to", "w_to", "o_to", "._to"], Literal["C", "W", "O", "I", "."]]
@@ -142,25 +148,6 @@ class RulesetAccess:
             HostName(host_name()),
             cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
         )
-
-    # Yet another unbelievable API violation:
-    @staticmethod
-    def get_effective_service_level(
-        plugin_name: Literal["logwatch_ec", "logwatch_ec_single"],
-        item: str | None,
-    ) -> int:
-        """Get the service level that applies to the current service."""
-
-        host = HostName(host_name())
-        config_cache = cmk.base.config.get_config_cache()
-        service_description = cmk.base.config.service_description(
-            config_cache.ruleset_matcher, host, CheckPluginName(plugin_name), item
-        )
-        service_level = config_cache.service_level_of_service(host, service_description)
-        if service_level is not None:
-            return service_level
-
-        return config_cache.service_level(host) or 0
 
 
 def update_seen_batches(

@@ -84,6 +84,10 @@ SECTION1 = logwatch_.Section(
     },
 )
 
+DEFAULT_TEST_PARAMETERS = logwatch_.ParameterLogwatchEc(
+    {**logwatch_ec.CHECK_DEFAULT_PARAMETERS, "service_level": 10}
+)
+
 
 @pytest.mark.parametrize(
     "info, fwd_rule, expected_result",
@@ -229,7 +233,7 @@ class _FakeForwarder:
     [
         (
             "log1",
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {"node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES)},
             [
                 Result(state=State.OK, summary="Forwarded 0 messages"),
@@ -244,6 +248,7 @@ class _FakeForwarder:
                 "monitor_logfilelist": False,
                 "monitor_logfile_access_state": 2,
                 "expected_logfiles": ["log4"],
+                "service_level": 10,
             },
             {"node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES)},
             [
@@ -266,7 +271,6 @@ def test_check_logwatch_ec_common_single_node(
                 item,
                 params,
                 parsed,
-                service_level=10,
                 value_store={},
                 hostname=HostName("test-host"),
                 message_forwarder=_FakeForwarder(),
@@ -280,11 +284,10 @@ def test_check_logwatch_ec_common_single_node_item_missing() -> None:
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -302,11 +305,11 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
                 "monitor_logfilelist": True,
                 "monitor_logfile_access_state": 2,
                 "expected_logfiles": ["log3"],
+                "service_level": 10,
             },
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -366,9 +369,8 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
         list(
             logwatch_ec.check_logwatch_ec_common(
                 "log1",
-                logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+                DEFAULT_TEST_PARAMETERS,
                 cluster_section,
-                service_level=10,
                 value_store={},
                 hostname=HostName("test-host"),
                 message_forwarder=_FakeForwarder(),
@@ -382,7 +384,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
     ["params", "cluster_section", "expected_result"],
     [
         pytest.param(
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
                 "node2": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
@@ -396,7 +398,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
             id="no messages",
         ),
         pytest.param(
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
@@ -416,6 +418,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
                 "monitor_logfilelist": False,
                 "monitor_logfile_access_state": 2,
                 "expected_logfiles": ["log4"],
+                "service_level": 10,
             },
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
@@ -430,7 +433,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
             id="no access to logfile on both nodes",
         ),
         pytest.param(
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1_2),
@@ -443,7 +446,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
             id="messages on both nodes, same logfile",
         ),
         pytest.param(
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
@@ -469,7 +472,6 @@ def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
                 None,
                 params,
                 cluster_section,
-                service_level=10,
                 value_store={},
                 hostname=HostName("test-host"),
                 message_forwarder=_FakeForwarder(),
@@ -483,12 +485,11 @@ def test_check_logwatch_ec_common_multiple_nodes_item_completely_missing() -> No
     assert not list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -500,12 +501,11 @@ def test_check_logwatch_ec_common_multiple_nodes_item_partially_missing() -> Non
     assert list(
         logwatch_ec.check_logwatch_ec_common(
             "log1",
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -526,12 +526,12 @@ def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
                 "monitor_logfilelist": True,
                 "monitor_logfile_access_state": 2,
                 "expected_logfiles": ["log3"],
+                "service_level": 10,
             },
             {
                 "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),
@@ -549,13 +549,12 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
         logwatch_ec.check_logwatch_ec_common(
             "log1",
             {
-                **logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+                **DEFAULT_TEST_PARAMETERS,
                 "method": "spool:",
             },
             {
                 "node1": SECTION1,
             },
-            service_level=10,
             value_store={},
             hostname=HostName("test-host"),
             message_forwarder=logwatch_ec.MessageForwarder("log1", HostName("test-host")),
@@ -816,7 +815,7 @@ def test_check_logwatch_ec_common_batch_stored() -> None:
     _result = list(
         logwatch_ec.check_logwatch_ec_common(
             None,
-            logwatch_ec.CHECK_DEFAULT_PARAMETERS,
+            DEFAULT_TEST_PARAMETERS,
             {
                 None: logwatch_.Section(
                     errors=(),
@@ -826,7 +825,6 @@ def test_check_logwatch_ec_common_batch_stored() -> None:
                     },
                 ),
             },
-            service_level=10,
             value_store=value_store,
             hostname=HostName("test-host"),
             message_forwarder=_FakeForwarder(),

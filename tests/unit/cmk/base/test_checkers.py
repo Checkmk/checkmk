@@ -194,7 +194,7 @@ def test_only_from_injection() -> None:
             "inner": ("cmk_postprocessed", "only_from", None),
         },
     }
-    assert checkers.postprocess_configuration(p, inject, ["1.2.3.4"]) == {
+    assert checkers.postprocess_configuration(p, inject, ["1.2.3.4"], 42) == {
         "outer": {
             "inner": ["1.2.3.4"],
         },
@@ -214,7 +214,7 @@ def test_prediction_injection_legacy() -> None:
             },
         )
     }
-    assert checkers.postprocess_configuration(p, inject, []) == {
+    assert checkers.postprocess_configuration(p, inject, [], 42) == {
         "pagefile": (
             "predictive",
             {
@@ -254,7 +254,7 @@ def test_prediction_injection() -> None:
             },
         ),
     }
-    assert checkers.postprocess_configuration(p, inject, []) == {
+    assert checkers.postprocess_configuration(p, inject, [], 42) == {
         "levels_upper": (
             "predictive",
             ("my_reference_metric", *prediction),

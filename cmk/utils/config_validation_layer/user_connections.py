@@ -187,7 +187,7 @@ class SAMLConnectionModel(BaseModel):
     role_membership_mapping: ROLE_MAPPING
 
 
-def validate_user_connections(connections: list) -> None:
+def validate_user_connections(connections: Sequence) -> None:
     for connection in connections:
         try:
             if connection["type"] == "ldap":

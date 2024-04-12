@@ -91,7 +91,7 @@ def register(mode_registry: ModeRegistry) -> None:
 #   '----------------------------------------------------------------------'
 
 
-class LDAPConnectionValuespec(MigrateNotUpdated):
+class LDAPConnectionValuespec(Dictionary):
     def __init__(self, new: bool, connection_id: str | None) -> None:
         self._new = new
         self._connection_id = connection_id
@@ -103,7 +103,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
         group_elements = self._group_elements()
         other_elements = self._other_elements()
 
-        valuespec = Dictionary(
+        super().__init__(
             title=_("LDAP Connection"),
             elements=general_elements
             + connection_elements
@@ -140,8 +140,6 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
             ],
             validate=self._validate_ldap_connection,
         )
-
-        super().__init__(valuespec=valuespec, migrate=LDAPUserConnector.migrate_config)
 
     def _general_elements(self) -> list[DictionaryEntry]:
         general_elements: list[DictionaryEntry] = []
@@ -811,7 +809,7 @@ class ModeEditLDAPConnection(WatoMode):
 
         vs = self._valuespec()
         connection_cfg = cast(LDAPUserConnectionConfig, vs.from_html_vars("connection"))
-        vs.validate_value(connection_cfg, "connection")
+        vs.validate_value(dict(connection_cfg), "connection")
         connection_cfg["type"] = "ldap"
 
         if self._new:
@@ -856,7 +854,7 @@ class ModeEditLDAPConnection(WatoMode):
         with html.form_context("connection", method="POST"):
             html.prevent_password_auto_completion()
             vs = self._valuespec()
-            vs.render_input("connection", self._connection_cfg)
+            vs.render_input("connection", dict(self._connection_cfg))
             vs.set_focus("connection")
             html.hidden_fields()
         html.close_td()

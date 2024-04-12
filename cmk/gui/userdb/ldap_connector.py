@@ -222,55 +222,8 @@ class LDAPUserConnector(UserConnector):
     # stores the ldap connection suffixes of all connections
     connection_suffixes: dict[str, str] = {}
 
-    @classmethod
-    def migrate_config(cls, cfg):
-        if not cfg:
-            return cfg
-
-        # For a short time in git master the directory_type could be:
-        # ('ad', {'discover_nearest_dc': True/False})
-        if (
-            isinstance(cfg["directory_type"], tuple)
-            and cfg["directory_type"][0] == "ad"
-            and "discover_nearest_dc" in cfg["directory_type"][1]
-        ):
-            auto_discover = cfg["directory_type"][1]["discover_nearest_dc"]
-
-            if not auto_discover:
-                cfg["directory_type"] = "ad"
-            else:
-                cfg["directory_type"] = (
-                    cfg["directory_type"][0],
-                    {
-                        "connect_to": (
-                            "discover",
-                            {
-                                "domain": cfg["server"],
-                            },
-                        ),
-                    },
-                )
-
-        if not isinstance(cfg["directory_type"], tuple) and "server" in cfg:
-            # Old separate configuration of directory_type and server
-            servers = {
-                "server": cfg["server"],
-            }
-
-            if "failover_servers" in cfg:
-                servers["failover_servers"] = cfg["failover_servers"]
-
-            cfg["directory_type"] = (
-                cfg["directory_type"],
-                {
-                    "connect_to": ("fixed_list", servers),
-                },
-            )
-
-        return cfg
-
     def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(self.migrate_config(cfg))
+        super().__init__(cfg)
 
         self._ldap_obj: ldap.ldapobject.ReconnectLDAPObject | None = None
         self._ldap_obj_config = None

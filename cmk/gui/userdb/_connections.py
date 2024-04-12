@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast, Literal, NotRequired, TypedDict
 
 import cmk.utils.plugin_registry
@@ -337,14 +337,24 @@ def load_connection_config(lock: bool = False) -> list[ConfigurableUserConnectio
         the connections. During UI rendering, `active_config.user_connections` must
         be used.
     """
-    filename = os.path.join(_multisite_dir(), "user_connections.mk")
-    connections = store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
+    connections = load_raw_connection_config(lock)
     validate_user_connections(connections)
     return connections
 
 
+def load_raw_connection_config(
+    lock: bool = False,
+) -> list[ConfigurableUserConnectionSpec]:
+    """Only use this directly for update config actions"""
+    filename = os.path.join(_multisite_dir(), "user_connections.mk")
+    connections = store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
+    return connections
+
+
 def save_connection_config(
-    connections: list[ConfigurableUserConnectionSpec], base_dir: str | None = None
+    connections: Sequence[ConfigurableUserConnectionSpec],
+    base_dir: str | None = None,
+    validate: bool = True,
 ) -> None:
     """Save the connections for the Setup
 
@@ -353,10 +363,18 @@ def save_connection_config(
         the connections. During UI rendering, `active_config.user_connections` must
         be used.
     """
-    validate_user_connections(connections)
+    if validate:
+        validate_user_connections(connections)
+    save_raw_connection_config(connections, base_dir)
+
+
+def save_raw_connection_config(
+    connections: Sequence[Mapping[str, Any]], base_dir: str | None = None
+) -> None:
+    """Only use this directly for update config actions"""
     if not base_dir:
         base_dir = _multisite_dir()
-    store.mkdir(base_dir)
+    store.makedirs(base_dir)
     store.save_to_mk_file(
         os.path.join(base_dir, "user_connections.mk"), "user_connections", connections
     )

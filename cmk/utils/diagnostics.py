@@ -33,6 +33,7 @@ DiagnosticsElementFilepaths = Iterator[Path]
 class DiagnosticsParameters(TypedDict):
     site: SiteId
     general: Literal[True]
+    timeout: int
     opt_info: DiagnosticsOptionalParameters | None
     comp_specific: DiagnosticsOptionalParameters | None
 

@@ -2246,7 +2246,7 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
         return NotificationRuleConfigFile().load_for_reading()
 
     def _save_rules(self, rules: list[EventRule]) -> None:
-        NotificationRuleConfigFile().save(rules, True)
+        NotificationRuleConfigFile().save(rules)
 
     def _user_id(self):
         return None

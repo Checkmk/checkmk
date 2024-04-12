@@ -10,6 +10,8 @@ import cmk.utils.store as store
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
 
+from cmk.gui.config import active_config
+
 _G = TypeVar("_G")
 _T = TypeVar("_T")
 
@@ -39,13 +41,13 @@ class WatoConfigFile(ABC, Generic[_G]):
             lock=lock,
         )
 
-    def save(self, cfg: _G, pretty: bool) -> None:
+    def save(self, cfg: _G) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
         store.save_to_mk_file(
             str(self._config_file_path),
             self._config_variable,
             cfg,
-            pprint_value=pretty,
+            pprint_value=active_config.wato_pprint_config,
         )
 
     @property

@@ -8,6 +8,7 @@ import pytest
 from cmk.utils.password_store import Password
 
 from cmk.gui import userdb
+from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.password_store import join_password_specs, PasswordStore, split_password_specs
 
 
@@ -101,7 +102,8 @@ def test_password_store_save(store: PasswordStore) -> None:
             }
         )
     }
-    store.save(entries, pretty=False)
+    with gui_context():
+        store.save(entries)
 
     assert store.load_for_reading() == entries
 
@@ -120,7 +122,7 @@ def fixture_test_store(store: PasswordStore) -> PasswordStore:
             }
         )
     }
-    store.save(entries, pretty=False)
+    store.save(entries)
     return store
 
 

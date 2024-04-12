@@ -80,7 +80,7 @@ def _create_or_update_rule(
     try:
         all_rules[rule_from_request.rule_id] = rule_from_request
         NotificationRuleConfigFile().save(
-            [rule.to_mk_file_format() for rule in all_rules.values()], True
+            [rule.to_mk_file_format() for rule in all_rules.values()],
         )
     except BulkNotAllowedException as exc:
         raise ProblemException(
@@ -205,7 +205,7 @@ def delete_rule(params: Mapping[str, Any]) -> Response:
     if rule_id in all_rules:
         del all_rules[rule_id]
         updated_rules = [rule.to_mk_file_format() for rule in all_rules.values()]
-        NotificationRuleConfigFile().save(updated_rules, True)
+        NotificationRuleConfigFile().save(updated_rules)
 
     return Response(status=204)
 

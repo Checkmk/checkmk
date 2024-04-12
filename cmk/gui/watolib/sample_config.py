@@ -293,7 +293,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         rulesets.save_folder()
 
         notification_rules = [get_default_notification_rule()]
-        NotificationRuleConfigFile().save(notification_rules, True)
+        NotificationRuleConfigFile().save(notification_rules)
 
     def _initial_global_settings(self) -> dict[str, Any]:
         settings = {

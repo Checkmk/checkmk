@@ -102,9 +102,9 @@ class NotificationRuleConfigFile(WatoConfigFile[list[EventRule]]):
         validate_notification_rules(notification_rules)
         return notification_rules
 
-    def save(self, cfg: list[EventRule], pretty: bool) -> None:
+    def save(self, cfg: list[EventRule]) -> None:
         validate_notification_rules(cfg)
-        super().save(cfg, pretty)
+        super().save(cfg)
 
 
 def register(config_file_registry: ConfigFileRegistry) -> None:

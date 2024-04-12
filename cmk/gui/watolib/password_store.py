@@ -62,13 +62,13 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
         validate_passwords(cfg)
         return cfg
 
-    def save(self, cfg: Mapping[str, Password], pretty: bool) -> None:
+    def save(self, cfg: Mapping[str, Password]) -> None:
         """The actual passwords are stored in a separate file for special treatment
 
         Have a look at `cmk.utils.password_store` for further information"""
         validate_passwords(cfg)
         meta_data, passwords = split_password_specs(cfg)
-        super().save(meta_data, pretty)
+        super().save(meta_data)
         password_store.save(passwords, password_store.password_store_path())
 
 

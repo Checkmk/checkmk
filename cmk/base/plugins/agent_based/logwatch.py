@@ -20,7 +20,7 @@ import time
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from re import Match
-from typing import Any, IO, Literal
+from typing import IO, Literal
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
@@ -34,8 +34,6 @@ from .agent_based_api.v1 import get_value_store, regex, register, render, Result
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
 
-AllParams = Sequence[Mapping[str, Any]]
-
 ClusterSection = dict[str | None, logwatch.Section]
 
 GroupingPattern = tuple[str, str]
@@ -44,7 +42,9 @@ DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPatt
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 
 
-def _get_discovery_groups(params: AllParams) -> Sequence[list[tuple[str, GroupingPattern]]]:
+def _get_discovery_groups(
+    params: Sequence[logwatch.ParameterLogwatchGroups],
+) -> Sequence[list[tuple[str, GroupingPattern]]]:
     return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
 
 
@@ -66,10 +66,10 @@ def _get_discovery_groups(params: AllParams) -> Sequence[list[tuple[str, Groupin
 
 
 def discover_logwatch_single(
-    params: AllParams,
+    params: Sequence[logwatch.ParameterLogwatchGroups],
     section: logwatch.Section,
 ) -> DiscoveryResult:
-    log_filter = logwatch.LogFileFilter(logwatch.get_ec_rule_params())
+    log_filter = logwatch.LogFileFilter(logwatch.RulesetAccess.logwatch_ec_all())
     not_forwarded_logs = {
         item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
     }
@@ -83,10 +83,10 @@ def discover_logwatch_single(
 
 
 def discover_logwatch_groups(
-    params: AllParams,
+    params: Sequence[logwatch.ParameterLogwatchGroups],
     section: logwatch.Section,
 ) -> DiscoveryResult:
-    log_filter = logwatch.LogFileFilter(logwatch.get_ec_rule_params())
+    log_filter = logwatch.LogFileFilter(logwatch.RulesetAccess.logwatch_ec_all())
     not_forwarded_logs = {
         item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
     }
@@ -111,11 +111,13 @@ def check_logwatch_node(
     section: logwatch.Section,
 ) -> CheckResult:
     """fall back to the cluster case with node=None"""
-    yield from check_logwatch(item, {None: section})
+    params = logwatch.RulesetAccess.logwatch_rules_all(item)
+    yield from check_logwatch(item, params, {None: section})
 
 
 def check_logwatch(
     item: str,
+    params: Sequence[logwatch.ParameterLogwatchRules],
     section: ClusterSection,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
@@ -136,7 +138,7 @@ def check_logwatch(
 
     yield from check_logwatch_generic(
         item=item,
-        reclassify_parameters=logwatch.compile_reclassify_params(item),
+        reclassify_parameters=logwatch.compile_reclassify_params(params),
         loglines=loglines,
         found=item in logwatch.discoverable_items(*section.values()),
         max_filesize=_LOGWATCH_MAX_FILESIZE,
@@ -146,7 +148,8 @@ def check_logwatch(
 def cluster_check_logwatch(
     item: str, section: Mapping[str, logwatch.Section | None]
 ) -> CheckResult:
-    yield from check_logwatch(item, {k: v for k, v in section.items() if v is not None})
+    params = logwatch.RulesetAccess.logwatch_rules_all(item)
+    yield from check_logwatch(item, params, {k: v for k, v in section.items() if v is not None})
 
 
 register.check_plugin(
@@ -253,12 +256,14 @@ def check_logwatch_groups_node(
     section: logwatch.Section,
 ) -> CheckResult:
     """fall back to the cluster case with node=None"""
-    yield from check_logwatch_groups(item, params, {None: section})
+    params_rules = logwatch.RulesetAccess.logwatch_rules_all(item)
+    yield from check_logwatch_groups(item, params, params_rules, {None: section})
 
 
 def check_logwatch_groups(
     item: str,
     params: DiscoveredGroupParams,
+    params_rules: Sequence[logwatch.ParameterLogwatchRules],
     section: ClusterSection,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
@@ -278,7 +283,7 @@ def check_logwatch_groups(
 
     yield from check_logwatch_generic(
         item=item,
-        reclassify_parameters=logwatch.compile_reclassify_params(item),
+        reclassify_parameters=logwatch.compile_reclassify_params(params_rules),
         loglines=loglines,
         found=True,
         max_filesize=_LOGWATCH_MAX_FILESIZE,
@@ -304,8 +309,9 @@ def cluster_check_logwatch_groups(
     params: DiscoveredGroupParams,
     section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
+    params_rules = logwatch.RulesetAccess.logwatch_rules_all(item)
     yield from check_logwatch_groups(
-        item, params, {k: v for k, v in section.items() if v is not None}
+        item, params, params_rules, {k: v for k, v in section.items() if v is not None}
     )
 
 

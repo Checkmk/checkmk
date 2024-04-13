@@ -17,9 +17,11 @@ import re
 from collections.abc import Callable, Container, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from re import Pattern
-from typing import Any, Literal, NamedTuple, TypedDict
+from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
+
+from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
@@ -41,27 +43,102 @@ class Section(NamedTuple):
 SyslogConfig = tuple[Literal["tcp"], dict] | tuple[Literal["udp"], dict]
 
 
-class DictLogwatchEc(TypedDict, total=False):
-    method: Literal["", "spool:"] | str | SyslogConfig
-    facility: int
-    restrict_logfiles: list[str]
-    monitor_logfilelist: bool
-    expected_logfiles: list[str]
-    logwatch_reclassify: bool
-    monitor_logfile_access_state: Literal[0, 1, 2, 3]
-    separate_checks: bool
+class ParameterLogwatchEc(TypedDict):
+    """Parameters as created by the 'logwatch_ec' ruleset"""
+
+    method: NotRequired[Literal["", "spool:"] | str | SyslogConfig]
+    facility: NotRequired[int]
+    restrict_logfiles: NotRequired[list[str]]
+    monitor_logfilelist: NotRequired[bool]
+    expected_logfiles: NotRequired[list[str]]
+    logwatch_reclassify: NotRequired[bool]
+    monitor_logfile_access_state: NotRequired[Literal[0, 1, 2, 3]]
+    separate_checks: NotRequired[bool]
 
 
-ParameterLogwatchEc = Literal[""] | DictLogwatchEc
+_StateMap = Mapping[Literal["c_to", "w_to", "o_to", "._to"], Literal["C", "W", "O", "I", "."]]
 
 
-def _service_extra_conf(service: str) -> list:
-    return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
-        HostName(host_name()), service, cmk.base.config.logwatch_rules
-    )
+class ParameterLogwatchRules(TypedDict):
+    reclassify_patterns: list[tuple[Literal["C", "W", "O", "I"], str, str]]
+    reclassify_states: NotRequired[_StateMap]
+
+
+class ParameterLogwatchGroups(TypedDict):
+    grouping_patterns: list[tuple[str, tuple[str, str]]]
 
 
 ClusterSection = dict[str | None, Section]
+
+
+class RulesetAccess:
+    """Namespace to get an overview of logwatch rulesets / configuration
+
+    Logwatch uses more configuration parameters that just its rulesets.
+    It also uses the current host name, and the "effective service level".
+
+    We consider 8 cases here: EC/¬EC, grouped/single, cluster/node.
+
+    There are three logwatch rulesets:
+
+    logwatch_rules:
+        These contain the reclassification-patterns and -states.
+        They are used:
+            * In all 8 check functions
+              ** match type "ALL"
+              ** in logwatch_ec (gouped) they don't match on the item (the group),
+                 but on the individual logfiles _in_ the group (bug or feature?).
+
+    logwatch_ec:
+        These contain forwarding parameters (which files + how) and a few flags.
+        They are used:
+            * As the 'official' check parameters in logwatch_ec (_not_ logwatch_ec_single)
+              This implies match type "MERGED".
+            * In all discovery functions, where in a "merged" style only the "restrict_logfiles"
+              parameters is used to filter the logfiles (forwardig VS no forwarding).
+            * In the EC case, they are "forwarded" to the check functions as discovered parameters.
+
+    logwatch_groups:
+        These contain grouping patterns for the ¬EC case.
+        They are used:
+            * As regular 'ALL' style discovery parameters for the ¬EC plugins.
+
+    """
+
+    # This is only wishful typing -- but lets assume this is what we get.
+    @staticmethod
+    def logwatch_rules_all(item: str) -> Sequence[ParameterLogwatchRules]:
+        return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
+            HostName(host_name()), item, cmk.base.config.logwatch_rules  # type: ignore[arg-type]
+        )
+
+    # This is only wishful typing -- but lets assume this is what we get.
+    @staticmethod
+    def logwatch_ec_all() -> Sequence[ParameterLogwatchEc]:
+        """Isolate the remaining API violation w.r.t. parameters"""
+        return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
+            HostName(host_name()),
+            cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
+        )
+
+    # Yet another unbelievable API violation:
+    @staticmethod
+    def get_effective_service_level(
+        plugin_name: Literal["logwatch_ec", "logwatch_ec_single"],
+        item: str | None,
+    ) -> int:
+        """Get the service level that applies to the current service."""
+
+        host = HostName(host_name())
+        config_cache = cmk.base.config.get_config_cache()
+        service_description = cmk.base.config.service_description(
+            config_cache.ruleset_matcher, host, CheckPluginName(plugin_name), item
+        )
+        service_level = config_cache.service_level_of_service(host, service_description)
+        if service_level is not None:
+            return service_level
+
+        return config_cache.service_level(host) or 0
 
 
 def update_seen_batches(
@@ -91,15 +168,6 @@ def extract_unseen_lines(
         if batch not in seen_batches
         for line in lines
     ]
-
-
-# This is only wishful typing -- but lets assume this is what we get.
-def get_ec_rule_params() -> Sequence[ParameterLogwatchEc]:
-    """Isolate the remaining API violation w.r.t. parameters"""
-    return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
-        HostName(host_name()),
-        cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
-    )
 
 
 def discoverable_items(*sections: Section) -> list[str]:
@@ -147,13 +215,13 @@ class LogFileFilter:
 @dataclass(frozen=True)
 class ReclassifyParameters:
     patterns: Sequence[tuple[Literal["C", "W", "O", "I"], str, str]]
-    states: Mapping[Literal["c_to", "w_to", "o_to", "._to"], Literal["C", "W", "O", "I", "."]]
+    states: _StateMap
 
 
-def compile_reclassify_params(item: str) -> ReclassifyParameters:
+def compile_reclassify_params(params: Sequence[ParameterLogwatchRules]) -> ReclassifyParameters:
     patterns: list[tuple[Literal["C", "W", "O", "I"], str, str]] = []
 
-    for rule in _service_extra_conf(item):
+    for rule in params:
         if isinstance(rule, dict):
             patterns.extend(rule["reclassify_patterns"])
             if "reclassify_states" in rule:

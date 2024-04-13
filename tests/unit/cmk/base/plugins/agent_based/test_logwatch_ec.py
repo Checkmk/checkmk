@@ -172,7 +172,9 @@ def test_logwatch_ec_inventory_single(
 ) -> None:
     parsed = parse_logwatch(info)
 
-    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: fwd_rule)
+    monkeypatch.setattr(
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: fwd_rule
+    )
     actual_result = sorted(logwatch_ec.discover_single(parsed), key=lambda s: s.item or "")
     assert actual_result == expected_result
 
@@ -206,7 +208,9 @@ def test_logwatch_ec_inventory_groups(
 ) -> None:
     parsed = parse_logwatch(info)
 
-    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: fwd_rule)
+    monkeypatch.setattr(
+        logwatch_.RulesetAccess, logwatch_.RulesetAccess.logwatch_ec_all.__name__, lambda: fwd_rule
+    )
     actual_result = list(logwatch_ec.discover_group(parsed))
     assert actual_result == expected_result
 
@@ -455,7 +459,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
     ],
 )
 def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
-    params: logwatch_.DictLogwatchEc,
+    params: logwatch_.ParameterLogwatchEc,
     cluster_section: logwatch_.ClusterSection,
     expected_result: CheckResult,
 ) -> None:

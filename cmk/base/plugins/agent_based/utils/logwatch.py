@@ -103,6 +103,28 @@ class RulesetAccess:
         They are used:
             * As regular 'ALL' style discovery parameters for the ¬EC plugins.
 
+    PROPOSAL:
+    Way out: Change to one common discovery and two dedicated check paramater rulesets:
+
+        Discovery ruleset (ONE for all plugins).
+         * Match type: ALL.
+         * Grouping patterns
+         * Forwarding patterns
+
+        ¬EC check ruleset
+         * Match type: MERGE
+         * Reclassify-patterns and -states
+
+        EC check ruleset
+         * Match type: MERGE
+         * Reclassify-patterns and -states
+         * Forwarding parameters
+
+    * Current configurations could be embedded in an update config step.
+    * In the future, reclassification parameters would *always* be matched against the *item*.
+    * Proposal: Grouping should work the same regardless of EC/¬EC
+      (currently the options in EC are only 'group everything' or 'group nothing').
+      Grouping could be _independently_ configured from forwarding.
     """
 
     # This is only wishful typing -- but lets assume this is what we get.

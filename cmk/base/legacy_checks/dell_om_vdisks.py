@@ -38,7 +38,7 @@ def inventory_dell_om_vdisks(parsed):
 def check_dell_om_vdisks(item, params, parsed):
     if item in parsed:
         status = status_translate_omreport(parsed[item]["Status"])
-        if parsed[item]["State"] != "Ready":
+        if parsed[item]["State"] not in [ "Ready", "Resynching" ]:
             status = 2
 
         return status, "Device: {}, Status: {}, State: {}, Layout: {}".format(

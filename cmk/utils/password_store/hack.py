@@ -45,7 +45,7 @@ HACK_CHECKS = {
     "cert": False,  # has no secret
     "cmk_inv": False,  # has no secret
     "dns": False,  # has no secret
-    "elasticsearch_query": True,
+    "elasticsearch_query": False,
     "form_submit": False,  # has no secret
     "ftp": False,  # has no secret
     "httpv2": False,  # yay!

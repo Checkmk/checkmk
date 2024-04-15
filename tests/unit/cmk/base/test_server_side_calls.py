@@ -1879,7 +1879,7 @@ def test_hack_apply_map_special_agents_is_complete() -> None:
     }
 
 
-def _test_hack_apply_map_active_checks_is_complete() -> None:  # temparily disabled
+def test_hack_apply_map_active_checks_is_complete() -> None:
     assert set(password_store.hack.HACK_CHECKS) == {
         p.name for p in load_active_checks()[1].values()
     }

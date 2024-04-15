@@ -96,7 +96,7 @@ class LDAPConnectionValuespec(Dictionary):
         self._new = new
         self._connection_id = connection_id
         connection = get_connection(self._connection_id)
-        if connection and not isinstance(connection, LDAPUserConnector):
+        if connection is not None and not isinstance(connection, LDAPUserConnector):
             raise TypeError("connection is not LDAPUserConnector")
         self._connection = connection
 
@@ -454,7 +454,7 @@ class LDAPConnectionValuespec(Dictionary):
                     ),
                     size=80,
                     default_value=lambda: ldap_filter_of_connection(
-                        self._connection_id, "users", False
+                        self._connection, "users", False
                     ),
                 ),
             ),
@@ -488,7 +488,7 @@ class LDAPConnectionValuespec(Dictionary):
                         "unique values to make an user identifyable by the value of this "
                         "attribute."
                     ),
-                    default_value=lambda: ldap_attr_of_connection(self._connection_id, "user_id"),
+                    default_value=lambda: ldap_attr_of_connection(self._connection, "user_id"),
                 ),
             ),
             (
@@ -579,7 +579,7 @@ class LDAPConnectionValuespec(Dictionary):
                     ),
                     size=80,
                     default_value=lambda: ldap_filter_of_connection(
-                        self._connection_id, "groups", False
+                        self._connection, "groups", False
                     ),
                 ),
             ),
@@ -588,7 +588,7 @@ class LDAPConnectionValuespec(Dictionary):
                 TextInput(
                     title=_("Member attribute"),
                     help=_("The attribute used to identify users group memberships."),
-                    default_value=lambda: ldap_attr_of_connection(self._connection_id, "member"),
+                    default_value=lambda: ldap_attr_of_connection(self._connection, "member"),
                 ),
             ),
         ]
@@ -608,8 +608,7 @@ class LDAPConnectionValuespec(Dictionary):
                         "user accounts for gathering their attributes. The user options which get imported "
                         "into Checkmk from LDAP will be locked in Setup."
                     ),
-                    # Temporary suppression. Fix will come soon.
-                    elements=lambda: ldap_attribute_plugins_elements(self._connection),  # type: ignore[arg-type]
+                    elements=lambda: ldap_attribute_plugins_elements(self._connection),
                     default_keys=["email", "alias", "auth_expire"],
                 ),
             ),

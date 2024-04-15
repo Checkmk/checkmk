@@ -5,6 +5,8 @@
 
 from collections.abc import Mapping, Sequence
 
+from cryptography.x509.oid import ObjectIdentifier, SignatureAlgorithmOID
+
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -97,46 +99,7 @@ def _valuespec_specific_values() -> Dictionary:
                 )
             ),
             "signature_algorithm": DictElement[tuple[str, object]](
-                parameter_form=CascadingSingleChoice(
-                    title=Title("Certificate signature algorithm"),
-                    help_text=Help(
-                        "The signature algorithm and the message digest algorithm for the "
-                        "certificate's signature. Please note that an exact match is expected if "
-                        "this option is used."
-                    ),
-                    prefill=DefaultValue("rsa"),
-                    elements=[
-                        CascadingSingleChoiceElement[tuple[str, object]](
-                            name="rsa",
-                            title=Title("RSA"),
-                            parameter_form=_hash_algorithm_choice(),
-                        ),
-                        CascadingSingleChoiceElement[tuple[str, object]](
-                            name="ecdsa",
-                            title=Title("ECDSA"),
-                            parameter_form=_hash_algorithm_choice(),
-                        ),
-                        CascadingSingleChoiceElement[None](
-                            name="ed25519",
-                            title=Title("Ed25519"),
-                            parameter_form=FixedValue[None](
-                                value=None,
-                                title=Title("Ed25519"),
-                                label=Label("SHA-512 (fixed)"),
-                            ),
-                        ),
-                        CascadingSingleChoiceElement[tuple[str, object]](
-                            name="rsassa_pss",
-                            title=Title("RSASSA-PSS"),
-                            parameter_form=_hash_algorithm_choice(),
-                        ),
-                        CascadingSingleChoiceElement[tuple[str, object]](
-                            name="dsa",
-                            title=Title("DSA"),
-                            parameter_form=_hash_algorithm_choice(),
-                        ),
-                    ],
-                )
+                parameter_form=_signature_algorithm_choice(),
             ),
             "issuer": DictElement[Mapping[str, object]](
                 parameter_form=Dictionary(
@@ -412,31 +375,62 @@ def _form_active_checks_cert() -> Dictionary:
     )
 
 
-def _hash_algorithm_choice() -> CascadingSingleChoice:
-    choices = [
-        ("sha224", Title("SHA-224")),
-        ("sha256", Title("SHA-256")),
-        ("sha384", Title("SHA-384")),
-        ("sha512", Title("SHA-512")),
-        ("sha3_224", Title("SHA3-224")),
-        ("sha3_256", Title("SHA3-256")),
-        ("sha3_384", Title("SHA3-384")),
-        ("sha3_512", Title("SHA3-512")),
-    ]
+def _signature_algorithm_choice() -> CascadingSingleChoice:
+    def fmt(sa: ObjectIdentifier) -> Title:
+        return Title(f"{sa._name} ({sa.dotted_string})")  # pylint: disable=protected-access
+
+    choices = (
+        # The algorithms commented out are defined upstream
+        # https://github.com/pyca/cryptography/blob/main/src/cryptography/hazmat/_oid.py
+        # but give "Unknown OID" for name.
+        ("RSA_WITH_MD5", SignatureAlgorithmOID.RSA_WITH_MD5),
+        ("RSA_WITH_SHA1", SignatureAlgorithmOID.RSA_WITH_SHA1),
+        # ("RSA_WITH_SHA1_alt", SignatureAlgorithmOID._RSA_WITH_SHA1),
+        ("RSA_WITH_SHA224", SignatureAlgorithmOID.RSA_WITH_SHA224),
+        ("RSA_WITH_SHA256", SignatureAlgorithmOID.RSA_WITH_SHA256),
+        ("RSA_WITH_SHA384", SignatureAlgorithmOID.RSA_WITH_SHA384),
+        ("RSA_WITH_SHA512", SignatureAlgorithmOID.RSA_WITH_SHA512),
+        # ("RSA_WITH_SHA3_224", SignatureAlgorithmOID.RSA_WITH_SHA3_224),
+        # ("RSA_WITH_SHA3_256", SignatureAlgorithmOID.RSA_WITH_SHA3_256),
+        # ("RSA_WITH_SHA3_384", SignatureAlgorithmOID.RSA_WITH_SHA3_384),
+        # ("RSA_WITH_SHA3_512", SignatureAlgorithmOID.RSA_WITH_SHA3_512),
+        ("RSASSA_PSS", SignatureAlgorithmOID.RSASSA_PSS),
+        ("ECDSA_WITH_SHA1", SignatureAlgorithmOID.ECDSA_WITH_SHA1),
+        ("ECDSA_WITH_SHA224", SignatureAlgorithmOID.ECDSA_WITH_SHA224),
+        ("ECDSA_WITH_SHA256", SignatureAlgorithmOID.ECDSA_WITH_SHA256),
+        ("ECDSA_WITH_SHA384", SignatureAlgorithmOID.ECDSA_WITH_SHA384),
+        ("ECDSA_WITH_SHA512", SignatureAlgorithmOID.ECDSA_WITH_SHA512),
+        # ("ECDSA_WITH_SHA3_224", SignatureAlgorithmOID.ECDSA_WITH_SHA3_224),
+        # ("ECDSA_WITH_SHA3_256", SignatureAlgorithmOID.ECDSA_WITH_SHA3_256),
+        # ("ECDSA_WITH_SHA3_384", SignatureAlgorithmOID.ECDSA_WITH_SHA3_384),
+        # ("ECDSA_WITH_SHA3_512", SignatureAlgorithmOID.ECDSA_WITH_SHA3_512),
+        ("DSA_WITH_SHA1", SignatureAlgorithmOID.DSA_WITH_SHA1),
+        ("DSA_WITH_SHA224", SignatureAlgorithmOID.DSA_WITH_SHA224),
+        ("DSA_WITH_SHA256", SignatureAlgorithmOID.DSA_WITH_SHA256),
+        # ("DSA_WITH_SHA384", SignatureAlgorithmOID.DSA_WITH_SHA384),
+        # ("DSA_WITH_SHA512", SignatureAlgorithmOID.DSA_WITH_SHA512),
+        ("ED25519", SignatureAlgorithmOID.ED25519),
+        ("ED448", SignatureAlgorithmOID.ED448),
+    )
     return CascadingSingleChoice(
-        title=Title("Hashing algorithm"),
+        title=Title("Certificate signature algorithm"),
+        help_text=Help(
+            "The signature algorithm algorithm for the "
+            "certificate's signature. Please note that an matching is done on "
+            "the OID"
+        ),
         elements=[
             CascadingSingleChoiceElement[str](
-                name=value,
-                title=title,
+                name=key,
+                title=fmt(sa),
                 parameter_form=FixedValue[str](
-                    value=value,
-                    title=title,
+                    value=sa.dotted_string,
+                    title=fmt(sa),
                 ),
             )
-            for value, title in choices
+            for key, sa in choices
         ],
-        prefill=DefaultValue("sha256"),
+        prefill=DefaultValue("RSA_WITH_SHA256"),
     )
 
 

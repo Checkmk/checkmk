@@ -34,7 +34,7 @@ FloatLevels = (
     | tuple[Literal[LevelsType.FIXED], tuple[float, float]]
 )
 
-SignatureAlgorithm = tuple[str, tuple[str, str]]
+SignatureAlgorithm = tuple[str, str]
 
 PubKey = tuple[str, str]
 
@@ -195,13 +195,9 @@ def _cert_details_args(cert_details: CertificateDetails) -> Iterator[str]:
 
 
 def _signature_algorithm_args(signature_algorithm: SignatureAlgorithm) -> Iterator[str]:
-    encryption_algorithm = signature_algorithm[0]
+    encryption_algorithm = signature_algorithm[1]
     yield "--signature-algorithm"
     yield encryption_algorithm
-
-    hashing_algorithm = signature_algorithm[1][0]
-    yield "--signature-hash-algorithm"
-    yield hashing_algorithm
 
 
 def _issuer_args(issuer: Issuer) -> Iterator[str]:

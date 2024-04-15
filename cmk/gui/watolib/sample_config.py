@@ -216,6 +216,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "host_label_groups": [("and", [("and", "cmk/docker_object:node")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                     {
                         "id": "b4b151f9-c7cc-4127-87a6-9539931fcd73",
@@ -223,6 +226,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                     {
                         "id": "2527cb37-e9da-4a15-a7d9-80825a7f6661",
@@ -230,13 +236,19 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "host_label_groups": [("and", [("and", "cmk/kubernetes:yes")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                     {
-                        "id": "6c57ce3d-dc7a-4409-8c7e-e94b01160654",
+                        "id": "bea23477-f13a-4e9f-a472-08be507aac9e",
                         "condition": {
                             "host_label_groups": [("and", [("and", "cmk/rmk/node_type:local")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                 ]
             },

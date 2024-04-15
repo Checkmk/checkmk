@@ -137,39 +137,6 @@ class DiscoveryResult(NamedTuple):
     sources: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: Version) -> str:
-        if for_cmk_version < Version.from_str("2.3.0b1"):
-            return repr(
-                (
-                    self.job_status,
-                    self.check_table_created,
-                    [
-                        tuple(
-                            (
-                                v
-                                if k != "check_source"
-                                else v.replace("unchanged", "old").replace("changed", "old")
-                            )
-                            for k, v in dataclasses.asdict(cpe).items()
-                            if k
-                            not in [
-                                "new_labels",
-                                "discovery_ruleset_name",
-                                "new_discovered_parameters",
-                            ]
-                        )
-                        for cpe in self.check_table
-                    ],
-                    self.host_labels,
-                    self.new_labels,
-                    self.vanished_labels,
-                    self.changed_labels,
-                    {
-                        str(host_name): [label.serialize() for label in host_labels]
-                        for host_name, host_labels in self.labels_by_host.items()
-                    },
-                    self.sources,
-                )
-            )
         return repr(
             (
                 self.job_status,

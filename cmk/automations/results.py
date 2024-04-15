@@ -118,26 +118,6 @@ class ServiceDiscoveryPreviewResult(ABCAutomationResult):
     source_results: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: cmk_version.Version) -> SerializedResult:
-        if for_cmk_version < cmk_version.Version.from_str(
-            "2.1.0p27"
-        ):  # no source results, no labels by host
-            return SerializedResult(repr(astuple(self)[:6]))
-
-        if for_cmk_version < cmk_version.Version.from_str(
-            "2.2.0b1"
-        ):  # labels by host, but no source results
-            return self._serialize_as_dict()
-
-        if for_cmk_version < cmk_version.Version.from_str(
-            "2.2.0b2"
-        ):  # no source results, no labels by host
-            return SerializedResult(repr(astuple(self)[:6]))
-
-        if for_cmk_version < cmk_version.Version.from_str(
-            "2.2.0b6"
-        ):  # source_results, no labels by host
-            return SerializedResult(repr(astuple(self)[:6] + (self.source_results,)))
-
         return self._serialize_as_dict()
 
     def _serialize_as_dict(self) -> SerializedResult:

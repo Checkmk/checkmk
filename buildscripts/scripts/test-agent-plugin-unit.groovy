@@ -25,7 +25,13 @@ def main() {
             def test_builds = python_versions.collectEntries { python_version ->
                 [(python_version) : {
                     stage("Test for python${python_version}") {
-                        sh("make -C tests test-agent-plugin-unit-py${python_version}-docker");
+                        // Here we need the docker registry as we are using python:VERSION docker images
+                        // which are stored on nexus.
+                        docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                            docker_reference_image().inside(docker_args) {
+                                sh("make -C tests test-agent-plugin-unit-py${python_version}-docker");
+                            }
+                        }
                     }
                 }]
             }

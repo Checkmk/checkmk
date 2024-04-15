@@ -1,0 +1,9 @@
+Title: Fix missing inventory macros in dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1713178933
+Edition: cee
+Level: 1
+Version: 2.2.0p25
+

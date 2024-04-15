@@ -19,6 +19,7 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import (
     ColumnSpec,
     HTTPVariables,
+    InventoryJoinMacrosSpec,
     SingleInfos,
     SorterSpec,
     ViewSpec,
@@ -79,6 +80,7 @@ class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
     force_checkboxes: bool
     play_sounds: bool
     user_sortable: bool
+    inventory_join_macros: InventoryJoinMacrosSpec
 
 
 def copy_view_into_dashlet(
@@ -315,7 +317,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
 def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
     """Should be aligned with copy_view_into_dashlet"""
     # Sadly there is currently no less verbose way of doing this
-    return ViewSpec(
+    view_spec = ViewSpec(
         {
             "datasource": dashlet["datasource"],
             "group_painters": dashlet["group_painters"],
@@ -345,6 +347,9 @@ def view_spec_from_view_dashlet(dashlet: ViewDashletConfig) -> ViewSpec:
             "packaged": False,
         }
     )
+    if inventory_join_macros := dashlet.get("inventory_join_macros"):
+        view_spec["inventory_join_macros"] = inventory_join_macros
+    return view_spec
 
 
 class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):

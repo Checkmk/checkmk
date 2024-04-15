@@ -450,7 +450,7 @@ class _ViewSpecMandatory(Visual):
     sorters: Sequence[SorterSpec]
 
 
-class _InventoryJoinMacrosSpec(TypedDict):
+class InventoryJoinMacrosSpec(TypedDict):
     macros: list[tuple[str, str]]
 
 
@@ -463,7 +463,7 @@ class ViewSpec(_ViewSpecMandatory, total=False):
     force_checkboxes: bool
     user_sortable: bool
     play_sounds: bool
-    inventory_join_macros: _InventoryJoinMacrosSpec
+    inventory_join_macros: InventoryJoinMacrosSpec
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]

@@ -11,6 +11,7 @@ import fnmatch
 import io
 import os
 import socket
+import sqlite3
 import sys
 import tarfile
 from collections.abc import Callable, Iterator
@@ -251,8 +252,20 @@ def tar_add(
             if tarinfo is None or not predicate(tarinfo):
                 return
 
+            # Create a backup of history file and add it to the archive as history.sqlite.
+            if name.endswith("var/mkeventd/history/history.sqlite"):
+                backup_name = f"{name}.backup"
+                try:
+                    backup_sqlite(name, backup_name)
+                    backup_tarinfo = tar.gettarinfo(backup_name, arcname=arcname)
+                    with open(backup_name, "rb") as file:
+                        tar.addfile(backup_tarinfo, file)
+                finally:
+                    os.remove(backup_name)
+                return
+
             # Append the tar header and data to the archive.
-            if tarinfo.isreg():
+            if tarinfo.isfile():
                 with open(name, "rb") as file:
                     tar.addfile(tarinfo, file)
             else:
@@ -296,3 +309,15 @@ def get_site_and_version_from_backup(tar: tarfile.TarFile) -> tuple[str, str]:
         raise Exception("Failed to detect version of backed up site.")
 
     return sitename, version
+
+
+def backup_sqlite(src: str | Path, dst: str | Path) -> None:
+    """Backup sqlite database file.
+
+    Uses sqlite3 backup API to create a backup of the database file.
+    """
+    with (
+        contextlib.closing(sqlite3.connect(src, timeout=10)) as src_conn,
+        contextlib.closing(sqlite3.connect(dst)) as dst_conn,
+    ):
+        src_conn.backup(dst_conn)

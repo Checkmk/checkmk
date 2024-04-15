@@ -397,8 +397,6 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
     localizer: Callable[[str], str],
 ) -> type[legacy_rulespecs.RulespecSubGroup]:
     match topic_to_convert:
-        case ruleset_api_v1.rule_specs.Topic.AGENT_PLUGINS:
-            return _to_generated_builtin_sub_group(legacy_main_group, "Agent plug-ins", localizer)
         case ruleset_api_v1.rule_specs.Topic.APPLICATIONS:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersApplications

@@ -1300,7 +1300,7 @@ def test_convert_to_legacy_rulespec_group(
             api_v1.rule_specs.AgentConfig(
                 name="test_rulespec",
                 title=api_v1.Title("rulespec title"),
-                topic=api_v1.rule_specs.Topic.AGENT_PLUGINS,
+                topic=api_v1.rule_specs.Topic.CONFIGURATION_DEPLOYMENT,
                 parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
                 help_text=api_v1.Help("help text"),
             ),
@@ -1308,7 +1308,7 @@ def test_convert_to_legacy_rulespec_group(
                 name=RuleGroup.AgentConfig("test_rulespec"),
                 group=_to_generated_builtin_sub_group(
                     legacy_rulespec_groups.RulespecGroupMonitoringAgents,
-                    "Agent plug-ins",
+                    "Configuration & Deployment",
                     lambda x: x,
                 ),
                 title=lambda: _("rulespec title"),

@@ -216,7 +216,7 @@ class WatchLog:
         found, lines = self._check_for_line(match_for, timeout)
         if not found:
             raise Exception(
-                "Did not find %r in %s after %d seconds\n%s"
+                "Did not find %r in %s after %d seconds\n'%s'"
                 % (match_for, self._log_path, timeout, lines)
             )
 
@@ -226,7 +226,8 @@ class WatchLog:
         found, lines = self._check_for_line(match_for, timeout)
         if found:
             raise Exception(
-                "Found %r in %s after %d seconds\n%s" % (match_for, self._log_path, timeout, lines)
+                "Found %r in %s after %d seconds\n'%s'"
+                % (match_for, self._log_path, timeout, lines)
             )
 
     def _check_for_line(self, match_for: str, timeout: float) -> tuple[bool, str]:

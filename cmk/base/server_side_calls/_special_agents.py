@@ -110,7 +110,9 @@ class SpecialAgent:
                 command.command_arguments,
                 self.stored_passwords,
                 processed.surrogates,
-                apply_password_store_hack=password_store.hack.HACK_AGENTS[special_agent.name],
+                apply_password_store_hack=password_store.hack.HACK_AGENTS.get(
+                    special_agent.name, False
+                ),
             )
             # there's a test that currently prevents us from moving this out of the loop
             path = self._make_source_path(special_agent.name)

@@ -598,7 +598,6 @@ def test_get_active_service_data_password_without_hack(
         "_get_command",
         lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
     )
-    monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", False)
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
         legacy_plugins={},
@@ -1609,7 +1608,6 @@ def test_iter_special_agent_commands_stored_password_without_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
-    monkeypatch.setitem(password_store.hack.HACK_AGENTS, "test_agent", False)
 
     special_agent = SpecialAgent(
         plugins=_PASSWORD_TEST_PLUGINS,

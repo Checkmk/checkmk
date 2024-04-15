@@ -190,7 +190,9 @@ class ActiveCheck:
                     service.command_arguments,
                     self.stored_passwords,
                     processed.surrogates,
-                    apply_password_store_hack=password_store.hack.HACK_CHECKS[active_check.name],
+                    apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
+                        active_check.name, False
+                    ),
                 )
                 command_line = f"check_{active_check.name} {arguments}"
                 yield service.service_description, arguments, command_line, conf_dict

@@ -35,6 +35,7 @@ from cmk.gui.userdb import (
     ConfigurableUserConnectionSpec,
     load_connection_config,
     save_connection_config,
+    UserConnectionConfigFile,
 )
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri_contextless
@@ -221,7 +222,7 @@ def get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteI
 def _delete_connection(
     index: int, connection_type: str, *, custom_config_dirs: Iterable[Path]
 ) -> None:
-    connections = load_connection_config(lock=True)
+    connections = UserConnectionConfigFile().load_for_modification()
     connection = connections[index]
     connection_id = connection["id"]
     add_change(
@@ -245,7 +246,7 @@ def _remove_custom_files(cert_dir: Path) -> None:
 
 
 def _move_connection(from_index: int, to_index: int, connection_type: str) -> None:
-    connections = load_connection_config(lock=True)
+    connections = UserConnectionConfigFile().load_for_modification()
     connection = connections[from_index]
     add_change(
         f"move-{connection_type}-connection",

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Callable, Generic, TypeVar
 
@@ -50,6 +51,23 @@ class WatoConfigFile(ABC, Generic[_G]):
     @property
     def name(self) -> str:
         return self._config_file_path.relative_to(omd_root).as_posix()
+
+
+class WatoListConfigFile(WatoConfigFile, Generic[_G]):
+    """Manage simple .mk config file containing a list of objects."""
+
+    def __init__(self, config_file_path: Path, config_variable: str) -> None:
+        super().__init__(config_file_path)
+        self._config_variable = config_variable
+
+    def load_for_reading(self) -> Sequence[_G]:
+        return super().load_for_reading()
+
+    def load_for_modification(self) -> list[_G]:
+        return super().load_for_modification()
+
+    def save(self, cfg: Sequence[_G]) -> None:
+        super().save(cfg)
 
 
 class WatoSingleConfigFile(WatoConfigFile[_T], Generic[_T]):

@@ -5,8 +5,7 @@
 
 from logging import Logger
 
-from cmk.gui.userdb import LDAPUserConnectionConfig, save_connection_config
-from cmk.gui.userdb._connections import load_raw_connection_config
+from cmk.gui.userdb import LDAPUserConnectionConfig, UserConnectionConfigFile
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
@@ -17,14 +16,15 @@ class UpdateLDAPConnections(UpdateAction):
         # These changes were actually made a long time ago. The migrations were just only be done
         # during runtime and never persisted, so the we can not be sure that the migration was done for
         # all connections. So we need to keep the migration for the 2.4 here and can drop it afterwards.
-        connections = load_raw_connection_config()
+        config_file = UserConnectionConfigFile()
+        connections = config_file.load_without_validation()
         migrated = False
         for connection in connections:
             if connection["type"] == "ldap":
                 migrated |= self._migrate_config(connection)
 
         if migrated:
-            save_connection_config(connections)
+            config_file.save(connections)
 
     def _migrate_config(self, cfg: LDAPUserConnectionConfig) -> bool:
         migrated = False

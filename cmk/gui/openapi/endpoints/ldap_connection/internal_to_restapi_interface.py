@@ -25,16 +25,15 @@ from cmk.gui.userdb import (
     LDAPConnectionConfigDiscover,
     LDAPConnectionConfigFixed,
     LDAPUserConnectionConfig,
-    load_connection_config,
     NAV_HIDE_ICONS_TITLE,
     OPEN_LDAP,
-    save_connection_config,
     SHOW_MODE,
     START_URL,
     SyncAttribute,
     TEMP_UNIT,
     UI_SIDEBAR_POSITIONS,
     UI_THEME,
+    UserConnectionConfigFile,
 )
 
 
@@ -1291,24 +1290,27 @@ def request_ldap_connections() -> dict[str, LDAPConnectionInterface]:
 
 
 def request_to_delete_ldap_connection(ldap_id: str) -> None:
-    all_connections = load_connection_config(lock=True)
-    save_connection_config([c for c in all_connections if c["id"] != ldap_id])
+    config_file = UserConnectionConfigFile()
+    all_connections = UserConnectionConfigFile().load_for_modification()
+    config_file.save([c for c in all_connections if c["id"] != ldap_id])
 
 
 def request_to_create_ldap_connection(ldap_data: APIConnection) -> LDAPConnectionInterface:
     connection = LDAPConnectionInterface.from_api_request(ldap_data)
-    all_connections = load_connection_config(lock=True)
+    config_file = UserConnectionConfigFile()
+    all_connections = config_file.load_for_modification()
     all_connections.append(connection.to_mk_format())
-    save_connection_config(all_connections)
+    config_file.save(all_connections)
     return connection
 
 
 def request_to_edit_ldap_connection(
     ldap_id: str, ldap_data: APIConnection
 ) -> LDAPConnectionInterface:
-    all_connections = load_connection_config(lock=True)
+    config_file = UserConnectionConfigFile()
+    all_connections = config_file.load_for_modification()
     connection = LDAPConnectionInterface.from_api_request(ldap_data)
     modified_connections = [c for c in all_connections if c["id"] != ldap_id]
     modified_connections.append(connection.to_mk_format())
-    save_connection_config(modified_connections)
+    config_file.save(modified_connections)
     return connection

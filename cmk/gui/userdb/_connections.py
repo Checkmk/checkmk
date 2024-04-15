@@ -5,9 +5,9 @@
 
 import os
 from collections.abc import Callable, Mapping, Sequence
+from pathlib import Path
 from typing import Any, cast, Literal, NotRequired, TypedDict
 
-import cmk.utils.plugin_registry
 import cmk.utils.store as store
 from cmk.utils.config_validation_layer.user_connections import (
     PrivateKeyPath,
@@ -17,6 +17,8 @@ from cmk.utils.config_validation_layer.user_connections import (
 
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoListConfigFile
+from cmk.gui.watolib.utils import multisite_dir
 
 from ._connector import ConnectorType, user_connector_registry, UserConnectionConfig, UserConnector
 
@@ -315,37 +317,16 @@ def _get_attributes(
     return selector(connection) if connection else []
 
 
-def _multisite_dir() -> str:
-    return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
+UserConnections = list[ConfigurableUserConnectionSpec] | Sequence[ConfigurableUserConnectionSpec]
 
 
-def load_connection_config(lock: bool = False) -> list[ConfigurableUserConnectionSpec]:
-    """Load the configured connections for the Setup
-
-    Note:
-        This function should only be used in the Setup context, when configuring
-        the connections. During UI rendering, `active_config.user_connections` must
-        be used.
-    """
-    connections = load_raw_connection_config(lock)
-    validate_user_connections(connections)
-    return connections
+def load_connection_config(lock: bool = False) -> UserConnections:
+    if lock:
+        return UserConnectionConfigFile().load_for_modification()
+    return UserConnectionConfigFile().load_for_reading()
 
 
-def load_raw_connection_config(
-    lock: bool = False,
-) -> list[ConfigurableUserConnectionSpec]:
-    """Only use this directly for update config actions"""
-    filename = os.path.join(_multisite_dir(), "user_connections.mk")
-    connections = store.load_from_mk_file(filename, "user_connections", default=[], lock=lock)
-    return connections
-
-
-def save_connection_config(
-    connections: Sequence[ConfigurableUserConnectionSpec],
-    base_dir: str | None = None,
-    validate: bool = True,
-) -> None:
+def save_connection_config(connections: Sequence[ConfigurableUserConnectionSpec]) -> None:
     """Save the connections for the Setup
 
     Note:
@@ -353,23 +334,77 @@ def save_connection_config(
         the connections. During UI rendering, `active_config.user_connections` must
         be used.
     """
-    if validate:
-        validate_user_connections(connections)
-    save_raw_connection_config(connections, base_dir)
+    UserConnectionConfigFile().save(connections)
 
 
-def save_raw_connection_config(
-    connections: Sequence[Mapping[str, Any]], base_dir: str | None = None
+def save_snapshot_user_connection_config(
+    connections: list[Mapping[str, Any]],
+    snapshot_work_dir: str,
 ) -> None:
-    """Only use this directly for update config actions"""
-    if not base_dir:
-        base_dir = _multisite_dir()
-    store.makedirs(base_dir)
+    save_dir = os.path.join(snapshot_work_dir, "etc/check_mk/multisite.d/wato")
+    store.makedirs(save_dir)
     store.save_to_mk_file(
-        os.path.join(base_dir, "user_connections.mk"), "user_connections", connections
+        os.path.join(save_dir, "user_connections.mk"), "user_connections", connections
     )
 
     for connector_class in user_connector_registry.values():
         connector_class.config_changed()
 
     clear_user_connection_cache()
+
+
+class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec]):
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(multisite_dir() + "user_connections.mk"),
+            config_variable="user_connections",
+        )
+
+    def load_for_reading(self) -> Sequence[ConfigurableUserConnectionSpec]:
+        cfg = self._load_file(lock=False)
+        validate_user_connections(cfg)
+        return cfg
+
+    def load_for_modification(self) -> list[ConfigurableUserConnectionSpec]:
+        cfg = self._load_file(lock=True)
+        validate_user_connections(cfg)
+        return cfg
+
+    def _load_file(self, lock: bool) -> list[ConfigurableUserConnectionSpec]:
+        return store.load_from_mk_file(
+            self._config_file_path,
+            key=self._config_variable,
+            default=[],
+            lock=lock,
+        )
+
+    def save(self, cfg: Sequence[ConfigurableUserConnectionSpec]) -> None:
+        validate_user_connections(cfg)
+        self._save(cfg)
+
+    def _save(self, cfg: Sequence) -> None:
+        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        store.save_to_mk_file(
+            str(self._config_file_path),
+            self._config_variable,
+            cfg,
+            pprint_value=active_config.wato_pprint_config,
+        )
+
+        for connector_class in user_connector_registry.values():
+            connector_class.config_changed()
+
+        clear_user_connection_cache()
+
+    def load_without_validation(self, lock: bool = False) -> list[ConfigurableUserConnectionSpec]:
+        """Only use this directly for update config actions"""
+        return self._load_file(lock=True)
+
+    def save_without_validation(self, cfg: list) -> None:
+        """Only use this directly for update config actions"""
+        self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
+        self._save(cfg)
+
+
+def register_config_file(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(UserConnectionConfigFile())

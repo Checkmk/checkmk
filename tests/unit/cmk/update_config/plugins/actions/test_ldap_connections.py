@@ -8,10 +8,9 @@ import logging
 from cmk.gui.userdb import (
     LDAPConnectionConfigFixed,
     LDAPUserConnectionConfig,
-    load_connection_config,
-    save_connection_config,
+    UserConnectionConfigFile,
 )
-from cmk.gui.userdb._connections import save_raw_connection_config
+from cmk.gui.utils.script_helpers import gui_context
 
 from cmk.update_config.plugins.actions.ldap_connections import UpdateLDAPConnections
 
@@ -49,7 +48,8 @@ def test_update_ldap_connection_not_changed() -> None:
             "type": "ldap",
         }
     )
-    save_connection_config([connection])
+    with gui_context():
+        UserConnectionConfigFile().save([connection])
 
     UpdateLDAPConnections(
         name="update_ldap_connections",
@@ -57,7 +57,7 @@ def test_update_ldap_connection_not_changed() -> None:
         sort_index=100,  # can run whenever
     )(logging.getLogger(), {})
 
-    assert load_connection_config() == [connection]
+    assert UserConnectionConfigFile().load_for_reading() == [connection]
 
 
 def test_update_ldap_connection_directory_type() -> None:
@@ -84,15 +84,16 @@ def test_update_ldap_connection_directory_type() -> None:
         "cache_livetime": 300,
         "type": "ldap",
     }
-    save_raw_connection_config([connection])
+    with gui_context():
+        UserConnectionConfigFile().save_without_validation([connection])
 
-    UpdateLDAPConnections(
-        name="update_ldap_connections",
-        title="Update LDAP connections",
-        sort_index=100,  # can run whenever
-    )(logging.getLogger(), {})
+        UpdateLDAPConnections(
+            name="update_ldap_connections",
+            title="Update LDAP connections",
+            sort_index=100,  # can run whenever
+        )(logging.getLogger(), {})
 
-    loaded_connection = load_connection_config()[0]
+    loaded_connection = UserConnectionConfigFile().load_for_reading()[0]
     assert loaded_connection["type"] == "ldap"
     assert loaded_connection["directory_type"] == (
         "ad",
@@ -119,15 +120,16 @@ def test_update_ldap_connection_separate_server_and_directory_type() -> None:
         "cache_livetime": 300,
         "type": "ldap",
     }
-    save_raw_connection_config([connection])
+    with gui_context():
+        UserConnectionConfigFile().save_without_validation([connection])
 
-    UpdateLDAPConnections(
-        name="update_ldap_connections",
-        title="Update LDAP connections",
-        sort_index=100,  # can run whenever
-    )(logging.getLogger(), {})
+        UpdateLDAPConnections(
+            name="update_ldap_connections",
+            title="Update LDAP connections",
+            sort_index=100,  # can run whenever
+        )(logging.getLogger(), {})
 
-    loaded_connection = load_connection_config()[0]
+    loaded_connection = UserConnectionConfigFile().load_for_reading()[0]
     assert loaded_connection["type"] == "ldap"
     assert loaded_connection["directory_type"] == (
         "ad",

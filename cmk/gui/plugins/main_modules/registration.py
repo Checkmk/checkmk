@@ -64,6 +64,7 @@ from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.sidebar import snapin_registry
+from cmk.gui.userdb import register_config_file as user_connections_config
 from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
 from cmk.gui.valuespec import autocompleter_registry
@@ -289,6 +290,7 @@ def register() -> None:
     notifications_config.register(config_file_registry)
     tag_config.register(config_file_registry)
     sites_config.register(config_file_registry)
+    user_connections_config(config_file_registry)
 
 
 register()

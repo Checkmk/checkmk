@@ -5237,11 +5237,26 @@ class Timerange(CascadingDropdown):
         def _month_edge_days(now: float, day_id: str) -> ComputedTimerange:
             # base time is current time rounded down to month
             from_time = TimeHelper.round(now, "m")
-            if day_id == "f1":
+            if day_id in ["f1", "fwd1"]:  # first (work) day of last month
                 from_time = TimeHelper.add(from_time, -1, "m")
-            if day_id == "l1":
+            if day_id in ["l1", "lwd1"]:  # last (work) day of last month
                 from_time = TimeHelper.add(from_time, -1, "d")
+            if day_id == "lwd0":  # last work day of this month
+                from_time = TimeHelper.add(from_time, 1, "m")
+                from_time = TimeHelper.add(from_time, -1, "d")
+
+            if (
+                "wd" in day_id
+                and (weekday_number := datetime.datetime.fromtimestamp(from_time).weekday()) > 4
+            ):
+                # find first/last work day. we're ignoring holidays here
+                if day_id.startswith("fwd"):
+                    from_time = TimeHelper.add(from_time, 7 - weekday_number, "d")
+                elif day_id.startswith("lwd"):
+                    from_time = TimeHelper.add(from_time, 4 - weekday_number, "d")
+
             end_time = TimeHelper.add(from_time, 1, "d")
+
             return ComputedTimerange(
                 (int(from_time), int(end_time)),
                 time.strftime("%d/%m/%Y", time.localtime(from_time)),
@@ -5303,7 +5318,7 @@ class Timerange(CascadingDropdown):
             title = _("Last %d %s") % (count, unit_name)
             return ComputedTimerange((int(from_time), int(now)), title)
 
-        if rangespec in ["f0", "f1", "l1"]:
+        if rangespec in ["f0", "f1", "l1", "fwd0", "lwd0", "fwd1", "lwd1"]:
             return _month_edge_days(now, rangespec)
 
         # base time is current time rounded down to the nearest unit (day, week, ...)

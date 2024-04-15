@@ -608,7 +608,8 @@ class LDAPConnectionValuespec(Dictionary):
                         "user accounts for gathering their attributes. The user options which get imported "
                         "into Checkmk from LDAP will be locked in Setup."
                     ),
-                    elements=lambda: ldap_attribute_plugins_elements(self._connection),
+                    # Temporary suppression. Fix will come soon.
+                    elements=lambda: ldap_attribute_plugins_elements(self._connection),  # type: ignore[arg-type]
                     default_keys=["email", "alias", "auth_expire"],
                 ),
             ),

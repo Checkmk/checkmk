@@ -96,7 +96,8 @@ class LDAPConnectionValuespec(Dictionary):
         self._new = new
         self._connection_id = connection_id
         connection = get_connection(self._connection_id)
-        assert isinstance(connection, LDAPUserConnector)
+        if connection and not isinstance(connection, LDAPUserConnector):
+            raise TypeError("connection is not LDAPUserConnector")
         self._connection = connection
 
         general_elements = self._general_elements()

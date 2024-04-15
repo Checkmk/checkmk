@@ -497,7 +497,7 @@ class ActionHandler:
         self._did_stop_job = False
         self._did_delete_job = False
 
-    def confirm_dialog_opened(self):
+    def confirm_dialog_opened(self) -> bool:
         for action_var in [self.stop_job_var, self.delete_job_var]:
             if request.has_var(action_var):
                 return True
@@ -515,16 +515,16 @@ class ActionHandler:
             return True
         return False
 
-    def did_acknowledge_job(self):
+    def did_acknowledge_job(self) -> bool:
         return self._did_acknowledge_job
 
-    def did_stop_job(self):
+    def did_stop_job(self) -> bool:
         return self._did_stop_job
 
-    def did_delete_job(self):
+    def did_delete_job(self) -> bool:
         return self._did_delete_job
 
-    def acknowledge_job(self):
+    def acknowledge_job(self) -> None:
         job_id = request.get_ascii_input_mandatory(self.acknowledge_job_var)
         job = BackgroundJob(job_id)
         if not job.is_available():
@@ -533,7 +533,7 @@ class ActionHandler:
         self._did_acknowledge_job = True
         job.acknowledge(user.id)
 
-    def stop_job(self):
+    def stop_job(self) -> None:
         job_id = request.get_ascii_input_mandatory(self.stop_job_var)
         job = BackgroundJob(job_id)
         if not job.is_available():
@@ -548,7 +548,7 @@ class ActionHandler:
             self._did_stop_job = True
             html.show_message(_("Background job has been stopped"))
 
-    def delete_job(self):
+    def delete_job(self) -> None:
         job_id = request.get_ascii_input_mandatory(self.delete_job_var)
         job = BackgroundJob(job_id)
         if not job.is_available():

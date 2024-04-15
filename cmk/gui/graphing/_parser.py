@@ -9,6 +9,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal
 
+from cmk.gui.valuespec import Age, Float, Integer, Percentage
+
 from cmk.graphing.v1 import metrics
 
 from ._loader import units_from_api
@@ -460,6 +462,16 @@ class TimeFormatter(NotationFormatter):
         return _BASIC_DECIMAL_ATOMS[:6]
 
 
+def _vs_type(unit: metrics.Unit) -> type[Age] | type[Float] | type[Integer] | type[Percentage]:
+    if isinstance(unit.notation, metrics.TimeNotation):
+        return Age
+    if unit.notation.symbol.startswith("%"):
+        return Percentage
+    if unit.precision.digits == 0:
+        return Integer
+    return Float
+
+
 def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
     if (
         unit_id := (
@@ -510,6 +522,7 @@ def parse_or_add_unit(unit: metrics.Unit) -> UnitInfo:
     new cmk.number_format.{unit.precision.__class__.__name__}({unit.precision.digits}),
 ).render(v)""",
             formatter_ident=formatter.ident(),
+            valuespec=_vs_type(unit),
         )
     )
 

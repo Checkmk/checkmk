@@ -13,7 +13,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.time_series import TimeSeries
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
@@ -44,7 +44,9 @@ class UnitInfo(TypedDict):
     color: NotRequired[str]
     graph_unit: NotRequired[Callable[[list[float]], tuple[str, list[str]]]]
     description: NotRequired[str]
-    valuespec: NotRequired[type[ValueSpec]]
+    valuespec: NotRequired[
+        type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage]
+    ]
     conversion: NotRequired[Callable[[float], float]]
     perfometer_render: NotRequired[Callable[[float], str]]
     formatter_ident: NotRequired[

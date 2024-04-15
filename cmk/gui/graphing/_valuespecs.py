@@ -17,16 +17,20 @@ from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import Choice, Choices, GraphTitleFormatVS, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
+    Age,
     CascadingDropdown,
     CascadingDropdownChoiceValue,
     Checkbox,
     Dictionary,
     DropdownChoice,
     DropdownChoiceWithHostAndServiceHints,
+    Filesize,
     Float,
     Fontsize,
+    Integer,
     ListChoice,
     MigrateNotUpdated,
+    Percentage,
     Tuple,
     ValueSpecHelp,
     ValueSpecValidateFunc,
@@ -256,36 +260,48 @@ class ValuesWithUnits(CascadingDropdown):
         validate_value_elemets: ValueSpecValidateFunc[tuple[Any, ...]] | None = None,
         help: ValueSpecHelp | None = None,
     ):
-        super().__init__(choices=registered_units(), help=help)
+        super().__init__(choices=self._unit_choices, help=help)
         self._vs_name = vs_name
         self._metric_vs_name = metric_vs_name
         self._elements = elements
         self._validate_value_elements = validate_value_elemets
 
-    def _unit_vs(self, info):
+    def _unit_vs(
+        self,
+        vs: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage],
+        symbol: str,
+    ) -> Tuple:
         def set_vs(vs, title, default):
             if vs.__name__ in ["Float", "Integer"]:
-                return vs(title=title, unit=info["symbol"], default_value=default)
+                return vs(title=title, unit=symbol, default_value=default)
             return vs(title=title, default_value=default)
-
-        vs = info.get("valuespec") or Float
 
         return Tuple(
             elements=[set_vs(vs, elem["title"], elem["default"]) for elem in self._elements],
             validate=self._validate_value_elements,
         )
 
+    def _unit_choices(self) -> Sequence[tuple[str, str, Tuple]]:
+        return [
+            (
+                registered_unit.name,
+                registered_unit.description or registered_unit.title,
+                self._unit_vs(registered_unit.valuespec, registered_unit.symbol),
+            )
+            for registered_unit in registered_units()
+        ]
+
     @staticmethod
     def resolve_units(metric_name: MetricName_ | None) -> PageResult:
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
-        known_units = [id_ for id_, _title in registered_units()]
         if metric_name:
             required_unit = get_extended_metric_info(metric_name)["unit"]["id"]
         else:
             required_unit = ""
 
+        known_units = [registered_unit.name for registered_unit in registered_units()]
         try:
             index = known_units.index(required_unit)
         except ValueError:

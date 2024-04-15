@@ -188,19 +188,7 @@ def patch_themes(EDITION) {
                     echo '@mixin ntop {}' > web/htdocs/themes/${THEME}/scss/cee/_ntop.scss
                     echo '@mixin license_usage {}' > web/htdocs/themes/${THEME}/scss/cee/_license_usage.scss
                     echo '@mixin robotmk {}' > web/htdocs/themes/${THEME}/scss/cee/_robotmk.scss
-                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
                 """
-            }
-            break
-        case 'cloud':
-        case 'saas':
-        case 'enterprise':
-        case 'free':
-            // Workaround since scss does not support conditional includes
-            THEME_LIST.each { THEME ->
-                sh("""
-                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
-                """);
             }
             break
     }

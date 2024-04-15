@@ -58,12 +58,8 @@ function Write-Help() {
     Write-Host "  -A, --all            shortcut to -B -C -O -T -M -E -Q:  build, ctl, ohm, unit, msi, extensions, mk-sql"
     Write-Host "  --clean-all          clean literally all, use with care"
     Write-Host "  --clean-artifacts    clean artifacts"
-    #Write-Host "  -S, --setup          check setup" # not implemented
     Write-Host "  -C, --ctl            build controller"
     Write-Host "  -Q, --mk-sql         build mk-sql"
-    # Write-Host "  -D, --documentation  create documentation" # not implemented
-    #Write-Host "  -f, --format         format sources" # not implemented
-    #Write-Host "  -F, --check-format   check for correct formatting" # not implemented
     Write-Host "  -B, --build          build agent"
     Write-Host "  -M, --msi            build msi"
     Write-Host "  -O, --ohm            build ohm"
@@ -91,9 +87,6 @@ else {
         switch ($args[$i]) {
             { $("-?", "-h", "--help") -contains "$_" } { Write-Help; return }
             { $("-A", "--all") -contains $_ } { $argAll = $true }
-            #{ $("-S", "--setup") -contains $_ } { $argSetup = $true }
-            #{ $("-f", "--format") -contains $_ } { $argFormat = $true }
-            #{ $("-F", "--check-format") -contains $_ } { $argCheckFormat = $true }
             { $("-C", "--controller") -contains $_ } { $argCtl = $true }
             { $("-B", "--build") -contains $_ } { $argBuild = $true }
             { $("-M", "--msi") -contains $_ } { $argMsi = $true }
@@ -101,7 +94,6 @@ else {
             { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
             { $("-T", "--test") -contains $_ } { $argTest = $true }
-            #{ $("-D", "--documentation") -contains $_ } { $argDoc = $true }
             "--clean-all" { $argClean = $true; $argCleanArtifacts = $true }
             "--clean-artifacts" { $argCleanArtifacts = $true }
             "--detach" { $argDetach = $true }

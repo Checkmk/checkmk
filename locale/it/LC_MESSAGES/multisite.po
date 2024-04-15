@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-03-13 07:00+0000\n"
+"PO-Revision-Date: 2024-04-12 06:00+0000\n"
 "Last-Translator: Martin Hirschvogel <martin.hirschvogel@checkmk.com>\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/"
 "software/it/>\n"
@@ -14328,6 +14328,10 @@ msgstr "Il livello critico è al massimo"
 msgid "Critical of "
 msgstr "Critica di "
 
+#, fuzzy, python-format
+msgid "Critical of %s"
+msgstr "Critico se %s"
+
 msgid "Critical threshold"
 msgstr "Soglia critica"
 
@@ -15048,7 +15052,7 @@ msgid "DaemonSet problems"
 msgstr "Problemi con DaemonSet"
 
 msgid "DaemonSets"
-msgstr "Set di demoni"
+msgstr "DaemonSets"
 
 msgid "Daily"
 msgstr "Quotidiano"
@@ -30029,7 +30033,7 @@ msgstr ""
 "%s"
 
 #, fuzzy
-msgid "Internal rmk_id"
+msgid "Internal plan_id"
 msgstr "ID interno della suite"
 
 msgid "Internal user"
@@ -30526,6 +30530,10 @@ msgstr "Inventario: Storia"
 
 msgid "Invert matching"
 msgstr "Invertire la corrispondenza"
+
+#, fuzzy
+msgid "Invisible"
+msgstr "Visibile"
 
 msgid "Invocations"
 msgstr "Invocazioni"
@@ -31069,10 +31077,10 @@ msgid "Kubernetes CPU resource utilization"
 msgstr "Utilizzo delle risorse CPU di Kubernetes"
 
 msgid "Kubernetes Cluster"
-msgstr "Cluster Kubernetes"
+msgstr "Kubernetes Cluster"
 
 msgid "Kubernetes Clusters"
-msgstr "Cluster Kubernetes"
+msgstr "Kubernetes Clusters"
 
 msgid "Kubernetes Collector Info"
 msgstr "Info sul collettore Kubernetes"
@@ -31081,28 +31089,28 @@ msgid "Kubernetes CronJob status"
 msgstr "Stato di Kubernetes CronJob"
 
 msgid "Kubernetes DaemonSet"
-msgstr "DaemonSet Kubernetes"
+msgstr "Kubernetes DaemonSet"
 
 msgid "Kubernetes Daemonset"
-msgstr "Daemonset Kubernetes"
+msgstr "Kubernetes Daemonset"
 
 msgid "Kubernetes Daemonsets"
-msgstr "Daemonset Kubernetes"
+msgstr "Kubernetes DaemonSets"
 
 msgid "Kubernetes Deployment"
-msgstr "Distribuzione di Kubernetes"
+msgstr "Kubernetes Deployment"
 
 msgid "Kubernetes Deployments"
-msgstr "Distribuzioni Kubernetes"
+msgstr "Kubernetes Deployments"
 
 msgid "Kubernetes Namespace"
-msgstr "Spazio dei nomi Kubernetes"
+msgstr "Kubernetes Namespace"
 
 msgid "Kubernetes Namespaces"
-msgstr "Spazi dei nomi di Kubernetes"
+msgstr "Kubernetes Namespaces"
 
 msgid "Kubernetes Node"
-msgstr "Nodi Kubernetes"
+msgstr "Kubernetes Node"
 
 msgid "Kubernetes StatefulSet"
 msgstr "Kubernetes StatefulSet"
@@ -35155,6 +35163,11 @@ msgstr "Durata massima di esecuzione per l'ultima esecuzione"
 
 msgid "Maximum session duration"
 msgstr "Durata massima della sessione"
+
+msgid ""
+"Maximum session duration almost reached. Re-authenticate session to prevent "
+"dataloss."
+msgstr ""
 
 msgid "Maximum single-request consumption"
 msgstr "Consumo massimo a richiesta singola"
@@ -39786,6 +39799,9 @@ msgstr ""
 "di dialogo è possibile analizzare e fare il debug dell'intero set di modelli "
 "di logfile."
 
+msgid "Onboarding button toggle"
+msgstr ""
+
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
@@ -42307,6 +42323,12 @@ msgstr "La comunicazione in chiaro è abilitata per %s"
 msgid "Plaintext"
 msgstr "Testo in chiaro"
 
+msgid "Plan ID"
+msgstr ""
+
+msgid "Plans"
+msgstr ""
+
 msgid "Platform Firmware level"
 msgstr "Piattaforma Livello firmware"
 
@@ -43006,19 +43028,19 @@ msgid "Pod resources: Cluster"
 msgstr "Risorse del Pod: Cluster"
 
 msgid "Pod resources: DaemonSet"
-msgstr "Risorse del pod: DaemonSet"
+msgstr "Risorse del Pod: DaemonSet"
 
 msgid "Pod resources: Deployment"
-msgstr "Risorse Pod: Distribuzione"
+msgstr "Risorse del Pod: Deployment"
 
 msgid "Pod resources: Namespace"
-msgstr "Risorse del Pod: Spazio dei nomi"
+msgstr "Risorse del Pod: Namespace"
 
 msgid "Pod resources: StatefulSet"
-msgstr "Risorse del pod: StatefulSet"
+msgstr "Risorse del Pod: StatefulSet"
 
 msgid "Pods"
-msgstr "Baccelli"
+msgstr "Pods"
 
 msgid "Pods of CronJobs"
 msgstr "Baccelli di CronJobs"
@@ -44211,9 +44233,6 @@ msgstr "REWRITE"
 
 msgid "RMAN Backups"
 msgstr "Backup RMAN"
-
-msgid "RMK ID"
-msgstr ""
 
 msgid "RMON packets per second"
 msgstr "Pacchetti RMON al secondo"
@@ -46472,9 +46491,6 @@ msgid ""
 "Robot Framework tests as Checkmk services."
 msgstr ""
 
-msgid "Robotmk Dashboard"
-msgstr "Cruscotto Robotmk"
-
 #, fuzzy
 msgid "Robotmk Enterprise features are hidden."
 msgstr "Caratteristica dell'impresa"
@@ -46486,8 +46502,8 @@ msgid "Robotmk logs"
 msgstr "Registri di Robotmk"
 
 #, fuzzy
-msgid "Robotmk suite"
-msgstr "Stato della suite Robotmk"
+msgid "Robotmk plan"
+msgstr "Registri di Robotmk"
 
 #, fuzzy
 msgid "Robotmk test"
@@ -46905,11 +46921,15 @@ msgstr "Sessioni di corsa"
 msgid "Runtime"
 msgstr "Runtime"
 
+#, fuzzy
+msgid "Runtime (Peak Attempt)"
+msgstr "Tentativo di controllo corrente"
+
 msgid "Runtime run queue"
 msgstr "Coda di esecuzione runtime"
 
 #, fuzzy
-msgid "Runtime-Timeout ratio"
+msgid "Runtime-limit ratio (Peak Attempt)"
 msgstr "Rapporto di successo della regola"
 
 msgid "Rx"
@@ -53534,9 +53554,6 @@ msgstr "Firma verificata con successo"
 msgid "Suggested tutorial videos"
 msgstr "Video tutorial consigliati"
 
-msgid "Suite runtime"
-msgstr "Tempo di esecuzione della suite"
-
 msgid "Sum"
 msgstr "Somma"
 
@@ -53800,12 +53817,12 @@ msgid "Synthetic Monitoring"
 msgstr "Monitoraggio sintetico"
 
 #, fuzzy
-msgid "Synthetic Monitoring Tests"
-msgstr "Monitoraggio sintetico"
-
-#, fuzzy
 msgid "Synthetic Monitoring is an add-on."
 msgstr "Ricerca in Monitoraggio"
+
+#, fuzzy
+msgid "Synthetic Monitoring tests"
+msgstr "Monitoraggio sintetico"
 
 #, python-format
 msgid "Synthetic monitoring (licensed tests: %s)"
@@ -55180,10 +55197,10 @@ msgid "The Port Description"
 msgstr "La descrizione del porto"
 
 msgid ""
-"The Runtime-Timeout ratio is calculated as <i>runtime * 100 / timeout</i>. "
-"These thresholds apply to the runtime of a single execution attempt. If "
-"there are multiple execution attempts, the thresholds apply to the longest "
-"runtime. "
+"The Runtime-limit ratio (Peak Attempt) is calculated as <i>runtime * 100 / "
+"timeout</i>. These thresholds apply to the runtime of a single execution "
+"attempt. If there are multiple execution attempts, the thresholds apply to "
+"the longest runtime. "
 msgstr ""
 
 msgid ""
@@ -57320,6 +57337,13 @@ msgid ""
 "Checkmk."
 msgstr ""
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk. You may use macros in this field. The most common ones are $HOSTNAME"
+"$, $HOSTALIAS$ or $HOSTADDRESS$."
+msgstr ""
+
 msgid "The name of the Data Proxy"
 msgstr "Il nome del Data Proxy"
 
@@ -57954,9 +57978,9 @@ msgid "The power supply sensor name as shown in the service"
 msgstr "Il nome del sensore di alimentazione come mostrato nel servizio"
 
 msgid ""
-"The prefix is automatically to each service to be able to organize them. The "
-"prefix is static and will be CERT. Alternatively, you may choose to not use "
-"the prefix option."
+"The prefix is automatically attached to each service name to be able to "
+"organize them. The prefix is static and will be CERT. Alternatively, you may "
+"choose to not use the prefix option."
 msgstr ""
 
 msgid ""
@@ -71268,6 +71292,10 @@ msgstr "Livelli di avvertimento per Time Offset"
 msgid "Warning of "
 msgstr "Avviso di "
 
+#, fuzzy, python-format
+msgid "Warning of %s"
+msgstr "Attenzione se %s"
+
 msgid "Warning starts with"
 msgstr "L'avvertimento inizia con"
 
@@ -74767,9 +74795,9 @@ msgstr ""
 
 msgid ""
 "You may enter any fully qualified domain name or valid IP address here. The "
-"name does must not contain any further information, like port or protocol. "
-"You may use macros in this field. The most common ones are $HOSTNAME$, "
-"$HOSTALIAS$ or $HOSTADDRESS$."
+"name must not contain any further information, like port or protocol. You "
+"may use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS"
+"$ or $HOSTADDRESS$."
 msgstr ""
 
 msgid ""
@@ -77434,6 +77462,17 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Robotmk Dashboard"
+#~ msgstr "Cruscotto Robotmk"
+
+#, fuzzy
+#~| msgid "Robotmk suite status"
+#~ msgid "Robotmk suite"
+#~ msgstr "Stato della suite Robotmk"
+
+#~ msgid "Suite runtime"
+#~ msgstr "Tempo di esecuzione della suite"
 
 #~ msgid "Attribute Sync Plug-ins"
 #~ msgstr "Plug-in di sincronizzazione degli attributi"

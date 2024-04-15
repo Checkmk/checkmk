@@ -14501,6 +14501,10 @@ msgstr "Kritisch niveau is ten minste"
 msgid "Critical of "
 msgstr "Kritisch als %s"
 
+#, fuzzy, python-format
+msgid "Critical of %s"
+msgstr "Kritisch als %s"
+
 msgid "Critical threshold"
 msgstr "Kritieke drempel"
 
@@ -30350,7 +30354,7 @@ msgstr ""
 "%s"
 
 #, fuzzy
-msgid "Internal rmk_id"
+msgid "Internal plan_id"
 msgstr "Interne gebruiker"
 
 msgid "Internal user"
@@ -30851,6 +30855,10 @@ msgstr "Inventaris: Geschiedenis"
 
 msgid "Invert matching"
 msgstr "Omgekeerde koppeling"
+
+#, fuzzy
+msgid "Invisible"
+msgstr "Zichtbaar"
 
 msgid "Invocations"
 msgstr "Invocaties"
@@ -35549,6 +35557,11 @@ msgstr "Maximale duur van de laatste uitvoering"
 msgid "Maximum session duration"
 msgstr "Maximale spoelduur"
 
+msgid ""
+"Maximum session duration almost reached. Re-authenticate session to prevent "
+"dataloss."
+msgstr ""
+
 msgid "Maximum single-request consumption"
 msgstr "Maximaal verbruik bij één verzoek"
 
@@ -40241,6 +40254,9 @@ msgstr ""
 "dialoogvenster is het mogelijk om je hele set logfile patronen te analyseren "
 "en te debuggen."
 
+msgid "Onboarding button toggle"
+msgstr ""
+
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
@@ -42787,6 +42803,12 @@ msgstr "Communicatie via platte tekst is ingeschakeld voor %s"
 msgid "Plaintext"
 msgstr "Onduidelijke tekst"
 
+msgid "Plan ID"
+msgstr ""
+
+msgid "Plans"
+msgstr ""
+
 msgid "Platform Firmware level"
 msgstr "Platform Firmware niveau"
 
@@ -44706,9 +44728,6 @@ msgstr "REWRITE"
 
 msgid "RMAN Backups"
 msgstr "RMAN Back-ups"
-
-msgid "RMK ID"
-msgstr ""
 
 msgid "RMON packets per second"
 msgstr "RMON-pakketten per seconde"
@@ -46982,10 +47001,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Robotmk Dashboard"
-msgstr "Probleem dashboard"
-
-#, fuzzy
 msgid "Robotmk Enterprise features are hidden."
 msgstr "Ondernemingsfunctie"
 
@@ -46998,8 +47013,8 @@ msgid "Robotmk logs"
 msgstr "RobotMK logboeken"
 
 #, fuzzy
-msgid "Robotmk suite"
-msgstr "Status van de site"
+msgid "Robotmk plan"
+msgstr "RobotMK logboeken"
 
 #, fuzzy
 msgid "Robotmk test"
@@ -47414,11 +47429,15 @@ msgstr "Lopende sessies"
 msgid "Runtime"
 msgstr "Runtime"
 
+#, fuzzy
+msgid "Runtime (Peak Attempt)"
+msgstr "Huidige controlepoging"
+
 msgid "Runtime run queue"
 msgstr "Runtime wachtrij"
 
 #, fuzzy
-msgid "Runtime-Timeout ratio"
+msgid "Runtime-limit ratio (Peak Attempt)"
 msgstr "Regel trefverhouding"
 
 msgid "Rx"
@@ -54117,10 +54136,6 @@ msgstr "Succesvol geverifieerde handtekening"
 msgid "Suggested tutorial videos"
 msgstr "Voorgestelde instructievideo's"
 
-#, fuzzy
-msgid "Suite runtime"
-msgstr "Naam site"
-
 msgid "Sum"
 msgstr "Som"
 
@@ -54389,11 +54404,11 @@ msgid "Synthetic Monitoring"
 msgstr "Zoeken in Toezicht"
 
 #, fuzzy
-msgid "Synthetic Monitoring Tests"
+msgid "Synthetic Monitoring is an add-on."
 msgstr "Zoeken in Toezicht"
 
 #, fuzzy
-msgid "Synthetic Monitoring is an add-on."
+msgid "Synthetic Monitoring tests"
 msgstr "Zoeken in Toezicht"
 
 #, python-format
@@ -55798,10 +55813,10 @@ msgid "The Port Description"
 msgstr "De Haven Beschrijving"
 
 msgid ""
-"The Runtime-Timeout ratio is calculated as <i>runtime * 100 / timeout</i>. "
-"These thresholds apply to the runtime of a single execution attempt. If "
-"there are multiple execution attempts, the thresholds apply to the longest "
-"runtime. "
+"The Runtime-limit ratio (Peak Attempt) is calculated as <i>runtime * 100 / "
+"timeout</i>. These thresholds apply to the runtime of a single execution "
+"attempt. If there are multiple execution attempts, the thresholds apply to "
+"the longest runtime. "
 msgstr ""
 
 msgid ""
@@ -57953,6 +57968,13 @@ msgid ""
 "Checkmk."
 msgstr ""
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk. You may use macros in this field. The most common ones are $HOSTNAME"
+"$, $HOSTALIAS$ or $HOSTADDRESS$."
+msgstr ""
+
 msgid "The name of the Data Proxy"
 msgstr "De naam van de Data Proxy"
 
@@ -58591,9 +58613,9 @@ msgid "The power supply sensor name as shown in the service"
 msgstr "De naam van de voedingssensor zoals aangegeven in de service"
 
 msgid ""
-"The prefix is automatically to each service to be able to organize them. The "
-"prefix is static and will be CERT. Alternatively, you may choose to not use "
-"the prefix option."
+"The prefix is automatically attached to each service name to be able to "
+"organize them. The prefix is static and will be CERT. Alternatively, you may "
+"choose to not use the prefix option."
 msgstr ""
 
 msgid ""
@@ -72061,6 +72083,10 @@ msgstr "Waarschuwingsniveaus voor tijdafwijking"
 msgid "Warning of "
 msgstr "Waarschuwing als %s"
 
+#, fuzzy, python-format
+msgid "Warning of %s"
+msgstr "Waarschuwing als %s"
+
 msgid "Warning starts with"
 msgstr "Waarschuwing begint met"
 
@@ -75597,9 +75623,9 @@ msgstr ""
 
 msgid ""
 "You may enter any fully qualified domain name or valid IP address here. The "
-"name does must not contain any further information, like port or protocol. "
-"You may use macros in this field. The most common ones are $HOSTNAME$, "
-"$HOSTALIAS$ or $HOSTADDRESS$."
+"name must not contain any further information, like port or protocol. You "
+"may use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS"
+"$ or $HOSTADDRESS$."
 msgstr ""
 
 msgid ""
@@ -78297,6 +78323,21 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Problem dashboard"
+#~ msgid "Robotmk Dashboard"
+#~ msgstr "Probleem dashboard"
+
+#, fuzzy
+#~| msgid "Site status"
+#~ msgid "Robotmk suite"
+#~ msgstr "Status van de site"
+
+#, fuzzy
+#~| msgid "Site name"
+#~ msgid "Suite runtime"
+#~ msgstr "Naam site"
 
 #, fuzzy
 #~| msgid "Attribute Sync Plugins"

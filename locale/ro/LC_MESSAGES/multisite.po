@@ -14491,6 +14491,10 @@ msgstr "Nivelul critic este de cel mult"
 msgid "Critical of "
 msgstr "Critic pentru "
 
+#, fuzzy, python-format
+msgid "Critical of %s"
+msgstr "Critic dacă %s"
+
 msgid "Critical threshold"
 msgstr "Pragul critic"
 
@@ -30376,7 +30380,7 @@ msgstr ""
 "%s"
 
 #, fuzzy
-msgid "Internal rmk_id"
+msgid "Internal plan_id"
 msgstr "Interne suite_id"
 
 msgid "Internal user"
@@ -30876,6 +30880,10 @@ msgstr "Inventar: Istorie"
 
 msgid "Invert matching"
 msgstr "Inversarea corespondenței"
+
+#, fuzzy
+msgid "Invisible"
+msgstr "Vizibil"
 
 msgid "Invocations"
 msgstr "Invocări"
@@ -35530,6 +35538,14 @@ msgstr "Durata maximă de funcționare pentru ultima execuție"
 
 msgid "Maximum session duration"
 msgstr "Durata maximă a sesiunii"
+
+#, fuzzy
+msgid ""
+"Maximum session duration almost reached. Re-authenticate session to prevent "
+"dataloss."
+msgstr ""
+"Definiți durata maximă a sesiunii. Dacă este atinsă, utilizatorul trebuie să "
+"se autentifice din nou."
 
 msgid "Maximum single-request consumption"
 msgstr "Consumul maxim pentru o singură solicitare"
@@ -40212,6 +40228,9 @@ msgstr ""
 "jurnal. Cu ajutorul acestei ferestre de dialog este posibil să analizați și "
 "să depanați întregul set de modele de fișiere jurnal."
 
+msgid "Onboarding button toggle"
+msgstr ""
+
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
@@ -42753,6 +42772,12 @@ msgstr "Comunicarea în text simplu este activată pentru %s."
 msgid "Plaintext"
 msgstr "Plaintext"
 
+msgid "Plan ID"
+msgstr ""
+
+msgid "Plans"
+msgstr ""
+
 msgid "Platform Firmware level"
 msgstr "Platforma Nivelul firmware-ului"
 
@@ -44689,9 +44714,6 @@ msgstr "REWRITE"
 
 msgid "RMAN Backups"
 msgstr "Copii de rezervă RMAN"
-
-msgid "RMK ID"
-msgstr ""
 
 msgid "RMON packets per second"
 msgstr "Pachete RMON pe secundă"
@@ -46962,9 +46984,6 @@ msgstr ""
 "Robotmk (ca parte a Checkmk Synthetic Monitoring) integrează rezultatele "
 "testelor Robot Framework ca servicii Checkmk."
 
-msgid "Robotmk Dashboard"
-msgstr "Tabloul de bord Robotmk"
-
 #, fuzzy
 msgid "Robotmk Enterprise features are hidden."
 msgstr "Caracteristica Enterprise"
@@ -46976,8 +46995,8 @@ msgid "Robotmk logs"
 msgstr "Jurnalele Robotmk"
 
 #, fuzzy
-msgid "Robotmk suite"
-msgstr "Starea suitei Robotmk"
+msgid "Robotmk plan"
+msgstr "Jurnalele Robotmk"
 
 #, fuzzy
 msgid "Robotmk test"
@@ -47396,11 +47415,15 @@ msgstr "Sesiuni de alergare"
 msgid "Runtime"
 msgstr "Timp de execuție"
 
+#, fuzzy
+msgid "Runtime (Peak Attempt)"
+msgstr "Încercare de verificare curentă"
+
 msgid "Runtime run queue"
 msgstr "Coadă de execuție în timp de execuție"
 
 #, fuzzy
-msgid "Runtime-Timeout ratio"
+msgid "Runtime-limit ratio (Peak Attempt)"
 msgstr "Rata de succes a regulilor"
 
 msgid "Rx"
@@ -54164,9 +54187,6 @@ msgstr "Semnătură verificată cu succes"
 msgid "Suggested tutorial videos"
 msgstr "Videoclipuri tutorial sugerate"
 
-msgid "Suite runtime"
-msgstr "Durata de execuție a suitei"
-
 msgid "Sum"
 msgstr "Suma"
 
@@ -54433,12 +54453,12 @@ msgid "Synthetic Monitoring"
 msgstr "Monitorizare sintetică"
 
 #, fuzzy
-msgid "Synthetic Monitoring Tests"
-msgstr "Monitorizare sintetică"
-
-#, fuzzy
 msgid "Synthetic Monitoring is an add-on."
 msgstr "Căutare în Monitorizare"
+
+#, fuzzy
+msgid "Synthetic Monitoring tests"
+msgstr "Monitorizare sintetică"
 
 #, python-format
 msgid "Synthetic monitoring (licensed tests: %s)"
@@ -55824,10 +55844,10 @@ msgid "The Port Description"
 msgstr "Descrierea portului"
 
 msgid ""
-"The Runtime-Timeout ratio is calculated as <i>runtime * 100 / timeout</i>. "
-"These thresholds apply to the runtime of a single execution attempt. If "
-"there are multiple execution attempts, the thresholds apply to the longest "
-"runtime. "
+"The Runtime-limit ratio (Peak Attempt) is calculated as <i>runtime * 100 / "
+"timeout</i>. These thresholds apply to the runtime of a single execution "
+"attempt. If there are multiple execution attempts, the thresholds apply to "
+"the longest runtime. "
 msgstr ""
 
 msgid ""
@@ -58001,6 +58021,13 @@ msgid ""
 "Checkmk."
 msgstr ""
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk. You may use macros in this field. The most common ones are $HOSTNAME"
+"$, $HOSTALIAS$ or $HOSTADDRESS$."
+msgstr ""
+
 msgid "The name of the Data Proxy"
 msgstr "Numele proxy-ului de date"
 
@@ -58647,9 +58674,9 @@ msgstr ""
 "prezentată în service"
 
 msgid ""
-"The prefix is automatically to each service to be able to organize them. The "
-"prefix is static and will be CERT. Alternatively, you may choose to not use "
-"the prefix option."
+"The prefix is automatically attached to each service name to be able to "
+"organize them. The prefix is static and will be CERT. Alternatively, you may "
+"choose to not use the prefix option."
 msgstr ""
 
 msgid ""
@@ -72110,6 +72137,10 @@ msgstr "Niveluri de avertizare pentru decalajul de timp"
 msgid "Warning of "
 msgstr "Avertisment de "
 
+#, fuzzy, python-format
+msgid "Warning of %s"
+msgstr "Avertisment dacă %s"
+
 msgid "Warning starts with"
 msgstr "Avertismentul începe cu"
 
@@ -75640,9 +75671,9 @@ msgstr ""
 
 msgid ""
 "You may enter any fully qualified domain name or valid IP address here. The "
-"name does must not contain any further information, like port or protocol. "
-"You may use macros in this field. The most common ones are $HOSTNAME$, "
-"$HOSTALIAS$ or $HOSTADDRESS$."
+"name must not contain any further information, like port or protocol. You "
+"may use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS"
+"$ or $HOSTADDRESS$."
 msgstr ""
 
 msgid ""
@@ -78340,6 +78371,17 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Robotmk Dashboard"
+#~ msgstr "Tabloul de bord Robotmk"
+
+#, fuzzy
+#~| msgid "Robotmk suite status"
+#~ msgid "Robotmk suite"
+#~ msgstr "Starea suitei Robotmk"
+
+#~ msgid "Suite runtime"
+#~ msgstr "Durata de execuție a suitei"
 
 #~ msgid "Attribute Sync Plug-ins"
 #~ msgstr "Plugin-uri de sincronizare a atributelor"

@@ -14621,6 +14621,10 @@ msgstr "El nivel crítico es como mínimo"
 msgid "Critical of "
 msgstr "Crítico si %s"
 
+#, fuzzy, python-format
+msgid "Critical of %s"
+msgstr "Crítico si %s"
+
 msgid "Critical threshold"
 msgstr "Umbral crítico"
 
@@ -30619,7 +30623,7 @@ msgstr ""
 "%s"
 
 #, fuzzy
-msgid "Internal rmk_id"
+msgid "Internal plan_id"
 msgstr "Usuario interno"
 
 msgid "Internal user"
@@ -31124,6 +31128,10 @@ msgstr "Inventario: Historia"
 
 msgid "Invert matching"
 msgstr "Invertir la correspondencia"
+
+#, fuzzy
+msgid "Invisible"
+msgstr "Visible"
 
 msgid "Invocations"
 msgstr "Invocaciones"
@@ -35864,6 +35872,14 @@ msgstr "Duración máxima de la última ejecución"
 msgid "Maximum session duration"
 msgstr "Duración máxima de la bobina"
 
+#, fuzzy
+msgid ""
+"Maximum session duration almost reached. Re-authenticate session to prevent "
+"dataloss."
+msgstr ""
+"Establezca la duración máxima de la sesión. Si se alcanza, el usuario deberá "
+"autenticarse de nuevo."
+
 msgid "Maximum single-request consumption"
 msgstr "Consumo máximo de una solicitud"
 
@@ -40600,6 +40616,9 @@ msgstr ""
 "registro. Utilizando este diálogo es posible analizar y depurar todo su "
 "conjunto de patrones de archivos de registro."
 
+msgid "Onboarding button toggle"
+msgstr ""
+
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
@@ -43166,6 +43185,12 @@ msgstr "La comunicación en texto plano está habilitada para %s"
 msgid "Plaintext"
 msgstr "Texto sin formato"
 
+msgid "Plan ID"
+msgstr ""
+
+msgid "Plans"
+msgstr ""
+
 msgid "Platform Firmware level"
 msgstr "Plataforma Nivel de firmware"
 
@@ -45119,9 +45144,6 @@ msgstr "REWRITE"
 
 msgid "RMAN Backups"
 msgstr "Copias de seguridad RMAN"
-
-msgid "RMK ID"
-msgstr ""
 
 msgid "RMON packets per second"
 msgstr "Paquetes RMON por segundo"
@@ -47438,10 +47460,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Robotmk Dashboard"
-msgstr "Cuadro de mandos del problema"
-
-#, fuzzy
 msgid "Robotmk Enterprise features are hidden."
 msgstr "Característica de la empresa"
 
@@ -47454,8 +47472,8 @@ msgid "Robotmk logs"
 msgstr "Registros de RobotMK"
 
 #, fuzzy
-msgid "Robotmk suite"
-msgstr "Estado del sitio"
+msgid "Robotmk plan"
+msgstr "Registros de RobotMK"
 
 #, fuzzy
 msgid "Robotmk test"
@@ -47879,11 +47897,15 @@ msgstr "Sesiones de trabajo"
 msgid "Runtime"
 msgstr "Tiempo de ejecución"
 
+#, fuzzy
+msgid "Runtime (Peak Attempt)"
+msgstr "Intento de comprobación actual"
+
 msgid "Runtime run queue"
 msgstr "Cola de ejecución en tiempo real"
 
 #, fuzzy
-msgid "Runtime-Timeout ratio"
+msgid "Runtime-limit ratio (Peak Attempt)"
 msgstr "Ratio de aciertos de las reglas"
 
 msgid "Rx"
@@ -54656,10 +54678,6 @@ msgstr "Firma verificada correctamente"
 msgid "Suggested tutorial videos"
 msgstr "Vídeos tutoriales sugeridos"
 
-#, fuzzy
-msgid "Suite runtime"
-msgstr "Nombre del sitio"
-
 msgid "Sum"
 msgstr "Suma"
 
@@ -54932,11 +54950,11 @@ msgid "Synthetic Monitoring"
 msgstr "Buscar en la supervisión"
 
 #, fuzzy
-msgid "Synthetic Monitoring Tests"
+msgid "Synthetic Monitoring is an add-on."
 msgstr "Buscar en la supervisión"
 
 #, fuzzy
-msgid "Synthetic Monitoring is an add-on."
+msgid "Synthetic Monitoring tests"
 msgstr "Buscar en la supervisión"
 
 #, python-format
@@ -56352,10 +56370,10 @@ msgid "The Port Description"
 msgstr "Descripción del puerto"
 
 msgid ""
-"The Runtime-Timeout ratio is calculated as <i>runtime * 100 / timeout</i>. "
-"These thresholds apply to the runtime of a single execution attempt. If "
-"there are multiple execution attempts, the thresholds apply to the longest "
-"runtime. "
+"The Runtime-limit ratio (Peak Attempt) is calculated as <i>runtime * 100 / "
+"timeout</i>. These thresholds apply to the runtime of a single execution "
+"attempt. If there are multiple execution attempts, the thresholds apply to "
+"the longest runtime. "
 msgstr ""
 
 msgid ""
@@ -58516,6 +58534,13 @@ msgid ""
 "Checkmk."
 msgstr ""
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk. You may use macros in this field. The most common ones are $HOSTNAME"
+"$, $HOSTALIAS$ or $HOSTADDRESS$."
+msgstr ""
+
 msgid "The name of the Data Proxy"
 msgstr "El nombre del Proxy de Datos"
 
@@ -59157,9 +59182,9 @@ msgstr ""
 "servicio"
 
 msgid ""
-"The prefix is automatically to each service to be able to organize them. The "
-"prefix is static and will be CERT. Alternatively, you may choose to not use "
-"the prefix option."
+"The prefix is automatically attached to each service name to be able to "
+"organize them. The prefix is static and will be CERT. Alternatively, you may "
+"choose to not use the prefix option."
 msgstr ""
 
 msgid ""
@@ -72736,6 +72761,10 @@ msgstr "Niveles de advertencia para el desfase horario"
 msgid "Warning of "
 msgstr "Advertencia si %s"
 
+#, fuzzy, python-format
+msgid "Warning of %s"
+msgstr "Advertencia si %s"
+
 msgid "Warning starts with"
 msgstr "La advertencia comienza con"
 
@@ -76275,9 +76304,9 @@ msgstr ""
 
 msgid ""
 "You may enter any fully qualified domain name or valid IP address here. The "
-"name does must not contain any further information, like port or protocol. "
-"You may use macros in this field. The most common ones are $HOSTNAME$, "
-"$HOSTALIAS$ or $HOSTADDRESS$."
+"name must not contain any further information, like port or protocol. You "
+"may use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS"
+"$ or $HOSTADDRESS$."
 msgstr ""
 
 msgid ""
@@ -79002,6 +79031,21 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~| msgid "Problem dashboard"
+#~ msgid "Robotmk Dashboard"
+#~ msgstr "Cuadro de mandos del problema"
+
+#, fuzzy
+#~| msgid "Site status"
+#~ msgid "Robotmk suite"
+#~ msgstr "Estado del sitio"
+
+#, fuzzy
+#~| msgid "Site name"
+#~ msgid "Suite runtime"
+#~ msgstr "Nombre del sitio"
 
 #, fuzzy
 #~| msgid "Attribute Sync Plugins"

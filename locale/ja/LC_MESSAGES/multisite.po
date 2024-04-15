@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-04-03 06:00+0000\n"
+"PO-Revision-Date: 2024-04-15 04:56+0000\n"
 "Last-Translator: hiroko toguchi <toguchi@jtc-i.co.jp>\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "software/ja/>\n"
@@ -61,20 +61,17 @@ msgstr " (すべてのパケットに関して(成功 + エラー))"
 msgid " (in relation to all successful packets)"
 msgstr " (成功したすべてのパケットに関して)"
 
-#, fuzzy
 msgid " (lower levels)"
-msgstr "下位レベル"
+msgstr " (下位レベル)"
 
 msgid " (packaged)"
 msgstr " (パッケージ)"
 
-#, fuzzy
 msgid " (required)"
-msgstr "必須"
+msgstr " (必須)"
 
-#, fuzzy
 msgid " (upper levels)"
-msgstr "上位レベル"
+msgstr " (上位レベル)"
 
 #, python-format
 msgid " (worst state: %s)"
@@ -220,7 +217,7 @@ msgstr ""
 "消えます。したがって、グループ外で区切り文字を適用します。"
 
 msgid "\"not\" is the abbreviation for \"and not\","
-msgstr ""
+msgstr "「not」は「そして〜でない」という意味です、"
 
 msgid "# Containers"
 msgstr "# コンテナ"
@@ -410,13 +407,13 @@ msgstr "%d エラーが発生しました:"
 msgid "%d failed notifications"
 msgstr "%d 失敗した通知"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d hour"
-msgstr "時間"
+msgstr "%d 時間"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d hours"
-msgstr "時間"
+msgstr "%d 時間"
 
 #, python-format
 msgid "%d icons and actions"
@@ -612,13 +609,13 @@ msgstr "%sレイテンシ"
 msgid "%s latency %s"
 msgstr "%sレイテンシ%s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s left in your Checkmk trial period"
-msgstr "Checkmk の試用期間は残り %d 日です"
+msgstr "Checkmk の試用期間は残り %s 日です"
 
 #, fuzzy, python-format
 msgid "%s left in your free trial"
-msgstr " 無料トライアルの残り"
+msgstr "無料トライアルの残り%日"
 
 #, python-format
 msgid "%s matching labels: %s"
@@ -646,9 +643,9 @@ msgstr "%sはホスト名の明示的なリストに存在しません。"
 msgid "%s not monitored by one of the explicitly selected sites."
 msgstr "%s は、明示的に選択されたサイトの1つによって監視されていません。"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s notification rules are matching"
-msgstr "通知ルール"
+msgstr "%s 通知ルール"
 
 #, python-format
 msgid ""
@@ -694,9 +691,9 @@ msgstr "%sレート"
 msgid "%s read %s"
 msgstr "%s 読み取り%s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s resulting notifications"
-msgstr "結果の通知"
+msgstr "%s 結果の通知"
 
 #, python-format
 msgid "%s running for %s"
@@ -1277,13 +1274,11 @@ msgstr ""
 "オプションを使用して指定します。これらのサービスでは、タグ全体が無視されま"
 "す。"
 
-#, fuzzy
 msgid "<b>Keyword</b> pattern"
-msgstr "<b>キーワード</b>監視"
+msgstr "<b>キーワード</b>パターン"
 
-#, fuzzy
 msgid "<b>Keyword</b> runtime"
-msgstr "<b>キーワード</b>監視"
+msgstr "<b>キーワード</b>ランタイム"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -1330,6 +1325,11 @@ msgid ""
 "management boards via a dedicated host using <a href='%s'>IPMI</a> or SNMP."
 "<br><a href='%s' target='_blank'>Read more about management boards.</a>"
 msgstr ""
+"<b>この機能は、将来のCheckmkのバージョンで非推奨となります。</b><br>もうここ"
+"で管理ボードを構成しないでください。専用のホストを使用して、<a "
+"href='%s'></a>IPMIまたはSNMP<br>を介して管理ボードを監視してください。<a "
+"href='%s' "
+"target='_blank'>管理ボードについて詳しくはこちらをご覧ください。</a>"
 
 #, python-format
 msgid ""
@@ -1902,13 +1902,12 @@ msgid ""
 msgstr ""
 "<tt>sqlnet.ora</tt> と <tt>tnsnames.ora</tt> %sに使用する<tt>TNS_ADMIN</tt>"
 
-#, fuzzy, python-format
+#, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
-msgstr "<u>注意</u>: ダウンタイムは、サービスにも適用されます。"
+msgstr "<u>注意</u>: ダウンタイムは、%sの全てのサービスにも適用されます。"
 
-#, fuzzy
 msgid "<u>Info</u>: Downtime does not apply to host."
-msgstr "注意: ダウンタイムはホストには適用されません。"
+msgstr "<u>注意</u>: ダウンタイムはホストには適用されません。"
 
 msgid "??"
 msgstr "??"
@@ -2537,9 +2536,8 @@ msgstr "AWSタグ"
 msgid "AWS/CE Costs and Usage"
 msgstr "AWS/CEのコストと使用法"
 
-#, fuzzy
 msgid "AWS/CE Total Reservation Utilization"
-msgstr "総メモリ使用率"
+msgstr "AWS/CE 全体の予約利用率"
 
 msgid "AWS/CloudFront"
 msgstr "AWS/CloudFront"
@@ -2707,9 +2705,8 @@ msgstr "アラートの絶対時間"
 msgid "Absolute commitable memory"
 msgstr "絶対コミット可能メモリ"
 
-#, fuzzy
 msgid "Absolute difference"
-msgstr "絶対無料"
+msgstr "絶対差"
 
 msgid "Absolute difference from prediction"
 msgstr "予測との絶対差"
@@ -2804,7 +2801,8 @@ msgstr "着信接続の絶対数"
 msgid ""
 "Absolute path to the directory of all suites on the Windows host, for "
 "example \"C:\\robot\"."
-msgstr ""
+msgstr "Windows ホスト上のすべてのスイートのディレクトリへの絶対パス。例えば\"C:"
+"\\robot\"。"
 
 #, fuzzy
 msgid "Absolute used commit charge"
@@ -14122,6 +14120,10 @@ msgstr "少なくともクリティカルレベルです"
 
 msgid "Critical of "
 msgstr "クリティカル "
+
+#, fuzzy, python-format
+msgid "Critical of %s"
+msgstr "クリティカル %sの場合"
 
 msgid "Critical threshold"
 msgstr "クリティカルしきい値"
@@ -29673,7 +29675,7 @@ msgstr ""
 "%s"
 
 #, fuzzy
-msgid "Internal rmk_id"
+msgid "Internal plan_id"
 msgstr "内部ユーザー"
 
 msgid "Internal user"
@@ -30164,6 +30166,10 @@ msgstr "インベントリ:履歴"
 
 msgid "Invert matching"
 msgstr "マッチングを反転"
+
+#, fuzzy
+msgid "Invisible"
+msgstr "目に見える"
 
 msgid "Invocations"
 msgstr "呼び出し"
@@ -34758,6 +34764,14 @@ msgstr "最後の実行の最大実行時間"
 
 msgid "Maximum session duration"
 msgstr "セッションの最大時間"
+
+#, fuzzy
+msgid ""
+"Maximum session duration almost reached. Re-authenticate session to prevent "
+"dataloss."
+msgstr ""
+"最大セッション時間を定義します。最大値に達した場合、ユーザは再認証する必要が"
+"あります。"
 
 msgid "Maximum single-request consumption"
 msgstr "単一リクエストの最大消費量"
@@ -39365,6 +39379,9 @@ msgstr ""
 "れたログファイルパターンをテストすることができます。このダイアログを使用し"
 "て、ログファイルパターンのセット全体を分析およびデバッグすることが可能です。"
 
+msgid "Onboarding button toggle"
+msgstr ""
+
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
 "memberships, instead it will also dig into nested groups and treat the "
@@ -41857,6 +41874,12 @@ msgstr "プレーンテキスト通信が %s で有効になっている"
 msgid "Plaintext"
 msgstr "プレーンテキスト"
 
+msgid "Plan ID"
+msgstr ""
+
+msgid "Plans"
+msgstr ""
+
 msgid "Platform Firmware level"
 msgstr "プラットフォームファームウェアレベル"
 
@@ -43746,9 +43769,6 @@ msgstr "リライト"
 
 msgid "RMAN Backups"
 msgstr "RMANバックアップ"
-
-msgid "RMK ID"
-msgstr ""
 
 msgid "RMON packets per second"
 msgstr "1秒あたりのRMONパケット"
@@ -46010,10 +46030,6 @@ msgstr ""
 "結果をCheckmkサービスとして統合します。"
 
 #, fuzzy
-msgid "Robotmk Dashboard"
-msgstr "問題のダッシュボード"
-
-#, fuzzy
 msgid "Robotmk Enterprise features are hidden."
 msgstr "エンタープライズ機能"
 
@@ -46026,8 +46042,8 @@ msgid "Robotmk logs"
 msgstr "RobotMKのログ"
 
 #, fuzzy
-msgid "Robotmk suite"
-msgstr "サイトステータス"
+msgid "Robotmk plan"
+msgstr "RobotMKのログ"
 
 #, fuzzy
 msgid "Robotmk test"
@@ -46436,11 +46452,15 @@ msgstr "セッションの実行"
 msgid "Runtime"
 msgstr "ランタイム"
 
+#, fuzzy
+msgid "Runtime (Peak Attempt)"
+msgstr "現在のチェックの試み"
+
 msgid "Runtime run queue"
 msgstr "ランタイム実行キュー"
 
 #, fuzzy
-msgid "Runtime-Timeout ratio"
+msgid "Runtime-limit ratio (Peak Attempt)"
 msgstr "ルールヒット率"
 
 msgid "Rx"
@@ -52982,10 +53002,6 @@ msgstr "署名の検証に成功"
 msgid "Suggested tutorial videos"
 msgstr "推奨されるチュートリアルビデオ"
 
-#, fuzzy
-msgid "Suite runtime"
-msgstr "サイト名"
-
 msgid "Sum"
 msgstr "和"
 
@@ -53251,11 +53267,11 @@ msgid "Synthetic Monitoring"
 msgstr "モニタリングで検索"
 
 #, fuzzy
-msgid "Synthetic Monitoring Tests"
+msgid "Synthetic Monitoring is an add-on."
 msgstr "モニタリングで検索"
 
 #, fuzzy
-msgid "Synthetic Monitoring is an add-on."
+msgid "Synthetic Monitoring tests"
 msgstr "モニタリングで検索"
 
 #, python-format
@@ -54588,10 +54604,10 @@ msgid "The Port Description"
 msgstr "ポートの説明"
 
 msgid ""
-"The Runtime-Timeout ratio is calculated as <i>runtime * 100 / timeout</i>. "
-"These thresholds apply to the runtime of a single execution attempt. If "
-"there are multiple execution attempts, the thresholds apply to the longest "
-"runtime. "
+"The Runtime-limit ratio (Peak Attempt) is calculated as <i>runtime * 100 / "
+"timeout</i>. These thresholds apply to the runtime of a single execution "
+"attempt. If there are multiple execution attempts, the thresholds apply to "
+"the longest runtime. "
 msgstr ""
 
 msgid ""
@@ -56611,6 +56627,13 @@ msgid ""
 "Checkmk."
 msgstr ""
 
+msgid ""
+"The name is the individual part of the used service description. Choose a "
+"human readable and unique title to be able to find your service later in "
+"Checkmk. You may use macros in this field. The most common ones are $HOSTNAME"
+"$, $HOSTALIAS$ or $HOSTADDRESS$."
+msgstr ""
+
 msgid "The name of the Data Proxy"
 msgstr "Data Proxyの名前"
 
@@ -57234,9 +57257,9 @@ msgid "The power supply sensor name as shown in the service"
 msgstr "サービスで表示される電源センサー名"
 
 msgid ""
-"The prefix is automatically to each service to be able to organize them. The "
-"prefix is static and will be CERT. Alternatively, you may choose to not use "
-"the prefix option."
+"The prefix is automatically attached to each service name to be able to "
+"organize them. The prefix is static and will be CERT. Alternatively, you may "
+"choose to not use the prefix option."
 msgstr ""
 
 msgid ""
@@ -70301,6 +70324,10 @@ msgstr "タイムオフセットの警告レベル"
 msgid "Warning of "
 msgstr "警告 "
 
+#, fuzzy, python-format
+msgid "Warning of %s"
+msgstr "%s の場合警告"
+
 msgid "Warning starts with"
 msgstr "警告の開始"
 
@@ -73628,9 +73655,9 @@ msgstr ""
 
 msgid ""
 "You may enter any fully qualified domain name or valid IP address here. The "
-"name does must not contain any further information, like port or protocol. "
-"You may use macros in this field. The most common ones are $HOSTNAME$, "
-"$HOSTALIAS$ or $HOSTADDRESS$."
+"name must not contain any further information, like port or protocol. You "
+"may use macros in this field. The most common ones are $HOSTNAME$, $HOSTALIAS"
+"$ or $HOSTADDRESS$."
 msgstr ""
 
 msgid ""
@@ -76297,6 +76324,21 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Problem dashboard"
+#~ msgid "Robotmk Dashboard"
+#~ msgstr "問題のダッシュボード"
+
+#, fuzzy
+#~| msgid "Site status"
+#~ msgid "Robotmk suite"
+#~ msgstr "サイトステータス"
+
+#, fuzzy
+#~| msgid "Site name"
+#~ msgid "Suite runtime"
+#~ msgstr "サイト名"
 
 #, fuzzy
 #~| msgid "Attribute Sync Plugins"

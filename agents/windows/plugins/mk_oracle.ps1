@@ -256,7 +256,7 @@ function Test-DomainSid([string]$sid) {
 #>
 function Test-SafeEnry([string]$entry) {
      foreach ( $safe in $CURRENT_SAFE_ENTRIES + $WINDOWS_SAFE_ENTRIES) {
-          if ( $entry.ToLower() -match $safe.ToLower()) {
+          if ( $entry -imatch ("^" + $safe + "$")) {
                return $True
           }
      }

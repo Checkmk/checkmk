@@ -12,14 +12,13 @@ import urllib3
 
 from cmk.utils import password_store
 
-password_store.replace_passwords()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def main():
     args = parse_arguments()
 
-    auth = _make_auth(args.user, args.password)
+    auth = _make_auth(args.user, args.password, args.password_id)
     try:
         msg, state, perfdata = handle_request(args, auth)
     except Exception as exc:
@@ -33,11 +32,14 @@ def main():
 def _make_auth(
     user: str | None,
     password: str | None,
+    password_id: str | None,
 ) -> tuple[str, str] | None:
     if user is None:
         return None
     if password is not None:
         return (user, password)
+    if password_id is not None:
+        return (user, password_store.lookup(password_id))
     return None
 
 
@@ -111,11 +113,17 @@ def parse_arguments(argv=None):
         default=None,
         help="Username for elasticsearch login",
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument(
         "-s",
         "--password",
         default=None,
-        help="Password for easticsearch login",
+        help="Password for easticsearch login. Preferred over --password-id",
+    )
+    group.add_argument(
+        "--password-id",
+        default=None,
+        help="Password store reference to the password for easticsearch login",
     )
     parser.add_argument(
         "-P",

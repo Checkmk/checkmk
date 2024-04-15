@@ -587,11 +587,9 @@ def inv_paint_service_status(status: str) -> PaintResult:
 def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
     # FIXME At the moment  we need it to get tdclass: Clean this up one day.
     if "paint" in raw_hint:
-        name = raw_hint["paint"]
-        inv_paint_funtion = inv_paint_funtions[_PAINT_FUNCTION_NAME_PREFIX + name]
-        return name, inv_paint_funtion["func"]
-
-    return "str", inv_paint_generic
+        data_type = raw_hint["paint"]
+        return data_type, inv_paint_funtions[_PAINT_FUNCTION_NAME_PREFIX + data_type]["func"]
+    return "str", inv_paint_funtions["inv_paint_generic"]["func"]
 
 
 def _make_sort_function(raw_hint: InventoryHintSpec) -> SortFunction:

@@ -94,14 +94,16 @@ def main() {
                 try {
                     stage("Run `make ${make_target}`") {
                         dir("${checkout_dir}/tests") {
-                            sh("""
-                                RESULT_PATH='${WORKSPACE}/test-results/${distro}' \
-                                EDITION='${edition}' \
-                                DOCKER_TAG='${docker_tag}' \
-                                VERSION="daily" \
-                                DISTRO='${distro}' \
-                                make ${make_target}
-                            """);
+                            docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+                                sh("""
+                                    RESULT_PATH='${WORKSPACE}/test-results/${distro}' \
+                                    EDITION='${edition}' \
+                                    DOCKER_TAG='${docker_tag}' \
+                                    VERSION="daily" \
+                                    DISTRO='${distro}' \
+                                    make ${make_target}
+                                """);
+                            }
                         }
                     }
                 } finally {

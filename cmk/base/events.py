@@ -325,7 +325,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
                 [
                     ("view_name", "hoststatus"),
                     ("host", raw_context["HOSTNAME"]),
-                    ("site", raw_context["OMD_SITE"]),
+                    ("site", enriched_context["OMD_SITE"]),
                 ]
             )
         )
@@ -336,7 +336,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
                         ("view_name", "service"),
                         ("host", raw_context["HOSTNAME"]),
                         ("service", raw_context["SERVICEDESC"]),
-                        ("site", raw_context["OMD_SITE"]),
+                        ("site", enriched_context["OMD_SITE"]),
                     ]
                 )
             )

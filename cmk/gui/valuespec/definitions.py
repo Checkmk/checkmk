@@ -281,10 +281,7 @@ class ValueSpec(abc.ABC, Generic[T]):
         This is optional and only used in the value editor for same cases where
         the default value is known."""
         if callable(self._default_value):
-            try:
-                value = self._default_value()
-            except Exception:
-                value = DEF_VALUE
+            value = self._default_value()
         else:
             value = self._default_value
 

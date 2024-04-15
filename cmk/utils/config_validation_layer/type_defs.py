@@ -5,10 +5,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from typing import Any, Callable, overload
+from typing import Any, overload
 
-from pydantic import Field
+from pydantic import Field, GetCoreSchemaHandler
+from pydantic_core import core_schema, CoreSchema
 
 
 class Omitted:
@@ -16,12 +16,10 @@ class Omitted:
         return f"{self.__class__.__name__}"
 
     @classmethod
-    def __get_validators__(cls) -> Iterator[Callable[[object], Omitted]]:
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, *v: object) -> Omitted:
-        return cls()
+    def __get_pydantic_core_schema__(
+        cls, _source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.is_instance_schema(cls)
 
 
 def omitted_value() -> Any:

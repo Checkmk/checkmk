@@ -4,9 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 import cmk.utils.debug
 from cmk.utils.plugin_registry import Registry
+
+from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes, graphs, metrics, perfometers, translations
@@ -49,11 +52,38 @@ def get_unit_info(unit_id: str) -> UnitInfo:
     return unit_info[""]
 
 
-def registered_units() -> Sequence[tuple[str, str]]:
+@dataclass(frozen=True)
+class RegisteredUnit:
+    name: str
+    symbol: str
+    title: str
+    description: str
+    valuespec: type[Age] | type[Filesize] | type[Float] | type[Integer] | type[Percentage]
+
+
+def registered_units() -> Sequence[RegisteredUnit]:
     return sorted(
-        [(name, info.get("description", info["title"])) for (name, info) in unit_info.items()]
-        + [(unit_id, info["title"]) for (unit_id, info) in units_from_api.items()],
-        key=lambda x: x[1],
+        [
+            RegisteredUnit(
+                name,
+                info["symbol"],
+                info["title"],
+                info.get("description", ""),
+                info.get("valuespec", Float),
+            )
+            for (name, info) in unit_info.items()
+        ]
+        + [
+            RegisteredUnit(
+                name,
+                info["symbol"],
+                info["title"],
+                "",
+                info.get("valuespec", Float),
+            )
+            for (name, info) in units_from_api.items()
+        ],
+        key=lambda x: x.title,
     )
 
 

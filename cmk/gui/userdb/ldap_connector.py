@@ -64,7 +64,6 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
@@ -82,6 +81,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.watolib.groups_io import load_contact_group_information
 
 from ._connections import (
     active_connections,

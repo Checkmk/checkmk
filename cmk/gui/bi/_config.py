@@ -10,6 +10,7 @@ from collections.abc import Collection, Iterable
 from typing import Any, overload, TypedDict
 
 import cmk.utils.version as cmk_version
+from cmk.utils.config_validation_layer.groups import GroupName
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
@@ -22,7 +23,6 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.groups import GroupName, load_contact_group_information
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -83,6 +83,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import ContactGroupSelection, PermissionSectionWATO, TileMenuRenderer
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
     MainModuleRegistry,

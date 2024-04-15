@@ -7,6 +7,7 @@ import abc
 from collections.abc import Collection, Iterator, Sequence
 
 import cmk.utils.paths
+from cmk.utils.config_validation_layer.groups import GroupName, GroupSpec, GroupType
 from cmk.utils.user import UserId
 from cmk.utils.version import edition_supports_nagvis
 
@@ -15,14 +16,6 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import (
-    GroupName,
-    GroupSpec,
-    GroupType,
-    load_contact_group_information,
-    load_host_group_information,
-    load_service_group_information,
-)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -49,6 +42,11 @@ from cmk.gui.valuespec import (
     ListChoiceChoice,
     ListOf,
     ListOfStrings,
+)
+from cmk.gui.watolib.groups_io import (
+    load_contact_group_information,
+    load_host_group_information,
+    load_service_group_information,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode

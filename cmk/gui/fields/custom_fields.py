@@ -14,8 +14,8 @@ from cmk.utils.crypto import certificate, keys
 from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
 
 from cmk.gui.config import active_config
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.userdb import connection_choices, get_saml_connections
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.tags import (
     load_all_tag_config_read_only,

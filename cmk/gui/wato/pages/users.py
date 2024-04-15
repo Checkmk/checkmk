@@ -36,7 +36,6 @@ from cmk.gui.form_specs.vue.vue_table import (
     build_text,
     render_vue_table,
 )
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
 from cmk.gui.http import request
@@ -90,6 +89,7 @@ from cmk.gui.valuespec import (
     UserID,
 )
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.user_scripts import load_notification_scripts

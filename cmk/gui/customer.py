@@ -9,7 +9,8 @@ from typing import Any
 
 from livestatus import SiteConfigurations, SiteId
 
-from cmk.gui.groups import GroupSpec
+from cmk.utils.config_validation_layer.groups import GroupSpec
+
 from cmk.gui.hooks import request_memoize
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 

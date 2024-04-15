@@ -69,23 +69,20 @@ def create_password(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.passwords")
     body = params["body"]
     ident = body["ident"]
-    password_details = cast(
-        Password,
-        {
-            k: v
-            for k, v in body.items()
-            if k
-            not in (
-                "ident",
-                "owned_by",
-                "customer",
-            )
-        },
-    )
+    password_details = {
+        k: v
+        for k, v in body.items()
+        if k
+        not in (
+            "ident",
+            "owned_by",
+            "customer",
+        )
+    }
     if version.edition() is version.Edition.CME:
         password_details = update_customer_info(password_details, body["customer"])
     password_details["owned_by"] = None if body["owned_by"] == "admin" else body["owned_by"]
-    save_password(ident, password_details, new_password=True)
+    save_password(ident, cast(Password, password_details), new_password=True)
     return _serve_password(ident, load_password(ident))
 
 

@@ -23,7 +23,6 @@ from typing import Any
 from cmk.utils import version
 
 import cmk.gui.watolib.groups as groups
-from cmk.gui.groups import load_host_group_information
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.host_group_config.request_schemas import (
@@ -54,6 +53,7 @@ from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
+from cmk.gui.watolib.groups_io import load_host_group_information
 
 PERMISSIONS = permissions.Perm("wato.groups")
 

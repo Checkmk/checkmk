@@ -135,12 +135,12 @@ def handle_request(args, sections):
             if args.debug:
                 raise
 
-            continue  # Try working with the next section
+            return 1
 
         # Things might go wrong if authentication is missing.
         if response.status_code != 200:
             sys.stderr.write("Could not fetch data from Jenkins. Details: %s\n" % response)
-            continue
+            return 2
 
         # Jenkins will happily return a HTTP status 200 even if things go wrong.
         # If we do not receive any content we know that our request has failed.
@@ -148,7 +148,7 @@ def handle_request(args, sections):
             sys.stderr.write(
                 "Jenkins did not return any data when querying for %s\n" % section.name
             )
-            continue
+            return 3
 
         if section.name == "instance":
             value = response.json()
@@ -178,6 +178,8 @@ def handle_request(args, sections):
     # if labels:
     #    sys.stdout.write("<<<labels:sep(0)>>>\n")
     #    sys.stdout.write("%s\n" % json.dumps(labels))
+
+    return 0
 
 
 if __name__ == "__main__":

@@ -48,7 +48,9 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     ).join(" ");
 
     println("inside_container(image=${image} docker_args: ${run_args_str})");
-    image.inside(run_args_str) {
-        body();
+    docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+        image.inside(run_args_str) {
+            body();
+        }
     }
 }

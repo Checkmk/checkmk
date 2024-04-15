@@ -483,6 +483,10 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesStorage
             return _to_generated_builtin_sub_group(legacy_main_group, "Storage", localizer)
+        case ruleset_api_v1.rule_specs.Topic.SYNTHETIC_MONITORING:
+            return _to_generated_builtin_sub_group(
+                legacy_main_group, "Synthetic Monitoring", localizer
+            )
         case ruleset_api_v1.rule_specs.Topic.VIRTUALIZATION:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersVirtualization

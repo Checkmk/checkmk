@@ -31,6 +31,7 @@ class Topic(Enum):
     POWER = "power"
     SERVER_HARDWARE = "server_hardware"
     STORAGE = "storage"
+    SYNTHETIC_MONITORING = "synthetic_monitoring"
     VIRTUALIZATION = "virtualization"
     WINDOWS = "windows"
 

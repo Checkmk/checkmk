@@ -70,14 +70,14 @@ from cmk.gui.rest_api_types.notifications_types import (
     NotificationPlugin,
 )
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoConfigFile
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
 
 logger = logging.getLogger(__name__)
 
 
-class NotificationRuleConfigFile(WatoConfigFile[list[EventRule]]):
+class NotificationRuleConfigFile(WatoSingleConfigFile[list[EventRule]]):
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(wato_root_dir() + "notifications.mk"),

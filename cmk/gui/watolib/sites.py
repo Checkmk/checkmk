@@ -58,11 +58,11 @@ from cmk.gui.watolib.config_domains import (
 )
 from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoConfigFile
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
 
-class SitesConfigFile(WatoConfigFile[SiteConfigurations]):
+class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
     def __init__(self) -> None:
         super().__init__(
             config_file_path=Path(cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"),

@@ -25,11 +25,11 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
-from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoConfigFile
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
 
 
-class TagConfigFile(WatoConfigFile[TagConfigSpec]):
+class TagConfigFile(WatoSingleConfigFile[TagConfigSpec]):
     """Handles loading the tag definitions from GUI tags.mk
 
     When saving the configuration it also writes out the tags.mk for the cmk.base world.

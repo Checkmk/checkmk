@@ -3,24 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, overload
+from __future__ import annotations
+
+from collections.abc import Iterator
+from typing import Any, Callable, overload
 
 from pydantic import Field
 
 
 class Omitted:
-    def __init__(self):
-        pass
-
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}"
 
     @classmethod
-    def __get_validators__(cls):
+    def __get_validators__(cls) -> Iterator[Callable[[object], Omitted]]:
         yield cls.validate
 
     @classmethod
-    def validate(cls, *v: Any) -> "Omitted":
+    def validate(cls, *v: object) -> Omitted:
         return cls()
 
 

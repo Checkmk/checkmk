@@ -10,7 +10,9 @@ import time
 from collections.abc import Collection, Iterator, Mapping
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, NamedTuple, overload
+from typing import Any, Literal, NamedTuple, overload
+
+from livestatus import LivestatusResponse
 
 import cmk.utils.store as store
 from cmk.utils.notify import NotificationContext
@@ -842,7 +844,7 @@ class ModeNotifications(ABCNotificationsMode):
         so we enrich the context after fetching all user defined options"""
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
-            "GET hosts\nColumns: custom_variables groups contact_groups\nFilter: host_name = %s\n"
+            "GET hosts\nColumns: custom_variable_names custom_variable_values groups contact_groups\nFilter: host_name = %s\n"
             % hostname
         )
         if len(resp) < 1:
@@ -850,14 +852,25 @@ class ModeNotifications(ABCNotificationsMode):
                 None,
                 _("Host '%s' is not known in the activated monitoring configuration") % hostname,
             )
-        context["HOSTTAGS"] = resp[0][0].get("TAGS")
-        context["HOSTGROUPNAMES"] = ",".join(resp[0][1])
-        context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][2])
+
+        self._set_custom_variables(context, resp, "HOST")
+        context["HOSTGROUPNAMES"] = ",".join(resp[0][2])
+        context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][3])
+
+    def _set_custom_variables(
+        self,
+        context: NotificationContext,
+        resp: LivestatusResponse,
+        prefix: Literal["HOST", "SERVICE"],
+    ) -> None:
+        custom_vars = dict(zip(resp[0][0], resp[0][1]))
+        for key, value in custom_vars.items():
+            context[f"{prefix}_{key}"] = value
 
     def _add_missing_service_context(self, context: NotificationContext) -> None:
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
-            "GET services\nColumns: groups contact_groups check_command\nFilter: host_name = %s\nFilter: service_description = %s"
+            "GET services\nColumns: custom_variable_names custom_variable_values groups contact_groups check_command\nFilter: host_name = %s\nFilter: service_description = %s"
             % (hostname, context["SERVICEDESC"])
         )
         if len(resp) < 1:
@@ -866,9 +879,10 @@ class ModeNotifications(ABCNotificationsMode):
                 _("Host '%s' is not known in the activated monitoring configuration") % hostname,
             )
 
-        context["SERVICEGROUPNAMES"] = ",".join(resp[0][0])
-        context["SERVICECONTACTGROUPNAMES"] = ",".join(resp[0][1])
-        context["SERVICECHECKCOMMAND"] = resp[0][2]
+        self._set_custom_variables(context, resp, "SERVICE")
+        context["SERVICEGROUPNAMES"] = ",".join(resp[0][2])
+        context["SERVICECONTACTGROUPNAMES"] = ",".join(resp[0][3])
+        context["SERVICECHECKCOMMAND"] = resp[0][4]
 
     def _show_no_fallback_contact_warning(self):
         if not self._fallback_mail_contacts_configured():

@@ -29,7 +29,7 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import AutocheckServiceWithNodes, DiscoveredService
-from ._autodiscovery import get_host_services_by_host_name, ServicesByTransition
+from ._autodiscovery import get_host_services, ServicesByTransition
 from ._discovery import DiscoveryPlugin
 from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
@@ -140,7 +140,7 @@ def execute_check_discovery(
             ),
         )
 
-    services_by_host = get_host_services_by_host_name(
+    services = get_host_services(
         host_name,
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
@@ -156,7 +156,7 @@ def execute_check_discovery(
 
     services_result, services_need_rediscovery = _check_service_lists(
         host_name=host_name,
-        services_by_transition=services_by_host[host_name],
+        services_by_transition=services,
         params=params,
         service_filters=_ServiceFilters.from_settings(params.rediscovery),
         discovery_mode=discovery_mode,

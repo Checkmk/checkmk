@@ -32,7 +32,7 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import AutocheckEntry, DiscoveredService
-from ._autodiscovery import _Transition, get_host_services_by_host_name
+from ._autodiscovery import _Transition, get_host_services
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._utils import DiscoveredItem, QualifiedDiscovery
@@ -65,7 +65,7 @@ class CheckPreviewEntry:
 
 @dataclass(frozen=True)
 class CheckPreview:
-    table: Mapping[HostName, Sequence[CheckPreviewEntry]]
+    table: Sequence[CheckPreviewEntry]
     labels: QualifiedDiscovery[HostLabel]
     source_results: Mapping[str, ActiveCheckResult]
     kept_labels: Mapping[HostName, Sequence[HostLabel]]
@@ -147,7 +147,7 @@ def get_check_preview(
         for line in result.details:
             console.warning(line)
 
-    grouped_services_by_host = get_host_services_by_host_name(
+    grouped_services = get_host_services(
         host_name,
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
@@ -162,52 +162,49 @@ def get_check_preview(
     )
 
     entry: DiscoveredItem[AutocheckEntry]
-    passive_rows_by_host = {
-        h: [
-            _check_preview_table_row(
-                h,
-                check_plugins=check_plugins,
-                service=ConfiguredService(
-                    check_plugin_name=DiscoveredService.check_plugin_name(entry),
-                    item=DiscoveredService.item(entry),
-                    description=find_service_description(h, *DiscoveredService.id(entry)),
-                    parameters=compute_check_parameters(h, DiscoveredService.older(entry)),
-                    discovered_parameters=DiscoveredService.older(entry).parameters,
-                    service_labels={
-                        n: ServiceLabel(n, v)
-                        for n, v in DiscoveredService.older(entry).service_labels.items()
-                    },
-                    is_enforced=False,
-                ),
-                new_discovered_parameters=DiscoveredService.newer(entry).parameters,
-                new_service_labels={
+    passive_rows = [
+        _check_preview_table_row(
+            host_name,
+            check_plugins=check_plugins,
+            service=ConfiguredService(
+                check_plugin_name=DiscoveredService.check_plugin_name(entry),
+                item=DiscoveredService.item(entry),
+                description=find_service_description(host_name, *DiscoveredService.id(entry)),
+                parameters=compute_check_parameters(host_name, DiscoveredService.older(entry)),
+                discovered_parameters=DiscoveredService.older(entry).parameters,
+                service_labels={
                     n: ServiceLabel(n, v)
-                    for n, v in DiscoveredService.newer(entry).service_labels.items()
+                    for n, v in DiscoveredService.older(entry).service_labels.items()
                 },
-                check_source=check_source,
-                providers=providers,
-                found_on_nodes=found_on_nodes,
-            )
-            for check_source, services_with_nodes in entries.items()
-            for entry, found_on_nodes in services_with_nodes
-        ]
-        + [
-            _check_preview_table_row(
-                h,
-                service=service,
-                new_service_labels={},
-                new_discovered_parameters={},
-                check_plugins=check_plugins,
-                check_source="manual",  # "enforced" would be nicer
-                providers=providers,
-                found_on_nodes=[h],
-            )
-            for _ruleset_name, service in enforced_services.values()
-        ]
-        for h, entries in grouped_services_by_host.items()
-    }
+                is_enforced=False,
+            ),
+            new_discovered_parameters=DiscoveredService.newer(entry).parameters,
+            new_service_labels={
+                n: ServiceLabel(n, v)
+                for n, v in DiscoveredService.newer(entry).service_labels.items()
+            },
+            check_source=check_source,
+            providers=providers,
+            found_on_nodes=found_on_nodes,
+        )
+        for check_source, services_with_nodes in grouped_services.items()
+        for entry, found_on_nodes in services_with_nodes
+    ] + [
+        _check_preview_table_row(
+            host_name,
+            service=service,
+            new_service_labels={},
+            new_discovered_parameters={},
+            check_plugins=check_plugins,
+            check_source="manual",  # "enforced" would be nicer
+            providers=providers,
+            found_on_nodes=[host_name],
+        )
+        for _ruleset_name, service in enforced_services.values()
+    ]
+
     return CheckPreview(
-        table={h: [*passive_rows] for h, passive_rows in passive_rows_by_host.items()},
+        table=[*passive_rows],
         labels=host_labels,
         source_results={
             src.ident: result for (src, _sections), result in zip(parsed, summarizer(parsed))

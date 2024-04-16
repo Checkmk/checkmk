@@ -1,0 +1,14 @@
+Title: postgres_stat_database_size: Don't discover 'access_to_shared_objects'
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1713251421
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+Checkmk discovered Services like "PostgreSQL DB MAIN/access_to_shared_objects
+Size" but the Services only showed "Database size not available" and a WARN
+status.
+
+Those Services are no longer discovered.

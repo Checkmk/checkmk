@@ -191,7 +191,7 @@ class Crawler:
             storage_state = await self.access_storage_state(browser)
             # makes sure authentication cookies is also available in the "requests" session.
             for cookie_dict in storage_state["cookies"]:
-                self.requests_session.cookies.set(  # type: ignore[no-untyped-call]
+                self.requests_session.cookies.set(
                     name=cookie_dict["name"],
                     value=cookie_dict["value"],
                 )

@@ -113,7 +113,7 @@ ply = "==3.11"  # needed by pysmi, python-active-directory
 pysmi-lextudio = "==1.4.3"  # needed by pysnmp
 pysnmp-lextudio = "==6.1.2"  # needed by Event Console
 snmpsim-lextudio = "==1.1.0"  # needed by pysnmp integration tests
-urllib3 = "~=1.26.15"  # needed by requests
+urllib3 = "*"  # needed by requests
 pyopenssl = "*"
 pbr = "==5.11.1"  # needed by jira
 pyghmi = "==1.5.60"  # needed by base for IPMI

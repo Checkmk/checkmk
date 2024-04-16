@@ -84,6 +84,9 @@ def test_update(  # pylint: disable=too-many-branches
             # "Notification Spooler" results in "No status information, Spooler not running"
             # See CMK-16760. TODO: restore service after ticket is done.
             f"OMD {test_site.id} Notification Spooler",
+            # Check_MK service turning into CRIT after the update.
+            # See CMK-17002. TODO: restore service after ticket is done.
+            "Check_MK",
         ]
 
         for data in ignore_data:

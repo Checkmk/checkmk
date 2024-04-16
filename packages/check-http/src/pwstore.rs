@@ -84,7 +84,7 @@ fn decrypt(ciphertext: &[u8], key: &[u8], nonce: &[u8], tag: &[u8]) -> AeadResul
 
 fn lookup_pw(pw_store: &str, pw_id: &str) -> AnyhowResult<String> {
     let p: Option<HashMap<&str, &str>> = pw_store
-        .split_whitespace()
+        .lines()
         .map(|entry| entry.split_once(':'))
         .collect();
     let Some(parsed_store) = p else {
@@ -99,7 +99,7 @@ fn lookup_pw(pw_store: &str, pw_id: &str) -> AnyhowResult<String> {
 
 #[cfg(test)]
 mod test_pw_store {
-    use crate::pwstore::unpack_pw_store;
+    use crate::pwstore::{lookup_pw, unpack_pw_store};
     use std::num::ParseIntError;
 
     fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
@@ -133,5 +133,26 @@ mod test_pw_store {
         let output = String::from("Time is an illusion. Lunchtime doubly so.");
 
         assert_eq!(unpack_pw_store(&input, secret).unwrap(), output);
+    }
+
+    #[test]
+    fn test_lookup_pw() {
+        let pwstore = "my:password\nfoo:bar:baz\nbar: foo bar\nbaz:föö";
+        assert_eq!(lookup_pw(pwstore, "my").unwrap(), "password".to_string());
+        assert_eq!(lookup_pw(pwstore, "foo").unwrap(), "bar:baz".to_string());
+        assert_eq!(lookup_pw(pwstore, "bar").unwrap(), " foo bar".to_string());
+        assert_eq!(lookup_pw(pwstore, "baz").unwrap(), "föö".to_string());
+    }
+
+    #[test]
+    fn test_lookup_pw_unexpected_format() {
+        let pwstore = "foo:bar\nbarbaz";
+        assert!(lookup_pw(pwstore, "foo").is_err());
+    }
+
+    #[test]
+    fn test_lookup_pw_wrong_id() {
+        let pwstore = "foo:bar\nbar:baz";
+        assert!(lookup_pw(pwstore, "baz").is_err());
     }
 }

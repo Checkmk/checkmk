@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator, ValidationInfo
 
 
 class Config(BaseModel):
@@ -20,6 +20,25 @@ class Config(BaseModel):
 
     def all_components(self) -> list[tuple[str, str]]:
         return sum(self.edition_components.values(), self.components)
+
+    @model_validator(mode="before")
+    @classmethod
+    def default_current_version_from_context(
+        cls, data: dict[str, object], info: ValidationInfo
+    ) -> dict[str, object]:
+        """
+        Use the 'current_version' specified via context if it is missing from the model data.
+        """
+        if "current_version" in data:
+            return data
+
+        if (
+            info.context is not None
+            and (context_version := info.context.get("current_version")) is not None
+        ):
+            return data | {"current_version": context_version}
+
+        raise ValueError("current_version must be provided either directly or via context")
 
 
 def _load_current_version(defines_make: Path) -> str:
@@ -38,5 +57,7 @@ def load_config(werk_config: Path, defines_make: Path) -> Config:
     )
 
     data.pop("__builtins__")
-    data["current_version"] = _load_current_version(defines_make)
-    return Config.model_validate(data)
+    return Config.model_validate(
+        data,
+        context={"current_version": _load_current_version(defines_make)},
+    )

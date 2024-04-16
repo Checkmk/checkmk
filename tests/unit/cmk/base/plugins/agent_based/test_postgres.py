@@ -148,9 +148,6 @@ def _get_parsed(tmp_path: Path, fix_register: FixRegister) -> dict[str, dict[str
         pytest.param(
             CheckPluginName("postgres_stat_database_size"),
             [
-                Service(
-                    item="MAIN/access_to_shared_objects"
-                ),  # TODO: this is a bug! should not be discovered for size!
                 Service(item="MAIN/template0"),
                 Service(item="MAIN/template1"),
                 Service(item="MAIN/nnnnnn"),

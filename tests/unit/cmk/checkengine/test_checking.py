@@ -11,7 +11,7 @@ from cmk.checkengine.checking import (
     CheckPluginName,
     ConfiguredService,
 )
-from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
+from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.parameters import TimespecificParameters
 
@@ -56,8 +56,9 @@ def make_aggregated_result(*, name: str, data_received: bool) -> AggregatedResul
             service_labels={},
             is_enforced=False,
         ),
+        submit=False,
         data_received=data_received,
-        result=UnsubmittableServiceCheckResult(),
+        result=ServiceCheckResult(0),
         cache_info=None,
     )
 

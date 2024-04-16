@@ -18,11 +18,7 @@ from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.checkresults import (
-    ActiveCheckResult,
-    MetricTuple,
-    SubmittableServiceCheckResult,
-)
+from cmk.checkengine.checkresults import ActiveCheckResult, MetricTuple, ServiceCheckResult
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParametersPreview
 from cmk.checkengine.parser import group_by_host, ParserFunction
@@ -241,7 +237,7 @@ def _check_preview_table_row(
     result = (
         check_plugin.function(host_name, service, providers=providers).result
         if check_plugin is not None
-        else SubmittableServiceCheckResult.check_not_implemented()
+        else ServiceCheckResult.check_not_implemented()
     )
 
     def make_output() -> str:

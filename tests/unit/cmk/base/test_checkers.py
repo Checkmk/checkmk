@@ -16,7 +16,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
+from cmk.checkengine.checkresults import ServiceCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
@@ -41,32 +41,26 @@ def make_timespecific_params_list(
 @pytest.mark.parametrize(
     "subresults, aggregated_results",
     [
-        ([], SubmittableServiceCheckResult.item_not_found()),
+        ([], ServiceCheckResult.item_not_found()),
         (
             [
                 Result(state=State.OK, notice="details"),
             ],
-            SubmittableServiceCheckResult(
-                0, "Everything looks OK - 1 detail available\ndetails", []
-            ),
+            ServiceCheckResult(0, "Everything looks OK - 1 detail available\ndetails", []),
         ),
         (
             [
                 Result(state=State.OK, summary="summary1", details="detailed info1"),
                 Result(state=State.WARN, summary="summary2", details="detailed info2"),
             ],
-            SubmittableServiceCheckResult(
-                1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", []
-            ),
+            ServiceCheckResult(1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", []),
         ),
         (
             [
                 Result(state=State.OK, summary="summary"),
                 Metric(name="name", value=42),
             ],
-            SubmittableServiceCheckResult(
-                0, "summary\nsummary", [("name", 42.0, None, None, None, None)]
-            ),
+            ServiceCheckResult(0, "summary\nsummary", [("name", 42.0, None, None, None, None)]),
         ),
     ],
 )

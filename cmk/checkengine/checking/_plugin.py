@@ -77,6 +77,7 @@ class ConfiguredService(NamedTuple):
 @dataclass(frozen=True)
 class AggregatedResult:
     service: ConfiguredService
+    submit: bool
     data_received: bool
     result: ServiceCheckResult
     cache_info: tuple[int, int] | None

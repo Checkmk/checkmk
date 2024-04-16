@@ -5,22 +5,20 @@
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checkresults import UnsubmittableServiceCheckResult
+from cmk.checkengine.checkresults import ServiceCheckResult
 
 
 def test_cluster_received_no_data_no_nodes() -> None:
-    assert UnsubmittableServiceCheckResult.cluster_received_no_data(
-        []
-    ) == UnsubmittableServiceCheckResult(
+    assert ServiceCheckResult.cluster_received_no_data([]) == ServiceCheckResult(
         3,
         "Clustered service received no monitoring data (no nodes configured)",
     )
 
 
 def test_cluster_received_no_data() -> None:
-    assert UnsubmittableServiceCheckResult.cluster_received_no_data(
+    assert ServiceCheckResult.cluster_received_no_data(
         [HostName("node1"), HostName("node2")]
-    ) == UnsubmittableServiceCheckResult(
+    ) == ServiceCheckResult(
         3,
         "Clustered service received no monitoring data (configured nodes: node1, node2)",
     )

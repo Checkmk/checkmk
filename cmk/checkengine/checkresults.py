@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import dataclasses
-from abc import abstractmethod
 from collections.abc import Sequence
 from typing import Self
 
@@ -32,20 +31,11 @@ MetricTuple = tuple[
 ]
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class ServiceCheckResult:
     state: int = 0
     output: str = ""
     metrics: Sequence[MetricTuple] = ()
-
-    @abstractmethod
-    def is_submittable(self) -> bool: ...
-
-
-class SubmittableServiceCheckResult(ServiceCheckResult):
-
-    def is_submittable(self) -> bool:
-        return True
 
     @classmethod
     def item_not_found(cls) -> Self:
@@ -54,12 +44,6 @@ class SubmittableServiceCheckResult(ServiceCheckResult):
     @classmethod
     def check_not_implemented(cls) -> Self:
         return cls(3, "Check plug-in not implemented")
-
-
-class UnsubmittableServiceCheckResult(ServiceCheckResult):
-
-    def is_submittable(self) -> bool:
-        return False
 
     @classmethod
     def received_no_data(cls) -> Self:

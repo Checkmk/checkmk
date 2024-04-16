@@ -113,6 +113,7 @@ class Submittee:
     name: ServiceName
     result: ServiceCheckResult
     cache_info: _CacheInfo | None
+    pending: bool
 
 
 @dataclass(frozen=True)
@@ -144,7 +145,7 @@ class Submitter(abc.ABC):
                 state=s.result.state,
                 details=self._make_details(s.result),
                 cache_info=s.cache_info,
-                pending=s.result.is_submittable(),
+                pending=s.pending,
             )
             for s in submittees
         ]

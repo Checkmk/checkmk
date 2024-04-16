@@ -174,16 +174,16 @@ class RestApiException(Exception):
 def get_link(resp: dict, rel: str) -> Mapping:
     for link in resp.get("links", []):
         if link["rel"].startswith(rel):
-            return link  # type: ignore[no-any-return]
+            return link
     if "result" in resp:
         for link in resp["result"].get("links", []):
             if link["rel"].startswith(rel):
-                return link  # type: ignore[no-any-return]
+                return link
     for member in resp.get("members", {}).values():
         if member["memberType"] == "action":
             for link in member["links"]:
                 if link["rel"].startswith(rel):
-                    return link  # type: ignore[no-any-return]
+                    return link
     raise KeyError(f"{rel!r} not found")
 
 

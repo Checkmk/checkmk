@@ -161,7 +161,7 @@ pytestmark = pytest.mark.checks
     ],
 )
 def test_ra32e_sensors_inputs(
-    info: Sequence[StringTable],
+    info: list[StringTable],
     discoveries_expected: Sequence[tuple[str, Sequence[object]]],
     checks_expected: Sequence[tuple[str, str, Mapping[str, object], BasicCheckResult]],
 ) -> None:

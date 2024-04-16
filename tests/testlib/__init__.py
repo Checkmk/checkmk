@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from collections.abc import Collection, Iterator, Mapping
+from collections.abc import Collection, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType, TracebackType
@@ -352,19 +352,19 @@ class Check(BaseCheck):
             return self._migrated_plugin.check_default_parameters or {}
         return {}
 
-    def run_parse(self, info):  # type: ignore[no-untyped-def]
+    def run_parse(self, info: list) -> object:
         if self.info.parse_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
         return self.info.parse_function(info)
 
-    def run_discovery(self, info):  # type: ignore[no-untyped-def]
+    def run_discovery(self, info: object) -> Any:
         if self.info.discovery_function is None:
             raise MissingCheckInfoError(
                 "Check '%s' " % self.name + "has no discovery function defined"
             )
         return self.info.discovery_function(info)
 
-    def run_check(self, item, params, info):  # type: ignore[no-untyped-def]
+    def run_check(self, item: object, params: object, info: object) -> Any:
         if self.info.check_function is None:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
         return self.info.check_function(item, params, info)
@@ -377,15 +377,15 @@ class ActiveCheck(BaseCheck):
         super().__init__(name)
         self.info = config.active_check_info.get(self.name[len("check_") :])
 
-    def run_argument_function(self, params):  # type: ignore[no-untyped-def]
+    def run_argument_function(self, params: Mapping[str, object]) -> Sequence[str]:
         assert self.info, "Active check has to be implemented in the legacy API"
         return self.info["argument_function"](params)
 
-    def run_service_description(self, params):  # type: ignore[no-untyped-def]
+    def run_service_description(self, params: object) -> object:
         assert self.info, "Active check has to be implemented in the legacy API"
         return self.info["service_description"](params)
 
-    def run_generate_icmp_services(self, host_config, params):  # type: ignore[no-untyped-def]
+    def run_generate_icmp_services(self, host_config: object, params: object) -> object:
         assert self.info, "Active check has to be implemented in the legacy API"
         yield from self.info["service_generator"](host_config, params)
 

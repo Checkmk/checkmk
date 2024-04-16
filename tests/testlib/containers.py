@@ -617,7 +617,7 @@ class ContainerExec:
         self.output = output
 
     def inspect(self) -> Mapping:
-        return self.client.api.exec_inspect(self.id)  # type: ignore[no-any-return]
+        return self.client.api.exec_inspect(self.id)
 
     def poll(self) -> int:
         return int(self.inspect()["ExitCode"])

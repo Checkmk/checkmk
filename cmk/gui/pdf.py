@@ -446,7 +446,7 @@ class Document:
     def place_pil_image(
         self,
         position: Position,
-        pil: Image,
+        pil: Image.Image,
         width_mm: SizeMM | None,
         height_mm: SizeMM | None,
         resolution: int | None,
@@ -538,7 +538,7 @@ class Document:
 
     def add_pil_image(
         self,
-        pil: Image,
+        pil: Image.Image,
         width: SizeMM | None,
         height: SizeMM | None,
         resolution: SizeDPI | None = None,
@@ -948,7 +948,7 @@ class Document:
     # is set, then width and height are being ignored.
     def get_image_dimensions(
         self,
-        pil: Image,
+        pil: Image.Image,
         width_mm: SizeMM | None,
         height_mm: SizeMM | None,
         resolution_dpi: SizeDPI | None = None,

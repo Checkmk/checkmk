@@ -586,22 +586,26 @@ class CMKOpenApiSession(requests.Session):
 
     def create_rule(
         self,
-        ruleset_name: str,
         value: object,
+        ruleset_name: str | None = None,
         folder: str = "/",
         conditions: dict[str, Any] | None = None,
     ) -> str:
         response = self.post(
             "/domain-types/rule/collections/all",
-            json={
-                "ruleset": ruleset_name,
-                "folder": folder,
-                "properties": {
-                    "disabled": False,
-                },
-                "value_raw": repr(value),
-                "conditions": conditions or {},
-            },
+            json=(
+                {
+                    "ruleset": ruleset_name,
+                    "folder": folder,
+                    "properties": {
+                        "disabled": False,
+                    },
+                    "value_raw": repr(value),
+                    "conditions": conditions or {},
+                }
+                if ruleset_name
+                else value
+            ),
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
@@ -636,7 +640,7 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = response.json()["value"]
+        value: list[dict[str, Any]] = [_["extensions"] for _ in response.json()["value"]]
         return value
 
     def get_rulesets(self) -> list[dict[str, Any]]:

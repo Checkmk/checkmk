@@ -67,13 +67,11 @@ $DEBUG = 0
 
 # Entries which assumed as safe during testing security permission check
 # ----------------------------------------------------------------------
-# Add to the list regexs of entries which 
+# Add to the list of entries which 
 # 1. May have write access to Oracle binaries
 # 2. Are not Administrators
 # Typical example: 'DOMAIN\DbInstaller' or 'MYPC\SpecialUser'
 # For the case above you need to add $CURRENT_SAFE_ENTRIES = @("DOMAIN\\DbInstaller", "MYPC\\SpecialUser)
-# Do not forget to escape the backslash.
-# Another example: $CURRENT_SAFE_ENTRIES = @(".*ORA", "DOMAIN\\EX.*")
 $CURRENT_SAFE_ENTRIES = @()
 
 
@@ -256,7 +254,7 @@ function Test-DomainSid([string]$sid) {
 #>
 function Test-SafeEnry([string]$entry) {
      foreach ( $safe in $CURRENT_SAFE_ENTRIES + $WINDOWS_SAFE_ENTRIES) {
-          if ( $entry -imatch ("^" + $safe + "$")) {
+          if ( $entry.ToLower() -eq $safe.ToLower()) {
                return $True
           }
      }
@@ -2366,7 +2364,7 @@ if ($the_count -gt 0) {
                }
                if ($Null -ne $result) {
                     Write-Output "<<<oracle_instance:sep(124)>>>"
-                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Alternatively, you can try to run the plugin as a user using the rule 'Run plugins and local checks using non-system account'"
+                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Alternatively, you can try to run the plugin as a user using the rule 'Run plugins and local checks using non-system account' or adjust settings in 'Oracle binaries permissions checlsecurity check'."
                     continue
                }
           }

@@ -7982,7 +7982,7 @@ msgid "Base directory for variable data (caches, state files)"
 msgstr "Basismap voor variabele gegevens (caches, statusbestanden)"
 
 #, fuzzy
-msgid "Base directory of suites"
+msgid "Base directory of Robot Framework projects"
 msgstr "Alleen baseren op diensttijden"
 
 msgid "Base layout"
@@ -16585,10 +16585,10 @@ msgstr ""
 "kiezen waartoe u zich wilt beperken."
 
 msgid ""
-"Depending on the libraries used in a suite, building its Python environment "
+"Depending on the libraries used in a plan, building its Python environment "
 "for the very first time can take some minutes. This setting ensures that a "
-"hanging/failing environment creation for a single suite does not block the "
-"scheduling phase of other suites."
+"hanging/failing environment creation for a single plan does not block the "
+"scheduling phase of other plans."
 msgstr ""
 
 msgid ""
@@ -32804,6 +32804,10 @@ msgstr "Beperking van metagegevens"
 msgid "Limit path levels for service names"
 msgstr "Begrens padniveaus voor dienstnamen"
 
+#, fuzzy
+msgid "Limit per attempt"
+msgstr "niet geprobeerd"
+
 msgid "Limit processed data"
 msgstr "Verwerkte gegevens beperken"
 
@@ -41715,12 +41719,12 @@ msgstr "Parallelle verbindingen"
 msgid "Parallel connections load"
 msgstr "Parallelle aansluitingen belasting"
 
-#, fuzzy
-msgid "Parallel execution groups"
-msgstr "Plan uitvoering"
-
 msgid "Parallel pings to send"
 msgstr "Parallelle pings te sturen"
+
+#, fuzzy
+msgid "Parallel plan groups"
+msgstr "Plan uitvoering"
 
 msgid "Parallelize core config creation"
 msgstr "Paralleliseren van core config creatie"
@@ -41978,17 +41982,12 @@ msgid "Path to temporary directory (will be created)"
 msgstr "Pad naar tijdelijke directory (zal worden aangemaakt)"
 
 #, fuzzy
-msgid "Path to test suite"
+msgid "Path to test suite file or folder"
 msgstr "Pad naar .env bestand"
 
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
-"file, relative to the base directory."
-msgstr ""
-
-msgid ""
-"Path to the `robot.yaml` configuration file inside a RCC compatible robot "
-"suite, relative to the base directory."
+"file, relative to the base directory of Robot Framework projects."
 msgstr ""
 
 msgid "Path to unix socket"
@@ -42802,6 +42801,9 @@ msgstr "Communicatie via platte tekst is ingeschakeld voor %s"
 
 msgid "Plaintext"
 msgstr "Onduidelijke tekst"
+
+msgid "Plan"
+msgstr ""
 
 msgid "Plan ID"
 msgstr ""
@@ -48998,7 +49000,7 @@ msgid "September"
 msgstr "September"
 
 #, fuzzy
-msgid "Sequential executions"
+msgid "Sequential plans"
 msgstr "Plan uitvoering"
 
 msgid "Serial"
@@ -51967,9 +51969,9 @@ msgid "Specifies the default line style"
 msgstr "Specificeert de standaard lijnstijl"
 
 msgid ""
-"Specifies the maximum time that the scheduler allows for a robot framework "
+"Specifies the maximum time that the scheduler allows for a Robot Framework "
 "execution. This time, multiplied by the number of repeated executions, may "
-"not be greater in total with all other suites in this group than the group "
+"not be greater in total with all other plans in this group than the group "
 "execution interval."
 msgstr ""
 
@@ -55813,10 +55815,10 @@ msgid "The Port Description"
 msgstr "De Haven Beschrijving"
 
 msgid ""
-"The Runtime-limit ratio (Peak Attempt) is calculated as <i>runtime * 100 / "
-"timeout</i>. These thresholds apply to the runtime of a single execution "
-"attempt. If there are multiple execution attempts, the thresholds apply to "
-"the longest runtime. "
+"The Runtime-limit ratio (Peak Attempt) is the longest attempt runtime in "
+"relation to the limit per attempt. These thresholds apply to the runtime of "
+"a single execution attempt. If there are multiple execution attempts, the "
+"thresholds apply to the longest runtime. "
 msgstr ""
 
 msgid ""
@@ -64907,10 +64909,6 @@ msgstr "Time-out in seconden voordat het scriptproces wordt beëindigd"
 
 msgid "Timeout occured"
 msgstr "Er is een time-out opgetreden"
-
-#, fuzzy
-msgid "Timeout per attempt"
-msgstr "niet geprobeerd"
 
 msgid "Timeout waiting for a free channel"
 msgstr "Timeout bij het wachten op een vrij kanaal"
@@ -76204,6 +76202,11 @@ msgstr "[%s] Start synchronisatie voor site"
 
 msgid "_customer_switch has an invalid format"
 msgstr "_customer_switch heeft een ongeldig formaat"
+
+msgid ""
+"`robot.yaml` is the RCC configuration file. It is specified relative to the "
+"base directory of Robot Framework projects."
+msgstr ""
 
 msgid ""
 "a TCP session that is active but that has no data being transmitted by "

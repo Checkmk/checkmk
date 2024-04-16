@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-04-12 06:00+0000\n"
+"PO-Revision-Date: 2024-04-16 14:23+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -380,7 +380,7 @@ msgstr "%d Änderungen"
 msgid "%d chaotic state changes from %s until %s (%s)"
 msgstr "%d chaotische Zustandsänderungen von %s bis %s (%s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d check plug-ins using the deprecated API: %s"
 msgstr "%d Check-Plugins, welche die veraltete API verwenden: %s"
 
@@ -428,7 +428,7 @@ msgstr "%d Symbole und Aktionen"
 msgid "%d icons customized"
 msgstr "%d Icons angepasst"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d ignored HW/SW inventory plug-ins found: %s"
 msgstr "%d ignorierte HW/SW-Inventur-Plugins gefunden: %s"
 
@@ -1332,7 +1332,6 @@ msgstr ""
 "<b>Hinweis</b>: Wenn Sie auf den <i>htpasswd</i>-Connector migrieren, müssen "
 "die Benutzer ihr Passwort beim nächsten Login ändern."
 
-#, fuzzy
 msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
 "Python 3.4 installation (or newer) with installed python packages \"pyOpenSSL"
@@ -1642,7 +1641,7 @@ msgstr ""
 "OK, da er den von den Apache-Prozessen benötigten Speicherplatz nicht genau "
 "abschätzen kann.</p>"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk checker processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1661,16 +1660,16 @@ msgid ""
 "initialized in parallel during startup of the Microcore, which may cause "
 "load peaks when having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
-"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die Checkmk- und "
-"Checkmk-Discovery-Checks der überwachten Systeme auszuführen. Es sollten "
-"immer genügend Hilfsprozesse vorhanden sein um die konfigurierten Checks zu "
-"bearbeiten.</p><p>Wenn die Hilfsprozesse der Checker zu 100% ausgelastet "
-"sind, werden die konfigurierten Checks nicht rechtzeitig ausgeführt. Infolge "
-"dessen steigt die Latenz der Checks und die Check-Ergebnisse sind nicht "
-"aktuelle.</p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-"
-"Timeouts verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href="
-"\"view.py?view_name=service_check_durations\">viel Zeit der Hilfsprozesse "
-"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
+"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die von Checkmk "
+"überwachten Checkmk- und Checkmk-Discovery-Services der überwachten Hosts "
+"auszuführen. Es sollten immer genügend Hilfsprozesse vorhanden sein um die "
+"konfigurierten Checks zu bearbeiten.</p><p>Wenn der Checker-Helper-Pool zu "
+"100 % ausgelastet ist, werden die Checks nicht rechtzeitig ausgeführt, die "
+"Latenzzeit für die Checks steigt und die Zustände sind nicht mehr aktuell.</"
+"p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-Timeouts "
+"verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view.py?"
+"view_name=service_check_durations\">viel Zeit der Hilfsprozesse verbrauchen</"
+"a></li><li>Erhöhen Sie die <a href=\"wato.py?"
 "mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
 "Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der Anzahl der "
 "Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu konfigurieren, "
@@ -1680,7 +1679,7 @@ msgstr ""
 "werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
 "kann.</p>"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
 "the Checkmk and Checkmk Discovery services of the hosts monitored with "
@@ -1698,15 +1697,15 @@ msgid ""
 "parallel during startup of the Microcore, which may cause load peaks when "
 "having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
-"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die Checkmk- und "
-"Checkmk-Discovery-Checks der überwachten Systeme auszuführen. Es sollten "
-"immer genügend Hilfsprozesse vorhanden sein um die konfigurierten Checks zu "
-"bearbeiten.</p><p>Wenn die Hilfsprozesse der Checker zu 100% ausgelastet "
-"sind, werden die konfigurierten Checks nicht rechtzeitig ausgeführt. Infolge "
-"dessen steigt die Latenz der Checks und die Check-Ergebnisse sind nicht "
-"aktuell.</p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-"
-"Timeouts verringern können</li><li>Prüfen Sie, welche Checks/Plugins <a href="
-"\"view.py?view_name=service_check_durations\">viel Zeit der Hilfsprozesse "
+"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die von Checkmk "
+"überwachten Checkmk- und Checkmk-Discovery-Services der überwachten Hosts "
+"auszuführen. Es sollten immer genügend Hilfsprozesse vorhanden sein um die "
+"konfigurierten Checks zu bearbeiten.</p><p>Wenn der Checker-Helper-Pool zu "
+"100 % ausgelastet ist, werden die Checks nicht rechtzeitig ausgeführt, die "
+"Latenzzeit für die Checks steigt und die Zustände sind nicht mehr aktuell.</"
+"p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-Timeouts "
+"verringern können</li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view."
+"py?view_name=service_check_durations\">viel Zeit der Hilfsprozesse "
 "verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
 "mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
 "Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der Anzahl der "
@@ -1717,7 +1716,7 @@ msgstr ""
 "werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
 "kann.</p>"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses Checkmk helper processes to execute the "
 "Checkmk and Checkmk Discovery services of the hosts monitored with Checkmk. "
@@ -1736,16 +1735,16 @@ msgid ""
 "parallel during startup of the Microcore, which may cause load peaks when "
 "having a lot of Checkmk helper processes configured.</p>"
 msgstr ""
-"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die Checkmk- und "
-"Checkmk-Discovery-Checks der überwachten Systeme auszuführen. Es sollten "
-"immer genügend Hilfsprozesse vorhanden sein um die konfigurierten Checks zu "
-"bearbeiten.</p><p>Wenn die Hilfsprozesse der Checker zu 100% ausgelastet "
-"sind, werden die konfigurierten Checks nicht rechtzeitig ausgeführt. Infolge "
-"dessen steigt die Latenz der Checks und die Check-Ergebnisse sind nicht "
-"aktuell.</p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-"
-"Timeouts verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href="
-"\"view.py?view_name=service_check_durations\">viel Zeit der Hilfsprozesse "
-"verbrauchen</a></li><li>Erhöhen Sie die <a href=\"wato.py?"
+"<p>Der Checkmk Micro Core nutzt Checkmk Checker-Prozesse um die von Checkmk "
+"überwachten Checkmk- und Checkmk-Discovery-Services der überwachten Hosts "
+"auszuführen. Es sollten immer genügend Hilfsprozesse vorhanden sein um die "
+"konfigurierten Checks zu bearbeiten.</p><p>Wenn der Checker-Helper-Pool zu "
+"100 % ausgelastet ist, werden die Checks nicht rechtzeitig ausgeführt, die "
+"Latenzzeit für die Checks steigt und die Zustände sind nicht mehr aktuell.</"
+"p><p>Mögliche Aktionen:<ul><li>Prüfen Sie, ob Sie die Check-Timeouts "
+"verringen können</li><li>Prüfen Sie, welche Checks/Plugins <a href=\"view.py?"
+"view_name=service_check_durations\">viel Zeit der Hilfsprozesse verbrauchen</"
+"a></li><li>Erhöhen Sie die <a href=\"wato.py?"
 "mode=edit_configvar&varname=cmc_checker_helpers\">Anzahl der Checkmk Checker-"
 "Prozesse</a></li></ul></p><p>Achten Sie bei der Konfiguration der Anzahl der "
 "Checkmk Checker-Prozesse darauf, nicht zu viele Prozesse zu konfigurieren, "
@@ -1755,7 +1754,7 @@ msgstr ""
 "werden, was zu Lastspitzen bzw. einer längeren Initialisierungsphase führen "
 "kann.</p>"
 
-#, fuzzy, no-python-format
+#, no-python-format
 msgid ""
 "<p>The Checkmk Microcore uses generic check helper processes to execute the "
 "active check based services (e.g. check_http, check_...). There should "
@@ -2019,7 +2018,6 @@ msgstr ""
 "lange sich eine Bedingung in einem fehlgeschlagenen Zustand befinden darf, "
 "bevor der Check Alarm schlägt."
 
-#, fuzzy
 msgid ""
 "A cache age limit on plug-ins and local checks. If set, the output of plug-"
 "ins is cached and reused until this much time has passed."
@@ -2028,7 +2026,6 @@ msgstr ""
 "werden. Wenn gesetzt, wird die Ausgabe von Plugins zwischengespeichert und "
 "für die eingestellte Zeit wiederverwendet."
 
-#, fuzzy
 msgid ""
 "A cache age limit on plugins. If set, the output of plug-ins is cached and "
 "reused until this much time has passed. Especially, this rule can be used to "
@@ -2378,7 +2375,6 @@ msgstr ""
 "Datenfiles bestehen. Mit dieser Regel können Sie die Größe von Tablespaces "
 "überwachen."
 
-#, fuzzy
 msgid ""
 "A timeout on plug-ins and local checks keeps those checks from staling the "
 "whole agent. If no timeout is configured here, the default is 60 seconds."
@@ -3961,11 +3957,9 @@ msgstr "Muster hinzufügen"
 msgid "Add pattern group"
 msgstr "Mustergruppe hinzufügen"
 
-#, fuzzy
 msgid "Add plug-in"
 msgstr "Plugin hinzufügen"
 
-#, fuzzy
 msgid "Add plug-in configuration"
 msgstr "Plugin-Konfiguration hinzufügen"
 
@@ -4396,9 +4390,8 @@ msgstr ""
 "Fortgeschritten: Unterstützung für SSL/TLS Host-Namen Erweiterung (SNI) "
 "ausschalten"
 
-#, fuzzy
 msgid "Advise re-authentication before termination"
-msgstr "Erneute Authentifizierung vor Beendigung empfehlen:"
+msgstr "Erneute Authentifizierung vor Beendigung empfehlen"
 
 msgid "Aerohive HiveManager"
 msgstr "Aerohive HiveManager"
@@ -4537,7 +4530,6 @@ msgstr ""
 "Services konfigurieren möchten, verwenden Sie bitte den Regelsatz <a href="
 "\"%s\">%s</a>."
 
-#, fuzzy
 msgid "After the configured time notification plug-ins are being interrupted."
 msgstr ""
 "Nach der eingestellten Zeit werden Benachrichtigungs-Plugins abgebrochen."
@@ -4689,13 +4681,13 @@ msgid "Agent Controller"
 msgstr "Agent Controller"
 
 msgid "Agent Deployment: Downloaded Agent Hash"
-msgstr "Agentenverteilung: heruntergeladener Agent-Hash"
+msgstr "Agentenverteilung: heruntergeladener Agenten-Hash"
 
 msgid "Agent Deployment: Icons"
 msgstr "Agentenverteilung: Icons"
 
 msgid "Agent Deployment: Installed Agent Hash"
-msgstr "Agentenverteilung: installierter Agent-Hash"
+msgstr "Agentenverteilung: installierter Agenten-Hash"
 
 msgid "Agent Deployment: Last Contact"
 msgstr "Agentenverteilung: letzter Kontakt"
@@ -4707,7 +4699,7 @@ msgid "Agent Deployment: Last Error"
 msgstr "Agentenverteilung: letzter Fehler"
 
 msgid "Agent Deployment: Target Agent Hash"
-msgstr "Agentenverteilung: Zielagent-Hash"
+msgstr "Agentenverteilung: Zielagenten-Hash"
 
 msgid "Agent Error"
 msgstr "Agentenfehler"
@@ -4756,7 +4748,7 @@ msgid "Agent controller"
 msgstr "Agent Controller"
 
 msgid "Agent controller auto-registration"
-msgstr "Automatische Registrierung von Agent-Controllern"
+msgstr "Automatische Registrierung von Agent Controllern"
 
 msgid "Agent controller connections"
 msgstr "Agent Controller Verbindungen"
@@ -4794,15 +4786,12 @@ msgstr "Agentenausgabe"
 msgid "Agent pairing"
 msgstr "Agentenkopplung"
 
-#, fuzzy
 msgid "Agent plug-ins"
-msgstr "Agentenplugins"
+msgstr "Agenten-Plugins"
 
-#, fuzzy
 msgid "Agent plug-ins: Regular expression to exclude plugins"
 msgstr "Agenten-Plugins: Regulärer Ausdruck zum Ausschluss von Plugins"
 
-#, fuzzy
 msgid "Agent plug-ins: versions"
 msgstr "Agenten-Plugins: Versionen"
 
@@ -4825,7 +4814,7 @@ msgid "Agent signing"
 msgstr "Agent signieren"
 
 msgid "Agent type"
-msgstr "Agent-Type"
+msgstr "Agententyp"
 
 msgid "Agent update status"
 msgstr "Status Agentenupdate"
@@ -5298,7 +5287,6 @@ msgstr "Alle Host- und Service-Wartungszeiten (einschließlich IDs)"
 msgid "All hosts"
 msgstr "Alle Hosts"
 
-#, fuzzy
 msgid ""
 "All hosts configured via this ruleset will do a hardware and software "
 "inventory after every check cycle if there's at least one inventory plug-in "
@@ -5306,14 +5294,13 @@ msgid ""
 "for agent based hosts make sure that you have installed the agent plug-in "
 "<tt>mk_inventory</tt> on these hosts."
 msgstr ""
-"Alle mit diesem Regelsatz konfigurierten Hosts werden eine Hardware- und "
-"Softwareinventur nach jedem Checkzyklus durchführen, falls es mindestens ein "
+"Alle mit diesem Regelsatz konfigurierten Hosts werden nach jedem Checkzyklus "
+"eine Hardware- und Softwareinventur durchführen, falls es mindestens ein "
 "Inventur-Plugin gibt, welches Statusdaten verarbeitet. <b>Anmerkung:</b> Um "
 "für agentenbasierte Hosts sinnvolle Resultate zu erhalten, stellen Sie "
 "sicher, dass das Agentenplugin <tt>mk_inventory</tt> auf diesen Hosts "
 "installiert ist."
 
-#, fuzzy
 msgid ""
 "All hosts configured via this ruleset will do a hardware and software "
 "inventory. For each configured host a new active check will be created. You "
@@ -5326,9 +5313,10 @@ msgstr ""
 "Softwareinventur durchführen. Für jeden konfigurierten Host wird ein neuer "
 "aktiver Check erstellt. Sie sollten auch eine Regel erstellen, die das "
 "normale Intervall für diesen Check auf etwas in der Größenordnung von ein "
-"paar Stunden oder einem Tag setzt. <b>Anmerkung:</b> Um für agentenbasierte "
-"Hosts sinnvolle Resultate zu erhalten, stellen Sie sicher, dass das "
-"Agentenplugin <tt>mk_inventory</tt> auf diesen Hosts installiert ist."
+"paar Stunden bis zu einem Tag setzt. <b>Anmerkung:</b> Um für "
+"agentenbasierte Hosts sinnvolle Resultate zu erhalten, stellen Sie sicher, "
+"dass das Agentenplugin <tt>mk_inventory</tt> auf diesen Hosts installiert "
+"ist."
 
 msgid ""
 "All hosts created by this connection will be placed in this folder. You are "
@@ -5990,13 +5978,12 @@ msgstr ""
 msgid "An absolute path to a CA certificate"
 msgstr "Ein absoluter Pfad zu einem CA Zertifikat"
 
-#, fuzzy
 msgid ""
 "An absolute path to the configuration file (in case of MRPE) or to a "
 "directory in case of local / plug-in"
 msgstr ""
-"Ein absoluter Pfad zu einer Konfigurationsdatei (im Falle von MRPE) oder zu "
-"einem Verzeichnis im Falle von local / plugin"
+"Ein absoluter Pfad zur Konfigurationsdatei (im Falle von MRPE) oder zu einem "
+"Verzeichnis im Falle von lokal / Plugin"
 
 msgid "An alias or description of the role"
 msgstr "Alias/Beschreibung der Rolle"
@@ -6575,7 +6562,7 @@ msgid "Arrays (Controllers)"
 msgstr "Arrays (Kontroller)"
 
 msgid "Articles in the user guide"
-msgstr "Artikel im Benutzerhandbuch"
+msgstr "Artikel im Handbuch"
 
 msgid "Artificial slowdown of logfile parsing (for testing!)"
 msgstr "Das Einlesen der Logdateien künstlich verzögern (zum Testen!)"
@@ -7926,8 +7913,9 @@ msgstr "Basisverzeichnis für <tt>plugins</tt> und <tt>local</tt>"
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Basisverzeichnis für variable Daten (Caches, Zustandsdateien)"
 
-msgid "Base directory of suites"
-msgstr "Basisverzeichnis der Suiten"
+#, fuzzy
+msgid "Base directory of Robot Framework projects"
+msgstr "Jeder Service überwacht Robot Framework tests.\n"
 
 msgid "Base layout"
 msgstr "Grundlayout"
@@ -8002,16 +7990,16 @@ msgid "Beginner's guide"
 msgstr "Leitfaden für Einsteiger"
 
 msgid "Beginner's guide: Adding the first hosts"
-msgstr "Anleitung für Anfänger: Erste Hosts hinzufügen"
+msgstr "Leitfaden für Einsteiger: Erste Hosts hinzufügen"
 
 msgid "Beginner's guide: Configuring services"
-msgstr "Anleitung für Anfänger: Services konfigurieren"
+msgstr "Leitfaden für Einsteiger: Services konfigurieren"
 
 msgid "Beginner's guide: Creating folders"
-msgstr "Anleitung für Anfänger: Ordner anlegen"
+msgstr "Leitfaden für Einsteiger: Ordner anlegen"
 
 msgid "Beginner's guide: Host folder structures"
-msgstr "Anleitung für Anfänger: Host-Ordner Strukturen"
+msgstr "Leitfaden für Einsteiger: Host-Ordner Strukturen"
 
 msgid ""
 "Below the specified value alert rules will be monitored as asingle service."
@@ -9010,7 +8998,6 @@ msgstr ""
 "</b><br>Der <tt>Check_MK</tt>-Service verarbeitet überhaupt keine Piggyback-"
 "Daten und ignoriert sie, falls vorhanden."
 
-#, fuzzy
 msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
 "received from external sources, like plug-in output or log messages. If you "
@@ -9024,7 +9011,6 @@ msgstr ""
 "wie z.B. gerenderte Links, deaktivieren Sie diese Option. Beachten Sie, dass "
 "Sie den Weg für mehrere Injektionsangriffe frei machen können."
 
-#, fuzzy
 msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
 "received from external sources, like service output or log messages. But "
@@ -9042,12 +9028,11 @@ msgstr ""
 "Ausgaben oder Log-Meldungen. Es gibt jedoch bestimmte Gründe, diese "
 "Sicherheitsfunktion zu deaktivieren. Wenn Sie z.B. die HTML-Ausgabe eines "
 "bestimmten Check-Plugins anzeigen wollen, erlaubt die Deaktivierung des "
-"Maskierens dem Plugin, nicht nur HTML, sondern auch Javascript-Code im "
-"Kontext Ihres Browsers auszuführen. Dies ermöglicht die Ausführung von "
-"beliebigem Javascript, sogar für Injektionsangriffe. Aus diesem Grund "
-"sollten Sie diese Funktion nur für eine kleine, sehr spezifische Anzahl von "
-"Services deaktivieren, um sicherzustellen, dass nicht jedes beliebige Check-"
-"Plugin in der Lage ist, Code zu erzeugen, den Ihr Browser interpretiert."
+"Escapings dem Plugin, nicht nur HTML, sondern auch Javascript-Code im "
+"Kontext Ihres Browsers auszuführen. Aus diesem Grund sollten Sie diese "
+"Funktion nur für eine kleine, sehr spezifische Anzahl von Services "
+"deaktivieren, um sicherzustellen, dass nicht jedes beliebige Check-Plugin in "
+"der Lage ist, Code zu erzeugen, der von Ihrem Browser interpretiert wird."
 
 msgid ""
 "By default, for security reasons, the GUI does not interpret any HTML code "
@@ -9085,7 +9070,6 @@ msgstr ""
 "diese implizit bekannt ist. Wenn Sie jedoch mehrere Hosts in einem "
 "gemeinsamen Check überwachen möchten, können Sie hier IP-Adressen angeben."
 
-#, fuzzy
 msgid ""
 "By default, python agent plug-ins are written in Python 3. However, since "
 "Python 2 is still often seen on many machines, we provide a fallback Python "
@@ -9099,11 +9083,10 @@ msgstr ""
 "jedoch noch auf vielen Geräten verwendet wird, stellen wir einen Fallback "
 "auf eine Python 2 Version, zusätzlich zur Python 3 Version des Plugins, "
 "bereit, die verwendet wird, wenn kein Python 3 auf dem Host verfügbar ist. "
-"<br>Mit dieser Regel, kann entweder die Verwendung von Python 2 oder Python "
-"3 erzwungen werden.<br>Zusätzlich kann ein Befehl zur Python Plugin "
-"Ausführung festgelegt werden."
+"<br>Mit dieser Regel, können Sie die Verwendung von Python 2 oder Python 3 "
+"erzwingen.<br>Zusätzlich können Sie einen Befehl angeben, der für die "
+"Ausführung des Python-Plug-ins verwendet wird."
 
-#, fuzzy
 msgid ""
 "By default, the Checkmk UNIX agent will execute Python 3 plug-ins with "
 "<tt>python3</tt> and Python 2 plug-ins with <tt>python2</tt> or <tt>python</"
@@ -9112,9 +9095,9 @@ msgid ""
 msgstr ""
 "Standardmäßig wird der Checkmk UNIX Agent Python 3 Plugins mit <tt>python3</"
 "tt> ausführen und Python 2 Plugins mit <tt>python2</tt> oder <tt>python</tt> "
-"(abhängig davon welcher Befehl auf dem Host gefunden wird). Hier kann ein "
-"spezifischer Befehl festgelegt werden, der unabhängig vom Skript ausgeführt "
-"wird."
+"(abhängig davon welcher Befehl auf dem Host-System gefunden wird). Hier "
+"können Sie einen spezifischen Befehl festlegen, der unabhängig vom Skript "
+"ausgeführt wird."
 
 msgid ""
 "By default, the controller ignores proxy servers configured on the target "
@@ -9750,7 +9733,6 @@ msgstr "Kann die Version %r nicht parsen"
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#, fuzzy
 msgid "Cancel notifications for this plug-in type"
 msgstr "Benachrichtigungen für diesen Typ von Plugin löschen"
 
@@ -10427,14 +10409,12 @@ msgstr "Prüfe FTP-Dienst"
 msgid "Check HTML Form Submit"
 msgstr "Absenden eines HTML-Formulars prüfen"
 
-#, fuzzy
 msgid "Check HTTP service (deprecated)"
-msgstr "Prüfe HTTP Service"
+msgstr "Prüfe HTTP Service (veraltet)"
 
 msgid "Check HTTP web service"
 msgstr "Prüfe HTTP Webdienst"
 
-#, fuzzy
 msgid ""
 "Check HTTP/HTTPS service using the plug-in <tt>check_http</tt> from the "
 "standard Monitoring Plugins. This plug-in tests the HTTP service on the "
@@ -10444,10 +10424,14 @@ msgid ""
 "plug-in is deprecated and shall not be used anymore. Please use the new "
 "\"Check HTTP web service\" instead."
 msgstr ""
-"Prüfen eines HTTP/HTTPS-Dienstes durch Benutzung des Plugins <tt>check_http</"
-"tt> aus den Standard Monitoring-Plugins. Der Check prüft auf dem Host HTTP, "
-"HTTPS, Umleitungen, Suche nach Zeichenketten und regulären Ausdrücken, "
-"Verbindungszeiten und Ablauf von Zertifikaten."
+"Überprüfen Sie den HTTP/HTTPS-Dienst mit dem Plugin <tt>check_http</tt> aus "
+"den Standard Monitoring Plugins. Dieses Plugin testet den HTTP-Dienst auf "
+"dem angegebenen Host. Es kann normale (HTTP) und sichere (HTTPS) Server "
+"testen, Umleitungen verfolgen, nach Zeichenketten und regulären Ausdrücken "
+"suchen, Verbindungszeiten prüfen und Ablaufzeiten von Zertifikaten melden. "
+"Bitte beachten Sie, dass dieses Plugin veraltet ist und nicht mehr verwendet "
+"werden soll. Bitte verwenden Sie stattdessen das neue \"Check HTTP web "
+"service\"."
 
 msgid "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections"
 msgstr "Check HTTP: Verwende HTTPS anstelle von HTTP für SSL/TLS-Verbindungen"
@@ -10644,19 +10628,15 @@ msgstr "Checkperiode für Hosts"
 msgid "Check period for passive Checkmk services"
 msgstr "Check Zeitraum für passive Checkmk Services"
 
-#, fuzzy
 msgid "Check plug-in"
 msgstr "Check-Plugin"
 
-#, fuzzy
 msgid "Check plug-in API introduction"
 msgstr "Einführung in das Check-Plugin-API"
 
-#, fuzzy
 msgid "Check plug-in timeout"
 msgstr "Ablaufzeit für Check-Plugin"
 
-#, fuzzy
 msgid "Check plug-ins matching"
 msgstr "Übereinstimmende Check-Plugins"
 
@@ -10679,7 +10659,6 @@ msgstr ""
 msgid "Check specific host(s)"
 msgstr "Bestimmte(n) Host(s) prüfen"
 
-#, fuzzy
 msgid ""
 "Check submission of HTML forms via HTTP/HTTPS using the plug-in "
 "<tt>check_form_submit</tt> provided with Checkmk. This plug-in provides more "
@@ -10687,17 +10666,16 @@ msgid ""
 "redirect, accepts and uses cookies, parses forms from the requested pages, "
 "changes vars and submits them to check the response afterwards."
 msgstr ""
-"Das Absenden von HTML-Formularen via HTTP/HTTPS mittels des Plugins "
-"<tt>check_form_submit</tt> prüfen, welches mit Checkmk mitgeliefert wird. "
-"Dieses Plugin hat mehr Funktionen als <tt>check_http</tt>: es folgt "
-"automatisch HTTP-Redirects, empfängt und sendet Cookies korrekt, wertet "
-"Formulare in den angeforderten Seite aus, kann dort enthaltene Variablen "
-"ändern und so ein Absenden des Formulars simulieren."
+"Überprüfen Sie das Absenden von HTML-Formularen über HTTP/HTTPS mit dem Plug-"
+"in <tt>check_form_submit</tt>, das mit Checkmk geliefert wird. Dieses Plugin "
+"bietet mehr Funktionalität als <tt>check_http</tt>, da es automatisch der "
+"HTTP-Weiterleitung folgt, Cookies akzeptiert und verwendet, Formulare von "
+"den angeforderten Seiten analysiert, Variablen ändert und sie absendet, um "
+"anschließend die Antwort zu überprüfen."
 
 msgid "Check the URL"
 msgstr "Prüfe die URL"
 
-#, fuzzy
 msgid ""
 "Check the number of sent notifications per contact using the plug-in "
 "<tt>check_notify_count</tt> provided with Checkmk. This plug-in counts the "
@@ -10713,8 +10691,9 @@ msgstr ""
 "die durch den lokalen Monitoring-Kern verschickt wurden und zeichnet für "
 "jeden einzelnen Kontakt einen Graphen. Sie können Schwellwerte für die "
 "Anzahl der Benachrichtigungen pro Kontakt in einem bestimmten Zeitintervall "
-"definieren. Das Plugin nutzt Livestatus, um die benachrichtigungsrelevanten "
-"Informationen aus den Logdateien Ihres Monitoring-Kerns zu ermitteln."
+"definieren. Dieses Plugin nutzt Livestatus, um die "
+"benachrichtigungsrelevanten Informationen aus den Logdateien Ihres "
+"Monitoring-Kerns zu ermitteln."
 
 msgid ""
 "Check the resolution of a hostname into an IP address by a DNS server. This "
@@ -10815,7 +10794,6 @@ msgstr "Checkmk Agent Port (<a href=\"%s\">Regeln</a>)"
 msgid "Checkmk Agent installation auditing"
 msgstr "Überwachung der Checkmk-Agent Installation"
 
-#, fuzzy
 msgid ""
 "Checkmk Agent, Number, version and edition of sites, Cluster host; Number of "
 "hosts, services, CMK Helper, Live Helper, Helper usage; State of daemons: "
@@ -10825,7 +10803,7 @@ msgstr ""
 "Checkmk Agent, Anzahl, Version und Edition der Instanzen, Cluster-Host; "
 "Anzahl der Hosts, Dienste, CMK Helper, Live Helper, Helper-Verwendung; "
 "Status der Daemons: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, "
-"MKNotifyd, RRDCached (Agent-Plugin mk_inventory muss installiert sein)"
+"MKNotifyd, RRDCached (Agentenplugin mk_inventory muss installiert sein)"
 
 msgid "Checkmk Configuration Files"
 msgstr "Checkmk-Konfigurationsdateien"
@@ -10888,7 +10866,7 @@ msgid "Checkmk agent network service (Solaris)"
 msgstr "Checkmk Agent Netzwerkdienst (Solaris)"
 
 msgid "Checkmk agent plugins"
-msgstr "Checkmk-Agent-Plugins"
+msgstr "Checkmk-Agentenplugins"
 
 msgid "Checkmk agent: Execute the Checkmk agent within running containers"
 msgstr ""
@@ -11233,20 +11211,19 @@ msgid ""
 "agent package, rather than the contents of the package, e.g., service names. "
 "In particular, it doesn't support to install multiple agents on one machine."
 msgstr ""
-"Wählen Sie einen benutzerdefinierten Namen für das gebackene Checkmk-Agent-"
-"Paket, abweichend vom Standard <tt>check-mk-agent</tt>. Bitte beachten Sie, "
-"dass diese Regel nur den Namen betrifft, der vom Paketmanager (z. B. RPM) "
-"verwendet wird, um das Checkmk-Agenten-Paket zu identifizieren, und nicht "
-"den Inhalt des Pakets, z. B. die Service-Namen. Insbesondere ist es nicht "
-"möglich, mehrere Agenten auf einem Rechner zu installieren."
+"Wählen Sie einen benutzerdefinierten Namen für das gebackene Checkmk-"
+"Agentenpaket, abweichend vom Standard <tt>check-mk-agent</tt>. Bitte "
+"beachten Sie, dass diese Regel nur den Namen betrifft, der vom Paketmanager "
+"(z. B. RPM) verwendet wird, um das Checkmk-Agentenpaket zu identifizieren, "
+"und nicht den Inhalt des Pakets, z. B. die Service-Namen. Insbesondere ist "
+"es nicht möglich, mehrere Agenten auf einem Rechner zu installieren."
 
-#, fuzzy
 msgid ""
 "Choose a name here. If you choose <tt>foo</tt> then section header and thus "
 "the name of the required check plug-in will be &lt;&lt;&lt;winperf_foo&gt;"
 "&gt;&gt;."
 msgstr ""
-"Wählen Sie hier einen Namen. Wenn Sie <tt>foo</tt> eintragen, wird der "
+"Wählen Sie hier einen Namen. Wenn Sie <tt>foo</tt> wählen, wird der "
 "Sektionsheader und somit der Name des benötigten Check-Plugins &lt;&lt;&lt;"
 "winperf_foo&gt;&gt;&gt; sein."
 
@@ -11266,7 +11243,6 @@ msgstr ""
 "Exklusiv (Nur Jobs mit Label-Einschränkungen laufen, die zu diesem Knoten "
 "passen). Der Status wechselt in den Warnstatus, wenn der Modus abweicht."
 
-#, fuzzy
 msgid ""
 "Choose how to monitor the docker node. You can uncheck individual sections, "
 "if you do not need the corresponding services. The respectice checkboxes "
@@ -11284,7 +11260,6 @@ msgstr ""
 "Sie Leistungsprobleme feststellen, sollten Sie erwägen, diesen zu "
 "deaktivieren."
 
-#, fuzzy
 msgid "Choose if this rule applies to plug-ins or local checks"
 msgstr "Wählen Sie, ob sich diese Regel auf Plugins oder lokale Checks bezieht"
 
@@ -11430,7 +11405,6 @@ msgstr ""
 "Wählen Sie, welches Modem verwendet wird. Derzeit wird nur das Teltonika-"
 "TRB140 unterstützt."
 
-#, fuzzy
 msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
 "configured in the plugin's dedicated rules. Please choose \"override\" only "
@@ -12502,7 +12476,6 @@ msgstr "Konfiguration der Checkmk Hardware/Software-Inventur"
 msgid "Configuration of the Datadog special agent."
 msgstr "Konfiguration des Datadog-Spezialagenten."
 
-#, fuzzy
 msgid "Configuration of update plug-in"
 msgstr "Konfiguration des Update-Plugins"
 
@@ -12661,7 +12634,7 @@ msgid ""
 "removal of hosts</a>."
 msgstr ""
 "Konfigurieren Sie die automatische Erstellung neuer Hosts auf Basis von "
-"Agent-Controller-Anfragen, siehe auch den <a href=\"%s\">entsprechenden "
+"Agent Controller-Anfragen, siehe auch den <a href=\"%s\">entsprechenden "
 "Bakery-Regelsatz</a>. <b>Hinweis</b>: Auf diese weise erstellte neue Hosts "
 "werden durch das Host-Label <tt>cmk/agent_auto_registered:yes</tt> "
 "gekennzeichnet. Dies kann z. B. genutzt werden, um ein Host-Lifecycle-"
@@ -12909,7 +12882,6 @@ msgstr ""
 "Das Konfigurieren von mehr Checkern als die Anzahl der verfügbaren CPUs (%d) "
 "wirkt sich nachteilig aus, da sie nicht IO-gebunden sind."
 
-#, fuzzy
 msgid ""
 "Configuring this to have the notification plug-in connect directly to the "
 "smtp server. This has the advantage of providing better error messages in "
@@ -14037,12 +14009,11 @@ msgstr "Erzeuge zufällige Monitoring-Daten"
 msgid "Create random secret and copy secret to clipboard"
 msgstr "Zufälliges Passwort erzeugen und in die Zwischenablage kopieren"
 
-#, fuzzy
 msgid ""
 "Create real-time data executing the following agent plug-ins (Linux only)"
 msgstr ""
-"Erstellen Sie Echtzeitdaten, indem Sie die folgenden Agent-Plugins ausführen "
-"(nur Linux)"
+"Erstellen Sie Echtzeitdaten, indem Sie die folgenden Agentenplugins "
+"ausführen (nur Linux)"
 
 msgid "Create regular time-schedule for this report"
 msgstr "Für diesen Bericht einen Eintrag im Berichtsplaner erstellen"
@@ -14400,9 +14371,9 @@ msgstr "Kritisches Level liegt bei höchstens"
 msgid "Critical of "
 msgstr "Kritisch bei "
 
-#, fuzzy, python-format
+#, python-format
 msgid "Critical of %s"
-msgstr "Kritsch wenn %s"
+msgstr "Kritisch ab %s"
 
 msgid "Critical threshold"
 msgstr "Kritischer Schwellwert"
@@ -16474,11 +16445,12 @@ msgstr ""
 "einzelnen Host zu beschränken oder die Art der Objekte, auf die Sie "
 "beschränken möchten, manuell auszuwählen."
 
+#, fuzzy
 msgid ""
-"Depending on the libraries used in a suite, building its Python environment "
+"Depending on the libraries used in a plan, building its Python environment "
 "for the very first time can take some minutes. This setting ensures that a "
-"hanging/failing environment creation for a single suite does not block the "
-"scheduling phase of other suites."
+"hanging/failing environment creation for a single plan does not block the "
+"scheduling phase of other plans."
 msgstr ""
 "Je nach den in einer Suite verwendeten Bibliotheken kann das erstmalige "
 "Erstellen ihrer Python-Umgebung einige Minuten dauern. Mit dieser "
@@ -16504,144 +16476,113 @@ msgstr ""
 msgid "Deploy %s"
 msgstr "%s verteilen"
 
-#, fuzzy
 msgid "Deploy AD-Replication plug-in"
 msgstr "Plugin für AD-Replikation verteilen"
 
-#, fuzzy
 msgid "Deploy Arcserve plug-in"
 msgstr "Arcserve-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy DB2 memory plug-in"
 msgstr "DB2 memory Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy IBM MQ plug-in"
 msgstr "IBM MQ-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy ISC DHCP-Daemon plug-in"
 msgstr "ISC DHCP-Daemon-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Inotify plug-in"
 msgstr "INotify Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Kaspersky Anti-Virus plug-in"
 msgstr "Kaspersky Anti-Virus Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy LVM plug-in"
 msgstr "LVM-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Linux filesystem quota plug-in"
 msgstr "Linux filesystem quota Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy MS Office 365 plug-in"
 msgstr "MS Office 365-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy MSSQL Server plug-in"
 msgstr "MSSQL-Server-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy MTR plug-in asynchronously"
 msgstr "MTR-Plugin asynchron verteilen"
 
-#, fuzzy
 msgid "Deploy Mailman plug-in"
-msgstr "Mailman Plugin verteilen"
+msgstr "Mailman-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy MegaRAID plug-in"
 msgstr "MegaRAID-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy NFS4 exports plug-in"
 msgstr "NFS4 exports Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy ORACLE databases plug-in"
 msgstr "ORACLE-Datenbank-Plugin verteilen"
 
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitor (kopflos) verteilen"
 
-#, fuzzy
 msgid "Deploy Remote Desktop Licenses plug-in"
 msgstr "Remote-Desktop-Lizenzen-Plugin verteilen"
 
 msgid "Deploy Robotmk Scheduler and Agent Plugin"
 msgstr "Robotmk Scheduler und Agentenplugin verteilen"
 
-#, fuzzy
 msgid "Deploy SMART plug-in"
 msgstr "SMART Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy SUSEConnect plug-in"
 msgstr "SUSEConnect Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy StorCLI plug-in"
 msgstr "StorCLI-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Symantec Anti Virus plug-in"
 msgstr "Symantec Anti Virus Plugin verteilen"
 
 msgid "Deploy Unitrends plugins"
 msgstr "Unitrends Plugins verteilen"
 
-#, fuzzy
 msgid "Deploy VxVM plug-in"
 msgstr "VxVM Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Windows License plug-in"
 msgstr "Windows-Lizenz-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Windows McAfee AV client plug-in"
 msgstr "Windows McAfee AV Clientplugin verteilen"
 
-#, fuzzy
 msgid "Deploy Windows Multipath plug-in"
 msgstr "Windows Multipath Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Windows Printer Queue plug-in"
 msgstr "Windows-Druckerwarteschlange-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Windows Updates plug-in"
 msgstr "Windows Updates Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy Zorp plug-in"
 msgstr "Zorp-Plugin verteilen"
 
 msgid "Deploy agents"
 msgstr "Agenten verteilen"
 
-#, fuzzy
 msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
 msgstr ""
-"Batch-Version des Plugins verteilen - empfohlen für Windows XP / Windows "
-"2000 aufwärts"
+"Batch-Datei des Plugins verteilen - empfohlen für Windows XP / Windows 2000 "
+"aufwärts"
 
 msgid "Deploy custom files with agent"
 msgstr "Benutzerdefinierte Dateien mit Agent verteilen"
 
-#, fuzzy
 msgid "Deploy iptables plug-in"
 msgstr "iptables Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy logged in users plug-in"
 msgstr "Plugin für eingeloggte Benutzer verteilen"
 
@@ -16651,141 +16592,107 @@ msgstr "mk_mongodb.py mit Authentifizierung verteilen."
 msgid "Deploy mk_mongodb.py without authentication."
 msgstr "mk_mongodb.py ohne Authentifizierung verteilen."
 
-#, fuzzy
 msgid "Deploy plug-in for Citrix XenApp"
 msgstr "Plugin für Citrix XenApp verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for Citrix licenses"
 msgstr "Plugin für Citrix-Lizenzen verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for DAG"
 msgstr "Plugin für DAG verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for DB2"
 msgstr "Plugin für DB2 verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for Hyper-V VM Guest Information"
 msgstr "Plugin für Hyper-V VM Gastinformationen verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for Hyper-V VMs"
 msgstr "Plugin für Hyper-V VMs verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for JAR signatures"
 msgstr "Plugin für JAR-Signaturen verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for MS Exchange database latency"
-msgstr "Plugin für MS Exchange Datenbank-Latenzzeiten verteilen"
+msgstr "Plugin für MS Exchange Datenbank-Latenz verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for MS IIS Application Pool States"
 msgstr "Plugin für MS IIS Application Pool States verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for NFS IO Stats"
 msgstr "Plugin für NFS IO Stats verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for Veeam backup status"
 msgstr "Plugin für den Veeam Backup-Status verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for Windows DHCP pools"
 msgstr "Plugin für Windows DHCP pools verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for Windows System Info"
 msgstr "Plugins für Windows Systeminfo verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for Windows Task Scheduler"
 msgstr "Plugin für Windows Task-Scheduler verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in for Windows broadcom bonding"
 msgstr "Plugin für Windows Broadcom-Bonding verteilen"
 
-#, fuzzy
 msgid "Deploy plug-in that updates agent automatically"
 msgstr "Plugin, das Agenten automatisch aktualisiert, verteilen"
 
-#, fuzzy
 msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
-msgstr ""
-"Powershell-Version des Plugins verteilen - empfohlen für Windows 2008 und "
-"aufwärts"
+msgstr "Powershell-Plugin verteilen - empfohlen für Windows 2008 und aufwärts"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deploy the %s plug-in and its configuration"
 msgstr "Das %s Plugin mit Konfiguration verteilen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Deploy the %s plug-in without configuration"
 msgstr "Das %s Plugin ohne Konfiguration verteilen"
 
-#, fuzzy
 msgid "Deploy the APT plug-in"
-msgstr "Das APT-Plugin verteilen"
+msgstr "APT-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Checkmk CUPS queues plug-in"
-msgstr "Das Checkmk CUPS Queues Plugin verteilen"
+msgstr "Checkmk CUPS Queues Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Checkmk EMC ScaleIO plug-in"
-msgstr "Das Checkmk EMC ScaleIO Plugin verteilen"
+msgstr "Checkmk EMC ScaleIO Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Checkmk Inventory plug-in"
-msgstr "Das Checkmk Inventory Plugin verteilen"
+msgstr "Checkmk Inventory Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Checkmk object counts plug-in"
-msgstr "Das Checkmk-Objektzählungs-Plugin verteilen"
+msgstr "Checkmk-Objektzählungs-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Jolokia plug-in"
-msgstr "Das Jolokia Plugin verteilen"
+msgstr "Jolokia Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the MySQL plug-in"
-msgstr "Das MySQL Plugin verteilen"
+msgstr "MySQL Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the PostgreSQL plug-in"
-msgstr "Das PostgresQL-Plugin verteilen"
+msgstr "PostgresQL-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the SAP HANA plug-in"
-msgstr "Das SAP HANA-Plugin verteilen"
+msgstr "SAP HANA-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the SAP R/3 plug-in"
-msgstr "Das SAP R/3 Plugin verteilen"
+msgstr "SAP R/3 Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the SAP router plug-in"
-msgstr "Das SAP-Router-Plugin verteilen"
+msgstr "SAP-Router-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the SSH daemon configuration plug-in"
-msgstr "Das SSH Daemon Konfigurationsplugin verteilen"
+msgstr "SSH Daemon Konfigurationsplugin verteilen"
 
-#, fuzzy
 msgid "Deploy the TSM plug-in"
-msgstr "Das TSM Plugin verteilen"
+msgstr "TSM Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the Zypper plug-in"
-msgstr "Das Zypper Plugin verteilen"
+msgstr "Zypper Plugin verteilen"
 
-#, fuzzy
 msgid ""
 "Deploy the agent plug-in <tt>mk_postgres</tt>. This will create information "
 "necessary for all <tt>postgres_*</tt> checks"
@@ -16794,35 +16701,27 @@ msgstr ""
 "Informationen, die für die Überwachung aller <tt>postgres_*</tt> Checks "
 "notwendig sind"
 
-#, fuzzy
 msgid "Deploy the agent plug-in <tt>mk_sshd_config</tt>."
 msgstr "Das Agentenplugin <tt>mk_sshd_config</tt> verteilen."
 
-#, fuzzy
 msgid "Deploy the agent plug-in <tt>mk_suseconnect</tt>."
 msgstr "Das Agentenplugin <tt>mk_suseconnect</tt> verteilen."
 
-#, fuzzy
 msgid "Deploy the agent plug-in <tt>zorp</tt> on your target system."
 msgstr "Das Agentenplugin <tt>zorp</tt> auf Ihrem Zielsystem verteilen."
 
-#, fuzzy
 msgid "Deploy the docker container plug-in"
 msgstr "Das Docker Container Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the docker plug-in"
 msgstr "Das Docker Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the mk_filehandler plug-in"
 msgstr "mk_filehandler-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the netstat plug-in"
 msgstr "Das netstat-Plugin verteilen"
 
-#, fuzzy
 msgid "Deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smi Agenten-Plugin verteilen"
 
@@ -17436,7 +17335,6 @@ msgstr "Erkennen von Services während der Erstellung"
 msgid "Discover single interfaces"
 msgstr "Erkenne einzelne Interfaces"
 
-#, fuzzy
 msgid "Discovered by plug-in"
 msgstr "Erkannt durch Plugin"
 
@@ -18031,304 +17929,232 @@ msgstr "Groß-/Kleinschreibung nicht umwandeln"
 msgid "Do not create hosts"
 msgstr "Hosts nicht erstellen"
 
-#, fuzzy
 msgid "Do not deploy AD-Replication plug-in"
 msgstr "Plugin für AD-Replikation nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Check SQL Server plug-in"
 msgstr "Check SQL-Server-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy DB2 memory plug-in"
 msgstr "Das DB2 memory Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy ISC DHCP-Daemon plug-in"
 msgstr "Das ISC DHCP-Daemon Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Inotify plug-in"
 msgstr "INotify Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Kaspersky Anti-Virus plug-in"
 msgstr "Das Kaspersky Anti-Virus Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy LVM plug-in"
 msgstr "Das LVM-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Linux filesystem quota plug-in"
 msgstr "Das Linux filesystem quota Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy MTR plug-in"
 msgstr "MTR-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Mailman plug-in"
 msgstr "Das Mailman Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy NFS4 exports plug-in"
 msgstr "Das NFS4 exports Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy ORACLE databases plug-in"
 msgstr "ORACLE-Datenbank-Plugin nicht verteilen"
 
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitor (ohne GUI) nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Remote Desktop Licenses plug-in"
 msgstr "Remote-Desktop-Lizenzen-Plugin nicht verteilen"
 
 msgid "Do not deploy Robotmk"
 msgstr "Robotmk nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy SMART plug-in"
 msgstr "Das SMART Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy SUSEConnect plug-in"
 msgstr "Das SUSEConnect Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Symantec Anti Virus plug-in"
 msgstr "Das Symantec Anti Virus Plugin nicht verteilen"
 
 msgid "Do not deploy Unitrends plugins"
 msgstr "Die Unitrends Plugins nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy VxVM plug-in"
 msgstr "Das VxVM Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Windows License plug-in"
 msgstr "Windows-Lizenz-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Windows McAfee AV client plug-in"
 msgstr "Das Windows McAfee AV Clientplugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Windows Multipath plug-in"
 msgstr "Das Windows Multipath Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Windows Printer Queue plug-in"
 msgstr "Das Windows-Druckerwarteschlange-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy Windows Updates plug-in"
 msgstr "Das Windows Updates-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy automatic agent update plug-in"
 msgstr "Plugin für automatisches Agentenupdate nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy iptables plug-in"
 msgstr "Das iptables Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy logged in users plug-in"
 msgstr "Plugins für angemeldete Benutzer nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy mk_mongodb.py plug-in"
 msgstr "Das Plugin mk_mongodb.py nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in"
 msgstr "Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Citrix XenApp"
 msgstr "Plugin für Citrix XenApp nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Citrix licenses"
 msgstr "Plugin für Citrix-Lizenzen nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for DAG"
 msgstr "Plugin für DAG nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
 msgstr "Plugin für Hyper-V VM Gastinformationen nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VMs"
 msgstr "Plugin für Hyper-V VMs nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for JAR signatures"
 msgstr "Plugin für JAR-Signaturen nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for MS Exchange database latency"
 msgstr "Das Plugin für MS Exchange Datenbank-Latenzzeiten nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for MS IIS Application Pool States"
 msgstr "Plugin für MS IIS Application Pool States nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for MS Office 365"
 msgstr "Das MS Office 365-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Plugin für Microsoft SQL-Server nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for NFS IO Stats"
 msgstr "Kein Plugin für NFS IO Stats verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Veeam backup status"
 msgstr "Plugin für den Veeam-Backup-Status nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows DHCP pools"
 msgstr "Plugins für Windows DHCP pools nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows System Info"
 msgstr "Plugins für Windows Systeminfo nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows Task Scheduler"
 msgstr "Plugin für Windows Task-Scheduler nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows broadcom bonding"
 msgstr "Plugin für Windows Broadcom-Bonding nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy plug-in for Windows interfaces"
-msgstr "Plugin nicht für Windows Interfaces verteilen"
+msgstr "Plugin für Windows Interfaces nicht verteilen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Do not deploy the %s plug-in"
 msgstr "Das %s Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the APT plug-in"
 msgstr "Das APT-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Apache Status plug-in"
 msgstr "Das Apache Status Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Arcserve plug-in"
 msgstr "Arcserve-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk CUPS queues plug-in"
 msgstr "Das Checkmk CUPS Queues Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk EMC ScaleIO plug-in"
 msgstr "Das Checkmk EMC ScaleIO Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk Inventory plug-in"
 msgstr "Das Checkmk Inventory Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk site objects plug-in"
 msgstr "Das Plugin für die Checkmk-Instanzobjekte nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the DB2 plug-in"
 msgstr "Das DB2 Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the DNS client plug-in"
 msgstr "Das DNS client Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the IBM MQ plug-in"
 msgstr "Das IBM MQ Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Jolokia plug-in"
 msgstr "Das Jolokia Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the MegaRAID plug-in"
 msgstr "MegaRAID-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the MySQL plug-in"
 msgstr "Das MySQL Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the NGINX Status plug-in"
 msgstr "Das NGINX Status Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the PostgreSQL plug-in"
 msgstr "Das PostgreSQL Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Redis plug-in"
 msgstr "Das Redis Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the SAP HANA plug-in"
 msgstr "Das SAP HANA-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "Das SAP R/3 Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the SAP router plug-in"
 msgstr "Das SAP-Router-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the SSH daemon configuration plug-in"
 msgstr "Das SSH Daemon Konfigurationsplugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the StorCLI plug-in"
 msgstr "Das StorCLI-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the TSM plug-in"
 msgstr "Das TSM Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the Zypper plug-in"
 msgstr "Das Zypper Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the docker container plug-in"
 msgstr "Das Docker Container Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the docker plug-in"
 msgstr "Das Docker Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "mk_filehandler-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the netstat plug-in"
 msgstr "Das Netstat-Plugin nicht verteilen"
 
-#, fuzzy
 msgid "Do not deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smi Agenten-Plugin nicht verteilen"
 
@@ -18356,7 +18182,6 @@ msgstr "Keine Symbole für Historie und Zeitleiste anzeigen"
 msgid "Do not display legend for availability levels"
 msgstr "Keine Legende für die Verfügbarkeitslevel zeigen"
 
-#, fuzzy
 msgid "Do not display plug-in output in timeline"
 msgstr "Plugin-Ausgabe nicht in der Timeline anzeigen"
 
@@ -18366,7 +18191,6 @@ msgstr "Keinen Host-Namen anzeigen"
 msgid "Do not encrypt the backup"
 msgstr "Die Sicherung nicht verschlüsseln"
 
-#, fuzzy
 msgid ""
 "Do not forget to activate the plug-in (i.e., deploy with or without "
 "configuration in at least one of your rules. It can be useful to create "
@@ -18383,7 +18207,6 @@ msgstr ""
 "nur für einige Ihrer Hosts auf <i>Nein</i> setzt, ohne andere Parameter zu "
 "setzen."
 
-#, fuzzy
 msgid ""
 "Do not forget to activate the plug-in in at least one of your rules. It can "
 "be useful to create rules that are only partially filled out. Since the rule "
@@ -18393,7 +18216,7 @@ msgid ""
 msgstr ""
 "Vergessen Sie nicht, in wenigstens einer Ihrer Regeln das Plugin zu "
 "aktivieren. Es kann sinnvoll sein, Regeln zu erzeugen, die nur manche der "
-"Parameter definieren. Da die Regelauswertung immer <i>pro Parameter</i> "
+"Parameter definieren. Da die Regelausführung immer <i>pro Parameter</i> "
 "funktioniert, können Sie z.B. eine Regel am Anfang der Kette anlegen, die "
 "lediglich für manche Hosts die Aktivierung auf <i>aus</i> stellt, ohne "
 "andere Parameter zu beeinflussen."
@@ -18683,7 +18506,7 @@ msgid "Double Integer (DINT)"
 msgstr "Doppelte Ganzzahl (DINT)"
 
 msgid "Double-click to grow further"
-msgstr ""
+msgstr "Doppelklick für weiteres Wachstum"
 
 msgid "Down"
 msgstr "Down"
@@ -18752,11 +18575,9 @@ msgstr "Verifizierungsanfrage herunterladen"
 msgid "Downloaded Agent"
 msgstr "Heruntergeladener Agent"
 
-#, fuzzy
 msgid "Downloads Checkmk agent and plug-ins for Linux"
 msgstr "Checkmk Agent und Plugins für Linux herunterladen"
 
-#, fuzzy
 msgid "Downloads Checkmk agent and plug-ins for Windows"
 msgstr "Checkmk Agent und Plugins für Windows herunterladen"
 
@@ -19194,7 +19015,6 @@ msgstr "Jedes Label darf einmal verwendet werden."
 msgid "Each metric must be unique for a service"
 msgstr "Jede Metrik für einen Service muss eindeutig sein"
 
-#, fuzzy
 msgid ""
 "Each new message runs through this list of rules. As soon as a regular "
 "expression is found <i>in</i> the message, the state is determined and the "
@@ -20304,9 +20124,8 @@ msgstr "Änderungen erzwingen"
 msgid "Enforce lower case User-IDs."
 msgstr "Erzwinge kleinbuchstabige Benutzer IDs."
 
-#, fuzzy
 msgid "Enforce re-authentication after"
-msgstr "Erneute Authentifizierung erzwingen nach:"
+msgstr "Erneute Authentifizierung erzwingen nach"
 
 msgid "Enforce show more"
 msgstr "\"Mehr anzeigen\" erzwingen"
@@ -20924,7 +20743,6 @@ msgstr "Ereignisse: Syslog Facility"
 msgid "Every day"
 msgstr "Jeden Tag"
 
-#, fuzzy
 msgid ""
 "Every time the plug-in is executed, it gathers all relevant messages since "
 "its last execution. It then puts these messages in a bundle and stores it on "
@@ -21158,9 +20976,8 @@ msgstr "MRPE-Checks ausführen"
 msgid "Execute Shell Script"
 msgstr "Führe Shellskript aus"
 
-#, fuzzy
 msgid "Execute all files in the plug-ins directory"
-msgstr "Alle Dateien im plugins-Verzeichnis ausführen"
+msgstr "Alle Dateien im Plugins-Verzeichnis ausführen"
 
 msgid "Execute as MQM"
 msgstr "Als MQM ausführen"
@@ -21184,7 +21001,6 @@ msgstr "Lokale Scripts ausführen"
 msgid "Execute manually"
 msgstr "Manuell ausführen"
 
-#, fuzzy
 msgid "Execute plug-ins in general"
 msgstr "Plugins im Allgemeinen ausführen"
 
@@ -21976,7 +21792,6 @@ msgstr "Failover Status: NONE"
 msgid "Failover states"
 msgstr "Failover States"
 
-#, fuzzy
 msgid ""
 "Failover: The check function of the plug-in will be applied to each "
 "individual node. The worst outcome will determine the overall state of the "
@@ -23237,7 +23052,7 @@ msgid "Free SGA memory available"
 msgstr "Freier SGA-Speicher vorhanden"
 
 msgid "Free floating style"
-msgstr ""
+msgstr "Stil \"Frei schwebend\""
 
 msgid "Free leases levels"
 msgstr "Level für freie Leases"
@@ -23697,9 +23512,8 @@ msgstr "Generische Check-Plugins"
 msgid "Generic numeric value"
 msgstr "Generischer numerischer Wert"
 
-#, fuzzy
 msgid "Generic plug-in display options"
-msgstr "Allgemeine Anzeigeoptionen"
+msgstr "Generische Plugin-Anzeigeoptionen"
 
 msgid "Generic rate"
 msgstr "Generische Rate"
@@ -24180,17 +23994,15 @@ msgstr "Wachsend"
 msgid "Growth"
 msgstr "Wachstum"
 
-#, fuzzy
 msgid "Growth continues here"
-msgstr "Hier nicht mehr fortfahren"
+msgstr "Wachstum wird hier fortgesetzt"
 
 #, python-format
 msgid "Growth interrupted %d/%d"
 msgstr "Wachstum verhindert %d/%d"
 
-#, fuzzy
 msgid "Growth stops here"
-msgstr "Wachstumstrend"
+msgstr "Wachstum wird hier gestoppt"
 
 msgid "Growth trend"
 msgstr "Wachstumstrend"
@@ -24868,7 +24680,6 @@ msgstr ""
 "der erste ausgeführt. Es macht also keinen Sinn, mehr als einen Eintrag für "
 "<i>Alle Ereignisprotokolle</i> anzulegen."
 
-#, fuzzy
 msgid ""
 "Here you can configure which performance counter objects the Windows agent "
 "should extract and provide to the Checkmk server. You can either specify "
@@ -25077,7 +24888,6 @@ msgstr ""
 "können die Anzahl der Suchergebnisse oder die aufsummierten/"
 "durchschnittlichen Werte eines bestimmten numerischen Feldes anzeigen."
 
-#, fuzzy
 msgid ""
 "Here you can deploy a plug-in for monitoring the quarantine queue, tasks and "
 "updates of Kaspersky Anti Virus."
@@ -25085,7 +24895,6 @@ msgstr ""
 "Hier können Sie ein Plugin zum Monitoring der Quarantäne-Warteschlange, der "
 "Aufgaben und der Updates von Kaspersky Anti Virus verteilen."
 
-#, fuzzy
 msgid ""
 "Here you can deploy a plug-in for monitoring the quarantine queue, tasks and "
 "updates of Symantec Anti Virus."
@@ -25124,7 +24933,6 @@ msgstr ""
 "Hier können Sie Änderungen aktivieren lassen, wann immer Service hinzugefügt "
 "oder entfernt wurden."
 
-#, fuzzy
 msgid ""
 "Here you can impose various levels on the results reported by the "
 "mk_filstats plugin. Note that some levels only apply to a matching output "
@@ -25465,10 +25273,10 @@ msgid ""
 "new rollout to a known list of five hosts, then these five should appear "
 "here at latest after one configured update interval."
 msgstr ""
-"Hier erhalten Sie eine Rückmeldung über die letzten Agent-Rollouts. Wenn Sie "
-"z.B. einen neuen Rollout auf eine bekannte Liste von fünf Hosts beschränken, "
-"dann sollten diese fünf spätestens nach einem konfigurierten Update-"
-"Intervall hier erscheinen."
+"Hier erhalten Sie eine Rückmeldung über die letzten Agenten-Rollouts. Wenn "
+"Sie z.B. einen neuen Rollout auf eine bekannte Liste von fünf Hosts "
+"beschränken, dann sollten diese fünf spätestens nach einem konfigurierten "
+"Update-Intervall hier erscheinen."
 
 msgid ""
 "Here you have to use macros which are defined above below <tt>Macros for "
@@ -25932,7 +25740,6 @@ msgstr "ID des benutzerdefinierten Host Feldes"
 msgid "Host customer"
 msgstr "Host Kunde"
 
-#, fuzzy
 msgid "Host details"
 msgstr "Host-Details"
 
@@ -26153,7 +25960,6 @@ msgstr ""
 msgid "Host overview"
 msgstr "Hostübersicht"
 
-#, fuzzy
 msgid "Host parent/child topology"
 msgstr "Host Eltern/Kind Topologie"
 
@@ -26446,7 +26252,6 @@ msgstr ""
 msgid "Hosts colored according to state (host group)"
 msgstr "Hosts farbig markiert nach Status (Host-Gruppe)"
 
-#, fuzzy
 msgid ""
 "Hosts configured via this rule get the <tt>lnx_quota</tt> plug-in deployed. "
 "This is only useful if you have filesystem quotas setup on the host."
@@ -26455,7 +26260,6 @@ msgstr ""
 "verteilt. Dies ist nur nützlich, wenn Sie auf dem Host Dateisystem-"
 "Kontingente einsetzen."
 
-#, fuzzy
 msgid ""
 "Hosts configured via this rule get the <tt>mk_filehandler</tt> plug-in "
 "deployed."
@@ -26463,20 +26267,17 @@ msgstr ""
 "Hosts, die mit dieser Regel konfiguriert wurden, erhalten das "
 "<tt>mk_filehandler</tt>-Plugin verteilt."
 
-#, fuzzy
 msgid ""
 "Hosts configured via this rule get the <tt>mk_iptables</tt> plug-in deployed."
 msgstr ""
 "Über diese Regel wird das <tt>mk_iptables</tt>-Plugin auf Hosts verteilt."
 
-#, fuzzy
 msgid ""
 "Hosts configured via this rule get the <tt>mk_logins</tt> plug-in deployed."
 msgstr ""
 "Auf über diese Regel konfigurierte Hosts wird das <tt>mk_logins</tt>-Plugin "
 "verteilt."
 
-#, fuzzy
 msgid ""
 "Hosts configured via this rule get the <tt>smart</tt> plug-in deployed. "
 "Assuming you have installed <tt>smartmontools</tt>, your local harddisks "
@@ -26486,7 +26287,6 @@ msgstr ""
 "verteilt. Vorausgesetzt, dass <tt>smartmontools</tt> installiert ist, werden "
 "Ihre lokalen Festplatten auf Temperatur und Fehler überwacht."
 
-#, fuzzy
 msgid ""
 "Hosts configured via this rule get the plug-in <tt>db2_mem</tt> deployed. "
 "This will create one service for the memory consumption of every running DB2 "
@@ -27082,9 +26882,8 @@ msgstr "Symbolbild für Hosts in Status GUI"
 msgid "Icon image for services in status GUI"
 msgstr "Symbolbild für Services in Status GUI"
 
-#, fuzzy
 msgid "Icon in monitoring"
-msgstr "Suche in Überwachen"
+msgstr "Symbol im Monitoring"
 
 msgid "Icons"
 msgstr "Symbole"
@@ -27230,7 +27029,6 @@ msgstr ""
 "abgebrochen, bei denen die angegebenen Gruppen mit der gleichen Anzahl von "
 "Gruppen im Ausgangstext übereinstimmen, beginnend von links."
 
-#, fuzzy
 msgid ""
 "If a multipath device has an alias then you can use it for specifying the "
 "device instead of the UUID. The alias will then be part of the service "
@@ -27512,7 +27310,6 @@ msgstr ""
 "befindet sich der Dienst zumindest in einem WARNING-Zustand (auch wenn das "
 "Ergebnis selbst OK ist)."
 
-#, fuzzy
 msgid ""
 "If set, the plug-in may be called repeately - up to this many times or until "
 "it finishes successfully."
@@ -27708,7 +27505,6 @@ msgstr ""
 "entfernt, sobald diese beim BI-Aggregat verschwindet. Manuell gesetzte "
 "Wartungszeiten sind davon unberührt."
 
-#, fuzzy
 msgid ""
 "If this is option is enabled the actual check plug-in will not be run every "
 "check cycle but just every time the configured age has expired. Furthermore "
@@ -27733,7 +27529,6 @@ msgstr ""
 "diese Option abgewählt, verwirft der Controller alle hier nicht aufgeführten "
 "Verbindungen."
 
-#, fuzzy
 msgid ""
 "If this is set, the plug-in output will be cached and will only be refreshed "
 "once the age of the cache has exceeded this value."
@@ -27942,7 +27737,6 @@ msgstr ""
 "zurückliefern. Diese wird vom dann ausgewertet. Wenn die Prozedur "
 "Eingabeparameter benötigt, dann können diese unten angegeben werden."
 
-#, fuzzy
 msgid ""
 "If you activate this option, the agent plug-in <tt>mk_inventory</tt> will be "
 "deployed on linux and windows hosts. It gathers information about installed "
@@ -27962,7 +27756,6 @@ msgstr ""
 "varname=active_checks%3Acmk_inv&folder=&mode=edit_ruleset'>Hardware/Software-"
 "Inventur / Hardware/Software-Inventur aktivieren</a>."
 
-#, fuzzy
 msgid ""
 "If you activate this option, then the agent plug-in <tt>apache_status</tt> "
 "will be deployed. For each configured or detected Apache instance there will "
@@ -27974,7 +27767,6 @@ msgstr ""
 "Instanz gibt es einen neuen Dienst mit detaillierten Statistiken über die "
 "aktuelle Anzahl von Clients und Prozessen und ihre verschiedenen Zustände."
 
-#, fuzzy
 msgid ""
 "If you activate this option, then the agent plug-in <tt>mk_redis</tt> will "
 "be deployed. You can configure multiple instances or auto detect running "
@@ -27984,14 +27776,13 @@ msgstr ""
 "verteilt. Sie können mehrere Instanzen konfigurieren, oder laufende "
 "Instanzen automatisch erkennen."
 
-#, fuzzy
 msgid ""
 "If you activate this option, then the agent plug-in <tt>nginx_status</tt> "
 "will be deployed. For each configured or detected NGINX instance there will "
 "be one new service with detailed statistics of the current number of clients "
 "and processes and their various states."
 msgstr ""
-"Wenn Sie diese Option aktivieren, wird das Agent-Plugin <tt>nginx_status</"
+"Wenn Sie diese Option aktivieren, wird das Agentenplugin <tt>nginx_status</"
 "tt> verteilt. Für jede konfigurierte oder erkannte NGINX-Instanz gibt es "
 "einen neuen Dienst mit detaillierten Statistiken über die aktuelle Anzahl "
 "von Clients und Prozessen und ihre verschiedenen Zustände."
@@ -28392,7 +28183,6 @@ msgstr ""
 "Sie eine andere Basisrolle auswählen, werden alle standardmäßigen "
 "Berechtigungen auf die neue Basisrolle übertragen."
 
-#, fuzzy
 msgid ""
 "If you leave this empty then the database will appear on the host where the "
 "<tt>mk_oracle</tt> plug-in is running. In this case the SIDs of all "
@@ -28479,7 +28269,6 @@ msgstr ""
 "Wenn Sie Ihre Lizenz von einem %s gekauft haben, kontaktieren Sie diesen "
 "bitte."
 
-#, fuzzy
 msgid ""
 "If you select a contact group here, then all notifications of hosts and "
 "services in that contact group will be sent to the event console. <b>Note</"
@@ -28699,7 +28488,6 @@ msgstr ""
 "Wenn Sie Checkmk weiterhin nutzen möchten, erwerben Sie bitte eine Lizenz, "
 "die %s unterstützt oder kontaktieren Sie das Checkmk-Verkaufsteam unter %s."
 
-#, fuzzy
 msgid ""
 "If you want to run your own custom agent plug-ins on Windows, simply put "
 "them into the subdirectory <tt>plugins</tt> of your agent's installation "
@@ -29042,7 +28830,6 @@ msgstr ""
 "Event Console über TCP. Stellen Sie sicher dass in den globalen "
 "Einstellungen die Event Console aktiviert ist. Standard-Port: 6558."
 
-#, fuzzy
 msgid ""
 "In addition to setting the generic \"Missing monitoring data\" state above "
 "you can specify a regex pattern to match specific check plug-ins and give "
@@ -29328,7 +29115,6 @@ msgstr ""
 "empfohlen wird. Der Spezialagent wird diesen Filternamen verwenden, um S3-"
 "Anforderungsmetriken von der AWS-API abzufragen."
 
-#, fuzzy
 msgid ""
 "In order to monitor docker containers the plug-in <tt>mk_docker.py</tt> "
 "collects the following information of each docker container as piggyback "
@@ -29991,7 +29777,6 @@ msgstr "Eindeutige MAC Innenbereich"
 msgid "Install Date"
 msgstr "Installationsdatum"
 
-#, fuzzy
 msgid "Install Python automatically when configured plug-ins need it"
 msgstr ""
 "Python automatisch installieren, wenn konfigurierte Plugins es benötigen"
@@ -30216,9 +30001,8 @@ msgstr ""
 "Interner Fehler: %s\n"
 "%s"
 
-#, fuzzy
 msgid "Internal plan_id"
-msgstr "Interne rmk_id"
+msgstr "Interne plan_id"
 
 msgid "Internal user"
 msgstr "Interner Benutzer"
@@ -30702,9 +30486,8 @@ msgstr "Inventarknoten"
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Inventur der Linux-Kernel-Konfiguration (sysctl)"
 
-#, fuzzy
 msgid "Inventory of all deployed agent plug-ins and their versions"
-msgstr "Bestand aller verteilten Agenten-Plugins und ihrer Versionen"
+msgstr "Inventur aller verteilten Agenten-Plugins und ihrer Versionen"
 
 msgid "Inventory of host"
 msgstr "Hostinventar"
@@ -30718,9 +30501,8 @@ msgstr "Inventur: Geschichte"
 msgid "Invert matching"
 msgstr "Bedingung invertieren"
 
-#, fuzzy
 msgid "Invisible"
-msgstr "Sichtbar"
+msgstr "Unsichtbar"
 
 msgid "Invocations"
 msgstr "Aufrufe"
@@ -30841,7 +30623,6 @@ msgstr ""
 "zu informieren, aber die Nachricht zu unterdrücken, nachdem das Ereignis "
 "stattgefunden hat."
 
-#, fuzzy
 msgid ""
 "It is possible to fetch several attributes of users, like Email or full "
 "names, from the LDAP directory. This is done by plug-ins which can "
@@ -31771,7 +31552,6 @@ msgstr "Verlasse Layout Modus"
 msgid "Left"
 msgstr "Links"
 
-#, fuzzy
 msgid ""
 "Legacy ASCII Emails do not support bulking. You can either disable "
 "notification bulking or choose another notification plug-in which allows "
@@ -32632,6 +32412,10 @@ msgstr "Limitierung von Metadaten"
 msgid "Limit path levels for service names"
 msgstr "Begrenze die Pfad-Level für Service-Namen"
 
+#, fuzzy
+msgid "Limit per attempt"
+msgstr "Timeout pro Versuch"
+
 msgid "Limit processed data"
 msgstr "Datenmenge begrenzen"
 
@@ -33478,7 +33262,6 @@ msgstr "Log-Datei: Nachrichtentyp (regex)"
 msgid "Log: number of check attempt"
 msgstr "Logdatei: Anzahl von Checkversuchen"
 
-#, fuzzy
 msgid "Log: plug-in output (regex)"
 msgstr "Log-Datei: Plugin-Ausgabe (regex)"
 
@@ -33506,7 +33289,6 @@ msgstr "Logdatei"
 msgid "Logfile Grouping"
 msgstr "Logfile-Gruppierung"
 
-#, fuzzy
 msgid "Logfile information of logwatch plug-in"
 msgstr "Informationen zu Logdateien des Logwatch-Plugins"
 
@@ -33646,9 +33428,8 @@ msgstr "Lang - Die gesamte Docker container ID verwenden"
 msgid "Long active sessions"
 msgstr "Lang aktive Sitzungen"
 
-#, fuzzy
 msgid "Long output of check plug-in"
-msgstr "Check-Plugin: Lange Ausgabe"
+msgstr "Lange Ausgabe des Check-Plugins"
 
 msgid "Longest"
 msgstr "Längster"
@@ -34727,7 +34508,6 @@ msgstr "Alle Benutzer abgleichen"
 msgid "Match behaviour"
 msgstr "Verhalten bei Übereinstimmung"
 
-#, fuzzy
 msgid "Match check plug-in output"
 msgstr "Check-Plugin Ausgabe abgleichen"
 
@@ -35214,7 +34994,6 @@ msgstr "Maxmale Anzahl von RPCs pro Sekunde"
 msgid "Maximum number of access points"
 msgstr "Maximale Anzahl von Zugangspunkten"
 
-#, fuzzy
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
 "notification plug-in may report that a retry is pointless in which case no "
@@ -35333,13 +35112,12 @@ msgstr "Maximale Laufzeit der letzten Ausführung"
 msgid "Maximum session duration"
 msgstr "Maximale Sitzungsdauer"
 
-#, fuzzy
 msgid ""
 "Maximum session duration almost reached. Re-authenticate session to prevent "
 "dataloss."
 msgstr ""
-"Legen Sie die maximale Sitzungsdauer fest. Wird sie erreicht, muss sich der "
-"Benutzer erneut authentifizieren."
+"Maximale Sitzungsdauer fast erreicht. Authentifizieren Sie die Sitzung "
+"erneut, um Datenverlust zu vermeiden."
 
 msgid "Maximum single-request consumption"
 msgstr "Maximaler Verbrauch einzelner Anfragen"
@@ -37167,7 +36945,6 @@ msgstr "Name des Knotens"
 msgid "Name of operating system user"
 msgstr "Name des Betriebssystembenutzers"
 
-#, fuzzy
 msgid "Name of plug-in"
 msgstr "Name des Plugins"
 
@@ -37375,7 +37152,6 @@ msgstr "Namespaces"
 msgid "Native cluster mode"
 msgstr "Nativer Cluster-Modus"
 
-#, fuzzy
 msgid ""
 "Native: Use the cluster check function implemented by the check plugin. If "
 "it is available, it is probably the best choice, as it implements logic "
@@ -37837,7 +37613,6 @@ msgstr "Es wurden keine defekten Erweiterungen gefunden."
 msgid "No certificate"
 msgstr "Kein Zertifikat"
 
-#, fuzzy
 msgid "No check plug-ins using the deprecated API"
 msgstr "Keine Check-Plugins, welche die veraltete API verwenden"
 
@@ -37961,7 +37736,6 @@ msgstr "Keine Hosts zu entdecken"
 msgid "No hosts/services found."
 msgstr "Keine Hosts/Services gefunden."
 
-#, fuzzy
 msgid "No ignored HW/SW inventory plug-ins found"
 msgstr "Keine ignorierten HW/SW-Inventar-Plugins gefunden"
 
@@ -38719,7 +38493,6 @@ msgstr "Benachrichtigungsperiode für Services"
 msgid "Notification phase"
 msgstr "Benachrichtigungsphase"
 
-#, fuzzy
 msgid "Notification plug-in timeout"
 msgstr "Timeout für Benachrichtigungs-Plugins"
 
@@ -39976,7 +39749,7 @@ msgstr ""
 "Tragen Sie bei den beiden Feldern nichts ein, werden alle Muster verwendet."
 
 msgid "Onboarding button toggle"
-msgstr ""
+msgstr "Onboarding-Knopf umschalten"
 
 msgid ""
 "Once you enable this option, this plugin will not only handle direct group "
@@ -40142,9 +39915,8 @@ msgstr "Nur den SLA Namen anzeigen"
 msgid "Only execute manually"
 msgstr "Nur manuell ausführen"
 
-#, fuzzy
 msgid "Only execute plug-ins with the following extensions:"
-msgstr "Nur Plugins mit den Folgenden Dateiendungen ausführen:"
+msgstr "Nur Plugins mit den folgenden Erweiterungen ausführen:"
 
 msgid ""
 "Only execute selected sub-suites. When this option is used with <tt>--test</"
@@ -41422,7 +41194,7 @@ msgid "Palo Alto Users"
 msgstr "Palo Alto Benutzer"
 
 msgid "Panning"
-msgstr ""
+msgstr "Schwenken"
 
 msgid "Paper margins"
 msgstr "Seitenränder"
@@ -41436,11 +41208,12 @@ msgstr "Parallele Verbindungen"
 msgid "Parallel connections load"
 msgstr "Auslastung paralleler Verbindungen"
 
-msgid "Parallel execution groups"
-msgstr "Parallele Ausführungsgruppen"
-
 msgid "Parallel pings to send"
 msgstr "Parallel zu sendende Pings"
+
+#, fuzzy
+msgid "Parallel plan groups"
+msgstr "Parallele Ausführungsgruppen"
 
 msgid "Parallelize core config creation"
 msgstr "Parallelisiere die Erzeugung der Kernkonfiguration"
@@ -41692,22 +41465,17 @@ msgstr "Pfad zu sapgenpse"
 msgid "Path to temporary directory (will be created)"
 msgstr "Verzeichnis für temporäre Dateien (wird erzeugt)"
 
-msgid "Path to test suite"
+#, fuzzy
+msgid "Path to test suite file or folder"
 msgstr "Pfad zur Test-Suite"
 
+#, fuzzy
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
-"file, relative to the base directory."
+"file, relative to the base directory of Robot Framework projects."
 msgstr ""
 "Pfad zum Ordner der Robot Framework-Suite oder direkt zu einer bestimmten `."
 "robot`-Datei, relativ zum Basisverzeichnis."
-
-msgid ""
-"Path to the `robot.yaml` configuration file inside a RCC compatible robot "
-"suite, relative to the base directory."
-msgstr ""
-"Pfad zur Konfigurationsdatei `robot.yaml` innerhalb einer RCC-kompatiblen "
-"Robot-Suite, relativ zum Basisverzeichnis."
 
 msgid "Path to unix socket"
 msgstr "Pfad zur Unix-Buchse"
@@ -41824,7 +41592,6 @@ msgstr "Ausstehende vBuckets"
 msgid "Per Core utilization"
 msgstr "Auslastung pro Kern"
 
-#, fuzzy
 msgid ""
 "Per default all plug-ins and local scripts are being run sequentially. You "
 "choose to run all asynchronous plug-ins in parallel. This can cut down the "
@@ -42510,11 +42277,15 @@ msgstr "Kommunikation im Klartext ist für %s aktiviert"
 msgid "Plaintext"
 msgstr "Klartext"
 
+#, fuzzy
+msgid "Plan"
+msgstr "Pläne"
+
 msgid "Plan ID"
-msgstr ""
+msgstr "Plan-ID"
 
 msgid "Plans"
-msgstr ""
+msgstr "Pläne"
 
 msgid "Platform Firmware level"
 msgstr "Plattform Firmware-Ebene"
@@ -42532,7 +42303,7 @@ msgid ""
 msgstr ""
 "Bitte beachten, dass der Agent Leerzeichen in Service-Namen durch <tt>_</tt> "
 "ersetzt. Wenn Sie den genauen Namen nicht kennen dann schauen Sie zuerst auf "
-"die Agent-Ausgaben (cmk -d Host). Service-Namen finden Sie in der 1. Spalte "
+"die Agentenausgaben (cmk -d Host). Service-Namen finden Sie in der 1. Spalte "
 "im Abschnitt &lt;&lt;&lt;Services&gt;&gt;&gt;. Bitte Service-Namen nicht mit "
 "angezeigtem Namen verwechseln. Der angezeigte Name dient nur als "
 "Zusatzinformation."
@@ -42617,9 +42388,8 @@ msgstr "Bitte wählen Sie ein gültiges PNG-Bild."
 msgid "Please choose an audit log to view:"
 msgstr "Bitte wählen Sie ein Audit-Log für die Anzeige aus:"
 
-#, fuzzy
 msgid "Please choose the check plug-in"
-msgstr "Bitte Check Plugin auswählen"
+msgstr "Bitte Check-Plugin auswählen"
 
 msgid ""
 "Please configure at least either the discovery of single interfaces or the "
@@ -42730,7 +42500,6 @@ msgstr ""
 msgid "Please enter the Multisite URL of the slave site."
 msgstr "Bitte geben Sie die Multisite URL der Remote-Instanz ein."
 
-#, fuzzy
 msgid ""
 "Please enter the complete shell command including path name and arguments to "
 "execute. If the plug-in you like to execute is located in either <tt>~/local/"
@@ -42871,8 +42640,8 @@ msgid ""
 "Please refer to the [dashboards#host_problems|Checkmk user guide] for more "
 "details."
 msgstr ""
-"Weitere Einzelheiten entnehmen Sie bitte dem [dashboards#host_problems|"
-"Checkmk-Benutzerhandbuch]."
+"Weitere Einzelheiten entnehmen Sie bitte dem [dashboards#host_problems"
+"|Checkmk-Handbuch]."
 
 msgid ""
 "Please remove entry \"All sites\" from selected sites, if you want to select "
@@ -43152,7 +42921,6 @@ msgstr "Schalter ist AN"
 msgid "Plug item number or name"
 msgstr "Anschlussnummer oder -name"
 
-#, fuzzy
 msgid "Plug-in API references"
 msgstr "Plugin-API Referenzen"
 
@@ -43818,7 +43586,7 @@ msgid "Process preexisting log messages"
 msgstr "Bereits existierende Mitteilungen verarbeiten"
 
 msgid "Process stored SNMP walks with agent simulator"
-msgstr "Verarbeite gespeicherte SNMP Walks mit dem Agent-Simulator"
+msgstr "Verarbeite gespeicherte SNMP Walks mit dem Agentensimulator"
 
 msgid "Processed bytes"
 msgstr "Verarbeitete Bytes"
@@ -44164,7 +43932,6 @@ msgstr "Python-Modul-Pfad"
 msgid "Python Version"
 msgstr "Python-Version"
 
-#, fuzzy
 msgid "Python agent plug-in execution (UNIX)"
 msgstr "Python Agent Plugin Ausführung (UNIX)"
 
@@ -44186,7 +43953,7 @@ msgstr ""
 "<tt>set_environment.py:testing</tt>"
 
 msgid "Python version for execution of python agent plugins"
-msgstr "Python-Version zur Ausführung von Python-Agent-Plugins"
+msgstr "Python-Version zur Ausführung von Python-Agentenplugins"
 
 msgid "Qmail: Mail Queue"
 msgstr "Qmail: Mail Queue"
@@ -46702,9 +46469,8 @@ msgstr "Robotmk Scheduler (Windows)"
 msgid "Robotmk logs"
 msgstr "Robotmk-Protokolle"
 
-#, fuzzy
 msgid "Robotmk plan"
-msgstr "Robotmk-Protokolle"
+msgstr "Robotmk-Plan"
 
 msgid "Robotmk test"
 msgstr "Robotmk Test"
@@ -46872,17 +46638,14 @@ msgstr "Darstellung der Regel: %s"
 msgid "Rule search"
 msgstr "Regelsuche"
 
-#, fuzzy
 msgid "Rule search: Deprecated Rulesets"
-msgstr "Suche Regeln: Veraltete Regelketten"
+msgstr "Regelsuche: Veraltete Regelsätze"
 
-#, fuzzy
 msgid "Rule search: Rulesets with ineffective rules"
-msgstr "Suche Regeln: Regelketten mit nicht wirksamen Regeln"
+msgstr "Regelsuche: Regelsätze mit nicht wirksamen Regeln"
 
-#, fuzzy
 msgid "Rule search: Used rulesets"
-msgstr "Suche Regeln: Verwendete Regelketten"
+msgstr "Regelsuche: Verwendete Regelsätze"
 
 msgid "Rule sets in use"
 msgstr "Genutzte Regelsätze"
@@ -46938,7 +46701,6 @@ msgstr "Freitext-Suche"
 msgid "Rules of VPC security group"
 msgstr "Regeln der VPC-Sicherheitsgruppe"
 
-#, fuzzy
 msgid ""
 "Rules that influence the discovery of services. These rules allow, for "
 "example, the execution of a periodic service discovery or the deactivation "
@@ -47016,11 +46778,9 @@ msgstr "Führe aus als"
 msgid "Run as user (empty = root):"
 msgstr "Als Benutzer ausführen (leer = root):"
 
-#, fuzzy
 msgid "Run asynchronous plug-ins in parallel"
 msgstr "Asynchrone Plugins parallel ausführen"
 
-#, fuzzy
 msgid "Run asynchronous plug-ins sequential"
 msgstr "Asynchrone Plugins sequentiell ausführen"
 
@@ -47039,10 +46799,8 @@ msgstr "Bulk-Service-Erkennung durchführen"
 msgid "Run in simulation mode"
 msgstr "Im Simulations-Modus ausführen"
 
-#, fuzzy
 msgid "Run plug-ins and local checks using non-system account"
-msgstr ""
-"Starte Plugins oder lokale Checks als ein nicht-systemverwaltender Benutzer"
+msgstr "Plug-ins und lokale Checks unter einem Nicht-System-Konto ausführen"
 
 msgid ""
 "Run report as this user. This either means that all objects are filtered "
@@ -47119,16 +46877,14 @@ msgstr "Laufende Sitzungen"
 msgid "Runtime"
 msgstr "Laufzeit"
 
-#, fuzzy
 msgid "Runtime (Peak Attempt)"
-msgstr "Aktueller Check-Versuch"
+msgstr "Laufzeit (Peak Attempt)"
 
 msgid "Runtime run queue"
 msgstr "Laufzeit-Warteschlange"
 
-#, fuzzy
 msgid "Runtime-limit ratio (Peak Attempt)"
-msgstr "Laufzeit-Timeout-Verhältnis"
+msgstr "Laufzeit-Limit-Verhältnis (Peak Attempt)"
 
 msgid "Rx"
 msgstr "Rx"
@@ -47178,7 +46934,6 @@ msgstr "SAP HANA Replikationsstatus"
 msgid "SAP R/3"
 msgstr "SAP R/3"
 
-#, fuzzy
 msgid "SAP R/3 Monitoring plug-in"
 msgstr "SAP R/3 Monitoring-Plugin"
 
@@ -48668,7 +48423,8 @@ msgstr "Trenner"
 msgid "September"
 msgstr "September"
 
-msgid "Sequential executions"
+#, fuzzy
+msgid "Sequential plans"
 msgstr "Sequenzielle Ausführungen"
 
 msgid "Serial"
@@ -48904,9 +48660,8 @@ msgstr "Service-Beschreibung: "
 msgid "Service descriptions"
 msgstr "Service-Beschreibungen"
 
-#, fuzzy
 msgid "Service details"
-msgstr "BI Servicedetails"
+msgstr "Servicedetails"
 
 msgid "Service discovery"
 msgstr "Service-Erkennung"
@@ -49091,7 +48846,6 @@ msgstr "Serviceperiode für Hosts"
 msgid "Service period for services"
 msgstr "Serviceperiode für Services"
 
-#, fuzzy
 msgid "Service plug-in output"
 msgstr "Ausgabe des Service-Plugins"
 
@@ -49336,11 +49090,9 @@ msgstr "Als Start-URL einstellen"
 msgid "Set by rule pack"
 msgstr "Von Regelpaket festgelegt"
 
-#, fuzzy
 msgid "Set cache age for plug-ins (UNIX)"
 msgstr "Cache-Alter für Plugins (UNIX) festlegen"
 
-#, fuzzy
 msgid "Set cache age for plug-ins and local checks"
 msgstr "Cache-Alter für Plugins und lokale Checks einstellen"
 
@@ -49377,7 +49129,6 @@ msgstr "Plattenzustände setzen"
 msgid "Set event to acknowledged"
 msgstr "Ereignis auf quittiert setzen"
 
-#, fuzzy
 msgid "Set execution mode for plug-ins and local checks"
 msgstr "Setze Ausführungsmodus für Plugins und lokale Checks"
 
@@ -49461,9 +49212,9 @@ msgstr "Setze relative Level"
 msgid "Set resolution"
 msgstr "Auflösung festlegen"
 
-#, fuzzy
 msgid "Set retry count for plug-ins and local checks"
-msgstr "Wiederholungen für Plugins und lokale Checks"
+msgstr ""
+"Anzahl der Wiederholungsversuche für Plug-ins und lokale Checks festlegen"
 
 msgid "Set roles"
 msgstr "Rollen verteilen"
@@ -49702,9 +49453,8 @@ msgstr ""
 msgid "Set this ntopng instance active"
 msgstr "Diese ntopng Instanz aktiv setzen"
 
-#, fuzzy
 msgid "Set timeouts for plug-ins and local checks"
-msgstr "Timeouts für Plugins und lokale Checks"
+msgstr "Timeouts für Plugins und lokale Checks festlegen"
 
 msgid "Set to \"0\" to disable the automatic reload."
 msgstr "Auf \"0\" setzen, um automatisches Neuladen zu deaktivieren."
@@ -49745,7 +49495,6 @@ msgstr ""
 "Legt einen Grenzwert für die Anzahl der Diagramme fest, die in einer "
 "Benachrichtigung angezeigt werden."
 
-#, fuzzy
 msgid ""
 "Sets a limit for the number of notifications in a bulk for which graphs are "
 "displayed. If you do not use bulk notifications this option is ignored. Note "
@@ -50311,9 +50060,8 @@ msgstr "Pro Stunde anzeigen"
 msgid "Show pin"
 msgstr "Zeige Pin"
 
-#, fuzzy
 msgid "Show plug-in names"
-msgstr "Namen von Plugins anzeigen"
+msgstr "Plugin-Namen anzeigen"
 
 msgid "Show popup message"
 msgstr "Popup-Meldung anzeigen"
@@ -51205,7 +50953,6 @@ msgstr ""
 "wenn kein anderer Ansatz möglich ist (z. B. Begrenzung der Bulk-Größe), da "
 "Bulk Walks viel leistungsfähiger sind."
 
-#, fuzzy
 msgid ""
 "Some agent commands or plug-ins may follow the environment variable TMPDIR "
 "for storage of temporary files. For some reasons, you might want to adapt "
@@ -51220,7 +50967,6 @@ msgstr ""
 "gemountet ist. Bitte beachten Sie, dass der Checkmk-Agent keine automatische "
 "Bereinigung in diesem benutzerdefinierten Pfad vornimmt."
 
-#, fuzzy
 msgid ""
 "Some agents or agent plug-ins send data not only for the queried host but "
 "also for other hosts &quot;piggyback&quot; with their own data. This is the "
@@ -51633,10 +51379,11 @@ msgstr ""
 msgid "Specifies the default line style"
 msgstr "Gibt den Standard-Linienstil an"
 
+#, fuzzy
 msgid ""
-"Specifies the maximum time that the scheduler allows for a robot framework "
+"Specifies the maximum time that the scheduler allows for a Robot Framework "
 "execution. This time, multiplied by the number of repeated executions, may "
-"not be greater in total with all other suites in this group than the group "
+"not be greater in total with all other plans in this group than the group "
 "execution interval."
 msgstr ""
 "Gibt die maximale Zeit an, die der Scheduler für die Ausführung eines Robot "
@@ -52704,7 +52451,6 @@ msgstr "Zustand, wenn die Batterie ausgetauscht werden muss"
 msgid "State if calibration is invalid"
 msgstr "Status für ungültige Kalibrierung"
 
-#, fuzzy
 msgid "State if check plug-ins received no monitoring data"
 msgstr "Status, wenn Check-Plugins keine Monitoring-Daten erhalten haben"
 
@@ -52810,7 +52556,6 @@ msgstr "Status, wenn der Probe-Status nicht OK ist"
 msgid "State if remaining API reads are unknown"
 msgstr "Status falls verbleibende API Leseoperationen unbekannt sind"
 
-#, fuzzy
 msgid "State if specific check plug-ins receive no monitoring data."
 msgstr "Status, wenn bestimmte Check-Plugins keine Monitoring-Daten erhalten."
 
@@ -53801,7 +53546,6 @@ msgstr "Zusammenfassung über alle Protokolle"
 msgid "Summary"
 msgstr "Zusammenfassung"
 
-#, fuzzy
 msgid "Summary (Previously named: Status details or plug-in output)"
 msgstr "Zusammenfassung (Bisheriger Name: Statusdetails oder Plugin-Ausgabe)"
 
@@ -54049,9 +53793,8 @@ msgstr "Synthetisches Monitoring"
 msgid "Synthetic Monitoring is an add-on."
 msgstr "Synthetisches Monitoring ist ein Add-on."
 
-#, fuzzy
 msgid "Synthetic Monitoring tests"
-msgstr "Synthetisches Monitoring"
+msgstr "Tests des synthetischen Monitorings"
 
 #, python-format
 msgid "Synthetic monitoring (licensed tests: %s)"
@@ -54580,7 +54323,6 @@ msgstr ""
 "einer Teamintegration gehört, wird dieses Feld mit dem Besitzerteam "
 "überschrieben."
 
-#, fuzzy
 msgid ""
 "Tell the jolokia plug-in to stop waiting for a response from each configured "
 "instance after the provided number of seconds have passed. This time limit "
@@ -55072,7 +54814,6 @@ msgstr ""
 "um die gebackenen Agenten Echtzeitdaten an den Checkmk-Server schicken zu "
 "lassen."
 
-#, fuzzy
 msgid ""
 "The Checkmk agent supports executing Nagios plug-ins on the remote host like "
 "you might have done it before when monitoring via NRPE. This feature is "
@@ -55281,7 +55022,6 @@ msgstr ""
 msgid "The Index of the Overcurrent Protector"
 msgstr "Der Index des Überspannungsschutzes"
 
-#, fuzzy
 msgid ""
 "The Inotify (Inode notify) is a Linux kernel subsystem that acts to extend "
 "filesystems to notice changes to the filesystem. The Inotify plug-in "
@@ -55294,7 +55034,6 @@ msgstr ""
 "Zielhost muss für den Betrieb dieses Plugins auch das Python Modul pynotify "
 "installiert sein."
 
-#, fuzzy
 msgid ""
 "The Inotify is running permanently on the target system and expects regular "
 "heartbeats to continue running. If no heartbeat is received over this time "
@@ -55431,15 +55170,15 @@ msgstr "Port Beschreibung"
 
 #, fuzzy
 msgid ""
-"The Runtime-limit ratio (Peak Attempt) is calculated as <i>runtime * 100 / "
-"timeout</i>. These thresholds apply to the runtime of a single execution "
-"attempt. If there are multiple execution attempts, the thresholds apply to "
-"the longest runtime. "
+"The Runtime-limit ratio (Peak Attempt) is the longest attempt runtime in "
+"relation to the limit per attempt. These thresholds apply to the runtime of "
+"a single execution attempt. If there are multiple execution attempts, the "
+"thresholds apply to the longest runtime. "
 msgstr ""
-"Das Verhältnis zwischen Laufzeit und Zeitüberschreitung wird berechnet als "
-"<i>Laufzeit * 100 / Zeitüberschreitung</i>. Diese Schwellwerte gelten für "
-"die Laufzeit eines einzelnen Ausführungsversuchs. Gibt es mehrere "
-"Ausführungsversuche, gelten die Schwellwerte für die längste Laufzeit. "
+"Das Laufzeit-Limit-Verhältnis (Peak Attempt) wird berechnet als <i>Laufzeit "
+"* 100 / Timeout</i>. Diese Schwellenwerte gelten für die Laufzeit eines "
+"einzelnen Ausführungsversuchs. Gibt es mehrere Ausführungsversuche, gelten "
+"die Schwellenwerte für die längste Laufzeit. "
 
 msgid ""
 "The SAML login button on the login page will display this name. Choose a "
@@ -55582,7 +55321,6 @@ msgstr ""
 "Die Webhook-URL muss mit <tt>https://alert.victorops.com/integrations</tt> "
 "beginnen"
 
-#, fuzzy
 msgid ""
 "The Windows Multipath plug-in checks for the number of paths in a MPIO "
 "(Microsoft Multipath IO)"
@@ -55590,7 +55328,6 @@ msgstr ""
 "Das Windows Multipath-Plugin überwacht die Anzahl der Pfade einer MPIO "
 "(Microsoft Multipath IO)"
 
-#, fuzzy
 msgid ""
 "The Windows Updates plug-in checks for the number of pending updates. The "
 "default configuration will include the asynchronous execution and caching of "
@@ -55687,15 +55424,14 @@ msgid ""
 "case the agent will work in legacy pull mode. Please note: In the legacy "
 "pull mode the transported data is not encrypted."
 msgstr ""
-"Der Agent-Controller bietet einen sicheren Kanal für die Kommunikation "
+"Der Agent Controller bietet einen sicheren Kanal für die Kommunikation "
 "zwischen der Monitoring-Instanz und dem Agenten. Er bietet zudem die "
 "Möglichkeit, Monitoring-Daten an die Instanz zu senden (falls dies in Ihrer "
-"Checkmk-Edition möglich ist). Sie können den Agent-Controller deaktivieren, "
+"Checkmk-Edition möglich ist). Sie können den Agent Controller deaktivieren, "
 "wenn Sie Probleme mit ihm haben. In diesem Fall wird der Agent im Legacy-"
 "Pull-Modus arbeiten. Bitte beachten Sie: Im Legacy-Pull-Modus werden die "
 "übertragenen Daten nicht verschlüsselt."
 
-#, fuzzy
 msgid ""
 "The agent plug-in <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
@@ -55708,7 +55444,6 @@ msgstr ""
 "einzelne Datei überwacht werden. Wenn keine Abschnitte angegeben werden, "
 "erzeugt das Plugin keine Ausgabe."
 
-#, fuzzy
 msgid ""
 "The agent plug-in <tt>mk_logwatch.py</tt> monitors a configured set of text "
 "logfiles for new messages, classifies these according to a set of rules and "
@@ -55985,7 +55720,7 @@ msgstr ""
 "Check <tt>sap.value_groups</tt> umschalten. Dieser Check überwacht eine "
 "Liste von SAP-Werten auf einmal."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The check plug-in API for plug-ins in <tt>%s</tt> is deprecated. Plugin "
 "files in this folder are still considered, but the API they are using may "
@@ -56553,7 +56288,6 @@ msgstr ""
 msgid "The entry %s is missing"
 msgstr "Eingabe %s fehlt"
 
-#, fuzzy
 msgid ""
 "The environment file of the PostgreSQL instance. This file contains "
 "variables of the form `PGPORT=\"5432\"`. Check the header of the agent plug-"
@@ -56561,7 +56295,7 @@ msgid ""
 msgstr ""
 "Die Umgebungsdatei der PostgreSQL-Instanz. Diese Datei enthält Variablen der "
 "Form `PGPORT=\"5432\"`. Eine genauere Beschreibung finden Sie im Header des "
-"Agent-Plugins."
+"Agentenplugins."
 
 msgid ""
 "The event daemon keeps statistics about the rate of messages, events rule "
@@ -56860,14 +56594,13 @@ msgstr ""
 "Der angegebene Wert ist nicht erlaubt. Sie dürfen nur relative URLs wie "
 "<tt>dashboard.py?name=my_dashboard</tt> konfigurieren."
 
-#, fuzzy
 msgid ""
 "The glob pattern by which to select the affected plugins. It is applied to "
 "the filenames agent plug-in files as they appear within the agent package."
 msgstr ""
 "Das globale Muster, nach dem die betroffenen Plugins ausgewählt werden "
-"sollen. Es wird auf die Dateinamen der Agent-Plugin-Dateien angewendet, wie "
-"sie im Agent-Paket erscheinen."
+"sollen. Es wird auf die Dateinamen der Agentenplugin-Dateien angewendet, wie "
+"sie im Agentenpaket erscheinen."
 
 #, python-format
 msgid "The global setting \"%s\" does not exist."
@@ -57131,7 +56864,6 @@ msgstr ""
 "Das Intervall, in dem die Verbindung ausgeführt wird, um die Datenquelle "
 "abzufragen und die Konfiguration zu aktualisieren."
 
-#, fuzzy
 msgid "The interval the plug-in is triggered by check-mk-agent-async.service"
 msgstr ""
 "Das Intervall, in dem das Plugin durch check-mk-agent-async.service "
@@ -57593,7 +57325,6 @@ msgstr ""
 "Der Monitoring-Zustand für den Fall, dass die Version eines lokalen Checks "
 "nicht parsebar ist."
 
-#, fuzzy
 msgid ""
 "The monitoring state in case the version of an agent plug-in is unparsable."
 msgstr ""
@@ -57619,16 +57350,17 @@ msgstr ""
 "Wählen Sie einen für Menschen lesbaren und eindeutigen Titel, damit Sie "
 "Ihren Service später in Checkmk finden können."
 
-#, fuzzy
 msgid ""
 "The name is the individual part of the used service description. Choose a "
 "human readable and unique title to be able to find your service later in "
 "Checkmk. You may use macros in this field. The most common ones are $HOSTNAME"
 "$, $HOSTALIAS$ or $HOSTADDRESS$."
 msgstr ""
-"Der Name ist der individuelle Teil der verwendeten Service-Beschreibung. "
-"Wählen Sie einen für Menschen lesbaren und eindeutigen Titel, damit Sie "
-"Ihren Service später in Checkmk finden können."
+"Der Name ist der individuelle Teil der verwendeten Dienstbeschreibung. "
+"Wählen Sie einen für Menschen lesbaren und eindeutigen Titel, um Ihren "
+"Dienst später in Checkmk finden zu können. Sie können in diesem Feld Makros "
+"verwenden. Die gebräuchlichsten sind $HOSTNAME$, $HOSTALIAS$ oder "
+"$HOSTADDRESS$."
 
 msgid "The name of the Data Proxy"
 msgstr "Der Name des Datenproxies"
@@ -57711,7 +57443,6 @@ msgstr ""
 msgid "The name of the input, e.g. <tt>Phase 1</tt>"
 msgstr "Name der Eingabe, z.B. <tt>Phase 1</tt>"
 
-#, fuzzy
 msgid ""
 "The name of the instance to be monitored. If left empty, the instance name "
 "is determined based on the name of the environment file. For example, if you "
@@ -58015,7 +57746,7 @@ msgstr ""
 "detaillierte Liste der verfügbaren Zähler in einer Windows-Shell mit dem "
 "Befehl 'lodctr /s:counters.txt' erhalten."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The old inventory plug-in API has been removed in Checkmk version 2.2. "
 "Plugin files in <tt>'%s'</tt> are ignored. Please migrate the plug-ins to "
@@ -58219,7 +57950,6 @@ msgstr ""
 "Der Platzhalter <tt>\\0</tt> wird durch den ursprünglichen Text ersetzt. "
 "Damit können Sie am Anfang oder am Ende Ergänzungen hinzufügen. "
 
-#, fuzzy
 msgid ""
 "The plug-in <tt>isc_dhcpd</tt> collects information about a DHCP server "
 "daemon on Linux."
@@ -58227,7 +57957,6 @@ msgstr ""
 "Das Plugin <tt>isc_dhcpd</tt> sammelt Informationen über einen DHCP Server "
 "Daemon auf Linux."
 
-#, fuzzy
 msgid ""
 "The plug-in will process anything that is matched by this globbing pattern. "
 "If it's a directory, recursively process all of its content."
@@ -58236,7 +57965,6 @@ msgstr ""
 "wird. Wenn es sich um ein Verzeichnis handelt, verarbeiten Sie rekursiv den "
 "gesamten Inhalt."
 
-#, fuzzy
 msgid ""
 "The plug-ins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</tt> "
 "(Mailman 3) monitor Mailman mailing lists. If enabled, both plug-ins will be "
@@ -58248,7 +57976,6 @@ msgstr ""
 "ist, werden beide Plugins verteilt, da je nach installierter Mailman-Version "
 "nur eines von ihnen Daten erzeugt."
 
-#, fuzzy
 msgid ""
 "The plug-ins in this list will be called such that they will create real-"
 "time data."
@@ -58279,13 +58006,12 @@ msgstr ""
 msgid "The power supply sensor name as shown in the service"
 msgstr "Der Name des Netzteilsensors, wie er im Service angezeigt wird"
 
-#, fuzzy
 msgid ""
 "The prefix is automatically attached to each service name to be able to "
 "organize them. The prefix is static and will be CERT. Alternatively, you may "
 "choose to not use the prefix option."
 msgstr ""
-"Das Präfix wird automatisch zu jedem Service hinzugefügt, um ihn zu "
+"Das Präfix wird automatisch an jeden Service-Namen angehängt, um ihn zu "
 "organisieren. Das Präfix ist statisch und lautet CERT. Alternativ können Sie "
 "die Präfix-Option auch nicht verwenden."
 
@@ -59482,7 +59208,6 @@ msgstr ""
 "aktiviert werden (Die Instanzen %s haben Änderungen, aber sind offline oder "
 "nicht eingeloggt)."
 
-#, fuzzy
 msgid ""
 "There are different places in Checkmk where an admin can use the GUI to add "
 "executable code to a Checkmk site or agent. For example when configuring "
@@ -59498,19 +59223,20 @@ msgid ""
 "able to configure rulesets where bare command lines are configured."
 msgstr ""
 "Es gibt verschiedene Stellen in Checkmk, an denen ein Administrator die GUI "
-"verwenden kann, um ausführbaren Code zu Checkmk hinzuzufügen. Beispielsweise "
-"fügt der Benutzer bei der Konfiguration von Datenquellenprogrammen eine "
-"Befehlszeile zum Sammeln von Monitoring-Daten ein. Diese Befehlszeile wird "
-"dann während dem Monitoring durch Checkmk ausgeführt. Ein weiteres Beispiel "
-"ist der Upload von Erweiterungspaketen (MKPs). Allen diesen Funktionen ist "
-"gemeinsam, dass der Benutzer Daten bereitstellt, die von Checkmk ausgeführt "
-"werden. Wenn Sie sicherstellen möchten, dass Ihre Setup-Benutzer keine "
-"beliebigen ausführbaren Dateien in Ihre Checkmk-Installation \" einspielen "
-"\" können, müssen Sie nur diese Berechtigung für sie entfernen. Diese "
-"Berechtigung wird zusätzlich zu den anderen komponentenbezogenen "
-"Berechtigungen benötigt. Beispielsweise benötigen Sie die Berechtigung "
-"<tt>wato.rulesets</tt> zusammen mit dieser Berechtigung, um Regelsätze "
-"konfigurieren zu können, mit denen Befehlszeilen konfiguriert werden können."
+"verwenden kann, um ausführbaren Code zu einer Checkmk-Instanz oder einem "
+"Agenten hinzuzufügen. Bei der Konfiguration von Datenquellenprogrammen fügt "
+"der Benutzer beispielsweise eine Befehlszeile zur Erfassung von Monitoring-"
+"Daten ein. Diese Befehlszeile wird dann während dem Monitoring durch Checkmk "
+"ausgeführt. Ein weiteres Beispiel ist der Upload von Erweiterungspaketen "
+"(MKPs). Alle diese Funktionen haben gemeinsam, dass der Benutzer Daten "
+"bereitstellt, die von Checkmk oder dem Agenten ausgeführt werden. Wenn Sie "
+"sicherstellen wollen, dass Ihre Setup-Benutzer keine beliebigen ausführbaren "
+"Dateien in Ihre Checkmk-Installation \"injizieren\" können, brauchen Sie "
+"ihnen nur diese Berechtigung zu entziehen. Dieses Recht wird zusätzlich zu "
+"den anderen komponentenbezogenen Rechten benötigt. Zum Beispiel benötigen "
+"Sie die <tt>wato.rulesets</tt> Berechtigung zusammen mit dieser "
+"Berechtigung, um Regelsätze zu konfigurieren, in denen reine Befehlszeilen "
+"konfiguriert sind."
 
 msgid "There are no configured rules in this aggregation pack"
 msgstr "Es sind keine Regeln in diesem Aggregationspaket konfiguriert"
@@ -60028,7 +59754,6 @@ msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr ""
 "Dieser Regelsatz definiert die Schwellwert-Grenzen für Feuchtigkeitssensoren"
 
-#, fuzzy
 msgid "This SLA has no computation plug-ins configured"
 msgstr "Diese SLA hat keine Berechnungsplugins konfiguriert"
 
@@ -60079,7 +59804,7 @@ msgstr ""
 "zu tun:<ul><li>Sie vertrauen diesem Host nicht mehr und wollen keine Daten "
 "mehr empfangen oder abrufen.</li><li>Sie wollen die Kommunikation auf den "
 "veralteten und unverschlüsselten Modus zurücksetzen (in diesem Fall müssen "
-"Sie auch den Agent-Controller auf dem überwachten Host zurücksetzen (siehe "
+"Sie auch den Agent Controller auf dem überwachten Host zurücksetzen (siehe "
 "`cmk-agent-ctl help`).</li></ul>"
 
 msgid ""
@@ -60271,7 +59996,6 @@ msgstr ""
 "NFS, Samba oder ähnlichem ablegen wollen. Allerdings müssen Sie den "
 "Netzwerkfreigabe selbstständig unter dem gewählten Pfad einbinden."
 
-#, fuzzy
 msgid ""
 "This catalog of check plug-ins gives you a complete listing of all plug-ins "
 "that are shipped with your Checkmk installation. It also allows you to "
@@ -60901,8 +60625,8 @@ msgid ""
 "not the uid of the display itself. There is currently no support for "
 "controling multiple displays."
 msgstr ""
-"Dies ist die uid des Sensors der in der 7-Segment Anzeige wiedergegeben "
-"werden soll, nicht die uid der Anzeige selber. Es ist momentan nicht "
+"Dies ist die UID des Sensors der in der 7-Segment Anzeige wiedergegeben "
+"werden soll, nicht die UID der Anzeige selber. Es ist momentan nicht "
 "möglich, mehrere Anzeigen anzusteuern."
 
 msgid "This job cannot be stopped"
@@ -61119,7 +60843,6 @@ msgstr ""
 "gepackten Dateien werden in den ungepackten Zustand überführt. Die Dateien "
 "können dann in ein anderes Paket gepackt oder manuell gelöscht werden."
 
-#, fuzzy
 msgid ""
 "This option allows to omit individual sections from being fetched at all. As "
 "a result, associated Checkmk services may be entirely missing. However, some "
@@ -61651,7 +61374,6 @@ msgstr ""
 "Mit dieser Berechtigung können Benutzer über die Weboberfläche Nachrichten "
 "an die Benutzer des Monitoring-Systems senden."
 
-#, fuzzy
 msgid ""
 "This permission gives read access to the Checkmk MKP manager. It allows to "
 "view and download installed packages. MKPs contain extensions to Checkmk "
@@ -61764,7 +61486,6 @@ msgstr ""
 "persönlichen Einstellungen des Benutzers bereit, die es ihm erlaubt, all "
 "seine Benachrichtigungen zu deaktivieren. Vorsichtig einsetzen."
 
-#, fuzzy
 msgid ""
 "This plug-in allows you to let users keep their own plugins, local scripts "
 "and MRPE configuration, which will be run by the agent with the permissions "
@@ -61774,7 +61495,6 @@ msgstr ""
 "MRPE-Konfiguration zu behalten, die durch den Agenten lokal mit den "
 "Berechtigungen des jeweiligen Benutzers ausgeführt werden."
 
-#, fuzzy
 msgid ""
 "This plug-in can be used to check the remaining life time of SSL "
 "certificates that are contained in JAVA JAR files. The tool <tt>jarsigner -"
@@ -61784,7 +61504,6 @@ msgstr ""
 "Zertifikaten prüfen, welche in Java Jar-Containern enthalten sind. Dafür "
 "wird der Kommandozeilenbefehl <tt>jarsigner -verify</tt> verwendet."
 
-#, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all MS Office 365 "
 "licenses and serviceplans using the MSOnline PowerShell module."
@@ -61792,7 +61511,6 @@ msgstr ""
 "Dieses Plugin kann verwendet werden, um Informationen über alle MS Office "
 "365-Lizenzen und Servicepläne mit dem MSOnline PowerShell-Modul zu sammeln."
 
-#, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all running MSSQL servers "
 "on the local and remote system. "
@@ -61800,7 +61518,6 @@ msgstr ""
 "Dieses Plugin kann verwendet werden, um Informationen über alle MSSQL-Server "
 "auf dem lokalen oder dem Remote-System zu sammeln. "
 
-#, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all running MSSQL servers "
 "on the local system. The current implementation of the check uses the "
@@ -61815,12 +61532,11 @@ msgstr ""
 "auf dem lokalen System sammeln. Die aktuelle Implementierung verwendet "
 "\"Trusted Authentication\", wobei standardmäßig kein Benutzer/Passwort in "
 "der MSSQL Server-Instanz erstellt werden muss. Bei dieser Methode müssen Sie "
-"dem Benutzer, unter dem der Checkmk Windows Agent-Dienst läuft, Zugriff auf "
+"dem Benutzer, unter dem der Checkmk Windows Agentendienst läuft, Zugriff auf "
 "die MSSQL-Datenbank gewähren. Andernfalls können Sie die Anmeldedaten eines "
 "Datenbankbenutzers konfigurieren, der die Berechtigung hat, die benötigten "
 "Informationen von der Serverinstanz zu lesen."
 
-#, fuzzy
 msgid ""
 "This plug-in can only be deployed asynchronously because it launches "
 "background processes (one per address). Under systemd, this only works when "
@@ -61830,28 +61546,23 @@ msgstr ""
 "(einen pro Adresse) startet. Unter systemd funktioniert es nur, wenn es "
 "asynchron ausgeführt wird."
 
-#, fuzzy
 msgid "This plug-in checks for Citrix Licenses on Window hosts."
-msgstr "Dieses Plugin überwacht Citrix-Lizenzen auf Windows-Rechnern."
+msgstr "Dieses Plugin überwacht Citrix-Lizenzen auf Windows-Hosts."
 
-#, fuzzy
 msgid "This plug-in checks for Windows License status."
 msgstr "Dieses Plugin überprüft den Status der Windows-Lizenz."
 
-#, fuzzy
 msgid ""
 "This plug-in checks the current state of a Windows broadcom bonding "
 "interface."
 msgstr ""
-"Diese Plugin überwacht den Status von Bonding-Netzwerkkarten, die mit dem "
-"Broadcom-Treiber realisiert werden."
+"Dieses Plugin prüft den aktuellen Status einer Windows-Broadcom-Bonding-"
+"Schnittstelle."
 
-#, fuzzy
 msgid "This plug-in checks the last return state of Windows task scripts"
 msgstr ""
-"Dieses Plugin überwacht den letzten Erfolgsstatus von Windows Task-Skripten"
+"Dieses Plugin prüft den letzten Rückgabestatus von Windows-Task-Skripten"
 
-#, fuzzy
 msgid ""
 "This plug-in checks the replication of Active Directory. To be able to run "
 "this check you need appropriate credentials in the target domain. Normally "
@@ -61867,7 +61578,6 @@ msgstr ""
 "zu lösen, können Sie z.B. das Konto, mit dem der Service gestartet wird, in "
 "ein Domänenbenutzerkonto mit ausreichenden Rechten auf dem DC ändern."
 
-#, fuzzy
 msgid ""
 "This plug-in checks the status and performance of network interfaces on "
 "Windows. Use the legacy plug-in for Windows versions without Powershell"
@@ -61876,7 +61586,6 @@ msgstr ""
 "Netzwerkschnittstellen unter Windows. Verwenden Sie das Legacy-Plugin für "
 "Windows-Versionen ohne Powershell"
 
-#, fuzzy
 msgid ""
 "This plug-in collects information on the logical volumes and physical disks "
 "of LSI RAID controllers using the StorCLI utility. StorCLI must be installed "
@@ -61886,7 +61595,6 @@ msgstr ""
 "physische Platten von LSI RAID-Controllern ab. StorCLI muss auf dem "
 "Zielsystem installiert sein, damit das Plugin funktioniert."
 
-#, fuzzy
 msgid ""
 "This plug-in monitors Arcserve backups by deploying a plug-in for the "
 "Arcserve server on Windows. This only supports the German version of "
@@ -61897,12 +61605,10 @@ msgstr ""
 "Version von Arcserve, da die Log-Meldungen in lokalisierter Sprache "
 "vorliegen."
 
-#, fuzzy
 msgid "This plug-in monitors Citrix sessions and server load on Window hosts."
 msgstr ""
 "Dieses Plugin überwacht Sessions und Serverlast von Citrix unter Windows."
 
-#, fuzzy
 msgid ""
 "This plug-in monitors Exchange Mailbox Servers in a Database Availability "
 "Group on Window hosts."
@@ -61910,32 +61616,26 @@ msgstr ""
 "Dieses Plugin überwacht Exchange-Postfachserver in einer "
 "Datenbankverfügbarkeitsgruppe auf Windows-Hosts."
 
-#, fuzzy
 msgid "This plug-in monitors MS Exchange database latency on Window hosts."
 msgstr ""
 "Dieses Plugin überwacht die Latenzzeiten der MS Exchange-Datenbank auf "
 "Windows-Hosts."
 
-#, fuzzy
 msgid "This plug-in monitors MS IIS Application Pool States on Windows hosts."
 msgstr ""
 "Dieses Plugin überwacht MS IIS Anwendungspool-Status auf Windows-Hosts."
 
-#, fuzzy
 msgid "This plug-in monitors Veeam backup status on Window hosts."
 msgstr "Dieses Plugin überwacht den Veeam-Backup-Status auf Windows-Hosts."
 
-#, fuzzy
 msgid "This plug-in monitors channels, managers and queues of IBM MQ."
 msgstr "Dieses Plugin überwacht Kanäle, Manager und Warteschlangen von IBM MQ."
 
-#, fuzzy
 msgid "This plug-in monitors the NFS version 4 exports of a Linux host."
 msgstr ""
 "Mit diesem Plugin überwachen Sie Exporte von NFS Version 4 eines Linux-"
 "Servers."
 
-#, fuzzy
 msgid ""
 "This plug-in monitors the number of print jobs in the printer queues and the "
 "printer states"
@@ -61943,11 +61643,9 @@ msgstr ""
 "Dieses Plugin überwacht die Anzahl der Druckaufträge in den Druckerschlangen "
 "und die Druckerzustände"
 
-#, fuzzy
 msgid "This plug-in monitors the number of uses remote desktop licenses."
 msgstr "Dieses Plugin überwacht die Anzahl der Remote Desktop Lizenzen."
 
-#, fuzzy
 msgid ""
 "This plug-in monitors the signature date of a windows system using McAfee "
 "Anti-Virus software"
@@ -61955,15 +61653,12 @@ msgstr ""
 "Dieses Plugin überwacht das Signaturdatum von Windowssystemen mit Hilfe der "
 "McAfee Anti-Virus Software"
 
-#, fuzzy
 msgid "This plug-in monitors the state of Hyper-V VMs on Window hosts."
 msgstr "Dieses Plugin überwacht den Zustand von HyperV VMs auf Windows."
 
-#, fuzzy
 msgid "This plug-in monitors various aspects of VxVM."
 msgstr "Diese Plugin überwacht verschiedene Aspekte von VxVM."
 
-#, fuzzy
 msgid ""
 "This plug-in provides information about integration services and checkpoints "
 "(snapshots) for each Hyper-V VM guest."
@@ -61971,7 +61666,6 @@ msgstr ""
 "Dieses Plugin stellt Informationen zu den Integrationsdiensten und "
 "Checkpoints (Schnappschüssen) für jeden Hyper-V VM Gast zur Verfügung."
 
-#, fuzzy
 msgid ""
 "This plug-in requires the executable <tt>C:\\Programme\\GnuWin32\\sbin"
 "\\dmidecode.exe</tt>. This is the default location when installing this "
@@ -61982,7 +61676,6 @@ msgstr ""
 "\\dmidecode.exe</tt>. Sie können es <a href='http://gnuwin32.sourceforge.net/"
 "packages/dmidecode.htm'>hier</a> kostenlos herunterladen. "
 
-#, fuzzy
 msgid ""
 "This plug-in tests the local DNS resolver by looking up one or several host "
 "names using <tt>nslookup</tt>. That tool is expected to be installed on the "
@@ -61992,7 +61685,6 @@ msgstr ""
 "mehrere Host-Namen mit <tt>nslookup</tt> abfragt. Dieses Tool muss dafür auf "
 "dem Zielsystem installiert sein."
 
-#, fuzzy
 msgid ""
 "This plug-in uses the command <tt>netstat</tt> in order to output "
 "information about established TCP (and UDP) connections. The according check "
@@ -62003,7 +61695,6 @@ msgstr ""
 "bestehenden TCP- und UDP-Verbindungen auszugeben. Der dazugehörige Check "
 "erlaubt Ihnen dann eine Überwachung von bestimmten Verbindungen."
 
-#, fuzzy
 msgid ""
 "This plug-in uses the command line tool <tt>MegaCli.exe</tt> in order to "
 "provide monitoring information of LSI RAID controllers and attached hard "
@@ -63049,8 +62740,8 @@ msgid ""
 "This ruleset allows to add embedded Python to the Windows Agent "
 "installation. "
 msgstr ""
-"Dieser Regelsatz ermöglicht das Einbinden von Python in die Windows Agent-"
-"Installation. "
+"Dieser Regelsatz ermöglicht das Einbinden von Python in die Windows "
+"Agenteninstallation. "
 
 msgid ""
 "This ruleset allows to choose which Python interpreter is used to run python "
@@ -63059,7 +62750,6 @@ msgstr ""
 "Mit diesem Regelsatz kann ausgewählt werden, welcher Python-Interpreter zur "
 "Ausführung von Python-Skripten verwendet werden soll."
 
-#, fuzzy
 msgid ""
 "This ruleset allows to deploy an agent plug-in that updates the Checkmk "
 "agent for Linux, Solaris and Windows on a regular base. The agent will look "
@@ -63250,7 +62940,6 @@ msgstr ""
 "Dieser Regelsatz ist veraltet. Bitte verwenden Sie stattdessen den Regelsatz "
 "<i>\"%s\"</i>."
 
-#, fuzzy
 msgid ""
 "This ruleset is for deploying two plug-ins for monitoring Unitrends software."
 msgstr ""
@@ -63336,7 +63025,6 @@ msgstr ""
 "Status haben, wenn der Host nicht erreichbar ist. Hinweis: Die Einstellung "
 "<i>Timeout</i> funktioniert nur bei Verwendung des Checkmk Micro Core."
 
-#, fuzzy
 msgid ""
 "This ruleset will deploy the agent plug-in <tt>mk_sap</tt> for (locally) "
 "monitoring SAP R/3 instances. Note: you still need to manually deploy the "
@@ -63744,7 +63432,6 @@ msgstr ""
 "Diese Vorlage wird für die Titelseite, Inhaltsverzeichnis und andere "
 "Elemente der Titelei verwendet"
 
-#, fuzzy
 msgid ""
 "This text is a regular expression that is being searched in the output of "
 "the check plug-ins that produced the alert. It is not a prefix but an infix "
@@ -63900,7 +63587,6 @@ msgstr ""
 "Dies wird als Service-Beschreibung innerhalb von Checkmk benutzt. Es muss "
 "ein eindeutiger Name pro Host sein."
 
-#, fuzzy
 msgid ""
 "This will deploy and configure the Checkmk agent plug-in <tt>mk_jolokia</"
 "tt>. In order to use this you need the Jolokia <tt>.war</tt> file from the "
@@ -63919,7 +63605,6 @@ msgstr ""
 "auf dem Host, auf dem das Plugin läuft, <b>als auch</b> die WAR-Datei auf "
 "den JVMs."
 
-#, fuzzy
 msgid ""
 "This will deploy and configure the Checkmk agent plug-in <tt>mk_sap_hana</"
 "tt>. To make this plug-in work you have to configure default credentials "
@@ -63931,7 +63616,7 @@ msgid ""
 "default.  Use the FQDN in the query if HOSTNAME is not set, other the short "
 "hostname."
 msgstr ""
-"Dadurch wird das Checkmk-Agent-Plugin <tt>mk_sap_hana</tt> verteilt und "
+"Dadurch wird das Checkmk-Agentenplugin <tt>mk_sap_hana</tt> verteilt und "
 "konfiguriert. Damit dieses Plugin funktioniert, müssen Sie Standard-"
 "Anmeldeinformationen, die für alle Datenbanken verwendet werden, oder "
 "Anmeldeinformationen pro Datenbank konfigurieren. Um Anmeldedaten zu "
@@ -63943,7 +63628,6 @@ msgstr ""
 "Sie den FQDN in der Abfrage, wenn HOSTNAME nicht gesetzt ist, ansonsten den "
 "kurzen Host-Namen."
 
-#, fuzzy
 msgid ""
 "This will deploy and configure the Checkmk agent plug-in <tt>mk_saprouter</"
 "tt>. The plug-in runs below the specified user's environment. Furthermore "
@@ -63955,7 +63639,6 @@ msgstr ""
 "angegebenen Benutzers. Außerdem müssen Sie den Pfad zu sapgenpse bestimmen. "
 "Es wird empfohlen, das Plugin asynchron auszuführen."
 
-#, fuzzy
 msgid ""
 "This will deploy and configure the Checkmk agent plug-in "
 "<tt>mk_site_object_counts</tt>. The plug-in runs below the specified user's "
@@ -63967,7 +63650,6 @@ msgstr ""
 "Umgebung des angegebenen Benutzers. Außerdem müssen Sie Host-Tags oder "
 "Service-Check-Befehle angeben."
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_apt</tt>. This will activate the "
 "check <tt>apt</tt> on DEB-based hosts (like Debian and Ubuntu) and monitor "
@@ -63977,7 +63659,6 @@ msgstr ""
 "<tt>apt</tt> auf Debian-basierten Hosts (z.B. Debian und Ubuntu) und "
 "überwacht ausstehende normale und Sicherheitsupdates."
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_docker.py</tt>. You can choose to "
 "monitor the node and/or the individual containers. This plug-in requires the "
@@ -63990,7 +63671,7 @@ msgid ""
 "translation rules</a> to avoid name collisions if containers with the same "
 "name exist on multiple docker nodes."
 msgstr ""
-"Dadurch wird das Agent-Plugin <tt>mk_docker.py</tt> verteilt. Sie können "
+"Dadurch wird das Agentenplugin <tt>mk_docker.py</tt> verteilt. Sie können "
 "wählen, ob Sie den Knoten und/oder die einzelnen Container überwachen "
 "möchten. Dieses Plugin erfordert, dass die Python-Bibliothek "
 "'docker' (mindestens Version 2.0.0) auf dem überwachten System installiert "
@@ -64003,11 +63684,9 @@ msgstr ""
 "vermeiden, wenn Container mit demselben Namen auf mehreren Docker-Knoten "
 "existieren."
 
-#, fuzzy
 msgid "This will deploy the agent plug-in <tt>mk_mongodb.py</tt>."
-msgstr "Dadurch wird das Agent-Plugin <tt>mk_mongodb.py</tt> verteilt."
+msgstr "Dadurch wird das Agentenplugin <tt>mk_mongodb.py</tt> verteilt."
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_mysql</tt> on linux systems and "
 "<tt>mk_mysql.vbs</tt> on windows systems for monitoring several aspects of "
@@ -64016,10 +63695,10 @@ msgid ""
 msgstr ""
 "Verteilt das Agentenplugin <tt>mk_mysql</tt> auf Linuxsystemen und "
 "<tt>mk_mysql.vbs</tt> auf Windowssystemen, um verschiedene Aspekte von MySQL-"
-"Datenbanken zu überwachen. Unter Windows sucht das Plugin nach Dienstnamen, "
-"welche die Zeichenketten <tt>MySQL</tt> oder <tt>MariaDB</tt> enthalten"
+"Datenbanken zu überwachen. Unter Windows sucht das Plugin nach Service-"
+"Namen, welche die Zeichenketten <tt>MySQL</tt> oder <tt>MariaDB</tt> "
+"enthalten"
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_nfsiostat</tt> to check various "
 "client side NFS IO stats."
@@ -64027,16 +63706,14 @@ msgstr ""
 "Hiermit wird das Agenten-Plugin <tt>mk_nfsiostat</tt> verteilt, um "
 "verschiedene clientseitige NFS IO-Statistiken zu überprüfen."
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
 "Currently not all options are available in all operating systems."
 msgstr ""
-"Dadurch wird das Agent-Plugin <tt>mk_oracle</tt> auf Ihrem Zielsystem "
+"Dadurch wird das Agentenplugin <tt>mk_oracle</tt> auf Ihrem Zielsystem "
 "verteilt. Derzeit sind nicht alle Optionen auf allen Betriebssystemen "
 "verfügbar."
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_tsm</tt>. It will provide several "
 "checks concerning TSM."
@@ -64044,7 +63721,6 @@ msgstr ""
 "Dies verteilt das Agentenplugin <tt>mk_tsm</tt>, das mehrere Checks für TSM "
 "versorgt."
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_zypper</tt>. This will activate "
 "the check <tt>zypper</tt> on SUSE Linux hosts and monitor normal and "
@@ -64054,7 +63730,6 @@ msgstr ""
 "<tt>zypper</tt> auf SUSE Linux Hosts und überwacht normale und "
 "Sicherheitsupdates."
 
-#, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>nvidia_smi</tt> used for monitoring "
 "Nvidia GPUs."
@@ -64062,7 +63737,6 @@ msgstr ""
 "Dies verteilt das Agenten-Plugin <tt>nvidia_smi</tt>, das für das Monitoring "
 "von Nvidia GPUs genutzt wird."
 
-#, fuzzy
 msgid ""
 "This will deploy the two agent plug-ins <tt>plesk_backup</tt> and "
 "<tt>plesk_domain</tt>, used for monitoring Plesk."
@@ -64621,9 +64295,6 @@ msgstr "Timeout in Sekunden bevor der Prozess des Skripts beendet wird"
 msgid "Timeout occured"
 msgstr "Ein Timeout ist aufgetreten"
 
-msgid "Timeout per attempt"
-msgstr "Timeout pro Versuch"
-
 msgid "Timeout waiting for a free channel"
 msgstr "Timeout für das Warten auf einen freien Kanal"
 
@@ -64734,7 +64405,6 @@ msgstr ""
 "Um eine Regel für die Gesamtkapazität des FlashArrays zu konfigurieren, "
 "verwenden Sie den Eintrag 'Overall'."
 
-#, fuzzy
 msgid ""
 "To determine the notified contacts and used notification plug-in the "
 "mknotifyd starts a new subprocess for each message forwarded by a remote "
@@ -64767,7 +64437,7 @@ msgid ""
 "the case for automatic updates via agent updater."
 msgstr ""
 "Um verschiedene Agentenbäckerei-Pakete voneinander zu unterscheiden, ist der "
-"Hash eines Agent-Pakets in der Version der .rpm- und .deb-Pakete enthalten. "
+"Hash eines Agentenpakets in der Version der .rpm- und .deb-Pakete enthalten. "
 "Wenn ein Paket auf einem Host aktualisiert wird, kann das neue Agentenpaket "
 "jedoch als Downgrade angesehen werden. Um dies zu vermeiden, kann diese "
 "Option aktiviert werden. Es wird dann eine immer höhere <i>Bake revision</i> "
@@ -64786,9 +64456,9 @@ msgid ""
 "for a header value."
 msgstr ""
 "Um die Abfragequelle für den angefragten Webserver transparent zu machen, "
-"wird das User-Agent-Header-Feld verwendet. Der Standardwert ist checkmk/"
-"check_http, aber Sie können auch Ihren eigenen verwenden. Der Eintrag muss "
-"ein gültiger String für einen Header-Wert sein."
+"wird das Benutzer-Agenten-Header-Feld verwendet. Der Standardwert ist "
+"checkmk/check_http, aber Sie können auch Ihren eigenen verwenden. Der "
+"Eintrag muss ein gültiger String für einen Header-Wert sein."
 
 msgid ""
 "To monitor Azure resources add this datasource to <b>one</b> host. The data "
@@ -65388,646 +65058,486 @@ msgstr "Gesamte Reservierungsauslastung"
 msgid "Total restarts"
 msgstr "Neustarts insgesamt"
 
-#, fuzzy
 msgid "Total running on-demand F instances vCPUs"
 msgstr "Insgesamt laufende On-Demand F-Instanzen vCPUs"
 
-#, fuzzy
 msgid "Total running on-demand G instances vCPUs"
 msgstr "Insgesamt laufende On-Demand G-Instanzen vCPUs"
 
-#, fuzzy
 msgid "Total running on-demand Inf instances vCPUs"
 msgstr "Insgesamt laufende On-Demand Inf-Instanzen vCPUs"
 
-#, fuzzy
 msgid "Total running on-demand Instances of type z1d"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ z1d"
 
-#, fuzzy
 msgid "Total running on-demand P instances vCPUs"
 msgstr "Insgesamt laufende On-Demand P-Instanzen vCPUs"
 
-#, fuzzy
 msgid ""
 "Total running on-demand Standard (A, C, D, H, I, M, R, T, Z) instances vCPUs"
 msgstr ""
 "Insgesamt laufende On-Demand Standard-Instanzen (A, C, D, H, I, M, R, T, Z) "
 "vCPUs"
 
-#, fuzzy
 msgid "Total running on-demand X instances vCPUs"
 msgstr "Insgesamt laufende On-Demand X-Instanzen vCPUs"
 
-#, fuzzy
 msgid "Total running on-demand a1.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand a1.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand a1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand a1.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand a1.large instances"
 msgstr "Insgesamt laufende On-Demand a1.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand a1.medium instances"
 msgstr "Insgesamt laufende On-Demand a1.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand a1.metal instances"
 msgstr "Insgesamt laufende On-Demand a1.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand a1.xlarge instances"
 msgstr "Insgesamt laufende On-Demand a1.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c1.medium instances"
 msgstr "Insgesamt laufende On-Demand c1.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c1.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c1.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c3.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c3.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c3.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c3.large instances"
 msgstr "Insgesamt laufende On-Demand c3.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c3.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c4.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c4.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c4.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c4.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c4.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c4.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c4.large instances"
 msgstr "Insgesamt laufende On-Demand c4.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c4.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c4.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5.18xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.18xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5.9xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.9xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5.large instances"
 msgstr "Insgesamt laufende On-Demand c5.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5.metal instances"
 msgstr "Insgesamt laufende On-Demand c5.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5a.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5a.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5a.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5a.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5a.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5a.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5a.large instances"
 msgstr "Insgesamt laufende On-Demand c5a.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5a.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5a.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5ad.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5ad.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5ad.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5ad.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5ad.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5ad.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5ad.large instances"
 msgstr "Insgesamt laufende On-Demand c5ad.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5ad.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5ad.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5d.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5d.18xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.18xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5d.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5d.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5d.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5d.9xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.9xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5d.large instances"
 msgstr "Insgesamt laufende On-Demand c5d.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5d.metal instances"
 msgstr "Insgesamt laufende On-Demand c5d.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5d.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5d.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5n.18xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.18xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5n.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5n.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5n.9xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.9xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5n.large instances"
 msgstr "Insgesamt laufende On-Demand c5n.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5n.metal instances"
 msgstr "Insgesamt laufende On-Demand c5n.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c5n.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c5n.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6g.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6g.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6g.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6g.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6g.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6g.large instances"
 msgstr "Insgesamt laufende On-Demand c6g.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6g.medium instances"
 msgstr "Insgesamt laufende On-Demand c6g.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6g.metal instances"
 msgstr "Insgesamt laufende On-Demand c6g.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6g.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6g.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gd.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gd.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gd.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gd.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gd.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gd.large instances"
 msgstr "Insgesamt laufende On-Demand c6gd.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gd.medium instances"
 msgstr "Insgesamt laufende On-Demand c6gd.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gd.metal instances"
 msgstr "Insgesamt laufende On-Demand c6gd.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gd.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gn.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gn.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gn.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gn.large instances"
 msgstr "Insgesamt laufende On-Demand c6gn.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gn.medium instances"
 msgstr "Insgesamt laufende On-Demand c6gn.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand c6gn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand c6gn.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand cc1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand cc1.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand cc2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand cc2.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand cg1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand cg1.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand cr1.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand cr1.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand d2.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d2.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand d2.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand d2.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand d2.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3en.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3en.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3en.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3en.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.6xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3en.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand d3en.xlarge instances"
 msgstr "Insgesamt laufende On-Demand d3en.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand f1.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand f1.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand f1.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand f1.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand f1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand f1.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand g2.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand g2.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g3.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand g3.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand g3.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand g3.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g3s.xlarge instances"
 msgstr "Insgesamt laufende On-Demand g3s.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4ad.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4ad.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4ad.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4ad.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4ad.xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4ad.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4dn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4dn.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4dn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4dn.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4dn.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4dn.metal instances"
 msgstr "Insgesamt laufende On-Demand g4dn.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand g4dn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand g4dn.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand h1.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand h1.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand h1.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand h1.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand h1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand h1.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand h1.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand h1.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand hi1.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand hi1.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand hs1.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand hs1.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand i2.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i2.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand i2.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand i2.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand i2.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3.large instances"
 msgstr "Insgesamt laufende On-Demand i3.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3.metal instances"
 msgstr "Insgesamt laufende On-Demand i3.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3en.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3en.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3en.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3en.3xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.3xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3en.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.6xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3en.large instances"
 msgstr "Insgesamt laufende On-Demand i3en.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3en.metal instances"
 msgstr "Insgesamt laufende On-Demand i3en.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand i3en.xlarge instances"
 msgstr "Insgesamt laufende On-Demand i3en.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand inf1.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand inf1.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand inf1.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand inf1.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand inf1.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand inf1.6xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand inf1.xlarge instances"
 msgstr "Insgesamt laufende On-Demand inf1.xlarge-Instanzen"
 
@@ -66259,1071 +65769,804 @@ msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ x1e"
 msgid "Total running on-demand instances of type x2gd"
 msgstr "Insgesamt laufende On-Demand-Instanzen vom Typ x2gd"
 
-#, fuzzy
 msgid "Total running on-demand m1.large instances"
 msgstr "Insgesamt laufende On-Demand m1.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m1.medium instances"
 msgstr "Insgesamt laufende On-Demand m1.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m1.small instances"
 msgstr "Insgesamt laufende On-Demand m1.small-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m1.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m1.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m2.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m2.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m2.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m2.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m3.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m3.large instances"
 msgstr "Insgesamt laufende On-Demand m3.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m3.medium instances"
 msgstr "Insgesamt laufende On-Demand m3.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m3.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m4.10xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.10xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m4.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m4.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m4.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m4.large instances"
 msgstr "Insgesamt laufende On-Demand m4.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m4.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m4.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5.large instances"
 msgstr "Insgesamt laufende On-Demand m5.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5.metal instances"
 msgstr "Insgesamt laufende On-Demand m5.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5a.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5a.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5a.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5a.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5a.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5a.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5a.large instances"
 msgstr "Insgesamt laufende On-Demand m5a.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5a.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5a.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.large instances"
 msgstr "Insgesamt laufende On-Demand m5ad.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5ad.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5ad.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5d.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5d.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5d.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5d.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5d.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5d.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5d.large instances"
 msgstr "Insgesamt laufende On-Demand m5d.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5d.metal instances"
 msgstr "Insgesamt laufende On-Demand m5d.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5d.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5d.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.large instances"
 msgstr "Insgesamt laufende On-Demand m5dn.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.metal instances"
 msgstr "Insgesamt laufende On-Demand m5dn.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5dn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5dn.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5n.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5n.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5n.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5n.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5n.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5n.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5n.large instances"
 msgstr "Insgesamt laufende On-Demand m5n.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5n.metal instances"
 msgstr "Insgesamt laufende On-Demand m5n.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5n.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5n.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.3xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.3xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.6xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.large instances"
 msgstr "Insgesamt laufende On-Demand m5zn.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.metal instances"
 msgstr "Insgesamt laufende On-Demand m5zn.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m5zn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m5zn.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6g.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6g.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6g.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6g.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6g.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6g.large instances"
 msgstr "Insgesamt laufende On-Demand m6g.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6g.medium instances"
 msgstr "Insgesamt laufende On-Demand m6g.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6g.metal instances"
 msgstr "Insgesamt laufende On-Demand m6g.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6g.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6g.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.large instances"
 msgstr "Insgesamt laufende On-Demand m6gd.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.medium instances"
 msgstr "Insgesamt laufende On-Demand m6gd.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.metal instances"
 msgstr "Insgesamt laufende On-Demand m6gd.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6gd.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6i.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6i.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6i.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6i.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6i.32xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.32xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6i.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6i.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6i.large instances"
 msgstr "Insgesamt laufende On-Demand m6i.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand m6i.xlarge instances"
 msgstr "Insgesamt laufende On-Demand m6i.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand mac1.metal instances"
 msgstr "Insgesamt laufende On-Demand mac1.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand p2.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand p2.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand p2.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand p2.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand p2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand p2.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand p3.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand p3.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand p3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand p3.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand p3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand p3.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand p3dn.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand p3dn.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand p4d.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand p4d.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r3.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r3.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r3.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r3.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r3.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r3.large instances"
 msgstr "Insgesamt laufende On-Demand r3.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r3.xlarge -Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r4.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r4.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r4.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r4.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r4.large instances"
 msgstr "Insgesamt laufende On-Demand r4.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r4.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r4.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5.large instances"
 msgstr "Insgesamt laufende On-Demand r5.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5.metal instances"
 msgstr "Insgesamt laufende On-Demand r5.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5a.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5a.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5a.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5a.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5a.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5a.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5a.large instances"
 msgstr "Insgesamt laufende On-Demand r5a.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5a.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5a.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.large instances"
 msgstr "Insgesamt laufende On-Demand r5ad.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5ad.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5ad.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5b.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5b.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5b.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5b.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5b.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5b.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5b.large instances"
 msgstr "Insgesamt laufende On-Demand r5b.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5b.metal instances"
 msgstr "Insgesamt laufende On-Demand r5b.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5b.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5b.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5d.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5d.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5d.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5d.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5d.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5d.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5d.large instances"
 msgstr "Insgesamt laufende On-Demand r5d.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5d.metal instances"
 msgstr "Insgesamt laufende On-Demand r5d.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5d.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5d.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.large instances"
 msgstr "Insgesamt laufende On-Demand r5dn.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.metal instances"
 msgstr "Insgesamt laufende On-Demand r5dn.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5dn.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5dn.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5n.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5n.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5n.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5n.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5n.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5n.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5n.large instances"
 msgstr "Insgesamt laufende On-Demand r5n.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5n.metal instances"
 msgstr "Insgesamt laufende On-Demand r5n.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r5n.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r5n.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6g.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6g.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.16xlarge -Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6g.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6g.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6g.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6g.large instances"
 msgstr "Insgesamt laufende On-Demand r6g.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6g.medium instances"
 msgstr "Insgesamt laufende On-Demand r6g.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6g.metal instances"
 msgstr "Insgesamt laufende On-Demand r6g.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6g.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6g.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.large instances"
 msgstr "Insgesamt laufende On-Demand r6gd.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.medium instances"
 msgstr "Insgesamt laufende On-Demand r6gd.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.metal instances"
 msgstr "Insgesamt laufende On-Demand r6gd.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand r6gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand r6gd.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t1.micro instances"
 msgstr "Insgesamt laufende On-Demand t1.micro-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t2.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand t2.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t2.large instances"
 msgstr "Insgesamt laufende On-Demand t2.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t2.medium instances"
 msgstr "Insgesamt laufende On-Demand t2.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t2.micro instances"
 msgstr "Insgesamt laufende On-Demand t2.micro-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t2.nano instances"
 msgstr "Insgesamt laufende On-Demand t2.nano-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t2.small instances"
 msgstr "Insgesamt laufende On-Demand t2.small-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t2.xlarge instances"
 msgstr "Insgesamt laufende On-Demand t2.xlarge -Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand t3.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3.large instances"
 msgstr "Insgesamt laufende On-Demand t3.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3.medium instances"
 msgstr "Insgesamt laufende On-Demand t3.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3.micro instances"
 msgstr "Insgesamt laufende On-Demand t3.micro-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3.nano instances"
 msgstr "Insgesamt laufende On-Demand t3.nano-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3.small instances"
 msgstr "Insgesamt laufende On-Demand t3.small-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3.xlarge instances"
 msgstr "Insgesamt laufende On-Demand t3.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3a.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand t3a.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3a.large instances"
 msgstr "Insgesamt laufende On-Demand t3a.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3a.medium instances"
 msgstr "Insgesamt laufende On-Demand t3a.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3a.micro instances"
 msgstr "Insgesamt laufende On-Demand t3a.micro-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3a.nano instances"
 msgstr "Insgesamt laufende On-Demand t3a.nano-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3a.small instances"
 msgstr "Insgesamt laufende On-Demand t3a.small-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t3a.xlarge instances"
 msgstr "Insgesamt laufende On-Demand t3a.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t4g.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand t4g.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t4g.large instances"
 msgstr "Insgesamt laufende On-Demand t4g.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t4g.medium instances"
 msgstr "Insgesamt laufende On-Demand t4g.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t4g.micro instances"
 msgstr "Insgesamt laufende On-Demand t4g.micro-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t4g.nano instances"
 msgstr "Insgesamt laufende On-Demand t4g.nano-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t4g.small instances"
 msgstr "Insgesamt laufende On-Demand t4g.small-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand t4g.xlarge instances"
 msgstr "Insgesamt laufende On-Demand t4g.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand u-12tb1.112xlarge instances"
 msgstr "Insgesamt laufende On-Demand u-12tb1.112xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand u-12tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-12tb1.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand u-18tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-18tb1.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand u-24tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-24tb1.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand u-6tb1.112xlarge instances"
 msgstr "Insgesamt laufende On-Demand u-6tb1.112xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand u-6tb1.56xlarge instances"
 msgstr "Insgesamt laufende On-Demand u-6tb1.56xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand u-6tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-6tb1.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand u-9tb1.112xlarge instances"
 msgstr "Insgesamt laufende On-Demand u-9tb1.112xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand u-9tb1.metal instances"
 msgstr "Insgesamt laufende On-Demand u-9tb1.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand vt1.24xlarge instances"
 msgstr "Insgesamt laufende On-Demand vt1.24xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand vt1.3xlarge instances"
 msgstr "Insgesamt laufende On-Demand vt1.3xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand vt1.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand vt1.6xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x1.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x1.32xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1.32xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x1e.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x1e.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x1e.32xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.32xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x1e.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x1e.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x1e.xlarge instances"
 msgstr "Insgesamt laufende On-Demand x1e.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.16xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.16xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.4xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.4xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.8xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.8xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.large instances"
 msgstr "Insgesamt laufende On-Demand x2gd.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.medium instances"
 msgstr "Insgesamt laufende On-Demand x2gd.medium-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.metal instances"
 msgstr "Insgesamt laufende On-Demand x2gd.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand x2gd.xlarge instances"
 msgstr "Insgesamt laufende On-Demand x2gd.xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand z1d.12xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.12xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand z1d.2xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.2xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand z1d.3xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.3xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand z1d.6xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.6xlarge-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand z1d.large instances"
 msgstr "Insgesamt laufende On-Demand z1d.large-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand z1d.metal instances"
 msgstr "Insgesamt laufende On-Demand z1d.metal-Instanzen"
 
-#, fuzzy
 msgid "Total running on-demand z1d.xlarge instances"
 msgstr "Insgesamt laufende On-Demand z1d.xlarge-Instanzen"
 
@@ -68302,9 +67545,8 @@ msgstr "Einheit"
 msgid "Unit Name"
 msgstr "Name der Einheit"
 
-#, fuzzy
 msgid "Unitrends backup and replication plug-ins (Linux)"
-msgstr "Unitrends Backup/Replikation (Linux)"
+msgstr "Unitrends Backup und Replikations-Plugins (Linux)"
 
 msgid "Unity of measurement"
 msgstr "Maßeinheit"
@@ -71685,9 +70927,9 @@ msgstr "Warnungschwellen für die Zeitversatz"
 msgid "Warning of "
 msgstr "Warnung bei "
 
-#, fuzzy, python-format
+#, python-format
 msgid "Warning of %s"
-msgstr "Warnung wenn %s"
+msgstr "Warnung ab %s"
 
 msgid "Warning starts with"
 msgstr "Warnung beginnt mit"
@@ -73547,7 +72789,6 @@ msgstr "Schlechtester Status"
 msgid "Worst state, %d nodes, restrict to %s"
 msgstr "Schlechtester Status, %d Knoten auf %s beschränken"
 
-#, fuzzy
 msgid ""
 "Worst: The check function of the plug-in will be applied to each individual "
 "node. The worst outcome will determine the overall state of the clustered "
@@ -74014,7 +73255,6 @@ msgstr ""
 "Sie eine Gruppe an Status ändern. Das Ändern von Grenzwerten hat keinen "
 "Einfluss auf den Timer."
 
-#, fuzzy
 msgid ""
 "You can configure lower thresholds for the versions of the currently "
 "deployed agent plug-ins and local checks."
@@ -74022,13 +73262,12 @@ msgstr ""
 "Sie können niedrigere Schwellwerte für die Versionen der aktuell verteilten "
 "Agenten-Plugins und lokalen Checks konfigurieren."
 
-#, fuzzy
 msgid ""
 "You can configure lower thresholds for the versions of the currently "
 "deployed agent plug-ins."
 msgstr ""
 "Sie können niedrigere Schwellwerte für die Versionen der aktuell verteilten "
-"Agent-Plugins konfigurieren."
+"Agentenplugins konfigurieren."
 
 msgid ""
 "You can configure lower thresholds for the versions of the currently "
@@ -74231,7 +73470,6 @@ msgstr ""
 "Event Console die konfigurierten Kontakte über die Regel oder erstellt eine "
 "Benachrichtigung mit leeren Kontaktinformationen."
 
-#, fuzzy
 msgid ""
 "You can make sure that the plug-in is running with a specific or a minimal "
 "version."
@@ -74255,7 +73493,6 @@ msgstr ""
 "reguläre Ausdrücke sind möglich. Ein <tt>$</tt> am Ende führt zu einer "
 "genauen Auswertung."
 
-#, fuzzy
 msgid ""
 "You can monitor database instances that are hosted on another server. This "
 "can be helpful if you want to monitoring ORACLE databases on Windows without "
@@ -74340,7 +73577,6 @@ msgstr ""
 "Sie können nur für die lokale Instanz eine lokale Verbindung konfigurieren. "
 "Die IDs ('%s' und '%s') stimmen nicht überein."
 
-#, fuzzy
 msgid ""
 "You can only configure section names here, but not choose individual check "
 "plugins. The reason for this is that the check plug-ins themselves are not "
@@ -74993,11 +74229,11 @@ msgid "You have %d <a href=\"%s\">rules</a> for deploying the update plugin"
 msgstr ""
 "Sie haben %d <a href=\"%s\">Regeln</a> um das Update-Plugin zu verteilen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "You have %d baked agents containing the update plug-in"
 msgstr "Sie haben %d gebackene Agenten, die das Update-Plugin beinhalten"
 
-#, fuzzy, python-format
+#, python-format
 msgid "You have %d rules for deploying the update plug-in"
 msgstr "Sie haben %d Regeln für die Verteilung des Update-Plugins"
 
@@ -75237,7 +74473,6 @@ msgstr ""
 "Verbindung fehlschlägt, wenn der Webserver die erforderliche HTTP-Version "
 "nicht unterstützt."
 
-#, fuzzy
 msgid ""
 "You may enter any fully qualified domain name or valid IP address here. The "
 "name must not contain any further information, like port or protocol. You "
@@ -75856,6 +75091,14 @@ msgstr "[%s] Starte Synchronisierung für Instanz"
 
 msgid "_customer_switch has an invalid format"
 msgstr "_customer_switch hat ein ungültiges Format"
+
+#, fuzzy
+msgid ""
+"`robot.yaml` is the RCC configuration file. It is specified relative to the "
+"base directory of Robot Framework projects."
+msgstr ""
+"Pfad zur Konfigurationsdatei `robot.yaml` innerhalb einer RCC-kompatiblen "
+"Robot-Suite, relativ zum Basisverzeichnis."
 
 msgid ""
 "a TCP session that is active but that has no data being transmitted by "
@@ -76559,7 +75802,7 @@ msgid "groups"
 msgstr "Gruppen"
 
 msgid "guid"
-msgstr ""
+msgstr "GUID"
 
 msgid "h"
 msgstr "h"
@@ -76623,9 +75866,8 @@ msgstr "Der Host ist UP und hat keine Service-Probleme"
 msgid "host is up but has services in warning state"
 msgstr "Der Host ist UP, aber Services sind im Warnzustand"
 
-#, fuzzy
 msgid "host names"
-msgstr "Vhost Name"
+msgstr "Host-Namen"
 
 msgid "host tags"
 msgstr "Host Tags"
@@ -77255,9 +76497,8 @@ msgstr "andere CTIO-Fehler"
 msgid "other hosts"
 msgstr "andere Hosts"
 
-#, fuzzy
 msgid "other names"
-msgstr "Name des Knotens"
+msgstr "andere Namen"
 
 msgid ""
 "our socket has closed; we are in the process of tearing down the connection"
@@ -77538,9 +76779,8 @@ msgstr[1] "Services"
 msgid "service in %s state"
 msgstr "Service im Zustand %s"
 
-#, fuzzy
 msgid "service names"
-msgstr "Service-Name"
+msgstr "Service-Namen"
 
 msgid "services"
 msgstr "Services"
@@ -77728,10 +76968,10 @@ msgid "uPnP configuration enabled"
 msgstr "uPnP-Konfiguration aktiviert"
 
 msgid "uid"
-msgstr "uid"
+msgstr "UID"
 
 msgid "uid and serialNumber"
-msgstr "uid und serialNumber"
+msgstr "UID und serialNumber"
 
 msgid "unknown"
 msgstr "unbekannt"
@@ -77934,6 +77174,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Base directory of suites"
+#~ msgstr "Basisverzeichnis der Suiten"
 
 #~ msgid "RMK ID"
 #~ msgstr "RMK-ID"

@@ -7958,8 +7958,9 @@ msgstr "Director de bază pentru <tt>plugins</tt> și <tt>local</tt>."
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Director de bază pentru datele variabile (cache-uri, fișiere de stare)"
 
-msgid "Base directory of suites"
-msgstr "Directorul de bază al suitelor"
+#, fuzzy
+msgid "Base directory of Robot Framework projects"
+msgstr "Fiecare serviciu monitorizează testele Robot Framework.\n"
 
 msgid "Base layout"
 msgstr "Schema de bază"
@@ -16576,10 +16577,10 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Depending on the libraries used in a suite, building its Python environment "
+"Depending on the libraries used in a plan, building its Python environment "
 "for the very first time can take some minutes. This setting ensures that a "
-"hanging/failing environment creation for a single suite does not block the "
-"scheduling phase of other suites."
+"hanging/failing environment creation for a single plan does not block the "
+"scheduling phase of other plans."
 msgstr ""
 "În funcție de bibliotecile utilizate într-o suită, crearea mediului Python "
 "pentru prima dată poate dura câteva minute. Această setare asigură că o "
@@ -32803,6 +32804,10 @@ msgstr "Limita de meta-date"
 msgid "Limit path levels for service names"
 msgstr "Limitarea nivelurilor de traseu pentru denumirile serviciilor"
 
+#, fuzzy
+msgid "Limit per attempt"
+msgstr "Timeout per încercare"
+
 msgid "Limit processed data"
 msgstr "Limitarea datelor prelucrate"
 
@@ -41701,12 +41706,12 @@ msgstr "Conexiuni paralele"
 msgid "Parallel connections load"
 msgstr "Sarcina conexiunilor paralele"
 
-#, fuzzy
-msgid "Parallel execution groups"
-msgstr "Grupuri de execuție a suitei"
-
 msgid "Parallel pings to send"
 msgstr "Ping-uri paralele de trimis"
+
+#, fuzzy
+msgid "Parallel plan groups"
+msgstr "Grupuri de execuție a suitei"
 
 msgid "Parallelize core config creation"
 msgstr "Crearea în paralel a configurației de bază"
@@ -41960,17 +41965,13 @@ msgstr "Calea către sapgenpse"
 msgid "Path to temporary directory (will be created)"
 msgstr "Cale de acces la directorul temporar (va fi creat)"
 
-msgid "Path to test suite"
+#, fuzzy
+msgid "Path to test suite file or folder"
 msgstr "Calea către suita de testare"
 
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
-"file, relative to the base directory."
-msgstr ""
-
-msgid ""
-"Path to the `robot.yaml` configuration file inside a RCC compatible robot "
-"suite, relative to the base directory."
+"file, relative to the base directory of Robot Framework projects."
 msgstr ""
 
 msgid "Path to unix socket"
@@ -42771,6 +42772,9 @@ msgstr "Comunicarea în text simplu este activată pentru %s."
 
 msgid "Plaintext"
 msgstr "Plaintext"
+
+msgid "Plan"
+msgstr ""
 
 msgid "Plan ID"
 msgstr ""
@@ -48986,7 +48990,7 @@ msgid "September"
 msgstr "Septembrie"
 
 #, fuzzy
-msgid "Sequential executions"
+msgid "Sequential plans"
 msgstr "Programarea execuției"
 
 msgid "Serial"
@@ -52001,9 +52005,9 @@ msgid "Specifies the default line style"
 msgstr "Specifică stilul de linie implicit"
 
 msgid ""
-"Specifies the maximum time that the scheduler allows for a robot framework "
+"Specifies the maximum time that the scheduler allows for a Robot Framework "
 "execution. This time, multiplied by the number of repeated executions, may "
-"not be greater in total with all other suites in this group than the group "
+"not be greater in total with all other plans in this group than the group "
 "execution interval."
 msgstr ""
 
@@ -55844,10 +55848,10 @@ msgid "The Port Description"
 msgstr "Descrierea portului"
 
 msgid ""
-"The Runtime-limit ratio (Peak Attempt) is calculated as <i>runtime * 100 / "
-"timeout</i>. These thresholds apply to the runtime of a single execution "
-"attempt. If there are multiple execution attempts, the thresholds apply to "
-"the longest runtime. "
+"The Runtime-limit ratio (Peak Attempt) is the longest attempt runtime in "
+"relation to the limit per attempt. These thresholds apply to the runtime of "
+"a single execution attempt. If there are multiple execution attempts, the "
+"thresholds apply to the longest runtime. "
 msgstr ""
 
 msgid ""
@@ -65034,9 +65038,6 @@ msgstr ""
 
 msgid "Timeout occured"
 msgstr "A apărut timeout"
-
-msgid "Timeout per attempt"
-msgstr "Timeout per încercare"
 
 msgid "Timeout waiting for a free channel"
 msgstr "Timeout în așteptarea unui canal liber"
@@ -76273,6 +76274,11 @@ msgid "_customer_switch has an invalid format"
 msgstr "_customer_switch are un format invalid"
 
 msgid ""
+"`robot.yaml` is the RCC configuration file. It is specified relative to the "
+"base directory of Robot Framework projects."
+msgstr ""
+
+msgid ""
 "a TCP session that is active but that has no data being transmitted by "
 "either device for a prolonged period of time"
 msgstr ""
@@ -78371,6 +78377,9 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Base directory of suites"
+#~ msgstr "Directorul de bază al suitelor"
 
 #~ msgid "Robotmk Dashboard"
 #~ msgstr "Tabloul de bord Robotmk"

@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2024-04-15 04:56+0000\n"
 "Last-Translator: hiroko toguchi <toguchi@jtc-i.co.jp>\n"
@@ -1326,9 +1326,8 @@ msgid ""
 "<br><a href='%s' target='_blank'>Read more about management boards.</a>"
 msgstr ""
 "<b>この機能は、将来のCheckmkのバージョンで非推奨となります。</b><br>もうここ"
-"で管理ボードを構成しないでください。専用のホストを使用して、<a "
-"href='%s'></a>IPMIまたはSNMP<br>を介して管理ボードを監視してください。<a "
-"href='%s' "
+"で管理ボードを構成しないでください。専用のホストを使用して、<a href='%s'></"
+"a>IPMIまたはSNMP<br>を介して管理ボードを監視してください。<a href='%s' "
 "target='_blank'>管理ボードについて詳しくはこちらをご覧ください。</a>"
 
 #, python-format
@@ -2801,7 +2800,8 @@ msgstr "着信接続の絶対数"
 msgid ""
 "Absolute path to the directory of all suites on the Windows host, for "
 "example \"C:\\robot\"."
-msgstr "Windows ホスト上のすべてのスイートのディレクトリへの絶対パス。例えば\"C:"
+msgstr ""
+"Windows ホスト上のすべてのスイートのディレクトリへの絶対パス。例えば\"C:"
 "\\robot\"。"
 
 #, fuzzy
@@ -7781,7 +7781,7 @@ msgid "Base directory for variable data (caches, state files)"
 msgstr "変数データ(キャッシュ、状態ファイル)のベースディレクトリ"
 
 #, fuzzy
-msgid "Base directory of suites"
+msgid "Base directory of Robot Framework projects"
 msgstr "サービス時間のみのベースレポート"
 
 msgid "Base layout"
@@ -16180,10 +16180,10 @@ msgstr ""
 "イプを選択するオプションがあります。"
 
 msgid ""
-"Depending on the libraries used in a suite, building its Python environment "
+"Depending on the libraries used in a plan, building its Python environment "
 "for the very first time can take some minutes. This setting ensures that a "
-"hanging/failing environment creation for a single suite does not block the "
-"scheduling phase of other suites."
+"hanging/failing environment creation for a single plan does not block the "
+"scheduling phase of other plans."
 msgstr ""
 
 msgid ""
@@ -32066,6 +32066,10 @@ msgstr "メタデータの制限"
 msgid "Limit path levels for service names"
 msgstr "サービス名のパスレベルを制限する"
 
+#, fuzzy
+msgid "Limit per attempt"
+msgstr "試みられなかった"
+
 msgid "Limit processed data"
 msgstr "処理されるデータを制限する"
 
@@ -40804,12 +40808,12 @@ msgstr "並列接続"
 msgid "Parallel connections load"
 msgstr "並列接続の負荷"
 
-#, fuzzy
-msgid "Parallel execution groups"
-msgstr "実行スケジュール"
-
 msgid "Parallel pings to send"
 msgstr "送信する並列ping"
+
+#, fuzzy
+msgid "Parallel plan groups"
+msgstr "実行スケジュール"
 
 msgid "Parallelize core config creation"
 msgstr "コア構成の作成を並列化する"
@@ -41063,17 +41067,12 @@ msgid "Path to temporary directory (will be created)"
 msgstr "一時ディレクトリへのパス(作成されます)"
 
 #, fuzzy
-msgid "Path to test suite"
+msgid "Path to test suite file or folder"
 msgstr ".envファイルへのパス"
 
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
-"file, relative to the base directory."
-msgstr ""
-
-msgid ""
-"Path to the `robot.yaml` configuration file inside a RCC compatible robot "
-"suite, relative to the base directory."
+"file, relative to the base directory of Robot Framework projects."
 msgstr ""
 
 msgid "Path to unix socket"
@@ -41873,6 +41872,9 @@ msgstr "プレーンテキスト通信が %s で有効になっている"
 
 msgid "Plaintext"
 msgstr "プレーンテキスト"
+
+msgid "Plan"
+msgstr ""
 
 msgid "Plan ID"
 msgstr ""
@@ -47990,7 +47992,7 @@ msgid "September"
 msgstr "9月"
 
 #, fuzzy
-msgid "Sequential executions"
+msgid "Sequential plans"
 msgstr "実行スケジュール"
 
 msgid "Serial"
@@ -50906,9 +50908,9 @@ msgid "Specifies the default line style"
 msgstr "デフォルトの線種を指定します"
 
 msgid ""
-"Specifies the maximum time that the scheduler allows for a robot framework "
+"Specifies the maximum time that the scheduler allows for a Robot Framework "
 "execution. This time, multiplied by the number of repeated executions, may "
-"not be greater in total with all other suites in this group than the group "
+"not be greater in total with all other plans in this group than the group "
 "execution interval."
 msgstr ""
 
@@ -54604,10 +54606,10 @@ msgid "The Port Description"
 msgstr "ポートの説明"
 
 msgid ""
-"The Runtime-limit ratio (Peak Attempt) is calculated as <i>runtime * 100 / "
-"timeout</i>. These thresholds apply to the runtime of a single execution "
-"attempt. If there are multiple execution attempts, the thresholds apply to "
-"the longest runtime. "
+"The Runtime-limit ratio (Peak Attempt) is the longest attempt runtime in "
+"relation to the limit per attempt. These thresholds apply to the runtime of "
+"a single execution attempt. If there are multiple execution attempts, the "
+"thresholds apply to the longest runtime. "
 msgstr ""
 
 msgid ""
@@ -63255,10 +63257,6 @@ msgstr "スクリプトプロセスが終了するまでの秒単位のタイム
 
 msgid "Timeout occured"
 msgstr "タイムアウトが発生しました"
-
-#, fuzzy
-msgid "Timeout per attempt"
-msgstr "試みられなかった"
 
 msgid "Timeout waiting for a free channel"
 msgstr "空きチャネルを待機しているタイムアウト"
@@ -74230,6 +74228,11 @@ msgstr "[%s] サイトの同期開始"
 
 msgid "_customer_switch has an invalid format"
 msgstr "_customer_switchの形式が無効です"
+
+msgid ""
+"`robot.yaml` is the RCC configuration file. It is specified relative to the "
+"base directory of Robot Framework projects."
+msgstr ""
 
 msgid ""
 "a TCP session that is active but that has no data being transmitted by "

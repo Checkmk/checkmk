@@ -41,16 +41,20 @@ class Config(BaseModel):
         raise ValueError("current_version must be provided either directly or via context")
 
 
-def _load_current_version(defines_make: Path) -> str:
-    with defines_make.open(encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("VERSION"):
-                version = line.split("=", 1)[1].strip()
-                return version
-    raise RuntimeError("Failed to read VERSION from defines.make")
+def try_load_current_version_from_defines_make(defines_make: Path) -> str | None:
+    try:
+        with defines_make.open(encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("VERSION"):
+                    version = line.split("=", 1)[1].strip()
+                    return version
+    except FileNotFoundError:
+        pass
+
+    return None
 
 
-def load_config(werk_config: Path, defines_make: Path) -> Config:
+def load_config(werk_config: Path, *, current_version: str | None = None) -> Config:
     data: dict[str, object] = {}
     exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
         werk_config.read_text(encoding="utf-8"), data, data
@@ -59,5 +63,5 @@ def load_config(werk_config: Path, defines_make: Path) -> Config:
     data.pop("__builtins__")
     return Config.model_validate(
         data,
-        context={"current_version": _load_current_version(defines_make)},
+        context={"current_version": current_version},
     )

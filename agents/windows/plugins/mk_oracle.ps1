@@ -236,6 +236,13 @@ Function should_exclude($exclude, $section) {
      return (($exclude -Match "ALL") -or ($exclude -Match $section))
 }
 
+<#
+    .SYNOPSIS
+        Checks that some sid is allowed
+    .DESCRIPTION
+        As for now allowed are 'Domain Admins' = 'S-1-5-32-512' and 'Enterprise Admins' 'S-1-5-32-519'.
+        The reason: those groups must not be included in Administrators group but certainly are safe.
+#>
 function Test-DomainSid([string]$sid) {
      $domain_sid_pattern = "S-1-5-(.*)-51[2,9]"
      ($sid -match $domain_sid_pattern)[0]
@@ -273,6 +280,7 @@ function Invoke-SafetyCheck( [String]$file ) {
           return
      }
 
+     # the groups are confirmed by Security team too
      $admin_sids = @(
           "S-1-5-18", # SYSTEM
           "S-1-5-32-544" # Administrators
@@ -2364,7 +2372,7 @@ if ($the_count -gt 0) {
                }
                if ($Null -ne $result) {
                     Write-Output "<<<oracle_instance:sep(124)>>>"
-                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Alternatively, you can try to run the plugin as a user using the rule 'Run plugins and local checks using non-system account' or adjust settings in 'Oracle binaries permissions checlsecurity check'."
+                    Write-Output "$ORACLE_SID|FAILURE|$result - Execution is blocked because you try to run unsafe binary as an administrator. Please, disable 'Write', 'Modify' and 'Full control' access to the the file by non-admin users. Alternatively, you can try to run the plugin as a user or run plugin as a group using the rule 'Run plugins and local checks using non-system account' or adjust settings in 'ORACLE databases (Linux, Solaris, AIX, Windows)'."
                     continue
                }
           }

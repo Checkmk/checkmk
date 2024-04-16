@@ -131,7 +131,6 @@ from cmk.base.config import (
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
-from cmk.base.parent_scan import ScanConfig
 from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser, SNMPFetcherConfig
 
@@ -859,72 +858,6 @@ modes.register(
         long_option="cleanup-piggyback",
         handler_function=mode_cleanup_piggyback,
         short_help="Cleanup outdated piggyback files",
-    )
-)
-
-# .
-#   .--scan-parents--------------------------------------------------------.
-#   |                                                         _            |
-#   |    ___  ___ __ _ _ __        _ __   __ _ _ __ ___ _ __ | |_ ___      |
-#   |   / __|/ __/ _` | '_ \ _____| '_ \ / _` | '__/ _ \ '_ \| __/ __|     |
-#   |   \__ \ (_| (_| | | | |_____| |_) | (_| | | |  __/ | | | |_\__ \     |
-#   |   |___/\___\__,_|_| |_|     | .__/ \__,_|_|  \___|_| |_|\__|___/     |
-#   |                             |_|                                      |
-#   '----------------------------------------------------------------------'
-
-
-def mode_scan_parents(options: dict, args: list[str]) -> None:
-    config.load(exclude_parents_mk=True)
-    config_cache = config.get_config_cache()
-    hosts_config = config.make_hosts_config()
-
-    max_num_processes = max(options.get("procs", config.max_num_processes), 1)
-    hosts = [HostName(hn) for hn in args]
-
-    def make_scan_config() -> Mapping[HostName, ScanConfig]:
-        return {
-            host: config_cache.make_parent_scan_config(host)
-            for host in itertools.chain(
-                hosts,
-                hosts_config.hosts,
-                ([HostName(config.monitoring_host)] if config.monitoring_host else ()),
-            )
-        }
-
-    cmk.base.parent_scan.do_scan_parents(
-        make_scan_config(),
-        hosts_config,
-        HostName(config.monitoring_host) if config.monitoring_host is not None else None,
-        hosts,
-        max_num_processes=max_num_processes,
-        lookup_ip_address=partial(config.lookup_ip_address, config_cache),
-    )
-
-
-modes.register(
-    Mode(
-        long_option="scan-parents",
-        handler_function=mode_scan_parents,
-        needs_config=False,
-        needs_checks=False,
-        argument=True,
-        argument_descr="HOST1 HOST2...",
-        argument_optional=True,
-        short_help="Autoscan parents, create conf.d/parents.mk",
-        long_help=[
-            "Uses traceroute in order to automatically detect hosts's parents. "
-            "It creates the file conf.d/parents.mk which "
-            "defines gateway hosts and parent declarations.",
-        ],
-        sub_options=[
-            Option(
-                long_option="procs",
-                argument=True,
-                argument_descr="N",
-                argument_conv=int,
-                short_help="Start up to N processes in parallel. Defaults to 50.",
-            ),
-        ],
     )
 )
 

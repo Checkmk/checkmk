@@ -20,6 +20,7 @@ from typing import Any, assert_never, cast, Final
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
+from cmk.utils.config_validation_layer.rules import validate_rule
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
@@ -415,6 +416,8 @@ class RulesetCollection:
         for varname, ruleset_config in self.get_ruleset_configs_from_file(
             folder, loaded_file_config, only_varname
         ):
+            for rule in ruleset_config:
+                validate_rule(rule)
             if not ruleset_config:
                 continue  # Nothing configured: nothing left to do
 
@@ -427,6 +430,11 @@ class RulesetCollection:
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
     ) -> None:
         store.mkdir(folder.tree.get_root_dir())
+
+        for _name, ruleset in sorted(rulesets.items()):
+            if not ruleset.is_empty_in_folder(folder):
+                for rule in ruleset.get_folder_rules(folder):
+                    validate_rule(rule.to_config())
 
         content = [
             *(

@@ -173,7 +173,15 @@ class ModeDiagnostics(WatoMode):
 
         params = self._diagnostics_parameters
         assert params is not None
-        self._job.start(lambda job_interface: self._job.do_execute(params, job_interface))
+        self._job.start(
+            lambda job_interface: self._job.do_execute(params, job_interface),
+            InitialStatusArgs(
+                title=self._job.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
 
         return redirect(self._job.detail_url())
 
@@ -605,15 +613,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         return _("Diagnostics dump")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def _back_url(self) -> str:
         return makeuri(request, [])

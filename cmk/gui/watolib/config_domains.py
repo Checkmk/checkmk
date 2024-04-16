@@ -518,7 +518,15 @@ class ConfigDomainOMD(ABCConfigDomain):
             if job.is_active():
                 raise MKUserError(None, _("Another omd config change job is already running."))
 
-            job.start(lambda job_interface: job.do_execute(config_change_commands, job_interface))
+            job.start(
+                lambda job_interface: job.do_execute(config_change_commands, job_interface),
+                InitialStatusArgs(
+                    title=job.gui_title(),
+                    lock_wato=False,
+                    stoppable=False,
+                    user=str(user.id) if user.id else None,
+                ),
+            )
         else:
             _do_config_change(config_change_commands, self._logger)
 
@@ -673,15 +681,7 @@ class OMDConfigChangeBackgroundJob(BackgroundJob):
         return _("Apply OMD config changes")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def do_execute(
         self, config_change_commands: list[str], job_interface: BackgroundProcessInterface

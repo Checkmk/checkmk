@@ -1625,7 +1625,15 @@ class ActivateChangesManager(ActivateChanges):
         job = ActivateChangesSchedulerBackgroundJob(
             self._activation_id, self._site_snapshot_settings, self._prevent_activate, self._source
         )
-        job.start(job.schedule_sites)
+        job.start(
+            job.schedule_sites,
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
 
     def _log_activation(self):
         log_msg = "Starting activation (Sites: %s)" % ",".join(self._sites)
@@ -1899,15 +1907,7 @@ class ActivationCleanupBackgroundJob(BackgroundJob):
                 The default value is 300 (seconds), which are exactly 5 minutes.
 
         """
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
         self.maximum_age = maximum_age
 
     def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
@@ -2006,7 +2006,15 @@ def execute_activation_cleanup_background_job(maximum_age: int | None = None) ->
         return
 
     try:
-        job.start(job.do_execute)
+        job.start(
+            job.do_execute,
+            InitialStatusArgs(
+                title=job.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
     except BackgroundJobAlreadyRunning:
         logger.debug("Another activation cleanup job is already running: Skipping this time")
 
@@ -2377,14 +2385,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         prevent_activate: bool,
         source: ActivationSource,
     ) -> None:
-        super().__init__(
-            f"{self.job_prefix}-{activation_id}",
-            InitialStatusArgs(
-                deletable=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(f"{self.job_prefix}-{activation_id}")
         self._activation_id = activation_id
         self._site_snapshot_settings = site_snapshot_settings
         self._prevent_activate = prevent_activate

@@ -22,7 +22,7 @@ from cmk.utils.notify_types import EventRule
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.plugin_registry import Registry
 
-from cmk.gui import background_job, userdb
+from cmk.gui import userdb
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
@@ -35,7 +35,6 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.urls import makeuri
 
 from ..config import active_config
-from ..logged_in import user
 from .audit_log import log_audit
 from .automation_commands import AutomationCommand
 from .automations import do_remote_automation
@@ -435,30 +434,13 @@ class RenameHostsBackgroundJob(BackgroundJob):
         return _("Host renaming")
 
     @classmethod
-    def status_checks(cls, title: str | None = None) -> tuple[bool, bool]:
+    def status_checks(cls) -> tuple[bool, bool]:
         instance = cls.__new__(cls)
-        super(RenameHostsBackgroundJob, instance).__init__(
-            instance.job_prefix,
-            background_job.InitialStatusArgs(
-                title=title or instance.gui_title(),
-                lock_wato=True,
-                stoppable=False,
-                estimated_duration=BackgroundJob(instance.job_prefix).get_status().duration,
-            ),
-        )
+        super(RenameHostsBackgroundJob, instance).__init__(instance.job_prefix)
         return instance.exists(), instance.is_active()
 
-    def __init__(self, title: str | None = None) -> None:
-        super().__init__(
-            self.job_prefix,
-            background_job.InitialStatusArgs(
-                title=title or self.gui_title(),
-                lock_wato=True,
-                stoppable=False,
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+    def __init__(self) -> None:
+        super().__init__(self.job_prefix)
 
         if self.is_active():
             raise BackgroundJobAlreadyRunning(
@@ -470,8 +452,8 @@ class RenameHostsBackgroundJob(BackgroundJob):
 
 
 class RenameHostBackgroundJob(RenameHostsBackgroundJob):
-    def __init__(self, host, title=None) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(title)
+    def __init__(self, host: Host) -> None:
+        super().__init__()
         self._host = host
 
     def _back_url(self):

@@ -124,7 +124,14 @@ def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
     job = DiscoveredHostLabelSyncJob()
 
     try:
-        job.start(job.do_sync)
+        job.start(
+            job.do_sync,
+            InitialStatusArgs(
+                title=DiscoveredHostLabelSyncJob.gui_title(),
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
+        )
     except BackgroundJobAlreadyRunning:
         logger.debug("Another synchronization job is already running: Skipping this sync")
 
@@ -145,14 +152,7 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
         return _("Discovered host label synchronization")
 
     def __init__(self) -> None:
-        super().__init__(
-            job_id=self.job_prefix,
-            initial_status_args=InitialStatusArgs(
-                title=self.gui_title(),
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def do_sync(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Synchronization started..."))

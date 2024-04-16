@@ -875,7 +875,16 @@ def execute_discovery_job(
         DiscoveryAction.REFRESH,
         DiscoveryAction.TABULA_RASA,
     ]:
-        job.start(lambda job_interface: job.discover(action, raise_errors=raise_errors))
+        job.start(
+            lambda job_interface: job.discover(action, raise_errors=raise_errors),
+            InitialStatusArgs(
+                title=_("Service discovery"),
+                stoppable=True,
+                host_name=str(host_name),
+                estimated_duration=job.get_status().duration,
+                user=str(user.id) if user.id else None,
+            ),
+        )
 
     if job.is_active() and action == DiscoveryAction.STOP:
         job.stop()
@@ -895,16 +904,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         return _("Service discovery")
 
     def __init__(self, host_name: HostName) -> None:
-        super().__init__(
-            f"{self.job_prefix}-{host_name}",
-            InitialStatusArgs(
-                title=_("Service discovery"),
-                stoppable=True,
-                host_name=str(host_name),
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(f"{self.job_prefix}-{host_name}")
         self.host_name: Final = host_name
 
         self._preview_store = ObjectStore(

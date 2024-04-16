@@ -53,7 +53,12 @@ def execute_userdb_job() -> None:
             enforce_sync=False,
             load_users_func=load_users,
             save_users_func=save_users,
-        )
+        ),
+        InitialStatusArgs(
+            title=job.gui_title(),
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
     )
 
 
@@ -133,7 +138,12 @@ def ajax_sync() -> None:
                     enforce_sync=True,
                     load_users_func=load_users,
                     save_users_func=save_users,
-                )
+                ),
+                InitialStatusArgs(
+                    title=job.gui_title(),
+                    stoppable=False,
+                    user=str(user.id) if user.id else None,
+                ),
             )
         except BackgroundJobAlreadyRunning as e:
             raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
@@ -153,14 +163,7 @@ class UserSyncBackgroundJob(BackgroundJob):
         return _("User synchronization")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def _back_url(self) -> str:
         return makeuri_contextless(request, [("mode", "users")], filename="wato.py")

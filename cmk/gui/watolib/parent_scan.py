@@ -66,15 +66,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         return _("Parent scan")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=_("Parent scan"),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def _back_url(self) -> str:
         return disk_or_search_folder_from_request(
@@ -329,5 +321,11 @@ def start_parent_scan(
             settings,
             [ParentScanTask(host.site_id(), host.folder().path(), host.name()) for host in hosts],
             job_interface,
-        )
+        ),
+        InitialStatusArgs(
+            title=_("Parent scan"),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
     )

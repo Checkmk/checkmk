@@ -290,7 +290,12 @@ class ModeUsers(WatoMode):
                             enforce_sync=True,
                             load_users_func=userdb.load_users,
                             save_users_func=userdb.save_users,
-                        )
+                        ),
+                        background_job.InitialStatusArgs(
+                            title=job.gui_title(),
+                            stoppable=False,
+                            user=str(user.id) if user.id else None,
+                        ),
                     )
                 except background_job.BackgroundJobAlreadyRunning as e:
                     raise MKUserError(

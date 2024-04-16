@@ -95,10 +95,7 @@ class TestCheckmkAutomationBackgroundJob:
                 stdin_data=None,
                 timeout=None,
             )
-            automations.CheckmkAutomationBackgroundJob(
-                "job_id",
-                api_request,
-            ).execute_automation(
+            automations.CheckmkAutomationBackgroundJob("job_id").execute_automation(
                 MagicMock(),
                 api_request,
             )
@@ -123,7 +120,7 @@ class TestCheckmkAutomationBackgroundJob:
                 stdin_data=None,
                 timeout=None,
             )
-            automations.CheckmkAutomationBackgroundJob("job_id", api_request).execute_automation(
+            automations.CheckmkAutomationBackgroundJob("job_id").execute_automation(
                 MagicMock(),
                 api_request,
             )

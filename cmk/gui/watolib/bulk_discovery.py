@@ -215,15 +215,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         return _("Bulk Discovery")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def _back_url(self) -> str:
         return disk_or_search_folder_from_request(
@@ -461,7 +453,13 @@ def start_bulk_discovery(
     job.start(
         lambda job_interface: job.do_execute(
             discovery_mode, do_full_scan, ignore_errors, tasks, job_interface
-        )
+        ),
+        InitialStatusArgs(
+            title=job.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
     )
 
 

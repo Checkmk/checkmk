@@ -130,15 +130,7 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
         return _("Sync remote site changes and audit log")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
         self._last_audit_log_timestamps_path = _get_last_audit_log_timestamps_path()
         self._last_audit_log_timestamps_store = LastAuditLogTimestampsStore(
             self._last_audit_log_timestamps_path
@@ -313,4 +305,12 @@ def execute_sync_remote_sites() -> None:
         logger.debug("Another 'sync remote sites' job is already running: Skipping this time.")
         return
 
-    job.start(job.do_execute)
+    job.start(
+        job.do_execute,
+        InitialStatusArgs(
+            title=SyncRemoteSitesBackgroundJob.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
+    )

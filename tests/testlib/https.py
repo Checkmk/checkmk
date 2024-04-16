@@ -45,8 +45,8 @@ class HTTPSDummy:
         self,
         address: str = "127.0.0.1",
         dns_name: str = "localhost",
-        http_port: int = 80,
-        https_port: int = 443,
+        http_port: int = 8080,
+        https_port: int = 8443,
         cert_dir: str = "/tmp",
         tries: int = 10,
     ) -> None:
@@ -104,7 +104,10 @@ class HTTPSDummy:
             )
             .add_extension(
                 x509.SubjectAlternativeName(
-                    [x509.DNSName(self.dns_name), x509.IPAddress(IPv4Address(self.address))]
+                    [
+                        x509.DNSName(self.dns_name),
+                        x509.IPAddress(IPv4Address(self.address)),
+                    ]
                 ),
                 critical=False,
             )

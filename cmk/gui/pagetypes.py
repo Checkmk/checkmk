@@ -2258,7 +2258,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
             "synthetic_monitoring": {
                 "name": "synthetic_monitoring",
                 "title": _("Synthetic Monitoring"),
-                "icon_name": "topic_synthetic_monitoring",
+                "icon_name": "synthetic_monitoring_topic",
                 "description": "",
                 "public": True,
                 "sort_index": 105,

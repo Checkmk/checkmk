@@ -1,0 +1,14 @@
+Title: Inventory: Add Windows support for Hardware > System > Uuid
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1713272987
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+This element is already available for Linux, now the windows agent also supports
+reading this value.
+
+You have to update <code>mk_inventory.vbs</code> on the monitored host, to provide the
+necessary data.

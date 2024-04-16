@@ -153,10 +153,14 @@ def test_update(  # pylint: disable=too-many-branches
             for service in base_ok_services[hostname]
             if service not in target_ok_services[hostname]
         ]
+        err_details = [
+            (s, "state: " + str(target_data[hostname][s].state), target_data[hostname][s].summary)
+            for s in not_ok_services
+        ]
         err_msg = (
             f"In the {hostname} host the following services were `OK` in base-version but not in "
             f"target-version: "
             f"{not_ok_services}"
-            f"\nDetails: {[(s, target_data[hostname][s].summary) for s in not_ok_services]})"
+            f"\nDetails: {err_details})"
         )
         assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg

@@ -1308,6 +1308,12 @@ def _register_attribute_column(
     datasources."""
     long_inventory_title = hint.long_inventory_title
 
+    inventory_path = inventory.InventoryPath(
+        path=path,
+        source=inventory.TreeSource.attributes,
+        key=key,
+    )
+
     # Declare column painter
     register_painter(
         ident,
@@ -1338,21 +1344,19 @@ def _register_attribute_column(
             "printable": True,
             "load_inv": True,
             "sorter": ident,
-            "paint": lambda row: _paint_host_inventory_attribute(row, path, key, hint),
-            "export_for_python": lambda row, cell: _compute_attribute_painter_data(row, path, key),
+            "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
+            "export_for_python": lambda row, cell: _compute_attribute_painter_data(
+                row, inventory_path
+            ),
             "export_for_csv": lambda row, cell: (
                 ""
-                if (data := _compute_attribute_painter_data(row, path, key)) is None
+                if (data := _compute_attribute_painter_data(row, inventory_path)) is None
                 else str(data)
             ),
-            "export_for_json": lambda row, cell: _compute_attribute_painter_data(row, path, key),
+            "export_for_json": lambda row, cell: _compute_attribute_painter_data(
+                row, inventory_path
+            ),
         },
-    )
-
-    inventory_path = inventory.InventoryPath(
-        path=path,
-        source=inventory.TreeSource.attributes,
-        key=key,
     )
 
     # Declare sorter. It will detect numbers automatically
@@ -1379,22 +1383,22 @@ def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
     return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
 
 
-def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
-    if (attributes := _get_attributes(row, path)) is None:
+def _compute_attribute_painter_data(row: Row, inventory_path: inventory.InventoryPath) -> SDValue:
+    if (attributes := _get_attributes(row, inventory_path.path)) is None:
         return None
-    return attributes.pairs.get(key)
+    return attributes.pairs.get(inventory_path.key)
 
 
 def _paint_host_inventory_attribute(
-    row: Row, path: SDPath, key: SDKey, hint: AttributeDisplayHint
+    row: Row, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
 ) -> CellSpec:
-    if (attributes := _get_attributes(row, path)) is None:
+    if (attributes := _get_attributes(row, inventory_path.path)) is None:
         return "", ""
     return _compute_cell_spec(
         _SDItem(
-            key,
-            attributes.pairs.get(key),
-            attributes.retentions.get(key),
+            inventory_path.key,
+            attributes.pairs.get(inventory_path.key),
+            attributes.retentions.get(inventory_path.key),
         ),
         hint,
     )

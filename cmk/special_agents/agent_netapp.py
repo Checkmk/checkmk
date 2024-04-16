@@ -90,17 +90,6 @@ Args = argparse.Namespace
 LicenseInformation = MutableMapping[str, MutableMapping[str, Any]]
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-# TODO: Couldn't we use create_urllib3_context() instead of this access violation?
-urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join(
-    [
-        "DH+3DES",
-        "DH+HIGH",
-        "ECDH+3DES",
-        "ECDH+HIGH",
-        "RSA+3DES",
-        "RSA+HIGH",
-    ]
-)
 
 # This suppress deprecated warning on older python versions
 warnings.filterwarnings("ignore")

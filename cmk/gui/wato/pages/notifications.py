@@ -862,6 +862,12 @@ class ModeNotifications(ABCNotificationsMode):
         custom_vars = dict(zip(resp[0][0], resp[0][1]))
         for key, value in custom_vars.items():
             context[f"{prefix}_{key}"] = value
+            # TODO in the context of a real notification, some variables are
+            # set two times. Why?!
+            # e.g. event_match_hosttags would not match with "_" set while
+            # user defined custom attributes would not match without.
+            # For now we just set both.
+            context[f"{prefix}{key}"] = value
 
     def _add_missing_service_context(self, context: NotificationContext) -> None:
         hostname = context["HOSTNAME"]

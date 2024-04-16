@@ -473,7 +473,13 @@ def walk_skel(
 
 # Change site specific information in files originally create from
 # skeleton files. Skip files below tmp/
-def patch_skeleton_files(conflict_mode: str, old_site: SiteContext, new_site: SiteContext) -> None:
+def patch_skeleton_files(
+    conflict_mode: str,
+    old_site: SiteContext,
+    new_site: SiteContext,
+    old_replacements: Replacements,
+    new_replacements: Replacements,
+) -> None:
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     with chdir(skelroot):  # make relative paths
         for dirpath, _dirnames, filenames in os.walk("."):
@@ -493,7 +499,15 @@ def patch_skeleton_files(conflict_mode: str, old_site: SiteContext, new_site: Si
                     os.path.isfile(src) and not os.path.islink(src) and os.path.exists(dst)
                 ):  # not deleted by user
                     try:
-                        patch_template_file(conflict_mode, src, dst, old_site, new_site)
+                        patch_template_file(
+                            conflict_mode,
+                            src,
+                            dst,
+                            old_site,
+                            new_site,
+                            old_replacements,
+                            new_replacements,
+                        )
                     except MKTerminate:
                         raise
                     except Exception as e:
@@ -505,14 +519,22 @@ def _is_unpatchable_file(path: str) -> bool:
 
 
 def patch_template_file(  # pylint: disable=too-many-branches
-    conflict_mode: str, src: str, dst: str, old_site: SiteContext, new_site: SiteContext
+    conflict_mode: str,
+    src: str,
+    dst: str,
+    old_site: SiteContext,
+    new_site: SiteContext,
+    old_replacements: Replacements,
+    new_replacements: Replacements,
 ) -> None:
     # Create patch from old instantiated skeleton file to new one
     content = Path(src).read_bytes()
-    for site in [old_site, new_site]:
-        filename = Path(f"{dst}.skel.{site.name}")
-        filename.write_bytes(replace_tags(content, site.replacements))
-        try_chown(str(filename), new_site.name)
+    filename = Path(f"{dst}.skel.{new_site.name}")
+    filename.write_bytes(replace_tags(content, new_replacements))
+    try_chown(str(filename), new_site.name)
+    filename = Path(f"{dst}.skel.{old_site.name}")
+    filename.write_bytes(replace_tags(content, old_replacements))
+    try_chown(str(filename), new_site.name)
 
     # If old and new skeleton file are identical, then do nothing
     old_orig_path = Path(f"{dst}.skel.{old_site.name}")
@@ -635,14 +657,31 @@ def patch_template_file(  # pylint: disable=too-many-branches
 # Try to merge changes from old->new version and
 # old->user version
 def merge_update_file(  # pylint: disable=too-many-branches
-    site: SiteContext, conflict_mode: str, relpath: str, old_version: str, new_version: str
+    site: SiteContext,
+    conflict_mode: str,
+    relpath: str,
+    old_version: str,
+    new_version: str,
+    old_replacements: Replacements,
+    new_replacements: Replacements,
 ) -> None:
     fn = tty.bold + relpath + tty.normal
 
     user_path = Path(site.dir, relpath)
     permissions = user_path.stat().st_mode
 
-    if _try_merge(site, conflict_mode, relpath, old_version, new_version) == 0:
+    if (
+        _try_merge(
+            site,
+            conflict_mode,
+            relpath,
+            old_version,
+            new_version,
+            old_replacements,
+            new_replacements,
+        )
+        == 0
+    ):
         # ACHTUNG: Hier müssen die Dateien $DATEI-alt, $DATEI-neu und $DATEI.orig
         # gelöscht werden
         sys.stdout.write(StateMarkers.good + " Merged         %s\n" % fn)
@@ -729,7 +768,18 @@ def merge_update_file(  # pylint: disable=too-many-branches
         elif choice == "try again":
             Path(f"{user_path}.orig").rename(user_path)
             os.system(f"{editor} '{user_path}'")  # nosec
-            if _try_merge(site, conflict_mode, relpath, old_version, new_version) == 0:
+            if (
+                _try_merge(
+                    site,
+                    conflict_mode,
+                    relpath,
+                    old_version,
+                    new_version,
+                    old_replacements,
+                    new_replacements,
+                )
+                == 0
+            ):
                 sys.stdout.write(
                     "Successfully merged changes from %s -> %s into %s\n"
                     % (old_version, new_version, fn)
@@ -757,13 +807,19 @@ def merge_update_file(  # pylint: disable=too-many-branches
 
 
 def _try_merge(
-    site: SiteContext, conflict_mode: str, relpath: str, old_version: str, new_version: str
+    site: SiteContext,
+    conflict_mode: str,
+    relpath: str,
+    old_version: str,
+    new_version: str,
+    old_replacements: Replacements,
+    new_replacements: Replacements,
 ) -> int:
     user_path = Path(site.dir, relpath)
 
-    for version, skelroot in [
-        (old_version, site.version_skel_dir),
-        (new_version, "/omd/versions/%s/skel" % new_version),
+    for version, skelroot, replacements in [
+        (old_version, site.version_skel_dir, old_replacements),
+        (new_version, "/omd/versions/%s/skel" % new_version, new_replacements),
     ]:
         p = Path(skelroot, relpath)
         while True:
@@ -793,7 +849,7 @@ def _try_merge(
                 ):
                     skel_content = b""
                     break
-        Path(f"{user_path}-{version}").write_bytes(replace_tags(skel_content, site.replacements))
+        Path(f"{user_path}-{version}").write_bytes(replace_tags(skel_content, replacements))
     version_patch = os.popen(  # nosec
         f"diff -u {user_path}-{old_version} {user_path}-{new_version}"
     ).read()
@@ -929,7 +985,8 @@ def update_file(  # pylint: disable=too-many-branches
             return
 
     new_replacements = {
-        **site.replacements,
+        "###SITE###": site.name,
+        "###ROOT###": site.dir,
         # When calling this during "omd update", the site.version and site.edition still point to
         # the original edition, because we are still in the update prcedure and the version symlink
         # has not been changed yet.
@@ -941,8 +998,8 @@ def update_file(  # pylint: disable=too-many-branches
         old_edition,
         site.dir,
         {
-            **site.replacements,
-            "###EDITION###": old_edition,
+            "###SITE###": site.name,
+            "###ROOT###": site.dir,
         },
     )
 
@@ -1124,7 +1181,15 @@ def update_file(  # pylint: disable=too-many-branches
     # 7) old, new and user are files. And all are different
     elif old_type == "file" and new_type == "file" and user_type == "file":
         try:
-            merge_update_file(site, conflict_mode, relpath, old_version, new_version)
+            merge_update_file(
+                site,
+                conflict_mode,
+                relpath,
+                old_version,
+                new_version,
+                old_replacements,
+                new_replacements,
+            )
         except KeyboardInterrupt:
             raise
         except MKTerminate:
@@ -2636,7 +2701,9 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     chown_tree(new_site.dir, new_site.name)
 
     # Change config files from old to new site (see rename_site())
-    patch_skeleton_files(conflict_mode, old_site, new_site)
+    patch_skeleton_files(
+        conflict_mode, old_site, new_site, old_site.replacements, new_site.replacements
+    )
 
     # In case of mv now delete old user
     if command_type is CommandType.move and not reuse:
@@ -3573,7 +3640,9 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     # Change config files from old to new site (see rename_site())
     if sitename != site.name:
         old_site = SiteContext(sitename)
-        patch_skeleton_files(_get_conflict_mode(options), old_site, site)
+        patch_skeleton_files(
+            _get_conflict_mode(options), old_site, site, old_site.replacements, site.replacements
+        )
 
     # Now switch over to the new site as currently active site
     os.chdir(site.dir)

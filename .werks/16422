@@ -1,0 +1,19 @@
+Title: omd update: Fix Checkmk Free Edition Crash
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1713275522
+Edition: cre
+Level: 1
+Version: 2.2.0p25
+
+While upgrading from the 2.1.0 Checkmk Free Edition to a 2.2.0 Checkmk Enterprise Edition, the
+following crash occured and the update failed:
+
+C+:
+  File "/omd/versions/2.2.0p21.cce/lib/python3.11/enum.py", line 790, in __getitem__
+    return cls._member_map_[name]
+KeyError: 'CFE'
+C-:
+
+This crash is now fixed.

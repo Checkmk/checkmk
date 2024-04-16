@@ -10,12 +10,10 @@ import sys
 from typing import NamedTuple
 
 import requests
-import urllib3
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 import cmk.utils.password_store
 
-urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 cmk.utils.password_store.replace_passwords()
 
 

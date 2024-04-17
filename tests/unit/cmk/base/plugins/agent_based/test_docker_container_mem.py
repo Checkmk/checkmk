@@ -56,6 +56,7 @@ def test_parse_container_mem_docker_plugin() -> None:
     be parsed corretly
     """
     result = parse_docker_container_mem(PLUGIN_OUTPUT_MEM_NO_LIMIT)
+    assert result is not None
     assert result == {"MemFree": 3611148288, "MemTotal": 4667232256}
     # compare to output of docker stats:
     assert round(result["MemTotal"] / 1024 / 1024 / 1.024) / 1000 == 4.347
@@ -67,10 +68,25 @@ def test_parse_container_mem_docker_plugin_with_limit() -> None:
     same as above, but with a 500MiB memory limit set via `-m` on `docker run`
     """
     result = parse_docker_container_mem(PLUGIN_OUTPUT_MEM_LIMIT)
+    assert result is not None
     assert result == {"MemFree": 119451648, "MemTotal": 524288000}
     # compare to output of docker stats:
     assert round(result["MemTotal"] / 1024 / 1024) == 500
     assert round((result["MemTotal"] - result["MemFree"]) / 1024 / 102.4) / 10 == 386.1
+
+
+def test_parse_container_mem_docker_plugin_with_no_version_and_empty_data() -> None:
+    """
+    test if the plugin can handle empty data and does not crash
+    """
+    partial_empty_output = [
+        ["usage_in_bytes", "121810944"],
+        ["limit_in_bytes", "9223372036854771712"],
+        ["total_inactive_file"],
+        ["MemTotal:", "65660592", "kB"],
+    ]
+    result = parse_docker_container_mem(partial_empty_output)
+    assert result is None
 
 
 MK_DOCKER_CONTAINER_MEM_CGROUPV1 = [

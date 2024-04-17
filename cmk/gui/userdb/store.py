@@ -243,7 +243,7 @@ def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branch
         ("ui_theme", lambda x: x),
         ("two_factor_credentials", ast.literal_eval),
         ("ui_sidebar_position", lambda x: None if x == "None" else x),
-        ("ui_saas_onboarding_button_toggle", lambda x: x),
+        ("ui_saas_onboarding_button_toggle", lambda x: None if x == "None" else x),
         ("last_login", ast.literal_eval),
     ]
 

@@ -5,7 +5,6 @@
 
 """The user profile mega menu and related AJAX endpoints"""
 
-
 import cmk.utils.version as cmk_version
 
 from cmk.gui.exceptions import MKUserError
@@ -40,21 +39,23 @@ def _get_current_theme_title() -> str:
 def _get_sidebar_position() -> str:
     assert user.id is not None
     sidebar_position = load_custom_attr(
-        user_id=user.id, key="ui_sidebar_position", parser=lambda x: None if x == "None" else "left"
+        user_id=user.id,
+        key="ui_sidebar_position",
+        parser=lambda x: None if x == "None" else "left",
     )
 
     return sidebar_position or "right"
 
 
-def _get_saas_onboarding_visibility_status() -> str:
+def _get_saas_onboarding_visibility_status() -> str | None:
     assert user.id is not None
     saas_onboarding_button_toggle = load_custom_attr(
         user_id=user.id,
         key="ui_saas_onboarding_button_toggle",
-        parser=lambda x: x,
+        parser=lambda x: None if x == "None" else x,
     )
 
-    return saas_onboarding_button_toggle or "visible"
+    return saas_onboarding_button_toggle
 
 
 def _sidebar_position_title(stored_value: str) -> str:
@@ -98,7 +99,7 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
                 icon="sidebar_position",
                 button_title=(
                     _("Visible")
-                    if _get_saas_onboarding_visibility_status() == "visible"
+                    if _get_saas_onboarding_visibility_status() is None
                     else _("Invisible")
                 ),
             ),
@@ -225,7 +226,7 @@ class ModeAjaxCycleSaasOnboardingButtonToggle(AjaxPage):
         check_csrf_token()
         _set_user_attribute(
             "ui_saas_onboarding_button_toggle",
-            ("visible" if _get_saas_onboarding_visibility_status() == "invisible" else "invisible"),
+            (None if _get_saas_onboarding_visibility_status() == "invisible" else "invisible"),
         )
         return {}
 

@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
 
-from marshmallow import fields, pre_dump
+from marshmallow import pre_dump
 from marshmallow_oneofschema import OneOfSchema
 
 from livestatus import SiteId
@@ -20,6 +20,7 @@ from cmk.utils.statename import host_state_name, service_state_name
 
 from cmk.checkengine.submitters import ServiceState  # pylint: disable=cmk-module-layer-violation
 
+from cmk import fields
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.lib import (
     ABCBIAggregationFunction,
@@ -283,8 +284,8 @@ class BICompiledLeaf(ABCBICompiledNode):
 
 
 class BISiteHostPairSchema(Schema):
-    site_id = ReqString()
-    host_name = ReqString()
+    site_id = ReqString(description="Site ID.")
+    host_name = ReqString(description="Host name.")
 
     @pre_dump
     def pre_dumper(self, obj: tuple, many: bool = False) -> dict:
@@ -293,11 +294,11 @@ class BISiteHostPairSchema(Schema):
 
 
 class BICompiledLeafSchema(Schema):
-    type = ReqConstant(BICompiledLeaf.kind())
-    required_hosts = ReqList(fields.Nested(BISiteHostPairSchema))
-    site_id = ReqString()
-    host_name = ReqString()
-    service_description = fields.String()
+    type = ReqConstant(BICompiledLeaf.kind(), description="Leaf node of the tree.")
+    required_hosts = ReqList(fields.Nested(BISiteHostPairSchema), description="List of hosts.")
+    site_id = ReqString(description="Site ID.")
+    host_name = ReqString(description="Host name.")
+    service_description = fields.String(description="Service description.")
 
 
 #   .--Rule----------------------------------------------------------------.
@@ -477,19 +478,22 @@ class BICompiledRule(ABCBICompiledNode):
 
 
 class BICompiledRuleSchema(Schema):
-    id = ReqString()
-    pack_id = ReqString()
-    type = ReqConstant(BICompiledRule.kind())
-    required_hosts = ReqList(fields.Nested(BISiteHostPairSchema))
-    nodes = ReqList(fields.Nested("BIResultSchema"))
+    id = ReqString(description="Rule ID.")
+    pack_id = ReqString(description="Pack ID.")
+    type = ReqConstant(BICompiledRule.kind(), description="Compiled rule.")
+    required_hosts = ReqList(fields.Nested(BISiteHostPairSchema), description="Required hosts.")
+    nodes = ReqList(fields.Nested("BIResultSchema"), description="Child nodes.")
     aggregation_function = ReqNested(
         BIAggregationFunctionSchema,
         example={"type": "worst", "count": 2, "restrict_state": 1},
+        description="Aggregation function.",
     )
     node_visualization = ReqNested(
-        BINodeVisLayoutStyleSchema, example=BINodeVisBlockStyleSchema().dump({})
+        BINodeVisLayoutStyleSchema,
+        example=BINodeVisBlockStyleSchema().dump({}),
+        description="Node visualization.",
     )
-    properties = ReqNested("BIRulePropertiesSchema", example={})
+    properties = ReqNested("BIRulePropertiesSchema", example={}, description="Rule properties.")
 
 
 #   .--Remaining-----------------------------------------------------------.
@@ -732,17 +736,20 @@ class BICompiledAggregation:
 
 
 class BICompiledAggregationSchema(Schema):
-    id = ReqString()
-    branches = ReqList(fields.Nested(BICompiledRuleSchema))
-    aggregation_visualization = ReqNested(BIAggregationVisualizationSchema)
+    id = ReqString(description="Aggregation ID.")
+    branches = ReqList(fields.Nested(BICompiledRuleSchema), description="List of rules.")
+    aggregation_visualization = ReqNested(
+        BIAggregationVisualizationSchema, description="Aggregation visualization."
+    )
     computation_options = create_nested_schema_for_class(
         BIAggregationComputationOptions,
         example_config={"disabled": True},
+        description="Computation options.",
     )
-
     groups = create_nested_schema_for_class(
         BIAggregationGroups,
         example_config={"names": ["groupA", "groupB"], "paths": [["path", "group", "a"]]},
+        description="Groups.",
     )
 
 

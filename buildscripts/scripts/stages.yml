@@ -259,8 +259,13 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-file-content-junit.xml --color=no"
-        CHANGED_FILES_REL: "${CHANGED_FILES_REL}"
-      COMMAND: "make test-file-content-docker"
+      # ${CHANGED_FILES_REL} can be huge, so we use a file to transport the list
+      # to the pytest command. This will be tidied up with CMK-17048
+      COMMAND: |
+          CHANGED_FILES_REL_FILE=$(mktemp)
+          echo "${CHANGED_FILES_REL}" > $CHANGED_FILES_REL_FILE
+          trap "rm -f $CHANGED_FILES_REL_FILE" EXIT
+          make test-file-content-docker
       TEXT_ON_SKIP: 'No files changed'
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-file-content-junit.xml"

@@ -322,10 +322,10 @@ test-pipfile-docker:
 	../scripts/run-in-docker.sh make --quiet test-pipfile
 
 test-file-content:
-	if test -z "$$CHANGED_FILES_REL"; then \
+	if test -z "$$CHANGED_FILES_REL_FILE"; then \
 	    $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
 	else \
-	    echo "$$CHANGED_FILES_REL" | xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
 	fi \
 
 test-file-content-docker:

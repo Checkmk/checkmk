@@ -334,7 +334,7 @@ class ModePatternEditor(WatoMode):
                         table.cell(_("Comment"), comment)
                         table.cell(_("Matched line"), disp_match_txt)
 
-                    table.row(fixed=True)
+                    table.row(fixed=True, collect_headers=False)
                     table.cell(colspan=7)
                     edit_url = folder_preserving_link(
                         [

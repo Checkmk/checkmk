@@ -1,0 +1,17 @@
+Title: Logfile pattern analyzer: Fix crash for first rule without regex pattern
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1713341414
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+
+The "Logfile pattern analyzer" page crashed when the first "Logfile pattern" rule in place did not hold a regex pattern and a later rule did hold a regex pattern.
+The rendering of the table of rules would crash with
+
+C+:
+Internal error: list index out of range
+C-:
+
+This is fixed and all rules are rendered as expected.

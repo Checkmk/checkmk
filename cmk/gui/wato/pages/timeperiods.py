@@ -123,7 +123,8 @@ class ICalEvent(Event):
 
     @property
     def _timerange_to(self) -> str:
-        if self._duration == timedelta(days=1):
+        duration = self._duration
+        if duration.days >= 1 and duration.seconds == 0 and duration.microseconds == 0:
             return "24:00"
 
         return (self.dtstart_dt + self._duration).strftime("%H:%M")
@@ -144,6 +145,48 @@ class ICalEvent(Event):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({super().__repr__()})"
+
+    def to_timeperiod_exception(self) -> dict[str, TimeperiodUsage]:
+        """An event can take several days. Moreover, it does not necessarily have to take up the whole day.
+        This method returns a dict that relates each of the days involved to the corresponding time slot.
+
+        Examples:
+        From 2024-08-01 00:00
+        To 2024-08-02 00:00:00
+        Output {'2024-08-01': ("00:00", "24:00")}
+
+        From 2024-08-01 12:00:00
+        To 2024-08-03 12:00:00
+        Output {'2024-08-01': ("12:00", "24:00"), '2024-08-02': ("00:00", "24:00"), '2024-8-03': ("00:00", "12:00")}
+
+        From 2024-08-01 09:00
+        To 2024-08-01 18:00
+        Output {'2024-08-01': ("09:00", "18:00")}
+
+        """
+        start_date = self.dtstart_dt
+        event_lenght = self._duration
+        end_date = start_date + event_lenght
+        end_date_str = end_date.strftime("%Y-%m-%d")
+
+        result: dict[str, tuple[str, str]] = {}
+        current_day = start_date
+        current_time_start = start_date.strftime("%H:%M")
+        current_time_end = "24:00"
+
+        while current_day.date() <= end_date.date():
+            current_day_str = current_day.strftime("%Y-%m-%d")
+            if current_day_str == end_date_str and (end_date.hour == 0 and end_date.minute == 0):
+                break
+
+            if current_day_str == end_date_str:
+                current_time_end = end_date.strftime("%H:%M")
+
+            result[current_day_str] = (current_time_start, current_time_end)
+            current_day += timedelta(days=1)
+            current_time_start = "00:00"
+
+        return result
 
 
 class ModeTimeperiods(WatoMode):
@@ -395,7 +438,8 @@ class ModeTimeperiodImportICal(WatoMode):
         # but currently more than 75 events is too many and causes an ISE. See CMK-14051.
         # For now, we are limiting events to only the current calendar year.
 
-        event_map: dict[datetime, ICalEvent] = {}
+        exception_map: dict[str, list[TimeperiodUsage]] = {}
+
         for e in recurring_ical_events.of(cal_obj).between(
             date.today(), date(date.today().year + 1, 1, 1)
         ):
@@ -403,11 +447,17 @@ class ModeTimeperiodImportICal(WatoMode):
             if ice.dtstart_dt is None:
                 continue
 
-            if existing_event := event_map.get(ice.dtstart_dt):
-                existing_event.add_timerange(ice.timerange)
-                continue
+            exceptions = ice.to_timeperiod_exception()
+            for dt, timerange in exceptions.items():
+                if existing_event := exception_map.get(dt):
+                    existing_event.append(timerange)
+                    continue
+                exception_map[dt] = [timerange]
 
-            event_map[ice.dtstart_dt] = ice
+        # If a time period exception has the full day, we can ignore the others (if available)
+        for exception in exception_map:
+            if ("00:00", "24:00") in exception_map[exception]:
+                exception_map[exception] = [("00:00", "24:00")]
 
         get_vars = {
             "timeperiod_p_alias": str(
@@ -419,18 +469,21 @@ class ModeTimeperiodImportICal(WatoMode):
             get_vars["%s_0_from" % day] = ""
             get_vars["%s_0_until" % day] = ""
 
-        get_vars["timeperiod_p_exceptions_count"] = "%d" % len(event_map)
+        get_vars["timeperiod_p_exceptions_count"] = "%d" % len(exception_map)
 
-        for index, event in enumerate(dict(sorted(event_map.items())).values(), 1):
-            get_vars["timeperiod_p_exceptions_%d_0" % index] = event.dtstart_str
+        index = 1
+        for dtstart_str, timeranges in sorted(exception_map.items()):
+            get_vars["timeperiod_p_exceptions_%d_0" % index] = dtstart_str
             get_vars["timeperiod_p_exceptions_indexof_%d" % index] = "%d" % index
             get_vars["timeperiod_p_exceptions_%d_1_count" % index] = "%d" % len(
-                event.timeranges
+                timeranges
             )  # "1"  # "%d" % len(ical["times"])
-            for n, (timerange_from, timerange_to) in enumerate(event.timeranges, 1):
+            for n, (timerange_from, timerange_to) in enumerate(timeranges, 1):
                 get_vars["timeperiod_p_exceptions_%d_1_%d_from" % (index, n)] = timerange_from
                 get_vars["timeperiod_p_exceptions_%d_1_%d_until" % (index, n)] = timerange_to
                 get_vars["timeperiod_p_exceptions_%d_1_indexof_%d" % (index, n)] = "%d" % index
+
+            index += 1
 
         for var, val in get_vars.items():
             request.set_var(var, val)

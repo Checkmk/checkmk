@@ -769,7 +769,7 @@ class EmailAndDisplayName(BaseSchema):
     address = fields.String(
         required=False,
         description="",
-        example="mat@tribe29.com",
+        example="mail@example.com",
     )
     display_name = fields.String(
         required=False,

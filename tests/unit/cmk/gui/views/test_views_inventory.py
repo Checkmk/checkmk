@@ -40,9 +40,9 @@ from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
     _decorate_sort_function,
-    _DeltaTreeValueInfo,
-    _InventoryTreeValueInfo,
     _register_sorter,
+    _SDDeltaItem,
+    _SDItem,
     _sort_delta_pairs,
     _sort_delta_rows,
     _sort_pairs,
@@ -505,18 +505,18 @@ def test_make_node_displayhint_from_hint(
             ),
             [
                 [
-                    _InventoryTreeValueInfo("sid", "SID 1", None),
-                    _InventoryTreeValueInfo("changed", None, None),
-                    _InventoryTreeValueInfo("foo", None, None),
-                    _InventoryTreeValueInfo("flashback", "Flashback 1", None),
-                    _InventoryTreeValueInfo("other", "Other 1", None),
+                    _SDItem("sid", "SID 1", None),
+                    _SDItem("changed", None, None),
+                    _SDItem("foo", None, None),
+                    _SDItem("flashback", "Flashback 1", None),
+                    _SDItem("other", "Other 1", None),
                 ],
                 [
-                    _InventoryTreeValueInfo("sid", "SID 2", RetentionInterval(1, 2, 3, "previous")),
-                    _InventoryTreeValueInfo("changed", None, None),
-                    _InventoryTreeValueInfo("foo", None, None),
-                    _InventoryTreeValueInfo("flashback", "Flashback 2", None),
-                    _InventoryTreeValueInfo("other", "Other 2", None),
+                    _SDItem("sid", "SID 2", RetentionInterval(1, 2, 3, "previous")),
+                    _SDItem("changed", None, None),
+                    _SDItem("foo", None, None),
+                    _SDItem("flashback", "Flashback 2", None),
+                    _SDItem("other", "Other 2", None),
                 ],
             ],
         ),
@@ -524,7 +524,7 @@ def test_make_node_displayhint_from_hint(
 )
 def test_sort_table_rows_displayhint(
     table: ImmutableTable,
-    expected: Sequence[Sequence[_InventoryTreeValueInfo]],
+    expected: Sequence[Sequence[_SDItem]],
 ) -> None:
     assert (
         _sort_rows(
@@ -565,18 +565,18 @@ def test_sort_table_rows_displayhint(
             ),
             [
                 [
-                    _DeltaTreeValueInfo(SDKey("sid"), "SID 1", None),
-                    _DeltaTreeValueInfo(SDKey("changed"), "Changed 11", "Changed 12"),
-                    _DeltaTreeValueInfo(SDKey("foo"), None, None),
-                    _DeltaTreeValueInfo(SDKey("flashback"), None, "Flashback 1"),
-                    _DeltaTreeValueInfo(SDKey("other"), "Other 1", "Other 1"),
+                    _SDDeltaItem(SDKey("sid"), "SID 1", None),
+                    _SDDeltaItem(SDKey("changed"), "Changed 11", "Changed 12"),
+                    _SDDeltaItem(SDKey("foo"), None, None),
+                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 1"),
+                    _SDDeltaItem(SDKey("other"), "Other 1", "Other 1"),
                 ],
                 [
-                    _DeltaTreeValueInfo(SDKey("sid"), "SID 2", None),
-                    _DeltaTreeValueInfo(SDKey("changed"), "Changed 21", "Changed 22"),
-                    _DeltaTreeValueInfo(SDKey("foo"), None, None),
-                    _DeltaTreeValueInfo(SDKey("flashback"), None, "Flashback 2"),
-                    _DeltaTreeValueInfo(SDKey("other"), "Other 2", "Other 2"),
+                    _SDDeltaItem(SDKey("sid"), "SID 2", None),
+                    _SDDeltaItem(SDKey("changed"), "Changed 21", "Changed 22"),
+                    _SDDeltaItem(SDKey("foo"), None, None),
+                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 2"),
+                    _SDDeltaItem(SDKey("other"), "Other 2", "Other 2"),
                 ],
             ],
         ),
@@ -584,7 +584,7 @@ def test_sort_table_rows_displayhint(
 )
 def test_sort_deltatable_rows_displayhint(
     delta_table: ImmutableDeltaTable,
-    expected: Sequence[Sequence[_DeltaTreeValueInfo]],
+    expected: Sequence[Sequence[_SDDeltaItem]],
 ) -> None:
     assert (
         _sort_delta_rows(
@@ -747,17 +747,17 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 retentions={SDKey("c"): RetentionInterval(1, 2, 3, "previous")},
             ),
             [
-                _InventoryTreeValueInfo(SDKey("a"), "A", None),
-                _InventoryTreeValueInfo(SDKey("b"), "B", None),
-                _InventoryTreeValueInfo(SDKey("d"), "D", None),
-                _InventoryTreeValueInfo(SDKey("c"), "C", RetentionInterval(1, 2, 3, "previous")),
+                _SDItem(SDKey("a"), "A", None),
+                _SDItem(SDKey("b"), "B", None),
+                _SDItem(SDKey("d"), "D", None),
+                _SDItem(SDKey("c"), "C", RetentionInterval(1, 2, 3, "previous")),
             ],
         ),
     ],
 )
 def test_sort_attributes_pairs_displayhint(
     attributes: ImmutableAttributes,
-    expected: Sequence[_InventoryTreeValueInfo],
+    expected: Sequence[_SDItem],
 ) -> None:
     assert _sort_pairs(attributes, [SDKey("a"), SDKey("b"), SDKey("d"), SDKey("c")]) == expected
 
@@ -776,17 +776,17 @@ def test_sort_attributes_pairs_displayhint(
                 }
             ),
             [
-                _DeltaTreeValueInfo(SDKey("a"), "A1", "A2"),
-                _DeltaTreeValueInfo(SDKey("b"), "B", None),
-                _DeltaTreeValueInfo(SDKey("d"), None, "D"),
-                _DeltaTreeValueInfo(SDKey("c"), "C", "C"),
+                _SDDeltaItem(SDKey("a"), "A1", "A2"),
+                _SDDeltaItem(SDKey("b"), "B", None),
+                _SDDeltaItem(SDKey("d"), None, "D"),
+                _SDDeltaItem(SDKey("c"), "C", "C"),
             ],
         ),
     ],
 )
 def test_sort_delta_attributes_pairs_displayhint(
     delta_attributes: ImmutableDeltaAttributes,
-    expected: Sequence[_DeltaTreeValueInfo],
+    expected: Sequence[_SDDeltaItem],
 ) -> None:
     assert (
         _sort_delta_pairs(delta_attributes, [SDKey("a"), SDKey("b"), SDKey("d"), SDKey("c")])

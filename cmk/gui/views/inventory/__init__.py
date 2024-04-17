@@ -1391,7 +1391,7 @@ def _paint_host_inventory_attribute(
     if (attributes := _get_attributes(row, path)) is None:
         return "", ""
     return _compute_cell_spec(
-        _InventoryTreeValueInfo(
+        _SDItem(
             key,
             attributes.pairs.get(key),
             attributes.retentions.get(key),
@@ -1404,7 +1404,7 @@ def _paint_host_inventory_column(row: Row, column: str, hint: ColumnDisplayHint)
     if column not in row:
         return "", ""
     return _compute_cell_spec(
-        _InventoryTreeValueInfo(
+        _SDItem(
             SDKey(column),
             row[column],
             row.get("_".join([column, "retention_interval"])),
@@ -2175,33 +2175,26 @@ class _MinType:
         return self is other
 
 
-class _InventoryTreeValueInfo(NamedTuple):
+class _SDItem(NamedTuple):
     key: SDKey
     value: SDValue
     retention_interval: RetentionInterval | None
 
 
-def _sort_pairs(
-    attributes: ImmutableAttributes, key_order: Sequence[SDKey]
-) -> Sequence[_InventoryTreeValueInfo]:
+def _sort_pairs(attributes: ImmutableAttributes, key_order: Sequence[SDKey]) -> Sequence[_SDItem]:
     sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
     return [
-        _InventoryTreeValueInfo(k, attributes.pairs[k], attributes.retentions.get(k))
+        _SDItem(k, attributes.pairs[k], attributes.retentions.get(k))
         for k in sorted_keys
         if k in attributes.pairs
     ]
 
 
-def _sort_rows(
-    table: ImmutableTable, columns: Sequence[SDKey]
-) -> Sequence[Sequence[_InventoryTreeValueInfo]]:
+def _sort_rows(table: ImmutableTable, columns: Sequence[SDKey]) -> Sequence[Sequence[_SDItem]]:
     def _sort_row(
         ident: SDRowIdent, row: Mapping[SDKey, SDValue], columns: Sequence[SDKey]
-    ) -> Sequence[_InventoryTreeValueInfo]:
-        return [
-            _InventoryTreeValueInfo(c, row.get(c), table.retentions.get(ident, {}).get(c))
-            for c in columns
-        ]
+    ) -> Sequence[_SDItem]:
+        return [_SDItem(c, row.get(c), table.retentions.get(ident, {}).get(c)) for c in columns]
 
     min_type = _MinType()
 
@@ -2215,7 +2208,7 @@ def _sort_rows(
     ]
 
 
-class _DeltaTreeValueInfo(NamedTuple):
+class _SDDeltaItem(NamedTuple):
     key: SDKey
     old: SDValue
     new: SDValue
@@ -2223,10 +2216,10 @@ class _DeltaTreeValueInfo(NamedTuple):
 
 def _sort_delta_pairs(
     attributes: ImmutableDeltaAttributes, key_order: Sequence[SDKey]
-) -> Sequence[_DeltaTreeValueInfo]:
+) -> Sequence[_SDDeltaItem]:
     sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
     return [
-        _DeltaTreeValueInfo(k, attributes.pairs[k].old, attributes.pairs[k].new)
+        _SDDeltaItem(k, attributes.pairs[k].old, attributes.pairs[k].new)
         for k in sorted_keys
         if k in attributes.pairs
     ]
@@ -2234,12 +2227,12 @@ def _sort_delta_pairs(
 
 def _sort_delta_rows(
     table: ImmutableDeltaTable, columns: Sequence[SDKey]
-) -> Sequence[Sequence[_DeltaTreeValueInfo]]:
+) -> Sequence[Sequence[_SDDeltaItem]]:
     def _sort_row(
         row: Mapping[SDKey, SDDeltaValue], columns: Sequence[SDKey]
-    ) -> Sequence[_DeltaTreeValueInfo]:
+    ) -> Sequence[_SDDeltaItem]:
         return [
-            _DeltaTreeValueInfo(c, v.old, v.new)
+            _SDDeltaItem(c, v.old, v.new)
             for c in columns
             for v in (row.get(c) or SDDeltaValue(None, None),)
         ]
@@ -2266,24 +2259,22 @@ def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHi
 
 
 def _compute_cell_spec(
-    value_info: _InventoryTreeValueInfo,
+    item: _SDItem,
     hint: AttributeDisplayHint | ColumnDisplayHint,
 ) -> tuple[str, HTML]:
     # TODO separate tdclass from rendered value
-    tdclass, code = hint.paint_function(value_info.value)
+    tdclass, code = hint.paint_function(item.value)
     html_value = HTML(code)
     if (
         not html_value
-        or value_info.retention_interval is None
-        or value_info.retention_interval.source == "current"
+        or item.retention_interval is None
+        or item.retention_interval.source == "current"
     ):
         return tdclass, html_value
 
     now = int(time.time())
-    valid_until = (
-        value_info.retention_interval.cached_at + value_info.retention_interval.cache_interval
-    )
-    keep_until = valid_until + value_info.retention_interval.retention_interval
+    valid_until = item.retention_interval.cached_at + item.retention_interval.cache_interval
+    keep_until = valid_until + item.retention_interval.retention_interval
     if now > keep_until:
         return (
             tdclass,
@@ -2305,7 +2296,7 @@ def _compute_cell_spec(
                 html_value,
                 title=_("Data was provided at %s and is considered valid until %s")
                 % (
-                    cmk.utils.render.date_and_time(value_info.retention_interval.cached_at),
+                    cmk.utils.render.date_and_time(item.retention_interval.cached_at),
                     cmk.utils.render.date_and_time(keep_until),
                 ),
                 css=["muted_text"],
@@ -2314,37 +2305,37 @@ def _compute_cell_spec(
     return tdclass, html_value
 
 
-def _show_value(
-    value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
+def _show_item(
+    item: _SDItem | _SDDeltaItem,
     hint: AttributeDisplayHint | ColumnDisplayHint,
 ) -> None:
-    if isinstance(value_info, _DeltaTreeValueInfo):
-        _show_delta_value(value_info, hint)
+    if isinstance(item, _SDDeltaItem):
+        _show_delta_value(item, hint)
         return
-    html.write_html(_compute_cell_spec(value_info, hint)[1])
+    html.write_html(_compute_cell_spec(item, hint)[1])
 
 
 def _show_delta_value(
-    value_info: _DeltaTreeValueInfo,
+    item: _SDDeltaItem,
     hint: AttributeDisplayHint | ColumnDisplayHint,
 ) -> None:
-    if value_info.old is None and value_info.new is not None:
+    if item.old is None and item.new is not None:
         html.open_span(class_="invnew")
-        html.write_html(_get_html_value(value_info.new, hint))
+        html.write_html(_get_html_value(item.new, hint))
         html.close_span()
-    elif value_info.old is not None and value_info.new is None:
+    elif item.old is not None and item.new is None:
         html.open_span(class_="invold")
-        html.write_html(_get_html_value(value_info.old, hint))
+        html.write_html(_get_html_value(item.old, hint))
         html.close_span()
-    elif value_info.old == value_info.new:
-        html.write_html(_get_html_value(value_info.old, hint))
-    elif value_info.old is not None and value_info.new is not None:
+    elif item.old == item.new:
+        html.write_html(_get_html_value(item.old, hint))
+    elif item.old is not None and item.new is not None:
         html.open_span(class_="invold")
-        html.write_html(_get_html_value(value_info.old, hint))
+        html.write_html(_get_html_value(item.old, hint))
         html.close_span()
         html.write_text(" → ")
         html.open_span(class_="invnew")
-        html.write_html(_get_html_value(value_info.new, hint))
+        html.write_html(_get_html_value(item.new, hint))
         html.close_span()
     else:
         raise NotImplementedError()
@@ -2442,7 +2433,7 @@ class TreeRenderer:
     def _show_attributes(
         self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
     ) -> None:
-        sorted_pairs: Sequence[_InventoryTreeValueInfo] | Sequence[_DeltaTreeValueInfo]
+        sorted_pairs: Sequence[_SDItem] | Sequence[_SDDeltaItem]
         key_order = [SDKey(k) for k in hints.attributes_hint.key_order]
         if isinstance(attributes, ImmutableAttributes):
             sorted_pairs = _sort_pairs(attributes, key_order)
@@ -2450,12 +2441,12 @@ class TreeRenderer:
             sorted_pairs = _sort_delta_pairs(attributes, key_order)
 
         html.open_table()
-        for value_info in sorted_pairs:
-            attr_hint = hints.get_attribute_hint(value_info.key)
+        for item in sorted_pairs:
+            attr_hint = hints.get_attribute_hint(item.key)
             html.open_tr()
-            html.th(self._get_header(attr_hint.title, value_info.key))
+            html.th(self._get_header(attr_hint.title, item.key))
             html.open_td()
-            _show_value(value_info, attr_hint)
+            _show_item(item, attr_hint)
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -2484,9 +2475,7 @@ class TreeRenderer:
             )
 
         columns = _make_columns(table.rows, [SDKey(k) for k in hints.table_hint.key_order])
-        sorted_rows: (
-            Sequence[Sequence[_InventoryTreeValueInfo]] | Sequence[Sequence[_DeltaTreeValueInfo]]
-        )
+        sorted_rows: Sequence[Sequence[_SDItem]] | Sequence[Sequence[_SDDeltaItem]]
         if isinstance(table, ImmutableTable):
             sorted_rows = _sort_rows(table, columns)
         else:
@@ -2506,17 +2495,15 @@ class TreeRenderer:
 
         for row in sorted_rows:
             html.open_tr(class_="even0")
-            for value_info in row:
-                column_hint = hints.get_column_hint(value_info.key)
+            for item in row:
+                column_hint = hints.get_column_hint(item.key)
                 # TODO separate tdclass from rendered value
-                if isinstance(value_info, _DeltaTreeValueInfo):
-                    tdclass, _rendered_value = column_hint.paint_function(
-                        value_info.old or value_info.new
-                    )
+                if isinstance(item, _SDDeltaItem):
+                    tdclass, _rendered_value = column_hint.paint_function(item.old or item.new)
                 else:
-                    tdclass, _rendered_value = column_hint.paint_function(value_info.value)
+                    tdclass, _rendered_value = column_hint.paint_function(item.value)
                 html.open_td(class_=tdclass)
-                _show_value(value_info, column_hint)
+                _show_item(item, column_hint)
                 html.close_td()
             html.close_tr()
         html.close_table()

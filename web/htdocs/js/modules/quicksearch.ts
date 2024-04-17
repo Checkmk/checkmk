@@ -207,16 +207,31 @@ function handle_search_response(oField: HTMLInputElement, code: string) {
     }
 }
 
+let g_call_ajax_search_obj: null | XMLHttpRequest = null;
+
 // Build a new result list and show it up
 function mkSearch(oField: HTMLInputElement | null) {
     if (oField == null) return;
+
+    kill_previous_quicksearch();
 
     const val = oField.value;
     if (mkSearchResultShown() && val == oldValue) return; // nothing changed, no new search
     oldValue = val;
 
-    call_ajax("ajax_search.py?q=" + encodeURIComponent(val), {
-        response_handler: handle_search_response,
-        handler_data: oField,
-    });
+    g_call_ajax_search_obj = call_ajax(
+        "ajax_search.py?q=" + encodeURIComponent(val),
+        {
+            response_handler: handle_search_response,
+            handler_data: oField,
+        }
+    );
+}
+
+function kill_previous_quicksearch() {
+    // Terminate already running request
+    if (g_call_ajax_search_obj) {
+        g_call_ajax_search_obj.abort();
+        g_call_ajax_search_obj = null;
+    }
 }

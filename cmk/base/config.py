@@ -1381,7 +1381,7 @@ def _initialize_data_structures() -> None:
 def _get_plugin_paths(*dirs: str) -> list[str]:
     filelist: list[str] = []
     for directory in dirs:
-        filelist += _plugin_pathnames_in_directory(directory)
+        filelist += plugin_pathnames_in_directory(directory)
     return filelist
 
 
@@ -1393,6 +1393,7 @@ def load_checks(
     filelist: list[str],
 ) -> list[str]:
     loaded_files: set[str] = set()
+    ignored_plugins_errors = []
 
     did_compile = False
     for f in filelist:
@@ -1418,7 +1419,9 @@ def load_checks(
             raise
 
         except Exception as e:
-            console.error("Error in plug-in file %s: %s\n", f, e)
+            ignored_plugins_errors.append(
+                f"Ignoring outdated plug-in file {f}: {e} -- this API is deprecated!\n"
+            )
             if cmk.utils.debug.enabled():
                 raise
             continue
@@ -1430,16 +1433,23 @@ def load_checks(
 
     # Now just drop everything we don't like; this is not a supported API anymore.
     # Users affected by this will see a CRIT in their "Analyse Configuration" page.
-    sane_check_info = {
-        k: v
-        for k, v in check_info.items()
-        if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
-    }
+    sane_check_info = {}
+    for k, v in check_info.items():
+        if isinstance(k, str) and isinstance(v, LegacyCheckDefinition):
+            sane_check_info[k] = v
+            continue
+        ignored_plugins_errors.append(
+            f"Ignoring outdated plug-in {k!r} from file {legacy_check_plugin_files[str(k)]!r}: "
+            "Format no longer supported -- this API is deprecated!\n"
+        )
+
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})
 
-    return _extract_agent_and_snmp_sections(sane_check_info) + _extract_check_plugins(
-        sane_check_info, validate_creation_kwargs=did_compile
-    )
+    return [
+        *ignored_plugins_errors,
+        *_extract_agent_and_snmp_sections(sane_check_info),
+        *_extract_check_plugins(sane_check_info, validate_creation_kwargs=did_compile),
+    ]
 
 
 # Constructs a new check context dictionary. It contains the whole check API.
@@ -1457,7 +1467,7 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     return context
 
 
-def _plugin_pathnames_in_directory(path: str) -> list[str]:
+def plugin_pathnames_in_directory(path: str) -> list[str]:
     if path and os.path.exists(path):
         return sorted(
             [

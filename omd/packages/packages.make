@@ -55,6 +55,7 @@ $(BUILD_HELPER_DIR)/%-skel-dir: $(PRE_INSTALL)
 	    fi ; \
 	    if [ -d "$$PACKAGE_PATH/skel" ]; then \
 		tar cf - -C "$$PACKAGE_PATH/skel" \
+		    --exclude="BUILD" \
 		    --exclude="*~" \
 		    --exclude=".gitignore" \
 		    --exclude=".f12" \

@@ -90,7 +90,12 @@ def test_check_password_hashes(
 ) -> None:
     test_user = {
         UserId(username): UserSpec(
-            {"connector": "htpasswd", "password": PasswordHash(pw_hash), "alias": username}
+            {
+                "connector": "htpasswd",
+                "password": PasswordHash(pw_hash),
+                "alias": username,
+                "locked": False,
+            }
         )
     }
 
@@ -102,6 +107,7 @@ def test_check_password_hashes(
                 "password": PasswordHash("$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),
                 "automation_secret": "foo",
                 "alias": username,
+                "locked": False,
             }
         )
     }

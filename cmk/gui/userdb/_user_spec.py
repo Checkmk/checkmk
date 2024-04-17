@@ -16,6 +16,7 @@ def new_user_template(connection_id: str) -> UserSpec:
     new_user = UserSpec(
         serial=0,
         connector=connection_id,
+        locked=False,
     )
 
     # Apply the default user profile

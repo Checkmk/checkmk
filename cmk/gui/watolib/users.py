@@ -183,7 +183,7 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
         )
 
     # Locking
-    locked = user_attrs.get("locked")
+    locked = user_attrs["locked"]
     if user_id == user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 

@@ -185,7 +185,7 @@ class UserSpec(TypedDict, total=False):
     language: str
     last_pw_change: int
     last_login: LastLoginInfo | None
-    locked: bool | None
+    locked: bool
     mail: str  # TODO: Why do we have "email" *and* "mail"?
     notification_method: Any  # TODO: Improve this
     notification_period: str

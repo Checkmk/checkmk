@@ -115,7 +115,7 @@ class HtpasswdUserConnector(UserConnector[HtpasswdUserConnectionConfig]):
 
             if user.get("password"):
                 entries[uid] = PasswordHash(
-                    "{}{}".format("!" if user.get("locked", False) else "", user["password"])
+                    "{}{}".format("!" if user["locked"] else "", user["password"])
                 )
 
         self._htpasswd.save_all(entries)

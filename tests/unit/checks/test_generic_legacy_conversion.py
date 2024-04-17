@@ -970,7 +970,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mkeventd_status",
         "mknotifyd",
         "mknotifyd.connection",
-        "mongodb_asserts",
         "mongodb_cluster",
         "mongodb_cluster.collections",
         "mongodb_cluster.balancer",

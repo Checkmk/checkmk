@@ -2604,7 +2604,13 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
     }
 
     auto prefix = CmaUserPrefix();
-    return prefix.empty() ? std::wstring{} : prefix + group.data();
+    auto name = prefix.empty() ? std::wstring{} : prefix + group.data();
+    // sometimes some Windows may restrict user name length
+    if (name.size() > 20) {
+        XLOG::l("User name '{}' is too long", ToUtf8(name));
+        name = name.substr(0, 20);
+    }
+    return name;
 }
 
 InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept {

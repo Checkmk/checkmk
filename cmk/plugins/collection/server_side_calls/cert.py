@@ -218,7 +218,7 @@ def _issuer_args(issuer: Issuer) -> Iterator[str]:
         yield "--issuer-st"
         yield state
     if (country := issuer.country) is not None:
-        yield "--isuer-c"
+        yield "--issuer-c"
         yield country
 
 

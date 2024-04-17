@@ -227,16 +227,18 @@ def current_base_branch_name() -> str:
     return branch_name
 
 
+def get_cmk_download_credentials_file() -> str:
+    return "%s/.cmk-credentials" % os.environ["HOME"]
+
+
 def get_cmk_download_credentials() -> tuple[str, str]:
-    credentials_file_path = Path("~").expanduser() / ".cmk-credentials"
+    credentials_file_path = get_cmk_download_credentials_file()
     try:
         with open(credentials_file_path) as credentials_file:
             username, password = credentials_file.read().strip().split(":", maxsplit=1)
             return username, password
     except OSError:
-        raise RuntimeError(
-            f"Missing file: {credentials_file_path} (Create with content: USER:PASSWORD)"
-        )
+        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % credentials_file)
 
 
 def get_standard_linux_agent_output() -> str:

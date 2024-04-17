@@ -150,7 +150,7 @@ def _check_single_netapp_volume(
     item: str,
     params: Mapping[str, Any],
     volume: models.VolumeModel,
-    volume_counter: models.VolumeCountersModel,
+    volume_counter: models.VolumeCountersModel | None,
     value_store: MutableMapping[str, Any],
     now: float,
 ) -> CheckResult:
@@ -174,7 +174,6 @@ def _check_single_netapp_volume(
     assert volume.space_total is not None  # to avoid my-py complaining about this being None
     assert volume.logical_used is not None  # to avoid my-py complaining about this being None
     assert volume.space_available is not None  # to avoid my-py complaining about this being None
-    yield from _generate_volume_metrics(value_store, params, volume_counter, now)
     if not volume.logical_enforcement:
         logical_available = volume.space_total - volume.logical_used
         yield Metric(
@@ -187,6 +186,9 @@ def _check_single_netapp_volume(
             value=volume.space_available - logical_available,
             boundaries=(0.0, volume.space_total),
         )
+
+    if volume_counter:
+        yield from _generate_volume_metrics(value_store, params, volume_counter, now)
 
 
 def _generate_volume_metrics(
@@ -302,12 +304,7 @@ def check_volumes(
     if not section_netapp_ontap_volumes_counters:
         return
 
-    if (
-        volume_counter := section_netapp_ontap_volumes_counters.get(
-            _get_volume_counters_key(volume)
-        )
-    ) is None:
-        return
+    volume_counter = section_netapp_ontap_volumes_counters.get(_get_volume_counters_key(volume))
     yield from _check_single_netapp_volume(item, params, volume, volume_counter, value_store, now)
 
 

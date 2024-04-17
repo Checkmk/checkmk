@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.agent_based.v2 import Metric, Result, State
@@ -39,22 +40,6 @@ _VOLUME_COUNTERS_MODELS = [
         iscsi_write_latency=1000,
         read_latency=1000,
         nfs_write_ops=1000,
-    ),
-]
-
-_VOLUMES_MODELS = [
-    VolumeModelFactory.build(
-        uuid="volume_uuid",
-        state="OK",
-        name="volume_name",
-        msid=100,
-        svm_name="svm_name",
-        svm_uuid="svm_uuid",
-        space_available=500,
-        space_total=1000,
-        logical_used=500,
-        files_maximum=1000,
-        files_used=500,
     ),
 ]
 
@@ -117,7 +102,24 @@ def test_generate_volume_metrics() -> None:
 
 
 def test_serialize_volumes() -> None:
-    volumes_section = {vol_obj.item_name(): vol_obj for vol_obj in _VOLUMES_MODELS}
+
+    volume_models = [
+        VolumeModelFactory.build(
+            uuid="volume_uuid",
+            state="OK",
+            name="volume_name",
+            msid=100,
+            svm_name="svm_name",
+            svm_uuid="svm_uuid",
+            space_available=500,
+            space_total=1000,
+            logical_used=500,
+            files_maximum=1000,
+            files_used=500,
+        ),
+    ]
+
+    volumes_section = {vol_obj.item_name(): vol_obj for vol_obj in volume_models}
     volumes_counters_section = {
         counter_obj.item_name(): counter_obj for counter_obj in _VOLUME_COUNTERS_MODELS
     }
@@ -166,25 +168,58 @@ def test_check_netapp_ontap_volumes_state_not_online() -> None:
     assert result == [Result(state=State.WARN, summary="Volume state OK")]
 
 
-def test_check_netapp_ontap_volumes_state_online() -> None:
-    volume_models = [
-        VolumeModelFactory.build(
-            uuid="volume_uuid",
-            state="online",
-            name="volume_name",
-            msid=100,
-            svm_name="svm_name",
-            svm_uuid="svm_uuid",
-            space_available=500,
-            space_total=1000,
-            logical_used=500,
-            files_maximum=1000,
-            files_used=500,
-            logical_enforcement=False,
-        )
-    ]
+_VOLUME_MODELS = [
+    # with counters
+    VolumeModelFactory.build(
+        uuid="volume_uuid",
+        state="online",
+        name="volume_name",
+        msid=100,
+        svm_name="svm_name",
+        svm_uuid="svm_uuid",
+        space_available=500,
+        space_total=1000,
+        logical_used=500,
+        files_maximum=1000,
+        files_used=500,
+        logical_enforcement=False,
+    ),
+    # without counters
+    VolumeModelFactory.build(
+        uuid="volume_uuid1",
+        state="online",
+        name="volume_name1",
+        msid=100,
+        svm_name="svm_name",
+        svm_uuid="svm_uuid",
+        space_available=500,
+        space_total=1000,
+        logical_used=500,
+        files_maximum=1000,
+        files_used=500,
+        logical_enforcement=False,
+    ),
+]
 
-    volumes_section = {vol_obj.item_name(): vol_obj for vol_obj in volume_models}
+
+@pytest.mark.parametrize(
+    "volume_id, expected_result_qty",
+    [
+        pytest.param(
+            "svm_name:volume_name",
+            16,
+            id="volume with counters",
+        ),
+        pytest.param(
+            "svm_name:volume_name1",
+            14,
+            id="volume without counters",
+        ),
+    ],
+)
+def test_check_netapp_ontap_volumes_state_online(volume_id: str, expected_result_qty: int) -> None:
+
+    volumes_section = {vol_obj.item_name(): vol_obj for vol_obj in _VOLUME_MODELS}
     volumes_counters_section = {
         counter_obj.item_name(): counter_obj for counter_obj in _VOLUME_COUNTERS_MODELS
     }
@@ -195,15 +230,22 @@ def test_check_netapp_ontap_volumes_state_online() -> None:
         **INODES_DEFAULT_PARAMS,
         **TREND_DEFAULT_PARAMS,
     }
+    # also test counters
+    default_params = default_params | {
+        "perfdata": [""],
+    }
 
     value_store = {
         #                 last time, last value
         "svm_name:volume_name.delta": (LAST_EVALUATION_SECONDS, 0),
+        "svm_name:volume_name1.delta": (LAST_EVALUATION_SECONDS, 0),
+        "bytes_written": (LAST_EVALUATION_SECONDS, 0),
+        "bytes_read": (LAST_EVALUATION_SECONDS, 0),
     }
 
     result = list(
         check_volumes(
-            "svm_name:volume_name",
+            volume_id,
             default_params,
             volumes_section,
             volumes_counters_section,
@@ -212,12 +254,8 @@ def test_check_netapp_ontap_volumes_state_online() -> None:
         )
     )
 
-    assert len(result) == 14
+    assert len(result) == expected_result_qty
     assert isinstance(result[0], Metric)
     assert result[0].name == "fs_used"
     assert isinstance(result[1], Metric)
     assert result[1].name == "fs_free"
-
-    assert isinstance(result[-1], Metric)
-    assert result[-1].name == "space_savings"
-    assert result[-1].value == 0.0

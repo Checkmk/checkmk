@@ -92,7 +92,7 @@ def test_update_rule_with_full_contact_selection_data(clients: ClientRegistry) -
         "members_of_contact_groups": {"state": "enabled", "value": ["cg1", "cg2"]},
         "explicit_email_addresses": {
             "state": "enabled",
-            "value": ["monkey@tribe29.com", "thelionsleepstonight@thetokens.com"],
+            "value": ["monkey@example.com", "thelionsleepstonight@example.com"],
         },
         "restrict_by_custom_macros": {"state": "enabled", "value": []},
         "restrict_by_contact_groups": {"state": "enabled", "value": []},

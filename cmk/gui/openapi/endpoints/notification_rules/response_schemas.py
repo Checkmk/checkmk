@@ -318,7 +318,7 @@ class PluginName(BaseSchema):
 class EmailAndDisplayName(BaseSchema):
     address = fields.String(
         description="",
-        example="mat@tribe29.com",
+        example="mail@example.com",
     )
     display_name = fields.String(
         description="",

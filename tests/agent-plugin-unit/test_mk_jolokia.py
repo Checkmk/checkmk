@@ -199,3 +199,41 @@ def test_parse_fetched_data_v1_2_0() -> None:
     assert product == "glassfish"
     assert version == "4.0"
     assert agentversion == "1.2.0"
+
+
+def test_parse_fetched_data_v2_0_2_missing_server_product() -> None:
+    data = {
+        "agent": "2.0.2",
+        "protocol": "7.2",
+        "details": {
+            "agent_version": "2.0.2",
+            "agent_id": "192.168.0.221-21185-5ce94d31-servlet",
+            "server_vendor": "Apache",
+            "server_version": "10.1.16",
+            "secured": True,
+            "url": "http://192.168.0.221:8080/jolokia",
+        },
+    }
+    product, version, agentversion = mk_jolokia._parse_fetched_data(data)
+    assert product == "unknown"
+    assert version == "10.1.16"
+    assert agentversion == "2.0.2"
+
+
+def test_parse_fetched_data_v2_0_2_missing_server_version() -> None:
+    data = {
+        "agent": "2.0.2",
+        "protocol": "7.2",
+        "details": {
+            "agent_version": "2.0.2",
+            "agent_id": "192.168.0.221-21185-5ce94d31-servlet",
+            "server_product": "tomcat",
+            "server_vendor": "Apache",
+            "secured": True,
+            "url": "http://192.168.0.221:8080/jolokia",
+        },
+    }
+    product, version, agentversion = mk_jolokia._parse_fetched_data(data)
+    assert product == "tomcat"
+    assert version == "unknown"
+    assert agentversion == "2.0.2"

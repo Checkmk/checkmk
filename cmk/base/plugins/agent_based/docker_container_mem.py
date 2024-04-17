@@ -39,7 +39,7 @@ def _parse_docker_container_mem_plugin(string_table: StringTable) -> docker.Memo
     )
 
 
-def parse_docker_container_mem(string_table: StringTable) -> memory.SectionMemUsed:
+def parse_docker_container_mem(string_table: StringTable) -> memory.SectionMemUsed | None:
     """
         >>> import pprint
         >>> pprint.pprint(parse_docker_container_mem([
@@ -90,6 +90,9 @@ def parse_docker_container_mem(string_table: StringTable) -> memory.SectionMemUs
         # this is the output of mk_docker.py
         # it has to handle both cgroupv1 and cgroupv2
         parsed = _parse_docker_container_mem_plugin(string_table)
+
+    if parsed is None:
+        return None
     return parsed.to_mem_used()
 
 

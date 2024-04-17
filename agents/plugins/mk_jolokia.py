@@ -658,9 +658,10 @@ def query_instance(inst):
 def _parse_fetched_data(data):
     # type: (dict[str, Any]) -> tuple[str, str, str]
     if "details" in data:
+        info = data["details"]
         # https://github.com/jolokia/jolokia/blob/2.0/src/documentation/manual/modules/ROOT/pages/jolokia_mbeans.adoc
-        product = data["details"]["server_product"]
-        version = data["details"]["server_version"]
+        product = info.get("server_product", "unknown")
+        version = info.get("server_version", "unknown")
     else:  # jolokia version 1.7.2 or lower
         # https://github.com/jolokia/jolokia/blob/v1.7.2/src/docbkx/protocol/version.xml
         info = data.get("info", {})

@@ -4,13 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """ Pre update checks, executed before any configuration is changed. """
 
+from collections.abc import Sequence
 from logging import Logger
 
+from cmk.utils import version
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import GroupSpec, load_contact_group_information
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -40,7 +43,12 @@ class PreUpdateRulesets(PreUpdateAction):
 
         with disable_redis(), gui_context(), SuperUserContext():
             set_global_vars()
-            result = _validate_rule_values(rulesets, conflict_mode, logger)
+            result = _validate_rule_values(
+                rulesets,
+                load_contact_group_information(),
+                conflict_mode,
+                logger,
+            )
 
         if not result:
             raise MKUserError(None, "failed ruleset validation")
@@ -59,6 +67,7 @@ def _request_user_input_on_ruleset_exception(exc: Exception) -> str:
 
 def _validate_rule_values(
     all_rulesets: RulesetCollection,
+    contact_groups: GroupSpec,
     conflict_mode: ConflictMode,
     logger: Logger,
 ) -> bool:
@@ -88,9 +97,32 @@ def _validate_rule_values(
                     "",
                 )
             except (MKUserError, AssertionError, ValueError, TypeError) as e:
+                if version.edition() is version.Edition.CME and ruleset.name in (
+                    "host_contactgroups",
+                    "service_contactgroups",
+                ):
+                    addition_info = [
+                        "Note:",
+                        (
+                            f"The group {rule.value!r} may not be synchronized to this site because"
+                            " the customer setting of the group is not set to global."
+                        ),
+                        (
+                            "If you continue the invalid rule does not have any effect but should"
+                            " be fixed anyway.\n"
+                        ),
+                    ]
+                else:
+                    addition_info = []
                 return (
                     conflict_mode is ConflictMode.ASK
-                    and _request_user_input_on_invalid_rule(ruleset, folder, index, e).lower()
+                    and _request_user_input_on_invalid_rule(
+                        ruleset,
+                        folder,
+                        index,
+                        e,
+                        addition_info,
+                    ).lower()
                     in USER_INPUT_CONTINUE
                 )
 
@@ -98,18 +130,29 @@ def _validate_rule_values(
 
 
 def _request_user_input_on_invalid_rule(
-    ruleset: Ruleset, folder: Folder, index: int, exception: Exception
+    ruleset: Ruleset,
+    folder: Folder,
+    index: int,
+    exception: Exception,
+    additional_info: Sequence[str],
 ) -> str:
-    return prompt(
-        "WARNING: Invalid rule configuration detected\n"
-        f"Ruleset: {ruleset.name}\n"
-        f"Title: {ruleset.title()}\n"
-        f"Folder: {folder.path() or 'main'}\n"
-        f"Rule nr: {index + 1}\n"
-        f"Exception: {exception}\n\n"
-        "You can abort the update process (A) or continue (c) the update.\n\n"
-        "Abort update? [A/c]\n"
+    parts = [
+        "WARNING: Invalid rule configuration detected",
+        f"Ruleset: {ruleset.name}",
+        f"Title: {ruleset.title()}",
+        f"Folder: {folder.path() or 'main'}",
+        f"Rule nr: {index + 1}",
+        f"Exception: {exception}\n",
+    ]
+    if additional_info:
+        parts.extend(additional_info)
+    parts.extend(
+        [
+            "You can abort the update process (A) or continue (c) the update.",
+            "Abort update? [A/c]\n",
+        ]
     )
+    return prompt("\n".join(parts))
 
 
 pre_update_action_registry.register(

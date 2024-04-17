@@ -2207,8 +2207,6 @@ class AutomationActiveCheck(Automation):
 
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        with redirect_stdout(open(os.devnull, "w")):
-            host_attrs = config_cache.get_host_attributes(host_name)
 
         if plugin == "custom":
             for entry in config_cache.custom_checks(host_name):
@@ -2226,6 +2224,9 @@ class AutomationActiveCheck(Automation):
                     -1,
                     "Passive check - cannot be executed",
                 )
+
+        with redirect_stdout(open(os.devnull, "w")):
+            host_attrs = config_cache.get_host_attributes(host_name)
 
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = config.get_resource_macros()

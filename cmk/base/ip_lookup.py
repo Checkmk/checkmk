@@ -83,10 +83,7 @@ def enforce_localhost() -> None:
 
 # Determine the IP address of a host. It returns either an IP address or, when
 # a hostname is configured as IP address, the hostname.
-# Or raise an exception when a hostname can not be resolved on the first
-# try to resolve a hostname. On later tries to resolve a hostname  it
-# returns None instead of raising an exception.
-# FIXME: This different handling is bad. Clean this up!
+# Or raise an exception when a hostname can not be resolved.
 def lookup_ip_address(
     *,
     host_name: HostName | HostAddress,
@@ -97,7 +94,7 @@ def lookup_ip_address(
     override_dns: HostAddress | None,
     is_dyndns_host: bool,
     force_file_cache_renewal: bool,
-) -> HostAddress | None:
+) -> HostAddress:
     """This function *may* look up an IP address, or return a host name"""
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
@@ -132,27 +129,26 @@ def cached_dns_lookup(
     *,
     family: socket.AddressFamily,
     force_file_cache_renewal: bool,
-) -> HostAddress | None:
+) -> HostAddress:
     """Cached DNS lookup in *two* caching layers
 
     1) outer layer (this function):
        A *config cache* that caches all calls until the configuration is changed or runtime ends.
        Other than activating a changed configuration there is no way to remove cached results during
        runtime. Changes made by a differend process will not be noticed.
-       This layer caches `None` for lookups that failed, after raising the corresponding exception
-       *once*. Subsequent lookups for this hostname / family combination  will not raise an
-       exception, until the configuration is changed.
 
     2) inner layer: see _file_cached_dns_lookup
     """
-    cache: dict[tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | None] = (
-        cache_manager.obtain_cache("cached_dns_lookup")
-    )
+    cache: dict[
+        tuple[HostName | HostAddress, socket.AddressFamily], HostAddress | MKIPAddressLookupError
+    ] = cache_manager.obtain_cache("cached_dns_lookup")
     cache_id = hostname, family
 
     # Address has already been resolved in prior call to this function?
     try:
-        return cache[cache_id]
+        if isinstance(prior_result := cache[cache_id], HostAddress):
+            return prior_result
+        raise prior_result
     except KeyError:
         pass
 
@@ -162,11 +158,12 @@ def cached_dns_lookup(
             family,
             force_file_cache_renewal=force_file_cache_renewal,
         )
-    except MKIPAddressLookupError:
-        cache[cache_id] = None
+    except MKIPAddressLookupError as exc:
+        cache[cache_id] = exc
         raise
 
-    return cache.setdefault(cache_id, ip_address)
+    cache[cache_id] = ip_address
+    return ip_address
 
 
 def _file_cached_dns_lookup(
@@ -176,9 +173,8 @@ def _file_cached_dns_lookup(
     force_file_cache_renewal: bool,
 ) -> HostAddress:
     # TODO: is there any point in the IPLookupCache being cached in the
-    # *config cache*? It seems to me it could well be kept during the entire
-    # runtime, which means a) this could be a decorator and b) we could use
-    # the same mechanism that the value store uses.
+    # *config cache*?
+    # It seems to me it could well be kept during the entire runtime.
     """Resolve DNS using a file based cache
 
     This layer caches *successful* lookups of host name / IP address family combinations, and writes

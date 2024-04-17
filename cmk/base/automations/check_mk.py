@@ -586,6 +586,7 @@ def _execute_discovery(
         # We *must* do the lookup *before* calling `get_host_attributes()`
         # because...  I don't know... global variables I guess.  In any case,
         # doing it the other way around breaks one integration test.
+        # note (mo): The baviour of repeated lookups changed. The above _might_ not be true anymore.
         else config.lookup_ip_address(config_cache, host_name)
     )
     with (

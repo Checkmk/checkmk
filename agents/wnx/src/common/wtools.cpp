@@ -32,6 +32,7 @@
 #pragma comment(lib, "iphlpapi.lib")
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 using namespace std::chrono_literals;
 
 namespace wtools {
@@ -2603,8 +2604,10 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
         return {};
     }
 
-    auto prefix = CmaUserPrefix();
-    auto name = prefix.empty() ? std::wstring{} : prefix + group.data();
+    auto group_name = std::wstring{group};
+    rs::replace(group_name, ' ', '_');
+    const auto prefix = CmaUserPrefix();
+    auto name = prefix.empty() ? std::wstring{} : prefix + group_name;
     // sometimes some Windows may restrict user name length
     if (name.size() > 20) {
         XLOG::l("User name '{}' is too long", ToUtf8(name));

@@ -213,14 +213,10 @@ def _migrate_to_simple_levels(
         case None | (None, None) | ("no_levels", None):
             return "no_levels", None
 
-        case (
-            ("fixed", (int(warn), int(crit)) | (float(warn), float(crit)))
-            | (
-                int(warn),
-                int(crit),
-            )
-            | (float(warn), float(crit))
-        ):
+        case ("fixed", (int(warn), int(crit)) | (float(warn), float(crit))):
+            return "fixed", (ntype(warn), ntype(crit))
+
+        case (int(warn), int(crit)) | (float(warn), float(crit)):
             return "fixed", (ntype(warn * scale), ntype(crit * scale))
 
         case ("cmk_postprocessed", "predictive_levels", val_dict) | val_dict if isinstance(

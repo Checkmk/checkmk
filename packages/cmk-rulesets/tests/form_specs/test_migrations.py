@@ -10,6 +10,8 @@ import pytest
 
 from cmk.rulesets.v1.form_specs import (
     LevelsConfigModel,
+    migrate_to_float_simple_levels,
+    migrate_to_integer_simple_levels,
     migrate_to_lower_float_levels,
     migrate_to_lower_integer_levels,
     migrate_to_password,
@@ -479,6 +481,22 @@ def test_migrate_to_upper_int_levels(
 ) -> None:
     with expected_raises:
         assert expected_value == migrate_to_upper_integer_levels(input_value)
+
+
+def test_migrate_to_integer_simple_levels_scaled() -> None:
+    old = (50, 60)
+    scale = 0.1
+    new = ("fixed", (5, 6))
+    assert migrate_to_integer_simple_levels(old, scale) == new
+    assert migrate_to_integer_simple_levels(new, scale) == new
+
+
+def test_migrate_to_simple_float_levels_scaled() -> None:
+    old = (50.0, 60.0)
+    scale = 0.1
+    new = ("fixed", (5.0, 6.0))
+    assert migrate_to_float_simple_levels(old, scale) == new
+    assert migrate_to_float_simple_levels(new, scale) == new
 
 
 def test_migrate_to_upper_integer_levels_scaled() -> None:

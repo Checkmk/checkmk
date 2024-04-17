@@ -19,7 +19,7 @@ def build(Map args) {
                     bat 'cd agents\\modules\\windows && call build_the_module.cmd cached ' + args.CREDS + ' ' + args.CACHE_URL
                     ARTIFACTS = 'python-3.cab,python-3.4.cab'
                 } else if (args.TARGET == "agent_with_sign") {
-                    bat 'cd agents\\wnx && call build_release.cmd tribe29.pfx ' + args.PASSWORD
+                    bat 'cd agents\\wnx && call build_release.cmd checkmk.pfx ' + args.PASSWORD
                     ARTIFACTS = "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe,unit_tests_results.zip,OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe"
                 } else if (args.TARGET == "agent_no_sign") {
                     bat 'cd agents\\wnx && call build_release.cmd'
@@ -35,7 +35,7 @@ def build(Map args) {
                 } else {
                     throw new Exception(args.TARGET + " is not known!")
                 }
-    
+
                 if (ARTIFACTS != '') {
                    if (args.STASH_NAME == null ) {
                       archive_artifacts(ARTIFACTS, ARTIFACTS_DIR)
@@ -43,17 +43,17 @@ def build(Map args) {
                       stash_artifacts(ARTIFACTS, args.STASH_NAME, ARTIFACTS_DIR)
                    }
                 }
-    
+
             } catch(ERROR) {
                 mail(
                     to: WIN_DEV_MAIL,
-                    cc: '', 
-                    bcc: '', 
-                    from: JENKINS_MAIL, 
-                    replyTo: '', 
+                    cc: '',
+                    bcc: '',
+                    from: JENKINS_MAIL,
+                    replyTo: '',
                     subject: "Win Error in $BUILD_URL",
                     body: """
-                        The following Error appered in 
+                        The following Error appered in
                         Build URL: $BUILD_URL \n
                     """
                         + ERROR.getMessage()

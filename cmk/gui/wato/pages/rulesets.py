@@ -766,7 +766,7 @@ def _is_used_rulesets_page(search_options) -> bool:  # type: ignore[no-untyped-d
 
 
 class ModeEditRuleset(WatoMode):
-    related_page_menu_hook: Callable[[str], Iterator[PageMenuEntry]] = lambda s: iter([])
+    related_page_menu_hooks: list[Callable[[str], Iterator[PageMenuEntry]]] = []
 
     @classmethod
     def name(cls) -> str:
@@ -998,7 +998,8 @@ class ModeEditRuleset(WatoMode):
                     ),
                 )
 
-        yield from ModeEditRuleset.related_page_menu_hook(self._name)
+        for related_hook in ModeEditRuleset.related_page_menu_hooks:
+            yield from related_hook(self._name)
 
         if self._name == "logwatch_rules":
             yield PageMenuEntry(

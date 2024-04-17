@@ -146,7 +146,7 @@ class LDAPUserConnectionConfig(UserConnectionConfig):
     group_member: NotRequired[str]
     active_plugins: ActivePlugins
     cache_livetime: int
-    customer: NotRequired[str]
+    customer: NotRequired[str | None]
     type: Literal["ldap"]
 
 

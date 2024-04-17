@@ -267,6 +267,12 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     def id(self):
         return self._config["id"]
 
+    @property
+    def customer_id(self) -> None | str:
+        if "customer" not in self._config:
+            return None
+        return self._config["customer"]
+
     def connect_server(self, server: str) -> tuple[ldap.ldapobject.ReconnectLDAPObject, str | None]:
         """Connects to an LDAP server using the provided server uri"""
         try:

@@ -23,7 +23,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.customer import customer_api
+from cmk.gui.customer import ABCCustomerAPI, customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.vue.vue_table import (
     build_checkbox,
@@ -65,8 +65,10 @@ from cmk.gui.userdb import (
     load_roles,
     new_user_template,
     UserAttribute,
+    UserConnector,
 )
 from cmk.gui.userdb.htpasswd import hash_password
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
@@ -106,6 +108,20 @@ from cmk.gui.watolib.utils import ldap_connections_are_configurable
 def register(_mode_registry: ModeRegistry) -> None:
     _mode_registry.register(ModeUsers)
     _mode_registry.register(ModeEditUser)
+
+
+def has_customer(
+    user_cxn: UserConnector | None,
+    cust_api: ABCCustomerAPI,
+    user_spec: UserSpec,
+) -> str | None:
+    if edition() is not Edition.CME:
+        return None
+
+    if isinstance(user_cxn, LDAPUserConnector):
+        if user_cxn.customer_id is not None:
+            return cust_api.get_customer_name_by_id(user_cxn.customer_id)
+    return cust_api.get_customer_name(user_spec)
 
 
 class ModeUsers(WatoMode):
@@ -505,10 +521,8 @@ class ModeUsers(WatoMode):
                 add_header(_("Last seen"))
                 cells.append(build_table_cell(content=[build_text(shown_text)]))
 
-            if edition() is Edition.CME:
-                cells.append(
-                    build_table_cell(content=[build_text(customer.get_customer_name(user_spec))])
-                )
+            if cust := has_customer(user_cxn=connection, cust_api=customer, user_spec=user_spec):
+                cells.append(build_table_cell(content=[build_text(cust)]))
 
             # Connection
             add_header(_("Connection"))
@@ -718,8 +732,10 @@ class ModeUsers(WatoMode):
                     else:
                         html.write_text(_("Never"))
 
-                if edition() is Edition.CME:
-                    table.cell(_("Customer"), customer.get_customer_name(user_spec))
+                if cust := has_customer(
+                    user_cxn=connection, cust_api=customer, user_spec=user_spec
+                ):
+                    table.cell(_("Customer"), cust)
 
                 # Connection
                 if connection:

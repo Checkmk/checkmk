@@ -140,6 +140,7 @@ def test_docker_parse_container_mem_docker_plugin_cgroupv2() -> None:
     version used on the host.
     """
     result = parse_docker_container_mem(PLUGIN_OUTPUT_CGROUPV2)
+    assert result is not None
     assert result == {"MemFree": 16564215808, "MemTotal": 16591540224}
     # make sure docker stats result is the same:
     assert round((result["MemTotal"] - result["MemFree"]) / 1024 / 10.24) / 100 == 26.06
@@ -147,6 +148,7 @@ def test_docker_parse_container_mem_docker_plugin_cgroupv2() -> None:
 
 def test_docker_parse_container_mem_docker_plugin_cgroupv2_with_limit() -> None:
     result = parse_docker_container_mem(PLUGIN_OUTPUT_CGROUPV2_LIMIT)
+    assert result is not None
     assert result == {"MemFree": 55504896, "MemTotal": 57671680}
     # make sure docker stats result is the same:
     assert (result["MemTotal"]) / 1024 / 1024 == 55

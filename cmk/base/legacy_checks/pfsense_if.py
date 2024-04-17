@@ -26,7 +26,10 @@ def inventory_pfsense_if(parsed):
         yield item, {}
 
 
-def check_firewall_if(item, params, data):
+def check_firewall_if(item, params, section):
+    if (data := section.get(item)) is None:
+        return
+
     infotext_names = {
         "ip4_in_blocked": "Incoming IPv4 packets blocked: ",
     }

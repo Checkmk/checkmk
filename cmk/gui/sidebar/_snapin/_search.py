@@ -1611,6 +1611,14 @@ class PageSearchSetup(AjaxPage):
                 html.close_ul()
                 html.close_div()
                 return output_funnel.drain()
+        except RuntimeError:
+            with output_funnel.plugged():
+                html.open_div(class_="error")
+                html.open_ul()
+                html.write_text(_("Redis server is not reachable."))
+                html.close_ul()
+                html.close_div()
+                return output_funnel.drain()
         except Exception:
             with output_funnel.plugged():
                 handle_exception_as_gui_crash_report(

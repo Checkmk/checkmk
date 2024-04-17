@@ -46,12 +46,13 @@ def _send_reply_ready() -> None:
     sys.stdout.flush()
 
 
-def event_keepalive(  # pylint: disable=too-many-branches
-    event_function: Callable,
-    call_every_loop: Callable | None = None,
+def event_keepalive(
+    event_function: Callable[[EventContext], object],
+    call_every_loop: Callable[[], object] | None = None,
     loop_interval: int | None = None,
-    shutdown_function: Callable | None = None,
+    shutdown_function: Callable[[], object] | None = None,
 ) -> None:
+    # pylint: disable=too-many-branches
     last_config_timestamp = config_timestamp()
 
     # Send signal that we are ready to receive the next event, but

@@ -4,7 +4,7 @@ version = "1.0.0"
 dependencies = [
     "cryptography>41.0",
     "fastapi>=0.109.0",
-    "gunicorn==20.1.0",
+    "gunicorn==22.0.0",
     "python-dateutil==2.8.2",
     "python-multipart==0.0.*",
     "requests~=2.28",

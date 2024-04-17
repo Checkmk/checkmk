@@ -30,12 +30,12 @@ def build(Map args) {
 
         def (subdir, command, artifacts) = (
             (args.TARGET == "cached") ? [
-                "agents/modules/windows", 
-                "call build_the_module.cmd cached ${args.CREDS} ${args.CACHE_URL}", 
+                "agents/modules/windows",
+                "call build_the_module.cmd cached ${args.CREDS} ${args.CACHE_URL}",
                 "python-3.cab,python-3.4.cab"] :
             (args.TARGET == "agent_with_sign") ? [
                 "agents/wnx",
-                "call build_release.cmd tribe29.pfx ${args.PASSWORD}",
+                "call build_release.cmd checkmk.pfx ${args.PASSWORD}",
                 "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe,unit_tests_results.zip,OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe"] :
             (args.TARGET == "agent_no_sign") ? [
                  "agents/wnx",

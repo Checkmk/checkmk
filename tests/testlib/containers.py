@@ -309,15 +309,15 @@ def _create_cmk_image(
         # name=f"testbase-{container_name_suffix(distro_name, docker_tag)}",
         image=base_image_name_with_tag,
         labels={
-            "org.tribe29.build_time": f"{int(time.time()):d}",
-            "org.tribe29.build_id": base_image.short_id,
-            "org.tribe29.base_image": base_image_name_with_tag,
-            "org.tribe29.base_image_hash": base_image.short_id,
-            "org.tribe29.cmk_edition_short": version.edition.short,
-            "org.tribe29.cmk_version": version.version,
-            "org.tribe29.cmk_branch": version.branch,
+            "com.checkmk.build_time": f"{int(time.time()):d}",
+            "com.checkmk.build_id": base_image.short_id,
+            "com.checkmk.base_image": base_image_name_with_tag,
+            "com.checkmk.base_image_hash": base_image.short_id,
+            "com.checkmk.cmk_edition_short": version.edition.short,
+            "com.checkmk.cmk_version": version.version,
+            "com.checkmk.cmk_branch": version.branch,
             # override the base image label
-            "com.tribe29.image_type": "cmk-image",
+            "com.checkmk.image_type": "cmk-image",
         },
         command=["tail", "-f", "/dev/null"],  # keep running
         host_config=client.api.create_host_config(
@@ -366,7 +366,7 @@ def _create_cmk_image(
         tmp_image = container.commit()
 
         new_labels = container.labels.copy()
-        new_labels["org.tribe29.cmk_hash"] = hash_entry
+        new_labels["com.checkmk.cmk_hash"] = hash_entry
 
         logger.info("Finalizing image")
         labeled_container = client.containers.run(tmp_image, labels=new_labels, detach=True)
@@ -393,7 +393,7 @@ def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> b
         logger.info("  Base image not available, assuming it's up-to-date")
         return False
 
-    image_base_hash = image.labels.get("org.tribe29.base_image_hash")
+    image_base_hash = image.labels.get("com.checkmk.base_image_hash")
     if base_image.short_id != image_base_hash:
         logger.info(
             "  Is based on an outdated base image (%s), current is (%s)",
@@ -409,9 +409,9 @@ def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> b
 def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
     logger.info("  Check whether or not image is using the current Checkmk package")
 
-    cmk_hash_entry = image.labels.get("org.tribe29.cmk_hash")
+    cmk_hash_entry = image.labels.get("com.checkmk.cmk_hash")
     if not cmk_hash_entry:
-        logger.info("  Checkmk package hash label missing (org.tribe29.cmk_hash). Trigger rebuild.")
+        logger.info("  Checkmk package hash label missing (com.checkmk.cmk_hash). Trigger rebuild.")
         return False
 
     cmk_hash_image, package_name_image = cmk_hash_entry.split()

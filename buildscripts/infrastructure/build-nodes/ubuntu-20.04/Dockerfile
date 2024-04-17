@@ -190,7 +190,7 @@ RUN echo "${VERS_TAG}" > /version.txt
 
 ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
-    com.tribe29.image_type="build-image"
+    com.checkmk.image_type="build-image"
 
 COPY --from=dev_images entrypoint.sh /opt/
 ENTRYPOINT ["/opt/entrypoint.sh"]

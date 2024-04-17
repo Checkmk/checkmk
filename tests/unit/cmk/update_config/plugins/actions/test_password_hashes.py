@@ -89,7 +89,9 @@ def test_check_password_hashes(
     should_warn: bool,
 ) -> None:
     test_user = {
-        UserId(username): UserSpec({"connector": "htpasswd", "password": PasswordHash(pw_hash)})
+        UserId(username): UserSpec(
+            {"connector": "htpasswd", "locked": False, "password": PasswordHash(pw_hash)}
+        )
     }
 
     # automation user with legacy hash that should not receive a warning
@@ -99,6 +101,7 @@ def test_check_password_hashes(
                 "connector": "htpasswd",
                 "password": PasswordHash("$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),
                 "automation_secret": "foo",
+                "locked": False,
             }
         )
     }

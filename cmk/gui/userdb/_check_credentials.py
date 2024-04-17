@@ -148,4 +148,4 @@ def _show_exception(connection_id: str, title: str, e: Exception, debug: bool = 
 
 
 def user_locked(user_id: UserId) -> bool:
-    return bool(load_user(user_id).get("locked"))
+    return load_user(user_id)["locked"]

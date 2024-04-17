@@ -2018,16 +2018,12 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
         if connection._is_active_directory() and ldap_user.get("useraccountcontrol"):
             # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
             locked_in_ad = int(ldap_user["useraccountcontrol"][0]) & 2
-            locked_in_cmk = user.get("locked", False)
+            locked_in_cmk = user["locked"]
 
             if locked_in_ad and not locked_in_cmk:
                 return {
                     "locked": True,
                     "serial": user.get("serial", 0) + 1,
-                }
-            if not locked_in_ad:
-                return {
-                    "locked": False,
                 }
 
         changed_attr = params.get("attr", connection._ldap_attr("pw_changed")).lower()

@@ -7,7 +7,10 @@ import pytest
 
 from cmk.gui.type_defs import UserSpec
 
-from cmk.update_config.plugins.actions.user_attributes import _update_disable_notifications
+from cmk.update_config.plugins.actions.user_attributes import (
+    _add_or_update_locked_attr,
+    _update_disable_notifications,
+)
 
 
 @pytest.mark.parametrize(
@@ -22,3 +25,17 @@ from cmk.update_config.plugins.actions.user_attributes import _update_disable_no
 def test_update_disable_notifications(old: UserSpec, expected_new: UserSpec) -> None:
     _update_disable_notifications(old)
     assert old == expected_new
+
+
+@pytest.mark.parametrize(
+    ["pre_update", "post_update"],
+    [
+        pytest.param({}, {"locked": False}),
+        pytest.param({"locked": True}, {"locked": True}),
+        pytest.param({"locked": False}, {"locked": False}),
+        pytest.param({"locked": None}, {"locked": False}),
+    ],
+)
+def test_add_or_update_locked_attr(pre_update: UserSpec, post_update: UserSpec) -> None:
+    _add_or_update_locked_attr(pre_update)
+    assert pre_update == post_update

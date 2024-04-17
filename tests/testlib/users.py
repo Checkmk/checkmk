@@ -45,6 +45,7 @@ def _mk_user_obj(
                 "notification_method": "email",
                 "roles": [role],
                 "serial": 0,
+                "locked": False,
             },
             "is_new_user": True,
         }

@@ -30,11 +30,17 @@ def _update_disable_notifications(user_spec: UserSpec) -> None:
         user_spec["disable_notifications"] = {"disable": True} if disable_notifications else {}
 
 
-def _add_missing_locked_attr(user_spec: UserSpec) -> None:
-    """Until 2.3 the LDAP user connector did not set the locked attribute in all cases"""
-    if "locked" in user_spec:
+def _add_or_update_locked_attr(user_spec: UserSpec) -> None:
+    """
+    Until 2.3 the "locked" attribute was not set in all cases and could be
+    bool | None
+    """
+    if "locked" not in user_spec:
+        user_spec.setdefault("locked", False)
         return
-    user_spec.setdefault("locked", False)
+
+    if user_spec.get("locked", False) is None:
+        user_spec["locked"] = False
     return
 
 
@@ -51,7 +57,7 @@ def _update_user_attributes(logger: Logger, users: Users) -> Users:
             changed_user_specs = True
             del user_spec["language"]
         _update_disable_notifications(user_spec)
-        _add_missing_locked_attr(user_spec)
+        _add_or_update_locked_attr(user_spec)
 
     if changed_user_specs:
         logger.log(

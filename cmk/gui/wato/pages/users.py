@@ -527,7 +527,7 @@ class ModeUsers(WatoMode):
 
             add_header(_("State"))
             state_content = []
-            if user_spec.get("locked", False):
+            if user_spec["locked"]:
                 state_content.append(
                     build_icon_button("", _("The login is currently locked"), "user_locked")
                 )
@@ -736,7 +736,7 @@ class ModeUsers(WatoMode):
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"), sortable=False)
-                if user_spec.get("locked", False):
+                if user_spec["locked"]:
                     html.icon("user_locked", _("The login is currently locked"))
 
                 if "disable_notifications" in user_spec and isinstance(
@@ -1141,7 +1141,7 @@ class ModeEditUser(WatoMode):
 
     def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
         # Locking
-        user_attrs["locked"] = html.get_checkbox("locked")
+        user_attrs["locked"] = html.get_checkbox("locked") or False
         if (  # toggled for an existing user
             self._user_id in self._users
             and self._users[self._user_id]["locked"] != user_attrs["locked"]
@@ -1485,14 +1485,14 @@ class ModeEditUser(WatoMode):
             if not self._is_locked("locked"):
                 html.checkbox(
                     "locked",
-                    bool(self._user.get("locked")),
+                    bool(self._user["locked"]),
                     label=_("disable the login to this account"),
                 )
             else:
                 html.write_text(
-                    _("Login disabled") if self._user.get("locked", False) else _("Login possible")
+                    _("Login disabled") if self._user["locked"] else _("Login possible")
                 )
-                html.hidden_field("locked", "1" if self._user.get("locked", False) else "")
+                html.hidden_field("locked", "1" if self._user["locked"] else "")
             html.help(
                 _(
                     "Disabling the password will prevent a user from logging in while "

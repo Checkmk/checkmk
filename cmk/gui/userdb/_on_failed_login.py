@@ -30,7 +30,7 @@ def on_failed_login(username: UserId, now: datetime) -> None:
             log_msg_until_locked = str(
                 bool(active_config.lock_on_logon_failures) - user["num_failed_logins"]
             )
-            if not user.get("locked"):
+            if not user["locked"]:
                 log_msg_locked = "No"
             elif log_msg_until_locked == "0":
                 log_msg_locked = "Yes (now)"

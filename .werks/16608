@@ -1,0 +1,13 @@
+Title: netapp_ontap_volumes: also monitor volumes without counters data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1713366377
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+In the Netapp Ontap Plugin <em>NetApp Filer: Used Space and Traffic of Volumes</em> volumes where not discovered 
+if the counter information for these volumes was not present.
+
+With this werk we now handle this condition discovering and monitoring these volumes.

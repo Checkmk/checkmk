@@ -1594,12 +1594,9 @@ class CommandECArchiveEventsOfHost(ECCommand):
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        return HTML(
-            _(
-                "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
-            )
-            % request.var("host")
-        )
+        return HTML() + _(
+            "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
+        ) % request.var("host")
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML("")

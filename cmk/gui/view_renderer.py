@@ -102,14 +102,14 @@ class GUIViewRenderer(ABCViewRenderer):
         super().__init__(view)
         self._show_buttons = show_buttons
 
-    def render(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def render(  # pylint: disable=too-many-branches
         self,
         rows: Rows,
         show_checkboxes: bool,
         num_columns: int,
         show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
-    ):
+    ) -> None:
         view_spec = self.view.spec
 
         if transactions.transaction_valid() and html.do_actions():

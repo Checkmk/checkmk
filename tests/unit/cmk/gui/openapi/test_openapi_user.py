@@ -33,6 +33,7 @@ from cmk.gui.openapi.endpoints.user_config import (
 from cmk.gui.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import UserObject, UserRole
 from cmk.gui.userdb import ConnectorType
+from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.watolib.custom_attributes import (
     CustomUserAttrSpec,
@@ -1303,29 +1304,34 @@ def test_create_user_with_contact_group(clients: ClientRegistry) -> None:
 @pytest.fixture(name="mock_ldap_locked_attributes")
 def fixture_mock_ldap_locked_attributes(mocker: MockerFixture) -> MagicMock:
     """Mock the locked attributes of a LDAP user"""
-    ldap_config = {
-        "id": "CMKTest",
-        "description": "",
-        "comment": "",
-        "docu_url": "",
-        "disabled": False,
-        "directory_type": (
+    ldap_config = LDAPUserConnectionConfig(
+        id="CMKTest",
+        description="",
+        comment="",
+        docu_url="",
+        disabled=False,
+        directory_type=(
             "ad",
-            {"connect_to": ("fixed_list", {"server": "some.domain.com"})},
+            LDAPConnectionConfigFixed(
+                connect_to=(
+                    "fixed_list",
+                    Fixed(server="some.domain.com"),
+                )
+            ),
         ),
-        "bind": (
+        bind=(
             "CN=svc_checkmk,OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
             ("store", "AD_svc_checkmk"),
         ),
-        "port": 636,
-        "use_ssl": True,
-        "user_dn": "OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
-        "user_scope": "sub",
-        "user_filter": "(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
-        "user_id_umlauts": "keep",
-        "group_dn": "OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
-        "group_scope": "sub",
-        "active_plugins": {
+        port=636,
+        use_ssl=True,
+        user_dn="OU=checkmktest-users,DC=int,DC=testdomain,DC=com",
+        user_scope="sub",
+        user_filter="(&(objectclass=user)(objectcategory=person)(|(memberof=CN=cmk_AD_admins,OU=checkmktest-groups,DC=int,DC=testdomain,DC=com)))",
+        user_id_umlauts="keep",
+        group_dn="OU=checkmktest-groups,DC=int,DC=testdomain,DC=com",
+        group_scope="sub",
+        active_plugins={
             "alias": {},
             "auth_expire": {},
             "groups_to_contactgroups": {"nested": True},
@@ -1349,9 +1355,9 @@ def fixture_mock_ldap_locked_attributes(mocker: MockerFixture) -> MagicMock:
             "ui_theme": {"attr": "msDS-cloudExtensionAttribute7"},
             "force_authuser": {"attr": "msDS-cloudExtensionAttribute8"},
         },
-        "cache_livetime": 300,
-        "type": "ldap",
-    }
+        cache_livetime=300,
+        type="ldap",
+    )
 
     return mocker.patch(
         "cmk.gui.openapi.endpoints.user_config.locked_attributes",

@@ -228,7 +228,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # stores the ldap connection suffixes of all connections
     connection_suffixes: dict[str, str] = {}
 
-    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, cfg: LDAPUserConnectionConfig) -> None:
         super().__init__(cfg)
 
         self._ldap_obj: ldap.ldapobject.ReconnectLDAPObject | None = None

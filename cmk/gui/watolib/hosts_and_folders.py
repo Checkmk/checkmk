@@ -2496,7 +2496,7 @@ class Folder(FolderProtocol):
             hosts_by_site.setdefault(host.site_id(), []).append(host_name)
         return hosts_by_site
 
-    def move_hosts(self, host_names, target_folder: Folder):  # type: ignore[no-untyped-def]
+    def move_hosts(self, host_names: Collection[HostName], target_folder: Folder) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         user.need_permission("wato.edit_hosts")
@@ -3513,8 +3513,8 @@ def call_hook_hosts_changed(folder: Folder) -> None:
 # hostnames. These informations are used for displaying warning
 # symbols in the host list and the host detail view
 # Returns dictionary { hostname: [errors] }
-def validate_all_hosts(  # type: ignore[no-untyped-def]
-    hostnames: Sequence[HostName], force_all=False
+def validate_all_hosts(
+    hostnames: Sequence[HostName], force_all: bool = False
 ) -> dict[HostName, list[str]]:
     if hooks.registered("validate-all-hosts") and (len(hostnames) > 0 or force_all):
         hosts_errors: dict[HostName, list[str]] = {}

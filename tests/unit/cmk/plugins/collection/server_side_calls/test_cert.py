@@ -42,7 +42,7 @@ def test_generate_cert_services() -> None:
             command_arguments=[
                 "--url",
                 "abc.xyz",
-                "--subject-cn",
+                "--issuer-cn",
                 "issuer",
                 "--subject-cn",
                 "subject",

@@ -678,9 +678,12 @@ def _register_table_views_and_columns() -> None:
         for key, attr_hint in hints.attribute_hints.items():
             _register_attribute_column(
                 "_".join(ident + (key,)),
+                inventory.InventoryPath(
+                    path=hints.abc_path,
+                    source=inventory.TreeSource.attributes,
+                    key=SDKey(key),
+                ),
                 attr_hint,
-                hints.abc_path,
-                SDKey(key),
             )
 
         _register_table_view(hints)
@@ -763,17 +766,11 @@ def _export_node_for_csv() -> str | HTML:
 
 
 def _register_attribute_column(
-    ident: str, hint: AttributeDisplayHint, path: SDPath, key: SDKey
+    ident: str, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
 ) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
     long_inventory_title = hint.long_inventory_title
-
-    inventory_path = inventory.InventoryPath(
-        path=path,
-        source=inventory.TreeSource.attributes,
-        key=key,
-    )
 
     # Declare column painter
     register_painter(

@@ -7,11 +7,24 @@ from __future__ import annotations
 
 import abc
 from collections.abc import Callable, Sequence
-from typing import Any, Protocol, TypedDict, TypeVar
+from typing import Protocol, TypedDict, TypeVar
 
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.structured_data import SDValue
 
+from cmk.gui.inventory.filters import (
+    FilterInvBool,
+    FilterInvFloat,
+    FilterInvtableAdminStatus,
+    FilterInvtableAvailable,
+    FilterInvtableIntegerRange,
+    FilterInvtableInterfaceType,
+    FilterInvtableOperStatus,
+    FilterInvtableText,
+    FilterInvtableTimestampAsAge,
+    FilterInvtableVersion,
+    FilterInvText,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 
@@ -40,7 +53,19 @@ class InventoryHintSpec(TypedDict, total=False):
     view: str
     keyorder: Sequence[str]
     sort: SortFunction
-    filter: Any
+    filter: (
+        type[FilterInvText]
+        | type[FilterInvBool]
+        | type[FilterInvFloat]
+        | type[FilterInvtableAdminStatus]
+        | type[FilterInvtableAvailable]
+        | type[FilterInvtableIntegerRange]
+        | type[FilterInvtableInterfaceType]
+        | type[FilterInvtableOperStatus]
+        | type[FilterInvtableText]
+        | type[FilterInvtableTimestampAsAge]
+        | type[FilterInvtableVersion]
+    )
     is_show_more: bool
 
 

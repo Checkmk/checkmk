@@ -73,7 +73,7 @@ def test_update(  # pylint: disable=too-many-branches
     base_ok_services = {}
 
     for hostname in hostnames:
-        test_site.reschedule_services(hostname)
+        test_site.reschedule_services(hostname, max_count=20)
 
         # get baseline monitoring data for each host
         base_data[hostname] = test_site.get_host_services(hostname)
@@ -127,7 +127,7 @@ def test_update(  # pylint: disable=too-many-branches
     target_ok_services = {}
 
     for hostname in hostnames:
-        target_site.reschedule_services(hostname)
+        target_site.reschedule_services(hostname, max_count=20)
 
         # get update monitoring data
         target_data[hostname] = target_site.get_host_services(hostname)

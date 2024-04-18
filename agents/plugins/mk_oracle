@@ -3156,6 +3156,7 @@ export -f custom_sql_section
 export -f do_async_custom_sqls
 export -f handle_custom_sql_errors
 export -f get_binary_execution_mode
+export -f needs_user_switch_before_executing
 export -f get_binary_owner
 export -f only_root_can_modify
 

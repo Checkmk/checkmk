@@ -5195,6 +5195,7 @@ def _valuespec_extra_service_conf_icon_image() -> IconSelector:
         )
         % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
         with_emblem=False,
+        default_value="",
     )
 
 

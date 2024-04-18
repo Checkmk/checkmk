@@ -10,8 +10,10 @@
 import logging
 from collections.abc import Iterable, Sequence
 from contextlib import suppress
+from pathlib import Path
 from typing import assert_never, Final
 
+from cmk.utils import password_store
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -115,6 +117,7 @@ class _Builder:
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
         snmp_backend_override: SNMPBackendEnum | None,
+        password_store_file: Path,
     ) -> None:
         super().__init__()
         assert not is_cluster
@@ -129,6 +132,7 @@ class _Builder:
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
         self.snmp_backend_override: Final = snmp_backend_override
+        self.password_store_file: Final = password_store_file
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
@@ -175,7 +179,9 @@ class _Builder:
                         config.get_ssc_host_config(self.host_name, self.config_cache, macros),
                         host_attrs,
                         config.http_proxies,
-                        self.config_cache.collect_passwords(),
+                        # TODO: consolidate these two
+                        password_store.load(self.password_store_file),
+                        password_store_file=self.password_store_file,
                     )
                     for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                         yield SpecialAgentSource(
@@ -369,6 +375,7 @@ def make_sources(
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
     snmp_backend_override: SNMPBackendEnum | None,
+    password_store_file: Path,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if is_cluster:
@@ -404,4 +411,5 @@ def make_sources(
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),
         snmp_backend_override=snmp_backend_override,
+        password_store_file=password_store_file,
     ).sources

@@ -494,11 +494,6 @@ def test_get_active_service_data(
     expected_result: Sequence[ActiveServiceData],
 ) -> None:
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "my_active_check", True)
-    monkeypatch.setattr(
-        password_store,
-        password_store.temporary_helper_password_store_path_getter.__name__,
-        lambda: "/pw/store",
-    )
     active_check = ActiveCheck(
         active_check_plugins,
         legacy_active_check_plugins,
@@ -509,6 +504,7 @@ def test_get_active_service_data(
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
         stored_passwords=stored_passwords,
+        password_store_file=Path("/pw/store"),
     )
 
     services = list(active_check.get_active_service_data(active_check_rules))
@@ -548,11 +544,6 @@ def test_get_active_service_data_password_with_hack(
         lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
     )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "test_check", True)
-    monkeypatch.setattr(
-        password_store,
-        password_store.temporary_helper_password_store_path_getter.__name__,
-        lambda: "/pw/store",
-    )
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
         legacy_plugins={},
@@ -563,6 +554,7 @@ def test_get_active_service_data_password_with_hack(
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
         stored_passwords={"uuid1234": "p4ssw0rd!"},
+        password_store_file=Path("/pw/store"),
     )
 
     assert list(
@@ -608,11 +600,6 @@ def test_get_active_service_data_password_without_hack(
         "_get_command",
         lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
     )
-    monkeypatch.setattr(
-        password_store,
-        password_store.temporary_helper_password_store_path_getter.__name__,
-        lambda: "/pw/store",
-    )
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
         legacy_plugins={},
@@ -623,6 +610,7 @@ def test_get_active_service_data_password_without_hack(
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
         stored_passwords={"uuid1234": "p4ssw0rd!"},
+        password_store_file=Path("/pw/store"),
     )
 
     assert list(
@@ -717,6 +705,7 @@ def test_test_get_active_service_data_crash(
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
         stored_passwords={},
+        password_store_file=Path("/pw/store"),
     )
 
     list(active_check.get_active_service_data(active_check_rules))
@@ -784,6 +773,7 @@ def test_test_get_active_service_data_crash_with_debug(
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
         stored_passwords={},
+        password_store_file=Path("/pw/store"),
     )
 
     with pytest.raises(
@@ -917,11 +907,6 @@ def test_get_active_service_data_warnings(
     expected_warning: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(
-        password_store,
-        password_store.temporary_helper_password_store_path_getter.__name__,
-        lambda: "/pw/store",
-    )
     monkeypatch.setitem(password_store.hack.HACK_CHECKS, "my_active_check", True)
     active_check_config = ActiveCheck(
         active_check_plugins,
@@ -933,6 +918,7 @@ def test_get_active_service_data_warnings(
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
         stored_passwords={},
+        password_store_file=Path("/pw/store"),
     )
 
     services = list(active_check_config.get_active_service_data(active_check_rules))
@@ -1134,6 +1120,7 @@ def test_get_active_service_descriptions(
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
         stored_passwords={},
+        password_store_file=Path("/pw/store"),
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
@@ -1180,6 +1167,7 @@ def test_get_active_service_descriptions_warnings(
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
         stored_passwords={},
+        password_store_file=Path("/pw/store"),
     )
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
@@ -1568,6 +1556,7 @@ def test_iter_special_agent_commands(
         host_attrs,
         http_proxies={},
         stored_passwords=stored_passwords,
+        password_store_file=Path("/pw/store"),
     )
     commands = list(special_agent.iter_special_agent_commands("test_agent", parameters))
     assert commands == expected_result
@@ -1600,11 +1589,6 @@ def test_iter_special_agent_commands_stored_password_with_hack(
 ) -> None:
     monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
     monkeypatch.setitem(password_store.hack.HACK_AGENTS, "test_agent", True)
-    monkeypatch.setattr(
-        password_store,
-        password_store.temporary_helper_password_store_path_getter.__name__,
-        lambda: "/pw/store",
-    )
 
     special_agent = SpecialAgent(
         plugins=_PASSWORD_TEST_PLUGINS,
@@ -1615,6 +1599,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         host_attrs=HOST_ATTRS,
         http_proxies={},
         stored_passwords={"1234": "p4ssw0rd!"},
+        password_store_file=Path("/pw/store"),
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -1633,11 +1618,6 @@ def test_iter_special_agent_commands_stored_password_without_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
-    monkeypatch.setattr(
-        password_store,
-        password_store.temporary_helper_password_store_path_getter.__name__,
-        lambda: "/pw/store",
-    )
 
     special_agent = SpecialAgent(
         plugins=_PASSWORD_TEST_PLUGINS,
@@ -1648,6 +1628,7 @@ def test_iter_special_agent_commands_stored_password_without_hack(
         host_attrs=HOST_ATTRS,
         http_proxies={},
         stored_passwords={"uuid1234": "p4ssw0rd!"},
+        password_store_file=Path("/pw/store"),
     )
     assert list(
         special_agent.iter_special_agent_commands(
@@ -1704,6 +1685,7 @@ def test_iter_special_agent_commands_crash(
         HOST_ATTRS,
         http_proxies={},
         stored_passwords={},
+        password_store_file=Path("/pw/store"),
     )
 
     list(special_agent.iter_special_agent_commands("test_agent", {}))
@@ -1756,6 +1738,7 @@ def test_iter_special_agent_commands_crash_with_debug(
         HOST_ATTRS,
         http_proxies={},
         stored_passwords={},
+        password_store_file=Path("/pw/store"),
     )
 
     with pytest.raises(
@@ -1775,6 +1758,7 @@ def test_make_source_path() -> None:
         host_attrs={},
         http_proxies={},
         stored_passwords={},
+        password_store_file=Path("/pw/store"),
     )
 
     shipped_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
@@ -1794,6 +1778,7 @@ def test_make_source_path_local_agent() -> None:
         host_attrs={},
         http_proxies={},
         stored_passwords={},
+        password_store_file=Path("/pw/store"),
     )
 
     local_agent_path = Path(cmk.utils.paths.agents_dir, "special", "agent_test_agent")
@@ -1882,7 +1867,7 @@ def test_commandline_arguments_nonexisting_password(
         service_name,
         ["arg1", ("store", "pw-id", "--password=%s"), "arg3"],
         {},
-        password_store.temporary_helper_password_store_path_getter(),
+        Path("/pw/store"),
     )
     captured = capsys.readouterr()
     assert expected_warning in captured.out
@@ -1906,7 +1891,7 @@ def test_commandline_arguments_invalid_arguments_type(args: int | tuple[int, int
             "test service",
             args,  # type: ignore[arg-type]
             {},
-            password_store.temporary_helper_password_store_path_getter(),
+            Path("/pw/store"),
         )
 
 
@@ -1920,7 +1905,7 @@ def test_commandline_arguments_invalid_argument() -> None:
             "test service",
             ["arg1", (1, 2), "arg3"],  # type: ignore[list-item]
             {},
-            password_store.temporary_helper_password_store_path_getter(),
+            Path("/pw/store"),
         )
 
 

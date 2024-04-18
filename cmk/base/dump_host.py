@@ -6,6 +6,7 @@
 import socket
 import time
 
+import cmk.utils.password_store
 import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
@@ -190,6 +191,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             simulation_mode=config.simulation_mode,
             file_cache_max_age=MaxAge.zero(),
             snmp_backend_override=None,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
     ]
 

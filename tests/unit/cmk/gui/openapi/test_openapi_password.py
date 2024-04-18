@@ -257,7 +257,7 @@ def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Non
         status=200,
     )
 
-    loaded = password_store._load(password_store.password_store_path())
+    loaded = password_store.load(password_store.password_store_path())
     assert loaded["gcp"] == credentials_with_newlines.replace("\n", "")
 
 

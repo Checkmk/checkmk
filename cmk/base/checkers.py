@@ -13,6 +13,7 @@ import logging
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import partial
+from pathlib import Path
 from typing import Final, Literal
 
 import livestatus
@@ -262,6 +263,7 @@ class CMKFetcher:
         force_snmp_cache_refresh: bool,
         mode: Mode,
         on_error: OnError,
+        password_store_file: Path,
         selected_sections: SectionNameCollection,
         simulation_mode: bool,
         max_cachefile_age: MaxAge | None = None,
@@ -272,6 +274,7 @@ class CMKFetcher:
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.mode: Final = mode
         self.on_error: Final = on_error
+        self.password_store_file: Final = password_store_file
         self.selected_sections: Final = selected_sections
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
@@ -315,6 +318,7 @@ class CMKFetcher:
                         self.max_cachefile_age or self.config_cache.max_cachefile_age(host_name)
                     ),
                     snmp_backend_override=self.snmp_backend_override,
+                    password_store_file=self.password_store_file,
                 )
                 for current_host_name, current_ip_address in hosts
             ),

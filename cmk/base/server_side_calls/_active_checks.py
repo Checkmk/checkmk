@@ -118,6 +118,7 @@ class ActiveCheck:
         service_name_finalizer: Callable[[ServiceName], ServiceName],
         use_new_descriptions_for: Container[CheckPluginNameStr],
         stored_passwords: Mapping[str, str],
+        password_store_file: Path,
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
     ):
         self._plugins = {p.name: p for p in plugins.values()}
@@ -130,6 +131,7 @@ class ActiveCheck:
         self._http_proxies = http_proxies
         self._service_name_finalizer = service_name_finalizer
         self.stored_passwords = stored_passwords or {}
+        self.password_store_file = password_store_file
         self.escape_func = escape_func
         self._use_new_descriptions_for = use_new_descriptions_for
 
@@ -192,7 +194,7 @@ class ActiveCheck:
                     self.host_name,
                     service.command_arguments,
                     self.stored_passwords,
-                    password_store.temporary_helper_password_store_path_getter(),
+                    self.password_store_file,
                     processed.surrogates,
                     apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
                         active_check.name, False
@@ -318,7 +320,7 @@ class ActiveCheck:
             description,
             plugin_info.argument_function(params),
             self.stored_passwords,
-            password_store.temporary_helper_password_store_path_getter(),
+            self.password_store_file,
         )
         yield description, arguments
 

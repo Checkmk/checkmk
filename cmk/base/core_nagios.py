@@ -17,13 +17,10 @@ from pathlib import Path
 from typing import Any, cast, IO, Literal
 
 import cmk.utils.config_path
-import cmk.utils.config_warnings as config_warnings
-import cmk.utils.password_store
 import cmk.utils.paths
-import cmk.utils.store as store
-import cmk.utils.tty as tty
+from cmk.utils import config_warnings, password_store, store, tty
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.config_path import VersionedConfigPath
+from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.labels import Labels
@@ -503,6 +500,9 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         lambda x: config.get_final_service_description(x, translations),
         config.use_new_descriptions_for,
         stored_passwords,
+        # using LATEST_CONFIG here is the result of a refactoring.
+        # I am not sure if we shouldn't explicitly use the one we are creating here.
+        password_store.core_password_store_path(LATEST_CONFIG),
         escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
     )
 
@@ -1365,6 +1365,7 @@ if '-d' in sys.argv:
     output.write(f"           [{hostname!r}],\n")
     output.write("            active_check_handler=lambda *args: None,\n")
     output.write("            keepalive=False,\n")
+    output.write("            precompiled_host_check=True,\n")
     output.write("        )\n")
     output.write("    )\n")
     output.write("except MKTerminate:\n")

@@ -2799,7 +2799,7 @@ class ConfigCache:
             }
 
         return {
-            **password_store.load(),
+            **password_store.load(password_store.password_store_path()),
             **_gather_secrets_from(self.active_checks),
             **_gather_secrets_from(self.special_agents),
         }

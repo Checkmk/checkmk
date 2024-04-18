@@ -57,7 +57,7 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
                 default={},
                 lock=lock,
             ),
-            password_store.load(),
+            password_store.load(password_store.password_store_path()),
         )
 
     def save(self, cfg: Mapping[str, Password], pretty: bool) -> None:

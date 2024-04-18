@@ -36,6 +36,7 @@ import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
+from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
@@ -278,6 +279,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             selected_sections=NO_SELECTION,
             simulation_mode=config.simulation_mode,
             snmp_backend_override=None,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
         for hostname in hostnames:
 
@@ -457,6 +459,7 @@ def active_check_preview_rows(
     host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
     resource_macros = config.get_resource_macros()
     macros = {**host_macros, **resource_macros}
+    password_store_file = cmk.utils.password_store.pending_password_store_path()
     active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
@@ -466,7 +469,8 @@ def active_check_preview_rows(
         config.http_proxies,
         make_final_service_name,
         config.use_new_descriptions_for,
-        config_cache.collect_passwords(),
+        cmk.utils.password_store.load(password_store_file),
+        password_store_file,
     )
 
     return list(
@@ -522,6 +526,7 @@ def _execute_discovery(
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
+        password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     ip_address = (
         None
@@ -635,6 +640,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
     section_plugins = SectionPluginMapper()
     host_label_plugins = HostLabelPluginMapper(ruleset_matcher=ruleset_matcher)
@@ -1324,6 +1330,7 @@ class AutomationAnalyseServices(Automation):
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = config.get_resource_macros()
         macros = {**host_macros, **resource_macros}
+        password_store_file = cmk.utils.password_store.pending_password_store_path()
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
@@ -1333,7 +1340,8 @@ class AutomationAnalyseServices(Automation):
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             config.use_new_descriptions_for,
-            config_cache.collect_passwords(),
+            cmk.utils.password_store.load(password_store_file),
+            password_store_file,
         )
 
         active_checks = config_cache.active_checks(host_name)
@@ -1955,6 +1963,7 @@ class AutomationDiagHost(Automation):
                 inventory=1.5 * check_interval,
             ),
             snmp_backend_override=None,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2185,6 +2194,7 @@ class AutomationActiveCheck(Automation):
         resource_macros = config.get_resource_macros()
         translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
         macros = {**host_macros, **resource_macros}
+        password_store_file = cmk.utils.password_store.pending_password_store_path()
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
@@ -2194,7 +2204,8 @@ class AutomationActiveCheck(Automation):
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             config.use_new_descriptions_for,
-            config_cache.collect_passwords(),
+            cmk.utils.password_store.load(password_store_file),
+            password_store_file,
         )
 
         active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])
@@ -2340,6 +2351,9 @@ class AutomationGetAgentOutput(Automation):
                         inventory=1.5 * check_interval,
                     ),
                     snmp_backend_override=None,
+                    password_store_file=cmk.utils.password_store.core_password_store_path(
+                        LATEST_CONFIG
+                    ),
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

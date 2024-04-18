@@ -53,6 +53,7 @@ class SpecialAgent:
         host_attrs: Mapping[str, str],
         http_proxies: Mapping[str, Mapping[str, str]],
         stored_passwords: Mapping[str, str],
+        password_store_file: Path,
     ):
         self._plugins = {p.name: p for p in plugins.values()}
         self._modules = {p.name: l.module for l, p in plugins.items()}
@@ -63,6 +64,7 @@ class SpecialAgent:
         self.host_attrs = host_attrs
         self._http_proxies = http_proxies
         self.stored_passwords = stored_passwords
+        self.password_store_file = password_store_file
 
     def _make_source_path(self, agent_name: str) -> Path | str:
         file_name = f"agent_{agent_name}"
@@ -87,7 +89,7 @@ class SpecialAgent:
             None,
             agent_configuration,
             self.stored_passwords,
-            password_store.temporary_helper_password_store_path_getter(),
+            self.password_store_file,
         )
         return replace_macros(f"{path} {args}", self.host_config.macros)
 
@@ -116,7 +118,7 @@ class SpecialAgent:
                 self.host_name,
                 command.command_arguments,
                 self.stored_passwords,
-                password_store.temporary_helper_password_store_path_getter(),
+                self.password_store_file,
                 processed.surrogates,
                 apply_password_store_hack=password_store.hack.HACK_AGENTS.get(
                     special_agent.name, False

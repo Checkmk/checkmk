@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
 
 from tests.testlib.base import Scenario
@@ -110,5 +112,6 @@ def test_host_config_creates_passing_source_sources(
             file_cache_options=FileCacheOptions(),
             file_cache_max_age=MaxAge.zero(),
             snmp_backend_override=None,
+            password_store_file=Path("/pw/store"),
         )
     ] == sources

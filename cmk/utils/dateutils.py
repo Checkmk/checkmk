@@ -3,7 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
+
 from cmk.utils.i18n import _
+
+Weekday = Literal[
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]
 
 
 def weekday_name(day_num: int) -> str:
@@ -11,7 +23,7 @@ def weekday_name(day_num: int) -> str:
     return weekdays()[day_num]
 
 
-def weekday_ids() -> list[str]:
+def weekday_ids() -> list[Weekday]:
     """Returns a list of the internal week day names"""
     return [d[0] for d in weekdays_by_name()]
 
@@ -29,7 +41,7 @@ def weekdays() -> dict[int, str]:
     }
 
 
-def weekdays_by_name() -> list[tuple[str, str]]:
+def weekdays_by_name() -> list[tuple[Weekday, str]]:
     """Returns a list of two element tuples containing the weekday ID and the human readable day name"""
     return [
         ("monday", _("Monday")),

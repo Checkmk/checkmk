@@ -2900,11 +2900,6 @@ msgstr "Nombre absolu de connexions inactives"
 msgid "Absolute number of incoming connections"
 msgstr "Nombre absolu de connexions entrantes"
 
-msgid ""
-"Absolute path to the directory of all suites on the Windows host, for "
-"example \"C:\\robot\"."
-msgstr ""
-
 msgid "Absolute used commit charge"
 msgstr ""
 
@@ -9044,8 +9039,8 @@ msgid ""
 "behavior. The HTML log will still contain the omitted tests and show them as "
 "<tt>FAIL</tt> (even though they were not executed).<br>See also \"<a href="
 "\"http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#stopping-when-first-test-case-fails\">How to stop a suite when the "
-"first test fails</a>\". "
+"html#stopping-when-first-test-case-fails\" target=\"_blank\">How to stop a "
+"suite when the first test fails</a>\". "
 msgstr ""
 
 msgid ""
@@ -9226,6 +9221,11 @@ msgstr ""
 "<tt>python</tt> (selon la commande trouvée sur le système hôte). Ici, vous "
 "pouvez spécifier une commande spécifique, indépendante du script qui sera "
 "exécuté."
+
+msgid ""
+"By default, the agent determines the location dynamically based on a few "
+"well-known locations. You can specify a full path here instead."
+msgstr ""
 
 msgid ""
 "By default, the controller ignores proxy servers configured on the target "
@@ -10590,7 +10590,7 @@ msgid "Check MK status of piggybacked host within this period"
 msgstr "Vérifier le statut MK de l'hôte du ferroutage pendant cette période"
 
 #, fuzzy
-msgid "Check MS SQL Server- BETA (Linux, Windows)"
+msgid "Check MS SQL Server (Linux, Windows)"
 msgstr "Microsoft SQL Server (Windows)"
 
 msgid "Check Parameter"
@@ -12251,8 +12251,10 @@ msgstr "Colonnes à faire correspondre"
 msgid "Com. buf. max/total"
 msgstr "Com. buf. max/total"
 
-msgid "Combinations of suite application names and tags must be unique."
+#, fuzzy
+msgid "Combinations of application names and variants must be unique."
 msgstr ""
+"Cartographie des combinaisons d'état opérationnel et d'état d'administration"
 
 msgid "Combined graph"
 msgstr "Graphique combiné"
@@ -28039,12 +28041,6 @@ msgstr ""
 "l'application, l'installation et les groupes de correspondance "
 "correspondent)."
 
-msgid ""
-"If the same Robot Framework suite is executed several times but with "
-"different parameters, this field is used to differentiate them. (Example: DE "
-"and EN when testing two language versions of a website.)"
-msgstr ""
-
 msgid "If the status is non-OK or a magic factor is set"
 msgstr "Si le statut est non-OK ou si un facteur magique est défini"
 
@@ -28084,6 +28080,17 @@ msgstr ""
 "répété n fois]. L'activation de cet indicateur peut contribuer à réduire la "
 "taille de la sortie de l'agent dans le cas où de nombreuses lignes en double "
 "sont générées."
+
+msgid ""
+"If there is more than one plan testing the same application, then the "
+"variant is used to differentiate them. Example: DE and EN when testing two "
+"language versions of a website. The application name and the variant are "
+"combined to form the `Plan ID`. The `Plan ID` is used in various places such "
+"as log messages, rcc space identifies, identification of environment builds, "
+"as part of service items. The variant is available as a service label. "
+"Variants are restricted to the following characters: a-z, A-Z, 0-9, `-`, "
+"`_`, `.`"
+msgstr ""
 
 msgid ""
 "If there is only one form element on the requested page, you do not need to "
@@ -37801,8 +37808,12 @@ msgid "Name of the VM/HostSystem"
 msgstr "Nom de la VM/Système hôte"
 
 msgid ""
-"Name of the application to be tested here. This name can be chosen "
-"arbitrarily and be used multiple times."
+"Name of the application to be tested here. The application name and the "
+"variant are combined to form the `Plan ID`. The `Plan ID` is used in various "
+"places such as log messages, rcc space identifies, identification of "
+"environment builds, as part of service items. Moreover, the application is "
+"available as a service label. Application names are restricted to the "
+"following characters: a-z, A-Z, 0-9, `-`, `_`, `.`"
 msgstr ""
 
 msgid "Name of the band, e.g. 5 GHz"
@@ -37918,7 +37929,7 @@ msgid ""
 "Robotmk or for problematic characters. The arguments given here are used "
 "along with possible other command line options. (See also <a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#argument-files\">About argument files</a>)"
+"html#argument-files\" target=\"_blank\">About argument files</a>)"
 msgstr ""
 
 msgid ""
@@ -42346,6 +42357,9 @@ msgstr "Chemin d'accès au fichier Cert Key"
 msgid "Path to Certificate key file"
 msgstr "Chemin d'accès au fichier de la clé du certificat"
 
+msgid "Path to PostGreSQL binary"
+msgstr ""
+
 msgid "Path to a CA certificate"
 msgstr "Chemin d'accès à un certificat CA"
 
@@ -44886,9 +44900,9 @@ msgstr "Exécution du plugin d'agent Python (UNIX)"
 msgid ""
 "Python or YAML file file to read variables from. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#variable-files\">About variable files</a>) Possible arguments to the "
-"variable file can be given after the file path using a colon or a semicolon "
-"as a separator. Examples:\n"
+"html#variable-files\" target=\"_blank\">About variable files</a>) Possible "
+"arguments to the variable file can be given after the file path using a "
+"colon or a semicolon as a separator. Examples:\n"
 "<tt>path/vars.yaml</tt>\n"
 "<tt>set_environment.py:testing</tt>"
 msgstr ""
@@ -45725,6 +45739,10 @@ msgstr "Redis n'est pas joignable, terminaison"
 
 msgid "Redis persistence"
 msgstr "Persistance Redis"
+
+#, fuzzy
+msgid "Redis server is not reachable."
+msgstr "Ce site n'est actuellement pas joignable."
 
 msgid "Redis server name"
 msgstr "Nom du serveur Redis"
@@ -47474,15 +47492,15 @@ msgid "Robotmk Enterprise features are hidden."
 msgstr ""
 
 #, fuzzy
-msgid "Robotmk Scheduler (Windows)"
-msgstr "Journaux de RobotMK"
-
-#, fuzzy
 msgid "Robotmk logs"
 msgstr "Journaux de RobotMK"
 
 #, fuzzy
 msgid "Robotmk plan"
+msgstr "Journaux de RobotMK"
+
+#, fuzzy
+msgid "Robotmk scheduler (Windows)"
 msgstr "Journaux de RobotMK"
 
 #, fuzzy
@@ -49123,9 +49141,9 @@ msgstr "Sélectionner les suites par nom (%s)"
 msgid ""
 "Select test cases that are not to run at all with a tag. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#tagging-test-cases\">About tagging test cases</a>). These tests are not "
-"run even if included with <tt>--include</tt>. Tags are matched using the "
-"same rules as with <tt>--include</tt>."
+"html#tagging-test-cases\" target=\"_blank\">About tagging test cases</a>). "
+"These tests are not run even if included with <tt>--include</tt>. Tags are "
+"matched using the same rules as with <tt>--include</tt>."
 msgstr ""
 
 #, python-format
@@ -49142,11 +49160,11 @@ msgstr ""
 
 msgid ""
 "Select tests by tag. (<a href=\"https://robotframework.org/robotframework/"
-"latest/RobotFrameworkUserGuide.html#tagging-test-cases\">About tagging test "
-"cases</a>). Similarly as name with <tt>--test</tt>,' tag is case and space "
-"insensitive and it is possible to use patterns with <tt>*</tt>, <tt>?</tt> "
-"and <tt>[]</tt> as wildcards. Tags and patterns can also be combined with "
-"<tt>AND</tt>, <tt>OR</tt>, and <tt>NOT</tt> operators."
+"latest/RobotFrameworkUserGuide.html#tagging-test-cases\"  target=\"_blank"
+"\">About tagging test cases</a>). Similarly as name with <tt>--test</tt>,' "
+"tag is case and space insensitive and it is possible to use patterns with "
+"<tt>*</tt>, <tt>?</tt> and <tt>[]</tt> as wildcards. Tags and patterns can "
+"also be combined with <tt>AND</tt>, <tt>OR</tt>, and <tt>NOT</tt> operators."
 msgstr ""
 
 msgid ""
@@ -61473,6 +61491,11 @@ msgstr "Ceci définit une règle de modèle de fichier journal"
 
 msgid "This defines one value grouping pattern"
 msgstr "Ceci définit un modèle de groupement de valeurs"
+
+msgid ""
+"This directory contains all Robot Framework suite directories. An absolute "
+"path is used to specify this directory, for example \"C:\\robot\"."
+msgstr ""
 
 msgid ""
 "This directory will be used for temporarily storing backups before uploading "
@@ -74282,11 +74305,12 @@ msgstr ""
 "actuellement supportés sont les indicents et les cas."
 
 msgid ""
-"With the help of the [rcc](https://github.com/robocorp/rcc) binary, the "
-"robotmk scheduler can generate the Python environments required for the "
-"execution of Robot Framework suites. This eliminates the need to install and "
-"configure Python and all of its library packages on the target hosts. RCC "
-"environments are only built when the scheduler is started."
+"With the help of the <a href=\"https://github.com/robocorp/rcc\" target="
+"\"_blank\">RCC</a> binary, the robotmk scheduler can generate the Python "
+"environments required for the execution of Robot Framework suites. This "
+"eliminates the need to install and configure Python and all of its library "
+"packages on the target hosts. RCC environments are only built when the "
+"scheduler is started."
 msgstr ""
 
 msgid ""

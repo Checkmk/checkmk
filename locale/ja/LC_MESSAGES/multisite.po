@@ -2797,13 +2797,6 @@ msgstr "アイドル接続の絶対数"
 msgid "Absolute number of incoming connections"
 msgstr "着信接続の絶対数"
 
-msgid ""
-"Absolute path to the directory of all suites on the Windows host, for "
-"example \"C:\\robot\"."
-msgstr ""
-"Windows ホスト上のすべてのスイートのディレクトリへの絶対パス。例えば\"C:"
-"\\robot\"。"
-
 #, fuzzy
 msgid "Absolute used commit charge"
 msgstr "絶対コミット可能メモリ"
@@ -8736,8 +8729,8 @@ msgid ""
 "behavior. The HTML log will still contain the omitted tests and show them as "
 "<tt>FAIL</tt> (even though they were not executed).<br>See also \"<a href="
 "\"http://robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#stopping-when-first-test-case-fails\">How to stop a suite when the "
-"first test fails</a>\". "
+"html#stopping-when-first-test-case-fails\" target=\"_blank\">How to stop a "
+"suite when the first test fails</a>\". "
 msgstr ""
 
 msgid ""
@@ -8907,6 +8900,11 @@ msgstr ""
 "ンを実行し、<tt>python2</tt>または<tt>python</tt>でPython 2プラグインを実行し"
 "ます(ホストシステムで見つかったコマンドによって異なります)。ここでは、実行さ"
 "れるスクリプトとは関係なく、特定のコマンドを指定できます。"
+
+msgid ""
+"By default, the agent determines the location dynamically based on a few "
+"well-known locations. You can specify a full path here instead."
+msgstr ""
 
 msgid ""
 "By default, the controller ignores proxy servers configured on the target "
@@ -10240,7 +10238,7 @@ msgid "Check MK status of piggybacked host within this period"
 msgstr "この期間内にピギーバックされたホストのMKステータスを確認します"
 
 #, fuzzy
-msgid "Check MS SQL Server- BETA (Linux, Windows)"
+msgid "Check MS SQL Server (Linux, Windows)"
 msgstr "Microsoft SQL Server(Windows)"
 
 msgid "Check Parameter"
@@ -11851,8 +11849,9 @@ msgstr "一致するカラム"
 msgid "Com. buf. max/total"
 msgstr "Com. Buf. 最大/合計"
 
-msgid "Combinations of suite application names and tags must be unique."
-msgstr ""
+#, fuzzy
+msgid "Combinations of application names and variants must be unique."
+msgstr "運用状態と管理状態の組合せマップ"
 
 msgid "Combined graph"
 msgstr "結合グラフ"
@@ -27187,12 +27186,6 @@ msgstr ""
 "的にキャンセルされます(ホスト、アプリケーション、ファシリティ、および一致グ"
 "ループが一致する場合)。"
 
-msgid ""
-"If the same Robot Framework suite is executed several times but with "
-"different parameters, this field is used to differentiate them. (Example: DE "
-"and EN when testing two language versions of a website.)"
-msgstr ""
-
 msgid "If the status is non-OK or a magic factor is set"
 msgstr "ステータスがOKでないか、マジックファクターが設定されている場合"
 
@@ -27227,6 +27220,17 @@ msgstr ""
 "を配信し、その後、削除された行数を含む文脈行を出力します。[上記のメッセージ"
 "は n 回繰り返されました]。このフラグを設定すると、多くの重複行が生成された場"
 "合に、エージェントの出力サイズを小さくすることができます。"
+
+msgid ""
+"If there is more than one plan testing the same application, then the "
+"variant is used to differentiate them. Example: DE and EN when testing two "
+"language versions of a website. The application name and the variant are "
+"combined to form the `Plan ID`. The `Plan ID` is used in various places such "
+"as log messages, rcc space identifies, identification of environment builds, "
+"as part of service items. The variant is available as a service label. "
+"Variants are restricted to the following characters: a-z, A-Z, 0-9, `-`, "
+"`_`, `.`"
+msgstr ""
 
 msgid ""
 "If there is only one form element on the requested page, you do not need to "
@@ -36647,8 +36651,12 @@ msgid "Name of the VM/HostSystem"
 msgstr "VM/HostSystemの名前"
 
 msgid ""
-"Name of the application to be tested here. This name can be chosen "
-"arbitrarily and be used multiple times."
+"Name of the application to be tested here. The application name and the "
+"variant are combined to form the `Plan ID`. The `Plan ID` is used in various "
+"places such as log messages, rcc space identifies, identification of "
+"environment builds, as part of service items. Moreover, the application is "
+"available as a service label. Application names are restricted to the "
+"following characters: a-z, A-Z, 0-9, `-`, `_`, `.`"
 msgstr ""
 
 msgid "Name of the band, e.g. 5 GHz"
@@ -36764,7 +36772,7 @@ msgid ""
 "Robotmk or for problematic characters. The arguments given here are used "
 "along with possible other command line options. (See also <a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#argument-files\">About argument files</a>)"
+"html#argument-files\" target=\"_blank\">About argument files</a>)"
 msgstr ""
 
 msgid ""
@@ -41047,6 +41055,9 @@ msgstr "Cert Keyファイルへのパス"
 msgid "Path to Certificate key file"
 msgstr "証明書キーファイルへのパス"
 
+msgid "Path to PostGreSQL binary"
+msgstr ""
+
 msgid "Path to a CA certificate"
 msgstr "CA証明書へのパス"
 
@@ -43497,9 +43508,9 @@ msgstr "Pythonエージェントプラグインの実行(UNIX)"
 msgid ""
 "Python or YAML file file to read variables from. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#variable-files\">About variable files</a>) Possible arguments to the "
-"variable file can be given after the file path using a colon or a semicolon "
-"as a separator. Examples:\n"
+"html#variable-files\" target=\"_blank\">About variable files</a>) Possible "
+"arguments to the variable file can be given after the file path using a "
+"colon or a semicolon as a separator. Examples:\n"
 "<tt>path/vars.yaml</tt>\n"
 "<tt>set_environment.py:testing</tt>"
 msgstr ""
@@ -44334,6 +44345,10 @@ msgstr "Redisにアクセスできません、終了"
 
 msgid "Redis persistence"
 msgstr "Redisの永続性"
+
+#, fuzzy
+msgid "Redis server is not reachable."
+msgstr "このサイトには現在アクセスできません。"
 
 msgid "Redis server name"
 msgstr "Redisサーバー名"
@@ -46036,15 +46051,15 @@ msgid "Robotmk Enterprise features are hidden."
 msgstr "エンタープライズ機能"
 
 #, fuzzy
-msgid "Robotmk Scheduler (Windows)"
-msgstr "RobotMKのログ"
-
-#, fuzzy
 msgid "Robotmk logs"
 msgstr "RobotMKのログ"
 
 #, fuzzy
 msgid "Robotmk plan"
+msgstr "RobotMKのログ"
+
+#, fuzzy
+msgid "Robotmk scheduler (Windows)"
 msgstr "RobotMKのログ"
 
 #, fuzzy
@@ -47646,9 +47661,9 @@ msgstr "名前でスイートを選択 (%s)"
 msgid ""
 "Select test cases that are not to run at all with a tag. (<a href=\"https://"
 "robotframework.org/robotframework/latest/RobotFrameworkUserGuide."
-"html#tagging-test-cases\">About tagging test cases</a>). These tests are not "
-"run even if included with <tt>--include</tt>. Tags are matched using the "
-"same rules as with <tt>--include</tt>."
+"html#tagging-test-cases\" target=\"_blank\">About tagging test cases</a>). "
+"These tests are not run even if included with <tt>--include</tt>. Tags are "
+"matched using the same rules as with <tt>--include</tt>."
 msgstr ""
 
 #, python-format
@@ -47665,11 +47680,11 @@ msgstr ""
 
 msgid ""
 "Select tests by tag. (<a href=\"https://robotframework.org/robotframework/"
-"latest/RobotFrameworkUserGuide.html#tagging-test-cases\">About tagging test "
-"cases</a>). Similarly as name with <tt>--test</tt>,' tag is case and space "
-"insensitive and it is possible to use patterns with <tt>*</tt>, <tt>?</tt> "
-"and <tt>[]</tt> as wildcards. Tags and patterns can also be combined with "
-"<tt>AND</tt>, <tt>OR</tt>, and <tt>NOT</tt> operators."
+"latest/RobotFrameworkUserGuide.html#tagging-test-cases\"  target=\"_blank"
+"\">About tagging test cases</a>). Similarly as name with <tt>--test</tt>,' "
+"tag is case and space insensitive and it is possible to use patterns with "
+"<tt>*</tt>, <tt>?</tt> and <tt>[]</tt> as wildcards. Tags and patterns can "
+"also be combined with <tt>AND</tt>, <tt>OR</tt>, and <tt>NOT</tt> operators."
 msgstr ""
 
 msgid ""
@@ -59393,6 +59408,11 @@ msgstr "これは１つのログファイルのパターンルールを定義す
 
 msgid "This defines one value grouping pattern"
 msgstr "これは、1つの値のグループ化パターンを定義します"
+
+msgid ""
+"This directory contains all Robot Framework suite directories. An absolute "
+"path is used to specify this directory, for example \"C:\\robot\"."
+msgstr ""
 
 msgid ""
 "This directory will be used for temporarily storing backups before uploading "
@@ -71656,11 +71676,12 @@ msgstr ""
 "されているのは、インシデント管理とケース管理です。"
 
 msgid ""
-"With the help of the [rcc](https://github.com/robocorp/rcc) binary, the "
-"robotmk scheduler can generate the Python environments required for the "
-"execution of Robot Framework suites. This eliminates the need to install and "
-"configure Python and all of its library packages on the target hosts. RCC "
-"environments are only built when the scheduler is started."
+"With the help of the <a href=\"https://github.com/robocorp/rcc\" target="
+"\"_blank\">RCC</a> binary, the robotmk scheduler can generate the Python "
+"environments required for the execution of Robot Framework suites. This "
+"eliminates the need to install and configure Python and all of its library "
+"packages on the target hosts. RCC environments are only built when the "
+"scheduler is started."
 msgstr ""
 
 msgid ""
@@ -76327,6 +76348,13 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "Absolute path to the directory of all suites on the Windows host, for "
+#~ "example \"C:\\robot\"."
+#~ msgstr ""
+#~ "Windows ホスト上のすべてのスイートのディレクトリへの絶対パス。例えば\"C:"
+#~ "\\robot\"。"
 
 #, fuzzy
 #~| msgid "Problem dashboard"

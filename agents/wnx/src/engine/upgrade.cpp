@@ -625,7 +625,7 @@ bool FindStopDeactivateLegacyAgent() {
     }
     auto path = FindLegacyAgent();
     if (path.empty()) {
-        XLOG::l.t("There is no legacy Check Mk agent installed");
+        XLOG::l.t("There is no legacy Checkmk agent installed");
         return true;
     }
 
@@ -702,7 +702,7 @@ bool FindActivateStartLegacyAgent(AddAction action) {
 
     auto path = FindLegacyAgent();
     if (path.empty()) {
-        XLOG::l.t("There is no legacy Check Mk agent installed");
+        XLOG::l.t("There is no legacy Checkmk agent installed");
         return true;
     }
 

@@ -87,52 +87,6 @@ EXPECTED_INV_HIST_KEYS = [
     "invhist_changed",
 ]
 
-INV_ROWS_MULTI = [
-    (
-        "invtesttable1",
-        [
-            {
-                "sid": "A",
-                "value1": 1,
-            },
-            {
-                "sid": "B",
-                "value1": 2,
-            },
-            {
-                "sid": "C",
-                "value1": 3,
-            },
-        ],
-    ),
-    (
-        "invtesttable2",
-        [
-            {
-                "sid": "A",
-                "value2": 4,
-            },
-            {
-                "sid": "B",
-                "value2": 5,
-            },
-            {
-                "sid": "C",
-                "value2": 6,
-            },
-        ],
-    ),
-]
-
-EXPECTED_INV_MULTI_KEYS = [
-    "site",
-    "host_name",
-    "invtesttable1_sid",
-    "invtesttable1_value1",
-    "invtesttable2_sid",
-    "invtesttable2_value2",
-]
-
 
 @pytest.fixture(name="view")
 def fixture_view() -> View:

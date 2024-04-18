@@ -8,6 +8,7 @@ import time
 from pathlib import Path
 from typing import Literal
 
+import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.tty as tty
@@ -215,6 +216,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             cas_dir=cas_dir,
             ca_store=ca_store,
             site_crt=site_crt,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
     ]
 

@@ -8,6 +8,7 @@
 import functools
 import logging
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
@@ -1435,6 +1436,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             selected_sections=NO_SELECTION,
             simulation_mode=True,
             snmp_backend_override=None,
+            password_store_file=Path("/pw/store"),
         )
         commandline_discovery(
             host_name=testhost,

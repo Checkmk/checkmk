@@ -2711,7 +2711,11 @@ class ConfigCache:
         return self.__special_agents.setdefault(host_name, special_agents_impl())
 
     def special_agent_command_lines(
-        self, host_name: HostName, ip_address: HostAddress | None, passwords: Mapping[str, str]
+        self,
+        host_name: HostName,
+        ip_address: HostAddress | None,
+        passwords: Mapping[str, str],
+        password_store_file: Path,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
         for agentname, params_seq in self.special_agents(host_name):
             for params in params_seq:
@@ -2730,6 +2734,7 @@ class ConfigCache:
                     host_attrs,
                     http_proxies,
                     passwords,
+                    password_store_file,
                 )
                 for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                     yield agentname, agent_data
@@ -2768,7 +2773,7 @@ class ConfigCache:
             }
 
         return {
-            **password_store.load(),
+            **password_store.load(password_store.password_store_path()),
             **_gather_secrets_from(self.active_checks),
             **_gather_secrets_from(self.special_agents),
         }

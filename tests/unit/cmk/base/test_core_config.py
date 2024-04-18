@@ -88,19 +88,19 @@ def test_do_create_config_nagios_collects_passwords(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
-    password_store.save({"stored-secret": "123"}, password_store.password_store_path())
 
-    assert not password_store.load_for_helpers()
+    password_store.save(
+        passwords := {"stored-secret": "123"}, password_store.pending_password_store_path()
+    )
+
+    core_store = password_store.core_password_store_path(LATEST_CONFIG)
+    assert not password_store.load(core_store)
 
     core_config.do_create_config(
         create_core("nagios"), core_scenario, all_hosts=[HostName("test-host")], duplicates=()
     )
 
-    assert password_store.load_for_helpers() == {
-        # TODO: once the password collection of ad-hoc passwords is implemented, this should be there:
-        # ":uuid:1234": "p4ssw0rd!",
-        "stored-secret": "123",
-    }
+    assert password_store.load(core_store) == passwords
 
 
 def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:

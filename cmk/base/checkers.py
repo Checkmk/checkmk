@@ -268,6 +268,7 @@ class CMKFetcher:
         force_snmp_cache_refresh: bool,
         mode: Mode,
         on_error: OnError,
+        password_store_file: Path,
         selected_sections: SectionNameCollection,
         simulation_mode: bool,
         max_cachefile_age: MaxAge | None = None,
@@ -278,6 +279,7 @@ class CMKFetcher:
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.mode: Final = mode
         self.on_error: Final = on_error
+        self.password_store_file: Final = password_store_file
         self.selected_sections: Final = selected_sections
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
@@ -357,6 +359,7 @@ class CMKFetcher:
                     cas_dir=cas_dir,
                     ca_store=ca_store,
                     site_crt=site_crt,
+                    password_store_file=self.password_store_file,
                 )
                 for current_host_name, current_ip_stack_config, current_ip_address in hosts
             ),

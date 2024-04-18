@@ -257,10 +257,7 @@ def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Non
         status=200,
     )
 
-    # suppression fixed in next commit
-    loaded = password_store._load(  # pylint: disable=protected-access
-        password_store.password_store_path()
-    )
+    loaded = password_store.load(password_store.password_store_path())
     assert loaded["gcp"] == credentials_with_newlines.replace("\n", "")
 
 

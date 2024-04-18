@@ -114,11 +114,7 @@ def save(passwords: Mapping[str, str], store_path: Path) -> None:
     store.save_bytes_to_file(store_path, PasswordStore.encrypt(content))
 
 
-def load() -> dict[str, str]:
-    return _load(password_store_path())
-
-
-def _load(store_path: Path) -> dict[str, str]:
+def load(store_path: Path) -> dict[str, str]:
     with suppress(FileNotFoundError):
         store_path_bytes: bytes = store_path.read_bytes()
         if not store_path_bytes:
@@ -155,8 +151,9 @@ def ad_hoc_password_id() -> str:
 
 def extract(password_id: PasswordId) -> str | None:
     """Translate the password store reference to the actual password"""
+    staging_path = pending_password_store_path()
     if not isinstance(password_id, tuple):
-        return load().get(password_id)
+        return load(staging_path).get(password_id)
 
     # In case we get a tuple, assume it was coming from a ValueSpec "IndividualOrStoredPassword"
     pw_type, pw_id = password_id
@@ -164,14 +161,9 @@ def extract(password_id: PasswordId) -> str | None:
         return pw_id
     if pw_type == "store":
         # TODO: Is this None really intended? Shouldn't we better raise an exception?
-        return load().get(pw_id)
+        return load(staging_path).get(pw_id)
 
     raise MKGeneralException("Unknown password type.")
-
-
-def save_for_helpers(config_base_path: ConfigPath, passwords: Mapping[str, str]) -> None:
-    """Update the helper password store with the given passwords"""
-    save(passwords, core_password_store_path(config_base_path))
 
 
 def lookup(pw_file: Path, pw_id: str) -> str:
@@ -184,20 +176,11 @@ def lookup(pw_file: Path, pw_id: str) -> str:
         The password as found in the password store.
     """
     try:
-        return _load(pw_file)[pw_id]
+        return load(pw_file)[pw_id]
     except KeyError:
         # the fact that this is a dict is an implementation detail.
         # Let's make it a ValueError.
         raise ValueError(f"Password '{pw_id}' not found in {pw_file}")
-
-
-def load_for_helpers() -> dict[str, str]:
-    return _load(core_password_store_path(LATEST_CONFIG))
-
-
-def temporary_helper_password_store_path_getter() -> Path:
-    """only temporary to keep the patch size managable"""
-    return core_password_store_path(LATEST_CONFIG)
 
 
 class PasswordStore:

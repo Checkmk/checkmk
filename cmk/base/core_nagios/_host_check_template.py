@@ -96,6 +96,7 @@ def main() -> int:
             [CONFIG.hostname],
             active_check_handler=lambda *args: None,
             keepalive=False,
+            precompiled_host_check=True,
         )
     except MKTerminate:
         out.output("<Interrupted>\n", stream=sys.stderr)

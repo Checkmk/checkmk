@@ -58,7 +58,7 @@ class PasswordStore(WatoSimpleConfigFile[Password]):
                 default={},
                 lock=lock,
             ),
-            password_store.load(),
+            password_store.load(password_store.password_store_path()),
         )
         validate_passwords(cfg)
         return cfg

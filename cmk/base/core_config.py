@@ -362,7 +362,9 @@ def _create_core_config(
     _verify_non_duplicate_hosts(duplicates)
     _verify_non_deprecated_checkgroups()
 
-    passwords = config_cache.collect_passwords()
+    passwords = cmk.utils.password_store.load(
+        cmk.utils.password_store.pending_password_store_path()
+    )
 
     config_path = next(VersionedConfigPath.current())
     with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
@@ -370,7 +372,9 @@ def _create_core_config(
             config_path, config_cache, hosts_to_update=hosts_to_update, passwords=passwords
         )
 
-    cmk.utils.password_store.save_for_helpers(config_path, passwords)
+    cmk.utils.password_store.save(
+        passwords, cmk.utils.password_store.core_password_store_path(config_path)
+    )
 
 
 def _verify_non_deprecated_checkgroups() -> None:

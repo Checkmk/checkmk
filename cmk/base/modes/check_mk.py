@@ -31,6 +31,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
@@ -579,6 +580,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             cas_dir=cas_dir,
             ca_store=ca_store,
             site_crt=site_crt,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -1340,7 +1342,9 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         config_cache,
         hostnames=hostnames,
         licensing_handler=get_licensing_handler_type().make(),
-        passwords=cmk.utils.password_store.load(),
+        passwords=cmk.utils.password_store.load(
+            cmk.utils.password_store.pending_password_store_path()
+        ),
     )
 
 
@@ -1742,6 +1746,7 @@ def mode_check_discovery(
             inventory=1.5 * check_interval,
         ),
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
     parser = CMKParser(
         config_cache,
@@ -2067,6 +2072,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     for hostname in sorted(
         _preprocess_hostnames(
@@ -2199,6 +2205,7 @@ def mode_check(
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
+    precompiled_host_check: bool = False,
 ) -> ServiceState:
     file_cache_options = _handle_fetcher_options(options)
     try:
@@ -2225,6 +2232,11 @@ def mode_check(
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=(
+            cmk.utils.password_store.core_password_store_path(LATEST_CONFIG)
+            if precompiled_host_check
+            else cmk.utils.password_store.pending_password_store_path()
+        ),
     )
     parser = CMKParser(
         config_cache,
@@ -2447,6 +2459,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     parser = CMKParser(
         config_cache,
@@ -2691,6 +2704,7 @@ def mode_inventory_as_check(
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
     parser = CMKParser(
         config_cache,
@@ -2844,6 +2858,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
 
     def summarizer(host_name: HostName) -> CMKSummarizer:

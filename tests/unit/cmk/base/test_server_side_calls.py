@@ -246,7 +246,7 @@ def argument_function_with_exception(*args, **kwargs):
                 "http": {
                     "command_line": "echo $ARG1$",
                     "argument_function": lambda _: "--arg1 arument1 --host_alias $HOSTALIAS$",
-                    "service_description": lambda _: "Active check of $HOSTALIAS$",
+                    "service_description": lambda _: "HTTP myHTTPName on $HOSTALIAS$",
                 }
             },
             {},

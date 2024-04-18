@@ -345,6 +345,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "fortigate_node_memory",
                 "hr_fs",
                 "hr_mem",
+                # TODO: can be removed when
+                #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
+                #  can be removed
                 "http",
                 "huawei_switch_mem",
                 "hyperv_vms",

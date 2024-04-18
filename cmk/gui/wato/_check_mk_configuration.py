@@ -2849,7 +2849,15 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("fortigate_node_memory", _("Fortigate node memory")),
                 ("hr_fs", _("Used space in filesystems via SNMP")),
                 ("hr_mem", _("HR: Used memory via SNMP")),
-                ("http", _("Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections")),
+                # TODO: can be removed when
+                #  cmk.update_config.plugins.actions.rulesets._force_old_http_service_description
+                #  can be removed
+                (
+                    "http",
+                    _(
+                        "Check HTTP: Use HTTPS instead of HTTP for SSL/TLS connections (Deprecated/ineffective)"
+                    ),
+                ),
                 (
                     "huawei_switch_mem",
                     _("Memory percentage used of devices with modules (Huawei)"),

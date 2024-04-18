@@ -19,6 +19,8 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetName, RuleSpec
 
 from cmk.checkengine.checking import CheckPluginName
 
+from cmk.base import config
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import (
@@ -58,6 +60,9 @@ class UpdateRulesets(UpdateAction):
         raw_rulesets = AllRulesets(RulesetCollection._initialize_rulesets())
         root_folder = folder_tree().root_folder()
         all_rulesets = _transform_label_conditions_in_all_folders(logger, raw_rulesets, root_folder)
+
+        if "http" not in config.use_new_descriptions_for:
+            _force_old_http_service_description(all_rulesets)
 
         _delete_deprecated_wato_rulesets(
             logger,
@@ -243,6 +248,20 @@ def _transform_wato_ruleset_mail_queue_length(
     for folder, _folder_index, rule in old_ruleset.get_rules():
         if _mail_queue_matches_single(rule.conditions):
             new_ruleset.append_rule(folder, rule)
+
+
+def _force_old_http_service_description(all_rulesets: RulesetCollection) -> None:
+    # relevant for update to 2.4
+
+    # remove "http" from configuration/ add another update step
+    if (http_ruleset := all_rulesets.get("active_checks:http")).is_empty():
+        return
+
+    for _, _, rule in http_ruleset.get_rules():
+        if rule.value["name"].startswith("^"):
+            continue
+
+        rule.value["name"] = f"^HTTP {rule.value['name']}"
 
 
 def _mail_queue_matches_single(conditions: RuleConditions) -> bool:

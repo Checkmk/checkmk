@@ -539,7 +539,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 "http": {
                     "command_line": "some_command $ARG1$",
                     "argument_function": mock_argument_function,
-                    "service_description": mock_service_description,
+                    "service_description": lambda x: "HTTP my special HTTP",
                 }
             },
             {

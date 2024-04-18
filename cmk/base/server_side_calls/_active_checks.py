@@ -268,29 +268,18 @@ class ActiveCheck:
         )
         return command, detected_executable, " ".join((detected_executable, *args))
 
-    @staticmethod
-    def _old_active_http_check_service_description(params: Mapping[str, object]) -> str:
-        name = str(params["name"])
-        return name[1:] if name.startswith("^") else "HTTP %s" % name
-
     def _active_check_service_description(
         self,
-        plugin_name: str,
         plugin_info: PluginInfo,
         params: object,
     ) -> ServiceName:
         if not plugin_info.service_description:
             raise InvalidPluginInfoError
 
-        if plugin_name == "http" and plugin_name not in self._use_new_descriptions_for:
-            description_with_macros = self._old_active_http_check_service_description(
-                _ensure_mapping_str_object((params,))[0]
-            )
-        else:
-            description_with_macros = plugin_info.service_description(params)
-
-        description = description_with_macros.replace("$HOSTNAME$", self.host_name).replace(
-            "$HOSTALIAS$", self.host_alias
+        description = (
+            plugin_info.service_description(params)
+            .replace("$HOSTNAME$", self.host_name)
+            .replace("$HOSTALIAS$", self.host_alias)
         )
 
         return self._service_name_finalizer(description)
@@ -308,7 +297,7 @@ class ActiveCheck:
                 yield str(desc), str(args)
             return
 
-        description = self._active_check_service_description(plugin_name, plugin_info, params)
+        description = self._active_check_service_description(plugin_info, params)
 
         if not plugin_info.argument_function:
             raise InvalidPluginInfoError
@@ -387,7 +376,7 @@ class ActiveCheck:
                     yield ActiveServiceDescription(plugin_name, str(description), params)
                 return
 
-            description = self._active_check_service_description(plugin_name, plugin_info, params)
+            description = self._active_check_service_description(plugin_info, params)
             yield ActiveServiceDescription(plugin_name, str(description), params)
 
     def _iterate_service_descriptions(

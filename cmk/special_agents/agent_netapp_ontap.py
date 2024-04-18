@@ -29,7 +29,8 @@ def write_section(section_header: str, generator: Iterable, logger: logging.Logg
             writer.append_json(element.model_dump(exclude_unset=True, exclude_none=False))
 
 
-def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
+def _collect_netapp_resource_volume(connection: HostConnection, is_constituent: bool) -> Iterable:
+
     field_query = (
         "uuid",
         "state",
@@ -48,10 +49,15 @@ def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
         "space.snapshot.reserve_percent",
     )
 
-    for element in NetAppResource.Volume.get_collection(
-        connection=connection, fields=",".join(field_query)
-    ):
-        element_data = element.to_dict()
+    yield from NetAppResource.Volume.get_collection(
+        connection=connection, is_constituent=is_constituent, fields=",".join(field_query)
+    )
+
+
+def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[models.VolumeModel]:
+
+    for netapp_resources in netapp_volumes:
+        element_data = netapp_resources.to_dict()
 
         yield models.VolumeModel(
             uuid=element_data["uuid"],
@@ -76,6 +82,16 @@ def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
             .get("snapshot", {})
             .get("reserve_percent"),
         )
+
+
+def fetch_volumes(connection: HostConnection) -> Iterable[models.VolumeModel]:
+
+    yield from _collect_volume_models(
+        _collect_netapp_resource_volume(connection, is_constituent=True)
+    )
+    yield from _collect_volume_models(
+        _collect_netapp_resource_volume(connection, is_constituent=False)
+    )
 
 
 def fetch_volumes_counters(

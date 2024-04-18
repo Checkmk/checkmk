@@ -202,7 +202,7 @@ def _signature_algorithm_args(signature_algorithm: SignatureAlgorithm) -> Iterat
 
 def _issuer_args(issuer: Issuer) -> Iterator[str]:
     if (common_name := issuer.common_name) is not None:
-        yield "--subject-cn"
+        yield "--issuer-cn"
         yield common_name
     if (org := issuer.organization) is not None:
         yield "--issuer-o"

@@ -236,7 +236,7 @@ char *cmk_lookup_password(const char *pw_id)
         pwsecretpath, sizeof pwsecretpath,
         "%s/etc/password_store.secret", omd_root);
     if (ok < 0 || ok >= sizeof pwsecretpath) {
-        cmk_bail_out("passwort_store.secret path too long");
+        cmk_bail_out("password_store.secret path too long");
     }
     unsigned char *pwsecret = NULL;
     ssize_t pwsecretlen = cmk_read_file(pwsecretpath, &pwsecret);

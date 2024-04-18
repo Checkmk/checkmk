@@ -164,4 +164,4 @@ ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt
 
 LABEL \
-    com.tribe29.image_type="build-image"
+    com.checkmk.image_type="build-image"

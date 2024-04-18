@@ -54,8 +54,8 @@ TEST(WinPerf, ValidateFabricConfig) {
     ASSERT_NE(cfg_timeout, 1234567);
     EXPECT_EQ(groups::g_winperf.timeout(), cfg_timeout);
 
-    EXPECT_TRUE(wp_group[vars::kWinPerfFork].as<bool>(false));
-    EXPECT_TRUE(groups::g_winperf.isFork());
+    EXPECT_FALSE(wp_group[vars::kWinPerfFork].as<bool>(true));
+    EXPECT_FALSE(groups::g_winperf.isFork());
 
     EXPECT_FALSE(wp_group[vars::kWinPerfTrace].as<bool>(true));
     EXPECT_FALSE(groups::g_winperf.isTrace());

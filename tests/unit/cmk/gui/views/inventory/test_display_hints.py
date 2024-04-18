@@ -19,14 +19,7 @@ from cmk.gui.num_split import cmp_version
 from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.utils.theme import theme
-from cmk.gui.views.inventory import (
-    _register_sorter,
-    inv_paint_generic,
-    inv_paint_if_oper_status,
-    inv_paint_number,
-    inv_paint_service_status,
-    inv_paint_size,
-)
+from cmk.gui.views.inventory import _register_sorter
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
@@ -39,6 +32,13 @@ from cmk.gui.views.inventory._display_hints import (
     NodeDisplayHint,
     TableDisplayHint,
     TableViewSpec,
+)
+from cmk.gui.views.inventory._paint_functions import (
+    inv_paint_generic,
+    inv_paint_if_oper_status,
+    inv_paint_number,
+    inv_paint_service_status,
+    inv_paint_size,
 )
 from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.views.sorter import sorter_registry

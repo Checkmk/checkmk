@@ -7,7 +7,6 @@
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -89,7 +88,7 @@ def _user_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if user_may_see_saas_onboarding(user.id) and cmk_version.edition() == cmk_version.Edition.CSE:
+    if cmk_version.edition() == cmk_version.Edition.CSE:
         quick_items.append(
             TopicMenuItem(
                 name="saas_onboarding_button_toggle",

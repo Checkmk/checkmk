@@ -56,6 +56,7 @@ from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb.htpasswd import hash_password
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may
@@ -440,7 +441,15 @@ class ModeUsers(WatoMode):
                         html.write_text(_("Never logged in"))
 
                 if cmk_version.is_managed_edition():
-                    table.cell(_("Customer"), managed.get_customer_name(user_spec))
+                    if (
+                        isinstance(connection, LDAPUserConnector)
+                        and connection.customer_id is not None
+                    ):
+                        table.cell(
+                            _("Customer"), managed.get_customer_name_by_id(connection.customer_id)
+                        )
+                    else:
+                        table.cell(_("Customer"), managed.get_customer_name(user_spec))
 
                 # Connection
                 if connection:

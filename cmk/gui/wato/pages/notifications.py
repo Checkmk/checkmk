@@ -1040,7 +1040,7 @@ class ModeNotifications(ABCNotificationsMode):
                     last_state = {"OK": "0", "WARNING": "1", "CRITICAL": "2", "UNKNOWN": "3"}[
                         last_state_name
                     ]
-                    state = context["HOSTSTATEID"]
+                    state = context["SERVICESTATEID"]
                     state_name = context["SERVICESTATE"]
                 else:
                     css = "state hstate hstate"

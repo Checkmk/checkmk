@@ -238,6 +238,25 @@ def _valuespec_port() -> Integer:
     )
 
 
+def ensure_service_name_in_connections(value: object) -> Mapping[str, object]:
+    if (
+        not isinstance(value, Mapping)
+        or "connections" not in value
+        or "standard_settings" not in value
+    ):
+        raise ValueError(f"Invalid rules value {value} for Check certificates migrate.")
+
+    generic_port = value["standard_settings"]["port"]
+    for item in value["connections"]:
+        if "service_name" not in item:
+            item["service_name"] = {
+                "prefix": "auto",
+                "name": f"{item['address']}:{item.get('port', generic_port)}",
+            }
+
+    return value
+
+
 def _valuespec_host_settings() -> List[Mapping[str, object]]:
     return List(
         title=Title("Endpoints to monitor"),
@@ -375,6 +394,7 @@ def _form_active_checks_cert() -> Dictionary:
                 required=True,
             ),
         },
+        migrate=ensure_service_name_in_connections,
     )
 
 

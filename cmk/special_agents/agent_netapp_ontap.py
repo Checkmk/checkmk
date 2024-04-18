@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.utils import (  # pylint: disable=cmk-module-l
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
-__version__ = "2.3.0b1"
+__version__ = "2.2.0p27"
 
 USER_AGENT = f"checkmk-special-netapp-ontap-{__version__}"
 
@@ -30,7 +30,8 @@ def write_section(section_header: str, generator: Iterable, logger: logging.Logg
             writer.append_json(element.dict(exclude_unset=True, exclude_none=False))
 
 
-def fetch_volumes(connection: HostConnection) -> Iterable[netapp_ontap_models.VolumeModel]:
+def _collect_netapp_resource_volumes(connection: HostConnection, is_constituent: bool) -> Iterable:
+
     field_query = (
         "uuid",
         "state",
@@ -49,10 +50,15 @@ def fetch_volumes(connection: HostConnection) -> Iterable[netapp_ontap_models.Vo
         "space.snapshot.reserve_percent",
     )
 
-    for element in NetAppResource.Volume.get_collection(
-        connection=connection, fields=",".join(field_query)
-    ):
-        element_data = element.to_dict()
+    yield from NetAppResource.Volume.get_collection(
+        connection=connection, is_constituent=is_constituent, fields=",".join(field_query)
+    )
+
+
+def _collect_volume_models(netapp_volumes: Iterable) -> Iterable[netapp_ontap_models.VolumeModel]:
+
+    for netapp_resources in netapp_volumes:
+        element_data = netapp_resources.to_dict()
 
         yield netapp_ontap_models.VolumeModel(
             uuid=element_data["uuid"],
@@ -77,6 +83,16 @@ def fetch_volumes(connection: HostConnection) -> Iterable[netapp_ontap_models.Vo
             .get("snapshot", {})
             .get("reserve_percent"),
         )
+
+
+def fetch_volumes(connection: HostConnection) -> Iterable[netapp_ontap_models.VolumeModel]:
+
+    yield from _collect_volume_models(
+        _collect_netapp_resource_volumes(connection, is_constituent=True)
+    )
+    yield from _collect_volume_models(
+        _collect_netapp_resource_volumes(connection, is_constituent=False)
+    )
 
 
 def fetch_volumes_counters(

@@ -78,7 +78,21 @@ class Password(TypedDict):
 
 
 def password_store_path() -> Path:
+    """file where the user-managed passwords are stored."""
     return Path(cmk.utils.paths.var_dir, "stored_passwords")
+
+
+def core_password_store_path(config_path: ConfigPath) -> Path:
+    """file where the passwords for use by the helpers are stored
+
+    This is "frozen" in the state at config generation.
+    """
+    return Path(config_path) / "stored_passwords"
+
+
+def pending_password_store_path() -> Path:
+    """file where user-managed passwords and the ones extracted from the configuration are merged."""
+    return Path(cmk.utils.paths.var_dir, "passwords_merged")
 
 
 # This function and its questionable bahavior of operating in-place on sys.argv is quasi-public.
@@ -159,7 +173,7 @@ def extract(password_id: PasswordId) -> str | None:
 
 def save_for_helpers(config_base_path: ConfigPath, passwords: Mapping[str, str]) -> None:
     """Update the helper password store with the given passwords"""
-    save(passwords, _helper_password_store_path(config_base_path))
+    save(passwords, core_password_store_path(config_base_path))
 
 
 def lookup(pw_file: Path, pw_id: str) -> str:
@@ -180,16 +194,12 @@ def lookup(pw_file: Path, pw_id: str) -> str:
 
 
 def load_for_helpers() -> dict[str, str]:
-    return _load(_helper_password_store_path(LATEST_CONFIG))
-
-
-def _helper_password_store_path(config_path: ConfigPath) -> Path:
-    return Path(config_path) / "stored_passwords"
+    return _load(core_password_store_path(LATEST_CONFIG))
 
 
 def temporary_helper_password_store_path_getter() -> Path:
     """only temporary to keep the patch size managable"""
-    return _helper_password_store_path(LATEST_CONFIG)
+    return core_password_store_path(LATEST_CONFIG)
 
 
 class PasswordStore:

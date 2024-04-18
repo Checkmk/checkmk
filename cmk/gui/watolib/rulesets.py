@@ -10,6 +10,7 @@ import itertools
 import os
 import pprint
 import re
+import subprocess
 from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
 from pathlib import Path
@@ -22,6 +23,7 @@ from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import (
     RuleConditionsSpec,
     RuleOptionsSpec,
@@ -47,6 +49,8 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
+
+from cmk.server_side_calls_backend.config_processing import process_configuration_to_parameters
 
 from .changes import add_change
 from .check_mk_automations import get_services_labels
@@ -454,6 +458,16 @@ class RulesetCollection:
         finally:
             if may_use_redis():
                 get_wato_redis_client(folder.tree).folder_updated(folder.filesystem_path())
+
+        # check if this contains a password. If so, update the password file
+        if any(
+            process_configuration_to_parameters(rule.value).found_secrets
+            for name, rules in rulesets.items()
+            if RuleGroup.is_active_checks_rule(name) or RuleGroup.is_special_agents_rule(name)
+            for rule in rules.get_folder_rules(folder)
+            if isinstance(rule.value, dict)  # this is true for all _FormSpec_ SSC rules.
+        ):
+            subprocess.check_call(["cmk", "--automation", "update-passwords-merged-file"])
 
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets

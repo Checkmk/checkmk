@@ -454,6 +454,17 @@ result_type_registry.register(UpdateDNSCacheResult)
 
 
 @dataclass
+class UpdatePasswordsMergedFileResult(ABCAutomationResult):
+
+    @staticmethod
+    def automation_call() -> str:
+        return "update-passwords-merged-file"
+
+
+result_type_registry.register(UpdatePasswordsMergedFileResult)
+
+
+@dataclass
 class GetAgentOutputResult(ABCAutomationResult):
     success: bool
     service_details: ServiceDetails

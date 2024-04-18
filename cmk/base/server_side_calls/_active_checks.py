@@ -189,6 +189,7 @@ class ActiveCheck:
                     self.host_name,
                     service.command_arguments,
                     self.stored_passwords,
+                    password_store.temporary_helper_password_store_path_getter(),
                     processed.surrogates,
                     apply_password_store_hack=password_store.hack.HACK_CHECKS.get(
                         active_check.name, False
@@ -314,6 +315,7 @@ class ActiveCheck:
             description,
             plugin_info.argument_function(params),
             self.stored_passwords,
+            password_store.temporary_helper_password_store_path_getter(),
         )
         yield description, arguments
 

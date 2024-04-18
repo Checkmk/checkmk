@@ -1029,8 +1029,8 @@ class EventServer(ECServerThread):
         merge = rule["expect"].get("merge", "open")
 
         # Changed "acked" to ("acked", bool) with 1.6.0p20
-        if isinstance(merge, tuple):
-            merge, reset_ack = merge
+        if isinstance(merge, tuple):  # TODO: Move this to upgrade time
+            merge, reset_ack = merge  # type: ignore[unreachable]
 
         if merge != "never":
             for event in self._event_status.events():
@@ -1251,8 +1251,9 @@ class EventServer(ECServerThread):
 
         skip_pack = None
         for rule in rule_candidates:
-            if skip_pack and rule["pack"] == skip_pack:
-                continue  # still in the rule pack that we want to skip
+            # TODO: Rewrite this skipping logic, so it's blindingly obvious, even for mypy.
+            if skip_pack and rule["pack"] == skip_pack:  # type: ignore[unreachable]
+                continue  # type: ignore[unreachable] # still in the rule pack that we want to skip
             skip_pack = None  # new pack, reset skipping
 
             try:

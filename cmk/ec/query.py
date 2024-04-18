@@ -136,7 +136,7 @@ OperatorName = Literal["=", ">", "<", ">=", "<=", "~", "=~", "~~", "in"]
 class QueryFilter:
     column_name: str
     operator_name: OperatorName
-    predicate: Callable[[Any], bool]
+    predicate: Callable[[object], bool]
     argument: Any
 
 

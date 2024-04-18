@@ -164,6 +164,12 @@ disallow_untyped_defs = true
 warn_return_any = true
 warn_unused_ignores = true
 
+[[tool.mypy.overrides]]
+module = [ "cmk.ec.*" ]
+disallow_any_generics = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+warn_unreachable = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

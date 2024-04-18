@@ -211,7 +211,7 @@ class SQLiteHistory(History):
                         orig_host TEXT,
                         contact_groups_precedence TEXT,
                         core_host TEXT,
-                        host_in_downtime BOOL,  
+                        host_in_downtime BOOL,
                         match_groups_syslog_application JSON
                     );"""
             )
@@ -290,7 +290,7 @@ class SQLiteHistory(History):
             self._vacuum()
             self._last_housekeeping = now
 
-    def _vacuum(self):
+    def _vacuum(self) -> None:
         """Run VACUUM command only if the free pages in DB are greater than 50 Mb."""
         with self.conn as connection:
             freelist_count = connection.execute("PRAGMA freelist_count").fetchone()[0]

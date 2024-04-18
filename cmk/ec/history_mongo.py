@@ -7,7 +7,7 @@ import contextlib
 import datetime
 import os
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
 from typing import Any, Literal
 
@@ -166,7 +166,7 @@ except ImportError:
 
 class MongoDB:
     def __init__(self) -> None:
-        self.connection: pymongo.MongoClient | None = None
+        self.connection: pymongo.MongoClient[Mapping[str, object]] | None = None
         self.db: Any = None
 
 

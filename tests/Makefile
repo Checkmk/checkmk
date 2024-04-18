@@ -53,6 +53,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-format-shell \
 	$(SYSTEM_TESTS) \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
+	container-debug \
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
@@ -65,6 +66,7 @@ clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
 help:
+	@echo "container-debug                     - Run container for manual test debugging"
 	@echo "format-shell                        - Format shell agents"
 	@for i in $(AGENT_PLUGIN_PYTHON_VERSIONS); do \
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
@@ -72,7 +74,6 @@ help:
 	@for i in $(SYSTEM_TESTS); do \
 	    echo "$${i}              - Run $${i} locally"; \
 	    echo "$${i}-docker       - Run $${i} in container"; \
-	    echo "$${i}-docker-debug - Run $${i} in container for manual debugging"; \
 	done
 	@echo "test-bandit                         - Run bandit (security) tests"
 	@echo "test-bandit-docker                  - Run bandit (security) tests in docker"
@@ -266,7 +267,7 @@ test-plugins:
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
 
-$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
+container-debug $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
 	$(PIPENV) run scripts/run-dockerized.py debug
 
 test-license-headers:

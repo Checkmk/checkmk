@@ -2586,6 +2586,17 @@ def _execute_cmk_update_config() -> None:
         raise MKGeneralException(_("Configuration update failed\n%s") % completed_process.stdout)
 
 
+def _execute_update_passwords() -> None:
+    cmd = ["cmk", "--automation", "update-passwords-merged-file"]
+    msg_template = f"{' '.join(cmd)!r} finished. Exit code: %s, Output: %s"
+    try:
+        out = subprocess.check_output(cmd, encoding="utf-8")
+        logger.log(logging.DEBUG, msg_template, 0, out)
+    except subprocess.CalledProcessError as e:
+        logger.log(logging.WARNING, msg_template, e.returncode, e.output)
+        raise MKGeneralException(_("Collection of passwords failed\n%s") % e.output)
+
+
 def _execute_post_config_sync_actions(site_id: SiteId) -> None:
     try:
         # When receiving configuration from a central site that uses a previous major
@@ -2637,6 +2648,8 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()
+
+        _execute_update_passwords()
 
         # The local configuration has just been replaced. The pending changes are not
         # relevant anymore. Confirm all of them to cleanup the inconsistency.

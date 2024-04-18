@@ -51,6 +51,7 @@ import cmk.gui.login as login
 import cmk.gui.mkeventd.wato as mkeventd
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
+import cmk.gui.watolib.password_store
 from cmk.gui import hooks, http, main_modules, userdb
 from cmk.gui.config import active_config
 from cmk.gui.livestatus_utils.testing import mock_livestatus
@@ -80,6 +81,15 @@ HTTPMethod = Literal[
     "POST",
     "DELETE",
 ]  # fmt: off
+
+
+@pytest.fixture
+def mock_password_file_regeneration(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        cmk.gui.watolib.password_store,
+        cmk.gui.watolib.password_store.update_passwords_merged_file.__name__,
+        lambda: None,
+    )
 
 
 @pytest.fixture(autouse=True)

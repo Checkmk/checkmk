@@ -102,6 +102,7 @@ from cmk.automations.results import (
     SetAutochecksTable,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
+    UpdatePasswordsMergedFileResult,
 )
 
 from cmk.snmplib import (
@@ -2293,6 +2294,22 @@ class AutomationActiveCheck(Automation):
 
 
 automations.register(AutomationActiveCheck())
+
+
+class AutomationUpdatePasswordsMergedFile(Automation):
+    cmd = "update-passwords-merged-file"
+    needs_config = True
+    needs_checks = False
+
+    def execute(self, args: list[str]) -> UpdatePasswordsMergedFileResult:
+        cmk.utils.password_store.save(
+            config.get_config_cache().collect_passwords(),
+            cmk.utils.password_store.pending_password_store_path(),
+        )
+        return UpdatePasswordsMergedFileResult()
+
+
+automations.register(AutomationUpdatePasswordsMergedFile())
 
 
 class AutomationUpdateDNSCache(Automation):

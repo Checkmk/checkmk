@@ -83,7 +83,7 @@ def password_store_path() -> Path:
 # Many third party plugins rely on it, so we must not change it.
 # One day, when we have a more official versioned API we can hopefully remove it.
 def replace_passwords() -> None:
-    sys.argv[:] = hack.resolve_password_hack(sys.argv, load_for_helpers())
+    sys.argv[:] = hack.resolve_password_hack(sys.argv, lookup)
 
 
 def save(passwords: Mapping[str, str], store_path: Path) -> None:
@@ -160,8 +160,8 @@ def save_for_helpers(config_base_path: ConfigPath, passwords: Mapping[str, str])
     save(passwords, _helper_password_store_path(config_base_path))
 
 
-def lookup(password_id: str, /) -> str:
-    """Look up the password in the password store compiled for the helpers and return it.
+def lookup(pw_file: Path, pw_id: str) -> str:
+    """Look up the password with id <id> in the file <file> and return it.
 
     Raises:
         ValueError: If the password_id is not found in the password store.
@@ -170,11 +170,11 @@ def lookup(password_id: str, /) -> str:
         The password as found in the password store.
     """
     try:
-        return load_for_helpers()[password_id]
+        return _load(pw_file)[pw_id]
     except KeyError:
         # the fact that this is a dict is an implementation detail.
         # Let's make it a ValueError.
-        raise ValueError(f"Password {password_id!r} not found in password store")
+        raise ValueError(f"Password '{pw_id}' not found in {pw_file}")
 
 
 def load_for_helpers() -> dict[str, str]:
@@ -183,6 +183,11 @@ def load_for_helpers() -> dict[str, str]:
 
 def _helper_password_store_path(config_path: ConfigPath) -> Path:
     return Path(config_path) / "stored_passwords"
+
+
+def temporary_helper_password_store_path_getter() -> Path:
+    """only temporary to keep the patch size managable"""
+    return _helper_password_store_path(LATEST_CONFIG)
 
 
 class PasswordStore:

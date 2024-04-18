@@ -416,10 +416,15 @@ def _need_devices(section_names: Sequence[str]) -> bool:
     )
 
 
+def _make_secret(args: Args) -> str:
+    pw_id, pw_file = args.apikey.split(":", 1)
+    return password_store.lookup(Path(pw_file), pw_id)
+
+
 def agent_cisco_meraki_main(args: Args) -> int:
     config = MerakiConfig(
         dashboard=_configure_meraki_dashboard(
-            password_store.lookup(args.apikey),
+            _make_secret(args),
             args.debug,
             args.proxy,
         ),

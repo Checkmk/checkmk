@@ -80,7 +80,11 @@ class SpecialAgent:
     ) -> str:
         path = self._make_source_path(agent_name)
         args = commandline_arguments(
-            self.host_name, None, agent_configuration, self.stored_passwords
+            self.host_name,
+            None,
+            agent_configuration,
+            self.stored_passwords,
+            password_store.temporary_helper_password_store_path_getter(),
         )
         return replace_macros(f"{path} {args}", self.host_config.macros)
 
@@ -109,6 +113,7 @@ class SpecialAgent:
                 self.host_name,
                 command.command_arguments,
                 self.stored_passwords,
+                password_store.temporary_helper_password_store_path_getter(),
                 processed.surrogates,
                 apply_password_store_hack=password_store.hack.HACK_AGENTS.get(
                     special_agent.name, False

@@ -6,6 +6,7 @@
 import argparse
 import sys
 import urllib.parse
+from pathlib import Path
 
 import requests
 import urllib3
@@ -32,14 +33,15 @@ def main():
 def _make_auth(
     user: str | None,
     password: str | None,
-    password_id: str | None,
+    password_ref: str | None,
 ) -> tuple[str, str] | None:
     if user is None:
         return None
     if password is not None:
         return (user, password)
-    if password_id is not None:
-        return (user, password_store.lookup(password_id))
+    if password_ref is not None:
+        pw_id, pw_file = password_ref.split(":", 1)
+        return (user, password_store.lookup(Path(pw_file), pw_id))
     return None
 
 

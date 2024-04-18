@@ -6,6 +6,8 @@
 from __future__ import annotations
 
 import base64
+import binascii
+import contextlib
 import hmac
 import re
 import uuid
@@ -299,8 +301,10 @@ def _check_internal_token() -> SiteInternalPseudoUser | None:
 
     _tokenname, token = auth_header.split("InternalToken ", maxsplit=1)
 
-    if SiteInternalSecret().check(Secret.from_b64(token)):
-        return SiteInternalPseudoUser()
+    with contextlib.suppress(binascii.Error):  # base64 decoding failure
+        if SiteInternalSecret().check(Secret.from_b64(token)):
+            return SiteInternalPseudoUser()
+
     return None
 
 

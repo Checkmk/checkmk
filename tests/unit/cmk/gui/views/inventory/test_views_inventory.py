@@ -3,40 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-
-# No stub file
 import pytest
 
 from livestatus import LivestatusResponse, LivestatusRow, OnlySites
 
-from cmk.utils.structured_data import (
-    ImmutableAttributes,
-    ImmutableDeltaAttributes,
-    ImmutableDeltaTable,
-    ImmutableTable,
-    ImmutableTree,
-    RetentionInterval,
-    SDDeltaValue,
-    SDKey,
-    SDNodeName,
-)
+from cmk.utils.structured_data import ImmutableTree, SDNodeName
 
 import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.painter.v0.base import JoinCell
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.view import View
-from cmk.gui.views.inventory import (
-    _SDDeltaItem,
-    _SDItem,
-    _sort_delta_pairs,
-    _sort_delta_rows,
-    _sort_pairs,
-    _sort_rows,
-    RowTableInventory,
-    RowTableInventoryHistory,
-)
+from cmk.gui.views.inventory import RowTableInventory, RowTableInventoryHistory
 from cmk.gui.views.inventory.row_post_processor import _join_inventory_rows
 from cmk.gui.views.store import multisite_builtin_views
 
@@ -145,184 +123,6 @@ def test_query_row_table_inventory_history_add_columns(view: View) -> None:
     rows, _len_rows = row_table.query(view.datasource, [], ["host_foo"], {}, "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS + ["host_foo"])
-
-
-@pytest.mark.parametrize(
-    "table, expected",
-    [
-        (ImmutableTable(), []),
-        (
-            ImmutableTable(
-                key_columns=[SDKey("sid")],
-                rows_by_ident={
-                    ("SID 2",): {
-                        SDKey("sid"): "SID 2",
-                        SDKey("flashback"): "Flashback 2",
-                        SDKey("other"): "Other 2",
-                    },
-                    ("SID 1",): {
-                        SDKey("sid"): "SID 1",
-                        SDKey("flashback"): "Flashback 1",
-                        SDKey("other"): "Other 1",
-                    },
-                    (None,): {SDKey("sid"): None, SDKey("flashback"): None, SDKey("other"): None},
-                },
-                retentions={
-                    ("SID 2",): {SDKey("sid"): RetentionInterval(1, 2, 3, "previous")},
-                },
-            ),
-            [
-                [
-                    _SDItem("sid", "SID 1", None),
-                    _SDItem("changed", None, None),
-                    _SDItem("foo", None, None),
-                    _SDItem("flashback", "Flashback 1", None),
-                    _SDItem("other", "Other 1", None),
-                ],
-                [
-                    _SDItem("sid", "SID 2", RetentionInterval(1, 2, 3, "previous")),
-                    _SDItem("changed", None, None),
-                    _SDItem("foo", None, None),
-                    _SDItem("flashback", "Flashback 2", None),
-                    _SDItem("other", "Other 2", None),
-                ],
-            ],
-        ),
-    ],
-)
-def test_sort_table_rows_displayhint(
-    table: ImmutableTable,
-    expected: Sequence[Sequence[_SDItem]],
-) -> None:
-    assert (
-        _sort_rows(
-            table,
-            [SDKey("sid"), SDKey("changed"), SDKey("foo"), SDKey("flashback"), SDKey("other")],
-        )
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    "delta_table, expected",
-    [
-        (ImmutableDeltaTable(), []),
-        (
-            ImmutableDeltaTable(
-                key_columns=[SDKey("sid")],
-                rows=[
-                    {
-                        SDKey("sid"): SDDeltaValue("SID 2", None),
-                        SDKey("flashback"): SDDeltaValue(None, "Flashback 2"),
-                        SDKey("other"): SDDeltaValue("Other 2", "Other 2"),
-                        SDKey("changed"): SDDeltaValue("Changed 21", "Changed 22"),
-                    },
-                    {
-                        SDKey("sid"): SDDeltaValue("SID 1", None),
-                        SDKey("flashback"): SDDeltaValue(None, "Flashback 1"),
-                        SDKey("other"): SDDeltaValue("Other 1", "Other 1"),
-                        SDKey("changed"): SDDeltaValue("Changed 11", "Changed 12"),
-                    },
-                    {
-                        SDKey("sid"): SDDeltaValue("SID 3", "SID 3"),
-                        SDKey("flashback"): SDDeltaValue("Flashback 3", "Flashback 3"),
-                        SDKey("other"): SDDeltaValue(None, None),
-                        SDKey("changed"): SDDeltaValue(None, None),
-                    },
-                ],
-            ),
-            [
-                [
-                    _SDDeltaItem(SDKey("sid"), "SID 1", None),
-                    _SDDeltaItem(SDKey("changed"), "Changed 11", "Changed 12"),
-                    _SDDeltaItem(SDKey("foo"), None, None),
-                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 1"),
-                    _SDDeltaItem(SDKey("other"), "Other 1", "Other 1"),
-                ],
-                [
-                    _SDDeltaItem(SDKey("sid"), "SID 2", None),
-                    _SDDeltaItem(SDKey("changed"), "Changed 21", "Changed 22"),
-                    _SDDeltaItem(SDKey("foo"), None, None),
-                    _SDDeltaItem(SDKey("flashback"), None, "Flashback 2"),
-                    _SDDeltaItem(SDKey("other"), "Other 2", "Other 2"),
-                ],
-            ],
-        ),
-    ],
-)
-def test_sort_deltatable_rows_displayhint(
-    delta_table: ImmutableDeltaTable,
-    expected: Sequence[Sequence[_SDDeltaItem]],
-) -> None:
-    assert (
-        _sort_delta_rows(
-            delta_table,
-            [SDKey("sid"), SDKey("changed"), SDKey("foo"), SDKey("flashback"), SDKey("other")],
-        )
-        == expected
-    )
-
-
-@pytest.mark.parametrize(
-    "attributes, expected",
-    [
-        (ImmutableAttributes(), []),
-        (
-            ImmutableAttributes(
-                pairs={
-                    SDKey("b"): "B",
-                    SDKey("d"): "D",
-                    SDKey("c"): "C",
-                    SDKey("a"): "A",
-                },
-                retentions={SDKey("c"): RetentionInterval(1, 2, 3, "previous")},
-            ),
-            [
-                _SDItem(SDKey("a"), "A", None),
-                _SDItem(SDKey("b"), "B", None),
-                _SDItem(SDKey("d"), "D", None),
-                _SDItem(SDKey("c"), "C", RetentionInterval(1, 2, 3, "previous")),
-            ],
-        ),
-    ],
-)
-def test_sort_attributes_pairs_displayhint(
-    attributes: ImmutableAttributes,
-    expected: Sequence[_SDItem],
-) -> None:
-    assert _sort_pairs(attributes, [SDKey("a"), SDKey("b"), SDKey("d"), SDKey("c")]) == expected
-
-
-@pytest.mark.parametrize(
-    "delta_attributes, expected",
-    [
-        (ImmutableDeltaAttributes(), []),
-        (
-            ImmutableDeltaAttributes(
-                pairs={
-                    SDKey("b"): SDDeltaValue("B", None),
-                    SDKey("d"): SDDeltaValue(None, "D"),
-                    SDKey("c"): SDDeltaValue("C", "C"),
-                    SDKey("a"): SDDeltaValue("A1", "A2"),
-                }
-            ),
-            [
-                _SDDeltaItem(SDKey("a"), "A1", "A2"),
-                _SDDeltaItem(SDKey("b"), "B", None),
-                _SDDeltaItem(SDKey("d"), None, "D"),
-                _SDDeltaItem(SDKey("c"), "C", "C"),
-            ],
-        ),
-    ],
-)
-def test_sort_delta_attributes_pairs_displayhint(
-    delta_attributes: ImmutableDeltaAttributes,
-    expected: Sequence[_SDDeltaItem],
-) -> None:
-    assert (
-        _sort_delta_pairs(delta_attributes, [SDKey("a"), SDKey("b"), SDKey("d"), SDKey("c")])
-        == expected
-    )
 
 
 def test_row_post_processor() -> None:

@@ -183,6 +183,10 @@ def lookup(pw_file: Path, pw_id: str) -> str:
         raise ValueError(f"Password '{pw_id}' not found in {pw_file}")
 
 
+def lookup_for_bakery(pw_id: str) -> str:
+    return lookup(core_password_store_path(LATEST_CONFIG), pw_id)
+
+
 class PasswordStore:
     VERSION = 0
     VERSION_BYTE_LENGTH = 2

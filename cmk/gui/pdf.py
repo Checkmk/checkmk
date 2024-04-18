@@ -762,6 +762,7 @@ class Document:
         top = top_mm * mm + (height_mm * mm - ex_height) / 2.0
         if valign == "middle":
             top -= ex_height * 0.5  # estimate
+
         if align == "center":
             self._canvas.drawCentredString((left_mm + width_mm / 2.0) * mm, top, text)
         elif align == "left":

@@ -14,6 +14,7 @@ from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoiceElement,
     DefaultValue,
     DictElement,
+    DictGroup,
     Dictionary,
     FixedValue,
     InputHint,
@@ -276,6 +277,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                     prefill=DefaultValue("auto"),
                                 ),
                                 required=True,
+                                group=DictGroup(),
                             ),
                             "name": DictElement(
                                 parameter_form=String(
@@ -291,6 +293,7 @@ def _valuespec_host_settings() -> List[Mapping[str, object]]:
                                     prefill=InputHint("My service name"),
                                 ),
                                 required=True,
+                                group=DictGroup(),
                             ),
                         },
                     ),

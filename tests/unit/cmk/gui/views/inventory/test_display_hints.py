@@ -30,12 +30,12 @@ from cmk.gui.views.inventory import (
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
+    _get_related_raw_hints,
     _RelatedRawHints,
     AttributeDisplayHint,
     AttributesDisplayHint,
     ColumnDisplayHint,
     DISPLAY_HINTS,
-    DisplayHints,
     NodeDisplayHint,
     TableDisplayHint,
     TableViewSpec,
@@ -79,7 +79,7 @@ def test_related_display_hints() -> None:
     #   - nodes with attributes, eg. ".hardware.cpu." or
     #   - nodes with a table, eg. ".software.packages:"
 
-    all_related_raw_hints = DisplayHints.get_related_raw_hints(inventory_displayhints)
+    all_related_raw_hints = _get_related_raw_hints(inventory_displayhints)
 
     def _check_path(path: SDPath) -> bool:
         return all(path[:idx] in all_related_raw_hints for idx in range(1, len(path)))
@@ -106,9 +106,7 @@ def test_related_display_hints() -> None:
         and _check_raw_hints(related_raw_hints)
         and _check_table_key_order(path, related_raw_hints)
         and _check_attributes_key_order(path, related_raw_hints)
-        for path, related_raw_hints in DisplayHints.get_related_raw_hints(
-            inventory_displayhints
-        ).items()
+        for path, related_raw_hints in _get_related_raw_hints(inventory_displayhints).items()
     )
 
 

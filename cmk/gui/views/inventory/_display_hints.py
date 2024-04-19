@@ -105,6 +105,14 @@ class NodeDisplayHint:
         )
 
 
+def _parse_view_name(view_name: str) -> str:
+    if not view_name.startswith("inv"):
+        view_name = f"inv{view_name}"
+    if view_name.endswith("_of_host"):
+        view_name = view_name[:-8]
+    return view_name
+
+
 @dataclass(frozen=True)
 class TableViewSpec:
     view_name: str
@@ -114,13 +122,6 @@ class TableViewSpec:
 
     @classmethod
     def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> TableViewSpec | None:
-        def _parse_view_name(view_name: str) -> str:
-            if not view_name.startswith("inv"):
-                view_name = f"inv{view_name}"
-            if view_name.endswith("_of_host"):
-                view_name = view_name[:-8]
-            return view_name
-
         if "*" in path:
             # See DYNAMIC-PATHS
             return None
@@ -353,7 +354,7 @@ def _inv_filter_info():
     }
 
 
-@dataclass
+@dataclass(frozen=True)
 class _RelatedRawHints:
     for_node: InventoryHintSpec = field(
         default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
@@ -363,6 +364,40 @@ class _RelatedRawHints:
     )
     by_columns: dict[str, InventoryHintSpec] = field(default_factory=dict)
     by_attributes: dict[str, InventoryHintSpec] = field(default_factory=dict)
+
+
+def _get_related_raw_hints(
+    raw_hints: Mapping[str, InventoryHintSpec]
+) -> Mapping[SDPath, _RelatedRawHints]:
+    related_raw_hints_by_path: dict[SDPath, _RelatedRawHints] = {}
+    for raw_path, raw_hint in raw_hints.items():
+        inventory_path = inventory.InventoryPath.parse(raw_path)
+        related_raw_hints = related_raw_hints_by_path.setdefault(
+            inventory_path.path,
+            _RelatedRawHints(),
+        )
+
+        if inventory_path.source == inventory.TreeSource.node:
+            related_raw_hints.for_node.update(raw_hint)
+            continue
+
+        if inventory_path.source == inventory.TreeSource.table:
+            if inventory_path.key:
+                related_raw_hints.by_columns.setdefault(inventory_path.key, raw_hint)
+                continue
+
+            related_raw_hints.for_table.update(raw_hint)
+            continue
+
+        if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:
+            related_raw_hints.by_attributes.setdefault(inventory_path.key, raw_hint)
+            continue
+
+    return related_raw_hints_by_path
+
+
+def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> Sequence[str]:
+    return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
 
 
 # TODO Workaround for InventoryHintSpec (TypedDict)
@@ -440,7 +475,7 @@ class DisplayHints:
         )
 
     def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
-        for path, related_raw_hints in sorted(self.get_related_raw_hints(raw_hints).items()):
+        for path, related_raw_hints in sorted(_get_related_raw_hints(raw_hints).items()):
             if not path:
                 continue
 
@@ -451,11 +486,11 @@ class DisplayHints:
                 elif (value := related_raw_hints.for_node.get(key)) is not None:
                     node_or_table_hints[key] = value
 
-            table_keys = self._complete_key_order(
+            table_keys = _complete_key_order(
                 related_raw_hints.for_table.get("keyorder", []),
                 set(related_raw_hints.by_columns),
             )
-            attributes_keys = self._complete_key_order(
+            attributes_keys = _complete_key_order(
                 related_raw_hints.for_node.get("keyorder", []),
                 set(related_raw_hints.by_attributes),
             )
@@ -494,40 +529,6 @@ class DisplayHints:
                     ),
                 ),
             )
-
-    @staticmethod
-    def get_related_raw_hints(
-        raw_hints: Mapping[str, InventoryHintSpec]
-    ) -> Mapping[SDPath, _RelatedRawHints]:
-        related_raw_hints_by_path: dict[SDPath, _RelatedRawHints] = {}
-        for raw_path, raw_hint in raw_hints.items():
-            inventory_path = inventory.InventoryPath.parse(raw_path)
-            related_raw_hints = related_raw_hints_by_path.setdefault(
-                inventory_path.path,
-                _RelatedRawHints(),
-            )
-
-            if inventory_path.source == inventory.TreeSource.node:
-                related_raw_hints.for_node.update(raw_hint)
-                continue
-
-            if inventory_path.source == inventory.TreeSource.table:
-                if inventory_path.key:
-                    related_raw_hints.by_columns.setdefault(inventory_path.key, raw_hint)
-                    continue
-
-                related_raw_hints.for_table.update(raw_hint)
-                continue
-
-            if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:
-                related_raw_hints.by_attributes.setdefault(inventory_path.key, raw_hint)
-                continue
-
-        return related_raw_hints_by_path
-
-    @staticmethod
-    def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> Sequence[str]:
-        return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
 
     def _get_parent(self, path: SDPath) -> DisplayHints:
         node = self

@@ -78,7 +78,9 @@ if [[ -e "/etc/apt/sources.list.d/clang.list" ]]; then
 else
     echo "${REPO_NAME}" >>/etc/apt/sources.list.d/clang.list
 fi
-apt-get update
+# https://askubuntu.com/questions/65245/apt-get-update-only-for-a-specific-repository
+apt-get update -o Dir::Etc::sourcelist="sources.list.d/clang.list" \
+    -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
 apt-get install -y \
     "clang-$CLANG_VERSION" \
     "clangd-$CLANG_VERSION" \
@@ -87,7 +89,6 @@ apt-get install -y \
     "lld-$CLANG_VERSION" \
     "lldb-$CLANG_VERSION" \
     "libclang-$CLANG_VERSION-dev"
-rm -rf /var/lib/apt/lists/*
 
 # Workaround for https://github.com/llvm/llvm-project/issues/61550
 if [ "$CLANG_VERSION" = 16 ]; then

@@ -13,8 +13,10 @@ case "$DISTRO" in
             gpg --dearmor |
             sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg >/dev/null
         echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-        apt-get update && apt-get install -y packer
-        rm -rf /var/lib/apt/lists/*
+        # https://askubuntu.com/questions/65245/apt-get-update-only-for-a-specific-repository
+        apt-get update -o Dir::Etc::sourcelist="sources.list.d/hashicorp.list" \
+            -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
+        apt-get install -y packer
 
         # Test the installation
         packer --version || exit $?

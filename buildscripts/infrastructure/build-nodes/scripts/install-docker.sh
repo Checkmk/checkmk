@@ -13,9 +13,10 @@ case "$DISTRO" in
         # Install docker software
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
         echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" >/etc/apt/sources.list.d/docker.list
-        apt-get update
+        # https://askubuntu.com/questions/65245/apt-get-update-only-for-a-specific-repository
+        apt-get update -o Dir::Etc::sourcelist="sources.list.d/docker.list" \
+            -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
         apt-get install -y docker-ce
-        rm -rf /var/lib/apt/lists/*
 
         # Test the installation
         docker --version || exit $?

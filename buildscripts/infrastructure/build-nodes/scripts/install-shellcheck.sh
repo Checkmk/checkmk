@@ -10,9 +10,7 @@ case "$DISTRO" in
         # installable on all Ubuntu versions to be potentially usable by developers
         echo "Installing for Ubuntu"
 
-        apt-get update
         apt-get install -y shellcheck
-        rm -rf /var/lib/apt/lists/*
 
         # Test the installation
         shellcheck --version || exit $?

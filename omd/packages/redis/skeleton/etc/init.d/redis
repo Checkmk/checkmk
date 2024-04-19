@@ -5,16 +5,15 @@ unset LANG
 PIDFILE=$OMD_ROOT/tmp/run/redis-server.pid
 DAEMON=$OMD_ROOT/bin/redis-server
 THE_PID=$(cat "$PIDFILE" 2>/dev/null)
-OPTS="$OMD_ROOT/etc/redis/redis.conf"
+CONF="$OMD_ROOT/etc/redis/redis.conf"
 
 case "$1" in
 start)
     echo -n 'Starting redis...'
-    # shellcheck disable=SC2086 # Yes, we want splitting for OPTS.
     if kill -0 "$THE_PID" >/dev/null 2>&1; then
         echo 'Already running.'
         exit 0
-    elif "$DAEMON" $OPTS; then
+    elif "$DAEMON" "$CONF"; then
         init-redis
         echo OK
         exit 0

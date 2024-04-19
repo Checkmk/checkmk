@@ -325,7 +325,7 @@ def test_selector() -> None:
                     "type": "Microsoft.Compute/virtualMachines",
                     "location": "westeurope",
                     "tags": {"tag1": "value1", "tag2": "value2", "mytag": "True"},
-                    "group": "TEST-GROUP",
+                    "group": "test-group",
                 },
                 tag_key_pattern=TagsImportPatternOption.import_all,
             ),

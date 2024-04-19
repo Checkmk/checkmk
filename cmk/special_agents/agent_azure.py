@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
+
+Resources and resourcegroups are all treated lowercase because of:
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
 
 from __future__ import annotations
@@ -23,7 +26,7 @@ from multiprocessing import Lock, Process, Queue
 from queue import Empty as QueueEmpty
 from typing import Any, Literal, NamedTuple
 
-import msal  # type: ignore[import]
+import msal  # type: ignore[import-untyped]
 import requests
 
 from cmk.utils import password_store
@@ -971,9 +974,11 @@ class AzureResource:
 
         self.section = info["type"].split("/")[-1].lower()
         self.piggytargets = []
-        group = self.info.get("group")
-        if group:
-            self.piggytargets.append(group)
+
+        if group := self.info.get("group"):
+            self.info["group"] = group.lower()
+            self.piggytargets.append(group.lower())
+
         self.metrics: list = []
 
     def dumpinfo(self):
@@ -1439,7 +1444,7 @@ def get_group_labels(
     group_labels: dict[str, dict[str, str]] = {}
 
     for group in mgmt_client.resourcegroups():
-        name = group["name"]
+        name = group["name"].lower()
 
         if tag_key_pattern == TagsImportPatternOption.ignore_all:
             tags = {}
@@ -1702,7 +1707,7 @@ def process_resource_health(
         health_section[group].append(json.dumps(health_data))
 
     for group, values in health_section.items():
-        section = AzureSection("resource_health", [group])
+        section = AzureSection("resource_health", [group.lower()])
         for value in values:
             section.add([value])
         yield section

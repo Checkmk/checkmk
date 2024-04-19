@@ -335,7 +335,7 @@ def _convert_to_legacy_agent_config_rule_spec(
         group=_convert_to_legacy_rulespec_group(legacy_main_group, to_convert.topic, localizer),
         name=RuleGroup.AgentConfig(to_convert.name),
         valuespec=partial(
-            _tranform_agent_config_rule_spec_match_type, to_convert.parameter_form(), localizer
+            _transform_agent_config_rule_spec_match_type, to_convert.parameter_form(), localizer
         ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
@@ -360,13 +360,13 @@ def _remove_agent_config_match_type_key(value: object) -> object:
     raise TypeError(value)
 
 
-def _tranform_agent_config_rule_spec_match_type(
-    parameter_form: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
+def _transform_agent_config_rule_spec_match_type(
+    parameter_form: ruleset_api_v1.form_specs.Dictionary, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     return Transform(
         _convert_to_legacy_valuespec(parameter_form, localizer),
-        forth=_add_agent_config_match_type_key,
-        back=_remove_agent_config_match_type_key,
+        forth=_remove_agent_config_match_type_key,
+        back=_add_agent_config_match_type_key,
     )
 
 

@@ -146,6 +146,9 @@ def main() {
             /// in erroneous cases
             show_duration("check reference image") {
                 sh("""
+                    POPULATE_BUILD_CACHE=1 \
+                    VERBOSE=1 \
+                    PULL_BASE_IMAGE=1 \
                     ${checkout_dir}/scripts/run-in-docker.sh cat /etc/os-release
                 """);
             }

@@ -920,17 +920,23 @@ def _get_packed_value(
 ) -> object:
     match nested_form, value_to_pack:
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_pack:
-            return _pack_dict_groups(dict_form.elements, dict_to_pack, packed_dict)
+            return _pack_dict_groups(
+                dict_form.elements, dict_form.ignored_elements, dict_to_pack, packed_dict
+            )
         case _:
             return value_to_pack
 
 
 def _pack_dict_groups(
     dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    ignored_elements: Sequence[str],
     dict_to_pack: Mapping[str, object],
     packed_dict: dict,
 ) -> MutableMapping[str, object]:
     for key_to_pack, value_to_pack in dict_to_pack.items():
+        if key_to_pack in ignored_elements:
+            packed_dict[key_to_pack] = value_to_pack
+            continue
 
         nested_packed_dict = {}
         if isinstance(
@@ -953,7 +959,8 @@ def _pack_dict_groups(
 
 
 def _transform_dict_groups_forth(
-    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
+    dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    ignored_elements: Sequence[str],
 ) -> Callable[[Mapping[str, object] | None], Mapping[str, object] | None]:
     def _forth(value: Mapping[str, object] | None) -> Mapping[str, object] | None:
         if value is None:
@@ -961,7 +968,9 @@ def _transform_dict_groups_forth(
         if not set(_get_group_keys(dict_elements)).isdisjoint(value.keys()):  # already transformed
             return value
 
-        return _pack_dict_groups(dict_elements, value, _make_group_keys_dict(dict_elements))
+        return _pack_dict_groups(
+            dict_elements, ignored_elements, value, _make_group_keys_dict(dict_elements)
+        )
 
     return _forth
 
@@ -971,13 +980,16 @@ def _get_unpacked_value(
 ) -> object:
     match nested_form, value_to_unpack:
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_unpack:
-            return _unpack_dict_group(dict_form.elements, dict_to_unpack)
+            return _unpack_dict_group(
+                dict_form.elements, dict_form.ignored_elements, dict_to_unpack
+            )
         case _:
             return value_to_unpack
 
 
 def _unpack_dict_group(
     dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    ignored_elements: Sequence[str],
     dict_to_unpack: Mapping[str, object],
 ) -> Mapping[str, object]:
     if not isinstance(dict_to_unpack, dict):
@@ -985,6 +997,10 @@ def _unpack_dict_group(
 
     unpacked_dict = {}
     for key_to_unpack, value_to_unpack in dict_to_unpack.items():
+        if key_to_unpack in ignored_elements:
+            unpacked_dict[key_to_unpack] = value_to_unpack
+            continue
+
         if key_to_unpack in _get_group_keys(dict_elements):
             for grouped_key_to_unpack, grouped_value_to_unpack in value_to_unpack.items():
                 unpacked_dict[grouped_key_to_unpack] = _get_unpacked_value(
@@ -999,11 +1015,12 @@ def _unpack_dict_group(
 
 def _transform_dict_group_back(
     dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    ignored_elements: Sequence[str],
 ) -> Callable[[Mapping[str, object] | None], Mapping[str, object] | None]:
     def _back(value: Mapping[str, object] | None) -> Mapping[str, object] | None:
         if value is None:
             return value
-        return _unpack_dict_group(dict_elements, value)
+        return _unpack_dict_group(dict_elements, ignored_elements, value)
 
     return _back
 
@@ -1011,10 +1028,11 @@ def _transform_dict_group_back(
 def _convert_to_dict_legacy_validation(
     v1_validate_funcs: Iterable[Callable[[Mapping[str, object]], object]],
     dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
+    ignore_elements: Sequence[str],
     localizer: Callable[[str], str],
 ) -> Callable[[Mapping[str, object], str], None]:
     def wrapper(value: Mapping[str, object], var_prefix: str) -> None:
-        unpacked_value = _unpack_dict_group(dict_elements, value)
+        unpacked_value = _unpack_dict_group(dict_elements, ignore_elements, value)
         try:
             _ = [v1_validate_func(unpacked_value) for v1_validate_func in v1_validate_funcs]
         except ruleset_api_v1.form_specs.validators.ValidationError as e:
@@ -1076,14 +1094,17 @@ def _convert_to_legacy_dictionary(
             hidden_keys=ungrouped_element_key_props.hidden,
             validate=(
                 _convert_to_dict_legacy_validation(
-                    to_convert.custom_validate, to_convert.elements, localizer
+                    to_convert.custom_validate,
+                    to_convert.elements,
+                    to_convert.ignored_elements,
+                    localizer,
                 )
                 if to_convert.custom_validate is not None
                 else None
             ),
         ),
-        back=_transform_dict_group_back(to_convert.elements),
-        forth=_transform_dict_groups_forth(to_convert.elements),
+        back=_transform_dict_group_back(to_convert.elements, to_convert.ignored_elements),
+        forth=_transform_dict_groups_forth(to_convert.elements, to_convert.ignored_elements),
     )
 
 

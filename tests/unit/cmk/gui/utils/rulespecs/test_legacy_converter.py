@@ -2369,6 +2369,66 @@ def test_dictionary_groups_datamodel_transformation(
     assert converted.from_valuespec(form_model) == consumer_model
 
 
+def test_dictionary_groups_ignored_elements() -> None:
+    to_convert = api_v1.form_specs.Dictionary(
+        elements={
+            "a": api_v1.form_specs.DictElement(
+                parameter_form=api_v1.form_specs.Integer(),
+                group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+            ),
+            "b": api_v1.form_specs.DictElement(
+                parameter_form=api_v1.form_specs.Dictionary(
+                    elements={
+                        "a_nested": api_v1.form_specs.DictElement(
+                            parameter_form=api_v1.form_specs.Integer(),
+                            group=api_v1.form_specs.DictGroup(
+                                title=api_v1.Title("Nested group title")
+                            ),
+                        ),
+                        "b_nested": api_v1.form_specs.DictElement(
+                            parameter_form=api_v1.form_specs.Integer(),
+                            group=api_v1.form_specs.DictGroup(
+                                title=api_v1.Title("Nested group title")
+                            ),
+                        ),
+                        "c_nested": api_v1.form_specs.DictElement(
+                            parameter_form=api_v1.form_specs.Integer(),
+                        ),
+                    },
+                    ignored_elements=("d_nested",),
+                ),
+                group=api_v1.form_specs.DictGroup(title=api_v1.Title("Group title")),
+            ),
+        },
+        ignored_elements=("c",),
+    )
+    consumer_model = {
+        "a": 1,
+        "b": {"a_nested": 2, "b_nested": 3, "c_nested": 4, "d_nested": 5},
+        "c": 6,
+    }
+    form_model = {
+        "DictGroup(title=Title('Group title'), help_text=None)": {
+            "a": 1,
+            "b": {
+                "DictGroup(title=Title('Nested group title'), help_text=None)": {
+                    "a_nested": 2,
+                    "b_nested": 3,
+                },
+                "c_nested": 4,
+                "d_nested": 5,
+            },
+        },
+        "c": 6,
+    }
+
+    converted = _convert_to_legacy_valuespec(to_convert, _)
+    assert isinstance(converted, legacy_valuespecs.Transform)
+
+    assert converted.to_valuespec(consumer_model) == form_model
+    assert converted.from_valuespec(form_model) == consumer_model
+
+
 @pytest.mark.parametrize(
     ["to_convert", "expected"],
     [

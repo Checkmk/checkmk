@@ -88,6 +88,7 @@ from cmk.gui.watolib import password_store
 from cmk.gui.watolib import registration as watolib_registration
 from cmk.gui.watolib import sites as sites_config
 from cmk.gui.watolib import tags as tag_config
+from cmk.gui.watolib import users as user_config
 from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
@@ -291,6 +292,7 @@ def register() -> None:
     tag_config.register(config_file_registry)
     sites_config.register(config_file_registry)
     user_connections_config(config_file_registry)
+    user_config.register(config_file_registry)
 
 
 register()

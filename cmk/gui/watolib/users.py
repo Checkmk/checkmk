@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
 from datetime import datetime
+from pathlib import Path
 from typing import cast
 
+from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.object_diff import make_diff_text
@@ -23,11 +25,13 @@ from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.user_scripts import (
     declare_notification_plugin_permissions,
     user_script_choices,
     user_script_title,
 )
+from cmk.gui.watolib.utils import multisite_dir
 
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:
@@ -297,3 +301,25 @@ def verify_password_policy(password: Password, varname: str = "password") -> Non
             )
             % num_groups,
         )
+
+
+class UsersConfigFile(WatoSingleConfigFile[dict]):
+    """Handles reading and writing users.mk file"""
+
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(multisite_dir()) / "users.mk", config_variable="multisite_users"
+        )
+
+    def _load_file(self, lock: bool) -> dict:
+        users = super()._load_file(lock)
+        validate_users(users)
+        return users
+
+    def save(self, cfg: dict) -> None:
+        validate_users(cfg)
+        super().save(cfg)
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(UsersConfigFile())

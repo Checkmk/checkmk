@@ -416,6 +416,8 @@ def test_make_node_displayhint_from_hint(
             tuple(),
             "key",
             ColumnDisplayHint(
+                view_name="",
+                key=SDKey("key"),
                 paint_function=inv_paint_generic,
                 title="Key",
                 short=None,
@@ -428,6 +430,8 @@ def test_make_node_displayhint_from_hint(
             ("networking", "interfaces"),
             "oper_status",
             ColumnDisplayHint(
+                view_name="invinterface",
+                key=SDKey("oper_status"),
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 short=None,
@@ -440,6 +444,8 @@ def test_make_node_displayhint_from_hint(
             ("path", "to", "node"),
             "key",
             ColumnDisplayHint(
+                view_name="",
+                key=SDKey("key"),
                 paint_function=inv_paint_generic,
                 title="Key",
                 short=None,
@@ -452,6 +458,8 @@ def test_make_node_displayhint_from_hint(
             ("software", "applications", "check_mk", "sites"),
             "cmc",
             ColumnDisplayHint(
+                view_name="",
+                key=SDKey("cmc"),
                 paint_function=inv_paint_service_status,
                 title="CMC status",
                 short="CMC",
@@ -465,6 +473,8 @@ def test_make_node_displayhint_from_hint(
 def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
     hint = DISPLAY_HINTS.get_tree_hints(path).get_column_hint(key)
 
+    if hint.view_name:
+        assert hint.ident == f"{hint.view_name}_{hint.key}"
     assert hint.title == expected.title
     assert hint.short == expected.short
     assert hint.long_title == expected.long_title
@@ -479,6 +489,8 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".foo:*.bar",
             ColumnDisplayHint(
+                view_name="",
+                key=SDKey("key"),
                 paint_function=inv_paint_generic,
                 title="Bar",
                 short=None,
@@ -490,6 +502,8 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.package_version",
             ColumnDisplayHint(
+                view_name="invswpac",
+                key=SDKey("package_version"),
                 paint_function=inv_paint_generic,
                 title="Package Version",
                 short=None,
@@ -501,6 +515,8 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.version",
             ColumnDisplayHint(
+                view_name="invswpac",
+                key=SDKey("version"),
                 paint_function=inv_paint_generic,
                 title="Version",
                 short=None,
@@ -512,6 +528,8 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.index",
             ColumnDisplayHint(
+                view_name="invinterface",
+                key=SDKey("index"),
                 paint_function=inv_paint_number,
                 title="Index",
                 short=None,
@@ -523,6 +541,8 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.oper_status",
             ColumnDisplayHint(
+                view_name="invinterface",
+                key=SDKey("oper_status"),
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 short=None,
@@ -539,6 +559,8 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
         inventory_path.key or ""
     )
 
+    if hint.view_name:
+        assert hint.ident == f"{hint.view_name}_{hint.key}"
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
     assert hint.long_inventory_title == expected.long_inventory_title

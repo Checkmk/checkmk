@@ -857,32 +857,28 @@ def _paint_host_inventory_attribute(
     )
 
 
-def _paint_host_inventory_column(row: Row, column: str, hint: ColumnDisplayHint) -> CellSpec:
-    if column not in row:
+def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHint) -> CellSpec:
+    if hint.ident not in row:
         return "", ""
     return _compute_cell_spec(
         _SDItem(
-            SDKey(column),
-            row[column],
-            row.get("_".join([column, "retention_interval"])),
+            SDKey(hint.ident),
+            row[hint.ident],
+            row.get("_".join([hint.ident, "retention_interval"])),
         ),
         hint,
     )
 
 
-def _register_table_column(
-    table_view_name: str,
-    column: str,
-    hint: ColumnDisplayHint,
-) -> None:
+def _register_table_column(hint: ColumnDisplayHint) -> None:
     long_inventory_title = hint.long_inventory_title
 
     # TODO
     # - Sync this with _register_attribute_column()
-    filter_registry.register(hint.make_filter(table_view_name, column))
+    filter_registry.register(hint.make_filter())
 
     register_painter(
-        column,
+        hint.ident,
         {
             "title": long_inventory_title,
             # The short titles (used in column headers) may overlap for different painters, e.g.:
@@ -892,9 +888,9 @@ def _register_table_column(
             # long_title in the column title tooltips
             "short": hint.short or hint.title,
             "tooltip_title": hint.long_title,
-            "columns": [column],
-            "paint": lambda row: _paint_host_inventory_column(row, column, hint),
-            "sorter": column,
+            "columns": [hint.ident],
+            "paint": lambda row: _paint_host_inventory_column(row, hint),
+            "sorter": hint.ident,
             # See views/painter/v0/base.py::Cell.painter_parameters
             # We have to add a dummy value here such that the painter_parameters are not None and
             # the "real" parameters, ie. _painter_params, are used.
@@ -903,12 +899,12 @@ def _register_table_column(
     )
 
     _register_sorter(
-        ident=column,
+        ident=hint.ident,
         long_inventory_title=long_inventory_title,
         load_inv=False,
-        columns=[column],
+        columns=[hint.ident],
         hint=hint,
-        value_extractor=lambda v: v.get(column),
+        value_extractor=lambda v: v.get(hint.ident),
     )
 
 
@@ -1015,18 +1011,11 @@ def _register_table_view(hints: DisplayHints) -> None:
 
     painters: list[ColumnSpec] = []
     filters = []
-    for name, col_hint in hints.column_hints.items():
-        column = table_view_spec.view_name + "_" + name
-
+    for col_hint in hints.column_hints.values():
         # Declare a painter, sorter and filters for each path with display hint
-        _register_table_column(
-            table_view_spec.view_name,
-            column,
-            col_hint,
-        )
-
-        painters.append(ColumnSpec(column))
-        filters.append(column)
+        _register_table_column(col_hint)
+        painters.append(ColumnSpec(col_hint.ident))
+        filters.append(col_hint.ident)
 
     _register_views(
         table_view_spec.view_name,

@@ -190,6 +190,7 @@ def _allowed_for_base(
             ),
             _in_component(imported=imported, component=Component("cmk.cee.helpers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
         )
     )
 
@@ -242,6 +243,7 @@ def _allow_for_gui(
             ),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
         )
     )
 

@@ -15,6 +15,10 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentConfig
+from cmk.server_side_calls_backend.config_processing import (
+    process_configuration_to_parameters,
+    ProxyConfig,
+)
 
 from ._commons import (
     commandline_arguments,
@@ -23,7 +27,6 @@ from ._commons import (
     replace_passwords,
     SpecialAgentInfoFunctionResult,
 )
-from ._config_processing import process_configuration_to_parameters, ProxyConfig
 
 
 @dataclass(frozen=True)

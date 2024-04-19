@@ -21,9 +21,12 @@ from cmk.base import plugin_contexts
 
 from cmk.discover_plugins import discover_executable, family_libexec_dir, PluginLocation
 from cmk.server_side_calls.v1 import ActiveCheckConfig, HostConfig
+from cmk.server_side_calls_backend.config_processing import (
+    process_configuration_to_parameters,
+    ProxyConfig,
+)
 
 from ._commons import commandline_arguments, replace_macros, replace_passwords
-from ._config_processing import process_configuration_to_parameters, ProxyConfig
 
 
 class InvalidPluginInfoError(Exception):

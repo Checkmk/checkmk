@@ -1,0 +1,19 @@
+Title: mem_win: rename 'Commit Charge' to 'Virtual Memory' for correctness
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1713530099
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+
+The value previously displayed as 'Commit Charge' did not match its
+description. Therefore, this value has been accurately renamed to
+'Virtual Memory,' while maintaining the original calculation method.
+Correspondingly, the titles of related graphs have been adjusted to
+reflect this change.
+
+In versions prior to 2.3, the service summary included a metric labeled
+'Pagefile installed.' This has now been correctly renamed to
+'Total Virtual Memory,' as it never accurately represented the
+'Pagefile installed.'

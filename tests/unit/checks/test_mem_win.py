@@ -61,7 +61,7 @@ _SECTION = {
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB (warn/crit at 70.00%/90.00% used)",
+                    summary="Virtual memory: 75.43% - 111 GiB of 147 GiB (warn/crit at 70.00%/90.00% used)",
                 ),
                 Metric(
                     "pagefile_used",
@@ -109,7 +109,7 @@ _SECTION = {
                 ),
                 Result(
                     state=State.WARN,
-                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 10 min average: 75.43% (111 GiB)",
+                    summary="Virtual memory: 75.43% - 111 GiB of 147 GiB, 10 min average: 75.43% (111 GiB)",
                 ),
                 Metric(
                     "pagefile_used",
@@ -172,7 +172,7 @@ _SECTION = {
                 ),
                 Result(
                     state=State.CRIT,
-                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, Commit charge: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
+                    summary="Virtual memory: 75.43% - 111 GiB of 147 GiB, Virtual memory: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
                 ),
                 Metric(
                     "pagefile_used",
@@ -239,7 +239,7 @@ _SECTION = {
                 ),
                 Result(
                     state=State.CRIT,
-                    summary="Commit charge: 75.43% - 111 GiB of 147 GiB, 60 min average: 75.43% (111 GiB), Commit charge: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
+                    summary="Virtual memory: 75.43% - 111 GiB of 147 GiB, 60 min average: 75.43% (111 GiB), Virtual memory: 110.88 GiB (predicted reference: 97.66) (warn/crit at 87.89 GiB/107.42 GiB)",
                 ),
                 Metric(
                     "pagefile_used",

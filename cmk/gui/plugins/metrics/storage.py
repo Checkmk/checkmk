@@ -308,7 +308,7 @@ metric_info["memory_avg"] = {
 }
 
 metric_info["pagefile_avg"] = {
-    "title": _("Commit Charge Average"),
+    "title": _("Virtual memory Average"),
     "color": "#408f20",
     "unit": "bytes",
 }
@@ -333,7 +333,7 @@ metric_info["mem_available"] = {
 
 metric_info["pagefile_used"] = {
     "color": "#408f20",
-    "title": _("Commit Charge"),
+    "title": _("Used virtual memory"),
     "unit": "bytes",
 }
 
@@ -670,7 +670,7 @@ metric_info["mem_esx_private"] = {
 }
 
 metric_info["pagefile_total"] = {
-    "title": _("Pagefile installed"),
+    "title": _("Total virtual memory"),
     "color": "#e0e0e0",
     "unit": "bytes",
 }

@@ -280,7 +280,7 @@ def check_mem_windows(_no_item, params, section):
 
     for title, prefix, paramname, metric_name in [
         ("RAM", "Mem", "memory", "mem_used"),
-        ("Commit charge", "Page", "pagefile", "pagefile_used"),
+        ("Virtual memory", "Page", "pagefile", "pagefile_used"),
     ]:
 
         total = section.get("%sTotal" % prefix)

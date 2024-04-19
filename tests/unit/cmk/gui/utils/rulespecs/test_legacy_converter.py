@@ -2526,6 +2526,60 @@ def test_dictionary_groups_datamodel_transformation(
             ),
             id="render_only dictelements",
         ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                title=api_v1.Title("ABC"),
+                help_text=api_v1.Help("This is an explanation for ABC"),
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(),
+                    ),
+                },
+            ),
+            legacy_valuespecs.Dictionary(
+                title=_("ABC"),
+                help=_("This is an explanation for ABC"),
+                elements=[
+                    ("a", legacy_valuespecs.Integer()),
+                    ("b", legacy_valuespecs.Integer()),
+                ],
+            ),
+            id="no dummy dictionary required",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                title=api_v1.Title("ABC"),
+                help_text=api_v1.Help("This is an explanation for ABC"),
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(),
+                        required=True,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(),
+                        required=True,
+                    ),
+                },
+            ),
+            legacy_valuespecs.Dictionary(
+                title=_("ABC"),
+                help=_("This is an explanation for ABC"),
+                elements=[
+                    ("a", legacy_valuespecs.Integer()),
+                    ("b", legacy_valuespecs.Integer()),
+                ],
+                required_keys=["a", "b"],
+                horizontal=True,
+            ),
+            id="no dummy dictionary required, horizontal rendering",
+        ),
     ],
 )
 def test_dictionary_groups_dict_element_properties(

@@ -5,7 +5,7 @@ Component: reporting
 Date: 1709025058
 Edition: cee
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Since 2.2 the content element "Metrics graph of a single service" allowed to
 configure multiple context/search filters.

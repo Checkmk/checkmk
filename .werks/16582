@@ -5,7 +5,7 @@ Component: rest-api
 Date: 1710234772
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Previous this Werk, a status code 500 (Internal server error) was raised when creating a password with a non existent customer. This werk fixes that and now it returns a status code 400 (Bad request) with proper informaiton about the error
 

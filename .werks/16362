@@ -5,7 +5,7 @@ Component: checks
 Date: 1709283564
 Edition: cee
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 When agent plugins are configured for a windows agent the baked package for windows contains a Python version.
 This version is updated from 3.11.7 to 3.11.8.

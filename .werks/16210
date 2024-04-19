@@ -5,7 +5,7 @@ Component: rest-api
 Date: 1704965695
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Prior to this Werk, the REST API could delete non-empty folders without any further check. With this Werk, the endpoint now accepts the <strong>delete_method</strong> query parameter. The possible values are:
 - <strong>recursive</strong>: Deletes the folder and all the elements it contains.

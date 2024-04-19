@@ -5,7 +5,7 @@ Component: omd
 Date: 1707904094
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Since Checkmk 2.2.0 there is a agent CA located in <code>etc/ssl/agents/</code>. This CA is
 different from the site CA. In particular, if updating from 2.1.0 to 2.2.0,

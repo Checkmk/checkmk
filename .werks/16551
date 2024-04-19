@@ -5,7 +5,7 @@ Component: agents
 Date: 1711098828
 Edition: cee
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 After cloning a site with <code>omd cp</code> or renaming it with <code>omd mv</code>, opening the agent bakery GUI
 did result in a crash, showing a message like

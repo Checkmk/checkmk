@@ -5,7 +5,7 @@ Component: checks
 Date: 1712751995
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 The agent did not handle the cases where shelves had no fans, temperature sensors or PSUs.
 This led to crashes during the agent execution.

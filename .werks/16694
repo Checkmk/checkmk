@@ -5,7 +5,7 @@ Component: multisite
 Date: 1712656769
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 For the dashlet "Event statistics" you were able to configure "Host" and
 "Service" Context/Search filter.

@@ -5,7 +5,7 @@ Component: checks
 Date: 1708687568
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 If you've been using mysql and the corresponding agent plugin <em>mk_sql</em>
 under Windows, the plugin may have crashed and the agent output would then

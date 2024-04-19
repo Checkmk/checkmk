@@ -5,7 +5,7 @@ Component: wato
 Date: 1713448991
 Edition: cme
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 When an ldap connection is configured for a specific customer, this
 wasn't reflected in the users for that ldap connection.  This werk

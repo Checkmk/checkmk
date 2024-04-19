@@ -5,7 +5,7 @@ Component: checks
 Date: 1709804740
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Previously, if configured, proxy was used to connect to all clients except for the 'STS' client.
 This led to a crash in the agent if 'STS' client was only accessible via proxy.

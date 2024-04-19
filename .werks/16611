@@ -5,7 +5,7 @@ Component: notifications
 Date: 1711532390
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 When a user tries to access the notification setup page where
 a rule is listed for which the user does not have access rights,

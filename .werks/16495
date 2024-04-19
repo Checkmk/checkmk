@@ -5,7 +5,7 @@ Component: checks
 Date: 1709557446
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 When selecting to check multiple mailboxes, the software always checked only the last specified mailbox.
 This werk fixes this behaviour.

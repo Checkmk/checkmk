@@ -5,7 +5,7 @@ Component: checks
 Date: 1706532543
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Rule "Status of the Checkmk service" provides a setting called "State if
 specific check plugins receive no monitoring data" where you can specify a

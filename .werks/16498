@@ -5,6 +5,6 @@ Component: checks
 Date: 1709890474
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Fixes a crash in the check plugin, caused by not handling two recently added switch of activity reasons.

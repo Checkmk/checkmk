@@ -5,7 +5,7 @@ Component: checks
 Date: 1709894365
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 apc_netbotz_sensors and apc_netbotz_other_sensors checks provided monitoring for APC Netbotz v2 devices.
 Now, the checks can additionally monitor APC Netbotz 50 devices.

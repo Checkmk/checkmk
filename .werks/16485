@@ -5,7 +5,7 @@ Component: rest-api
 Date: 1710161510
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 When creating hosts in a folder with umlauts in the name via one of the
 <code>host_config</code> endpoints the endpoint would return an error 400 even though

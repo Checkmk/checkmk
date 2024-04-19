@@ -5,7 +5,7 @@ Component: checks
 Date: 1709038229
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 You're affected if your aws_ec2_limits check reported "Unknown resource" and you're using "m7i.large".
 The aws resource names are changing from time to time and we will need to find a more stable solution for that in the future.

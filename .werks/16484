@@ -5,7 +5,7 @@ Component: multisite
 Date: 1709884230
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 When creating a combined graph with an empty time filter (e.g. Last service check),
 the creation of the combined graph would crash.

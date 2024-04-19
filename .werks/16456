@@ -5,7 +5,7 @@ Component: omd
 Date: 1710148230
 Edition: cme
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 This situation can be fixed by stopping and starting remote sites via 'omd stop'
 and 'omd start',

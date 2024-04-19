@@ -5,7 +5,7 @@ Component: checks
 Date: 1708967815
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 The above-mentioned plugin now monitors the list of ambient and internal temperature sensors,
 sticking to the logic of the netapp_api_temp plugin (old Netapp API).

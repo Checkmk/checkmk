@@ -5,7 +5,7 @@ Component: rest-api
 Date: 1710239567
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Previously, the single service discovery and the bulk discovery shared the same
 documentation for the mode field. This covers the use cases for the bulk discovery

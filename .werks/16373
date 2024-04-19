@@ -5,6 +5,6 @@ Component: rest-api
 Date: 1709109314
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Before this Werk, the REST API was not able to access metrics named after IP addresses. This Werk fixes that and allows user to access metrics containing dots on the id

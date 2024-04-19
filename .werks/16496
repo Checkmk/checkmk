@@ -5,7 +5,7 @@ Component: checks
 Date: 1709739981
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 The agent would crash if information (backend pools or outbound rules) was missing for a load balancer.
 This werk ensures that the system handles scenarios where this data may not be present.

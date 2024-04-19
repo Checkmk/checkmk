@@ -5,7 +5,7 @@ Component: reporting
 Date: 1709800537
 Edition: cee
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 If you used the option “Inherit from report time range” for the painter "Metric
 history" in report content elements, an error was shown in the report.

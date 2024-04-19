@@ -5,7 +5,7 @@ Component: checks
 Date: 1709728993
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 The agent plugin <code>mk_oracle</code> creates forked processes, e.g. from <code>sqlplus</code>. 
 In order to reliable clean up stale processes, we kill now the whole process chain under AIX

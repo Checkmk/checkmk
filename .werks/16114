@@ -5,7 +5,7 @@ Component: rest-api
 Date: 1696846527
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Prior to this Werk, the folder name pattern for GET and DELETE endpoints did not allow the use of unicode characters while they were supported by the CREATE endpoint, with the result that folders created with such characters could not be accessed or deleted from the REST API.
 

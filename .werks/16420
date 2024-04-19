@@ -5,7 +5,7 @@ Component: checks
 Date: 1712568535
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Jolokia 2.0 was released 2023-12-19. With the release some changes to the Jolokia Protocol have been
 introduced. If a user installed this version of Jolokia, the check plugin <code>jolokia_info</code> showed

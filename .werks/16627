@@ -5,7 +5,7 @@ Component: checks
 Date: 1712140230
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Before this update, configuring 'Volume parameters' in the PVC check plugin led to a crash. This
 issue arose because the plugin was not designed to process trend size-related levels, which, 

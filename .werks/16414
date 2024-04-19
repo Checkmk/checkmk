@@ -5,7 +5,7 @@ Component: notifications
 Date: 1710770356
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 In Werk #6417, we announced that some changes to <code>etc/check_mk/conf.d/wato/contacts.mk</code> are
 necessary before updating. In case a user did not migrate his configuration, they would encounter

@@ -5,7 +5,7 @@ Component: checks
 Date: 1711529016
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Postgres.cfg was always read as unicode decoded.
 This ensures that the read text is correctly converted to byte string format.

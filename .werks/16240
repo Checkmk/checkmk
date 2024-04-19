@@ -5,7 +5,7 @@ Component: checks
 Date: 1709129579
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 You're affected if you want to monitor your CPU and the cpu check crashes with something like:
 C+:

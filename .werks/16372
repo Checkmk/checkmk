@@ -5,6 +5,6 @@ Component: rest-api
 Date: 1709285249
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Since not all Python regexes are ECMA (JavaScript) compliant, several parameter fields did not work in Swagger. This werk solves the problem by adjusting the regexes to be compatible with JavaScript.

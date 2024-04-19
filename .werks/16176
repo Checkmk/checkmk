@@ -5,7 +5,7 @@ Component: checks
 Date: 1710323821
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Previously, Checkmk agent used the data from /proc to determine if Postfix instance is running.
 Since docker containers don't have permissions to read /proc, the agent always reported

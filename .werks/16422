@@ -5,7 +5,7 @@ Component: omd
 Date: 1713275522
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 While upgrading from the 2.1.0 Checkmk Free Edition to a 2.2.0 Checkmk Enterprise Edition, the
 following crash occured and the update failed:

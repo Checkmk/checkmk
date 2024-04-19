@@ -5,7 +5,7 @@ Component: checks
 Date: 1706189999
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Stopped resources are marked <code>CRIT</code>.
 

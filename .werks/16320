@@ -5,7 +5,7 @@ Component: multisite
 Date: 1709641954
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Werk 13498 introduced the possibility to set publish permissions independently
 of each other.

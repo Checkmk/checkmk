@@ -5,7 +5,7 @@ Component: checks
 Date: 1709742514
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 In newer versions of the Docker API the information about the 'VirtualSize' of a node image is not available, because it has been deprecated.
 From now on the plugin will use 'VirtualSize' if available, and 'Size' if not.

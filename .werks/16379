@@ -5,7 +5,7 @@ Component: checks
 Date: 1710141228
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 It was impossible to disable bulkwalks for SNMP version 3 hosts using the inline SNMP backend.
 It is fixed now in the sense that it works as in the classic backend:

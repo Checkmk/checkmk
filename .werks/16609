@@ -5,7 +5,7 @@ Component: multisite
 Date: 1710410065
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Werk 13498 introduced the possibility to set limit publish permissions
 to certain contact groups, sites etc. Still, the permission "Publish views"

@@ -5,7 +5,7 @@ Component: checks
 Date: 1707740421
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Prior to this werk, the snmp detect condition was too
 restrictive which excluded subsequently new devices.

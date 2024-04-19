@@ -5,7 +5,7 @@ Component: agents
 Date: 1710234878
 Edition: cee
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 In the ruleset <em>Remote alert handlers (Linux)</em>, you have to specify
 a user under that the remote alert handler will be executed on agent side.

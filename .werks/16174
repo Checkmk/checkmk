@@ -5,7 +5,7 @@ Component: checks
 Date: 1709804918
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Checkmk previously assumed that timestamps collected from MongoDB oplog
 are provided in ms. This wasn't the case, which led to wrong values for

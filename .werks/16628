@@ -5,7 +5,7 @@ Component: wato
 Date: 1712242054
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 Before this werk, the site failed to redirect users to the
 "Change Password" page following a successful login when

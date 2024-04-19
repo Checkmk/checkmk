@@ -5,7 +5,7 @@ Component: checks
 Date: 1710155388
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 With this Werk the <code>websphere_mq</code> plugin is removed for security reasons.
 

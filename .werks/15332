@@ -5,7 +5,7 @@ Component: inv
 Date: 1713272987
 Edition: cre
 Level: 1
-Version: 2.2.0p25
+Version: 2.2.0p26
 
 This element is already available for Linux, now the windows agent also supports
 reading this value.

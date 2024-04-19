@@ -163,7 +163,7 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, snmp_default_community
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -2057,10 +2057,9 @@ class AutomationDiagHost(Automation):
         # ('authNoPriv', 'md5', '11111111', '22222222')
         # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
-        credentials: SNMPCredentials = snmp_config.credentials
-
-        # Insert preconfigured communitiy
         if test == "snmpv3":
+            credentials: SNMPCredentials = snmp_config.credentials
+
             if snmpv3_use:
                 snmpv3_credentials = [snmpv3_use]
                 if snmpv3_use in ["authNoPriv", "authPriv"]:
@@ -2086,8 +2085,12 @@ class AutomationDiagHost(Automation):
                     snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
 
                 credentials = tuple(snmpv3_credentials)
-        elif snmp_community:
-            credentials = snmp_community
+        else:
+            credentials = snmp_community or (
+                snmp_config.credentials
+                if isinstance(snmp_config.credentials, str)
+                else snmp_default_community
+            )
 
         # Determine SNMPv2/v3 community
         if hostname not in config.explicit_snmp_communities:

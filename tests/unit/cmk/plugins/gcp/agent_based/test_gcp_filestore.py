@@ -77,6 +77,7 @@ PLUGINS = [
             "disk_write_ios",
             "disk_average_read_wait",
             "disk_average_write_wait",
+            "disk_latency",
         ],
         pure_metrics=["disk_used_capacity", "disk_capacity"],
         results=[

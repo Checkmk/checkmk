@@ -1631,4 +1631,5 @@ def test_check_latency_calculation() -> None:
             state=State.WARN,
             notice="Latency: 4 milliseconds (warn/crit at 3 milliseconds/5 milliseconds)",
         ),
+        Metric("disk_latency", 0.004, levels=(0.003, 0.005)),
     ]

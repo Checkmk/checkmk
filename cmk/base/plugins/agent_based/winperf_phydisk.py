@@ -579,7 +579,6 @@ def check_winperf_phydisk(
         disk=disk_with_rates,
         value_store=value_store,
         this_time=time.time(),
-        generate_latency_metric=True,
     )
 
 

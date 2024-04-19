@@ -146,8 +146,8 @@ class Plugin:
 
     def __post_init__(self) -> None:
         num_percentile_metrics = sum(len(percentiles) for _, percentiles in self.percentile_metrics)
-        assert len(self.metrics) + num_percentile_metrics == len(
-            self.results
+        assert len(self.metrics) + num_percentile_metrics == len(self.results) + len(
+            self.additional_results
         ), "expect to have the same number of metrics and results"
 
     def expected_results(self) -> set:

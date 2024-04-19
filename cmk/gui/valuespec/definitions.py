@@ -388,7 +388,7 @@ class FixedValue(ValueSpec[T]):
         return self._value
 
     def render_input(self, varprefix: str, value: T) -> None:
-        html.write_text(self.value_to_html(value))
+        html.span(self.value_to_html(value), class_="vs_fixed_value")
 
     def value_to_html(self, value: T) -> ValueSpecText:
         if self._totext is not None:
@@ -5852,7 +5852,7 @@ class Tuple(ValueSpec[TT]):
                     html.open_td(class_="tuple_td")
 
             if self._orientation == "vertical":
-                html.open_td(class_="tuple_right")
+                html.open_td(class_="tuple_right" + (" has_title" if title else ""))
 
             html.help(element.help())
             element.render_input(vp, val)

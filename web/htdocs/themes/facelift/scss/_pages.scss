@@ -1038,12 +1038,7 @@ table.nform {
   }
 
   .vs_floating_text {
-    display: inline-block;
-    height: $input-field-height;
-    margin: $input-field-margin;
-    line-height: $input-field-height;
-    vertical-align: bottom;
-    box-sizing: border-box;
+    @include floating-text-mixin;
   }
 }
 

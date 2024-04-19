@@ -675,7 +675,6 @@ def _register_table_views_and_columns() -> None:
 
         for key, attr_hint in hints.attribute_hints.items():
             _register_attribute_column(
-                "_".join(("inv",) + hints.abc_path + (key,)),
                 inventory.InventoryPath(
                     path=hints.abc_path,
                     source=inventory.TreeSource.attributes,
@@ -762,7 +761,7 @@ def _export_node_for_csv() -> str | HTML:
 
 
 def _register_attribute_column(
-    ident: str, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
+    inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
 ) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
@@ -770,7 +769,7 @@ def _register_attribute_column(
 
     # Declare column painter
     register_painter(
-        ident,
+        hint.ident,
         {
             "title": long_inventory_title,
             # The short titles (used in column headers) may overlap for different painters, e.g.:
@@ -797,7 +796,7 @@ def _register_attribute_column(
             ),
             "printable": True,
             "load_inv": True,
-            "sorter": ident,
+            "sorter": hint.ident,
             "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
             "export_for_python": lambda row, cell: _compute_attribute_painter_data(
                 row, inventory_path
@@ -815,7 +814,7 @@ def _register_attribute_column(
 
     # Declare sorter. It will detect numbers automatically
     _register_sorter(
-        ident=ident,
+        ident=hint.ident,
         long_inventory_title=long_inventory_title,
         load_inv=True,
         columns=["host_inventory", "host_structured_status"],
@@ -826,7 +825,7 @@ def _register_attribute_column(
     )
 
     # Declare filter. Sync this with _register_table_column()
-    filter_registry.register(hint.make_filter(ident, inventory_path))
+    filter_registry.register(hint.make_filter(inventory_path))
 
 
 def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:

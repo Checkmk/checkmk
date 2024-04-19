@@ -6,7 +6,7 @@
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDNodeName, SDPath
+from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -553,6 +553,8 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             tuple(),
             "key",
             AttributeDisplayHint(
+                path=tuple(),
+                key=SDKey("key"),
                 data_type="str",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
@@ -566,6 +568,8 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             ("hardware", "storage", "disks"),
             "size",
             AttributeDisplayHint(
+                path=(SDNodeName("hardware"), SDNodeName("storage"), SDNodeName("disks")),
+                key=SDKey("size"),
                 data_type="size",
                 paint_function=inv_paint_size,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
@@ -579,6 +583,8 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             ("path", "to", "node"),
             "key",
             AttributeDisplayHint(
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                key=SDKey("key"),
                 data_type="str",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
@@ -593,6 +599,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
 def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
     hint = DISPLAY_HINTS.get_tree_hints(path).get_attribute_hint(key)
 
+    assert hint.ident == "_".join(("inv",) + hint.path + (hint.key,))
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
@@ -608,6 +615,8 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".foo.bar",
             AttributeDisplayHint(
+                path=(SDNodeName("foo"),),
+                key=SDKey("bar"),
                 data_type="str",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
@@ -620,6 +629,8 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".hardware.cpu.arch",
             AttributeDisplayHint(
+                path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                key=SDKey("arch"),
                 data_type="str",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
@@ -632,6 +643,8 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".hardware.system.product",
             AttributeDisplayHint(
+                path=(SDNodeName("hardware"), SDNodeName("system")),
+                key=SDKey("product"),
                 data_type="str",
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
@@ -651,6 +664,7 @@ def test_make_attribute_displayhint_from_hint(
         inventory_path.key or ""
     )
 
+    assert hint.ident == "_".join(("inv",) + hint.path + (hint.key,))
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
@@ -694,6 +708,8 @@ def test_view_spec_view_name(view_name: str, expected: str) -> None:
 
 def test_registered_sorter_cmp() -> None:
     hint = AttributeDisplayHint(
+        path=tuple(),
+        key=SDKey("key"),
         data_type="str",
         paint_function=inv_paint_generic,
         sort_function=_decorate_sort_function(_cmp_inv_generic),

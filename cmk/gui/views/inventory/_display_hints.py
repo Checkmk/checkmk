@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal
 
-from cmk.utils.structured_data import SDNodeName, SDPath
+from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _, _l
@@ -81,6 +81,13 @@ def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], s
     )
 
 
+def _make_ident(path: SDPath, key: str = "") -> str:
+    parts = ["inv"] + list(path)
+    if key:
+        parts.append(key)
+    return "_".join(parts)
+
+
 @dataclass(frozen=True)
 class NodeDisplayHint:
     path: SDPath
@@ -90,7 +97,7 @@ class NodeDisplayHint:
 
     @property
     def ident(self) -> str:
-        return "_".join(("inv",) + self.path)
+        return _make_ident(self.path)
 
     @property
     def long_title(self) -> str:
@@ -290,6 +297,8 @@ class AttributesDisplayHint:
 
 @dataclass(frozen=True)
 class AttributeDisplayHint:
+    path: SDPath
+    key: SDKey
     title: str
     short: str | None
     _long_title_function: Callable[[], str]
@@ -297,6 +306,10 @@ class AttributeDisplayHint:
     paint_function: PaintFunction
     sort_function: SortFunction
     is_show_more: bool
+
+    @property
+    def ident(self) -> str:
+        return _make_ident(self.path, self.key)
 
     @property
     def long_title(self) -> str:
@@ -311,6 +324,8 @@ class AttributeDisplayHint:
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(key)
         return cls(
+            path=path,
+            key=SDKey(key),
             title=title,
             short=None if (short := raw_hint.get("short")) is None else str(short),
             _long_title_function=_make_long_title_function(title, path),
@@ -321,11 +336,11 @@ class AttributeDisplayHint:
         )
 
     def make_filter(
-        self, ident: str, inventory_path: inventory.InventoryPath
+        self, inventory_path: inventory.InventoryPath
     ) -> FilterInvText | FilterInvBool | FilterInvFloat:
         if self.data_type == "str":
             return FilterInvText(
-                ident=ident,
+                ident=self.ident,
                 title=self.long_title,
                 inventory_path=inventory_path,
                 is_show_more=self.is_show_more,
@@ -333,7 +348,7 @@ class AttributeDisplayHint:
 
         if self.data_type == "bool":
             return FilterInvBool(
-                ident=ident,
+                ident=self.ident,
                 title=self.long_title,
                 inventory_path=inventory_path,
                 is_show_more=self.is_show_more,
@@ -341,7 +356,7 @@ class AttributeDisplayHint:
 
         filter_info = _inv_filter_info().get(self.data_type, {})
         return FilterInvFloat(
-            ident=ident,
+            ident=self.ident,
             title=self.long_title,
             inventory_path=inventory_path,
             unit=filter_info.get("unit"),

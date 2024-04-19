@@ -121,14 +121,10 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import IPStackConfig
-from cmk.base.server_side_calls import (
-    load_special_agents,
-    PreprocessingResult,
-    SpecialAgent,
-    SpecialAgentCommandLine,
-)
+from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
 
 from cmk.server_side_calls import v1 as server_side_calls_api
+from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
 # TODO: Prefix helper functions with "_".
 

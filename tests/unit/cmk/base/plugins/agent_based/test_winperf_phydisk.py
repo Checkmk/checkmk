@@ -149,9 +149,13 @@ def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
         )
     )
 
-    exp_metrics = set(
+    exp_metrics = {
         "disk_" + k for k in DISK if not k.endswith("_base") and k not in ("timestamp", "frequency")
-    )
+    }
+    if "latency" not in DISK and "average_write_wait" in DISK and "average_read_wait" in DISK:
+        exp_metrics.update(
+            {"disk_latency": max(DISK["average_write_wait"], DISK["average_read_wait"])}
+        )
     for res in check_results:
         if isinstance(res, Metric):
             exp_metrics.remove(res.name)

@@ -220,9 +220,9 @@ class SQLiteHistory(History):
                 connection.execute(index_statement)
 
     def flush(self) -> None:
-        """Drop the history table."""
-        self.conn.execute("DROP TABLE IF EXISTS history;")
-        self.conn.commit()
+        """Delete all entries the history table."""
+        with self.conn as connection:
+            connection.execute("DELETE FROM history;")
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
         """Add a single entry to the history table.

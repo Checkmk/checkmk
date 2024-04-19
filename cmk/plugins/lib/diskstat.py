@@ -391,6 +391,7 @@ def check_diskstat_dict(
     disk: Disk,
     value_store: MutableMapping,
     this_time: float,
+    generate_latency_metric: bool = False,  # SUP-17975
 ) -> CheckResult:
     if not disk:
         return
@@ -433,6 +434,7 @@ def check_diskstat_dict(
         yield from check_levels(
             latency,
             levels_upper=levels,
+            metric_name="disk_latency" if generate_latency_metric else None,
             render_func=render.timespan,
             label="Latency",
         )

@@ -3,12 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from typing import Any, Callable, Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based import winperf_phydisk
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, type_defs
 
 from cmk.plugins.lib import diskstat
 
@@ -177,7 +177,7 @@ def _advance_time(disk: diskstat.Disk, seconds: int) -> diskstat.Disk:
     return disk_inc
 
 
-def _check_disk_with_rates(disk, disk_with_rates):
+def _check_disk_with_rates(disk: diskstat.Disk, disk_with_rates: diskstat.Disk) -> None:
     disk_reference = {
         k: 23.0 for k in disk if not k.endswith("_base") and k not in ("timestamp", "frequency")
     }
@@ -242,7 +242,19 @@ def test_compute_rates_single_disk_with_frequency() -> None:
     )
 
 
-def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
+def _test_check_winperf_phydisk(
+    item: str,
+    section_1: diskstat.Section | Mapping[str, diskstat.Section],
+    section_2: diskstat.Section | Mapping[str, diskstat.Section],
+    check_func: Callable[
+        [
+            str,
+            Mapping[str, Any],
+            Any,
+        ],
+        type_defs.CheckResult,
+    ],
+) -> None:
     # fist call: initialize value store
     with pytest.raises(IgnoreResultsError):
         list(
@@ -265,6 +277,10 @@ def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
     exp_metrics = {
         "disk_" + k for k in DISK if not k.endswith("_base") and k not in ("timestamp", "frequency")
     }
+    if "latency" not in DISK and "average_write_wait" in DISK and "average_read_wait" in DISK:
+        exp_metrics.update(
+            {"disk_latency": max(DISK["average_write_wait"], DISK["average_read_wait"])}
+        )
     for res in check_results:
         if isinstance(res, Metric):
             exp_metrics.remove(res.name)
@@ -321,19 +337,19 @@ def test_cluster_check_winperf_phydisk(item: str) -> None:
     )
 
 
-def test_denom_ok():
+def test_denom_ok() -> None:
     ok = winperf_phydisk._Denom(2, False)
     assert ok.calc_smart(1.0) == 0.5
 
 
-def test_denom_null():
+def test_denom_null() -> None:
     null = winperf_phydisk._Denom(0, False)
     assert null.calc_smart(0.0) == 0.0
     with pytest.raises(IgnoreResultsError):
         null.calc_smart(1.0)
 
 
-def test_denom_bad():
+def test_denom_bad() -> None:
     none = winperf_phydisk._Denom(None, False)
     with pytest.raises(IgnoreResultsError):
         none.calc_smart(0.0)

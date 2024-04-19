@@ -11,7 +11,6 @@ use anyhow::{anyhow, Result as AnyhowResult};
 use scrypt::{scrypt, Params};
 use std::{collections::HashMap, env, fs, path::PathBuf};
 
-const PW_STORE_FILE: &str = "var/check_mk/core/helper_config/latest/stored_passwords";
 const PW_STORE_SECRET_FILE: &str = "etc/password_store.secret";
 const OMD_ROOT: &str = "OMD_ROOT";
 
@@ -27,14 +26,17 @@ const KEY_SIZE: usize = 32;
 
 type AesGcmCustom = AesGcm<Aes256, U16>;
 
-pub fn password_from_store(pw_id: &str) -> AnyhowResult<String> {
-    let (pw_store_bytes, secret) = load_pw_store_bytes()?;
+pub fn password_from_store(pw_spec: &str) -> AnyhowResult<String> {
+    let (pw_id, pwstore_path) = pw_spec
+        .split_once(':')
+        .ok_or_else(|| anyhow!("Invalid pwstore argument, expected <PW_ID>:<PWSTORE_FILE>"))?;
+    let (pw_store_bytes, secret) = load_pw_store_bytes(pwstore_path)?;
     let pw_store = unpack_pw_store(&pw_store_bytes, &secret)?;
 
     lookup_pw(&pw_store, pw_id)
 }
 
-fn load_pw_store_bytes() -> AnyhowResult<(Vec<u8>, Vec<u8>)> {
+fn load_pw_store_bytes(pwstore_path: &str) -> AnyhowResult<(Vec<u8>, Vec<u8>)> {
     let omd_root = env::var(OMD_ROOT)?;
     if omd_root.is_empty() {
         return Err(anyhow!("Environment variable {} is empty", OMD_ROOT));
@@ -42,7 +44,7 @@ fn load_pw_store_bytes() -> AnyhowResult<(Vec<u8>, Vec<u8>)> {
     let omd_path = PathBuf::from(omd_root);
 
     Ok((
-        fs::read(omd_path.join(PW_STORE_FILE))?,
+        fs::read(omd_path.join(pwstore_path))?,
         fs::read(omd_path.join(PW_STORE_SECRET_FILE))?,
     ))
 }

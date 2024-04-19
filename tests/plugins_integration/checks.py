@@ -26,7 +26,17 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class SkippedDumps:
-    SKIPPED_DUMPS = []  # type: ignore
+    SKIPPED_DUMPS = [
+        # dumps currently failing. See CMK-17058.
+        # TODO: restore dumps once ticket is closed.
+        "agent-2.1.0p33-postgreSQL-14.9",
+        "agent-2.1.0p11-ms-exchange",
+        "agent-2.2.0p9-windows-citrix",
+        "agent-1.2.7i2-zfs-solaris",
+        "agent-1.2.6-server-windows-oracle",
+        "agent-1.2.6b12-win-ad-replication",
+        "agent-2.1.0p34-cma-1.7",
+    ]
 
 
 @dataclass

@@ -1869,7 +1869,7 @@ class TreeRenderer:
         self._tree_id = tree_id
         self._tree_name = f"inv_{hostname}{tree_id}"
 
-    def _get_header(self, title: str, key_info: str, icon: str | None = None) -> HTML:
+    def _get_header(self, title: str, key_info: str, icon: str = "") -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
             header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted_text")

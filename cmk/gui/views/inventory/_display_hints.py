@@ -91,7 +91,7 @@ def _make_ident(path: SDPath, key: str = "") -> str:
 @dataclass(frozen=True)
 class NodeDisplayHint:
     path: SDPath
-    icon: str | None
+    icon: str
     title: str
     _long_title_function: Callable[[], str]
 
@@ -112,7 +112,7 @@ class NodeDisplayHint:
         title = _make_title_function(raw_hint)(path[-1] if path else "")
         return cls(
             path=path,
-            icon=raw_hint.get("icon"),
+            icon=raw_hint.get("icon", ""),
             title=title,
             _long_title_function=_make_long_title_function(title, path[:-1]),
         )
@@ -131,7 +131,7 @@ class TableViewSpec:
     view_name: str
     title: str
     _long_title_function: Callable[[], str]
-    icon: str | None
+    icon: str
 
     @classmethod
     def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> TableViewSpec | None:
@@ -147,7 +147,7 @@ class TableViewSpec:
                 view_name=_parse_view_name(view_name),
                 title=title,
                 _long_title_function=_make_long_title_function(title, path[:-1]),
-                icon=raw_hint.get("icon"),
+                icon=raw_hint.get("icon", ""),
             )
 
         return None

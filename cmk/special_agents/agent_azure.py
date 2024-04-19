@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
+
+Resources and resourcegroups are all treated lowercase because of:
+https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/frequently-asked-questions#are-resource-group-names-case-sensitive
 """
 
 from __future__ import annotations
@@ -730,6 +733,9 @@ class ExplicitConfig:
             return
         if self.current_group is None:
             raise RuntimeError("missing arg: group=<name>")
+        if key == "resources":
+            self.current_group.add_key(key, value.lower())
+            return
         self.current_group.add_key(key, value)
 
     def is_configured(self, resource: AzureResource) -> bool:
@@ -918,9 +924,13 @@ class AzureResource:
 
         self.section = info["type"].split("/")[-1].lower()
         self.piggytargets = []
-        group = self.info.get("group")
-        if group:
-            self.piggytargets.append(group)
+
+        if name := self.info.get("name"):
+            self.info["name"] = name.lower()
+        if group := self.info.get("group"):
+            self.info["group"] = group.lower()
+            self.piggytargets.append(group.lower())
+
         self.metrics: list = []
 
     def dumpinfo(self):
@@ -1377,7 +1387,7 @@ def get_group_labels(mgmt_client: MgmtApiClient, monitored_groups: Sequence[str]
     group_labels: dict[str, dict[str, str]] = {}
 
     for group in mgmt_client.resourcegroups():
-        name = group["name"]
+        name = group["name"].lower()
         tags = group.get("tags", {})
         if name in monitored_groups:
             # label is being renamed to "cmk/azure/resource_group", remove for version 2.3.0
@@ -1627,7 +1637,7 @@ def process_resource_health(
         health_section[group].append(json.dumps(health_data))
 
     for group, values in health_section.items():
-        section = AzureSection("resource_health", [group])
+        section = AzureSection("resource_health", [group.lower()])
         for value in values:
             section.add([value])
         yield section

@@ -2141,6 +2141,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 "contact_match_macros",
                 "contact_match_groups",
             ],
+            hidden_keys=["contact_emails"] if edition() == Edition.CSE else [],
             headers=headers_part1 + contact_headers + headers_part2,
             render="form",
             form_narrow=True,

@@ -72,7 +72,7 @@ fn test_section_select_query() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
     let mut client = client::ClientBuilder::new()
-        .local(Some(mk_sql::ms_sql::defaults::STANDARD_PORT.into()))
+        .local_by_port(Some(mk_sql::ms_sql::defaults::STANDARD_PORT.into()))
         .certificate(std::env::var(tools::MS_SQL_DB_CERT).ok())
         .build()
         .await
@@ -141,7 +141,7 @@ async fn test_validate_all_instances_local() {
 
     for name in names {
         let c = client::ClientBuilder::new()
-            .local_instance(&name, None::<u16>)
+            .browse(None, &name, None::<u16>)
             .build()
             .await;
         match c {

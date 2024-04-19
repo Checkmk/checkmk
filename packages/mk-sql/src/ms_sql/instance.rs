@@ -362,7 +362,7 @@ impl SqlInstance {
             AuthType::SqlServer | AuthType::Windows => {
                 if let Some(credentials) = client::obtain_config_credentials(auth) {
                     client::ClientBuilder::new()
-                        .remote(conn.hostname(), self.port(), credentials)
+                        .logon_on_port(conn.hostname(), self.port(), credentials)
                         .database(database)
                 } else {
                     anyhow::bail!("Not provided credentials")
@@ -371,7 +371,7 @@ impl SqlInstance {
 
             #[cfg(windows)]
             AuthType::Integrated => client::ClientBuilder::new()
-                .local_instance(&self.name, conn.sql_browser_port())
+                .browse(None, &self.name, conn.sql_browser_port())
                 .database(database),
 
             _ => anyhow::bail!("Not supported authorization type"),
@@ -1554,7 +1554,8 @@ async fn get_custom_instance_builder(
 ) -> Option<SqlInstanceBuilder> {
     let port = get_reasonable_port(builder, endpoint);
     let instance_name = &builder.get_name();
-    match client::connect_custom_endpoint(endpoint, port).await {
+    log::debug!("Trying to connect to `{instance_name}` using port {port}");
+    let builder = match client::connect_custom_endpoint(endpoint, port).await {
         Ok(mut client) => {
             let b = obtain_properties(&mut client, instance_name)
                 .await
@@ -1570,6 +1571,30 @@ async fn get_custom_instance_builder(
             log::error!("Error creating client for `{instance_name}`: {e}");
             None
         }
+    };
+    #[cfg(unix)]
+    return builder;
+
+    #[cfg(windows)]
+    if builder.is_none() {
+        log::info!("Instance `{instance_name}` not found. Try to use named connection");
+        match client::connect_custom_instance(endpoint, instance_name).await {
+            Ok(mut client) => {
+                let b = obtain_properties(&mut client, instance_name)
+                    .await
+                    .map(|p| to_instance_builder(endpoint, &p));
+                if b.is_none() {
+                    log::error!("Instance `{instance_name}` not found. Impossible.");
+                }
+                b
+            }
+            Err(e) => {
+                log::error!("Error creating client for `{instance_name}`: {e}");
+                None
+            }
+        }
+    } else {
+        builder
     }
 }
 
@@ -1783,7 +1808,7 @@ pub async fn obtain_instance_builders_by_sql_browser(
 ) -> Result<Vec<SqlInstanceBuilder>> {
     for instance in instances {
         match client::ClientBuilder::new()
-            .local_instance(instance, endpoint.conn().sql_browser_port())
+            .browse(None, instance, endpoint.conn().sql_browser_port())
             .build()
             .await
         {

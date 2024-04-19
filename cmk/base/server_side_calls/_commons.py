@@ -117,7 +117,7 @@ def replace_passwords(
         secret_name = surrogated_secrets[secret.id]
 
         if secret.pass_safely:
-            formatted.append(shlex.quote(secret_name))
+            formatted.append(shlex.quote(f"{secret_name}:{password_store_file}"))
             continue
 
         # we are meant to pass it as plain secret here, but we

@@ -562,7 +562,7 @@ def test_get_active_service_data_password_with_hack(
         http_proxies={},
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
-        stored_passwords={":uuid:1234": "p4ssw0rd!"},
+        stored_passwords={"uuid1234": "p4ssw0rd!"},
     )
 
     assert list(
@@ -576,7 +576,7 @@ def test_get_active_service_data_password_with_hack(
                             "password": (
                                 "cmk_postprocessed",
                                 "explicit_password",
-                                (":uuid:1234", "p4ssw0rd!"),
+                                ("uuid1234", "p4ssw0rd!"),
                             ),
                         }
                     ],
@@ -588,13 +588,13 @@ def test_get_active_service_data_password_with_hack(
             plugin_name="test_check",
             description="My service",
             command="check_mk_active-check_path",
-            command_display="check_mk_active-check_path!--pwstore=4@1@/pw/store@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
-            command_line="check_test_check --pwstore=4@1@/pw/store@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
+            command_display="check_mk_active-check_path!--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
+            command_line="check_test_check --pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
             params={
                 "description": "My active check",
-                "password": ("cmk_postprocessed", "explicit_password", (":uuid:1234", "p4ssw0rd!")),
+                "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
             },
-            expanded_args="--pwstore=4@1@/pw/store@:uuid:1234 --password-id :uuid:1234 --password-plain-in-curly '{*********}'",
+            expanded_args="--pwstore=4@1@/pw/store@uuid1234 --password-id uuid1234:/pw/store --password-plain-in-curly '{*********}'",
             detected_executable="/path/to/check_test_check",
         ),
     ]
@@ -608,6 +608,11 @@ def test_get_active_service_data_password_without_hack(
         "_get_command",
         lambda self, pn, cl: ("check_mk_active-check_path", f"/path/to/check_{pn}", cl),
     )
+    monkeypatch.setattr(
+        password_store,
+        password_store.temporary_helper_password_store_path_getter.__name__,
+        lambda: "/pw/store",
+    )
     active_check = ActiveCheck(
         plugins=_PASSWORD_TEST_ACTIVE_CHECKS,
         legacy_plugins={},
@@ -617,7 +622,7 @@ def test_get_active_service_data_password_without_hack(
         http_proxies={},
         service_name_finalizer=lambda x: x,
         use_new_descriptions_for=[],
-        stored_passwords={":uuid:1234": "p4ssw0rd!"},
+        stored_passwords={"uuid1234": "p4ssw0rd!"},
     )
 
     assert list(
@@ -631,7 +636,7 @@ def test_get_active_service_data_password_without_hack(
                             "password": (
                                 "cmk_postprocessed",
                                 "explicit_password",
-                                (":uuid:1234", "p4ssw0rd!"),
+                                ("uuid1234", "p4ssw0rd!"),
                             ),
                         }
                     ],
@@ -643,13 +648,13 @@ def test_get_active_service_data_password_without_hack(
             plugin_name="test_check",
             description="My service",
             command="check_mk_active-check_path",
-            command_display="check_mk_active-check_path!--password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd\\!}'",
-            command_line="check_test_check --password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd!}'",
+            command_display="check_mk_active-check_path!--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd\\!}'",
+            command_line="check_test_check --password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd!}'",
             params={
                 "description": "My active check",
-                "password": ("cmk_postprocessed", "explicit_password", (":uuid:1234", "p4ssw0rd!")),
+                "password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!")),
             },
-            expanded_args="--password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd\\!}'",
+            expanded_args="--password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd\\!}'",
             detected_executable="/path/to/check_test_check",
         ),
     ]
@@ -1618,7 +1623,7 @@ def test_iter_special_agent_commands_stored_password_with_hack(
         )
     ) == [
         SpecialAgentCommandLine(
-            "agent_path --pwstore=4@1@/pw/store@1234 --password-id 1234 --password-plain-in-curly '{*********}'",
+            "agent_path --pwstore=4@1@/pw/store@1234 --password-id 1234:/pw/store --password-plain-in-curly '{*********}'",
             None,
         )
     ]
@@ -1628,6 +1633,11 @@ def test_iter_special_agent_commands_stored_password_without_hack(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
+    monkeypatch.setattr(
+        password_store,
+        password_store.temporary_helper_password_store_path_getter.__name__,
+        lambda: "/pw/store",
+    )
 
     special_agent = SpecialAgent(
         plugins=_PASSWORD_TEST_PLUGINS,
@@ -1637,16 +1647,17 @@ def test_iter_special_agent_commands_stored_password_without_hack(
         host_config=HOST_CONFIG,
         host_attrs=HOST_ATTRS,
         http_proxies={},
-        stored_passwords={":uuid:1234": "p4ssw0rd!"},
+        stored_passwords={"uuid1234": "p4ssw0rd!"},
     )
     assert list(
         special_agent.iter_special_agent_commands(
             "test_agent",
-            {"password": ("cmk_postprocessed", "explicit_password", (":uuid:1234", "p4ssw0rd!"))},
+            {"password": ("cmk_postprocessed", "explicit_password", ("uuid1234", "p4ssw0rd!"))},
         )
     ) == [
         SpecialAgentCommandLine(
-            "agent_path --password-id :uuid:1234 --password-plain-in-curly '{p4ssw0rd!}'", None
+            "agent_path --password-id uuid1234:/pw/store --password-plain-in-curly '{p4ssw0rd!}'",
+            None,
         )
     ]
 

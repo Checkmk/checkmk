@@ -671,13 +671,11 @@ def _register_table_views_and_columns() -> None:
             #   'DataSourceInventory' uses 'RowTableInventory'
             continue
 
-        ident = ("inv",) + hints.abc_path
-
-        _register_node_painter("_".join(ident), hints, painter_options=painter_options)
+        _register_node_painter(hints, painter_options=painter_options)
 
         for key, attr_hint in hints.attribute_hints.items():
             _register_attribute_column(
-                "_".join(ident + (key,)),
+                "_".join(("inv",) + hints.abc_path + (key,)),
                 inventory.InventoryPath(
                     path=hints.abc_path,
                     source=inventory.TreeSource.attributes,
@@ -689,12 +687,10 @@ def _register_table_views_and_columns() -> None:
         _register_table_view(hints)
 
 
-def _register_node_painter(
-    ident: str, hints: DisplayHints, *, painter_options: PainterOptions
-) -> None:
+def _register_node_painter(hints: DisplayHints, *, painter_options: PainterOptions) -> None:
     """Declares painters for (sub) trees on all host related datasources."""
     register_painter(
-        ident,
+        hints.node_hint.ident,
         {
             "title": hints.node_hint.long_inventory_title,
             "short": hints.node_hint.title,
@@ -718,7 +714,7 @@ def _register_node_painter(
             # not look good for the HW/SW inventory tree
             "printable": False,
             "load_inv": True,
-            "sorter": ident,
+            "sorter": hints.node_hint.ident,
             "paint": lambda row: _paint_host_inventory_tree(
                 row, hints.abc_path, painter_options=painter_options
             ),

@@ -6,7 +6,7 @@
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDPath
+from cmk.utils.structured_data import SDNodeName, SDPath
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -149,6 +149,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
         (
             tuple(),
             NodeDisplayHint(
+                path=tuple(),
                 icon=None,
                 title="Inventory Tree",
                 _long_title_function=lambda: "Inventory Tree",
@@ -165,6 +166,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
         (
             ("hardware",),
             NodeDisplayHint(
+                path=(SDNodeName("hardware"),),
                 icon="hardware",
                 title="Hardware",
                 _long_title_function=lambda: "Hardware",
@@ -181,6 +183,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
         (
             ("hardware", "cpu"),
             NodeDisplayHint(
+                path=(SDNodeName("hardware"), SDNodeName("cpu")),
                 icon=None,
                 title="Processor",
                 _long_title_function=lambda: "Hardware ➤ Processor",
@@ -216,6 +219,12 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
         (
             ("software", "applications", "docker", "images"),
             NodeDisplayHint(
+                path=(
+                    SDNodeName("software"),
+                    SDNodeName("applications"),
+                    SDNodeName("docker"),
+                    SDNodeName("images"),
+                ),
                 icon=None,
                 title="Docker images",
                 _long_title_function=lambda: "Docker ➤ Docker images",
@@ -245,6 +254,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
         (
             ("path", "to", "node"),
             NodeDisplayHint(
+                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                 icon=None,
                 title="Node",
                 _long_title_function=lambda: "To ➤ Node",
@@ -268,6 +278,7 @@ def test_make_node_displayhint(
 ) -> None:
     hints = DISPLAY_HINTS.get_tree_hints(path)
 
+    assert hints.node_hint.ident == "_".join(("inv",) + hints.node_hint.path)
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
     assert hints.node_hint.long_title == expected_node_hint.long_title
@@ -293,6 +304,7 @@ def test_make_node_displayhint(
         (
             ".foo.bar.",
             NodeDisplayHint(
+                path=(SDNodeName("foo"), SDNodeName("bar")),
                 icon=None,
                 title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
@@ -309,6 +321,7 @@ def test_make_node_displayhint(
         (
             ".foo.bar:",
             NodeDisplayHint(
+                path=(SDNodeName("foo"), SDNodeName("bar")),
                 icon=None,
                 title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
@@ -325,6 +338,7 @@ def test_make_node_displayhint(
         (
             ".software.",
             NodeDisplayHint(
+                path=(SDNodeName("software"),),
                 icon="software",
                 title="Software",
                 _long_title_function=lambda: "Software",
@@ -341,6 +355,12 @@ def test_make_node_displayhint(
         (
             ".software.applications.docker.containers:",
             NodeDisplayHint(
+                path=(
+                    SDNodeName("software"),
+                    SDNodeName("applications"),
+                    SDNodeName("docker"),
+                    SDNodeName("containers"),
+                ),
                 icon=None,
                 title="Docker containers",
                 _long_title_function=lambda: "Docker ➤ Docker containers",
@@ -369,6 +389,7 @@ def test_make_node_displayhint_from_hint(
 ) -> None:
     hints = DISPLAY_HINTS.get_tree_hints(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
 
+    assert hints.node_hint.ident == "_".join(("inv",) + hints.node_hint.path)
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
     assert hints.node_hint.long_title == expected_node_hint.long_title

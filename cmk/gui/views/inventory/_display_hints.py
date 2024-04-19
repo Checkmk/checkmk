@@ -83,9 +83,14 @@ def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], s
 
 @dataclass(frozen=True)
 class NodeDisplayHint:
+    path: SDPath
     icon: str | None
     title: str
     _long_title_function: Callable[[], str]
+
+    @property
+    def ident(self) -> str:
+        return "_".join(("inv",) + self.path)
 
     @property
     def long_title(self) -> str:
@@ -99,6 +104,7 @@ class NodeDisplayHint:
     def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
         title = _make_title_function(raw_hint)(path[-1] if path else "")
         return cls(
+            path=path,
             icon=raw_hint.get("icon"),
             title=title,
             _long_title_function=_make_long_title_function(title, path[:-1]),

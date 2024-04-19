@@ -1000,6 +1000,7 @@ def update_file(  # pylint: disable=too-many-branches
         {
             "###SITE###": site.name,
             "###ROOT###": site.dir,
+            "###EDITION###": old_edition,
         },
     )
 

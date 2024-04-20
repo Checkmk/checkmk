@@ -173,7 +173,7 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
 
     # not bulkwalk and not v2c
-    assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.CLASSIC
+    assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.INLINE
     assert config_cache.get_snmp_backend(HostName("bulkwalk_h")) is SNMPBackendEnum.INLINE
     assert config_cache.get_snmp_backend(HostName("v2c_h")) is SNMPBackendEnum.INLINE
 

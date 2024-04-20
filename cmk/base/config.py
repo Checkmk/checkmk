@@ -3165,14 +3165,12 @@ class ConfigCache:
                 return SNMPBackendEnum.CLASSIC
             raise MKGeneralException(f"Bad Host SNMP Backend configuration: {host_backend}")
 
-        # TODO(sk): remove this when netsnmp is fixed
-        # NOTE: Force usage of CLASSIC with SNMP-v1 to prevent memory leak in the netsnmp
-        if self._is_host_snmp_v1(host_name):
-            return SNMPBackendEnum.CLASSIC
-
         if with_inline_snmp and snmp_backend_default == "inline":
             return SNMPBackendEnum.INLINE
-
+        if snmp_backend_default == "classic":
+            return SNMPBackendEnum.CLASSIC
+        # Note: in the above case we raise here.
+        # I am not sure if this different behavior is intentional.
         return SNMPBackendEnum.CLASSIC
 
     def snmp_credentials_of_version(

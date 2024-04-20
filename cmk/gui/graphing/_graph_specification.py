@@ -69,15 +69,11 @@ metric_operation_registry = MetricOperationRegistry()
 
 
 def parse_metric_operation(raw: object) -> MetricOperation:
-    parsed = TypeAdapter(
-        Annotated[
-            Union[*metric_operation_registry.values()],
-            Field(discriminator="ident"),
-        ],
-    ).validate_python(raw)
-    # mypy apparently doesn't understand TypeAdapter.validate_python
-    assert isinstance(parsed, MetricOperation)
-    return parsed
+    if isinstance(raw, MetricOperation):
+        return raw
+    if isinstance(raw, dict):
+        return metric_operation_registry[f'metric_op_{raw["ident"]}'].model_validate(raw)
+    raise TypeError(raw)
 
 
 class MetricOpConstant(MetricOperation, frozen=True):

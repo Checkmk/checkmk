@@ -242,6 +242,7 @@ class ReclassifyParameters:
 
 def compile_reclassify_params(params: Sequence[ParameterLogwatchRules]) -> ReclassifyParameters:
     patterns: list[tuple[Literal["C", "W", "O", "I"], str, str]] = []
+    states: _StateMap = {}
 
     for rule in params:
         if isinstance(rule, dict):

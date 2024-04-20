@@ -53,9 +53,24 @@ def _self_compile(src: str, dst: str) -> None:
     os.chmod(dst, 0o700)
 
 
+def _simple_arg_parsing(executable: str, *opts: str) -> tuple[int, bool]:
+    """Very basic argument parsing
+
+    It seems this is all we needed in the last decade.
+
+    >>> _simple_arg_parsing("/foo", "-vv", "-v", "-d")
+    (3, True)
+    """
+    if not set(opts).issubset({"-v", "-vv", "-d"}):
+        sys.stderr.write(f"usage: {executable} [-v | -vv] [-d]")
+        raise SystemExit(3)
+
+    j_opts = "".join(opts)
+    return j_opts.count("v"), "d" in j_opts
+
+
 def main() -> int:
-    # main() added for now to avoid executing code upon import (sys.path.pop !).
-    # This function needs cleaning up, of course.
+    loglevel, debug = _simple_arg_parsing(*sys.argv)
 
     if CONFIG.verify_site_python and not sys.executable.startswith("/omd"):
         sys.stdout.write("ERROR: Only executable with sites python\\n")
@@ -69,21 +84,11 @@ def main() -> int:
         if location.name is not None:
             register_plugin_by_type(location, getattr(module, location.name))
 
-    # Register default Checkmk signal handler
     cmk.base.utils.register_sigint_handler()
-
-    # initialize global variables
-    # very simple commandline parsing: only -v (once or twice) and -d are supported
-
     cmk.utils.log.setup_console_logging()
 
-    # TODO: This is not really good parsing, because it not cares about syntax like e.g. "-nv".
-    #       The later regular argument parsing is handling this correctly. Try to clean this up.
-    cmk.utils.log.logger.setLevel(
-        cmk.utils.log.verbosity_to_log_level(len([a for a in sys.argv if a in ["-v", "--verbose"]]))
-    )
-
-    if "-d" in sys.argv:
+    cmk.utils.log.logger.setLevel(cmk.utils.log.verbosity_to_log_level(loglevel))
+    if debug:
         cmk.utils.debug.enable()
 
     config.load_checks(check_api.get_check_api_context, CONFIG.checks_to_load)
@@ -105,18 +110,15 @@ def main() -> int:
     except MKTerminate:
         out.output("<Interrupted>\n", stream=sys.stderr)
         return 1
-    except SystemExit as e:
-        return e.code  # type: ignore[return-value]  # what's the point of this anyway?
     except Exception as e:
         import traceback
 
-        # status output message
         sys.stdout.write(
+            # status output message
             f"UNKNOWN - Exception in precompiled check: {e} (details in long output)\n"
+            # generate traceback for long output
+            f"Traceback: {traceback.format_exc()}\n"
         )
-
-        # generate traceback for long output
-        sys.stdout.write(f"Traceback: {traceback.format_exc()}\n")
         return 3
 
 

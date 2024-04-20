@@ -38,6 +38,20 @@ CONFIG = HostCheckConfig(
 )
 
 
+def _self_compile(src: str, dst: str) -> None:
+    """replace symlink with precompiled python-code, if we are run for the first time"""
+    import os
+
+    if not os.path.islink(dst):
+        return
+
+    import py_compile
+
+    os.remove(dst)
+    py_compile.compile(src, dst, dst, True)
+    os.chmod(dst, 0o700)
+
+
 def main() -> int:
     # main() added for now to avoid executing code upon import (sys.path.pop !).
     # This function needs cleaning up, of course.
@@ -46,16 +60,8 @@ def main() -> int:
         sys.stdout.write("ERROR: Only executable with sites python\\n")
         return 2
 
-    # Self-compile: replace symlink with precompiled python-code, if we are run for the first time
     if CONFIG.delay_precompile:
-        import os
-
-        if os.path.islink(CONFIG.dst):
-            import py_compile
-
-            os.remove(CONFIG.dst)
-            py_compile.compile(CONFIG.src, CONFIG.dst, CONFIG.dst, True)
-            os.chmod(CONFIG.dst, 0o700)
+        _self_compile(CONFIG.src, CONFIG.dst)
 
     for location in CONFIG.locations:
         module = import_module(location.module)

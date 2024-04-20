@@ -340,15 +340,8 @@ def _register_table_views_and_columns() -> None:
 
         _register_node_painter(hints, painter_options=painter_options)
 
-        for key, attr_hint in hints.attribute_hints.items():
-            _register_attribute_column(
-                inventory.InventoryPath(
-                    path=hints.abc_path,
-                    source=inventory.TreeSource.attributes,
-                    key=SDKey(key),
-                ),
-                attr_hint,
-            )
+        for attr_hint in hints.attribute_hints.values():
+            _register_attribute_column(attr_hint)
 
         _register_table_view(hints)
 
@@ -427,9 +420,7 @@ def _export_node_for_csv() -> str | HTML:
     raise CSVExportError()
 
 
-def _register_attribute_column(
-    inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
-) -> None:
+def _register_attribute_column(hint: AttributeDisplayHint) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
     long_inventory_title = hint.long_inventory_title
@@ -464,18 +455,12 @@ def _register_attribute_column(
             "printable": True,
             "load_inv": True,
             "sorter": hint.ident,
-            "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
-            "export_for_python": lambda row, cell: _compute_attribute_painter_data(
-                row, inventory_path
-            ),
+            "paint": lambda row: _paint_host_inventory_attribute(row, hint),
+            "export_for_python": lambda row, cell: _compute_attribute_painter_data(row, hint),
             "export_for_csv": lambda row, cell: (
-                ""
-                if (data := _compute_attribute_painter_data(row, inventory_path)) is None
-                else str(data)
+                "" if (data := _compute_attribute_painter_data(row, hint)) is None else str(data)
             ),
-            "export_for_json": lambda row, cell: _compute_attribute_painter_data(
-                row, inventory_path
-            ),
+            "export_for_json": lambda row, cell: _compute_attribute_painter_data(row, hint),
         },
     )
 
@@ -486,13 +471,11 @@ def _register_attribute_column(
         load_inv=True,
         columns=["host_inventory", "host_structured_status"],
         hint=hint,
-        value_extractor=lambda row: row["host_inventory"].get_attribute(
-            inventory_path.path, inventory_path.key
-        ),
+        value_extractor=lambda row: row["host_inventory"].get_attribute(hint.path, hint.key),
     )
 
     # Declare filter. Sync this with _register_table_column()
-    filter_registry.register(hint.make_filter(inventory_path))
+    filter_registry.register(hint.make_filter())
 
 
 def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
@@ -503,22 +486,20 @@ def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
     return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
 
 
-def _compute_attribute_painter_data(row: Row, inventory_path: inventory.InventoryPath) -> SDValue:
-    if (attributes := _get_attributes(row, inventory_path.path)) is None:
+def _compute_attribute_painter_data(row: Row, hint: AttributeDisplayHint) -> SDValue:
+    if (attributes := _get_attributes(row, hint.path)) is None:
         return None
-    return attributes.pairs.get(inventory_path.key)
+    return attributes.pairs.get(hint.key)
 
 
-def _paint_host_inventory_attribute(
-    row: Row, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
-) -> CellSpec:
-    if (attributes := _get_attributes(row, inventory_path.path)) is None:
+def _paint_host_inventory_attribute(row: Row, hint: AttributeDisplayHint) -> CellSpec:
+    if (attributes := _get_attributes(row, hint.path)) is None:
         return "", ""
     return compute_cell_spec(
         SDItem(
-            inventory_path.key,
-            attributes.pairs.get(inventory_path.key),
-            attributes.retentions.get(inventory_path.key),
+            hint.key,
+            attributes.pairs.get(hint.key),
+            attributes.retentions.get(hint.key),
         ),
         hint,
     )

@@ -347,9 +347,12 @@ class AttributeDisplayHint:
             is_show_more=raw_hint.get("is_show_more", True),
         )
 
-    def make_filter(
-        self, inventory_path: inventory.InventoryPath
-    ) -> FilterInvText | FilterInvBool | FilterInvFloat:
+    def make_filter(self) -> FilterInvText | FilterInvBool | FilterInvFloat:
+        inventory_path = inventory.InventoryPath(
+            path=self.path,
+            source=inventory.TreeSource.attributes,
+            key=self.key,
+        )
         if self.data_type == "str":
             return FilterInvText(
                 ident=self.ident,

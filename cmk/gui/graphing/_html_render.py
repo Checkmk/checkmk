@@ -347,7 +347,7 @@ def _show_graph_add_to_icon_for_popup(
     graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfig,
 ) -> None:
-    icon_html = html.render_icon("menu", _("Add this graph to..."))
+    icon_html = html.render_icon("menu", _("Add to ..."))
     element_type_name = "pnpgraph"
 
     # Data will be transferred via URL and Javascript magic eventually

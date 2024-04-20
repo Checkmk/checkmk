@@ -13,18 +13,20 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 class _Section(NamedTuple):
     pki_appl_version: str
-    local_node_id: int
+    local_node_id: str
 
 
 def parse(string_table: StringTable) -> _Section | None:
     """
     >>> parse([['PrimeKeyAppliance.3.9.2', '1']])
-    _Section(pki_appl_version='PrimeKeyAppliance.3.9.2', local_node_id=1)
+    _Section(pki_appl_version='PrimeKeyAppliance.3.9.2', local_node_id='1')
+    >>> parse([['PrimeKeyAppliance.3.9.2', '']])
+    _Section(pki_appl_version='PrimeKeyAppliance.3.9.2', local_node_id='')
     """
     if not string_table:
         return None
 
-    return _Section(pki_appl_version=string_table[0][0], local_node_id=int(string_table[0][1]))
+    return _Section(pki_appl_version=string_table[0][0], local_node_id=string_table[0][1])
 
 
 register.snmp_section(
@@ -43,8 +45,9 @@ register.snmp_section(
 
 def inventory_primekey(section: _Section) -> InventoryResult:
     """
-    >>> list(inventory_primekey(_Section(pki_appl_version='PrimeKeyAppliance.3.9.2', local_node_id=1)))
-    [Attributes(path=['hardware', 'system'], inventory_attributes={'pki_appliance_version': 'PrimeKeyAppliance.3.9.2', 'node_name': 1}, status_attributes={})]
+    >>> section = parse([['PrimeKeyAppliance.3.9.2', '1']])
+    >>> next(inventory_primekey(section))
+    Attributes(path=['hardware', 'system'], inventory_attributes={'pki_appliance_version': 'PrimeKeyAppliance.3.9.2', 'node_name': '1'}, status_attributes={})
     """
 
     yield Attributes(

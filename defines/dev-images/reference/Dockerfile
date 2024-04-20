@@ -7,10 +7,8 @@ ENV \
     LC_ALL=C.UTF-8 \
     LANG=C.UTF-8
 
-# Note: We don't update package sources here since this would result in lots of
-#       redundant time and bandwidth intense package update and installations.
-#       Instead we update the base images regularly and keep the possibility
-#       to update manually on demand.
+# needed because of later installs and apt-cache get's purged
+RUN apt-get update
 
 # golang-go: needed for install-buildifier.sh
 # msitools:  needed for `msiinfo` in test source package

@@ -21,6 +21,7 @@ import cmk.base.obsolete_output as out
 import cmk.base.utils
 from cmk.base.api.agent_based.register import register_plugin_by_type
 from cmk.base.core_nagios import HostCheckConfig
+from cmk.base.modes.check_mk import mode_check
 
 from cmk.discover_plugins import PluginLocation
 
@@ -93,9 +94,6 @@ def main() -> int:
     config.ipv6addresses = CONFIG.ipv6addresses
 
     try:
-        # mode_check is `mode --check hostname`
-        from cmk.base.modes.check_mk import mode_check
-
         return mode_check(
             get_submitter,
             {},

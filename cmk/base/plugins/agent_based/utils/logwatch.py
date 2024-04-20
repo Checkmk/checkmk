@@ -114,23 +114,26 @@ class RulesetAccess:
 
         Discovery ruleset (ONE for all plugins).
          * Match type: ALL.
-         * Grouping patterns
-         * Forwarding patterns
+         * Grouping patterns: List of tripples:
+            ** <Group matches to one item 'group name'> | <matched logfiles are single items>
+            ** <patterns (include/exclude?)>
+            ** <forward these to EC or not>
 
         ¬EC check ruleset
          * Match type: MERGE
          * Reclassify-patterns and -states
+         * matching regularly, i.e. on items or groups
 
         EC check ruleset
          * Match type: MERGE
          * Reclassify-patterns and -states
          * Forwarding parameters
+         * matching regularly, i.e. on items or groups
 
     * Current configurations could be embedded in an update config step.
     * In the future, reclassification parameters would *always* be matched against the *item*.
     * Proposal: Grouping should work the same regardless of EC/¬EC
       (currently the options in EC are only 'group everything' or 'group nothing').
-      Grouping could be _independently_ configured from forwarding.
     """
 
     # This is only wishful typing -- but lets assume this is what we get.

@@ -28,7 +28,8 @@ RUN apt-get update \
     rrdtool \
     strace \
     sudo \
-    vim
+    vim \
+    && rm -rf /var/lib/apt/lists/*  # about 50M
 
 RUN apt-get update \
     && apt-get install -y \
@@ -80,7 +81,8 @@ RUN apt-get update \
     software-properties-common \
     texinfo \
     tk-dev \
-    uuid-dev
+    uuid-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff

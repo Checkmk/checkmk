@@ -31,6 +31,7 @@ add_gpg_key() {
 
 cleanup() {
     rm -f "$TARGET_DIR"/needed-packages
+    rm -rf /var/lib/apt/lists/*
 }
 
 extract_needed_packages
@@ -56,6 +57,7 @@ case "$DISTRO" in
         zypper in -y $(cat "$TARGET_DIR"/needed-packages)
         ;;
     ubuntu-* | debian-*)
+        apt-get update
         # shellcheck disable=SC2046  # we want word splitting here
         apt-get install -y $(cat "$TARGET_DIR"/needed-packages)
         ;;

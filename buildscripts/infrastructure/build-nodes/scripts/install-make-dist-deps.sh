@@ -10,6 +10,7 @@ case "$DISTRO" in
         # installable on all Ubuntu versions to be potentially usable by developers
         echo "Installing for Ubuntu"
 
+        apt-get update
         # Needed for building the agent deb/rpm packages
         # buildscripts/scripts/sign-packages.sh
         # Not needed for "make dist", but for the post-build steps of
@@ -19,6 +20,7 @@ case "$DISTRO" in
             rpm \
             alien \
             dpkg-sig
+        rm -rf /var/lib/apt/lists/*
 
         # Test the installations
         EXIT_STATUS=0

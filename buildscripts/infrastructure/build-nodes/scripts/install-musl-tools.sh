@@ -10,7 +10,9 @@ case "$DISTRO" in
         # installable on all Ubuntu versions to be potentially usable by developers
         echo "Installing for Ubuntu"
 
+        apt-get update
         apt-get install -y musl-tools
+        rm -rf /var/lib/apt/lists/*
 
         # Test the installation
         musl-gcc --version || exit $?

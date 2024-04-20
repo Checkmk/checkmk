@@ -32,10 +32,9 @@ install_package() {
     else
         echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODEJS_VERSION.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
     fi
-    # https://askubuntu.com/questions/65245/apt-get-update-only-for-a-specific-repository
-    apt-get update -o Dir::Etc::sourcelist="sources.list.d/nodesource.list" \
-        -o Dir::Etc::sourceparts="-" -o APT::Get::List-Cleanup="0"
+    apt-get update
     apt-get install -y nodejs
+    rm -rf /var/lib/apt/lists/*
 }
 
 install_package

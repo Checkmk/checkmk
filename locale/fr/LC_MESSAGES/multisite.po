@@ -1970,6 +1970,13 @@ msgstr ""
 "<tt>TNS_ADMIN</tt> à utiliser pour <tt>sqlnet.ora</tt> et <tt>tnsnames.ora</"
 "tt> %s"
 
+msgid ""
+"<tt>robot.yaml</tt> is the main RCC configuration file. It is specified "
+"relative to the base directory of Robot Framework projects. This file also "
+"references the <tt>conda.yaml</tt> file which lists all environment "
+"dependencies. "
+msgstr ""
+
 #, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
 msgstr ""
@@ -4751,9 +4758,6 @@ msgstr "Déploiement de l'agent : Hash de l'agent cible"
 msgid "Agent Error"
 msgstr "Erreur de l'agent"
 
-msgid "Agent Plugins"
-msgstr "Plugins pour agents"
-
 msgid "Agent TCP connect timeout"
 msgstr "Délai de connexion TCP de l'agent"
 
@@ -5765,7 +5769,8 @@ msgstr ""
 "utilisateurs et de spécifier des adresses électroniques arbitraires comme "
 "destination des rapports."
 
-msgid "Allows the assignment of Robotmk services to another host."
+msgid ""
+"Allows the assignment of the Robotmk plan/test services to another host."
 msgstr ""
 
 msgid ""
@@ -6742,7 +6747,7 @@ msgid "Assign SLA to service"
 msgstr "Attribuer un SLA au service"
 
 #, fuzzy
-msgid "Assign result to piggyback host"
+msgid "Assign plan/test result to piggyback host"
 msgstr "Traduction du nom d'hôte pour les hôtes en ferroutage"
 
 msgid "Assign service to following host"
@@ -9044,7 +9049,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"By default, Robotmk executes all suites in the user context of the Checkmk "
+"By default, Robotmk executes all plans in the user context of the Checkmk "
 "agent, which does not have access to the desktop of the Windows computer. To "
 "run tests on Windows GUI applications, you can specify the name of a user "
 "who is permanently logged on to a desktop session. The prerequisites for "
@@ -12173,6 +12178,14 @@ msgstr "Collecte de données de performance pour la latence des disques"
 msgid "Collection Size"
 msgstr "Taille de la collection"
 
+#, fuzzy, python-format
+msgid ""
+"Collection of passwords failed\n"
+"%s"
+msgstr ""
+"Échec de la mise à jour de la configuration\n"
+"%s"
+
 msgid "Collections"
 msgstr "Collections"
 
@@ -12250,11 +12263,6 @@ msgstr "Colonnes à faire correspondre"
 
 msgid "Com. buf. max/total"
 msgstr "Com. buf. max/total"
-
-#, fuzzy
-msgid "Combinations of application names and variants must be unique."
-msgstr ""
-"Cartographie des combinaisons d'état opérationnel et d'état d'administration"
 
 msgid "Combined graph"
 msgstr "Graphique combiné"
@@ -15235,6 +15243,9 @@ msgstr "Statistiques DHCP (messages reçus)"
 msgid "DHCP statistics (sent messages)"
 msgstr "Statistiques DHCP (messages envoyés)"
 
+msgid "DISTRIBUTION"
+msgstr ""
+
 msgid "DISTTAG"
 msgstr "DISTTAG"
 
@@ -16720,18 +16731,19 @@ msgstr ""
 "ou de choisir manuellement le type d'objets que vous souhaitez restreindre."
 
 msgid ""
-"Depending on the libraries used in a plan, building its Python environment "
-"for the very first time can take some minutes. This setting ensures that a "
-"hanging/failing environment creation for a single plan does not block the "
-"scheduling phase of other plans."
-msgstr ""
-
-msgid ""
 "Depending on the measurement unit (defaults to bit), the absolute levels are "
 "set in bits or bytes per second."
 msgstr ""
 "En fonction de l'unité de mesure (bit par défaut), les niveaux absolus sont "
 "définis en bits ou en octets par seconde."
+
+msgid ""
+"Depending on the package dependencies listed in <tt>conda.yaml</tt> used in "
+"a plan, building its Python environment for the very first time can take "
+"some minutes. This setting ensures that a hanging/failing environment "
+"creation for a single plan does not block the scheduling phase of other "
+"plans."
+msgstr ""
 
 msgid ""
 "Depending on the precision the unit can be either milliseconds or "
@@ -19318,9 +19330,6 @@ msgid "E.g. 'project = my_project and result = \"waiting for something\"'"
 msgstr ""
 "Par exemple, 'projet = mon_projet et résultat = \"attente de quelque chose\"'"
 
-msgid "ECDSA"
-msgstr ""
-
 msgid "EMC Data Domain MTree state"
 msgstr "État du MTree d'EMC Data Domain"
 
@@ -19552,9 +19561,6 @@ msgstr ""
 "de nouvelles permissions apparaissent, le rôle de l'utilisateur obtiendra ou "
 "non ces nouvelles permissions en fonction des paramètres par défaut du rôle "
 "construit sur lequel il est basé."
-
-msgid "Ed25519"
-msgstr ""
 
 msgid "Edit"
 msgstr "Modifier"
@@ -21460,10 +21466,6 @@ msgstr "Exécutif"
 msgid "Execute as another user"
 msgstr "Activer les modifications d'autres utilisateurs"
 
-#, fuzzy
-msgid "Execute as specific user"
-msgstr "Exécution du programme"
-
 #, python-format
 msgid "Execute custom action '%s'?"
 msgstr "Exécuter l'action '%s' ?"
@@ -21476,6 +21478,10 @@ msgstr "Exécuter des scripts locaux"
 
 msgid "Execute manually"
 msgstr "Exécuter manuellement"
+
+#, fuzzy
+msgid "Execute plan as a specific user"
+msgstr "Exécution du programme"
 
 #, fuzzy
 msgid "Execute plug-ins in general"
@@ -22833,6 +22839,14 @@ msgstr "Première page"
 
 msgid "First time the downtime starts"
 msgstr "La première fois que le temps d'arrêt commence"
+
+#, fuzzy
+msgid "First work day of last month"
+msgstr "Premier jour du mois dernier"
+
+#, fuzzy
+msgid "First work day of this month"
+msgstr "Premier jour de ce mois"
 
 #, fuzzy
 msgid "Fit to screen"
@@ -24915,10 +24929,6 @@ msgstr "Doit contenir le chemin d'accès au fichier de la clé de certification.
 
 msgid "Hash"
 msgstr "Hash"
-
-#, fuzzy
-msgid "Hashing algorithm"
-msgstr "Algorithme de signature"
 
 #, fuzzy
 msgid "Header name pattern"
@@ -27826,6 +27836,11 @@ msgid ""
 "If enabled, the service details will contain username of a process owner."
 msgstr ""
 
+msgid ""
+"If exceeded, an Exception will appear. In extraordinary cases, consider "
+"calling Support Diagnostics from command line (see inline help)."
+msgstr ""
+
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
 "S'il est donné, il transfère la sortie vers un autre hôte en utilisant les "
@@ -28084,12 +28099,12 @@ msgstr ""
 msgid ""
 "If there is more than one plan testing the same application, then the "
 "variant is used to differentiate them. Example: DE and EN when testing two "
-"language versions of a website. The application name and the variant are "
-"combined to form the `Plan ID`. The `Plan ID` is used in various places such "
-"as log messages, rcc space identifies, identification of environment builds, "
-"as part of service items. The variant is available as a service label. "
-"Variants are restricted to the following characters: a-z, A-Z, 0-9, `-`, "
-"`_`, `.`"
+"language versions of a website. The application name, the variant and the "
+"suite name are combined to form the `Plan ID`. The `Plan ID` is used in "
+"various places such as log messages, rcc space identifies, identification of "
+"environment builds, as part of service items. The variant is available as a "
+"service label. Variants are restricted to the following characters: a-z, A-"
+"Z, 0-9, `-`, `_`, `.`"
 msgstr ""
 
 msgid ""
@@ -32165,6 +32180,14 @@ msgstr "Échec de la dernière vérification"
 
 msgid "Last week"
 msgstr "La semaine dernière"
+
+#, fuzzy
+msgid "Last work day of last month"
+msgstr "Dernier jour du dernier mois"
+
+#, fuzzy
+msgid "Last work day of this month"
+msgstr "Premier jour de ce mois"
 
 msgid "Last year"
 msgstr "L'année dernière"
@@ -37808,11 +37831,11 @@ msgid "Name of the VM/HostSystem"
 msgstr "Nom de la VM/Système hôte"
 
 msgid ""
-"Name of the application to be tested here. The application name and the "
-"variant are combined to form the `Plan ID`. The `Plan ID` is used in various "
-"places such as log messages, rcc space identifies, identification of "
-"environment builds, as part of service items. Moreover, the application is "
-"available as a service label. Application names are restricted to the "
+"Name of the application to be tested here. The application name, the variant "
+"and the suite name are combined to form the `Plan ID`. The `Plan ID` is used "
+"in various places such as log messages, rcc space identifies, identification "
+"of environment builds, as part of service items. Moreover, the application "
+"is available as a service label. Application names are restricted to the "
 "following characters: a-z, A-Z, 0-9, `-`, `_`, `.`"
 msgstr ""
 
@@ -42369,19 +42392,11 @@ msgstr "Chemin vers les catégories"
 msgid "Path to nvidia-smi.exe"
 msgstr "Chemin d'accès : nvidia-smi.exe"
 
-#, fuzzy
-msgid "Path to robot.yaml"
-msgstr "Chemin d'accès au fichier Cert Key"
-
 msgid "Path to sapgenpse"
 msgstr "Chemin vers sapgenpse"
 
 msgid "Path to temporary directory (will be created)"
 msgstr "Chemin vers le répertoire temporaire (qui sera créé)"
-
-#, fuzzy
-msgid "Path to test suite file or folder"
-msgstr "Chemin vers le fichier .env"
 
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
@@ -43213,6 +43228,13 @@ msgstr ""
 msgid "Plan ID"
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Plan IDs (combinations of application names, suite names and variants) must "
+"be unique."
+msgstr ""
+"Cartographie des combinaisons d'état opérationnel et d'état d'administration"
+
 msgid "Plans"
 msgstr ""
 
@@ -43586,13 +43608,19 @@ msgstr "Veuillez sélectionner un fichier."
 msgid "Please select a graph."
 msgstr "Veuillez sélectionner un graphique."
 
-msgid "Please select a metric"
+#, fuzzy
+msgid "Please select a host."
+msgstr "Veuillez sélectionner un graphique."
+
+#, fuzzy
+msgid "Please select a metric."
 msgstr "Veuillez sélectionner un système métrique"
 
 msgid "Please select a number between 0 and 100"
 msgstr "Veuillez choisir un nombre entre 0 et 100"
 
-msgid "Please select a service"
+#, fuzzy
+msgid "Please select a service."
 msgstr "Veuillez sélectionner un service"
 
 msgid "Please select at least one element"
@@ -45259,9 +45287,6 @@ msgstr "Mise au point du RRDCached"
 msgid "RSA"
 msgstr "RA"
 
-msgid "RSASSA-PSS"
-msgstr ""
-
 #, python-format
 msgid "RSync of generic files took %.4fsec"
 msgstr "RSync des fichiers génériques a pris %.4fsec"
@@ -46102,6 +46127,14 @@ msgstr "Niveaux relatifs"
 
 msgid "Relative levels of active sessions."
 msgstr "Niveaux relatifs des sessions actives."
+
+#, fuzzy
+msgid "Relative path to robot.yaml"
+msgstr "Chemin d'accès au fichier Cert Key"
+
+#, fuzzy
+msgid "Relative path to test suite file or folder"
+msgstr "Chemin vers le fichier .env"
 
 msgid "Relay Log Size"
 msgstr "Taille du journal du relais"
@@ -48036,41 +48069,6 @@ msgid "SHA-2 (SHA-384)"
 msgstr "SHA-2 (SHA-384)"
 
 msgid "SHA-2 (SHA-512)"
-msgstr "SHA-2 (SHA-512)"
-
-#, fuzzy
-msgid "SHA-224"
-msgstr "SHA-2 (SHA-224)"
-
-#, fuzzy
-msgid "SHA-256"
-msgstr "AES-256"
-
-#, fuzzy
-msgid "SHA-384"
-msgstr "SHA-2 (SHA-384)"
-
-#, fuzzy
-msgid "SHA-512"
-msgstr "SHA-2 (SHA-512)"
-
-msgid "SHA-512 (fixed)"
-msgstr ""
-
-#, fuzzy
-msgid "SHA3-224"
-msgstr "SHA-2 (SHA-224)"
-
-#, fuzzy
-msgid "SHA3-256"
-msgstr "AES-256"
-
-#, fuzzy
-msgid "SHA3-384"
-msgstr "SHA-2 (SHA-384)"
-
-#, fuzzy
-msgid "SHA3-512"
 msgstr "SHA-2 (SHA-512)"
 
 msgid "SID"
@@ -50659,9 +50657,11 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Sets the runtime threshold for this particular test. Note that runtime "
-"monitoring is not a feature of Robot Framework, but of Robotmk; a Robot "
-"suite can have an internal OK state but a WARN state in Checkmk."
+"Sets the runtime threshold for the runtime of a test. Note that runtime "
+"monitoring is not a feature of Robot Framework, but of Robotmk. That means "
+"that even when a Robot suite has ended with a PASS result, the states of "
+"Robotmk test and plan services can be other than OK if runtimes were "
+"exceeded. "
 msgstr ""
 
 msgid "Setting"
@@ -54704,6 +54704,10 @@ msgstr "Signature vérifiée avec succès"
 msgid "Suggested tutorial videos"
 msgstr "Vidéos tutorielles suggérées"
 
+#, fuzzy
+msgid "Suite name"
+msgstr "Nom du site"
+
 msgid "Sum"
 msgstr "Somme"
 
@@ -56405,7 +56409,10 @@ msgid ""
 "The Runtime-limit ratio (Peak Attempt) is the longest attempt runtime in "
 "relation to the limit per attempt. These thresholds apply to the runtime of "
 "a single execution attempt. If there are multiple execution attempts, the "
-"thresholds apply to the longest runtime. "
+"thresholds apply to the longest runtime. Alarms for an exceeded ratio "
+"threshold mean that the maximum runtime for a single attempt was set too "
+"low, or that the test itself should be readjusted (e.g. by reducing keyword "
+"timeouts). "
 msgstr ""
 
 msgid ""
@@ -57858,6 +57865,12 @@ msgid "The graph template id '%s' is disabled"
 msgstr "L'id du modèle de graphique '%s' est désactivé"
 
 msgid ""
+"The group execution interval must be greater than the sum of the individual "
+"plan runtime limits. The runtime limit of a plan is calculated as follows: "
+"limit_per_attempt x (1 + max_number_of_reexecutions)."
+msgstr ""
+
+msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
 "either deleting them or moving them to a subfolder. By default nothing is "
 "cleaned up."
@@ -58079,10 +58092,10 @@ msgstr ""
 "combinés comme ceci db2wps8:WPSCOMT8.USERSPACE1"
 
 msgid ""
-"The interval at which an execution group is executed. The execution interval "
-"of the group must be greater than the sum of the maximum runtimes of all "
-"suites in the group. The maximum runtime of a suite is calculated as "
-"follows: `\"environment_setup_timeout\" x (1 + \"max_reexecutions\")`"
+"The interval at which an execution group is executed. The interval must be "
+"larger than the sum of the individual plan runtime limits. The runtime limit "
+"of a plan is calculated as follows: <tt>limit_per_attempt x (1 + "
+"max_number_of_reexecutions).</tt>"
 msgstr ""
 
 msgid ""
@@ -59767,9 +59780,8 @@ msgid "The sidecar host"
 msgstr "L'hôte du side-car"
 
 msgid ""
-"The signature algorithm and the message digest algorithm for the "
-"certificate's signature. Please note that an exact match is expected if this "
-"option is used."
+"The signature algorithm algorithm for the certificate's signature. Please "
+"note that an matching is done on the OID"
 msgstr ""
 
 msgid ""
@@ -60096,6 +60108,14 @@ msgstr ""
 "Le délai d'attente appliqué aux connexions HTTP avec le fournisseur "
 "d'identité. Checkmk lui envoie des demandes et reçoit des réponses "
 "concernant le processus d'authentification d'un utilisateur."
+
+msgid ""
+"The timeout in seconds when gathering the Support Diagnostics Data. The "
+"default is 110 seconds. When very large files are collected, it's also "
+"possible to call the support diagnostics from command line using the command "
+"'cmk --create-diagnostics-dump' with  appropriate parameters in the context "
+"of the affected site."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -74309,8 +74329,9 @@ msgid ""
 "\"_blank\">RCC</a> binary, the robotmk scheduler can generate the Python "
 "environments required for the execution of Robot Framework suites. This "
 "eliminates the need to install and configure Python and all of its library "
-"packages on the target hosts. RCC environments are only built when the "
-"scheduler is started."
+"packages on the target hosts. RCC environments are created right after the "
+"schedulder gets started by the Checkmk agent and before it enters the "
+"scheduling phase."
 msgstr ""
 
 msgid ""
@@ -77069,11 +77090,6 @@ msgid "_customer_switch has an invalid format"
 msgstr "_customer_switch a un format invalide"
 
 msgid ""
-"`robot.yaml` is the RCC configuration file. It is specified relative to the "
-"base directory of Robot Framework projects."
-msgstr ""
-
-msgid ""
 "a TCP session that is active but that has no data being transmitted by "
 "either device for a prolonged period of time"
 msgstr ""
@@ -79188,9 +79204,61 @@ msgstr "{actual} est trop élevée. La valeur maximale autorisée est {bound}."
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 
+#, python-brace-format
+msgid "{sa._name} ({sa.dotted_string})"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Agent Plugins"
+#~ msgstr "Plugins pour agents"
+
+#, fuzzy
+#~| msgid "Signature algorithm"
+#~ msgid "Hashing algorithm"
+#~ msgstr "Algorithme de signature"
+
+#, fuzzy
+#~| msgid "SHA-2 (SHA-224)"
+#~ msgid "SHA-224"
+#~ msgstr "SHA-2 (SHA-224)"
+
+#, fuzzy
+#~| msgid "AES-256"
+#~ msgid "SHA-256"
+#~ msgstr "AES-256"
+
+#, fuzzy
+#~| msgid "SHA-2 (SHA-384)"
+#~ msgid "SHA-384"
+#~ msgstr "SHA-2 (SHA-384)"
+
+#, fuzzy
+#~| msgid "SHA-2 (SHA-512)"
+#~ msgid "SHA-512"
+#~ msgstr "SHA-2 (SHA-512)"
+
+#, fuzzy
+#~| msgid "SHA-2 (SHA-224)"
+#~ msgid "SHA3-224"
+#~ msgstr "SHA-2 (SHA-224)"
+
+#, fuzzy
+#~| msgid "AES-256"
+#~ msgid "SHA3-256"
+#~ msgstr "AES-256"
+
+#, fuzzy
+#~| msgid "SHA-2 (SHA-384)"
+#~ msgid "SHA3-384"
+#~ msgstr "SHA-2 (SHA-384)"
+
+#, fuzzy
+#~| msgid "SHA-2 (SHA-512)"
+#~ msgid "SHA3-512"
+#~ msgstr "SHA-2 (SHA-512)"
 
 #, fuzzy
 #~| msgid "Problem dashboard"

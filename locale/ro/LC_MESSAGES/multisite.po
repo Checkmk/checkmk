@@ -1961,6 +1961,13 @@ msgstr ""
 "<tt>TNS_ADMIN</tt> de folosit pentru <tt>sqlnet.ora</tt> și <tt>tnsnames."
 "ora</tt> %s."
 
+msgid ""
+"<tt>robot.yaml</tt> is the main RCC configuration file. It is specified "
+"relative to the base directory of Robot Framework projects. This file also "
+"references the <tt>conda.yaml</tt> file which lists all environment "
+"dependencies. "
+msgstr ""
+
 #, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
 msgstr ""
@@ -4714,9 +4721,6 @@ msgstr "Implementarea agentului: Agent țintă Hash"
 msgid "Agent Error"
 msgstr "Eroare agent"
 
-msgid "Agent Plugins"
-msgstr "Plugin-uri agent"
-
 msgid "Agent TCP connect timeout"
 msgstr "Timpul de conectare TCP al agentului"
 
@@ -5720,7 +5724,9 @@ msgstr ""
 "utilizatori și, de asemenea, să specifice adrese de e-mail arbitrare ca "
 "destinație a rapoartelor."
 
-msgid "Allows the assignment of Robotmk services to another host."
+#, fuzzy
+msgid ""
+"Allows the assignment of the Robotmk plan/test services to another host."
 msgstr "Permite atribuirea de servicii Robotmk unei alte gazde."
 
 msgid ""
@@ -6686,7 +6692,8 @@ msgstr "Atribuiți definiția SLA la serviciu"
 msgid "Assign SLA to service"
 msgstr "Atribuiți SLA serviciului"
 
-msgid "Assign result to piggyback host"
+#, fuzzy
+msgid "Assign plan/test result to piggyback host"
 msgstr "Atribuiți rezultatul la gazda piggyback"
 
 msgid "Assign service to following host"
@@ -8977,8 +8984,9 @@ msgstr ""
 "html#stopping-when-first-test-case-fails\">Cum să oprești o suită atunci "
 "când primul test eșuează</a>\". "
 
+#, fuzzy
 msgid ""
-"By default, Robotmk executes all suites in the user context of the Checkmk "
+"By default, Robotmk executes all plans in the user context of the Checkmk "
 "agent, which does not have access to the desktop of the Windows computer. To "
 "run tests on Windows GUI applications, you can specify the name of a user "
 "who is permanently logged on to a desktop session. The prerequisites for "
@@ -12089,6 +12097,12 @@ msgstr "Colectați date de performanță pentru latența discului"
 msgid "Collection Size"
 msgstr "Dimensiunea colecției"
 
+#, fuzzy, python-format
+msgid ""
+"Collection of passwords failed\n"
+"%s"
+msgstr "Decriptarea parolei SNMPv3 a eșuat."
+
 msgid "Collections"
 msgstr "Colecții"
 
@@ -12166,11 +12180,6 @@ msgstr "Coloane care să corespundă"
 
 msgid "Com. buf. max/total"
 msgstr "Com. buf. max/total"
-
-#, fuzzy
-msgid "Combinations of application names and variants must be unique."
-msgstr ""
-"Combinațiile de nume și etichete ale aplicației suite trebuie să fie unice."
 
 msgid "Combined graph"
 msgstr "Graficul combinat"
@@ -15102,6 +15111,9 @@ msgstr "Statistici DHCP (mesaje primite)"
 msgid "DHCP statistics (sent messages)"
 msgstr "Statistici DHCP (mesaje trimise)"
 
+msgid "DISTRIBUTION"
+msgstr ""
+
 msgid "DISTTAG"
 msgstr "DISTTAG"
 
@@ -16578,24 +16590,25 @@ msgstr ""
 "o singură gazdă sau de a alege manual tipul de obiecte pe care doriți să le "
 "restricționați."
 
-#, fuzzy
-msgid ""
-"Depending on the libraries used in a plan, building its Python environment "
-"for the very first time can take some minutes. This setting ensures that a "
-"hanging/failing environment creation for a single plan does not block the "
-"scheduling phase of other plans."
-msgstr ""
-"În funcție de bibliotecile utilizate într-o suită, crearea mediului Python "
-"pentru prima dată poate dura câteva minute. Această setare asigură că o "
-"creare de mediu suspendată/nereușită pentru o singură suită nu blochează "
-"faza de programare a altor suite. "
-
 msgid ""
 "Depending on the measurement unit (defaults to bit), the absolute levels are "
 "set in bits or bytes per second."
 msgstr ""
 "În funcție de unitatea de măsură (valoarea implicită este bit), nivelurile "
 "absolute sunt stabilite în biți sau octeți pe secundă."
+
+#, fuzzy
+msgid ""
+"Depending on the package dependencies listed in <tt>conda.yaml</tt> used in "
+"a plan, building its Python environment for the very first time can take "
+"some minutes. This setting ensures that a hanging/failing environment "
+"creation for a single plan does not block the scheduling phase of other "
+"plans."
+msgstr ""
+"În funcție de bibliotecile utilizate într-o suită, crearea mediului Python "
+"pentru prima dată poate dura câteva minute. Această setare asigură că o "
+"creare de mediu suspendată/nereușită pentru o singură suită nu blochează "
+"faza de programare a altor suite. "
 
 msgid ""
 "Depending on the precision the unit can be either milliseconds or "
@@ -19152,9 +19165,6 @@ msgid "E.g. 'project = my_project and result = \"waiting for something\"'"
 msgstr ""
 "De exemplu 'project = my_project și result = \"waiting for something\"'"
 
-msgid "ECDSA"
-msgstr "ECDSA"
-
 msgid "EMC Data Domain MTree state"
 msgstr "Starea EMC Data Domain MTree"
 
@@ -19387,9 +19397,6 @@ msgstr ""
 "instalării unui addon, apar noi permisiuni, rolul utilizatorului va primi "
 "sau nu aceste noi permisiuni în funcție de setările implicite ale rolului "
 "încorporat pe care se bazează."
-
-msgid "Ed25519"
-msgstr "Ed25519"
 
 msgid "Edit"
 msgstr "Editați"
@@ -21280,9 +21287,6 @@ msgstr "Executarea ca MQM"
 msgid "Execute as another user"
 msgstr "Executarea ca alt utilizator"
 
-msgid "Execute as specific user"
-msgstr "Executarea ca utilizator specific"
-
 #, python-format
 msgid "Execute custom action '%s'?"
 msgstr "Executarea acțiunii personalizate '%s'?"
@@ -21295,6 +21299,10 @@ msgstr "Executarea scripturilor locale"
 
 msgid "Execute manually"
 msgstr "Executarea manuală"
+
+#, fuzzy
+msgid "Execute plan as a specific user"
+msgstr "Executarea ca utilizator specific"
 
 #, fuzzy
 msgid "Execute plug-ins in general"
@@ -22638,6 +22646,14 @@ msgstr "Prima pagină"
 
 msgid "First time the downtime starts"
 msgstr "Prima dată când începe timpul de nefuncționare"
+
+#, fuzzy
+msgid "First work day of last month"
+msgstr "Prima zi a ultimei luni"
+
+#, fuzzy
+msgid "First work day of this month"
+msgstr "Prima zi a acestei luni"
 
 msgid "Fit to screen"
 msgstr "Se potrivește la ecran"
@@ -24684,9 +24700,6 @@ msgstr "Trebuie să conțină calea către fișierul cu cheia de certificare."
 
 msgid "Hash"
 msgstr "Hash"
-
-msgid "Hashing algorithm"
-msgstr "Algoritm de hașurare"
 
 msgid "Header name pattern"
 msgstr "Model de nume de antet"
@@ -27553,6 +27566,11 @@ msgstr ""
 "Dacă este activată, detaliile serviciului vor conține numele de utilizator "
 "al proprietarului procesului."
 
+msgid ""
+"If exceeded, an Exception will appear. In extraordinary cases, consider "
+"calling Support Diagnostics from command line (see inline help)."
+msgstr ""
+
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
 "În cazul în care este dată, transmite ieșirea către o altă gazdă folosind "
@@ -27811,12 +27829,12 @@ msgstr ""
 msgid ""
 "If there is more than one plan testing the same application, then the "
 "variant is used to differentiate them. Example: DE and EN when testing two "
-"language versions of a website. The application name and the variant are "
-"combined to form the `Plan ID`. The `Plan ID` is used in various places such "
-"as log messages, rcc space identifies, identification of environment builds, "
-"as part of service items. The variant is available as a service label. "
-"Variants are restricted to the following characters: a-z, A-Z, 0-9, `-`, "
-"`_`, `.`"
+"language versions of a website. The application name, the variant and the "
+"suite name are combined to form the `Plan ID`. The `Plan ID` is used in "
+"various places such as log messages, rcc space identifies, identification of "
+"environment builds, as part of service items. The variant is available as a "
+"service label. Variants are restricted to the following characters: a-z, A-"
+"Z, 0-9, `-`, `_`, `.`"
 msgstr ""
 
 msgid ""
@@ -31885,6 +31903,14 @@ msgstr "Ultima verificare a eșuat"
 
 msgid "Last week"
 msgstr "Săptămâna trecută"
+
+#, fuzzy
+msgid "Last work day of last month"
+msgstr "Ultima zi a ultimei luni"
+
+#, fuzzy
+msgid "Last work day of this month"
+msgstr "Prima zi a acestei luni"
 
 msgid "Last year"
 msgstr "Anul trecut"
@@ -37458,11 +37484,11 @@ msgid "Name of the VM/HostSystem"
 msgstr "Numele sistemului VM/HostSystem"
 
 msgid ""
-"Name of the application to be tested here. The application name and the "
-"variant are combined to form the `Plan ID`. The `Plan ID` is used in various "
-"places such as log messages, rcc space identifies, identification of "
-"environment builds, as part of service items. Moreover, the application is "
-"available as a service label. Application names are restricted to the "
+"Name of the application to be tested here. The application name, the variant "
+"and the suite name are combined to form the `Plan ID`. The `Plan ID` is used "
+"in various places such as log messages, rcc space identifies, identification "
+"of environment builds, as part of service items. Moreover, the application "
+"is available as a service label. Application names are restricted to the "
 "following characters: a-z, A-Z, 0-9, `-`, `_`, `.`"
 msgstr ""
 
@@ -41972,18 +41998,11 @@ msgstr "Calea către categorii"
 msgid "Path to nvidia-smi.exe"
 msgstr "Cărare către nvidia-smi.exe"
 
-msgid "Path to robot.yaml"
-msgstr "Cale către robot.yaml"
-
 msgid "Path to sapgenpse"
 msgstr "Calea către sapgenpse"
 
 msgid "Path to temporary directory (will be created)"
 msgstr "Cale de acces la directorul temporar (va fi creat)"
-
-#, fuzzy
-msgid "Path to test suite file or folder"
-msgstr "Calea către suita de testare"
 
 msgid ""
 "Path to the Robot Framework suite folder or directly to a specific `.robot` "
@@ -42795,6 +42814,13 @@ msgstr ""
 msgid "Plan ID"
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Plan IDs (combinations of application names, suite names and variants) must "
+"be unique."
+msgstr ""
+"Combinațiile de nume și etichete ale aplicației suite trebuie să fie unice."
+
 msgid "Plans"
 msgstr ""
 
@@ -43168,13 +43194,19 @@ msgstr "Vă rugăm să selectați un fișier."
 msgid "Please select a graph."
 msgstr "Vă rugăm să selectați un grafic."
 
-msgid "Please select a metric"
+#, fuzzy
+msgid "Please select a host."
+msgstr "Vă rugăm să selectați un grafic."
+
+#, fuzzy
+msgid "Please select a metric."
 msgstr "Vă rugăm să selectați un sistem metric"
 
 msgid "Please select a number between 0 and 100"
 msgstr "Vă rugăm să selectați un număr între 0 și 100"
 
-msgid "Please select a service"
+#, fuzzy
+msgid "Please select a service."
 msgstr "Vă rugăm să selectați un serviciu"
 
 msgid "Please select at least one element"
@@ -44821,9 +44853,6 @@ msgstr "Reglarea RRDCached"
 msgid "RSA"
 msgstr "RSA"
 
-msgid "RSASSA-PSS"
-msgstr "RSASSA-PSS"
-
 #, python-format
 msgid "RSync of generic files took %.4fsec"
 msgstr "RSync de fișiere generice a durat %.4fsec"
@@ -45653,6 +45682,14 @@ msgstr "Niveluri relative"
 
 msgid "Relative levels of active sessions."
 msgstr "Nivelurile relative ale sesiunilor active."
+
+#, fuzzy
+msgid "Relative path to robot.yaml"
+msgstr "Cale către robot.yaml"
+
+#, fuzzy
+msgid "Relative path to test suite file or folder"
+msgstr "Calea către suita de testare"
 
 msgid "Relay Log Size"
 msgstr "Dimensiunea jurnalului de releu"
@@ -47551,33 +47588,6 @@ msgstr "SHA-2 (SHA-384)"
 
 msgid "SHA-2 (SHA-512)"
 msgstr "SHA-2 (SHA-512)"
-
-msgid "SHA-224"
-msgstr "SHA-224"
-
-msgid "SHA-256"
-msgstr "SHA-256"
-
-msgid "SHA-384"
-msgstr "SHA-384"
-
-msgid "SHA-512"
-msgstr "SHA-512"
-
-msgid "SHA-512 (fixed)"
-msgstr "SHA-512 (fix)"
-
-msgid "SHA3-224"
-msgstr "SHA3-224"
-
-msgid "SHA3-256"
-msgstr "SHA3-256"
-
-msgid "SHA3-384"
-msgstr "SHA3-384"
-
-msgid "SHA3-512"
-msgstr "SHA3-512"
 
 msgid "SID"
 msgstr "SID"
@@ -50181,10 +50191,13 @@ msgstr ""
 "caracteristică a Robot Framework, ci a Robotmk; o suită Robot poate avea o "
 "stare internă OK, dar o stare WARN în Checkmk."
 
+#, fuzzy
 msgid ""
-"Sets the runtime threshold for this particular test. Note that runtime "
-"monitoring is not a feature of Robot Framework, but of Robotmk; a Robot "
-"suite can have an internal OK state but a WARN state in Checkmk."
+"Sets the runtime threshold for the runtime of a test. Note that runtime "
+"monitoring is not a feature of Robot Framework, but of Robotmk. That means "
+"that even when a Robot suite has ended with a PASS result, the states of "
+"Robotmk test and plan services can be other than OK if runtimes were "
+"exceeded. "
 msgstr ""
 "Stabilește pragul de execuție pentru acest test special. Rețineți că "
 "monitorizarea în timpul execuției nu este o caracteristică a Robot "
@@ -54215,6 +54228,10 @@ msgstr "Semnătură verificată cu succes"
 msgid "Suggested tutorial videos"
 msgstr "Videoclipuri tutorial sugerate"
 
+#, fuzzy
+msgid "Suite name"
+msgstr "Numele sitului"
+
 msgid "Sum"
 msgstr "Suma"
 
@@ -55875,7 +55892,10 @@ msgid ""
 "The Runtime-limit ratio (Peak Attempt) is the longest attempt runtime in "
 "relation to the limit per attempt. These thresholds apply to the runtime of "
 "a single execution attempt. If there are multiple execution attempts, the "
-"thresholds apply to the longest runtime. "
+"thresholds apply to the longest runtime. Alarms for an exceeded ratio "
+"threshold mean that the maximum runtime for a single attempt was set too "
+"low, or that the test itself should be readjusted (e.g. by reducing keyword "
+"timeouts). "
 msgstr ""
 
 msgid ""
@@ -57323,6 +57343,12 @@ msgid "The graph template id '%s' is disabled"
 msgstr "Șablonul grafic id '%s' este dezactivat"
 
 msgid ""
+"The group execution interval must be greater than the sum of the individual "
+"plan runtime limits. The runtime limit of a plan is calculated as follows: "
+"limit_per_attempt x (1 + max_number_of_reexecutions)."
+msgstr ""
+
+msgid ""
 "The handled messages (see <i>subject matching</i>) can be cleaned up by "
 "either deleting them or moving them to a subfolder. By default nothing is "
 "cleaned up."
@@ -57544,10 +57570,10 @@ msgstr ""
 "astfel db2wps8:WPSCOMT8.USERSPACE1"
 
 msgid ""
-"The interval at which an execution group is executed. The execution interval "
-"of the group must be greater than the sum of the maximum runtimes of all "
-"suites in the group. The maximum runtime of a suite is calculated as "
-"follows: `\"environment_setup_timeout\" x (1 + \"max_reexecutions\")`"
+"The interval at which an execution group is executed. The interval must be "
+"larger than the sum of the individual plan runtime limits. The runtime limit "
+"of a plan is calculated as follows: <tt>limit_per_attempt x (1 + "
+"max_number_of_reexecutions).</tt>"
 msgstr ""
 
 msgid ""
@@ -59239,9 +59265,8 @@ msgid "The sidecar host"
 msgstr "Gazda sidecar"
 
 msgid ""
-"The signature algorithm and the message digest algorithm for the "
-"certificate's signature. Please note that an exact match is expected if this "
-"option is used."
+"The signature algorithm algorithm for the certificate's signature. Please "
+"note that an matching is done on the OID"
 msgstr ""
 
 msgid ""
@@ -59567,6 +59592,14 @@ msgstr ""
 "Timpul de așteptare aplicat conexiunilor HTTP cu furnizorul de identitate. "
 "Checkmk trimite solicitări către acesta și primește răspunsuri de la acesta "
 "cu privire la procesul de autentificare a unui utilizator."
+
+msgid ""
+"The timeout in seconds when gathering the Support Diagnostics Data. The "
+"default is 110 seconds. When very large files are collected, it's also "
+"possible to call the support diagnostics from command line using the command "
+"'cmk --create-diagnostics-dump' with  appropriate parameters in the context "
+"of the affected site."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -73596,8 +73629,9 @@ msgid ""
 "\"_blank\">RCC</a> binary, the robotmk scheduler can generate the Python "
 "environments required for the execution of Robot Framework suites. This "
 "eliminates the need to install and configure Python and all of its library "
-"packages on the target hosts. RCC environments are only built when the "
-"scheduler is started."
+"packages on the target hosts. RCC environments are created right after the "
+"schedulder gets started by the Checkmk agent and before it enters the "
+"scheduling phase."
 msgstr ""
 "Cu ajutorul <a href=https://github.com/robocorp/rcc>rcc binary</a>, "
 "programatorul robotmk poate genera mediile Python necesare pentru executarea "
@@ -76304,11 +76338,6 @@ msgid "_customer_switch has an invalid format"
 msgstr "_customer_switch are un format invalid"
 
 msgid ""
-"`robot.yaml` is the RCC configuration file. It is specified relative to the "
-"base directory of Robot Framework projects."
-msgstr ""
-
-msgid ""
 "a TCP session that is active but that has no data being transmitted by "
 "either device for a prolonged period of time"
 msgstr ""
@@ -78404,9 +78433,55 @@ msgstr "{actual} este prea mare. Valoarea maximă admisă este {bound}."
 msgid "{actual} is too low. The minimum allowed value is {bound}."
 msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 
+#, python-brace-format
+msgid "{sa._name} ({sa.dotted_string})"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Agent Plugins"
+#~ msgstr "Plugin-uri agent"
+
+#~ msgid "ECDSA"
+#~ msgstr "ECDSA"
+
+#~ msgid "Ed25519"
+#~ msgstr "Ed25519"
+
+#~ msgid "Hashing algorithm"
+#~ msgstr "Algoritm de hașurare"
+
+#~ msgid "RSASSA-PSS"
+#~ msgstr "RSASSA-PSS"
+
+#~ msgid "SHA-224"
+#~ msgstr "SHA-224"
+
+#~ msgid "SHA-256"
+#~ msgstr "SHA-256"
+
+#~ msgid "SHA-384"
+#~ msgstr "SHA-384"
+
+#~ msgid "SHA-512"
+#~ msgstr "SHA-512"
+
+#~ msgid "SHA-512 (fixed)"
+#~ msgstr "SHA-512 (fix)"
+
+#~ msgid "SHA3-224"
+#~ msgstr "SHA3-224"
+
+#~ msgid "SHA3-256"
+#~ msgstr "SHA3-256"
+
+#~ msgid "SHA3-384"
+#~ msgstr "SHA3-384"
+
+#~ msgid "SHA3-512"
+#~ msgstr "SHA3-512"
 
 #~ msgid "Base directory of suites"
 #~ msgstr "Directorul de bază al suitelor"

@@ -726,7 +726,7 @@ class ModeNotifications(ABCNotificationsMode):
         advanced_test_options = self._vs_advanced_test_options().from_html_vars("advanced_opts")
         self._vs_advanced_test_options().validate_value(advanced_test_options, "advanced_opts")
 
-        hostname = general_test_options["hostname_choice"]
+        hostname = general_test_options["on_hostname_hint"]
         context: dict[str, Any] = {
             "HOSTNAME": hostname,
             "HOSTALIAS": hostname,
@@ -747,7 +747,7 @@ class ModeNotifications(ABCNotificationsMode):
             context["HOSTSTATE"] = "UP"
 
         notification_nr = str(advanced_test_options["notification_nr"])
-        if service_desc := general_test_options.get("service_choice"):
+        if service_desc := general_test_options.get("on_service_hint"):
             if not service_desc:
                 raise MKUserError(None, _("Please provide a service."))
 
@@ -1286,7 +1286,9 @@ class ModeNotifications(ABCNotificationsMode):
         return Dictionary(
             elements=[
                 (
-                    "hostname_choice",
+                    # we use the already existing logic for the host aware
+                    # service selection. It needs "_hostname_hint" as suffix
+                    "on_hostname_hint",
                     MonitoredHostname(
                         title=_("Host"),
                         strict="True",
@@ -1296,7 +1298,9 @@ class ModeNotifications(ABCNotificationsMode):
                     ),
                 ),
                 (
-                    "service_choice",
+                    # we use the already existing logic for the host aware
+                    # service selection. It needs "_service_hint" as suffix
+                    "on_service_hint",
                     MonitoredServiceDescription(
                         title=_("Service"),
                         autocompleter=ContextAutocompleterConfig(
@@ -1444,9 +1448,9 @@ class ModeNotifications(ABCNotificationsMode):
 
     def _get_default_options(self, hostname: str | None, servicename: str | None) -> dict[str, str]:
         if hostname and servicename:
-            return {"hostname_choice": hostname, "service_choice": servicename}
+            return {"on_hostname_hint": hostname, "on_service_hint": servicename}
         if hostname:
-            return {"hostname_choice": hostname}
+            return {"on_hostname_hint": hostname}
         return {}
 
     def _ensure_correct_default_test_options(self) -> None:
@@ -1465,14 +1469,14 @@ class ModeNotifications(ABCNotificationsMode):
 
 
 def _validate_general_opts(value, varprefix):
-    if not value["hostname_choice"]:
+    if not value["on_hostname_hint"]:
         raise MKUserError(
-            f"{varprefix}_p_hostname_choice", _("Please provide a hostname to test with.")
+            f"{varprefix}_p_on_hostname_hint", _("Please provide a hostname to test with.")
         )
 
-    if request.has_var("_test_service_notifications") and not value["service_choice"]:
+    if request.has_var("_test_service_notifications") and not value["on_service_hint"]:
         raise MKUserError(
-            f"{varprefix}_p_service_choice",
+            f"{varprefix}_p_on_service_hint",
             _("If you want to test service notifications, please provide a service to test with."),
         )
 

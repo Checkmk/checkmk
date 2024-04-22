@@ -954,8 +954,10 @@ def _pack_dict_groups(
 
 def _transform_dict_groups_forth(
     dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
-) -> Callable[[Mapping[str, object]], Mapping[str, object]]:
-    def _forth(value: Mapping[str, object]) -> Mapping[str, object]:
+) -> Callable[[Mapping[str, object] | None], Mapping[str, object] | None]:
+    def _forth(value: Mapping[str, object] | None) -> Mapping[str, object] | None:
+        if value is None:
+            return value
         if not set(_get_group_keys(dict_elements)).isdisjoint(value.keys()):  # already transformed
             return value
 
@@ -997,8 +999,10 @@ def _unpack_dict_group(
 
 def _transform_dict_group_back(
     dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
-) -> Callable[[Mapping[str, object]], Mapping[str, object]]:
-    def _back(value: Mapping[str, object]) -> Mapping[str, object]:
+) -> Callable[[Mapping[str, object] | None], Mapping[str, object] | None]:
+    def _back(value: Mapping[str, object] | None) -> Mapping[str, object] | None:
+        if value is None:
+            return value
         return _unpack_dict_group(dict_elements, value)
 
     return _back

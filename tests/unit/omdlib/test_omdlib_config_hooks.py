@@ -66,3 +66,44 @@ def test__error_from_config_choice_accept_value(value: str) -> None:
 )
 def test__error_from_config_choice_reject_value(value: str) -> None:
     assert main._error_from_config_choice(config_hooks.IpAddressListHasError(), value).is_error()
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "[::]",
+        "127.0.0.1",
+        "example.com",
+        "abc",
+        "0.0.0",
+        "a_b_c",
+    ],
+)
+def test__ok_from_apache_tcp_addr_has_error(value: str) -> None:
+    assert main._error_from_config_choice(config_hooks.ApacheTCPAddrHasError(), value).is_ok()
+
+
+@pytest.mark.parametrize(
+    "value, message",
+    [
+        pytest.param(
+            "",
+            "This is invalid because of: empty host",
+        ),
+        pytest.param(
+            "::",
+            "This is invalid because of: empty host",
+        ),
+        pytest.param(
+            "[:::::::]",
+            "This is invalid because of: invalid IPv6 address",
+        ),
+        pytest.param(
+            "[zzz]",
+            "This is invalid because of: invalid IPv6 address",
+        ),
+    ],
+)
+def test__error_from_apache_tcp_addr_has_error(value: str, message: str) -> None:
+    result = main._error_from_config_choice(config_hooks.ApacheTCPAddrHasError(), value)
+    assert result.error.endswith(message)

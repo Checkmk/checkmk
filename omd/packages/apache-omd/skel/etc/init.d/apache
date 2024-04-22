@@ -101,7 +101,7 @@ apache_wait_stop() {
       fi
      done
   fi
-  
+
   [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
   kill_stale_php_cgis
   return 0
@@ -121,13 +121,14 @@ apache_wait_start() {
   # LM: We could remove this here and fix the boot order. Would be a better fix.
   if test -f /etc/debian_version && test $(cut -f1 -d" " /proc/uptime | cut -f1 -d".") -lt 300; then
       TRIES=10
-      while [ $TRIES -gt 0 ] && ! ping -n -q -c1 -w1 $CONFIG_APACHE_TCP_ADDR >/dev/null 2>&1;  do
+      IP_ADDR="$(echo "$CONFIG_APACHE_TCP_ADDR" | cut -d "[" -f 2 | cut -d "]" -f 1)"
+      while [ $TRIES -gt 0 ] && ! ping -n -q -c1 -w1 "$IP_ADDR" >/dev/null 2>&1;  do
           TRIES=$(($TRIES-1))
       done
   fi
 
   $(apache_bin) -f "$CONFIG_FILE"
-  
+
   i=0
   while ! pidof_apache >/dev/null 2>&1;  do
     if [ $i = '10' ]; then
@@ -142,14 +143,14 @@ apache_wait_start() {
   return 0
 }
 
-kill_stale_php_cgis() 
+kill_stale_php_cgis()
 {
     i=1
-    killall -e $(php_cgi_bin) -u ###SITE### >/dev/null 2>&1 
+    killall -e $(php_cgi_bin) -u ###SITE### >/dev/null 2>&1
     while killall -e $(php_cgi_bin) -u ###SITE### >/dev/null 2>&1
     do
         i=$((i+1))
-        if [ $i -gt 50 ] ; then 
+        if [ $i -gt 50 ] ; then
             return
         fi
         sleep 0.1

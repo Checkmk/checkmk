@@ -1915,7 +1915,7 @@ class CommandScheduleDowntimes(Command):
             delayed_duration = 0
         return delayed_duration
 
-    def _comment(self):
+    def _comment(self) -> str:
         comment = (
             active_config.adhoc_downtime.get("comment", "")
             if request.var("_down_adhoc")
@@ -1925,10 +1925,10 @@ class CommandScheduleDowntimes(Command):
             raise MKUserError("_down_comment", _("You need to supply a comment for your downtime."))
         return comment
 
-    def _current_local_time(self):
+    def _current_local_time(self) -> float:
         return time.time()
 
-    def _custom_start_time(self):
+    def _custom_start_time(self) -> float:
         vs_date = self._vs_date()
         raw_start_date = vs_date.from_html_vars("_down_from_date")
         vs_date.validate_value(raw_start_date, "_down_from_date")
@@ -1943,7 +1943,7 @@ class CommandScheduleDowntimes(Command):
         self._vs_down_from().validate_value(down_from, "_down_from")
         return down_from
 
-    def _custom_end_time(self, start_time):
+    def _custom_end_time(self, start_time: float) -> float:
         vs_date = self._vs_date()
         raw_end_date = vs_date.from_html_vars("_down_to_date")
         vs_date.validate_value(raw_end_date, "_down_to_date")

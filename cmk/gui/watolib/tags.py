@@ -117,7 +117,7 @@ def load_tag_group(ident: TagGroupID) -> TagGroup | None:
     return tag_config.get_tag_group(ident)
 
 
-def save_tag_group(tag_group: TagGroup):  # type: ignore[no-untyped-def]
+def save_tag_group(tag_group: TagGroup) -> None:
     """Save a new tag group
 
     Args:

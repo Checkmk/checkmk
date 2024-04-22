@@ -313,10 +313,10 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
         self._num_hosts_processed += len(task.host_names)
 
-    def _process_discovery_results(  # type: ignore[no-untyped-def]
+    def _process_discovery_results(
         self,
         task: DiscoveryTask,
-        job_interface,
+        job_interface: BackgroundProcessInterface,
         response: AutomationDiscoveryResult,
     ) -> None:
         # The following code updates the host config. The progress from loading the Setup folder

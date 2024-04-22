@@ -14,7 +14,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509 import Certificate, load_pem_x509_certificate
@@ -40,6 +40,7 @@ from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.type_defs import TrustedCertificateAuthorities
 from cmk.gui.userdb import load_users, save_users
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
@@ -324,7 +325,9 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 f"Failed to create trusted CA file '{self.trusted_cas_file}': {traceback.format_exc()}"
             ]
 
-    def _update_trusted_cas(self, current_config) -> ConfigurationWarnings:  # type: ignore[no-untyped-def]
+    def _update_trusted_cas(
+        self, current_config: TrustedCertificateAuthorities
+    ) -> ConfigurationWarnings:
         trusted_cas: list[str] = []
         errors: ConfigurationWarnings = []
 
@@ -344,7 +347,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     # this is only a non-member classmethod, because it used in update config to 2.2
     @classmethod
-    def update_remote_sites_cas(cls, trusted_cas: list[str]) -> None:
+    def update_remote_sites_cas(cls, trusted_cas: Sequence[str]) -> None:
         remote_cas_store = RemoteSiteCertsStore(cmk.utils.paths.remote_sites_cas_dir)
         for site, cert in cls._remote_sites_cas(trusted_cas).items():
             remote_cas_store.save(site, cert)
@@ -368,7 +371,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return cert
 
     @staticmethod
-    def _load_certs(trusted_cas: list[str]) -> Iterable[Certificate]:
+    def _load_certs(trusted_cas: Sequence[str]) -> Iterable[Certificate]:
         for cert_str in trusted_cas:
             try:
                 yield ConfigDomainCACertificates._load_cert(cert_str)
@@ -380,7 +383,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     )
 
     @staticmethod
-    def _remote_sites_cas(trusted_cas: list[str]) -> Mapping[SiteId, Certificate]:
+    def _remote_sites_cas(trusted_cas: Sequence[str]) -> Mapping[SiteId, Certificate]:
         return {
             site_id: cert
             for cert in sorted(
@@ -454,7 +457,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
         return list(trusted_cas), errors
 
-    def default_globals(self) -> Mapping[str, Any]:
+    def default_globals(self) -> Mapping[str, TrustedCertificateAuthorities]:
         return {
             "trusted_certificate_authorities": {
                 "use_system_wide_cas": True,

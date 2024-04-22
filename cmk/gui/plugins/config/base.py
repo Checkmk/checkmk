@@ -13,7 +13,7 @@ from livestatus import SiteConfigurations
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.version import edition, Edition
 
-from cmk.gui.type_defs import GroupSpec, UserSpec
+from cmk.gui.type_defs import GroupSpec, TrustedCertificateAuthorities, UserSpec
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 CustomLinkSpec = tuple[str, bool, list[tuple[str, str, str | None, str]]]
@@ -478,11 +478,13 @@ class CREConfig:
     # Override toplevel and sort_index settings of built-in icons
     builtin_icon_visibility: dict = field(default_factory=dict)
 
-    trusted_certificate_authorities: dict[str, Any] = field(
-        default_factory=lambda: {
-            "use_system_wide_cas": True,
-            "trusted_cas": [],
-        }
+    trusted_certificate_authorities: TrustedCertificateAuthorities = field(
+        default_factory=lambda: TrustedCertificateAuthorities(
+            {
+                "use_system_wide_cas": True,
+                "trusted_cas": [],
+            }
+        )
     )
 
     # .

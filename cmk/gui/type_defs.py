@@ -43,6 +43,11 @@ Choice = tuple[ChoiceId, ChoiceText]
 Choices = list[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 
 
+class TrustedCertificateAuthorities(TypedDict):
+    use_system_wide_cas: bool
+    trusted_cas: Sequence[str]
+
+
 @dataclass
 class UserRole:
     name: str

@@ -6,9 +6,10 @@
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel, ValidationError
 
 from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 TYPE_SITE = str
 CONTACT_GROUP_NAME = str
@@ -21,7 +22,6 @@ class DisableNotifications(BaseModel):
 
 
 class Contact(BaseModel):
-    username: str
     alias: str = OMITTED_FIELD
     disable_notifications: DisableNotifications = DisableNotifications()
     email: str = OMITTED_FIELD
@@ -33,10 +33,16 @@ class Contact(BaseModel):
     customer: str | None = OMITTED_FIELD
 
 
+ContactMapModel = RootModel[dict[str, Contact]]
+
+
 def validate_contacts(contacts: dict[str, Any]) -> None:
-    for name, contact in contacts.items():
-        validate_contact(name, contact)
+    try:
+        ContactMapModel(contacts)
 
-
-def validate_contact(name: str, contact: dict) -> None:
-    Contact(username=name, **contact)
+    except ValidationError as exc:
+        raise ConfigValidationError(
+            which_file="contacts.mk",
+            pydantic_error=exc,
+            original_data=contacts,
+        )

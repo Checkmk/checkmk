@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import cast
 
+from cmk.utils.config_validation_layer.users.contacts import validate_contacts
 from cmk.utils.config_validation_layer.users.users import validate_users
 from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.log.security_event import log_security_event
@@ -31,7 +32,7 @@ from cmk.gui.watolib.user_scripts import (
     user_script_choices,
     user_script_title,
 )
-from cmk.gui.watolib.utils import multisite_dir
+from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:
@@ -321,5 +322,24 @@ class UsersConfigFile(WatoSingleConfigFile[dict]):
         super().save(cfg)
 
 
+class ContactsConfigFile(WatoSingleConfigFile[dict]):
+    """Handles reading and writing contacts.mk file"""
+
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(wato_root_dir()) / "contacts.mk", config_variable="contacts"
+        )
+
+    def _load_file(self, lock: bool) -> dict:
+        users = super()._load_file(lock)
+        validate_contacts(users)
+        return users
+
+    def save(self, cfg: dict) -> None:
+        validate_contacts(cfg)
+        super().save(cfg)
+
+
 def register(config_file_registry: ConfigFileRegistry) -> None:
     config_file_registry.register(UsersConfigFile())
+    config_file_registry.register(ContactsConfigFile())

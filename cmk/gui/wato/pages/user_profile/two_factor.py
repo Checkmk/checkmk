@@ -207,7 +207,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         )
         return HTML("").join([header_msg, message1, codesdiv, message2, copy_button])
 
-    def _page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
+    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id)
         registered_credentials = list(credentials["webauthn_credentials"].keys()) + list(

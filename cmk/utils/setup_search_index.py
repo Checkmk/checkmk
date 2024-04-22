@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.store import locked

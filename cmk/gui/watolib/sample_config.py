@@ -10,13 +10,13 @@ from typing import Any
 from uuid import uuid4
 
 from cmk.utils import store
+from cmk.utils.config_validation_layer.groups import AllGroupSpecs, GroupName
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
 from cmk.utils.notify_types import EventRule, NotificationRuleID
 from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 
-from cmk.gui.groups import AllGroupSpecs, GroupName
 from cmk.gui.log import logger
 from cmk.gui.userdb import create_cmk_automation_user
 from cmk.gui.watolib.config_domain_name import (
@@ -25,9 +25,9 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
-from cmk.gui.watolib.group_writer import save_group_information
+from cmk.gui.watolib.groups_io import save_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.gui.watolib.notifications import save_notification_rules
+from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
@@ -206,7 +206,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 },
             ],
             # Enable HW/SW inventory + status data inventory for docker
-            # containers, kubernetes objects and Check-MK servers by default to
+            # containers, kubernetes objects, robotmk and Check-MK servers by default to
             # simplify the setup procedure for them
             "active_checks": {
                 "cmk_inv": [
@@ -216,6 +216,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "host_label_groups": [("and", [("and", "cmk/docker_object:node")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                     {
                         "id": "b4b151f9-c7cc-4127-87a6-9539931fcd73",
@@ -223,6 +226,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                     {
                         "id": "2527cb37-e9da-4a15-a7d9-80825a7f6661",
@@ -230,6 +236,19 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                             "host_label_groups": [("and", [("and", "cmk/kubernetes:yes")])]
                         },
                         "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
+                    },
+                    {
+                        "id": "bea23477-f13a-4e9f-a472-08be507aac9e",
+                        "condition": {
+                            "host_label_groups": [("and", [("and", "cmk/rmk/node_type:local")])]
+                        },
+                        "value": {"status_data_inventory": True},
+                        "options": {
+                            "description": "Factory default. Required for the shipped dashboards.",
+                        },
                     },
                 ]
             },
@@ -293,7 +312,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         rulesets.save_folder()
 
         notification_rules = [get_default_notification_rule()]
-        save_notification_rules(notification_rules)
+        NotificationRuleConfigFile().save(notification_rules)
 
     def _initial_global_settings(self) -> dict[str, Any]:
         settings = {

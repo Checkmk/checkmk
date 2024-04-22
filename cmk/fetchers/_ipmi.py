@@ -8,11 +8,10 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterable
 from dataclasses import astuple, dataclass
-from typing import Final, Self, TYPE_CHECKING
+from typing import Final, Self, TYPE_CHECKING, TypedDict
 
 import pyghmi.constants as ipmi_const  # type: ignore[import-untyped]
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
-from typing_extensions import TypedDict
 
 if TYPE_CHECKING:
     # The remaining pyghmi imports are expensive (60 ms for all of them together).

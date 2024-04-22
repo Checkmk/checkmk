@@ -197,7 +197,9 @@ EndPoint = PortNumber | FileDescriptor
 
 
 def _endpoint(
-    enabled: bool, file_descriptor: FileDescriptor, default_port_number: PortNumber
+    enabled: bool,
+    file_descriptor: FileDescriptor | None,
+    default_port_number: PortNumber,
 ) -> EndPoint | None:
     """Returns a communication endpoint based on given commandline arguments."""
     if not enabled:

@@ -1126,7 +1126,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "perle_modules_mgt",
         "perle_psmu",
         "perle_psmu.fan",
-        "pfsense_if",
         "pfsense_status",
         "plesk_backups",
         "plesk_domains",

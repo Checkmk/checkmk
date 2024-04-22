@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, Literal, NamedTuple
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
     CheckResult,

@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import pprint
 import re
@@ -108,6 +113,18 @@ def _generate_event_message(site: Site, message: str) -> None:
         _validate_process_return_code(process, "Failed to generate EC message via Unix socket.")
 
 
+def _wait_for_queried_column(
+    site: Site, query: str, sleep_time: float = 1, max_count: int = 20
+) -> list[str]:
+    count = 0
+    while not (queried_column := site.live.query_column(query)) and count < max_count:
+        logger.info("Waiting for the following livestatus query: %s", repr(query))
+        time.sleep(sleep_time)
+        count += 1
+    assert queried_column, f"Failed to retrieve livestatus query: {repr(query)}"
+    return queried_column
+
+
 def _get_snmp_trap_cmd(event_message: str) -> list:
     return [
         "snmptrap",
@@ -215,7 +232,6 @@ def _enable_snmp_trap_translation(site: Site) -> Iterator[None]:
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
     """Generate a message matching an EC rule and assert an event is created"""
     match, rule_id, rule_state = setup_ec
@@ -223,25 +239,26 @@ def test_ec_rule_match(site: Site, setup_ec: Iterator) -> None:
     event_message = f"some {match} status"
     _generate_event_message(site, event_message)
 
-    live = site.live
-
     # retrieve id of matching rule via livestatus query
-    queried_rule_ids = live.query_column("GET eventconsolerules\nColumns: rule_id\n")
+    queried_rule_ids = _wait_for_queried_column(site, "GET eventconsolerules\nColumns: rule_id\n")
     assert rule_id in queried_rule_ids
 
     # retrieve matching event state via livestatus query
-    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n"
+    )
     assert len(queried_event_states) == 1
     assert queried_event_states[0] == rule_state
 
     # retrieve matching event message via livestatus query
-    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
     assert len(queried_event_messages) == 1
     assert queried_event_messages[0] == event_message
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
     """Generate a message not matching any EC rule and assert no event is created"""
     match, _, _ = setup_ec
@@ -250,17 +267,14 @@ def test_ec_rule_no_match(site: Site, setup_ec: Iterator) -> None:
 
     _generate_event_message(site, event_message)
 
-    live = site.live
-
-    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = site.live.query_column("GET eventconsoleevents\nColumns: event_state\n")
     assert not queried_event_states
 
-    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = site.live.query_column("GET eventconsoleevents\nColumns: event_text")
     assert not queried_event_messages
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_rule_match_snmp_trap(
     site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
 ) -> None:
@@ -275,25 +289,26 @@ def test_ec_rule_match_snmp_trap(
 
     assert event_message in site.read_file("var/log/mkeventd.log")
 
-    live = site.live
-
     # retrieve id of matching rule via livestatus query
-    queried_rule_ids = live.query_column("GET eventconsolerules\nColumns: rule_id\n")
+    queried_rule_ids = _wait_for_queried_column(site, "GET eventconsolerules\nColumns: rule_id\n")
     assert rule_id in queried_rule_ids
 
     # retrieve matching event state via livestatus query
-    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_state\n"
+    )
     assert len(queried_event_states) == 1
     assert queried_event_states[0] == rule_state
 
     # retrieve matching event message via livestatus query
-    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
     assert len(queried_event_messages) == 1
     assert event_message in queried_event_messages[0]
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_rule_no_match_snmp_trap(
     site: Site, setup_ec: Iterator, enable_snmp_trap_receiver: None
 ) -> None:
@@ -307,17 +322,14 @@ def test_ec_rule_no_match_snmp_trap(
     )
     _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
-    live = site.live
-
-    queried_event_states = live.query_column("GET eventconsoleevents\nColumns: event_state\n")
+    queried_event_states = site.live.query_column("GET eventconsoleevents\nColumns: event_state\n")
     assert not queried_event_states
 
-    queried_event_messages = live.query_column("GET eventconsoleevents\nColumns: event_text")
+    queried_event_messages = site.live.query_column("GET eventconsoleevents\nColumns: event_text")
     assert not queried_event_messages
 
 
 @skip_if_saas_edition(reason="EC is disabled in the SaaS edition")
-@pytest.mark.xfail(reason="Test experiences a flaky behavior. See CMK-16588.")
 def test_ec_global_settings(
     site: Site,
     setup_ec: Iterator,
@@ -338,17 +350,9 @@ def test_ec_global_settings(
     )
     _validate_process_return_code(process, "Failed to send message via SNMP trap.")
 
-    live = site.live
-
-    start_time = time.time()
-    while not (
-        queried_event_messages := live.query_column("GET eventconsoleevents\nColumns: event_text")
-    ):
-        logger.info("Waiting for the SNMP trap to be translated...")
-        time.sleep(0.1)
-        if time.time() > start_time + 30:
-            raise TimeoutError("Timeout reached for the SNMP trap to be translated.")
-
+    queried_event_messages = _wait_for_queried_column(
+        site, "GET eventconsoleevents\nColumns: event_text"
+    )
     assert len(queried_event_messages) == 1
 
     pattern = "SNMP.*MIB"  # pattern expected after SNMP traps translation

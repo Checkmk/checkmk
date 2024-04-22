@@ -6,8 +6,7 @@
 import time
 from collections.abc import Container, Iterable
 from dataclasses import dataclass
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
 

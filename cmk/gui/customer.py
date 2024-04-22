@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
-from typing import Any, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from livestatus import SiteConfigurations, SiteId
 
-from cmk.gui.groups import GroupSpec
+from cmk.utils.config_validation_layer.groups import GroupSpec
+
 from cmk.gui.hooks import request_memoize
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 

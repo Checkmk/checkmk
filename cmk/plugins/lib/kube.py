@@ -6,10 +6,9 @@
 import enum
 import time
 from collections.abc import Callable, Mapping, Sequence
-from typing import assert_never, Literal, NewType, TypeVar
+from typing import assert_never, Literal, NewType, TypedDict, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing_extensions import TypedDict
 
 from cmk.agent_based.v2 import CheckResult, HostLabel, HostLabelGenerator
 

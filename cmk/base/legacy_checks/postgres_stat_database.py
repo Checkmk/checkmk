@@ -57,6 +57,13 @@ def inventory_postgres_stat_database(parsed):
     return [(k, {}) for k in parsed if parsed[k]["xact_commit"] > 0]
 
 
+def inventory_postgres_stat_database_size(parsed):
+    # https://www.postgresql.org/docs/current/monitoring-stats.html#MONITORING-PG-STAT-DATABASE-VIEW
+    # > datid: OID of this database, or 0 for objects belonging to a shared relation
+    # shared relations don't have a size, so we don't want to discover them.
+    return [(k, {}) for k in parsed if parsed[k]["xact_commit"] > 0 and parsed[k]["datid"] != "0"]
+
+
 def check_postgres_stat_database(item, params, parsed):
     if item not in parsed:
         return (3, "Database not found")
@@ -131,7 +138,7 @@ def check_postgres_stat_database_size(item, params, parsed):
 check_info["postgres_stat_database.size"] = LegacyCheckDefinition(
     service_name="PostgreSQL DB %s Size",
     sections=["postgres_stat_database"],
-    discovery_function=inventory_postgres_stat_database,
+    discovery_function=inventory_postgres_stat_database_size,
     check_function=check_postgres_stat_database_size,
     check_ruleset_name="postgres_stat_database",
 )

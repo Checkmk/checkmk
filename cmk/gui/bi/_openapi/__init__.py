@@ -169,7 +169,7 @@ def post_bi_rule(params: Mapping[str, Any]) -> Response:
     return _update_bi_rule(params, must_exist=False)
 
 
-def _update_bi_rule(params, must_exist: bool):  # type: ignore[no-untyped-def]
+def _update_bi_rule(params: Mapping[str, Any], must_exist: bool) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
@@ -371,7 +371,7 @@ def _aggregation_state(
                 "output": node_result_bundle.actual_result.output,
                 "hosts": required_hosts,
                 "acknowledged": node_result_bundle.actual_result.acknowledged,
-                "in_downtime": node_result_bundle.actual_result.downtime_state != 0,
+                "in_downtime": node_result_bundle.actual_result.in_downtime != 0,
                 "in_service_period": node_result_bundle.actual_result.in_service_period,
                 "infos": collect_infos(node_result_bundle, is_single_host_aggregation),
             }
@@ -449,7 +449,7 @@ def post_bi_aggregation(params: Mapping[str, Any]) -> Response:
     return _update_bi_aggregation(params, must_exist=False)
 
 
-def _update_bi_aggregation(params, must_exist: bool):  # type: ignore[no-untyped-def]
+def _update_bi_aggregation(params: Mapping[str, Any], must_exist: bool) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
@@ -682,7 +682,7 @@ def post_bi_pack(params: Mapping[str, Any]) -> Response:
     return _update_bi_pack(params, must_exist=False)
 
 
-def _update_bi_pack(params, must_exist: bool) -> Response:  # type: ignore[no-untyped-def]
+def _update_bi_pack(params: Mapping[str, Any], must_exist: bool) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.bi_rules")
     user.need_permission("wato.bi_admin")

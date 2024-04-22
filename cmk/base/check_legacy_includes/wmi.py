@@ -160,7 +160,7 @@ def inventory_wmi_table_total(  # type: ignore[no-untyped-def]
 
 # to make wato rules simpler, levels are allowed to be passed as tuples if the level
 # specifies the upper limit
-def get_levels_quadruple(params):
+def get_levels_quadruple(params: tuple | dict[str, tuple] | None) -> tuple | None:
     if params is None:
         return (None, None, None, None)
     if isinstance(params, tuple):
@@ -304,13 +304,13 @@ def wmi_calculate_raw_average_time(
     return measure_per_sec / base_per_sec  # fixed: true-division
 
 
-def wmi_yield_raw_average(  # type: ignore[no-untyped-def]
+def wmi_yield_raw_average(
     table: WMITable,
     row: str | int,
     column: str,
     infoname: str | None,
     perfvar: str | None,
-    levels=None,
+    levels: tuple | dict[str, tuple] | None = None,
     perfscale: float = 1.0,
 ) -> CheckResult:
     try:
@@ -327,13 +327,13 @@ def wmi_yield_raw_average(  # type: ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_average_timer(  # type: ignore[no-untyped-def]
+def wmi_yield_raw_average_timer(
     table: WMITable,
     row: str | int,
     column: str,
     infoname: str | None,
     perfvar: str | None,
-    levels=None,
+    levels: tuple | dict[str, tuple] | None = None,
 ) -> CheckResult:
     assert table.frequency
     try:
@@ -356,13 +356,13 @@ def wmi_yield_raw_average_timer(  # type: ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_fraction(  # type: ignore[no-untyped-def]
+def wmi_yield_raw_fraction(
     table: WMITable,
     row: str | int,
     column: str,
     infoname: str | None,
     perfvar: str | None,
-    levels=None,
+    levels: tuple | dict[str, tuple] | None = None,
 ) -> CheckResult:
     try:
         average = wmi_calculate_raw_average(table, row, column, 100)
@@ -377,6 +377,3 @@ def wmi_yield_raw_fraction(  # type: ignore[no-untyped-def]
         human_readable_func=render.percent,
         boundaries=(0, 100),
     )
-
-
-# .

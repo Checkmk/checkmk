@@ -28,17 +28,15 @@ def main() {
 
     def output_file = PACKAGE_PATH.split("/")[-1] + ".log"
     dir(checkout_dir) {
-        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
-            docker_reference_image().inside() {
-                withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
-                    helper.execute_test([
-                        name       : PACKAGE_PATH,
-                        cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
-                        output_file: output_file,
-                    ]);
-                }
-                sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
+        inside_container() {
+            withCredentials(secret_list(SECRET_VARS).collect { string(credentialsId: it, variable: it) }) {
+                helper.execute_test([
+                    name       : PACKAGE_PATH,
+                    cmd        : "cd ${PACKAGE_PATH}; ${COMMAND_LINE}",
+                    output_file: output_file,
+                ]);
             }
+            sh("mv ${PACKAGE_PATH}/${output_file} ${checkout_dir}");
         }
         archiveArtifacts(
             artifacts: "${output_file}",

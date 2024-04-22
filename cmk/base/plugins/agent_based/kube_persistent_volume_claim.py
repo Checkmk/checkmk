@@ -5,9 +5,7 @@
 import json
 import time
 from collections.abc import Iterator, Mapping, MutableMapping
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.plugins.lib.df import (
     df_check_filesystem_single,

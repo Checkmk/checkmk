@@ -281,10 +281,7 @@ class ValueSpec(abc.ABC, Generic[T]):
         This is optional and only used in the value editor for same cases where
         the default value is known."""
         if callable(self._default_value):
-            try:
-                value = self._default_value()
-            except Exception:
-                value = DEF_VALUE
+            value = self._default_value()
         else:
             value = self._default_value
 
@@ -391,7 +388,7 @@ class FixedValue(ValueSpec[T]):
         return self._value
 
     def render_input(self, varprefix: str, value: T) -> None:
-        html.span(self.value_to_html(value), class_="vs_floating_text")
+        html.span(self.value_to_html(value), class_="vs_fixed_value")
 
     def value_to_html(self, value: T) -> ValueSpecText:
         if self._totext is not None:
@@ -852,21 +849,30 @@ class LegacyDataSize(Integer):
             ]
         )
 
-    def scale_value(self, value: int) -> tuple[LegacyBinaryUnit, int]:
+    def _scale_value(self, value: int) -> tuple[LegacyBinaryUnit, str]:
         sorted_units = sorted(self._units, key=lambda x: x.value)
         for unit in reversed(sorted_units):
             if value == 0:
-                return sorted_units[0], value
-            if value % unit.value == 0:
-                return unit, int(value / unit.value)
-        raise ValueError("Invalid value: %r" % value)
+                return sorted_units[0], "0"
+            scaled, remainder = divmod(value, unit.value)
+            if remainder == 0:
+                return unit, f"{scaled}"
+
+        # "0.5 GB" for instance.
+        # This might in fact change the value slightly, and/or look ugly.
+        # Try to do better in the native implementation.
+        # Compare to TimeSpan, which is an analogous construct when seen from cmk.rulesets.v1,
+        # but quite different in rendering / UX currently.
+        return (u := sorted_units[-1]), f"{value / u.value!r}"
 
     def render_input(self, varprefix: str, value: int | None) -> None:
+        # This is utterly inconsistent with what TimeSpan does :-(
+
         # The value type is only Optional to be compatible with the base class
         if value is None:
             raise TypeError(value)
-        selected_unit, scaled_value = self.scale_value(value)
-        self._renderer.text_input(varprefix + "_size", str(scaled_value))
+        selected_unit, scaled_value = self._scale_value(value)
+        self._renderer.text_input(varprefix + "_size", scaled_value)
         html.nbsp()
         choices: Choices = [(str(unit.value), unit.name) for unit in self._units]
         html.dropdown(varprefix + "_unit", choices, deflt=str(selected_unit.value))
@@ -878,7 +884,7 @@ class LegacyDataSize(Integer):
         )
 
     def value_to_html(self, value: int) -> ValueSpecText:
-        selected_unit, scaled_value = self.scale_value(value)
+        selected_unit, scaled_value = self._scale_value(value)
         return f"{scaled_value} {selected_unit.name}"
 
     def value_to_json(self, value: int) -> JSONValue:
@@ -1053,7 +1059,7 @@ class UUID(TextInput):
         html.hidden_field(varprefix, value, add_var=True)
 
 
-def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def ID(  # pylint: disable=redefined-builtin
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1073,7 +1079,7 @@ def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str] | None = None,
-):
+) -> TextInput:
     """Internal ID as used in many places (for contact names, group name, an so on)"""
     return TextInput(
         label=label,
@@ -1102,7 +1108,7 @@ def ID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     )
 
 
-def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def UserID(  # pylint: disable=redefined-builtin
     label: str | None = None,
     size: int | Literal["max"] = 25,
     try_max_width: bool = False,
@@ -1121,7 +1127,7 @@ def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
-):
+) -> TextInput:
     """Internal ID as used in many places (for contact names, group name, an so on)"""
 
     def _validate(userid_str: str, varprefix: str) -> None:
@@ -1271,7 +1277,7 @@ class RegExp(TextInput):
 
         return " ".join("%s" % h for h in help_text)
 
-    def _css_classes(self, case_sensitive: bool, mode: str | None):  # type: ignore[no-untyped-def]
+    def _css_classes(self, case_sensitive: bool, mode: str | None) -> str:
         classes = ["text", "regexp"]
 
         if case_sensitive is True:
@@ -1527,15 +1533,15 @@ def _validate_hostname(text: str | None, varprefix: str) -> None:
         ) from exception
 
 
-def Hostname(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def Hostname(  # pylint: disable=redefined-builtin
     # TextInput
-    allow_empty=False,
+    allow_empty: bool = False,
     # ValueSpec
     title: str | None = None,
     help: ValueSpecHelp | None = None,
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     size: int = 38,
-):
+) -> TextInput:
     """A host name with or without domain part. Also allow IP addresses"""
     return TextInput(
         size=size,
@@ -3169,7 +3175,7 @@ class DropdownChoice(ValueSpec[T | None]):
         return [(self._option_for_html(val), title) for val, title in orig_options]
 
     @staticmethod
-    def option_id(val) -> str:  # type: ignore[no-untyped-def]
+    def option_id(val: object) -> str:
         return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
 
     def _validate_value(self, value: T | None, varprefix: str) -> None:
@@ -3417,7 +3423,7 @@ MonitoringStateValue = Literal[0, 1, 2, 3]
 
 
 # TODO: Rename to ServiceState() or something like this
-def MonitoringState(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def MonitoringState(  # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -3438,7 +3444,7 @@ def MonitoringState(  # type: ignore[no-untyped-def] # pylint: disable=redefined
     default_value: ValueSpecDefault[int] = 0,  # NOTE: Different!
     validate: ValueSpecValidateFunc[int | None] | None = None,
     deprecated_choices: Sequence[int] = (),
-):
+) -> DropdownChoice[int]:
     """Special convenience variant for monitoring states"""
     return DropdownChoice[int](
         choices=[
@@ -4421,7 +4427,7 @@ def _today() -> int:
 _sorted = sorted
 
 
-def Weekday(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def Weekday(  # pylint: disable=redefined-builtin
     # DropdownChoice
     sorted: bool = False,
     label: str | None = None,
@@ -4442,7 +4448,7 @@ def Weekday(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     default_value: ValueSpecDefault[str] = DEF_VALUE,
     validate: ValueSpecValidateFunc[str | None] | None = None,
     deprecated_choices: Sequence[str] = (),
-):
+) -> DropdownChoice:
     return DropdownChoice(
         choices=_sorted(dateutils.weekdays().items()),
         sorted=sorted,
@@ -5231,11 +5237,26 @@ class Timerange(CascadingDropdown):
         def _month_edge_days(now: float, day_id: str) -> ComputedTimerange:
             # base time is current time rounded down to month
             from_time = TimeHelper.round(now, "m")
-            if day_id == "f1":
+            if day_id in ["f1", "fwd1"]:  # first (work) day of last month
                 from_time = TimeHelper.add(from_time, -1, "m")
-            if day_id == "l1":
+            if day_id in ["l1", "lwd1"]:  # last (work) day of last month
                 from_time = TimeHelper.add(from_time, -1, "d")
+            if day_id == "lwd0":  # last work day of this month
+                from_time = TimeHelper.add(from_time, 1, "m")
+                from_time = TimeHelper.add(from_time, -1, "d")
+
+            if (
+                "wd" in day_id
+                and (weekday_number := datetime.datetime.fromtimestamp(from_time).weekday()) > 4
+            ):
+                # find first/last work day. we're ignoring holidays here
+                if day_id.startswith("fwd"):
+                    from_time = TimeHelper.add(from_time, 7 - weekday_number, "d")
+                elif day_id.startswith("lwd"):
+                    from_time = TimeHelper.add(from_time, 4 - weekday_number, "d")
+
             end_time = TimeHelper.add(from_time, 1, "d")
+
             return ComputedTimerange(
                 (int(from_time), int(end_time)),
                 time.strftime("%d/%m/%Y", time.localtime(from_time)),
@@ -5297,7 +5318,7 @@ class Timerange(CascadingDropdown):
             title = _("Last %d %s") % (count, unit_name)
             return ComputedTimerange((int(from_time), int(now)), title)
 
-        if rangespec in ["f0", "f1", "l1"]:
+        if rangespec in ["f0", "f1", "l1", "fwd0", "lwd0", "fwd1", "lwd1"]:
             return _month_edge_days(now, rangespec)
 
         # base time is current time rounded down to the nearest unit (day, week, ...)
@@ -5831,7 +5852,7 @@ class Tuple(ValueSpec[TT]):
                     html.open_td(class_="tuple_td")
 
             if self._orientation == "vertical":
-                html.open_td(class_="tuple_right")
+                html.open_td(class_="tuple_right" + (" has_title" if title else ""))
 
             html.help(element.help())
             element.render_input(vp, val)
@@ -6067,7 +6088,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
                 html.help(vs.help())
                 html.close_td()
                 html.open_td(class_="dictright")
-            else:
+            elif label:
                 html.br()
 
             html.open_div(
@@ -6119,7 +6140,9 @@ class Dictionary(ValueSpec[DictionaryModel]):
             forms.end()
 
     @staticmethod
-    def _normalize_header(header):
+    def _normalize_header(
+        header: tuple[str, Sequence[str]] | tuple[str, str, Sequence[str]]
+    ) -> tuple[str, str | None, Sequence[str]]:
         if isinstance(header, tuple):
             if len(header) == 2:
                 return header[0], None, header[1]
@@ -6141,8 +6164,13 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if param in section_elements
         )
 
-    def render_input_form_header(  # type: ignore[no-untyped-def]
-        self, varprefix, value, title, section_elements, css
+    def render_input_form_header(
+        self,
+        varprefix: str,
+        value: DictionaryModel,
+        title: str,
+        section_elements: Sequence[str],
+        css: str | None,
     ) -> None:
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
@@ -8146,8 +8174,8 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
-def SchedulePeriod(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
-    from_end=True,
+def SchedulePeriod(  # pylint: disable=redefined-builtin
+    from_end: bool = True,
     # CascadingDropdown
     label: str | None = None,
     separator: str = ", ",

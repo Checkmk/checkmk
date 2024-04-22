@@ -92,10 +92,12 @@ def page_dashboard() -> None:
 
     # If no owner is set, prioritize the user's own dashboard over the builtin ones
     owner = (
-        UserId(o)
-        if (o := request.get_ascii_input("owner")) is not None
+        o
+        if (o := request.get_validated_type_input(UserId, "owner")) is not None
         else (
-            user.id if user.id in get_permitted_dashboards_by_owners()[name] else UserId.builtin()
+            user.id
+            if user.id and user.id in get_permitted_dashboards_by_owners().get(name, [])
+            else UserId.builtin()
         )
     )
     draw_dashboard(name, owner)
@@ -1115,7 +1117,7 @@ def draw_dashlet(dashlet: Dashlet, content: HTML | str, title: HTML | str) -> No
 def ajax_dashlet() -> None:
     """Render the inner HTML of a dashlet"""
     name = request.get_ascii_input_mandatory("name", "")
-    owner = UserId(request.get_ascii_input_mandatory("owner", ""))
+    owner = request.get_validated_type_input_mandatory(UserId, "owner", UserId.builtin())
     if not name:
         raise MKUserError("name", _("The name of the dashboard is missing."))
 

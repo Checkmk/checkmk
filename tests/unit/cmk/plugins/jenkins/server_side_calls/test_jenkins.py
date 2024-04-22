@@ -48,6 +48,7 @@ HOST_CONFIG = HostConfig(
                 "instance": "test",
                 "protocol": "https",
                 "port": 442,
+                "path": "path",
                 "sections": ["instance", "jobs", "nodes", "queue"],
             },
             [
@@ -59,6 +60,8 @@ HOST_CONFIG = HostConfig(
                         "username",
                         "-s",
                         Secret(0).unsafe(),
+                        "--path",
+                        "path",
                         "-m",
                         "instance jobs nodes queue",
                         "-p",

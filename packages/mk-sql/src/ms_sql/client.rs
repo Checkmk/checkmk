@@ -30,7 +30,8 @@ pub struct Local {
 }
 
 #[cfg(windows)]
-pub struct LocalInstance {
+pub struct BrowseInstance {
+    pub host: Option<HostName>,
     pub instance_name: InstanceName,
     pub browser_port: Option<Port>,
 }
@@ -38,7 +39,7 @@ pub struct LocalInstance {
 enum ClientConnection<'a> {
     Remote(Remote<'a>),
     #[cfg(windows)]
-    LocalInstance(LocalInstance),
+    BrowseInstance(BrowseInstance),
     #[cfg(windows)]
     Local(Local),
 }
@@ -67,7 +68,7 @@ impl<'a> ClientBuilder<'a> {
         ClientBuilder::default()
     }
 
-    pub fn remote(
+    pub fn logon_on_port(
         mut self,
         host: &HostName,
         port: Option<Port>,
@@ -83,21 +84,23 @@ impl<'a> ClientBuilder<'a> {
     }
 
     #[cfg(windows)]
-    pub fn local_instance<P: Into<Port>>(
+    pub fn browse<P: Into<Port>>(
         mut self,
+        host: Option<HostName>,
         instance: &InstanceName,
         browser_port: Option<P>,
     ) -> Self {
-        let i = LocalInstance {
+        let i = BrowseInstance {
+            host: host.map(|h| h.to_owned()),
             instance_name: instance.to_owned(),
             browser_port: browser_port.map(|p| p.into()),
         };
-        self.client_connection = Some(ClientConnection::LocalInstance(i));
+        self.client_connection = Some(ClientConnection::BrowseInstance(i));
         self
     }
 
     #[cfg(windows)]
-    pub fn local(mut self, port: Option<Port>) -> Self {
+    pub fn local_by_port(mut self, port: Option<Port>) -> Self {
         let l = ClientConnection::Local(Local { port });
         self.client_connection = Some(l);
         self
@@ -143,7 +146,7 @@ impl<'a> ClientBuilder<'a> {
                 });
             }
             #[cfg(windows)]
-            Some(ClientConnection::LocalInstance(i)) => {
+            Some(ClientConnection::BrowseInstance(i)) => {
                 let port = i.browser_port.as_ref().map(|p| p.value());
                 config.host("localhost");
                 config.port(port.unwrap_or(defaults::SQL_BROWSER_PORT));
@@ -174,7 +177,7 @@ impl<'a> ClientBuilder<'a> {
         match self.client_connection {
             Some(ClientConnection::Remote(_)) => create_remote(tiberius_config).await,
             #[cfg(windows)]
-            Some(ClientConnection::LocalInstance(_)) => {
+            Some(ClientConnection::BrowseInstance(_)) => {
                 create_instance_local(tiberius_config).await
             }
             #[cfg(windows)]
@@ -210,7 +213,7 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
                 tokio::time::timeout(
                     conn.timeout(),
                     ClientBuilder::new()
-                        .remote(conn.hostname(), Some(port), credentials)
+                        .logon_on_port(conn.hostname(), Some(port), credentials)
                         .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                         .trust_server_certificate(conn.trust_server_certificate())
                         .build(),
@@ -226,7 +229,54 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
         AuthType::Integrated => tokio::time::timeout(
             conn.timeout(),
             ClientBuilder::new()
-                .local(Some(port))
+                .local_by_port(Some(port))
+                .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
+                .trust_server_certificate(conn.trust_server_certificate())
+                .build(),
+        )
+        .await
+        .map_err(map_elapsed_to_anyhow)?,
+
+        _ => anyhow::bail!("Not supported authorization type"),
+    };
+
+    client
+}
+
+#[cfg(windows)]
+pub async fn connect_custom_instance(
+    endpoint: &Endpoint,
+    instance: &InstanceName,
+) -> Result<Client> {
+    let (auth, conn) = endpoint.split();
+    let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
+        anyhow::anyhow!(
+            "Timeout: {e} when creating client from config {:?}",
+            conn.timeout()
+        )
+    };
+    let client = match auth.auth_type() {
+        AuthType::SqlServer | AuthType::Windows => {
+            if let Some(_credentials) = obtain_config_credentials(auth) {
+                tokio::time::timeout(
+                    conn.timeout(),
+                    ClientBuilder::new()
+                        .browse(None, instance, conn.sql_browser_port())
+                        .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
+                        .trust_server_certificate(conn.trust_server_certificate())
+                        .build(),
+                )
+                .await
+                .map_err(map_elapsed_to_anyhow)?
+            } else {
+                anyhow::bail!("Not provided credentials")
+            }
+        }
+
+        AuthType::Integrated => tokio::time::timeout(
+            conn.timeout(),
+            ClientBuilder::new()
+                .browse(None, instance, conn.sql_browser_port())
                 .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                 .trust_server_certificate(conn.trust_server_certificate())
                 .build(),
@@ -412,20 +462,20 @@ mssql:
         pub const MS_SQL_DB_CERT: &str = "CI_TEST_MS_SQL_DB_CERT";
         if let Ok(certificate_path) = std::env::var(MS_SQL_DB_CERT) {
             ClientBuilder::new()
-                .local(Some(1433u16.into()))
+                .local_by_port(Some(1433u16.into()))
                 .certificate(Some(certificate_path))
                 .trust_server_certificate(false)
                 .build()
                 .await
                 .unwrap();
             assert!(ClientBuilder::new()
-                .local(Some(1433u16.into()))
+                .local_by_port(Some(1433u16.into()))
                 .trust_server_certificate(false)
                 .build()
                 .await
                 .is_err());
             assert!(ClientBuilder::new()
-                .local(Some(1433u16.into()))
+                .local_by_port(Some(1433u16.into()))
                 .trust_server_certificate(true)
                 .build()
                 .await
@@ -445,7 +495,7 @@ mssql:
         assert!(remote.client_connection.is_none());
         let host: HostName = "host".to_owned().into();
         let port: Option<Port> = Some(123u16.into());
-        let builder = remote.remote(&host, port, credentials);
+        let builder = remote.logon_on_port(&host, port, credentials);
         assert!(matches!(
             builder.client_connection,
             Some(ClientConnection::Remote(Remote {
@@ -461,10 +511,11 @@ mssql:
         let local = ClientBuilder::new();
         let instance_name: InstanceName = "i".to_owned().into();
         let browser_port: Option<Port> = Some(123u16.into());
-        let builder = local.local_instance(&instance_name, browser_port);
+        let builder = local.browse(None, &instance_name, browser_port);
         assert!(matches!(
             builder.client_connection,
-            Some(ClientConnection::LocalInstance(LocalInstance {
+            Some(ClientConnection::BrowseInstance(BrowseInstance {
+                host: None,
                 instance_name: _,
                 browser_port: _,
             }))
@@ -475,7 +526,7 @@ mssql:
     fn test_client_builder_local() {
         let local = ClientBuilder::new();
         let port: Option<Port> = Some(123u16.into());
-        let builder = local.local(port);
+        let builder = local.local_by_port(port);
         assert!(matches!(
             builder.client_connection,
             Some(ClientConnection::Local(Local { port: _ }))

@@ -27,16 +27,29 @@ if [ -n "${VERBOSE}" ]; then
     echo >&2 " - REFERENCE_IMAGE_DISTRO:.... '${REFERENCE_IMAGE_DISTRO}'"
     echo >&2 " - BUILD_IMAGE_TAG:........... '${BUILD_IMAGE_TAG}'"
     echo >&2 " - DOCKER_REGISTRY_NO_HTTP:... '${DOCKER_REGISTRY_NO_HTTP}'"
+    echo >&2 " - PULL_BASE_IMAGE:........... '${PULL_BASE_IMAGE}'"
+    echo >&2 " - NO_CACHE:.................. '${NO_CACHE}'"
     echo >&2 " - populate build context at:. ${TEMP_CONTEXT_DIR}"
     echo >&2 " - build image based on image: '${BASE_BUILD_IMAGE}'"
 fi
 
+if [ -n "${NO_CACHE}" ]; then
+    EXTRA_ARGS="${EXTRA_ARGS} --no-cache"
+fi
+
+if [ -n "${PULL_BASE_IMAGE}" ]; then
+    EXTRA_ARGS="${EXTRA_ARGS} --pull"
+fi
+
 "${CHECKOUT_ROOT}/defines/dev-images/populate-build-context.sh" "${TEMP_CONTEXT_DIR}"
+# shellcheck disable=SC2086
 "${CHECKOUT_ROOT}/scripts/decent-output" 2 \
     docker build \
+    ${EXTRA_ARGS} \
     --iidfile "${IIDFILE}" \
     --build-arg BASE_BUILD_IMAGE="${BASE_BUILD_IMAGE}" \
     --build-context scripts="${CHECKOUT_ROOT}/buildscripts/infrastructure/build-nodes/scripts" \
+    --build-context dev_images="${CHECKOUT_ROOT}/defines/dev-images" \
     -f "${CHECKOUT_ROOT}/defines/dev-images/reference/Dockerfile" \
     "${TEMP_CONTEXT_DIR}" \
     1>&2

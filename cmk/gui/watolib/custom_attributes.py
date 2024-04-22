@@ -42,7 +42,7 @@ class CustomAttrSpecs(TypedDict):
     host: list[CustomHostAttrSpec]
 
 
-def update_user_custom_attrs(now: datetime):  # type: ignore[no-untyped-def]
+def update_user_custom_attrs(now: datetime) -> None:
     userdb.update_config_based_user_attributes()
     userdb.rewrite_users(now)
 

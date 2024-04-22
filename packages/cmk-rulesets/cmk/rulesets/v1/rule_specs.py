@@ -14,7 +14,6 @@ from .form_specs.validators import LengthInRange
 
 
 class Topic(Enum):
-    AGENT_PLUGINS = "agent_plugins"
     APPLICATIONS = "applications"
     CACHING_MESSAGE_QUEUES = "cache_message_queues"
     CLOUD = "cloud"
@@ -31,6 +30,7 @@ class Topic(Enum):
     POWER = "power"
     SERVER_HARDWARE = "server_hardware"
     STORAGE = "storage"
+    SYNTHETIC_MONITORING = "synthetic_monitoring"
     VIRTUALIZATION = "virtualization"
     WINDOWS = "windows"
 

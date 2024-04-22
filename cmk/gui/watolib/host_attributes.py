@@ -14,10 +14,9 @@ import functools
 import re
 import warnings
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, NotRequired
+from typing import Any, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
@@ -173,10 +172,10 @@ class HostAttributeTopic(abc.ABC):
 
 
 class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[type[HostAttributeTopic]]):
-    def plugin_name(self, instance: type[HostAttributeTopic]):  # type: ignore[no-untyped-def]
+    def plugin_name(self, instance: type[HostAttributeTopic]) -> str:
         return instance().ident
 
-    def get_choices(self):
+    def get_choices(self) -> Choices:
         return [
             (t.ident, t.title)
             for t in sorted([t_class() for t_class in self.values()], key=lambda e: e.sort_index)
@@ -557,8 +556,8 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     ]
 
 
-def get_sorted_host_attributes_by_topic(  # type: ignore[no-untyped-def]
-    topic_id,
+def get_sorted_host_attributes_by_topic(
+    topic_id: str,
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting

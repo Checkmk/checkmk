@@ -7,9 +7,9 @@ import json
 import logging
 import re
 from collections import defaultdict
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import Iterator, Literal, NamedTuple
+from typing import Literal, NamedTuple
 
 from git.objects.commit import Commit
 from git.repo import Repo

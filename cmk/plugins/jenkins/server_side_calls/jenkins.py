@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Iterator, Sequence
+from collections.abc import Iterator, Sequence
 
 from pydantic import BaseModel
 
@@ -22,6 +22,7 @@ class JenkinsParams(BaseModel):
     password: Secret
     protocol: str
     instance: str
+    path: str = ""
     port: int | None = None
     sections: Sequence[str] = []
 
@@ -38,6 +39,9 @@ def agent_jenkins_config(
         "-s",
         params.password.unsafe(),
     ]
+
+    if params.path:
+        args += ["--path", params.path]
 
     if params.sections:
         args += ["-m", " ".join(params.sections)]

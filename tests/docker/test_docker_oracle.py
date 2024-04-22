@@ -8,7 +8,6 @@ import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from shutil import rmtree
 from typing import Final
 
 import docker  # type: ignore[import-untyped]
@@ -27,6 +26,7 @@ from tests.testlib.docker import (
     get_container_ip,
     resolve_image_alias,
 )
+from tests.testlib.pytest_helpers.marks import skip_if_not_enterprise_edition
 
 logger = logging.getLogger()
 
@@ -151,7 +151,8 @@ class OracleDatabase:
                 environment=self.environment,
                 detach=True,
                 shm_size="4G",
-                mem_limit="6G",
+                mem_reservation="6G",
+                mem_limit="8G",
                 memswap_limit="8G",
             )
         return container
@@ -168,14 +169,18 @@ class OracleDatabase:
             for command, msg in {
                 f"{self.INIT_CMD} start": "Starting Oracle database...",
                 f"{self.INIT_CMD} delete": "Dropping Oracle database...",
+                f"""/usr/bin/bash -c 'rm -rf "{self.DATA}/{self.SID}"'""": "Cleanup Oracle database...",
                 f"{self.INIT_CMD} configure": "Creating new Oracle database...",
             }.items():
                 logger.info(msg)
+                print("=" * 80)
+                print(f"$ {command} #{msg}")
                 _, output = self.container.exec_run(
                     command, environment=self.environment, user="root", privileged=True, stream=True
                 )
                 for chunk in output:
                     print(chunk.decode("UTF-8").strip())
+                print("=" * 80)
 
         logger.info("Forcing listener registration...")
         rc, _ = self.container.exec_run(
@@ -221,7 +226,7 @@ class OracleDatabase:
 
         checkmk_docker_wait_for_services(checkmk=self.checkmk, hostname=self.name, min_services=5)
 
-        logger.debug(self.container.logs().decode("utf-8").strip())
+        logger.info(self.container.logs().decode("utf-8").strip())
 
     def _install_oracle_plugin(self) -> None:
         plugin_source_path = repo_path() / "agents" / "plugins" / "mk_oracle"
@@ -230,7 +235,7 @@ class OracleDatabase:
         logger.info(
             "Patching the Oracle plugin: Detect free edition + Use default TNS_ADMIN path..."
         )
-        with open(plugin_source_path, "r", encoding="UTF-8") as plugin_file:
+        with open(plugin_source_path, encoding="UTF-8") as plugin_file:
             plugin_script = plugin_file.read()
         # detect free edition
         plugin_script = plugin_script.replace(r"_pmon_'", r"_pmon_|^db_pmon_'")
@@ -264,9 +269,6 @@ class OracleDatabase:
         if os.getenv("CLEANUP", "1") == "1":
             self.container.stop(timeout=30)
             self.container.remove(force=True)
-            rmtree(self.DATA, ignore_errors=True)
-            if os.path.exists(self.DATA):
-                logger.warning('Database folder "%s" could not be removed!', self.DATA)
 
 
 @pytest.fixture(name="oracle", scope="session")
@@ -283,6 +285,7 @@ def _oracle(
     )
 
 
+@skip_if_not_enterprise_edition
 def test_docker_oracle(
     checkmk: docker.models.containers.Container,
     oracle: OracleDatabase,

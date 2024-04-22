@@ -6,11 +6,10 @@
 from cmk.utils.password_store import Password
 
 import cmk.gui.userdb as userdb
-from cmk.gui.config import active_config
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 
 
@@ -37,7 +36,7 @@ def save_password(ident: str, details: Password, new_password: bool = False) -> 
     password_store = PasswordStore()
     entries = password_store.load_for_modification()
     entries[ident] = details
-    password_store.save(entries, active_config.wato_pprint_config)
+    password_store.save(entries)
     _add_change(ident, change_type="new" if new_password else "edit")
 
 
@@ -45,7 +44,7 @@ def remove_password(ident: str) -> None:
     password_store = PasswordStore()
     entries = load_passwords_to_modify()
     _ = entries.pop(ident)
-    password_store.save(entries, active_config.wato_pprint_config)
+    password_store.save(entries)
     _add_change(ident, change_type="delete")
 
 

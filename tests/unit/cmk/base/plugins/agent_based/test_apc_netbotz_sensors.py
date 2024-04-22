@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import List
 
 import pytest
 
@@ -19,7 +18,7 @@ from cmk.base.plugins.agent_based.apc_netbotz_sensors import (
 
 from cmk.plugins.lib.temperature import TempParamType
 
-TEST_INFO: List[StringTable] = [
+TEST_INFO: list[StringTable] = [
     [
         ["nbAlinkEnc_0_4_TEMP", "252", "Temp 03.01.190-19 (4)", "25.200000"],
         ["nbAlinkEnc_0_5_TEMP", "0", "Temperature  (5)", ""],

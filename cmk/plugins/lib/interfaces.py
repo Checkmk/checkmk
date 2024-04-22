@@ -20,10 +20,9 @@ from collections.abc import (
 )
 from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
-from typing import Any, assert_never, Final, Literal, ParamSpec, TypeVar
+from typing import Any, assert_never, Final, Literal, ParamSpec, TypedDict, TypeVar
 
 import pydantic
-from typing_extensions import TypedDict
 
 from cmk.agent_based.v1 import check_levels, check_levels_predictive
 from cmk.agent_based.v2 import (

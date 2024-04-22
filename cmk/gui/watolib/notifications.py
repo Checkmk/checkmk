@@ -26,9 +26,11 @@ import logging
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, cast
 
 import cmk.utils.store as store
+from cmk.utils.config_validation_layer.notification_rules import validate_notification_rules
 from cmk.utils.notify_types import (
     BuiltInPluginNames,
     EventRule,
@@ -39,7 +41,6 @@ from cmk.utils.notify_types import (
 from cmk.utils.user import UserId
 
 import cmk.gui.userdb as userdb
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
@@ -69,39 +70,49 @@ from cmk.gui.rest_api_types.notifications_types import (
     NotificationPlugin,
 )
 from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
 
 logger = logging.getLogger(__name__)
 
 
+class NotificationRuleConfigFile(WatoSingleConfigFile[list[EventRule]]):
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(wato_root_dir() + "notifications.mk"),
+            config_variable="notification_rules",
+        )
+
+    def _load_file(self, lock: bool) -> list[EventRule]:
+        notification_rules = store.load_from_mk_file(
+            self._config_file_path,
+            key=self._config_variable,
+            default=[],
+            lock=lock,
+        )
+        # Convert to new plug-in configuration format
+        for rule in notification_rules:
+            if "notify_method" in rule:
+                method = rule["notify_method"]
+                plugin = rule["notify_plugin"]
+                del rule["notify_method"]
+                rule["notify_plugin"] = (plugin, method)
+
+        validate_notification_rules(notification_rules)
+        return notification_rules
+
+    def save(self, cfg: list[EventRule]) -> None:
+        validate_notification_rules(cfg)
+        super().save(cfg)
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(NotificationRuleConfigFile())
+
+
 def _generate_new_rule_id() -> NotificationRuleID:
     return NotificationRuleID(str(uuid.uuid4()))
-
-
-def load_notification_rules(lock: bool = False) -> list[EventRule]:
-    filename = wato_root_dir() + "notifications.mk"
-    notification_rules = store.load_from_mk_file(filename, "notification_rules", [], lock=lock)
-
-    # Convert to new plug-in configuration format
-    for rule in notification_rules:
-        if "notify_method" in rule:
-            method = rule["notify_method"]
-            plugin = rule["notify_plugin"]
-            del rule["notify_method"]
-            rule["notify_plugin"] = (plugin, method)
-
-    return notification_rules
-
-
-def save_notification_rules(rules: list[EventRule]) -> None:
-    store.mkdir(wato_root_dir())
-    store.save_to_mk_file(
-        wato_root_dir() + "notifications.mk",
-        "notification_rules",
-        rules,
-        pprint_value=active_config.wato_pprint_config,
-    )
 
 
 def load_user_notification_rules() -> Mapping[UserId, list[EventRule]]:
@@ -646,7 +657,7 @@ def find_usages_of_contact_group_in_notification_rules(
     name: str, _settings: GlobalSettings
 ) -> list[tuple[str, str]]:
     used_in: list[tuple[str, str]] = []
-    for rule in load_notification_rules():
+    for rule in NotificationRuleConfigFile().load_for_reading():
         if _used_in_notification_rule(name, rule):
             title = "{}: {}".format(_("Notification rule"), rule.get("description", ""))
             used_in.append((title, "wato.py?mode=notifications"))
@@ -669,6 +680,6 @@ def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
 
 def find_timeperiod_usage_in_notification_rules(time_period_name: str) -> list[tuple[str, str]]:
     used_in: list[tuple[str, str]] = []
-    for index, rule in enumerate(load_notification_rules()):
+    for index, rule in enumerate(NotificationRuleConfigFile().load_for_reading()):
         used_in += userdb.find_timeperiod_usage_in_notification_rule(time_period_name, index, rule)
     return used_in

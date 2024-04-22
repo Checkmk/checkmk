@@ -10,9 +10,7 @@ from __future__ import annotations
 import ast
 import string
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any, Literal, NamedTuple, overload
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, NamedTuple, overload, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import SDPath

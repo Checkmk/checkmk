@@ -402,7 +402,15 @@ class IndexSearcher:
                 lambda job_interface: _index_building_in_background_job(
                     job_interface,
                     self._redis_client,
-                )
+                ),
+                # We deliberately do not provide an estimated duration here, since that involves I/O.
+                # We need to be as fast as possible here, since this is done at the end of HTTP
+                # requests.
+                InitialStatusArgs(
+                    title=_("Search index"),
+                    stoppable=False,
+                    user=str(user.id) if user.id else None,
+                ),
             )
 
     def _search_redis_categories(
@@ -541,7 +549,15 @@ def _launch_requests_processing_background() -> None:
             lambda job_interface: _process_update_requests_background(
                 job_interface,
                 get_redis_client(),
-            )
+            ),
+            # We deliberately do not provide an estimated duration here, since that involves I/O.
+            # We need to be as fast as possible here, since this is done at the end of HTTP
+            # requests.
+            InitialStatusArgs(
+                title=_("Search index"),
+                stoppable=False,
+                user=str(user.id) if user.id else None,
+            ),
         )
 
 
@@ -593,14 +609,4 @@ class SearchIndexBackgroundJob(BackgroundJob):
         return _("Search index")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            # We deliberately do not provide an estimated duration here, since that involves I/O.
-            # We need to be as fast as possible here, since this is done at the end of HTTP
-            # requests.
-            InitialStatusArgs(
-                title=_("Search index"),
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)

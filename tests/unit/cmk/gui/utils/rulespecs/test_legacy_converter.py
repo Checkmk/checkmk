@@ -28,6 +28,7 @@ from cmk.gui.utils.rule_specs.legacy_converter import (
     convert_to_legacy_rulespec,
 )
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import LegacyBinaryUnit, LegacyDataSize
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
@@ -108,7 +109,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 },
                 title=api_v1.Title("Configuration title"),
                 help_text=api_v1.Help("Helpful description"),
-                deprecated_elements=("old_key", "another_old_key"),
+                ignored_elements=("old_key", "another_old_key"),
                 no_elements_text=api_v1.Message("No elements specified"),
             ),
             legacy_valuespecs.Transform(
@@ -367,7 +368,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                     ),
                 ],
                 no_elements_text=api_v1.Message("No elements"),
-                deprecated_elements=(),
+                ignored_elements=(),
                 frozen=True,
                 title=api_v1.Title("title"),
                 label=api_v1.Label("label"),
@@ -1286,7 +1287,7 @@ def test_convert_to_legacy_rulespec_group(
             api_v1.rule_specs.AgentConfig(
                 name="test_rulespec",
                 title=api_v1.Title("rulespec title"),
-                topic=api_v1.rule_specs.Topic.AGENT_PLUGINS,
+                topic=api_v1.rule_specs.Topic.CONFIGURATION_DEPLOYMENT,
                 parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
                 help_text=api_v1.Help("help text"),
             ),
@@ -1294,7 +1295,7 @@ def test_convert_to_legacy_rulespec_group(
                 name=RuleGroup.AgentConfig("test_rulespec"),
                 group=_to_generated_builtin_sub_group(
                     legacy_rulespec_groups.RulespecGroupMonitoringAgents,
-                    "Agent plug-ins",
+                    "Configuration & Deployment",
                     lambda x: x,
                 ),
                 title=lambda: _("rulespec title"),
@@ -1457,6 +1458,24 @@ def test_convert_to_legacy_rulespec_group(
                 match_type="first",
             ),
             id="SpecialAgentRuleSpec",
+        ),
+        pytest.param(
+            api_v1.rule_specs.SpecialAgent(
+                name="gcp",
+                title=api_v1.Title("rulespec title"),
+                topic=api_v1.rule_specs.Topic.CLOUD,
+                parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
+                help_text=api_v1.Help("help text"),
+            ),
+            legacy_rulespecs.HostRulespec(
+                name=RuleGroup.SpecialAgents("gcp"),
+                group=legacy_wato_groups.RulespecGroupDatasourceProgramsCloud,
+                title=lambda: _("rulespec title"),
+                valuespec=partial(legacy_valuespecs.TextInput),
+                match_type="first",
+                doc_references={DocReference.GCP: _("Monitoring Google Cloud Platform (GCP)")},
+            ),
+            id="RuleSpec with doc_references",
         ),
     ],
 )
@@ -2567,6 +2586,61 @@ def test_dictionary_groups_dict_element_properties(
             {"a": {"a_nested": 1}, "b": 2},
             {"a": {"a_nested": 2}, "b": 2},
             id="migration in group",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Levels(
+                            level_direction=api_v1.form_specs.LevelDirection.UPPER,
+                            form_spec_template=api_v1.form_specs.Integer(
+                                migrate=lambda x: x * 2  # type: ignore[operator]
+                            ),
+                            prefill_fixed_levels=api_v1.form_specs.DefaultValue((1, 2)),
+                            predictive=api_v1.form_specs.PredictiveLevels(
+                                reference_metric="my_metric",
+                                prefill_abs_diff=api_v1.form_specs.DefaultValue((5, 10)),
+                            ),
+                        ),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                    ),
+                },
+            ),
+            {
+                "a": (
+                    "cmk_postprocessed",
+                    "predictive_levels",
+                    {
+                        "__direction__": "upper",
+                        "__reference_metric__": "my_metric",
+                        "horizon": 90,
+                        "levels": ("absolute", (1, 2)),
+                        "period": "wday",
+                        "bound": None,
+                    },
+                ),
+                "b": 2,
+            },
+            {
+                "a": (
+                    "cmk_postprocessed",
+                    "predictive_levels",
+                    {
+                        "__direction__": "upper",
+                        "__reference_metric__": "my_metric",
+                        "horizon": 90,
+                        "levels": ("absolute", (2, 4)),
+                        "period": "wday",
+                        "bound": None,
+                    },
+                ),
+                "b": 2,
+            },
+            id="migration in non-Dictionary with group",
         ),
     ],
 )

@@ -12,7 +12,8 @@ Additional information about the parents and the parent scan can be found in the
 [Checkmk documentation](https://docs.checkmk.com/latest/en/hosts_structure.html#parents).
 """
 
-from typing import Any, assert_never, Mapping
+from collections.abc import Mapping
+from typing import Any, assert_never
 
 from cmk.gui.background_job import BackgroundJob
 from cmk.gui.http import Response

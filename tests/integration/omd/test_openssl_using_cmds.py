@@ -42,7 +42,7 @@ def test_scp(site: Site) -> None:
     """
     with site.execute(["touch", "test_scp_source"]) as p:
         assert p.wait() == 0
-    with site.execute(["scp", str("test_scp_source"), str("test_scp_target")]) as p:
+    with site.execute(["scp", "test_scp_source", "test_scp_target"]) as p:
         exit_code = p.wait()
         print(p.stdout)
         print(p.stderr)

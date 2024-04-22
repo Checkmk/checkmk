@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import NamedTuple
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, TypedDict
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.render import percent, timespan

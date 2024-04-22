@@ -18,6 +18,7 @@ tag for resolving conditions.
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.tags import AuxTag, AuxTagInUseError, TagID
 
 from cmk.gui.http import Response
@@ -110,7 +111,17 @@ def create_aux_tag(params: Mapping[str, Any]) -> Response:
         topic=params["body"].get("topic"),
         help=params["body"].get("help"),
     )
-    tag_config.insert_aux_tag(aux_tag)
+    try:
+        tag_config.insert_aux_tag(aux_tag)
+        tag_config.validate_config()
+
+    except MKGeneralException as e:
+        return problem(
+            status=400,
+            title="Unable to create auxiliary tag",
+            detail=str(e),
+        )
+
     update_tag_config(tag_config)
     return serve_json(data=_serialize_aux_tag(aux_tag))
 

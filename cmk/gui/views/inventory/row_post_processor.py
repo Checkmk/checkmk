@@ -212,6 +212,6 @@ def _find_table_rows(
             macros={
                 macro: macro_table_value
                 for macro_column_name, macro in painter_macros
-                if (macro_table_value := table_row.get(macro_column_name)) is not None
+                if (macro_table_value := table_row.get(SDKey(macro_column_name))) is not None
             },
         )

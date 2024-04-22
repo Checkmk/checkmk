@@ -126,11 +126,11 @@ def test_create_graph_recipe_from_template() -> None:
         ],
         scalars=[
             ScalarDefinition(
-                expression=WarningOf(Metric(("fs_used"))),
+                expression=WarningOf(Metric("fs_used")),
                 title="Warning",
             ),
             ScalarDefinition(
-                expression=CriticalOf(Metric(("fs_used"))),
+                expression=CriticalOf(Metric("fs_used")),
                 title="Critical",
             ),
         ],

@@ -376,7 +376,6 @@ class ModeObjectParameters(WatoMode):
                 service_result=service_result,
             )
         self._show_labels(service_result.labels, "service", service_result.label_sources)
-        render_labels()
 
     def _handle_classic_origin(
         self,

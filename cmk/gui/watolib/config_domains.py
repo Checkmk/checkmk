@@ -10,11 +10,11 @@ import signal
 import subprocess
 import traceback
 import warnings as warnings_module
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.x509 import Certificate, load_pem_x509_certificate
@@ -518,7 +518,15 @@ class ConfigDomainOMD(ABCConfigDomain):
             if job.is_active():
                 raise MKUserError(None, _("Another omd config change job is already running."))
 
-            job.start(lambda job_interface: job.do_execute(config_change_commands, job_interface))
+            job.start(
+                lambda job_interface: job.do_execute(config_change_commands, job_interface),
+                InitialStatusArgs(
+                    title=job.gui_title(),
+                    lock_wato=False,
+                    stoppable=False,
+                    user=str(user.id) if user.id else None,
+                ),
+            )
         else:
             _do_config_change(config_change_commands, self._logger)
 
@@ -673,15 +681,7 @@ class OMDConfigChangeBackgroundJob(BackgroundJob):
         return _("Apply OMD config changes")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def do_execute(
         self, config_change_commands: list[str], job_interface: BackgroundProcessInterface

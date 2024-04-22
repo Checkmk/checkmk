@@ -137,39 +137,6 @@ class DiscoveryResult(NamedTuple):
     sources: Mapping[str, tuple[int, str]]
 
     def serialize(self, for_cmk_version: Version) -> str:
-        if for_cmk_version < Version.from_str("2.3.0b1"):
-            return repr(
-                (
-                    self.job_status,
-                    self.check_table_created,
-                    [
-                        tuple(
-                            (
-                                v
-                                if k != "check_source"
-                                else v.replace("unchanged", "old").replace("changed", "old")
-                            )
-                            for k, v in dataclasses.asdict(cpe).items()
-                            if k
-                            not in [
-                                "new_labels",
-                                "discovery_ruleset_name",
-                                "new_discovered_parameters",
-                            ]
-                        )
-                        for cpe in self.check_table
-                    ],
-                    self.host_labels,
-                    self.new_labels,
-                    self.vanished_labels,
-                    self.changed_labels,
-                    {
-                        str(host_name): [label.serialize() for label in host_labels]
-                        for host_name, host_labels in self.labels_by_host.items()
-                    },
-                    self.sources,
-                )
-            )
         return repr(
             (
                 self.job_status,
@@ -875,7 +842,16 @@ def execute_discovery_job(
         DiscoveryAction.REFRESH,
         DiscoveryAction.TABULA_RASA,
     ]:
-        job.start(lambda job_interface: job.discover(action, raise_errors=raise_errors))
+        job.start(
+            lambda job_interface: job.discover(action, raise_errors=raise_errors),
+            InitialStatusArgs(
+                title=_("Service discovery"),
+                stoppable=True,
+                host_name=str(host_name),
+                estimated_duration=job.get_status().duration,
+                user=str(user.id) if user.id else None,
+            ),
+        )
 
     if job.is_active() and action == DiscoveryAction.STOP:
         job.stop()
@@ -895,16 +871,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         return _("Service discovery")
 
     def __init__(self, host_name: HostName) -> None:
-        super().__init__(
-            f"{self.job_prefix}-{host_name}",
-            InitialStatusArgs(
-                title=_("Service discovery"),
-                stoppable=True,
-                host_name=str(host_name),
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(f"{self.job_prefix}-{host_name}")
         self.host_name: Final = host_name
 
         self._preview_store = ObjectStore(

@@ -10,7 +10,7 @@
 checkname = "liebert_reheating"
 
 
-info = [["Reheating is awesome!", "81.3", "%"], ["This value ignored", "21.1", "def C"]]
+info = [["Reheating is awesome!", "81.3", "%"], ["This value ignored", "21.1", "deg C"]]
 
 
 discovery = {"": [(None, {})]}

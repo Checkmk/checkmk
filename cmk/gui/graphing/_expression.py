@@ -7,9 +7,9 @@ from __future__ import annotations
 
 import abc
 import contextlib
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, KW_ONLY
-from typing import Callable, Final, Literal
+from typing import Final, Literal
 
 from cmk.utils.metrics import MetricName
 

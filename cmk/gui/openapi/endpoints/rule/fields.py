@@ -5,11 +5,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, cast, Literal, TYPE_CHECKING
+from typing import Any, cast, Literal, TYPE_CHECKING, TypedDict
 
 import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, validates_schema, ValidationError
-from typing_extensions import TypedDict
 
 from cmk.utils.rulesets.conditions import (
     HostOrServiceConditions,

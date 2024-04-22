@@ -15,7 +15,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import cache_manager, DictCache
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console
 
@@ -24,6 +24,7 @@ from cmk.automations.results import Gateway, GatewayResult
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
 from cmk.base.config import ConfigCache
+from cmk.base.ip_lookup import IPStackConfig
 
 
 def do_scan_parents(
@@ -142,12 +143,16 @@ def scan_parents_of(
     if settings is None:
         settings = {}
 
-    if monitoring_host:
-        nagios_ip = config.lookup_ip_address(
+    nagios_ip = (
+        None
+        if (
+            monitoring_host is None
+            or ConfigCache.ip_stack_config(monitoring_host) is IPStackConfig.NO_IP
+        )
+        else config.lookup_ip_address(
             config_cache, monitoring_host, family=socket.AddressFamily.AF_INET
         )
-    else:
-        nagios_ip = None
+    )
 
     os.putenv("LANG", "")
     os.putenv("LC_ALL", "")
@@ -156,8 +161,17 @@ def scan_parents_of(
     procs: list[tuple[HostName, HostAddress | None, str | subprocess.Popen]] = []
     for host in hosts:
         console.verbose("%s " % host)
+        if ConfigCache.ip_stack_config(host) is IPStackConfig.NO_IP:
+            procs.append((host, None, "ERROR: Configured to be a No-IP host"))
+            continue
+
         try:
-            ip = config.lookup_ip_address(config_cache, host, family=socket.AddressFamily.AF_INET)
+            ip = config.lookup_ip_address(
+                config_cache,
+                host,
+                # [IPv6] -- what about it?
+                family=socket.AddressFamily.AF_INET,
+            )
             if ip is None:
                 raise RuntimeError()
             command = [
@@ -375,11 +389,13 @@ def _fill_ip_to_hostname_cache(
         for hn in hosts_config.hosts
         if config_cache.is_active(hn) and config_cache.is_online(hn)
     }:
+        if ConfigCache.ip_stack_config(host) is IPStackConfig.NO_IP:
+            continue
         try:
             cache[
                 config.lookup_ip_address(config_cache, host, family=socket.AddressFamily.AF_INET)
             ] = host
-        except Exception:
+        except MKIPAddressLookupError:
             pass
 
 

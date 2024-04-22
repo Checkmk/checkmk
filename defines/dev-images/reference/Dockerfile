@@ -43,29 +43,40 @@ COPY --from=scripts \
     Check_MK-pubkey.gpg \
     /opt/
 
-COPY --from=scripts install-docker.sh /opt/
-RUN /opt/install-docker.sh
-
-COPY --from=scripts install-make-dist-deps.sh /opt/
-RUN /opt/install-make-dist-deps.sh
-
-COPY --from=scripts install-nodejs.sh /opt/
-RUN /opt/install-nodejs.sh
-
+# timing: real 1m57.766s user 4m42.879s sys 0m14.978s
 COPY --from=scripts install-iwyu.sh install-clang.sh /opt/
 RUN /opt/install-clang.sh
 
+# timing: real 0m27.583s user 0m15.425s sys 0m2.999s
+COPY --from=scripts install-docker.sh /opt/
+RUN /opt/install-docker.sh
+
+# timing: real 0m13.629s user 0m9.842s sys 0m1.944s
+COPY --from=scripts install-nodejs.sh /opt/
+RUN /opt/install-nodejs.sh
+
+# timing: real 0m8.166s user 0m5.136s sys 0m1.044s
 COPY --from=scripts install-shellcheck.sh /opt/
 RUN /opt/install-shellcheck.sh
 
+# timing: real 0m9.666s user 0m5.302s sys 0m1.281s
 COPY --from=scripts install-musl-tools.sh /opt/
 RUN /opt/install-musl-tools.sh
 
+# timing: real 0m9.257s user 0m5.424s sys 0m1.103s
 COPY --from=scripts install-packer.sh /opt/
 RUN /opt/install-packer.sh
 
+# timing: real 0m7.677s user 0m4.898s sys 0m0.805s
+COPY --from=scripts install-make-dist-deps.sh /opt/
+RUN /opt/install-make-dist-deps.sh
+
+# timing: real 0m8.192s user 0m2.279s sys 0m1.352s
 COPY --from=scripts install-aws-cli.sh /opt/
 RUN /opt/install-aws-cli.sh
 
+# timing: real 0m6.492s user 0m11.914s sys 0m1.146s
 COPY --from=scripts install-buildifier.sh /opt/
 RUN /opt/install-buildifier.sh
+
+COPY --from=dev_images entrypoint.sh /opt/

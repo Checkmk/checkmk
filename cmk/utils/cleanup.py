@@ -10,11 +10,11 @@ from collections.abc import Callable
 cleanup_functions = set()
 
 
-def register_cleanup(func: Callable) -> None:
+def register_cleanup(func: Callable[[], None]) -> None:
     cleanup_functions.add(func)
 
 
-def unregister_cleanup(func: Callable) -> None:
+def unregister_cleanup(func: Callable[[], None]) -> None:
     cleanup_functions.remove(func)
 
 

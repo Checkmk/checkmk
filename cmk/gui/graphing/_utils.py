@@ -9,9 +9,7 @@ import shlex
 from collections import Counter, OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, NamedTuple, NewType, NotRequired, Self
-
-from typing_extensions import TypedDict
+from typing import Literal, NamedTuple, NewType, NotRequired, Self, TypedDict
 
 from livestatus import livestatus_lql
 
@@ -212,14 +210,14 @@ def _parse_quantity(
             return MetricDefinition(
                 expression=WarningOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=_("Warning of %s") % metric_["title"],
             )
         case metrics.CriticalOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
             return MetricDefinition(
                 expression=CriticalOf(Metric(quantity.metric_name)),
                 line_type=line_type,
-                title=str(metric_["title"]),
+                title=_("Critical of %s") % metric_["title"],
             )
         case metrics.MinimumOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
@@ -1184,12 +1182,7 @@ def get_graph_templates(
     yield from explicit_templates
     yield from _get_implicit_graph_templates(
         translated_metrics,
-        set(
-            m.name
-            for gt in explicit_templates
-            for md in gt.metrics
-            for m in md.expression.metrics()
-        ),
+        {m.name for gt in explicit_templates for md in gt.metrics for m in md.expression.metrics()},
     )
 
 

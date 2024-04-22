@@ -1417,12 +1417,12 @@ COLOR_HEX = "#1e90ff"
                     MetricDefinition(
                         WarningOf(Metric("metric-name-2")),
                         "stack",
-                        "metric-name-2",
+                        "Warning of metric-name-2",
                     ),
                     MetricDefinition(
                         CriticalOf(Metric("metric-name-3")),
                         "stack",
-                        "metric-name-3",
+                        "Critical of metric-name-3",
                     ),
                     MetricDefinition(
                         MinimumOf(
@@ -1535,11 +1535,11 @@ COLOR_HEX = "#1e90ff"
                 scalars=[
                     utils.ScalarDefinition(
                         WarningOf(Metric("metric-name-2")),
-                        "metric-name-2",
+                        "Warning of metric-name-2",
                     ),
                     utils.ScalarDefinition(
                         CriticalOf(Metric("metric-name-3")),
-                        "metric-name-3",
+                        "Critical of metric-name-3",
                     ),
                     utils.ScalarDefinition(
                         MinimumOf(
@@ -1738,11 +1738,11 @@ def test_graph_template_from_graph(
                 scalars=[
                     utils.ScalarDefinition(
                         WarningOf(Metric("metric-name-l3"), "warn"),
-                        "metric-name-l3",
+                        "Warning of metric-name-l3",
                     ),
                     utils.ScalarDefinition(
                         CriticalOf(Metric("metric-name-l4"), "crit"),
-                        "metric-name-l4",
+                        "Critical of metric-name-l4",
                     ),
                     utils.ScalarDefinition(
                         MinimumOf(Metric("metric-name-l5"), "min", explicit_color=COLOR_HEX),
@@ -1754,11 +1754,11 @@ def test_graph_template_from_graph(
                     ),
                     utils.ScalarDefinition(
                         WarningOf(Metric("metric-name-u3"), "warn"),
-                        "metric-name-u3",
+                        "Warning of metric-name-u3",
                     ),
                     utils.ScalarDefinition(
                         CriticalOf(Metric("metric-name-u4"), "crit"),
-                        "metric-name-u4",
+                        "Critical of metric-name-u4",
                     ),
                     utils.ScalarDefinition(
                         MinimumOf(Metric("metric-name-u5"), "min", explicit_color=COLOR_HEX),

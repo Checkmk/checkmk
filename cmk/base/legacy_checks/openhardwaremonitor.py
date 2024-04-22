@@ -6,9 +6,7 @@
 
 import collections
 from collections.abc import Mapping
-from typing import NotRequired
-
-from typing_extensions import TypedDict
+from typing import NotRequired, TypedDict
 
 from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.check_legacy_includes.fan import check_fan

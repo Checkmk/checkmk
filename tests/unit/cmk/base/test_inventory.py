@@ -21,6 +21,7 @@ from cmk.utils.structured_data import (
     MutableTree,
     RetentionInterval,
     SDKey,
+    SDNodeName,
     SDRowIdent,
     UpdateResult,
 )
@@ -807,7 +808,7 @@ def test_updater_merge_previous_attributes(
     expected_retentions: Mapping[SDKey, RetentionInterval],
 ) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
-        previous_attributes_retentions={"old": RetentionInterval(1, 2, 3, "current")},
+        previous_attributes_retentions={SDKey("old"): RetentionInterval(1, 2, 3, "current")},
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
@@ -831,7 +832,9 @@ def test_updater_merge_previous_attributes(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-attrs")))
+    inv_node = _make_immutable_tree(
+        trees.inventory.get_tree((SDNodeName("path-to"), SDNodeName("node-with-attrs")))
+    )
     assert inv_node.attributes.retentions == expected_retentions
 
     if expected_retentions:
@@ -847,7 +850,7 @@ def test_updater_merge_previous_attributes(
 )
 def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str]]) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
-        previous_attributes_retentions={"old": RetentionInterval(1, 2, 3, "current")},
+        previous_attributes_retentions={SDKey("old"): RetentionInterval(1, 2, 3, "current")},
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
@@ -868,7 +871,9 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-attrs")))
+    inv_node = _make_immutable_tree(
+        trees.inventory.get_tree((SDNodeName("path-to"), SDNodeName("node-with-attrs")))
+    )
     assert inv_node.attributes.retentions == {}
 
 
@@ -892,8 +897,8 @@ def test_updater_merge_previous_tables(
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
-            ("Ident 1",): {"old": RetentionInterval(1, 2, 3, "current")},
-            ("Ident 2",): {"old": RetentionInterval(1, 2, 3, "current")},
+            ("Ident 1",): {SDKey("old"): RetentionInterval(1, 2, 3, "current")},
+            ("Ident 2",): {SDKey("old"): RetentionInterval(1, 2, 3, "current")},
         },
         raw_cache_info=(-1, -2),
     )
@@ -917,7 +922,9 @@ def test_updater_merge_previous_tables(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-table")))
+    inv_node = _make_immutable_tree(
+        trees.inventory.get_tree((SDNodeName("path-to"), SDNodeName("node-with-table")))
+    )
     assert inv_node.table.retentions == expected_retentions
 
     if expected_retentions:
@@ -936,8 +943,8 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
-            ("Ident 1",): {"old": RetentionInterval(1, 2, 3, "current")},
-            ("Ident 2",): {"old": RetentionInterval(1, 2, 3, "current")},
+            ("Ident 1",): {SDKey("old"): RetentionInterval(1, 2, 3, "current")},
+            ("Ident 2",): {SDKey("old"): RetentionInterval(1, 2, 3, "current")},
         },
         raw_cache_info=(-1, -2),
     )
@@ -958,7 +965,9 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-table")))
+    inv_node = _make_immutable_tree(
+        trees.inventory.get_tree((SDNodeName("path-to"), SDNodeName("node-with-table")))
+    )
     assert inv_node.table.retentions == {}
 
 
@@ -982,8 +991,8 @@ def test_updater_merge_attributes(
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={
-            "old": RetentionInterval(1, 2, 3, "current"),
-            "keys": RetentionInterval(1, 2, 3, "current"),
+            SDKey("old"): RetentionInterval(1, 2, 3, "current"),
+            SDKey("keys"): RetentionInterval(1, 2, 3, "current"),
         },
         previous_table_retentions={},
         raw_cache_info=(4, 5),
@@ -1008,12 +1017,14 @@ def test_updater_merge_attributes(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-attrs")))
+    inv_node = _make_immutable_tree(
+        trees.inventory.get_tree((SDNodeName("path-to"), SDNodeName("node-with-attrs")))
+    )
     assert inv_node.attributes.retentions == expected_retentions
 
     if expected_retentions:
         assert "old" in inv_node.attributes.pairs
-        assert inv_node.attributes.pairs.get("keys") == "New Keys"
+        assert inv_node.attributes.pairs.get(SDKey("keys")) == "New Keys"
 
 
 @pytest.mark.parametrize(
@@ -1035,8 +1046,8 @@ def test_updater_merge_attributes_outdated(
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={
-            "old": RetentionInterval(1, 2, 3, "current"),
-            "keys": RetentionInterval(1, 2, 3, "current"),
+            SDKey("old"): RetentionInterval(1, 2, 3, "current"),
+            SDKey("keys"): RetentionInterval(1, 2, 3, "current"),
         },
         previous_table_retentions={},
         raw_cache_info=(4, 5),
@@ -1061,7 +1072,9 @@ def test_updater_merge_attributes_outdated(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-attrs")))
+    inv_node = _make_immutable_tree(
+        trees.inventory.get_tree((SDNodeName("path-to"), SDNodeName("node-with-attrs")))
+    )
     assert inv_node.attributes.retentions == expected_retentions
 
 
@@ -1097,12 +1110,12 @@ def test_updater_merge_tables(
         previous_attributes_retentions={},
         previous_table_retentions={
             ("Ident 1",): {
-                "old": RetentionInterval(1, 2, 3, "current"),
-                "keys": RetentionInterval(1, 2, 3, "current"),
+                SDKey("old"): RetentionInterval(1, 2, 3, "current"),
+                SDKey("keys"): RetentionInterval(1, 2, 3, "current"),
             },
             ("Ident 2",): {
-                "old": RetentionInterval(1, 2, 3, "current"),
-                "keys": RetentionInterval(1, 2, 3, "current"),
+                SDKey("old"): RetentionInterval(1, 2, 3, "current"),
+                SDKey("keys"): RetentionInterval(1, 2, 3, "current"),
             },
         },
         raw_cache_info=(4, 5),
@@ -1127,13 +1140,15 @@ def test_updater_merge_tables(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-table")))
+    inv_node = _make_immutable_tree(
+        trees.inventory.get_tree((SDNodeName("path-to"), SDNodeName("node-with-table")))
+    )
     assert inv_node.table.retentions == expected_retentions
 
     if expected_retentions:
         for row in inv_node.table.rows:
             assert "old" in row
-            assert isinstance(v := row["keys"], str)
+            assert isinstance(v := row[SDKey("keys")], str)
             assert v.startswith("New Keys")
 
 
@@ -1167,12 +1182,12 @@ def test_updater_merge_tables_outdated(
         previous_attributes_retentions={},
         previous_table_retentions={
             ("Ident 1",): {
-                "old": RetentionInterval(1, 2, 3, "current"),
-                "keys": RetentionInterval(1, 2, 3, "current"),
+                SDKey("old"): RetentionInterval(1, 2, 3, "current"),
+                SDKey("keys"): RetentionInterval(1, 2, 3, "current"),
             },
             ("Ident 2",): {
-                "old": RetentionInterval(1, 2, 3, "current"),
-                "keys": RetentionInterval(1, 2, 3, "current"),
+                SDKey("old"): RetentionInterval(1, 2, 3, "current"),
+                SDKey("keys"): RetentionInterval(1, 2, 3, "current"),
             },
         },
         raw_cache_info=(4, 5),
@@ -1197,7 +1212,9 @@ def test_updater_merge_tables_outdated(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-table")))
+    inv_node = _make_immutable_tree(
+        trees.inventory.get_tree((SDNodeName("path-to"), SDNodeName("node-with-table")))
+    )
     assert inv_node.table.retentions == expected_retentions
 
 
@@ -1306,9 +1323,17 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
     assert check_result.summary == "No data yet, please be patient"
 
 
-def _create_cluster_tree(pairs: Mapping[str, int | float | str | None]) -> MutableTree:
+def _create_cluster_tree(pairs: Mapping[SDKey, int | float | str | None]) -> MutableTree:
     tree = MutableTree()
-    tree.add(path=("software", "applications", "check_mk", "cluster"), pairs=[pairs])
+    tree.add(
+        path=(
+            SDNodeName("software"),
+            SDNodeName("applications"),
+            SDNodeName("check_mk"),
+            SDNodeName("cluster"),
+        ),
+        pairs=[pairs],
+    )
     return tree
 
 
@@ -1328,7 +1353,7 @@ def _create_cluster_tree(pairs: Mapping[str, int | float | str | None]) -> Mutab
             ],
         ),
         (
-            _create_cluster_tree({"is_cluster": True, "foo": "bar"}),
+            _create_cluster_tree({SDKey("is_cluster"): True, SDKey("foo"): "bar"}),
             [
                 ActiveCheckResult(
                     state=1,
@@ -1343,7 +1368,7 @@ def _create_cluster_tree(pairs: Mapping[str, int | float | str | None]) -> Mutab
             ],
         ),
         (
-            _create_cluster_tree({"is_cluster": True}),
+            _create_cluster_tree({SDKey("is_cluster"): True}),
             [
                 ActiveCheckResult(
                     state=0, summary="No further data for tree update", details=(), metrics=()
@@ -1355,7 +1380,7 @@ def _create_cluster_tree(pairs: Mapping[str, int | float | str | None]) -> Mutab
             ],
         ),
         (
-            _create_cluster_tree({"is_cluster": False}),
+            _create_cluster_tree({SDKey("is_cluster"): False}),
             [
                 ActiveCheckResult(
                     state=0, summary="No further data for tree update", details=(), metrics=()
@@ -1386,7 +1411,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
     )
 
 
-def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableTree:
+def _create_root_tree(pairs: Mapping[SDKey, int | float | str | None]) -> MutableTree:
     tree = MutableTree()
     tree.add(path=(), pairs=[pairs])
     return tree
@@ -1402,30 +1427,30 @@ def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableT
             # No further impact, may not be realistic here
             MutableTree(),
             # Content of path does not matter here
-            UpdateResult(reasons_by_path={("path-to", "node"): []}),
+            UpdateResult(reasons_by_path={(SDNodeName("path-to"), SDNodeName("node")): []}),
             _SaveTreeActions(do_archive=True, do_save=False),
         ),
         (
             ImmutableTree(),
-            _create_root_tree({"key": "new value"}),
+            _create_root_tree({SDKey("key"): "new value"}),
             # Content of path does not matter here
-            UpdateResult(reasons_by_path={("path-to", "node"): []}),
+            UpdateResult(reasons_by_path={(SDNodeName("path-to"), SDNodeName("node")): []}),
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
         (
             ImmutableTree.deserialize(
                 {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
-            _create_root_tree({"key": "new value"}),
+            _create_root_tree({SDKey("key"): "new value"}),
             # Content of path does not matter here
-            UpdateResult(reasons_by_path={("path-to", "node"): []}),
+            UpdateResult(reasons_by_path={(SDNodeName("path-to"), SDNodeName("node")): []}),
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
         (
             ImmutableTree.deserialize(
                 {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
             ),
-            _create_root_tree({"key": "new value"}),
+            _create_root_tree({SDKey("key"): "new value"}),
             UpdateResult(),
             _SaveTreeActions(do_archive=True, do_save=True),
         ),
@@ -1433,7 +1458,7 @@ def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableT
             ImmutableTree.deserialize(
                 {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
             ),
-            _create_root_tree({"key": "value"}),
+            _create_root_tree({SDKey("key"): "value"}),
             UpdateResult(),
             _SaveTreeActions(do_archive=False, do_save=False),
         ),
@@ -1441,9 +1466,9 @@ def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableT
             ImmutableTree.deserialize(
                 {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
             ),
-            _create_root_tree({"key": "value"}),
+            _create_root_tree({SDKey("key"): "value"}),
             # Content of path does not matter here
-            UpdateResult(reasons_by_path={("path-to", "node"): []}),
+            UpdateResult(reasons_by_path={(SDNodeName("path-to"), SDNodeName("node")): []}),
             _SaveTreeActions(do_archive=False, do_save=True),
         ),
     ],
@@ -1513,7 +1538,7 @@ def test_add_rows_with_different_key_columns() -> None:
     )
     tree_from_fs = ImmutableTree.deserialize(trees.inventory.serialize())
     assert tree_from_fs == trees.inventory
-    rows = tree_from_fs.get_rows(("path-to-node",))
+    rows = tree_from_fs.get_rows((SDNodeName("path-to-node"),))
     assert len(rows) == 3
     for row in [
         {"ident": "Ident 1", "key": "Key 1", "another-key": "Another key 1"},

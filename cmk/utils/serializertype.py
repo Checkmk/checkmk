@@ -4,15 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import sys
-from collections.abc import Iterator
+from collections.abc import Buffer, Iterator
 from typing import Protocol, Self, SupportsBytes, TypeVar
-
-if sys.version_info < (3, 12):
-    from typing_extensions import Buffer
-else:
-    from collections.abc import Buffer
-
 
 __all__ = ["Serializer", "Deserializer"]
 

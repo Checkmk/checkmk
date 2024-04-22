@@ -34,16 +34,20 @@ def main() {
     def distros = versioning.get_distros(edition: EDITION, use_case: "daily_update_tests", override: OVERRIDE_DISTROS);
     def make_target = build_make_target(EDITION);
 
-    testing_helper.run_make_targets(
-        DOCKER_GROUP_ID: get_docker_group_id(),
-        DISTRO_LIST: distros,
-        EDITION: EDITION,
-        VERSION: "daily",
-        DOCKER_TAG: "master-latest",
-        MAKE_TARGET: make_target,
-        BRANCH: "master",
-        cmk_version: versioning.get_cmk_version("master", branch_version, "daily"),
-    );
+    stage("Run `make ${make_target}`") {
+        docker.withRegistry(DOCKER_REGISTRY, "nexus") {
+            testing_helper.run_make_targets(
+                DOCKER_GROUP_ID: get_docker_group_id(),
+                DISTRO_LIST: distros,
+                EDITION: EDITION,
+                VERSION: "daily",
+                DOCKER_TAG: "master-latest",
+                MAKE_TARGET: make_target,
+                BRANCH: "master",
+                cmk_version: versioning.get_cmk_version("master", branch_version, "daily"),
+            );
+        }
+    }
 }
 
 return this;

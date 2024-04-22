@@ -192,8 +192,8 @@ def current_base_branch_name() -> str:
         ["git", "rev-list", "--max-count=30", branch_name], encoding="utf-8"
     )
     for commit in commits.strip().split("\n"):
-        # Asking for remote heads here, since the git repos checked out by jenkins do not create all
-        # the branches locally
+        # Asking for remote heads here, since the git repos checked out in CI
+        # do not create all branches locally
 
         # --format=%(refname): Is not supported by all distros :(
         #
@@ -227,18 +227,16 @@ def current_base_branch_name() -> str:
     return branch_name
 
 
-def get_cmk_download_credentials_file() -> str:
-    return "%s/.cmk-credentials" % os.environ["HOME"]
-
-
 def get_cmk_download_credentials() -> tuple[str, str]:
-    credentials_file_path = get_cmk_download_credentials_file()
+    credentials_file_path = Path("~").expanduser() / ".cmk-credentials"
     try:
         with open(credentials_file_path) as credentials_file:
             username, password = credentials_file.read().strip().split(":", maxsplit=1)
             return username, password
     except OSError:
-        raise Exception("Missing %s file (Create with content: USER:PASSWORD)" % credentials_file)
+        raise RuntimeError(
+            f"Missing file: {credentials_file_path} (Create with content: USER:PASSWORD)"
+        )
 
 
 def get_standard_linux_agent_output() -> str:

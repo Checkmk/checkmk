@@ -32,7 +32,7 @@ def _extract_major_version(version: str) -> str:
 
 
 _MAJOR_VERSION: Final = _extract_major_version(__version__)
-PRODUCT_NAME: Final = f"Check MK Agent {_MAJOR_VERSION}"
+PRODUCT_NAME: Final = f"Checkmk Agent {_MAJOR_VERSION}"
 AGENT_STANDARD_MSI_FILE: Final = "check_mk_agent.msi"
 AGENT_UNSIGNED_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
 _APPLY_PATCH_SCRIPT: Final = "apply_unsign_msi_patch.sh"

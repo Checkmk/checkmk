@@ -50,7 +50,7 @@ section = OrderedDict(
 
 
 def test_inventory() -> None:
-    # Setting the timezone is needed, otherwise test results will differ between jenkins and local
+    # Setting the timezone is needed, otherwise test results will differ between CI and local
     # runs
     with time_machine.travel(datetime.datetime(2024, 1, 1, tzinfo=ZoneInfo("UTC"))):
         actual = sort_inventory_result(inv_esx_vsphere_hostsystem(section))

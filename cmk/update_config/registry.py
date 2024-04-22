@@ -72,7 +72,7 @@ class PreUpdateAction(ABC):
         self.sort_index: Final = sort_index
 
     @abstractmethod
-    def __call__(self, conflict_mode: ConflictMode) -> None:
+    def __call__(self, logger: Logger, conflict_mode: ConflictMode) -> None:
         """
         Execute the pre-update action.
         Raising an exception will abort the config update.

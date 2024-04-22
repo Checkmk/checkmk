@@ -7,9 +7,7 @@ from __future__ import annotations
 
 import urllib.parse
 from collections.abc import Callable, Mapping
-from typing import Any, cast, Self
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Self, TypedDict
 
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId

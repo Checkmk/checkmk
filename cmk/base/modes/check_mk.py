@@ -14,9 +14,7 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, overload, Protocol, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar
 
 import livestatus
 
@@ -33,6 +31,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
@@ -539,7 +538,12 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         if hostname in hosts_config.clusters:
             raise MKBailOut("Can not be used with cluster hosts")
 
-        ipaddress = config.lookup_ip_address(config_cache, hostname)
+        ip_stack_config = ConfigCache.ip_stack_config(hostname)
+        ipaddress = (
+            None
+            if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
+            else config.lookup_ip_address(config_cache, hostname)
+        )
         check_interval = config_cache.check_mk_check_interval(hostname)
         oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
         stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
@@ -557,7 +561,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         for source in sources.make_sources(
             hostname,
             ipaddress,
-            ConfigCache.ip_stack_config(hostname),
+            ip_stack_config,
             config_cache=config_cache,
             is_cluster=False,
             simulation_mode=config.simulation_mode,
@@ -576,6 +580,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             cas_dir=cas_dir,
             ca_store=ca_store,
             site_crt=site_crt,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -1035,6 +1040,9 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
     stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
 
     for hostname in (HostName(hn) for hn in hostnames):
+        if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
+            raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
+
         ipaddress = config.lookup_ip_address(config_cache, hostname)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
@@ -1125,6 +1133,8 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
     assert hostnames
     stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
     for hostname in (HostName(hn) for hn in hostnames):
+        if ConfigCache.ip_stack_config(hostname) is ip_lookup.IPStackConfig.NO_IP:
+            raise MKGeneralException(f"Host is configured as No-IP host: {hostname}")
         ipaddress = config.lookup_ip_address(config_cache, hostname)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
@@ -1332,7 +1342,9 @@ def mode_dump_nagios_config(args: Sequence[HostName]) -> None:
         config_cache,
         hostnames=hostnames,
         licensing_handler=get_licensing_handler_type().make(),
-        passwords=cmk.utils.password_store.load(),
+        passwords=cmk.utils.password_store.load(
+            cmk.utils.password_store.pending_password_store_path()
+        ),
     )
 
 
@@ -1659,7 +1671,14 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
 
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)
-    return notify.do_notify(options, args)
+
+    return notify.do_notify(
+        options,
+        args,
+        host_parameters_cb=lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
+            hostname, plugin
+        ),
+    )
 
 
 modes.register(
@@ -1727,6 +1746,7 @@ def mode_check_discovery(
             inventory=1.5 * check_interval,
         ),
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
     parser = CMKParser(
         config_cache,
@@ -2052,6 +2072,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     for hostname in sorted(
         _preprocess_hostnames(
@@ -2184,6 +2205,7 @@ def mode_check(
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
+    precompiled_host_check: bool = False,
 ) -> ServiceState:
     file_cache_options = _handle_fetcher_options(options)
     try:
@@ -2210,6 +2232,11 @@ def mode_check(
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=(
+            cmk.utils.password_store.core_password_store_path(LATEST_CONFIG)
+            if precompiled_host_check
+            else cmk.utils.password_store.pending_password_store_path()
+        ),
     )
     parser = CMKParser(
         config_cache,
@@ -2432,6 +2459,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     parser = CMKParser(
         config_cache,
@@ -2597,6 +2625,8 @@ def _execute_active_check_inventory(
 
     if result.no_data_or_files:
         AutoQueue(cmk.utils.paths.autoinventory_dir).add(host_name)
+    else:
+        (AutoQueue(cmk.utils.paths.autoinventory_dir).path / str(host_name)).unlink(missing_ok=True)
 
     if not (result.processing_failed or result.no_data_or_files):
         save_tree_actions = _get_save_tree_actions(
@@ -2674,6 +2704,7 @@ def mode_inventory_as_check(
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
     parser = CMKParser(
         config_cache,
@@ -2827,6 +2858,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=snmp_backend_override,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
 
     def summarizer(host_name: HostName) -> CMKSummarizer:

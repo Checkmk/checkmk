@@ -360,7 +360,7 @@ fn parse_string_header_pair(header_pair: &str) -> AnyhowResult<(String, String)>
 }
 
 fn parse_seconds(secs: &str) -> AnyhowResult<Duration> {
-    Ok(Duration::from_secs(secs.parse()?))
+    Ok(Duration::from_secs_f64(secs.parse()?))
 }
 
 fn parse_optional_pair<T>(input: &str) -> AnyhowResult<(T, Option<T>)>

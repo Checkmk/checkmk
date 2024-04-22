@@ -61,7 +61,7 @@ from cmk.utils.i18n import _
 from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.log import console, section
 from cmk.utils.site import omd_site
-from cmk.utils.structured_data import load_tree, SDRawTree
+from cmk.utils.structured_data import load_tree, SDNodeName, SDRawTree
 from cmk.utils.user import UserId
 
 if cmk_version.edition() in [
@@ -767,7 +767,11 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                 "No HW/SW inventory tree of '%s' found" % checkmk_server_name
             )
 
-        if not (node := tree.get_tree(("software", "applications", "check_mk"))):
+        if not (
+            node := tree.get_tree(
+                (SDNodeName("software"), SDNodeName("applications"), SDNodeName("check_mk"))
+            )
+        ):
             raise DiagnosticsElementError(
                 "No HW/SW inventory node 'Software > Applications > Checkmk'"
             )

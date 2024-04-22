@@ -293,7 +293,7 @@ class ModeEditSite(WatoMode):
 
     def _basic_elements(self):
         if self._new:
-            vs_site_id = ID(
+            vs_site_id: TextInput | FixedValue = ID(
                 title=_("Site ID"),
                 size=60,
                 allow_empty=False,

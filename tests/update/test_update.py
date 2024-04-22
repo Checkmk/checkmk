@@ -8,7 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib.agent import register_controller, wait_until_host_receives_data
+from tests.testlib.agent import (
+    register_controller,
+    wait_for_agent_cache_omd_status,
+    wait_until_host_receives_data,
+)
 from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name, get_services_with_status
 from tests.testlib.version import CMKVersion, version_from_env
@@ -73,17 +77,20 @@ def test_update(  # pylint: disable=too-many-branches
     base_ok_services = {}
 
     for hostname in hostnames:
-        test_site.reschedule_services(hostname)
+        test_site.reschedule_services(hostname, max_count=20)
 
         # get baseline monitoring data for each host
         base_data[hostname] = test_site.get_host_services(hostname)
         ignore_data = [
-            # OMD status service turning into CRIT after the update (looks like for performance reasons)
-            # See CMK-16608. TODO: restore service after ticket is done.
-            f"OMD {test_site.id} status",
             # "Notification Spooler" results in "No status information, Spooler not running"
             # See CMK-16760. TODO: restore service after ticket is done.
             f"OMD {test_site.id} Notification Spooler",
+            # Check_MK service turning into CRIT after the update.
+            # See CMK-17002. TODO: restore service after ticket is done.
+            "Check_MK",
+            # OMD status performance turning into CRIT after the update
+            # See CMK-17016. TODO: restore service after ticket is done.
+            f"OMD {test_site.id} performance",
         ]
 
         for data in ignore_data:
@@ -120,8 +127,14 @@ def test_update(  # pylint: disable=too-many-branches
     target_data = {}
     target_ok_services = {}
 
+    # services such as 'omd status' rely on cache data:
+    # wait for the cache to be up-to-date and reschedule services
+    wait_for_agent_cache_omd_status(test_site)
     for hostname in hostnames:
-        target_site.reschedule_services(hostname)
+        test_site.schedule_check(hostname, "Check_MK", 0)
+
+    for hostname in hostnames:
+        target_site.reschedule_services(hostname, max_count=20)
 
         # get update monitoring data
         target_data[hostname] = target_site.get_host_services(hostname)
@@ -147,10 +160,14 @@ def test_update(  # pylint: disable=too-many-branches
             for service in base_ok_services[hostname]
             if service not in target_ok_services[hostname]
         ]
+        err_details = [
+            (s, "state: " + str(target_data[hostname][s].state), target_data[hostname][s].summary)
+            for s in not_ok_services
+        ]
         err_msg = (
             f"In the {hostname} host the following services were `OK` in base-version but not in "
             f"target-version: "
             f"{not_ok_services}"
-            f"\nDetails: {[(s, target_data[hostname][s].summary) for s in not_ok_services]})"
+            f"\nDetails: {err_details})"
         )
         assert base_ok_services[hostname].issubset(target_ok_services[hostname]), err_msg

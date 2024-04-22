@@ -468,7 +468,7 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
 
     def _basic_elements(self, id_title):
         if self._new:
-            vs_id = ID(
+            vs_id: TextInput | FixedValue = ID(
                 title=id_title,
                 size=60,
                 allow_empty=False,
@@ -770,8 +770,8 @@ class ModeEditTagGroup(ABCEditTagMode):
 
         if self._new:
             # Inserts and verifies changed tag group
-            changed_hosttags_config.insert_tag_group(changed_tag_group)
             try:
+                changed_hosttags_config.insert_tag_group(changed_tag_group)
                 changed_hosttags_config.validate_config()
             except MKGeneralException as e:
                 raise MKUserError(None, "%s" % e)

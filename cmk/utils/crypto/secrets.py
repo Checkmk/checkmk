@@ -153,9 +153,11 @@ class AutomationUserSecret:
         return secret
 
     def exists(self) -> bool:
+        """Check if the secret file is present on disk"""
         return self.path.is_file()
 
     def save(self, secret: str) -> None:
+        """Write the secret to the user's "automation.secret" file"""
         self.path.write_text(secret)
 
     def delete(self) -> None:

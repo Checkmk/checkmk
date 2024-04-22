@@ -10,9 +10,7 @@ import time
 import uuid
 from logging import Logger
 from pathlib import Path
-from typing import Final, Literal, NewType
-
-from typing_extensions import TypedDict
+from typing import Final, Literal, NewType, TypedDict
 
 import livestatus
 
@@ -20,7 +18,7 @@ import cmk.utils.statename as statename
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.notify_types import EventContext
+from cmk.utils.notify_types import EnrichedEventContext
 from cmk.utils.notify_types import NotificationContext as NotificationContext
 
 logger = logging.getLogger("cmk.utils.notify")
@@ -49,7 +47,7 @@ class NotificationResult(TypedDict, total=False):
 
 class NotificationForward(TypedDict):
     forward: Literal[True]
-    context: EventContext
+    context: EnrichedEventContext
 
 
 class NotificationViaPlugin(TypedDict):

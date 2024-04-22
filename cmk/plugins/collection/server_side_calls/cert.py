@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Iterator, Mapping, Sequence
 from enum import StrEnum
-from typing import Final, List, Literal
+from typing import Final, Literal
 
 from pydantic import BaseModel
 
@@ -34,7 +34,7 @@ FloatLevels = (
     | tuple[Literal[LevelsType.FIXED], tuple[float, float]]
 )
 
-SignatureAlgorithm = tuple[str, tuple[str, str]]
+SignatureAlgorithm = tuple[str, str]
 
 PubKey = tuple[str, str]
 
@@ -71,7 +71,7 @@ class CertificateDetails(BaseModel):
     signature_algorithm: SignatureAlgorithm | None = None
     issuer: Issuer | None = None
     subject: Subject | None = None
-    altnames: List[str] | None = None
+    altnames: list[str] | None = None
 
 
 class Settings(BaseModel):
@@ -195,18 +195,14 @@ def _cert_details_args(cert_details: CertificateDetails) -> Iterator[str]:
 
 
 def _signature_algorithm_args(signature_algorithm: SignatureAlgorithm) -> Iterator[str]:
-    encryption_algorithm = signature_algorithm[0]
+    encryption_algorithm = signature_algorithm[1]
     yield "--signature-algorithm"
     yield encryption_algorithm
-
-    hashing_algorithm = signature_algorithm[1][0]
-    yield "--signature-hash-algorithm"
-    yield hashing_algorithm
 
 
 def _issuer_args(issuer: Issuer) -> Iterator[str]:
     if (common_name := issuer.common_name) is not None:
-        yield "--subject-cn"
+        yield "--issuer-cn"
         yield common_name
     if (org := issuer.organization) is not None:
         yield "--issuer-o"
@@ -218,7 +214,7 @@ def _issuer_args(issuer: Issuer) -> Iterator[str]:
         yield "--issuer-st"
         yield state
     if (country := issuer.country) is not None:
-        yield "--isuer-c"
+        yield "--issuer-c"
         yield country
 
 

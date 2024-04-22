@@ -641,20 +641,6 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "keyorder": ["name"],
         },
         ".software.applications.check_mk.cluster.nodes:*.name": {"title": _l("Node name")},
-        ".software.applications.check_mk.host_labels:": {
-            "title": _l("Discovered host labels"),
-            "keyorder": [
-                "label",
-                "plugin_name",
-            ],
-        },
-        ".software.applications.check_mk.host_labels:*.label": {
-            "title": _l("Label"),
-            "paint": "cmk_label",
-        },
-        ".software.applications.check_mk.host_labels:*.plugin_name": {
-            "title": _l("Discovered by plug-in"),
-        },
         ".software.applications.checkmk-agent.": {
             "title": _l("Checkmk Agent"),
             "keyorder": [
@@ -1024,25 +1010,41 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.kube.pod.pod_ip": {"title": _l("Pod IP")},
         ".software.applications.kube.pod.qos_class": {"title": _l("QoS class")},
         ".software.applications.synthetic_monitoring.": {"title": _l("Synthetic Monitoring")},
+        ".software.applications.synthetic_monitoring.plans:": {
+            "title": _l("Plans"),
+            "keyorder": [
+                "application",
+                "suite_name",
+                "variant",
+                "plan_id",
+            ],
+            "view": "invsyntheticmonitoringplans",
+        },
+        ".software.applications.synthetic_monitoring.plans:*.application": {"title": _l("Application")},
+        ".software.applications.synthetic_monitoring.plans:*.suite_name": {"title": _l("Suite name")},
+        ".software.applications.synthetic_monitoring.plans:*.variant": {"title": _l("Variant")},
+        ".software.applications.synthetic_monitoring.plans:*.plan_id": {"title": _l("Plan ID")},
         ".software.applications.synthetic_monitoring.tests:": {
             "title": _l("Tests"),
             "keyorder": [
                 "application",
+                "suite_name",
                 "variant",
                 "top_level_suite_name",
                 "bottom_level_suite_name",
                 "test_name",
-                "rmk_id",
+                "plan_id",
                 "test_item",
             ],
-            "view": "invsyntheticmonitoring",
+            "view": "invsyntheticmonitoringtests",
         },
         ".software.applications.synthetic_monitoring.tests:*.application": {"title": _l("Application")},
+        ".software.applications.synthetic_monitoring.tests:*.suite_name": {"title": _l("Suite name")},
         ".software.applications.synthetic_monitoring.tests:*.variant": {"title": _l("Variant")},
         ".software.applications.synthetic_monitoring.tests:*.top_level_suite_name": {"title": _l("Top level suite")},
         ".software.applications.synthetic_monitoring.tests:*.bottom_level_suite_name": {"title": _l("Bottom level suite")},
         ".software.applications.synthetic_monitoring.tests:*.test_name": {"title": _l("Test")},
-        ".software.applications.synthetic_monitoring.tests:*.rmk_id": {"title": _l("RMK ID")},
+        ".software.applications.synthetic_monitoring.tests:*.plan_id": {"title": _l("Plan ID")},
         ".software.applications.synthetic_monitoring.tests:*.test_item": {"title": _l("Item")},
         ".software.applications.mobileiron.": {
             "title": _l("Mobileiron"),

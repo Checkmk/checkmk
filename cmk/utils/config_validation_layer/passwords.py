@@ -2,14 +2,12 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping
+from collections.abc import Mapping
 
 from pydantic import BaseModel, RootModel, ValidationError
 
 from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
-from cmk.utils.i18n import _
-
-from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 
 class PasswordModel(BaseModel):
@@ -32,4 +30,8 @@ def validate_passwords(passwords: dict | Mapping) -> None:
     try:
         PasswordMapModel(passwords)
     except ValidationError as exc:
-        raise MKConfigError(_("Error: passwords.mk validation %s") % exc.errors())
+        raise ConfigValidationError(
+            which_file="passwords.mk",
+            pydantic_error=exc,
+            original_data=passwords,
+        )

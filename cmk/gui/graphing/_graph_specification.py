@@ -9,9 +9,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
-from typing import Annotated, Literal, NamedTuple, Union
+from typing import Annotated, Literal, NamedTuple
 
-from pydantic import BaseModel, Field, field_validator, PlainValidator, SerializeAsAny, TypeAdapter
+from pydantic import BaseModel, field_validator, PlainValidator, SerializeAsAny
 
 from livestatus import SiteId
 
@@ -69,15 +69,11 @@ metric_operation_registry = MetricOperationRegistry()
 
 
 def parse_metric_operation(raw: object) -> MetricOperation:
-    parsed = TypeAdapter(
-        Annotated[
-            Union[*metric_operation_registry.values()],
-            Field(discriminator="ident"),
-        ],
-    ).validate_python(raw)
-    # mypy apparently doesn't understand TypeAdapter.validate_python
-    assert isinstance(parsed, MetricOperation)
-    return parsed
+    if isinstance(raw, MetricOperation):
+        return raw
+    if isinstance(raw, dict):
+        return metric_operation_registry[f'metric_op_{raw["ident"]}'].model_validate(raw)
+    raise TypeError(raw)
 
 
 class MetricOpConstant(MetricOperation, frozen=True):
@@ -193,16 +189,14 @@ class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):
 graph_specification_registry = GraphSpecificationRegistry()
 
 
-def parse_raw_graph_specification(raw: Mapping[str, object]) -> GraphSpecification:
-    parsed = TypeAdapter(
-        Annotated[
-            Union[*graph_specification_registry.values()],
-            Field(discriminator="graph_type"),
-        ],
-    ).validate_python(raw)
-    # mypy apparently doesn't understand TypeAdapter.validate_python
-    assert isinstance(parsed, GraphSpecification)
-    return parsed
+def parse_raw_graph_specification(raw: object) -> GraphSpecification:
+    if isinstance(raw, GraphSpecification):
+        return raw
+    if isinstance(raw, dict):
+        return graph_specification_registry[
+            f"{raw['graph_type']}_graph_specification"
+        ].model_validate(raw)
+    raise TypeError(raw)
 
 
 class GraphDataRange(BaseModel, frozen=True):

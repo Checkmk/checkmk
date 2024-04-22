@@ -8,9 +8,7 @@ from __future__ import annotations
 import pprint
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from typing import Final
-
-from typing_extensions import TypedDict
+from typing import Final, TypedDict
 
 import cmk.utils.debug
 from cmk.utils.check_utils import ParametersTypeAlias

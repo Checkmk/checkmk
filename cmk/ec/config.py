@@ -187,6 +187,7 @@ class Rule(TypedDict, total=False):
     set_text: str
     sl: ServiceLevel
     state: State
+    drop: bool | Literal["skip_pack"]
 
 
 class ECRulePackSpec(TypedDict, total=False):

@@ -7,6 +7,8 @@ import datetime
 from collections.abc import Mapping
 from typing import Any
 
+from dateutil import parser as date_parser
+
 from cmk.plugins.lib import docker, uptime
 
 from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service, State
@@ -317,22 +319,16 @@ def check_docker_container_status_uptime(
     ):
         return
 
-    started_str = section_docker_container_status.get("StartedAt")
-    if not started_str:
+    if not (started_str := section_docker_container_status.get("StartedAt")):
         return
-
-    # assumed format: 2019-06-05T08:58:06.893459004Z
-    utc_start = datetime.datetime.strptime(
-        started_str[:-4] + "UTC", "%Y-%m-%dT%H:%M:%S.%f%Z"
-    ).astimezone(tz=datetime.UTC)
 
     op_status = section_docker_container_status["Status"]
     if op_status == "running":
+        utc_start = date_parser.parse(started_str)
         uptime_sec = (datetime.datetime.now(tz=datetime.UTC) - utc_start).total_seconds()
         yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
     else:
-        yield from uptime.check(params, uptime.Section(0, None))
-        yield Result(state=State.OK, summary="Operation State: %s" % op_status)
+        yield Result(state=State.OK, summary="Operational state: %s" % op_status)
 
 
 register.check_plugin(

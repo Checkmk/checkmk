@@ -23,7 +23,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.customer import customer_api
+from cmk.gui.customer import ABCCustomerAPI, customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.vue.vue_table import (
     build_checkbox,
@@ -36,7 +36,6 @@ from cmk.gui.form_specs.vue.vue_table import (
     build_text,
     render_vue_table,
 )
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import ExperimentalRenderMode, get_render_mode, html
 from cmk.gui.http import request
@@ -66,8 +65,10 @@ from cmk.gui.userdb import (
     load_roles,
     new_user_template,
     UserAttribute,
+    UserConnector,
 )
 from cmk.gui.userdb.htpasswd import hash_password
+from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
@@ -81,8 +82,16 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_security_message import SecurityNotificationEvent, send_security_message
-from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
+from cmk.gui.valuespec import (
+    Alternative,
+    DualListChoice,
+    EmailAddress,
+    FixedValue,
+    TextInput,
+    UserID,
+)
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.user_scripts import load_notification_scripts
@@ -99,6 +108,20 @@ from cmk.gui.watolib.utils import ldap_connections_are_configurable
 def register(_mode_registry: ModeRegistry) -> None:
     _mode_registry.register(ModeUsers)
     _mode_registry.register(ModeEditUser)
+
+
+def has_customer(
+    user_cxn: UserConnector | None,
+    cust_api: ABCCustomerAPI,
+    user_spec: UserSpec,
+) -> str | None:
+    if edition() is not Edition.CME:
+        return None
+
+    if isinstance(user_cxn, LDAPUserConnector):
+        if user_cxn.customer_id is not None:
+            return cust_api.get_customer_name_by_id(user_cxn.customer_id)
+    return cust_api.get_customer_name(user_spec)
 
 
 class ModeUsers(WatoMode):
@@ -283,7 +306,12 @@ class ModeUsers(WatoMode):
                             enforce_sync=True,
                             load_users_func=userdb.load_users,
                             save_users_func=userdb.save_users,
-                        )
+                        ),
+                        background_job.InitialStatusArgs(
+                            title=job.gui_title(),
+                            stoppable=False,
+                            user=str(user.id) if user.id else None,
+                        ),
                     )
                 except background_job.BackgroundJobAlreadyRunning as e:
                     raise MKUserError(
@@ -493,10 +521,8 @@ class ModeUsers(WatoMode):
                 add_header(_("Last seen"))
                 cells.append(build_table_cell(content=[build_text(shown_text)]))
 
-            if edition() is Edition.CME:
-                cells.append(
-                    build_table_cell(content=[build_text(customer.get_customer_name(user_spec))])
-                )
+            if cust := has_customer(user_cxn=connection, cust_api=customer, user_spec=user_spec):
+                cells.append(build_table_cell(content=[build_text(cust)]))
 
             # Connection
             add_header(_("Connection"))
@@ -528,7 +554,7 @@ class ModeUsers(WatoMode):
 
             add_header(_("State"))
             state_content = []
-            if user_spec.get("locked", False):
+            if user_spec["locked"]:
                 state_content.append(
                     build_icon_button("", _("The login is currently locked"), "user_locked")
                 )
@@ -706,8 +732,10 @@ class ModeUsers(WatoMode):
                     else:
                         html.write_text(_("Never"))
 
-                if edition() is Edition.CME:
-                    table.cell(_("Customer"), customer.get_customer_name(user_spec))
+                if cust := has_customer(
+                    user_cxn=connection, cust_api=customer, user_spec=user_spec
+                ):
+                    table.cell(_("Customer"), cust)
 
                 # Connection
                 if connection:
@@ -737,7 +765,7 @@ class ModeUsers(WatoMode):
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"), sortable=False)
-                if user_spec.get("locked", False):
+                if user_spec["locked"]:
                     html.icon("user_locked", _("The login is currently locked"))
 
                 if "disable_notifications" in user_spec and isinstance(
@@ -1143,7 +1171,7 @@ class ModeEditUser(WatoMode):
 
     def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
         # Locking
-        user_attrs["locked"] = html.get_checkbox("locked")
+        user_attrs["locked"] = html.get_checkbox("locked") or False
         if (  # toggled for an existing user
             self._user_id in self._users
             and self._users[self._user_id]["locked"] != user_attrs["locked"]
@@ -1305,7 +1333,7 @@ class ModeEditUser(WatoMode):
         # ID
         forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
         if self._is_new_user:
-            vs_user_id = UserID(allow_empty=False, size=73)
+            vs_user_id: TextInput | FixedValue = UserID(allow_empty=False, size=73)
         else:
             vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)
@@ -1487,14 +1515,14 @@ class ModeEditUser(WatoMode):
             if not self._is_locked("locked"):
                 html.checkbox(
                     "locked",
-                    bool(self._user.get("locked")),
+                    bool(self._user["locked"]),
                     label=_("disable the login to this account"),
                 )
             else:
                 html.write_text(
-                    _("Login disabled") if self._user.get("locked", False) else _("Login possible")
+                    _("Login disabled") if self._user["locked"] else _("Login possible")
                 )
-                html.hidden_field("locked", "1" if self._user.get("locked", False) else "")
+                html.hidden_field("locked", "1" if self._user["locked"] else "")
             html.help(
                 _(
                     "Disabling the password will prevent a user from logging in while "

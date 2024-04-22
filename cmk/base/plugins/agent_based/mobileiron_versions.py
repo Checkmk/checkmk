@@ -6,8 +6,7 @@ from __future__ import annotations
 
 import contextlib
 import datetime
-
-from typing_extensions import TypedDict
+from typing import TypedDict
 
 from cmk.plugins.lib.mobileiron import Section
 

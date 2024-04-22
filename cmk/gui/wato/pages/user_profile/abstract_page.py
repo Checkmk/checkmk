@@ -51,7 +51,7 @@ class ABCUserProfilePage(Page):
         if not active_config.wato_enabled:
             raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))
 
-    def _page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
+    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
             _("Profile"), breadcrumb, form_name="profile", button_name="_save"
         )

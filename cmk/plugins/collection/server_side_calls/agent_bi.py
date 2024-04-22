@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable, Mapping
-from typing import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand, SpecialAgentConfig
 

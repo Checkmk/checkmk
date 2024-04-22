@@ -5,11 +5,12 @@
 
 import logging
 import re
-from collections.abc import Mapping
-from typing import Any, Literal, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.config_validation_layer.groups import GroupName
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.version import edition, Edition
@@ -18,7 +19,6 @@ from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-viol
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
-from cmk.gui.groups import GroupName, load_contact_group_information
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_languages
@@ -89,6 +89,7 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupAgentSNMP,
@@ -5194,6 +5195,7 @@ def _valuespec_extra_service_conf_icon_image() -> IconSelector:
         )
         % str(cmk.utils.paths.omd_root / "local/share/check_mk/web/htdocs/images/icons"),
         with_emblem=False,
+        default_value="",
     )
 
 

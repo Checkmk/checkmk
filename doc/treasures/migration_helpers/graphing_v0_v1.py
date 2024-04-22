@@ -66,27 +66,34 @@ def _parse_arguments() -> argparse.Namespace:
         help="Stop at the very first exception",
     )
     parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="Show informations during migration",
+    )
+    parser.add_argument(
         "folders",
         nargs="+",
         help="Search in these folders",
     )
     parser.add_argument(
-        "--metric-names",
+        "--filter-metric-names",
         nargs="+",
-        required=True,
+        default=[],
         help="Filter by these metrics names",
+    )
+    parser.add_argument(
+        "--filter-standalone-metrics",
+        action="store_true",
+        default=False,
+        help="Filter out connected objects",
     )
     parser.add_argument(
         "--translations",
         action="store_true",
         default=False,
         help="Migrate translations",
-    )
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        default=False,
-        help="Check connected graph objects",
     )
     parser.add_argument(
         "--sanitize",
@@ -97,14 +104,47 @@ def _parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _setup_logger(debug: bool) -> None:
+def _setup_logger(debug: bool, verbose: bool) -> None:
     handler: logging.StreamHandler[TextIO] | logging.NullHandler
-    if debug:
+    if debug or verbose:
         handler = logging.StreamHandler()
     else:
         handler = logging.NullHandler()
     _LOGGER.addHandler(handler)
     _LOGGER.setLevel(logging.INFO)
+
+
+@dataclass(frozen=True)
+class MigrationErrors:
+    _metrics_without_def: set[str] = field(default_factory=set)
+    _objects: dict[Literal["metrics", "translations", "perfometers", "graphs"], set[str]] = field(
+        default_factory=dict
+    )
+
+    def add_metric_without_def(self, name: str) -> None:
+        self._metrics_without_def.add(name)
+
+    @property
+    def metrics_without_def(self) -> Sequence[str]:
+        return list(self._metrics_without_def)
+
+    def add_unparseable_metric(self, name: str) -> None:
+        self._objects.setdefault("metrics", set()).add(name)
+
+    def add_unparseable_translation(self, name: str) -> None:
+        self._objects.setdefault("translations", set()).add(name)
+
+    def add_unparseable_perfometer(self, name: str) -> None:
+        self._objects.setdefault("perfometers", set()).add(name)
+
+    def add_unparseable_graph(self, name: str) -> None:
+        self._objects.setdefault("graphs", set()).add(name)
+
+    @property
+    def objects(
+        self,
+    ) -> Mapping[Literal["metrics", "translations", "perfometers", "graphs"], set[str]]:
+        return self._objects
 
 
 def _load_module(filepath: Path) -> types.ModuleType:
@@ -388,7 +428,8 @@ class ConnectedObjects:
 
 
 def _make_connected_objects(
-    metric_names_filter: Sequence[str],
+    filter_metric_names: Sequence[str],
+    migration_errors: MigrationErrors,
     legacy_metric_info: Mapping[str, MetricInfo],
     legacy_perfometer_info: Sequence[PerfometerSpec],
     legacy_graph_info: Mapping[str, RawGraphTemplate],
@@ -399,7 +440,7 @@ def _make_connected_objects(
     handled_metric_names: set[str] = set()
     all_connected_metric_names: set[tuple[str, ...]] = set()
     for metric_name in used_metrics:
-        if metric_name not in metric_names_filter:
+        if filter_metric_names and metric_name not in filter_metric_names:
             continue
         all_connected_metric_names.add(
             tuple(
@@ -440,17 +481,22 @@ def _make_connected_objects(
                 if connected_graph_template not in graph_templates_:
                     graph_templates_.append(connected_graph_template)
 
-        yield ConnectedObjects(
-            {c: legacy_metric_info[c] for c in connected_metric_names},
-            perfometers_,
-            graph_templates_,
-        )
+        legacy_metrics = {}
+        for c in connected_metric_names:
+            try:
+                legacy_metrics[c] = legacy_metric_info[c]
+            except KeyError:
+                migration_errors.add_metric_without_def(c)
+
+        yield ConnectedObjects(legacy_metrics, perfometers_, graph_templates_)
 
 
 def _compute_connected_objects(
     debug: bool,
     folders: Sequence[str],
-    metric_names_filter: Sequence[str],
+    filter_metric_names: Sequence[str],
+    filter_standalone_metrics: bool,
+    migration_errors: MigrationErrors,
     legacy_metric_info: Mapping[str, MetricInfo],
     legacy_perfometer_info: Sequence[PerfometerSpec],
     legacy_graph_info: Mapping[str, RawGraphTemplate],
@@ -477,7 +523,8 @@ def _compute_connected_objects(
 
     return list(
         _make_connected_objects(
-            metric_names_filter,
+            filter_metric_names,
+            migration_errors,
             legacy_metric_info,
             legacy_perfometer_info,
             legacy_graph_info,
@@ -497,12 +544,6 @@ def _compute_connected_objects(
 #   |                |_| |_| |_|_|\__, |_|  \__,_|\__\___|                 |
 #   |                             |___/                                    |
 #   '----------------------------------------------------------------------'
-
-
-@dataclass(frozen=True)
-class Unparseable:
-    namespace: Literal["metrics", "translations", "perfometers", "graphs"]
-    name: str
 
 
 class ParsedUnit(NamedTuple):
@@ -755,7 +796,7 @@ def _parse_legacy_metric_info(
 
 def _parse_legacy_metric_infos(
     debug: bool,
-    unparseables: list[Unparseable],
+    migration_errors: MigrationErrors,
     unit_parser: UnitParser,
     metric_info: Mapping[str, MetricInfo],
 ) -> Iterator[metrics.Metric]:
@@ -766,12 +807,12 @@ def _parse_legacy_metric_infos(
             _show_exception(e)
             if debug:
                 raise e
-            unparseables.append(Unparseable("metrics", name))
+            migration_errors.add_unparseable_metric(name)
 
 
 def _parse_legacy_check_metrics(
     debug: bool,
-    unparseables: list[Unparseable],
+    migration_errors: MigrationErrors,
     check_metrics: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
 ) -> Iterator[translations.Translation]:
     by_translations: dict[
@@ -805,7 +846,7 @@ def _parse_legacy_check_metrics(
         elif name.startswith("check_"):
             check_command = translations.NagiosPlugin(name[6:])
         else:
-            unparseables.append(Unparseable("translations", name))
+            migration_errors.add_unparseable_translation(name)
             raise ValueError(name)
 
         translations_: list[
@@ -846,7 +887,7 @@ def _parse_legacy_check_metrics(
             _show_exception(e)
             if debug:
                 raise e
-            unparseables.append(Unparseable("translations", name))
+            migration_errors.add_unparseable_translation(name)
 
 
 _Operators = Literal["+", "*", "-", "/"]
@@ -1284,7 +1325,7 @@ def _parse_legacy_stacked_perfometer(
 
 def _parse_legacy_perfometer_infos(
     debug: bool,
-    unparseables: list[Unparseable],
+    migration_errors: MigrationErrors,
     unit_parser: UnitParser,
     perfometer_info: Sequence[PerfometerSpec],
 ) -> Iterator[perfometers.Perfometer | perfometers.Bidirectional | perfometers.Stacked]:
@@ -1302,7 +1343,7 @@ def _parse_legacy_perfometer_infos(
             _show_exception(e)
             if debug:
                 raise e
-            unparseables.append(Unparseable("perfometers", str(idx)))
+            migration_errors.add_unparseable_perfometer(str(idx))
 
 
 def _parse_legacy_metric(
@@ -1503,7 +1544,7 @@ def _parse_legacy_graph_info(
 
 def _parse_legacy_graph_infos(
     debug: bool,
-    unparseables: list[Unparseable],
+    migration_errors: MigrationErrors,
     unit_parser: UnitParser,
     graph_info: Mapping[str, RawGraphTemplate],
 ) -> Iterator[graphs.Graph | graphs.Bidirectional]:
@@ -1514,7 +1555,7 @@ def _parse_legacy_graph_infos(
             _show_exception(e)
             if debug:
                 raise e
-            unparseables.append(Unparseable("graphs", name))
+            migration_errors.add_unparseable_graph(name)
             continue
 
         if lower is not None and upper is not None:
@@ -1546,7 +1587,7 @@ class MigratedObjects:
 
 def _migrate(
     debug: bool,
-    unparseables: list[Unparseable],
+    migration_errors: MigrationErrors,
     unit_parser: UnitParser,
     legacy_metric_info: Mapping[str, MetricInfo],
     legacy_check_metrics: Mapping[str, Mapping[MetricName, CheckMetricEntry]],
@@ -1554,12 +1595,14 @@ def _migrate(
     legacy_graph_info: Mapping[str, RawGraphTemplate],
 ) -> MigratedObjects:
     return MigratedObjects(
-        list(_parse_legacy_metric_infos(debug, unparseables, unit_parser, legacy_metric_info)),
-        list(_parse_legacy_check_metrics(debug, unparseables, legacy_check_metrics)),
+        list(_parse_legacy_metric_infos(debug, migration_errors, unit_parser, legacy_metric_info)),
+        list(_parse_legacy_check_metrics(debug, migration_errors, legacy_check_metrics)),
         list(
-            _parse_legacy_perfometer_infos(debug, unparseables, unit_parser, legacy_perfometer_info)
+            _parse_legacy_perfometer_infos(
+                debug, migration_errors, unit_parser, legacy_perfometer_info
+            )
         ),
-        list(_parse_legacy_graph_infos(debug, unparseables, unit_parser, legacy_graph_info)),
+        list(_parse_legacy_graph_infos(debug, migration_errors, unit_parser, legacy_graph_info)),
     )
 
 
@@ -1664,7 +1707,7 @@ def _sanitize(migrated_objects: MigratedObjects) -> MigratedObjects:
     )
 
 
-#  .
+# .
 #   .--repr----------------------------------------------------------------.
 #   |                                                                      |
 #   |                         _ __ ___ _ __  _ __                          |
@@ -2069,7 +2112,9 @@ def _obj_repr(
 
 def main() -> None:
     args = _parse_arguments()
-    _setup_logger(args.debug)
+    _setup_logger(args.debug, args.verbose)
+
+    migration_errors = MigrationErrors()
 
     (
         legacy_metric_info,
@@ -2081,28 +2126,36 @@ def main() -> None:
     all_connected_objects = _compute_connected_objects(
         args.debug,
         args.folders,
-        args.metric_names,
+        args.filter_metric_names,
+        args.filter_standalone_metrics,
+        migration_errors,
         legacy_metric_info,
         legacy_perfometer_info,
         legacy_graph_info,
     )
 
-    if args.check:
-        for connected_objects in all_connected_objects:
-            print(connected_objects)
-        return
-
-    unparseables: list[Unparseable] = []
     unit_parser = UnitParser()
-    migrated_objects = _migrate(
-        args.debug,
-        unparseables,
-        unit_parser,
-        {n: m for c in all_connected_objects for n, m in c.metrics.items()},
-        legacy_check_metrics,
-        [p.spec for c in all_connected_objects for p in c.perfometers],
-        {g.ident: g.template for c in all_connected_objects for g in c.graph_templates},
-    )
+    if args.filter_standalone_metrics:
+        connected_legacy_metric_names = {n for c in all_connected_objects for n in c.metrics}
+        migrated_objects = _migrate(
+            args.debug,
+            migration_errors,
+            unit_parser,
+            {n: m for n, m in legacy_metric_info.items() if n not in connected_legacy_metric_names},
+            legacy_check_metrics,
+            [],
+            {},
+        )
+    else:
+        migrated_objects = _migrate(
+            args.debug,
+            migration_errors,
+            unit_parser,
+            {n: m for c in all_connected_objects for n, m in c.metrics.items()},
+            legacy_check_metrics,
+            [p.spec for c in all_connected_objects for p in c.perfometers],
+            {g.ident: g.template for c in all_connected_objects for g in c.graph_templates},
+        )
 
     if args.sanitize:
         migrated_objects = _sanitize(migrated_objects)
@@ -2111,8 +2164,14 @@ def main() -> None:
         print("\n".join([f"{u.name} = {_unit_repr(u.unit)}" for u in unit_parser.units]))
     for migrated_object in migrated_objects:
         print(_obj_repr(unit_parser, migrated_object))
-    for unparseable in unparseables:
-        _LOGGER.info("%s", unparseable)
+
+    if migration_errors.metrics_without_def:
+        _LOGGER.info(
+            "Metrics without definitions: %s",
+            ", ".join(sorted(migration_errors.metrics_without_def)),
+        )
+    for namespace, names in migration_errors.objects.items():
+        _LOGGER.info("Migration errors of %r: %s", namespace, ", ".join(sorted(names)))
 
 
 if __name__ == "__main__":

@@ -7,9 +7,7 @@ import itertools
 import json
 import time
 from collections.abc import Iterable, Iterator, Sequence
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from livestatus import LocalConnection, SiteId
 
@@ -43,7 +41,15 @@ def execute_host_removal_background_job() -> None:
         logger.debug("Another host removal job is already running, skipping this time.")
         return
 
-    job.start(_remove_hosts)
+    job.start(
+        _remove_hosts,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            lock_wato=False,
+            stoppable=False,
+            user=str(user.id) if user.id else None,
+        ),
+    )
 
 
 class HostRemovalBackgroundJob(BackgroundJob):
@@ -54,15 +60,7 @@ class HostRemovalBackgroundJob(BackgroundJob):
         return _("Host removal")
 
     def __init__(self) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                lock_wato=False,
-                stoppable=False,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
 
 def _remove_hosts(job_interface: BackgroundProcessInterface) -> None:

@@ -5,9 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, cast, Literal
-
-from typing_extensions import get_args, TypedDict
+from typing import Any, cast, get_args, Literal, TypedDict
 
 from cmk.gui.userdb import (
     ACTIVE_DIR,
@@ -26,17 +24,16 @@ from cmk.gui.userdb import (
     ICONS_PER_ITEM,
     LDAPConnectionConfigDiscover,
     LDAPConnectionConfigFixed,
-    LDAPConnectionTypedDict,
-    load_connection_config,
+    LDAPUserConnectionConfig,
     NAV_HIDE_ICONS_TITLE,
     OPEN_LDAP,
-    save_connection_config,
     SHOW_MODE,
     START_URL,
     SyncAttribute,
     TEMP_UNIT,
     UI_SIDEBAR_POSITIONS,
     UI_THEME,
+    UserConnectionConfigFile,
 )
 
 
@@ -65,7 +62,7 @@ class GeneralProperties:
     disabled: bool
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> GeneralProperties:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> GeneralProperties:
         return cls(
             id=config["id"],
             description=config["description"],
@@ -174,7 +171,7 @@ class ConnectionConfig:
     suffix: str | None
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> ConnectionConfig:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> ConnectionConfig:
         return cls(
             directory_type=config["directory_type"],
             bind=config.get("bind"),
@@ -405,7 +402,7 @@ class Users:
     create_only_on_login: Literal[True] | None
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> Users:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> Users:
         return cls(
             user_dn=config["user_dn"],
             user_scope=config["user_scope"],
@@ -492,7 +489,7 @@ class Groups:
     group_member: str | None = None
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> Groups:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> Groups:
         return cls(
             group_dn=config["group_dn"],
             group_scope=config["group_scope"],
@@ -1028,7 +1025,7 @@ class SyncPlugins:
     active_plugins: ActivePlugins
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> SyncPlugins:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> SyncPlugins:
         return cls(active_plugins=config["active_plugins"])
 
     @classmethod
@@ -1158,7 +1155,7 @@ class Other:
     cache_livetime: int
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> Other:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> Other:
         return cls(cache_livetime=config["cache_livetime"])
 
     @classmethod
@@ -1202,7 +1199,7 @@ class LDAPConnectionInterface:
     other: Other
 
     @classmethod
-    def from_mk_file_format(cls, config: LDAPConnectionTypedDict) -> LDAPConnectionInterface:
+    def from_mk_file_format(cls, config: LDAPUserConnectionConfig) -> LDAPConnectionInterface:
         return cls(
             general_properties=GeneralProperties.from_mk_file_format(config),
             connection_config=ConnectionConfig.from_mk_file_format(config),
@@ -1244,7 +1241,7 @@ class LDAPConnectionInterface:
         }
         return r
 
-    def to_mk_format(self) -> LDAPConnectionTypedDict:
+    def to_mk_format(self) -> LDAPUserConnectionConfig:
         r: dict[str, Any] = {
             "id": self.general_properties.id,
             "description": self.general_properties.description,
@@ -1277,7 +1274,7 @@ class LDAPConnectionInterface:
             "create_only_on_login": self.users.create_only_on_login,
         }
 
-        c = cast(LDAPConnectionTypedDict, {k: v for k, v in r.items() if v is not None})
+        c = cast(LDAPUserConnectionConfig, {k: v for k, v in r.items() if v is not None})
         return c
 
 
@@ -1293,24 +1290,27 @@ def request_ldap_connections() -> dict[str, LDAPConnectionInterface]:
 
 
 def request_to_delete_ldap_connection(ldap_id: str) -> None:
-    all_connections = load_connection_config(lock=True)
-    save_connection_config([c for c in all_connections if c["id"] != ldap_id])
+    config_file = UserConnectionConfigFile()
+    all_connections = UserConnectionConfigFile().load_for_modification()
+    config_file.save([c for c in all_connections if c["id"] != ldap_id])
 
 
 def request_to_create_ldap_connection(ldap_data: APIConnection) -> LDAPConnectionInterface:
     connection = LDAPConnectionInterface.from_api_request(ldap_data)
-    all_connections = load_connection_config(lock=True)
+    config_file = UserConnectionConfigFile()
+    all_connections = config_file.load_for_modification()
     all_connections.append(connection.to_mk_format())
-    save_connection_config(all_connections)
+    config_file.save(all_connections)
     return connection
 
 
 def request_to_edit_ldap_connection(
     ldap_id: str, ldap_data: APIConnection
 ) -> LDAPConnectionInterface:
-    all_connections = load_connection_config(lock=True)
+    config_file = UserConnectionConfigFile()
+    all_connections = config_file.load_for_modification()
     connection = LDAPConnectionInterface.from_api_request(ldap_data)
     modified_connections = [c for c in all_connections if c["id"] != ldap_id]
     modified_connections.append(connection.to_mk_format())
-    save_connection_config(modified_connections)
+    config_file.save(modified_connections)
     return connection

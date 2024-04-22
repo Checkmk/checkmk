@@ -7,10 +7,10 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from pytest_mock import MockerFixture
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 

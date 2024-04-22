@@ -5,9 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from enum import StrEnum
-from typing import Any, Literal, NewType
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, NewType, TypedDict
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.timeperiod import TimeperiodName
@@ -36,6 +34,7 @@ __all__ = [
     "DisabledNotificationsOptions",
     "Contact",
     "EventContext",
+    "EnrichedEventContext",
     "ECEventContext",
 ]
 
@@ -503,25 +502,19 @@ class EventContext(TypedDict, total=False):
     EC_RULE_ID: str
     HOSTATTEMPT: str
     HOSTCONTACTGROUPNAMES: str
-    HOSTFORURL: str
     HOSTGROUPNAMES: str
     HOSTNAME: HostName
     HOSTNOTIFICATIONNUMBER: str
     HOSTOUTPUT: str
     HOSTSTATE: Literal["UP", "DOWN", "UNREACHABLE"]
     HOSTTAGS: str
-    HOSTURL: str
     HOST_SL: str
     LASTHOSTSTATE: str
     LASTHOSTSTATECHANGE: str
-    LASTHOSTSTATECHANGE_REL: str
     LASTHOSTUP: str
-    LASTHOSTUP_REL: str
     LASTSERVICEOK: str
-    LASTSERVICEOK_REL: str
     LASTSERVICESTATE: str
     LASTSERVICESTATECHANGE: str
-    LASTSERVICESTATECHANGE_REL: str
     LOGDIR: str
     LONGDATETIME: str
     LONGSERVICEOUTPUT: str
@@ -542,12 +535,14 @@ class EventContext(TypedDict, total=False):
     SERVICENOTIFICATIONNUMBER: str
     SERVICEOUTPUT: str
     SERVICESTATE: str
-    SERVICEURL: str
     SHORTDATETIME: str
     SVC_SL: str
     WHAT: Literal["SERVICE", "HOST"]
 
+
+class EnrichedEventContext(EventContext, total=False):
     # Dynamically added:
+    # FOOSHORTSTATE: str
     # HOSTLABEL_*: str
     # SERVICELABEL_*: str
 
@@ -557,12 +552,19 @@ class EventContext(TypedDict, total=False):
     #     if key.endswith("STATE"):
     #         raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
     # We know of:
+    HOSTFORURL: str
+    HOSTURL: str
     HOSTSHORTSTATE: str
     LASTHOSTSHORTSTATE: str
+    LASTHOSTSTATECHANGE_REL: str
+    LASTHOSTUP_REL: str
     LASTSERVICESHORTSTATE: str
+    LASTSERVICESTATECHANGE_REL: str
+    LASTSERVICEOK_REL: str
     PREVIOUSHOSTHARDSHORTSTATE: str
     PREVIOUSSERVICEHARDSHORTSTATE: str
     SERVICESHORTSTATE: str
+    SERVICEURL: str
 
 
 class ECEventContext(EventContext, total=False):

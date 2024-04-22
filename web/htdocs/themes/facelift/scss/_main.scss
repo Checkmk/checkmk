@@ -555,6 +555,10 @@ table.dictionary {
     border-style: none;
   }
 
+  td.horizontal {
+    padding-right: 5px;
+  }
+
   td.dictleft {
     &:not(.horizontal) {
       width: 1%;
@@ -579,23 +583,30 @@ table.dictionary {
   }
 }
 
-td.dictleft div.dictelement {
-  float: none;
-  margin-top: 3px;
-  margin-bottom: 10px;
-  margin-left: 0;
-
-  &:empty {
-    margin: 0;
+td.dictleft {
+  &.horizontal div.dictelement[id*="DictGroup"] {
+    margin-bottom: 0;
   }
+  div.dictelement {
+    float: none;
+    margin-top: 3px;
+    margin-left: 0;
+    margin-bottom: 10px;
 
-  &.indent {
-    padding-left: 10px;
-    margin-left: 6px;
-    border-left: 2px solid $line-color;
+    &:empty {
+      margin: 0;
+    }
 
-    ul {
-      margin-top: 1px;
+    &.indent {
+      &:not(div[id*="DictGroup"]) {
+        padding-left: 10px;
+        margin-left: 6px;
+        border-left: 2px solid $line-color;
+      }
+
+      ul {
+        margin-top: 1px;
+      }
     }
   }
 }
@@ -613,6 +624,15 @@ table.vs_dict_text {
   }
 }
 
+@mixin floating-text-mixin {
+  display: inline-block;
+  height: $input-field-height;
+  margin: $input-field-margin;
+  line-height: $input-field-height;
+  vertical-align: bottom;
+  box-sizing: border-box;
+}
+
 table.valuespec_tuple {
   border-collapse: collapse;
 
@@ -625,6 +645,10 @@ table.valuespec_tuple {
 
     &.tuple_left {
       vertical-align: middle;
+    }
+
+    &.tuple_right.has_title > span.vs_fixed_value {
+      @include floating-text-mixin;
     }
 
     &.tuple_td {

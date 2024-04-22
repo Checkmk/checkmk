@@ -38,6 +38,7 @@ import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import cache_manager
+from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
@@ -102,6 +103,7 @@ from cmk.automations.results import (
     SetAutochecksTable,
     UpdateDNSCacheResult,
     UpdateHostLabelsResult,
+    UpdatePasswordsMergedFileResult,
 )
 
 from cmk.snmplib import (
@@ -163,7 +165,7 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, snmp_default_community
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -279,6 +281,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             selected_sections=NO_SELECTION,
             simulation_mode=config.simulation_mode,
             snmp_backend_override=None,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
         )
         for hostname in hostnames:
 
@@ -458,6 +461,7 @@ def active_check_preview_rows(
     host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
     resource_macros = config.get_resource_macros()
     macros = {**host_macros, **resource_macros}
+    password_store_file = cmk.utils.password_store.pending_password_store_path()
     active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
@@ -467,7 +471,8 @@ def active_check_preview_rows(
         config.http_proxies,
         make_final_service_name,
         config.use_new_descriptions_for,
-        config_cache.collect_passwords(),
+        cmk.utils.password_store.load(password_store_file),
+        password_store_file,
     )
 
     return list(
@@ -523,10 +528,12 @@ def _execute_discovery(
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
+        password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     ip_address = (
         None
         if host_name in hosts_config.clusters
+        or ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP
         # We *must* do the lookup *before* calling `get_host_attributes()`
         # because...  I don't know... global variables I guess.  In any case,
         # doing it the other way around breaks one integration test.
@@ -636,6 +643,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
         snmp_backend_override=None,
+        password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
     section_plugins = SectionPluginMapper()
     host_label_plugins = HostLabelPluginMapper(ruleset_matcher=ruleset_matcher)
@@ -1333,6 +1341,7 @@ class AutomationAnalyseServices(Automation):
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = config.get_resource_macros()
         macros = {**host_macros, **resource_macros}
+        password_store_file = cmk.utils.password_store.pending_password_store_path()
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
@@ -1342,7 +1351,8 @@ class AutomationAnalyseServices(Automation):
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             config.use_new_descriptions_for,
-            config_cache.collect_passwords(),
+            cmk.utils.password_store.load(password_store_file),
+            password_store_file,
         )
 
         active_checks = config_cache.active_checks(host_name)
@@ -1855,6 +1865,8 @@ class AutomationDiagHost(Automation):
         file_cache_options = FileCacheOptions()
 
         if not ipaddress:
+            if ConfigCache.ip_stack_config(host_name) is ip_lookup.IPStackConfig.NO_IP:
+                raise MKGeneralException("Host is configured as No-IP host: %s" % host_name)
             try:
                 resolved_address = config.lookup_ip_address(config_cache, host_name)
             except Exception:
@@ -1981,6 +1993,7 @@ class AutomationDiagHost(Automation):
             cas_dir=cas_dir,
             ca_store=ca_store,
             site_crt=site_crt,
+            password_store_file=cmk.utils.password_store.pending_password_store_path(),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2077,10 +2090,9 @@ class AutomationDiagHost(Automation):
         # ('authNoPriv', 'md5', '11111111', '22222222')
         # ('authPriv', 'md5', '11111111', '22222222', 'DES', '33333333')
 
-        credentials: SNMPCredentials = snmp_config.credentials
-
-        # Insert preconfigured communitiy
         if test == "snmpv3":
+            credentials: SNMPCredentials = snmp_config.credentials
+
             if snmpv3_use:
                 snmpv3_credentials = [snmpv3_use]
                 if snmpv3_use in ["authNoPriv", "authPriv"]:
@@ -2106,8 +2118,12 @@ class AutomationDiagHost(Automation):
                     snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
 
                 credentials = tuple(snmpv3_credentials)
-        elif snmp_community:
-            credentials = snmp_community
+        else:
+            credentials = snmp_community or (
+                snmp_config.credentials
+                if isinstance(snmp_config.credentials, str)
+                else snmp_default_community
+            )
 
         # Determine SNMPv2/v3 community
         if hostname not in config.explicit_snmp_communities:
@@ -2215,6 +2231,7 @@ class AutomationActiveCheck(Automation):
         resource_macros = config.get_resource_macros()
         translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
         macros = {**host_macros, **resource_macros}
+        password_store_file = cmk.utils.password_store.pending_password_store_path()
         active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
@@ -2224,7 +2241,8 @@ class AutomationActiveCheck(Automation):
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
             config.use_new_descriptions_for,
-            config_cache.collect_passwords(),
+            cmk.utils.password_store.load(password_store_file),
+            password_store_file,
         )
 
         active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])
@@ -2292,6 +2310,22 @@ class AutomationActiveCheck(Automation):
 automations.register(AutomationActiveCheck())
 
 
+class AutomationUpdatePasswordsMergedFile(Automation):
+    cmd = "update-passwords-merged-file"
+    needs_config = True
+    needs_checks = False
+
+    def execute(self, args: list[str]) -> UpdatePasswordsMergedFileResult:
+        cmk.utils.password_store.save(
+            config.get_config_cache().collect_passwords(),
+            cmk.utils.password_store.pending_password_store_path(),
+        )
+        return UpdatePasswordsMergedFileResult()
+
+
+automations.register(AutomationUpdatePasswordsMergedFile())
+
+
 class AutomationUpdateDNSCache(Automation):
     cmd = "update-dns-cache"
     needs_config = True
@@ -2337,7 +2371,12 @@ class AutomationGetAgentOutput(Automation):
         info = b""
 
         try:
-            ipaddress = config.lookup_ip_address(config_cache, hostname)
+            ip_stack_config = ConfigCache.ip_stack_config(hostname)
+            ipaddress = (
+                None
+                if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
+                else config.lookup_ip_address(config_cache, hostname)
+            )
             check_interval = config_cache.check_mk_check_interval(hostname)
             oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
             stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
@@ -2353,7 +2392,7 @@ class AutomationGetAgentOutput(Automation):
                 for source in sources.make_sources(
                     hostname,
                     ipaddress,
-                    ConfigCache.ip_stack_config(hostname),
+                    ip_stack_config,
                     config_cache=config_cache,
                     is_cluster=hostname in hosts_config.clusters,
                     simulation_mode=config.simulation_mode,
@@ -2372,6 +2411,9 @@ class AutomationGetAgentOutput(Automation):
                     cas_dir=cas_dir,
                     ca_store=ca_store,
                     site_crt=site_crt,
+                    password_store_file=cmk.utils.password_store.core_password_store_path(
+                        LATEST_CONFIG
+                    ),
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:
@@ -2459,7 +2501,12 @@ class AutomationNotificationReplay(Automation):
 
     def execute(self, args: list[str]) -> NotificationReplayResult:
         nr = args[0]
-        notify.notification_replay_backlog(int(nr))
+        notify.notification_replay_backlog(
+            lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
+                hostname, plugin
+            ),
+            int(nr),
+        )
         return NotificationReplayResult()
 
 
@@ -2473,7 +2520,14 @@ class AutomationNotificationAnalyse(Automation):
 
     def execute(self, args: list[str]) -> NotificationAnalyseResult:
         nr = args[0]
-        return NotificationAnalyseResult(notify.notification_analyse_backlog(int(nr)))
+        return NotificationAnalyseResult(
+            notify.notification_analyse_backlog(
+                lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
+                    hostname, plugin
+                ),
+                int(nr),
+            )
+        )
 
 
 automations.register(AutomationNotificationAnalyse())
@@ -2487,7 +2541,15 @@ class AutomationNotificationTest(Automation):
     def execute(self, args: list[str]) -> NotificationTestResult:
         context = json.loads(args[0])
         dispatch = args[1]
-        return NotificationTestResult(notify.notification_test(context, dispatch == "True"))
+        return NotificationTestResult(
+            notify.notification_test(
+                context,
+                lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
+                    hostname, plugin
+                ),
+                dispatch=dispatch == "True",
+            )
+        )
 
 
 automations.register(AutomationNotificationTest())

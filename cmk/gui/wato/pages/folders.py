@@ -9,6 +9,7 @@ import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import TypeVar
 
+from cmk.utils.config_validation_layer.groups import GroupSpecs
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.store.host_storage import ContactgroupName
@@ -20,7 +21,6 @@ import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import GroupSpecs, load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
@@ -72,6 +72,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.host_attributes import (
     collect_attributes,
     host_attribute_registry,

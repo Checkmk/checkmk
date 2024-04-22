@@ -10,7 +10,9 @@ import time
 from collections.abc import Collection, Iterator, Mapping
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, NamedTuple, overload
+from typing import Any, Literal, NamedTuple, overload
+
+from livestatus import LivestatusResponse
 
 import cmk.utils.store as store
 from cmk.utils.notify import NotificationContext
@@ -100,11 +102,7 @@ from cmk.gui.watolib.check_mk_automations import (
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
-from cmk.gui.watolib.notifications import (
-    load_notification_rules,
-    load_user_notification_rules,
-    save_notification_rules,
-)
+from cmk.gui.watolib.notifications import load_user_notification_rules, NotificationRuleConfigFile
 from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.user_scripts import load_notification_scripts
@@ -708,7 +706,7 @@ class ModeNotifications(ABCNotificationsMode):
                 self._get_notification_rules(),
                 "notification",
                 _("notification rule"),
-                save_notification_rules,
+                NotificationRuleConfigFile().save,
             )
         return redirect(self.mode_url())
 
@@ -724,7 +722,7 @@ class ModeNotifications(ABCNotificationsMode):
         advanced_test_options = self._vs_advanced_test_options().from_html_vars("advanced_opts")
         self._vs_advanced_test_options().validate_value(advanced_test_options, "advanced_opts")
 
-        hostname = general_test_options["hostname_choice"]
+        hostname = general_test_options["on_hostname_hint"]
         context: dict[str, Any] = {
             "HOSTNAME": hostname,
             "HOSTALIAS": hostname,
@@ -745,7 +743,7 @@ class ModeNotifications(ABCNotificationsMode):
             context["HOSTSTATE"] = "UP"
 
         notification_nr = str(advanced_test_options["notification_nr"])
-        if service_desc := general_test_options.get("service_choice"):
+        if service_desc := general_test_options.get("on_service_hint"):
             if not service_desc:
                 raise MKUserError(None, _("Please provide a service."))
 
@@ -790,7 +788,7 @@ class ModeNotifications(ABCNotificationsMode):
         return context
 
     def _get_notification_rules(self):
-        return load_notification_rules()
+        return NotificationRuleConfigFile().load_for_reading()
 
     def _save_notification_display_options(self):
         user.save_file(
@@ -842,7 +840,7 @@ class ModeNotifications(ABCNotificationsMode):
         so we enrich the context after fetching all user defined options"""
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
-            "GET hosts\nColumns: custom_variables groups contact_groups\nFilter: host_name = %s\n"
+            "GET hosts\nColumns: custom_variable_names custom_variable_values groups contact_groups\nFilter: host_name = %s\n"
             % hostname
         )
         if len(resp) < 1:
@@ -850,14 +848,31 @@ class ModeNotifications(ABCNotificationsMode):
                 None,
                 _("Host '%s' is not known in the activated monitoring configuration") % hostname,
             )
-        context["HOSTTAGS"] = resp[0][0].get("TAGS")
-        context["HOSTGROUPNAMES"] = ",".join(resp[0][1])
-        context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][2])
+
+        self._set_custom_variables(context, resp, "HOST")
+        context["HOSTGROUPNAMES"] = ",".join(resp[0][2])
+        context["HOSTCONTACTGROUPNAMES"] = ",".join(resp[0][3])
+
+    def _set_custom_variables(
+        self,
+        context: NotificationContext,
+        resp: LivestatusResponse,
+        prefix: Literal["HOST", "SERVICE"],
+    ) -> None:
+        custom_vars = dict(zip(resp[0][0], resp[0][1]))
+        for key, value in custom_vars.items():
+            context[f"{prefix}_{key}"] = value
+            # TODO in the context of a real notification, some variables are
+            # set two times. Why?!
+            # e.g. event_match_hosttags would not match with "_" set while
+            # user defined custom attributes would not match without.
+            # For now we just set both.
+            context[f"{prefix}{key}"] = value
 
     def _add_missing_service_context(self, context: NotificationContext) -> None:
         hostname = context["HOSTNAME"]
         resp = sites.live().query(
-            "GET services\nColumns: groups contact_groups check_command\nFilter: host_name = %s\nFilter: service_description = %s"
+            "GET services\nColumns: custom_variable_names custom_variable_values groups contact_groups check_command\nFilter: host_name = %s\nFilter: service_description = %s"
             % (hostname, context["SERVICEDESC"])
         )
         if len(resp) < 1:
@@ -866,9 +881,10 @@ class ModeNotifications(ABCNotificationsMode):
                 _("Host '%s' is not known in the activated monitoring configuration") % hostname,
             )
 
-        context["SERVICEGROUPNAMES"] = ",".join(resp[0][0])
-        context["SERVICECONTACTGROUPNAMES"] = ",".join(resp[0][1])
-        context["SERVICECHECKCOMMAND"] = resp[0][2]
+        self._set_custom_variables(context, resp, "SERVICE")
+        context["SERVICEGROUPNAMES"] = ",".join(resp[0][2])
+        context["SERVICECONTACTGROUPNAMES"] = ",".join(resp[0][3])
+        context["SERVICECHECKCOMMAND"] = resp[0][4]
 
     def _show_no_fallback_contact_warning(self):
         if not self._fallback_mail_contacts_configured():
@@ -1020,7 +1036,7 @@ class ModeNotifications(ABCNotificationsMode):
                     last_state = {"OK": "0", "WARNING": "1", "CRITICAL": "2", "UNKNOWN": "3"}[
                         last_state_name
                     ]
-                    state = context["HOSTSTATEID"]
+                    state = context["SERVICESTATEID"]
                     state_name = context["SERVICESTATE"]
                 else:
                     css = "state hstate hstate"
@@ -1268,7 +1284,9 @@ class ModeNotifications(ABCNotificationsMode):
         return Dictionary(
             elements=[
                 (
-                    "hostname_choice",
+                    # we use the already existing logic for the host aware
+                    # service selection. It needs "_hostname_hint" as suffix
+                    "on_hostname_hint",
                     MonitoredHostname(
                         title=_("Host"),
                         strict="True",
@@ -1278,7 +1296,9 @@ class ModeNotifications(ABCNotificationsMode):
                     ),
                 ),
                 (
-                    "service_choice",
+                    # we use the already existing logic for the host aware
+                    # service selection. It needs "_service_hint" as suffix
+                    "on_service_hint",
                     MonitoredServiceDescription(
                         title=_("Service"),
                         autocompleter=ContextAutocompleterConfig(
@@ -1426,9 +1446,9 @@ class ModeNotifications(ABCNotificationsMode):
 
     def _get_default_options(self, hostname: str | None, servicename: str | None) -> dict[str, str]:
         if hostname and servicename:
-            return {"hostname_choice": hostname, "service_choice": servicename}
+            return {"on_hostname_hint": hostname, "on_service_hint": servicename}
         if hostname:
-            return {"hostname_choice": hostname}
+            return {"on_hostname_hint": hostname}
         return {}
 
     def _ensure_correct_default_test_options(self) -> None:
@@ -1447,14 +1467,14 @@ class ModeNotifications(ABCNotificationsMode):
 
 
 def _validate_general_opts(value, varprefix):
-    if not value["hostname_choice"]:
+    if not value["on_hostname_hint"]:
         raise MKUserError(
-            f"{varprefix}_p_hostname_choice", _("Please provide a hostname to test with.")
+            f"{varprefix}_p_on_hostname_hint", _("Please provide a hostname to test with.")
         )
 
-    if request.has_var("_test_service_notifications") and not value["service_choice"]:
+    if request.has_var("_test_service_notifications") and not value["on_service_hint"]:
         raise MKUserError(
-            f"{varprefix}_p_service_choice",
+            f"{varprefix}_p_on_service_hint",
             _("If you want to test service notifications, please provide a service to test with."),
         )
 
@@ -2245,10 +2265,12 @@ class ModeEditNotificationRule(ABCEditNotificationRuleMode):
         return ModeNotifications
 
     def _load_rules(self) -> list[EventRule]:
-        return load_notification_rules(lock=transactions.is_transaction())
+        if transactions.is_transaction():
+            return NotificationRuleConfigFile().load_for_modification()
+        return NotificationRuleConfigFile().load_for_reading()
 
     def _save_rules(self, rules: list[EventRule]) -> None:
-        save_notification_rules(rules)
+        NotificationRuleConfigFile().save(rules)
 
     def _user_id(self):
         return None

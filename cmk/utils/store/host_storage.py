@@ -11,9 +11,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from functools import cache, lru_cache
 from pathlib import Path
-from typing import Any, Generic, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Any, Generic, TypedDict, TypeVar
 
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName

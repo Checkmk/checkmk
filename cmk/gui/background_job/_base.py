@@ -10,10 +10,9 @@ import shutil
 import signal
 import time
 from collections.abc import Callable
-from typing import NoReturn
+from typing import NoReturn, TypedDict
 
 import psutil
-from typing_extensions import TypedDict
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
@@ -60,7 +59,6 @@ class BackgroundJob:
     def __init__(
         self,
         job_id: str,
-        initial_status_args: InitialStatusArgs | None = None,
         logger: logging.Logger | None = None,
     ) -> None:
         super().__init__()
@@ -71,12 +69,6 @@ class BackgroundJob:
 
         self._logger = logger if logger else log.logger.getChild("background-job")
 
-        if initial_status_args is None:
-            initial_status_args = InitialStatusArgs(
-                user=str(user.id) if user.id else None,
-            )
-
-        self._initial_status_args = initial_status_args
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
 
@@ -285,11 +277,24 @@ class BackgroundJob:
 
         return status
 
-    def start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
-        with store.locked(self._job_initializiation_lock):
-            self._start(target)
+    def start(
+        self,
+        target: Callable[[BackgroundProcessInterface], None],
+        initial_status_args: InitialStatusArgs,
+    ) -> None:
+        # if initial_status_args is None:
+        #    initial_status_args = InitialStatusArgs(
+        #        user=str(user.id) if user.id else None,
+        #    )
 
-    def _start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
+        with store.locked(self._job_initializiation_lock):
+            self._start(target, initial_status_args)
+
+    def _start(
+        self,
+        target: Callable[[BackgroundProcessInterface], None],
+        initial_status_args: InitialStatusArgs,
+    ) -> None:
         if self.is_active():
             raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
 
@@ -307,14 +312,14 @@ class BackgroundJob:
                 "JobResult": [],
                 "JobException": [],
             },
-            title=self._initial_status_args.title,
-            stoppable=self._initial_status_args.stoppable,
-            deletable=self._initial_status_args.deletable,
-            user=self._initial_status_args.user,
-            estimated_duration=self._initial_status_args.estimated_duration,
-            logfile_path=self._initial_status_args.logfile_path,
-            lock_wato=self._initial_status_args.lock_wato,
-            host_name=self._initial_status_args.host_name,
+            title=initial_status_args.title,
+            stoppable=initial_status_args.stoppable,
+            deletable=initial_status_args.deletable,
+            user=initial_status_args.user,
+            estimated_duration=initial_status_args.estimated_duration,
+            logfile_path=initial_status_args.logfile_path,
+            lock_wato=initial_status_args.lock_wato,
+            host_name=initial_status_args.host_name,
         )
         self._jobstatus_store.write(initial_status)
 

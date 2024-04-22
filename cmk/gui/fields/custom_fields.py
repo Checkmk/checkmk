@@ -11,11 +11,11 @@ from typing import Any, Literal
 from marshmallow import validate, ValidationError
 
 from cmk.utils.crypto import certificate, keys
-from cmk.utils.tags import BuiltinTagConfig, TagID
+from cmk.utils.tags import BuiltinTagConfig, TagGroupID, TagID
 
 from cmk.gui.config import active_config
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.userdb import connection_choices, get_saml_connections
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.tags import (
     load_all_tag_config_read_only,
@@ -273,6 +273,7 @@ class AuxTagIDField(fields.String):
     default_error_messages = {
         "should_exist": "The aux_tag {aux_tag_id!r} should exist but it doesn't.",
         "should_not_exist": "The aux_tag {aux_tag_id!r} should not exist but it does.",
+        "should_not_exist_tag_group": "The id {aux_tag_id!r} is already in use by a tag group.",
         "should_exist_and_should_be_builtin": "The aux_tag {aux_tag_id!r} should be an existing built-in aux tag but it's not.",
         "should_exist_and_should_be_custom": "The aux_tag {aux_tag_id!r} should be an existing custom aux tag but it's not.",
     }
@@ -311,8 +312,15 @@ class AuxTagIDField(fields.String):
                 raise self.make_error("should_exist_and_should_be_custom", aux_tag_id=tag_id)
 
         if self.presence == "should_not_exist":
-            if load_all_tag_config_read_only().aux_tag_list.exists(tag_id):
+            ro_config = load_tag_config_read_only()
+            builtin_config = BuiltinTagConfig()
+            if ro_config.aux_tag_list.exists(tag_id) or builtin_config.aux_tag_list.exists(tag_id):
                 raise self.make_error("should_not_exist", aux_tag_id=tag_id)
+
+            if ro_config.tag_group_exists(TagGroupID(tag_id)) or builtin_config.tag_group_exists(
+                TagGroupID(tag_id)
+            ):
+                raise self.make_error("should_not_exist_tag_group", aux_tag_id=tag_id)
 
         if self.presence == "should_exist":
             if not load_all_tag_config_read_only().aux_tag_list.exists(tag_id):

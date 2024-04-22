@@ -14,11 +14,14 @@
 #########################################################################################
 
 import re
-from collections import Counter
 from collections.abc import Callable, Container, Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, Literal, NamedTuple, Pattern, TypedDict
+from dataclasses import dataclass
+from re import Pattern
+from typing import Any, Literal, NamedTuple, NotRequired, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
+
+from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
@@ -40,27 +43,124 @@ class Section(NamedTuple):
 SyslogConfig = tuple[Literal["tcp"], dict] | tuple[Literal["udp"], dict]
 
 
-class DictLogwatchEc(TypedDict, total=False):
-    method: Literal["", "spool:"] | str | SyslogConfig
-    facility: int
-    restrict_logfiles: list[str]
-    monitor_logfilelist: bool
-    expected_logfiles: list[str]
-    logwatch_reclassify: bool
-    monitor_logfile_access_state: Literal[0, 1, 2, 3]
-    separate_checks: bool
+class ParameterLogwatchEc(TypedDict):
+    """Parameters as created by the 'logwatch_ec' ruleset"""
+
+    method: NotRequired[Literal["", "spool:"] | str | SyslogConfig]
+    facility: NotRequired[int]
+    restrict_logfiles: NotRequired[list[str]]
+    monitor_logfilelist: NotRequired[bool]
+    expected_logfiles: NotRequired[list[str]]
+    logwatch_reclassify: NotRequired[bool]
+    monitor_logfile_access_state: NotRequired[Literal[0, 1, 2, 3]]
+    separate_checks: NotRequired[bool]
 
 
-ParameterLogwatchEc = Literal[""] | DictLogwatchEc
+_StateMap = Mapping[Literal["c_to", "w_to", "o_to", "._to"], Literal["C", "W", "O", "I", "."]]
 
 
-def service_extra_conf(service: str) -> list:
-    return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
-        HostName(host_name()), service, cmk.base.config.logwatch_rules
-    )
+class ParameterLogwatchRules(TypedDict):
+    reclassify_patterns: list[tuple[Literal["C", "W", "O", "I"], str, str]]
+    reclassify_states: NotRequired[_StateMap]
+
+
+class ParameterLogwatchGroups(TypedDict):
+    grouping_patterns: list[tuple[str, tuple[str, str]]]
 
 
 ClusterSection = dict[str | None, Section]
+
+
+class RulesetAccess:
+    """Namespace to get an overview of logwatch rulesets / configuration
+
+    Logwatch uses more configuration parameters that just its rulesets.
+    It also uses the current host name, and the "effective service level".
+
+    We consider 8 cases here: EC/¬EC, grouped/single, cluster/node.
+
+    There are three logwatch rulesets:
+
+    logwatch_rules:
+        These contain the reclassification-patterns and -states.
+        They are used:
+            * In all 8 check functions
+              ** match type "ALL"
+              ** in logwatch_ec (gouped) they don't match on the item (the group),
+                 but on the individual logfiles _in_ the group (bug or feature?).
+
+    logwatch_ec:
+        These contain forwarding parameters (which files + how) and a few flags.
+        They are used:
+            * As the 'official' check parameters in logwatch_ec (_not_ logwatch_ec_single)
+              This implies match type "MERGED".
+            * In all discovery functions, where in a "merged" style only the "restrict_logfiles"
+              parameters is used to filter the logfiles (forwardig VS no forwarding).
+            * In the EC case, they are "forwarded" to the check functions as discovered parameters.
+
+    logwatch_groups:
+        These contain grouping patterns for the ¬EC case.
+        They are used:
+            * As regular 'ALL' style discovery parameters for the ¬EC plugins.
+
+    PROPOSAL:
+    Way out: Change to one common discovery and two dedicated check paramater rulesets:
+
+        Discovery ruleset (ONE for all plugins).
+         * Match type: ALL.
+         * Grouping patterns
+         * Forwarding patterns
+
+        ¬EC check ruleset
+         * Match type: MERGE
+         * Reclassify-patterns and -states
+
+        EC check ruleset
+         * Match type: MERGE
+         * Reclassify-patterns and -states
+         * Forwarding parameters
+
+    * Current configurations could be embedded in an update config step.
+    * In the future, reclassification parameters would *always* be matched against the *item*.
+    * Proposal: Grouping should work the same regardless of EC/¬EC
+      (currently the options in EC are only 'group everything' or 'group nothing').
+      Grouping could be _independently_ configured from forwarding.
+    """
+
+    # This is only wishful typing -- but lets assume this is what we get.
+    @staticmethod
+    def logwatch_rules_all(item: str) -> Sequence[ParameterLogwatchRules]:
+        return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
+            HostName(host_name()), item, cmk.base.config.logwatch_rules  # type: ignore[arg-type]
+        )
+
+    # This is only wishful typing -- but lets assume this is what we get.
+    @staticmethod
+    def logwatch_ec_all() -> Sequence[ParameterLogwatchEc]:
+        """Isolate the remaining API violation w.r.t. parameters"""
+        return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
+            HostName(host_name()),
+            cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
+        )
+
+    # Yet another unbelievable API violation:
+    @staticmethod
+    def get_effective_service_level(
+        plugin_name: Literal["logwatch_ec", "logwatch_ec_single"],
+        item: str | None,
+    ) -> int:
+        """Get the service level that applies to the current service."""
+
+        host = HostName(host_name())
+        config_cache = cmk.base.config.get_config_cache()
+        service_description = cmk.base.config.service_description(
+            config_cache.ruleset_matcher, host, CheckPluginName(plugin_name), item
+        )
+        service_level = config_cache.service_level_of_service(host, service_description)
+        if service_level is not None:
+            return service_level
+
+        return config_cache.service_level(host) or 0
 
 
 def update_seen_batches(
@@ -90,15 +190,6 @@ def extract_unseen_lines(
         if batch not in seen_batches
         for line in lines
     ]
-
-
-# This is only wishful typing -- but lets assume this is what we get.
-def get_ec_rule_params() -> Sequence[ParameterLogwatchEc]:
-    """Isolate the remaining API violation w.r.t. parameters"""
-    return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
-        HostName(host_name()),
-        cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
-    )
 
 
 def discoverable_items(*sections: Section) -> list[str]:
@@ -143,33 +234,54 @@ class LogFileFilter:
         return any(rgx.match(logfile) for rgx in self._expressions)
 
 
+@dataclass(frozen=True)
+class ReclassifyParameters:
+    patterns: Sequence[tuple[Literal["C", "W", "O", "I"], str, str]]
+    states: _StateMap
+
+
+def compile_reclassify_params(params: Sequence[ParameterLogwatchRules]) -> ReclassifyParameters:
+    patterns: list[tuple[Literal["C", "W", "O", "I"], str, str]] = []
+    states: _StateMap = {}
+
+    for rule in params:
+        if isinstance(rule, dict):
+            patterns.extend(rule["reclassify_patterns"])
+            if "reclassify_states" in rule:
+                # (mo) wondering during migration: doesn't this mean the last one wins?
+                states = rule["reclassify_states"]
+        else:
+            patterns.extend(rule)
+
+    return ReclassifyParameters(patterns, states)
+
+
+# the `str` is a hack to account for the poorly typed `old_level` below.
+_STATE_CHANGE_MAP: Mapping[str, Literal["c_to", "w_to", "o_to", "._to"]] = {
+    "C": "c_to",
+    "W": "w_to",
+    "O": "o_to",
+    ".": "._to",
+}
+
+
 def reclassify(
-    counts: Counter[int],
-    patterns: dict[str, Any],  # all I know right now :-(
+    reclassify_parameters: ReclassifyParameters,
     text: str,
     old_level: str,
 ) -> str:
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
-    for level, pattern, _ in patterns.get("reclassify_patterns", []):
+    for level, pattern, _ in reclassify_parameters.patterns:
         # not necessary to validate regex: already done by GUI
-        reg = regex(pattern, re.UNICODE)
-        if reg.search(text):
-            # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
-            # then we count how many times this pattern has already matched and
-            # assign the levels according to the number of matches of this pattern.
-            if isinstance(level, tuple):
-                warn, crit = level
-                newcount = counts[id(pattern)] + 1
-                counts[id(pattern)] = newcount
-                if newcount >= crit:
-                    return "C"
-                return "W" if newcount >= warn else "I"
+        if regex(pattern, re.UNICODE).search(text):
             return level
 
     # Reclassify state to another state
-    change_state_paramkey = ("%s_to" % old_level).lower()
-    return patterns.get("reclassify_states", {}).get(change_state_paramkey, old_level)
+    try:
+        return reclassify_parameters.states[_STATE_CHANGE_MAP[old_level.upper()]]
+    except KeyError:
+        return old_level
 
 
 def check_errors(cluster_section: Mapping[str | None, Section]) -> Iterable[Result]:

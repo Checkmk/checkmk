@@ -6,10 +6,10 @@ import dataclasses
 import enum
 import urllib.parse
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, assert_never, Callable, Literal, Self, TypeVar
+from typing import Any, assert_never, Literal, Self, TypeVar
 
 from cmk.utils.password_store import ad_hoc_password_id
 from cmk.utils.rulesets.definition import RuleGroup
@@ -22,6 +22,7 @@ from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import Transform
 from cmk.gui.wato import _check_mk_configuration as legacy_cmk_config_groups
 from cmk.gui.wato import _rulespec_groups as legacy_wato_groups
@@ -40,6 +41,46 @@ from cmk.gui.watolib.rulespecs import (
 from cmk.rulesets import v1 as ruleset_api_v1
 
 GENERATED_GROUP_PREFIX = "gen-"
+
+RULESET_DOC_REFERENCES_MAP = {
+    RuleGroup.SpecialAgents("aws"): {
+        DocReference.AWS: ruleset_api_v1.Title("Monitoring Amazon Web Services (AWS)")
+    },
+    RuleGroup.SpecialAgents("aws_status"): {
+        DocReference.AWS: ruleset_api_v1.Title("Monitoring Amazon Web Services (AWS)")
+    },
+    RuleGroup.SpecialAgents("azure"): {
+        DocReference.AZURE: ruleset_api_v1.Title("Monitoring Microsoft Azure")
+    },
+    RuleGroup.SpecialAgents("azure_status"): {
+        DocReference.AZURE: ruleset_api_v1.Title("Monitoring Microsoft Azure")
+    },
+    RuleGroup.SpecialAgents("gcp"): {
+        DocReference.GCP: ruleset_api_v1.Title("Monitoring Google Cloud Platform (GCP)")
+    },
+    RuleGroup.SpecialAgents("gcp_status"): {
+        DocReference.GCP: ruleset_api_v1.Title("Monitoring Google Cloud Platform (GCP)")
+    },
+    RuleGroup.SpecialAgents("kube"): {
+        DocReference.KUBERNETES: ruleset_api_v1.Title("Monitoring Kubernetes")
+    },
+    RuleGroup.SpecialAgents("prometheus"): {
+        DocReference.PROMETHEUS: ruleset_api_v1.Title("Integrating Prometheus")
+    },
+    RuleGroup.SpecialAgents("vsphere"): {
+        DocReference.VMWARE: ruleset_api_v1.Title("Monitoring VMWare ESXi")
+    },
+}
+
+
+def _get_doc_references(
+    ruleset_name: str, localizer: Callable[[str], str]
+) -> dict[DocReference, str] | None:
+    if (doc_ref_mapping := RULESET_DOC_REFERENCES_MAP.get(ruleset_name, None)) is None:
+        return None
+    return {
+        doc_reference: title.localize(localizer) for doc_reference, title in doc_ref_mapping.items()
+    }
 
 
 def _localize_optional(
@@ -281,6 +322,7 @@ def _convert_to_legacy_host_rule_spec_rulespec(
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
+        doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
     )
 
 
@@ -298,6 +340,7 @@ def _convert_to_legacy_agent_config_rule_spec(
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=to_convert.is_deprecated,
         match_type=_convert_to_legacy_match_type(to_convert),
+        doc_references=_get_doc_references(RuleGroup.AgentConfig(to_convert.name), localizer),
     )
 
 
@@ -344,6 +387,7 @@ def _convert_to_legacy_service_rule_spec_rulespec(
         match_type=(
             "dict" if to_convert.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
         ),
+        doc_references=_get_doc_references(config_scope_prefix(to_convert.name), localizer),
     )
 
 
@@ -353,8 +397,6 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
     localizer: Callable[[str], str],
 ) -> type[legacy_rulespecs.RulespecSubGroup]:
     match topic_to_convert:
-        case ruleset_api_v1.rule_specs.Topic.AGENT_PLUGINS:
-            return _to_generated_builtin_sub_group(legacy_main_group, "Agent plug-ins", localizer)
         case ruleset_api_v1.rule_specs.Topic.APPLICATIONS:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersApplications
@@ -439,6 +481,10 @@ def _get_builtin_legacy_sub_group_with_main_group(  # pylint: disable=too-many-b
             if legacy_main_group == legacy_rulespecs.RulespecGroupEnforcedServices:
                 return legacy_rulespec_groups.RulespecGroupEnforcedServicesStorage
             return _to_generated_builtin_sub_group(legacy_main_group, "Storage", localizer)
+        case ruleset_api_v1.rule_specs.Topic.SYNTHETIC_MONITORING:
+            return _to_generated_builtin_sub_group(
+                legacy_main_group, "Synthetic Monitoring", localizer
+            )
         case ruleset_api_v1.rule_specs.Topic.VIRTUALIZATION:
             if legacy_main_group == legacy_rulespec_groups.RulespecGroupMonitoringConfiguration:
                 return legacy_wato_groups.RulespecGroupCheckParametersVirtualization
@@ -611,7 +657,7 @@ def _convert_to_legacy_valuespec(
 
 
 def _get_allow_empty_conf(
-    to_convert: ruleset_api_v1.form_specs.FormSpec[str], localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.form_specs.FormSpec, localizer: Callable[[str], str]
 ) -> Mapping[str, bool | str]:
     min_len_validator = None
     if to_convert.custom_validate is not None:
@@ -625,12 +671,9 @@ def _get_allow_empty_conf(
             None,
         )
 
-    return {
-        "allow_empty": min_len_validator is None,
-        "empty_text": (
-            min_len_validator.error_msg.localize(localizer) if min_len_validator is not None else ""
-        ),
-    }
+    if isinstance(min_len_validator, ruleset_api_v1.form_specs.validators.LengthInRange):
+        return {"allow_empty": False, "empty_text": min_len_validator.error_msg.localize(localizer)}
+    return {"allow_empty": True}
 
 
 def _convert_to_legacy_integer(
@@ -878,11 +921,8 @@ def _get_packed_value(
     match nested_form, value_to_pack:
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_pack:
             return _pack_dict_groups(dict_form.elements, dict_to_pack, packed_dict)
-        case (ruleset_api_v1.form_specs.Dictionary(), _) | (_, dict()):
-            raise TypeError(
-                f"Type of value {type(value_to_pack)} does not match the form spec {type(nested_form)}"
-            )
-    return value_to_pack
+        case _:
+            return value_to_pack
 
 
 def _pack_dict_groups(
@@ -930,11 +970,8 @@ def _get_unpacked_value(
     match nested_form, value_to_unpack:
         case ruleset_api_v1.form_specs.Dictionary() as dict_form, dict() as dict_to_unpack:
             return _unpack_dict_group(dict_form.elements, dict_to_unpack)
-        case (ruleset_api_v1.form_specs.Dictionary(), _) | (_, dict()):
-            raise TypeError(
-                f"Type of value {type(value_to_unpack)} does not match the form spec {type(nested_form)}"
-            )
-    return value_to_unpack
+        case _:
+            return value_to_unpack
 
 
 def _unpack_dict_group(
@@ -997,7 +1034,7 @@ def _convert_to_legacy_dictionary(
             help=_localize_optional(to_convert.help_text, localizer),
             empty_text=_localize_optional(to_convert.no_elements_text, localizer),
             required_keys=ungrouped_element_key_props.required + list(grouped_elements_map.keys()),
-            ignored_keys=list(to_convert.deprecated_elements),
+            ignored_keys=list(to_convert.ignored_elements),
             hidden_keys=ungrouped_element_key_props.hidden,
             validate=(
                 _convert_to_dict_legacy_validation(
@@ -1120,6 +1157,7 @@ def _convert_to_legacy_dropdown_choice(
         "help": _localize_optional(to_convert.help_text, localizer),
         "empty_text": _localize_optional(to_convert.no_elements_text, localizer),
         "read_only": to_convert.frozen,
+        "deprecated_choices": to_convert.ignored_elements,
     }
 
     match to_convert.prefill:
@@ -1143,9 +1181,6 @@ def _convert_to_legacy_dropdown_choice(
         converted_kwargs["invalid_choice_error"] = _localize_optional(
             to_convert.invalid_element_validation.error_msg, localizer
         )
-
-    if to_convert.deprecated_elements is not None:
-        converted_kwargs["deprecated_choices"] = to_convert.deprecated_elements
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -1244,6 +1279,7 @@ def _convert_to_legacy_list(
         "add_label": to_convert.add_element_label.localize(localizer),
         "del_label": to_convert.remove_element_label.localize(localizer),
         "text_if_empty": to_convert.no_element_label.localize(localizer),
+        **_get_allow_empty_conf(to_convert, localizer),
     }
 
     if to_convert.custom_validate is not None:
@@ -1597,7 +1633,7 @@ def _get_predictive_levels_choice_element(
             **p,
             # The backend uses this information to compute the correct prediction.
             # The Transform ensures that an updated value in the ruleset plugin
-            # is reflecetd in the stored data after update.
+            # is reflected in the stored data after update.
             "__reference_metric__": to_convert.reference_metric,
             "__direction__": (
                 "upper"
@@ -1999,6 +2035,7 @@ def _convert_to_legacy_list_choice(
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "default_value": to_convert.prefill.value,
+        **_get_allow_empty_conf(to_convert, localizer),
     }
 
     if to_convert.custom_validate is not None:

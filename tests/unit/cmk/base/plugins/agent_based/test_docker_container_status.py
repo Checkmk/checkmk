@@ -207,20 +207,50 @@ def test_discover_docker_container_status_uptime_multiple_nodes() -> None:
     [
         (
             {},
-            PARSED,
+            {
+                "StartedAt": "2019-06-05T10:00:00.000000000Z",
+                "Status": "running",
+            },
             [
-                Result(state=State.OK, summary="Up since 2019-06-05 08:58:07"),
-                Result(state=State.OK, summary="Uptime: 1 hour 1 minute"),
-                Metric("uptime", 3713.0),
+                Result(state=State.OK, summary="Up since 2019-06-05 10:00:00"),
+                Result(state=State.OK, summary="Uptime: 0 seconds"),
+                Metric("uptime", 0.0),
             ],
         ),
         (
             {"min": (1000, 2000)},
-            PARSED,
+            {
+                "StartedAt": "2019-06-05T09:00:00.000000000Z",
+                "Status": "running",
+            },
             [
-                Result(state=State.OK, summary="Up since 2019-06-05 08:58:07"),
-                Result(state=State.OK, summary="Uptime: 1 hour 1 minute"),
-                Metric("uptime", 3713.0),
+                Result(state=State.OK, summary="Up since 2019-06-05 09:00:00"),
+                Result(state=State.OK, summary="Uptime: 1 hour 0 minutes"),
+                Metric("uptime", 3600.0),
+            ],
+        ),
+        (
+            {"min": (1000, 2000)},
+            {
+                "StartedAt": "2019-06-05T09:00:00.000000000+04:00",  # means 05 UTC, 07 UTC+2 (ours)
+                "Status": "running",
+            },
+            [
+                Result(state=State.OK, summary="Up since 2019-06-05 05:00:00"),
+                Result(state=State.OK, summary="Uptime: 5 hours 0 minutes"),
+                Metric("uptime", 18000.0),
+            ],
+        ),
+        (
+            {"min": (1000, 2000)},
+            {
+                "StartedAt": "2019-06-05T01:00:00.000000000-04:00",  # means 05 UTC, 07 UTC+2 (ours)
+                "Status": "running",
+            },
+            [
+                Result(state=State.OK, summary="Up since 2019-06-05 05:00:00"),
+                Result(state=State.OK, summary="Uptime: 5 hours 0 minutes"),
+                Metric("uptime", 18000.0),
             ],
         ),
         (
@@ -248,7 +278,9 @@ def test_check_docker_container_status_uptime(
     section: docker.Section,
     expected_results: CheckResult,
 ) -> None:
-    with time_machine.travel(datetime.datetime.fromtimestamp(1559728800, tz=ZoneInfo("UTC"))):
+    with time_machine.travel(
+        datetime.datetime(2019, 6, 5, 10, 0, tzinfo=ZoneInfo("UTC"))
+    ):  # equals "2019-06-05T10:00:00.000000000Z"
         yielded_results = list(docker.check_docker_container_status_uptime(params, section, None))
         assert expected_results == yielded_results
 

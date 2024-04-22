@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import json
 import logging
-import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -13,7 +17,6 @@ from tests.testlib.agent import (
     register_controller,
     wait_until_host_receives_data,
 )
-from tests.update.conftest import BaseVersions
 from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
@@ -24,8 +27,9 @@ from tests.testlib.utils import (
 )
 from tests.testlib.version import CMKVersion, version_from_env
 
-from cmk.utils.version import Edition
+from tests.update.conftest import BaseVersions
 
+from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
 
@@ -206,7 +210,7 @@ def test_update_from_backup_demo(
     current_lost_services = {}
     missed_services = {}
 
-    with open(lost_services_path, "r") as json_file:
+    with open(lost_services_path) as json_file:
         known_lost_services = json.load(json_file)
 
     for hostname in target_hostnames:

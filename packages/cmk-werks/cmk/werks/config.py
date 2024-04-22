@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator, ValidationInfo
 
 
 class Config(BaseModel):
@@ -21,22 +21,47 @@ class Config(BaseModel):
     def all_components(self) -> list[tuple[str, str]]:
         return sum(self.edition_components.values(), self.components)
 
+    @model_validator(mode="before")
+    @classmethod
+    def default_current_version_from_context(
+        cls, data: dict[str, object], info: ValidationInfo
+    ) -> dict[str, object]:
+        """
+        Use the 'current_version' specified via context if it is missing from the model data.
+        """
+        if "current_version" in data:
+            return data
 
-def _load_current_version(defines_make: Path) -> str:
-    with defines_make.open(encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("VERSION"):
-                version = line.split("=", 1)[1].strip()
-                return version
-    raise RuntimeError("Failed to read VERSION from defines.make")
+        if (
+            info.context is not None
+            and (context_version := info.context.get("current_version")) is not None
+        ):
+            return data | {"current_version": context_version}
+
+        raise ValueError("current_version must be provided either directly or via context")
 
 
-def load_config(werk_config: Path, defines_make: Path) -> Config:
+def try_load_current_version_from_defines_make(defines_make: Path) -> str | None:
+    try:
+        with defines_make.open(encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("VERSION"):
+                    version = line.split("=", 1)[1].strip()
+                    return version
+    except FileNotFoundError:
+        pass
+
+    return None
+
+
+def load_config(werk_config: Path, *, current_version: str | None = None) -> Config:
     data: dict[str, object] = {}
     exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
         werk_config.read_text(encoding="utf-8"), data, data
     )
 
     data.pop("__builtins__")
-    data["current_version"] = _load_current_version(defines_make)
-    return Config.model_validate(data)
+    return Config.model_validate(
+        data,
+        context={"current_version": current_version},
+    )

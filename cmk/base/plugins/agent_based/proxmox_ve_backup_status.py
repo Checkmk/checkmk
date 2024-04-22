@@ -6,9 +6,7 @@
 import json
 from collections.abc import Mapping
 from datetime import datetime, timezone
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

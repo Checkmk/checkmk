@@ -5,7 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Iterable, Mapping, Protocol, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Protocol
 
 import pytest
 

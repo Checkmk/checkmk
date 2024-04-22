@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator
-from typing import Any, Generator, get_args, Literal
+from collections.abc import Generator, Iterator
+from typing import Any, get_args, Literal
 
 import pytest
 
@@ -92,7 +92,7 @@ def test_update_rule_with_full_contact_selection_data(clients: ClientRegistry) -
         "members_of_contact_groups": {"state": "enabled", "value": ["cg1", "cg2"]},
         "explicit_email_addresses": {
             "state": "enabled",
-            "value": ["monkey@tribe29.com", "thelionsleepstonight@thetokens.com"],
+            "value": ["monkey@example.com", "thelionsleepstonight@example.com"],
         },
         "restrict_by_custom_macros": {"state": "enabled", "value": []},
         "restrict_by_contact_groups": {"state": "enabled", "value": []},
@@ -371,6 +371,7 @@ def conditions_set_3() -> APIConditions:
 
 @managedtest
 @pytest.mark.usefixtures("with_host")
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 @pytest.mark.parametrize("testdata", [conditions_set_1(), conditions_set_2(), conditions_set_3()])
 def test_create_and_update_rule_with_conditions_data_200(
     clients: ClientRegistry,
@@ -398,6 +399,7 @@ def invalid_conditions() -> Iterator:
 
 @managedtest
 @pytest.mark.parametrize("testdata", invalid_conditions())
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_create_and_update_rule_with_conditions_data_400(
     clients: ClientRegistry,
     testdata: APIConditions,
@@ -1297,6 +1299,7 @@ def test_update_notification_method_cancel_previous(
 
 @managedtest
 @pytest.mark.parametrize("plugin_data", plugin_test_data)
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_update_notification_method(
     clients: ClientRegistry,
     plugin_data: PluginType,
@@ -1588,6 +1591,7 @@ def plugin_with_bulking(
 
 @managedtest
 @pytest.mark.parametrize("config", plugin_with_bulking(bulking="allowed"))
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_bulking_200(
     clients: ClientRegistry,
     config: APINotificationRule,
@@ -1599,6 +1603,7 @@ def test_bulking_200(
 
 @managedtest
 @pytest.mark.parametrize("config", plugin_with_bulking(bulking="not_allowed"))
+@pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_bulking_400(
     clients: ClientRegistry,
     config: APINotificationRule,

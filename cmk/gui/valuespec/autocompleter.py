@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Callable
+from collections.abc import Callable
 
 from cmk.utils.plugin_registry import Registry
 

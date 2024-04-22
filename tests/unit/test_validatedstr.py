@@ -15,9 +15,9 @@ from cmk.utils.validatedstr import ValidatedString
 @pytest.mark.parametrize(
     "str_name", ["", 23] + list("\"'^°!²³§$½¬%&/{([])}=?ß\\'`*+~#-.:,;ÜÖÄüöä<>|")
 )
-def test_invalid_plugin_name(str_name) -> None:  # type: ignore[no-untyped-def]
+def test_invalid_plugin_name(str_name: object) -> None:
     with pytest.raises((TypeError, ValueError)):
-        ValidatedString(str_name)
+        ValidatedString(str_name)  # type: ignore[arg-type]
 
 
 def test_plugin_name_repr() -> None:

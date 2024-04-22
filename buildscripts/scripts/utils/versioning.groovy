@@ -101,7 +101,7 @@ def get_distros(Map args) {
     }
 
     /// read distros from edition.yml otherwise.
-    docker_reference_image().inside("${mount_reference_repo_dir}") {
+    inside_container() {
         dir("${checkout_dir}") {
             return cmd_output("""scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \
@@ -115,7 +115,7 @@ def get_distros(Map args) {
 }
 
 def get_internal_artifacts_pattern() {
-    docker_reference_image().inside("${mount_reference_repo_dir}") {
+    inside_container() {
         dir("${checkout_dir}") {
             return sh(script: """scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \
@@ -126,7 +126,6 @@ def get_internal_artifacts_pattern() {
             """, returnStdout: true).trim();
         }
     }
-
 }
 
 def get_branch_version(String git_dir=".") {
@@ -184,24 +183,12 @@ def patch_themes(EDITION) {
             // Workaround since scss does not support conditional includes
             THEME_LIST.each { THEME ->
                 sh """
-                    echo '@mixin graphs_cee {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs_cee.scss
-                    echo '@mixin reporting {}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
-                    echo '@mixin ntop {}' > web/htdocs/themes/${THEME}/scss/cee/_ntop.scss
-                    echo '@mixin license_usage {}' > web/htdocs/themes/${THEME}/scss/cee/_license_usage.scss
-                    echo '@mixin robotmk {}' > web/htdocs/themes/${THEME}/scss/cee/_robotmk.scss
-                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
+                    echo '@mixin graphs_cee {\n}' > web/htdocs/themes/${THEME}/scss/cee/_graphs_cee.scss
+                    echo '@mixin reporting {\n}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
+                    echo '@mixin ntop {\n}' > web/htdocs/themes/${THEME}/scss/cee/_ntop.scss
+                    echo '@mixin license_usage {\n}' > web/htdocs/themes/${THEME}/scss/cee/_license_usage.scss
+                    echo '@mixin robotmk {\n}' > web/htdocs/themes/${THEME}/scss/cee/_robotmk.scss
                 """
-            }
-            break
-        case 'cloud':
-        case 'saas':
-        case 'enterprise':
-        case 'free':
-            // Workaround since scss does not support conditional includes
-            THEME_LIST.each { THEME ->
-                sh("""
-                    echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
-                """);
             }
             break
     }

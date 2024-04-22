@@ -261,7 +261,7 @@ def has_note(repo: Repo, commit: Commit, args: Args) -> bool:
 
 
 def add_note(repo: Repo, commit: Commit, args: Args) -> None:
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.UTC)
     note = f"Mail sent: {now.isoformat()}"
     repo.git.notes(f"--ref={args.ref}", "add", "-m", note, commit.hexsha)
     logger.info("added note to commit %s: %s", commit.hexsha, note)

@@ -10,7 +10,8 @@
 
 import re
 import time
-from typing import Final, Literal, Mapping, NamedTuple, NotRequired, TypedDict
+from collections.abc import Mapping
+from typing import Final, Literal, NamedTuple, NotRequired, TypedDict
 
 from cmk.agent_based.v2 import (
     check_levels,

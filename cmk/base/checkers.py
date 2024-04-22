@@ -52,6 +52,8 @@ from cmk.checkengine.checkresults import (
     MetricTuple,
     ServiceCheckResult,
     state_markers,
+    SubmittableServiceCheckResult,
+    UnsubmittableServiceCheckResult,
 )
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.exitspec import ExitSpec
@@ -78,6 +80,7 @@ from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAP
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
+from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import make_parser, make_sources, Source
 
 from cmk.agent_based.prediction_backend import (
@@ -265,6 +268,7 @@ class CMKFetcher:
         force_snmp_cache_refresh: bool,
         mode: Mode,
         on_error: OnError,
+        password_store_file: Path,
         selected_sections: SectionNameCollection,
         simulation_mode: bool,
         max_cachefile_age: MaxAge | None = None,
@@ -275,6 +279,7 @@ class CMKFetcher:
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.mode: Final = mode
         self.on_error: Final = on_error
+        self.password_store_file: Final = password_store_file
         self.selected_sections: Final = selected_sections
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
@@ -294,11 +299,28 @@ class CMKFetcher:
             # address is unknown). When called as non keepalive ipaddress may be None or
             # is already an address (2nd argument)
             hosts = [
-                (host_name, ip_address or config.lookup_ip_address(self.config_cache, host_name))
+                (
+                    host_name,
+                    (ip_stack_config := ConfigCache.ip_stack_config(host_name)),
+                    ip_address
+                    or (
+                        None
+                        if ip_stack_config is IPStackConfig.NO_IP
+                        else config.lookup_ip_address(self.config_cache, host_name)
+                    ),
+                )
             ]
         else:
             hosts = [
-                (node, config.lookup_ip_address(self.config_cache, node))
+                (
+                    node,
+                    (ip_stack_config := ConfigCache.ip_stack_config(node)),
+                    (
+                        None
+                        if ip_stack_config is IPStackConfig.NO_IP
+                        else config.lookup_ip_address(self.config_cache, node)
+                    ),
+                )
                 for node in self.config_cache.nodes(host_name)
             ]
 
@@ -315,7 +337,7 @@ class CMKFetcher:
                 make_sources(
                     current_host_name,
                     current_ip_address,
-                    ConfigCache.ip_stack_config(current_host_name),
+                    current_ip_stack_config,
                     config_cache=self.config_cache,
                     is_cluster=current_host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(
@@ -337,8 +359,9 @@ class CMKFetcher:
                     cas_dir=cas_dir,
                     ca_store=ca_store,
                     site_crt=site_crt,
+                    password_store_file=self.password_store_file,
                 )
-                for current_host_name, current_ip_address in hosts
+                for current_host_name, current_ip_stack_config, current_ip_address in hosts
             ),
             simulation=self.simulation_mode,
             file_cache_options=self.file_cache_options,
@@ -465,6 +488,10 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
                         time.time(),
                     ),
                 ),
+                # Most of the following are only needed for individual plugins, actually.
+                # once we have all of them in this place, we might want to consider how
+                # to optimize these computations.
+                only_from=self.config_cache.only_from(host_name),
             )
 
         return CheckPlugin(
@@ -515,20 +542,36 @@ def _get_check_function(
 
 
 def _aggregate_results(
-    subresults: tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+    subresults: tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]
 ) -> ServiceCheckResult:
     # Impedance matching part of `get_check_function()`.
-    perfdata, results = subresults
-    needs_marker = len(results) > 1
-    summaries: list[str] = []
+    ignore_results, metrics, results = subresults
+
+    if not ignore_results and not results:  # Check returned nothing
+        return SubmittableServiceCheckResult.item_not_found()
+
+    state = int(State.worst(*(r.state for r in results))) if results else 0
+    output = _aggregate_texts(ignore_results, results)
+
+    return (
+        UnsubmittableServiceCheckResult(state, output, metrics)
+        if ignore_results
+        else SubmittableServiceCheckResult(state, output, metrics)
+    )
+
+
+def _aggregate_texts(
+    ignore_results: Sequence[IgnoreResults],
+    results: Sequence[CheckFunctionResult],
+) -> str:
+    summaries = [t for e in ignore_results if (t := str(e))]
     details: list[str] = []
-    status = State.OK
+    needs_marker = len(results) > 1
 
     def _add_state_marker(result_str: str, state_marker: str) -> str:
         return result_str if state_marker in result_str else result_str + state_marker
 
     for result_ in results:
-        status = State.worst(status, result_.state)
         state_marker = state_markers[int(result_.state)] if needs_marker else ""
         if result_.summary:
             summaries.append(
@@ -544,17 +587,12 @@ def _aggregate_results(
             )
         )
 
-    # Empty list? Check returned nothing
-    if not details:
-        return ServiceCheckResult.item_not_found()
-
     if not summaries:
         count = len(details)
         summaries.append(
             "Everything looks OK - %d detail%s available" % (count, "" if count == 1 else "s")
         )
-    all_text = [", ".join(summaries)] + details
-    return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
+    return "\n".join([", ".join(summaries)] + details)
 
 
 def consume_check_results(
@@ -562,27 +600,26 @@ def consume_check_results(
     # creating invalid output.
     # Typing this as `CheckResult` will make linters complain about unreachable code.
     subresults: Iterable[object],
-) -> tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
+) -> tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
     """Impedance matching between the Check API and the Check Engine."""
     ignore_results: list[IgnoreResults] = []
     results: list[CheckFunctionResult] = []
     perfdata: list[MetricTuple] = []
-    for subr in subresults:
-        if isinstance(subr, IgnoreResults):
-            ignore_results.append(subr)
-        elif isinstance(subr, Metric):
-            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
-        elif isinstance(subr, CheckFunctionResult):
-            results.append(subr)
-        else:
-            raise TypeError(subr)
+    try:
+        for subr in subresults:
+            match subr:
+                case IgnoreResults():
+                    ignore_results.append(subr)
+                case Metric():
+                    perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+                case CheckFunctionResult():
+                    results.append(subr)
+                case _:
+                    raise TypeError(subr)
+    except IgnoreResultsError as exc:
+        return [IgnoreResults(str(exc))], perfdata, results
 
-    # Consume *all* check results, and *then* raise, if we encountered
-    # an IgnoreResults instance.
-    if ignore_results:
-        raise IgnoreResultsError(str(ignore_results[-1]))
-
-    return perfdata, results
+    return ignore_results, perfdata, results
 
 
 def _get_monitoring_data_kwargs(
@@ -595,7 +632,7 @@ def _get_monitoring_data_kwargs(
     *,
     cluster_nodes: Sequence[HostName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
-) -> tuple[Mapping[str, object], ServiceCheckResult]:
+) -> tuple[Mapping[str, object], UnsubmittableServiceCheckResult]:
     # Mapping[str, object] stands for either
     #  * Mapping[HostName, Mapping[str, ParsedSectionContent | None]] for clusters, or
     #  * Mapping[str, ParsedSectionContent | None] otherwise.
@@ -620,7 +657,7 @@ def _get_monitoring_data_kwargs(
                 nodes,
                 sections,
             ),
-            ServiceCheckResult.cluster_received_no_data([nk.hostname for nk in nodes]),
+            UnsubmittableServiceCheckResult.cluster_received_no_data([nk.hostname for nk in nodes]),
         )
 
     return (
@@ -629,7 +666,7 @@ def _get_monitoring_data_kwargs(
             HostKey(host_name, source_type),
             sections,
         ),
-        ServiceCheckResult.received_no_data(),
+        UnsubmittableServiceCheckResult.received_no_data(),
     )
 
 
@@ -664,6 +701,7 @@ def get_aggregated_result(
     rtc_package: AgentRawData | None,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     snmp_backend: SNMPBackendEnum,
+    only_from: None | str | list[str],
 ) -> AggregatedResult:
     # Mostly API-specific error-handling around the check function.
     #
@@ -715,7 +753,6 @@ def get_aggregated_result(
     if not section_kws:  # no data found
         return AggregatedResult(
             service=service,
-            submit=False,
             data_received=False,
             result=error_result,
             cache_info=None,
@@ -725,26 +762,19 @@ def get_aggregated_result(
     params_kw = (
         {}
         if plugin.check_default_parameters is None
-        else {"params": _final_read_only_check_parameters(service.parameters, injected_p)}
+        else {
+            "params": _final_read_only_check_parameters(service.parameters, injected_p, only_from)
+        }
     )
 
     try:
         check_result = check_function(**item_kw, **params_kw, **section_kws)
-    except IgnoreResultsError as e:
-        msg = str(e) or "No service summary available"
-        return AggregatedResult(
-            service=service,
-            submit=False,
-            data_received=True,
-            result=ServiceCheckResult(output=msg),
-            cache_info=None,
-        )
     except MKTimeout:
         raise
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        check_result = ServiceCheckResult(
+        check_result = SubmittableServiceCheckResult(
             3,
             create_check_crash_dump(
                 host_name,
@@ -770,7 +800,6 @@ def get_aggregated_result(
 
     return AggregatedResult(
         service=service,
-        submit=True,
         data_received=True,
         result=check_result,
         cache_info=get_cache_info(
@@ -786,6 +815,7 @@ def get_aggregated_result(
 def _final_read_only_check_parameters(
     entries: TimespecificParameters | LegacyCheckParameters,
     injected_p: InjectedParameters,
+    only_from: None | str | list[str],
 ) -> Parameters:
     params = (
         entries.evaluate(timeperiod_active)
@@ -799,83 +829,89 @@ def _final_read_only_check_parameters(
         # unwrapped by a decorator of the original check_function.
         wrap_parameters(
             (
-                inject_prediction_params_recursively(params, injected_p)
-                if _contains_predictive_levels(params)
+                postprocess_configuration(params, injected_p, only_from)
+                if _needs_postprocessing(params)
                 else params
             ),
         )
     )
 
 
-def _contains_predictive_levels(params: LegacyCheckParameters) -> bool:
-    if isinstance(params, (list, tuple)):
-        return any(_contains_predictive_levels(p) for p in params)
-
-    if isinstance(params, dict):
-        return (
-            "__injected__" in params
-            or "__reference_metric__" in params
-            or any(_contains_predictive_levels(p) for p in params.values())
-        )
-
+def _needs_postprocessing(params: object) -> bool:
+    match params:
+        case tuple(("cmk_postprocessed", str(), _)):
+            return True
+        case tuple() | list():
+            return any(_needs_postprocessing(p) for p in params)
+        case {"__injected__": _}:  # legacy "valuespec" case.
+            return True
+        case {**mapping}:
+            return any(_needs_postprocessing(p) for p in mapping.values())
     return False
 
 
-def inject_prediction_params_recursively(
+def postprocess_configuration(
     params: LegacyCheckParameters | Mapping[str, object],
     injected_p: InjectedParameters,
+    only_from: None | str | list[str],
 ) -> LegacyCheckParameters | Mapping[str, object]:
-    """This currently supports two ways to handle predictive levels.
+    """Postprocess configuration parameters.
+
+    Parameters consisting of a 3-tuple with the first element being
+    "cmk_postprocessed" and the second one one of several known string constants
+    are postprocessed.
+
+    This currently supports two ways to handle predictive levels.
 
     The "__injected__" case is legacy, the other case is the new one.
-    Once the legacy case is removed, this can be simplified significantly.
+    Once the legacy case is removed, this can be simplified.
 
     Hopefully we can move this out of this scope entirely someday (and get
     rid of the recursion).
     """
     match params:
-        case (
-            "cmk_postprocessed",
-            "predictive_levels",
-            {
-                "__reference_metric__": str(metric),
-                "__direction__": "upper" | "lower" as direction,
-            },
-        ):
-            return _get_prediction_and_levels(params[2], injected_p, metric, direction)
+        case tuple(("cmk_postprocessed", "predictive_levels", value)):
+            return _postprocess_predictive_levels(value, injected_p)
+        case tuple(("cmk_postprocessed", "only_from", _)):
+            return only_from
         case tuple():
-            return tuple(inject_prediction_params_recursively(v, injected_p) for v in params)
+            return tuple(postprocess_configuration(v, injected_p, only_from) for v in params)
         case list():
-            return list(inject_prediction_params_recursively(v, injected_p) for v in params)
-        case dict():
+            return list(postprocess_configuration(v, injected_p, only_from) for v in params)
+        case dict():  # check for legacy predictive levels :-(
             return {
                 k: (
                     injected_p.model_dump()
                     if k == "__injected__"
-                    else inject_prediction_params_recursively(v, injected_p)
+                    else postprocess_configuration(v, injected_p, only_from)
                 )
                 for k, v in params.items()
             }
     return params
 
 
-def _get_prediction_and_levels(
-    params: dict, injected_p: InjectedParameters, metric: str, direction: Literal["upper", "lower"]
+def _postprocess_predictive_levels(
+    params: dict, injected_p: InjectedParameters
 ) -> tuple[Literal["predictive"], tuple[str, float | None, tuple[float, float] | None]]:
-    return (
-        "predictive",
-        (
-            metric,
-            *lookup_predictive_levels(
-                metric,
-                direction,
-                PredictionParameters.model_validate(
-                    {k: v for k, v in params.items() if not k.startswith("__")}
+    match params:
+        case {
+            "__reference_metric__": str(metric),
+            "__direction__": "upper" | "lower" as direction,
+            **raw_prediction_params,
+        }:
+            return (
+                "predictive",
+                (
+                    metric,
+                    *lookup_predictive_levels(
+                        metric,
+                        direction,
+                        PredictionParameters.model_validate(raw_prediction_params),
+                        injected_p,
+                    ),
                 ),
-                injected_p,
-            ),
-        ),
-    )
+            )
+    raise ValueError(f"Invalid predictive levels: {params!r}")
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

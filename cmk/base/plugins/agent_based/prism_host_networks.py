@@ -5,8 +5,8 @@
 
 
 import json
-from collections.abc import Mapping
-from typing import Any, Iterable, MutableMapping, NamedTuple, Sequence
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, NamedTuple
 
 import pydantic
 

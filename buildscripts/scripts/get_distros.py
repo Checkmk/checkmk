@@ -18,7 +18,7 @@ import yaml
 
 sys.path.insert(0, Path(__file__).parent.parent.parent.as_posix())
 
-from tests.testlib.utils import get_cmk_download_credentials_file
+from tests.testlib.utils import get_cmk_download_credentials
 from tests.testlib.version import ABCPackageManager, code_name
 
 from cmk.utils.version import Edition
@@ -121,10 +121,7 @@ class Registry:
 
 
 def get_credentials() -> Credentials:
-    with open(get_cmk_download_credentials_file()) as credentials_file:
-        username, password = credentials_file.read().strip().split(":", maxsplit=1)
-
-    return Credentials(username=username, password=password)
+    return Credentials(*get_cmk_download_credentials())
 
 
 def hash_file(artifact_name: str) -> str:

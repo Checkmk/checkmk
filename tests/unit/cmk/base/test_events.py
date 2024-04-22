@@ -6,7 +6,7 @@
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.utils.notify_types import EventContext
+from cmk.utils.notify_types import EnrichedEventContext, EventContext
 
 import cmk.base.events
 from cmk.base.core_config import CollectedHostLabels
@@ -205,7 +205,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
 
 
 @pytest.mark.parametrize(
-    "raw_context, labels, expected",
+    "enriched_context, labels, expected",
     [
         pytest.param(
             {
@@ -278,7 +278,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
     ],
 )
 def test_update_raw_contect_with_labels(
-    raw_context: EventContext,
+    enriched_context: EnrichedEventContext,
     labels: CollectedHostLabels,
     expected: EventContext,
     monkeypatch: MonkeyPatch,
@@ -288,5 +288,5 @@ def test_update_raw_contect_with_labels(
         "read_notify_host_file",
         lambda host_name: labels,
     )
-    _update_raw_context_with_labels(raw_context)
-    assert raw_context == expected
+    _update_raw_context_with_labels(enriched_context)
+    assert enriched_context == expected

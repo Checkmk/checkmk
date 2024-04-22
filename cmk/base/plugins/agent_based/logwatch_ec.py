@@ -16,7 +16,7 @@
 import ast
 import socket
 import time
-from collections import Counter, defaultdict
+from collections import defaultdict
 from collections.abc import Container, Generator, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,10 +27,6 @@ import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
-from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
-
-# from cmk.base.config import logwatch_rules will NOT work!
-import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -51,7 +47,7 @@ from .utils import logwatch
 
 _MAX_SPOOL_SIZE = 1024**2
 
-CHECK_DEFAULT_PARAMETERS: logwatch.DictLogwatchEc = {
+CHECK_DEFAULT_PARAMETERS: logwatch.ParameterLogwatchEc = {
     "facility": 17,  # default to "local1"
     "method": "",  # local site
     "monitor_logfilelist": False,
@@ -59,22 +55,21 @@ CHECK_DEFAULT_PARAMETERS: logwatch.DictLogwatchEc = {
 }
 
 
-def discover_group(
-    section: logwatch.Section,
-) -> DiscoveryResult:
-    yield from discover_logwatch_ec_common(section, logwatch.get_ec_rule_params(), "groups")
+def discover_group(section: logwatch.Section) -> DiscoveryResult:
+    yield from discover_logwatch_ec_common(
+        section, logwatch.RulesetAccess.logwatch_ec_all(), "groups"
+    )
 
 
 def check_logwatch_ec(
-    params: logwatch.ParameterLogwatchEc,
-    section: logwatch.Section,
+    params: logwatch.ParameterLogwatchEc, section: logwatch.Section
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
     yield from check_logwatch_ec_common(
         None,
         params,
         {None: section},
-        service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
+        service_level=logwatch.RulesetAccess.get_effective_service_level("logwatch_ec", None),
         value_store=get_value_store(),
         hostname=HostName(host_name()),
         message_forwarder=MessageForwarder(None, HostName(host_name())),
@@ -82,14 +77,13 @@ def check_logwatch_ec(
 
 
 def cluster_check_logwatch_ec(
-    params: logwatch.ParameterLogwatchEc,
-    section: Mapping[str, logwatch.Section | None],
+    params: logwatch.ParameterLogwatchEc, section: Mapping[str, logwatch.Section | None]
 ) -> CheckResult:
     yield from check_logwatch_ec_common(
         None,
         params,
         {k: v for k, v in section.items() if v is not None},
-        service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
+        service_level=logwatch.RulesetAccess.get_effective_service_level("logwatch_ec", None),
         value_store=get_value_store(),
         hostname=host_name(),
         message_forwarder=MessageForwarder(None, HostName(host_name())),
@@ -108,10 +102,10 @@ register.check_plugin(
 )
 
 
-def discover_single(
-    section: logwatch.Section,
-) -> DiscoveryResult:
-    yield from discover_logwatch_ec_common(section, logwatch.get_ec_rule_params(), "single")
+def discover_single(section: logwatch.Section) -> DiscoveryResult:
+    yield from discover_logwatch_ec_common(
+        section, logwatch.RulesetAccess.logwatch_ec_all(), "single"
+    )
 
 
 def check_logwatch_ec_single(
@@ -124,7 +118,9 @@ def check_logwatch_ec_single(
         item,
         params,
         {None: section},
-        service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
+        service_level=logwatch.RulesetAccess.get_effective_service_level(
+            "logwatch_ec_single", item
+        ),
         value_store=get_value_store(),
         hostname=HostName(host_name()),
         message_forwarder=MessageForwarder(item, HostName(host_name())),
@@ -141,7 +137,9 @@ def cluster_check_logwatch_ec_single(
         item,
         params,
         {k: v for k, v in section.items() if v is not None},
-        service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
+        service_level=logwatch.RulesetAccess.get_effective_service_level(
+            "logwatch_ec_single", item
+        ),
         value_store=get_value_store(),
         hostname=host_name(),
         message_forwarder=MessageForwarder(item, HostName(host_name())),
@@ -154,29 +152,10 @@ register.check_plugin(
     sections=["logwatch"],
     discovery_function=discover_single,
     check_function=check_logwatch_ec_single,
-    # seems we're not using the ruleset since 2.0.0?!
+    # other params are added during discovery.
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     cluster_check_function=cluster_check_logwatch_ec_single,
 )
-
-
-# Yet another unbelievable API violation:
-def _get_effective_service_level(
-    plugin_name: CheckPluginName,
-    item: str | None,
-) -> int:
-    """Get the service level that applies to the current service."""
-
-    host = HostName(host_name())
-    config_cache = cmk.base.config.get_config_cache()
-    service_description = cmk.base.config.service_description(
-        config_cache.ruleset_matcher, host, plugin_name, item
-    )
-    service_level = config_cache.service_level_of_service(host, service_description)
-    if service_level is not None:
-        return service_level
-
-    return config_cache.service_level(host) or 0
 
 
 # OK      -> priority 5 (notice)
@@ -198,8 +177,8 @@ def logwatch_to_prio(level: str) -> int:
 
 def _logwatch_inventory_mode_rules(
     forward_settings: Sequence[logwatch.ParameterLogwatchEc],
-) -> tuple[Literal["no", "single", "groups"], logwatch.DictLogwatchEc]:
-    merged_rules: logwatch.DictLogwatchEc = {}
+) -> tuple[Literal["no", "single", "groups"], logwatch.ParameterLogwatchEc]:
+    merged_rules: logwatch.ParameterLogwatchEc = {}
     for rule in forward_settings[-1::-1]:
         if isinstance(rule, dict):
             for key, value in rule.items():
@@ -217,7 +196,7 @@ def discover_logwatch_ec_common(
     params: Sequence[logwatch.ParameterLogwatchEc],
     use_mode: str,
 ) -> DiscoveryResult:
-    log_filter = logwatch.LogFileFilter(logwatch.get_ec_rule_params())
+    log_filter = logwatch.LogFileFilter(params)
     if not (
         forwarded_logs := {
             item for item in logwatch.discoverable_items(section) if log_filter.is_forwarded(item)
@@ -233,7 +212,7 @@ def discover_logwatch_ec_common(
         yield Service(parameters={"expected_logfiles": sorted(forwarded_logs)})
         return
 
-    single_log_params = {}
+    single_log_params = logwatch.ParameterLogwatchEc()
     for key in [
         "method",
         "facility",
@@ -330,11 +309,6 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
             if item in node_data.logfiles:
                 used_logfiles[item].append((node_name, node_data.logfiles[item]["attr"]))
 
-        yield from logwatch.check_unreadable_files(
-            logwatch.get_unreadable_logfiles(item, parsed),
-            State(params["monitor_logfile_access_state"]),
-        )
-
     else:
         used_logfiles = defaultdict(list)
         # Filter logfiles if some should be excluded
@@ -344,40 +318,15 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
                     used_logfiles[name].append((node_name, data["attr"]))
         used_logfiles = dict(sorted(used_logfiles.items()))
 
-        for logfile in used_logfiles:
-            yield from logwatch.check_unreadable_files(
-                logwatch.get_unreadable_logfiles(logfile, parsed),
-                State(params["monitor_logfile_access_state"]),
-            )
+    for logfile in used_logfiles:
+        yield from logwatch.check_unreadable_files(
+            logwatch.get_unreadable_logfiles(logfile, parsed),
+            State(params["monitor_logfile_access_state"]),
+        )
 
     # Check if the number of expected files matches the actual one
     if params["monitor_logfilelist"]:
-        if "expected_logfiles" not in params:
-            yield Result(
-                state=State.WARN,
-                summary=(
-                    "You enabled monitoring the list of forwarded logfiles. "
-                    "You need to redo service discovery."
-                ),
-            )
-        else:
-            expected = params["expected_logfiles"]
-            missing = [
-                *_get_missing_logfiles_from_attr(used_logfiles),
-                *(f for f in expected if f not in used_logfiles),
-            ]
-            if missing:
-                yield Result(
-                    state=State.WARN,
-                    summary="Missing logfiles: %s" % (", ".join(missing)),
-                )
-
-            exceeding = [f for f in used_logfiles if f not in expected]
-            if exceeding:
-                yield Result(
-                    state=State.WARN,
-                    summary="Newly appeared logfiles: %s" % (", ".join(exceeding)),
-                )
+        yield from _monitor_logile_list(used_logfiles, params.get("expected_logfiles"))
 
     # 3. create syslog message of each line
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasas
@@ -392,38 +341,23 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     rclfd_total = 0
     rclfd_to_ignore = 0
 
-    logfile_reclassify_settings: dict[str, Any] = {}
-
-    def add_reclassify_settings(settings):
-        if isinstance(settings, dict):
-            logfile_reclassify_settings["reclassify_patterns"].extend(
-                settings.get("reclassify_patterns", [])
-            )
-            if "reclassify_states" in settings:
-                logfile_reclassify_settings["reclassify_states"] = settings["reclassify_states"]
-        else:  # legacy configuration
-            logfile_reclassify_settings["reclassify_patterns"].extend(settings)
+    reclassify = bool(params.get("logwatch_reclassify"))
 
     seen_batches = logwatch.update_seen_batches(value_store, parsed, used_logfiles)
     for logfile in used_logfiles:
         lines = _filter_accumulated_lines(parsed, logfile, seen_batches)
 
-        logfile_reclassify_settings["reclassify_patterns"] = []
-        logfile_reclassify_settings["reclassify_states"] = {}
-
         # Determine logwatch patterns specifically for this logfile
-        if params.get("logwatch_reclassify"):
-            logfile_settings = logwatch.service_extra_conf(logfile)
-            for settings in logfile_settings:
-                add_reclassify_settings(settings)
+        rules_for_this_file = logwatch.RulesetAccess.logwatch_rules_all(logfile)
+        logfile_reclassify_settings = (
+            logwatch.compile_reclassify_params(rules_for_this_file) if reclassify else None
+        )
 
         for line in lines:
             rclfd_level = None
             if logfile_reclassify_settings:
                 old_level, _text = line.split(" ", 1)
-                level = logwatch.reclassify(
-                    Counter(), logfile_reclassify_settings, line[2:], old_level
-                )
+                level = logwatch.reclassify(logfile_reclassify_settings, line[2:], old_level)
                 if level != old_level:
                     rclfd_total += 1
                     rclfd_level = level
@@ -486,6 +420,37 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
             state=State.OK,
             summary="Reclassified %d messages through logwatch patterns (%d to IGNORE)"
             % (rclfd_total, rclfd_to_ignore),
+        )
+
+
+def _monitor_logile_list(
+    used_logfiles: UsedLogFiles,
+    expected_logfiles: Iterable[str] | None,
+) -> Iterable[Result]:
+    if expected_logfiles is None:
+        yield Result(
+            state=State.WARN,
+            summary=(
+                "You enabled monitoring the list of forwarded logfiles. "
+                "You need to redo service discovery."
+            ),
+        )
+        return
+    missing = [
+        *_get_missing_logfiles_from_attr(used_logfiles),
+        *(f for f in expected_logfiles if f not in used_logfiles),
+    ]
+    if missing:
+        yield Result(
+            state=State.WARN,
+            summary="Missing logfiles: %s" % (", ".join(missing)),
+        )
+
+    exceeding = [f for f in used_logfiles if f not in expected_logfiles]
+    if exceeding:
+        yield Result(
+            state=State.WARN,
+            summary="Newly appeared logfiles: %s" % (", ".join(exceeding)),
         )
 
 

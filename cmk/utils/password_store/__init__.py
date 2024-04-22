@@ -43,10 +43,8 @@ import sys
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypedDict
 from uuid import uuid4
-
-from typing_extensions import TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -78,14 +76,28 @@ class Password(TypedDict):
 
 
 def password_store_path() -> Path:
+    """file where the user-managed passwords are stored."""
     return Path(cmk.utils.paths.var_dir, "stored_passwords")
+
+
+def core_password_store_path(config_path: ConfigPath) -> Path:
+    """file where the passwords for use by the helpers are stored
+
+    This is "frozen" in the state at config generation.
+    """
+    return Path(config_path) / "stored_passwords"
+
+
+def pending_password_store_path() -> Path:
+    """file where user-managed passwords and the ones extracted from the configuration are merged."""
+    return Path(cmk.utils.paths.var_dir, "passwords_merged")
 
 
 # This function and its questionable bahavior of operating in-place on sys.argv is quasi-public.
 # Many third party plugins rely on it, so we must not change it.
 # One day, when we have a more official versioned API we can hopefully remove it.
 def replace_passwords() -> None:
-    sys.argv[:] = hack.resolve_password_hack(sys.argv, load_for_helpers())
+    sys.argv[:] = hack.resolve_password_hack(sys.argv, lookup)
 
 
 def save(passwords: Mapping[str, str], store_path: Path) -> None:
@@ -102,11 +114,7 @@ def save(passwords: Mapping[str, str], store_path: Path) -> None:
     store.save_bytes_to_file(store_path, PasswordStore.encrypt(content))
 
 
-def load() -> dict[str, str]:
-    return _load(password_store_path())
-
-
-def _load(store_path: Path) -> dict[str, str]:
+def load(store_path: Path) -> dict[str, str]:
     with suppress(FileNotFoundError):
         store_path_bytes: bytes = store_path.read_bytes()
         if not store_path_bytes:
@@ -143,8 +151,9 @@ def ad_hoc_password_id() -> str:
 
 def extract(password_id: PasswordId) -> str | None:
     """Translate the password store reference to the actual password"""
+    staging_path = pending_password_store_path()
     if not isinstance(password_id, tuple):
-        return load().get(password_id)
+        return load(staging_path).get(password_id)
 
     # In case we get a tuple, assume it was coming from a ValueSpec "IndividualOrStoredPassword"
     pw_type, pw_id = password_id
@@ -152,18 +161,13 @@ def extract(password_id: PasswordId) -> str | None:
         return pw_id
     if pw_type == "store":
         # TODO: Is this None really intended? Shouldn't we better raise an exception?
-        return load().get(pw_id)
+        return load(staging_path).get(pw_id)
 
     raise MKGeneralException("Unknown password type.")
 
 
-def save_for_helpers(config_base_path: ConfigPath, passwords: Mapping[str, str]) -> None:
-    """Update the helper password store with the given passwords"""
-    save(passwords, _helper_password_store_path(config_base_path))
-
-
-def lookup(password_id: str, /) -> str:
-    """Look up the password in the password store compiled for the helpers and return it.
+def lookup(pw_file: Path, pw_id: str) -> str:
+    """Look up the password with id <id> in the file <file> and return it.
 
     Raises:
         ValueError: If the password_id is not found in the password store.
@@ -172,19 +176,11 @@ def lookup(password_id: str, /) -> str:
         The password as found in the password store.
     """
     try:
-        return load_for_helpers()[password_id]
+        return load(pw_file)[pw_id]
     except KeyError:
         # the fact that this is a dict is an implementation detail.
         # Let's make it a ValueError.
-        raise ValueError(f"Password {password_id!r} not found in password store")
-
-
-def load_for_helpers() -> dict[str, str]:
-    return _load(_helper_password_store_path(LATEST_CONFIG))
-
-
-def _helper_password_store_path(config_path: ConfigPath) -> Path:
-    return Path(config_path) / "stored_passwords"
+        raise ValueError(f"Password '{pw_id}' not found in {pw_file}")
 
 
 class PasswordStore:

@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Literal
-
-from typing_extensions import TypedDict
+from typing import Literal, TypedDict
 
 from cmk.agent_based.v2 import CheckResult, Metric, render, Result, State
 

@@ -227,14 +227,14 @@ def test_agent_cisco_meraki_main(
     monkeypatch.setattr(
         password_store,
         "lookup",
-        lambda k: {"my-api-key-id": "my-api-key"}[k],
+        lambda f, k: {("/file", "my-api-key-id"): "my-api-key"}[(str(f), k)],
     )
 
     agent_cisco_meraki.agent_cisco_meraki_main(
         agent_cisco_meraki.parse_arguments(
             [
                 "testhost",
-                "my-api-key-id",
+                "my-api-key-id:/file",
             ]
             + list(orgs)
             + list(args)

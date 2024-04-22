@@ -8,16 +8,14 @@ use crate::check::{
 };
 use std::collections::HashSet;
 use std::convert::AsRef;
-use std::fmt::{Display, Formatter, Result as FormatResult};
 use time::Duration;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::{BasicExtension, Validity, X509Certificate};
 use x509_parser::error::X509Error;
 use x509_parser::extensions::{GeneralName, SubjectAlternativeName};
 use x509_parser::prelude::FromDer;
-use x509_parser::prelude::{oid2sn, oid_registry, AlgorithmIdentifier};
+use x509_parser::prelude::{oid2sn, oid_registry};
 use x509_parser::public_key::PublicKey;
-use x509_parser::signature_algorithm::SignatureAlgorithm as X509SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::{AttributeTypeAndValue, SubjectPublicKeyInfo};
 
@@ -37,43 +35,13 @@ fn first_of<'a>(iter: &mut impl Iterator<Item = &'a AttributeTypeAndValue<'a>>) 
         .unwrap_or_default()
 }
 
-#[allow(non_camel_case_types)]
-#[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, PartialEq)]
-pub enum SignatureAlgorithm {
-    RSA,
-    RSASSA_PSS(String),
-    RSAAES_OAEP(String),
-    DSA,
-    ECDSA,
-    ED25519,
-}
-
-impl Display for SignatureAlgorithm {
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::RSA => "RSA".to_string(),
-                Self::RSASSA_PSS(hash) => format!("RSASSA_PSS-{}", hash.to_uppercase()),
-                Self::RSAAES_OAEP(hash) => format!("RSAAES_OAEP-{}", hash.to_uppercase()),
-                Self::DSA => "DSA".to_string(),
-                Self::ECDSA => "ECDSA".to_string(),
-                Self::ED25519 => "ED25519".to_string(),
-            }
-        )?;
-        Ok(())
-    }
-}
-
 #[derive(Debug, TypedBuilder)]
 #[builder(field_defaults(default))]
 pub struct Config {
     pubkey_algorithm: Option<String>,
     pubkey_size: Option<usize>,
     serial: Option<String>,
-    signature_algorithm: Option<SignatureAlgorithm>,
+    signature_algorithm: Option<String>,
     subject_cn: Option<String>,
     subject_alt_names: Option<Vec<String>>,
     subject_o: Option<String>,
@@ -92,6 +60,13 @@ fn handle_empty(s: &str) -> &str {
         "empty"
     } else {
         s
+    }
+}
+
+fn format_oid(oid: &oid_registry::Oid) -> String {
+    match oid2sn(oid, oid_registry()) {
+        Ok(s) => s.to_owned(),
+        _ => format!("{}", oid),
     }
 }
 
@@ -219,7 +194,21 @@ pub fn check(der: &[u8], config: Config) -> Collection {
                 ))
             }
         }),
-        check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm),
+        config.signature_algorithm.map(|expected| {
+            let name = "Signature algorithm";
+            let value = &cert.signature_algorithm.algorithm;
+            if expected == value.to_string() {
+                SimpleCheckResult::notice(format!("{}: {}", name, format_oid(value)))
+            } else {
+                SimpleCheckResult::warn(format!(
+                    "{} is {} ({}) but expected {}",
+                    name,
+                    handle_empty(&format_oid(value)),
+                    value,
+                    expected
+                ))
+            }
+        }),
         check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm),
         check_pubkey_size(cert.public_key(), config.pubkey_size),
         check_validity_not_after(
@@ -280,42 +269,6 @@ fn check_subject_alt_names(
     })
 }
 
-fn check_signature_algorithm(
-    signature_algorithm: &AlgorithmIdentifier,
-    expected: Option<SignatureAlgorithm>,
-) -> Option<SimpleCheckResult> {
-    expected.map(|expected| {
-        fn format_oid(oid: &oid_registry::Oid) -> String {
-            match oid2sn(oid, oid_registry()) {
-                Ok(s) => s.to_owned(),
-                _ => format!("{}", oid),
-            }
-        }
-
-        let name = "Signature algorithm";
-        let value = match X509SignatureAlgorithm::try_from(signature_algorithm) {
-            Ok(X509SignatureAlgorithm::RSA) => "RSA".to_string(),
-            Ok(X509SignatureAlgorithm::RSASSA_PSS(params)) => format!(
-                "RSASSA_PSS-{}",
-                format_oid(params.hash_algorithm_oid()).to_uppercase()
-            ),
-            Ok(X509SignatureAlgorithm::RSAAES_OAEP(params)) => format!(
-                "RSAAES_OAEP-{}",
-                format_oid(params.hash_algorithm_oid()).to_uppercase()
-            ),
-            Ok(X509SignatureAlgorithm::DSA) => "DSA".to_string(),
-            Ok(X509SignatureAlgorithm::ECDSA) => "ECDSA".to_string(),
-            Ok(X509SignatureAlgorithm::ED25519) => "ED25519".to_string(),
-            Err(_) => return SimpleCheckResult::warn("Signature algorithm: Parser failed"),
-        };
-        if expected.to_string() == value {
-            SimpleCheckResult::notice(format!("{}: {}", name, value))
-        } else {
-            SimpleCheckResult::warn(format!("{} is {} but expected {}", name, value, expected))
-        }
-    })
-}
-
 fn check_pubkey_algorithm(
     pubkey: &SubjectPublicKeyInfo,
     expected: Option<String>,
@@ -372,7 +325,7 @@ fn check_validity_not_after(
         None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
-            OutputType::Notice(format!(
+            OutputType::Summary(format!(
                 "Certificate expires in {} day(s) ({})",
                 time_to_expiration.whole_days(),
                 not_after

@@ -6,9 +6,7 @@
 from collections import defaultdict
 from collections.abc import Mapping
 from enum import Enum
-from typing import NamedTuple, NotRequired
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, NotRequired, TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,

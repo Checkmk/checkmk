@@ -14,10 +14,10 @@ import logging
 import subprocess
 import sys
 import traceback
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from itertools import chain
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Literal
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
@@ -232,7 +232,7 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
         _initialize_base_environment()
         for count, pre_action in enumerate(pre_update_actions, start=1):
             logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
-            pre_action(conflict_mode)
+            pre_action(logger, conflict_mode)
 
     logger.info(f"Done ({tty.green}success{tty.normal})\n")
 

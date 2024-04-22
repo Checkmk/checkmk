@@ -79,7 +79,7 @@ def test_check_mk_base(
     assert sections.count("<<<>>>") == 2
     assert _INTERNAL_SECTIONS.issubset(
         set(sections)
-    ), f"Missing sections: {_INTERNAL_SECTIONS.difference((set(sections)))}"
+    ), f"Missing sections: {_INTERNAL_SECTIONS.difference(set(sections))}"
     assert sections[-1] == "<<<systemtime>>>"
     assert len(sections) == SECTION_COUNT
 

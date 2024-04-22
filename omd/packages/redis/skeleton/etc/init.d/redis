@@ -10,9 +10,18 @@ OPTS="$OMD_ROOT/etc/redis/redis.conf"
 case "$1" in
 start)
     echo -n 'Starting redis...'
-    $DAEMON $OPTS
-    init-redis
-    echo OK
+    # shellcheck disable=SC2086 # Yes, we want splitting for OPTS.
+    if kill -0 "$THE_PID" >/dev/null 2>&1; then
+        echo 'Already running.'
+        exit 0
+    elif "$DAEMON" $OPTS; then
+        init-redis
+        echo OK
+        exit 0
+    else
+        echo Failed
+        exit 1
+    fi
     ;;
 stop)
     echo -n 'Stopping redis...'

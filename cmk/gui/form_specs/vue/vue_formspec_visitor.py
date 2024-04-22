@@ -5,10 +5,11 @@
 
 import json
 import uuid
+from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import asdict
 from enum import auto, Enum
-from typing import Any, Callable, final
+from typing import Any, final
 
 from cmk.utils.exceptions import MKGeneralException
 

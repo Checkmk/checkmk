@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Generator, NamedTuple, Self, TypeVar
+from typing import Any, NamedTuple, Self, TypeVar
 
 from cmk.utils import debug
 from cmk.utils.hostaddress import HostName

@@ -15,7 +15,7 @@ import json
 from collections import namedtuple
 from collections.abc import Mapping
 from time import time
-from typing import Any, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -94,7 +94,7 @@ def check_jenkins_jobs(item: str, params: Mapping[str, Any], section: Section) -
 
 
 def _check_jenkins_jobs(
-    item: str, params: Mapping[str, Any], section: Section, now: Optional[int | float] = None
+    item: str, params: Mapping[str, Any], section: Section, now: int | float | None = None
 ) -> CheckResult:
     if (item_data := section.get(item)) is None:
         return

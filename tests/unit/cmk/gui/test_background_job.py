@@ -107,15 +107,7 @@ class DummyBackgroundJob(BackgroundJob):
     def __init__(self) -> None:
         self.finish_hello_event = multiprocessing.Event()
 
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                deletable=False,
-                stoppable=True,
-                user=str(user.id) if user.id else None,
-            ),
-        )
+        super().__init__(self.job_prefix)
 
     def execute_hello(self, job_interface):
         sys.stdout.write("Hallo :-)\n")
@@ -135,11 +127,27 @@ def test_start_job() -> None:
     status = job.get_status()
     assert status.state == JobStatusStates.INITIALIZED
 
-    job.start(job.execute_hello)
+    job.start(
+        job.execute_hello,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=str(user.id) if user.id else None,
+        ),
+    )
     wait_until(job.is_active, timeout=5, interval=0.1)
 
     with pytest.raises(BackgroundJobAlreadyRunning):
-        job.start(job.execute_hello)
+        job.start(
+            job.execute_hello,
+            InitialStatusArgs(
+                title=job.gui_title(),
+                deletable=False,
+                stoppable=True,
+                user=str(user.id) if user.id else None,
+            ),
+        )
     assert job.is_active()
 
     job.finish_hello_event.set()
@@ -162,7 +170,15 @@ def test_start_job() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_stop_job() -> None:
     job = DummyBackgroundJob()
-    job.start(job.execute_endless)
+    job.start(
+        job.execute_endless,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=str(user.id) if user.id else None,
+        ),
+    )
 
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
@@ -204,7 +220,15 @@ def test_job_status_not_started() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_job_status_while_running() -> None:
     job = DummyBackgroundJob()
-    job.start(job.execute_endless)
+    job.start(
+        job.execute_endless,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=str(user.id) if user.id else None,
+        ),
+    )
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=5,
@@ -229,7 +253,15 @@ def test_job_status_while_running() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_job_status_after_stop() -> None:
     job = DummyBackgroundJob()
-    job.start(job.execute_endless)
+    job.start(
+        job.execute_endless,
+        InitialStatusArgs(
+            title=job.gui_title(),
+            deletable=False,
+            stoppable=True,
+            user=str(user.id) if user.id else None,
+        ),
+    )
     wait_until(
         lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=5,

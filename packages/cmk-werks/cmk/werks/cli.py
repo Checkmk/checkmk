@@ -26,7 +26,7 @@ from typing import Literal, NamedTuple, NoReturn
 
 from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
-from .config import Config, load_config
+from .config import Config, load_config, try_load_current_version_from_defines_make
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
 from .parse import WerkV2ParseResult
@@ -315,7 +315,8 @@ def get_last_werk() -> WerkId:
 
 @cache
 def get_config() -> Config:
-    return load_config(Path("config"), Path("../defines.make"))
+    current_version = try_load_current_version_from_defines_make(Path("../defines.make"))
+    return load_config(Path("config"), current_version=current_version)
 
 
 def load_werks() -> dict[WerkId, Werk]:

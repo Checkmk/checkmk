@@ -28,9 +28,7 @@ import json
 import os
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
-from typing import cast, Generic, Literal, Self, TypeVar
-
-from typing_extensions import TypedDict
+from typing import cast, Generic, Literal, Self, TypedDict, TypeVar
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -1935,12 +1933,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
 
     @classmethod
     def requested_page_by_name(cls, instances: OverridableInstances[Self], name: str) -> Self:
-        if raw_owner := request.var("owner"):
-            try:
-                owner = UserId(raw_owner)
-            except ValueError as e:
-                raise MKUserError("owner", str(e)) from e
-
+        if owner := request.get_validated_type_input(UserId, "owner"):
             cls.need_overriding_permission("see_user")
             if foreign := instances.find_foreign_page(owner, name):
                 return foreign
@@ -2265,7 +2258,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
             "synthetic_monitoring": {
                 "name": "synthetic_monitoring",
                 "title": _("Synthetic Monitoring"),
-                "icon_name": "topic_synthetic_monitoring",
+                "icon_name": "synthetic_monitoring_topic",
                 "description": "",
                 "public": True,
                 "sort_index": 105,

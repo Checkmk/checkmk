@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from pathlib import Path
-from typing import Any, NotRequired
-
-from typing_extensions import TypedDict
+from typing import Any, NotRequired, TypedDict
 
 import cmk.utils.paths
 

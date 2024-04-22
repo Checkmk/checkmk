@@ -5,9 +5,7 @@
 
 from dataclasses import asdict, dataclass
 from enum import Enum, unique
-from typing import Final
-
-from typing_extensions import TypedDict
+from typing import Final, TypedDict
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import (

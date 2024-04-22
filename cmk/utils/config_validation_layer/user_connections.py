@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal, NewType, Sequence
+from collections.abc import Sequence
+from typing import Literal, NewType, TypedDict
 
-from pydantic import BaseModel, Field, ValidationError
-from typing_extensions import TypedDict
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
-from cmk.utils.i18n import _
-
-from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 # these need to be written to a .mk file, so a more complex type like Path will lead to problems
 PrivateKeyPath = NewType("PrivateKeyPath", str)
@@ -142,7 +140,7 @@ class LDAPConnectionModel(BaseModel):
     group_member: str = OMITTED_FIELD
     active_plugins: ActivePlugins
     cache_livetime: int
-    customer: str = OMITTED_FIELD
+    customer: str | None = OMITTED_FIELD
     type: Literal["ldap"]
 
 
@@ -187,12 +185,15 @@ class SAMLConnectionModel(BaseModel):
     role_membership_mapping: ROLE_MAPPING
 
 
-def validate_user_connections(connections: list) -> None:
-    for connection in connections:
-        try:
-            if connection["type"] == "ldap":
-                LDAPConnectionModel(**connection)
-            elif connection["type"] == "saml2":
-                SAMLConnectionModel(**connection)
-        except ValidationError as exc:
-            raise MKConfigError(_("Error: user_connections.mk validation %s") % exc.errors())
+UserConnectionListAdapter = TypeAdapter(list[LDAPConnectionModel | SAMLConnectionModel])
+
+
+def validate_user_connections(connections: Sequence) -> None:
+    try:
+        UserConnectionListAdapter.validate_python(connections)
+    except ValidationError as exc:
+        raise ConfigValidationError(
+            which_file="user_connections.mk",
+            pydantic_error=exc,
+            original_data=connections,
+        )

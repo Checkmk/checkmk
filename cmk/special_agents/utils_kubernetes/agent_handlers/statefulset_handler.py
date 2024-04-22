@@ -1,6 +1,11 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from __future__ import annotations
 
-from typing import Iterator
+from collections.abc import Iterator
 
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationOption,

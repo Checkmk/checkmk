@@ -9,8 +9,8 @@ import functools
 import itertools
 import os
 import time
-from collections.abc import Callable, Iterator
-from typing import Any, Generator, Literal, NamedTuple, Sequence
+from collections.abc import Callable, Generator, Iterator, Sequence
+from typing import Any, Literal, NamedTuple
 
 from livestatus import (
     LivestatusRow,
@@ -63,6 +63,7 @@ from cmk.gui.valuespec import (
     Percentage,
     Timerange,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.view_utils import CSSClass
 
@@ -74,12 +75,12 @@ from cmk.bi.lib import (
     NodeComputeResult,
     NodeResultBundle,
 )
-from cmk.bi.trees import BICompiledAggregation, BICompiledRule
+from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
 
 AVMode = str  # TODO: Improve this type
-AVObjectType = Literal["host", "service", "bi"]  # TODO: Improve this type
+AVObjectType = Literal["host", "service", "bi"]
 AVOptions = dict[str, Any]  # TODO: Improve this type
-AVOptionValueSpecs = list  # TODO: Be more specific here
+AVOptionValueSpecs = list[tuple[str, Literal["double", "single"], bool, ValueSpec]]
 AVBIObjectSpec = tuple[None, None, str]
 AVHostOrServiceObjectSpec = tuple[SiteId, HostName, ServiceName]
 AVObjectSpec = None | AVBIObjectSpec | AVHostOrServiceObjectSpec
@@ -150,7 +151,7 @@ AVTimelineRow = tuple[AVSpan, AVTimelineStateName]
 AVTimelineRows = list[AVTimelineRow]
 AVTimelineStates = dict[AVTimelineStateName, int]
 AVTimelineStatistics = dict[AVTimelineStateName, tuple[int, int, int]]
-AVTimelineStyle = str
+AVTimelineStyle = Literal["standalone", "inline"]
 
 
 # Example for annotations:
@@ -202,7 +203,7 @@ class AvailabilityColumns:
         self.service = self._service_availability_columns()
         self.bi = self._bi_availability_columns()
 
-    def __getitem__(self, key) -> list[ColumnSpec]:  # type: ignore[no-untyped-def]
+    def __getitem__(self, key: str) -> list[ColumnSpec]:
         return getattr(self, key)
 
     def _host_availability_columns(self) -> list[ColumnSpec]:
@@ -2344,7 +2345,6 @@ def _increment_month(tst: time.struct_time) -> time.struct_time:
 #   '----------------------------------------------------------------------'
 
 BIAggregationGroupTitle = str
-BIAggregationTree = dict[str, Any]
 BIAggregationTitle = str
 BITreeState = Any
 BITimelineEntry = Any
@@ -2405,7 +2405,7 @@ def get_timeline_containers(
 
 # Not a real class, more a struct
 class TimelineContainer:
-    def __init__(self, aggr_row) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, aggr_row: Row) -> None:
         self._aggr_row = aggr_row
 
         # PUBLIC accessible data
@@ -2413,7 +2413,7 @@ class TimelineContainer:
             "aggr_compiled_aggregation"
         ]
         self.aggr_compiled_branch: BICompiledRule = self._aggr_row["aggr_compiled_branch"]
-        self.aggr_tree: BIAggregationTree = self._aggr_row["aggr_tree"]
+        self.aggr_tree: CompiledAggrTree = self._aggr_row["aggr_tree"]
         self.aggr_group: BIAggregationGroupTitle = self._aggr_row["aggr_group"]
 
         # Data fetched from livestatus query
@@ -2724,7 +2724,7 @@ def _get_timewarp_state(node_compute_result_bundle, timeline_container):
 
 
 def create_bi_timeline_entry(
-    tree: BIAggregationTree,
+    tree: CompiledAggrTree,
     aggr_group: BIAggregationGroupTitle,
     from_time: AVTimeStamp,
     until_time: AVTimeStamp,
@@ -2740,7 +2740,7 @@ def create_bi_timeline_entry(
         "service_description": tree["title"],
         "in_notification_period": 1,
         "in_service_period": node_compute_result.in_service_period,
-        "in_downtime": node_compute_result.downtime_state > 0,
+        "in_downtime": node_compute_result.in_downtime,
         "in_host_downtime": 0,
         "host_down": 0,
         "is_flapping": 0,
@@ -2789,7 +2789,7 @@ def _compute_node_result_bundle(
     if not results:
         # The aggregation did not find any hosts or services. Return "Not yet monitored"
         return NodeResultBundle(
-            NodeComputeResult(-1, 0, False, _("Not yet monitored"), True, {}, {}),
+            NodeComputeResult(-1, False, False, _("Not yet monitored"), True, {}, {}),
             None,
             [],
             None,

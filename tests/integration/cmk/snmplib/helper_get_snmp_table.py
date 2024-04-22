@@ -6,10 +6,10 @@
 import ast
 import logging
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import cmk.utils.paths
 from cmk.utils.sectionname import SectionName

@@ -16,7 +16,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checkresults import ServiceCheckResult
+from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
@@ -41,26 +41,32 @@ def make_timespecific_params_list(
 @pytest.mark.parametrize(
     "subresults, aggregated_results",
     [
-        ([], ServiceCheckResult.item_not_found()),
+        ([], SubmittableServiceCheckResult.item_not_found()),
         (
             [
                 Result(state=State.OK, notice="details"),
             ],
-            ServiceCheckResult(0, "Everything looks OK - 1 detail available\ndetails", []),
+            SubmittableServiceCheckResult(
+                0, "Everything looks OK - 1 detail available\ndetails", []
+            ),
         ),
         (
             [
                 Result(state=State.OK, summary="summary1", details="detailed info1"),
                 Result(state=State.WARN, summary="summary2", details="detailed info2"),
             ],
-            ServiceCheckResult(1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", []),
+            SubmittableServiceCheckResult(
+                1, "summary1, summary2(!)\ndetailed info1\ndetailed info2(!)", []
+            ),
         ),
         (
             [
                 Result(state=State.OK, summary="summary"),
                 Metric(name="name", value=42),
             ],
-            ServiceCheckResult(0, "summary\nsummary", [("name", 42.0, None, None, None, None)]),
+            SubmittableServiceCheckResult(
+                0, "summary\nsummary", [("name", 42.0, None, None, None, None)]
+            ),
         ),
     ],
 )
@@ -181,6 +187,20 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     )
 
 
+def test_only_from_injection() -> None:
+    inject = InjectedParameters(meta_file_path_template="", predictions={})
+    p: dict[str, object] = {
+        "outer": {
+            "inner": ("cmk_postprocessed", "only_from", None),
+        },
+    }
+    assert checkers.postprocess_configuration(p, inject, ["1.2.3.4"]) == {
+        "outer": {
+            "inner": ["1.2.3.4"],
+        },
+    }
+
+
 def test_prediction_injection_legacy() -> None:
     inject = InjectedParameters(meta_file_path_template="", predictions={})
     p: dict[str, object] = {
@@ -194,7 +214,7 @@ def test_prediction_injection_legacy() -> None:
             },
         )
     }
-    assert checkers.inject_prediction_params_recursively(p, inject) == {
+    assert checkers.postprocess_configuration(p, inject, []) == {
         "pagefile": (
             "predictive",
             {
@@ -234,7 +254,7 @@ def test_prediction_injection() -> None:
             },
         ),
     }
-    assert checkers.inject_prediction_params_recursively(p, inject) == {
+    assert checkers.postprocess_configuration(p, inject, []) == {
         "levels_upper": (
             "predictive",
             ("my_reference_metric", *prediction),

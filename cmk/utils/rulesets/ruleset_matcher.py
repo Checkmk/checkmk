@@ -8,9 +8,7 @@ import contextlib
 import dataclasses
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, NamedTuple, NotRequired, TypeAlias, TypeVar
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Generic, NamedTuple, NotRequired, TypeAlias, TypedDict, TypeVar
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import (

@@ -2,11 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Checker to prevent disallowed imports of modules
-
-See chapter "Module hierarchy" in coding_guidelines_python in wiki
-for further information.
-"""
+"""Checker to prevent disallowed imports of modules"""
 
 from contextlib import suppress
 from pathlib import Path
@@ -194,6 +190,7 @@ def _allowed_for_base(
             ),
             _in_component(imported=imported, component=Component("cmk.cee.helpers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
         )
     )
 
@@ -246,6 +243,7 @@ def _allow_for_gui(
             ),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.server_side_calls_backend")),
         )
     )
 
@@ -268,6 +266,7 @@ def _allow_for_gui_cee(
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.views")),
+            _in_component(imported=imported, component=Component("cmk.cee.robotmk.dashboards")),
             _in_component(imported=imported, component=Component("cmk.cee.robotmk.pages")),
             _in_component(
                 imported=imported, component=Component("cmk.cee.robotmk.bakery.rulespecs")

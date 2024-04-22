@@ -1,7 +1,7 @@
-#  !/usr/bin/env python3
-#  Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-#  This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-#  conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
@@ -56,6 +56,12 @@ def test_dictionary_ident_validation(name: str) -> None:
         Dictionary(elements=elements)
 
 
+def test_dictionary_ignored_elements_validation() -> None:
+    elements = {"name": DictElement(parameter_form=FixedValue(value=None))}
+    with pytest.raises(ValueError):
+        Dictionary(elements=elements, ignored_elements=("name",))
+
+
 def test_multiple_choice_validation() -> None:
     with pytest.raises(ValueError, match="Invalid prefill element"):
         MultipleChoice(
@@ -70,6 +76,15 @@ def test_single_choice_validation() -> None:
         SingleChoice(
             elements=elements,
             prefill=DefaultValue("element_xyz"),
+        )
+
+
+def test_single_choice_ignored_elements_validation() -> None:
+    elements = (SingleChoiceElement(name="element_abc", title=Title("Element ABC")),)
+    with pytest.raises(ValueError):
+        SingleChoice(
+            elements=elements,
+            ignored_elements=("element_abc",),
         )
 
 

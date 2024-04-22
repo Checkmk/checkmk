@@ -5,8 +5,8 @@
 """Modes for renaming one or multiple existing hosts"""
 
 import socket
-from collections.abc import Collection, Mapping, Sequence
-from typing import Any, Iterable
+from collections.abc import Collection, Iterable, Mapping, Sequence
+from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
@@ -160,11 +160,18 @@ class ModeBulkRenameHost(WatoMode):
         )
         if c:
             title = _("Renaming of %s") % ", ".join("%s → %s" % x[1:] for x in renamings)
-            host_renaming_job = RenameHostsBackgroundJob(title=title)
+            host_renaming_job = RenameHostsBackgroundJob()
 
             try:
                 host_renaming_job.start(
-                    lambda job_interface: rename_hosts_background_job(renamings, job_interface)
+                    lambda job_interface: rename_hosts_background_job(renamings, job_interface),
+                    background_job.InitialStatusArgs(
+                        title=title,
+                        lock_wato=True,
+                        stoppable=False,
+                        estimated_duration=host_renaming_job.get_status().duration,
+                        user=str(user.id) if user.id else None,
+                    ),
                 )
             except background_job.BackgroundJobAlreadyRunning as e:
                 raise MKGeneralException(_("Another host renaming job is already running: %s") % e)
@@ -514,14 +521,19 @@ class ModeRenameHost(WatoMode):
         self._check_new_host_name(folder, "newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.
-        host_renaming_job = RenameHostBackgroundJob(
-            self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname)
-        )
+        host_renaming_job = RenameHostBackgroundJob(self._host)
         renamings = [(folder, self._host.name(), newname)]
 
         try:
             host_renaming_job.start(
-                lambda job_interface: rename_hosts_background_job(renamings, job_interface)
+                lambda job_interface: rename_hosts_background_job(renamings, job_interface),
+                background_job.InitialStatusArgs(
+                    title=_("Renaming of %s -> %s") % (self._host.name(), newname),
+                    lock_wato=True,
+                    stoppable=False,
+                    estimated_duration=host_renaming_job.get_status().duration,
+                    user=str(user.id) if user.id else None,
+                ),
             )
         except background_job.BackgroundJobAlreadyRunning as e:
             raise MKGeneralException(_("Another host renaming job is already running: %s") % e)

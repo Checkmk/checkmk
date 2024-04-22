@@ -9,8 +9,7 @@
 # trying to capture the current behavior of the connector to facilitate refactoring
 
 import datetime
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 from unittest.mock import ANY, MagicMock
 
 import ldap  # type: ignore[import-untyped]
@@ -21,6 +20,7 @@ from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 from cmk.gui.type_defs import Users
+from cmk.gui.userdb._connections import Fixed, LDAPConnectionConfigFixed, LDAPUserConnectionConfig
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 
 
@@ -33,39 +33,38 @@ def fixture_mock_ldap_object(mocker: MockerFixture) -> MagicMock:
     return mocker.patch("ldap.ldapobject.ReconnectLDAPObject", autospec=True)
 
 
-Config = Mapping[str, Any]
-_test_config: Config = {
-    "id": "test-golden-ldap-connector",
-    "description": "LDAP connector for unit tests",
-    "comment": "Hi!",
-    "docu_url": "",
-    "disabled": False,
-    "directory_type": (
+_test_config = LDAPUserConnectionConfig(
+    id="test-golden-ldap-connector",
+    description="LDAP connector for unit tests",
+    comment="Hi!",
+    docu_url="",
+    disabled=False,
+    directory_type=(
         "openldap",
-        {
-            "connect_to": (
+        LDAPConnectionConfigFixed(
+            connect_to=(
                 "fixed_list",
-                {
-                    "server": "lolcathorst",
-                    "failover_servers": ["internet"],
-                },
+                Fixed(
+                    server="lolcathorst",
+                    failover_servers=["internet"],
+                ),
             )
-        },
+        ),
     ),
-    "user_dn": "ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
-    "user_scope": "sub",
-    "user_id_umlauts": "keep",
-    "group_dn": "ou=Groups,dc=ldap_golden,dc=unit_tests,dc=local",
-    "group_scope": "sub",
-    "active_plugins": {"alias": {}, "email": {}},
-    "cache_livetime": 300,
-    "type": "ldap",
-    "bind": ("bind_dn", "ldap_golden_unknown_password"),  # not in password_store
-    "version": 42,
-    "connect_timeout": 0.1,
-    "lower_user_ids": True,
-    "suffix": "LDAP_SUFFIX",
-}
+    user_dn="ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
+    user_scope="sub",
+    user_id_umlauts="keep",
+    group_dn="ou=Groups,dc=ldap_golden,dc=unit_tests,dc=local",
+    group_scope="sub",
+    active_plugins={"alias": {}, "email": {}},
+    cache_livetime=300,
+    type="ldap",
+    bind=("bind_dn", ("store", "ldap_golden_unknown_password")),  # not in password_store
+    version=2,
+    connect_timeout=0.1,
+    lower_user_ids=True,
+    suffix="LDAP_SUFFIX",
+)
 
 
 @pytest.mark.parametrize(
@@ -84,7 +83,7 @@ _test_config: Config = {
         },
     ],
 )
-def test_init_connector(config: Config) -> None:
+def test_init_connector(config: LDAPUserConnectionConfig) -> None:
     """Test initializing the connector with a given config"""
     LDAPUserConnector(config)
 

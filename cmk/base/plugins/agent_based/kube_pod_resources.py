@@ -9,9 +9,7 @@ import math
 import time
 from collections.abc import MutableMapping
 from itertools import islice
-from typing import Literal, NamedTuple
-
-from typing_extensions import TypedDict
+from typing import Literal, NamedTuple, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

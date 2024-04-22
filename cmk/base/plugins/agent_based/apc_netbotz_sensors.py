@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Callable, List
 
 from cmk.plugins.lib.humidity import check_humidity
 from cmk.plugins.lib.temperature import check_temperature, TempParamType
@@ -107,7 +106,7 @@ Section = Mapping[str, Mapping[str, SensorData]]
 
 
 def parse_apc_netbotz_sensors(
-    string_table: List[StringTable], parse_reading: Callable[[str], float]
+    string_table: list[StringTable], parse_reading: Callable[[str], float]
 ) -> Section:
     parsed: dict[str, dict[str, SensorData]] = {}
     for item_type, block in zip(("temp", "humidity", "dewpoint"), string_table):
@@ -140,7 +139,7 @@ def check_apc_netbotz_sensors(
 
 
 # ACP Netbotz v2 sensors deliver sensor readings in tenth of a degree or tenth of a percent
-def parse_apc_netbotz_v2_sensors(string_table: List[StringTable]) -> Section:
+def parse_apc_netbotz_v2_sensors(string_table: list[StringTable]) -> Section:
     def parse_reading(reading: str) -> float:
         return float(reading) / 10.0
 
@@ -170,7 +169,7 @@ register.snmp_section(
 
 
 # ACP Netbotz 50 sensors deliver sensor readings in degrees or percent
-def parse_apc_netbotz_50_sensors(string_table: List[StringTable]) -> Section:
+def parse_apc_netbotz_50_sensors(string_table: list[StringTable]) -> Section:
     return parse_apc_netbotz_sensors(string_table, float)
 
 

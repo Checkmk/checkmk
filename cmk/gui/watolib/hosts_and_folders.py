@@ -19,15 +19,15 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol
+from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, TypedDict
 
 from redis.client import Pipeline
-from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
 import cmk.utils.paths
 from cmk.utils import store
+from cmk.utils.config_validation_layer.groups import GroupName
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
@@ -63,7 +63,6 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException, MKUserError, RequestTimeout
-from cmk.gui.groups import GroupName
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -2497,7 +2496,7 @@ class Folder(FolderProtocol):
             hosts_by_site.setdefault(host.site_id(), []).append(host_name)
         return hosts_by_site
 
-    def move_hosts(self, host_names, target_folder: Folder):  # type: ignore[no-untyped-def]
+    def move_hosts(self, host_names: Collection[HostName], target_folder: Folder) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         user.need_permission("wato.edit_hosts")
@@ -3514,8 +3513,8 @@ def call_hook_hosts_changed(folder: Folder) -> None:
 # hostnames. These informations are used for displaying warning
 # symbols in the host list and the host detail view
 # Returns dictionary { hostname: [errors] }
-def validate_all_hosts(  # type: ignore[no-untyped-def]
-    hostnames: Sequence[HostName], force_all=False
+def validate_all_hosts(
+    hostnames: Sequence[HostName], force_all: bool = False
 ) -> dict[HostName, list[str]]:
     if hooks.registered("validate-all-hosts") and (len(hostnames) > 0 or force_all):
         hosts_errors: dict[HostName, list[str]] = {}

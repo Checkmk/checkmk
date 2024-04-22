@@ -17,7 +17,7 @@ import functools
 import hashlib
 import marshal
 import typing
-from typing import Callable
+from collections.abc import Callable
 
 from redis.exceptions import RedisError
 

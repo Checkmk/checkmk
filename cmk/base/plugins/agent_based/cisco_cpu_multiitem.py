@@ -5,9 +5,7 @@
 
 from contextlib import suppress
 from statistics import mean
-from typing import NamedTuple
-
-from typing_extensions import TypedDict
+from typing import NamedTuple, TypedDict
 
 from cmk.plugins.lib.cisco_mem import DETECT_MULTIITEM
 from cmk.plugins.lib.entity_mib import PhysicalClasses

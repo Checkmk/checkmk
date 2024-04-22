@@ -13,9 +13,7 @@ import pprint
 import queue
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn, TYPE_CHECKING
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Literal, NoReturn, TYPE_CHECKING, TypedDict
 
 from cmk.utils import version
 
@@ -176,16 +174,16 @@ class RestApiException(Exception):
 def get_link(resp: dict, rel: str) -> Mapping:
     for link in resp.get("links", []):
         if link["rel"].startswith(rel):
-            return link  # type: ignore[no-any-return]
+            return link
     if "result" in resp:
         for link in resp["result"].get("links", []):
             if link["rel"].startswith(rel):
-                return link  # type: ignore[no-any-return]
+                return link
     for member in resp.get("members", {}).values():
         if member["memberType"] == "action":
             for link in member["links"]:
                 if link["rel"].startswith(rel):
-                    return link  # type: ignore[no-any-return]
+                    return link
     raise KeyError(f"{rel!r} not found")
 
 
@@ -1539,7 +1537,7 @@ class DowntimeClient(RestApiClient):
 
     def delete(
         self,
-        delete_type: "FindByType",
+        delete_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
@@ -1573,7 +1571,7 @@ class DowntimeClient(RestApiClient):
 
     def modify(
         self,
-        modify_type: "FindByType",
+        modify_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
@@ -1617,7 +1615,7 @@ class DowntimeClient(RestApiClient):
     @staticmethod
     def _update_find_by_type(
         body: dict,
-        find_type: "FindByType",
+        find_type: FindByType,
         site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
@@ -2733,6 +2731,16 @@ class ParentScanClient(RestApiClient):
 
 @dataclasses.dataclass
 class ClientRegistry:
+    """Overall client registry for all available endpoint family clients.
+
+    Guidelines for individual clients:
+        1) Keep in mind that this is a test client rather than a user client.
+        This implies that not all fields must be made available as function arguments. This
+        applies especially to nested fields where a top-level dict definition should be enough.
+        Take a look at the 'performance_settings' of the ParentScan.start method.
+
+    """
+
     Licensing: LicensingClient
     ActivateChanges: ActivateChangesClient
     User: UserClient

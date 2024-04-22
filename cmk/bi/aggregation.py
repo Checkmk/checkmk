@@ -146,7 +146,17 @@ class BIAggregationSchema(Schema):
             "names": ["groupA", "groupB"],
             "paths": [["path", "group", "a"], ["path", "group", "b"]],
         },
+        description="Groups.",
     )
-    node = create_nested_schema_for_class(BINodeGenerator)
-    aggregation_visualization = create_nested_schema(BIAggregationVisualizationSchema)
-    computation_options = create_nested_schema_for_class(BIAggregationComputationOptions)
+    node = create_nested_schema_for_class(
+        BINodeGenerator,
+        description="Node generation.",
+    )
+    aggregation_visualization = create_nested_schema(
+        BIAggregationVisualizationSchema,
+        description="Aggregation visualization options.",
+    )
+    computation_options = create_nested_schema_for_class(
+        BIAggregationComputationOptions,
+        description="Computation options.",
+    )

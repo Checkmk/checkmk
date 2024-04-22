@@ -58,19 +58,17 @@ def main() {
     }
 
     // Build Phase
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_reference_image().inside() {
-            smart_stage(
-                name: 'Packer init',
-                condition: build_cloud_images,
-                raiseOnError: true,
-            ) {
-                dir("${checkout_dir}/packer") {
-                    // https://developer.hashicorp.com/packer/docs/configure#environment-variables-usable-for-packer
-                    withEnv(packer_envvars){
-                        // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
-                        sh("packer init .");
-                    }
+    inside_container() {
+        smart_stage(
+            name: 'Packer init',
+            condition: build_cloud_images,
+            raiseOnError: true,
+        ) {
+            dir("${checkout_dir}/packer") {
+                // https://developer.hashicorp.com/packer/docs/configure#environment-variables-usable-for-packer
+                withEnv(packer_envvars){
+                    // This step cannot be done during building images as it needs the *.pkr.hcl scripts from the repo
+                    sh("packer init .");
                 }
             }
             parallel(create_build_stages(cloud_targets, env_secret_map, build_cloud_images, packer_envvars));
@@ -78,14 +76,12 @@ def main() {
     }
 
     // Publish Phase
-    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        docker_reference_image().inside() {
-            dir("${checkout_dir}") {
-                // As we're using the same .venv for multiple cloud targets in parallel, we need to make sure the
-                // .venv is up-to-date before parallelisation. Otherwise one process may fail due to a invalid .venv.
-                sh("make .venv");
-                parallel(create_publish_stages(["aws": ami_image_name, "azure": azure_image_name], cmk_version, publish_cloud_images))
-            }
+    inside_container() {
+        dir("${checkout_dir}") {
+            // As we're using the same .venv for multiple cloud targets in parallel, we need to make sure the
+            // .venv is up-to-date before parallelisation. Otherwise one process may fail due to a invalid .venv.
+            sh("make .venv");
+            parallel(create_publish_stages(["aws": ami_image_name, "azure": azure_image_name], cmk_version, publish_cloud_images))
         }
     }
 }

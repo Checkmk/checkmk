@@ -13,7 +13,7 @@ import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import docker  # type: ignore[import-untyped]
 import requests
@@ -195,9 +195,9 @@ def build_checkmk(
 
     assert "Healthcheck" in config
 
-    assert attrs["ContainerConfig"]["Entrypoint"] == ["/docker-entrypoint.sh"]
+    assert config["Entrypoint"] == ["/docker-entrypoint.sh"]
 
-    assert attrs["ContainerConfig"]["ExposedPorts"] == {
+    assert config["ExposedPorts"] == {
         "5000/tcp": {},
         "6557/tcp": {},
     }
@@ -225,7 +225,7 @@ def start_checkmk(
     name: str | None = None,
     hostname: str | None = None,
     environment: dict[str, str] | None = None,
-    ports: dict[str, Union[int, None, tuple[str, int] | list[int]]] | None = None,
+    ports: dict[str, int | None | tuple[str, int] | list[int]] | None = None,
     volumes: list[str] | None = None,
     volumes_from: list[str] | None = None,
 ) -> Iterator[docker.models.containers.Container]:
@@ -445,7 +445,8 @@ def checkmk_docker_add_host(
     ipv4: str,
 ) -> None:
     """Create a host in a Checkmk docker instance."""
-    checkmk_docker_api_request(
+    logger.info('Add host "%s" to Checkmk at %s...', hostname, ipv4)
+    response = checkmk_docker_api_request(
         checkmk,
         "post",
         "/domain-types/host_config/collections/all",
@@ -458,6 +459,7 @@ def checkmk_docker_add_host(
             },
         },
     )
+    assert response.status_code == 200, f'Failed to add host "{hostname}" to Checkmk at {ipv4}!'
     checkmk_docker_activate_changes(checkmk)
 
 
@@ -468,6 +470,7 @@ def checkmk_docker_wait_for_services(
     attempts: int = 15,
 ) -> None:
     """Repeatedly discover services in a Checkmk docker instance until min_services are found."""
+    logger.info("Wait for service discovery...")
     for _ in range(attempts):
         if len(checkmk_docker_get_host_services(checkmk, hostname)) > min_services:
             break

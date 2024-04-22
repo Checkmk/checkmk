@@ -10,9 +10,7 @@ import itertools
 import time
 from collections.abc import Callable, Container, Iterable, Iterator
 from functools import partial
-from typing import Any, cast, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, cast, Literal, TypedDict
 
 import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.man_pages import make_man_page_path_map

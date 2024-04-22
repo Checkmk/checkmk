@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shlex
-from collections.abc import Mapping, Sequence
-from typing import Callable, Iterable, Protocol
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from pathlib import Path
+from typing import Protocol
 
 import cmk.utils.config_warnings as config_warnings
 from cmk.utils import password_store
@@ -27,9 +28,7 @@ SpecialAgentInfoFunctionResult = (  # or check.
     str | Sequence[str | int | float | tuple[str, str, str]] | SpecialAgentLegacyConfiguration
 )
 
-InfoFunc = Callable[
-    [Mapping[str, object], HostName, HostAddress | None], SpecialAgentInfoFunctionResult
-]
+InfoFunc = Callable[[object, HostName, HostAddress | None], SpecialAgentInfoFunctionResult]
 
 
 class ActiveCheckError(Exception):  # or agent
@@ -41,6 +40,7 @@ def commandline_arguments(
     description: ServiceName | None,
     commandline_args: SpecialAgentInfoFunctionResult,
     passwords: Mapping[str, str],
+    password_store_file: Path,
 ) -> str:
     """Commandline arguments for special agents or active checks."""
 
@@ -56,7 +56,7 @@ def commandline_arguments(
             "string of the concatenated arguments (Service: %s)." % (description)
         )
 
-    return _prepare_check_command(args, hostname, description, passwords)
+    return _prepare_check_command(args, hostname, description, passwords, password_store_file)
 
 
 def _prepare_check_command(
@@ -64,6 +64,7 @@ def _prepare_check_command(
     hostname: HostName,
     description: ServiceName | None,
     passwords: Mapping[str, str],
+    password_store_file: Path,
 ) -> str:
     """Prepares a check command for execution by Checkmk
 
@@ -87,7 +88,11 @@ def _prepare_check_command(
 
     return " ".join(
         password_store.hack.apply_password_hack(
-            formatted, passwords, config_warnings.warn, _make_log_label(hostname, description)
+            formatted,
+            passwords,
+            password_store_file,
+            config_warnings.warn,
+            _make_log_label(hostname, description),
         ),
     )
 
@@ -96,6 +101,7 @@ def replace_passwords(
     host_name: str,
     arguments: Sequence[str | Secret],
     passwords: Mapping[str, str],
+    password_store_file: Path,
     surrogated_secrets: Mapping[int, str],
     *,
     apply_password_store_hack: bool,
@@ -111,7 +117,7 @@ def replace_passwords(
         secret_name = surrogated_secrets[secret.id]
 
         if secret.pass_safely:
-            formatted.append(shlex.quote(secret_name))
+            formatted.append(shlex.quote(f"{secret_name}:{password_store_file}"))
             continue
 
         # we are meant to pass it as plain secret here, but we
@@ -134,7 +140,11 @@ def replace_passwords(
 
     return " ".join(
         password_store.hack.apply_password_hack(
-            formatted, passwords, config_warnings.warn, _make_log_label(host_name)
+            formatted,
+            passwords,
+            password_store_file,
+            config_warnings.warn,
+            _make_log_label(host_name),
         ),
     )
 

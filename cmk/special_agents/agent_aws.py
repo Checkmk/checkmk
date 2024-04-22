@@ -24,13 +24,21 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 from time import sleep
-from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TYPE_CHECKING, TypeVar
+from typing import (
+    Any,
+    assert_never,
+    Literal,
+    NamedTuple,
+    NotRequired,
+    TYPE_CHECKING,
+    TypedDict,
+    TypeVar,
+)
 
 import boto3
 import botocore
 from botocore.client import BaseClient
 from pydantic import BaseModel, ConfigDict, Field
-from typing_extensions import TypedDict
 
 import cmk.utils.password_store
 import cmk.utils.store as store

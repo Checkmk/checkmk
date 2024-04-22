@@ -6,7 +6,7 @@
 import logging
 import socket
 import ssl
-import sys
+from collections.abc import Buffer
 from pathlib import Path
 from typing import Final
 
@@ -24,12 +24,6 @@ from ._agentprtcl import (
     TransportProtocol,
     validate_agent_protocol,
 )
-
-if sys.version_info < (3, 12):
-    from typing_extensions import Buffer
-else:
-    from collections.abc import Buffer
-
 
 __all__ = ["TCPFetcher"]
 

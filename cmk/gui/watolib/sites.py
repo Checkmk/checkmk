@@ -6,6 +6,7 @@
 import os
 import re
 import time
+from pathlib import Path
 from typing import Any, cast, NamedTuple
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfigurations, SiteId
@@ -57,7 +58,42 @@ from cmk.gui.watolib.config_domains import (
 )
 from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.utils import ldap_connections_are_configurable, multisite_dir
+from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
+from cmk.gui.watolib.utils import ldap_connections_are_configurable
+
+
+class SitesConfigFile(WatoSingleConfigFile[SiteConfigurations]):
+    def __init__(self) -> None:
+        super().__init__(
+            config_file_path=Path(cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"),
+            config_variable="sites",
+        )
+
+    def _load_file(self, lock: bool) -> SiteConfigurations:
+        if not self._config_file_path.exists():
+            return default_single_site_configuration()
+
+        sites_from_file = store.load_from_mk_file(
+            self._config_file_path,
+            key=self._config_variable,
+            default={},
+            lock=lock,
+        )
+
+        if not sites_from_file:
+            return default_single_site_configuration()
+
+        sites = prepare_raw_site_config(sites_from_file)
+        validate_sites(sites)
+        return sites
+
+    def save(self, cfg: SiteConfigurations) -> None:
+        validate_sites(cfg)
+        super().save(cfg)
+
+
+def register(config_file_registry: ConfigFileRegistry) -> None:
+    config_file_registry.register(SitesConfigFile())
 
 
 class SiteManagement:
@@ -309,30 +345,14 @@ class SiteManagement:
 
     @classmethod
     def load_sites(cls) -> SiteConfigurations:
-        if not os.path.exists(cls._sites_mk()):
-            return default_single_site_configuration()
-
-        raw_sites = store.load_from_mk_file(cls._sites_mk(), "sites", {})
-        if not raw_sites:
-            return default_single_site_configuration()
-
-        sites = prepare_raw_site_config(raw_sites)
-        for site in sites.values():
-            if site.get("proxy") is not None:
-                site["proxy"] = cls.transform_old_connection_params(site["proxy"])
-
-        validate_sites(sites)
-        return sites
+        return SitesConfigFile().load_for_reading()
 
     @classmethod
     def save_sites(cls, sites: SiteConfigurations, activate: bool = True) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-        validate_sites(sites)
-
-        store.mkdir(multisite_dir())
-        store.save_to_mk_file(cls._sites_mk(), "sites", sites)
+        SitesConfigFile().save(sites)
 
         # Do not activate when just the site's global settings have
         # been edited
@@ -349,15 +369,12 @@ class SiteManagement:
             hooks.call("sites-saved", sites)
 
     @classmethod
-    def _sites_mk(cls):
-        return cmk.utils.paths.default_config_dir + "/multisite.d/sites.mk"
-
-    @classmethod
     def delete_site(cls, site_id):
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
 
-        all_sites = cls.load_sites()
+        sites_config_file = SitesConfigFile()
+        all_sites = sites_config_file.load_for_modification()
         if site_id not in all_sites:
             raise MKUserError(None, _("Unable to delete unknown site id: %s") % site_id)
 
@@ -388,7 +405,7 @@ class SiteManagement:
         domains = cls._affected_config_domains()
 
         del all_sites[site_id]
-        cls.save_sites(all_sites)
+        sites_config_file.save(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
         cmk.gui.watolib.changes.add_change(
             "edit-sites", _("Deleted site %s") % site_id, domains=domains, sites=[omd_site()]
@@ -397,10 +414,6 @@ class SiteManagement:
     @classmethod
     def _affected_config_domains(cls):
         return [ConfigDomainGUI]
-
-    @classmethod
-    def transform_old_connection_params(cls, value):
-        return value
 
 
 class SiteManagementFactory:

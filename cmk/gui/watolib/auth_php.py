@@ -39,13 +39,14 @@ from pathlib import Path
 from typing import Any, Literal
 
 import cmk.utils.store as store
+from cmk.utils.config_validation_layer.groups import GroupName
 
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
-from cmk.gui.groups import GroupName, load_contact_group_information
 from cmk.gui.hooks import ClearEvent
 from cmk.gui.type_defs import Users
 from cmk.gui.utils.roles import get_role_permissions
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.utils import format_php
 

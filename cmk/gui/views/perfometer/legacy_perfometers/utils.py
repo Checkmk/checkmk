@@ -11,7 +11,7 @@
 # Darin die vertikalen Balken.
 
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Literal
 
 from cmk.utils.exceptions import MKGeneralException
@@ -72,7 +72,7 @@ def render_perfometer_td(perc: float, color: str) -> HTML:
 
 # render the perfometer table
 # data is expected to be a list of tuples [(perc, color), (perc2, color2), ...]
-def render_perfometer(data: PerfometerData) -> HTML:
+def render_perfometer(data: Sequence[tuple[float, str]]) -> HTML:
     tds = HTML().join(render_perfometer_td(percentage, color) for percentage, color in data)
     return HTMLWriter.render_table(HTMLWriter.render_tr(tds))
 
@@ -166,8 +166,8 @@ def perfometer_logarithmic_dual_independent(
 #   '----------------------------------------------------------------------'
 
 
-# Create HTML representation of Perf-O-Meter
-def render_metricometer(stack) -> HTML:  # type: ignore[no-untyped-def]
+def render_metricometer(stack: Sequence[Sequence[tuple[int | float, str]]]) -> HTML:
+    """Create HTML representation of Perf-O-Meter"""
     if len(stack) not in (1, 2):
         raise MKGeneralException(
             _("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack

@@ -1,4 +1,4 @@
-use check_cert::checker::certificate::{self, Config as CertConfig, SignatureAlgorithm};
+use check_cert::checker::certificate::{self, Config as CertConfig};
 
 // Taken from `x509-parser`.
 static DER: &[u8] = include_bytes!("../assets/IGC_A.der");
@@ -25,7 +25,7 @@ fn test_cert_ok() {
             .issuer_ou(s("DCSSI"))
             .issuer_st(s("France"))
             .issuer_c(s("FR"))
-            .signature_algorithm(Some(SignatureAlgorithm::RSA))
+            .signature_algorithm(s("1.2.840.113549.1.1.5"))
             .pubkey_algorithm(s(PUBKEY_ALG))
             .pubkey_size(Some(PUBKEY_SZ))
             .build(),
@@ -43,7 +43,7 @@ fn test_cert_ok() {
             Issuer OU: DCSSI\n\
             Issuer ST: France\n\
             Issuer C: FR\n\
-            Signature algorithm: RSA\n\
+            Signature algorithm: sha1WithRSAEncryption\n\
             Public key algorithm: {PUBKEY_ALG}\n\
             Public key size: {PUBKEY_SZ}"
         )

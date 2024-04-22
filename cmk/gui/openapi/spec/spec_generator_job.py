@@ -31,9 +31,17 @@ def register(job_registry: BackgroundJobRegistry) -> None:
 
 
 def trigger_spec_generation_in_background(user_id: str | None) -> None:
-    job = SpecGeneratorBackgroundJob(user_id)
+    job = SpecGeneratorBackgroundJob()
     with suppress(BackgroundJobAlreadyRunning):
-        job.start(_generate_spec_in_background_job)
+        job.start(
+            _generate_spec_in_background_job,
+            InitialStatusArgs(
+                title=SpecGeneratorBackgroundJob.gui_title(),
+                stoppable=False,
+                lock_wato=False,
+                user=user_id,
+            ),
+        )
 
 
 class SpecGeneratorBackgroundJob(BackgroundJob):
@@ -43,16 +51,8 @@ class SpecGeneratorBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Generate REST API specification")
 
-    def __init__(self, user_id: str | None) -> None:
-        super().__init__(
-            self.job_prefix,
-            InitialStatusArgs(
-                title=self.gui_title(),
-                stoppable=False,
-                lock_wato=False,
-                user=user_id,
-            ),
-        )
+    def __init__(self) -> None:
+        super().__init__(self.job_prefix)
 
 
 def _generate_spec_in_background_job(job_interface: BackgroundProcessInterface) -> None:

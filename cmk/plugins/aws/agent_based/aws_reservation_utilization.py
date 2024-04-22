@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from datetime import date
-from typing import Optional, Tuple, TypedDict
+from typing import TypedDict
 
 from pydantic import BaseModel
 
@@ -34,7 +34,7 @@ Section = dict[str, ReservationUtilization]
 
 
 class UtilizationParams(TypedDict):
-    levels_utilization_percent: Optional[Tuple[float, float]]
+    levels_utilization_percent: tuple[float, float] | None
 
 
 def parse_aws_reservation_utilization(string_table: StringTable) -> Section:
@@ -61,7 +61,7 @@ def check_aws_reservation_utilization(params: UtilizationParams, section: Sectio
     if not section:
         raise IgnoreResultsError("Currently no data from AWS")
 
-    latest_date = max((date.fromisoformat(d) for d in section.keys())).strftime("%Y-%m-%d")
+    latest_date = max(date.fromisoformat(d) for d in section.keys()).strftime("%Y-%m-%d")
     data = section[latest_date]
 
     yield from check_levels(

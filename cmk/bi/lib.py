@@ -65,7 +65,7 @@ class BIStates:
 
 class NodeComputeResult(NamedTuple):
     state: int
-    downtime_state: int
+    in_downtime: bool
     acknowledged: bool
     output: str
     in_service_period: bool
@@ -173,15 +173,17 @@ def create_nested_schema_for_class(
     class_template: type[ABCWithSchema],
     default_schema: type[Schema] | None = None,
     example_config: list | dict[str, Any] | None = None,
+    description: str | None = None,
 ) -> Nested:
     class_schema = class_template.schema()
-    return create_nested_schema(class_schema, default_schema, example_config)
+    return create_nested_schema(class_schema, default_schema, example_config, description)
 
 
 def create_nested_schema(
     base_schema: type[marshmallow_Schema],
     default_schema: type[marshmallow_Schema] | None = None,
     example_config: list | dict[str, Any] | None = None,
+    description: str | None = None,
 ) -> Nested:
     """
 
@@ -194,9 +196,10 @@ def create_nested_schema(
     {}
 
     Args:
-        base_schema:
-        default_schema:
-        example_config:
+        base_schema: Schema
+        default_schema: Schema for default value, uses base_schema if not specified
+        example_config: Example value, uses generated default value is not specified
+        description: Schema description, uses an unhelpful message if not specified
 
     Returns:
 
@@ -207,7 +210,7 @@ def create_nested_schema(
         base_schema,
         dump_default=default_config,
         example=example,
-        description="Nested dictionary",
+        description=description or "Nested dictionary",
     )
 
 
@@ -264,10 +267,24 @@ class BIAggregationComputationOptions(ABCWithSchema):
 
 
 class BIAggregationComputationOptionsSchema(Schema):
-    disabled = ReqBoolean(dump_default=False, example=False)
-    use_hard_states = ReqBoolean(dump_default=False, example=False)
-    escalate_downtimes_as_warn = ReqBoolean(dump_default=False, example=False)
-    freeze_aggregations = Boolean(dump_default=False, example=False)
+    disabled = ReqBoolean(
+        dump_default=False, example=False, description="Enable or disable this computation option."
+    )
+    use_hard_states = ReqBoolean(
+        dump_default=False,
+        example=False,
+        description="Bases state computation only on hard states instead of hard and soft states.",
+    )
+    escalate_downtimes_as_warn = ReqBoolean(
+        dump_default=False,
+        example=False,
+        description="Escalates downtimes based on aggregated WARN state instead of CRIT state.",
+    )
+    freeze_aggregations = Boolean(
+        dump_default=False,
+        example=False,
+        description="Generates the aggregations initially, then doesn't update them automatically.",
+    )
 
 
 class BIAggregationGroups(ABCWithSchema):
@@ -294,8 +311,18 @@ class BIAggregationGroups(ABCWithSchema):
 
 
 class BIAggregationGroupsSchema(Schema):
-    names = List(ReqString(), dump_default=[], example=["group1", "group2"])
-    paths = List(List(ReqString()), dump_default=[], example=[["path", "of", "group1"]])
+    names = List(
+        ReqString(),
+        dump_default=[],
+        example=["group1", "group2"],
+        description="List of group names.",
+    )
+    paths = List(
+        List(ReqString(), description="List of group path segments."),
+        dump_default=[],
+        example=[["path", "of", "group1"]],
+        description="List of group paths.",
+    )
 
 
 class BIParams(ABCWithSchema):
@@ -316,7 +343,9 @@ class BIParams(ABCWithSchema):
 
 
 class BIParamsSchema(Schema):
-    arguments = ReqList(String, dump_default=[], example=["testhostParams"])
+    arguments = ReqList(
+        String, dump_default=[], example=["testhostParams"], description="List of arguments."
+    )
 
 
 T = TypeVar("T", str, dict, list)

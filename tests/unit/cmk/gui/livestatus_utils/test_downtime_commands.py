@@ -48,8 +48,8 @@ def test_host_downtime(
 
 
 @pytest.mark.usefixtures("request_context")
-def test_host_downtime_with_services(  # type: ignore[no-untyped-def]
-    mock_livestatus, dates
+def test_host_downtime_with_services(
+    mock_livestatus: MockLiveStatusConnection, dates: tuple[dt.datetime, dt.datetime]
 ) -> None:
     start_time, end_time = dates
 

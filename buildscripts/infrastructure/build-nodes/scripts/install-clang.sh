@@ -8,7 +8,7 @@
 # This script will install the llvm toolchain on the different
 # Debian and Ubuntu versions
 
-set -eux
+set -eu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh

@@ -9,11 +9,9 @@ from __future__ import annotations
 
 import abc
 import time
-from collections import OrderedDict
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import total_ordering
-from typing import Any, Literal, NamedTuple
+from typing import NamedTuple
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -27,8 +25,8 @@ from cmk.utils.structured_data import (
     ImmutableTable,
     ImmutableTree,
     RetentionInterval,
+    SDDeltaValue,
     SDKey,
-    SDNodeName,
     SDPath,
     SDRawDeltaTree,
     SDRawTree,
@@ -50,19 +48,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, Request
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
-from cmk.gui.inventory.filters import (
-    FilterInvBool,
-    FilterInvFloat,
-    FilterInvtableAdminStatus,
-    FilterInvtableAvailable,
-    FilterInvtableIntegerRange,
-    FilterInvtableInterfaceType,
-    FilterInvtableOperStatus,
-    FilterInvtableText,
-    FilterInvtableVersion,
-    FilterInvText,
-    get_ranged_table_filter_name,
-)
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry, register_painter
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptionRegistry, PainterOptions
@@ -88,7 +73,7 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
-from cmk.gui.view_utils import CellSpec, CSVExportError, render_labels
+from cmk.gui.view_utils import CellSpec, CSVExportError
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals import get_livestatus_filter_headers
@@ -96,23 +81,31 @@ from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 
 from . import builtin_display_hints
+from ._display_hints import (
+    AttributeDisplayHint,
+    ColumnDisplayHint,
+    DISPLAY_HINTS,
+    DisplayHints,
+    PAINT_FUNCTION_NAME_PREFIX,
+)
 from .registry import (
     inv_paint_funtions,
     inventory_displayhints,
     InventoryHintSpec,
     InvPaintFunction,
-    InvValue,
-    PaintFunction,
     PaintResult,
-    SortFunction,
 )
 
-_PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
+__all__ = [
+    "DISPLAY_HINTS",
+    "DisplayHints",
+    "InventoryHintSpec",
+]
 
 
 def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
     for k, v in mapping.items():
-        if k.startswith(_PAINT_FUNCTION_NAME_PREFIX) and callable(v):
+        if k.startswith(PAINT_FUNCTION_NAME_PREFIX) and callable(v):
             inv_paint_funtions.register(InvPaintFunction(name=k, func=v))
 
 
@@ -253,7 +246,7 @@ class PainterInventoryTree(Painter):
 
 
 class ABCRowTable(RowTable):
-    def __init__(self, info_names, add_host_columns) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, info_names: Sequence[str], add_host_columns: Sequence[ColumnName]) -> None:
         super().__init__()
         self._info_names = info_names
         self._add_host_columns = add_host_columns
@@ -264,7 +257,7 @@ class ABCRowTable(RowTable):
         cells: Sequence[Cell],
         columns: Sequence[ColumnName],
         context: VisualContext,
-        headers: str,
+        _unused_headers: str,
         only_sites: OnlySites,
         limit: object,
         all_active_filters: Sequence[Filter],
@@ -272,11 +265,11 @@ class ABCRowTable(RowTable):
         self._add_declaration_errors()
 
         # Create livestatus filter for filtering out hosts
-        host_columns = (
-            ["host_name"]
-            + list({c for c in columns if c.startswith("host_") and c != "host_name"})
-            + self._add_host_columns
-        )
+        host_columns = [
+            "host_name",
+            *{c for c in columns if c.startswith("host_") and c != "host_name"},
+            *self._add_host_columns,
+        ]
 
         query = "GET hosts\n"
         query += "Columns: " + (" ".join(host_columns)) + "\n"
@@ -297,7 +290,7 @@ class ABCRowTable(RowTable):
         data = self._get_raw_data(only_sites, query)
 
         # Now create big table of all inventory entries of these hosts
-        headers = ["site"] + host_columns
+        headers = ["site", *host_columns]
         rows = []
         for row in data:
             hostrow: Row = dict(zip(headers, row))
@@ -311,16 +304,8 @@ class ABCRowTable(RowTable):
         with sites.only_sites(only_sites), sites.prepend_site():
             return sites.live().query(query)
 
+    @abc.abstractmethod
     def _get_rows(self, hostrow: Row) -> Iterable[Row]:
-        inv_data = self._get_inv_data(hostrow)
-        return self._prepare_rows(inv_data)
-
-    @abc.abstractmethod
-    def _get_inv_data(self, hostrow: Row) -> Any:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def _prepare_rows(self, inv_data: Any) -> Iterable[Row]:
         raise NotImplementedError()
 
     def _add_declaration_errors(self) -> None:
@@ -338,178 +323,253 @@ class ABCRowTable(RowTable):
 #   '----------------------------------------------------------------------'
 
 
-def decorate_inv_paint(
-    skip_painting_if_string: bool = False,
-) -> Callable[[PaintFunction], PaintFunction]:
-    def decorator(f: PaintFunction) -> PaintFunction:
-        def wrapper(v: Any) -> PaintResult:
-            if v in ["", None]:
-                return "", ""
-            if skip_painting_if_string and isinstance(v, str):
-                return "number", v
-            return f(v)
-
-        return wrapper
-
-    return decorator
+def inv_paint_generic(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, float):
+        return "number", "%.2f" % value
+    if isinstance(value, int):
+        return "number", "%d" % value
+    if isinstance(value, bool):
+        return "", _("Yes") if value else _("No")
+    return "", escape_text("%s" % value)
 
 
-@decorate_inv_paint()
-def inv_paint_generic(v: int | float | str | bool) -> PaintResult:
-    if isinstance(v, float):
-        return "number", "%.2f" % v
-    if isinstance(v, int):
-        return "number", "%d" % v
-    if isinstance(v, bool):
-        return "", _("Yes") if v else _("No")
-    return "", escape_text("%s" % v)
+def inv_paint_hz(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, float):
+        raise ValueError(value)
+    return "number", cmk.utils.render.fmt_number_with_precision(value, drop_zeroes=False, unit="Hz")
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_hz(hz: float) -> PaintResult:
-    return "number", cmk.utils.render.fmt_number_with_precision(hz, drop_zeroes=False, unit="Hz")
-
-
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_bytes(b: int) -> PaintResult:
-    if b == 0:
+def inv_paint_bytes(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, int):
+        raise ValueError(value)
+    if value == 0:
         return "number", "0"
-    return "number", cmk.utils.render.fmt_bytes(b, precision=0)
+    return "number", cmk.utils.render.fmt_bytes(value, precision=0)
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_size(b: int) -> PaintResult:
-    return "number", cmk.utils.render.fmt_bytes(b)
+def inv_paint_size(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, int):
+        raise ValueError(value)
+    return "number", cmk.utils.render.fmt_bytes(value)
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_bytes_rounded(b: int) -> PaintResult:
-    if b == 0:
+def inv_paint_bytes_rounded(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, int):
+        raise ValueError(value)
+    if value == 0:
         return "number", "0"
-    return "number", cmk.utils.render.fmt_bytes(b)
+    return "number", cmk.utils.render.fmt_bytes(value)
 
 
-@decorate_inv_paint()
-def inv_paint_number(b: str | int | float) -> PaintResult:
-    return "number", str(b)
+def inv_paint_number(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, (str, int, float)):
+        raise ValueError(value)
+    return "number", str(value)
 
 
-# Similar to paint_number, but is allowed to
-# abbreviate things if numbers are very large
-# (though it doesn't do so yet)
-@decorate_inv_paint()
-def inv_paint_count(b: str | int | float) -> PaintResult:
-    return "number", str(b)
+def inv_paint_count(value: SDValue) -> PaintResult:
+    # Similar to paint_number, but is allowed to
+    # abbreviate things if numbers are very large
+    # (though it doesn't do so yet)
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, (str, int, float)):
+        raise ValueError(value)
+    return "number", str(value)
 
 
-@decorate_inv_paint()
-def inv_paint_nic_speed(bits_per_second: str) -> PaintResult:
-    return "number", cmk.utils.render.fmt_nic_speed(bits_per_second)
+def inv_paint_nic_speed(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, (str, int)):
+        raise ValueError(value)
+    return "number", cmk.utils.render.fmt_nic_speed(value)
 
 
-@decorate_inv_paint()
-def inv_paint_if_oper_status(oper_status: int) -> PaintResult:
-    if oper_status == 1:
+def inv_paint_if_oper_status(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, int):
+        raise ValueError(value)
+    if value == 1:
         css_class = "if_state_up"
-    elif oper_status == 2:
+    elif value == 2:
         css_class = "if_state_down"
     else:
         css_class = "if_state_other"
 
-    return "if_state " + css_class, interface_oper_state_name(
-        oper_status, "%s" % oper_status
-    ).replace(" ", "&nbsp;")
-
-
-# admin status can only be 1 or 2, matches oper status :-)
-@decorate_inv_paint()
-def inv_paint_if_admin_status(admin_status: int) -> PaintResult:
-    return inv_paint_if_oper_status(admin_status)
-
-
-@decorate_inv_paint()
-def inv_paint_if_port_type(port_type: int) -> PaintResult:
-    type_name = interface_port_types().get(port_type, _("unknown"))
-    return "", "%d - %s" % (port_type, type_name)
-
-
-@decorate_inv_paint()
-def inv_paint_if_available(available: bool) -> PaintResult:
-    return "if_state " + (available and "if_available" or "if_not_available"), (
-        available and _("free") or _("used")
+    return (
+        "if_state " + css_class,
+        interface_oper_state_name(value, "%s" % value).replace(" ", "&nbsp;"),
     )
 
 
-@decorate_inv_paint()
-def inv_paint_mssql_is_clustered(clustered: bool) -> PaintResult:
-    return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), (
-        clustered and _("is clustered") or _("is not clustered")
+def inv_paint_if_admin_status(value: SDValue) -> PaintResult:
+    # admin status can only be 1 or 2, matches oper status :-)
+    if value == "" or value is None:
+        return "", ""
+    return inv_paint_if_oper_status(value)
+
+
+def inv_paint_if_port_type(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, int):
+        raise ValueError(value)
+    type_name = interface_port_types().get(value, _("unknown"))
+    return "", "%d - %s" % (value, type_name)
+
+
+def inv_paint_if_available(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, bool):
+        raise ValueError(value)
+    return (
+        "if_state " + (value and "if_available" or "if_not_available"),
+        (value and _("free") or _("used")),
     )
 
 
-@decorate_inv_paint()
-def inv_paint_mssql_node_names(node_names: str) -> PaintResult:
-    return "", node_names
+def inv_paint_mssql_is_clustered(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, bool):
+        raise ValueError(value)
+    return (
+        "mssql_" + (value and "is_clustered" or "is_not_clustered"),
+        (value and _("is clustered") or _("is not clustered")),
+    )
 
 
-@decorate_inv_paint()
-def inv_paint_ipv4_network(nw: str) -> PaintResult:
-    if nw == "0.0.0.0/0":
+def inv_paint_mssql_node_names(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, str):
+        raise ValueError(value)
+    return "", value
+
+
+def inv_paint_ipv4_network(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, str):
+        raise ValueError(value)
+    if value == "0.0.0.0/0":
         return "", _("Default")
-    return "", nw
+    return "", value
 
 
-@decorate_inv_paint()
-def inv_paint_ip_address_type(t: str) -> PaintResult:
-    if t == "ipv4":
+def inv_paint_ip_address_type(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, str):
+        raise ValueError(value)
+    if value == "ipv4":
         return "", _("IPv4")
-    if t == "ipv6":
+    if value == "ipv6":
         return "", _("IPv6")
-    return "", t
+    return "", value
 
 
-@decorate_inv_paint()
-def inv_paint_route_type(rt: str) -> PaintResult:
-    if rt == "local":
+def inv_paint_route_type(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, str):
+        raise ValueError(value)
+    if value == "local":
         return "", _("Local route")
     return "", _("Gateway route")
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_volt(volt: float) -> PaintResult:
-    return "number", "%.1f V" % volt
+def inv_paint_volt(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, float):
+        raise ValueError(value)
+    return "number", "%.1f V" % value
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_date(timestamp: int) -> PaintResult:
-    date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
+def inv_paint_date(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, int):
+        raise ValueError(value)
+    date_painted = time.strftime("%Y-%m-%d", time.localtime(value))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_date_and_time(timestamp: int) -> PaintResult:
-    date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
+def inv_paint_date_and_time(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, int):
+        raise ValueError(value)
+    date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_age(age: float) -> PaintResult:
-    return "number", cmk.utils.render.approx_age(age)
+def inv_paint_age(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, float):
+        raise ValueError(value)
+    return "number", cmk.utils.render.approx_age(value)
 
 
-@decorate_inv_paint()
-def inv_paint_bool(value: bool) -> PaintResult:
+def inv_paint_bool(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, bool):
+        raise ValueError(value)
     return "", (_("Yes") if value else _("No"))
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_timestamp_as_age(timestamp: int) -> PaintResult:
-    age = time.time() - timestamp
-    return inv_paint_age(age)
+def inv_paint_timestamp_as_age(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, int):
+        raise ValueError(value)
+    return inv_paint_age(time.time() - value)
 
 
-@decorate_inv_paint(skip_painting_if_string=True)
-def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
+def inv_paint_timestamp_as_age_days(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if isinstance(value, str):
+        return "number", value
+    if not isinstance(value, int):
+        raise ValueError(value)
+
     def round_to_day(ts):
         broken = time.localtime(ts)
         return int(
@@ -529,7 +589,7 @@ def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
         )
 
     now_day = round_to_day(time.time())
-    change_day = round_to_day(timestamp)
+    change_day = round_to_day(value)
     age_days = int((now_day - change_day) / 86400.0)
 
     css_class = "number"
@@ -540,580 +600,51 @@ def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
     return css_class, "%d %s ago" % (int(age_days), _("days"))
 
 
-@decorate_inv_paint()
-def inv_paint_csv_labels(csv_list: str) -> PaintResult:
-    return "labels", HTMLWriter.render_br().join(csv_list.split(","))
+def inv_paint_csv_labels(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, str):
+        raise ValueError(value)
+    return "labels", HTMLWriter.render_br().join(value.split(","))
 
 
-@decorate_inv_paint()
-def inv_paint_cmk_label(label: Sequence[str]) -> PaintResult:
-    return "labels", render_labels(
-        {label[0]: label[1]},
-        object_type="host",
-        with_links=True,
-        label_sources={label[0]: "discovered"},
-        request=request,
-    )
-
-
-@decorate_inv_paint()
-def inv_paint_container_ready(ready: str) -> PaintResult:
-    if ready == "yes":
+def inv_paint_container_ready(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, str):
+        raise ValueError(value)
+    if value == "yes":
         css_class = "if_state_up"
-    elif ready == "no":
+    elif value == "no":
         css_class = "if_state_down"
     else:
         css_class = "if_state_other"
+    return "if_state " + css_class, value
 
-    return "if_state " + css_class, ready
 
-
-@decorate_inv_paint()
-def inv_paint_service_status(status: str) -> PaintResult:
-    if status == "running":
+def inv_paint_service_status(value: SDValue) -> PaintResult:
+    if value == "" or value is None:
+        return "", ""
+    if not isinstance(value, str):
+        raise ValueError(value)
+    if value == "running":
         css_class = "if_state_up"
-    elif status == "stopped":
+    elif value == "stopped":
         css_class = "if_state_down"
     else:
         css_class = "if_not_available"
-
-    return "if_state " + css_class, status
+    return "if_state " + css_class, value
 
 
 # .
-#   .--display hints-------------------------------------------------------.
-#   |           _ _           _               _     _       _              |
-#   |        __| (_)___ _ __ | | __ _ _   _  | |__ (_)_ __ | |_ ___        |
-#   |       / _` | / __| '_ \| |/ _` | | | | | '_ \| | '_ \| __/ __|       |
-#   |      | (_| | \__ \ |_) | | (_| | |_| | | | | | | | | | |_\__ \       |
-#   |       \__,_|_|___/ .__/|_|\__,_|\__, | |_| |_|_|_| |_|\__|___/       |
-#   |                  |_|            |___/                                |
+#   .--columns-------------------------------------------------------------.
+#   |                          _                                           |
+#   |                 ___ ___ | |_   _ _ __ ___  _ __  ___                 |
+#   |                / __/ _ \| | | | | '_ ` _ \| '_ \/ __|                |
+#   |               | (_| (_) | | |_| | | | | | | | | \__ \                |
+#   |                \___\___/|_|\__,_|_| |_| |_|_| |_|___/                |
+#   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
-    # FIXME At the moment  we need it to get tdclass: Clean this up one day.
-    if "paint" in raw_hint:
-        name = raw_hint["paint"]
-        inv_paint_funtion = inv_paint_funtions[_PAINT_FUNCTION_NAME_PREFIX + name]
-        return name, inv_paint_funtion["func"]
-
-    return "str", inv_paint_generic
-
-
-def _make_sort_function(raw_hint: InventoryHintSpec) -> SortFunction:
-    return _decorate_sort_function(raw_hint.get("sort", _cmp_inv_generic))
-
-
-def _decorate_sort_function(sort_function: SortFunction) -> SortFunction:
-    def wrapper(val_a: InvValue | None, val_b: InvValue | None) -> int:
-        if val_a is None:
-            return 0 if val_b is None else -1
-
-        if val_b is None:
-            return 0 if val_a is None else 1
-
-        return sort_function(val_a, val_b)
-
-    return wrapper
-
-
-def _cmp_inv_generic(val_a: InvValue, val_b: InvValue) -> int:
-    return (val_a > val_b) - (val_a < val_b)
-
-
-def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
-    if "title" not in raw_hint:
-        return lambda word: word.replace("_", " ").title()
-
-    if callable(title := raw_hint["title"]):
-        # TODO Do we still need this?
-        return title
-
-    return lambda word: str(title)
-
-
-def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], str]:
-    return lambda: (
-        DISPLAY_HINTS.get_tree_hints(parent_path).node_hint.title + " ➤ " + title
-        if parent_path
-        else title
-    )
-
-
-def _make_table_view_name_of_host(view_name: str) -> str:
-    return f"{view_name}_of_host"
-
-
-@dataclass(frozen=True)
-class NodeDisplayHint:
-    icon: str | None
-    title: str
-    _long_title_function: Callable[[], str]
-
-    @property
-    def long_title(self) -> str:
-        return self._long_title_function()
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory node: %s") % self.long_title
-
-    @classmethod
-    def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
-        title = _make_title_function(raw_hint)(path[-1] if path else "")
-        return cls(
-            icon=raw_hint.get("icon"),
-            title=title,
-            _long_title_function=_make_long_title_function(title, path[:-1]),
-        )
-
-
-@dataclass(frozen=True)
-class TableViewSpec:
-    view_name: str
-    title: str
-    _long_title_function: Callable[[], str]
-    icon: str | None
-
-    @classmethod
-    def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> TableViewSpec | None:
-        def _get_table_view_name(path: SDPath, raw_table_hint: InventoryHintSpec) -> str | None:
-            if "view" not in raw_table_hint:
-                return None
-            if (view_name := raw_table_hint["view"]).endswith("_of_host"):
-                return view_name[:-8]
-            return view_name
-
-        if "*" in path:
-            # See DYNAMIC-PATHS
-            return None
-
-        if view_name := _get_table_view_name(path, raw_hint):
-            title = str(raw_hint.get("title", ""))
-            return TableViewSpec(
-                # This seems to be important for the availability of GUI elements, such as filters,
-                # sorter, etc. in related contexts (eg. data source inv*).
-                view_name=view_name if view_name.startswith("inv") else f"inv{view_name}",
-                title=title,
-                _long_title_function=_make_long_title_function(title, path[:-1]),
-                icon=raw_hint.get("icon"),
-            )
-
-        return None
-
-    @property
-    def long_title(self) -> str:
-        return self._long_title_function()
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory table: %s") % self.long_title
-
-
-KeyOrder = Sequence[str]
-
-
-@dataclass(frozen=True)
-class TableDisplayHint:
-    key_order: KeyOrder
-    is_show_more: bool
-    view_spec: TableViewSpec | None = None
-
-    @classmethod
-    def from_raw(
-        cls,
-        path: SDPath,
-        raw_hint: InventoryHintSpec,
-        key_order: KeyOrder,
-    ) -> TableDisplayHint:
-        return cls(
-            key_order=key_order,
-            is_show_more=raw_hint.get("is_show_more", True),
-            view_spec=TableViewSpec.from_raw(path, raw_hint),
-        )
-
-
-@dataclass(frozen=True)
-class ColumnDisplayHint:
-    title: str
-    short: str | None
-    _long_title_function: Callable[[], str]
-    paint_function: PaintFunction
-    sort_function: SortFunction
-    filter_class: (
-        None
-        | type[FilterInvtableText]
-        | type[FilterInvtableVersion]
-        | type[FilterInvtableOperStatus]
-        | type[FilterInvtableAdminStatus]
-        | type[FilterInvtableAvailable]
-        | type[FilterInvtableInterfaceType]
-    )
-
-    @property
-    def long_title(self) -> str:
-        return self._long_title_function()
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory column: %s") % self.long_title
-
-    @classmethod
-    def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> ColumnDisplayHint:
-        _data_type, paint_function = _get_paint_function(raw_hint)
-        title = _make_title_function(raw_hint)(key)
-        return cls(
-            title=title,
-            short=None if (short := raw_hint.get("short")) is None else str(short),
-            _long_title_function=_make_long_title_function(title, path),
-            paint_function=paint_function,
-            sort_function=_make_sort_function(raw_hint),
-            filter_class=raw_hint.get("filter"),
-        )
-
-    def make_filter(
-        self, table_view_name: str, ident: str
-    ) -> (
-        FilterInvtableText
-        | FilterInvtableVersion
-        | FilterInvtableOperStatus
-        | FilterInvtableAdminStatus
-        | FilterInvtableAvailable
-        | FilterInvtableInterfaceType
-        | FilterInvtableIntegerRange
-    ):
-        if self.filter_class:
-            return self.filter_class(
-                inv_info=table_view_name,
-                ident=ident,
-                title=self.long_title,
-            )
-
-        if (ranged_table_filter_name := get_ranged_table_filter_name(ident)) is not None:
-            return FilterInvtableIntegerRange(
-                inv_info=table_view_name,
-                ident=ranged_table_filter_name,
-                title=self.long_title,
-            )
-
-        return FilterInvtableText(
-            inv_info=table_view_name,
-            ident=ident,
-            title=self.long_title,
-        )
-
-
-@dataclass(frozen=True)
-class AttributesDisplayHint:
-    key_order: KeyOrder
-
-    @classmethod
-    def from_raw(cls, key_order: KeyOrder) -> AttributesDisplayHint:
-        return cls(key_order=key_order)
-
-
-@dataclass(frozen=True)
-class AttributeDisplayHint:
-    title: str
-    short: str | None
-    _long_title_function: Callable[[], str]
-    data_type: str
-    paint_function: PaintFunction
-    sort_function: SortFunction
-    is_show_more: bool
-
-    @property
-    def long_title(self) -> str:
-        return self._long_title_function()
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory attribute: %s") % self.long_title
-
-    @classmethod
-    def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> AttributeDisplayHint:
-        data_type, paint_function = _get_paint_function(raw_hint)
-        title = _make_title_function(raw_hint)(key)
-        return cls(
-            title=title,
-            short=None if (short := raw_hint.get("short")) is None else str(short),
-            _long_title_function=_make_long_title_function(title, path),
-            data_type=data_type,
-            paint_function=paint_function,
-            sort_function=_make_sort_function(raw_hint),
-            is_show_more=raw_hint.get("is_show_more", True),
-        )
-
-    def make_filter(
-        self, ident: str, inventory_path: inventory.InventoryPath
-    ) -> FilterInvText | FilterInvBool | FilterInvFloat:
-        if self.data_type == "str":
-            return FilterInvText(
-                ident=ident,
-                title=self.long_title,
-                inventory_path=inventory_path,
-                is_show_more=self.is_show_more,
-            )
-
-        if self.data_type == "bool":
-            return FilterInvBool(
-                ident=ident,
-                title=self.long_title,
-                inventory_path=inventory_path,
-                is_show_more=self.is_show_more,
-            )
-
-        filter_info = _inv_filter_info().get(self.data_type, {})
-        return FilterInvFloat(
-            ident=ident,
-            title=self.long_title,
-            inventory_path=inventory_path,
-            unit=filter_info.get("unit"),
-            scale=filter_info.get("scale", 1.0),
-            is_show_more=self.is_show_more,
-        )
-
-
-def _inv_filter_info():
-    return {
-        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
-        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
-        "hz": {"unit": _("MHz"), "scale": 1000000},
-        "volt": {"unit": _("Volt")},
-        "timestamp": {"unit": _("secs")},
-    }
-
-
-@dataclass
-class _RelatedRawHints:
-    for_node: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
-    for_table: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
-    by_columns: dict[str, InventoryHintSpec] = field(default_factory=dict)
-    by_attributes: dict[str, InventoryHintSpec] = field(default_factory=dict)
-
-
-# TODO Workaround for InventoryHintSpec (TypedDict)
-# https://github.com/python/mypy/issues/7178
-_ALLOWED_KEYS: Sequence[
-    Literal[
-        "title",
-        "short",
-        "icon",
-        "paint",
-        "view",
-        "keyorder",
-        "sort",
-        "filter",
-        "is_show_more",
-    ]
-] = [
-    "title",
-    "short",
-    "icon",
-    "paint",
-    "view",
-    "keyorder",
-    "sort",
-    "filter",
-    "is_show_more",
-]
-
-
-class DisplayHints:
-    def __init__(
-        self,
-        *,
-        path: SDPath,
-        node_hint: NodeDisplayHint,
-        table_hint: TableDisplayHint,
-        column_hints: OrderedDict[str, ColumnDisplayHint],
-        attributes_hint: AttributesDisplayHint,
-        attribute_hints: OrderedDict[str, AttributeDisplayHint],
-    ) -> None:
-        # This inventory path is an 'abc' path because it's the general, abstract path of a display
-        # hint and may contain "*" (ie. placeholders).
-        # Concrete paths (in trees) contain node names which are inserted into these placeholders
-        # while calculating node titles.
-        self.abc_path = path
-        self.node_hint = node_hint
-        self.table_hint = table_hint
-        self.column_hints = column_hints
-        self.attributes_hint = attributes_hint
-        self.attribute_hints = attribute_hints
-
-        self.nodes: dict[str, DisplayHints] = {}
-
-    @classmethod
-    def root(cls) -> DisplayHints:
-        path: SDPath = tuple()
-        return DisplayHints(
-            path=path,
-            node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}),
-            table_hint=TableDisplayHint.from_raw(path, {}, []),
-            column_hints=OrderedDict({}),
-            attributes_hint=AttributesDisplayHint.from_raw([]),
-            attribute_hints=OrderedDict({}),
-        )
-
-    @classmethod
-    def default(cls, path: SDPath) -> DisplayHints:
-        return DisplayHints(
-            path=path,
-            node_hint=NodeDisplayHint.from_raw(path, {}),
-            table_hint=TableDisplayHint.from_raw(path, {}, []),
-            column_hints=OrderedDict({}),
-            attributes_hint=AttributesDisplayHint.from_raw([]),
-            attribute_hints=OrderedDict({}),
-        )
-
-    def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
-        for path, related_raw_hints in sorted(self._get_related_raw_hints(raw_hints).items()):
-            if not path:
-                continue
-
-            node_or_table_hints = InventoryHintSpec()
-            for key in _ALLOWED_KEYS:
-                if (value := related_raw_hints.for_table.get(key)) is not None:
-                    node_or_table_hints[key] = value
-                elif (value := related_raw_hints.for_node.get(key)) is not None:
-                    node_or_table_hints[key] = value
-
-            table_keys = self._complete_key_order(
-                related_raw_hints.for_table.get("keyorder", []),
-                set(related_raw_hints.by_columns),
-            )
-            attributes_keys = self._complete_key_order(
-                related_raw_hints.for_node.get("keyorder", []),
-                set(related_raw_hints.by_attributes),
-            )
-
-            self._get_parent(path).nodes.setdefault(
-                path[-1],
-                DisplayHints(
-                    path=path,
-                    # Some fields like 'title' or 'keyorder' of legacy display hints are declared
-                    # either for
-                    # - real nodes, eg. ".hardware.chassis.",
-                    # - nodes with attributes, eg. ".hardware.cpu." or
-                    # - nodes with a table, eg. ".software.packages:"
-                    node_hint=NodeDisplayHint.from_raw(path, node_or_table_hints),
-                    table_hint=TableDisplayHint.from_raw(path, node_or_table_hints, table_keys),
-                    column_hints=OrderedDict(
-                        {
-                            key: ColumnDisplayHint.from_raw(
-                                path,
-                                key,
-                                related_raw_hints.by_columns.get(key, {}),
-                            )
-                            for key in table_keys
-                        }
-                    ),
-                    attributes_hint=AttributesDisplayHint.from_raw(attributes_keys),
-                    attribute_hints=OrderedDict(
-                        {
-                            key: AttributeDisplayHint.from_raw(
-                                path,
-                                key,
-                                related_raw_hints.by_attributes.get(key, {}),
-                            )
-                            for key in attributes_keys
-                        }
-                    ),
-                ),
-            )
-
-    @staticmethod
-    def _get_related_raw_hints(
-        raw_hints: Mapping[str, InventoryHintSpec]
-    ) -> Mapping[SDPath, _RelatedRawHints]:
-        related_raw_hints_by_path: dict[SDPath, _RelatedRawHints] = {}
-        for raw_path, raw_hint in raw_hints.items():
-            inventory_path = inventory.InventoryPath.parse(raw_path)
-            related_raw_hints = related_raw_hints_by_path.setdefault(
-                inventory_path.path,
-                _RelatedRawHints(),
-            )
-
-            if inventory_path.source == inventory.TreeSource.node:
-                related_raw_hints.for_node.update(raw_hint)
-                continue
-
-            if inventory_path.source == inventory.TreeSource.table:
-                if inventory_path.key:
-                    related_raw_hints.by_columns.setdefault(inventory_path.key, raw_hint)
-                    continue
-
-                related_raw_hints.for_table.update(raw_hint)
-                continue
-
-            if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:
-                related_raw_hints.by_attributes.setdefault(inventory_path.key, raw_hint)
-                continue
-
-        return related_raw_hints_by_path
-
-    @staticmethod
-    def _complete_key_order(key_order: KeyOrder, additional_keys: set[str]) -> KeyOrder:
-        return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
-
-    def _get_parent(self, path: SDPath) -> DisplayHints:
-        node = self
-        for node_name in path[:-1]:
-            if node_name in node.nodes:
-                node = node.nodes[node_name]
-            else:
-                node = node.nodes.setdefault(node_name, DisplayHints.default(path))
-
-        return node
-
-    def __iter__(self) -> Iterator[DisplayHints]:
-        yield from self._make_inventory_paths_or_hints([])
-
-    def _make_inventory_paths_or_hints(self, path: list[str]) -> Iterator[DisplayHints]:
-        yield self
-        for node_name, node in self.nodes.items():
-            yield from node._make_inventory_paths_or_hints(path + [node_name])
-
-    def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
-        return self.attribute_hints.get(key, AttributeDisplayHint.from_raw(self.abc_path, key, {}))
-
-    def get_column_hint(self, key: str) -> ColumnDisplayHint:
-        return self.column_hints.get(key, ColumnDisplayHint.from_raw(self.abc_path, key, {}))
-
-    def get_node_hints(self, name: SDNodeName) -> DisplayHints:
-        return self.nodes.get(name, DisplayHints.default(self.abc_path))
-
-    def get_tree_hints(self, path: SDPath) -> DisplayHints:
-        node = self
-        for node_name in path:
-            if node_name in node.nodes:
-                node = node.nodes[node_name]
-
-            elif "*" in node.nodes:
-                node = node.nodes["*"]
-
-            else:
-                return DisplayHints.default(path)
-
-        return node
-
-    def replace_placeholders(self, path: SDPath) -> str:
-        if "%d" not in self.node_hint.title and "%s" not in self.node_hint.title:
-            return self.node_hint.title
-
-        title = self.node_hint.title.replace("%d", "%s")
-        node_names = tuple(
-            path[idx] for idx, node_name in enumerate(self.abc_path) if node_name == "*"
-        )
-        return title % node_names[-title.count("%s") :]
-
-
-DISPLAY_HINTS = DisplayHints.root()
 
 
 def register_table_views_and_columns() -> None:
@@ -1140,33 +671,25 @@ def _register_table_views_and_columns() -> None:
             #   'DataSourceInventory' uses 'RowTableInventory'
             continue
 
-        ident = ("inv",) + hints.abc_path
-
-        _register_node_painter("_".join(ident), hints, painter_options=painter_options)
+        _register_node_painter(hints, painter_options=painter_options)
 
         for key, attr_hint in hints.attribute_hints.items():
-            _register_attribute_column("_".join(ident + (key,)), attr_hint, hints.abc_path, key)
+            _register_attribute_column(
+                inventory.InventoryPath(
+                    path=hints.abc_path,
+                    source=inventory.TreeSource.attributes,
+                    key=SDKey(key),
+                ),
+                attr_hint,
+            )
 
         _register_table_view(hints)
 
 
-# .
-#   .--columns-------------------------------------------------------------.
-#   |                          _                                           |
-#   |                 ___ ___ | |_   _ _ __ ___  _ __  ___                 |
-#   |                / __/ _ \| | | | | '_ ` _ \| '_ \/ __|                |
-#   |               | (_| (_) | | |_| | | | | | | | | \__ \                |
-#   |                \___\___/|_|\__,_|_| |_| |_|_| |_|___/                |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _register_node_painter(
-    name: str, hints: DisplayHints, *, painter_options: PainterOptions
-) -> None:
+def _register_node_painter(hints: DisplayHints, *, painter_options: PainterOptions) -> None:
     """Declares painters for (sub) trees on all host related datasources."""
     register_painter(
-        name,
+        hints.node_hint.ident,
         {
             "title": hints.node_hint.long_inventory_title,
             "short": hints.node_hint.title,
@@ -1190,7 +713,7 @@ def _register_node_painter(
             # not look good for the HW/SW inventory tree
             "printable": False,
             "load_inv": True,
-            "sorter": name,
+            "sorter": hints.node_hint.ident,
             "paint": lambda row: _paint_host_inventory_tree(
                 row, hints.abc_path, painter_options=painter_options
             ),
@@ -1238,7 +761,7 @@ def _export_node_for_csv() -> str | HTML:
 
 
 def _register_attribute_column(
-    name: str, hint: AttributeDisplayHint, path: SDPath, key: str
+    inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
 ) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
@@ -1246,7 +769,7 @@ def _register_attribute_column(
 
     # Declare column painter
     register_painter(
-        name,
+        hint.ident,
         {
             "title": long_inventory_title,
             # The short titles (used in column headers) may overlap for different painters, e.g.:
@@ -1273,38 +796,36 @@ def _register_attribute_column(
             ),
             "printable": True,
             "load_inv": True,
-            "sorter": name,
-            "paint": lambda row: _paint_host_inventory_attribute(row, path, key, hint),
-            "export_for_python": lambda row, cell: _compute_attribute_painter_data(row, path, key),
+            "sorter": hint.ident,
+            "paint": lambda row: _paint_host_inventory_attribute(row, inventory_path, hint),
+            "export_for_python": lambda row, cell: _compute_attribute_painter_data(
+                row, inventory_path
+            ),
             "export_for_csv": lambda row, cell: (
                 ""
-                if (data := _compute_attribute_painter_data(row, path, key)) is None
+                if (data := _compute_attribute_painter_data(row, inventory_path)) is None
                 else str(data)
             ),
-            "export_for_json": lambda row, cell: _compute_attribute_painter_data(row, path, key),
+            "export_for_json": lambda row, cell: _compute_attribute_painter_data(
+                row, inventory_path
+            ),
         },
-    )
-
-    inventory_path = inventory.InventoryPath(
-        path=path,
-        source=inventory.TreeSource.attributes,
-        key=key,
     )
 
     # Declare sorter. It will detect numbers automatically
     _register_sorter(
-        ident=name,
+        ident=hint.ident,
         long_inventory_title=long_inventory_title,
         load_inv=True,
         columns=["host_inventory", "host_structured_status"],
         hint=hint,
         value_extractor=lambda row: row["host_inventory"].get_attribute(
-            inventory_path.path, inventory_path.key or ""
+            inventory_path.path, inventory_path.key
         ),
     )
 
     # Declare filter. Sync this with _register_table_column()
-    filter_registry.register(hint.make_filter(name, inventory_path))
+    filter_registry.register(hint.make_filter(inventory_path))
 
 
 def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
@@ -1315,53 +836,49 @@ def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
     return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
 
 
-def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
-    if (attributes := _get_attributes(row, path)) is None:
+def _compute_attribute_painter_data(row: Row, inventory_path: inventory.InventoryPath) -> SDValue:
+    if (attributes := _get_attributes(row, inventory_path.path)) is None:
         return None
-    return attributes.pairs.get(key)
+    return attributes.pairs.get(inventory_path.key)
 
 
 def _paint_host_inventory_attribute(
-    row: Row, path: SDPath, key: str, hint: AttributeDisplayHint
+    row: Row, inventory_path: inventory.InventoryPath, hint: AttributeDisplayHint
 ) -> CellSpec:
-    if (attributes := _get_attributes(row, path)) is None:
+    if (attributes := _get_attributes(row, inventory_path.path)) is None:
         return "", ""
     return _compute_cell_spec(
-        _InventoryTreeValueInfo(
-            key,
-            attributes.pairs.get(key),
-            attributes.retentions.get(key),
+        _SDItem(
+            inventory_path.key,
+            attributes.pairs.get(inventory_path.key),
+            attributes.retentions.get(inventory_path.key),
         ),
         hint,
     )
 
 
-def _paint_host_inventory_column(row: Row, column: str, hint: ColumnDisplayHint) -> CellSpec:
-    if column not in row:
+def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHint) -> CellSpec:
+    if hint.ident not in row:
         return "", ""
     return _compute_cell_spec(
-        _InventoryTreeValueInfo(
-            column,
-            row[column],
-            row.get("_".join([column, "retention_interval"])),
+        _SDItem(
+            SDKey(hint.ident),
+            row[hint.ident],
+            row.get("_".join([hint.ident, "retention_interval"])),
         ),
         hint,
     )
 
 
-def _register_table_column(
-    table_view_name: str,
-    column: str,
-    hint: ColumnDisplayHint,
-) -> None:
+def _register_table_column(hint: ColumnDisplayHint) -> None:
     long_inventory_title = hint.long_inventory_title
 
     # TODO
     # - Sync this with _register_attribute_column()
-    filter_registry.register(hint.make_filter(table_view_name, column))
+    filter_registry.register(hint.make_filter())
 
     register_painter(
-        column,
+        hint.ident,
         {
             "title": long_inventory_title,
             # The short titles (used in column headers) may overlap for different painters, e.g.:
@@ -1371,9 +888,9 @@ def _register_table_column(
             # long_title in the column title tooltips
             "short": hint.short or hint.title,
             "tooltip_title": hint.long_title,
-            "columns": [column],
-            "paint": lambda row: _paint_host_inventory_column(row, column, hint),
-            "sorter": column,
+            "columns": [hint.ident],
+            "paint": lambda row: _paint_host_inventory_column(row, hint),
+            "sorter": hint.ident,
             # See views/painter/v0/base.py::Cell.painter_parameters
             # We have to add a dummy value here such that the painter_parameters are not None and
             # the "real" parameters, ie. _painter_params, are used.
@@ -1382,12 +899,12 @@ def _register_table_column(
     )
 
     _register_sorter(
-        ident=column,
+        ident=hint.ident,
         long_inventory_title=long_inventory_title,
         load_inv=False,
-        columns=[column],
+        columns=[hint.ident],
         hint=hint,
-        value_extractor=lambda v: v.get(column),
+        value_extractor=lambda v: v.get(hint.ident),
     )
 
 
@@ -1419,11 +936,12 @@ class RowTableInventory(ABCRowTable):
         super().__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def _get_inv_data(
-        self, hostrow: Row
-    ) -> Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]:
+    def _get_rows(self, hostrow: Row) -> Iterable[Row]:
+        if not (self._info_names and (info_name := self._info_names[0])):
+            return
+
         try:
-            return (
+            table_rows = (
                 inventory.load_filtered_and_merged_tree(hostrow)
                 .get_tree(self._inventory_path.path)
                 .table.rows_with_retentions
@@ -1436,21 +954,14 @@ class RowTableInventory(ABCRowTable):
                     % inventory.get_short_inventory_filepath(hostrow.get("host_name", "")),
                 )
             )
-            return []
+            return
 
-    def _prepare_rows(
-        self, inv_data: Sequence[Mapping[SDKey, tuple[SDValue, RetentionInterval | None]]]
-    ) -> Iterable[Row]:
-        if not (self._info_names and (info_name := self._info_names[0])):
-            return []
-        rows = []
-        for inv_row in inv_data:
+        for table_row in table_rows:
             row: dict[str, int | float | str | bool | RetentionInterval | None] = {}
-            for key, (value, retention_interval) in inv_row.items():
+            for key, (value, retention_interval) in table_row.items():
                 row["_".join([info_name, key])] = value
                 row["_".join([info_name, key, "retention_interval"])] = retention_interval
-            rows.append(row)
-        return rows
+            yield row
 
 
 class ABCDataSourceInventory(ABCDataSource):
@@ -1500,18 +1011,11 @@ def _register_table_view(hints: DisplayHints) -> None:
 
     painters: list[ColumnSpec] = []
     filters = []
-    for name, col_hint in hints.column_hints.items():
-        column = table_view_spec.view_name + "_" + name
-
+    for col_hint in hints.column_hints.values():
         # Declare a painter, sorter and filters for each path with display hint
-        _register_table_column(
-            table_view_spec.view_name,
-            column,
-            col_hint,
-        )
-
-        painters.append(ColumnSpec(column))
-        filters.append(column)
+        _register_table_column(col_hint)
+        painters.append(ColumnSpec(col_hint.ident))
+        filters.append(col_hint.ident)
 
     _register_views(
         table_view_spec.view_name,
@@ -1541,6 +1045,10 @@ def _register_info_class(table_view_name: str, title_singular: str, title_plural
             },
         )
     )
+
+
+def _make_table_view_name_of_host(view_name: str) -> str:
+    return f"{view_name}_of_host"
 
 
 def _register_views(
@@ -1852,7 +1360,7 @@ class RowTableInventoryHistory(ABCRowTable):
         super().__init__(["invhist"], [])
         self._inventory_path = None
 
-    def _get_inv_data(self, hostrow: Row) -> Sequence[inventory.HistoryEntry]:
+    def _get_rows(self, hostrow: Row) -> Iterable[Row]:
         hostname: HostName = hostrow["host_name"]
         history, corrupted_history_files = inventory.get_history(hostname)
         if corrupted_history_files:
@@ -1865,11 +1373,7 @@ class RowTableInventoryHistory(ABCRowTable):
                     % ", ".join(sorted(corrupted_history_files)),
                 )
             )
-
-        return history
-
-    def _prepare_rows(self, inv_data: Sequence[inventory.HistoryEntry]) -> Iterable[Row]:
-        for history_entry in inv_data:
+        for history_entry in history:
             yield {
                 "invhist_time": history_entry.timestamp,
                 "invhist_delta": history_entry.delta_tree,
@@ -2030,7 +1534,7 @@ class PainterInvhistChanged(Painter):
     def ident(self) -> str:
         return "invhist_changed"
 
-    def title(self, cell: Cell):  # type: ignore[no-untyped-def]
+    def title(self, cell: Cell) -> str:
         return _("Changed entries")
 
     def short_title(self, cell: Cell) -> str:
@@ -2106,7 +1610,7 @@ multisite_builtin_views["inv_host_history"] = {
 
 
 def _make_columns(
-    rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]],
+    rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, SDDeltaValue]],
     key_order: Sequence[SDKey],
 ) -> Sequence[SDKey]:
     return list(key_order) + sorted({k for r in rows for k in r} - set(key_order))
@@ -2121,33 +1625,26 @@ class _MinType:
         return self is other
 
 
-class _InventoryTreeValueInfo(NamedTuple):
+class _SDItem(NamedTuple):
     key: SDKey
     value: SDValue
     retention_interval: RetentionInterval | None
 
 
-def _sort_pairs(
-    attributes: ImmutableAttributes, key_order: Sequence[SDKey]
-) -> Sequence[_InventoryTreeValueInfo]:
+def _sort_pairs(attributes: ImmutableAttributes, key_order: Sequence[SDKey]) -> Sequence[_SDItem]:
     sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
     return [
-        _InventoryTreeValueInfo(k, attributes.pairs[k], attributes.retentions.get(k))
+        _SDItem(k, attributes.pairs[k], attributes.retentions.get(k))
         for k in sorted_keys
         if k in attributes.pairs
     ]
 
 
-def _sort_rows(
-    table: ImmutableTable, columns: Sequence[SDKey]
-) -> Sequence[Sequence[_InventoryTreeValueInfo]]:
+def _sort_rows(table: ImmutableTable, columns: Sequence[SDKey]) -> Sequence[Sequence[_SDItem]]:
     def _sort_row(
         ident: SDRowIdent, row: Mapping[SDKey, SDValue], columns: Sequence[SDKey]
-    ) -> Sequence[_InventoryTreeValueInfo]:
-        return [
-            _InventoryTreeValueInfo(c, row.get(c), table.retentions.get(ident, {}).get(c))
-            for c in columns
-        ]
+    ) -> Sequence[_SDItem]:
+        return [_SDItem(c, row.get(c), table.retentions.get(ident, {}).get(c)) for c in columns]
 
     min_type = _MinType()
 
@@ -2161,40 +1658,45 @@ def _sort_rows(
     ]
 
 
-class _DeltaTreeValueInfo(NamedTuple):
+class _SDDeltaItem(NamedTuple):
     key: SDKey
-    value: tuple[SDValue, SDValue]
+    old: SDValue
+    new: SDValue
 
 
 def _sort_delta_pairs(
     attributes: ImmutableDeltaAttributes, key_order: Sequence[SDKey]
-) -> Sequence[_DeltaTreeValueInfo]:
+) -> Sequence[_SDDeltaItem]:
     sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
     return [
-        _DeltaTreeValueInfo(k, attributes.pairs[k]) for k in sorted_keys if k in attributes.pairs
+        _SDDeltaItem(k, attributes.pairs[k].old, attributes.pairs[k].new)
+        for k in sorted_keys
+        if k in attributes.pairs
     ]
 
 
 def _sort_delta_rows(
     table: ImmutableDeltaTable, columns: Sequence[SDKey]
-) -> Sequence[Sequence[_DeltaTreeValueInfo]]:
+) -> Sequence[Sequence[_SDDeltaItem]]:
     def _sort_row(
-        row: Mapping[SDKey, tuple[SDValue, SDValue]], columns: Sequence[SDKey]
-    ) -> Sequence[_DeltaTreeValueInfo]:
-        return [_DeltaTreeValueInfo(c, row.get(c) or (None, None)) for c in columns]
+        row: Mapping[SDKey, SDDeltaValue], columns: Sequence[SDKey]
+    ) -> Sequence[_SDDeltaItem]:
+        return [
+            _SDDeltaItem(c, v.old, v.new)
+            for c in columns
+            for v in (row.get(c) or SDDeltaValue(None, None),)
+        ]
 
     min_type = _MinType()
 
-    def _sanitize(value: tuple[SDValue, SDValue]) -> tuple[_MinType | SDValue, _MinType | SDValue]:
-        return (
-            min_type if value[0] is None else value[0],
-            min_type if value[1] is None else value[1],
-        )
+    def _sanitize(value: SDDeltaValue) -> tuple[_MinType | SDValue, _MinType | SDValue]:
+        return (value.old or min_type, value.new or min_type)
 
     return [
         _sort_row(row, columns)
         for row in sorted(
-            table.rows, key=lambda r: tuple(_sanitize(r.get(c) or (None, None)) for c in columns)
+            table.rows,
+            key=lambda r: tuple(_sanitize(r.get(c) or SDDeltaValue(None, None)) for c in columns),
         )
         if not all(left == right for left, right in row.values())
     ]
@@ -2207,24 +1709,22 @@ def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHi
 
 
 def _compute_cell_spec(
-    value_info: _InventoryTreeValueInfo,
+    item: _SDItem,
     hint: AttributeDisplayHint | ColumnDisplayHint,
 ) -> tuple[str, HTML]:
     # TODO separate tdclass from rendered value
-    tdclass, code = hint.paint_function(value_info.value)
+    tdclass, code = hint.paint_function(item.value)
     html_value = HTML(code)
     if (
         not html_value
-        or value_info.retention_interval is None
-        or value_info.retention_interval.source == "current"
+        or item.retention_interval is None
+        or item.retention_interval.source == "current"
     ):
         return tdclass, html_value
 
     now = int(time.time())
-    valid_until = (
-        value_info.retention_interval.cached_at + value_info.retention_interval.cache_interval
-    )
-    keep_until = valid_until + value_info.retention_interval.retention_interval
+    valid_until = item.retention_interval.cached_at + item.retention_interval.cache_interval
+    keep_until = valid_until + item.retention_interval.retention_interval
     if now > keep_until:
         return (
             tdclass,
@@ -2246,7 +1746,7 @@ def _compute_cell_spec(
                 html_value,
                 title=_("Data was provided at %s and is considered valid until %s")
                 % (
-                    cmk.utils.render.date_and_time(value_info.retention_interval.cached_at),
+                    cmk.utils.render.date_and_time(item.retention_interval.cached_at),
                     cmk.utils.render.date_and_time(keep_until),
                 ),
                 css=["muted_text"],
@@ -2255,38 +1755,37 @@ def _compute_cell_spec(
     return tdclass, html_value
 
 
-def _show_value(
-    value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
+def _show_item(
+    item: _SDItem | _SDDeltaItem,
     hint: AttributeDisplayHint | ColumnDisplayHint,
 ) -> None:
-    if isinstance(value_info, _DeltaTreeValueInfo):
-        _show_delta_value(value_info.value, hint)
+    if isinstance(item, _SDDeltaItem):
+        _show_delta_value(item, hint)
         return
-    html.write_html(_compute_cell_spec(value_info, hint)[1])
+    html.write_html(_compute_cell_spec(item, hint)[1])
 
 
 def _show_delta_value(
-    value: tuple[SDValue, SDValue],
+    item: _SDDeltaItem,
     hint: AttributeDisplayHint | ColumnDisplayHint,
 ) -> None:
-    old, new = value
-    if old is None and new is not None:
+    if item.old is None and item.new is not None:
         html.open_span(class_="invnew")
-        html.write_html(_get_html_value(new, hint))
+        html.write_html(_get_html_value(item.new, hint))
         html.close_span()
-    elif old is not None and new is None:
+    elif item.old is not None and item.new is None:
         html.open_span(class_="invold")
-        html.write_html(_get_html_value(old, hint))
+        html.write_html(_get_html_value(item.old, hint))
         html.close_span()
-    elif old == new:
-        html.write_html(_get_html_value(old, hint))
-    elif old is not None and new is not None:
+    elif item.old == item.new:
+        html.write_html(_get_html_value(item.old, hint))
+    elif item.old is not None and item.new is not None:
         html.open_span(class_="invold")
-        html.write_html(_get_html_value(old, hint))
+        html.write_html(_get_html_value(item.old, hint))
         html.close_span()
         html.write_text(" → ")
         html.open_span(class_="invnew")
-        html.write_html(_get_html_value(new, hint))
+        html.write_html(_get_html_value(item.new, hint))
         html.close_span()
     else:
         raise NotImplementedError()
@@ -2370,7 +1869,7 @@ class TreeRenderer:
         self._tree_id = tree_id
         self._tree_name = f"inv_{hostname}{tree_id}"
 
-    def _get_header(self, title: str, key_info: str, icon: str | None = None) -> HTML:
+    def _get_header(self, title: str, key_info: str, icon: str = "") -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
             header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted_text")
@@ -2384,19 +1883,20 @@ class TreeRenderer:
     def _show_attributes(
         self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
     ) -> None:
-        sorted_pairs: Sequence[_InventoryTreeValueInfo] | Sequence[_DeltaTreeValueInfo]
+        sorted_pairs: Sequence[_SDItem] | Sequence[_SDDeltaItem]
+        key_order = [SDKey(k) for k in hints.attributes_hint.key_order]
         if isinstance(attributes, ImmutableAttributes):
-            sorted_pairs = _sort_pairs(attributes, hints.attributes_hint.key_order)
+            sorted_pairs = _sort_pairs(attributes, key_order)
         else:
-            sorted_pairs = _sort_delta_pairs(attributes, hints.attributes_hint.key_order)
+            sorted_pairs = _sort_delta_pairs(attributes, key_order)
 
         html.open_table()
-        for value_info in sorted_pairs:
-            attr_hint = hints.get_attribute_hint(value_info.key)
+        for item in sorted_pairs:
+            attr_hint = hints.get_attribute_hint(item.key)
             html.open_tr()
-            html.th(self._get_header(attr_hint.title, value_info.key))
+            html.th(self._get_header(attr_hint.title, item.key))
             html.open_td()
-            _show_value(value_info, attr_hint)
+            _show_item(item, attr_hint)
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -2424,10 +1924,8 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns = _make_columns(table.rows, hints.table_hint.key_order)
-        sorted_rows: (
-            Sequence[Sequence[_InventoryTreeValueInfo]] | Sequence[Sequence[_DeltaTreeValueInfo]]
-        )
+        columns = _make_columns(table.rows, [SDKey(k) for k in hints.table_hint.key_order])
+        sorted_rows: Sequence[Sequence[_SDItem]] | Sequence[Sequence[_SDDeltaItem]]
         if isinstance(table, ImmutableTable):
             sorted_rows = _sort_rows(table, columns)
         else:
@@ -2447,12 +1945,15 @@ class TreeRenderer:
 
         for row in sorted_rows:
             html.open_tr(class_="even0")
-            for value_info in row:
-                column_hint = hints.get_column_hint(value_info.key)
+            for item in row:
+                column_hint = hints.get_column_hint(item.key)
                 # TODO separate tdclass from rendered value
-                tdclass, _rendered_value = column_hint.paint_function(value_info.value)
+                if isinstance(item, _SDDeltaItem):
+                    tdclass, _rendered_value = column_hint.paint_function(item.old or item.new)
+                else:
+                    tdclass, _rendered_value = column_hint.paint_function(item.value)
                 html.open_td(class_=tdclass)
-                _show_value(value_info, column_hint)
+                _show_item(item, column_hint)
                 html.close_td()
             html.close_tr()
         html.close_table()

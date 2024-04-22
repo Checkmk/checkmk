@@ -6,9 +6,7 @@
 import dataclasses
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
-from typing import Any, Literal
-
-from typing_extensions import TypedDict
+from typing import Any, Literal, TypedDict
 
 from cmk.plugins.lib.df import BlocksSubsection, InodesSubsection
 

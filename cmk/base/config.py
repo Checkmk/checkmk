@@ -121,14 +121,10 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import IPStackConfig
-from cmk.base.server_side_calls import (
-    load_special_agents,
-    PreprocessingResult,
-    SpecialAgent,
-    SpecialAgentCommandLine,
-)
+from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
 
 from cmk.server_side_calls import v1 as server_side_calls_api
+from cmk.server_side_calls_backend.config_processing import PreprocessingResult
 
 # TODO: Prefix helper functions with "_".
 
@@ -155,7 +151,9 @@ ObjectMacros = dict[str, AnyStr]
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
-SSCRules = Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+LegacySSCConfigModel = object
+
+SSCRules = Sequence[tuple[str, Sequence[Mapping[str, object] | LegacySSCConfigModel]]]
 
 
 class FilterMode(enum.Enum):
@@ -1379,7 +1377,7 @@ def _initialize_data_structures() -> None:
 def _get_plugin_paths(*dirs: str) -> list[str]:
     filelist: list[str] = []
     for directory in dirs:
-        filelist += _plugin_pathnames_in_directory(directory)
+        filelist += plugin_pathnames_in_directory(directory)
     return filelist
 
 
@@ -1391,6 +1389,7 @@ def load_checks(
     filelist: list[str],
 ) -> list[str]:
     loaded_files: set[str] = set()
+    ignored_plugins_errors = []
 
     did_compile = False
     for f in filelist:
@@ -1416,7 +1415,9 @@ def load_checks(
             raise
 
         except Exception as e:
-            console.error("Error in plug-in file %s: %s\n", f, e)
+            ignored_plugins_errors.append(
+                f"Ignoring outdated plug-in file {f}: {e} -- this API is deprecated!\n"
+            )
             if cmk.utils.debug.enabled():
                 raise
             continue
@@ -1428,16 +1429,23 @@ def load_checks(
 
     # Now just drop everything we don't like; this is not a supported API anymore.
     # Users affected by this will see a CRIT in their "Analyse Configuration" page.
-    sane_check_info = {
-        k: v
-        for k, v in check_info.items()
-        if isinstance(k, str) and isinstance(v, LegacyCheckDefinition)
-    }
+    sane_check_info = {}
+    for k, v in check_info.items():
+        if isinstance(k, str) and isinstance(v, LegacyCheckDefinition):
+            sane_check_info[k] = v
+            continue
+        ignored_plugins_errors.append(
+            f"Ignoring outdated plug-in {k!r} from file {legacy_check_plugin_files[str(k)]!r}: "
+            "Format no longer supported -- this API is deprecated!\n"
+        )
+
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})
 
-    return _extract_agent_and_snmp_sections(sane_check_info) + _extract_check_plugins(
-        sane_check_info, validate_creation_kwargs=did_compile
-    )
+    return [
+        *ignored_plugins_errors,
+        *_extract_agent_and_snmp_sections(sane_check_info),
+        *_extract_check_plugins(sane_check_info, validate_creation_kwargs=did_compile),
+    ]
 
 
 # Constructs a new check context dictionary. It contains the whole check API.
@@ -1455,7 +1463,7 @@ def new_check_context(get_check_api_context: GetCheckApiContext) -> CheckContext
     return context
 
 
-def _plugin_pathnames_in_directory(path: str) -> list[str]:
+def plugin_pathnames_in_directory(path: str) -> list[str]:
     if path and os.path.exists(path):
         return sorted(
             [
@@ -1763,11 +1771,6 @@ def lookup_ip_address(
     *,
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] | None = None,
 ) -> HostAddress | None:
-    if ConfigCache.ip_stack_config(host_name) is IPStackConfig.NO_IP:
-        # TODO(ml): [IPv6] Silently override the `family` parameter.  Where
-        # that is necessary, the callers are highly unlikely to handle IPv6
-        # and DUAL_STACK correctly.
-        return None
     if family is None:
         family = config_cache.default_address_family(host_name)
     return ip_lookup.lookup_ip_address(
@@ -1819,7 +1822,7 @@ def get_ssc_host_config(
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
     primary_family = config_cache.default_address_family(host_name)
-    hosts_ip_stack = config_cache.ip_stack_config(host_name)
+    ip_stack_config = config_cache.ip_stack_config(host_name)
     additional_addresses_ipv4, additional_addresses_ipv6 = config_cache.additional_ipaddresses(
         host_name
     )
@@ -1832,7 +1835,7 @@ def get_ssc_host_config(
                 address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET),
                 additional_addresses=additional_addresses_ipv4,
             )
-            if ip_lookup.IPStackConfig.IPv4 in hosts_ip_stack
+            if ip_lookup.IPStackConfig.IPv4 in ip_stack_config
             else None
         ),
         ipv6_config=(
@@ -1840,7 +1843,7 @@ def get_ssc_host_config(
                 address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET6),
                 additional_addresses=additional_addresses_ipv6,
             )
-            if ip_lookup.IPStackConfig.IPv6 in hosts_ip_stack
+            if ip_lookup.IPStackConfig.IPv6 in ip_stack_config
             else None
         ),
         primary_family=_get_ssc_ip_family(primary_family),
@@ -1938,11 +1941,11 @@ class ConfigCache:
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
-            set(
+            {
                 hn
                 for hn in set(self.hosts_config.hosts).union(self.hosts_config.clusters)
                 if self.is_active(hn) and self.is_online(hn)
-            )
+            }
         )
 
         return self
@@ -2345,20 +2348,20 @@ class ConfigCache:
             if host_name in self.hosts_config.clusters:
                 return HWSWInventoryParameters.from_raw({})
 
-            # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
-            rules = active_checks.get("cmk_inv")
-            if rules is None:
-                return HWSWInventoryParameters.from_raw({})
-
             # 'get_host_values' is already cached thus we can
             # use it after every check cycle.
-            entries = self.ruleset_matcher.get_host_values(host_name, rules)
-
-            if not entries:
+            if not (
+                entries := self.ruleset_matcher.get_host_values(
+                    host_name, active_checks.get("cmk_inv") or ()
+                )
+            ):
                 return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
 
             # Convert legacy rules to current dict format (just like the valuespec)
-            return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
+            # we can only have None or a dict here, but mypy doesn't know that
+            return HWSWInventoryParameters.from_raw(
+                entries[0] if isinstance(entries[0], dict) else {}
+            )
 
         with contextlib.suppress(KeyError):
             return self.__hwsw_inventory_parameters[host_name]
@@ -2631,7 +2634,7 @@ class ConfigCache:
         """
 
         def make_active_checks() -> SSCRules:
-            configured_checks: list[tuple[str, Sequence[Mapping[str, object]]]] = []
+            configured_checks: list[tuple[str, Sequence[object]]] = []
             for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts
@@ -2687,7 +2690,7 @@ class ConfigCache:
 
     def special_agents(self, host_name: HostName) -> SSCRules:
         def special_agents_impl() -> SSCRules:
-            matched: list[tuple[str, Sequence[Mapping[str, object]]]] = []
+            matched: list[tuple[str, Sequence[Mapping[str, object] | LegacySSCConfigModel]]] = []
             # Previous to 1.5.0 it was not defined in which order the special agent
             # rules overwrite each other. When multiple special agents were configured
             # for a single host a "random" one was picked (depending on the iteration
@@ -2708,7 +2711,11 @@ class ConfigCache:
         return self.__special_agents.setdefault(host_name, special_agents_impl())
 
     def special_agent_command_lines(
-        self, host_name: HostName, ip_address: HostAddress | None, passwords: Mapping[str, str]
+        self,
+        host_name: HostName,
+        ip_address: HostAddress | None,
+        passwords: Mapping[str, str],
+        password_store_file: Path,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
         for agentname, params_seq in self.special_agents(host_name):
             for params in params_seq:
@@ -2727,6 +2734,7 @@ class ConfigCache:
                     host_attrs,
                     http_proxies,
                     passwords,
+                    password_store_file,
                 )
                 for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                     yield agentname, agent_data
@@ -2739,21 +2747,33 @@ class ConfigCache:
             if self.is_active(hn) and self.is_online(hn)
         }
 
-        def _gather_secrets_from(
-            rules_function: Callable[
-                [HostName], Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+        def _filter_newstyle_ssc_rule(
+            unfiltered: Sequence[Mapping[str, object] | LegacySSCConfigModel]
+        ) -> Sequence[Mapping[str, object]]:
+            return [
+                r for r in unfiltered if isinstance(r, dict) and all(isinstance(k, str) for k in r)
             ]
+
+        def _compose_filtered_ssc_rules(
+            rules: SSCRules,
+        ) -> Sequence[tuple[str, Sequence[Mapping[str, object]]]]:
+            return [(name, _filter_newstyle_ssc_rule(unfiltered)) for name, unfiltered in rules]
+
+        def _gather_secrets_from(
+            rules_function: Callable[[HostName], SSCRules]
         ) -> Mapping[str, str]:
             return {
                 id_: secret
                 for host in all_active_hosts
                 for id_, secret in (
-                    PreprocessingResult.from_config(rules_function(host))
+                    PreprocessingResult.from_config(
+                        _compose_filtered_ssc_rules(rules_function(host))
+                    )
                 ).ad_hoc_secrets.items()
             }
 
         return {
-            **password_store.load(),
+            **password_store.load(password_store.password_store_path()),
             **_gather_secrets_from(self.active_checks),
             **_gather_secrets_from(self.special_agents),
         }
@@ -3145,14 +3165,12 @@ class ConfigCache:
                 return SNMPBackendEnum.CLASSIC
             raise MKGeneralException(f"Bad Host SNMP Backend configuration: {host_backend}")
 
-        # TODO(sk): remove this when netsnmp is fixed
-        # NOTE: Force usage of CLASSIC with SNMP-v1 to prevent memory leak in the netsnmp
-        if self._is_host_snmp_v1(host_name):
-            return SNMPBackendEnum.CLASSIC
-
         if with_inline_snmp and snmp_backend_default == "inline":
             return SNMPBackendEnum.INLINE
-
+        if snmp_backend_default == "classic":
+            return SNMPBackendEnum.CLASSIC
+        # Note: in the above case we raise here.
+        # I am not sure if this different behavior is intentional.
         return SNMPBackendEnum.CLASSIC
 
     def snmp_credentials_of_version(
@@ -3581,8 +3599,9 @@ class ConfigCache:
         attrs = {
             "_NODENAMES": " ".join(sorted_nodes),
         }
+        ip_stack_config = ConfigCache.ip_stack_config(hostname)
         node_ips_4 = []
-        if IPStackConfig.IPv4 in ConfigCache.ip_stack_config(hostname):
+        if IPStackConfig.IPv4 in ip_stack_config:
             family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6] = (
                 socket.AddressFamily.AF_INET
             )
@@ -3594,7 +3613,7 @@ class ConfigCache:
                     node_ips_4.append(ip_lookup.fallback_ip_for(family))
 
         node_ips_6 = []
-        if IPStackConfig.IPv6 in ConfigCache.ip_stack_config(hostname):
+        if IPStackConfig.IPv6 in ip_stack_config:
             family = socket.AddressFamily.AF_INET6
             for h in sorted_nodes:
                 addr = ip_address_of(self, h, family)

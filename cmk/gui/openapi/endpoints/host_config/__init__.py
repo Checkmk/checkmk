@@ -39,15 +39,15 @@ A host_config object can have the following relations present in `links`:
 """
 import itertools
 import operator
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Callable
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any
 from urllib.parse import urlparse
 
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
-from cmk.gui.background_job import BackgroundJobAlreadyRunning
+from cmk.gui.background_job import BackgroundJobAlreadyRunning, InitialStatusArgs
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
@@ -574,7 +574,14 @@ def rename_host(params: Mapping[str, Any]) -> Response:
         background_job.start(
             lambda job_interface: rename_hosts_background_job(
                 [(host.folder(), host_name, new_name)], job_interface
-            )
+            ),
+            InitialStatusArgs(
+                title="Renaming of %s -> %s" % (host_name, new_name),
+                lock_wato=True,
+                stoppable=False,
+                estimated_duration=background_job.get_status().duration,
+                user=str(user.id) if user.id else None,
+            ),
         )
     except BackgroundJobAlreadyRunning:
         return problem(

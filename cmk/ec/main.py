@@ -689,21 +689,22 @@ class EventServer(ECServerThread):
             # NOTE: We modify client_socket in the loop, so we need to copy below!
             for fd, (cs, address, previous_data) in list(client_sockets.items()):
                 if fd in readable:
-                    data = previous_data
                     # Receive next part of data
                     try:
-                        data += cs.recv(4096)
+                        new_data = cs.recv(4096)
                     except Exception:
+                        new_data = b""
                         self._logger.exception("Exception during syslog socket_tcp recv")
 
-                    if not data:
-                        cs.close()
-                        del client_sockets[fd]
+                    data = previous_data + new_data
 
                     messages, unprocessed = parse_bytes_into_syslog_messages(data)
                     self.process_syslog_messages(messages, address)
-                    if unprocessed:
+                    if new_data:
                         client_sockets[fd] = (cs, address, unprocessed)
+                    else:
+                        cs.close()
+                        del client_sockets[fd]
 
             # Read data from pipe
             if pipe in readable:
@@ -1029,8 +1030,8 @@ class EventServer(ECServerThread):
         merge = rule["expect"].get("merge", "open")
 
         # Changed "acked" to ("acked", bool) with 1.6.0p20
-        if isinstance(merge, tuple):
-            merge, reset_ack = merge
+        if isinstance(merge, tuple):  # TODO: Move this to upgrade time
+            merge, reset_ack = merge  # type: ignore[unreachable]
 
         if merge != "never":
             for event in self._event_status.events():
@@ -1251,8 +1252,9 @@ class EventServer(ECServerThread):
 
         skip_pack = None
         for rule in rule_candidates:
-            if skip_pack and rule["pack"] == skip_pack:
-                continue  # still in the rule pack that we want to skip
+            # TODO: Rewrite this skipping logic, so it's blindingly obvious, even for mypy.
+            if skip_pack and rule["pack"] == skip_pack:  # type: ignore[unreachable]
+                continue  # type: ignore[unreachable] # still in the rule pack that we want to skip
             skip_pack = None  # new pack, reset skipping
 
             try:

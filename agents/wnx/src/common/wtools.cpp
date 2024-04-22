@@ -2667,7 +2667,14 @@ std::wstring GenerateCmaUserNameInGroup(std::wstring_view group,
 
     auto group_name = std::wstring{group};
     rs::replace(group_name, ' ', '_');
-    return prefix.empty() ? std::wstring{} : std::wstring{prefix} + group_name;
+    auto name =
+        prefix.empty() ? std::wstring{} : std::wstring{prefix} + group_name;
+    // sometimes some Windows may restrict user name length
+    if (name.size() > 20) {
+        XLOG::l("User name '{}' is too long", ToUtf8(name));
+        name = name.substr(0, 20);
+    }
+    return name;
 }
 
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {

@@ -7,8 +7,11 @@ def main() {
         check_job_parameters([
             "VERSION_TO_CHECK",
         ])
-        docker_reference_image().inside(
-                "-v \$HOME/.cmk-credentials:\$HOME/.cmk-credentials -v /var/run/docker.sock:/var/run/docker.sock --group-add=${get_docker_group_id()}") {
+        inside_container(
+            set_docker_group_id: true,
+            mount_credentials: true,
+            priviliged: true,
+        ) {
             withEnv(["PYTHONUNBUFFERED=1"]) {
                 dir("${checkout_dir}") {
                     sh(script: """scripts/run-pipenv run \

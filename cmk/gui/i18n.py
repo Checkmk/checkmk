@@ -203,6 +203,17 @@ def _u(text: str) -> str:
         if current_language == "en":
             return text
         return ldict.get(current_language, text)
+
+    # Avoid localizing the empty string. The empty string is reserved for header data in PO files:
+    # https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html
+    # "An empty untranslated-string is reserved to contain the header entry with the meta information"
+    # Hence, the localization of the empty string is the header data, which we certainly do not want
+    # to display. Of course, static empty strings should not be marked as localizable in the first
+    # place. However, user-supplied texts are dynamic and can be empty (eg. descriptions of custom
+    # graphs).
+    if not text:
+        return ""
+
     if translation:
         return translation.translation.gettext(text)
     return text

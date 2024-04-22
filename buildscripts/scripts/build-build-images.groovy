@@ -93,6 +93,7 @@ def main() {
                         def docker_build_args = (""
                             + " --build-context scripts=buildscripts/infrastructure/build-nodes/scripts"
                             + " --build-context omd_distros=omd/distros"
+                            + " --build-context dev_images=defines/dev-images"
 
                             + " --build-arg DISTRO_IMAGE_BASE='${distro_base_image_id[distro]}'"
                             + " --build-arg DISTRO_MK_FILE='${distro_mk_file_name}'"
@@ -137,15 +138,40 @@ def main() {
     }
 
     /// build and use reference image in order to check if it's working at all
-    /// and to fill caches
+    /// and to fill caches. Also do some tests in order to check if permissions
+    /// are fine and everything gets cleaned up
     stage("Use reference image") {
-        show_duration("check reference image") {
-            docker_reference_image().inside() {
+        dir("${checkout_dir}") {
+            /// First check the bash script, since it yields more useful log output
+            /// in erroneous cases
+            show_duration("check reference image") {
+                sh("""
+                    ${checkout_dir}/scripts/run-in-docker.sh cat /etc/os-release
+                """);
+            }
+            /// also check the default way to use a container
+            inside_container() {
                 sh("""
                     echo Hello from reference image
                     cat /etc/os-release
+                    echo \$USER
+                    echo \$HOME
+                    echo Hello from reference image
+                    cat /etc/os-release
+                    echo \$USER
+                    echo \$HOME
+                    ls -alF \$HOME
+                    ls -alF \$HOME/.cache
+                    echo fcache > \$HOME/.cache/fcache
+                    ls -alF ${checkout_dir}/shared_cargo_folder
+                    echo fcargo > ${checkout_dir}/shared_cargo_folder/fcargo
                 """);
+                sh("git status");
             }
+            /// also test the run-in-docker.sh script
+            sh("""
+                ${checkout_dir}/scripts/run-in-docker.sh cat /etc/os-release
+            """);
         }
     }
 }

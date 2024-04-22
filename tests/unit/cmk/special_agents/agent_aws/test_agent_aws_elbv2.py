@@ -5,7 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import NamedTuple, Protocol, Sequence, Tuple
+from collections.abc import Sequence
+from typing import NamedTuple, Protocol
 
 import pytest
 
@@ -101,7 +102,7 @@ class ELBv2SectionsOut(NamedTuple):
     elbv2_summary: ELBSummaryGeneric
     elbv2_labels: ELBLabelsGeneric
     elbv2_target_groups: ELBv2TargetGroups
-    elbv2_application: Tuple[
+    elbv2_application: tuple[
         ELBv2Application, ELBv2ApplicationTargetGroupsHTTP, ELBv2ApplicationTargetGroupsLambda
     ]
     elbv2_network: ELBv2Network

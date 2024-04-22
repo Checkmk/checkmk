@@ -40,7 +40,7 @@ import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import cast, IO, Literal
+from typing import Any, cast, IO, Literal
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import-untyped]
@@ -64,7 +64,6 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
@@ -82,8 +81,15 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.watolib.groups_io import load_contact_group_information
 
-from ._connections import active_connections, get_connection, get_ldap_connections
+from ._connections import (
+    active_connections,
+    ActivePlugins,
+    get_connection,
+    get_ldap_connections,
+    LDAPUserConnectionConfig,
+)
 from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, UserConnectorRegistry
 from ._roles import load_roles
 from ._user_attribute import get_user_attributes
@@ -217,63 +223,16 @@ def _get_ad_locator():
     return FasterDetectLocator()
 
 
-class LDAPUserConnector(UserConnector):
+class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
     connection_suffixes: dict[str, str] = {}
 
-    @classmethod
-    def migrate_config(cls, cfg):
-        if not cfg:
-            return cfg
-
-        # For a short time in git master the directory_type could be:
-        # ('ad', {'discover_nearest_dc': True/False})
-        if (
-            isinstance(cfg["directory_type"], tuple)
-            and cfg["directory_type"][0] == "ad"
-            and "discover_nearest_dc" in cfg["directory_type"][1]
-        ):
-            auto_discover = cfg["directory_type"][1]["discover_nearest_dc"]
-
-            if not auto_discover:
-                cfg["directory_type"] = "ad"
-            else:
-                cfg["directory_type"] = (
-                    cfg["directory_type"][0],
-                    {
-                        "connect_to": (
-                            "discover",
-                            {
-                                "domain": cfg["server"],
-                            },
-                        ),
-                    },
-                )
-
-        if not isinstance(cfg["directory_type"], tuple) and "server" in cfg:
-            # Old separate configuration of directory_type and server
-            servers = {
-                "server": cfg["server"],
-            }
-
-            if "failover_servers" in cfg:
-                servers["failover_servers"] = cfg["failover_servers"]
-
-            cfg["directory_type"] = (
-                cfg["directory_type"],
-                {
-                    "connect_to": ("fixed_list", servers),
-                },
-            )
-
-        return cfg
-
-    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(self.migrate_config(cfg))
+    def __init__(self, cfg: LDAPUserConnectionConfig) -> None:
+        super().__init__(cfg)
 
         self._ldap_obj: ldap.ldapobject.ReconnectLDAPObject | None = None
-        self._ldap_obj_config = None
+        self._ldap_obj_config: LDAPUserConnectionConfig | None = None
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id)
 
         self._num_queries = 0
@@ -307,6 +266,12 @@ class LDAPUserConnector(UserConnector):
     @property
     def id(self):
         return self._config["id"]
+
+    @property
+    def customer_id(self) -> None | str:
+        if "customer" not in self._config:
+            return None
+        return self._config["customer"]
 
     def connect_server(self, server: str) -> tuple[ldap.ldapobject.ReconnectLDAPObject, str | None]:
         """Connects to an LDAP server using the provided server uri"""
@@ -480,7 +445,7 @@ class LDAPUserConnector(UserConnector):
             pass
 
     # Bind with the default credentials
-    def _default_bind(self, conn):
+    def _default_bind(self, conn: ldap.ldapobject.ReconnectLDAPObject | None) -> None:
         try:
             if "bind" in self._config:
                 bind_dn, password_id = self._config["bind"]
@@ -501,10 +466,15 @@ class LDAPUserConnector(UserConnector):
                 )
             )
 
-    def _bind(  # type: ignore[no-untyped-def]
-        self, user_dn, password_id: password_store.PasswordId, catch=True, conn=None
-    ):
+    def _bind(
+        self,
+        user_dn: str,
+        password_id: password_store.PasswordId,
+        catch: bool = True,
+        conn: ldap.ldapobject.ReconnectLDAPObject | None = None,
+    ) -> None:
         if conn is None:
+            assert self._ldap_obj is not None
             conn = self._ldap_obj
         self._logger.info("LDAP_BIND %s" % user_dn)
         try:
@@ -522,7 +492,7 @@ class LDAPUserConnector(UserConnector):
                 raise MKLDAPException(_("Unable to authenticate with LDAP (%s)") % e)
             raise
 
-    def servers(self):
+    def servers(self) -> list[str]:
         connect_params = self._get_connect_params()
         if self._uses_discover_nearest_server():
             servers = [self._discover_nearest_dc(connect_params["domain"])]
@@ -539,18 +509,28 @@ class LDAPUserConnector(UserConnector):
         # 'directory_type': ('ad', {'connect_to': ('discover', {'domain': 'corp.de'})}),
         return self._config["directory_type"][1]["connect_to"][1]
 
-    def use_ssl(self):
+    def use_ssl(self) -> bool:
         return "use_ssl" in self._config
 
-    def active_plugins(self):
+    def active_plugins(self) -> ActivePlugins:
         return self._config["active_plugins"]
 
-    def _active_sync_plugins(self) -> Iterator[tuple[str, dict, LDAPAttributePlugin]]:
+    def _active_sync_plugins(self) -> Iterator[tuple[str, dict[str, Any], LDAPAttributePlugin]]:
         for key, params in self._config["active_plugins"].items():
             try:
                 plugin = ldap_attribute_plugin_registry[key]()
             except KeyError:
                 continue
+            if not params:
+                params = {}
+            if not isinstance(params, dict):
+                raise TypeError(
+                    _(
+                        'The configuration of the LDAP attribute plugin "%s" is invalid. '
+                        "Please check the configuration."
+                    )
+                    % key
+                )
             yield key, params, plugin
 
     def _directory_type(self):
@@ -583,7 +563,7 @@ class LDAPUserConnector(UserConnector):
     def _get_user_dn(self) -> DistinguishedName:
         return self._replace_macros(self._config["user_dn"])
 
-    def _get_suffix(self) -> str:
+    def _get_suffix(self) -> str | None:
         return self._config.get("suffix")
 
     def _has_suffix(self) -> bool:
@@ -611,7 +591,7 @@ class LDAPUserConnector(UserConnector):
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
         attrs: set[str] = set()
         for _key, params, plugin in self._active_sync_plugins():
-            attrs.update(plugin.needed_attributes(self, params or {}))
+            attrs.update(plugin.needed_attributes(self, params))
         return list(attrs)
 
     def _object_exists(self, dn: DistinguishedName) -> bool:
@@ -1464,7 +1444,7 @@ class LDAPUserConnector(UserConnector):
         for key, params, plugin in self._active_sync_plugins():
             # sync_func doesn't expect UserSpec yet. In fact, it will access some LDAP-specific
             # attributes that aren't defined by UserSpec.
-            user.update(plugin.sync_func(self, key, params or {}, user_id, ldap_user, user))  # type: ignore
+            user.update(plugin.sync_func(self, key, params, user_id, ldap_user, user))  # type: ignore
 
     def _flush_caches(self):
         self._num_queries = 0
@@ -1602,7 +1582,7 @@ class LDAPAttributePlugin(abc.ABC):
         """Executed during user synchronization to modify the "user" structure"""
         raise NotImplementedError()
 
-    def parameters(self, connection: LDAPUserConnector) -> FixedValue | Dictionary:
+    def parameters(self, connection: LDAPUserConnector | None) -> FixedValue | Dictionary:
         return FixedValue(
             title=self.title,
             help=self.help,
@@ -1658,7 +1638,9 @@ class LDAPUserAttributePlugin(LDAPAttributePlugin):
 ldap_attribute_plugin_registry = LDAPAttributePluginRegistry()
 
 
-def ldap_attribute_plugins_elements(connection):
+def ldap_attribute_plugins_elements(
+    connection: LDAPUserConnector | None,
+) -> list[tuple[str, FixedValue | Dictionary]]:
     """Returns a list of pairs (key, parameters) of all available attribute plugins"""
     elements = []
     items = sorted(
@@ -1702,7 +1684,7 @@ def register_user_attribute_sync_plugins() -> None:
                                     "The LDAP attribute whose contents shall be synced into this custom attribute."
                                 ),
                                 default_value=lambda: ldap_attr_of_connection(
-                                    connection.id, self.ident
+                                    connection, self.ident
                                 ),
                             ),
                         ),
@@ -1717,27 +1699,23 @@ def register_user_attribute_sync_plugins() -> None:
 
 
 # Helper function for gathering the default LDAP attribute names of a connection.
-def ldap_attr_of_connection(connection_id, attr):
-    connection = get_connection(connection_id)
+def ldap_attr_of_connection(connection: LDAPUserConnector | None, attr: str) -> str:
     if not connection:
         # Handle "new connection" situation where there is no connection object existant yet.
         # The default type is "Active directory", so we use it here.
         return ldap_attr_map["ad"].get(attr, attr).lower()
-
-    assert isinstance(connection, LDAPUserConnector)
     return connection._ldap_attr(attr)
 
 
 # Helper function for gathering the default LDAP filters of a connection.
-def ldap_filter_of_connection(connection_id, *args, **kwargs):
-    connection = get_connection(connection_id)
+def ldap_filter_of_connection(
+    connection: LDAPUserConnector | None, key: str, handle_config: bool
+) -> str:
     if not connection:
         # Handle "new connection" situation where there is no connection object existent yet.
         # The default type is "Active directory", so we use it here.
-        return ldap_filter_map["ad"].get(args[0], "(objectclass=*)")
-
-    assert isinstance(connection, LDAPUserConnector)
-    return connection._ldap_filter(*args, **kwargs)
+        return ldap_filter_map["ad"].get(key, "(objectclass=*)")
+    return connection._ldap_filter(key, handle_config)
 
 
 def _ldap_sync_simple(user_id: str, ldap_user: dict, user: dict, user_attr: str, attr: str) -> dict:
@@ -1870,7 +1848,7 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
             return {"email": mail}
         return {}
 
-    def parameters(self, connection):
+    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
@@ -1880,7 +1858,7 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
                     TextInput(
                         title=_("LDAP attribute to sync"),
                         help=_("The LDAP attribute containing the mail address of the user."),
-                        default_value=lambda: ldap_attr_of_connection(connection.id, "mail"),
+                        default_value=lambda: ldap_attr_of_connection(connection, "mail"),
                     ),
                 ),
             ],
@@ -1937,7 +1915,7 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
             params.get("attr", connection._ldap_attr("cn")).lower(),
         )
 
-    def parameters(self, connection):
+    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
@@ -1947,7 +1925,7 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
                     TextInput(
                         title=_("LDAP attribute to sync"),
                         help=_("The LDAP attribute containing the alias of the user."),
-                        default_value=lambda: ldap_attr_of_connection(connection.id, "cn"),
+                        default_value=lambda: ldap_attr_of_connection(connection, "cn"),
                     ),
                 ),
             ],
@@ -2020,16 +1998,12 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
         if connection._is_active_directory() and ldap_user.get("useraccountcontrol"):
             # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
             locked_in_ad = int(ldap_user["useraccountcontrol"][0]) & 2
-            locked_in_cmk = user.get("locked", False)
+            locked_in_cmk = user["locked"]
 
             if locked_in_ad and not locked_in_cmk:
                 return {
                     "locked": True,
                     "serial": user.get("serial", 0) + 1,
-                }
-            if not locked_in_ad:
-                return {
-                    "locked": False,
                 }
 
         changed_attr = params.get("attr", connection._ldap_attr("pw_changed")).lower()
@@ -2058,7 +2032,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
 
         return {}
 
-    def parameters(self, connection):
+    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
@@ -2073,7 +2047,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
                             "user must login again. By default this field uses the fields which "
                             "hold the time of the last password change of the user."
                         ),
-                        default_value=lambda: ldap_attr_of_connection(connection.id, "pw_changed"),
+                        default_value=lambda: ldap_attr_of_connection(connection, "pw_changed"),
                     ),
                 ),
             ],
@@ -2131,7 +2105,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
             params.get("attr", connection._ldap_attr("mobile")).lower(),
         )
 
-    def parameters(self, connection):
+    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
@@ -2141,7 +2115,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
                     TextInput(
                         title=_("LDAP attribute to sync"),
                         help=_("The LDAP attribute containing the pager number of the user."),
-                        default_value=lambda: ldap_attr_of_connection(connection.id, "mobile"),
+                        default_value=lambda: ldap_attr_of_connection(connection, "mobile"),
                     ),
                 ),
             ],
@@ -2204,7 +2178,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
             )
         }
 
-    def parameters(self, connection):
+    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
@@ -2298,7 +2272,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 
         return update
 
-    def parameters(self, connection):
+    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,
@@ -2472,7 +2446,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
 
         return groups_to_fetch
 
-    def parameters(self, connection):
+    def parameters(self, connection: LDAPUserConnector | None) -> Dictionary:
         return Dictionary(
             title=self.title,
             help=self.help,

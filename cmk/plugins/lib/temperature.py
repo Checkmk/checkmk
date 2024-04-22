@@ -7,9 +7,7 @@ import dataclasses
 import math
 import time
 from collections.abc import Generator, Iterator, MutableMapping, Sequence
-from typing import Any
-
-from typing_extensions import TypedDict
+from typing import Any, TypedDict
 
 from cmk.agent_based.v1 import check_levels
 from cmk.agent_based.v2 import CheckResult, get_average, get_rate, Metric, Result, State

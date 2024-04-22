@@ -11,10 +11,9 @@ import json
 import logging
 import sys
 import traceback
-from typing import Any, NotRequired
+from typing import Any, NotRequired, TypedDict
 
 import requests
-from typing_extensions import TypedDict
 
 from cmk.special_agents.utils.prometheus import extract_connection_args, generate_api_session
 from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter

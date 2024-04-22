@@ -31,7 +31,7 @@ def parse(string_table: StringTable) -> _Section | None:
     if not string_table:
         return None
     item_names = ["VMs", "RAID", "EJBCA", "Signserver", "HSM"]
-    return dict((item, Status(int(i))) for item, i in zip(item_names, string_table[0]) if i)
+    return {item: Status(int(i)) for item, i in zip(item_names, string_table[0]) if i}
 
 
 register.snmp_section(

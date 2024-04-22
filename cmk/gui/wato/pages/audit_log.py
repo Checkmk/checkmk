@@ -43,6 +43,7 @@ from cmk.gui.valuespec import (
     Integer,
     RegExp,
     TextInput,
+    ValueSpec,
 )
 from cmk.gui.wato.pages.activate_changes import render_object_ref
 from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_audit_log_filter
@@ -543,7 +544,7 @@ class ModeAuditLog(WatoMode):
 
             for name, vs in self._audit_log_options():
 
-                def renderer(name=name, vs=vs) -> None:  # type: ignore[no-untyped-def]
+                def renderer(name: str = name, vs: ValueSpec = vs) -> None:
                     vs.render_input("options_" + name, self._options[name])
 
                 html.render_floating_option(name, "single", vs.title(), renderer)

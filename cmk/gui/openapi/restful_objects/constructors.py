@@ -261,15 +261,15 @@ class DomainObjectMembers:
         self.base = base
         self.members: dict[str, dict[str, Any]] = {}
 
-    def object_property(  # type: ignore[no-untyped-def]
+    def object_property(
         self,
         name: str,
         value: Any,
         prop_format: PropertyFormat,
         title: str | None = None,
-        linkable=True,
+        linkable: bool = True,
         links: list[LinkType] | None = None,
-    ):
+    ) -> dict[str, Any]:
         self.members[name] = object_property(
             name, value, prop_format, self.base, title, linkable, links
         )
@@ -316,11 +316,11 @@ def object_sub_property(
     return ret
 
 
-def collection_property(  # type: ignore[no-untyped-def]
+def collection_property(
     name: str,
     value: list[Any],
     base: str,
-):
+) -> dict[str, str | list | list[LinkType]]:
     """Represent a collection property.
 
     This is a property on an object which hols a collection. This has to be stored in the "member"

@@ -24,6 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.site_changes import ChangeSpec
 
 ConfigDomainName = str
 
@@ -157,7 +158,7 @@ class ABCConfigDomain(abc.ABC):
         ]
 
     @classmethod
-    def get_domain_settings(cls, change) -> SerializedSettings:  # type: ignore[no-untyped-def]
+    def get_domain_settings(cls, change: ChangeSpec) -> SerializedSettings:
         return change.get("domain_settings", {}).get(cls.ident(), {})
 
     @classmethod

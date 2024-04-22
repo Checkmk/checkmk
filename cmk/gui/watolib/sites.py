@@ -781,7 +781,7 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
     )
 
 
-def site_globals_editable(site_id, site) -> bool:  # type: ignore[no-untyped-def]
+def site_globals_editable(site_id: SiteId, site: SiteConfiguration) -> bool:
     # Site is a remote site of another site. Allow to edit probably pushed site
     # specific globals when remote Setup is enabled
     if is_wato_slave_site():
@@ -791,7 +791,7 @@ def site_globals_editable(site_id, site) -> bool:  # type: ignore[no-untyped-def
     if not has_wato_slave_sites():
         return False
 
-    return site["replication"] or site_is_local(active_config, site_id)
+    return bool(site["replication"]) or site_is_local(active_config, site_id)
 
 
 def _delete_distributed_wato_file():

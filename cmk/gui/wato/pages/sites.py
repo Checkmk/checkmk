@@ -601,7 +601,7 @@ class ModeDistributedMonitoring(WatoMode):
     def action(self) -> ActionResult:
         delete_id = request.get_ascii_input("_delete")
         if delete_id and transactions.check_transaction():
-            self._action_delete(delete_id)
+            return self._action_delete(SiteId(delete_id))
 
         logout_id = request.get_ascii_input("_logout")
         if logout_id:
@@ -612,10 +612,7 @@ class ModeDistributedMonitoring(WatoMode):
             return self._action_login(SiteId(login_id))
         return None
 
-    # Mypy wants the explicit return, pylint does not like it.
-    def _action_delete(  # type: ignore[no-untyped-def] # pylint: disable=useless-return
-        self, delete_id
-    ) -> ActionResult:
+    def _action_delete(self, delete_id: SiteId) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
@@ -1484,7 +1481,7 @@ def _page_menu_dropdown_site_details(
 def _page_menu_entries_site_details(
     site_id: str, site: SiteConfiguration, current_mode: str
 ) -> Iterator[PageMenuEntry]:
-    if current_mode != "edit_site_globals" and site_globals_editable(site_id, site):
+    if current_mode != "edit_site_globals" and site_globals_editable(SiteId(site_id), site):
         yield PageMenuEntry(
             title=_("Global settings"),
             icon_name="configuration",

@@ -185,20 +185,15 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
                 state=State.OK, summary="%sThere are no restrictions on this supply" % color_info
             )
             return
+
         if supply.level == -3:
-            yield Result(
-                state=State(params["some_remaining"]), summary="%sSome remaining" % color_info
-            )
-            yield Metric(
-                "pages",
-                supply.level,
-                levels=(0.01 * warn * supply.max_capacity, 0.01 * crit * supply.max_capacity),
-                boundaries=(0, supply.max_capacity),
-            )
+            yield _check_some_remaining(supply, params, color_info)
             return
+
         if supply.level == -2:
             yield Result(state=State.UNKNOWN, summary="%s Unknown level" % color_info)
             return
+
         if supply.max_capacity == -2:
             # no percentage possible. We compare directly against levels
             yield Result(state=State.OK, summary="%sLevel: %d" % (color_info, supply.level))
@@ -231,11 +226,29 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
     )
 
 
+def _check_some_remaining(
+    supply: PrinterSupply, params: Mapping[str, Any], color_info: str
+) -> Result:
+    match supply.supply_class:
+        case SupplyClass.CONTAINER:
+            return Result(
+                state=State(params["some_remaining_ink"]),
+                summary=f"{color_info}Some ink remaining",
+            )
+        case SupplyClass.RECEPTACLE:
+            return Result(
+                state=State(params["some_remaining_space"]),
+                summary=f"{color_info}Some space remaining",
+            )
+
+
 DEFAULT_PARAMETERS = {
     "levels": (20.0, 10.0),
     "upturn_toner": False,
-    "some_remaining": 1,
+    "some_remaining_ink": 1,
+    "some_remaining_space": 1,
 }
+
 
 register.check_plugin(
     name="printer_supply",

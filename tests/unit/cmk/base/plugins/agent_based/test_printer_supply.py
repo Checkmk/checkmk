@@ -79,14 +79,13 @@ def test_inventory_printer_supply(
     [
         (
             "Black Ink Cartridge",
-            DEFAULT_PARAMETERS,
+            {**DEFAULT_PARAMETERS, "some_remaining_ink": 3},
             [
                 [["1.4", "black"]],
                 [["Black Ink Cartridge", "15", "-2", "-3", "3", "4"]],
             ],
             [
-                Result(state=State.WARN, summary="Some remaining"),
-                Metric("pages", -3, levels=(-0.4, -0.2), boundaries=(0, -2)),
+                Result(state=State.UNKNOWN, summary="Some ink remaining"),
             ],
         ),
         (

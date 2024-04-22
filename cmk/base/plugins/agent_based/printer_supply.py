@@ -231,11 +231,17 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
     )
 
 
+DEFAULT_PARAMETERS = {
+    "levels": (20.0, 10.0),
+    "upturn_toner": False,
+    "some_remaining": 1,
+}
+
 register.check_plugin(
     name="printer_supply",
     service_name="Supply %s",
     discovery_function=discovery_printer_supply,
     check_function=check_printer_supply,
     check_ruleset_name="printer_supply",
-    check_default_parameters={"levels": (20.0, 10.0), "upturn_toner": False, "some_remaining": 1},
+    check_default_parameters=DEFAULT_PARAMETERS,
 )

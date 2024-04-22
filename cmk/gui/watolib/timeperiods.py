@@ -102,15 +102,23 @@ def create_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:
     _changes.add_change("edit-timeperiods", _("Created new time period %s") % name)
 
 
-def verify_timeperiod_name_exists(name):
+def verify_timeperiod_name_exists(name: str) -> bool:
     existing_timperiods = _load_timeperiods()
     return name in existing_timperiods
 
 
 class TimeperiodSelection(DropdownChoice[str]):
-    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        kwargs.setdefault("no_preselect_title", _("Select a time period"))
-        super().__init__(choices=self._get_choices, **kwargs)
+    def __init__(
+        self,
+        title: str | None = None,
+        help: str | None = None,  # pylint: disable=redefined-builtin
+    ) -> None:
+        super().__init__(
+            choices=self._get_choices,
+            title=title,
+            help=help,
+            no_preselect_title=_("Select a time period"),
+        )
 
     def _get_choices(self) -> list[tuple[str, str]]:
         timeperiods = _load_timeperiods()

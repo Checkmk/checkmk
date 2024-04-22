@@ -49,6 +49,7 @@ from cmk.gui.valuespec import (
     MigrateNotUpdated,
     TextInput,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import (
@@ -650,17 +651,21 @@ class CEESiteManagement(SiteManagement):
         return domains
 
 
-# TODO: Change to factory
 class LivestatusViaTCP(Dictionary):
-    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        kwargs["elements"] = [
+    def __init__(
+        self,
+        title: str | None = None,
+        help: str | None = None,  # pylint: disable=redefined-builtin
+        tcp_port: int = 6557,
+    ) -> None:
+        elements: list[tuple[str, ValueSpec]] = [
             (
                 "port",
                 Integer(
                     title=_("TCP port"),
                     minvalue=1,
                     maxvalue=65535,
-                    default_value=kwargs.pop("tcp_port", 6557),
+                    default_value=tcp_port,
                 ),
             ),
             (
@@ -695,8 +700,12 @@ class LivestatusViaTCP(Dictionary):
                 ),
             ),
         ]
-        kwargs["optional_keys"] = ["only_from", "tls"]
-        super().__init__(**kwargs)
+        super().__init__(
+            title=title,
+            help=help,
+            elements=elements,
+            optional_keys=["only_from", "tls"],
+        )
 
 
 def _create_nagvis_backends(sites_config):

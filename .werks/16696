@@ -1,0 +1,11 @@
+Title: Respect site filter in summary dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1713780113
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+
+If you used the "Site" filter in a dashboard with a host or service summary
+dashlet, the filter was ignored.

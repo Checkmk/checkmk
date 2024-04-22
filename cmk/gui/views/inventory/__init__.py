@@ -352,7 +352,7 @@ def _register_node_painter(hints: DisplayHints, *, painter_options: PainterOptio
         hints.node_hint.ident,
         {
             "title": hints.node_hint.long_inventory_title,
-            "short": hints.node_hint.title,
+            "short": hints.node_hint.short_title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
             "params": Dictionary(
@@ -435,7 +435,7 @@ def _register_attribute_column(hint: AttributeDisplayHint) -> None:
             # - Firmware > Version
             # We want to keep column titles short, yet, to make up for overlapping we show the
             # long_title in the column title tooltips
-            "short": hint.short or hint.title,
+            "short": hint.short_title,
             "tooltip_title": hint.long_title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
@@ -534,7 +534,7 @@ def _register_table_column(hint: ColumnDisplayHint) -> None:
             # - Firmware > Version
             # We want to keep column titles short, yet, to make up for overlapping we show the
             # long_title in the column title tooltips
-            "short": hint.short or hint.title,
+            "short": hint.short_title,
             "tooltip_title": hint.long_title,
             "columns": [hint.ident],
             "paint": lambda row: _paint_host_inventory_column(row, hint),

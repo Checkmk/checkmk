@@ -93,6 +93,7 @@ class NodeDisplayHint:
     path: SDPath
     icon: str
     title: str
+    short_title: str
     _long_title_function: Callable[[], str]
 
     @property
@@ -114,6 +115,7 @@ class NodeDisplayHint:
             path=path,
             icon=raw_hint.get("icon", ""),
             title=title,
+            short_title=title,
             _long_title_function=_make_long_title_function(title, path[:-1]),
         )
 
@@ -233,7 +235,7 @@ class ColumnDisplayHint:
     view_name: str
     key: SDKey
     title: str
-    short: str | None
+    short_title: str
     _long_title_function: Callable[[], str]
     paint_function: PaintFunction
     sort_function: SortFunction
@@ -272,7 +274,9 @@ class ColumnDisplayHint:
             view_name=view_name,
             key=SDKey(key),
             title=title,
-            short=None if (short := raw_hint.get("short")) is None else str(short),
+            short_title=(
+                title if (short_title := raw_hint.get("short")) is None else str(short_title)
+            ),
             _long_title_function=_make_long_title_function(title, path),
             paint_function=paint_function,
             sort_function=_make_sort_function(raw_hint),
@@ -312,7 +316,7 @@ class AttributeDisplayHint:
     path: SDPath
     key: SDKey
     title: str
-    short: str | None
+    short_title: str
     _long_title_function: Callable[[], str]
     data_type: str
     paint_function: PaintFunction
@@ -339,7 +343,9 @@ class AttributeDisplayHint:
             path=path,
             key=SDKey(key),
             title=title,
-            short=None if (short := raw_hint.get("short")) is None else str(short),
+            short_title=(
+                title if (short_title := raw_hint.get("short")) is None else str(short_title)
+            ),
             _long_title_function=_make_long_title_function(title, path),
             data_type=data_type,
             paint_function=paint_function,

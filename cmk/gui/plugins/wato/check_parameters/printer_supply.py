@@ -9,65 +9,76 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersPrinters,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, MonitoringState, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    Migrate,
+    MonitoringState,
+    Percentage,
+    TextInput,
+    Tuple,
+)
 
 
-def _parameter_valuespec_printer_supply() -> Dictionary:
-    return Dictionary(
-        elements=[
-            (
-                "levels",
-                Tuple(
-                    title=_("Levels for remaining supply"),
-                    elements=[
-                        Percentage(
-                            title=_("Warning level for remaining"),
-                            allow_int=True,
-                            default_value=20.0,
-                            help=_(
-                                "For consumable supplies, this is configured as the percentage of "
-                                "remaining capacity. For supplies that fill up, this is configured "
-                                "as remaining space."
+def _parameter_valuespec_printer_supply() -> Migrate:
+    return Migrate(
+        migrate=lambda x: x,
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    Tuple(
+                        title=_("Levels for remaining supply"),
+                        elements=[
+                            Percentage(
+                                title=_("Warning level for remaining"),
+                                allow_int=True,
+                                default_value=20.0,
+                                help=_(
+                                    "For consumable supplies, this is configured as the percentage of "
+                                    "remaining capacity. For supplies that fill up, this is configured "
+                                    "as remaining space."
+                                ),
                             ),
-                        ),
-                        Percentage(
-                            title=_("Critical level for remaining"),
-                            allow_int=True,
-                            default_value=10.0,
-                            help=_(
-                                "For consumable supplies, this is configured as the percentage of "
-                                "remaining capacity. For supplies that fill up, this is configured "
-                                "as remaining space."
+                            Percentage(
+                                title=_("Critical level for remaining"),
+                                allow_int=True,
+                                default_value=10.0,
+                                help=_(
+                                    "For consumable supplies, this is configured as the percentage of "
+                                    "remaining capacity. For supplies that fill up, this is configured "
+                                    "as remaining space."
+                                ),
                             ),
-                        ),
-                    ],
-                ),
-            ),
-            (
-                "some_remaining",
-                MonitoringState(
-                    title=_("State for <i>some remaining</i>"),
-                    help=_(
-                        "Some printers do not report a precise percentage but "
-                        "just <i>some remaining</i> at a low fill state. Here you "
-                        "can set the monitoring state for that situation"
-                    ),
-                    default_value=1,
-                ),
-            ),
-            (
-                "upturn_toner",
-                Checkbox(
-                    title=_("Upturn toner levels"),
-                    label=_("Printer sends <i>used</i> material instead of <i>remaining</i>"),
-                    help=_(
-                        "Some Printers (eg. Konica for Drum Cartdiges) returning the available"
-                        " fuel instead of what is left. In this case it's possible"
-                        " to upturn the levels to handle this behavior"
+                        ],
                     ),
                 ),
-            ),
-        ],
+                (
+                    "some_remaining",
+                    MonitoringState(
+                        title=_("State for <i>some remaining</i>"),
+                        help=_(
+                            "Some printers do not report a precise percentage but "
+                            "just <i>some remaining</i> at a low fill state. Here you "
+                            "can set the monitoring state for that situation"
+                        ),
+                        default_value=1,
+                    ),
+                ),
+                (
+                    "upturn_toner",
+                    Checkbox(
+                        title=_("Upturn toner levels"),
+                        label=_("Printer sends <i>used</i> material instead of <i>remaining</i>"),
+                        help=_(
+                            "Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                            " fuel instead of what is left. In this case it's possible"
+                            " to upturn the levels to handle this behavior"
+                        ),
+                    ),
+                ),
+            ],
+        ),
     )
 
 

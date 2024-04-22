@@ -70,7 +70,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
                 "&snmpv3_security_password=" +
                 encodeURIComponent(
                     getFirstElementByNameAsInput(
-                        "vs_host_p_snmp_v3_credentials_1_3"
+                        "vs_host_p_snmp_v3_credentials_1_3_orig"
                     ).value
                 );
         } else if (v3_use == "2") {

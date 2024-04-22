@@ -35,6 +35,7 @@ from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupActiv
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
+# Note: already migrated as `cmk.plugins.email.rulesets.options.smtp`
 def _smtp_email_parameters() -> Dictionary:
     return Dictionary(
         title="SMTP",
@@ -94,6 +95,7 @@ def _smtp_email_parameters() -> Dictionary:
     )
 
 
+# Note: already migrated as `cmk.plugins.email.rulesets.options.common`
 def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
     credentials_basic: tuple[str, str, Tuple] = (
         "basic",
@@ -221,6 +223,7 @@ def validate_common_email_parameters(params: Mapping[str, tuple], varprefix: str
         )
 
 
+# Note: already migrated as `cmk.plugins.email.rulesets.options.sending`
 def _mail_sending_params() -> DictionaryEntry:
     return (
         "send",
@@ -234,6 +237,7 @@ def _mail_sending_params() -> DictionaryEntry:
     )
 
 
+# Note: already migrated as `cmk.plugins.email.rulesets.options.receiving`
 def _mail_receiving_params(supported_protocols: Iterable[str]) -> DictionaryEntry:
     return (
         "fetch",

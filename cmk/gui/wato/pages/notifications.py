@@ -787,7 +787,7 @@ class ModeNotifications(ABCNotificationsMode):
 
         return context
 
-    def _get_notification_rules(self):
+    def _get_notification_rules(self) -> list[EventRule]:
         return NotificationRuleConfigFile().load_for_reading()
 
     def _save_notification_display_options(self):

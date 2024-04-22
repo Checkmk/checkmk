@@ -490,15 +490,15 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _output_analysed_ruleset(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def _output_analysed_ruleset(  # pylint: disable=too-many-branches
         self,
         all_rulesets: AllRulesets,
         rulespec: Rulespec,
         svc_desc_or_item: str | None,
         svc_desc: str | None,
         service_result: AnalyseServiceResult | None,
-        known_settings=None,
-    ):
+        known_settings: object | None = None,
+    ) -> None:
         if known_settings is None:
             known_settings = self._PARAMETERS_UNKNOWN
 

@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 from collections.abc import Mapping
-from typing import Any, Final, NamedTuple
+from dataclasses import dataclass
+from typing import Any, Final
 
 from cmk.plugins.lib.constants import OID_SYS_OBJ
 from cmk.plugins.lib.printer import DETECT_PRINTER
@@ -41,11 +43,17 @@ MAP_UNIT: Final = {
 }
 
 
-class PrinterSupply(NamedTuple):
+class SupplyClass(enum.Enum):
+    CONTAINER = enum.auto()
+    RECEPTACLE = enum.auto()
+
+
+@dataclass(frozen=True)
+class PrinterSupply:
     unit: str
     max_capacity: int
     level: int
-    supply_class: str
+    supply_class: SupplyClass
     color: str
 
 
@@ -71,9 +79,14 @@ def parse_printer_supply(string_table: list[StringTable]) -> Section:
 
     color_mapping = {_get_oid_end_last_index(oid_end): value for oid_end, value in string_table[0]}
 
-    for index, (name, unit_info, raw_max_capacity, raw_level, supply_class, color_id) in enumerate(
-        string_table[1]
-    ):
+    for index, (
+        name,
+        unit_info,
+        raw_max_capacity,
+        raw_level,
+        raw_supply_class,
+        color_id,
+    ) in enumerate(string_table[1]):
         try:
             max_capacity = int(raw_max_capacity)
             level = int(raw_level)
@@ -103,7 +116,21 @@ def parse_printer_supply(string_table: list[StringTable]) -> Section:
         color = color.rstrip("\0")
         unit = get_unit(unit_info)
 
-        parsed[description] = PrinterSupply(unit, max_capacity, level, supply_class, color)
+        parsed[description] = PrinterSupply(
+            unit,
+            max_capacity,
+            level,
+            # When unit type is
+            # 1 = other
+            # 3 = supplyThatIsConsumed
+            # 4 = supplyThatIsFilled
+            # the value is contains the current level if this supply is a container
+            # but when the remaining space if this supply is a receptacle
+            #
+            # This table can be missing on some devices. Assume type 3 in this case.
+            SupplyClass.RECEPTACLE if raw_supply_class == "4" else SupplyClass.CONTAINER,
+            color,
+        )
 
     return parsed
 
@@ -179,15 +206,7 @@ def check_printer_supply(item: str, params: Mapping[str, Any], section: Section)
             return
 
     leftperc = 100.0 * supply.level / supply.max_capacity
-    # When unit type is
-    # 1 = other
-    # 3 = supplyThatIsConsumed
-    # 4 = supplyThatIsFilled
-    # the value is contains the current level if this supply is a container
-    # but when the remaining space if this supply is a receptacle
-    #
-    # This table can be missing on some devices. Assume type 3 in this case.
-    if supply.supply_class == "4":
+    if supply.supply_class is SupplyClass.RECEPTACLE:
         leftperc = 100 - leftperc
 
     # Some printers handle the used / remaining material differently

@@ -19,6 +19,7 @@ from cmk.base.plugins.agent_based.printer_supply import (
     parse_printer_supply,
     PrinterSupply,
     Section,
+    SupplyClass,
 )
 
 
@@ -28,10 +29,21 @@ from cmk.base.plugins.agent_based.printer_supply import (
         pytest.param(
             [
                 [["1.1", "black\x00"]],
-                [["Patrone Schwarz 508A HP CF360A\x00", "19", "100", "9", "3", "1"]],
+                [
+                    [
+                        "Patrone Schwarz 508A HP CF360A\x00",
+                        "19",
+                        "100",
+                        "9",
+                        SupplyClass.CONTAINER,
+                        "1",
+                    ]
+                ],
             ],
             {
-                "Patrone Schwarz 508A HP CF360A": PrinterSupply("%", 100, 9, "3", "black"),
+                "Patrone Schwarz 508A HP CF360A": PrinterSupply(
+                    "%", 100, 9, SupplyClass.CONTAINER, "black"
+                ),
             },
             id="with null bytes",
         ),

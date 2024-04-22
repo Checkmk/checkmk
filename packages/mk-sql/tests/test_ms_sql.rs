@@ -131,6 +131,8 @@ async fn test_obtain_all_instances_from_registry_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_local() {
+    use mk_sql::constants;
+
     let l = tools::LogMe::new("test_validate_all_instances_local").start(log::Level::Debug);
     log::info!("{:#?}", l.dir());
     let endpoint = make_default_endpoint();
@@ -141,7 +143,7 @@ async fn test_validate_all_instances_local() {
 
     for name in names {
         let c = client::ClientBuilder::new()
-            .browse(None, &name, None::<u16>)
+            .browse(&constants::LOCAL_HOST, &name, None::<u16>)
             .build()
             .await;
         match c {

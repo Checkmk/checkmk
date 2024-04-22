@@ -31,7 +31,7 @@ pub struct Local {
 
 #[cfg(windows)]
 pub struct BrowseInstance {
-    pub host: Option<HostName>,
+    pub host: HostName,
     pub instance_name: InstanceName,
     pub browser_port: Option<Port>,
 }
@@ -86,12 +86,12 @@ impl<'a> ClientBuilder<'a> {
     #[cfg(windows)]
     pub fn browse<P: Into<Port>>(
         mut self,
-        host: Option<HostName>,
+        host: &HostName,
         instance: &InstanceName,
         browser_port: Option<P>,
     ) -> Self {
         let i = BrowseInstance {
-            host: host.map(|h| h.to_owned()),
+            host: host.to_owned(),
             instance_name: instance.to_owned(),
             browser_port: browser_port.map(|p| p.into()),
         };
@@ -148,7 +148,7 @@ impl<'a> ClientBuilder<'a> {
             #[cfg(windows)]
             Some(ClientConnection::BrowseInstance(i)) => {
                 let port = i.browser_port.as_ref().map(|p| p.value());
-                config.host("localhost");
+                config.host(i.host.clone());
                 config.port(port.unwrap_or(defaults::SQL_BROWSER_PORT));
                 config.authentication(AuthMethod::Integrated);
                 if let Some(db) = &self.database {
@@ -248,6 +248,8 @@ pub async fn connect_custom_instance(
     endpoint: &Endpoint,
     instance: &InstanceName,
 ) -> Result<Client> {
+    use crate::constants;
+
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
         anyhow::anyhow!(
@@ -261,7 +263,7 @@ pub async fn connect_custom_instance(
                 tokio::time::timeout(
                     conn.timeout(),
                     ClientBuilder::new()
-                        .browse(None, instance, conn.sql_browser_port())
+                        .browse(conn.hostname(), instance, conn.sql_browser_port())
                         .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                         .trust_server_certificate(conn.trust_server_certificate())
                         .build(),
@@ -276,7 +278,7 @@ pub async fn connect_custom_instance(
         AuthType::Integrated => tokio::time::timeout(
             conn.timeout(),
             ClientBuilder::new()
-                .browse(None, instance, conn.sql_browser_port())
+                .browse(&constants::LOCAL_HOST, instance, conn.sql_browser_port())
                 .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                 .trust_server_certificate(conn.trust_server_certificate())
                 .build(),
@@ -508,14 +510,15 @@ mssql:
     #[cfg(windows)]
     #[test]
     fn test_client_builder_local_instance() {
+        use crate::constants;
         let local = ClientBuilder::new();
         let instance_name: InstanceName = "i".to_owned().into();
         let browser_port: Option<Port> = Some(123u16.into());
-        let builder = local.browse(None, &instance_name, browser_port);
+        let builder = local.browse(&constants::LOCAL_HOST, &instance_name, browser_port);
         assert!(matches!(
             builder.client_connection,
             Some(ClientConnection::BrowseInstance(BrowseInstance {
-                host: None,
+                host: _,
                 instance_name: _,
                 browser_port: _,
             }))

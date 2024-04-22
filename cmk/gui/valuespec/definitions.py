@@ -7428,30 +7428,6 @@ class AndOrNotDropdown(DropdownChoice):
             vs_validate_value(value[1], varprefix_vs)
 
 
-# TODO: Nuke this, there is only a single call site, and we just fix a single kwarg.
-# Is it used in user code?
-def SingleLabel(  # pylint: disable=redefined-builtin
-    # Labels
-    world: Labels.World,
-    label_source: Labels.Source | None = None,
-    # ValueSpec
-    title: str | None = None,
-    help: ValueSpecHelp | None = None,
-    default_value: ValueSpecDefault[LabelsModel] = DEF_VALUE,
-    validate: ValueSpecValidateFunc[LabelsModel] | None = None,
-) -> Labels:
-    """Input element for a single label"""
-    return Labels(
-        world=world,
-        label_source=label_source,
-        max_labels=1,
-        title=title,
-        help=help,
-        default_value=default_value,
-        validate=validate,
-    )
-
-
 class _SingleLabel(AjaxDropdownChoice):
     ident: str = "label"
 

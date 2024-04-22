@@ -12,6 +12,8 @@ use crate::config::{
     section::names,
     CheckConfig,
 };
+#[cfg(windows)]
+use crate::constants;
 use crate::emit;
 use crate::ms_sql::query::{
     obtain_computer_name, obtain_instance_name, run_custom_query, run_known_query, Answer, Column,
@@ -371,7 +373,7 @@ impl SqlInstance {
 
             #[cfg(windows)]
             AuthType::Integrated => client::ClientBuilder::new()
-                .browse(None, &self.name, conn.sql_browser_port())
+                .browse(&constants::LOCAL_HOST, &self.name, conn.sql_browser_port())
                 .database(database),
 
             _ => anyhow::bail!("Not supported authorization type"),
@@ -1808,7 +1810,11 @@ pub async fn obtain_instance_builders_by_sql_browser(
 ) -> Result<Vec<SqlInstanceBuilder>> {
     for instance in instances {
         match client::ClientBuilder::new()
-            .browse(None, instance, endpoint.conn().sql_browser_port())
+            .browse(
+                endpoint.conn().hostname(),
+                instance,
+                endpoint.conn().sql_browser_port(),
+            )
             .build()
             .await
         {

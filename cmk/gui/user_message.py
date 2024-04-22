@@ -92,6 +92,7 @@ def render_user_message_table(what: str) -> None:
 
             msg_id = entry["id"]
             datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
+            expiretime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["valid_till"]))
             msg = entry["text"].replace("\n", " ")
 
             table.cell(_("Actions"), css=["buttons"], sortable=False)
@@ -110,7 +111,8 @@ def render_user_message_table(what: str) -> None:
                 )
 
             table.cell(_("Message"), msg)
-            table.cell(_("Date"), datetime)
+            table.cell(_("Date sent"), datetime)
+            table.cell(_("Expires on"), expiretime)
 
     html.close_div()
 

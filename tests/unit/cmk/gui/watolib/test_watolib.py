@@ -114,6 +114,7 @@ def test_registered_configvars() -> None:
         "housekeeping_interval",
         "sqlite_housekeeping_interval",
         "sqlite_freelist_size",
+        "user_security_notification_duration",
         "http_proxies",
         "inventory_check_autotrigger",
         "inventory_check_interval",

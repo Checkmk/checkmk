@@ -13,6 +13,7 @@ from cmk.utils.user import UserId
 
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
+from cmk.gui import config
 from cmk.gui.message import message_gui
 
 
@@ -60,7 +61,7 @@ def _send_mail(email_address: str, event: SecurityNotificationEvent, event_time:
     send_mail_sendmail(
         set_mail_headers(
             MailString(email_address),
-            MailString("Checkmk Security Event"),
+            MailString("Checkmk: Security Event"),
             MailString(default_from_address()),
             MailString(reply_to),
             mail,
@@ -72,13 +73,15 @@ def _send_mail(email_address: str, event: SecurityNotificationEvent, event_time:
 
 def _send_gui(user_id: UserId, event: SecurityNotificationEvent, event_time: datetime) -> None:
     timestamp = int(event_time.timestamp())
+
     message_gui(
         user_id,
         {
-            "text": "(CMK-16434) " + str(event.value),
+            "text": str(event.value),
             "dest": ("list", [user_id]),
             "methods": ["gui_hint"],
-            "valid_till": timestamp + 604000,  # 1 week
+            "valid_till": timestamp
+            + config.active_config.user_security_notification_duration,  # 1 week
             "id": utils.gen_id(),
             "time": timestamp,
             "security": True,

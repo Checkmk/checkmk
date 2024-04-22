@@ -99,6 +99,7 @@ def test_default_config_from_plugins() -> None:
         "user_downtime_timeranges",
         "builtin_icon_visibility",
         "trusted_certificate_authorities",
+        "user_security_notification_duration",
         "mkeventd_enabled",
         "mkeventd_pprint_rules",
         "mkeventd_notify_contactgroup",

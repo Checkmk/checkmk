@@ -403,6 +403,10 @@ class CREConfig:
         }
     )
 
+    # Individual changes to user's authentication security will trigger either emails or use notifications
+    # Default is 7 days
+    user_security_notification_duration: int = 604800
+
     user_localizations: dict[str, dict[str, str]] = field(
         default_factory=lambda: {
             "Agent type": {

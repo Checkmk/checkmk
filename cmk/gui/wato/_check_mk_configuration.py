@@ -193,6 +193,7 @@ def register(
     config_variable_registry.register(ConfigVariableSessionManagement)
     config_variable_registry.register(ConfigVariableSingleUserSession)
     config_variable_registry.register(ConfigVariableDefaultUserProfile)
+    config_variable_registry.register(ConfigVariableUserSecurityNotifications)
     contact_group_usage_finder_registry.register(
         find_usages_of_contact_group_in_default_user_profile
     )
@@ -2663,7 +2664,6 @@ class ConfigVariableSingleUserSession(ConfigVariable):
     def valuespec(self) -> ValueSpec:
         return Optional(
             valuespec=Age(
-                title=None,
                 display=["minutes", "hours"],
                 label=_("Session timeout:"),
                 minvalue=30,
@@ -2678,6 +2678,37 @@ class ConfigVariableSingleUserSession(ConfigVariable):
                 "When the user logs out or is inactive for the configured amount of time, the "
                 "session is invalidated automatically and the user has to log in again from the "
                 "current or another device."
+            ),
+        )
+
+
+class ConfigVariableUserSecurityNotifications(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserManagement
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "user_security_notification_duration"
+
+    def valuespec(self) -> ValueSpec:
+        return Optional(
+            valuespec=Age(
+                display=["days", "minutes", "hours"],
+                label=_("Session timeout:"),
+                minvalue=900,
+                default_value=604800,
+            ),
+            title=_("User security notification duration"),
+            label=_("Display time for user security messages"),
+            help=_(
+                "If a user has an email address associated with their account, "
+                "the user will not be shown a security notification in their user "
+                "tab."
+                "If a user does not have an associated email they will be shown "
+                "an undismissable message in their user tab for the duration "
+                "defined by this setting."
             ),
         )
 

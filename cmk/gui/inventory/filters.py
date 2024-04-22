@@ -71,7 +71,7 @@ def _filter_by_host_inventory(
     def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
         regex = query_filters.re_ignorecase(filtertext, column)
 
-        def filt(row: Row):  # type: ignore[no-untyped-def]
+        def filt(row: Row) -> bool:
             return bool(
                 regex.search(
                     str(
@@ -251,7 +251,7 @@ class FilterInvtableAvailable(FilterOption):
         )
 
 
-def port_types(info: str):  # type: ignore[no-untyped-def]
+def port_types(info: str) -> list[tuple[str, str]]:
     return [(str(k), str(v)) for k, v in sorted(interface_port_types().items(), key=lambda t: t[0])]
 
 

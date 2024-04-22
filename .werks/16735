@@ -1,0 +1,9 @@
+Title: Fix unknown METRIC element if combined graph is added to dashboard
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1713789249
+Edition: cee
+Level: 1
+Version: 2.2.0p26
+

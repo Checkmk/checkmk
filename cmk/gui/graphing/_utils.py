@@ -1133,7 +1133,7 @@ def translated_metrics_from_row(row: Row) -> Mapping[str, TranslatedMetric]:
 #   '----------------------------------------------------------------------'
 
 
-def graph_templates_internal() -> dict[str, GraphTemplate]:
+def _graph_templates_internal() -> dict[str, GraphTemplate]:
     # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
     graph_templates: dict[str, GraphTemplate] = {}
     for graph in graphs_from_api.values():
@@ -1151,7 +1151,7 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
-        [(k, v.title or k) for k, v in graph_templates_internal().items()],
+        [(k, v.title or k) for k, v in _graph_templates_internal().items()],
         key=lambda k_v: k_v[1],
     )
 
@@ -1159,7 +1159,7 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
 def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return GraphTemplate.from_name(template_id)
-    if template := graph_templates_internal().get(template_id):
+    if template := _graph_templates_internal().get(template_id):
         return template
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
@@ -1173,7 +1173,7 @@ def get_graph_templates(
 
     explicit_templates = list(
         _get_explicit_graph_templates(
-            graph_templates_internal().values(),
+            _graph_templates_internal().values(),
             translated_metrics,
         )
     )

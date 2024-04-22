@@ -15,8 +15,8 @@ import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._utils import (
+    get_graph_template_choices,
     get_graph_templates,
-    graph_templates_internal,
     metric_title,
     registered_metrics,
     translated_metrics_from_row,
@@ -268,10 +268,7 @@ def _graph_choices_from_livestatus_row(  # type: ignore[no-untyped-def]
     row,
 ) -> Iterable[tuple[str, str]]:
     yield from (
-        (
-            template.id,
-            template.title or metric_title(template.id),
-        )
+        (template.id, template.title or metric_title(template.id))
         for template in get_graph_templates(translated_metrics_from_row(row))
     )
 
@@ -281,14 +278,7 @@ def graph_templates_autocompleter(value: str, params: dict) -> Choices:
     Called by the webservice with the current input field value and the
     completions_params to get the list of choices"""
     if not params.get("context") and params.get("show_independent_of_context") is True:
-        choices: Iterable[tuple[str, str]] = (
-            (
-                graph_id,
-                graph_details.title or graph_details.id,
-            )
-            for graph_id, graph_details in graph_templates_internal().items()
-        )
-
+        choices: Iterable[tuple[str, str]] = get_graph_template_choices()
     else:
         columns = [
             "service_check_command",

@@ -23,7 +23,7 @@ from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._utils import (
-    graph_templates_internal,
+    get_graph_template_choices,
     metric_title,
     MKCombinedGraphLimitExceededError,
 )
@@ -90,11 +90,8 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         return [
             next(
                 (
-                    (
-                        graph_id,
-                        graph_detail.title or graph_id,
-                    )
-                    for graph_id, graph_detail in graph_templates_internal().items()
+                    (graph_id, graph_title)
+                    for graph_id, graph_title in get_graph_template_choices()
                     if graph_id == value
                 ),
                 (

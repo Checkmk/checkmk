@@ -1054,7 +1054,7 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, livestatus_field, name) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, livestatus_field: LivestatusColumn, name: str) -> None:
         super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
@@ -1065,7 +1065,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
             return _("Hostaddress")
         return _("Hostalias")
 
-    def _get_real_fieldname(self, livestatus_table):
+    def _get_real_fieldname(self, livestatus_table: LivestatusTable) -> LivestatusColumn:
         if livestatus_table != "hosts":
             return "host_%s" % self._livestatus_field
         return self._livestatus_field
@@ -1533,7 +1533,7 @@ class MenuSearchResultsRenderer(abc.ABC):
         html.span(topic)
         html.close_h2()
 
-    def _render_result(self, result, hidden=False) -> None:  # type: ignore[no-untyped-def]
+    def _render_result(self, result: SearchResult, hidden: bool = False) -> None:
         html.open_li(
             class_="hidden" if hidden else "",
             **{"data-extended": "false" if hidden else ""},

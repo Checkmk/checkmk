@@ -506,7 +506,7 @@ class Age(ValueSpec[int]):
         if not isinstance(value, int):
             raise MKUserError(
                 varprefix,
-                _("The value %r has type %s, but must be of type int") % (value, _type_name(value)),
+                _("The value %r has type %s, but must be of type int") % (value, type_name(value)),
             )
 
     def _validate_value(self, value: int, varprefix: str) -> None:
@@ -619,7 +619,7 @@ class TimeSpan(ValueSpec[float]):
             raise MKUserError(
                 varprefix,
                 _("The value %r has type %s, but must be of type float")
-                % (value, _type_name(value)),
+                % (value, type_name(value)),
             )
 
     def _validate_value(self, value: float, varprefix: str) -> None:
@@ -743,7 +743,7 @@ class Integer(ValueSpec[int]):
         raise MKUserError(
             varprefix,
             _("The value %r has the wrong type %s, but must be of type int")
-            % (value, _type_name(value)),
+            % (value, type_name(value)),
         )
 
     def _validate_value(self, value: int, varprefix: str) -> None:
@@ -1005,7 +1005,7 @@ class TextInput(ValueSpec[str]):
         if not isinstance(value, str):
             raise MKUserError(
                 varprefix,
-                _("The value must be of type str, but it has type %s") % _type_name(value),
+                _("The value must be of type str, but it has type %s") % type_name(value),
             )
 
     def _validate_value(self, value: str, varprefix: str) -> None:
@@ -2185,7 +2185,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
     def validate_datatype(self, value: Sequence[str], varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
-                varprefix, _("Expected data type is list, but your type is %s.") % _type_name(value)
+                varprefix, _("Expected data type is list, but your type is %s.") % type_name(value)
             )
         for nr, s in enumerate(value):
             self._valuespec.validate_datatype(s, varprefix + "_%d" % nr)
@@ -2557,7 +2557,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
 
     def validate_datatype(self, value: ListOfModel[T], varprefix: str) -> None:
         if not isinstance(value, list):
-            raise MKUserError(varprefix, _("The type must be list, but is %s") % _type_name(value))
+            raise MKUserError(varprefix, _("The type must be list, but is %s") % type_name(value))
         for n, v in enumerate(value):
             self._valuespec.validate_datatype(v, varprefix + "_%d" % (n + 1))
 
@@ -2772,7 +2772,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
 
     def validate_datatype(self, value: ListOfMultipleModel, varprefix: str) -> None:
         if not isinstance(value, dict):
-            raise MKUserError(varprefix, _("The type must be dict, but is %s") % _type_name(value))
+            raise MKUserError(varprefix, _("The type must be dict, but is %s") % type_name(value))
         for ident, val in value.items():
             self._choice_dict[ident].validate_datatype(val, varprefix + "_" + ident)
 
@@ -2856,7 +2856,7 @@ class Float(ValueSpec[float]):
         raise MKUserError(
             varprefix,
             _("The value %r has type %s, but must be of type float%s")
-            % (value, _type_name(value), _(" or int") if self._allow_int else ""),
+            % (value, type_name(value), _(" or int") if self._allow_int else ""),
         )
 
     def validate_value(self, value: float, varprefix: str) -> None:
@@ -2908,7 +2908,7 @@ class Percentage(Float):
                 raise MKUserError(
                     varprefix,
                     _("The value %r has type %s, but must be either float or int")
-                    % (value, _type_name(value)),
+                    % (value, type_name(value)),
                 )
         else:
             super().validate_datatype(value, varprefix)
@@ -2964,8 +2964,7 @@ class Checkbox(ValueSpec[bool]):
         if not isinstance(value, bool):
             raise MKUserError(
                 varprefix,
-                _("The value %r has type %s, but must be of type bool")
-                % (value, _type_name(value)),
+                _("The value %r has type %s, but must be of type bool") % (value, type_name(value)),
             )
 
 
@@ -3118,7 +3117,7 @@ class DropdownChoice(ValueSpec[T | None]):
         raise MKUserError(
             varprefix,
             _("The value %r has type %s, but does not match any of the available choice types.")
-            % (value, _type_name(value)),
+            % (value, type_name(value)),
         )
 
     def _get_invalid_choice_text(self, tmpl: str, value: object) -> str:
@@ -3259,7 +3258,7 @@ class AjaxDropdownChoice(DropdownChoice[str]):
         if not isinstance(value, str):
             raise MKUserError(
                 varprefix,
-                _("The value must be of type str, but it has type %s") % _type_name(value),
+                _("The value must be of type str, but it has type %s") % type_name(value),
             )
 
     def _validate_value(self, value: str | None, varprefix: str) -> None:
@@ -4066,7 +4065,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
     def validate_datatype(self, value: ListChoiceModel, varprefix: str) -> None:
         if not isinstance(value, list):
             raise MKUserError(
-                varprefix, _("The datatype must be list, but is %s") % _type_name(value)
+                varprefix, _("The datatype must be list, but is %s") % type_name(value)
             )
 
     def _validate_value(self, value: ListChoiceModel, varprefix: str) -> None:
@@ -4797,7 +4796,7 @@ class AbsoluteDate(ValueSpec[None | float]):
         if not isinstance(value, (int, float)):
             raise MKUserError(
                 varprefix,
-                _("The type of the timestamp must be int or float, but is %s") % _type_name(value),
+                _("The type of the timestamp must be int or float, but is %s") % type_name(value),
             )
 
     def _validate_value(self, value: float | None, varprefix: str) -> None:
@@ -4878,7 +4877,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
 
         if not isinstance(value, tuple):
             raise MKUserError(
-                varprefix, _("The datatype must be tuple, but ist %s") % _type_name(value)
+                varprefix, _("The datatype must be tuple, but ist %s") % type_name(value)
             )
 
         if len(value) != 2:
@@ -4890,7 +4889,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
             if not isinstance(x, int):
                 raise MKUserError(
                     varprefix,
-                    _("All elements of the tuple must be of type int, you have %s") % _type_name(x),
+                    _("All elements of the tuple must be of type int, you have %s") % type_name(x),
                 )
 
     def _validate_value(self, value: TimeofdayValue, varprefix: str) -> None:
@@ -4987,7 +4986,7 @@ class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
 
         if not isinstance(value, tuple):
             raise MKUserError(
-                varprefix, _("The datatype must be tuple, but ist %s") % _type_name(value)
+                varprefix, _("The datatype must be tuple, but ist %s") % type_name(value)
             )
 
         if len(value) != 2:
@@ -5894,7 +5893,7 @@ class Tuple(ValueSpec[TT]):
     def validate_datatype(self, value: TT, varprefix: str) -> None:
         if not isinstance(value, tuple):
             raise MKUserError(
-                varprefix, _("The datatype must be a tuple, but is %s") % _type_name(value)
+                varprefix, _("The datatype must be a tuple, but is %s") % type_name(value)
             )
         if len(value) != len(self._elements):
             raise MKUserError(
@@ -6286,7 +6285,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
 
         if not isinstance(value, dict):
             raise MKUserError(
-                varprefix, _("The type must be a dictionary, but it is a %s") % _type_name(value)
+                varprefix, _("The type must be a dictionary, but it is a %s") % type_name(value)
             )
 
         for param, vs in self._get_elements():
@@ -6427,7 +6426,7 @@ class ElementSelection(ValueSpec[None | str]):
 
         if not isinstance(value, str):
             raise MKUserError(
-                varprefix, _("The datatype must be str (string), but is %s") % _type_name(value)
+                varprefix, _("The datatype must be str (string), but is %s") % type_name(value)
             )
 
 
@@ -8699,7 +8698,7 @@ def DocumentationURL() -> TextInput:
     )
 
 
-def _type_name(v):
+def type_name(v):
     try:
         return type(v).__name__
     except Exception:

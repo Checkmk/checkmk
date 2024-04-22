@@ -144,6 +144,7 @@ from .definitions import (
     Transform,
     Transparent,
     Tuple,
+    type_name,
     UploadOrPasteTextFile,
     Url,
     UserID,
@@ -315,4 +316,5 @@ __all__ = [
     "AjaxFetchCA",
     "register",
     "ajax_popup_icon_selector",
+    "type_name",
 ]

@@ -34,7 +34,6 @@ install_package() {
     fi
     apt-get update
     apt-get install -y nodejs
-    rm -rf /var/lib/apt/lists/*
 }
 
 install_package

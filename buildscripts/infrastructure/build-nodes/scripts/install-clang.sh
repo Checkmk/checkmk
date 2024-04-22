@@ -87,7 +87,6 @@ apt-get install -y \
     "lld-$CLANG_VERSION" \
     "lldb-$CLANG_VERSION" \
     "libclang-$CLANG_VERSION-dev"
-rm -rf /var/lib/apt/lists/*
 
 # Workaround for https://github.com/llvm/llvm-project/issues/61550
 if [ "$CLANG_VERSION" = 16 ]; then

@@ -11,8 +11,9 @@ ENV \
     LANG=C.UTF-8 \
     PATH="/opt/bin:${PATH}"
 
-RUN apt-get update \
-    && apt-get install -y \
+RUN apt-get update
+
+RUN apt-get install -y \
     git \
     libenchant1c2a \
     librrd-dev \
@@ -23,11 +24,9 @@ RUN apt-get update \
     rrdtool \
     strace \
     sudo \
-    vim \
-    && rm -rf /var/lib/apt/lists/*  # about 50M
+    vim
 
-RUN apt-get update \
-    && apt-get install -y \
+RUN apt-get install -y \
     apache2 \
     apache2-dev \
     build-essential \
@@ -73,8 +72,7 @@ RUN apt-get update \
     smbclient \
     texinfo \
     tk-dev \
-    uuid-dev \
-    && rm -rf /var/lib/apt/lists/*
+    uuid-dev
 
 # Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff

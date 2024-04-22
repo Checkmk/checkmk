@@ -31,7 +31,6 @@ add_gpg_key() {
 
 cleanup() {
     rm -f "$TARGET_DIR"/needed-packages
-    rm -rf /var/lib/apt/lists/*
 }
 
 extract_needed_packages

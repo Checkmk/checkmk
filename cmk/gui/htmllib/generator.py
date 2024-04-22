@@ -174,6 +174,12 @@ class HTMLWriter:
     def javascript(self, code: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_javascript(code, **attrs))
 
+    def js_entrypoint(self, data: str, *, type_: str, **attrs: HTMLTagAttributeValue) -> None:
+        """generic way to transport data from the backend to the frontend,
+        without the need to directly invoke javascript code"""
+        attrs_type: dict[str, HTMLTagAttributeValue] = {"type": type_}
+        self.write_html(HTMLWriter.render_javascript(data, **(attrs_type | attrs)))
+
     def javascript_file(self, src: str, *, type_: str = "text/javascript") -> None:
         """<script type="text/javascript" src="%(name)"/>\n"""
         self.write_html(render_element("script", "", type_=type_, src=src))

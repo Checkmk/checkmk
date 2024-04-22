@@ -100,7 +100,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 
 	tar -c -C $(REPO_PATH)/packages/cmk-frontend-vue/dist/assets/ \
 	    $(CHECK_MK_TAROPTS) \
-	    vue_min.js* | \
+	    *.js* | \
 	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web/htdocs/js/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk

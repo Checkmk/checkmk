@@ -264,15 +264,20 @@ class HTMLGenerator(HTMLWriter):
 
         # Load all scripts
         for js in javascripts:
+            js_filepath = f"js/{js}_min.js"
+            js_url = HTMLGenerator._append_cache_busting_query(js_filepath)
             if js == "vue" and active_config.load_frontend_vue == "inject":
-                # those two files are injected by the vite dev server in `./packages/cmk-frontend-vue`
-                self.javascript_file("/cmk-frontend-vue-ahr/@vite/client", type_="module")
-                self.javascript_file("/cmk-frontend-vue-ahr/src/main.ts", type_="module")
+                # stage1 will try to load the hot reloading files. if this fails,
+                # an error will be shown and the fallback files will be loaded.
+                self.js_entrypoint(
+                    json.dumps({"fallback": [js_url]}),
+                    type_="cmk-entrypoint-vue-stage1",
+                )
+                self.javascript_file(HTMLGenerator._append_cache_busting_query("js/vue_stage1.js"))
             else:
-                js_filepath = f"js/{js}_min.js"
                 if current_app.debug:
                     HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
-                self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
+                self.javascript_file(js_url)
 
         self.set_js_csrf_token()
 

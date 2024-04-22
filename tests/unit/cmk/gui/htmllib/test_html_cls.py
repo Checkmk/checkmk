@@ -246,7 +246,7 @@ def test_text_input() -> None:
         )
 
     with output_funnel.plugged():
-        html.text_input("blabla", placeholder="placido", data_world="welt", data_max_labels=42)
+        html.text_input("blabla", placeholder="placido", data_attrs={"data-foo": "42"})
         written_text = "".join(output_funnel.drain())
         assert compare_html(
             written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />'

@@ -725,8 +725,7 @@ class HTMLGenerator(HTMLWriter):
         oninput: str | None = None,
         onblur: str | None = None,
         placeholder: str | None = None,
-        data_world: str | None = None,
-        data_max_labels: int | None = None,
+        data_attrs: HTMLTagAttributes | None = None,
         required: bool = False,
         title: str | None = None,
     ) -> None:
@@ -738,6 +737,9 @@ class HTMLGenerator(HTMLWriter):
         if error:
             self.set_focus(varname)
         self.form_vars.append(varname)
+
+        if data_attrs is not None:
+            assert all(data_attr_key.startswith("data-") for data_attr_key in data_attrs.keys())
 
         # View
         # TODO: Move styling away from py code
@@ -776,10 +778,9 @@ class HTMLGenerator(HTMLWriter):
                 else None
             ),
             "placeholder": placeholder,
-            "data-world": data_world,
-            "data-max-labels": None if data_max_labels is None else str(data_max_labels),
             "required": "" if required else None,
             "title": title,
+            **(data_attrs or {}),
         }
 
         if error:

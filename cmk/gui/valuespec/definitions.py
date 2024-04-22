@@ -7331,8 +7331,10 @@ class Labels(ValueSpec[LabelsModel]):
             default_value=encode_labels_for_http(value.items()),
             cssclass="labels" + " " + label_type,
             placeholder=_("Add some label"),
-            data_world=self._world.value,
-            data_max_labels=self._max_labels,
+            data_attrs={
+                "data-world": self._world.value,
+                "data-max-labels": None if self._max_labels is None else str(self._max_labels),
+            },
         )
 
     def value_to_json(self, value: LabelsModel) -> JSONValue:

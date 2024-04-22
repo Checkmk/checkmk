@@ -456,20 +456,24 @@ def _create_graph(
     )
 
 
-def _render_coordinates(v_scala, t_scala) -> None:  # type: ignore[no-untyped-def]
+def _render_coordinates(
+    v_scala: Sequence[tuple[float, str]], t_scala: Sequence[tuple[int, str]]
+) -> None:
     html.javascript(
         f"cmk.prediction.render_coordinates({json.dumps(v_scala)}, {json.dumps(t_scala)});"
     )
 
 
-def _render_curve(points, color, width=1, square=False) -> None:  # type: ignore[no-untyped-def]
+def _render_curve(
+    points: Sequence[float | None], color: str, width: int = 1, square: bool = False
+) -> None:
     html.javascript(
         "cmk.prediction.render_curve(%s, %s, %d, %d);"
         % (json.dumps(points), json.dumps(color), width, square and 1 or 0)
     )
 
 
-def _render_point(t, v, color) -> None:  # type: ignore[no-untyped-def]
+def _render_point(t: float, v: float, color: str) -> None:
     html.javascript(
         f"cmk.prediction.render_point({json.dumps(t)}, {json.dumps(v)}, {json.dumps(color)});"
     )

@@ -5,7 +5,7 @@ Component: wato
 Date: 1712665452
 Edition: cre
 Level: 1
-Version: 2.1.0p42
+Version: 2.1.0p43
 
 Prior to this Werk, the mechanism to lock user accounts after too many failed login attempts was only effective for the web form login method.
 Login attempts via the REST API and basic authentication did not count towards the lockout mechanism.

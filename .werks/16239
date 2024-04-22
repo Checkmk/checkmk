@@ -5,7 +5,7 @@ Component: checks
 Date: 1709123851
 Edition: cre
 Level: 1
-Version: 2.1.0p42
+Version: 2.1.0p43
 
 This werk affects you, in case you try to monitor your APC Rack Automatic Transfer Switch with <tt>apc_ats_status</tt>.
 Previously some devices were not discovered due to a too strict scan function.

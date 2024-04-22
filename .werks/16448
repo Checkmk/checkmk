@@ -5,7 +5,7 @@ Component: liveproxy
 Date: 1707132975
 Edition: cee
 Level: 1
-Version: 2.1.0p42
+Version: 2.1.0p43
 
 When the liveproxyd starts or ends at a particular time TS and remote inventory
 data is written between TS and \<TS+1 then it's not synced.

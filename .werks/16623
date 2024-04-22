@@ -5,7 +5,7 @@ Component: inv
 Date: 1710167848
 Edition: cre
 Level: 1
-Version: 2.1.0p42
+Version: 2.1.0p43
 
 When filtering the Checkmk versions -> #Sites inventory column, a crash occurs with
 

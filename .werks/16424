@@ -5,7 +5,7 @@ Component: omd
 Date: 1713456408
 Edition: cre
 Level: 1
-Version: 2.1.0p42
+Version: 2.1.0p43
 
 With this Werk, <code>omd start</code> will no longer create a new redis process if redis is already started.
 This aligns the behaviour with the other services of a site.

@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.1.0p42"
+$CMK_VERSION = "2.1.0p43"
 ####
 ## Hyper-V VM state
 ####

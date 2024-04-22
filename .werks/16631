@@ -5,7 +5,7 @@ Component: packages
 Date: 1712910849
 Edition: cre
 Level: 1
-Version: 2.1.0p42
+Version: 2.1.0p43
 
 Due to a recent change in Microsoft 365, the access to Exchange mailbox folders via the active check <code>check_mailboxes</code> could fail with an error message like this:
 

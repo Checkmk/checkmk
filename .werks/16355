@@ -5,7 +5,7 @@ Component: multisite
 Date: 1713176416
 Edition: cee
 Level: 1
-Version: 2.1.0p42
+Version: 2.1.0p43
 
 When using Checkmk in a language other than English, the list views for graph collections, graph
 tunings, custom graphs and forecast graphs might have displayed strange help texts such as

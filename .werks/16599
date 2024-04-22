@@ -5,7 +5,7 @@ Component: checks
 Date: 1710165014
 Edition: cre
 Level: 1
-Version: 2.1.0p42
+Version: 2.1.0p43
 
 The check plugin no longer showed any metrics if a product was not specified in the ruleset configuration.
 This werk restores the original behaviour, using as a default product the one reported in the info section of the agent output.

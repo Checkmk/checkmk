@@ -18,6 +18,7 @@ from cmk.utils.labels import (
     HostLabel,
     LabelGroups,
     Labels,
+    LabelSources,
 )
 from cmk.utils.parameters import merge_parameters
 from cmk.utils.regex import regex
@@ -28,8 +29,6 @@ from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")
-
-LabelSources = dict[str, str]
 
 # The Tag* types below are *not* used in `cmk.utils.tags`
 # but they are used here.  Therefore, they do *not* belong

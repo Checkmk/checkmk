@@ -5,13 +5,12 @@
 
 import re
 from collections.abc import Iterator, Mapping
-from typing import Any
+from typing import Any, Literal
 
 from livestatus import SiteId
 
 from cmk.utils.html import replace_state_markers
-from cmk.utils.labels import LabelGroups, Labels
-from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.labels import LabelGroups, Labels, LabelSource, LabelSources
 from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.utils.escaping as escaping
@@ -45,6 +44,9 @@ CSSClass = str | None
 # separated the data from rendering of the data, we can hopefully clean this up
 CellContent = str | HTML | Mapping[str, Any]
 CellSpec = tuple[CSSClass, CellContent]
+
+# We support more label CSS classes than just label sources
+LabelRenderType = Literal[LabelSource, "changed", "removed", "added", "unspecified"]
 
 # fmt: off
 _URL_PATTERN = (
@@ -210,6 +212,7 @@ def render_labels(  # pylint: disable=redefined-outer-name
     object_type: str,
     with_links: bool,
     label_sources: LabelSources,
+    override_label_render_type: LabelRenderType | None = None,
     *,
     request: Request,
 ) -> HTML:
@@ -219,6 +222,7 @@ def render_labels(  # pylint: disable=redefined-outer-name
         with_links,
         label_type="label",
         label_sources=label_sources,
+        override_label_render_type=override_label_render_type,
         request=request,
     )
 
@@ -261,7 +265,7 @@ def render_label_groups(label_groups: LabelGroups, object_type: str) -> HTML:
                     object_type,
                     with_link=False,
                     label_type="label",
-                    label_source="unspecified",
+                    label_render_type="unspecified",
                     request=request,
                 ),
                 class_=["tagify", "label", "display"],
@@ -295,6 +299,7 @@ def _render_tag_groups_or_labels(  # pylint: disable=redefined-outer-name
     with_links: bool,
     label_type: str,
     label_sources: LabelSources,
+    override_label_render_type: LabelRenderType | None = None,
     *,
     request: Request,
 ) -> HTML:
@@ -305,7 +310,11 @@ def _render_tag_groups_or_labels(  # pylint: disable=redefined-outer-name
             object_type,
             with_links,
             label_type,
-            label_sources.get(tag_group_id_or_label_key, "unspecified"),
+            (
+                override_label_render_type
+                if override_label_render_type
+                else label_sources.get(tag_group_id_or_label_key, "unspecified")
+            ),
             request=request,
         )
         for tag_group_id_or_label_key, tag_id_or_label_value in sorted(entries.items())
@@ -321,7 +330,7 @@ def _render_tag_group(  # pylint: disable=redefined-outer-name
     object_type: str,
     with_link: bool,
     label_type: str,
-    label_source: str,
+    label_render_type: LabelRenderType,
     *,
     request: Request,
 ) -> HTML:
@@ -336,7 +345,7 @@ def _render_tag_group(  # pylint: disable=redefined-outer-name
                 class_=["tagify__tag-text"],
             )
         ),
-        class_=["tagify--noAnim", label_source],
+        class_=["tagify--noAnim", label_render_type],
     )
     if not with_link:
         return span

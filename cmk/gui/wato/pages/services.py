@@ -60,7 +60,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference
-from cmk.gui.view_utils import format_plugin_output, render_labels
+from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
@@ -1102,9 +1102,9 @@ class DiscoveryPageRenderer:
                 }
                 table.cell(_("Newly discovered"))
                 self._show_discovered_labels(unchanged_labels)
-                self._show_discovered_labels(changed_labels, label_type="changed")
-                self._show_discovered_labels(added_labels, label_type="added")
-                self._show_discovered_labels(removed_labels, label_type="removed")
+                self._show_discovered_labels(changed_labels, override_label_render_type="changed")
+                self._show_discovered_labels(added_labels, override_label_render_type="added")
+                self._show_discovered_labels(removed_labels, override_label_render_type="removed")
 
         if self._options.show_plugin_names:
             table.cell(
@@ -1184,13 +1184,16 @@ class DiscoveryPageRenderer:
             html.write_text(paramtext)
 
     def _show_discovered_labels(
-        self, service_labels: Labels, label_type: str = "discovered"
+        self,
+        service_labels: Labels,
+        override_label_render_type: LabelRenderType | None = None,
     ) -> None:
         label_code = render_labels(
             service_labels,
             "service",
             with_links=False,
-            label_sources={k: label_type for k in service_labels.keys()},
+            label_sources={k: "discovered" for k in service_labels.keys()},
+            override_label_render_type=override_label_render_type,
             request=request,
         )
         html.write_html(label_code)

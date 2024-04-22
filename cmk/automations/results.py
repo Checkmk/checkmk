@@ -16,10 +16,10 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels
+from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels, LabelSources
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
+from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.servicename import Item, ServiceName
 
 from cmk.checkengine.discovery import CheckPreviewEntry

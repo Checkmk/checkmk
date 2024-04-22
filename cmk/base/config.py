@@ -50,19 +50,13 @@ from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
-from cmk.utils.labels import Labels
+from cmk.utils.labels import Labels, LabelSources
 from cmk.utils.legacy_check_api import LegacyCheckDefinition
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import (
-    LabelManager,
-    LabelSources,
-    RulesetMatcher,
-    RulesetName,
-    RuleSpec,
-)
+from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher, RulesetName, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.site import omd_site

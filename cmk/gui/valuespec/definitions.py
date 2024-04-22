@@ -71,7 +71,7 @@ import cmk.utils.regex
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.images import CMKImage, ImageType
-from cmk.utils.labels import AndOrNotLiteral
+from cmk.utils.labels import AndOrNotLiteral, LabelSources
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -7316,7 +7316,9 @@ class Labels(ValueSpec[LabelsModel]):
         return value
 
     def value_to_html(self, value: LabelsModel) -> ValueSpecText:
-        label_sources = {k: self._label_source.value for k in value} if self._label_source else {}
+        label_sources: LabelSources = (
+            {k: self._label_source.value for k in value} if self._label_source else {}
+        )
         return render_labels(
             value, "host", with_links=False, label_sources=label_sources, request=request
         )

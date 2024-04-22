@@ -19,6 +19,9 @@ from cmk.utils.site import omd_site
 
 Labels = Mapping[str, str]
 
+LabelSource = Literal["discovered", "ruleset", "explicit"]
+LabelSources = dict[str, LabelSource]
+
 
 class HostLabelValueDict(TypedDict):
     value: str

@@ -39,7 +39,10 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
 from ._display_hints import AttributeDisplayHint, ColumnDisplayHint, DISPLAY_HINTS, DisplayHints
-from ._helper import make_table_view_name_of_host
+
+
+def make_table_view_name_of_host(view_name: str) -> str:
+    return f"{view_name}_of_host"
 
 
 def _make_columns(

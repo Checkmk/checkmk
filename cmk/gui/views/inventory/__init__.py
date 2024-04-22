@@ -73,8 +73,13 @@ from ._display_hints import (
     DisplayHints,
     PAINT_FUNCTION_NAME_PREFIX,
 )
-from ._helper import make_table_view_name_of_host
-from ._tree_renderer import ajax_inv_render_tree, compute_cell_spec, SDItem, TreeRenderer
+from ._tree_renderer import (
+    ajax_inv_render_tree,
+    compute_cell_spec,
+    make_table_view_name_of_host,
+    SDItem,
+    TreeRenderer,
+)
 from .registry import (
     inv_paint_funtions,
     inventory_displayhints,

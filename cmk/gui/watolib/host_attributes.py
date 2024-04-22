@@ -1145,7 +1145,7 @@ def TextAttribute(
 
 
 # TODO: Kept for pre 1.6 plug-in compatibility
-def NagiosTextAttribute(  # type: ignore[no-untyped-def]
+def NagiosTextAttribute(
     name: str,
     nag_name: str,
     title: str,
@@ -1154,7 +1154,7 @@ def NagiosTextAttribute(  # type: ignore[no-untyped-def]
     mandatory: bool = False,
     allow_empty: bool = True,
     size: int = 25,
-):
+) -> type[ABCHostAttributeNagiosText]:
     return type(
         "HostAttribute%s" % name.title(),
         (ABCHostAttributeNagiosText,),

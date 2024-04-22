@@ -1270,6 +1270,10 @@ class ModeEditRuleset(WatoMode):
         rule: Rule,
         service_labels: Labels,
     ) -> tuple[str, str]:
+        if self._hostname is None:
+            raise MKUserError(
+                "host", _('Unable to analyze matching, because "host" parameter is missing')
+            )
         self._get_host_labels_from_remote_site()
         reasons = (
             [_("This rule is disabled")]

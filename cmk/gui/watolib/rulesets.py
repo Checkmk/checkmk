@@ -22,6 +22,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
 from cmk.utils.config_validation_layer.rules import validate_rule
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
@@ -756,10 +757,10 @@ class Ruleset:
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
-    def replace_folder_config(  # type: ignore[no-untyped-def]
+    def replace_folder_config(
         self,
         folder: Folder,
-        rules_config,
+        rules_config: Sequence[RuleSpec[object]],
     ) -> None:
         if not rules_config:
             return
@@ -992,13 +993,13 @@ class Ruleset:
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number
-    def analyse_ruleset(  # type: ignore[no-untyped-def]
+    def analyse_ruleset(
         self,
-        hostname,
-        svc_desc_or_item,
-        svc_desc,
+        hostname: HostName,
+        svc_desc_or_item: str | None,
+        svc_desc: str | None,
         service_labels: Labels,
-    ):
+    ) -> tuple[object, list[tuple[Folder, int, Rule]]]:
         resultlist = []
         resultdict: dict[str, Any] = {}
         effectiverules = []
@@ -1249,7 +1250,7 @@ class Rule:
                 return False
         return True
 
-    def matches_host_conditions(self, host_folder, hostname):
+    def matches_host_conditions(self, host_folder: Folder, hostname: HostName) -> bool:
         """Whether or not the given folder/host matches this rule
         This only evaluates host related conditions, even if the ruleset is a service ruleset."""
         return not any(
@@ -1264,14 +1265,14 @@ class Rule:
             )
         )
 
-    def matches_host_and_item(  # type: ignore[no-untyped-def]
+    def matches_host_and_item(
         self,
-        host_folder,
-        hostname,
-        svc_desc_or_item,
-        svc_desc,
+        host_folder: Folder,
+        hostname: HostName,
+        svc_desc_or_item: str | None,
+        svc_desc: str | None,
         service_labels: Labels,
-    ):
+    ) -> bool:
         """Whether or not the given folder/host/item matches this rule"""
         return not any(
             True
@@ -1285,15 +1286,15 @@ class Rule:
             )
         )
 
-    def get_mismatch_reasons(  # type: ignore[no-untyped-def]
+    def get_mismatch_reasons(
         self,
-        host_folder,
-        hostname,
-        svc_desc_or_item,
-        svc_desc,
-        only_host_conditions,
+        host_folder: Folder,
+        hostname: HostName,
+        svc_desc_or_item: str | None,
+        svc_desc: str | None,
+        only_host_conditions: bool,
         service_labels: Labels,
-    ):
+    ) -> Iterator[str]:
         """A generator that provides the reasons why a given folder/host/item does not match this rule"""
         host = host_folder.host(hostname)
         if host is None:
@@ -1312,10 +1313,14 @@ class Rule:
         if only_host_conditions:
             match_object = ruleset_matcher.RulesetMatchObject(hostname)
         elif self.ruleset.item_type() == "service":
+            if svc_desc_or_item is None:
+                raise TypeError("svc_desc_or_item must be set for service rulesets")
             match_object = cmk.base.export.ruleset_match_object_of_service(
                 hostname, svc_desc_or_item, svc_labels=service_labels
             )
         elif self.ruleset.item_type() == "item":
+            if svc_desc is None:
+                raise TypeError("svc_desc_or_item must be set for service rulesets")
             match_object = cmk.base.export.ruleset_match_object_for_checkgroup_parameters(
                 hostname, svc_desc_or_item, svc_desc, svc_labels=service_labels
             )
@@ -1332,7 +1337,9 @@ class Rule:
             match_object, match_service_conditions
         )
 
-    def _get_mismatch_reasons_of_match_object(self, match_object, match_service_conditions):
+    def _get_mismatch_reasons_of_match_object(
+        self, match_object: ruleset_matcher.RulesetMatchObject, match_service_conditions: bool
+    ) -> Iterator[str]:
         matcher = _get_ruleset_matcher()
         ruleset = self.to_single_base_ruleset()
         if match_service_conditions:

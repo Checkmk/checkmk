@@ -371,10 +371,10 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def is_show_more(self) -> bool:
         return True
 
-    def show_in_table(self):
+    def show_in_table(self) -> bool:
         return True
 
-    def show_in_folder(self):
+    def show_in_folder(self) -> bool:
         return True
 
     def valuespec(self) -> ValueSpec:
@@ -400,21 +400,21 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             description="A list of parents of this host.",
         )
 
-    def is_visible(self, for_what, new) -> bool:  # type: ignore[no-untyped-def]
+    def is_visible(self, for_what: str, new: bool) -> bool:
         return for_what != "cluster"
 
-    def to_nagios(self, value):
+    def to_nagios(self, value: str) -> str | None:
         if value:
             return ",".join(value)
         return None
 
-    def nagios_name(self):
+    def nagios_name(self) -> str:
         return "parents"
 
     def is_explicit(self) -> bool:
         return True
 
-    def paint(self, value, hostname):
+    def paint(self, value: str, hostname: HostName) -> tuple[str, HTML]:
         parts = [
             HTMLWriter.render_a(
                 hn, "wato.py?" + urlencode_vars([("mode", "edit_host"), ("host", hn)])

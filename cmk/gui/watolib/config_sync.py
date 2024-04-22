@@ -453,7 +453,7 @@ class SnapshotCreator(SnapshotCreationBase):
         )
 
 
-def is_user_file(filepath) -> bool:  # type: ignore[no-untyped-def]
+def is_user_file(filepath: str) -> bool:
     entry = os.path.basename(filepath)
     return entry.startswith("user_") or entry in ["tableoptions.mk", "treestates.mk", "sidebar.mk"]
 

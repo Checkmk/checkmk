@@ -4,16 +4,21 @@ import { extract_value, type ValueAndValidation } from '@/types'
 import type { VueLegacyValuespec } from '@/vue_types'
 
 const emit = defineEmits<{
-  (e: 'update-value', value: any): void
+  (e: 'update-value', value: unknown): void
 }>()
+
+interface LegacyWrapper {
+  varprefix: string
+  html: string
+}
 
 const props = defineProps<{
   vueSchema: VueLegacyValuespec
-  data: ValueAndValidation
+  data: ValueAndValidation<LegacyWrapper>
 }>()
 
 const legacy_dom = ref<HTMLFormElement | undefined>()
-function emit_form(): any {
+function emit_form() {
   emit('update-value', {
     input_context: Object.fromEntries(new FormData(legacy_dom.value)),
     varprefix: extract_value(props.data).varprefix

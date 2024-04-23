@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-  validation: any
+  validation: { messages: Array<string> }
 }>()
 </script>
 

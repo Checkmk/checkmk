@@ -5,18 +5,18 @@
  */
 import type { VueSchema } from '@/vue_types'
 
-export type ValueAndValidation = [any, string]
+export type ValueAndValidation<T> = [T, string]
 
-export interface VueFormSpec {
+export interface VueFormSpec<T> {
   id: string
   vue_schema: VueSchema
-  data: ValueAndValidation
+  data: ValueAndValidation<T>
 }
 
-export function extract_value(value: ValueAndValidation): any {
+export function extract_value<T>(value: ValueAndValidation<T>): T {
   return value[0]
 }
-export function extract_validation(value: ValueAndValidation): string {
+export function extract_validation<T>(value: ValueAndValidation<T>): string {
   return value[1]
 }
 
@@ -31,13 +31,13 @@ export interface TableCellContent {
 
 export interface TableCell {
   type: 'cell'
-  attributes: Record<string, any>
-  classes: Record<string, any>
+  attributes: Record<string, unknown>
+  classes: Record<string, unknown>
   content: TableCellContent[]
 }
 export interface TableRow {
   columns: TableCell[]
-  attributes: Record<string, any>
+  attributes: Record<string, unknown>
   classes: string[]
   key: string
 }
@@ -45,6 +45,6 @@ export interface TableRow {
 export interface VueTableSpec {
   rows: TableRow[]
   headers: string[]
-  attributes: Record<string, any>
+  attributes: Record<string, unknown>
   classes: string[]
 }

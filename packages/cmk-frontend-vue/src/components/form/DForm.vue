@@ -10,7 +10,7 @@ import type { ValueAndValidation } from '@/types'
 import type { VueSchema } from '@/vue_types'
 
 const emit = defineEmits<{
-  (e: 'update-value', value: any): void
+  (e: 'update-value', value: unknown): void
 }>()
 
 onBeforeMount(() => {
@@ -23,11 +23,11 @@ onMounted(() => {
 
 const props = defineProps<{
   vueSchema: VueSchema
-  data: ValueAndValidation
+  data: ValueAndValidation<unknown>
 }>()
 
 // https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
-const components: { [name: string]: {} } = {
+const components: Record<string, unknown> = {
   integer: DInteger,
   float: DFloat,
   text: DText,
@@ -40,13 +40,14 @@ const components: { [name: string]: {} } = {
   // cascading_dropdown_choice: DCascadingDropdownChoice,
 }
 
-function get_component(): object {
+// TODO: we should enforce an interface as return value?!
+function get_component(): unknown {
   console.log('get schema ', props.vueSchema)
   console.log('get data   ', props.data)
   return components[props.vueSchema.vue_type!]
 }
 
-function forward_value_upstream(new_value: any) {
+function forward_value_upstream(new_value: unknown) {
   // console.log('forward value', props.schema.schema_type, new_value)
   emit('update-value', new_value)
 }

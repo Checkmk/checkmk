@@ -37,16 +37,12 @@ function setup_vue() {
           data: vueApp.data
         }
       })
-      // @ts-ignore
-      app.use(Form)
       app.mount(div)
     } else if (vueApp.app_name == 'd3_table') {
       console.log('vue create table')
       const app = createApp(D3Table, {
         table_spec: vueApp.component
       })
-      // @ts-ignore
-      app.use(Form)
       app.mount(div)
       console.log('vue fully mounted table')
     } else if (vueApp.app_name == 'vue_table') {
@@ -54,8 +50,6 @@ function setup_vue() {
       const app = createApp(Table, {
         table_spec: vueApp.component
       })
-      // @ts-ignore
-      app.use(Form)
       app.mount(div)
       console.log('vue fully mounted table')
     } else {

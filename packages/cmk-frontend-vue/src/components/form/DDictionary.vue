@@ -6,24 +6,24 @@ import { clicked_checkbox_label } from '@/utils'
 import type { VueDictionary, VueDictionaryElement } from '@/vue_types'
 
 const emit = defineEmits<{
-  (e: 'update-value', value: any): void
+  (e: 'update-value', value: unknown): void
 }>()
 
 interface ElementFromProps {
   dict_config: VueDictionaryElement
   is_active: boolean
-  data: any
+  data: ValueAndValidation<unknown>
 }
 
 const props = defineProps<{
   vueSchema: VueDictionary
-  data: ValueAndValidation
+  data: ValueAndValidation<Record<string, ValueAndValidation<unknown>>>
 }>()
 
-let component_value: { [name: string]: any } = {}
-const default_values = ref<any>({})
-const element_components = ref<{ [index: string]: any }>({})
-const element_active: { [index: string]: any } = ref({})
+let component_value: { [name: string]: unknown } = {}
+const default_values = ref<Record<string, unknown>>({})
+const element_components = ref<{ [index: string]: unknown }>({})
+const element_active = ref<Record<string, boolean>>({})
 
 onBeforeMount(() => {
   component_value = {}
@@ -57,13 +57,13 @@ function get_elements_from_props(): ElementFromProps[] {
         element.ident in element_active.value
           ? element_active.value[element.ident]
           : element.required,
-      data: element.ident in data ? data[element.ident] : default_values.value[element.ident]
+      data: element.ident in data ? data[element.ident] : [default_values.value[element.ident], '']
     })
   })
   return elements
 }
 
-function update_key(key: string, new_value: any) {
+function update_key(key: string, new_value: unknown) {
   component_value[key] = new_value
   emit('update-value', component_value)
 }

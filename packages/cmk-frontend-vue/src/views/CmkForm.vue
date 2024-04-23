@@ -4,13 +4,13 @@ import { type VueFormSpec } from '@/types'
 import DForm from '@/components/form/DForm.vue'
 
 defineProps<{
-  formSpec: VueFormSpec
+  formSpec: VueFormSpec<unknown>
 }>()
 
-let raw_value = ref('')
+let raw_value = ref<unknown>('')
 let value_as_json = ref('')
 
-function update_value(new_value: any) {
+function update_value(new_value: unknown) {
   // console.log('got new value', new_value);
   raw_value.value = new_value
   value_as_json.value = JSON.stringify(new_value)

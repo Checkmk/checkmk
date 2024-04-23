@@ -5,12 +5,12 @@ import ValidationError from '@/components/ValidatonError.vue'
 import type { VueInteger } from '@/vue_types'
 
 const emit = defineEmits<{
-  (e: 'update-value', value: any): void
+  (e: 'update-value', value: number): void
 }>()
 
 const props = defineProps<{
   vueSchema: VueInteger
-  data: ValueAndValidation
+  data: ValueAndValidation<number>
 }>()
 
 const component_value = ref<string>()

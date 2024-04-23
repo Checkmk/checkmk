@@ -5,16 +5,16 @@ import type { VueText } from '@/vue_types'
 import { extract_validation, extract_value, type ValueAndValidation } from '@/types'
 
 const emit = defineEmits<{
-  (e: 'update-value', value: any): void
+  (e: 'update-value', value: string): void
 }>()
 
-function send_value_upstream(new_value: any) {
-  emit('update-value', parseInt(new_value))
+function send_value_upstream(new_value: string) {
+  emit('update-value', new_value)
 }
 
 const props = defineProps<{
   vueSchema: VueText
-  data: ValueAndValidation
+  data: ValueAndValidation<string>
 }>()
 
 const component_value = ref<string>()

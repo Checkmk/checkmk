@@ -141,7 +141,7 @@ def main() {
             name: "Trigger Saas Gitlab jobs",
             condition: success && edition == "saas",
             raiseOnError: false,) {
-        build(job: "${base_folder}/saas-gitlab", parameters: job_parameters);
+        build(job: "${base_folder}/trigger-saas-gitlab", parameters: job_parameters);
     }
 
     currentBuild.result = success ? "SUCCESS" : "FAILURE";

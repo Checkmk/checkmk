@@ -50,14 +50,23 @@ if [ -n "${VERBOSE}" ]; then
     echo >&2 " - populate build context at:. ${TEMP_CONTEXT_DIR}"
     echo >&2 " - build image based on image: '${BASE_BUILD_IMAGE}'"
     echo >&2 " - EXTRA_ARGS:................ '${EXTRA_ARGS}'"
+    echo >&2 " - $(docker --version)"
     DECENT_OUTPUT_TIMEOUT=0
 else
     DECENT_OUTPUT_TIMEOUT=2
 fi
 
-docker pull "${CACHE_IMAGE}" 1>&2 || true
+# Pre-fetch caching image. This is not required but was reported to solve some
+# issues and keeps fetching and building more transparent
+"${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
+    docker pull \
+    "${CACHE_IMAGE}" \
+    1>&2 || true
 
+# Copy over stuff we need for the build process but is located in folders we
+# cannot use as build context
 "${CHECKOUT_ROOT}/defines/dev-images/populate-build-context.sh" "${TEMP_CONTEXT_DIR}"
+
 # shellcheck disable=SC2086
 "${CHECKOUT_ROOT}/scripts/decent-output" ${DECENT_OUTPUT_TIMEOUT} \
     docker buildx build \

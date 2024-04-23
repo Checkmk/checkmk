@@ -26,6 +26,7 @@ from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
     _get_related_raw_hints,
+    _parse_view_name,
     _RelatedRawHints,
     AttributeDisplayHint,
     AttributesDisplayHint,
@@ -33,7 +34,6 @@ from cmk.gui.views.inventory._display_hints import (
     DISPLAY_HINTS,
     NodeDisplayHint,
     TableDisplayHint,
-    TableViewSpec,
 )
 from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
@@ -159,9 +159,12 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
             ),
             AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
+                title="",
+                _long_title_function=lambda: "",
+                icon="",
                 key_order=[],
                 is_show_more=True,
-                view_spec=None,
+                view_name="",
             ),
         ),
         (
@@ -175,9 +178,12 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
             ),
             AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
+                title="Hardware",
+                _long_title_function=lambda: "Hardware",
+                icon="hardware",
                 key_order=[],
                 is_show_more=True,
-                view_spec=None,
+                view_name="",
             ),
         ),
         (
@@ -215,9 +221,12 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 )
             ),
             TableDisplayHint(
+                title="Processor",
+                _long_title_function=lambda: "Hardware ➤ Processor",
+                icon="",
                 key_order=[],
                 is_show_more=True,
-                view_spec=None,
+                view_name="",
             ),
         ),
         (
@@ -236,6 +245,9 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
             ),
             AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
+                title="Docker images",
+                _long_title_function=lambda: "Docker ➤ Docker images",
+                icon="",
                 key_order=[
                     "id",
                     "creation",
@@ -246,12 +258,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                     "repodigests",
                 ],
                 is_show_more=False,
-                view_spec=TableViewSpec(
-                    view_name="invdockerimages",
-                    title="Docker images",
-                    _long_title_function=lambda: "Docker ➤ Docker images",
-                    icon="",
-                ),
+                view_name="invdockerimages",
             ),
         ),
         (
@@ -265,9 +272,12 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
             ),
             AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
+                title="Node",
+                _long_title_function=lambda: "To ➤ Node",
+                icon="",
                 key_order=[],
                 is_show_more=True,
-                view_spec=None,
+                view_name="",
             ),
         ),
     ],
@@ -288,16 +298,13 @@ def test_make_node_displayhint(
 
     assert list(hints.attributes_hint.by_key) == list(expected_attributes_hint.by_key)
 
+    assert hints.table_hint.title == expected_table_hint.title
+    assert hints.table_hint.long_title == expected_table_hint.long_title
+    assert hints.table_hint.long_inventory_title == expected_table_hint.long_inventory_title
+    assert hints.table_hint.icon == expected_table_hint.icon
     assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
-
-    if expected_table_hint.view_spec:
-        assert hints.table_hint.view_spec is not None
-        assert hints.table_hint.view_spec.long_title == expected_table_hint.view_spec.long_title
-        assert (
-            hints.table_hint.view_spec.long_inventory_title
-            == expected_table_hint.view_spec.long_inventory_title
-        )
+    assert hints.table_hint.view_name == expected_table_hint.view_name
 
 
 @pytest.mark.parametrize(
@@ -314,9 +321,12 @@ def test_make_node_displayhint(
             ),
             AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
+                title="Bar",
+                _long_title_function=lambda: "Foo ➤ Bar",
+                icon="",
                 key_order=[],
                 is_show_more=True,
-                view_spec=None,
+                view_name="",
             ),
         ),
         (
@@ -330,9 +340,12 @@ def test_make_node_displayhint(
             ),
             AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
+                title="Bar",
+                _long_title_function=lambda: "Foo ➤ Bar",
+                icon="",
                 key_order=[],
                 is_show_more=True,
-                view_spec=None,
+                view_name="",
             ),
         ),
         (
@@ -346,9 +359,12 @@ def test_make_node_displayhint(
             ),
             AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
+                title="Software",
+                _long_title_function=lambda: "Software",
+                icon="software",
                 key_order=[],
                 is_show_more=True,
-                view_spec=None,
+                view_name="",
             ),
         ),
         (
@@ -367,14 +383,12 @@ def test_make_node_displayhint(
             ),
             AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
+                title="Docker containers",
+                _long_title_function=lambda: "Docker ➤ Docker containers",
+                icon="",
                 key_order=["id", "creation", "name", "labels", "status", "image"],
                 is_show_more=False,
-                view_spec=TableViewSpec(
-                    view_name="invdockercontainers",
-                    title="Docker containers",
-                    _long_title_function=lambda: "Docker ➤ Docker containers",
-                    icon="",
-                ),
+                view_name="invdockercontainers",
             ),
         ),
     ],
@@ -395,16 +409,13 @@ def test_make_node_displayhint_from_hint(
 
     assert list(hints.attributes_hint.by_key) == list(expected_attributes_hint.by_key)
 
+    assert hints.table_hint.title == expected_table_hint.title
+    assert hints.table_hint.long_title == expected_table_hint.long_title
+    assert hints.table_hint.long_inventory_title == expected_table_hint.long_inventory_title
+    assert hints.table_hint.icon == expected_table_hint.icon
     assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
-
-    if expected_table_hint.view_spec:
-        assert hints.table_hint.view_spec is not None
-        assert hints.table_hint.view_spec.long_title == expected_table_hint.view_spec.long_title
-        assert (
-            hints.table_hint.view_spec.long_inventory_title
-            == expected_table_hint.view_spec.long_inventory_title
-        )
+    assert hints.table_hint.view_name == expected_table_hint.view_name
 
 
 @pytest.mark.parametrize(
@@ -714,16 +725,18 @@ def test_replace_placeholder(abc_path: SDPath, path: SDPath, expected_title: str
 
 
 @pytest.mark.parametrize(
-    "view_name, expected",
+    "view_name, expected_view_name",
     [
+        (None, ""),
+        ("", ""),
         ("viewname", "invviewname"),
         ("invviewname", "invviewname"),
+        ("viewname_of_host", "invviewname"),
+        ("invviewname_of_host", "invviewname"),
     ],
 )
-def test_view_spec_view_name(view_name: str, expected: str) -> None:
-    table_view_spec = TableViewSpec.from_raw(tuple(), {"view": view_name})
-    assert table_view_spec is not None
-    assert table_view_spec.view_name == expected
+def test__parse_view_name(view_name: str | None, expected_view_name: str) -> None:
+    assert _parse_view_name(view_name) == expected_view_name
 
 
 def test_registered_sorter_cmp() -> None:

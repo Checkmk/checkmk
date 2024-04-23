@@ -183,15 +183,13 @@ def view_inventory_join_macros(ds_name: str) -> Dictionary:
 
     column_choices: list[tuple[str, str]] = []
     for hints in DISPLAY_HINTS:
-        if hints.table_hint.view_spec is None or hints.table_hint.view_spec.view_name != ds_name:
-            continue
-
-        column_choices.extend(
-            _get_inventory_column_infos(
-                hints=hints,
-                table_view_name=hints.table_hint.view_spec.view_name,
+        if hints.table_hint.view_name == ds_name:
+            column_choices.extend(
+                _get_inventory_column_infos(
+                    hints=hints,
+                    table_view_name=hints.table_hint.view_name,
+                )
             )
-        )
 
     return Dictionary(
         title=_("Macros for joining service data or inventory tables"),
@@ -411,20 +409,20 @@ def _get_inventory_column_infos_by_table(
     ds_name: str,
 ) -> Iterator[tuple[InventoryTableInfo, list[InventoryColumnInfo]]]:
     for hints in DISPLAY_HINTS:
-        if hints.table_hint.view_spec is None or ds_name == hints.table_hint.view_spec.view_name:
+        if hints.table_hint.view_name in ("", ds_name):
             # No view, no choices; Also skip in case of same data source:
             # columns are already avail in "normal" column.
             continue
 
         yield (
             InventoryTableInfo(
-                table_view_name=hints.table_hint.view_spec.view_name,
+                table_view_name=hints.table_hint.view_name,
                 path=hints.abc_path,
                 title=hints.node_hint.long_title,
             ),
             _get_inventory_column_infos(
                 hints=hints,
-                table_view_name=hints.table_hint.view_spec.view_name,
+                table_view_name=hints.table_hint.view_name,
             ),
         )
 

@@ -624,27 +624,27 @@ class ABCDataSourceInventory(ABCDataSource):
 
 
 def _register_table_view(hints: DisplayHints) -> None:
-    if (table_view_spec := hints.table_hint.view_spec) is None:
+    if not hints.table_hint.view_name:
         return
 
     _register_info_class(
-        table_view_spec.view_name,
-        table_view_spec.title,
-        table_view_spec.title,
+        hints.table_hint.view_name,
+        hints.table_hint.title,
+        hints.table_hint.title,
     )
 
     # Create the datasource (like a database view)
     data_source_registry.register(
         type(
-            "DataSourceInventory%s" % table_view_spec.view_name.title(),
+            "DataSourceInventory%s" % hints.table_hint.view_name.title(),
             (ABCDataSourceInventory,),
             {
-                "_ident": table_view_spec.view_name,
+                "_ident": hints.table_hint.view_name,
                 "_inventory_path": inventory.InventoryPath(
                     path=hints.abc_path, source=inventory.TreeSource.table
                 ),
-                "_title": table_view_spec.long_inventory_title,
-                "_infos": ["host", table_view_spec.view_name],
+                "_title": hints.table_hint.long_inventory_title,
+                "_infos": ["host", hints.table_hint.view_name],
                 "ident": property(lambda s: s._ident),
                 "title": property(lambda s: s._title),
                 "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
@@ -666,13 +666,13 @@ def _register_table_view(hints: DisplayHints) -> None:
         filters.append(col_hint.ident)
 
     _register_views(
-        table_view_spec.view_name,
-        table_view_spec.title,
+        hints.table_hint.view_name,
+        hints.table_hint.title,
         painters,
         filters,
         hints.abc_path,
         hints.table_hint.is_show_more,
-        table_view_spec.icon,
+        hints.table_hint.icon,
     )
 
 

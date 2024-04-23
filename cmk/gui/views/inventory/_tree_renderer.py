@@ -340,7 +340,7 @@ class TreeRenderer:
     def _show_table(
         self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints, request_: Request
     ) -> None:
-        if hints.table_hint.view_spec:
+        if hints.table_hint.view_name:
             # Link to Multisite view with exactly this table
             html.div(
                 HTMLWriter.render_a(
@@ -350,7 +350,7 @@ class TreeRenderer:
                         [
                             (
                                 "view_name",
-                                make_table_view_name_of_host(hints.table_hint.view_spec.view_name),
+                                make_table_view_name_of_host(hints.table_hint.view_name),
                             ),
                             ("host", self._hostname),
                         ],

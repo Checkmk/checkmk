@@ -91,10 +91,10 @@ def _make_ident(path: SDPath, key: str = "") -> str:
 @dataclass(frozen=True)
 class NodeDisplayHint:
     path: SDPath
-    icon: str
     title: str
     short_title: str
     _long_title_function: Callable[[], str]
+    icon: str
 
     @property
     def ident(self) -> str:
@@ -113,14 +113,16 @@ class NodeDisplayHint:
         title = _make_title_function(raw_hint)(path[-1] if path else "")
         return cls(
             path=path,
-            icon=raw_hint.get("icon", ""),
             title=title,
             short_title=title,
             _long_title_function=_make_long_title_function(title, path[:-1]),
+            icon=raw_hint.get("icon", ""),
         )
 
 
-def _parse_view_name(view_name: str) -> str:
+def _parse_view_name(view_name: str | None) -> str:
+    if not view_name:
+        return ""
     if not view_name.startswith("inv"):
         view_name = f"inv{view_name}"
     if view_name.endswith("_of_host"):
@@ -129,45 +131,13 @@ def _parse_view_name(view_name: str) -> str:
 
 
 @dataclass(frozen=True)
-class TableViewSpec:
-    view_name: str
+class TableDisplayHint:
     title: str
     _long_title_function: Callable[[], str]
     icon: str
-
-    @classmethod
-    def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> TableViewSpec | None:
-        if "*" in path:
-            # See DYNAMIC-PATHS
-            return None
-
-        if view_name := raw_hint.get("view"):
-            title = str(raw_hint.get("title", ""))
-            return TableViewSpec(
-                # This seems to be important for the availability of GUI elements, such as filters,
-                # sorter, etc. in related contexts (eg. data source inv*).
-                view_name=_parse_view_name(view_name),
-                title=title,
-                _long_title_function=_make_long_title_function(title, path[:-1]),
-                icon=raw_hint.get("icon", ""),
-            )
-
-        return None
-
-    @property
-    def long_title(self) -> str:
-        return self._long_title_function()
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory table: %s") % self.long_title
-
-
-@dataclass(frozen=True)
-class TableDisplayHint:
     key_order: Sequence[str]
     is_show_more: bool
-    view_spec: TableViewSpec | None = None
+    view_name: str
 
     @classmethod
     def from_raw(
@@ -176,11 +146,24 @@ class TableDisplayHint:
         raw_hint: InventoryHintSpec,
         key_order: Sequence[str],
     ) -> TableDisplayHint:
+        title = _make_title_function(raw_hint)(path[-1] if path else "")
         return cls(
+            title=title,
+            _long_title_function=_make_long_title_function(title, path[:-1]),
+            icon=raw_hint.get("icon", ""),
             key_order=key_order,
             is_show_more=raw_hint.get("is_show_more", True),
-            view_spec=TableViewSpec.from_raw(path, raw_hint),
+            # See DYNAMIC-PATHS
+            view_name="" if "*" in path else _parse_view_name(raw_hint.get("view")),
         )
+
+    @property
+    def long_title(self) -> str:
+        return self._long_title_function()
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory table: %s") % self.long_title
 
 
 def _parse_column_display_hint_filter_class(
@@ -551,11 +534,7 @@ class DisplayHints:
                     column_hints=OrderedDict(
                         {
                             key: ColumnDisplayHint.from_raw(
-                                (
-                                    ""
-                                    if table_hint.view_spec is None
-                                    else table_hint.view_spec.view_name
-                                ),
+                                table_hint.view_name,
                                 path,
                                 key,
                                 related_raw_hints.by_columns.get(key, {}),

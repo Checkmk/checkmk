@@ -34,6 +34,7 @@ namespace rs = std::ranges;
 using namespace std::chrono_literals;
 
 namespace wtools {
+
 bool ChangeAccessRights(
     const wchar_t *object_name,   // name of object
     SE_OBJECT_TYPE object_type,   // type of object
@@ -2693,7 +2694,7 @@ InternalUser CreateCmaUserInGroup(const std::wstring &group_name,
 
     auto pwd = GenerateRandomString(12);
 
-    uc::LdapControl primary_dc;
+    const uc::LdapControl primary_dc;
     const auto ret = primary_dc.userDel(name);
     XLOG::t(ret == uc::Status::success ? "delete success" : "delete fail");
     const auto add_user_status = primary_dc.userAdd(name, pwd);

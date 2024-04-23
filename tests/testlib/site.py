@@ -929,7 +929,7 @@ class Site:
             omd_status_output = self.execute(
                 ["omd", "status"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             ).communicate()[0]
-            ps_output_file = os.path.join(self.result_dir(), "processes.out")
+            ps_output_file = self.result_dir() / "processes.out"
             self.write_text_file(
                 ps_output_file,
                 self.execute(
@@ -1115,28 +1115,28 @@ class Site:
 
         shutil.copytree(
             self.path("var/log"),
-            "%s/logs" % self.result_dir(),
+            self.result_dir() / "logs",
             ignore_dangling_symlinks=True,
             ignore=shutil.ignore_patterns(".*"),
             dirs_exist_ok=True,
         )
 
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
-            shutil.copy(nagios_log_path, "%s/logs" % self.result_dir())
+            shutil.copy(nagios_log_path, self.result_dir() / "logs")
 
-        cmc_dir = "%s/cmc" % self.result_dir()
+        cmc_dir = self.result_dir() / "cmc"
         os.makedirs(cmc_dir, exist_ok=True)
 
         with suppress(FileNotFoundError):
-            shutil.copy(self.path("var/check_mk/core/history"), "%s/history" % cmc_dir)
+            shutil.copy(self.path("var/check_mk/core/history"), cmc_dir / "history")
 
         with suppress(FileNotFoundError):
-            shutil.copy(self.path("var/check_mk/core/core"), "%s/core_dump" % cmc_dir)
+            shutil.copy(self.path("var/check_mk/core/core"), cmc_dir / "core_dump")
 
         with suppress(FileNotFoundError):
             shutil.copytree(
                 self.path("var/check_mk/crashes"),
-                "%s/crashes" % self.result_dir(),
+                self.result_dir() / "crashes",
                 ignore=shutil.ignore_patterns(".*"),
                 dirs_exist_ok=True,
             )
@@ -1145,8 +1145,8 @@ class Site:
             for crash_info in Path("var/check_mk/crashes").glob("**/crash.info"):
                 crash_info.rename(crash_info.parent / (crash_info.stem + ".json"))
 
-    def result_dir(self) -> str:
-        return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
+    def result_dir(self) -> Path:
+        return Path(os.environ.get("RESULT_PATH", self.path("results"))) / self.id
 
     def get_automation_secret(self) -> str:
         secret_path = "var/check_mk/web/automation/automation.secret"

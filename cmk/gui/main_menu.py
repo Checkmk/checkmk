@@ -12,6 +12,9 @@ from cmk.utils.licensing.registry import get_license_message
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.version import __version__, edition, Edition
 
+if edition() is Edition.CSE:
+    from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
+
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
@@ -108,7 +111,7 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
         ),
     ]
 
-    if edition() == Edition.CSE:
+    if edition() == Edition.CSE and user_may_see_saas_onboarding(user.id):
         learning_items.append(
             TopicMenuItem(
                 name="getting_started", title=_("Getting started"), sort_index=10, url=""

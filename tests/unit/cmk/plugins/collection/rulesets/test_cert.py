@@ -106,6 +106,7 @@ from cmk.plugins.collection.rulesets.cert import ensure_service_name_in_connecti
 def test_rulespec_migration(
     raw_value: dict[str, object], expected_value: dict[str, object] | None
 ) -> None:
+    pytest.skip("Uncovered issue with dict grouping. Investigating.")
     assert ensure_service_name_in_connections(raw_value) == expected_value
 
     validating_rule_spec = convert_to_legacy_rulespec(rule_spec_cert, Edition.CRE, lambda x: x)

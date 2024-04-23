@@ -10,7 +10,7 @@ import time
 from collections.abc import Collection, Iterator, Mapping
 from copy import deepcopy
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, overload, Iterable
+from typing import Any, Literal, NamedTuple, overload
 
 from livestatus import LivestatusResponse
 
@@ -1700,31 +1700,6 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
         return _("Your personal notification rules")
 
 
-class MenuItem:
-    def __init__(self, value: Any) -> None:
-        self.value = value
-
-    def visible(self):
-        return True
-
-
-class ConditionalMenuItem(MenuItem):
-    def __init__(self, value: Any, condition: bool) -> None:
-        super().__init__(value)
-        self.condition = condition
-
-    def visible(self):
-        return self.condition
-
-
-class MenuItemsIterator(list):
-    def __init__(self, items: list[MenuItem]) -> None:
-        """
-        Only include entries that are visible
-        """
-        super().__init__([item.value for item in items if item.visible()])
-
-
 class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def __init__(self) -> None:
         super().__init__()
@@ -1788,7 +1763,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def _vs_notification_rule(self, userid=None):
         if userid:
             contact_headers: list[tuple[str, list[str]] | tuple[str, str, list[str]]] = []
-            section_contacts = MenuItemsIterator([])
+            section_contacts = []
             section_override: list[DictionaryEntry] = []
         else:
             contact_headers = [
@@ -1806,125 +1781,108 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     ],
                 ),
             ]
-            section_contacts = MenuItemsIterator([
+            section_contacts = [
                 # Contact selection
-                MenuItem(
-                    (
-                        "contact_object",
-                        Checkbox(
-                            title=_("All contacts of the notified object"),
-                            label=_("Notify all contacts of the notified host or service."),
-                            default_value=True,
+                (
+                    "contact_object",
+                    Checkbox(
+                        title=_("All contacts of the notified object"),
+                        label=_("Notify all contacts of the notified host or service."),
+                        default_value=True,
+                    ),
+                ),
+                (
+                    "contact_all",
+                    Checkbox(
+                        title=_("All users"),
+                        label=_("Notify all users"),
+                    ),
+                ),
+                (
+                    "contact_all_with_email",
+                    Checkbox(
+                        title=_("All users with an email address"),
+                        label=_(
+                            "Notify all users that have configured an email address in their profile"
                         ),
                     ),
                 ),
-                MenuItem(
-                    (
-                        "contact_all",
-                        Checkbox(
-                            title=_("All users"),
-                            label=_("Notify all users"),
+                (
+                    "contact_users",
+                    ListOf(
+                        valuespec=userdb.UserSelection(only_contacts=False),
+                        title=_("The following users"),
+                        help=_(
+                            "Enter a list of user IDs to be notified here. These users need to be members "
+                            "of at least one contact group in order to be notified."
                         ),
+                        movable=False,
+                        add_label=_("Add user"),
                     ),
                 ),
-                MenuItem(
-                    (
-                        "contact_all_with_email",
-                        Checkbox(
-                            title=_("All users with an email address"),
-                            label=_(
-                                "Notify all users that have configured an email address in their profile"
-                            ),
-                        ),
+                (
+                    "contact_groups",
+                    ListOf(
+                        valuespec=ContactGroupSelection(),
+                        title=_("Members of contact groups"),
+                        movable=False,
                     ),
                 ),
-                MenuItem(
-                    (
-                        "contact_users",
-                        ListOf(
-                            valuespec=userdb.UserSelection(only_contacts=False),
-                            title=_("The following users"),
-                            help=_(
-                                "Enter a list of user IDs to be notified here. These users need to be members "
-                                "of at least one contact group in order to be notified."
-                            ),
-                            movable=False,
-                            add_label=_("Add user"),
-                        ),
+                (
+                    "contact_emails",
+                    ListOfStrings(
+                        valuespec=EmailAddress(size=44),
+                        title=_("Explicit email addresses"),
+                        orientation="vertical",
                     ),
                 ),
-                MenuItem(
-                    (
-                        "contact_groups",
-                        ListOf(
-                            valuespec=ContactGroupSelection(),
-                            title=_("Members of contact groups"),
-                            movable=False,
-                        ),
-                    ),
-                ),
-                ConditionalMenuItem(
-                    (
-                        "contact_emails",
-                        ListOfStrings(
-                            valuespec=EmailAddress(size=44),
-                            title=_("Explicit email addresses"),
-                            orientation="vertical",
-                        ),
-                    ),
-                    condition=edition() != Edition.CSE,
-                ),
-                MenuItem(
-                    (
-                        "contact_match_macros",
-                        ListOf(
-                            valuespec=Tuple(
-                                elements=[
-                                    TextInput(
-                                        title=_("Name of the macro"),
-                                        help=_(
-                                            "As configured in the users settings. Do not add a leading underscore."
-                                        ),
-                                        allow_empty=False,
+                (
+                    "contact_match_macros",
+                    ListOf(
+                        valuespec=Tuple(
+                            elements=[
+                                TextInput(
+                                    title=_("Name of the macro"),
+                                    help=_(
+                                        "As configured in the users settings. Do not add a leading underscore."
                                     ),
+                                    allow_empty=False,
+                                ),
                                 RegExp(
-                                        title=_("Required match (regular expression)"),
-                                        help=_("This expression must match the value of the variable"),
-                                        allow_empty=False,
-                                        mode=RegExp.complete,
-                                    ),
-                                ]
-                            ),
-                            title=_("Restrict by custom macros"),
-                            help=_(
-                                "Here you can <i>restrict</i> the list of contacts that has been "
-                                "built up by the previous options to those who have certain values "
-                                "in certain custom macros. If you add more than one macro here then "
-                                "<i>all</i> macros must match. The matches are regular expressions "
-                                "that must fully match the value of the macro."
-                            ),
-                            add_label=_("Add condition"),
+                                    title=_("Required match (regular expression)"),
+                                    help=_("This expression must match the value of the variable"),
+                                    allow_empty=False,
+                                    mode=RegExp.complete,
+                                ),
+                            ]
                         ),
+                        title=_("Restrict by custom macros"),
+                        help=_(
+                            "Here you can <i>restrict</i> the list of contacts that has been "
+                            "built up by the previous options to those who have certain values "
+                            "in certain custom macros. If you add more than one macro here then "
+                            "<i>all</i> macros must match. The matches are regular expressions "
+                            "that must fully match the value of the macro."
+                        ),
+                        add_label=_("Add condition"),
                     ),
                 ),
-                MenuItem(
-                    (
-                        "contact_match_groups",
-                        ListOf(
-                            valuespec=ContactGroupSelection(),
-                            title=_("Restrict by contact groups"),
-                            help=_(
-                                "Here you can <i>restrict</i> the list of contacts that has been "
-                                "built up by the previous options to those that are members of "
-                                "selected contact groups. If you select more than one contact group here then "
-                                "the user must be member of <i>all</i> these groups."
-                            ),
-                            add_label=_("Add Group"),
-                            movable=False,
+                (
+                    "contact_match_groups",
+                    ListOf(
+                        valuespec=ContactGroupSelection(),
+                        title=_("Restrict by contact groups"),
+                        help=_(
+                            "Here you can <i>restrict</i> the list of contacts that has been "
+                            "built up by the previous options to those that are members of "
+                            "selected contact groups. If you select more than one contact group here then "
+                            "the user must be member of <i>all</i> these groups."
                         ),
+                        add_label=_("Add Group"),
+                        movable=False,
                     ),
-                )
-            ])
+                ),
+            ]
             section_override = [
                 (
                     "allow_disable",

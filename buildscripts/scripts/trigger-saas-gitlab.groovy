@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: saas-gitlab.groovy
+/// file: trigger-saas-gitlab.groovy
 
 /// Trigger job chains in the saas project on gitlab
 

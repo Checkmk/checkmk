@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, onBeforeMount } from 'vue'
 import { extract_value, type ValueAndValidation } from '@/types'
-import DForm from '../DForm.vue'
+import CmkFormDispatcher from '../CmkFormDispatcher.vue'
 import { clicked_checkbox_label } from '@/utils'
 import type { VueDictionary, VueDictionaryElement } from '@/vue_types'
 
@@ -108,7 +108,7 @@ function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
           </span>
           <br />
           <div class="dictelement indent">
-            <DForm
+            <CmkFormDispatcher
               v-if="dict_element.is_active"
               :ref="
                 (el) => {

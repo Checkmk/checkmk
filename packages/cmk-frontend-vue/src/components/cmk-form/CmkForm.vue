@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { type VueFormSpec } from '@/types'
-import DForm from './DForm.vue'
+import CmkFormDispatcher from './CmkFormDispatcher.vue'
 
 defineProps<{
   formSpec: VueFormSpec<unknown>
@@ -21,7 +21,7 @@ function update_value(new_value: unknown) {
   <table class="nform">
     <tr>
       <td>
-        <DForm
+        <CmkFormDispatcher
           :vue-schema="formSpec.vue_schema"
           :data="formSpec.data"
           @update-value="update_value"

@@ -1,3 +1,3 @@
-import DForm from './DForm.vue'
+import CmkForm from './CmkForm.vue'
 
-export { DForm as CmkForm }
+export { CmkForm }

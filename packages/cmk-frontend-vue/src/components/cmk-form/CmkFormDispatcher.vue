@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import DInteger from './element/DInteger.vue'
-import DFloat from './element/DFloat.vue'
-import DDictionary from './container/DDictionary.vue'
-import DText from './element/DText.vue'
-import DLegacyValueSpec from './element/DLegacyValueSpec.vue'
+import CmkFormInteger from './element/CmkFormInteger.vue'
+import CmkFormFloat from './element/CmkFormFloat.vue'
+import CmkFormDictionary from './container/CmkFormDictionary.vue'
+import CmkFormText from './element/CmkFormText.vue'
+import CmkFormLegacyValueSpec from './element/CmkFormLegacyValueSpec.vue'
 
 import { onBeforeMount, onMounted } from 'vue'
 import type { ValueAndValidation } from '@/types'
@@ -26,18 +26,13 @@ const props = defineProps<{
   data: ValueAndValidation<unknown>
 }>()
 
-// https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
+// TODO: https://forum.vuejs.org/t/use-typescript-to-make-sure-a-vue3-component-has-certain-props/127239/9
 const components: Record<string, unknown> = {
-  integer: DInteger,
-  float: DFloat,
-  text: DText,
-  // list: DList,
-  // list_of: DListOf,
-  dictionary: DDictionary,
-  legacy_valuespec: DLegacyValueSpec
-  // checkbox: DCheckbox,
-  // dropdown_choice: DDropdownChoice,
-  // cascading_dropdown_choice: DCascadingDropdownChoice,
+  integer: CmkFormInteger,
+  float: CmkFormFloat,
+  text: CmkFormText,
+  dictionary: CmkFormDictionary,
+  legacy_valuespec: CmkFormLegacyValueSpec
 }
 
 // TODO: we should enforce an interface as return value?!

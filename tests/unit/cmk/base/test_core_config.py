@@ -88,9 +88,7 @@ def test_do_create_config_nagios_collects_passwords(
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
 
-    password_store.save(
-        passwords := {"stored-secret": "123"}, password_store.pending_password_store_path()
-    )
+    password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())
 
     core_store = password_store.core_password_store_path(LATEST_CONFIG)
     assert not password_store.load(core_store)

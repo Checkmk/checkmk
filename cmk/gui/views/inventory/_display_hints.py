@@ -375,25 +375,31 @@ class AttributeDisplayHint:
                 is_show_more=self.is_show_more,
             )
 
-        filter_info = _inv_filter_info().get(self.data_type, {})
+        match self.data_type:
+            case "bytes" | "bytes_rounded":
+                unit = _("MB")
+                scale = 1024 * 1024
+            case "hz":
+                unit = _("MHz")
+                scale = 1000000
+            case "volt":
+                unit = _("Volt")
+                scale = 1
+            case "timestamp":
+                unit = _("secs")
+                scale = 1
+            case _:
+                unit = ""
+                scale = 1
+
         return FilterInvFloat(
             ident=self.ident,
             title=self.long_title,
             inventory_path=inventory_path,
-            unit=filter_info.get("unit"),
-            scale=filter_info.get("scale", 1.0),
+            unit=unit,
+            scale=scale,
             is_show_more=self.is_show_more,
         )
-
-
-def _inv_filter_info():
-    return {
-        "bytes": {"unit": _("MB"), "scale": 1024 * 1024},
-        "bytes_rounded": {"unit": _("MB"), "scale": 1024 * 1024},
-        "hz": {"unit": _("MHz"), "scale": 1000000},
-        "volt": {"unit": _("Volt")},
-        "timestamp": {"unit": _("secs")},
-    }
 
 
 @dataclass(frozen=True)

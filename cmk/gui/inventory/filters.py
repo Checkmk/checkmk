@@ -14,6 +14,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.num_split import cmp_version
 from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
     display_filter_radiobuttons,
@@ -125,7 +126,7 @@ class FilterInvFloat(FilterNumberRange):
         ident: str,
         title: str,
         inventory_path: InventoryPath,
-        unit: str | None,
+        unit: str | LazyString,
         scale: float | None,
         is_show_more: bool = True,
     ) -> None:
@@ -140,6 +141,7 @@ class FilterInvFloat(FilterNumberRange):
                 request_var_suffix="",
                 bound_rescaling=scale if scale is not None else 1.0,
             ),
+            unit=unit,
             is_show_more=is_show_more,
         )
 

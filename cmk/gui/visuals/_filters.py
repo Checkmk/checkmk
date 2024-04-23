@@ -1039,7 +1039,7 @@ def register_site_filters(filter_registry: FilterRegistry) -> None:
 
     filter_registry.register(
         MultipleSitesFilter(
-            title=_l("Multiple Sites"),
+            title=_l("Multiple sites"),
             sort_index=502,
             query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
             description=_l("Associative selection of multiple sites"),

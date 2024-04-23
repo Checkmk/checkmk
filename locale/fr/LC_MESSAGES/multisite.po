@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-04-11 04:01+0000\n"
+"PO-Revision-Date: 2024-04-22 23:11+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/"
 "software/fr/>\n"
@@ -43612,16 +43612,14 @@ msgstr "Veuillez sélectionner un graphique."
 msgid "Please select a host."
 msgstr "Veuillez sélectionner un graphique."
 
-#, fuzzy
 msgid "Please select a metric."
-msgstr "Veuillez sélectionner un système métrique"
+msgstr "Veuillez sélectionner un système métrique."
 
 msgid "Please select a number between 0 and 100"
 msgstr "Veuillez choisir un nombre entre 0 et 100"
 
-#, fuzzy
 msgid "Please select a service."
-msgstr "Veuillez sélectionner un service"
+msgstr "Veuillez sélectionner un service."
 
 msgid "Please select at least one element"
 msgstr "Veuillez sélectionner au moins un élément"
@@ -62765,14 +62763,12 @@ msgstr ""
 "licences et plans de service de MS Office 365 en utilisant le module "
 "PowerShell MSOnline."
 
-#, fuzzy
 msgid ""
 "This plug-in can be used to collect information of all running MSSQL servers "
 "on the local and remote system. "
 msgstr ""
-"Ce plugin peut être utilisé pour collecter les informations de toutes les "
-"licences et plans de service de MS Office 365 en utilisant le module "
-"PowerShell MSOnline."
+"Ce plug-in peut être utilisé pour collecter des informations sur tous les "
+"serveurs MSSQL en cours d'exécution sur le système local et distant. "
 
 #, fuzzy
 msgid ""

@@ -11,7 +11,7 @@ Don't add new stuff here!
 
 import logging
 import subprocess
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -71,7 +71,7 @@ def _uninstall(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     manifest: Manifest,
 ) -> None:
-    if err := list(_remove_files(manifest, keep_files={}, path_config=path_config)):
+    if err := remove_files(manifest, keep_files={}, path_config=path_config):
         raise PackageError(", ".join(err))
 
     for part in set(manifest.files) & set(callbacks):
@@ -345,7 +345,7 @@ def _install(
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
-        for err in _remove_files(old_manifest, keep_files=manifest.files, path_config=path_config):
+        for err in remove_files(old_manifest, keep_files=manifest.files, path_config=path_config):
             _logger.error(err)
 
         for part in set(old_manifest.files) & set(callbacks):
@@ -360,20 +360,21 @@ def _install(
     return manifest
 
 
-def _remove_files(
+def remove_files(
     manifest: Manifest, keep_files: Mapping[PackagePart, Iterable[Path]], path_config: PathConfig
-) -> Iterator[str]:
+) -> tuple[str, ...]:
+    errors = []
     for part, files in manifest.files.items():
         _logger.debug("  Part '%s':", part.ident)
-        remove_files = set(files) - set(keep_files.get(part, []))
-        for fn in remove_files:
+        for fn in set(files) - set(keep_files.get(part, [])):
             path = path_config.get_path(part) / fn
             try:
                 path.unlink(missing_ok=True)
             except OSError as e:
-                yield f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}"
+                errors.append(f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}")
             else:
-                _logger.info("[%s %s]: Removed %s", manifest.name, manifest.version, path)
+                _logger.info("[%s %s]: Removed file %s", manifest.name, manifest.version, path)
+    return tuple(errors)
 
 
 def _raise_for_installability(

@@ -92,6 +92,7 @@ class Manifest(BaseModel):
 def manifest_template(
     name: PackageName,
     version_packaged: str,
+    version_required: str,
     *,
     version: PackageVersion | None = None,
     files: Mapping[PackagePart, Sequence[Path]] | None = None,
@@ -104,7 +105,7 @@ def manifest_template(
         description="Please add a description here",
         version=version or PackageVersion("1.0.0"),
         version_packaged=version_packaged,
-        version_min_required=version_packaged,
+        version_min_required=version_required,
         version_usable_until=None,
         author="Add your name here",
         download_url=f"https://example.com/{name}/",

@@ -9,11 +9,9 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal, NewType
 
-from pydantic import BaseModel, model_validator, ValidationError
+from pydantic import BaseModel, RootModel, ValidationError
 
-from cmk.utils.i18n import _
-
-from cmk.gui.exceptions import MKConfigError  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 
 class BuiltInUserRoleValues(Enum):
@@ -38,38 +36,18 @@ class BuiltInUserRole(UserRoleBase):
 
 
 RoleID = NewType("RoleID", str)
-UserRolesMap = dict[RoleID, CustomUserRole | BuiltInUserRole]
-
-
-class UserRoles(BaseModel):
-    user: BuiltInUserRole
-    admin: BuiltInUserRole
-    guest: BuiltInUserRole
-    agent_registration: BuiltInUserRole
-
-    class Config:
-        extra = "allow"
-
-    @model_validator(mode="after")
-    def validate_after(self) -> UserRoles:
-        if self.model_extra is None:
-            return self
-
-        # Validate custom user roles and set them as attributes
-        for field, value in self.model_extra.items():
-            if isinstance(value, CustomUserRole):
-                setattr(self, field, value)
-            else:
-                setattr(self, field, CustomUserRole(**value))
-
-        return self
-
-    def get_user_role_map(self) -> UserRolesMap:
-        return {RoleID(k): getattr(self, k) for k in self.model_dump()}
+UserRolesMap = RootModel[dict[RoleID, CustomUserRole | BuiltInUserRole]]
 
 
 def validate_userroles(userroles: dict) -> None:
     try:
-        UserRoles(**userroles).get_user_role_map()
+        UserRolesMap(userroles)
     except ValidationError as exc:
-        raise MKConfigError(_("Error: roles.mk validation %s") % exc.errors())
+        raise ConfigValidationError(
+            which_file="roles.mk",
+            pydantic_error=exc,
+            original_data=userroles,
+        )
+
+
+#

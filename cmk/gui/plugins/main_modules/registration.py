@@ -65,6 +65,7 @@ from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.sidebar import snapin_registry
 from cmk.gui.userdb import register_config_file as user_connections_config
+from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
 from cmk.gui.valuespec import autocompleter_registry
@@ -286,6 +287,7 @@ def register() -> None:
     sites.ConnectionClass = MultiSiteConnection
     customer.CustomerAPIClass = customer.CustomerAPIStub
 
+    register_userroles(config_file_registry)
     groups_io.register(config_file_registry)
     password_store.register(config_file_registry)
     notifications_config.register(config_file_registry)

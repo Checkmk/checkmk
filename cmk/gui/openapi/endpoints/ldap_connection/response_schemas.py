@@ -10,7 +10,7 @@ from marshmallow_oneofschema import OneOfSchema
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
-from cmk.gui.userdb import get_user_attributes, load_roles_from_file
+from cmk.gui.userdb import get_user_attributes, UserRolesConfigFile
 
 from cmk import fields
 
@@ -542,7 +542,10 @@ class LDAPGroupsToRoles(LDAPCheckbox):
 
 def ldap_group_to_roles_schema() -> type[LDAPGroupsToRoles]:
     return LDAPGroupsToRoles.from_dict(
-        {name: fields.List(fields.Nested(LDAPRoleElement)) for name in load_roles_from_file()},
+        {
+            name: fields.List(fields.Nested(LDAPRoleElement))
+            for name in UserRolesConfigFile().load_for_reading()
+        },
         name="LDAPGroupsToRolesWithCustomRoles",
     )
 

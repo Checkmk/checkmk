@@ -73,7 +73,7 @@ from ._custom_attributes import update_config_based_user_attributes
 from ._find_usage import find_timeperiod_usage_in_notification_rule
 from ._need_to_change_pw import is_automation_user, need_to_change_pw
 from ._on_failed_login import on_failed_login
-from ._roles import load_roles, load_roles_from_file
+from ._roles import load_roles, register_userroles_config_file, UserRolesConfigFile
 from ._two_factor import (
     disable_two_factor_authentication,
     is_two_factor_backup_code_valid,
@@ -167,7 +167,6 @@ __all__ = [
     "load_custom_attr",
     "load_multisite_users",
     "load_roles",
-    "load_roles_from_file",
     "load_session_infos",
     "load_two_factor_credentials",
     "load_user",
@@ -186,6 +185,7 @@ __all__ = [
     "OPEN_LDAP",
     "UserConnectionConfigFile",
     "register_config_file",
+    "register_userroles_config_file",
     "release_users_lock",
     "remove_custom_attr",
     "rewrite_users",
@@ -213,6 +213,7 @@ __all__ = [
     "UserAttributeRegistry",
     "UserConnectionConfig",
     "ConfigurableUserConnectionSpec",
+    "UserRolesConfigFile",
     "UserConnector",
     "UserConnectorRegistry",
     "UserSelection",

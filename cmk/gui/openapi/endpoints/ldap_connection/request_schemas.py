@@ -10,7 +10,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui.fields import LDAPConnectionID, Timestamp
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.userdb import get_ldap_connections, load_roles_from_file
+from cmk.gui.userdb import get_ldap_connections, UserRolesConfigFile
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 
 from cmk import fields
@@ -690,7 +690,7 @@ def ldap_group_to_roles_request_schema() -> type[LDAPGroupsToRolesRequest]:
     return LDAPGroupsToRolesRequest.from_dict(
         {
             name: fields.Nested(LDAPRoleElementRequest, many=True, required=False)
-            for name in load_roles_from_file()
+            for name in UserRolesConfigFile().load_for_reading()
         },
         name="LDAPGroupsToRolesRequestWithCustomRoles",
     )

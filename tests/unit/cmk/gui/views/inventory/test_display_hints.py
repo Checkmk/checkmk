@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import OrderedDict
+
 # No stub file
 import pytest
 
@@ -155,9 +157,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Inventory Tree",
                 _long_title_function=lambda: "Inventory Tree",
             ),
-            AttributesDisplayHint(
-                key_order=[],
-            ),
+            AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
@@ -173,9 +173,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Hardware",
                 _long_title_function=lambda: "Hardware",
             ),
-            AttributesDisplayHint(
-                key_order=[],
-            ),
+            AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
@@ -192,26 +190,29 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 _long_title_function=lambda: "Hardware ➤ Processor",
             ),
             AttributesDisplayHint(
-                key_order=[
-                    "arch",
-                    "max_speed",
-                    "model",
-                    "type",
-                    "threads",
-                    "smt_threads",
-                    "cpu_max_capa",
-                    "cpus",
-                    "logical_cpus",
-                    "cores",
-                    "cores_per_cpu",
-                    "threads_per_cpu",
-                    "cache_size",
-                    "bus_speed",
-                    "voltage",
-                    "sharing_mode",
-                    "implementation_mode",
-                    "entitlement",
-                ],
+                # The single attribute hints are not checked here
+                OrderedDict(
+                    arch=AttributeDisplayHint.from_raw(tuple(), "arch", {}),
+                    max_speed=AttributeDisplayHint.from_raw(tuple(), "max_speed", {}),
+                    model=AttributeDisplayHint.from_raw(tuple(), "model", {}),
+                    type=AttributeDisplayHint.from_raw(tuple(), "type", {}),
+                    threads=AttributeDisplayHint.from_raw(tuple(), "threads", {}),
+                    smt_threads=AttributeDisplayHint.from_raw(tuple(), "smt_threads", {}),
+                    cpu_max_capa=AttributeDisplayHint.from_raw(tuple(), "cpu_max_capa", {}),
+                    cpus=AttributeDisplayHint.from_raw(tuple(), "cpus", {}),
+                    logical_cpus=AttributeDisplayHint.from_raw(tuple(), "logical_cpus", {}),
+                    cores=AttributeDisplayHint.from_raw(tuple(), "cores", {}),
+                    cores_per_cpu=AttributeDisplayHint.from_raw(tuple(), "cores_per_cpu", {}),
+                    threads_per_cpu=AttributeDisplayHint.from_raw(tuple(), "threads_per_cpu", {}),
+                    cache_size=AttributeDisplayHint.from_raw(tuple(), "cache_size", {}),
+                    bus_speed=AttributeDisplayHint.from_raw(tuple(), "bus_speed", {}),
+                    voltage=AttributeDisplayHint.from_raw(tuple(), "voltage", {}),
+                    sharing_mode=AttributeDisplayHint.from_raw(tuple(), "sharing_mode", {}),
+                    implementation_mode=AttributeDisplayHint.from_raw(
+                        tuple(), "implementation_mode", {}
+                    ),
+                    entitlement=AttributeDisplayHint.from_raw(tuple(), "entitlement", {}),
+                )
             ),
             TableDisplayHint(
                 key_order=[],
@@ -233,9 +234,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Docker images",
                 _long_title_function=lambda: "Docker ➤ Docker images",
             ),
-            AttributesDisplayHint(
-                key_order=[],
-            ),
+            AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
                 key_order=[
                     "id",
@@ -264,9 +263,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Node",
                 _long_title_function=lambda: "To ➤ Node",
             ),
-            AttributesDisplayHint(
-                key_order=[],
-            ),
+            AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
@@ -289,7 +286,7 @@ def test_make_node_displayhint(
     assert hints.node_hint.long_title == expected_node_hint.long_title
     assert hints.node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
-    assert hints.attributes_hint.key_order == expected_attributes_hint.key_order
+    assert list(hints.attributes_hint.by_key) == list(expected_attributes_hint.by_key)
 
     assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
@@ -315,9 +312,7 @@ def test_make_node_displayhint(
                 short_title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
             ),
-            AttributesDisplayHint(
-                key_order=[],
-            ),
+            AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
@@ -333,9 +328,7 @@ def test_make_node_displayhint(
                 short_title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
             ),
-            AttributesDisplayHint(
-                key_order=[],
-            ),
+            AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
@@ -351,9 +344,7 @@ def test_make_node_displayhint(
                 short_title="Software",
                 _long_title_function=lambda: "Software",
             ),
-            AttributesDisplayHint(
-                key_order=[],
-            ),
+            AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
                 key_order=[],
                 is_show_more=True,
@@ -374,9 +365,7 @@ def test_make_node_displayhint(
                 short_title="Docker containers",
                 _long_title_function=lambda: "Docker ➤ Docker containers",
             ),
-            AttributesDisplayHint(
-                key_order=[],
-            ),
+            AttributesDisplayHint(OrderedDict()),
             TableDisplayHint(
                 key_order=["id", "creation", "name", "labels", "status", "image"],
                 is_show_more=False,
@@ -404,7 +393,7 @@ def test_make_node_displayhint_from_hint(
     assert hints.node_hint.long_title == expected_node_hint.long_title
     assert hints.node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
-    assert hints.attributes_hint.key_order == expected_attributes_hint.key_order
+    assert list(hints.attributes_hint.by_key) == list(expected_attributes_hint.by_key)
 
     assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more

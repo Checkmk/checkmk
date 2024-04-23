@@ -340,7 +340,7 @@ def _register_table_views_and_columns() -> None:
 
         _register_node_painter(hints, painter_options=painter_options)
 
-        for attr_hint in hints.attribute_hints.values():
+        for attr_hint in hints.attributes_hint.by_key.values():
             _register_attribute_column(attr_hint)
 
         _register_table_view(hints)

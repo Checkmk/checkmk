@@ -320,7 +320,7 @@ class TreeRenderer:
         self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
     ) -> None:
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
-        key_order = [SDKey(k) for k in hints.attributes_hint.key_order]
+        key_order = [SDKey(k) for k in hints.attributes_hint.by_key]
         if isinstance(attributes, ImmutableAttributes):
             sorted_pairs = _sort_pairs(attributes, key_order)
         else:

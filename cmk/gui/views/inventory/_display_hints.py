@@ -303,15 +303,6 @@ class ColumnDisplayHint:
 
 
 @dataclass(frozen=True)
-class AttributesDisplayHint:
-    key_order: Sequence[str]
-
-    @classmethod
-    def from_raw(cls, key_order: Sequence[str]) -> AttributesDisplayHint:
-        return cls(key_order=key_order)
-
-
-@dataclass(frozen=True)
 class AttributeDisplayHint:
     path: SDPath
     key: SDKey
@@ -403,6 +394,11 @@ class AttributeDisplayHint:
 
 
 @dataclass(frozen=True)
+class AttributesDisplayHint:
+    by_key: OrderedDict[str, AttributeDisplayHint]
+
+
+@dataclass(frozen=True)
 class _RelatedRawHints:
     for_node: InventoryHintSpec = field(
         default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
@@ -484,7 +480,6 @@ class DisplayHints:
         table_hint: TableDisplayHint,
         column_hints: OrderedDict[str, ColumnDisplayHint],
         attributes_hint: AttributesDisplayHint,
-        attribute_hints: OrderedDict[str, AttributeDisplayHint],
     ) -> None:
         # This inventory path is an 'abc' path because it's the general, abstract path of a display
         # hint and may contain "*" (ie. placeholders).
@@ -495,7 +490,6 @@ class DisplayHints:
         self.table_hint = table_hint
         self.column_hints = column_hints
         self.attributes_hint = attributes_hint
-        self.attribute_hints = attribute_hints
 
         self.nodes: dict[str, DisplayHints] = {}
 
@@ -506,9 +500,8 @@ class DisplayHints:
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}),
             table_hint=TableDisplayHint.from_raw(path, {}, []),
-            column_hints=OrderedDict({}),
-            attributes_hint=AttributesDisplayHint.from_raw([]),
-            attribute_hints=OrderedDict({}),
+            column_hints=OrderedDict(),
+            attributes_hint=AttributesDisplayHint(OrderedDict()),
         )
 
     @classmethod
@@ -517,9 +510,8 @@ class DisplayHints:
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {}),
             table_hint=TableDisplayHint.from_raw(path, {}, []),
-            column_hints=OrderedDict({}),
-            attributes_hint=AttributesDisplayHint.from_raw([]),
-            attribute_hints=OrderedDict({}),
+            column_hints=OrderedDict(),
+            attributes_hint=AttributesDisplayHint(OrderedDict()),
         )
 
     def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
@@ -571,16 +563,17 @@ class DisplayHints:
                             for key in table_keys
                         }
                     ),
-                    attributes_hint=AttributesDisplayHint.from_raw(attributes_keys),
-                    attribute_hints=OrderedDict(
-                        {
-                            key: AttributeDisplayHint.from_raw(
-                                path,
-                                key,
-                                related_raw_hints.by_attributes.get(key, {}),
-                            )
-                            for key in attributes_keys
-                        }
+                    attributes_hint=AttributesDisplayHint(
+                        OrderedDict(
+                            {
+                                key: AttributeDisplayHint.from_raw(
+                                    path,
+                                    key,
+                                    related_raw_hints.by_attributes.get(key, {}),
+                                )
+                                for key in attributes_keys
+                            }
+                        )
                     ),
                 ),
             )
@@ -604,7 +597,9 @@ class DisplayHints:
             yield from node.make_inventory_paths_or_hints(path + [node_name])
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
-        return self.attribute_hints.get(key, AttributeDisplayHint.from_raw(self.abc_path, key, {}))
+        return self.attributes_hint.by_key.get(
+            key, AttributeDisplayHint.from_raw(self.abc_path, key, {})
+        )
 
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
         return self.column_hints.get(key, ColumnDisplayHint.from_raw("", self.abc_path, key, {}))

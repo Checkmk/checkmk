@@ -64,6 +64,7 @@ def test_reload_gui_without_gui_files() -> None:
     package = mkp.manifest_template(
         PackageName("ding"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
     )
 
     make_post_package_change_actions(((PackagePart.GUI,), _assert_not_called), on_any_change=())(
@@ -75,6 +76,7 @@ def test_reload_gui_with_gui_part() -> None:
     package = mkp.manifest_template(
         name=PackageName("ding"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
         files={PackagePart.GUI: [Path("a")]},
     )
 
@@ -88,6 +90,7 @@ def test_reload_gui_on_unrelated_change() -> None:
     package = mkp.manifest_template(
         name=PackageName("ding"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
         files={PackagePart.MIBS: [Path("a")]},  # arbitrary non-gui file.
     )
 
@@ -105,6 +108,7 @@ def _create_simple_test_package(
         mkp.manifest_template(
             name=pacname,
             version_packaged="3.14.0p15",
+            version_required="3.14.0p1",
             files={PackagePart.AGENT_BASED: [Path(pacname)]},
         ),
         path_config,
@@ -156,6 +160,7 @@ def test_edit_not_existing(
     new_manifest = mkp.manifest_template(
         name=PackageName("aaa"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
         version=PackageVersion("2.0.0"),
     )
 
@@ -181,6 +186,7 @@ def test_edit(installer: Installer, path_config: PathConfig, package_store: Pack
     new_manifest = mkp.manifest_template(
         name=PackageName("aaa"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
         version=PackageVersion("2.0.0"),
     )
 
@@ -208,6 +214,7 @@ def test_edit_rename(
     new_manifest = mkp.manifest_template(
         PackageName("bbb"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
     )
 
     _create_simple_test_package(installer, PackageName("aaa"), path_config, package_store)
@@ -232,6 +239,7 @@ def test_edit_rename_conflict(
     new_manifest = mkp.manifest_template(
         PackageName("bbb"),
         version_packaged="3.14.0p15",
+        version_required="3.14.0p1",
     )
     _create_simple_test_package(installer, PackageName("aaa"), path_config, package_store)
     _create_simple_test_package(installer, PackageName("bbb"), path_config, package_store)

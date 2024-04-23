@@ -92,6 +92,21 @@ class MetricOpConstant(MetricOperation, frozen=True):
         return [AugmentedTimeSeries(data=TimeSeries([self.value] * num_points, twindow))]
 
 
+class MetricOpConstantNA(MetricOperation, frozen=True):
+    ident: Literal["constant_na"] = "constant_na"
+
+    @staticmethod
+    def name() -> str:
+        return "metric_op_constant_na"
+
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
+        yield from ()
+
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
+        num_points, twindow = derive_num_points_twindow(rrd_data)
+        return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
+
+
 class MetricOpOperator(MetricOperation, frozen=True):
     ident: Literal["operator"] = "operator"
     operator_name: Operators

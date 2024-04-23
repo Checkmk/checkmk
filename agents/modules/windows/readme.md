@@ -78,7 +78,7 @@ Main entry:
 build_the_module cached
 
 In a turn the script makes two calls:
-build_the_cached artefact_dir credentials url 3.12 0
+build_the_cached artefact_dir credentials url 3.12 1
 
 #### Caching
 

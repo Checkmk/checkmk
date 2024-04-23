@@ -24,6 +24,10 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, register_post_config_load_hook
+
+if cmk_version.edition() is cmk_version.Edition.CSE:
+    from cmk.gui.cse.utils.roles import user_may_see_saas_onboarding
+
 from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -638,7 +642,9 @@ class SidebarRenderer:
 
         MainMenuRenderer().show()
 
-        if cmk_version.edition() is cmk_version.Edition.CSE:
+        if cmk_version.edition() is cmk_version.Edition.CSE and user_may_see_saas_onboarding(
+            user.id
+        ):
             self._show_onboarding()
             self._show_saas_link()
 

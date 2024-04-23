@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { type VueFormSpec } from '@/types'
-import DForm from '@/components/form/DForm.vue'
+import DForm from './DForm.vue'
 
 defineProps<{
   formSpec: VueFormSpec<unknown>

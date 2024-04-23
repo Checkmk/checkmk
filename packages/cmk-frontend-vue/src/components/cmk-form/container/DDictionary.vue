@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, onBeforeMount } from 'vue'
 import { extract_value, type ValueAndValidation } from '@/types'
-import DForm from './DForm.vue'
+import DForm from '../DForm.vue'
 import { clicked_checkbox_label } from '@/utils'
 import type { VueDictionary, VueDictionaryElement } from '@/vue_types'
 

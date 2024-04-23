@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUpdated } from 'vue'
-import ValidationError from '@/components/ValidatonError.vue'
+import ValidationError from '../ValidationError.vue'
 import type { VueText } from '@/vue_types'
 import { extract_validation, extract_value, type ValueAndValidation } from '@/types'
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import DInteger from './DInteger.vue'
-import DFloat from './DFloat.vue'
-import DDictionary from './DDictionary.vue'
-import DText from './DText.vue'
-import DLegacyValueSpec from './DLegacyValueSpec.vue'
+import DInteger from './element/DInteger.vue'
+import DFloat from './element/DFloat.vue'
+import DDictionary from './container/DDictionary.vue'
+import DText from './element/DText.vue'
+import DLegacyValueSpec from './element/DLegacyValueSpec.vue'
 
 import { onBeforeMount, onMounted } from 'vue'
 import type { ValueAndValidation } from '@/types'

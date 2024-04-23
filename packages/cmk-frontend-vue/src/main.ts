@@ -13,7 +13,7 @@ import $ from 'jquery'
 import { createApp } from 'vue'
 
 import D3Table from './views/D3Table.vue'
-import Form from './views/CmkForm.vue'
+import { CmkForm } from './components/cmk-form/'
 import Table from './views/CmkTable.vue'
 
 function setup_vue() {
@@ -30,7 +30,7 @@ function setup_vue() {
     const vueApp = JSON.parse(vue_app_data)
 
     if (vueApp.app_name == 'form_spec') {
-      const app = createApp(Form, {
+      const app = createApp(CmkForm, {
         form_spec: {
           id: vueApp.id,
           vue_schema: vueApp.vue_schema,

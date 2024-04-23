@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { extract_validation, extract_value, type ValueAndValidation } from '@/types'
-import ValidationError from '@/components/ValidatonError.vue'
+import ValidationError from '../ValidationError.vue'
 import type { VueInteger } from '@/vue_types'
 
 const emit = defineEmits<{

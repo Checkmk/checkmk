@@ -1135,18 +1135,26 @@ class Site:
 
         with suppress(FileNotFoundError):
             shutil.copytree(
-                self.path("var/check_mk/crashes"),
-                self.result_dir() / "crashes",
+                self.crash_report_dir,
+                self.crash_archive_dir,
                 ignore=shutil.ignore_patterns(".*"),
                 dirs_exist_ok=True,
             )
 
             # Rename files to get better handling by the browser when opening a crash file
-            for crash_info in Path("var/check_mk/crashes").glob("**/crash.info"):
+            for crash_info in self.crash_archive_dir.glob("**/crash.info"):
                 crash_info.rename(crash_info.parent / (crash_info.stem + ".json"))
 
     def result_dir(self) -> Path:
         return Path(os.environ.get("RESULT_PATH", self.path("results"))) / self.id
+
+    @property
+    def crash_report_dir(self) -> Path:
+        return Path(self.root) / "var/check_mk/crashes"
+
+    @property
+    def crash_archive_dir(self) -> Path:
+        return self.result_dir() / "crashes"
 
     def get_automation_secret(self) -> str:
         secret_path = "var/check_mk/web/automation/automation.secret"

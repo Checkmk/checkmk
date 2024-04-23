@@ -77,29 +77,6 @@ def register() -> None:
     perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
     perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
     perfometers["check_mk-oracle_processes"] = perfometer_oracle_sessions
-    perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
-    perfometers["check_mk-netapp_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-cisco_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-juniper_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-brocade_mlx.module_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-hitachi_hnas_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-hitachi_hnas_fpga"] = perfometer_cpu_utilization
-    perfometers["check_mk-hr_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-innovaphone_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-enterasys_cpu_util"] = perfometer_cpu_utilization
-    perfometers["check_mk-juniper_trpz_cpu_util"] = perfometer_cpu_utilization
-    perfometers["check_mk-ibm_svc_nodestats.cpu_util"] = perfometer_cpu_utilization
-    perfometers["check_mk-ibm_svc_systemstats.cpu_util"] = perfometer_cpu_utilization
-    perfometers["check_mk-sni_octopuse_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-casa_cpu_util"] = perfometer_cpu_utilization
-    perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
-    perfometers["check_mk-ps"] = perfometer_ps
-    perfometers["check_mk-hpux_snmp_cs.cpu"] = perfometer_hpux_snmp_cs_cpu
-    perfometers["check_mk-uptime"] = perfometer_check_mk_uptime
-    perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
-    perfometers["check_mk-esx_vsphere_counters.uptime"] = perfometer_check_mk_uptime
-    perfometers["check_mk-oracle_instance"] = perfometer_check_mk_uptime
     perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
     perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
     perfometers["check_mk-aix_diskiod"] = perfometer_check_mk_diskstat
@@ -130,14 +107,6 @@ def register() -> None:
     perfometers["check_mk-hpux_tunables.semmns"] = perfometer_hpux_tunables
     perfometers["check_mk-hpux_tunables.shmseg"] = perfometer_hpux_tunables
     perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
-    perfometers["check_mk-mysql_capacity"] = perfometer_mysql_capacity
-    perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios
-    perfometers["check_mk-vms_system.procs"] = perfometer_check_mk_vms_system_procs
-    perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
-    perfometers["check_mk-carel_uniflair_cooling"] = perfometer_humidity
-    perfometers["check_mk-cmciii.humidity"] = perfometer_humidity
-    perfometers["check_mk-allnet_ip_sensoric.humidity"] = perfometer_humidity
-    perfometers["check_mk-knuerr_rms_humidity"] = perfometer_humidity
     perfometers["check_mk-ups_eaton_enviroment"] = perfometer_eaton
     perfometers["check_mk-emc_datadomain_nvbat"] = perfometer_battery
     perfometers["check_mk-genu_pfstate"] = perfometer_genu_screen
@@ -174,7 +143,6 @@ def register() -> None:
     perfometers["check_mk-raritan_pdu_outletcount"] = perfometer_raritan_pdu_outletcount
     perfometers["check_mk-allnet_ip_sensoric.tension"] = perfometer_allnet_ip_sensoric_tension
     perfometers["check_mk-allnet_ip_sensoric.pressure"] = perfometer_pressure
-    perfometers["check_mk-bintec_sensors.voltage"] = perfometer_voltage
     perfometers["check_mk-docsis_channels_downstream"] = perfometer_dbmv
     perfometers["check_mk-docsis_cm_status"] = perfometer_dbmv
     perfometers["check_mk-veeam_client"] = perfometer_veeam_client
@@ -521,52 +489,6 @@ def perfometer_oracle_sessions(
     return "%d%s" % (value, unit), perfometer_logarithmic(value, 50, 2, color)
 
 
-def perfometer_cpu_utilization(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    util = float(perf_data[0].value)  # is already percentage
-    color = "#60c080"
-    return "%.0f %%" % util, perfometer_linear(util, color)
-
-
-# perfometer_linear(perc, color)
-
-
-def perfometer_ps(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
-    perf_dict = {p.metric_name: float(p.value) for p in perf_data}
-    try:
-        perc = perf_dict["pcpu"]
-        return "%.1f%%" % perc, perfometer_linear(perc, "#30ff80")
-    except Exception:
-        return None
-
-
-def perfometer_hpux_snmp_cs_cpu(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    data = [
-        (float(perf_data[0].value), "#60f020"),
-        (float(perf_data[1].value), "#ff6000"),
-        (float(perf_data[2].value), "#00d080"),
-        (float(perf_data[3].value), get_themed_perfometer_bg_color()),
-    ]
-    total = float(perf_data[0].value) + float(perf_data[1].value) + float(perf_data[2].value)
-    return "%.0f%%" % total, render_perfometer(data)
-
-
-def perfometer_check_mk_uptime(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    seconds = int(float(perf_data[0].value))
-    days, rest = divmod(seconds, 60 * 60 * 24)
-    hours, rest = divmod(rest, 60 * 60)
-    minutes, seconds = divmod(rest, 60)
-
-    return "%02dd %02dh %02dm" % (days, hours, minutes), perfometer_logarithmic(
-        seconds, 2592000.0, 2, "#80F000"
-    )
-
-
 def perfometer_check_mk_diskstat(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -795,60 +717,6 @@ def perfometer_hpux_tunables(
     used = entry.value / entry.max * 100  # fixed: true-division
 
     return "%.0f%%" % (used), perfometer_linear(used, color)
-
-
-# this one still doesn't load. I need more test data to find out why.
-
-
-# This will probably move to a generic DB one
-def perfometer_mysql_capacity(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    color = {0: "#68f", 1: "#ff2", 2: "#f22", 3: "#fa2"}[row["service_state"]]
-
-    size = float(perf_data[0].value)
-    # put the vertical middle at 40GB DB size, this makes small databases look small
-    # and big ones big. raise every 18 months by Moore's law :)
-    median = 40 * 1024 * 1024 * 1024
-
-    return "%s" % number_human_readable(size), perfometer_logarithmic(size, median, 10, color)
-
-
-def perfometer_vms_system_ios(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    direct = float(perf_data[0].value)
-    buffered = float(perf_data[1].value)
-    # perfometer_logarithmic(100, 200, 2, "#883875")
-    return (
-        f"{direct:.0f} / {buffered:.0f}",
-        HTMLWriter.render_div(
-            perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
-            + perfometer_logarithmic(direct, 10000, 3, "#38808f"),
-            class_="stacked",
-        ),
-    )
-
-
-def perfometer_check_mk_vms_system_procs(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    color = {0: "#a4f", 1: "#ff2", 2: "#f22", 3: "#fa2"}[row["service_state"]]
-    return "%d" % int(perf_data[0].value), perfometer_logarithmic(perf_data[0].value, 100, 2, color)
-
-
-def perfometer_cmc_lcp(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
-    color = {0: "#68f", 1: "#ff2", 2: "#f22", 3: "#fa2"}[row["service_state"]]
-    val = float(perf_data[0].value)
-    unit = str(perf_data[0].metric_name)  # TODO really?
-    return f"{val:.1f} {unit}", perfometer_logarithmic(val, 4, 2, color)
-
-
-def perfometer_humidity(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    humidity = float(perf_data[0].value)
-    return "%3.1f%%" % humidity, perfometer_linear(humidity, "#6f2")
 
 
 def perfometer_eaton(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
@@ -1092,12 +960,6 @@ def perfometer_pressure(
 ) -> LegacyPerfometerResult:
     pressure = float(perf_data[0].value)
     return "%0.5f bars" % pressure, perfometer_logarithmic(pressure, 1, 2, "#da6")
-
-
-def perfometer_voltage(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
-    color = "#808000"
-    value = float(perf_data[0].value)
-    return "%0.3f V" % value, perfometer_logarithmic(value, 12, 2, color)
 
 
 def perfometer_dbmv(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:

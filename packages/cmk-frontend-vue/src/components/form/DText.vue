@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUpdated } from 'vue'
 import ValidationError from '@/components/ValidatonError.vue'
-import type { VueSchema, VueText } from '@/vue_types'
+import type { VueText } from '@/vue_types'
 import { extract_validation, extract_value, type ValueAndValidation } from '@/types'
 
 const emit = defineEmits<{
@@ -13,7 +13,7 @@ function send_value_upstream(new_value: any) {
 }
 
 const props = defineProps<{
-  vue_schema: VueText
+  vueSchema: VueText
   data: ValueAndValidation
 }>()
 
@@ -36,11 +36,11 @@ let style = computed(() => {
 
 <template>
   <input
+    v-model="component_value"
     :style="style"
     type="text"
-    v-model="component_value"
+    :placeholder="vueSchema.placeholder"
     @input="send_value_upstream(($event!.target! as HTMLInputElement).value)"
-    :placeholder="vue_schema.placeholder"
   />
   <ValidationError :error="extract_validation(data)"></ValidationError>
 </template>

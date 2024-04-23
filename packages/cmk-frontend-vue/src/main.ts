@@ -4,17 +4,20 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+// see https://github.com/vuejs/eslint-plugin-vue/issues/2201
+/* eslint-disable vue/one-component-per-file */
+
 import 'core-js/stable'
 
 import $ from 'jquery'
 import { createApp } from 'vue'
 
 import D3Table from './views/D3Table.vue'
-import Form from './views/Form.vue'
-import Table from './views/Table.vue'
+import Form from './views/CmkForm.vue'
+import Table from './views/CmkTable.vue'
 
 function setup_vue() {
-  document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div, _) => {
+  document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {
     const dataset = div.dataset
     if (dataset == undefined) return
 

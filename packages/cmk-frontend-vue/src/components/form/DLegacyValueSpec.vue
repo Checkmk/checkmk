@@ -8,7 +8,7 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-  vue_schema: VueLegacyValuespec
+  vueSchema: VueLegacyValuespec
   data: ValueAndValidation
 }>()
 
@@ -21,9 +21,12 @@ function emit_form(): any {
 }
 
 onMounted(() => {
-  const observer = new MutationObserver((mutationList, observer) => {
-    emit_form();
+  const observer = new MutationObserver(() => {
+    emit_form()
   })
+  if (legacy_dom.value === undefined) {
+    throw Error('can not observe legacy_dom is null')
+  }
   observer.observe(legacy_dom.value, {
     subtree: true,
     childList: true,
@@ -33,10 +36,12 @@ onMounted(() => {
 </script>
 
 <template>
+  <!-- eslint-disable vue/no-v-html -->
   <form
+    ref="legacy_dom"
     style="background: #595959"
     class="legacy_valuespec"
     v-html="extract_value(data).html"
-    ref="legacy_dom"
   ></form>
+  <!-- eslint-enable -->
 </template>

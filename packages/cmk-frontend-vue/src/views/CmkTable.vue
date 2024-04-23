@@ -1,11 +1,11 @@
-<script setup lang="ts" xmlns="http://www.w3.org/1999/html">
+<script setup lang="ts">
 import { type TableRow, type VueTableSpec } from '@/types'
-import { computed, ref, onMounted, onBeforeUpdate, onUpdated } from 'vue'
+import { ref, onMounted, onBeforeUpdate, onUpdated } from 'vue'
 import crossfilter from 'crossfilter2'
 import * as d3 from 'd3'
 
 const props = defineProps<{
-  table_spec: VueTableSpec
+  tableSpec: VueTableSpec
 }>()
 
 const search_text = ref<string>('')
@@ -31,6 +31,12 @@ function replace_inpage_search() {
   })
 }
 
+function get_custom_filter(search_text: string) {
+  return function customFilter(value: string) {
+    return value.includes(search_text)
+  }
+}
+
 function get_rows() {
   const search_value = search_text.value.toLowerCase()
 
@@ -38,7 +44,7 @@ function get_rows() {
   let records: TableRow[]
   if (!use_crossfilter) {
     records = []
-    props.table_spec.rows.forEach((row: TableRow) => {
+    props.tableSpec.rows.forEach((row: TableRow) => {
       let found_match = false
       row.columns.forEach((column) => {
         column.content.forEach((content) => {
@@ -50,11 +56,6 @@ function get_rows() {
       if (found_match) records.push(row)
     })
   } else {
-    function get_custom_filter(search_text: string) {
-      return function customFilter(value: string) {
-        return value.includes(search_text)
-      }
-    }
     search_text_dimension.filterFunction(get_custom_filter(search_value))
     records = row_crossfilter.allFiltered()
   }
@@ -76,7 +77,7 @@ function get_rows() {
 }
 
 onMounted(() => {
-  row_crossfilter.add(props.table_spec.rows)
+  row_crossfilter.add(props.tableSpec.rows)
   force_render.value += 1
   replace_inpage_search()
 })
@@ -101,15 +102,20 @@ function set_sort_index(index: number) {
 
 <template>
   <label>VUE Table</label>
-  <table :key="force_render" :class="table_spec.classes">
+  <table :key="force_render" :class="tableSpec.classes">
     <tbody>
       <tr>
-        <th v-for="(header, index) in table_spec.headers" v-on:click="set_sort_index(index)">
+        <th
+          v-for="(header, index) in tableSpec.headers"
+          :key="index"
+          @click="set_sort_index(index)"
+        >
           {{ header }}
         </th>
       </tr>
 
-      <tr :key="row.key" v-for="row in get_rows()" :class="row.classes">
+      <tr v-for="row in get_rows()" :key="row.key" :class="row.classes">
+        <!-- eslint-disable vue/require-v-for-key -->
         <td v-for="cell in row.columns" :class="cell.classes">
           <template v-for="content in cell.content">
             <input v-if="content.type === 'checkbox'" class="vue_checkbox" type="checkbox" />
@@ -117,10 +123,12 @@ function set_sort_index(index: number) {
               <img class="icon iconbutton" :src="content.icon" />
             </a>
             <span v-if="content.type === 'text'">{{ content.content }}</span>
+            <!-- eslint-disable-next-line vue/no-v-html -->
             <span v-if="content.type === 'html'" v-html="content.content" />
             <a v-if="content.type === 'href'" :href="content.url">{{ content.alias }}</a>
           </template>
         </td>
+        <!-- eslint-enable -->
       </tr>
     </tbody>
   </table>

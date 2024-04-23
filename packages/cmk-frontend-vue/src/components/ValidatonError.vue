@@ -1,11 +1,11 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   error: string | null
 }>()
 </script>
 
 <template>
-  <label style="background: #dc5e5e" v-if="error">
+  <label v-if="error" style="background: #dc5e5e">
     {{ error }}
   </label>
 </template>

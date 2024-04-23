@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   validation: any
 }>()
 </script>
@@ -7,7 +7,7 @@ const props = defineProps<{
 <template>
   <div v-if="validation.messages" class="validation">
     <ul>
-      <li v-for="message in validation.messages">&uarr; {{ message }}</li>
+      <li v-for="message in validation.messages" :key="message">&uarr; {{ message }}</li>
     </ul>
   </div>
 </template>

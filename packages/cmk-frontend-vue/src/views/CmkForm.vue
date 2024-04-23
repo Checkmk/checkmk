@@ -1,10 +1,10 @@
-<script setup lang="ts" xmlns="http://www.w3.org/1999/html">
+<script setup lang="ts">
 import { ref } from 'vue'
 import { type VueFormSpec } from '@/types'
 import DForm from '@/components/form/DForm.vue'
 
-const props = defineProps<{
-  form_spec: VueFormSpec
+defineProps<{
+  formSpec: VueFormSpec
 }>()
 
 let raw_value = ref('')
@@ -22,14 +22,14 @@ function update_value(new_value: any) {
     <tr>
       <td>
         <DForm
+          :vue-schema="formSpec.vue_schema"
+          :data="formSpec.data"
           @update-value="update_value"
-          :vue_schema="form_spec.vue_schema"
-          :data="form_spec.data"
         />
       </td>
     </tr>
     <!-- This input field contains the computed json value which is sent when the form is submitted -->
-    <input :name="form_spec.id" type="hidden" v-model="value_as_json" />
+    <input v-model="value_as_json" :name="formSpec.id" type="hidden" />
   </table>
   <pre>{{ raw_value }}</pre>
 </template>

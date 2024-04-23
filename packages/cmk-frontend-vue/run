@@ -19,7 +19,6 @@ fi
 NODE_OPTIONS="--dns-result-order=ipv4first" npm ci --audit=false
 
 # use the following commands when code base is cleaned up
-# ./node_modules/.bin/prettier --check src/
-# ./node_modules/.bin/eslint . --ignore-path .gitignore
-# npm run build
-npm run build-only
+./node_modules/.bin/prettier --check src/
+./node_modules/.bin/eslint . --ignore-path .gitignore
+npm run build

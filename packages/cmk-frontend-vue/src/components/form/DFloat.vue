@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { extract_validation, extract_value, type ValueAndValidation } from '@/types'
 import ValidationError from '@/components/ValidatonError.vue'
-import type { VueInteger, VueSchema } from '@/vue_types'
+import type { VueInteger } from '@/vue_types'
 
 const emit = defineEmits<{
   (e: 'update-value', value: any): void

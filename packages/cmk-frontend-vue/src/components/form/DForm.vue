@@ -1,5 +1,4 @@
-<script setup lang="ts" xmlns="http://www.w3.org/1999/html">
-// import DList from './DList.vue'
+<script setup lang="ts">
 import DInteger from './DInteger.vue'
 import DFloat from './DFloat.vue'
 import DDictionary from './DDictionary.vue'
@@ -9,11 +8,6 @@ import DLegacyValueSpec from './DLegacyValueSpec.vue'
 import { onBeforeMount, onMounted } from 'vue'
 import type { ValueAndValidation } from '@/types'
 import type { VueSchema } from '@/vue_types'
-// import DDropdownChoice from "cmk_vue/components/form/DDropdownChoice.vue";
-// import DCheckbox from "cmk_vue/components/form/DCheckbox.vue";
-// import DCascadingDropdownChoice from "cmk_vue/components/form/DCascadingDropdownChoice.vue";
-// import DPercentage from '@/components/form/DPercentage.vue'
-// import DListOf from "cmk_vue/components/form/DListOf.vue";
 
 const emit = defineEmits<{
   (e: 'update-value', value: any): void
@@ -28,7 +22,7 @@ onMounted(() => {
 })
 
 const props = defineProps<{
-  vue_schema: VueSchema
+  vueSchema: VueSchema
   data: ValueAndValidation
 }>()
 
@@ -47,9 +41,9 @@ const components: { [name: string]: {} } = {
 }
 
 function get_component(): object {
-  console.log('get schema ', props.vue_schema)
+  console.log('get schema ', props.vueSchema)
   console.log('get data   ', props.data)
-  return components[props.vue_schema.vue_type!]
+  return components[props.vueSchema.vue_type!]
 }
 
 function forward_value_upstream(new_value: any) {
@@ -60,8 +54,8 @@ function forward_value_upstream(new_value: any) {
 
 <template>
   <component
-    v-bind:is="get_component()"
-    :vue_schema="vue_schema"
+    :is="get_component()"
+    :vue-schema="vueSchema"
     :data="data"
     @update-value="forward_value_upstream"
   >

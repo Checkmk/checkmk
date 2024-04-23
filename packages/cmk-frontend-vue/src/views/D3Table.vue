@@ -1,11 +1,11 @@
-<script setup lang="ts" xmlns="http://www.w3.org/1999/html">
+<script setup lang="ts">
 import { type TableCell, type TableRow, type VueTableSpec } from '@/types'
-import { computed, ref, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import crossfilter from 'crossfilter2'
 import * as d3 from 'd3'
 
 const props = defineProps<{
-  table_spec: VueTableSpec
+  tableSpec: VueTableSpec
 }>()
 
 const search_text = ref<string>('')
@@ -66,7 +66,7 @@ function replace_inpage_search() {
 
 onMounted(() => {
   console.log('table on mounted')
-  row_crossfilter.add(props.table_spec.rows)
+  row_crossfilter.add(props.tableSpec.rows)
   force_render.value += 1
   replace_inpage_search()
   update_d3js_table()
@@ -92,9 +92,9 @@ function update_d3js_table() {
   const root_div = d3.select(d3_anchor.value)
   const table = root_div
     .selectAll<HTMLTableElement, VueTableSpec>('table')
-    .data([props.table_spec])
+    .data([props.tableSpec])
     .join('table')
-  const tbody = table.join('tbody').attr('class', props.table_spec.classes.join(' '))
+  const tbody = table.join('tbody').attr('class', props.tableSpec.classes.join(' '))
 
   // Headers
   const header_row = tbody

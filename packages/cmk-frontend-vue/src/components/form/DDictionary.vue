@@ -16,7 +16,7 @@ interface ElementFromProps {
 }
 
 const props = defineProps<{
-  vue_schema: VueDictionary
+  vueSchema: VueDictionary
   data: ValueAndValidation
 }>()
 
@@ -27,10 +27,10 @@ const element_active: { [index: string]: any } = ref({})
 
 onBeforeMount(() => {
   component_value = {}
-  console.log('dict schema', props.vue_schema)
+  console.log('dict schema', props.vueSchema)
   console.log('dict data', props.data)
   const data = extract_value(props.data)
-  props.vue_schema.elements.forEach((element: VueDictionaryElement) => {
+  props.vueSchema.elements.forEach((element: VueDictionaryElement) => {
     const key = element.ident
     default_values.value[key] = element.default_value
     if (key in data) component_value[key] = data[key]
@@ -46,7 +46,7 @@ onMounted(() => {
 function get_elements_from_props(): ElementFromProps[] {
   const elements: ElementFromProps[] = []
   const data = extract_value(props.data)
-  props.vue_schema.elements.forEach((element: VueDictionaryElement, index: number) => {
+  props.vueSchema.elements.forEach((element: VueDictionaryElement) => {
     elements.push({
       dict_config: element,
       is_active:
@@ -80,16 +80,13 @@ function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
 <template>
   <table class="dictionary">
     <tbody>
-      <tr
-        v-for="dict_element in get_elements_from_props()"
-        v-bind:key="dict_element.dict_config.ident"
-      >
+      <tr v-for="dict_element in get_elements_from_props()" :key="dict_element.dict_config.ident">
         <td class="dictleft">
           <span class="checkbox">
             <input
-              type="checkbox"
-              v-model="element_active[dict_element.dict_config.ident]"
               v-if="!dict_element.dict_config.required"
+              v-model="element_active[dict_element.dict_config.ident]"
+              type="checkbox"
             />
             <label
               :onclick="
@@ -104,13 +101,13 @@ function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
           <div class="dictelement indent">
             <DForm
               v-if="dict_element.is_active"
-              :vue_schema="dict_element.dict_config.vue_schema"
-              :data="dict_element.data"
               :ref="
                 (el) => {
                   element_components[dict_element.dict_config.ident] = el
                 }
               "
+              :vue-schema="dict_element.dict_config.vue_schema"
+              :data="dict_element.data"
               @update-value="(new_value) => update_key(dict_element.dict_config.ident, new_value)"
             />
           </div>

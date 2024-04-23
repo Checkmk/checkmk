@@ -17,7 +17,9 @@ const search_text_dimension = row_crossfilter.dimension<string>((d: TableRow) =>
   d.columns.forEach((column) => {
     column.content.forEach((content) => {
       // Might add additional types to this data dimension
-      if (content.type == 'text') combined_text.push(content.content!.toLowerCase())
+      if (content.type == 'text') {
+        combined_text.push(content.content!.toLowerCase())
+      }
     })
   })
   return combined_text.join('#')
@@ -53,7 +55,9 @@ function get_rows() {
           }
         })
       })
-      if (found_match) records.push(row)
+      if (found_match) {
+        records.push(row)
+      }
     })
   } else {
     search_text_dimension.filterFunction(get_custom_filter(search_value))
@@ -64,8 +68,12 @@ function get_rows() {
     return function (a: TableRow, b: TableRow) {
       const a_content = a.columns[index].content[0]!.content!.toLowerCase()
       const b_content = b.columns[index].content[0]!.content!.toLowerCase()
-      if (a_content == b_content) return 0
-      if (a_content > b_content) return direction
+      if (a_content == b_content) {
+        return 0
+      }
+      if (a_content > b_content) {
+        return direction
+      }
       return -direction
     }
   }
@@ -94,8 +102,11 @@ onUpdated(() => {
 
 let current_sort_index: null | [number, number] = null
 function set_sort_index(index: number) {
-  if (current_sort_index == null || current_sort_index[0] != index) current_sort_index = [index, 1]
-  else if (current_sort_index[0] == index) current_sort_index = [index, current_sort_index[1] * -1]
+  if (current_sort_index == null || current_sort_index[0] != index) {
+    current_sort_index = [index, 1]
+  } else if (current_sort_index[0] == index) {
+    current_sort_index = [index, current_sort_index[1] * -1]
+  }
   force_render.value += 1
 }
 </script>

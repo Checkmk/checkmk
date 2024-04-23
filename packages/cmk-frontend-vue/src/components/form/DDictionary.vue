@@ -33,9 +33,13 @@ onBeforeMount(() => {
   props.vueSchema.elements.forEach((element: VueDictionaryElement) => {
     const key = element.ident
     default_values.value[key] = element.default_value
-    if (key in data) component_value[key] = data[key]
-    else if (element.required) component_value[key] = element.default_value
-    else component_value[key] = undefined
+    if (key in data) {
+      component_value[key] = data[key]
+    } else if (element.required) {
+      component_value[key] = element.default_value
+    } else {
+      component_value[key] = undefined
+    }
   })
 })
 
@@ -66,13 +70,18 @@ function update_key(key: string, new_value: any) {
 
 function clicked_dictionary_checkbox_label(event: MouseEvent, key: string) {
   let target = event.target
-  if (!target) return
+  if (!target) {
+    return
+  }
 
   clicked_checkbox_label(target as HTMLLabelElement)
 
   const dict_values = extract_value(props.data)
-  if (key in dict_values) component_value[key] = undefined
-  else component_value[key] = dict_values[key]
+  if (key in dict_values) {
+    component_value[key] = undefined
+  } else {
+    component_value[key] = dict_values[key]
+  }
   emit('update-value', component_value)
 }
 </script>

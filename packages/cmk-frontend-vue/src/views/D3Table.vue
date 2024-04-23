@@ -16,7 +16,9 @@ const search_text_dimension = row_crossfilter.dimension<string>((d: TableRow) =>
   let combined_text: string[] = []
   d.columns.forEach((column) => {
     column.content.forEach((content) => {
-      if (content.type == 'text') combined_text.push(content.content!.toLowerCase())
+      if (content.type == 'text') {
+        combined_text.push(content.content!.toLowerCase())
+      }
     })
   })
   return combined_text.join('#')
@@ -31,16 +33,23 @@ function get_rows(): TableRow[] {
     }
   }
 
-  if (search_value) search_text_dimension.filterFunction(get_custom_filter(search_value))
-  else search_text_dimension.filterAll()
+  if (search_value) {
+    search_text_dimension.filterFunction(get_custom_filter(search_value))
+  } else {
+    search_text_dimension.filterAll()
+  }
   let records = row_crossfilter.allFiltered()
 
   function get_custom_sorter_function(index: number, direction: number) {
     return function (a: TableRow, b: TableRow) {
       const a_content = a.columns[index].content[0]!.content!.toLowerCase()
       const b_content = b.columns[index].content[0]!.content!.toLowerCase()
-      if (a_content == b_content) return 0
-      if (a_content > b_content) return direction
+      if (a_content == b_content) {
+        return 0
+      }
+      if (a_content > b_content) {
+        return direction
+      }
       return -direction
     }
   }
@@ -75,8 +84,11 @@ onMounted(() => {
 let current_sort_index: null | [number, number] = null
 
 function set_sort_index(index: number) {
-  if (current_sort_index == null || current_sort_index[0] != index) current_sort_index = [index, 1]
-  else if (current_sort_index[0] == index) current_sort_index = [index, current_sort_index[1] * -1]
+  if (current_sort_index == null || current_sort_index[0] != index) {
+    current_sort_index = [index, 1]
+  } else if (current_sort_index[0] == index) {
+    current_sort_index = [index, current_sort_index[1] * -1]
+  }
   force_render.value += 1
   update_d3js_table()
 }
@@ -84,7 +96,9 @@ function set_sort_index(index: number) {
 const d3_anchor = ref<HTMLDivElement | undefined>()
 
 function update_d3js_table() {
-  if (d3_anchor.value == undefined) return
+  if (d3_anchor.value == undefined) {
+    return
+  }
 
   const update_start = performance.now()
 

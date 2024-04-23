@@ -19,10 +19,14 @@ import Table from './views/CmkTable.vue'
 function setup_vue() {
   document.querySelectorAll<HTMLFormElement>('div[data-cmk_vue_app]').forEach((div) => {
     const dataset = div.dataset
-    if (dataset == undefined) return
+    if (dataset == undefined) {
+      return
+    }
 
     const vue_app_data = dataset.cmk_vue_app
-    if (vue_app_data == undefined) return
+    if (vue_app_data == undefined) {
+      return
+    }
     const vueApp = JSON.parse(vue_app_data)
 
     if (vueApp.app_name == 'form_spec') {

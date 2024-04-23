@@ -218,6 +218,19 @@ def _parse_list_unit_files(source: Iterator[Sequence[str]]) -> Mapping[str, str]
     }
 
 
+KWARG_PARSERS = [
+    ("microseconds", regex("([0-9]?[0-9]?[0-9])us"), 1),
+    ("milliseconds", regex("([0-9]?[0-9]?[0-9])ms"), 1),
+    ("seconds", regex("([0-6]?[0-9])s"), 1),
+    ("minutes", regex("([0-6]?[0-9])min"), 1),
+    ("hours", regex("([0-2]?[0-9])h"), 1),
+    ("days", regex("([0-2]?[0-9]) days?"), 1),
+    ("weeks", regex("([0-4]) weeks?"), 1),
+    ("seconds", regex("([0-9]?[0-9]?[0-9]) months?"), int(60 * 60 * 24 * 30.4375)),
+    ("seconds", regex("([0-9]?[0-9]?[0-9]) years?"), int(60 * 60 * 24 * 365.25)),
+]
+
+
 # systemd implementation for generating the time string we want to parse
 # https://github.com/systemd/systemd/blob/c87c30780624df257ed96909a2286b2b933f8c44/src/basic/time-util.c#L417
 #
@@ -225,20 +238,8 @@ def _parse_list_unit_files(source: Iterator[Sequence[str]]) -> Mapping[str, str]
 # https://github.com/systemd/systemd/blob/2afb2f4a9d6a497dfbe1983fbe1bac297a8dc52b/src/basic/time-util.h#L60
 def _parse_time_str(string: str) -> timedelta:
     kwargs: dict[str, int] = defaultdict(int)
-    SEC_PER_MONTH = 2629800
-    SEC_PER_YEAR = 31557600
-    kwarg_parsers = [
-        ("microseconds", regex("([0-9]?[0-9]?[0-9])us"), 1),
-        ("milliseconds", regex("([0-9]?[0-9]?[0-9])ms"), 1),
-        ("seconds", regex("([0-6]?[0-9])s"), 1),
-        ("minutes", regex("([0-6]?[0-9])min"), 1),
-        ("hours", regex("([0-2]?[0-9])h"), 1),
-        ("days", regex("([0-2]?[0-9]) days?"), 1),
-        ("weeks", regex("([0-4]) weeks?"), 1),
-        ("seconds", regex("([0-9]?[0-9]?[0-9]) months?"), SEC_PER_MONTH),
-        ("seconds", regex("([0-9]?[0-9]?[0-9]) years?"), SEC_PER_YEAR),
-    ]
-    for time_unit, rgx, scale in kwarg_parsers:
+
+    for time_unit, rgx, scale in KWARG_PARSERS:
         if match := rgx.search(string):
             kwargs[time_unit] += scale * int(match.groups()[0])
 
@@ -273,7 +274,7 @@ def _is_service_entry(entry: Sequence[Sequence[str]]) -> bool:
 
 
 def _is_new_entry(line: Sequence[str]) -> bool:
-    return (line[0] in _STATUS_SYMBOLS) and (len(line) > 3) and ("." in str(line[1]))
+    return (line[0] in _STATUS_SYMBOLS) and (len(line) > 3) and ("." in line[1])
 
 
 def _parse_status(source: Iterator[Sequence[str]]) -> Mapping[str, UnitStatus]:
@@ -288,8 +289,6 @@ def _parse_status(source: Iterator[Sequence[str]]) -> Mapping[str, UnitStatus]:
                 line,
             ]
             continue
-        if line[0].startswith("[all]"):
-            break
         entry.append(line)
     if len(entry) > 1 and _is_service_entry(entry):
         status = UnitStatus.from_entry(entry)

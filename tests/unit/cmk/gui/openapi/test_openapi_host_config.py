@@ -1583,3 +1583,9 @@ def test_openapi_create_host_in_folder_with_umlaut(clients: ClientRegistry) -> N
     )
     response = clients.HostConfig.create(host_name="host1", folder=f"~{folder_name}")
     assert response.status_code == 200
+
+
+def test_openapi_list_hosts_with_include_links(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="host1")
+    resp = clients.HostConfig.get_all(include_links=True)
+    assert len(resp.json["value"][0]["links"])

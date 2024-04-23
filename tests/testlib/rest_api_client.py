@@ -697,11 +697,19 @@ class HostConfigClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(self, effective_attributes: bool = False, expect_ok: bool = True) -> Response:
+    def get_all(
+        self,
+        effective_attributes: bool = False,
+        include_links: bool = False,
+        expect_ok: bool = True,
+    ) -> Response:
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
-            query_params={"effective_attributes": "true" if effective_attributes else "false"},
+            query_params={
+                "effective_attributes": "true" if effective_attributes else "false",
+                "include_links": "true" if include_links else "false",
+            },
             expect_ok=expect_ok,
         )
 

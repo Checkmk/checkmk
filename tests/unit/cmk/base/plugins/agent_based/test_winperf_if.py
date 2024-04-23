@@ -746,7 +746,7 @@ WINPERF_IF_WIN32_NETWORKADAPTER_INPUT_1: _Block = [
     [
         "TBWAW-VEEAM01",
         "E1:43:6A:0F:D3:F4 ",
-        "IBM USB Remote NDIS Network Device #2 ",
+        "IBM USB Remote NDIS   Network Device        #2 ",
         "Local Area Connection 2 ",
         "2 ",
         "9728000 ",
@@ -1072,7 +1072,7 @@ def test_parse_winperf_if(
                     "Dynamic ",
                     "40:90:7C:1A:45:F8;7C:33:82:DE:F6:3A",
                     "SLOT 6 Port 1 DAG;SLOT 4 Port 2 DAG",
-                    "Intel(R) Ethernet 10G 2P X520 Adapter #2;Intel(R) Ethernet 10G 2P X520 Adapter #4",
+                    "Intel(R) Ethernet 10G 2P X520 Adapter     #2;Intel(R) Ethernet 10G 2P X520 Adapter   #4",
                     "10000000000;10000000000",
                     "{70F3DEC7-8347-4157-B066-95F5672F39BA};{9C4971CB-95AA-4B01-B828-F61B339E4F19}",
                 ],

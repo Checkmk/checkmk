@@ -33,7 +33,7 @@ _IF_MAC_PSEUDO_COUNTER: Final[str] = "2006"
 
 
 def _canonize_name(name: str) -> str:
-    return name.replace("_", " ").replace("  ", " ").rstrip()
+    return " ".join(name.replace("_", " ").split())
 
 
 def _line_to_mapping(

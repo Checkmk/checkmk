@@ -739,7 +739,7 @@ check_metrics["check_mk-brocade_mlx_module_cpu"] = {
     "cpu_util1": {"name": "util1s"},
     "cpu_util5": {"name": "util5s"},
     "cpu_util60": {"name": "util1"},
-    "cpu_util200": {"name": "util5"},
+    "cpu_util300": {"name": "util5"},
 }
 check_metrics["check_mk-dell_powerconnect_cpu"] = {
     "load": {"name": "util", "deprecated": "2.0.0p4"},

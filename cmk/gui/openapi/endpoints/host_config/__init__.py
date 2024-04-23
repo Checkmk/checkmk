@@ -52,6 +52,7 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.endpoints.common_fields import field_include_links
 from cmk.gui.openapi.endpoints.host_config.request_schemas import (
     BulkCreateHost,
     BulkDeleteHost,
@@ -349,12 +350,18 @@ def _bulk_host_action_response(
     method="get",
     response_schema=HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
-    query_params=[EFFECTIVE_ATTRIBUTES],
+    query_params=[
+        EFFECTIVE_ATTRIBUTES,
+        field_include_links(
+            "Flag which toggles whether the links field of the individual hosts should be populated."
+        ),
+    ],
 )
 def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
     """Show all hosts"""
     root_folder = folder_tree().root_folder()
-    effective_attributes: bool = param.get("effective_attributes", False)
+    effective_attributes: bool = param["effective_attributes"]
+    include_links: bool = param["include_links"]
 
     hosts = (
         host
@@ -364,24 +371,33 @@ def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
     return serve_host_collection(
         hosts,
         effective_attributes=effective_attributes,
+        include_links=include_links,
     )
 
 
-def serve_host_collection(hosts: Iterable[Host], effective_attributes: bool = False) -> Response:
+def serve_host_collection(
+    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+) -> Response:
     return serve_json(
         _host_collection(
             hosts,
             effective_attributes=effective_attributes,
+            include_links=include_links,
         )
     )
 
 
-def _host_collection(hosts: Iterable[Host], effective_attributes: bool = False) -> dict[str, Any]:
+def _host_collection(
+    hosts: Iterable[Host], effective_attributes: bool = False, include_links: bool = False
+) -> dict[str, Any]:
     return {
         "id": "host",
         "domainType": "host_config",
         "value": [
-            serialize_host(host, effective_attributes=effective_attributes) for host in hosts
+            serialize_host(
+                host, effective_attributes=effective_attributes, include_links=include_links
+            )
+            for host in hosts
         ],
         "links": [constructors.link_rel("self", constructors.collection_href("host_config"))],
     }
@@ -766,7 +782,9 @@ def _serve_host(host: Host, effective_attributes: bool = False) -> Response:
 agent_links_hook: Callable[[HostName], list[LinkType]] = lambda h: []
 
 
-def serialize_host(host: Host, effective_attributes: bool) -> DomainObject:
+def serialize_host(
+    host: Host, effective_attributes: bool, include_links: bool = True
+) -> DomainObject:
     extensions = {
         "folder": "/" + host.folder().path(),
         "attributes": host.attributes,
@@ -776,22 +794,25 @@ def serialize_host(host: Host, effective_attributes: bool) -> DomainObject:
         "cluster_nodes": host.cluster_nodes(),
     }
 
-    agent_links = agent_links_hook(host.name())
-
-    return constructors.domain_object(
-        domain_type="host_config",
-        identifier=host.id(),
-        title=host.alias() or host.name(),
-        links=[
+    if include_links:
+        links = [
             constructors.link_rel(
                 rel="cmk/folder_config",
                 href=constructors.object_href("folder_config", folder_slug(host.folder())),
                 method="get",
                 title="The folder config of the host.",
             ),
-        ]
-        + agent_links,
+        ] + agent_links_hook(host.name())
+    else:
+        links = []
+
+    return constructors.domain_object(
+        domain_type="host_config",
+        identifier=host.id(),
+        title=host.alias() or host.name(),
+        links=links,
         extensions=extensions,
+        include_links=include_links,
     )
 
 

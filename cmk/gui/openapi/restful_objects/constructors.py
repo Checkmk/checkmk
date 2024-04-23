@@ -602,6 +602,7 @@ def domain_object(
     deletable: bool = True,
     links: list[LinkType] | None = None,
     self_link: LinkType | None = None,
+    include_links: bool = True,
 ) -> DomainObject:
     """Renders a domain-object dict structure.
 
@@ -638,6 +639,10 @@ def domain_object(
             (optional) The manually provided self link. If not provided, the self link is
             automatically generated
 
+        include_links:
+            (optional) A flag which governs if the links should be included in the output. Defaults
+            to True.
+
     """
     uri = object_href(domain_type, identifier)
     if extensions is None:
@@ -645,14 +650,16 @@ def domain_object(
     if members is None:
         members = {}
 
-    _links = [self_link if self_link is not None else link_rel("self", uri, method="get")]
+    _links = []
+    if include_links:
+        _links.append(self_link if self_link is not None else link_rel("self", uri, method="get"))
+        if editable:
+            _links.append(link_rel(".../update", uri, method="put"))
+        if deletable:
+            _links.append(link_rel(".../delete", uri, method="delete"))
+        if links:
+            _links.extend(links)
 
-    if editable:
-        _links.append(link_rel(".../update", uri, method="put"))
-    if deletable:
-        _links.append(link_rel(".../delete", uri, method="delete"))
-    if links:
-        _links.extend(links)
     return {
         "domainType": domain_type,
         "id": identifier,

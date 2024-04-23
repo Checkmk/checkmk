@@ -8,7 +8,7 @@ from __future__ import annotations
 import contextlib
 import dataclasses
 import json
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import NamedTuple, Self
@@ -275,12 +275,19 @@ def test_extension_compatibility(
         return
 
     expected = _get_expected_errors(name, site22, extension)
-    _assert_ok_or_broken_anyway(encountered.base_errors, expected.base_errors)
+    _assert_ok_or_broken_anyway(
+        _filter_old_api_deprecation_messages(encountered.base_errors),
+        expected.base_errors,
+    )
     _assert_ok_or_broken_anyway(encountered.gui_errors, expected.gui_errors)
 
 
 def _assert_ok_or_broken_anyway(actual: object, expected: object) -> None:
     assert not actual or expected
+
+
+def _filter_old_api_deprecation_messages(unfiltered: Iterable[str]) -> Collection[str]:
+    return {s for s in unfiltered if not s.endswith(" -- this API is deprecated!\n")}
 
 
 def _download_extension(url: str) -> bytes:

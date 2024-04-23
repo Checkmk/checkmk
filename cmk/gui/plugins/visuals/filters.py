@@ -1119,7 +1119,7 @@ class MultipleSitesFilter(SiteFilter):
 
 filter_registry.register(
     MultipleSitesFilter(
-        title=_l("Multiple Sites"),
+        title=_l("Multiple sites"),
         sort_index=502,
         query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
         description=_l("Associative selection of multiple sites"),
@@ -2083,6 +2083,7 @@ class _BIFrozenAggregations(Filter):
 
 
 filter_registry.register(_BIFrozenAggregations())
+
 
 # how is either "regex" or "exact"
 class BITextFilter(Filter):

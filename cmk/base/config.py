@@ -1429,8 +1429,8 @@ def load_checks(
             sane_check_info[k] = v
             continue
         ignored_plugins_errors.append(
-            f"Ignoring outdated plug-in {k!r} from file {legacy_check_plugin_files[str(k)]!r}: "
-            "Format no longer supported -- this API is deprecated!\n"
+            f"Ignoring outdated plug-in {k!r}: Format no longer supported"
+            " -- this API is deprecated!\n"
         )
 
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in sane_check_info})

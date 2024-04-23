@@ -8,7 +8,7 @@ import logging
 import os
 import shutil
 import subprocess
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
 from stat import filemode

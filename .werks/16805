@@ -1,0 +1,12 @@
+Title: mkp-tool: CLIs 'package' command
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1713873479
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+
+The <code>mkp package &lt;manifest&gt;</code> command would fail with "File conflict: /omd/sites/mydevsite/local/... (already existing)" if called in a site context.
+
+Additionally, we no longer write the mkp-tools version into the "version.min_required" field of the manifest template.

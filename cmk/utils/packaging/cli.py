@@ -399,6 +399,26 @@ def _command_package(args: argparse.Namespace, path_config: PathConfig) -> int:
     installer = Installer(paths.installed_packages_dir)
     try:
         manifest = store.store(create_mkp_object(package, path_config))
+
+        _logger.info("Removing packaged files before reinstalling...")
+        # remove the files, so that we can "properly" install the package.
+        # Installing calls hooks and fixes permissions, we want that.
+        for part, files in package.files.items():
+            for fn in files:
+                path = path_config.get_path(part) / fn
+                try:
+                    path.unlink(missing_ok=True)
+                except OSError as e:
+                    _logger.info(
+                        "[%s %s]: Error removing file %s: %s",
+                        package.name,
+                        package.version,
+                        path,
+                        e,
+                    )
+                else:
+                    _logger.info("[%s %s]: Removed file %s", package.name, package.version, path)
+
         install(installer, store, manifest.id, path_config)
     except PackageException as exc:
         sys.stderr.write(f"{exc}\n")

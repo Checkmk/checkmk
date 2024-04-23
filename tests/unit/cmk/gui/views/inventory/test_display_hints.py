@@ -93,14 +93,14 @@ def test_related_display_hints() -> None:
         ignored_keys = set(_IGNORED_KEYS_BY_PATH.get(path, []))
         return (
             set(related_raw_hints.for_table.get("keyorder", [])) - ignored_keys
-            == set(related_raw_hints.by_columns) - ignored_keys
+            == set(related_raw_hints.by_column) - ignored_keys
         )
 
     def _check_attributes_key_order(path: SDPath, related_raw_hints: _RelatedRawHints) -> bool:
         ignored_keys = set(_IGNORED_KEYS_BY_PATH.get(path, []))
         return (
             set(related_raw_hints.for_node.get("keyorder", [])) - ignored_keys
-            == set(related_raw_hints.by_attributes) - ignored_keys
+            == set(related_raw_hints.by_key) - ignored_keys
         )
 
     assert all(

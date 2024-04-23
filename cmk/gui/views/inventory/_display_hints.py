@@ -264,7 +264,7 @@ class TableDisplayHint:
         path: SDPath,
         raw_hint: InventoryHintSpec,
         key_order: Sequence[str],
-        by_columns: dict[str, InventoryHintSpec],
+        by_column: dict[str, InventoryHintSpec],
     ) -> TableDisplayHint:
         title = _make_title_function(raw_hint)(path[-1] if path else "")
         view_name = "" if "*" in path else _parse_view_name(raw_hint.get("view"))
@@ -281,7 +281,7 @@ class TableDisplayHint:
                         view_name,
                         path,
                         key,
-                        by_columns.get(key, {}),
+                        by_column.get(key, {}),
                     )
                     for key in key_order
                 }
@@ -401,8 +401,8 @@ class _RelatedRawHints:
     for_table: InventoryHintSpec = field(
         default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
     )
-    by_columns: dict[str, InventoryHintSpec] = field(default_factory=dict)
-    by_attributes: dict[str, InventoryHintSpec] = field(default_factory=dict)
+    by_column: dict[str, InventoryHintSpec] = field(default_factory=dict)
+    by_key: dict[str, InventoryHintSpec] = field(default_factory=dict)
 
 
 def _get_related_raw_hints(
@@ -422,14 +422,14 @@ def _get_related_raw_hints(
 
         if inventory_path.source == inventory.TreeSource.table:
             if inventory_path.key:
-                related_raw_hints.by_columns.setdefault(inventory_path.key, raw_hint)
+                related_raw_hints.by_column.setdefault(inventory_path.key, raw_hint)
                 continue
 
             related_raw_hints.for_table.update(raw_hint)
             continue
 
         if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:
-            related_raw_hints.by_attributes.setdefault(inventory_path.key, raw_hint)
+            related_raw_hints.by_key.setdefault(inventory_path.key, raw_hint)
             continue
 
     return related_raw_hints_by_path
@@ -497,7 +497,7 @@ class DisplayHints:
         )
 
     @classmethod
-    def default(cls, path: SDPath) -> DisplayHints:
+    def from_path(cls, path: SDPath) -> DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {}),
@@ -519,11 +519,11 @@ class DisplayHints:
 
             table_keys = _complete_key_order(
                 related_raw_hints.for_table.get("keyorder", []),
-                set(related_raw_hints.by_columns),
+                set(related_raw_hints.by_column),
             )
             attributes_keys = _complete_key_order(
                 related_raw_hints.for_node.get("keyorder", []),
-                set(related_raw_hints.by_attributes),
+                set(related_raw_hints.by_key),
             )
 
             self._get_parent(path).nodes.setdefault(
@@ -540,7 +540,7 @@ class DisplayHints:
                         path,
                         node_or_table_hints,
                         table_keys,
-                        related_raw_hints.by_columns,
+                        related_raw_hints.by_column,
                     ),
                     attributes_hint=AttributesDisplayHint(
                         OrderedDict(
@@ -548,7 +548,7 @@ class DisplayHints:
                                 key: AttributeDisplayHint.from_raw(
                                     path,
                                     key,
-                                    related_raw_hints.by_attributes.get(key, {}),
+                                    related_raw_hints.by_key.get(key, {}),
                                 )
                                 for key in attributes_keys
                             }
@@ -563,7 +563,7 @@ class DisplayHints:
             if node_name in node.nodes:
                 node = node.nodes[node_name]
             else:
-                node = node.nodes.setdefault(node_name, DisplayHints.default(path))
+                node = node.nodes.setdefault(node_name, DisplayHints.from_path(path))
 
         return node
 
@@ -586,7 +586,7 @@ class DisplayHints:
         )
 
     def get_node_hints(self, name: SDNodeName) -> DisplayHints:
-        return self.nodes.get(name, DisplayHints.default(self.abc_path))
+        return self.nodes.get(name, DisplayHints.from_path(self.abc_path))
 
     def get_tree_hints(self, path: SDPath) -> DisplayHints:
         node = self
@@ -598,7 +598,7 @@ class DisplayHints:
                 node = node.nodes["*"]
 
             else:
-                return DisplayHints.default(path)
+                return DisplayHints.from_path(path)
 
         return node
 

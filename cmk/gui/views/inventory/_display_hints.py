@@ -120,52 +120,6 @@ class NodeDisplayHint:
         )
 
 
-def _parse_view_name(view_name: str | None) -> str:
-    if not view_name:
-        return ""
-    if not view_name.startswith("inv"):
-        view_name = f"inv{view_name}"
-    if view_name.endswith("_of_host"):
-        view_name = view_name[:-8]
-    return view_name
-
-
-@dataclass(frozen=True)
-class TableDisplayHint:
-    title: str
-    _long_title_function: Callable[[], str]
-    icon: str
-    key_order: Sequence[str]
-    is_show_more: bool
-    view_name: str
-
-    @classmethod
-    def from_raw(
-        cls,
-        path: SDPath,
-        raw_hint: InventoryHintSpec,
-        key_order: Sequence[str],
-    ) -> TableDisplayHint:
-        title = _make_title_function(raw_hint)(path[-1] if path else "")
-        return cls(
-            title=title,
-            _long_title_function=_make_long_title_function(title, path[:-1]),
-            icon=raw_hint.get("icon", ""),
-            key_order=key_order,
-            is_show_more=raw_hint.get("is_show_more", True),
-            # See DYNAMIC-PATHS
-            view_name="" if "*" in path else _parse_view_name(raw_hint.get("view")),
-        )
-
-    @property
-    def long_title(self) -> str:
-        return self._long_title_function()
-
-    @property
-    def long_inventory_title(self) -> str:
-        return _("Inventory table: %s") % self.long_title
-
-
 def _parse_column_display_hint_filter_class(
     filter_class: (
         None
@@ -283,6 +237,64 @@ class ColumnDisplayHint:
             ident=self.ident,
             title=self.long_title,
         )
+
+
+def _parse_view_name(view_name: str | None) -> str:
+    if not view_name:
+        return ""
+    if not view_name.startswith("inv"):
+        view_name = f"inv{view_name}"
+    if view_name.endswith("_of_host"):
+        view_name = view_name[:-8]
+    return view_name
+
+
+@dataclass(frozen=True)
+class TableDisplayHint:
+    title: str
+    _long_title_function: Callable[[], str]
+    icon: str
+    is_show_more: bool
+    view_name: str
+    by_column: OrderedDict[str, ColumnDisplayHint]
+
+    @classmethod
+    def from_raw(
+        cls,
+        path: SDPath,
+        raw_hint: InventoryHintSpec,
+        key_order: Sequence[str],
+        by_columns: dict[str, InventoryHintSpec],
+    ) -> TableDisplayHint:
+        title = _make_title_function(raw_hint)(path[-1] if path else "")
+        view_name = "" if "*" in path else _parse_view_name(raw_hint.get("view"))
+        return cls(
+            title=title,
+            _long_title_function=_make_long_title_function(title, path[:-1]),
+            icon=raw_hint.get("icon", ""),
+            is_show_more=raw_hint.get("is_show_more", True),
+            # See DYNAMIC-PATHS
+            view_name=view_name,
+            by_column=OrderedDict(
+                {
+                    key: ColumnDisplayHint.from_raw(
+                        view_name,
+                        path,
+                        key,
+                        by_columns.get(key, {}),
+                    )
+                    for key in key_order
+                }
+            ),
+        )
+
+    @property
+    def long_title(self) -> str:
+        return self._long_title_function()
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _("Inventory table: %s") % self.long_title
 
 
 @dataclass(frozen=True)
@@ -461,7 +473,6 @@ class DisplayHints:
         path: SDPath,
         node_hint: NodeDisplayHint,
         table_hint: TableDisplayHint,
-        column_hints: OrderedDict[str, ColumnDisplayHint],
         attributes_hint: AttributesDisplayHint,
     ) -> None:
         # This inventory path is an 'abc' path because it's the general, abstract path of a display
@@ -471,7 +482,6 @@ class DisplayHints:
         self.abc_path = path
         self.node_hint = node_hint
         self.table_hint = table_hint
-        self.column_hints = column_hints
         self.attributes_hint = attributes_hint
 
         self.nodes: dict[str, DisplayHints] = {}
@@ -482,8 +492,7 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}),
-            table_hint=TableDisplayHint.from_raw(path, {}, []),
-            column_hints=OrderedDict(),
+            table_hint=TableDisplayHint.from_raw(path, {}, [], OrderedDict()),
             attributes_hint=AttributesDisplayHint(OrderedDict()),
         )
 
@@ -492,8 +501,7 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {}),
-            table_hint=TableDisplayHint.from_raw(path, {}, []),
-            column_hints=OrderedDict(),
+            table_hint=TableDisplayHint.from_raw(path, {}, [], OrderedDict()),
             attributes_hint=AttributesDisplayHint(OrderedDict()),
         )
 
@@ -518,8 +526,6 @@ class DisplayHints:
                 set(related_raw_hints.by_attributes),
             )
 
-            table_hint = TableDisplayHint.from_raw(path, node_or_table_hints, table_keys)
-
             self._get_parent(path).nodes.setdefault(
                 path[-1],
                 DisplayHints(
@@ -530,17 +536,11 @@ class DisplayHints:
                     # - nodes with attributes, eg. ".hardware.cpu." or
                     # - nodes with a table, eg. ".software.packages:"
                     node_hint=NodeDisplayHint.from_raw(path, node_or_table_hints),
-                    table_hint=table_hint,
-                    column_hints=OrderedDict(
-                        {
-                            key: ColumnDisplayHint.from_raw(
-                                table_hint.view_name,
-                                path,
-                                key,
-                                related_raw_hints.by_columns.get(key, {}),
-                            )
-                            for key in table_keys
-                        }
+                    table_hint=TableDisplayHint.from_raw(
+                        path,
+                        node_or_table_hints,
+                        table_keys,
+                        related_raw_hints.by_columns,
                     ),
                     attributes_hint=AttributesDisplayHint(
                         OrderedDict(
@@ -581,7 +581,9 @@ class DisplayHints:
         )
 
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
-        return self.column_hints.get(key, ColumnDisplayHint.from_raw("", self.abc_path, key, {}))
+        return self.table_hint.by_column.get(
+            key, ColumnDisplayHint.from_raw("", self.abc_path, key, {})
+        )
 
     def get_node_hints(self, name: SDNodeName) -> DisplayHints:
         return self.nodes.get(name, DisplayHints.default(self.abc_path))

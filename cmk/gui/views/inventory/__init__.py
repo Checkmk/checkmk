@@ -72,6 +72,7 @@ from ._display_hints import (
     DISPLAY_HINTS,
     DisplayHints,
     PAINT_FUNCTION_NAME_PREFIX,
+    TableDisplayHint,
 )
 from ._tree_renderer import (
     ajax_inv_render_tree,
@@ -89,8 +90,8 @@ from .registry import (
 
 __all__ = [
     "DISPLAY_HINTS",
-    "DisplayHints",
     "InventoryHintSpec",
+    "TableDisplayHint",
 ]
 
 
@@ -659,7 +660,7 @@ def _register_table_view(hints: DisplayHints) -> None:
 
     painters: list[ColumnSpec] = []
     filters = []
-    for col_hint in hints.column_hints.values():
+    for col_hint in hints.table_hint.by_column.values():
         # Declare a painter, sorter and filters for each path with display hint
         _register_table_column(col_hint)
         painters.append(ColumnSpec(col_hint.ident))

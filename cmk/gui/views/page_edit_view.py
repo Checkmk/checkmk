@@ -60,7 +60,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.views.inventory import DISPLAY_HINTS, DisplayHints
+from cmk.gui.views.inventory import DISPLAY_HINTS, TableDisplayHint
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 
@@ -181,16 +181,6 @@ def view_inventory_join_macros(ds_name: str) -> Dictionary:
                 ),
             )
 
-    column_choices: list[tuple[str, str]] = []
-    for hints in DISPLAY_HINTS:
-        if hints.table_hint.view_name == ds_name:
-            column_choices.extend(
-                _get_inventory_column_infos(
-                    hints=hints,
-                    table_view_name=hints.table_hint.view_name,
-                )
-            )
-
     return Dictionary(
         title=_("Macros for joining service data or inventory tables"),
         render="form",
@@ -203,7 +193,12 @@ def view_inventory_join_macros(ds_name: str) -> Dictionary:
                         elements=[
                             DropdownChoice(
                                 title=_("Use value from"),
-                                choices=column_choices,
+                                choices=[
+                                    col_info
+                                    for hints in DISPLAY_HINTS
+                                    if hints.table_hint.view_name == ds_name
+                                    for col_info in _get_inventory_column_infos(hints.table_hint)
+                                ],
                             ),
                             TextInput(
                                 title=_("as macro named"),
@@ -407,7 +402,7 @@ class InventoryColumnInfo(NamedTuple):
 
 def _get_inventory_column_infos_by_table(
     ds_name: str,
-) -> Iterator[tuple[InventoryTableInfo, list[InventoryColumnInfo]]]:
+) -> Iterator[tuple[InventoryTableInfo, Sequence[InventoryColumnInfo]]]:
     for hints in DISPLAY_HINTS:
         if hints.table_hint.view_name in ("", ds_name):
             # No view, no choices; Also skip in case of same data source:
@@ -420,23 +415,18 @@ def _get_inventory_column_infos_by_table(
                 path=hints.abc_path,
                 title=hints.node_hint.long_title,
             ),
-            _get_inventory_column_infos(
-                hints=hints,
-                table_view_name=hints.table_hint.view_name,
-            ),
+            _get_inventory_column_infos(hints.table_hint),
         )
 
 
-def _get_inventory_column_infos(
-    *, hints: DisplayHints, table_view_name: str
-) -> list[InventoryColumnInfo]:
+def _get_inventory_column_infos(hint: TableDisplayHint) -> Sequence[InventoryColumnInfo]:
     return [
         InventoryColumnInfo(
             column_name=column_name,
             title=str(column_hint.title),
         )
-        for column_name, column_hint in hints.column_hints.items()
-        if painter_registry.get(f"{table_view_name}_{column_name}")
+        for column_name, column_hint in hint.by_column.items()
+        if painter_registry.get(f"{hint.view_name}_{column_name}")
     ]
 
 

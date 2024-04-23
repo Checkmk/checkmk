@@ -360,7 +360,7 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns = _make_columns(table.rows, [SDKey(k) for k in hints.table_hint.key_order])
+        columns = _make_columns(table.rows, [SDKey(k) for k in hints.table_hint.by_column])
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
         if isinstance(table, ImmutableTable):
             sorted_rows = _sort_rows(table, columns)

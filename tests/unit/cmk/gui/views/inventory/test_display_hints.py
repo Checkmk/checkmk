@@ -162,9 +162,9 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="",
                 _long_title_function=lambda: "",
                 icon="",
-                key_order=[],
                 is_show_more=True,
                 view_name="",
+                by_column=OrderedDict(),
             ),
         ),
         (
@@ -181,9 +181,9 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Hardware",
                 _long_title_function=lambda: "Hardware",
                 icon="hardware",
-                key_order=[],
                 is_show_more=True,
                 view_name="",
+                by_column=OrderedDict(),
             ),
         ),
         (
@@ -224,9 +224,9 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Processor",
                 _long_title_function=lambda: "Hardware ➤ Processor",
                 icon="",
-                key_order=[],
                 is_show_more=True,
                 view_name="",
+                by_column=OrderedDict(),
             ),
         ),
         (
@@ -248,17 +248,20 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Docker images",
                 _long_title_function=lambda: "Docker ➤ Docker images",
                 icon="",
-                key_order=[
-                    "id",
-                    "creation",
-                    "size",
-                    "labels",
-                    "amount_containers",
-                    "repotags",
-                    "repodigests",
-                ],
                 is_show_more=False,
                 view_name="invdockerimages",
+                # The single column hints are not checked here
+                by_column=OrderedDict(
+                    id=ColumnDisplayHint.from_raw("", tuple(), "id", {}),
+                    creation=ColumnDisplayHint.from_raw("", tuple(), "creation", {}),
+                    size=ColumnDisplayHint.from_raw("", tuple(), "size", {}),
+                    labels=ColumnDisplayHint.from_raw("", tuple(), "labels", {}),
+                    amount_containers=ColumnDisplayHint.from_raw(
+                        "", tuple(), "amount_containers", {}
+                    ),
+                    repotags=ColumnDisplayHint.from_raw("", tuple(), "repotags", {}),
+                    repodigests=ColumnDisplayHint.from_raw("", tuple(), "repodigests", {}),
+                ),
             ),
         ),
         (
@@ -275,9 +278,9 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Node",
                 _long_title_function=lambda: "To ➤ Node",
                 icon="",
-                key_order=[],
                 is_show_more=True,
                 view_name="",
+                by_column=OrderedDict(),
             ),
         ),
     ],
@@ -302,9 +305,9 @@ def test_make_node_displayhint(
     assert hints.table_hint.long_title == expected_table_hint.long_title
     assert hints.table_hint.long_inventory_title == expected_table_hint.long_inventory_title
     assert hints.table_hint.icon == expected_table_hint.icon
-    assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
     assert hints.table_hint.view_name == expected_table_hint.view_name
+    assert list(hints.table_hint.by_column) == list(expected_table_hint.by_column)
 
 
 @pytest.mark.parametrize(
@@ -324,9 +327,9 @@ def test_make_node_displayhint(
                 title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
                 icon="",
-                key_order=[],
                 is_show_more=True,
                 view_name="",
+                by_column=OrderedDict(),
             ),
         ),
         (
@@ -343,9 +346,9 @@ def test_make_node_displayhint(
                 title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
                 icon="",
-                key_order=[],
                 is_show_more=True,
                 view_name="",
+                by_column=OrderedDict(),
             ),
         ),
         (
@@ -362,9 +365,9 @@ def test_make_node_displayhint(
                 title="Software",
                 _long_title_function=lambda: "Software",
                 icon="software",
-                key_order=[],
                 is_show_more=True,
                 view_name="",
+                by_column=OrderedDict(),
             ),
         ),
         (
@@ -386,9 +389,17 @@ def test_make_node_displayhint(
                 title="Docker containers",
                 _long_title_function=lambda: "Docker ➤ Docker containers",
                 icon="",
-                key_order=["id", "creation", "name", "labels", "status", "image"],
                 is_show_more=False,
                 view_name="invdockercontainers",
+                # The single column hints are not checked here
+                by_column=OrderedDict(
+                    id=ColumnDisplayHint.from_raw("", tuple(), "id", {}),
+                    creation=ColumnDisplayHint.from_raw("", tuple(), "creation", {}),
+                    name=ColumnDisplayHint.from_raw("", tuple(), "name", {}),
+                    labels=ColumnDisplayHint.from_raw("", tuple(), "labels", {}),
+                    status=ColumnDisplayHint.from_raw("", tuple(), "status", {}),
+                    image=ColumnDisplayHint.from_raw("", tuple(), "image", {}),
+                ),
             ),
         ),
     ],
@@ -413,9 +424,9 @@ def test_make_node_displayhint_from_hint(
     assert hints.table_hint.long_title == expected_table_hint.long_title
     assert hints.table_hint.long_inventory_title == expected_table_hint.long_inventory_title
     assert hints.table_hint.icon == expected_table_hint.icon
-    assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
     assert hints.table_hint.view_name == expected_table_hint.view_name
+    assert list(hints.table_hint.by_column) == list(expected_table_hint.by_column)
 
 
 @pytest.mark.parametrize(

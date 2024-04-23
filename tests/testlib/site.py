@@ -813,17 +813,21 @@ class Site:
 
     def _enable_gui_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/multisite.d")
+        # 10: debug
+        # 15: verbose
+        # 20: informational
+        # 30: warning (default)
         self.write_text_file(
             "etc/check_mk/multisite.d/logging.mk",
             "log_levels = %r\n"
             % {
-                "cmk.web": 10,
-                "cmk.web.ldap": 10,
-                "cmk.web.saml2": 10,
-                "cmk.web.auth": 10,
-                "cmk.web.bi.compilation": 10,
-                "cmk.web.automations": 10,
-                "cmk.web.background-job": 10,
+                "cmk.web": 15,
+                "cmk.web.ldap": 15,
+                "cmk.web.saml2": 15,
+                "cmk.web.auth": 15,
+                "cmk.web.bi.compilation": 15,
+                "cmk.web.automations": 15,
+                "cmk.web.background-job": 15,
             },
         )
 

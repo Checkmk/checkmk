@@ -6292,9 +6292,14 @@ class Dictionary(ValueSpec[DictionaryModel]):
         s = HTML()
         for param, vs in elem:
             if param in value:
-                title = vs.title() if vs.title() else vs.label()
+                if vs.title():
+                    title = "%s:&nbsp;" % vs.title()
+                elif vs.label():
+                    title = "%s:&nbsp;" % vs.label()
+                else:
+                    title = "&nbsp;"
                 s += HTMLWriter.render_tr(
-                    HTMLWriter.render_td("%s:&nbsp;" % title, class_="title")
+                    HTMLWriter.render_td(title, class_="title")
                     + HTMLWriter.render_td(vs.value_to_html(value[param]))
                 )
         return HTMLWriter.render_table(s)

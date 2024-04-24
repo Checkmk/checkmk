@@ -28,7 +28,7 @@ import uuid
 from collections.abc import Mapping, Sequence
 from functools import cache, partial
 from pathlib import Path
-from typing import Any, Callable, cast, Literal, overload
+from typing import Any, Callable, cast, Literal, overload, TypeAlias
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -83,7 +83,8 @@ import cmk.base.utils
 try:
     import cmk.base.cee.keepalive as keepalive
 except ImportError:
-    keepalive = None  # type: ignore[assignment]
+    # Edition layering...
+    keepalive: TypeAlias = None  # type: ignore[no-redef]
 
 from cmk.utils.hostaddress import HostName
 

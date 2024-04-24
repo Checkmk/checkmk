@@ -5822,12 +5822,11 @@ class Tuple(ValueSpec[TT]):
             elif self._orientation == "float":
                 html.write_text(self._separator)
 
+            title = ""
             if self._show_titles:
                 elem_title = element.title()
                 if elem_title:
                     title = elem_title[0].upper() + elem_title[1:]
-                else:
-                    title = ""
                 if self._orientation == "vertical":
                     html.open_td(class_="tuple_left")
                     if title:

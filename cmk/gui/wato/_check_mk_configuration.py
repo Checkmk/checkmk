@@ -338,8 +338,8 @@ class ConfigVariableEnableCommunityTranslations(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Enable community translated languages (not supported)"),
-            label=_("Enable community translated languages"),
+            title=_("Community translated languages (not supported)"),
+            label=_("Community translated languages"),
             help=_(
                 'Show/Hide community translated languages in the "Language" dropdown (User > Edit '
                 "profile). Note that these translations are contributed by the Checkmk community "
@@ -689,8 +689,8 @@ class ConfigVariableEnableSounds(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Enable sounds in views"),
-            label=_("enable sounds"),
+            title=_("Sounds in views"),
+            label=_("Sounds"),
             help=_(
                 "If sounds are enabled then the user will be alarmed by problems shown "
                 "in a Multisite status view if that view has been configured for sounds. "
@@ -1314,7 +1314,7 @@ class EnableLoginViaGet(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Enable login via GET requests"),
+            title=_("Login via GET requests"),
             help=_(
                 "Using the GET method to authenticate against login.py leaks user credentials "
                 "in the Apache logs (see more details in our Werk 14261). We disable logging  "
@@ -1338,7 +1338,7 @@ class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Enable automation user authentication via HTTP parameters"),
+            title=_("Automation user authentication via HTTP parameters"),
             help=_(
                 "In previous Checkmk versions it was possible to use an automation user to display "
                 "specific pages within Checkmk. To authenticate these requests it was possible to "

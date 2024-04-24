@@ -50,9 +50,12 @@ class HTTPSConfigurableConnection(HTTPSConnection):
 
     def __init__(self, host: str, ca_file: str | None = None) -> None:
         self.__ca_file = ca_file
-        context = ssl.create_default_context(cafile=self.__ca_file)
+        context = ssl.create_default_context(
+            cafile=None if ca_file == HTTPSConfigurableConnection.IGNORE else ca_file
+        )
         if self.__ca_file:
             if self.__ca_file == HTTPSConfigurableConnection.IGNORE:
+                context.check_hostname = False
                 context.verify_mode = ssl.CERT_NONE
             else:
                 context.verify_mode = ssl.CERT_REQUIRED

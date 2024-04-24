@@ -7,6 +7,7 @@ from __future__ import annotations
 import ast
 import glob
 import inspect
+import json
 import logging
 import os
 import shutil
@@ -21,6 +22,7 @@ from pprint import pformat
 from typing import Final, Literal
 
 import pytest
+import pytest_check  # type: ignore[import-untyped]
 
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
@@ -938,6 +940,8 @@ class Site:
             )
             self.save_results()
 
+            self.report_crashes()
+
             pytest.exit(
                 "Site was not running completely while it should be! Enforcing stop.\n\n"
                 f"Output of omd status:\n{omd_status_output}\n\n"
@@ -1144,6 +1148,23 @@ class Site:
             # Rename files to get better handling by the browser when opening a crash file
             for crash_info in self.crash_archive_dir.glob("**/crash.info"):
                 crash_info.rename(crash_info.parent / (crash_info.stem + ".json"))
+
+    def report_crashes(self):
+        crash_dirs = [
+            self.crash_report_dir / crash_type / crash_id
+            for crash_type in self.listdir(self.crash_report_dir)
+            for crash_id in self.listdir(self.crash_report_dir / crash_type)
+        ]
+        for crash_dir in crash_dirs:
+            crash_file = crash_dir / "crash.info"
+            if not os.path.exists(crash_file):
+                pytest_check.fail(f"Crash report detected!\nSee {crash_dir} for more details.")
+                continue
+            crash = json.loads(self.read_file(crash_file))
+            pytest_check.fail(
+                f"""Crash report detected! {crash.get('exc_type')}: {crash.get('exc_value')}.
+                See {crash_file} for more details."""
+            )
 
     def result_dir(self) -> Path:
         return Path(os.environ.get("RESULT_PATH", self.path("results"))) / self.id
@@ -1666,6 +1687,7 @@ class SiteFactory:
                 # teardown: saving results and removing site
                 if save_results:
                     site.save_results()
+                site.report_crashes()
                 if auto_cleanup and cleanup_site:
                     logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
                     site.rm()
@@ -1710,6 +1732,12 @@ class SiteFactory:
         for _site_id, site in sorted(self._sites.items(), key=lambda x: x[0]):
             logger.info("Saving results of site %s", site.id)
             site.save_results()
+
+    def report_crashes(self) -> None:
+        logger.info("Reporting crashes")
+        for _site_id, site in sorted(self._sites.items(), key=lambda x: x[0]):
+            logger.info("Reporting crashes of site %s", site.id)
+            site.report_crashes()
 
     def cleanup(self) -> None:
         logger.info("Removing sites")

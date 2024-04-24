@@ -446,7 +446,7 @@ class TreeRenderer:
         if tree.table:
             self._show_table(tree.table, hints.table_hint, request_)
 
-        for name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
+        for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node, hints.get_node_hint(name), request_)
+                self._show_node(node, DISPLAY_HINTS.get_tree_hints(node.path).node_hint, request_)

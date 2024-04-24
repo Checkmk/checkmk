@@ -10,7 +10,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal
 
-from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
+from cmk.utils.structured_data import SDKey, SDPath
 
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _, _l
@@ -577,13 +577,6 @@ class DisplayHints:
         yield self
         for node_name, node in self.nodes.items():
             yield from node.make_inventory_paths_or_hints(path + [node_name])
-
-    def get_node_hint(self, node_name: SDNodeName) -> NodeDisplayHint:
-        if node_name in self.nodes:
-            return self.nodes[node_name].node_hint
-        if "*" in self.nodes:
-            return self.nodes["*"].node_hint
-        return NodeDisplayHint.from_raw(self.abc_path, {})
 
     def get_tree_hints(self, path: SDPath) -> DisplayHints:
         if not path:

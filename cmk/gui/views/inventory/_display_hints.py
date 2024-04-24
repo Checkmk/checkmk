@@ -602,15 +602,5 @@ class DisplayHints:
 
         return node
 
-    def replace_placeholders(self, path: SDPath) -> str:
-        if "%d" not in self.node_hint.title and "%s" not in self.node_hint.title:
-            return self.node_hint.title
-
-        title = self.node_hint.title.replace("%d", "%s")
-        node_names = tuple(
-            path[idx] for idx, node_name in enumerate(self.abc_path) if node_name == "*"
-        )
-        return title % node_names[-title.count("%s") :]
-
 
 DISPLAY_HINTS = DisplayHints.root()

@@ -22,6 +22,7 @@ from cmk.utils.structured_data import (
     RetentionInterval,
     SDDeltaValue,
     SDKey,
+    SDPath,
     SDRowIdent,
     SDValue,
 )
@@ -291,6 +292,14 @@ def ajax_inv_render_tree() -> None:
     TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(tree, request)
 
 
+def _replace_title_placeholders(title: str, abc_path: SDPath, path: SDPath) -> str:
+    if "%d" not in title and "%s" not in title:
+        return title
+    title = title.replace("%d", "%s")
+    node_names = tuple(path[idx] for idx, node_name in enumerate(abc_path) if node_name == "*")
+    return title % node_names[-title.count("%s") :]
+
+
 class TreeRenderer:
     def __init__(
         self,
@@ -403,7 +412,7 @@ class TreeRenderer:
             id_=raw_path,
             isopen=False,
             title=self._get_header(
-                hints.replace_placeholders(node.path),
+                _replace_title_placeholders(hints.node_hint.title, hints.abc_path, node.path),
                 ".".join(map(str, node.path)),
                 hints.node_hint.icon,
             ),

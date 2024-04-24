@@ -15,9 +15,11 @@ from cmk.utils.structured_data import (
     RetentionInterval,
     SDDeltaValue,
     SDKey,
+    SDPath,
 )
 
 from cmk.gui.views.inventory._tree_renderer import (
+    _replace_title_placeholders,
     _SDDeltaItem,
     _sort_delta_pairs,
     _sort_delta_rows,
@@ -203,3 +205,26 @@ def test_sort_delta_attributes_pairs_displayhint(
         _sort_delta_pairs(delta_attributes, [SDKey("a"), SDKey("b"), SDKey("d"), SDKey("c")])
         == expected
     )
+
+
+@pytest.mark.parametrize(
+    "title, abc_path, path, expected_title",
+    [
+        (
+            "Datacenter %d",
+            ("software", "applications", "vmwareesx", "*"),
+            ("software", "applications", "vmwareesx", "1"),
+            "Datacenter 1",
+        ),
+        (
+            "Cluster %d",
+            ("software", "applications", "vmwareesx", "*", "clusters", "*"),
+            ("software", "applications", "vmwareesx", "1", "clusters", "2"),
+            "Cluster 2",
+        ),
+    ],
+)
+def test__replace_title_placeholders(
+    title: str, abc_path: SDPath, path: SDPath, expected_title: str
+) -> None:
+    assert _replace_title_placeholders(title, abc_path, path) == expected_title

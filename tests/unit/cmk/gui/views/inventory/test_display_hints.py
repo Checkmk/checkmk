@@ -717,25 +717,6 @@ def test_make_attribute_displayhint_from_hint(
 
 
 @pytest.mark.parametrize(
-    "abc_path, path, expected_title",
-    [
-        (
-            ("software", "applications", "vmwareesx", "*"),
-            ("software", "applications", "vmwareesx", "1"),
-            "Datacenter 1",
-        ),
-        (
-            ("software", "applications", "vmwareesx", "*", "clusters", "*"),
-            ("software", "applications", "vmwareesx", "1", "clusters", "2"),
-            "Cluster 2",
-        ),
-    ],
-)
-def test_replace_placeholder(abc_path: SDPath, path: SDPath, expected_title: str) -> None:
-    assert DISPLAY_HINTS.get_tree_hints(abc_path).replace_placeholders(path) == expected_title
-
-
-@pytest.mark.parametrize(
     "view_name, expected_view_name",
     [
         (None, ""),

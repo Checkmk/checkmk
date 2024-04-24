@@ -24,13 +24,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-ibm_svc_enclosurestats.power"] = perfometer_power_simple
-    perfometers["check_mk-sentry_pdu"] = perfometer_power_simple
-    perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
-    perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port
-    perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
-    perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
-    perfometers["check_mk-cisco_qos"] = perfometer_check_mk_cisco_qos
     perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
     perfometers["check_mk-oracle_dataguard_stats"] = perfometer_check_oracle_dataguard_stats
     perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
@@ -133,20 +126,6 @@ def number_human_readable(n: float, precision: int = 1, unit: str = "B") -> str:
     return (f + "%s") % (n, unit)
 
 
-def perfometer_power_simple(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    watt = int(perf_data[0].value)
-    text = "%s Watt" % watt
-    return text, perfometer_logarithmic(watt, 150, 2, "#60f020")
-
-
-def perfometer_users(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
-    color = "#39f"
-    value = float(perf_data[0].value)
-    return "%d users" % int(value), perfometer_logarithmic(value, 50, 2, color)
-
-
 def perfometer_blower(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
     rpm = int(perf_data[0].value)
     return "%d RPM" % rpm, perfometer_logarithmic(rpm, 2000, 1.5, "#88c")
@@ -188,43 +167,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_check_mk_fc_port(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    unit = "B"
-    return perfometer_bandwidth(
-        in_traffic=utils.savefloat(perf_data[0].value),
-        out_traffic=utils.savefloat(perf_data[1].value),
-        in_bw=utils.savefloat(perf_data[0].max),
-        out_bw=utils.savefloat(perf_data[1].max),
-        unit=unit,
-    )
-
-
-def perfometer_check_mk_brocade_fcport(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    return perfometer_bandwidth(
-        in_traffic=utils.savefloat(perf_data[0].value),
-        out_traffic=utils.savefloat(perf_data[1].value),
-        in_bw=utils.savefloat(perf_data[0].value),
-        out_bw=utils.savefloat(perf_data[1].max),
-    )
-
-
-def perfometer_check_mk_cisco_qos(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    unit = "Bit" if "Bit/s" in row["service_plugin_output"] else "B"
-    return perfometer_bandwidth(
-        in_traffic=utils.savefloat(perf_data[0].value),
-        out_traffic=utils.savefloat(perf_data[1].value),
-        in_bw=utils.savefloat(perf_data[0].warn),
-        out_bw=utils.savefloat(perf_data[1].warn),
-        unit=unit,
-    )
 
 
 def perfometer_oracle_tablespaces(

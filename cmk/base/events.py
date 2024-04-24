@@ -301,21 +301,21 @@ def complete_raw_context(  # pylint: disable=too-many-branches
     try:
         enriched_context["OMD_SITE"] = omd_site()
 
-        enriched_context["WHAT"] = "SERVICE" if raw_context.get("SERVICEDESC") else "HOST"
+        enriched_context["WHAT"] = "SERVICE" if enriched_context.get("SERVICEDESC") else "HOST"
 
         enriched_context.setdefault("MONITORING_HOST", socket.gethostname())
         enriched_context.setdefault("OMD_ROOT", str(cmk.utils.paths.omd_root))
 
         # The Checkmk Micro Core sends the MICROTIME and no other time stamps. We add
         # a few Nagios-like variants in order to be compatible
-        if "MICROTIME" in raw_context:
-            microtime = int(raw_context["MICROTIME"])
+        if "MICROTIME" in enriched_context:
+            microtime = int(enriched_context["MICROTIME"])
             timestamp = float(microtime) / 1000000.0
             broken = time.localtime(timestamp)
             enriched_context["DATE"] = time.strftime("%Y-%m-%d", broken)
             enriched_context["SHORTDATETIME"] = time.strftime("%Y-%m-%d %H:%M:%S", broken)
             enriched_context["LONGDATETIME"] = time.strftime("%a %b %d %H:%M:%S %Z %Y", broken)
-        elif "MICROTIME" not in raw_context:
+        elif "MICROTIME" not in enriched_context:
             # In case the microtime is not provided, e.g. when using Nagios, then set it here
             # from the current time. We could look for "LONGDATETIME" and calculate the timestamp
             # from that one, but we try to keep this simple here.
@@ -325,42 +325,42 @@ def complete_raw_context(  # pylint: disable=too-many-branches
             urlencode(
                 [
                     ("view_name", "hoststatus"),
-                    ("host", raw_context["HOSTNAME"]),
+                    ("host", enriched_context["HOSTNAME"]),
                     ("site", enriched_context["OMD_SITE"]),
                 ]
             )
         )
-        if raw_context["WHAT"] == "SERVICE":
+        if enriched_context["WHAT"] == "SERVICE":
             enriched_context["SERVICEURL"] = "/check_mk/index.py?start_url=view.py?%s" % quote(
                 urlencode(
                     [
                         ("view_name", "service"),
-                        ("host", raw_context["HOSTNAME"]),
-                        ("service", raw_context["SERVICEDESC"]),
+                        ("host", enriched_context["HOSTNAME"]),
+                        ("service", enriched_context["SERVICEDESC"]),
                         ("site", enriched_context["OMD_SITE"]),
                     ]
                 )
             )
 
         # Relative Timestamps for several macros
-        if (value := raw_context.get("LASTHOSTSTATECHANGE")) is not None:
+        if (value := enriched_context.get("LASTHOSTSTATECHANGE")) is not None:
             enriched_context["LASTHOSTSTATECHANGE_REL"] = get_readable_rel_date(value)
-        if (value := raw_context.get("LASTSERVICESTATECHANGE")) is not None:
+        if (value := enriched_context.get("LASTSERVICESTATECHANGE")) is not None:
             enriched_context["LASTSERVICESTATECHANGE_REL"] = get_readable_rel_date(value)
-        if (value := raw_context.get("LASTHOSTUP")) is not None:
+        if (value := enriched_context.get("LASTHOSTUP")) is not None:
             enriched_context["LASTHOSTUP_REL"] = get_readable_rel_date(value)
-        if (value := raw_context.get("LASTSERVICEOK")) is not None:
+        if (value := enriched_context.get("LASTSERVICEOK")) is not None:
             enriched_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
 
         add_rulebased_macros(enriched_context, contacts_needed)
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)
-        if raw_context.get("HOSTNOTIFICATIONNUMBER") == "0":
+        if enriched_context.get("HOSTNOTIFICATIONNUMBER") == "0":
             if with_dump:
                 logger.info("Setting HOSTNOTIFICATIONNUMBER for notification from '0' to '1'")
             enriched_context["HOSTNOTIFICATIONNUMBER"] = "1"
-        if raw_context.get("SERVICENOTIFICATIONNUMBER") == "0":
+        if enriched_context.get("SERVICENOTIFICATIONNUMBER") == "0":
             if with_dump:
                 logger.info("Setting SERVICENOTIFICATIONNUMBER for notification from '0' to '1'")
             enriched_context["SERVICENOTIFICATIONNUMBER"] = "1"
@@ -368,15 +368,15 @@ def complete_raw_context(  # pylint: disable=too-many-branches
         # Add the previous hard state. This is necessary for notification rules that depend on certain transitions,
         # like OK -> WARN (but not CRIT -> WARN). The CMC sends PREVIOUSHOSTHARDSTATE and PREVIOUSSERVICEHARDSTATE.
         # Nagios does not have this information and we try to deduct this.
-        if "PREVIOUSHOSTHARDSTATE" not in raw_context and "LASTHOSTSTATE" in raw_context:
-            prev_state = raw_context["LASTHOSTSTATE"]
+        if "PREVIOUSHOSTHARDSTATE" not in enriched_context and "LASTHOSTSTATE" in enriched_context:
+            prev_state = enriched_context["LASTHOSTSTATE"]
             # When the attempts are > 1 then the last state could be identical with
             # the current one, e.g. both critical. In that case we assume the
             # previous hard state to be OK.
-            if prev_state == raw_context["HOSTSTATE"]:
+            if prev_state == enriched_context["HOSTSTATE"]:
                 prev_state = "UP"
-            elif "HOSTATTEMPT" not in raw_context or (
-                "HOSTATTEMPT" in raw_context and raw_context["HOSTATTEMPT"] != "1"
+            elif "HOSTATTEMPT" not in enriched_context or (
+                "HOSTATTEMPT" in enriched_context and enriched_context["HOSTATTEMPT"] != "1"
             ):
                 # Here We do not know. The transition might be OK -> WARN -> CRIT and
                 # the initial OK is completely lost. We use the artificial state "?"
@@ -384,18 +384,21 @@ def complete_raw_context(  # pylint: disable=too-many-branches
                 # notification is being sent out. But when the new state is UP, then
                 # we know that the previous state was a hard state (otherwise there
                 # would not have been any notification)
-                if raw_context["HOSTSTATE"] != "UP":
+                if enriched_context["HOSTSTATE"] != "UP":
                     prev_state = "?"
                 logger.info("Previous host hard state not known. Allowing all states.")
             enriched_context["PREVIOUSHOSTHARDSTATE"] = prev_state
 
         # Same for services
-        if raw_context["WHAT"] == "SERVICE" and "PREVIOUSSERVICEHARDSTATE" not in raw_context:
-            prev_state = raw_context["LASTSERVICESTATE"]
-            if prev_state == raw_context["SERVICESTATE"]:
+        if (
+            enriched_context["WHAT"] == "SERVICE"
+            and "PREVIOUSSERVICEHARDSTATE" not in enriched_context
+        ):
+            prev_state = enriched_context["LASTSERVICESTATE"]
+            if prev_state == enriched_context["SERVICESTATE"]:
                 prev_state = "OK"
-            elif "SERVICEATTEMPT" not in raw_context or (
-                "SERVICEATTEMPT" in raw_context and raw_context["SERVICEATTEMPT"] != "1"
+            elif "SERVICEATTEMPT" not in enriched_context or (
+                "SERVICEATTEMPT" in enriched_context and enriched_context["SERVICEATTEMPT"] != "1"
             ):
                 if raw_context["SERVICESTATE"] != "OK":
                     prev_state = "?"
@@ -403,17 +406,17 @@ def complete_raw_context(  # pylint: disable=too-many-branches
             enriched_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
 
         # Add short variants for state names (at most 4 characters)
-        for ctx_key, ctx_value in list(raw_context.items()):
+        for ctx_key, ctx_value in list(enriched_context.items()):
             assert isinstance(ctx_value, str)
             if ctx_key.endswith("STATE"):
                 # dynamical keys are bad...
                 enriched_context[ctx_key[:-5] + "SHORTSTATE"] = ctx_value[:4]  # type: ignore[literal-required]
 
-        if raw_context["WHAT"] == "SERVICE":
-            enriched_context["SERVICEFORURL"] = quote(raw_context["SERVICEDESC"])
-        enriched_context["HOSTFORURL"] = quote(raw_context["HOSTNAME"])
+        if enriched_context["WHAT"] == "SERVICE":
+            enriched_context["SERVICEFORURL"] = quote(enriched_context["SERVICEDESC"])
+        enriched_context["HOSTFORURL"] = quote(enriched_context["HOSTNAME"])
 
-        _update_raw_context_with_labels(enriched_context)
+        _update_enriched_context_with_labels(enriched_context)
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
@@ -433,7 +436,7 @@ def complete_raw_context(  # pylint: disable=too-many-branches
     return enriched_context
 
 
-def _update_raw_context_with_labels(enriched_context: EnrichedEventContext) -> None:
+def _update_enriched_context_with_labels(enriched_context: EnrichedEventContext) -> None:
     labels = read_notify_host_file(enriched_context["HOSTNAME"])
     for k, v in labels.host_labels.items():
         # Dynamically added keys...

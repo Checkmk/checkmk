@@ -11,7 +11,7 @@ from cmk.utils.notify_types import EnrichedEventContext, EventContext
 import cmk.base.events
 from cmk.base.core_config import CollectedHostLabels
 from cmk.base.events import (
-    _update_raw_context_with_labels,
+    _update_enriched_context_with_labels,
     add_to_event_context,
     raw_context_from_string,
 )
@@ -277,7 +277,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
         ),
     ],
 )
-def test_update_raw_contect_with_labels(
+def test_update_enriched_contect_with_labels(
     enriched_context: EnrichedEventContext,
     labels: CollectedHostLabels,
     expected: EventContext,
@@ -288,5 +288,5 @@ def test_update_raw_contect_with_labels(
         "read_notify_host_file",
         lambda host_name: labels,
     )
-    _update_raw_context_with_labels(enriched_context)
+    _update_enriched_context_with_labels(enriched_context)
     assert enriched_context == expected

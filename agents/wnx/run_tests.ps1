@@ -386,8 +386,8 @@ catch {
     Write-Host "Trace stack: " -ForegroundColor Yellow
     Write-Host $_.ScriptStackTrace -ForegroundColor Yellow
 }
-finally {
-    Write-Host "Exit code: " $result
+if ($result -eq 0) {
+    Write-Host "SUCCESS" -ForegroundColor Green
 }
 exit $result
 

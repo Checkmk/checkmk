@@ -506,12 +506,19 @@ def makedirs(path: str, sudo: bool = True, substitute_user: str | None = None) -
 
 
 def restart_httpd() -> None:
-    """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
-    creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
-    e.g. the controller from querying the agent receiver port.
+    """Restart Apache manually on RHEL-based containers.
 
-    Note: the mere presence of httpd is not enough to determine whether we have to restart or not,
-    see e.g. sles-15sp4.
+    On RHEL-based containers, such as CentOS and AlmaLinux, the system Apache is not running.
+    OMD will not start Apache, if it is not running already.
+
+    If a distro uses an `INIT_CMD`, which is not available inside of docker, then the system
+    Apache won't be restarted either. For example, sles uses `systemctl restart apache2.service`.
+    However, the docker container does not use systemd as in init process. Thus, this fails in the
+    test environment, but not a real distribution.
+
+    Before using this in your test, try an Apache reload instead. It is much more likely to work
+    accross different distributions. If your test needs a system Apache, then run this command at
+    the beginning of the test. This ensures consistency accross distributions.
     """
 
     # When executed locally and un-dockerized, DISTRO may not be set

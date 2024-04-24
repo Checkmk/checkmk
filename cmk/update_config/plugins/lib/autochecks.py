@@ -74,6 +74,9 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms = {
     ),
     CheckPluginName("apc_inrow_airflow"): (lambda p: {}),
     CheckPluginName("apc_netbotz_sensors_humidity"): (lambda p: {}),
+    CheckPluginName("apc_powerswitch"): (
+        lambda p: p if isinstance(p, dict) else {"discovered_status": p}
+    ),
     CheckPluginName("arc_raid_status"): (lambda p: p if isinstance(p, dict) else {"n_disks": p}),
     CheckPluginName("arris_cmts_cpu"): (lambda p: {}),
     CheckPluginName("aws_ec2_security_groups"): (

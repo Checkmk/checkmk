@@ -158,6 +158,7 @@ _ALL_EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: TDiscoveredParametersTransforms 
 class RewriteError:
     message: str
     host_name: HostName
+    plugin: CheckPluginName | None = None
 
 
 def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
@@ -176,7 +177,7 @@ def _get_fixed_autochecks(
     except Exception as exc:
         if debug.enabled():
             raise
-        yield RewriteError(f"Failed to load autochecks: {exc}", host_name)
+        yield RewriteError(message=f"Failed to load autochecks: {exc}", host_name=host_name)
         return []
 
     fixed_autochecks: list[AutocheckEntry] = []
@@ -186,7 +187,9 @@ def _get_fixed_autochecks(
         except Exception as exc:
             if debug.enabled():
                 raise
-            yield RewriteError(str(exc), host_name)
+            yield RewriteError(
+                message=str(exc), host_name=host_name, plugin=entry.check_plugin_name
+            )
 
     return fixed_autochecks
 

@@ -8,12 +8,11 @@
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 from typing import assert_never, Final
 
-from cmk.utils import password_store
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -129,6 +128,7 @@ class _Builder:
         ca_store: Path,
         site_crt: Path,
         password_store_file: Path,
+        passwords: Mapping[str, str],
     ) -> None:
         super().__init__()
         assert not is_cluster
@@ -153,6 +153,7 @@ class _Builder:
         self.ca_store: Final = ca_store
         self.site_crt: Final = site_crt
         self.password_store_file: Final = password_store_file
+        self.passwords: Final = passwords
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
@@ -184,8 +185,7 @@ class _Builder:
             for agentname, agent_data in self.config_cache.special_agent_command_lines(
                 self.host_name,
                 self.ipaddress,
-                # TODO: consolidate these two
-                password_store.load(self.password_store_file),
+                self.passwords,
                 password_store_file=self.password_store_file,
             ):
                 yield SpecialAgentSource(
@@ -411,6 +411,7 @@ def make_sources(
     ca_store: Path,
     site_crt: Path,
     password_store_file: Path,
+    passwords: Mapping[str, str],
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if is_cluster:
@@ -455,4 +456,5 @@ def make_sources(
         ca_store=ca_store,
         site_crt=site_crt,
         password_store_file=password_store_file,
+        passwords=passwords,
     ).sources

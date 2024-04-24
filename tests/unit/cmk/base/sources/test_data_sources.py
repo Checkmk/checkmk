@@ -122,5 +122,6 @@ def test_host_config_creates_passing_source_sources(
             ca_store=tmp_path,
             site_crt=tmp_path,
             password_store_file=Path("/pw/store"),
+            passwords={},
         )
     ] == sources

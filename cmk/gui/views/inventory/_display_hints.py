@@ -582,20 +582,18 @@ class DisplayHints:
         )
 
     def get_tree_hints(self, path: SDPath) -> DisplayHints:
-        node = self
-        for node_name in path:
-            if node_name in node.nodes:
-                node = node.nodes[node_name]
-            elif "*" in node.nodes:
-                node = node.nodes["*"]
-            else:
-                return DisplayHints(
-                    path=path,
-                    node_hint=NodeDisplayHint.from_raw(path, {}),
-                    table_hint=TableDisplayHint.from_raw(path, {}, [], OrderedDict()),
-                    attributes_hint=AttributesDisplayHint(OrderedDict()),
-                )
-        return node
+        if not path:
+            return self
+        if (node_name := path[0]) in self.nodes:
+            return self.nodes[node_name].get_tree_hints(path[1:])
+        if "*" in self.nodes:
+            return self.nodes["*"].get_tree_hints(path[1:])
+        return DisplayHints(
+            path=path,
+            node_hint=NodeDisplayHint.from_raw(path, {}),
+            table_hint=TableDisplayHint.from_raw(path, {}, [], OrderedDict()),
+            attributes_hint=AttributesDisplayHint(OrderedDict()),
+        )
 
 
 DISPLAY_HINTS = DisplayHints.root()

@@ -266,6 +266,7 @@ def list_activations(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("activation_run", "pending_changes"),
     "cmk/pending-activation-changes",
     method="get",
+    etag="output",
     permissions_required=RO_PERMISSIONS,
     response_schema=PendingChangesCollection,
 )

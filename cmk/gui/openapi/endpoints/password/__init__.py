@@ -142,6 +142,7 @@ def delete_password(params: Mapping[str, Any]) -> Response:
     constructors.object_href("password", "{name}"),
     "cmk/show",
     method="get",
+    etag="output",
     path_params=[NAME_ID_FIELD],
     response_schema=PasswordObject,
     permissions_required=PERMISSIONS,

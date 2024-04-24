@@ -4243,6 +4243,10 @@ class CEEConfigCache(ConfigCache):
 
         return self.__rtc_secret.setdefault(host_name, _impl())
 
+    @staticmethod
+    def cmc_real_time_checks() -> object:
+        return cmc_real_time_checks
+
     def agent_config(self, host_name: HostName, default: Mapping[str, Any]) -> Mapping[str, Any]:
         def _impl() -> Mapping[str, Any]:
             return {

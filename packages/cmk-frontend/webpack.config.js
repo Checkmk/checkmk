@@ -6,7 +6,7 @@ const path = require("path");
 const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
 const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
-const CopyPlugin = require("copy-webpack-plugin");
+const FileManagerPlugin = require("filemanager-webpack-plugin");
 
 class WarningsToErrors {
     apply(compiler) {
@@ -130,18 +130,34 @@ module.exports = {
         new RemoveEmptyScriptsPlugin(),
         new webpack.EnvironmentPlugin(["ENTERPRISE"]),
         new WarningsToErrors(),
-        new CopyPlugin({
-            patterns: [
-                {from: "src/images", to: "images"},
-                {from: "src/openapi", to: "openapi", globOptions: {ignore: ["**/.f12"]}},
-                {from: "src/jquery", to: "jquery"},
-                {from: "src/css", to: "css"},
-                {from: "src/sounds", to: "sounds"},
-                {from: "src/themes/facelift/images", to: "themes/facelift/images"},
-                {from: "src/themes/facelift/theme.json", to: "themes/facelift/theme.json"},
-                {from: "src/themes/modern-dark/images", to: "themes/modern-dark/images"},
-                {from: "src/themes/modern-dark/theme.json", to: "themes/modern-dark/theme.json"},
-            ],
+        new FileManagerPlugin({
+            events: {
+                onEnd: {
+                    copy: [
+                        {source: "src/images", destination: "dist/images"},
+                        {source: "src/openapi", destination: "dist/openapi"},
+                        {source: "src/jquery", destination: "dist/jquery"},
+                        {source: "src/css", destination: "dist/css"},
+                        {source: "src/sounds", destination: "dist/sounds"},
+                        {
+                            source: "src/themes/facelift/images",
+                            destination: "dist/themes/facelift/images",
+                        },
+                        {
+                            source: "src/themes/facelift/theme.json",
+                            destination: "dist/themes/facelift/theme.json",
+                        },
+                        {
+                            source: "src/themes/modern-dark/images",
+                            destination: "dist/themes/modern-dark/images",
+                        },
+                        {
+                            source: "src/themes/modern-dark/theme.json",
+                            destination: "dist/themes/modern-dark/theme.json",
+                        },
+                    ],
+                },
+            },
         }),
     ],
 };

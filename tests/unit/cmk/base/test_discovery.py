@@ -253,14 +253,7 @@ def test__group_by_transition(
         # https://review.lan.tribe29.com/c/check_mk/+/67447
         # grep for '67447' to find the other 5 places in this test
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {},
             ["New Item 1", "New Item 2"],
             (2, 0, 2),
@@ -307,14 +300,7 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["New Item 1", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
@@ -361,14 +347,7 @@ def test__group_by_transition(
         ),
         # TODO 67447
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {"service_blacklist": ["^Test Description New Item 1"]},
             ["New Item 2"],
             (1, 0, 2),
@@ -420,14 +399,7 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -481,14 +453,7 @@ def test__group_by_transition(
         ),
         # TODO 67447
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {"service_whitelist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 2"],
             (0, 1, 1),
@@ -535,14 +500,7 @@ def test__group_by_transition(
         ),
         # TODO 67447
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {"service_blacklist": ["^Test Description Vanished Item 1"]},
             ["New Item 1", "New Item 2", "Vanished Item 1"],
             (2, 1, 1),
@@ -595,14 +553,7 @@ def test__group_by_transition(
         ),
         # TODO 67447
         (
-            (
-                "update_everything",
-                {
-                    "add_new_services": True,
-                    "remove_vanished_services": True,
-                    "update_host_labels": True,
-                },
-            ),
+            ("update_everything", None),
             {
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
@@ -730,14 +681,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -795,14 +739,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -863,14 +800,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -930,14 +860,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -995,14 +918,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -1063,14 +979,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": (
-                        "update_everything",
-                        {
-                            "add_new_services": True,
-                            "remove_vanished_services": True,
-                            "update_host_labels": True,
-                        },
-                    ),
+                    "mode": ("update_everything", None),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }

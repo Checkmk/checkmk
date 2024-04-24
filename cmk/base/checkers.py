@@ -22,6 +22,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
+from cmk.utils import password_store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import unwrap_parameters, wrap_parameters
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
@@ -319,6 +320,7 @@ class CMKFetcher:
                     ),
                     snmp_backend_override=self.snmp_backend_override,
                     password_store_file=self.password_store_file,
+                    passwords=password_store.load(self.password_store_file),
                 )
                 for current_host_name, current_ip_address in hosts
             ),

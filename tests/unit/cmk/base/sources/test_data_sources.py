@@ -113,5 +113,6 @@ def test_host_config_creates_passing_source_sources(
             file_cache_max_age=MaxAge.zero(),
             snmp_backend_override=None,
             password_store_file=Path("/pw/store"),
+            passwords={},
         )
     ] == sources

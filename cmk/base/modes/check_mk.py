@@ -545,6 +545,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         output = []
         # Show errors of problematic data sources
         has_errors = False
+        pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
         for source in sources.make_sources(
             hostname,
             ipaddress,
@@ -559,7 +560,8 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 inventory=1.5 * check_interval,
             ),
             snmp_backend_override=snmp_backend_override,
-            password_store_file=cmk.utils.password_store.pending_password_store_path(),
+            password_store_file=pending_passwords_file,
+            passwords=cmk.utils.password_store.load(pending_passwords_file),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:

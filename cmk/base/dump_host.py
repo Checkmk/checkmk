@@ -179,6 +179,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         + "\n"
     )
 
+    used_password_store = cmk.utils.password_store.pending_password_store_path()
     agenttypes = [
         dump_source(source)
         for source in sources.make_sources(
@@ -191,7 +192,8 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             simulation_mode=config.simulation_mode,
             file_cache_max_age=MaxAge.zero(),
             snmp_backend_override=None,
-            password_store_file=cmk.utils.password_store.pending_password_store_path(),
+            password_store_file=used_password_store,
+            passwords=cmk.utils.password_store.load(used_password_store),
         )
     ]
 

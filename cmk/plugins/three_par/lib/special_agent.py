@@ -15,7 +15,29 @@ import urllib3
 
 import cmk.utils.password_store
 
-VALID_VALUES = ["system", "cpgs", "volumes", "hosts", "capacity", "ports", "remotecopy"]
+from cmk.rulesets.v1 import Title
+
+DEFAULT_VALUES = {
+    "system": Title("System: Storage Array Configuration"),
+    "cpgs": Title("Common Provisioning Groups: Virtual Pool Configuration"),
+    "volumes": Title("Volumes: Virtual Volume Summary"),
+    "hosts": Title("Hosts: Host Capacity & Utilization"),
+    "capacity": Title("Capacity: Array Capacity & Utilization"),
+    "ports": Title("Ports: Port Utilization (FC and iSCSI)"),
+    "remotecopy": Title("RemoteCopy: Remote Copy Configuration"),
+}
+
+
+VALID_VALUES = {
+    **DEFAULT_VALUES,
+    "hostsets": Title("HostSets: Host Set Configuration"),
+    "volumesets": Title("VolumeSets: Volume Set Configuration"),
+    "vluns": Title("VLUNs: Virtual LUN Configuration"),
+    "flashcache": Title("FlashCache: Flash Cache Configuration"),
+    "users": Title("Users: User Management"),
+    "roles": Title("Roles: Role Management"),
+    "qos": Title("QoS: Quality of Service Configuration"),
+}
 
 
 def _get_values_list(opt_string):
@@ -39,10 +61,9 @@ def parse_arguments(argv):
     parser.add_argument(
         "-v",
         "--values",
+        required=True,
         type=_get_values_list,
-        default=VALID_VALUES,
-        help="Comma seperated list of values to fetch from 3par system. Choose from: %r"
-        % VALID_VALUES,
+        help=f"Comma seperated list of values to fetch from 3par system. Choose from: {', '.join(VALID_VALUES)}",
     )
     parser.add_argument("host", help="Host name or IP address of 3par system")
     args = parser.parse_args(argv)

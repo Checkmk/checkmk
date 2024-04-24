@@ -58,7 +58,7 @@ def main() {
                 try {
                     /* groovylint-disable LineLength */
                     sh(script: """
-                        (cd packages/cmk-frontend && ./run setup)
+                        (cd packages/cmk-frontend && ./run --setup-environment)
                         echo '<!DOCTYPE html><html lang="en"><head><title>werks</title></head><body>' > validate-werks.html
                         # still no need for jq!
                         python3 -c 'import json; print("\\n".join(("\\n\\n<p>{}</p>\\n{}".format(key, value["description"]) for key, value in json.load(open("all_werks.json")).items())))' >> validate-werks.html

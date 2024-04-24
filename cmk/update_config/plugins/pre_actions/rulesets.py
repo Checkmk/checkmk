@@ -65,6 +65,11 @@ def _validate_rule_values(
         # * the rule validation with the replaced ruleset will happen after the replacing anyway again
         # see cmk.update_config.plugins.actions.rulesets._validate_rule_values
         *{ruleset for ruleset in REPLACED_RULESETS if ruleset.startswith("static_checks:")},
+        # Validating the ignored checks ruleset does not make sense:
+        # Invalid choices are the plugins that don't exist (anymore).
+        # These do no harm, they are dropped upon rule edit. On the other hand, the plugin
+        # could be missing only temporarily, so better not remove it.
+        "ignored_checks",
     }
 
     for ruleset in all_rulesets.get_rulesets().values():

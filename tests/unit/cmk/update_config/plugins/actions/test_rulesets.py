@@ -11,7 +11,6 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.type_defs import CheckPluginName
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.watolib.timeperiods as timeperiods
@@ -186,56 +185,6 @@ def test_transform_replaced_wato_rulesets_and_params(
     rule = rules[0]
     assert len(rule) == 3
     assert rule[2].value == transformed_param_value
-
-
-@pytest.mark.usefixtures("request_context")
-def test_remove_removed_check_plugins_from_ignored_checks() -> None:
-    ruleset = Ruleset("ignored_checks", {})
-    ruleset.replace_folder_config(
-        Folder(""),
-        [
-            {
-                "id": "1",
-                "condition": {},
-                "options": {"disabled": False},
-                "value": ["a", "b", "mgmt_c"],
-            },
-            {
-                "id": "2",
-                "condition": {},
-                "options": {"disabled": False},
-                "value": ["d", "e"],
-            },
-            {
-                "id": "3",
-                "condition": {},
-                "options": {"disabled": False},
-                "value": ["mgmt_f"],
-            },
-            {
-                "id": "4",
-                "condition": {},
-                "options": {"disabled": False},
-                "value": ["a", "g"],
-            },
-        ],
-    )
-    rulesets = RulesetCollection({"ignored_checks": ruleset})
-    rulesets_updater._remove_removed_check_plugins_from_ignored_checks(
-        rulesets,
-        {
-            CheckPluginName("b"),
-            CheckPluginName("d"),
-            CheckPluginName("e"),
-            CheckPluginName("f"),
-        },
-    )
-    leftover_rules = [rule for (_folder, idx, rule) in rulesets.get("ignored_checks").get_rules()]
-    assert len(leftover_rules) == 2
-    assert leftover_rules[0].id == "1"
-    assert leftover_rules[1].id == "4"
-    assert leftover_rules[0].value == ["a", "mgmt_c"]
-    assert leftover_rules[1].value == ["a", "g"]
 
 
 @pytest.mark.parametrize(

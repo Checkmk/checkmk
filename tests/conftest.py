@@ -9,10 +9,26 @@
 import logging
 import os
 import shutil
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+import pytest_check  # type: ignore[import-untyped]
 from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
+
+
+@pytest.fixture(scope="function", autouse=True)
+def fail_on_log_exception(
+    caplog: pytest.LogCaptureFixture, pytestconfig: pytest.Config
+) -> Iterator[None]:
+    """Fail tests if exceptions are logged. Function scoped due to caplog fixture."""
+    yield
+    if not pytestconfig.getoption("--fail-on-log-exception"):
+        return
+    for record in caplog.get_records("call"):
+        if record.levelno >= logging.ERROR and record.exc_info:
+            pytest_check.fail(record.message)
+
 
 if os.getenv("_PYTEST_RAISE", "0") != "0":
     # This allows exceptions to be handled by IDEs (rather than just printing the results)
@@ -83,6 +99,12 @@ def pytest_addoption(parser):
         metavar="TYPE",
         default="unit",
         help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types),
+    )
+    parser.addoption(
+        "--fail-on-log-exception",
+        action="store_true",
+        default=False,
+        help="Fail test run if any exception was logged.",
     )
 
 

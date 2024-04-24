@@ -398,43 +398,111 @@ def _form_active_checks_cert() -> Dictionary:
     )
 
 
+SIGNATURE_CHOICES = {
+    # The algorithms commented out are defined upstream
+    # https://github.com/pyca/cryptography/blob/main/src/cryptography/hazmat/_oid.py
+    # but give "Unknown OID" for name.
+    "RSA_WITH_MD5": SignatureAlgorithmOID.RSA_WITH_MD5,
+    "RSA_WITH_SHA1": SignatureAlgorithmOID.RSA_WITH_SHA1,
+    # "RSA_WITH_SHA1_alt": SignatureAlgorithmOID._RSA_WITH_SHA1,
+    "RSA_WITH_SHA224": SignatureAlgorithmOID.RSA_WITH_SHA224,
+    "RSA_WITH_SHA256": SignatureAlgorithmOID.RSA_WITH_SHA256,
+    "RSA_WITH_SHA384": SignatureAlgorithmOID.RSA_WITH_SHA384,
+    "RSA_WITH_SHA512": SignatureAlgorithmOID.RSA_WITH_SHA512,
+    # "RSA_WITH_SHA3_224": SignatureAlgorithmOID.RSA_WITH_SHA3_224,
+    # "RSA_WITH_SHA3_256": SignatureAlgorithmOID.RSA_WITH_SHA3_256,
+    # "RSA_WITH_SHA3_384": SignatureAlgorithmOID.RSA_WITH_SHA3_384,
+    # "RSA_WITH_SHA3_512": SignatureAlgorithmOID.RSA_WITH_SHA3_512,
+    "RSASSA_PSS": SignatureAlgorithmOID.RSASSA_PSS,
+    "ECDSA_WITH_SHA1": SignatureAlgorithmOID.ECDSA_WITH_SHA1,
+    "ECDSA_WITH_SHA224": SignatureAlgorithmOID.ECDSA_WITH_SHA224,
+    "ECDSA_WITH_SHA256": SignatureAlgorithmOID.ECDSA_WITH_SHA256,
+    "ECDSA_WITH_SHA384": SignatureAlgorithmOID.ECDSA_WITH_SHA384,
+    "ECDSA_WITH_SHA512": SignatureAlgorithmOID.ECDSA_WITH_SHA512,
+    # "ECDSA_WITH_SHA3_224": SignatureAlgorithmOID.ECDSA_WITH_SHA3_224,
+    # "ECDSA_WITH_SHA3_256": SignatureAlgorithmOID.ECDSA_WITH_SHA3_256,
+    # "ECDSA_WITH_SHA3_384": SignatureAlgorithmOID.ECDSA_WITH_SHA3_384,
+    # "ECDSA_WITH_SHA3_512": SignatureAlgorithmOID.ECDSA_WITH_SHA3_512,
+    "DSA_WITH_SHA1": SignatureAlgorithmOID.DSA_WITH_SHA1,
+    "DSA_WITH_SHA224": SignatureAlgorithmOID.DSA_WITH_SHA224,
+    "DSA_WITH_SHA256": SignatureAlgorithmOID.DSA_WITH_SHA256,
+    # "DSA_WITH_SHA384": SignatureAlgorithmOID.DSA_WITH_SHA384,
+    # "DSA_WITH_SHA512": SignatureAlgorithmOID.DSA_WITH_SHA512,
+    "ED25519": SignatureAlgorithmOID.ED25519,
+    "ED448": SignatureAlgorithmOID.ED448,
+}
+
+
+def migrate_from_old_signature_keys(value: object) -> tuple[str, object]:
+
+    keys_old_reference = {
+        "rsa": {
+            "sha224": "RSA_WITH_SHA224",
+            "sha256": "RSA_WITH_SHA256",
+            "sha384": "RSA_WITH_SHA384",
+            "sha512": "RSA_WITH_SHA512",
+            "sha3_224": "RSA_WITH_SHA224",
+            "sha3_256": "RSA_WITH_SHA256",
+            "sha3_384": "RSA_WITH_SHA384",
+            "sha3_512": "RSA_WITH_SHA512",
+        },
+        "ecdsa": {
+            "sha224": "ECDSA_WITH_SHA224",
+            "sha256": "ECDSA_WITH_SHA256",
+            "sha384": "ECDSA_WITH_SHA384",
+            "sha512": "ECDSA_WITH_SHA512",
+            "sha3_224": "ECDSA_WITH_SHA224",
+            "sha3_256": "ECDSA_WITH_SHA256",
+            "sha3_384": "ECDSA_WITH_SHA384",
+            "sha3_512": "ECDSA_WITH_SHA512",
+        },
+        "rsassa_pss": {
+            "sha224": "RSASSA_PSS",
+            "sha256": "RSASSA_PSS",
+            "sha384": "RSASSA_PSS",
+            "sha512": "RSASSA_PSS",
+            "sha3_224": "RSASSA_PSS",
+            "sha3_256": "RSASSA_PSS",
+            "sha3_384": "RSASSA_PSS",
+            "sha3_512": "RSASSA_PSS",
+        },
+        "dsa": {
+            "sha224": "DSA_WITH_SHA224",
+            "sha256": "DSA_WITH_SHA256",
+            "sha384": "DSA_WITH_SHA256",
+            "sha512": "DSA_WITH_SHA256",
+            "sha3_224": "DSA_WITH_SHA224",
+            "sha3_256": "DSA_WITH_SHA256",
+            "sha3_384": "DSA_WITH_SHA256",
+            "sha3_512": "DSA_WITH_SHA256",
+        },
+    }
+
+    match value:
+        case (str(cert), None):
+            if cert != "ed25519":
+                raise ValueError(
+                    f"Invalid signature algorithm value {value} for Check certificates migrate."
+                )
+            return "ED25519", SIGNATURE_CHOICES["ED25519"].dotted_string
+        case (str(cert), (str(key), str(_val))):
+            new_key = keys_old_reference.get(cert, {}).get(key)
+            if not new_key:
+                raise ValueError(
+                    f"Invalid signature algorithm value {value} for Check certificates migrate."
+                )
+            return new_key, SIGNATURE_CHOICES[new_key].dotted_string
+
+        case (str(cert), str(oid)):
+            return cert, oid
+
+    raise ValueError(f"Invalid signature algorithm value {value} for Check certificates migrate.")
+
+
 def _signature_algorithm_choice() -> CascadingSingleChoice:
     def fmt(sa: ObjectIdentifier) -> Title:
         return Title(f"{sa._name} ({sa.dotted_string})")  # pylint: disable=protected-access
 
-    choices = (
-        # The algorithms commented out are defined upstream
-        # https://github.com/pyca/cryptography/blob/main/src/cryptography/hazmat/_oid.py
-        # but give "Unknown OID" for name.
-        ("RSA_WITH_MD5", SignatureAlgorithmOID.RSA_WITH_MD5),
-        ("RSA_WITH_SHA1", SignatureAlgorithmOID.RSA_WITH_SHA1),
-        # ("RSA_WITH_SHA1_alt", SignatureAlgorithmOID._RSA_WITH_SHA1),
-        ("RSA_WITH_SHA224", SignatureAlgorithmOID.RSA_WITH_SHA224),
-        ("RSA_WITH_SHA256", SignatureAlgorithmOID.RSA_WITH_SHA256),
-        ("RSA_WITH_SHA384", SignatureAlgorithmOID.RSA_WITH_SHA384),
-        ("RSA_WITH_SHA512", SignatureAlgorithmOID.RSA_WITH_SHA512),
-        # ("RSA_WITH_SHA3_224", SignatureAlgorithmOID.RSA_WITH_SHA3_224),
-        # ("RSA_WITH_SHA3_256", SignatureAlgorithmOID.RSA_WITH_SHA3_256),
-        # ("RSA_WITH_SHA3_384", SignatureAlgorithmOID.RSA_WITH_SHA3_384),
-        # ("RSA_WITH_SHA3_512", SignatureAlgorithmOID.RSA_WITH_SHA3_512),
-        ("RSASSA_PSS", SignatureAlgorithmOID.RSASSA_PSS),
-        ("ECDSA_WITH_SHA1", SignatureAlgorithmOID.ECDSA_WITH_SHA1),
-        ("ECDSA_WITH_SHA224", SignatureAlgorithmOID.ECDSA_WITH_SHA224),
-        ("ECDSA_WITH_SHA256", SignatureAlgorithmOID.ECDSA_WITH_SHA256),
-        ("ECDSA_WITH_SHA384", SignatureAlgorithmOID.ECDSA_WITH_SHA384),
-        ("ECDSA_WITH_SHA512", SignatureAlgorithmOID.ECDSA_WITH_SHA512),
-        # ("ECDSA_WITH_SHA3_224", SignatureAlgorithmOID.ECDSA_WITH_SHA3_224),
-        # ("ECDSA_WITH_SHA3_256", SignatureAlgorithmOID.ECDSA_WITH_SHA3_256),
-        # ("ECDSA_WITH_SHA3_384", SignatureAlgorithmOID.ECDSA_WITH_SHA3_384),
-        # ("ECDSA_WITH_SHA3_512", SignatureAlgorithmOID.ECDSA_WITH_SHA3_512),
-        ("DSA_WITH_SHA1", SignatureAlgorithmOID.DSA_WITH_SHA1),
-        ("DSA_WITH_SHA224", SignatureAlgorithmOID.DSA_WITH_SHA224),
-        ("DSA_WITH_SHA256", SignatureAlgorithmOID.DSA_WITH_SHA256),
-        # ("DSA_WITH_SHA384", SignatureAlgorithmOID.DSA_WITH_SHA384),
-        # ("DSA_WITH_SHA512", SignatureAlgorithmOID.DSA_WITH_SHA512),
-        ("ED25519", SignatureAlgorithmOID.ED25519),
-        ("ED448", SignatureAlgorithmOID.ED448),
-    )
     return CascadingSingleChoice(
         title=Title("Certificate signature algorithm"),
         help_text=Help(
@@ -451,9 +519,10 @@ def _signature_algorithm_choice() -> CascadingSingleChoice:
                     title=fmt(sa),
                 ),
             )
-            for key, sa in choices
+            for key, sa in SIGNATURE_CHOICES.items()
         ],
         prefill=DefaultValue("RSA_WITH_SHA256"),
+        migrate=migrate_from_old_signature_keys,
     )
 
 

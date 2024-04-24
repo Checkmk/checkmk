@@ -17,6 +17,7 @@ daily_reduced: &daily_reduced
     - "ubuntu-20.04"
     - "ubuntu-22.04"
     - "debian-10"
+    - "sles-15sp5"
 
 # Max L runs on the latest ubuntu and does not want to reinstall his machine
 daily_saas: &daily_saas

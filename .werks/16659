@@ -1,0 +1,15 @@
+Title: ldap: allow manually updating locked status of users
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1713947851
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+
+When using the "Authentication Expiration" sync plug-in for LDAP, users can be
+stuck in a locked state after too many failed login attempts.
+
+With this werk it is now allowed to edit the "Disable password" option in the UI
+(or "disable_login" in the REST API) for users managed by LDAP. Please note that
+a sync with the LDAP will restore the original value.

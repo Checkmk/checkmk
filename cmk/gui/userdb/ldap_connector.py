@@ -1986,7 +1986,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
         )
 
     def lock_attributes(self, params):
-        return ["locked"]
+        return []
 
     @property
     def multisite_attributes(self) -> list[str]:

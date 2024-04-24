@@ -82,9 +82,6 @@ def test_update(  # pylint: disable=too-many-branches
         # get baseline monitoring data for each host
         base_data[hostname] = test_site.get_host_services(hostname)
         ignore_data = [
-            # "Notification Spooler" results in "No status information, Spooler not running"
-            # See CMK-16760. TODO: restore service after ticket is done.
-            f"OMD {test_site.id} Notification Spooler",
             # Check_MK service turning into CRIT after the update.
             # See CMK-17002. TODO: restore service after ticket is done.
             "Check_MK",

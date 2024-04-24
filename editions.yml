@@ -17,6 +17,7 @@ daily_reduced: &daily_reduced
     - "ubuntu-20.04"
     - "ubuntu-22.04"
     - "debian-10"
+    - "sles-15sp5"
 
 daily_extended: &daily_extended
     - "debian-12"

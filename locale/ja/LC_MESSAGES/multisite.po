@@ -1909,6 +1909,10 @@ msgid ""
 msgstr ""
 
 #, python-format
+msgid "<tt>sqlnet.ora</tt> permission group %s"
+msgstr ""
+
+#, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
 msgstr "<u>注意</u>: ダウンタイムは、%sの全てのサービスにも適用されます。"
 
@@ -3546,9 +3550,6 @@ msgstr "アラートハンドラールールを追加する"
 msgid "Add all detected but not yet monitored services to the monitoring."
 msgstr "検出されたがまだ監視されていないすべてのサービスを監視に追加します。"
 
-msgid "Add all metrics of this graph to"
-msgstr "このグラフのすべてのメトリックをに追加します"
-
 msgid "Add attribute"
 msgstr "属性を追加"
 
@@ -3664,6 +3665,17 @@ msgstr "グラフの追加"
 
 msgid "Add group"
 msgstr "グループを追加"
+
+#, fuzzy
+msgid "Add group or user"
+msgstr "グループを追加"
+
+msgid ""
+"Add here only groups and users which do not have administrator rights but, "
+"for some reason, must have write access to the Oracle binaries. For example, "
+"it may be dedicated installer account in domain.The values are case "
+"insensitive."
+msgstr ""
 
 msgid "Add host"
 msgstr "ホストを追加"
@@ -3990,12 +4002,6 @@ msgstr ""
 "これらのグループを <b>連絡先</b>として <b>このフォルダ内のすべてのホスト</b>"
 "に追加します"
 
-msgid "Add this graph to..."
-msgstr "...にこのグラフを追加します。"
-
-msgid "Add this metric to custom graph..."
-msgstr "このメトリックをカスタムグラフに追加します..."
-
 msgid "Add this metric to dedicated graph"
 msgstr "このメトリックを専用グラフに追加します"
 
@@ -4015,11 +4021,19 @@ msgstr "追加"
 msgid "Add to %s"
 msgstr "%sに追加"
 
+#, fuzzy
+msgid "Add to ..."
+msgstr "追加"
+
 msgid "Add to bookmark list"
 msgstr "ブックマークリストに追加"
 
 msgid "Add to condition"
 msgstr "条件に追加"
+
+#, fuzzy
+msgid "Add to custom graph"
+msgstr "カスタムグラフを編集する"
 
 msgid "Add to dashboard"
 msgstr "ダッシュボードに追加"
@@ -6598,7 +6612,7 @@ msgid "Asynchronous closing connections"
 msgstr "非同期のクローズ接続"
 
 #, fuzzy
-msgid "Asynchronous execution of plug-ins"
+msgid "Asynchronous execution of plug-ins (deprecated)"
 msgstr "プラグインの非同期実行"
 
 msgid "Asynchronous keep alive connections"
@@ -12004,14 +12018,6 @@ msgstr "コミットチャージレベル"
 msgid "Commit limit"
 msgstr "コミット制限"
 
-#, fuzzy
-msgid "Commitable memory"
-msgstr "コミットされたメモリ"
-
-#, fuzzy
-msgid "Commitable memory (averaged)"
-msgstr "仮想メモリの平均化"
-
 msgid "Commits"
 msgstr "コミット"
 
@@ -14735,9 +14741,6 @@ msgstr "DHCP統計(受信メッセージ)"
 
 msgid "DHCP statistics (sent messages)"
 msgstr "DHCP統計(送信メッセージ)"
-
-msgid "DISTRIBUTION"
-msgstr ""
 
 msgid "DISTTAG"
 msgstr "DISTTAG"
@@ -18584,6 +18587,20 @@ msgstr "Dt."
 msgid ""
 "Dual or stacked Perf-O-Meters are not allowed to have 'dual' or 'stacked' "
 "sub Perf-O-Meters"
+msgstr ""
+
+msgid ""
+"Due to security reasons the plugin being executed as admin will check "
+"permissions for Oracle executables. If modification of oracle binaries is "
+"allowed for non-admin users or groups then the plugin stop processing thus "
+"breaking Oracle monitoring: execution of normal user code at elevated level "
+"means security vulnerability.You may <tt>disable</tt> this option if it is "
+"the only method to continue monitoring of Oracle database. Usually you need "
+"to <tt>disable</tt> the option only in the next case: It's impossible to "
+"correctly adjust permissions for Oracle binaries, mode group with group "
+"Administrator is not applicable and it is not possible to use custom account "
+"to monitor Oracle database.Even if check is enabled you may allow some "
+"groups and/or users to still have write access to the Oracle binaries."
 msgstr ""
 
 msgid "Dummy"
@@ -22880,6 +22897,14 @@ msgstr "空きスワップスペース"
 msgid "Free tapes"
 msgstr "フリーのテープ"
 
+#, fuzzy
+msgid "Free virtual memory"
+msgstr "合計仮想メモリ"
+
+#, fuzzy
+msgid "Free virtual memory (averaged)"
+msgstr "仮想メモリの平均化"
+
 msgid "Freeze"
 msgstr "凍結"
 
@@ -23786,6 +23811,12 @@ msgstr "テーブルビューでのサービスのグループ化"
 
 msgid "Groups"
 msgstr "グループ"
+
+msgid "Groups and/or users allowed to have write access to Oracle binaries"
+msgstr ""
+
+msgid "Groups and/or users in format Domain\\Name"
+msgstr ""
 
 msgid "Groups on cluster"
 msgstr "クラスター上のグループ"
@@ -36352,9 +36383,6 @@ msgstr "ホスト/サービスごとに複数のRRD(PNP4Nagiosと互換性があ
 msgid "Multiple Setup Folders"
 msgstr "複数のセットアップフォルダ"
 
-msgid "Multiple Sites"
-msgstr "複数のサイト"
-
 msgid "Multiple graphs"
 msgstr "複数のグラフ"
 
@@ -36363,6 +36391,10 @@ msgstr "複数の正規表現"
 
 msgid "Multiple services"
 msgstr "複数のサービス"
+
+#, fuzzy
+msgid "Multiple sites"
+msgstr "複数のサイト"
 
 msgid "Multiplicative: Seasonality grows with the trend."
 msgstr "乗法:季節性はトレンドとともに成長します。"
@@ -40057,6 +40089,10 @@ msgstr "Oracleテーブルスペース"
 msgid "Oracle Undo Retention"
 msgstr "Oracle Undo Retention"
 
+#, python-format
+msgid "Oracle binaries permissions check %s"
+msgstr ""
+
 msgid "Oracle dataguard statistics"
 msgstr "Oracle dataguardの統計"
 
@@ -41215,18 +41251,6 @@ msgstr "保留中のvBuckets"
 
 msgid "Per Core utilization"
 msgstr "コアあたりの使用率"
-
-#, fuzzy
-msgid ""
-"Per default all plug-ins and local scripts are being run sequentially. You "
-"choose to run all asynchronous plug-ins in parallel. This can cut down the "
-"execution time of the agent in situations where several complex scripts are "
-"being run in the background - at the cost of more CPU usage."
-msgstr ""
-"デフォルトでは、すべてのプラグインとローカルスクリプトは順次実行されます。す"
-"べての非同期プラグインを並列に実行することを選択できます。これは、いくつかの"
-"複雑なスクリプトがバックグラウンドで実行されている状況で(より多くのCPU 使用率"
-"を犠牲にすることで)、エージェントの実行時間を短縮することができます。"
 
 msgid ""
 "Per default only one notification is generated for all recipients. "
@@ -62074,6 +62098,10 @@ msgstr ""
 "らも、<a href='http://mathias-kettner.de/checkmk_sap_r3.html'>Checkmkドキュメ"
 "ント</a>で説明されています。"
 
+#, fuzzy
+msgid "This rulespec is deprecated and will be removed in future versions."
+msgstr "このルールは非推奨です。代わりに\"%s\"を使用してください。"
+
 msgid "This rulset allow you to configure a SSH check for a host"
 msgstr "このルールセットを使用すると、ホストのSSHチェックを構成できます"
 
@@ -69022,6 +69050,14 @@ msgstr ""
 "合に指定するために使用します。指定しない場合は認証用のユーザー名が使用されま"
 "す。"
 
+#, fuzzy
+msgid "Used virtual memory"
+msgstr "合計仮想メモリ"
+
+#, fuzzy
+msgid "Used virtual memory (averaged)"
+msgstr "仮想メモリの平均化"
+
 msgid "User"
 msgstr "ユーザー"
 
@@ -75428,6 +75464,16 @@ msgstr ""
 "合はエラーから回復するために最善を尽くします。それがうまくいかない場合は、特"
 "定のエンコーディングを構成できます。"
 
+msgid ""
+"mk_oracle for linux will change to a unprivileged user before executing any "
+"oracle binaries. This means that <tt>sqlnet.ora</tt> (which is created by "
+"the bakery) has to be readable by this user. At runtime the agent uses the "
+"owner of the oracle binary as the user to switch to. But we don't know this "
+"user nor its groups at agent install time. You have to explicitly configure "
+"a group here, so the user can read <tt>sqlnet.ora</tt>. For a default oracle "
+"installation <tt>oinstall</tt> can be used."
+msgstr ""
+
 msgid "mm"
 msgstr "mm"
 
@@ -76368,6 +76414,38 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Committed memory"
+#~ msgid "Commitable memory"
+#~ msgstr "コミットされたメモリ"
+
+#~ msgid "Add all metrics of this graph to"
+#~ msgstr "このグラフのすべてのメトリックをに追加します"
+
+#~ msgid "Add this graph to..."
+#~ msgstr "...にこのグラフを追加します。"
+
+#~ msgid "Add this metric to custom graph..."
+#~ msgstr "このメトリックをカスタムグラフに追加します..."
+
+#, fuzzy
+#~| msgid ""
+#~| "Per default all plugins and local scripts are being run sequentially. "
+#~| "You choose to run all asynchronous plugins in parallel. This can cut "
+#~| "down the execution time of the agent in situations where several complex "
+#~| "scripts are being run in the background - at the cost of more CPU usage."
+#~ msgid ""
+#~ "Per default all plug-ins and local scripts are being run sequentially. "
+#~ "You choose to run all asynchronous plug-ins in parallel. This can cut "
+#~ "down the execution time of the agent in situations where several complex "
+#~ "scripts are being run in the background - at the cost of more CPU usage."
+#~ msgstr ""
+#~ "デフォルトでは、すべてのプラグインとローカルスクリプトは順次実行されます。"
+#~ "すべての非同期プラグインを並列に実行することを選択できます。これは、いくつ"
+#~ "かの複雑なスクリプトがバックグラウンドで実行されている状況で(より多くの"
+#~ "CPU 使用率を犠牲にすることで)、エージェントの実行時間を短縮することができ"
+#~ "ます。"
 
 #~ msgid "Agent Plugins"
 #~ msgstr "エージェントプラグイン"

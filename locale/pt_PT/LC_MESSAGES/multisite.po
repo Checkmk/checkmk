@@ -1959,6 +1959,10 @@ msgid ""
 "dependencies. "
 msgstr ""
 
+#, python-format
+msgid "<tt>sqlnet.ora</tt> permission group %s"
+msgstr ""
+
 #, fuzzy, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
 msgstr "Tempos de paragem do serviço"
@@ -3647,9 +3651,6 @@ msgstr ""
 "Adicione todos os serviços detectados mas ainda não monitorados ao "
 "monitoramento."
 
-msgid "Add all metrics of this graph to"
-msgstr "Adicione todas as métricas deste gráfico a"
-
 msgid "Add attribute"
 msgstr "Adicionar atributo"
 
@@ -3765,6 +3766,17 @@ msgstr "Adicionar gráfico"
 
 msgid "Add group"
 msgstr "Adicionar grupo"
+
+#, fuzzy
+msgid "Add group or user"
+msgstr "Adicionar grupo"
+
+msgid ""
+"Add here only groups and users which do not have administrator rights but, "
+"for some reason, must have write access to the Oracle binaries. For example, "
+"it may be dedicated installer account in domain.The values are case "
+"insensitive."
+msgstr ""
 
 msgid "Add host"
 msgstr "Adicionar anfitrião"
@@ -4094,12 +4106,6 @@ msgstr ""
 "Adicione estes grupos como <b>contactos</b> a todos os anfitriões <b> nesta "
 "pasta</b>"
 
-msgid "Add this graph to..."
-msgstr "Adicione este gráfico a..."
-
-msgid "Add this metric to custom graph..."
-msgstr "Adicione esta métrica ao gráfico personalizado..."
-
 msgid "Add this metric to dedicated graph"
 msgstr "Adicione esta métrica ao gráfico dedicado"
 
@@ -4119,12 +4125,20 @@ msgstr "Adicione a"
 msgid "Add to %s"
 msgstr "Adicionar a %s"
 
+#, fuzzy
+msgid "Add to ..."
+msgstr "Adicione a"
+
 msgid "Add to bookmark list"
 msgstr "Adicionar à lista de favoritos"
 
 #, fuzzy
 msgid "Add to condition"
 msgstr "Adicionar condição de etiqueta"
+
+#, fuzzy
+msgid "Add to custom graph"
+msgstr "Editar gráfico personalizado"
 
 #, fuzzy
 msgid "Add to dashboard"
@@ -6805,7 +6819,7 @@ msgid "Asynchronous closing connections"
 msgstr "Conexões de fechamento assíncrono"
 
 #, fuzzy
-msgid "Asynchronous execution of plug-ins"
+msgid "Asynchronous execution of plug-ins (deprecated)"
 msgstr "Execução assíncrona de plugins"
 
 msgid "Asynchronous keep alive connections"
@@ -12327,14 +12341,6 @@ msgstr "Comprometa os níveis de carga"
 msgid "Commit limit"
 msgstr "Limite de compromisso"
 
-#, fuzzy
-msgid "Commitable memory"
-msgstr "Memória comprometida"
-
-#, fuzzy
-msgid "Commitable memory (averaged)"
-msgstr "Cálculo da média da memória virtual"
-
 msgid "Commits"
 msgstr "Compromissos"
 
@@ -15124,9 +15130,6 @@ msgstr "Estatísticas do DHCP (mensagens recebidas)"
 
 msgid "DHCP statistics (sent messages)"
 msgstr "Estatísticas do DHCP (mensagens enviadas)"
-
-msgid "DISTRIBUTION"
-msgstr ""
 
 msgid "DISTTAG"
 msgstr "DISTTAG"
@@ -19015,6 +19018,20 @@ msgstr "Dt."
 msgid ""
 "Dual or stacked Perf-O-Meters are not allowed to have 'dual' or 'stacked' "
 "sub Perf-O-Meters"
+msgstr ""
+
+msgid ""
+"Due to security reasons the plugin being executed as admin will check "
+"permissions for Oracle executables. If modification of oracle binaries is "
+"allowed for non-admin users or groups then the plugin stop processing thus "
+"breaking Oracle monitoring: execution of normal user code at elevated level "
+"means security vulnerability.You may <tt>disable</tt> this option if it is "
+"the only method to continue monitoring of Oracle database. Usually you need "
+"to <tt>disable</tt> the option only in the next case: It's impossible to "
+"correctly adjust permissions for Oracle binaries, mode group with group "
+"Administrator is not applicable and it is not possible to use custom account "
+"to monitor Oracle database.Even if check is enabled you may allow some "
+"groups and/or users to still have write access to the Oracle binaries."
 msgstr ""
 
 msgid "Dummy"
@@ -23384,6 +23401,14 @@ msgstr "Espaço de troca livre"
 msgid "Free tapes"
 msgstr "Fitas gratuitas"
 
+#, fuzzy
+msgid "Free virtual memory"
+msgstr "Memória virtual total"
+
+#, fuzzy
+msgid "Free virtual memory (averaged)"
+msgstr "Cálculo da média da memória virtual"
+
 msgid "Freeze"
 msgstr "Congelar"
 
@@ -24306,6 +24331,12 @@ msgstr "Agrupamento de serviços em vistas de tabela"
 
 msgid "Groups"
 msgstr "Grupos"
+
+msgid "Groups and/or users allowed to have write access to Oracle binaries"
+msgstr ""
+
+msgid "Groups and/or users in format Domain\\Name"
+msgstr ""
 
 msgid "Groups on cluster"
 msgstr "Grupos em cluster"
@@ -37155,9 +37186,6 @@ msgstr "Múltiplos RRDs por host/serviço (compatíveis com o PNP4Nagios)"
 msgid "Multiple Setup Folders"
 msgstr "Múltiplas pastas de configuração"
 
-msgid "Multiple Sites"
-msgstr "Vários locais"
-
 msgid "Multiple graphs"
 msgstr "Múltiplos gráficos"
 
@@ -37166,6 +37194,10 @@ msgstr "Múltiplas expressões regulares"
 
 msgid "Multiple services"
 msgstr "Serviços múltiplos"
+
+#, fuzzy
+msgid "Multiple sites"
+msgstr "Vários locais"
 
 msgid "Multiplicative: Seasonality grows with the trend."
 msgstr "Multiplicativo: A sazonalidade cresce com a tendência."
@@ -40907,6 +40939,10 @@ msgstr "Mesas Oracle"
 msgid "Oracle Undo Retention"
 msgstr "Retenção de Desfazer Oracle"
 
+#, python-format
+msgid "Oracle binaries permissions check %s"
+msgstr ""
+
 msgid "Oracle dataguard statistics"
 msgstr "Estatísticas do dataguard da Oracle"
 
@@ -42094,19 +42130,6 @@ msgstr "Cabazes vBuckets pendentes"
 
 msgid "Per Core utilization"
 msgstr "Por utilização do Core"
-
-#, fuzzy
-msgid ""
-"Per default all plug-ins and local scripts are being run sequentially. You "
-"choose to run all asynchronous plug-ins in parallel. This can cut down the "
-"execution time of the agent in situations where several complex scripts are "
-"being run in the background - at the cost of more CPU usage."
-msgstr ""
-"Por padrão, todos os plugins e scripts locais estão sendo executados "
-"sequencialmente. Você escolhe executar todos os plugins assíncronos em "
-"paralelo. Isto pode reduzir o tempo de execução do agente em situações em "
-"que vários scripts complexos estão sendo executados em segundo plano - ao "
-"custo de uma maior utilização da CPU."
 
 msgid ""
 "Per default only one notification is generated for all recipients. "
@@ -63620,6 +63643,10 @@ msgstr ""
 "sapnwrfc. Ambos são explicados em um <a href='http://mathias-kettner.de/"
 "checkmk_sap_r3.html'>artigo na documentação do Checkmk</a>."
 
+#, fuzzy
+msgid "This rulespec is deprecated and will be removed in future versions."
+msgstr "Esta regra é depreciada. Por favor, use \"%s\" em vez disso."
+
 msgid "This rulset allow you to configure a SSH check for a host"
 msgstr "Este rulset permite configurar uma verificação SSH para um host"
 
@@ -70687,6 +70714,14 @@ msgstr ""
 "no caso de ser diferente do nome de utilizador. Se não for especificado, é "
 "utilizado o nome de utilizador das credenciais."
 
+#, fuzzy
+msgid "Used virtual memory"
+msgstr "Memória virtual total"
+
+#, fuzzy
+msgid "Used virtual memory (averaged)"
+msgstr "Cálculo da média da memória virtual"
+
 msgid "User"
 msgstr "Utilizador"
 
@@ -77301,6 +77336,16 @@ msgstr ""
 "ficheiro, e recuperar de erros se este estiver errado. Se isso não funcionar "
 "para você, você pode configurar uma codificação específica."
 
+msgid ""
+"mk_oracle for linux will change to a unprivileged user before executing any "
+"oracle binaries. This means that <tt>sqlnet.ora</tt> (which is created by "
+"the bakery) has to be readable by this user. At runtime the agent uses the "
+"owner of the oracle binary as the user to switch to. But we don't know this "
+"user nor its groups at agent install time. You have to explicitly configure "
+"a group here, so the user can read <tt>sqlnet.ora</tt>. For a default oracle "
+"installation <tt>oinstall</tt> can be used."
+msgstr ""
+
 msgid "mm"
 msgstr "mm"
 
@@ -78246,6 +78291,38 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid "Committed memory"
+#~ msgid "Commitable memory"
+#~ msgstr "Memória comprometida"
+
+#~ msgid "Add all metrics of this graph to"
+#~ msgstr "Adicione todas as métricas deste gráfico a"
+
+#~ msgid "Add this graph to..."
+#~ msgstr "Adicione este gráfico a..."
+
+#~ msgid "Add this metric to custom graph..."
+#~ msgstr "Adicione esta métrica ao gráfico personalizado..."
+
+#, fuzzy
+#~| msgid ""
+#~| "Per default all plugins and local scripts are being run sequentially. "
+#~| "You choose to run all asynchronous plugins in parallel. This can cut "
+#~| "down the execution time of the agent in situations where several complex "
+#~| "scripts are being run in the background - at the cost of more CPU usage."
+#~ msgid ""
+#~ "Per default all plug-ins and local scripts are being run sequentially. "
+#~ "You choose to run all asynchronous plug-ins in parallel. This can cut "
+#~ "down the execution time of the agent in situations where several complex "
+#~ "scripts are being run in the background - at the cost of more CPU usage."
+#~ msgstr ""
+#~ "Por padrão, todos os plugins e scripts locais estão sendo executados "
+#~ "sequencialmente. Você escolhe executar todos os plugins assíncronos em "
+#~ "paralelo. Isto pode reduzir o tempo de execução do agente em situações em "
+#~ "que vários scripts complexos estão sendo executados em segundo plano - ao "
+#~ "custo de uma maior utilização da CPU."
 
 #~ msgid "Agent Plugins"
 #~ msgstr "Plugins de Agente"

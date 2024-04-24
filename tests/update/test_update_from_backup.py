@@ -86,10 +86,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
     hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 
     for hostname in hostnames:
-        # specifying a port is needed to avoid API issues in SLES distros. See CMK-16305
-        # TODO: remove once CMK-16601 is done
-        port = "8001"
-        address = f"127.0.0.{hostnames.index(hostname) + 1}:{port}"
+        address = f"127.0.0.{hostnames.index(hostname) + 1}"
         register_controller(agent_ctl, base_site, hostname, site_address=address)
         wait_until_host_receives_data(base_site, hostname)
 

@@ -7,7 +7,7 @@ from collections.abc import Iterable, Sequence
 from typing import NamedTuple
 
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import translate_hostname, TranslationOptions
 
@@ -51,6 +51,9 @@ class PiggybackMarker(NamedTuple):
             return cls(hostname or None)
         except ValueError:
             return cls(None)
+
+    def should_be_ignored(self) -> bool:
+        return self.hostname is None or not HostAddress.is_valid(self.hostname)
 
 
 class SectionMarker(NamedTuple):

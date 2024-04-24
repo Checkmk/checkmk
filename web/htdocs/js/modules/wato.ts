@@ -359,7 +359,7 @@ export function toggle_test_notification_visibility(
 
 function toggle_test_notification_options(hide_options: boolean) {
     const service_choice = document.getElementById(
-        "general_opts_d_service_choice"
+        "general_opts_d_on_service_hint"
     ) as HTMLDivElement;
     const service_states = document.getElementById(
         "general_opts_p_simulation_mode_1_d_svc_states"

@@ -18,7 +18,7 @@
     "not op_mini all"
   ],
   "scripts": {
-    "build": "ENTERPRISE=yes MANAGED=no webpack",
+    "build": "ENTERPRISE=${ENTERPRISE:=yes} MANAGED=no webpack",
     "build-watch": "WEBPACK_MODE=quick ENTERPRISE=yes MANAGED=no npx webpack --mode development --watch",
     "test-eslint": "eslint --max-warnings 0 --no-color './src/js/**/*.{j,t}s'",
     "test-tsc": "tsc",

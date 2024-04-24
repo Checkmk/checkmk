@@ -50,6 +50,7 @@ pytest-random-order = "*"  # used to test resiliency
 pytest-repeat = "*"  # used to test resiliency
 pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml
 pytest-xdist = "*" # used to limit number of procs in e2e tests
+pytest-check = "*" # used to queue failed assertions and continue test execution
 python-lsp-black = "*"  # black plugin for python-lsp-server
 python-lsp-server = "*"  # Note: There are extras, but the default seems sensible.
 responses = "*"  # used for unit tests

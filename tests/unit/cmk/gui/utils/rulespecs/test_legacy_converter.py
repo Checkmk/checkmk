@@ -894,6 +894,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=_("my title"),
                 help=_("help text"),
                 default_value=["first", "third"],
+                rows=11,
             ),
             id="large MultipleChoice",
         ),

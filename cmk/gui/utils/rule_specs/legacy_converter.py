@@ -2062,6 +2062,7 @@ def _convert_to_legacy_list_choice(
     # arbitrarily chosen maximal size of created ListChoice
     # if number of choices if bigger, MultipleChoice is converted to DualListChoice
     MAX_LIST_CHOICE_SIZE: int = 10
+    MAX_DUALLIST_CHOICE_SIZE: int = 25
 
     converted_kwargs: dict[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
@@ -2087,6 +2088,7 @@ def _convert_to_legacy_list_choice(
     return legacy_valuespecs.DualListChoice(
         choices=choices,
         toggle_all=to_convert.show_toggle_all,
+        rows=min(len(choices), MAX_DUALLIST_CHOICE_SIZE),
         **converted_kwargs,
     )
 

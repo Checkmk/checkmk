@@ -23,7 +23,7 @@ __all__ = [
 
 
 def register_with_system_apache(
-    version_info: VersionInfo, site: SiteContext, apache_reload: bool
+    version_info: VersionInfo, site: SiteContext, apache_reload: bool, verbose: bool
 ) -> None:
     """Apply the site specific configuration to the system global apache
 
@@ -33,21 +33,21 @@ def register_with_system_apache(
     Root permissions are needed to make this work.
     """
     create_apache_hook(site, apache_hook_version())
-    apply_apache_config(version_info, apache_reload)
+    apply_apache_config(version_info, apache_reload, verbose)
 
 
 def unregister_from_system_apache(
-    version_info: VersionInfo, site: SiteContext, apache_reload: bool
+    version_info: VersionInfo, site: SiteContext, apache_reload: bool, verbose: bool
 ) -> None:
     delete_apache_hook(site.name)
-    apply_apache_config(version_info, apache_reload)
+    apply_apache_config(version_info, apache_reload, verbose)
 
 
-def apply_apache_config(version_info: VersionInfo, apache_reload: bool) -> None:
+def apply_apache_config(version_info: VersionInfo, apache_reload: bool, verbose: bool) -> None:
     if apache_reload:
         reload_apache(version_info)
     else:
-        restart_apache(version_info)
+        restart_apache(version_info, verbose)
 
 
 def is_apache_hook_up_to_date(site: SiteContext) -> bool:
@@ -150,10 +150,17 @@ def reload_apache(version_info: VersionInfo) -> None:
     show_success(subprocess.call([version_info.APACHE_CTL, "graceful"]) >> 8)
 
 
-def restart_apache(version_info: VersionInfo) -> None:
-    status_cmd = shlex.split(init_cmd(version_info, version_info.APACHE_INIT_NAME, "status"))
-    if subprocess.call(status_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0:
+def restart_apache(version_info: VersionInfo, verbose: bool) -> None:
+    status_cmd = init_cmd(version_info, version_info.APACHE_INIT_NAME, "status")
+    status_exit_code = subprocess.call(
+        shlex.split(status_cmd), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
+    if status_exit_code == 0:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
         restart_cmd = shlex.split(init_cmd(version_info, version_info.APACHE_INIT_NAME, "restart"))
         show_success(subprocess.call(restart_cmd, stdout=subprocess.DEVNULL))
+    else:
+        if verbose:
+            sys.stdout.write(f"Non-zero exit code {status_exit_code} from {status_cmd}.\n")
+        sys.stdout.write("Skipping Apache restart.\n")

@@ -52,7 +52,7 @@ def test_register_with_system_apache(
 ) -> None:
     apache_config.parent.mkdir(parents=True)
 
-    register_with_system_apache(version_info, site_context, apache_reload=True)
+    register_with_system_apache(version_info, site_context, apache_reload=True, verbose=False)
 
     content = apache_config.read_bytes()
     assert (
@@ -73,11 +73,11 @@ def test_unregister_from_system_apache(
     reload_apache: MagicMock,
 ) -> None:
     apache_config.parent.mkdir(parents=True)
-    register_with_system_apache(version_info, site_context, apache_reload=True)
+    register_with_system_apache(version_info, site_context, apache_reload=True, verbose=False)
     assert apache_config.exists()
     reload_apache.reset_mock()
 
-    unregister_from_system_apache(version_info, site_context, apache_reload=True)
+    unregister_from_system_apache(version_info, site_context, apache_reload=True, verbose=False)
     assert not apache_config.exists()
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
 
@@ -88,7 +88,7 @@ def test_delete_apache_hook(
     site_context: SiteContext,
 ) -> None:
     apache_config.parent.mkdir(parents=True)
-    register_with_system_apache(version_info, site_context, apache_reload=True)
+    register_with_system_apache(version_info, site_context, apache_reload=True, verbose=False)
     assert apache_config.exists()
 
     delete_apache_hook(site_context.name)

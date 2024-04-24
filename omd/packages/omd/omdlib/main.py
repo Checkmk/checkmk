@@ -2328,7 +2328,7 @@ def init_site(
     # Change the few files that config save as created as root
     chown_tree(site.dir, site.name)
 
-    finalize_site(version_info, site, CommandType.create, apache_reload)
+    finalize_site(version_info, site, CommandType.create, apache_reload, global_opts.verbose)
 
     return admin_password
 
@@ -2337,7 +2337,11 @@ def init_site(
 # What is "create", "mv" or "cp". It is used for
 # running the appropriate hooks.
 def finalize_site(
-    version_info: VersionInfo, site: SiteContext, command_type: CommandType, apache_reload: bool
+    version_info: VersionInfo,
+    site: SiteContext,
+    command_type: CommandType,
+    apache_reload: bool,
+    verbose: bool,
 ) -> None:
     # Now we need to do a few things as site user. Note:
     # - We cannot use setuid() here, since we need to get back to root.
@@ -2367,7 +2371,7 @@ def finalize_site(
     # the root user, so load the site config again. Otherwise e.g. changed
     # APACHE_TCP_PORT would not be recognized
     site.load_config(load_defaults(site))
-    register_with_system_apache(version_info, site, apache_reload)
+    register_with_system_apache(version_info, site, apache_reload, verbose=verbose)
 
 
 def finalize_site_as_user(
@@ -2427,7 +2431,9 @@ def main_rm(
     # Needs to be cleaned up before removing the site directory. Otherwise a
     # parallel restart / reload of the apache may fail, because the apache hook
     # refers to a not existing site apache config.
-    unregister_from_system_apache(version_info, site, apache_reload="apache-reload" in options)
+    unregister_from_system_apache(
+        version_info, site, apache_reload="apache-reload" in options, verbose=global_opts.verbose
+    )
 
     if not reuse:
         remove_from_fstab(site)
@@ -2472,7 +2478,9 @@ def main_disable(
     stop_if_not_stopped(site)
     unmount_tmpfs(site, kill="kill" in options)
     sys.stdout.write("Disabling Apache configuration for this site...")
-    unregister_from_system_apache(version_info, site, apache_reload=False)
+    unregister_from_system_apache(
+        version_info, site, apache_reload=False, verbose=global_opts.verbose
+    )
 
 
 def main_enable(
@@ -2486,7 +2494,9 @@ def main_enable(
         sys.stderr.write("This site is already enabled.\n")
         sys.exit(0)
     sys.stdout.write("Re-enabling Apache configuration for this site...")
-    register_with_system_apache(version_info, site, apache_reload=False)
+    register_with_system_apache(
+        version_info, site, apache_reload=False, verbose=global_opts.verbose
+    )
 
 
 def main_update_apache_config(
@@ -2498,9 +2508,13 @@ def main_update_apache_config(
 ) -> None:
     site.load_config(load_defaults(site))
     if _is_apache_enabled(site):
-        register_with_system_apache(version_info, site, apache_reload=True)
+        register_with_system_apache(
+            version_info, site, apache_reload=True, verbose=global_opts.verbose
+        )
     else:
-        unregister_from_system_apache(version_info, site, apache_reload=True)
+        unregister_from_system_apache(
+            version_info, site, apache_reload=True, verbose=global_opts.verbose
+        )
 
 
 def _is_apache_enabled(site: SiteContext) -> bool:
@@ -2631,7 +2645,9 @@ def main_mv_or_cp(  # pylint: disable=too-many-branches
     # Needed by the post-rename-site script
     putenv("OLD_OMD_SITE", old_site.name)
 
-    finalize_site(version_info, new_site, command_type, "apache-reload" in options)
+    finalize_site(
+        version_info, new_site, command_type, "apache-reload" in options, global_opts.verbose
+    )
 
 
 def main_diff(
@@ -3515,7 +3531,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     putenv("OLD_OMD_SITE", sitename)
 
     if is_root():
-        postprocess_restore_as_root(version_info, site, options)
+        postprocess_restore_as_root(version_info, site, options, global_opts.verbose)
     else:
         postprocess_restore_as_site_user(version_info, site, options, orig_apache_port)
 
@@ -3745,7 +3761,7 @@ def site_user_processes(site: SiteContext, exclude_current_and_parents: bool) ->
 
 
 def postprocess_restore_as_root(
-    version_info: VersionInfo, site: SiteContext, options: CommandOptions
+    version_info: VersionInfo, site: SiteContext, options: CommandOptions, verbose: bool
 ) -> None:
     # Entry for tmps in /etc/fstab
     if "reuse" in options:
@@ -3754,7 +3770,7 @@ def postprocess_restore_as_root(
         command_type = CommandType.restore_as_new_site
         add_to_fstab(site, tmpfs_size=options.get("tmpfs-size"))
 
-    finalize_site(version_info, site, command_type, "apache-reload" in options)
+    finalize_site(version_info, site, command_type, "apache-reload" in options, verbose)
 
 
 def postprocess_restore_as_site_user(

@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Container, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
 from re import match, Pattern
 from typing import Any
@@ -16,8 +16,6 @@ from cmk.utils.labels import single_label_group_from_labels
 from cmk.utils.log import VERBOSE
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName, RuleSpec
-
-from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base import config
 
@@ -31,7 +29,6 @@ from cmk.gui.watolib.rulesets import (
     RulesetCollection,
 )
 
-from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import format_warning, UpdateActionState
 
@@ -90,10 +87,6 @@ class UpdateRulesets(UpdateAction):
         _transform_wato_rulesets_params(
             logger,
             all_rulesets,
-        )
-        _remove_removed_check_plugins_from_ignored_checks(
-            all_rulesets,
-            REPLACED_CHECK_PLUGINS,
         )
         _validate_rule_values(logger, all_rulesets)
         all_rulesets.save()
@@ -370,6 +363,11 @@ def _validate_rule_values(
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
         # see all of them
         RuleGroup.ExtraServiceConf("_sla_config"),
+        # Validating the ignored checks ruleset does not make sense:
+        # Invalid choices are the plugins that don't exist (anymore).
+        # These do no harm, they are dropped upon rule edit. On the other hand, the plugin
+        # could be missing only temporarily, so better not remove it.
+        "ignored_checks",
     }
 
     n_invalid = 0
@@ -406,22 +404,3 @@ def _validate_rule_values(
             ),
             n_invalid,
         )
-
-
-def _remove_removed_check_plugins_from_ignored_checks(
-    all_rulesets: RulesetCollection,
-    removed_check_plugins: Container[CheckPluginName],
-) -> None:
-    ignored_checks_ruleset = all_rulesets.get("ignored_checks")
-    for _folder, _index, rule in ignored_checks_ruleset.get_rules():
-        if plugins_to_keep := [
-            plugin_str
-            for plugin_str in rule.value
-            if CheckPluginName(plugin_str).create_basic_name() not in removed_check_plugins
-        ]:
-            rule.value = plugins_to_keep
-        else:
-            ignored_checks_ruleset.delete_rule(
-                rule,
-                create_change=False,
-            )

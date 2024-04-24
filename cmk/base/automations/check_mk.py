@@ -1949,6 +1949,7 @@ class AutomationDiagHost(Automation):
         hosts_config = config_cache.hosts_config
         check_interval = config_cache.check_mk_check_interval(host_name)
         state, output = 0, ""
+        pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
         for source in sources.make_sources(
             host_name,
             ipaddress,
@@ -1963,7 +1964,8 @@ class AutomationDiagHost(Automation):
                 inventory=1.5 * check_interval,
             ),
             snmp_backend_override=None,
-            password_store_file=cmk.utils.password_store.pending_password_store_path(),
+            password_store_file=pending_passwords_file,
+            passwords=cmk.utils.password_store.load(pending_passwords_file),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2340,6 +2342,9 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = config.lookup_ip_address(config_cache, hostname)
             check_interval = config_cache.check_mk_check_interval(hostname)
             if ty == "agent":
+                core_password_store_file = cmk.utils.password_store.core_password_store_path(
+                    LATEST_CONFIG
+                )
                 for source in sources.make_sources(
                     hostname,
                     ipaddress,
@@ -2354,9 +2359,8 @@ class AutomationGetAgentOutput(Automation):
                         inventory=1.5 * check_interval,
                     ),
                     snmp_backend_override=None,
-                    password_store_file=cmk.utils.password_store.core_password_store_path(
-                        LATEST_CONFIG
-                    ),
+                    password_store_file=core_password_store_file,
+                    passwords=cmk.utils.password_store.load(core_password_store_file),
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

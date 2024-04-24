@@ -561,24 +561,29 @@ class DisplayHints:
             yield from node.make_inventory_paths_or_hints(path + [node_name])
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
-        return self.attributes_hint.by_key.get(
-            key, AttributeDisplayHint.from_raw(self.abc_path, key, {})
+        return (
+            hint
+            if (hint := self.attributes_hint.by_key.get(key))
+            else AttributeDisplayHint.from_raw(self.abc_path, key, {})
         )
 
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
-        return self.table_hint.by_column.get(
-            key, ColumnDisplayHint.from_raw("", self.abc_path, key, {})
+        return (
+            hint
+            if (hint := self.table_hint.by_column.get(key))
+            else ColumnDisplayHint.from_raw("", self.abc_path, key, {})
         )
 
-    def get_node_hints(self, name: SDNodeName) -> DisplayHints:
-        return self.nodes.get(
-            name,
-            DisplayHints(
-                path=self.abc_path,
-                node_hint=NodeDisplayHint.from_raw(self.abc_path, {}),
-                table_hint=TableDisplayHint.from_raw(self.abc_path, {}, [], OrderedDict()),
-                attributes_hint=AttributesDisplayHint(OrderedDict()),
-            ),
+    def get_node_hints(self, node_name: SDNodeName) -> DisplayHints:
+        if node_name in self.nodes:
+            return self.nodes[node_name]
+        if "*" in self.nodes:
+            return self.nodes["*"]
+        return DisplayHints(
+            path=self.abc_path,
+            node_hint=NodeDisplayHint.from_raw(self.abc_path, {}),
+            table_hint=TableDisplayHint.from_raw(self.abc_path, {}, [], OrderedDict()),
+            attributes_hint=AttributesDisplayHint(OrderedDict()),
         )
 
     def get_tree_hints(self, path: SDPath) -> DisplayHints:

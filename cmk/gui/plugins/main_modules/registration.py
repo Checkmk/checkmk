@@ -87,6 +87,7 @@ from cmk.gui.watolib import groups_io
 from cmk.gui.watolib import notifications as notifications_config
 from cmk.gui.watolib import password_store
 from cmk.gui.watolib import registration as watolib_registration
+from cmk.gui.watolib import rulesets as rule_config
 from cmk.gui.watolib import sites as sites_config
 from cmk.gui.watolib import tags as tag_config
 from cmk.gui.watolib import users as user_config
@@ -295,6 +296,7 @@ def register() -> None:
     sites_config.register(config_file_registry)
     user_connections_config(config_file_registry)
     user_config.register(config_file_registry)
+    rule_config.register(config_file_registry)
 
 
 register()

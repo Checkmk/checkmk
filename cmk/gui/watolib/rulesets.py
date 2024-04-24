@@ -20,7 +20,7 @@ from typing import Any, assert_never, cast, Final
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
-from cmk.utils.config_validation_layer.rules import validate_rule
+from cmk.utils.config_validation_layer.rules import validate_rulesets
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import LabelGroups, Labels
@@ -76,6 +76,7 @@ from .rulespecs import (
     RulespecAllowList,
     TimeperiodValuespec,
 )
+from .simple_config_file import ConfigFileRegistry, WatoConfigFile
 from .timeperiods import TimeperiodSelection, TimeperiodUsage
 from .utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
@@ -325,20 +326,14 @@ class RulesetCollection:
     def _load_folder_rulesets(
         self, folder: Folder, only_varname: RulesetName | None = None
     ) -> None:
-        path = folder.rules_file_path()
+        path = Path(folder.rules_file_path())
 
-        if not os.path.exists(path):
+        if not path.exists():
             return  # Do not initialize rulesets when no rule at all exists
 
         self.replace_folder_config(
             folder,
-            store.load_mk_file(
-                path,
-                {
-                    **RulesetCollection._context_helpers(folder),
-                    **RulesetCollection._prepare_empty_rulesets(),
-                },
-            ),
+            RuleConfigFile(path).load_for_reading(),
             only_varname,
         )
 
@@ -417,8 +412,6 @@ class RulesetCollection:
         for varname, ruleset_config in self.get_ruleset_configs_from_file(
             folder, loaded_file_config, only_varname
         ):
-            for rule in ruleset_config:
-                validate_rule(rule)
             if not ruleset_config:
                 continue  # Nothing configured: nothing left to do
 
@@ -430,46 +423,9 @@ class RulesetCollection:
         rulesets: Mapping[RulesetName, Ruleset],
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
     ) -> None:
-        store.mkdir(folder.tree.get_root_dir())
-
-        for _name, ruleset in sorted(rulesets.items()):
-            if not ruleset.is_empty_in_folder(folder):
-                for rule in ruleset.get_folder_rules(folder):
-                    validate_rule(rule.to_config())
-
-        content = [
-            *(
-                ruleset.to_config(folder)
-                for _name, ruleset in sorted(rulesets.items())
-                if not ruleset.is_empty_in_folder(folder)
-            ),
-            *(
-                Ruleset.format_raw_value(varname, raw_value, False)
-                for varname, raw_value in sorted(unknown_rulesets.get(folder.path(), {}).items())
-            ),
-        ]
-
-        rules_file_path = folder.rules_file_path()
-        try:
-            # Remove empty rules files. This prevents needless reads
-            if not content:
-                try:
-                    os.unlink(rules_file_path)
-                except FileNotFoundError:
-                    pass
-                return
-
-            store.save_mk_file(
-                rules_file_path,
-                # Adding this instead of the full path makes it easy to move config
-                # files around. The real FOLDER_PATH will be added dynamically while
-                # loading the file in cmk.base.config
-                "".join(content).replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH"),
-                add_header=not active_config.wato_use_git,
-            )
-        finally:
-            if may_use_redis():
-                get_wato_redis_client(folder.tree).folder_updated(folder.filesystem_path())
+        RuleConfigFile(Path(folder.rules_file_path())).save_rulesets_and_unknown_rulesets(
+            rulesets, unknown_rulesets
+        )
 
         # check if this contains a password. If so, update the password file
         if any(
@@ -1067,6 +1023,10 @@ class Ruleset:
             return resultdict, effectiverules
 
         return None, []  # No match
+
+    @property
+    def rules(self):
+        return self._rules
 
 
 class Rule:
@@ -1730,3 +1690,101 @@ def find_timeperiod_usage_in_time_specific_parameters(
 @request_memoize()
 def _get_ruleset_matcher():
     return cmk.base.export.get_ruleset_matcher()
+
+
+class RuleConfigFile(WatoConfigFile[Mapping[RulesetName, Any]]):
+    """Handles reading and writing rules.mk files"""
+
+    def __init__(self, config_file_path: Path) -> None:
+        super().__init__(config_file_path=config_file_path)
+
+    @property
+    def folder(self) -> Folder:
+        root_dir = Path(folder_tree().get_root_dir())
+        return folder_tree().folder(
+            str(self._config_file_path.parent.relative_to(root_dir)).strip(".")
+        )
+
+    def _load_file(self, lock: bool) -> Mapping[RulesetName, Any]:
+        folder = self.folder
+        path = folder.rules_file_path()
+        loaded_file_config = store.load_mk_file(
+            path,
+            {
+                **RulesetCollection._context_helpers(folder),
+                **RulesetCollection._prepare_empty_rulesets(),
+            },
+            lock=lock,
+        )
+
+        validate_rulesets(loaded_file_config)
+        return loaded_file_config
+
+    def save_rulesets_and_unknown_rulesets(
+        self,
+        rulesets: Mapping[RulesetName, Ruleset],
+        unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
+    ) -> None:
+        self._save_and_validate_folder(self.folder, rulesets, unknown_rulesets)
+
+    def save(self, cfg: Mapping[RulesetName, Any]) -> None:
+        self._save_and_validate_folder(self.folder, cfg, {})
+
+    @staticmethod
+    def _save_and_validate_folder(
+        folder: Folder,
+        rulesets: Mapping[RulesetName, Ruleset],
+        unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
+    ) -> None:
+        validate_rulesets(
+            {
+                ruleset_name: {
+                    rule_name: [rule.to_config() for rule in rules]
+                    for rule_name, rules in ruleset.rules.items()
+                }
+                for ruleset_name, ruleset in rulesets.items()
+            }
+        )
+        store.mkdir(folder.tree.get_root_dir())
+        content = [
+            *(
+                ruleset.to_config(folder)
+                for _name, ruleset in sorted(rulesets.items())
+                if not ruleset.is_empty_in_folder(folder)
+            ),
+            *(
+                Ruleset.format_raw_value(varname, raw_value, False)
+                for varname, raw_value in sorted(unknown_rulesets.get(folder.path(), {}).items())
+            ),
+        ]
+
+        rules_file_path = folder.rules_file_path()
+        try:
+            # Remove empty rules files. This prevents needless reads
+            if not content:
+                try:
+                    os.unlink(rules_file_path)
+                except FileNotFoundError:
+                    pass
+                return
+            store.save_mk_file(
+                rules_file_path,
+                # Adding this instead of the full path makes it easy to move config
+                # files around. The real FOLDER_PATH will be added dynamically while
+                # loading the file in cmk.base.config
+                "".join(content).replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH"),
+                add_header=not active_config.wato_use_git,
+            )
+        finally:
+            if may_use_redis():
+                get_wato_redis_client(folder.tree).folder_updated(folder.filesystem_path())
+
+
+def register(
+    config_file_registry: ConfigFileRegistry, folder: Path = Path(wato_root_dir())
+) -> None:
+    if not folder.is_dir():
+        return
+    for subfolder in folder.iterdir():
+        register(config_file_registry, subfolder)
+    config_file_registry.register(RuleConfigFile(folder / "rules.mk"))

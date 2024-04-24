@@ -16,7 +16,13 @@ from icalendar import Calendar, Event  # type: ignore[import-untyped]
 from icalendar.prop import vDDDTypes  # type: ignore[import-untyped]
 
 import cmk.utils.dateutils as dateutils
-from cmk.utils.timeperiod import builtin_timeperiods, load_timeperiods, timeperiod_spec_alias
+from cmk.utils.timeperiod import (
+    builtin_timeperiods,
+    load_timeperiods,
+    timeperiod_spec_alias,
+    TimeperiodName,
+    TimeperiodSpec,
+)
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
@@ -353,7 +359,7 @@ class ModeTimeperiodImportICal(WatoMode):
             )
         return ModeEditTimeperiod().page_menu(breadcrumb)
 
-    def _vs_ical(self):
+    def _vs_ical(self) -> Dictionary:
         return Dictionary(
             title=_("Import iCalendar File"),
             render="form",
@@ -508,7 +514,7 @@ class ModeEditTimeperiod(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTimeperiods
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._timeperiods = load_timeperiods()
         self._name = request.var("edit")  # missing -> new group
         # TODO: Nuke the field below? It effectively hides facts about _name for mypy.
@@ -528,9 +534,10 @@ class ModeEditTimeperiod(WatoMode):
                 # initialize with 24x7 config
                 self._timeperiod = {day: [("00:00", "24:00")] for day in dateutils.weekday_ids()}
         else:
+            assert self._name is not None
             self._timeperiod = self._get_timeperiod(self._name)
 
-    def _get_timeperiod(self, name):
+    def _get_timeperiod(self, name: str) -> TimeperiodSpec:
         try:
             return self._timeperiods[name]
         except KeyError:
@@ -546,7 +553,7 @@ class ModeEditTimeperiod(WatoMode):
             _("Time period"), breadcrumb, form_name="timeperiod", button_name="_save"
         )
 
-    def _valuespec(self):
+    def _valuespec(self) -> Dictionary:
         if self._new:
             # Cannot use ID() here because old versions of the GUI allowed time periods to start
             # with numbers and so on. The ID() valuespec does not allow it.
@@ -579,8 +586,8 @@ class ModeEditTimeperiod(WatoMode):
         ]
 
         # Show the exclude option in the gui, only when there are choices.
-        exclude = self._vs_exclude()
-        if len(exclude._choices):
+        exclude = self._vs_exclude(choices := self._other_timeperiod_choices())
+        if choices:
             elements.append(("exclude", exclude))
 
         return Dictionary(
@@ -607,7 +614,7 @@ class ModeEditTimeperiod(WatoMode):
             assert message is not None
             raise MKUserError(varprefix, message)
 
-    def _vs_weekdays(self):
+    def _vs_weekdays(self) -> CascadingDropdown:
         return CascadingDropdown(
             title=_("Active time range"),
             help=_(
@@ -629,13 +636,13 @@ class ModeEditTimeperiod(WatoMode):
             ],
         )
 
-    def _weekday_elements(self):
+    def _weekday_elements(self) -> list[tuple[dateutils.Weekday, ListOf]]:
         elements = []
         for tp_id, tp_title in dateutils.weekdays_by_name():
             elements.append((tp_id, ListOfTimeRanges(title=tp_title)))
         return elements
 
-    def _vs_exceptions(self):
+    def _vs_exceptions(self) -> ListOf:
         return ListOf(
             valuespec=Tuple(
                 orientation="horizontal",
@@ -661,7 +668,7 @@ class ModeEditTimeperiod(WatoMode):
             add_label=_("Add Exception"),
         )
 
-    def _validate_timeperiod_exception(self, value, varprefix):
+    def _validate_timeperiod_exception(self, value: str, varprefix: str) -> None:
         if value in dateutils.weekday_ids():
             raise MKUserError(
                 varprefix, _("You cannot use weekday names (%s) in exceptions") % value
@@ -679,9 +686,9 @@ class ModeEditTimeperiod(WatoMode):
                     varprefix, _("You need to provide time period exceptions in YYYY-MM-DD format")
                 )
 
-    def _vs_exclude(self):
+    def _vs_exclude(self, choices: list[tuple[str, str]]) -> ListChoice:
         return ListChoice(
-            choices=self._other_timeperiod_choices(),
+            choices=choices,
             title=_("Exclude"),
             help=_(
                 "You can use other time period definitions to exclude the times "
@@ -689,7 +696,7 @@ class ModeEditTimeperiod(WatoMode):
             ),
         )
 
-    def _other_timeperiod_choices(self):
+    def _other_timeperiod_choices(self) -> list[tuple[str, str]]:
         """List of timeperiods that can be used for exclusions
 
         We offer the list of all other time periods - but only those that do not exclude the current
@@ -709,7 +716,7 @@ class ModeEditTimeperiod(WatoMode):
 
         return sorted(other_tps, key=lambda a: a[1].lower())
 
-    def _timeperiod_excludes(self, tpa_name):
+    def _timeperiod_excludes(self, tpa_name: TimeperiodName) -> bool:
         """Check, if timeperiod tpa excludes or is tpb"""
         if tpa_name == self._name:
             return True
@@ -719,6 +726,7 @@ class ModeEditTimeperiod(WatoMode):
             if ex == self._name:
                 return True
 
+            assert isinstance(ex, str)
             if self._timeperiod_excludes(ex):
                 return True
 
@@ -766,7 +774,7 @@ class ModeEditTimeperiod(WatoMode):
     #       ('00:00', '10:00')
     #   ],
     # ]}}
-    def _to_valuespec(self, tp_spec):
+    def _to_valuespec(self, tp_spec: TimeperiodSpec) -> dict:
         if not tp_spec:
             return {}
 
@@ -786,7 +794,7 @@ class ModeEditTimeperiod(WatoMode):
 
         return vs_spec
 
-    def _weekdays_to_valuespec(self, tp_spec):
+    def _weekdays_to_valuespec(self, tp_spec: TimeperiodSpec) -> tuple:
         if self._has_same_time_specs_during_whole_week(tp_spec):
             return ("whole_week", self._time_ranges_to_valuespec(tp_spec.get("monday", [])))
 
@@ -798,9 +806,7 @@ class ModeEditTimeperiod(WatoMode):
             },
         )
 
-    def _has_same_time_specs_during_whole_week(  # type: ignore[no-untyped-def]
-        self, tp_spec
-    ) -> bool:
+    def _has_same_time_specs_during_whole_week(self, tp_spec: TimeperiodSpec) -> bool:
         """Put the time ranges of all weekdays into a set to reduce the duplicates to see whether
         or not all days have the same time spec and return True if they have the same."""
         unified_time_ranges = {tuple(tp_spec.get(day, [])) for day in dateutils.weekday_ids()}

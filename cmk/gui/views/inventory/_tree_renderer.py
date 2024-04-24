@@ -39,7 +39,14 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
-from ._display_hints import AttributeDisplayHint, ColumnDisplayHint, DISPLAY_HINTS, DisplayHints
+from ._display_hints import (
+    AttributeDisplayHint,
+    AttributesDisplayHint,
+    ColumnDisplayHint,
+    DISPLAY_HINTS,
+    NodeDisplayHint,
+    TableDisplayHint,
+)
 
 
 def make_table_view_name_of_host(view_name: str) -> str:
@@ -326,10 +333,12 @@ class TreeRenderer:
         return header
 
     def _show_attributes(
-        self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
+        self,
+        attributes: ImmutableAttributes | ImmutableDeltaAttributes,
+        hint: AttributesDisplayHint,
     ) -> None:
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
-        key_order = [SDKey(k) for k in hints.attributes_hint.by_key]
+        key_order = [SDKey(k) for k in hint.by_key]
         if isinstance(attributes, ImmutableAttributes):
             sorted_pairs = _sort_pairs(attributes, key_order)
         else:
@@ -337,7 +346,7 @@ class TreeRenderer:
 
         html.open_table()
         for item in sorted_pairs:
-            attr_hint = hints.get_attribute_hint(item.key)
+            attr_hint = hint.get_attribute_hint(item.key)
             html.open_tr()
             html.th(self._get_header(attr_hint.title, item.key))
             html.open_td()
@@ -347,9 +356,9 @@ class TreeRenderer:
         html.close_table()
 
     def _show_table(
-        self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints, request_: Request
+        self, table: ImmutableTable | ImmutableDeltaTable, hint: TableDisplayHint, request_: Request
     ) -> None:
-        if hints.table_hint.view_name:
+        if hint.view_name:
             # Link to Multisite view with exactly this table
             html.div(
                 HTMLWriter.render_a(
@@ -357,10 +366,7 @@ class TreeRenderer:
                     href=makeuri_contextless(
                         request_,
                         [
-                            (
-                                "view_name",
-                                make_table_view_name_of_host(hints.table_hint.view_name),
-                            ),
+                            ("view_name", make_table_view_name_of_host(hint.view_name)),
                             ("host", self._hostname),
                         ],
                         filename="view.py",
@@ -369,7 +375,7 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns = _make_columns(table.rows, [SDKey(k) for k in hints.table_hint.by_column])
+        columns = _make_columns(table.rows, [SDKey(k) for k in hint.by_column])
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
         if isinstance(table, ImmutableTable):
             sorted_rows = _sort_rows(table, columns)
@@ -382,7 +388,7 @@ class TreeRenderer:
         for column in columns:
             html.th(
                 self._get_header(
-                    hints.get_column_hint(column).title,
+                    hint.get_column_hint(column).title,
                     "%s*" % column if column in table.key_columns else column,
                 )
             )
@@ -391,7 +397,7 @@ class TreeRenderer:
         for row in sorted_rows:
             html.open_tr(class_="even0")
             for item in row:
-                column_hint = hints.get_column_hint(item.key)
+                column_hint = hint.get_column_hint(item.key)
                 # TODO separate tdclass from rendered value
                 if isinstance(item, _SDDeltaItem):
                     tdclass, _rendered_value = column_hint.paint_function(item.old or item.new)
@@ -404,7 +410,7 @@ class TreeRenderer:
         html.close_table()
 
     def _show_node(
-        self, node: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints, request_: Request
+        self, node: ImmutableTree | ImmutableDeltaTree, hint: NodeDisplayHint, request_: Request
     ) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
         with foldable_container(
@@ -412,9 +418,9 @@ class TreeRenderer:
             id_=raw_path,
             isopen=False,
             title=self._get_header(
-                _replace_title_placeholders(hints.node_hint.title, hints.abc_path, node.path),
+                _replace_title_placeholders(hint.title, hint.path, node.path),
                 ".".join(map(str, node.path)),
-                hints.node_hint.icon,
+                hint.icon,
             ),
             fetch_url=makeuri_contextless(
                 request,
@@ -435,12 +441,12 @@ class TreeRenderer:
         hints = DISPLAY_HINTS.get_tree_hints(tree.path)
 
         if tree.attributes:
-            self._show_attributes(tree.attributes, hints)
+            self._show_attributes(tree.attributes, hints.attributes_hint)
 
         if tree.table:
-            self._show_table(tree.table, hints, request_)
+            self._show_table(tree.table, hints.table_hint, request_)
 
         for name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node, hints.get_node_hints(name), request_)
+                self._show_node(node, hints.get_node_hint(name), request_)

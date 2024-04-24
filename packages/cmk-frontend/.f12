@@ -8,7 +8,12 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-./scripts/npm-ci
+# check if node_modules is in sync with package-lock.json
+if ! npm ls --all &>/dev/null; then
+    # if not: install from package-lock.json
+    npm ci --yes --audit=false
+fi
+
 echo "Updating compiled JS/CSS files..."
 npm run build
 echo "Update site $SITE..."

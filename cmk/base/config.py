@@ -25,7 +25,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, TypedDict
+from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, TypeAlias
 
 import cmk.utils
 import cmk.utils.check_utils
@@ -119,6 +119,12 @@ from cmk.base.server_side_calls import load_special_agents, SpecialAgent, Specia
 
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
+
+try:
+    from cmk.base.cee.rrd import RRDObjectConfig
+except ModuleNotFoundError:
+    # Non-existing edition layering...
+    RRDObjectConfig: TypeAlias = object  # type: ignore[no-redef]
 
 # TODO: Prefix helper functions with "_".
 
@@ -322,16 +328,6 @@ def _get_clustered_services(
 class ClusterCacheInfo:
     clusters_of: Mapping[HostName, Sequence[HostName]]
     nodes_of: Mapping[HostName, Sequence[HostName]]
-
-
-class RRDObjectConfig(TypedDict):
-    """RRDObjectConfig
-    This typing might not be complete or even wrong, feel free to improve"""
-
-    cfs: Iterable[Literal["MIN", "MAX", "AVERAGE"]]  # conceptually a Set[Literal[...]]
-    rras: list[tuple[float, int, int]]
-    step: int
-    format: Literal["pnp_multiple", "cmc_single"]
 
 
 CheckContext = dict[str, Any]

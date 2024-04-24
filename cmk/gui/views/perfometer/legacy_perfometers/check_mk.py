@@ -35,32 +35,6 @@ def register() -> None:
     perfometers["check_mk-chrony"] = perfometer_check_mk_ntp
     perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, c, p, "s")
     perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
-    perfometers["check_mk-nvidia.temp"] = perfometer_temperature
-    perfometers["check_mk-cmctc.temp"] = perfometer_temperature
-    perfometers["check_mk-smart.temp"] = perfometer_temperature
-    perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
-    perfometers["check_mk-akcp_daisy_temp"] = perfometer_temperature
-    perfometers["check_mk-fsc_temp"] = perfometer_temperature
-    perfometers["check_mk-viprinet_temp"] = perfometer_temperature
-    perfometers["check_mk-hwg_temp"] = perfometer_temperature
-    perfometers["check_mk-sensatronics_temp"] = perfometer_temperature
-    perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
-    perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
-    perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
-    perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
-    perfometers["check_mk-wagner_titanus_topsense.temp"] = perfometer_temperature
-    perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
-    perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
-    perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
-    perfometers["check_mk-bintec_sensors.temp"] = perfometer_temperature
-    perfometers["check_mk-knuerr_rms_temp"] = perfometer_temperature
-    perfometers["check_mk-arris_cmts_temp"] = perfometer_temperature
-    perfometers["check_mk-casa_cpu_temp"] = perfometer_temperature
-    perfometers["check_mk-rms200_temp"] = perfometer_temperature
-    perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
-    perfometers["check_mk-climaveneta_temp"] = perfometer_temperature
-    perfometers["check_mk-carel_sensors"] = perfometer_temperature
-    perfometers["check_mk-kentix_temp"] = perfometer_temperature
     perfometers["check_mk-dell_poweredge_amperage.power"] = perfometer_power
     perfometers["check_mk-dell_chassis_power"] = perfometer_power
     perfometers["check_mk-dell_chassis_powersupplies"] = perfometer_power
@@ -77,14 +51,6 @@ def register() -> None:
     perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
     perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
     perfometers["check_mk-oracle_processes"] = perfometer_oracle_sessions
-    perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
-    perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
-    perfometers["check_mk-aix_diskiod"] = perfometer_check_mk_diskstat
-    perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
-    perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskstat
-    perfometers["check_mk-emcvnx_disks"] = perfometer_check_mk_diskstat
-    perfometers["check_mk-ibm_svc_nodestats.diskio"] = perfometer_check_mk_diskstat
-    perfometers["check_mk-ibm_svc_systemstats.diskio"] = perfometer_check_mk_diskstat
     perfometers["check_mk-ibm_svc_nodestats.iops"] = perfometer_check_mk_iops_r_w
     perfometers["check_mk-ibm_svc_systemstats.iops"] = perfometer_check_mk_iops_r_w
     perfometers["check_mk-ibm_svc_nodestats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
@@ -313,14 +279,6 @@ def perfometer_ipmi_sensors(
     return ("%d%s" % (int(value), unit)), render_perfometer(data)
 
 
-def perfometer_temperature(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    color = "#39f"
-    value = float(perf_data[0].value)
-    return "%d °C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
-
-
 def perfometer_power(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
     display_color = "#60f020"
 
@@ -487,31 +445,6 @@ def perfometer_oracle_sessions(
         unit = "/h"
     value = int(perf_data[0].value)
     return "%d%s" % (value, unit), perfometer_logarithmic(value, 50, 2, color)
-
-
-def perfometer_check_mk_diskstat(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    # No Perf-O-Meter for legacy version of diskstat possible
-    if len(perf_data) < 2:
-        return None
-
-    read_bytes = float(perf_data[0].value)
-    write_bytes = float(perf_data[1].value)
-
-    text = "{:<.2f} M/s  {:<.2f} M/s".format(
-        read_bytes / (1024.0 * 1024.0),
-        write_bytes / (1024.0 * 1024.0),
-    )
-
-    return text, perfometer_logarithmic_dual(
-        read_bytes,
-        "#60e0a0",
-        write_bytes,
-        "#60a0e0",
-        5000000,
-        10,
-    )
 
 
 def perfometer_check_mk_iops_r_w(

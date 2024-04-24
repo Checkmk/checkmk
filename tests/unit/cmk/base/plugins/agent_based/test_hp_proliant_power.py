@@ -49,7 +49,7 @@ def test_check_present(section_present: hp_proliant_power.Section) -> None:
             state=v1.State.CRIT,
             summary="Current reading: 268 Watts (warn/crit at 100 Watts/200 Watts)",
         ),
-        v1.Metric("watt", 268.0, levels=(100.0, 200.0)),
+        v1.Metric("power", 268.0, levels=(100.0, 200.0)),
     ]
 
 

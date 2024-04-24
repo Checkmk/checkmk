@@ -1138,3 +1138,6 @@ check_metrics["check_mk-ups_capacity"] = {
         "deprecated": "2.0.0b2",
     },
 }
+check_metrics["check_mk-hp_proliant_power"] = {
+    "watt": {"name": "power"},
+}

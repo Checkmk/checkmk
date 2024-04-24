@@ -567,7 +567,7 @@ class Site:
             ["cmk-passwd", "-i", ADMIN_USER], input=new_password or self.admin_password
         )
 
-    def listdir(self, rel_path: str) -> list[str]:
+    def listdir(self, rel_path: str | Path) -> list[str]:
         p = self.execute(["ls", "-1", self.path(rel_path)], stdout=subprocess.PIPE)
         output = p.communicate()[0].strip()
         assert p.wait() == 0

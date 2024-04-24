@@ -9,7 +9,11 @@ from cmk.utils.version import Edition
 
 from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
 
-from cmk.plugins.collection.rulesets.cert import ensure_service_name_in_connections, rule_spec_cert
+from cmk.plugins.collection.rulesets.cert import (
+    ensure_service_name_in_connections,
+    migrate_from_old_signature_keys,
+    rule_spec_cert,
+)
 
 
 @pytest.mark.parametrize(
@@ -111,3 +115,29 @@ def test_rulespec_migration(
     validating_rule_spec = convert_to_legacy_rulespec(rule_spec_cert, Edition.CRE, lambda x: x)
     validating_rule_spec.valuespec.validate_datatype(raw_value, "")
     validating_rule_spec.valuespec.validate_value(raw_value, "")
+
+
+@pytest.mark.parametrize(
+    "raw_value, expected_value",
+    [
+        pytest.param(
+            ("rsa", ("sha3_224", "sha3_224")),
+            ("RSA_WITH_SHA224", "1.2.840.113549.1.1.14"),
+            id="Signature rsa",
+        ),
+        pytest.param(
+            ("ed25519", None),
+            ("ED25519", "1.3.101.112"),
+            id="Signature ed25519",
+        ),
+        pytest.param(
+            ("rsassa_pss", ("sha3_384", "sha3_384")),
+            ("RSASSA_PSS", "1.2.840.113549.1.1.10"),
+            id="Signature rsassa_pss",
+        ),
+    ],
+)
+def test_cert_signature_migration(
+    raw_value: tuple[str, object], expected_value: tuple[str, object] | None
+) -> None:
+    assert migrate_from_old_signature_keys(raw_value) == expected_value

@@ -342,8 +342,8 @@ class ModeBIEditPack(ABCBIMode):
 
     def title(self) -> str:
         if self._bi_pack:
-            return super().title() + " - " + _("Edit BI Pack %s") % self.bi_pack.title
-        return super().title() + " - " + _("Add BI Pack")
+            return _("Edit BI Pack %s") % self.bi_pack.title
+        return _("Add BI Pack")
 
     def action(self) -> ActionResult:
         if transactions.check_transaction():

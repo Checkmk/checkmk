@@ -415,12 +415,13 @@ class HTMLGenerator(HTMLWriter):
             require_confirmation=require_confirmation,
         )
 
-        yield
-
-        if only_close:
-            html.close_form()
-        else:
-            html.end_form()
+        try:
+            yield
+        finally:
+            if only_close:
+                html.close_form()
+            else:
+                html.end_form()
 
     def begin_form(
         self,

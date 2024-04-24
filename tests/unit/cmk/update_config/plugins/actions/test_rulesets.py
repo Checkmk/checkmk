@@ -14,8 +14,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.version import edition, Edition
 
-from cmk.checkengine.checking import CheckPluginName
-
 from cmk.gui.valuespec import Dictionary, Float, Migrate
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
@@ -188,56 +186,6 @@ def test_transform_replaced_wato_rulesets_and_params(
     rule = rules[0]
     assert len(rule) == 3
     assert rule[2].value == transformed_param_value
-
-
-@pytest.mark.usefixtures("request_context")
-def test_remove_removed_check_plugins_from_ignored_checks() -> None:
-    ruleset = Ruleset("ignored_checks", {})
-    ruleset.replace_folder_config(
-        folder_tree().root_folder(),
-        [
-            {
-                "id": "1",
-                "condition": {},
-                "options": {"disabled": False},
-                "value": ["a", "b", "mgmt_c"],
-            },
-            {
-                "id": "2",
-                "condition": {},
-                "options": {"disabled": False},
-                "value": ["d", "e"],
-            },
-            {
-                "id": "3",
-                "condition": {},
-                "options": {"disabled": False},
-                "value": ["mgmt_f"],
-            },
-            {
-                "id": "4",
-                "condition": {},
-                "options": {"disabled": False},
-                "value": ["a", "g"],
-            },
-        ],
-    )
-    rulesets = RulesetCollection({"ignored_checks": ruleset})
-    rulesets_updater._remove_removed_check_plugins_from_ignored_checks(
-        rulesets,
-        {
-            CheckPluginName("b"),
-            CheckPluginName("d"),
-            CheckPluginName("e"),
-            CheckPluginName("f"),
-        },
-    )
-    leftover_rules = [rule for (_folder, idx, rule) in rulesets.get("ignored_checks").get_rules()]
-    assert len(leftover_rules) == 2
-    assert leftover_rules[0].id == "1"
-    assert leftover_rules[1].id == "4"
-    assert leftover_rules[0].value == ["a", "mgmt_c"]
-    assert leftover_rules[1].value == ["a", "g"]
 
 
 @pytest.mark.parametrize(

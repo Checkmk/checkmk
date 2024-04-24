@@ -506,9 +506,13 @@ class DisplayHints:
         )
 
     def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
-        for path, related_raw_hints in sorted(_get_related_raw_hints(raw_hints).items()):
+        for path, related_raw_hints in sorted(
+            _get_related_raw_hints(raw_hints).items(), key=lambda t: t[0]
+        ):
             if not path:
                 continue
+
+            parent = self.get_tree_hints(path[:-1])
 
             node_or_table_hints = InventoryHintSpec()
             for key in _ALLOWED_KEYS:
@@ -526,7 +530,7 @@ class DisplayHints:
                 set(related_raw_hints.by_key),
             )
 
-            self._get_parent(path).nodes.setdefault(
+            parent.nodes.setdefault(
                 path[-1],
                 DisplayHints(
                     path=path,
@@ -557,16 +561,6 @@ class DisplayHints:
                 ),
             )
 
-    def _get_parent(self, path: SDPath) -> DisplayHints:
-        node = self
-        for node_name in path[:-1]:
-            if node_name in node.nodes:
-                node = node.nodes[node_name]
-            else:
-                node = node.nodes.setdefault(node_name, DisplayHints.from_path(path))
-
-        return node
-
     def __iter__(self) -> Iterator[DisplayHints]:
         yield from self.make_inventory_paths_or_hints([])
 
@@ -593,13 +587,10 @@ class DisplayHints:
         for node_name in path:
             if node_name in node.nodes:
                 node = node.nodes[node_name]
-
             elif "*" in node.nodes:
                 node = node.nodes["*"]
-
             else:
                 return DisplayHints.from_path(path)
-
         return node
 
 

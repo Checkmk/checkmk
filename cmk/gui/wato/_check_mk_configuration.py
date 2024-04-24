@@ -4608,7 +4608,7 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
 
 def _migrate_automatic_rediscover_parameters(
     param: int | tuple[str, dict[str, bool]]
-) -> tuple[str, dict[str, bool]]:
+) -> tuple[str, dict[str, bool] | None]:
     # already migrated
     if isinstance(param, tuple):
         return param
@@ -4647,15 +4647,7 @@ def _migrate_automatic_rediscover_parameters(
         )
 
     if param == 3:
-        return (
-            "update_everything",
-            {
-                "add_new_services": True,
-                "remove_vanished_services": True,
-                "update_changed_service_labels": True,
-                "update_host_labels": True,
-            },
-        )
+        return ("update_everything", None)
 
     raise MKConfigError(f"Automatic rediscovery parameter {param} not implemented")
 

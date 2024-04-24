@@ -82,11 +82,7 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
                                 "update_everything",
                                 _("Refresh all services and host labels (tabula rasa)"),
                                 FixedValue(
-                                    value={
-                                        "add_new_services": True,
-                                        "remove_vanished_services": True,
-                                        "update_host_labels": True,
-                                    },
+                                    value=None,
                                     title=_("Refresh all services and host labels (tabula rasa)"),
                                     totext="",
                                 ),

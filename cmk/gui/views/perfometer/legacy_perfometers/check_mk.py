@@ -34,7 +34,6 @@ def register() -> None:
     perfometers["check_mk-ntp.time"] = perfometer_check_mk_ntp
     perfometers["check_mk-chrony"] = perfometer_check_mk_ntp
     perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, c, p, "s")
-    perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
     perfometers["check_mk-dell_poweredge_amperage.power"] = perfometer_power
     perfometers["check_mk-dell_chassis_power"] = perfometer_power
     perfometers["check_mk-dell_chassis_powersupplies"] = perfometer_power
@@ -243,40 +242,6 @@ def perfometer_check_mk_ntp(row, check_command, perf_data, unit="ms"):
             (50, get_themed_perfometer_bg_color()),
         ]
     return f"{offset:.2f} {unit}", render_perfometer(data)
-
-
-def perfometer_ipmi_sensors(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    state = row["service_state"]
-    color = "#39f"
-    value = float(perf_data[0].value)
-    crit = utils.savefloat(perf_data[0].crit)
-    if not crit:
-        return "%d" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
-
-    perc = value * 100.0 / crit
-    # some sensors get critical if the value is < crit (fans), some if > crit (temp)
-    if value <= crit:
-        data = [(perc, color), (100 - perc, get_themed_perfometer_bg_color())]
-    elif state == 0:  # fan, OK
-        m = max(value, 10000.0)
-        perc_crit = crit * 100.0 / m
-        perc_value = (value - crit) * 100.0 / m
-        perc_free = (m - value) * 100.0 / m
-        data = [
-            (perc_crit, color),
-            (perc_value, color),
-            (perc_free, get_themed_perfometer_bg_color()),
-        ]
-    else:
-        data = []
-
-    if perf_data[0].metric_name == "temp":
-        unit = "°C"
-    else:
-        unit = ""
-    return ("%d%s" % (int(value), unit)), render_perfometer(data)
 
 
 def perfometer_power(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:

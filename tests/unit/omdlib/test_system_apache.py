@@ -31,7 +31,9 @@ def test_register_with_system_apache(tmp_path: Path, mocker: MockerFixture) -> N
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
 
-    register_with_system_apache(version_info, "unit", str(tmp_path), "127.0.0.1", "5000", True)
+    register_with_system_apache(
+        version_info, "unit", str(tmp_path), "127.0.0.1", "5000", True, False
+    )
 
     content = apache_config.read_bytes()
     assert (
@@ -51,11 +53,13 @@ def test_unregister_from_system_apache(tmp_path: Path, mocker: MockerFixture) ->
     reload_apache = mocker.patch("subprocess.call", return_value=0)
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    register_with_system_apache(version_info, "unit", str(tmp_path), "127.0.0.1", "5000", True)
+    register_with_system_apache(
+        version_info, "unit", str(tmp_path), "127.0.0.1", "5000", True, False
+    )
     assert apache_config.exists()
     reload_apache.reset_mock()
 
-    unregister_from_system_apache(version_info, "unit", apache_reload=True)
+    unregister_from_system_apache(version_info, "unit", apache_reload=True, verbose=False)
     assert not apache_config.exists()
     reload_apache.assert_called_once_with(["/usr/sbin/apachectl", "graceful"])
 
@@ -65,7 +69,9 @@ def test_delete_apache_hook(tmp_path: Path) -> None:
     version_info.APACHE_CTL = "/usr/sbin/apachectl"
     apache_config = tmp_path / "omd/apache/unit.conf"
     apache_config.parent.mkdir(parents=True)
-    register_with_system_apache(version_info, "unit", str(tmp_path), "127.0.0.1", "5000", True)
+    register_with_system_apache(
+        version_info, "unit", str(tmp_path), "127.0.0.1", "5000", True, verbose=False
+    )
     assert apache_config.exists()
 
     delete_apache_hook("unit")

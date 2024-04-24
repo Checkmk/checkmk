@@ -81,9 +81,8 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
     base_site = site_factory.restore_site_from_backup(backup_path, base_site.id, reuse=True)
     hostnames = [_.get("id") for _ in base_site.openapi.get_hosts()]
 
-    for hostname in hostnames:
-        address = f"127.0.0.{hostnames.index(hostname) + 1}"
-        register_controller(agent_ctl, base_site, hostname, site_address=address)
+    for i, hostname in enumerate(hostnames, start=1):
+        register_controller(agent_ctl, base_site, hostname, site_address=f"127.0.0.{i}")
         wait_until_host_receives_data(base_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")

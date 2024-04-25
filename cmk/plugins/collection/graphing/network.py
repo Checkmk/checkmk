@@ -190,3 +190,9 @@ perfometer_busy_workers_requests_per_second = perfometers.Stacked(
         segments=["requests_per_second"],
     ),
 )
+
+perfometer_op_s = perfometers.Perfometer(
+    name="op_s",
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(1000)),
+    segments=["op_s"],
+)

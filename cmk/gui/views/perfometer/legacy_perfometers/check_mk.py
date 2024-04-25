@@ -12,13 +12,12 @@ from .utils import (
     perfometer_linear,
     perfometer_logarithmic,
     perfometer_logarithmic_dual,
-    perfometers,
     render_perfometer,
 )
 
 
 def register() -> None:
-    perfometers["check_mk-nfsiostat"] = perfometer_nfsiostat
+    return
 
 
 # Perf-O-Meters for Checkmk's checks
@@ -107,14 +106,3 @@ def perfometer_el_inphase(
         if data.metric_name == "power":
             power = utils.savefloat(data.value)
     return "%.0f W" % power, perfometer_linear(power, "#8050ff")
-
-
-def perfometer_nfsiostat(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    for pd in perf_data:
-        if pd.metric_name == "op_s":
-            ops = float(pd.value)
-            color = "#ff6347"
-            return "%d op/s" % ops, perfometer_linear(ops, color)
-    return None

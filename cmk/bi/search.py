@@ -71,8 +71,15 @@ class LabelConditionSchema(Schema):
 
 
 class LabelGroupConditionSchema(Schema):
-    operator = ReqString(enum=["and", "or", "not"], description="Condition operator.")
-    label_group = ReqList(fields.Nested(LabelConditionSchema), description="Label conditions.")
+    operator = fields.String(
+        enum=["and", "or", "not"],
+        description="Condition operator.",
+        load_default="and",
+    )
+    label_group = ReqList(
+        fields.Nested(LabelConditionSchema),
+        description="Label conditions.",
+    )
 
     @pre_dump
     def _pre_dump(
@@ -100,11 +107,27 @@ class HostConditionsSchema(Schema):
     host_label_groups = fields.List(
         fields.Nested(LabelGroupConditionSchema),
         dump_default=[],
-        description=(
-            "This is a required field but is not enforced, since we still allow our "
-            "legacy field 'host_labels for backward compatibility."
-        ),
-        example=[{"operator": "and", "label_group": [{"operator": "and", "label": "db:mssql"}]}],
+        description="Host label conditions. Although all items in this list have a default operator"
+        " value, the operator value for the the first item in the list does not have any effect.",
+        example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    },
+                ],
+            },
+            {
+                "operator": "and",
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "network/primary:yes",
+                    },
+                ],
+            },
+        ],
     )
     host_tags = ReqDict(dump_default={}, example={}, description="Host tags.")
     host_choice = ReqNested(
@@ -149,11 +172,27 @@ class ServiceConditionsSchema(HostConditionsSchema):
     service_label_groups = fields.List(
         fields.Nested(LabelGroupConditionSchema),
         dump_default=[],
-        description=(
-            "This is a required field but is not enforced, since we still allow our "
-            "legacy field 'service_labels for backward compatibility."
-        ),
-        example=[{"operator": "and", "label_group": [{"operator": "and", "label": "db:mssql"}]}],
+        description="Service label conditions. Although all items in this list have a default operator"
+        " value, the operator value for the the first item in the list does not have any effect.",
+        example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    },
+                ],
+            },
+            {
+                "operator": "and",
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "network/primary:yes",
+                    },
+                ],
+            },
+        ],
     )
     service_labels = fields.Dict(
         description=(

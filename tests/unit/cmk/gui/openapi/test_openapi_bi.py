@@ -753,3 +753,41 @@ def test_create_rule_with_invalid_labels_and_label_group_combos(
         body=test_rule,
         expect_ok=False,
     ).assert_status_code(400)
+
+
+def test_create_rule_with_label_groups_no_first_operator(clients: ClientRegistry) -> None:
+    test_rule = create_bipack_get_partial_rule_test_data(clients)
+
+    test_rule["nodes"][0]["search"]["conditions"]["host_label_groups"] = [
+        {
+            "label_group": [
+                {"operator": "and", "label": "mystery/switch:yes"},
+                {"operator": "or", "label": "mystery/switch:no"},
+            ],
+        },
+        {
+            "operator": "or",
+            "label_group": [
+                {"operator": "and", "label": "network/primary:yes"},
+                {"operator": "not", "label": "network/primary:no"},
+            ],
+        },
+    ]
+
+    test_rule["nodes"][0]["search"]["conditions"]["service_label_groups"] = [
+        {
+            "label_group": [
+                {"operator": "and", "label": "network/stable:yes"},
+                {"operator": "or", "label": "network/stable:no"},
+            ],
+        },
+        {
+            "operator": "or",
+            "label_group": [
+                {"operator": "and", "label": "network/uplink:yes"},
+                {"operator": "not", "label": "network/uplink:no"},
+            ],
+        },
+    ]
+
+    clients.BiRule.create(rule_id="label_test_rule_id_1", body=test_rule)

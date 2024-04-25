@@ -71,7 +71,7 @@ def inventory_infoblox_temp(parsed):
 
 
 def check_infoblox_temp(item, params, parsed):
-    if sensor := parsed.get(item):
+    if (sensor := parsed.get(item)) is None:
         return None
 
     devstate, devstatename = sensor["state"]

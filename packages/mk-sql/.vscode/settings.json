@@ -55,5 +55,6 @@
                 }
             }
         ]
-    }
+    },
+    "rust-analyzer.checkOnSave": true
 }

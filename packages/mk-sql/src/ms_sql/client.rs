@@ -342,12 +342,12 @@ async fn create_named_instance_client(config: Config) -> anyhow::Result<Client> 
     // The logic is based on SQL browser mechanic
     let tcp = TcpStream::connect_named(&config)
         .await
-        .map_err(|e| anyhow::anyhow!("{} {}", SQL_TCP_ERROR_TAG, e))?;
+        .map_err(|e| anyhow::anyhow!("Failed to connect to SQL Browser {}", e))?;
     tcp.set_nodelay(true)?; // in documentation and examples
 
     Client::connect(config, tcp.compat_write())
         .await
-        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e))
+        .map_err(|e| anyhow::anyhow!("Failed to access SQL Browser {}", e))
 }
 
 async fn connect_via_tcp(config: Config) -> Result<Client> {

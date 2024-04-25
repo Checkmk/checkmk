@@ -37,3 +37,21 @@ translation_emc_datadomain_nvbat = translations.Translation(
     check_commands=[translations.PassiveCheck("emc_datadomain_nvbat")],
     translations={"charge": translations.RenameTo("battery_capacity")},
 )
+
+translation_db2_mem = translations.Translation(
+    name="db2_mem",
+    check_commands=[translations.PassiveCheck("db2_mem")],
+    translations={"mem": translations.RenameTo("mem_used")},
+)
+
+translation_innovaphone_mem = translations.Translation(
+    name="innovaphone_mem",
+    check_commands=[translations.PassiveCheck("innovaphone_mem")],
+    translations={"usage": translations.RenameTo("mem_used_percent")},
+)
+
+translation_arris_cmts_mem = translations.Translation(
+    name="arris_cmts_mem",
+    check_commands=[translations.PassiveCheck("arris_cmts_mem")],
+    translations={"memused": translations.RenameTo("mem_used")},
+)

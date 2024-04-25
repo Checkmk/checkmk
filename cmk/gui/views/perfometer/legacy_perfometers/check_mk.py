@@ -21,12 +21,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-db2_mem"] = perfometer_simple_mem_usage
-    perfometers["check_mk-innovaphone_mem"] = perfometer_simple_mem_usage
-    perfometers["check_mk-juniper_screenos_mem"] = perfometer_simple_mem_usage
-    perfometers["check_mk-netscaler_mem"] = perfometer_simple_mem_usage
-    perfometers["check_mk-arris_cmts_mem"] = perfometer_simple_mem_usage
-    perfometers["check_mk-juniper_trpz_mem"] = perfometer_simple_mem_usage
     perfometers["check_mk-apc_mod_pdu_modules"] = perfometer_apc_mod_pdu_modules
     perfometers["check_mk-apc_inrow_airflow"] = perfometer_airflow_ls
     perfometers["check_mk-apc_inrow_fanspeed"] = perfometer_fanspeed
@@ -120,14 +114,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_simple_mem_usage(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
-    entry = perf[0]
-    if entry.max is None:
-        return None
-    used_perc = (100.0 / entry.max) * entry.value
-    return "%d%%" % used_perc, perfometer_linear(used_perc, "#20cf80")
 
 
 def perfometer_apc_mod_pdu_modules(

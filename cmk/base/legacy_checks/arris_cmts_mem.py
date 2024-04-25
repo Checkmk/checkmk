@@ -43,7 +43,7 @@ def check_arris_cmts_mem(item, params, parsed):
         data["mem_used"],
         data["mem_total"],
         (mode, (warn, crit)),
-        metric_name="memused",
+        metric_name="mem_used",
     )
 
 

@@ -17,7 +17,7 @@ def inventory_innovaphone_mem(info):
 def check_innovaphone_mem(_no_item, params, info):
     yield check_levels(
         int(info[0][1]),
-        "usage",
+        "mem_used_percent",
         params["levels"],
         human_readable_func=render.percent,
         infoname="Current",

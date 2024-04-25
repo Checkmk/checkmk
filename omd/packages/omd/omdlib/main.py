@@ -61,6 +61,7 @@ from omdlib.dialog import (
     user_confirms,
 )
 from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.site_name import sitename_must_be_valid
 from omdlib.sites import all_sites, main_sites
 from omdlib.skel_permissions import (
     get_skel_permissions,
@@ -90,7 +91,6 @@ from omdlib.users_and_groups import (
     group_id,
     groupdel,
     switch_to_site_user,
-    user_exists,
     user_id,
     user_logged_in,
     user_verify,
@@ -2067,24 +2067,6 @@ def main_setversion(
 
 def use_update_alternatives() -> bool:
     return os.path.exists("/var/lib/dpkg/alternatives/omd")
-
-
-# Bail out if name for new site is not valid (needed by create/mv/cp)
-def sitename_must_be_valid(site, reuse=False):
-    # type (SiteContext, bool) -> None
-    # Make sanity checks before starting any action
-
-    if not re.match("^[a-zA-Z_][a-zA-Z_0-9]{0,15}$", site.name):
-        bail_out(
-            "Invalid site name. Must begin with a character, may contain characters, digits and _ and have length 1 up to 16"
-        )
-
-    if not reuse and site.exists():
-        bail_out("Site '%s' already existing." % site.name)
-    if not reuse and group_exists(site.name):
-        bail_out("Group '%s' already existing." % site.name)
-    if not reuse and user_exists(site.name):
-        bail_out("User '%s' already existing." % site.name)
 
 
 def main_create(

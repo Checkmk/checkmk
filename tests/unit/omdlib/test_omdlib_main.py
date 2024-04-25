@@ -65,38 +65,6 @@ def test_main_help(capsys: pytest.CaptureFixture[str]) -> None:
     assert "omd COMMAND -h" in stdout
 
 
-def test_sitename_must_be_valid_ok(tmp_path: Path) -> None:
-    tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-    assert omdlib.main.sitename_must_be_valid(SiteContext("lulu")) is None
-
-
-@pytest.mark.parametrize(
-    "name,expected_result",
-    [
-        ("0asd", False),
-        ("asd0", True),
-        ("", False),
-        ("aaaaaaaaaaaaaaaa", True),
-        ("aaaaaaaaaaaaaaaaa", False),
-    ],
-)
-def test_sitename_must_be_valid_regex(tmp_path: Path, name: str, expected_result: bool) -> None:
-    tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-
-    if expected_result:
-        assert omdlib.main.sitename_must_be_valid(SiteContext(name)) is None
-    else:
-        with pytest.raises(SystemExit, match="Invalid site name"):
-            omdlib.main.sitename_must_be_valid(SiteContext(name))
-
-
-def test_sitename_must_be_valid_already_exists(tmp_path: Path) -> None:
-    tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-
-    with pytest.raises(SystemExit, match="already existing"):
-        omdlib.main.sitename_must_be_valid(SiteContext("lala"))
-
-
 def test_get_orig_working_directory(tmp_path: Path) -> None:
     orig_wd = os.getcwd()
     try:

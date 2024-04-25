@@ -254,7 +254,11 @@ class ProgramSource(Source[AgentRawData]):
         self._file_cache_path: Final = file_cache_path
         # `make_program_commandline()` may raise LookupError if no datasource
         # is configured.
-        self._cmdline: Final = self.config_cache.make_program_commandline(host_name, ipaddress)
+        self._cmdline: Final = self.config_cache.make_program_commandline(
+            host_name,
+            ipaddress,
+            config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure),
+        )
         self._stdin: Final = None
         self._is_cmc: Final = config.is_cmc()
 

@@ -75,8 +75,13 @@ def test_do_create_config_nagios(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
+    ip_address_of = config.ConfiguredIPLookup(core_scenario, config.handle_ip_lookup_failure)
     core_config.do_create_config(
-        create_core("nagios"), core_scenario, all_hosts=[HostName("test-host")], duplicates=()
+        create_core("nagios"),
+        core_scenario,
+        ip_address_of,
+        all_hosts=[HostName("test-host")],
+        duplicates=(),
     )
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()
@@ -87,6 +92,7 @@ def test_do_create_config_nagios_collects_passwords(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
+    ip_address_of = config.ConfiguredIPLookup(core_scenario, config.handle_ip_lookup_failure)
 
     password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())
 
@@ -94,7 +100,11 @@ def test_do_create_config_nagios_collects_passwords(
     assert not password_store.load(core_store)
 
     core_config.do_create_config(
-        create_core("nagios"), core_scenario, all_hosts=[HostName("test-host")], duplicates=()
+        create_core("nagios"),
+        core_scenario,
+        ip_address_of,
+        all_hosts=[HostName("test-host")],
+        duplicates=(),
     )
 
     assert password_store.load(core_store) == passwords
@@ -140,7 +150,13 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     if cmk_version.edition() is cmk_version.Edition.CME:
         expected_attrs["_CUSTOMER"] = "provider"
 
-    assert config_cache.get_host_attributes(HostName("test-host")) == expected_attrs
+    assert (
+        config_cache.get_host_attributes(
+            HostName("test-host"),
+            config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure),
+        )
+        == expected_attrs
+    )
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -264,9 +280,15 @@ def test_template_translation(
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
 
-    assert config_cache.translate_commandline(
-        hostname, ipaddress, template
-    ) == "<NOTHING>x{}x{}x<host>x<ip>x".format(ipaddress if ipaddress is not None else "", hostname)
+    assert (
+        config_cache.translate_commandline(
+            hostname,
+            ipaddress,
+            template,
+            config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure),
+        )
+        == f"<NOTHING>x{ipaddress or ''}x{hostname}x<host>x<ip>x"
+    )
 
 
 @pytest.mark.parametrize(

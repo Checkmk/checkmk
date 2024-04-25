@@ -1398,10 +1398,12 @@ def mode_update() -> None:
 
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
+    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
                 core=create_core(config.monitoring_core),
+                ip_address_of=ip_address_of,
                 config_cache=config_cache,
                 all_hosts=hosts_config.hosts,
                 duplicates=sorted(
@@ -1448,8 +1450,10 @@ modes.register(
 def mode_restart(args: Sequence[HostName]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
+    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
     cmk.base.core.do_restart(
         config_cache,
+        ip_address_of,
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
@@ -1493,8 +1497,10 @@ modes.register(
 def mode_reload(args: Sequence[HostName]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
+    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
     cmk.base.core.do_reload(
         config_cache,
+        ip_address_of,
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,

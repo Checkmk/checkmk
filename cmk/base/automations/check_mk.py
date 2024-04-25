@@ -368,7 +368,10 @@ class AutomationDiscoveryPreview(Automation):
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         return _get_discovery_preview(
-            host_name, not prevent_fetching, OnError.RAISE if raise_errors else OnError.WARN
+            host_name,
+            config_cache,
+            not prevent_fetching,
+            OnError.RAISE if raise_errors else OnError.WARN,
         )
 
 
@@ -391,7 +394,10 @@ class AutomationTryDiscovery(Automation):
         )  # ... or are you *absolutely* sure we always use *exactly* one of the directives :-)
 
         return _get_discovery_preview(
-            HostName(args[0]), perform_scan, OnError.RAISE if raise_errors else OnError.WARN
+            HostName(args[0]),
+            config.get_config_cache(),
+            perform_scan,
+            OnError.RAISE if raise_errors else OnError.WARN,
         )
 
 
@@ -400,13 +406,17 @@ automations.register(AutomationTryDiscovery())
 
 # TODO: invert the 'perform_scan' logic -> 'prevent_fetching'
 def _get_discovery_preview(
-    host_name: HostName, perform_scan: bool, on_error: OnError
+    host_name: HostName,
+    config_cache: ConfigCache,
+    perform_scan: bool,
+    on_error: OnError,
 ) -> ServiceDiscoveryPreviewResult:
     buf = io.StringIO()
+    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
 
-        check_preview = _execute_discovery(host_name, perform_scan, on_error)
+        check_preview = _execute_discovery(host_name, perform_scan, on_error, ip_address_of)
 
         def make_discovered_host_labels(
             labels: Sequence[HostLabel],
@@ -441,11 +451,13 @@ def _get_discovery_preview(
         )
 
 
-def active_check_preview_rows(
-    config_cache: ConfigCache, host_name: HostName
+def _active_check_preview_rows(
+    config_cache: ConfigCache,
+    host_name: HostName,
+    ip_address_of: config.IPLookup,
 ) -> Sequence[CheckPreviewEntry]:
     active_checks_ = config_cache.active_checks(host_name)
-    host_attrs = config_cache.get_host_attributes(host_name)
+    host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
     ignored_services = config.IgnoredServices(config_cache, host_name)
     ruleset_matcher = config_cache.ruleset_matcher
     translations = config.get_service_translations(ruleset_matcher, host_name)
@@ -468,7 +480,7 @@ def active_check_preview_rows(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
-        config.get_ssc_host_config(host_name, config_cache, macros),
+        config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
         host_attrs,
         config.http_proxies,
         make_final_service_name,
@@ -507,6 +519,7 @@ def _execute_discovery(
     host_name: HostName,
     perform_scan: bool,
     on_error: OnError,
+    ip_address_of: config.IPLookup,
 ) -> CheckPreview:
     file_cache_options = FileCacheOptions(
         use_outdated=not perform_scan, use_only_cache=not perform_scan
@@ -597,7 +610,7 @@ def _execute_discovery(
         table={
             host_name: [
                 *passive_check_preview.table[host_name],
-                *active_check_preview_rows(config_cache, host_name),
+                *_active_check_preview_rows(config_cache, host_name, ip_address_of),
                 *config_cache.custom_check_preview_rows(host_name),
             ]
         },
@@ -631,6 +644,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
 
     config.load()
     config_cache = config.get_config_cache()
+    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache,
@@ -775,6 +789,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
             if config.monitoring_core == "cmc":
                 cmk.base.core.do_reload(
                     config_cache,
+                    ip_address_of,
                     core,
                     locking_mode=config.restart_locking,
                     all_hosts=hosts_config.hosts,
@@ -787,6 +802,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
             else:
                 cmk.base.core.do_restart(
                     config_cache,
+                    ip_address_of,
                     core,
                     all_hosts=hosts_config.hosts,
                     locking_mode=config.restart_locking,
@@ -948,9 +964,13 @@ class AutomationRenameHosts(Automation):
                 # (If we are on a remote site now, locking *would* work, but we will not bake agents anyway.)
                 config_cache = config.get_config_cache()
                 hosts_config = config.make_hosts_config()
+                ip_address_of = config.ConfiguredIPLookup(
+                    config_cache, config.handle_ip_lookup_failure
+                )
                 _execute_silently(
                     config_cache,
                     CoreAction.START,
+                    ip_address_of,
                     hosts_config,
                     skip_config_locking_for_bakery=True,
                 )
@@ -1277,6 +1297,9 @@ class AutomationAnalyseServices(Automation):
                     config_cache=config_cache,
                     host_name=host_name,
                     servicedesc=servicedesc,
+                    ip_address_of=config.ConfiguredIPLookup(
+                        config_cache, config.handle_ip_lookup_failure
+                    ),
                 )
             )
             else AnalyseServiceResult(
@@ -1294,6 +1317,7 @@ class AutomationAnalyseServices(Automation):
         config_cache: ConfigCache,
         host_name: HostName,
         servicedesc: str,
+        ip_address_of: config.IPLookup,
     ) -> ServiceInfo:
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:
@@ -1343,7 +1367,7 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         translations = config.get_service_translations(config_cache.ruleset_matcher, host_name)
-        host_attrs = config_cache.get_host_attributes(host_name)
+        host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = config.get_resource_macros()
         macros = {**host_macros, **resource_macros}
@@ -1352,7 +1376,7 @@ class AutomationAnalyseServices(Automation):
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            config.get_ssc_host_config(host_name, config_cache, macros),
+            config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
             host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
@@ -1580,7 +1604,10 @@ class AutomationRestart(Automation):
             nodes = None
         config_cache = config.get_config_cache()
         hosts_config = config.make_hosts_config()
-        return _execute_silently(config_cache, self._mode(), hosts_config, hosts_to_update=nodes)
+        ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+        return _execute_silently(
+            config_cache, self._mode(), ip_address_of, hosts_config, hosts_to_update=nodes
+        )
 
     def _check_plugins_have_changed(self) -> bool:
         last_time = self._time_of_last_core_restart()
@@ -1634,6 +1661,7 @@ automations.register(AutomationReload())
 def _execute_silently(
     config_cache: ConfigCache,
     action: CoreAction,
+    ip_address_of: config.IPLookup,
     hosts_config: Hosts,
     hosts_to_update: set[HostName] | None = None,
     skip_config_locking_for_bakery: bool = False,
@@ -1643,6 +1671,7 @@ def _execute_silently(
         try:
             do_restart(
                 config_cache,
+                ip_address_of,
                 create_core(config.monitoring_core),
                 action=action,
                 all_hosts=hosts_config.hosts,
@@ -1908,6 +1937,14 @@ class AutomationDiagHost(Automation):
                         cmd=cmd,
                         tcp_connect_timeout=tcp_connect_timeout,
                         file_cache_options=file_cache_options,
+                        # Passing `ip_address_of` is the result of a refactoring.
+                        # We do pass an IP address as well, so I'm not quite sure why we need this.
+                        # Feel free to investigate!
+                        # Also: This class might write to console. The de-serializer of the automation call will
+                        # not be able to handle this I think? At best it will ignore it. We should fix this.
+                        ip_address_of=config.ConfiguredIPLookup(
+                            config_cache, config.handle_ip_lookup_failure
+                        ),
                     )
                 )
 
@@ -1977,6 +2014,7 @@ class AutomationDiagHost(Automation):
         cmd: str,
         tcp_connect_timeout: float | None,
         file_cache_options: FileCacheOptions,
+        ip_address_of: config.IPLookup,
     ) -> tuple[int, str]:
         hosts_config = config_cache.hosts_config
         check_interval = config_cache.check_mk_check_interval(host_name)
@@ -2024,7 +2062,9 @@ class AutomationDiagHost(Automation):
             if source_info.fetcher_type is FetcherType.PROGRAM and cmd:
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
-                    cmdline=config_cache.translate_commandline(host_name, ipaddress, cmd),
+                    cmdline=config_cache.translate_commandline(
+                        host_name, ipaddress, cmd, ip_address_of
+                    ),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
                 )
@@ -2228,6 +2268,7 @@ class AutomationActiveCheck(Automation):
 
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
+        ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
 
         if plugin == "custom":
             for entry in config_cache.custom_checks(host_name):
@@ -2235,7 +2276,10 @@ class AutomationActiveCheck(Automation):
                     continue
 
                 command_line = self._replace_macros(
-                    host_name, entry["service_description"], entry.get("command_line", "")
+                    host_name,
+                    entry["service_description"],
+                    entry.get("command_line", ""),
+                    ip_address_of,
                 )
                 if command_line:
                     cmd = core_config.autodetect_plugin(command_line)
@@ -2247,7 +2291,10 @@ class AutomationActiveCheck(Automation):
                 )
 
         with redirect_stdout(open(os.devnull, "w")):
-            host_attrs = config_cache.get_host_attributes(host_name)
+            # TODO: we're redirecting stdout to /dev/null here; so we might want to create
+            # a version of ip_address_of that does not write to stdout in the first place.
+            # Also I don't think we ever revisit the collected errors.
+            host_attrs = config_cache.get_host_attributes(host_name, ip_address_of)
 
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = config.get_resource_macros()
@@ -2258,7 +2305,7 @@ class AutomationActiveCheck(Automation):
             load_active_checks()[1],
             config.active_check_info,
             host_name,
-            config.get_ssc_host_config(host_name, config_cache, macros),
+            config.get_ssc_host_config(host_name, config_cache, macros, ip_address_of),
             host_attrs,
             config.http_proxies,
             lambda x: config.get_final_service_description(x, translations),
@@ -2289,10 +2336,16 @@ class AutomationActiveCheck(Automation):
     # without OMD, since we do not know the value of $USER1$ and $USER2$
     # here. We could read the Nagios resource.cfg file, but we do not
     # know for sure the place of that either.
-    def _replace_macros(self, hostname: HostName, service_desc: str, commandline: str) -> str:
+    def _replace_macros(
+        self,
+        hostname: HostName,
+        service_desc: str,
+        commandline: str,
+        ip_address_of: config.IPLookup,
+    ) -> str:
         config_cache = config.get_config_cache()
         macros = ConfigCache.get_host_macros_from_attributes(
-            hostname, config_cache.get_host_attributes(hostname)
+            hostname, config_cache.get_host_attributes(hostname, ip_address_of)
         )
         service_attrs = core_config.get_service_attributes(hostname, service_desc, config_cache)
         macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))

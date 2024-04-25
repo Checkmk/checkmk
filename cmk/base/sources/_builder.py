@@ -129,6 +129,7 @@ class _Builder:
         site_crt: Path,
         password_store_file: Path,
         passwords: Mapping[str, str],
+        ip_address_of: config.IPLookup,
     ) -> None:
         super().__init__()
         assert not is_cluster
@@ -154,6 +155,7 @@ class _Builder:
         self.site_crt: Final = site_crt
         self.password_store_file: Final = password_store_file
         self.passwords: Final = passwords
+        self._ip_address_of: Final = ip_address_of
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
@@ -187,6 +189,7 @@ class _Builder:
                 self.ipaddress,
                 self.passwords,
                 password_store_file=self.password_store_file,
+                ip_address_of=self._ip_address_of,
             ):
                 yield SpecialAgentSource(
                     self.config_cache,
@@ -457,4 +460,6 @@ def make_sources(
         site_crt=site_crt,
         password_store_file=password_store_file,
         passwords=passwords,
+        # TODO: move this further up the stack and see which type of IP lookup is needed
+        ip_address_of=config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure),
     ).sources

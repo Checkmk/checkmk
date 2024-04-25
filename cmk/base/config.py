@@ -367,31 +367,58 @@ _ignore_ip_lookup_failures = False
 _failed_ip_lookups: list[HostName] = []
 
 
-def ip_address_of(
-    config_cache: ConfigCache,
-    host_name: HostName,
-    family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
-) -> HostAddress | None:
-    try:
-        return lookup_ip_address(config_cache, host_name, family=family)
-    except Exception as e:
-        if host_name in config_cache.hosts_config.clusters:
-            return HostAddress("")
+IPLookup = Callable[
+    [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
+    HostAddress | None,
+]
 
-        _failed_ip_lookups.append(host_name)
-        if not _ignore_ip_lookup_failures:
-            config_warnings.warn(
-                "Cannot lookup IP address of '%s' (%s). "
-                "The host will not be monitored correctly." % (host_name, e)
-            )
+
+class ConfiguredIPLookup:
+    def __init__(
+        self, config_cache: ConfigCache, error_handler: Callable[[HostName, Exception], None]
+    ) -> None:
+        self._config_cache = config_cache
+        self.error_handler: Final = error_handler
+
+    def __call__(
+        self,
+        host_name: HostName,
+        family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
+    ) -> HostAddress | None:
+        try:
+            return lookup_ip_address(self._config_cache, host_name, family=family)
+        except Exception as e:
+            if host_name in self._config_cache.hosts_config.clusters:
+                return HostAddress("")
+            self.error_handler(host_name, e)
+
         return ip_lookup.fallback_ip_for(family)
 
 
+# This is an going refactoring. Hopefully this will be untangled soon.
+def handle_ip_lookup_failure(host_name: HostName, exc: Exception) -> None:
+    """Error handler for IP lookup failures.
+
+    * collects host for which the lookup failed in global variable
+    * collects error messages for failed lookups in a global variable (maybe)
+    * writesg error messages to the console (maybe)
+    """
+
+    _failed_ip_lookups.append(host_name)
+    if not _ignore_ip_lookup_failures:
+        config_warnings.warn(
+            f"Cannot lookup IP address of '{host_name}' ({exc}). "
+            "The host will not be monitored correctly."
+        )
+
+
+# TODO: use a simpler version of the above error handler if this is called.
 def ignore_ip_lookup_failures() -> None:
     global _ignore_ip_lookup_failures
     _ignore_ip_lookup_failures = True
 
 
+# TODO: use a simpler version of the above error handler unless this is called.
 def failed_ip_lookups() -> list[HostName]:
     return _failed_ip_lookups
 
@@ -1809,7 +1836,10 @@ def get_resource_macros() -> Mapping[str, str]:
 
 
 def get_ssc_host_config(
-    host_name: HostName, config_cache: ConfigCache, macros: Mapping[str, object]
+    host_name: HostName,
+    config_cache: ConfigCache,
+    macros: Mapping[str, object],
+    ip_address_of: IPLookup,
 ) -> server_side_calls_api.HostConfig:
     """Translates our internal config into the HostConfig exposed to and expected by server_side_calls plugins."""
     primary_family = config_cache.default_address_family(host_name)
@@ -1823,7 +1853,7 @@ def get_ssc_host_config(
         alias=config_cache.alias(host_name),
         ipv4_config=(
             server_side_calls_api.IPv4Config(
-                address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET),
+                address=ip_address_of(host_name, socket.AddressFamily.AF_INET),
                 additional_addresses=additional_addresses_ipv4,
             )
             if ip_lookup.IPStackConfig.IPv4 in ip_stack_config
@@ -1831,7 +1861,7 @@ def get_ssc_host_config(
         ),
         ipv6_config=(
             server_side_calls_api.IPv6Config(
-                address=ip_address_of(config_cache, host_name, socket.AddressFamily.AF_INET6),
+                address=ip_address_of(host_name, socket.AddressFamily.AF_INET6),
                 additional_addresses=additional_addresses_ipv6,
             )
             if ip_lookup.IPStackConfig.IPv6 in ip_stack_config
@@ -1958,7 +1988,12 @@ class ConfigCache:
             password=ipmi_credentials.get("password"),
         )
 
-    def make_program_commandline(self, host_name: HostName, ip_address: HostAddress | None) -> str:
+    def make_program_commandline(
+        self,
+        host_name: HostName,
+        ip_address: HostAddress | None,
+        ip_address_of: IPLookup,
+    ) -> str:
         """
         raise: LookupError if no datasource is configured.
         """
@@ -1966,6 +2001,7 @@ class ConfigCache:
             host_name,
             ip_address,
             self.ruleset_matcher.get_host_values(host_name, datasource_programs)[0],
+            ip_address_of,
         )
 
     def make_piggyback_fetcher(
@@ -2735,10 +2771,11 @@ class ConfigCache:
         ip_address: HostAddress | None,
         passwords: Mapping[str, str],
         password_store_file: Path,
+        ip_address_of: IPLookup,
     ) -> Iterable[tuple[str, SpecialAgentCommandLine]]:
         for agentname, params_seq in self.special_agents(host_name):
             for params in params_seq:
-                host_attrs = self.get_host_attributes(host_name)
+                host_attrs = self.get_host_attributes(host_name, ip_address_of)
                 macros = {
                     "<IP>": ip_address or "",
                     "<HOST>": host_name,
@@ -2749,7 +2786,7 @@ class ConfigCache:
                     special_agent_info,
                     host_name,
                     ip_address,
-                    get_ssc_host_config(host_name, self, macros),
+                    get_ssc_host_config(host_name, self, macros, ip_address_of),
                     host_attrs,
                     http_proxies,
                     passwords,
@@ -3541,7 +3578,11 @@ class ConfigCache:
     ) -> ObjectAttributes:
         return {f"__{prefix}_{k}": str(v) for k, v in collection.items()}
 
-    def get_host_attributes(self, hostname: HostName) -> ObjectAttributes:
+    def get_host_attributes(
+        self,
+        hostname: HostName,
+        ip_address_of: IPLookup,
+    ) -> ObjectAttributes:
         def _set_addresses(
             attrs: ObjectAttributes,
             addresses: list[HostAddress] | None,
@@ -3575,7 +3616,7 @@ class ConfigCache:
         # Now lookup configured IP addresses
         v4address: str | None = None
         if IPStackConfig.IPv4 in ip_stack_config:
-            v4address = ip_address_of(self, hostname, socket.AddressFamily.AF_INET)
+            v4address = ip_address_of(hostname, socket.AddressFamily.AF_INET)
 
         if v4address is None:
             v4address = ""
@@ -3583,7 +3624,7 @@ class ConfigCache:
 
         v6address: str | None = None
         if IPStackConfig.IPv6 in ip_stack_config:
-            v6address = ip_address_of(self, hostname, socket.AddressFamily.AF_INET6)
+            v6address = ip_address_of(hostname, socket.AddressFamily.AF_INET6)
         if v6address is None:
             v6address = ""
         attrs["_ADDRESS_6"] = v6address
@@ -3620,6 +3661,7 @@ class ConfigCache:
         self,
         hostname: HostName,
         nodes: Sequence[HostName],
+        ip_address_of: IPLookup,
     ) -> dict:
         sorted_nodes = sorted(nodes)
 
@@ -3633,7 +3675,7 @@ class ConfigCache:
                 socket.AddressFamily.AF_INET
             )
             for h in sorted_nodes:
-                addr = ip_address_of(self, h, family)
+                addr = ip_address_of(h, family)
                 if addr is not None:
                     node_ips_4.append(addr)
                 else:
@@ -3643,7 +3685,7 @@ class ConfigCache:
         if IPStackConfig.IPv6 in ip_stack_config:
             family = socket.AddressFamily.AF_INET6
             for h in sorted_nodes:
-                addr = ip_address_of(self, h, family)
+                addr = ip_address_of(h, family)
                 if addr is not None:
                     node_ips_6.append(addr)
                 else:
@@ -3779,9 +3821,10 @@ class ConfigCache:
         host_name: HostName,
         ip_address: HostAddress | None,
         template: str,
+        ip_address_of: IPLookup,
     ) -> str:
         def _translate_host_macros(cmd: str) -> str:
-            attrs = self.get_host_attributes(host_name)
+            attrs = self.get_host_attributes(host_name, ip_address_of)
             if host_name in self.hosts_config.clusters:
                 # TODO(ml): What is the difference between this and `self.parents()`?
                 parents_list = self.get_cluster_nodes_for_config(host_name)
@@ -3790,6 +3833,7 @@ class ConfigCache:
                     self.get_cluster_attributes(
                         host_name,
                         parents_list,
+                        ip_address_of,
                     )
                 )
 

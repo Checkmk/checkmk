@@ -62,6 +62,7 @@ class NagiosCore(core_config.MonitoringCore):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        ip_address_of: config.IPLookup,
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
@@ -206,27 +207,39 @@ def _create_nagios_config_host(
     cfg.write("# %s\n" % hostname)
     cfg.write("# ----------------------------------------------------\n")
 
-    host_attrs = config_cache.get_host_attributes(hostname)
+    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+
+    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
     if config.generate_hostconf:
-        host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
+        host_spec = create_nagios_host_spec(cfg, config_cache, hostname, host_attrs, ip_address_of)
         cfg.write(format_nagios_object("host", host_spec))
 
     return CollectedHostLabels(
         host_labels=get_labels_from_attributes(list(host_attrs.items())),
         service_labels=create_nagios_servicedefs(
-            cfg, config_cache, hostname, host_attrs, stored_passwords, license_counter
+            cfg,
+            config_cache,
+            hostname,
+            host_attrs,
+            stored_passwords,
+            license_counter,
+            ip_address_of,
         ),
     )
 
 
 def create_nagios_host_spec(  # pylint: disable=too-many-branches
-    cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, attrs: ObjectAttributes
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    hostname: HostName,
+    attrs: ObjectAttributes,
+    ip_address_of: config.IPLookup,
 ) -> ObjectSpec:
     ip = attrs["address"]
 
     if hostname in config_cache.hosts_config.clusters:
         nodes = config_cache.get_cluster_nodes_for_config(hostname)
-        attrs.update(config_cache.get_cluster_attributes(hostname, nodes))
+        attrs.update(config_cache.get_cluster_attributes(hostname, nodes, ip_address_of))
 
     #   _
     #  / |
@@ -349,6 +362,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
     host_attrs: ObjectAttributes,
     stored_passwords: Mapping[str, str],
     license_counter: Counter,
+    ip_address_of: config.IPLookup,
 ) -> dict[ServiceName, Labels]:
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
@@ -463,7 +477,7 @@ def create_nagios_servicedefs(  # pylint: disable=too-many-branches
         server_side_calls.load_active_checks()[1],
         config.active_check_info,
         hostname,
-        config.get_ssc_host_config(hostname, config_cache, macros),
+        config.get_ssc_host_config(hostname, config_cache, macros, ip_address_of),
         host_attrs,
         config.http_proxies,
         lambda x: config.get_final_service_description(x, translations),

@@ -9,10 +9,11 @@ import importlib
 import io
 import itertools
 import os
+import socket
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 from pytest import MonkeyPatch
@@ -29,6 +30,20 @@ from cmk.checkengine.discovery import AutocheckEntry
 
 import cmk.base.config as config
 import cmk.base.core_nagios as core_nagios
+
+
+def ip_address_of_never_called(
+    _h: HostName, _f: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+) -> HostAddress:
+    raise AssertionError(
+        "It seems you unmocked some things in the test? This used to not be called."
+    )
+
+
+def ip_address_of_return_local(
+    _h: HostName, _f: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
+) -> HostAddress:
+    return HostAddress("127.0.0.1")
 
 
 def test_format_nagios_object() -> None:
@@ -276,9 +291,13 @@ def test_create_nagios_host_spec(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     config_cache = ts.apply(monkeypatch)
-    host_attrs = config_cache.get_host_attributes(hostname)
+    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
 
-    host_spec = core_nagios.create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
+    host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
+
+    host_spec = core_nagios.create_nagios_host_spec(
+        cfg, config_cache, hostname, host_attrs, ip_address_of
+    )
     assert host_spec == result
 
 
@@ -583,7 +602,7 @@ def test_create_nagios_servicedefs_active_check(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, hostname, host_attrs, {}, license_counter
+        cfg, config_cache, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
     )
 
     assert outfile.getvalue() == expected_result
@@ -672,7 +691,6 @@ def test_create_nagios_servicedefs_with_warnings(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
     monkeypatch.setattr(config, "get_resource_macros", lambda: {})
-    monkeypatch.setattr(config, "ip_address_of", lambda *args: HostAddress("127.0.0.1"))
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
@@ -682,7 +700,13 @@ def test_create_nagios_servicedefs_with_warnings(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, HostName("my_host"), host_attrs, {}, license_counter
+        cfg,
+        config_cache,
+        HostName("my_host"),
+        host_attrs,
+        {},
+        license_counter,
+        ip_address_of_return_local,
     )
 
     assert outfile.getvalue() == expected_result
@@ -736,7 +760,7 @@ def test_create_nagios_servicedefs_omit_service(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, hostname, host_attrs, {}, license_counter
+        cfg, config_cache, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
     )
 
     assert outfile.getvalue() == expected_result
@@ -780,16 +804,11 @@ def test_create_nagios_servicedefs_invalid_args(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
-    monkeypatch.setattr(config, "ip_address_of", lambda *args: HostAddress("127.0.0.1"))
 
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
-    monkeypatch.setattr(
-        cmk.utils.debug,
-        "enabled",
-        lambda: False,
-    )
+    monkeypatch.setattr(cmk.utils.debug, "enabled", lambda: False)
 
     hostname = HostName("my_host")
     outfile = io.StringIO()
@@ -797,7 +816,7 @@ def test_create_nagios_servicedefs_invalid_args(
     license_counter = Counter("services")
 
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, hostname, host_attrs, {}, license_counter
+        cfg, config_cache, hostname, host_attrs, {}, license_counter, ip_address_of_return_local
     )
 
     out, _ = capsys.readouterr()
@@ -864,12 +883,14 @@ def test_create_nagios_config_commands(
     config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
+    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
     license_counter = Counter("services")
     core_nagios.create_nagios_servicedefs(
-        cfg, config_cache, hostname, host_attrs, {}, license_counter
+        cfg, config_cache, hostname, host_attrs, {}, license_counter, ip_address_of
     )
     core_nagios.create_nagios_config_commands(cfg)
 

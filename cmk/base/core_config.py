@@ -67,13 +67,14 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        ip_address_of: config.IPLookup,
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
     ) -> None:
         licensing_handler = self._licensing_handler_type.make()
         licensing_handler.persist_licensed_state(get_licensed_state_file_path())
         self._create_config(
-            config_path, config_cache, licensing_handler, passwords, hosts_to_update
+            config_path, config_cache, ip_address_of, licensing_handler, passwords, hosts_to_update
         )
 
     @abc.abstractmethod
@@ -81,6 +82,7 @@ class MonitoringCore(abc.ABC):
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
+        ip_address_of: config.IPLookup,
         licensing_handler: LicensingHandler,
         passwords: Mapping[str, str],
         hosts_to_update: set[HostName] | None = None,
@@ -251,6 +253,7 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    ip_address_of: config.IPLookup,
     all_hosts: Iterable[HostName],
     hosts_to_update: set[HostName] | None = None,
     *,
@@ -266,7 +269,11 @@ def do_create_config(
 
     try:
         _create_core_config(
-            core, config_cache, hosts_to_update=hosts_to_update, duplicates=duplicates
+            core,
+            config_cache,
+            ip_address_of,
+            hosts_to_update=hosts_to_update,
+            duplicates=duplicates,
         )
     except Exception as e:
         if cmk.utils.debug.enabled():
@@ -353,6 +360,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    ip_address_of: config.IPLookup,
     hosts_to_update: set[HostName] | None = None,
     *,
     duplicates: Sequence[HostName],
@@ -369,7 +377,11 @@ def _create_core_config(
     config_path = next(VersionedConfigPath.current())
     with config_path.create(is_cmc=core.is_cmc()), _backup_objects_file(core):
         core.create_config(
-            config_path, config_cache, hosts_to_update=hosts_to_update, passwords=passwords
+            config_path,
+            config_cache,
+            ip_address_of,
+            hosts_to_update=hosts_to_update,
+            passwords=passwords,
         )
 
     cmk.utils.password_store.save(

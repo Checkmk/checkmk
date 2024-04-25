@@ -1223,7 +1223,6 @@ def test_get_host_address_config(
 
 
 def mock_ip_address_of(
-    config_cache: base_config.ConfigCache,
     host_name: HostName,
     family: socket.AddressFamily | ip_lookup.IPStackConfig,
 ) -> HostAddress | None:
@@ -1244,6 +1243,7 @@ def test_get_host_config_macros_stringified() -> None:
         HostName("host_name"),
         config_cache,  # type: ignore[arg-type]
         {"$HOST_EC_SL$": 30},
+        mock_ip_address_of,
     )
 
     assert host_config == HostConfig(
@@ -1264,6 +1264,7 @@ def test_get_host_config_no_ip() -> None:
         HostName("host_name"),
         config_cache,  # type: ignore[arg-type]
         {},
+        mock_ip_address_of,
     )
 
     assert host_config == HostConfig(
@@ -1281,12 +1282,8 @@ def test_get_host_config_ipv4(monkeypatch: pytest.MonkeyPatch) -> None:
         family=socket.AddressFamily.AF_INET,
     )
 
-    monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
-
     host_config = base_config.get_ssc_host_config(
-        HostName("host_name"),
-        config_cache,  # type: ignore[arg-type]
-        {},
+        HostName("host_name"), config_cache, {}, mock_ip_address_of  # type: ignore[arg-type]
     )
 
     assert host_config == HostConfig(
@@ -1308,12 +1305,8 @@ def test_get_host_config_ipv6(monkeypatch: pytest.MonkeyPatch) -> None:
         family=socket.AddressFamily.AF_INET6,
     )
 
-    monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
-
     host_config = base_config.get_ssc_host_config(
-        HostName("host_name"),
-        config_cache,  # type: ignore[arg-type]
-        {},
+        HostName("host_name"), config_cache, {}, mock_ip_address_of  # type: ignore[arg-type]
     )
 
     assert host_config == HostConfig(
@@ -1335,12 +1328,8 @@ def test_get_host_config_dual(monkeypatch: pytest.MonkeyPatch) -> None:
         family=socket.AddressFamily.AF_INET6,
     )
 
-    monkeypatch.setattr(base_config, "ip_address_of", mock_ip_address_of)
-
     host_config = base_config.get_ssc_host_config(
-        HostName("host_name"),
-        config_cache,  # type: ignore[arg-type]
-        {},
+        HostName("host_name"), config_cache, {}, mock_ip_address_of  # type: ignore[arg-type]
     )
 
     assert host_config == HostConfig(

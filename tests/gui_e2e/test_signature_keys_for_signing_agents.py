@@ -139,13 +139,14 @@ def test_upload_signing_keys(
     delete_key(logged_in_page, fingerprint)
 
 
-@pytest.mark.skip("Skipped due to CMK-14702")
-def test_add_key(logged_in_page: LoginPage) -> None:
+def test_generate_key(logged_in_page: LoginPage) -> None:
     """Add a key, aka let Checkmk generate it."""
     go_to_signature_page(logged_in_page)
     delete_key(logged_in_page, "e2e-test")
 
-    logged_in_page.click_and_wait(logged_in_page.main_area.get_suggestion("Add key"), navigate=True)
+    logged_in_page.click_and_wait(
+        logged_in_page.main_area.get_suggestion("Generate key"), navigate=True
+    )
     logged_in_page.main_area.check_page_title("Add agent signature key")
 
     # Use a too short password
@@ -214,7 +215,6 @@ def test_bake_and_sign(logged_in_page: LoginPage, test_site: Site, with_key: str
     )
 
 
-@pytest.mark.xfail(reason="flaky test, sometimes the button is not (yet) disabled")
 def test_bake_and_sign_disabled(logged_in_page: LoginPage) -> None:
     """Delete all keys, go to agents and check that the sign buttons are disabled."""
     go_to_signature_page(logged_in_page)

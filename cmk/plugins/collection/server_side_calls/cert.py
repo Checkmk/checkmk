@@ -207,7 +207,7 @@ def _issuer_args(issuer: Issuer) -> Iterator[str]:
     if (org := issuer.organization) is not None:
         yield "--issuer-o"
         yield org
-    if (org_unit := issuer.organization) is not None:
+    if (org_unit := issuer.org_unit) is not None:
         yield "--issuer-ou"
         yield org_unit
     if (state := issuer.state) is not None:

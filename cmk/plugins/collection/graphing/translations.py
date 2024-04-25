@@ -25,3 +25,9 @@ translation_ibm_svc_nodestats_disk_latency = translations.Translation(
         "write_latency": translations.ScaleBy(0.001),
     },
 )
+
+translation_winperf_msx_queues = translations.Translation(
+    name="winperf_msx_queues",
+    check_commands=[translations.PassiveCheck("winperf_msx_queues")],
+    translations={"length": translations.RenameTo("queue_length")},
+)

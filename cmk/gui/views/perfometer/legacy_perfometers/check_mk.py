@@ -23,7 +23,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-winperf_msx_queues"] = perfometer_msx_queues
     perfometers["check_mk-fileinfo"] = perfometer_fileinfo
     perfometers["check_mk-fileinfo.groups"] = perfometer_fileinfo_groups
     perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces
@@ -150,20 +149,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_msx_queues(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    length = int(perf_data[0].value)
-    state = row["service_state"]
-    if state == 1:
-        color = "#ffd020"
-    elif state == 2:
-        color = "#ff2020"
-    else:
-        color = "#6090ff"
-    return "%d" % length, perfometer_logarithmic(length, 100, 2, color)
 
 
 def perfometer_fileinfo(

@@ -21,23 +21,10 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-hitachi_hnas_fan"] = perfometer_fanspeed_logarithmic
-    perfometers["check_mk-arcserve_backup"] = perfometer_check_mk_arcserve_backup
-    perfometers["check_mk-ibm_svc_host"] = perfometer_check_mk_ibm_svc_host
-    perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license
-    perfometers["check_mk-innovaphone_licenses"] = perfometer_licenses_percent
-    perfometers["check_mk-citrix_licenses"] = perfometer_licenses_percent
-    perfometers["check_mk-zfs_arc_cache"] = perfometer_cache_hit_ratio
-    perfometers["check_mk-adva_fsp_current"] = perfometer_current
-    perfometers["check_mk-raritan_pdu_inlet"] = perfometer_raritan_pdu_inlet
-    perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_raritan_pdu_inlet
-    perfometers["check_mk-raritan_pdu_outletcount"] = perfometer_raritan_pdu_outletcount
     perfometers["check_mk-docsis_channels_downstream"] = perfometer_dbmv
     perfometers["check_mk-docsis_cm_status"] = perfometer_dbmv
     perfometers["check_mk-veeam_client"] = perfometer_veeam_client
     perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase
-    perfometers["check_mk-raritan_pdu_inlet"] = perfometer_el_inphase
-    perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_el_inphase
     perfometers["check_mk-f5_bigip_vserver"] = perfometer_f5_bigip_vserver
     perfometers["check_mk-nfsiostat"] = perfometer_nfsiostat
 
@@ -119,144 +106,6 @@ def perfometer_airflow_ls(
 ) -> LegacyPerfometerResult:
     value = int(float(perf_data[0].value) * 100)
     return "%sl/s" % perf_data[0].value, perfometer_logarithmic(value, 1000, 2, "#3366cc")
-
-
-def perfometer_fanspeed_logarithmic(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    value = float(perf_data[0].value)
-    return "%d rpm" % value, perfometer_logarithmic(value, 5000, 2, "silver")
-
-
-def perfometer_check_mk_arcserve_backup(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    bytes_ = int(perf_data[2].value)
-    text = number_human_readable(bytes_)
-
-    return text, perfometer_logarithmic(bytes_, 1000 * 1024 * 1024 * 1024, 2, "#BDC6DE")
-
-
-def perfometer_check_mk_ibm_svc_host(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    if len(perf_data) < 5:
-        return None
-
-    active = int(perf_data[0].value)
-    inactive = int(perf_data[1].value)
-    degraded = int(perf_data[2].value)
-    offline = int(perf_data[3].value)
-    other = int(perf_data[4].value)
-    total = active + inactive + degraded + offline + other
-    data = []
-    if active > 0:
-        perc_active = active * 100.0 / total
-        data.append((perc_active, "#008000"))
-    if inactive > 0:
-        perc_inactive = inactive * 100.0 / total
-        data.append((perc_inactive, "#0000FF"))
-    if degraded > 0:
-        perc_degraded = degraded * 100.0 / total
-        data.append((perc_degraded, "#F84"))
-    if offline > 0:
-        perc_offline = offline * 100.0 / total
-        data.append((perc_offline, "#FF0000"))
-    if other > 0:
-        perc_other = other * 100.0 / total
-        data.append((perc_other, "#000000"))
-    if total == 0:
-        data.append((100, get_themed_perfometer_bg_color()))
-    return "%d active" % active, render_perfometer(data)
-
-
-def perfometer_check_mk_ibm_svc_license(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    if len(perf_data) < 2:
-        return None
-
-    licensed = float(perf_data[0].value)
-    used = float(perf_data[1].value)
-    if used == 0 and licensed == 0:
-        return "0 of 0 used", perfometer_linear(100, get_themed_perfometer_bg_color())
-    if licensed == 0:
-        return "completely unlicensed", perfometer_linear(100, "silver")
-
-    perc_used = used * 100.0 / licensed
-    return "%0.2f %% used" % perc_used, perfometer_linear(perc_used, "silver")
-
-
-def perfometer_licenses_percent(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    licenses = perf_data[0].value
-    max_avail = perf_data[0].max
-    if max_avail is None:
-        return None
-    used_perc = 100.0 * licenses / max_avail
-    return "%.0f%% used" % used_perc, perfometer_linear(used_perc, "orange")
-
-
-def perfometer_cache_hit_ratio(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    hit_ratio = float(perf_data[0].value)  # is already percentage
-    color = "#60f020"
-    return "%.2f %% hits" % hit_ratio, perfometer_linear(hit_ratio, color)
-
-
-def perfometer_current(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
-    display_color = "#50f020"
-
-    value = utils.savefloat(perf_data[0].value)
-    crit = utils.savefloat(perf_data[0].crit)
-    warn = utils.savefloat(perf_data[0].warn)
-    current_perc = (
-        value / crit * 90
-    )  # critical is at 90% to allow for more than crit # fixed: true-division
-
-    if value > warn:
-        display_color = "#FDC840"
-    if value > crit:
-        display_color = "#FF0000"
-
-    display_string = "%.1f Ampere" % value
-    return display_string, perfometer_linear(current_perc, display_color)
-
-
-def perfometer_raritan_pdu_inlet(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    display_color = "#50f020"
-    cap = perf_data[0].metric_name.split("-")[-1]
-    value = float(perf_data[0].value)
-    unit = perf_data[0].unit_name
-    display_str = f"{perf_data[0].value} {unit}"
-    if cap.startswith("rmsCurrent"):
-        return display_str, perfometer_logarithmic(value, 1, 2, display_color)
-    if cap.startswith("unbalancedCurrent"):
-        return display_str, perfometer_linear(value, display_color)
-    if cap.startswith("rmsVoltage"):
-        return display_str, perfometer_logarithmic(value, 500, 2, display_color)
-    if cap.startswith("activePower"):
-        return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    if cap.startswith("apparentPower"):
-        return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    if cap.startswith("powerFactor"):
-        return display_str, perfometer_linear(value * 100, display_color)
-    if cap.startswith("activeEnergy"):
-        return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-    if cap.startswith("apparentEnergy"):
-        return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-    return "unimplemented", perfometer_linear(0, get_themed_perfometer_bg_color())
-
-
-def perfometer_raritan_pdu_outletcount(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    outletcount = float(perf_data[0].value)
-    return "%d" % outletcount, perfometer_logarithmic(outletcount, 20, 2, "#da6")
 
 
 def perfometer_dbmv(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:

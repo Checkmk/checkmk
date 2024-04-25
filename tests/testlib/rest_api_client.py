@@ -13,7 +13,7 @@ import pprint
 import queue
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn, TYPE_CHECKING, TypedDict
+from typing import Any, cast, Literal, NoReturn, NotRequired, TYPE_CHECKING, TypedDict
 
 from cmk.utils import version
 
@@ -252,7 +252,7 @@ class LabelCondition(TypedDict):
 
 
 class LabelGroupCondition(TypedDict):
-    operator: Literal["and", "or", "not"]
+    operator: NotRequired[Literal["and", "or", "not"]]
     label_group: list[LabelCondition]
 
 

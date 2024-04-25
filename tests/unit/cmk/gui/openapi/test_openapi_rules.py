@@ -508,3 +508,14 @@ def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry
         value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
         expect_ok=False,
     )
+
+
+def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -> None:
+    clients.Rule.create(
+        ruleset="active_checks:http",
+        folder="/",
+        conditions={
+            "host_label_groups": [{"label_group": [{"operator": "and", "label": "os:windows"}]}]
+        },
+        value_raw='{"name": "check_localhost", "host": {"address": ("direct", "localhost")}, "mode": ("url", {})}',
+    )

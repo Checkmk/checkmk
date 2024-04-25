@@ -146,7 +146,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
 
 
 @pytest.mark.parametrize(
-    "path, expected_node_hint, expected_attributes_hint, expected_table_hint",
+    "path, expected_node_hint, expected_table_hint",
     [
         (
             (),
@@ -156,8 +156,8 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Inventory Tree",
                 short_title="Inventory Tree",
                 _long_title_function=lambda: "Inventory Tree",
+                attributes_hint=AttributesDisplayHint((), OrderedDict()),
             ),
-            AttributesDisplayHint((), OrderedDict()),
             TableDisplayHint(
                 path=(),
                 title="",
@@ -176,10 +176,10 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Hardware",
                 short_title="Hardware",
                 _long_title_function=lambda: "Hardware",
-            ),
-            AttributesDisplayHint(
-                (SDNodeName("hardware"),),
-                OrderedDict(),
+                attributes_hint=AttributesDisplayHint(
+                    (SDNodeName("hardware"),),
+                    OrderedDict(),
+                ),
             ),
             TableDisplayHint(
                 path=(SDNodeName("hardware"),),
@@ -199,31 +199,31 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Processor",
                 short_title="Processor",
                 _long_title_function=lambda: "Hardware ➤ Processor",
-            ),
-            AttributesDisplayHint(
-                # The single attribute hints are not checked here
-                (SDNodeName("hardware"), SDNodeName("cpu")),
-                OrderedDict(
-                    arch=AttributeDisplayHint.from_raw((), "arch", {}),
-                    max_speed=AttributeDisplayHint.from_raw((), "max_speed", {}),
-                    model=AttributeDisplayHint.from_raw((), "model", {}),
-                    type=AttributeDisplayHint.from_raw((), "type", {}),
-                    threads=AttributeDisplayHint.from_raw((), "threads", {}),
-                    smt_threads=AttributeDisplayHint.from_raw((), "smt_threads", {}),
-                    cpu_max_capa=AttributeDisplayHint.from_raw((), "cpu_max_capa", {}),
-                    cpus=AttributeDisplayHint.from_raw((), "cpus", {}),
-                    logical_cpus=AttributeDisplayHint.from_raw((), "logical_cpus", {}),
-                    cores=AttributeDisplayHint.from_raw((), "cores", {}),
-                    cores_per_cpu=AttributeDisplayHint.from_raw((), "cores_per_cpu", {}),
-                    threads_per_cpu=AttributeDisplayHint.from_raw((), "threads_per_cpu", {}),
-                    cache_size=AttributeDisplayHint.from_raw((), "cache_size", {}),
-                    bus_speed=AttributeDisplayHint.from_raw((), "bus_speed", {}),
-                    voltage=AttributeDisplayHint.from_raw((), "voltage", {}),
-                    sharing_mode=AttributeDisplayHint.from_raw((), "sharing_mode", {}),
-                    implementation_mode=AttributeDisplayHint.from_raw(
-                        (), "implementation_mode", {}
+                attributes_hint=AttributesDisplayHint(
+                    # The single attribute hints are not checked here
+                    (SDNodeName("hardware"), SDNodeName("cpu")),
+                    OrderedDict(
+                        arch=AttributeDisplayHint.from_raw((), "arch", {}),
+                        max_speed=AttributeDisplayHint.from_raw((), "max_speed", {}),
+                        model=AttributeDisplayHint.from_raw((), "model", {}),
+                        type=AttributeDisplayHint.from_raw((), "type", {}),
+                        threads=AttributeDisplayHint.from_raw((), "threads", {}),
+                        smt_threads=AttributeDisplayHint.from_raw((), "smt_threads", {}),
+                        cpu_max_capa=AttributeDisplayHint.from_raw((), "cpu_max_capa", {}),
+                        cpus=AttributeDisplayHint.from_raw((), "cpus", {}),
+                        logical_cpus=AttributeDisplayHint.from_raw((), "logical_cpus", {}),
+                        cores=AttributeDisplayHint.from_raw((), "cores", {}),
+                        cores_per_cpu=AttributeDisplayHint.from_raw((), "cores_per_cpu", {}),
+                        threads_per_cpu=AttributeDisplayHint.from_raw((), "threads_per_cpu", {}),
+                        cache_size=AttributeDisplayHint.from_raw((), "cache_size", {}),
+                        bus_speed=AttributeDisplayHint.from_raw((), "bus_speed", {}),
+                        voltage=AttributeDisplayHint.from_raw((), "voltage", {}),
+                        sharing_mode=AttributeDisplayHint.from_raw((), "sharing_mode", {}),
+                        implementation_mode=AttributeDisplayHint.from_raw(
+                            (), "implementation_mode", {}
+                        ),
+                        entitlement=AttributeDisplayHint.from_raw((), "entitlement", {}),
                     ),
-                    entitlement=AttributeDisplayHint.from_raw((), "entitlement", {}),
                 ),
             ),
             TableDisplayHint(
@@ -249,15 +249,15 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Docker images",
                 short_title="Docker images",
                 _long_title_function=lambda: "Docker ➤ Docker images",
-            ),
-            AttributesDisplayHint(
-                (
-                    SDNodeName("software"),
-                    SDNodeName("applications"),
-                    SDNodeName("docker"),
-                    SDNodeName("images"),
+                attributes_hint=AttributesDisplayHint(
+                    (
+                        SDNodeName("software"),
+                        SDNodeName("applications"),
+                        SDNodeName("docker"),
+                        SDNodeName("images"),
+                    ),
+                    OrderedDict(),
                 ),
-                OrderedDict(),
             ),
             TableDisplayHint(
                 path=(
@@ -291,10 +291,10 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 title="Node",
                 short_title="Node",
                 _long_title_function=lambda: "To ➤ Node",
-            ),
-            AttributesDisplayHint(
-                (SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                OrderedDict(),
+                attributes_hint=AttributesDisplayHint(
+                    (SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                    OrderedDict(),
+                ),
             ),
             TableDisplayHint(
                 (SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
@@ -311,7 +311,6 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
 def test_make_node_displayhint(
     path: SDPath,
     expected_node_hint: NodeDisplayHint,
-    expected_attributes_hint: AttributesDisplayHint,
     expected_table_hint: TableDisplayHint,
 ) -> None:
     hints = DISPLAY_HINTS.get_tree_hints(path)
@@ -322,7 +321,9 @@ def test_make_node_displayhint(
     assert hints.node_hint.long_title == expected_node_hint.long_title
     assert hints.node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
-    assert list(hints.attributes_hint.by_key) == list(expected_attributes_hint.by_key)
+    assert list(hints.node_hint.attributes_hint.by_key) == list(
+        expected_node_hint.attributes_hint.by_key
+    )
 
     assert hints.table_hint.title == expected_table_hint.title
     assert hints.table_hint.long_title == expected_table_hint.long_title
@@ -334,7 +335,7 @@ def test_make_node_displayhint(
 
 
 @pytest.mark.parametrize(
-    "raw_path, expected_node_hint, expected_attributes_hint, expected_table_hint",
+    "raw_path, expected_node_hint,expected_table_hint",
     [
         (
             ".foo.bar.",
@@ -344,10 +345,10 @@ def test_make_node_displayhint(
                 title="Bar",
                 short_title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
-            ),
-            AttributesDisplayHint(
-                (SDNodeName("foo"), SDNodeName("bar")),
-                OrderedDict(),
+                attributes_hint=AttributesDisplayHint(
+                    (SDNodeName("foo"), SDNodeName("bar")),
+                    OrderedDict(),
+                ),
             ),
             TableDisplayHint(
                 path=(SDNodeName("foo"), SDNodeName("bar")),
@@ -367,8 +368,10 @@ def test_make_node_displayhint(
                 title="Bar",
                 short_title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
+                attributes_hint=AttributesDisplayHint(
+                    (SDNodeName("foo"), SDNodeName("bar")), OrderedDict()
+                ),
             ),
-            AttributesDisplayHint((SDNodeName("foo"), SDNodeName("bar")), OrderedDict()),
             TableDisplayHint(
                 path=(SDNodeName("foo"), SDNodeName("bar")),
                 title="Bar",
@@ -387,8 +390,8 @@ def test_make_node_displayhint(
                 title="Software",
                 short_title="Software",
                 _long_title_function=lambda: "Software",
+                attributes_hint=AttributesDisplayHint((SDNodeName("software"),), OrderedDict()),
             ),
-            AttributesDisplayHint((SDNodeName("software"),), OrderedDict()),
             TableDisplayHint(
                 path=(SDNodeName("software"),),
                 title="Software",
@@ -412,15 +415,15 @@ def test_make_node_displayhint(
                 title="Docker containers",
                 short_title="Docker containers",
                 _long_title_function=lambda: "Docker ➤ Docker containers",
-            ),
-            AttributesDisplayHint(
-                (
-                    SDNodeName("software"),
-                    SDNodeName("applications"),
-                    SDNodeName("docker"),
-                    SDNodeName("containers"),
+                attributes_hint=AttributesDisplayHint(
+                    (
+                        SDNodeName("software"),
+                        SDNodeName("applications"),
+                        SDNodeName("docker"),
+                        SDNodeName("containers"),
+                    ),
+                    OrderedDict(),
                 ),
-                OrderedDict(),
             ),
             TableDisplayHint(
                 path=(
@@ -450,7 +453,6 @@ def test_make_node_displayhint(
 def test_make_node_displayhint_from_hint(
     raw_path: str,
     expected_node_hint: NodeDisplayHint,
-    expected_attributes_hint: AttributesDisplayHint,
     expected_table_hint: TableDisplayHint,
 ) -> None:
     hints = DISPLAY_HINTS.get_tree_hints(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
@@ -461,7 +463,9 @@ def test_make_node_displayhint_from_hint(
     assert hints.node_hint.long_title == expected_node_hint.long_title
     assert hints.node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
-    assert list(hints.attributes_hint.by_key) == list(expected_attributes_hint.by_key)
+    assert list(hints.node_hint.attributes_hint.by_key) == list(
+        expected_node_hint.attributes_hint.by_key
+    )
 
     assert hints.table_hint.title == expected_table_hint.title
     assert hints.table_hint.long_title == expected_table_hint.long_title
@@ -682,7 +686,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
     ],
 )
 def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_tree_hints(path).attributes_hint.get_attribute_hint(key)
+    hint = DISPLAY_HINTS.get_tree_hints(path).node_hint.attributes_hint.get_attribute_hint(key)
 
     assert hint.ident == "_".join(("inv",) + hint.path + (hint.key,))
     assert hint.data_type == expected.data_type
@@ -745,9 +749,9 @@ def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_tree_hints(inventory_path.path).attributes_hint.get_attribute_hint(
-        inventory_path.key or ""
-    )
+    hint = DISPLAY_HINTS.get_tree_hints(
+        inventory_path.path
+    ).node_hint.attributes_hint.get_attribute_hint(inventory_path.key or "")
 
     assert hint.ident == "_".join(("inv",) + hint.path + (hint.key,))
     assert hint.data_type == expected.data_type

@@ -441,7 +441,7 @@ class TreeRenderer:
         hints = DISPLAY_HINTS.get_tree_hints(tree.path)
 
         if tree.attributes:
-            self._show_attributes(tree.attributes, hints.attributes_hint)
+            self._show_attributes(tree.attributes, hints.node_hint.attributes_hint)
 
         if tree.table:
             self._show_table(tree.table, hints.table_hint, request_)

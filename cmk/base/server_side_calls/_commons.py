@@ -108,10 +108,14 @@ def replace_passwords(
 ) -> str:
     formatted: list[str | tuple[str, str, str]] = []
 
-    for arg in arguments:
+    for index, arg in enumerate(arguments):
         if isinstance(arg, str):
             formatted.append(shlex.quote(arg))
             continue
+
+        if not isinstance(arg, Secret):
+            # this can only happen if plugin developers are ignoring the API's typing.
+            raise _make_helpful_exception(index, arguments)
 
         secret = arg
         secret_name = surrogated_secrets[secret.id]
@@ -155,6 +159,14 @@ def _make_log_label(host_name: str | None, description: ServiceName | None = Non
     if host_name:
         return f' used by host "{host_name}"'
     return ""
+
+
+def _make_helpful_exception(index: int, arguments: Sequence[str | Secret]) -> TypeError:
+    """Create a developer-friendly exception for invalid arguments"""
+    raise TypeError(
+        f"Got invalid argument list from SSC plugin: {arguments[index]!r} at index {index} in {arguments!r}. "
+        "Expected either `str` or `Secret`."
+    )
 
 
 def replace_macros(string: str, macros: Mapping[str, str]) -> str:

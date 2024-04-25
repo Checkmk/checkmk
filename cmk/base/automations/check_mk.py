@@ -423,7 +423,8 @@ def _get_discovery_preview(
 
         return ServiceDiscoveryPreviewResult(
             output=buf.getvalue(),
-            check_table=check_preview.table,
+            # TODO: will be removed later when full information is returned to fronted
+            check_table=check_preview.table[host_name],
             host_labels=make_discovered_host_labels(check_preview.labels.present),
             new_labels=make_discovered_host_labels(
                 [l for l in check_preview.labels.new if l.name not in changed_labels]
@@ -592,11 +593,13 @@ def _execute_discovery(
             on_error=on_error,
         )
     return CheckPreview(
-        table=[
-            *passive_check_preview.table,
-            *active_check_preview_rows(config_cache, host_name),
-            *config_cache.custom_check_preview_rows(host_name),
-        ],
+        table={
+            host_name: [
+                *passive_check_preview.table[host_name],
+                *active_check_preview_rows(config_cache, host_name),
+                *config_cache.custom_check_preview_rows(host_name),
+            ]
+        },
         labels=passive_check_preview.labels,
         source_results=passive_check_preview.source_results,
         kept_labels=passive_check_preview.kept_labels,
@@ -849,7 +852,9 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             set_autochecks_of_cluster(
                 config_cache.nodes(hostname),
                 hostname,
-                new_services,
+                # TODO: get full node information and pass it to set_autochecks_of_cluster.
+                # Currently the set-autochecks command will still set cluster information.
+                {hostname: new_services},
                 config_cache.effective_host,
                 functools.partial(config.service_description, config_cache.ruleset_matcher),
             )

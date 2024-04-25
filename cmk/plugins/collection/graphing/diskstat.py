@@ -122,6 +122,20 @@ perfometer_disk_throughput = perfometers.Bidirectional(
     ),
 )
 
+perfometer_disk_ios = perfometers.Bidirectional(
+    name="disk_ios",
+    left=perfometers.Perfometer(
+        name="disk_read_ios",
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(200000)),
+        segments=["disk_read_ios"],
+    ),
+    right=perfometers.Perfometer(
+        name="disk_write_ios",
+        focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(200000)),
+        segments=["disk_write_ios"],
+    ),
+)
+
 graph_disk_utilization = graphs.Graph(
     name="disk_utilization",
     title=Title("Disk utilization"),

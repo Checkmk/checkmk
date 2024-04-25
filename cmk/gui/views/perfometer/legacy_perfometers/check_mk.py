@@ -23,8 +23,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-ibm_svc_nodestats.iops"] = perfometer_check_mk_iops_r_w
-    perfometers["check_mk-ibm_svc_systemstats.iops"] = perfometer_check_mk_iops_r_w
     perfometers["check_mk-ibm_svc_nodestats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
     perfometers["check_mk-ibm_svc_systemstats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
     perfometers["check_mk-openvpn_clients"] = perfometer_in_out_mb_per_sec
@@ -161,16 +159,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_check_mk_iops_r_w(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    iops_r = float(perf_data[0].value)
-    iops_w = float(perf_data[1].value)
-    text = f"{iops_r:.0f} IO/s {iops_w:.0f} IO/s"
-
-    return text, perfometer_logarithmic_dual(iops_r, "#60e0a0", iops_w, "#60a0e0", 100000, 10)
 
 
 def perfometer_check_mk_disk_latency_r_w(

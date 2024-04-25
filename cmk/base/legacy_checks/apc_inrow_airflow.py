@@ -44,7 +44,7 @@ def check_apc_inrow_airflow(_no_item, params, info):
         state = 1
         message = "too high"
 
-    perf = [("flow", flow, warn, crit)]
+    perf = [("airflow", flow, warn, crit)]
     return state, f"Current: {flow:.0f} l/s {message}", perf
 
 

@@ -61,3 +61,9 @@ translation_apc_mod_pdu_modules = translations.Translation(
     check_commands=[translations.PassiveCheck("apc_mod_pdu_modules")],
     translations={"current_power": translations.RenameToAndScaleBy("power", 1000)},
 )
+
+translation_apc_inrow_airflow = translations.Translation(
+    name="apc_inrow_airflow",
+    check_commands=[translations.PassiveCheck("apc_inrow_airflow")],
+    translations={"flow": translations.RenameTo("airflow")},
+)

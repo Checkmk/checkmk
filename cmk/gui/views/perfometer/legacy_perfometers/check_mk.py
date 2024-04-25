@@ -21,7 +21,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-apc_inrow_airflow"] = perfometer_airflow_ls
     perfometers["check_mk-apc_inrow_fanspeed"] = perfometer_fanspeed
     perfometers["check_mk-hitachi_hnas_fan"] = perfometer_fanspeed_logarithmic
     perfometers["check_mk-arcserve_backup"] = perfometer_check_mk_arcserve_backup

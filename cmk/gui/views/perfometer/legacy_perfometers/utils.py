@@ -10,9 +10,7 @@
 # [ [segment, segment, segment], [segment, segment] ] --> horizontal gespaltet.
 # Darin die vertikalen Balken.
 
-import math
 from collections.abc import Callable, Sequence
-from typing import Literal
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -92,65 +90,6 @@ def perfometer_logarithmic(value: float, half_value: float, base: float, color: 
             )
         ]
     )
-
-
-# prepare the rows for logarithmic perfometers (left or right)
-def calculate_half_row_logarithmic(
-    left_or_right: Literal["left", "right"],
-    value: float,
-    color: str,
-    half_value: float,
-    base: float,
-) -> PerfometerData:
-    value = float(value)
-
-    if value == 0.0:
-        pos = 0.0
-    else:
-        half_value = float(half_value)
-        h = math.log(half_value, base)  # value to be displayed at 50%
-        pos = 25 + 10.0 * (math.log(value, base) - h)
-        pos = min(max(1, pos), 49)
-    if left_or_right == "right":
-        return [(pos, color), (50 - pos, get_themed_perfometer_bg_color())]
-    return [(50 - pos, get_themed_perfometer_bg_color()), (pos, color)]
-
-
-# Dual logarithmic Perf-O-Meter
-def perfometer_logarithmic_dual(
-    value_left: float,
-    color_left: str,
-    value_right: float,
-    color_right: str,
-    half_value: float,
-    base: float,
-) -> HTML:
-    data: PerfometerData = []
-    data.extend(calculate_half_row_logarithmic("left", value_left, color_left, half_value, base))
-    data.extend(calculate_half_row_logarithmic("right", value_right, color_right, half_value, base))
-    return render_perfometer(data)
-
-
-def perfometer_logarithmic_dual_independent(
-    value_left: float,
-    color_left: str,
-    half_value_left: float,
-    base_left: float,
-    value_right: float,
-    color_right: str,
-    half_value_right: float,
-    base_right: float,
-) -> HTML:
-    data: PerfometerData = []
-    data.extend(
-        calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left)
-    )
-    data.extend(
-        calculate_half_row_logarithmic(
-            "right", value_right, color_right, half_value_right, base_right
-        )
-    )
-    return render_perfometer(data)
 
 
 # .

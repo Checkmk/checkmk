@@ -5,9 +5,10 @@
  */
 
 import * as d3 from "d3";
-import {AbstractNodeVisConstructor} from "nodevis/layer_utils";
-import {StyleMatcherConditions} from "nodevis/layout_utils";
-import * as texts from "nodevis/texts";
+
+import {AbstractNodeVisConstructor} from "./layer_utils";
+import {StyleMatcherConditions} from "./layout_utils";
+import * as texts from "./texts";
 import {
     BoundingRect,
     Coords,
@@ -18,8 +19,8 @@ import {
     NodevisNode,
     Quickinfo,
     Tooltip,
-} from "nodevis/type_defs";
-import {Viewport} from "nodevis/viewport";
+} from "./type_defs";
+import {Viewport} from "./viewport";
 
 // TODO: remove or fix logging
 export function log(level: number, ...args: any[]) {

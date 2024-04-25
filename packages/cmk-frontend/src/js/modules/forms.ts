@@ -8,12 +8,16 @@ import "select2";
 import "element-closest-polyfill";
 
 import Tagify, {EditTagsRuntimeSettings} from "@yaireo/tagify";
-import * as ajax from "ajax";
 import $ from "jquery";
 import Swal from "sweetalert2";
-import {CMKAjaxReponse, RequireConfirmation} from "types";
-import * as utils from "utils";
-import {initialize_autocompleters, toggle_label_row_opacity} from "valuespecs";
+
+import * as ajax from "./ajax";
+import {CMKAjaxReponse, RequireConfirmation} from "./types";
+import * as utils from "./utils";
+import {
+    initialize_autocompleters,
+    toggle_label_row_opacity,
+} from "./valuespecs";
 
 interface TagifyState {
     inputText: string;

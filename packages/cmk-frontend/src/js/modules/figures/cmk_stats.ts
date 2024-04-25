@@ -4,11 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as cmk_figures from "cmk_figures";
 import * as d3 from "d3";
 import { BaseType } from "d3";
 import * as d3Hexbin from "d3-hexbin";
-import { FigureData } from "figure_types";
+
+import * as cmk_figures from "./cmk_figures";
+import { FigureData } from "./figure_types";
 
 interface FigurePart {
     count: number;

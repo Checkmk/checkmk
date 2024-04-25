@@ -6,14 +6,15 @@
 
 import * as d3 from "d3";
 import {Simulation} from "d3";
-import {ForceConfig, ForceOptions, SimulationForce} from "nodevis/force_utils";
+
+import {ForceConfig, ForceOptions, SimulationForce} from "./force_utils";
 import {
     compute_node_positions_from_list_of_nodes,
     StyleOptionValues,
-} from "nodevis/layout_utils";
-import {compute_link_id} from "nodevis/link_utils";
-import {NodevisLink, NodevisNode} from "nodevis/type_defs";
-import {Viewport} from "nodevis/viewport";
+} from "./layout_utils";
+import {compute_link_id} from "./link_utils";
+import {NodevisLink, NodevisNode} from "./type_defs";
+import {Viewport} from "./viewport";
 
 export class ForceSimulation {
     _simulation: Simulation<NodevisNode, NodevisLink>;

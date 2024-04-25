@@ -5,23 +5,24 @@
  */
 
 import * as d3 from "d3";
-import {ForceConfig, ForceOptions, SimulationForce} from "nodevis/force_utils";
+
+import {ForceConfig, ForceOptions, SimulationForce} from "./force_utils";
 import {
     DynamicToggleableLayer,
     layer_class_registry,
     LayerSelections,
-} from "nodevis/layer_utils";
-import {StyleOptionSpecRange} from "nodevis/layout_utils";
-import {AbstractLink, link_type_class_registry} from "nodevis/link_utils";
-import {TopologyNode} from "nodevis/node_types";
+} from "./layer_utils";
+import {StyleOptionSpecRange} from "./layout_utils";
+import {AbstractLink, link_type_class_registry} from "./link_utils";
+import {TopologyNode} from "./node_types";
 import {
     AbstractGUINode,
     get_core_info,
     get_custom_node_settings,
     node_type_class_registry,
-} from "nodevis/node_utils";
-import * as texts from "nodevis/texts";
-import {TranslationKey} from "nodevis/texts";
+} from "./node_utils";
+import * as texts from "./texts";
+import {TranslationKey} from "./texts";
 import {
     ContextMenuElement,
     d3SelectionDiv,
@@ -30,14 +31,14 @@ import {
     NodevisWorld,
     OverlaysConfig,
     QuickinfoEntry,
-} from "nodevis/type_defs";
+} from "./type_defs";
 import {
     RadioGroupOption,
     render_radio_group,
     render_save_delete,
     show_tooltip,
-} from "nodevis/utils";
-import {Viewport} from "nodevis/viewport";
+} from "./utils";
+import {Viewport} from "./viewport";
 
 interface TopologyForceOptions extends ForceOptions {
     charge_host: number;

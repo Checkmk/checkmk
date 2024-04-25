@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "ajax";
-import * as foldable_container from "foldable_container";
-import * as utils from "utils";
+import * as ajax from "./ajax";
+import * as foldable_container from "./foldable_container";
+import * as utils from "./utils";
 
 export function toggle_grouped_rows(
     tree: string,

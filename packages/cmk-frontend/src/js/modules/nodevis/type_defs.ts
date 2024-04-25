@@ -6,13 +6,11 @@
 
 import * as d3 from "d3";
 import {HierarchyNode} from "d3";
-import {DatasourceManager} from "nodevis/datasources";
-import {ForceOptions} from "nodevis/force_utils";
-import {
-    AbstractLayoutStyle,
-    SerializedNodevisLayout,
-} from "nodevis/layout_utils";
-import {Viewport} from "nodevis/viewport";
+
+import {DatasourceManager} from "./datasources";
+import {ForceOptions} from "./force_utils";
+import {AbstractLayoutStyle, SerializedNodevisLayout} from "./layout_utils";
+import {Viewport} from "./viewport";
 
 export type d3Selection = d3.Selection<any, unknown, any, unknown>;
 

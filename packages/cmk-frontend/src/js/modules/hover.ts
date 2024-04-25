@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "utils";
+import * as utils from "./utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Mouseover hover menu, used for performance graph popups            |

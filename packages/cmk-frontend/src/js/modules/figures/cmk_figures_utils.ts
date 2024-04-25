@@ -4,8 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {FigureBase} from "cmk_figures";
 import * as d3 from "d3";
+
+import {FigureBase} from "./cmk_figures";
 import {
     Bounds,
     Domain,
@@ -13,8 +14,8 @@ import {
     FigureData,
     Levels,
     TransformedData,
-} from "figure_types";
-import {Scheduler} from "multi_data_fetcher";
+} from "./figure_types";
+import {Scheduler} from "./multi_data_fetcher";
 
 /**
  * Draw an individual shape

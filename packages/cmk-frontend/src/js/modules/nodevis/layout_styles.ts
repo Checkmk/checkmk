@@ -6,7 +6,8 @@
 
 import * as d3 from "d3";
 import * as d3_flextree from "d3-flextree";
-import {OverlayElement} from "nodevis/layer_utils";
+
+import {OverlayElement} from "./layer_utils";
 import {
     AbstractLayoutStyle,
     compute_node_position,
@@ -15,14 +16,14 @@ import {
     NodeForce,
     StyleOptionSpec,
     StyleOptionSpecCheckbox,
-} from "nodevis/layout_utils";
+} from "./layout_utils";
 import {
     Coords,
     d3SelectionSvg,
     NodevisNode,
     RectangleWithCoords,
-} from "nodevis/type_defs";
-import {get_bounding_rect_of_rotated_vertices, log} from "nodevis/utils";
+} from "./type_defs";
+import {get_bounding_rect_of_rotated_vertices, log} from "./utils";
 
 //#.
 //#   .-Hierarchy----------------------------------------------------------.

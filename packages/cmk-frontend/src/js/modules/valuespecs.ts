@@ -6,18 +6,19 @@
 
 import "select2";
 
-import * as ajax from "ajax";
+import * as d3 from "d3";
+import $ from "jquery";
+import {set} from "lodash";
+import {QueryOptions} from "select2";
+
+import * as ajax from "./ajax";
 //TODO: this causes an error because allowJS is set to false in tsconfig
 // colorpicker should be used as a package instead of copied file
 //@ts-ignore
-import * as colorpicker from "colorpicker";
-import * as d3 from "d3";
-import * as forms from "forms";
-import $ from "jquery";
-import {set} from "lodash";
-import * as popup_menu from "popup_menu";
-import {QueryOptions} from "select2";
-import * as utils from "utils";
+import * as colorpicker from "./colorpicker";
+import * as forms from "./forms";
+import * as popup_menu from "./popup_menu";
+import * as utils from "./utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Functions needed by HTML code from ValueSpec (valuespec.py)        |

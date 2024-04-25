@@ -6,11 +6,12 @@
 
 import "element-closest-polyfill";
 
-import * as foldable_container from "foldable_container";
-import * as forms from "forms";
 import $ from "jquery";
-import * as popup_menu from "popup_menu";
-import * as utils from "utils";
+
+import * as foldable_container from "./foldable_container";
+import * as forms from "./forms";
+import * as popup_menu from "./popup_menu";
+import * as utils from "./utils";
 
 // Closes the active page menu dropdown
 export function close_active_dropdown() {

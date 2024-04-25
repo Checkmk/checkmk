@@ -4,11 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import "nodevis/layout";
+import "./layout";
 
 import * as d3 from "d3";
-import {ForceSimulation} from "nodevis/force_simulation";
-import {ForceConfig} from "nodevis/force_utils";
+
+import {ForceSimulation} from "./force_simulation";
+import {ForceConfig} from "./force_utils";
 import {
     AbstractLayer,
     AbstractNodeVisConstructor,
@@ -17,9 +18,9 @@ import {
     layer_class_registry,
     LayerSelections,
     ToggleableLayer,
-} from "nodevis/layer_utils";
-import {LayeredNodesLayer} from "nodevis/layers";
-import {LayoutManagerLayer} from "nodevis/layout";
+} from "./layer_utils";
+import {LayeredNodesLayer} from "./layers";
+import {LayoutManagerLayer} from "./layout";
 import {
     BackendResponse,
     Coords,
@@ -34,8 +35,8 @@ import {
     OverlaysConfig,
     Rectangle,
     RectangleWithCoords,
-} from "nodevis/type_defs";
-import {DefaultTransition, get_bounding_rect} from "nodevis/utils";
+} from "./type_defs";
+import {DefaultTransition, get_bounding_rect} from "./utils";
 
 export class Viewport {
     _world_for_layers: NodevisWorld | null = null;

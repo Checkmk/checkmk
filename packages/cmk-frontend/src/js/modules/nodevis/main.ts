@@ -5,25 +5,23 @@
  */
 
 import * as d3 from "d3";
-import {BIForceConfig} from "nodevis/aggregations";
+
+import {BIForceConfig} from "./aggregations";
 import {
     AggregationsDatasource,
     DatasourceManager,
     TopologyDatasource,
-} from "nodevis/datasources";
-import {LayoutStyleExampleGenerator} from "nodevis/example_generator";
-import {ForceConfig} from "nodevis/force_utils";
-import {layer_class_registry} from "nodevis/layer_utils";
-import {layout_style_class_registry} from "nodevis/layout_utils";
-import {link_type_class_registry} from "nodevis/link_utils";
-import {
-    get_custom_node_settings,
-    node_type_class_registry,
-} from "nodevis/node_utils";
-import {SearchNodes} from "nodevis/search";
-import * as texts from "nodevis/texts";
-import {TranslationKey} from "nodevis/texts";
-import {TopologyForceConfig} from "nodevis/topology";
+} from "./datasources";
+import {LayoutStyleExampleGenerator} from "./example_generator";
+import {ForceConfig} from "./force_utils";
+import {layer_class_registry} from "./layer_utils";
+import {layout_style_class_registry} from "./layout_utils";
+import {link_type_class_registry} from "./link_utils";
+import {get_custom_node_settings, node_type_class_registry} from "./node_utils";
+import {SearchNodes} from "./search";
+import * as texts from "./texts";
+import {TranslationKey} from "./texts";
+import {TopologyForceConfig} from "./topology";
 import {
     BackendResponse,
     d3SelectionDiv,
@@ -33,9 +31,9 @@ import {
     OverlaysConfig,
     TopologyBackendResponse,
     TopologyFrontendConfig,
-} from "nodevis/type_defs";
-import {LiveSearch, render_input_range, SearchFilters} from "nodevis/utils";
-import {Viewport} from "nodevis/viewport";
+} from "./type_defs";
+import {LiveSearch, render_input_range, SearchFilters} from "./utils";
+import {Viewport} from "./viewport";
 
 //
 //  .--MainInstance--------------------------------------------------------.

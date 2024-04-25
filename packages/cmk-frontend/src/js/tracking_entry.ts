@@ -10,7 +10,7 @@ import {
     clearData,
     nukeDataFromOrbit,
     repeat,
-} from "tracking";
+} from "./modules/tracking";
 
 function help() {
     console.warn(`Available commands:

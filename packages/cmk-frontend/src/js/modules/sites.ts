@@ -4,8 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "ajax";
 import $ from "jquery";
+
+import * as ajax from "./ajax";
 
 interface AjaxJsonResponse<Result = any> {
     result_code: number;

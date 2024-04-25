@@ -15,14 +15,15 @@ import {
     jest,
     test,
 } from "@jest/globals";
-import {activate_tracking} from "tracking";
+
+import {activate_tracking} from "@/modules/tracking";
 import {
     getRecord,
     openDatabase,
     putRecord,
     repeatUrlsEntry,
     repeatUrlsTable,
-} from "tracking_database";
+} from "@/modules/tracking_database";
 
 async function getStore() {
     const db = await openDatabase();

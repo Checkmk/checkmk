@@ -4,10 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "ajax";
-import * as selection from "selection";
 import SimpleBar from "simplebar";
 import Swal from "sweetalert2";
+
+import * as ajax from "./ajax";
+import * as selection from "./selection";
 
 export type Nullable<T> = null | T;
 let g_content_scrollbar: SimpleBar | null | undefined = null;

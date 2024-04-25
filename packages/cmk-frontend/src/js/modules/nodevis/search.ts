@@ -5,14 +5,15 @@
  */
 
 import * as d3 from "d3";
-import * as texts from "nodevis/texts";
+
+import * as texts from "./texts";
 import {
     d3SelectionDiv,
     NodevisWorld,
     SearchResultEntry,
     SearchResults,
-} from "nodevis/type_defs";
-import {DefaultTransition} from "nodevis/utils";
+} from "./type_defs";
+import {DefaultTransition} from "./utils";
 
 export class SearchNodes {
     _world: NodevisWorld;

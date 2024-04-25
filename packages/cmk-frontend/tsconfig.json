@@ -23,18 +23,7 @@
         "allowSyntheticDefaultImports": true,
         "baseUrl": "./",
         "paths": {
-            "*": [
-                "*",
-                "src/*",
-                "src/js/modules/*",
-                "src/js/modules/*",
-                "src/js/modules/figures/*",
-                "src/js/modules/node_visualization/*",
-                "src/js/modules/cee/*",
-                "src/js/modules/cee/figures/*",
-                "src/js/modules/cee/license_usage/*",
-                "src/js/modules/cee/ntop/*"
-            ]
+          "@/*": ["./src/js/*"]
         }
     },
     "include": [

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {call_ajax} from "ajax";
+import {call_ajax} from "./ajax";
 
 let iCurrent: number | null = null;
 let oCurrent: HTMLAnchorElement | null = null;

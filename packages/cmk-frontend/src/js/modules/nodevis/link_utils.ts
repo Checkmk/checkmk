@@ -5,19 +5,16 @@
  */
 
 import {BaseType, Transition} from "d3";
-import {ForceOptions, SimulationForce} from "nodevis/force_utils";
-import {LineConfig} from "nodevis/layout_utils";
+
+import {ForceOptions, SimulationForce} from "./force_utils";
+import {LineConfig} from "./layout_utils";
 import {
     d3SelectionG,
     NodevisLink,
     NodevisNode,
     NodevisWorld,
-} from "nodevis/type_defs";
-import {
-    AbstractClassRegistry,
-    DefaultTransition,
-    TypeWithName,
-} from "nodevis/utils";
+} from "./type_defs";
+import {AbstractClassRegistry, DefaultTransition, TypeWithName} from "./utils";
 
 export function compute_link_id(link_data: NodevisLink): string {
     return link_data.source.data.id + "#@#" + link_data.target.data.id;

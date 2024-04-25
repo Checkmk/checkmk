@@ -5,9 +5,10 @@
  */
 
 import * as d3 from "d3";
-import {ForceConfig, ForceOptions} from "nodevis/force_utils";
-import {AbstractNodeVisConstructor, OverlayElement} from "nodevis/layer_utils";
-import * as texts from "nodevis/texts";
+
+import {ForceConfig, ForceOptions} from "./force_utils";
+import {AbstractNodeVisConstructor, OverlayElement} from "./layer_utils";
+import * as texts from "./texts";
 import {
     Coords,
     d3SelectionDiv,
@@ -16,7 +17,7 @@ import {
     NodevisWorld,
     Rectangle,
     XYCoords,
-} from "nodevis/type_defs";
+} from "./type_defs";
 import {
     AbstractClassRegistry,
     DefaultTransition,
@@ -24,7 +25,7 @@ import {
     log,
     render_input_range,
     TypeWithName,
-} from "nodevis/utils";
+} from "./utils";
 
 export type LineStyle = "straight" | "elbow" | "round";
 export class LineConfig {

@@ -4,24 +4,25 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import "nodevis/node_types";
-import "nodevis/link_types";
+import "./node_types";
+import "./link_types";
 
 import * as d3 from "d3";
+
 import {
     FixLayer,
     layer_class_registry,
     LayerSelections,
     ToggleableLayer,
-} from "nodevis/layer_utils";
+} from "./layer_utils";
 import {
     AbstractLink,
     compute_link_id,
     link_type_class_registry,
-} from "nodevis/link_utils";
-import {AbstractGUINode, node_type_class_registry} from "nodevis/node_utils";
-import * as texts from "nodevis/texts";
-import {TranslationKey} from "nodevis/texts";
+} from "./link_utils";
+import {AbstractGUINode, node_type_class_registry} from "./node_utils";
+import * as texts from "./texts";
+import {TranslationKey} from "./texts";
 import {
     ContextMenuElement,
     Coords,
@@ -30,8 +31,8 @@ import {
     NodevisLink,
     NodevisNode,
     NodevisWorld,
-} from "nodevis/type_defs";
-import {DefaultTransition} from "nodevis/utils";
+} from "./type_defs";
+import {DefaultTransition} from "./utils";
 
 export class ParentChildOverlay extends ToggleableLayer {
     override class_name(): string {

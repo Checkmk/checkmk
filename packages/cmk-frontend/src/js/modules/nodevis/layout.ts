@@ -5,14 +5,16 @@
  */
 
 import * as d3 from "d3";
+
+import {LayoutAggregations} from "./aggregations";
 import {
     AbstractNodeVisConstructor,
     FixLayer,
     layer_class_registry,
     LayerSelections,
-} from "nodevis/layer_utils";
-import {LayeredNodesLayer} from "nodevis/layers";
-import {LayoutStyleFixed, LayoutStyleHierarchy} from "nodevis/layout_styles";
+} from "./layer_utils";
+import {LayeredNodesLayer} from "./layers";
+import {LayoutStyleFixed, LayoutStyleHierarchy} from "./layout_styles";
 import {
     AbstractLayoutStyle,
     compute_node_position,
@@ -27,8 +29,9 @@ import {
     StyleConfig,
     StyleOptionSpec,
     StyleOptionValues,
-} from "nodevis/layout_utils";
-import * as texts from "nodevis/texts";
+} from "./layout_utils";
+import * as texts from "./texts";
+import {LayoutTopology} from "./topology";
 import {
     ContextMenuElement,
     Coords,
@@ -38,17 +41,14 @@ import {
     NodevisNode,
     NodevisWorld,
     Rectangle,
-} from "nodevis/type_defs";
+} from "./type_defs";
 import {
     DefaultTransition,
     log,
     NodeMatcher,
     RadioGroupOption,
     render_radio_group,
-} from "nodevis/utils";
-
-import {LayoutAggregations} from "./aggregations";
-import {LayoutTopology} from "./topology";
+} from "./utils";
 import {Viewport} from "./viewport";
 
 //#.

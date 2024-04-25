@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "utils";
+import * as utils from "./utils";
 
 // Stores the reload pause timer object once the regular reload has
 // been paused e.g. by modifying a graphs timerange or vertical axis.

@@ -9,12 +9,13 @@
 // Fortunately it has no effect on the actual NodeVisualization and is just used within the BI configuration GUI
 
 import * as d3 from "d3";
-import {LayoutManagerLayer} from "nodevis/layout";
+
+import {LayoutManagerLayer} from "./layout";
 import {
     LayoutStyleBlock,
     LayoutStyleHierarchy,
     LayoutStyleRadial,
-} from "nodevis/layout_styles";
+} from "./layout_styles";
 import {
     AbstractLayoutStyle,
     compute_node_position,
@@ -22,7 +23,7 @@ import {
     StyleConfig,
     StyleOptionSpec,
     StyleOptionValues,
-} from "nodevis/layout_utils";
+} from "./layout_utils";
 import {
     d3SelectionDiv,
     d3SelectionG,
@@ -30,8 +31,8 @@ import {
     NodeData,
     NodevisNode,
     NodevisWorld,
-} from "nodevis/type_defs";
-import {get_bounding_rect} from "nodevis/utils";
+} from "./type_defs";
+import {get_bounding_rect} from "./utils";
 
 type _ExampleOptions = Record<string, number>;
 interface ExampleOptions extends _ExampleOptions {

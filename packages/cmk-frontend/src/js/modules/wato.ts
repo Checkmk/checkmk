@@ -5,7 +5,8 @@
  */
 
 import $ from "jquery";
-import * as utils from "utils";
+
+import * as utils from "./utils";
 
 // ----------------------------------------------------------------------------
 // General functions for WATO

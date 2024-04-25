@@ -4,10 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "ajax";
-import * as hover from "hover";
-import * as reload_pause from "reload_pause";
-import * as utils from "utils";
+import * as ajax from "./ajax";
+import * as hover from "./hover";
+import * as reload_pause from "./reload_pause";
+import * as utils from "./utils";
 
 //types from cmk/utils/type_defs/_misc.py:81
 type Timestamp = number;

@@ -1,4 +1,9 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+/**
+ * Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -60,16 +65,9 @@ module.exports = {
         clean: true,
     },
     resolve: {
-        modules: [
-            "node_modules",
-            path.resolve(__dirname, "src/js/modules"),
-            path.resolve(__dirname, "src/js/modules/figures"),
-            path.resolve(__dirname, "src/js/modules/nodevis"),
-            path.resolve(__dirname, "src/js/modules/cee"),
-            path.resolve(__dirname, "src/js/modules/cee/figures"),
-            path.resolve(__dirname, "src/js/modules/cee/ntop"),
-            path.resolve(__dirname, "src/js/modules/cee/license_usage"),
-        ],
+        alias: {
+            "@": path.resolve(__dirname, "src/js/"),
+        },
         // added this because otherwise it won't find any imported ts files inside of a js file
         extensions: [".ts", ".js"],
     },

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {AbstractLink, link_type_class_registry} from "nodevis/link_utils";
+import {AbstractLink, link_type_class_registry} from "./link_utils";
 
 export class DefaultLinkNode extends AbstractLink {
     override class_name(): string {

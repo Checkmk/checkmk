@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {ForceSimulation} from "nodevis/force_simulation";
-import {StyleOptionSpecRange, StyleOptionValues} from "nodevis/layout_utils";
+import {ForceSimulation} from "./force_simulation";
+import {StyleOptionSpecRange, StyleOptionValues} from "./layout_utils";
 
 export type ForceOptions = {
     charge: number;

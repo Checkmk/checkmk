@@ -4,15 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "ajax";
-import {ForceConfig} from "nodevis/force_utils";
-import {
-    SerializedNodevisLayout,
-    StyleOptionSpecRange,
-} from "nodevis/layout_utils";
-import * as texts from "nodevis/texts";
-import {d3SelectionDiv, NodevisWorld} from "nodevis/type_defs";
-import {render_save_delete} from "nodevis/utils";
+import * as ajax from "../ajax";
+import {ForceConfig} from "./force_utils";
+import {SerializedNodevisLayout, StyleOptionSpecRange} from "./layout_utils";
+import * as texts from "./texts";
+import {d3SelectionDiv, NodevisWorld} from "./type_defs";
+import {render_save_delete} from "./utils";
 
 export class LayoutAggregations {
     _world: NodevisWorld;

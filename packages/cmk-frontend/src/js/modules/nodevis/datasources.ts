@@ -21,15 +21,15 @@
 //#   +--------------------------------------------------------------------+
 
 import * as d3 from "d3";
-import {SerializedNodevisLayout} from "nodevis/layout_utils";
+
+import {CMKAjaxReponse} from "../types";
+import * as utils from "../utils";
+import {SerializedNodevisLayout} from "./layout_utils";
 import {
     DatasourceCallback,
     SerializedNodeConfig,
     TopologyFrontendConfig,
-} from "nodevis/type_defs";
-import {CMKAjaxReponse} from "types";
-
-import * as utils from "../utils";
+} from "./type_defs";
 
 interface AjaxFetchTopologyData {
     node_config: SerializedNodeConfig;

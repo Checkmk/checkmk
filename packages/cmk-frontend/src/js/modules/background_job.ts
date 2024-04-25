@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as async_progress from "async_progress";
-import * as utils from "utils";
+import * as async_progress from "./async_progress";
+import * as utils from "./utils";
 
 interface BackGroundJobStart {
     status_container_content: string;

@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import {call_ajax} from "ajax";
-import {resize_mega_menu_popup, toggle_popup} from "popup_menu";
-import {add_class, remove_class} from "utils";
+import {call_ajax} from "./ajax";
+import {resize_mega_menu_popup, toggle_popup} from "./popup_menu";
+import {add_class, remove_class} from "./utils";
 
 let g_call_ajax_obj: null | XMLHttpRequest = null;
 

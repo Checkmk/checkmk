@@ -4,11 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "ajax";
 import * as d3 from "d3";
-import {CMKAjaxReponse} from "types";
-import * as utils from "utils";
-import * as valuespecs from "valuespecs";
+
+import * as ajax from "./ajax";
+import {CMKAjaxReponse} from "./types";
+import * as utils from "./utils";
+import * as valuespecs from "./valuespecs";
 
 export function toggle_subtree(oImg: HTMLElement, lazy: boolean) {
     if (oImg.tagName == "SPAN") {

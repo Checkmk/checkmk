@@ -5,8 +5,9 @@
  */
 
 import * as d3 from "d3";
-import {ForceOptions, SimulationForce} from "nodevis/force_utils";
-import * as texts from "nodevis/texts";
+
+import {ForceOptions, SimulationForce} from "./force_utils";
+import * as texts from "./texts";
 import {
     ContextMenuElement,
     CoreInfo,
@@ -15,13 +16,13 @@ import {
     NodevisNode,
     NodevisWorld,
     QuickinfoEntry,
-} from "nodevis/type_defs";
+} from "./type_defs";
 import {
     AbstractClassRegistry,
     add_basic_quickinfo,
     DefaultTransition,
     TypeWithName,
-} from "nodevis/utils";
+} from "./utils";
 
 export class AbstractGUINode implements TypeWithName {
     _world: NodevisWorld;

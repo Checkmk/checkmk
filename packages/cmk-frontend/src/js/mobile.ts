@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as forms from "forms";
-import * as graphs from "graphs";
+import * as forms from "./modules/forms";
+import * as graphs from "./modules/graphs";
 
 // NOTE: We use an up-to-date version of jQuery from the package-lock.json together
 // with a patched version of jQuery mobile to make it compatible with jQuery:

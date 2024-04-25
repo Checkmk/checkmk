@@ -13,8 +13,9 @@
 // - suspend_for (seconds)
 // - update_if_older_than (seconds)
 import * as d3 from "d3";
-import {CMKAjaxReponse} from "types";
-import * as utils from "utils";
+
+import {CMKAjaxReponse} from "../types";
+import * as utils from "../utils";
 
 export class Scheduler {
     _scheduled_function: () => void;

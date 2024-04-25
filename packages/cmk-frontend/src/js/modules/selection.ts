@@ -4,8 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "ajax";
-import * as utils from "utils";
+import * as ajax from "./ajax";
+import * as utils from "./utils";
 
 interface SelectionProperties {
     page_id: null | string;

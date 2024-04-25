@@ -5,12 +5,13 @@
  */
 
 import * as d3 from "d3";
+
 import {
     metricsEntry,
     metricsTable,
     onError,
     openDatabase,
-} from "tracking_database";
+} from "./tracking_database";
 
 type GroupedResult = {
     [key: string]: metricsEntry[];

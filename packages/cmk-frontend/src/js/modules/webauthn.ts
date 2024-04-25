@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as utils from "utils";
+import * as utils from "./utils";
 
 function urlsafe_base64_decode(base64str: string): string {
     return window.atob(base64str.replace(/_/g, "/").replace(/-/g, "+"));

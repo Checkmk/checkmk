@@ -4,22 +4,23 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
+import crossfilter, {Crossfilter} from "crossfilter2";
+import * as d3 from "d3";
+
+import {CMKAjaxReponse} from "../types";
+import * as utils from "../utils";
 import {
     add_scheduler_debugging,
     plot_render_function,
     svg_text_overflow_ellipsis,
-} from "cmk_figures_utils";
-import crossfilter, {Crossfilter} from "crossfilter2";
-import * as d3 from "d3";
+} from "./cmk_figures_utils";
 import {
     ElementMargin,
     ElementSize,
     FigureBaseDashletSpec,
     FigureData,
-} from "figure_types";
-import {Scheduler} from "multi_data_fetcher";
-import {CMKAjaxReponse} from "types";
-import * as utils from "utils";
+} from "./figure_types";
+import {Scheduler} from "./multi_data_fetcher";
 
 // Base class for all cmk_figure based figures
 // Introduces

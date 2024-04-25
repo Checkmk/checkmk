@@ -15,7 +15,7 @@ import {
     putRecord,
     repeatUrlsEntry,
     repeatUrlsTable,
-} from "tracking_database";
+} from "./tracking_database";
 
 export const currentUrl = window.location.pathname + window.location.search;
 

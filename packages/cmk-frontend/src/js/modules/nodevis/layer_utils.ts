@@ -9,8 +9,8 @@ import {
     d3SelectionG,
     NodevisNode,
     NodevisWorld,
-} from "nodevis/type_defs";
-import {AbstractClassRegistry, TypeWithName} from "nodevis/utils";
+} from "./type_defs";
+import {AbstractClassRegistry, TypeWithName} from "./utils";
 
 export interface LayerSelections {
     div: d3SelectionDiv;

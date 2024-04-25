@@ -4,11 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 
-import * as ajax from "ajax";
-import * as async_progress from "async_progress";
-import * as page_menu from "page_menu";
-import {CMKAjaxReponse} from "types";
-import * as utils from "utils";
+import * as ajax from "./ajax";
+import * as async_progress from "./async_progress";
+import * as page_menu from "./page_menu";
+import {CMKAjaxReponse} from "./types";
+import * as utils from "./utils";
 
 //#.
 //#   .-Activation---------------------------------------------------------.

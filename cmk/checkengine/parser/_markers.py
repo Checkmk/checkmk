@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from typing import NamedTuple
 
 from cmk.utils.encoding import ensure_str_with_fallback
@@ -31,11 +31,11 @@ class PiggybackMarker(NamedTuple):
             encoding="utf-8",
             fallback=encoding_fallback,
         )
-        assert raw_host_name
-
         try:
             hostname = translate_hostname(translation, raw_host_name)
-            # Note: hostname can be empty here, even though raw_host_name was not.
+            # NOTE: We are never called with an empty header (otherwise we would be a footer), and
+            # decoding won't make a non-empty header empty, so raw_host_name is never empty, either.
+            # Nevertheless, host name translation *can* result in an empty name.
             return cls(hostname or None)
         except ValueError:
             return cls(None)
@@ -53,45 +53,44 @@ class SectionMarker(NamedTuple):
     separator: str | None
 
     @classmethod
-    def default(cls, name: SectionName):  # type: ignore[no-untyped-def]
+    def default(cls, name: SectionName) -> "SectionMarker":
         return cls(name, None, "ascii", True, None, None)
 
     @classmethod
     def from_header(cls, header: bytes) -> "SectionMarker":
-        def parse_options(elems: Iterable[str]) -> Iterable[tuple[str, str]]:
-            for option in elems:
-                if "(" not in option:
-                    continue
-                name, value = option.split("(", 1)
-                assert value[-1] == ")", value
-                yield name, value[:-1]
+        section_name, *elems = header.decode().split(":")
+        options = {}
+        for option in elems:
+            if "(" not in option:
+                continue
+            name, value = option.split("(", 1)
+            # TODO: Why do we have this assert here? If it is *really* used to raise an exception
+            # when there is no closing parenthesis, then it's a bug: With the -O (or -O0) CLI
+            # option, Python will remove all assert statements!
+            assert value[-1] == ")", value
+            options[name] = value[:-1]
 
-        headerparts = header.decode().split(":")
-        options = dict(parse_options(headerparts[1:]))
-        cached: tuple[int, int] | None
         try:
             cached_ = tuple(map(int, options["cached"].split(",")))
-            cached = cached_[0], cached_[1]
+            cached: tuple[int, int] | None = cached_[0], cached_[1]
         except KeyError:
             cached = None
 
         encoding = options.get("encoding", "utf-8")
         nostrip = options.get("nostrip") is not None
 
-        persist: int | None
         try:
-            persist = int(options["persist"])
+            persist: int | None = int(options["persist"])
         except KeyError:
             persist = None
 
-        separator: str | None
         try:
-            separator = chr(int(options["sep"]))
+            separator: str | None = chr(int(options["sep"]))
         except KeyError:
             separator = None
 
         return SectionMarker(
-            name=SectionName(headerparts[0]),
+            name=SectionName(section_name),
             cached=cached,
             encoding=encoding,
             nostrip=nostrip,

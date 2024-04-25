@@ -15,7 +15,7 @@ import urllib.parse
 from collections.abc import Mapping, Sequence
 from typing import Any, cast, Literal, NoReturn
 
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from cmk.utils import version
 
@@ -248,7 +248,7 @@ class LabelCondition(TypedDict):
 
 
 class LabelGroupCondition(TypedDict):
-    operator: Literal["and", "or", "not"]
+    operator: NotRequired[Literal["and", "or", "not"]]
     label_group: list[LabelCondition]
 
 

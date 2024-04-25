@@ -635,6 +635,7 @@ class LabelGroupCondition(base.BaseSchema):
     operator = fields.String(
         enum=["and", "or", "not"],
         description="Boolean operator that connects the label group to other label groups",
+        load_default="and",
     )
     label_group = fields.List(
         fields.Nested(LabelCondition),
@@ -687,8 +688,17 @@ class Conditions(base.BaseSchema):
     )
     host_label_groups = fields.List(
         fields.Nested(LabelGroupCondition),
-        description="Further restrict this rule by applying host label conditions.",
+        description="Further restrict this rule by applying host label conditions. Although all items in this list"
+        " have a default operator value, the operator value for the the first item in the list does not have any effect.",
         example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    }
+                ],
+            },
             {
                 "operator": "and",
                 "label_group": [
@@ -697,15 +707,22 @@ class Conditions(base.BaseSchema):
                         "label": "os:windows",
                     }
                 ],
-            }
+            },
         ],
     )
     service_label_groups = fields.List(
         fields.Nested(LabelGroupCondition),
-        description=(
-            "Restrict the application of the rule, by checking against service label conditions."
-        ),
+        description="Restrict the application of the rule, by checking against service label conditions. Although all items in"
+        " this list have a default operator value, the operator value for the the first item in the list does not have any effect.",
         example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    }
+                ],
+            },
             {
                 "operator": "and",
                 "label_group": [
@@ -714,7 +731,7 @@ class Conditions(base.BaseSchema):
                         "label": "os:windows",
                     }
                 ],
-            }
+            },
         ],
     )
     service_description = fields.Nested(

@@ -12,14 +12,20 @@ def main() {
             mount_credentials: true,
             priviliged: true,
         ) {
-            withEnv(["PYTHONUNBUFFERED=1"]) {
-                dir("${checkout_dir}") {
-                    sh(script: """scripts/run-pipenv run \
-                    buildscripts/scripts/get_distros.py \
-                    --editions_file "${checkout_dir}/editions.yml" \
-                    assert_build_artifacts \
-                    --version "${VERSION_TO_CHECK}" \
-                    """);
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'nexus',
+                    passwordVariable: 'NEXUS_PASSWORD',
+                    usernameVariable: 'NEXUS_USER')]) {
+                withEnv(["PYTHONUNBUFFERED=1"]) {
+                    dir("${checkout_dir}") {
+                        sh(script: """scripts/run-pipenv run \
+                        buildscripts/scripts/get_distros.py \
+                        --editions_file "${checkout_dir}/editions.yml" \
+                        assert_build_artifacts \
+                        --version "${VERSION_TO_CHECK}" \
+                        """);
+                    }
                 }
             }
         }

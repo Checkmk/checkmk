@@ -211,7 +211,7 @@ class SNMPTrapParser:
         cb_ctx: None,
     ) -> None:
         if (
-            variables["securityLevel"] in [1, 2]
+            variables["securityLevel"] in {1, 2}
             and variables["statusInformation"]["errorIndication"]
             == pysnmp.proto.errind.unknownCommunityName
         ):

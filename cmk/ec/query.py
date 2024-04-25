@@ -126,7 +126,7 @@ def filter_operator_in(a: str, b: Iterable[str]) -> bool:
     cmk.ec.main: StatusTableEvents._enumerate
     not implemented as regex/IGNORECASE due to performance.
     """
-    return a.lower() in (e.lower() for e in b)
+    return a.lower() in {e.lower() for e in b}
 
 
 OperatorName = Literal["=", ">", "<", ">=", "<=", "~", "=~", "~~", "in"]
@@ -187,7 +187,7 @@ class QueryGET(Query):
 
     def _parse_header_line(self, header: str, argument: str, logger: Logger) -> None:
         if header == "OutputFormat":
-            if argument not in ["python", "plain", "json"]:
+            if argument not in {"python", "plain", "json"}:
                 raise MKClientError(
                     f'Invalid output format "{argument}" (allowed are: python, plain, json)'
                 )

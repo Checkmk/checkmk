@@ -176,7 +176,7 @@ def parse_syslog_message_into_event(  # pylint: disable=too-many-branches
         event["priority"] = 5  # notice
 
     # Variant 7 and 7a
-    if line[0] == "@" and line[11] in [" ", ";"] and line.split(" ", 1)[0].count(";") <= 1:
+    if line[0] == "@" and line[11] in {" ", ";"} and line.split(" ", 1)[0].count(";") <= 1:
         details, host, line = line.split(" ", 2)
         event["host"] = HostName(host)
         detail_tokens = details.split(";")

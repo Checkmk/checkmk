@@ -840,7 +840,7 @@ class EventServer(ECServerThread):
                 # handle counting
                 elif "count" in rule:
                     count = rule["count"]
-                    if count.get("algorithm") in ["tokenbucket", "dynabucket"]:
+                    if count.get("algorithm") in {"tokenbucket", "dynabucket"}:
                         last_token = event.get("last_token", event["first"])
                         secs_per_token = count["period"] / float(count["count"])
                         if count["algorithm"] == "dynabucket":  # get fewer tokens if count is lower
@@ -1745,7 +1745,7 @@ class EventServer(ECServerThread):
 def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress_: str) -> Event:
     """New event with the trap OID as the application."""
     trapOIDs, other = partition(
-        lambda binding: binding[0] in ("1.3.6.1.6.3.1.1.4.1.0", "SNMPv2-MIB::snmpTrapOID.0"), trap
+        lambda binding: binding[0] in {"1.3.6.1.6.3.1.1.4.1.0", "SNMPv2-MIB::snmpTrapOID.0"}, trap
     )
     return Event(
         time=time.time(),
@@ -2248,7 +2248,7 @@ class StatusServer(ECServerThread):
             # Note the common practice: We validate parameters *before* doing any changes.
             if acknowledged:
                 ack = int(acknowledged)
-                if ack and event["phase"] not in ["open", "ack"]:
+                if ack and event["phase"] not in {"open", "ack"}:
                     raise MKClientError("You cannot acknowledge an event that is not open.")
                 event["phase"] = "ack" if ack else "open"
             if comment:
@@ -3048,7 +3048,7 @@ def replication_allow_command(config: Config, command: str, slave_status: SlaveS
     if (
         is_replication_slave(config)
         and slave_status["mode"] == "sync"
-        and command in ["DELETE", "UPDATE", "CHANGESTATE", "ACTION"]
+        and command in {"DELETE", "UPDATE", "CHANGESTATE", "ACTION"}
     ):
         raise MKClientError(
             "This command is not allowed on a replication slave while it is in sync mode."

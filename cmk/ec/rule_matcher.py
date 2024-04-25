@@ -44,7 +44,7 @@ def compile_matching_value(key: str, val: str) -> TextPattern | None:
     value = val.strip()
     # Remove leading .* from regex. This is redundant and
     # dramatically destroys performance when doing an infix search.
-    if key in ["match", "match_ok"]:
+    if key in {"match", "match_ok"}:
         while value.startswith(".*") and not value.startswith(".*?"):
             value = value[2:]
     if not value:

@@ -23,11 +23,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-ibm_svc_nodestats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
-    perfometers["check_mk-ibm_svc_systemstats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
-    perfometers["check_mk-openvpn_clients"] = perfometer_in_out_mb_per_sec
-    perfometers["check_mk-emcvnx_hba"] = perfometer_check_mk_hba
-    perfometers["check_mk-emc_isilon_iops"] = perfometer_check_mk_iops
     perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
     perfometers["check_mk-printer_supply_ricoh"] = perfometer_check_mk_printer_supply
     perfometers["check_mk-printer_pages"] = perfometer_printer_pages
@@ -159,52 +154,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_check_mk_disk_latency_r_w(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    latency_r = float(perf_data[0].value)
-    latency_w = float(perf_data[1].value)
-    text = f"{latency_r:.1f} ms {latency_w:.1f} ms"
-
-    return text, perfometer_logarithmic_dual(latency_r, "#60e0a0", latency_w, "#60a0e0", 20, 10)
-
-
-def perfometer_in_out_mb_per_sec(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    read_mbit = float(perf_data[0].value) / 131072
-    write_mbit = float(perf_data[1].value) / 131072
-
-    text = f"{read_mbit:<.2f}Mb/s  {write_mbit:<.2f}Mb/s"
-
-    return text, perfometer_logarithmic_dual(read_mbit, "#30d050", write_mbit, "#0060c0", 100, 10)
-
-
-def perfometer_check_mk_hba(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    if len(perf_data) < 2:
-        return None
-
-    read_blocks = int(perf_data[0].value)
-    write_blocks = int(perf_data[1].value)
-
-    text = "%d/s  %d/s" % (read_blocks, write_blocks)
-
-    return text, perfometer_logarithmic_dual(
-        read_blocks, "#30d050", write_blocks, "#0060c0", 100000, 2
-    )
-
-
-def perfometer_check_mk_iops(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    iops = int(perf_data[0].value)
-    text = "%d/s" % iops
-
-    return text, perfometer_logarithmic(iops, 100000, 2, "#30d050")
 
 
 def perfometer_check_mk_printer_supply(

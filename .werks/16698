@@ -1,0 +1,12 @@
+Title: mknotifyd: Log to correct file after logrotate
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1714032530
+Edition: cee
+Level: 1
+Version: 2.2.0p26
+
+The logrotate cronjob rotated the logfile mknotifyd.log in the right way but
+the mknotifyd was not aware of the changed logfile, resulting in logging to the
+rotated file. The mknotifyd is now aware of a change of the logfile.

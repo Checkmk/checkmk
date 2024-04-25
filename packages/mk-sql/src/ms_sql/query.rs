@@ -113,12 +113,12 @@ pub async fn run_custom_query<T: AsRef<str>>(client: &mut Client, query: T) -> R
     result
 }
 
-fn log_query(start: Instant, result: &Result<Vec<Answer>>, query_name: &str) {
+fn log_query(start: Instant, result: &Result<Vec<Answer>>, query_body: &str) {
     let total = (Instant::now() - start).as_millis();
     match result {
-        Ok(_) => log::info!("Query [SUCCESS], took {total} ms, `{query_name}`"),
+        Ok(_) => log::info!("Query [SUCCESS], took {total} ms, `{query_body}`"),
         Err(err) => {
-            log::info!("Query [ERROR], took {total} ms, error: `{err}`, query: `{query_name}`",)
+            log::info!("Query [ERROR], took {total} ms, error: `{err}`, query: `{query_body}`",)
         }
     }
 }
@@ -139,7 +139,7 @@ async fn exec_sql(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
 
 fn make_short_query(query: &str) -> &str {
     query
-        .get(0..std::cmp::min(32, query.len() - 1))
+        .get(0..std::cmp::min(16, query.len() - 1))
         .unwrap_or_default()
 }
 

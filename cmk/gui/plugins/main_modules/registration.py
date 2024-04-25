@@ -108,7 +108,7 @@ from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
-if edition() is not Edition.CEE:
+if edition() is not Edition.CSE:
     from cmk.gui.cee.dcd import _store as dcd_store
 
 

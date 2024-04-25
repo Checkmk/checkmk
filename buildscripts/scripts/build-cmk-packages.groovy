@@ -592,7 +592,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
                     passwordVariable: 'NEXUS_PASSWORD',
                     usernameVariable: 'NEXUS_USERNAME')
             ]) {
-                sh('make dist || cat /root/.npm/_logs/*-debug.log');
+                sh('make dist');
             }
         }
     }

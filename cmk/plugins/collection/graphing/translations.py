@@ -55,3 +55,9 @@ translation_arris_cmts_mem = translations.Translation(
     check_commands=[translations.PassiveCheck("arris_cmts_mem")],
     translations={"memused": translations.RenameTo("mem_used")},
 )
+
+translation_apc_mod_pdu_modules = translations.Translation(
+    name="apc_mod_pdu_modules",
+    check_commands=[translations.PassiveCheck("apc_mod_pdu_modules")],
+    translations={"current_power": translations.RenameToAndScaleBy("power", 1000)},
+)

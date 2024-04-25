@@ -21,7 +21,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-apc_mod_pdu_modules"] = perfometer_apc_mod_pdu_modules
     perfometers["check_mk-apc_inrow_airflow"] = perfometer_airflow_ls
     perfometers["check_mk-apc_inrow_fanspeed"] = perfometer_fanspeed
     perfometers["check_mk-hitachi_hnas_fan"] = perfometer_fanspeed_logarithmic
@@ -114,13 +113,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_apc_mod_pdu_modules(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    value = int(utils.savefloat(perf_data[0].value) * 100)
-    return "%skw" % perf_data[0].value, perfometer_logarithmic(value, 500, 2, "#3366CC")
 
 
 # Aiflow in l/s

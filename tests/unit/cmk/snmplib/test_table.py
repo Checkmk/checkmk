@@ -166,6 +166,7 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName("bulkwalk_h"))
     ts.add_host(HostName("v2c_h"))
     ts.add_host(HostName("not_included"))
+    ts.add_host(HostName("v3_h"))
     monkeypatch.setattr(ConfigCache, "_is_inline_backend_supported", lambda *args: True)
 
     config_cache = ts.apply(monkeypatch)
@@ -177,7 +178,7 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
 
     # credentials is v3 -> INLINE
     monkeypatch.setattr(ConfigCache, "_snmp_credentials", lambda *args: ("a", "p"))
-    assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.INLINE
+    assert config_cache.get_snmp_backend(HostName("v3_h")) is SNMPBackendEnum.INLINE
 
 
 def test_walk_passes_on_timeout_with_snmpv3_context_continue_on_timeout() -> None:

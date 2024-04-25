@@ -17,29 +17,17 @@ __all__ = ["PiggybackMarker", "SectionMarker"]
 class PiggybackMarker(NamedTuple):
     hostname: HostName | None
 
-    @staticmethod
-    def is_header(line: bytes) -> bool:
-        return (
-            line.startswith(b"<<<<")
-            and line.endswith(b">>>>")
-            and not PiggybackMarker.is_footer(line)
-        )
-
-    @staticmethod
-    def is_footer(line: bytes) -> bool:
-        return line == b"<<<<>>>>"
-
     @classmethod
-    def from_headerline(
+    def from_header(
         cls,
-        line: bytes,
+        header: bytes,
         translation: TranslationOptions,
         *,
         encoding_fallback: str,
     ) -> "PiggybackMarker":
         # ? ensure_str called on a bytes object with different possible encodings
         raw_host_name = ensure_str_with_fallback(
-            line[4:-4],
+            header,
             encoding="utf-8",
             fallback=encoding_fallback,
         )
@@ -64,28 +52,12 @@ class SectionMarker(NamedTuple):
     persist: int | None
     separator: str | None
 
-    @staticmethod
-    def is_header(line: bytes) -> bool:
-        return (
-            line.startswith(b"<<<")
-            and line.endswith(b">>>")
-            and not SectionMarker.is_footer(line)
-            and not PiggybackMarker.is_header(line)
-            and not PiggybackMarker.is_footer(line)
-        )
-
-    @staticmethod
-    def is_footer(line: bytes) -> bool:
-        # There is no section footer in the protocol but some non-compliant
-        # plugins still add one and we accept it.
-        return line == b"<<<>>>" or (line.startswith(b"<<<:") and line.endswith(b">>>"))
-
     @classmethod
     def default(cls, name: SectionName):  # type: ignore[no-untyped-def]
         return cls(name, None, "ascii", True, None, None)
 
     @classmethod
-    def from_headerline(cls, headerline: bytes) -> "SectionMarker":
+    def from_header(cls, header: bytes) -> "SectionMarker":
         def parse_options(elems: Iterable[str]) -> Iterable[tuple[str, str]]:
             for option in elems:
                 if "(" not in option:
@@ -94,10 +66,7 @@ class SectionMarker(NamedTuple):
                 assert value[-1] == ")", value
                 yield name, value[:-1]
 
-        if not SectionMarker.is_header(headerline):
-            raise ValueError(headerline)
-
-        headerparts = headerline[3:-3].decode().split(":")
+        headerparts = header.decode().split(":")
         options = dict(parse_options(headerparts[1:]))
         cached: tuple[int, int] | None
         try:

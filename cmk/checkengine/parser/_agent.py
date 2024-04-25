@@ -241,20 +241,26 @@ class ParserState(abc.ABC):
             return self
 
         try:
-            if not line.startswith(b"<<<") or not line.endswith(b">>>"):  # optimization only
-                return self.do_action(line)
-            if PiggybackMarker.is_header(line):
-                return self.on_piggyback_header(
-                    PiggybackMarker.from_headerline(
-                        line, self.translation, encoding_fallback=self.encoding_fallback
+            if line.startswith(b"<<<") and line.endswith(b">>>"):
+                # The condition below implies the condition above. A nicer way would be lifting the
+                # "if" below before the "if" above, but for performance reasons we nest it here.
+                if line.startswith(b"<<<<") and line.endswith(b">>>>"):
+                    return (
+                        self.on_piggyback_header(
+                            PiggybackMarker.from_header(
+                                header, self.translation, encoding_fallback=self.encoding_fallback
+                            )
+                        )
+                        if (header := line[4:-4])
+                        else self.on_piggyback_footer()
                     )
+                # There is no section footer in the protocol but some non-compliant plugins still
+                # add one and we accept it.
+                return (
+                    self.on_section_header(SectionMarker.from_header(header))
+                    if (header := line[3:-3]) and not header.startswith(b":")
+                    else self.on_section_footer()
                 )
-            if PiggybackMarker.is_footer(line):
-                return self.on_piggyback_footer()
-            if SectionMarker.is_header(line):
-                return self.on_section_header(SectionMarker.from_headerline(line))
-            if SectionMarker.is_footer(line):
-                return self.on_section_footer()
             return self.do_action(line)
         except Exception:
             if cmk.utils.debug.enabled():

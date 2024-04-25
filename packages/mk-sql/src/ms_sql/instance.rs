@@ -1295,14 +1295,24 @@ struct Counter {
 
 impl From<&Row> for Counter {
     fn from(row: &Row) -> Self {
+        let instance = row.get_value_by_idx(2).trim().replace(' ', "_").to_string();
         Self {
-            name: row.get_value_by_idx(0).trim().replace(' ', "_").to_string(),
+            name: row
+                .get_value_by_idx(0)
+                .trim()
+                .replace(' ', "_")
+                .to_string()
+                .to_lowercase(),
             object: row
                 .get_value_by_idx(1)
                 .trim()
                 .replace([' ', '$'], "_")
                 .to_string(),
-            instance: row.get_value_by_idx(2).trim().replace(' ', "_").to_string(),
+            instance: if instance.is_empty() {
+                "None".to_string()
+            } else {
+                instance
+            },
             value: row.get_bigint_by_idx(3).to_string(),
         }
     }

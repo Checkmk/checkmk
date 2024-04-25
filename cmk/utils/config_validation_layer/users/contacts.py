@@ -8,7 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, RootModel, ValidationError
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 TYPE_SITE = str
@@ -17,20 +17,20 @@ TIME_RANGE = tuple[float, float]
 
 
 class DisableNotifications(BaseModel):
-    disable: bool = OMITTED_FIELD
-    timerange: TIME_RANGE = OMITTED_FIELD
+    disable: bool | Omitted = OMITTED_FIELD
+    timerange: TIME_RANGE | Omitted = OMITTED_FIELD
 
 
 class Contact(BaseModel):
-    alias: str = OMITTED_FIELD
+    alias: str | Omitted = OMITTED_FIELD
     disable_notifications: DisableNotifications = DisableNotifications()
-    email: str = OMITTED_FIELD
-    pager: str = OMITTED_FIELD
-    contactgroups: list[CONTACT_GROUP_NAME] = OMITTED_FIELD
-    fallback_contact: bool = OMITTED_FIELD
-    user_scheme_serial: int = OMITTED_FIELD
-    authorized_sites: list[TYPE_SITE] = OMITTED_FIELD
-    customer: str | None = OMITTED_FIELD
+    email: str | Omitted = OMITTED_FIELD
+    pager: str | Omitted = OMITTED_FIELD
+    contactgroups: list[CONTACT_GROUP_NAME] | Omitted = OMITTED_FIELD
+    fallback_contact: bool | Omitted = OMITTED_FIELD
+    user_scheme_serial: int | Omitted = OMITTED_FIELD
+    authorized_sites: list[TYPE_SITE] | Omitted = OMITTED_FIELD
+    customer: str | None | Omitted = OMITTED_FIELD
 
 
 ContactMapModel = RootModel[dict[str, Contact]]

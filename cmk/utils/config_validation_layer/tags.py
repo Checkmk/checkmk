@@ -7,7 +7,7 @@ from typing import cast
 
 from pydantic import BaseModel, ValidationError
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.tags import TagConfigSpec
 
@@ -26,8 +26,8 @@ class TagGroupModel(BaseTagModel):
 
 
 class AuxTagModel(BaseTagModel):
-    topic: str = OMITTED_FIELD
-    help: str = OMITTED_FIELD
+    topic: str | Omitted = OMITTED_FIELD
+    help: str | Omitted = OMITTED_FIELD
 
 
 class WatoTags(BaseModel):

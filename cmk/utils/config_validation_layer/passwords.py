@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from pydantic import BaseModel, RootModel, ValidationError
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 
@@ -17,7 +17,7 @@ class PasswordModel(BaseModel):
     password: str
     owned_by: str | None
     shared_with: list[str]
-    customer: str | None = OMITTED_FIELD
+    customer: str | None | Omitted = OMITTED_FIELD
 
 
 PasswordMapModel = RootModel[dict[str, PasswordModel]]

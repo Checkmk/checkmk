@@ -22,11 +22,7 @@ class Omitted:
         return core_schema.is_instance_schema(cls)
 
 
-def omitted_value() -> Any:
-    return Omitted()
-
-
-OMITTED_FIELD = Field(default_factory=omitted_value)
+OMITTED_FIELD = Field(default=Omitted())
 
 
 @overload

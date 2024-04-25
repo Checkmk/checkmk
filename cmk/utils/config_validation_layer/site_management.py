@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, RootModel, ValidationError
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 
@@ -48,27 +48,27 @@ UNIX = tuple[Literal["unix"], _Path]
 
 
 class _ProxyParams(BaseModel):
-    channels: int = OMITTED_FIELD
-    heartbeat: tuple[int, float] = OMITTED_FIELD
-    channel_timeout: float = OMITTED_FIELD
-    query_timeout: float = OMITTED_FIELD
-    connect_retry: float = OMITTED_FIELD
-    cache: bool = OMITTED_FIELD
+    channels: int | Omitted = OMITTED_FIELD
+    heartbeat: tuple[int, float] | Omitted = OMITTED_FIELD
+    channel_timeout: float | Omitted = OMITTED_FIELD
+    query_timeout: float | Omitted = OMITTED_FIELD
+    connect_retry: float | Omitted = OMITTED_FIELD
+    cache: bool | Omitted = OMITTED_FIELD
 
 
 class _ProxyTcp(BaseModel):
     port: int
-    only_from: list[str] = OMITTED_FIELD
-    tls: bool = OMITTED_FIELD
+    only_from: list[str] | Omitted = OMITTED_FIELD
+    tls: bool | Omitted = OMITTED_FIELD
 
 
 class _Proxy(BaseModel):
     params: _ProxyParams | None
-    tcp: _ProxyTcp = OMITTED_FIELD
+    tcp: _ProxyTcp | Omitted = OMITTED_FIELD
 
 
 class SiteModel(BaseModel):
-    id: str = OMITTED_FIELD
+    id: str | Omitted = OMITTED_FIELD
     url_prefix: str
     replication: Literal["slave"] | None
     proxy: _Proxy | None
@@ -79,8 +79,8 @@ class SiteModel(BaseModel):
     multisiteurl: str
     persist: bool
     replicate_ec: bool
-    replicate_mkps: bool = OMITTED_FIELD
-    ca_file_path: str = OMITTED_FIELD
+    replicate_mkps: bool | Omitted = OMITTED_FIELD
+    ca_file_path: str | Omitted = OMITTED_FIELD
 
     class Config:
         validate_assignment = True
@@ -99,10 +99,10 @@ class RemoteSiteModel(SiteModel):
     alias: str = Field(min_length=1)
     socket: TCP4 | TCP6 | UNIX
     timeout: int = Field(ge=0, default=2)
-    status_host: tuple[str, str] | None = OMITTED_FIELD
-    user_sync: USER_SYNC | None = OMITTED_FIELD
-    customer: str = OMITTED_FIELD
-    secret: str = OMITTED_FIELD
+    status_host: tuple[str, str] | None | Omitted = OMITTED_FIELD
+    user_sync: USER_SYNC | None | Omitted = OMITTED_FIELD
+    customer: str | Omitted = OMITTED_FIELD
+    secret: str | Omitted = OMITTED_FIELD
 
 
 SiteMapModel = RootModel[dict[str, CentralSiteModel | RemoteSiteModel]]

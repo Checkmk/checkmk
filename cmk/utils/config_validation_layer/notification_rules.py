@@ -16,13 +16,13 @@ from pydantic import (
     ValidationInfo,
 )
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 
 class EmailFromOrTo(BaseModel):
-    display_name: str = OMITTED_FIELD
-    address: str = OMITTED_FIELD
+    display_name: str | Omitted = OMITTED_FIELD
+    address: str | Omitted = OMITTED_FIELD
 
 
 class AutomaticUrlPrefix(BaseModel):
@@ -60,33 +60,33 @@ class MailAuth(BaseModel):
 class SyncDeliverySMTP(BaseModel):
     smarthosts: list[str]
     port: int
-    encryption: Literal["ssl_tls", "starttls"] = OMITTED_FIELD
-    auth: MailAuth = OMITTED_FIELD
+    encryption: Literal["ssl_tls", "starttls"] | Omitted = OMITTED_FIELD
+    auth: MailAuth | Omitted = OMITTED_FIELD
 
 
 class BaseMailPlugin(BaseModel):
-    from_: EmailFromOrTo = Field(default=OMITTED_FIELD, alias="from")
-    reply_to: EmailFromOrTo = OMITTED_FIELD
-    host_subject: str = OMITTED_FIELD
-    service_subject: str = OMITTED_FIELD
-    bulk_sort_order: Literal["oldest_first", "newest_first"] = OMITTED_FIELD
-    disable_multiplexing: Literal[True] = OMITTED_FIELD
+    from_: EmailFromOrTo | Omitted = Field(default=Omitted(), alias="from")
+    reply_to: EmailFromOrTo | Omitted = OMITTED_FIELD
+    host_subject: str | Omitted = OMITTED_FIELD
+    service_subject: str | Omitted = OMITTED_FIELD
+    bulk_sort_order: Literal["oldest_first", "newest_first"] | Omitted = OMITTED_FIELD
+    disable_multiplexing: Literal[True] | Omitted = OMITTED_FIELD
 
 
 class MailPluginModel(BaseMailPlugin):
-    elements: list[MailElement] = OMITTED_FIELD
-    insert_html_section: str = OMITTED_FIELD
-    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix = OMITTED_FIELD
-    no_floating_graphs: Literal[True] = OMITTED_FIELD
-    graphs_per_notification: int = OMITTED_FIELD
-    notifications_with_graphs: int = OMITTED_FIELD
-    smtp: SyncDeliverySMTP = OMITTED_FIELD
+    elements: list[MailElement] | Omitted = OMITTED_FIELD
+    insert_html_section: str | Omitted = OMITTED_FIELD
+    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix | Omitted = OMITTED_FIELD
+    no_floating_graphs: Literal[True] | Omitted = OMITTED_FIELD
+    graphs_per_notification: int | Omitted = OMITTED_FIELD
+    notifications_with_graphs: int | Omitted = OMITTED_FIELD
+    smtp: SyncDeliverySMTP | Omitted = OMITTED_FIELD
 
 
 class AsciiMailPluginModel(BaseMailPlugin):
-    common_body: str = OMITTED_FIELD
-    host_body: str = OMITTED_FIELD
-    service_body: str = OMITTED_FIELD
+    common_body: str | Omitted = OMITTED_FIELD
+    host_body: str | Omitted = OMITTED_FIELD
+    service_body: str | Omitted = OMITTED_FIELD
 
 
 Environment = tuple[Literal["environment"], Literal["envronment"]]
@@ -100,9 +100,9 @@ WebhookURL = tuple[Literal["webhook_url", "store"], str]
 
 class CiscoPluginModel(BaseModel):
     webhook_url: WebhookURL
-    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix = OMITTED_FIELD
-    ignore_ssl: Literal[True] = OMITTED_FIELD
-    proxy_url: ProxyURL = OMITTED_FIELD
+    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix | Omitted = OMITTED_FIELD
+    ignore_ssl: Literal[True] | Omitted = OMITTED_FIELD
+    proxy_url: ProxyURL | Omitted = OMITTED_FIELD
 
 
 SysLogFacility = Literal[
@@ -136,8 +136,8 @@ SysLogFacility = Literal[
 
 
 class MKEventdPluginModel(BaseModel):
-    facility: SysLogFacility = OMITTED_FIELD
-    remote: IPv4Address | IPv6Address = OMITTED_FIELD
+    facility: SysLogFacility | Omitted = OMITTED_FIELD
+    remote: IPv4Address | IPv6Address | Omitted = OMITTED_FIELD
 
 
 class IlertPluginModel(BaseModel):
@@ -146,8 +146,8 @@ class IlertPluginModel(BaseModel):
     ilert_summary_host: str
     ilert_summary_service: str
     url_prefix: AutomaticUrlPrefix | ManualUrlPrefix
-    ignore_ssl: Literal[True] = OMITTED_FIELD
-    proxy_url: ProxyURL = OMITTED_FIELD
+    ignore_ssl: Literal[True] | Omitted = OMITTED_FIELD
+    proxy_url: ProxyURL | Omitted = OMITTED_FIELD
 
 
 class JiraIssuePluginModel(BaseModel):
@@ -159,45 +159,45 @@ class JiraIssuePluginModel(BaseModel):
     host_customid: str
     service_customid: str
     monitoring: str
-    ignore_ssl: Literal[True] = OMITTED_FIELD
-    priority: str = OMITTED_FIELD
-    host_summary: str = OMITTED_FIELD
-    service_summary: str = OMITTED_FIELD
-    label: str = OMITTED_FIELD
-    resolution: str = OMITTED_FIELD
-    timeout: str = OMITTED_FIELD
+    ignore_ssl: Literal[True] | Omitted = OMITTED_FIELD
+    priority: str | Omitted = OMITTED_FIELD
+    host_summary: str | Omitted = OMITTED_FIELD
+    service_summary: str | Omitted = OMITTED_FIELD
+    label: str | Omitted = OMITTED_FIELD
+    resolution: str | Omitted = OMITTED_FIELD
+    timeout: str | Omitted = OMITTED_FIELD
 
 
 class MicrosoftTeamsPluginModel(BaseModel):
-    webhook_url: WebhookURL = OMITTED_FIELD
-    proxy_url: ProxyURL = OMITTED_FIELD
-    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix = OMITTED_FIELD
-    host_title: str = OMITTED_FIELD
-    service_title: str = OMITTED_FIELD
-    host_summary: str = OMITTED_FIELD
-    service_summary: str = OMITTED_FIELD
-    host_details: str = OMITTED_FIELD
-    service_details: str = OMITTED_FIELD
-    affected_host_groups: Literal[True] = OMITTED_FIELD
+    webhook_url: WebhookURL | Omitted = OMITTED_FIELD
+    proxy_url: ProxyURL | Omitted = OMITTED_FIELD
+    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix | Omitted = OMITTED_FIELD
+    host_title: str | Omitted = OMITTED_FIELD
+    service_title: str | Omitted = OMITTED_FIELD
+    host_summary: str | Omitted = OMITTED_FIELD
+    service_summary: str | Omitted = OMITTED_FIELD
+    host_details: str | Omitted = OMITTED_FIELD
+    service_details: str | Omitted = OMITTED_FIELD
+    affected_host_groups: Literal[True] | Omitted = OMITTED_FIELD
 
 
 class OpsGenieIssuesPluginModel(BaseModel):
     password: tuple[Literal["password", "store"], str]
-    url: str = OMITTED_FIELD
-    proxy_url: ProxyURL = OMITTED_FIELD
-    owner: str = OMITTED_FIELD
-    source: str = OMITTED_FIELD
-    priority: Literal["P1", "P2", "P3", "P4", "P5"] = OMITTED_FIELD
-    note_created: str = OMITTED_FIELD
-    note_closed: str = OMITTED_FIELD
-    host_msg: str = OMITTED_FIELD
-    svc_msg: str = OMITTED_FIELD
-    host_desc: str = OMITTED_FIELD
-    svc_desc: str = OMITTED_FIELD
-    teams: list[str] = OMITTED_FIELD
-    actions: list[str] = OMITTED_FIELD
-    tags: list[str] = OMITTED_FIELD
-    entity: str = OMITTED_FIELD
+    url: str | Omitted = OMITTED_FIELD
+    proxy_url: ProxyURL | Omitted = OMITTED_FIELD
+    owner: str | Omitted = OMITTED_FIELD
+    source: str | Omitted = OMITTED_FIELD
+    priority: Literal["P1", "P2", "P3", "P4", "P5"] | Omitted = OMITTED_FIELD
+    note_created: str | Omitted = OMITTED_FIELD
+    note_closed: str | Omitted = OMITTED_FIELD
+    host_msg: str | Omitted = OMITTED_FIELD
+    svc_msg: str | Omitted = OMITTED_FIELD
+    host_desc: str | Omitted = OMITTED_FIELD
+    svc_desc: str | Omitted = OMITTED_FIELD
+    teams: list[str] | Omitted = OMITTED_FIELD
+    actions: list[str] | Omitted = OMITTED_FIELD
+    tags: list[str] | Omitted = OMITTED_FIELD
+    entity: str | Omitted = OMITTED_FIELD
 
     @field_validator("url")
     @classmethod
@@ -208,9 +208,9 @@ class OpsGenieIssuesPluginModel(BaseModel):
 class PagerDutyPluginModel(BaseModel):
     routing_key: tuple[Literal["routing_key", "store"], str]
     webhook_url: Literal["https://events.pagerduty.com/v2/enqueue"]
-    ignore_ssl: Literal[True] = OMITTED_FIELD
-    proxy_url: ProxyURL = OMITTED_FIELD
-    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix = OMITTED_FIELD
+    ignore_ssl: Literal[True] | Omitted = OMITTED_FIELD
+    proxy_url: ProxyURL | Omitted = OMITTED_FIELD
+    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix | Omitted = OMITTED_FIELD
 
 
 Sound = Literal[
@@ -254,9 +254,9 @@ class PushoverPluginModel(BaseModel):
     api_key: str
     recipient_key: str
     url_prefix: str
-    proxy_url: ProxyURL = OMITTED_FIELD
-    priority: PushoverPriority = OMITTED_FIELD
-    sound: Sound = OMITTED_FIELD
+    proxy_url: ProxyURL | Omitted = OMITTED_FIELD
+    priority: PushoverPriority | Omitted = OMITTED_FIELD
+    sound: Sound | Omitted = OMITTED_FIELD
 
 
 CaseState = (
@@ -285,27 +285,27 @@ IncidentState = (
 
 
 class IncidentRecoveryState(BaseModel):
-    start: IncidentState = OMITTED_FIELD
+    start: IncidentState | Omitted = OMITTED_FIELD
 
 
 class CaseRecoveryState(BaseModel):
-    start: CaseState = OMITTED_FIELD
+    start: CaseState | Omitted = OMITTED_FIELD
 
 
 class AckState(BaseModel):
-    start: IncidentState = OMITTED_FIELD
+    start: IncidentState | Omitted = OMITTED_FIELD
 
 
 class DowntimeState(BaseModel):
-    start: IncidentState = OMITTED_FIELD
-    end: IncidentState = OMITTED_FIELD
+    start: IncidentState | Omitted = OMITTED_FIELD
+    end: IncidentState | Omitted = OMITTED_FIELD
 
 
 class MgmtTypeBase(BaseModel):
-    host_short_desc: str = OMITTED_FIELD
-    svc_short_desc: str = OMITTED_FIELD
-    host_desc: str = OMITTED_FIELD
-    svc_desc: str = OMITTED_FIELD
+    host_short_desc: str | Omitted = OMITTED_FIELD
+    svc_short_desc: str | Omitted = OMITTED_FIELD
+    host_desc: str | Omitted = OMITTED_FIELD
+    svc_desc: str | Omitted = OMITTED_FIELD
 
 
 Weight = Literal["low", "medium", "high"]
@@ -313,19 +313,19 @@ Weight = Literal["low", "medium", "high"]
 
 class MgmtTypeIncident(MgmtTypeBase):
     caller: str
-    urgency: Weight = OMITTED_FIELD
-    impact: Weight = OMITTED_FIELD
-    ack_state: AckState = OMITTED_FIELD
-    dt_state: DowntimeState = OMITTED_FIELD
-    recovery_state: IncidentRecoveryState = OMITTED_FIELD
+    urgency: Weight | Omitted = OMITTED_FIELD
+    impact: Weight | Omitted = OMITTED_FIELD
+    ack_state: AckState | Omitted = OMITTED_FIELD
+    dt_state: DowntimeState | Omitted = OMITTED_FIELD
+    recovery_state: IncidentRecoveryState | Omitted = OMITTED_FIELD
 
 
 Priority = Literal["low", "moderate", "high", "critical"]
 
 
 class MgmtTypeCase(MgmtTypeBase):
-    priority: Priority = OMITTED_FIELD
-    recovery_state: CaseRecoveryState = OMITTED_FIELD
+    priority: Priority | Omitted = OMITTED_FIELD
+    recovery_state: CaseRecoveryState | Omitted = OMITTED_FIELD
 
 
 Mgmt = tuple[Literal["incident"], MgmtTypeIncident] | tuple[Literal["case"], MgmtTypeCase]
@@ -335,23 +335,23 @@ class ServiceNowPluginModel(BaseModel):
     url: str
     username: str
     password: tuple[Literal["password", "store"], str]
-    use_site_id: bool = OMITTED_FIELD
-    timeout: str = OMITTED_FIELD
+    use_site_id: bool | Omitted = OMITTED_FIELD
+    timeout: str | Omitted = OMITTED_FIELD
     mgmt_type: Mgmt
 
 
 class SignL4PluginModel(BaseModel):
     password: tuple[Literal["password", "store"], str]
     url_prefix: AutomaticUrlPrefix | ManualUrlPrefix
-    proxy_url: ProxyURL = OMITTED_FIELD
-    ignore_ssl: Literal[True] = OMITTED_FIELD
+    proxy_url: ProxyURL | Omitted = OMITTED_FIELD
+    ignore_ssl: Literal[True] | Omitted = OMITTED_FIELD
 
 
 class SlackPluginModel(BaseModel):
     webhook_url: WebhookURL
-    ignore_ssl: Literal[True] = OMITTED_FIELD
-    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix = OMITTED_FIELD
-    proxy_url: ProxyURL = OMITTED_FIELD
+    ignore_ssl: Literal[True] | Omitted = OMITTED_FIELD
+    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix | Omitted = OMITTED_FIELD
+    proxy_url: ProxyURL | Omitted = OMITTED_FIELD
 
 
 class SmsApiPluginModel(BaseModel):
@@ -360,8 +360,8 @@ class SmsApiPluginModel(BaseModel):
     proxy_url: ProxyURL
     username: str
     password: tuple[Literal["password", "store"], str]
-    ignore_ssl: Literal[True] = OMITTED_FIELD
-    timeout: str = OMITTED_FIELD
+    ignore_ssl: Literal[True] | Omitted = OMITTED_FIELD
+    timeout: str | Omitted = OMITTED_FIELD
 
 
 class SpectrumPluginModel(BaseModel):
@@ -372,9 +372,9 @@ class SpectrumPluginModel(BaseModel):
 
 class SplunkPluginModel(BaseModel):
     webhook_url: WebhookURL
-    ignore_ssl: Literal[True] = OMITTED_FIELD
-    proxy_url: ProxyURL = OMITTED_FIELD
-    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix = OMITTED_FIELD
+    ignore_ssl: Literal[True] | Omitted = OMITTED_FIELD
+    proxy_url: ProxyURL | Omitted = OMITTED_FIELD
+    url_prefix: AutomaticUrlPrefix | ManualUrlPrefix | Omitted = OMITTED_FIELD
 
     @field_validator("webhook_url")
     @classmethod
@@ -396,10 +396,10 @@ SyslogPriority = Literal[
 
 
 class ConditionEventConsoleAlertsType(BaseModel):
-    match_rule_id: list[str] = OMITTED_FIELD
-    match_priority: tuple[SyslogPriority, SyslogPriority] = OMITTED_FIELD
-    match_facility: SysLogFacility = OMITTED_FIELD
-    match_comment: str = OMITTED_FIELD
+    match_rule_id: list[str] | Omitted = OMITTED_FIELD
+    match_priority: tuple[SyslogPriority, SyslogPriority] | Omitted = OMITTED_FIELD
+    match_facility: SysLogFacility | Omitted = OMITTED_FIELD
+    match_comment: str | Omitted = OMITTED_FIELD
 
 
 GroupBy = Literal[
@@ -418,7 +418,7 @@ class BulkBaseParameters(BaseModel):
     count: int
     groupby: list[GroupBy]
     groupby_custom: list[str]
-    bulk_subject: str = OMITTED_FIELD
+    bulk_subject: str | Omitted = OMITTED_FIELD
 
 
 class AlwayBulkParameters(BulkBaseParameters):
@@ -427,7 +427,7 @@ class AlwayBulkParameters(BulkBaseParameters):
 
 class TimeperiodBulkParameters(BulkBaseParameters):
     timeperiod: str
-    bulk_outside: AlwayBulkParameters = OMITTED_FIELD
+    bulk_outside: AlwayBulkParameters | Omitted = OMITTED_FIELD
 
 
 NotifyBulk = (
@@ -556,45 +556,45 @@ class NotificationRuleModel(BaseModel):
     description: str
     disabled: bool
     notify_plugin: Annotated[Plugin, PlainValidator(validate_plugin)]
-    comment: str = OMITTED_FIELD
-    docu_url: str = OMITTED_FIELD
-    user_id: str | None = OMITTED_FIELD
-    contact: str = OMITTED_FIELD
-    contact_emails: list[str] = OMITTED_FIELD
-    contact_groups: list[str] = OMITTED_FIELD
-    contact_match_groups: list[str] = OMITTED_FIELD
-    contact_match_macros: list[tuple[str, str]] = OMITTED_FIELD
-    contact_users: list[str] = OMITTED_FIELD
-    match_attempt: tuple[int, int] = OMITTED_FIELD
-    match_checktype: list[str] = OMITTED_FIELD
-    match_contactgroups: list[str] = OMITTED_FIELD
-    match_contacts: list[str] = OMITTED_FIELD
-    match_ec: ConditionEventConsoleAlertsType | Literal[False] = OMITTED_FIELD
-    match_escalation: tuple[int, int] = OMITTED_FIELD
-    match_escalation_throttle: tuple[int, int] = OMITTED_FIELD
-    match_exclude_hosts: list[str] = OMITTED_FIELD
-    match_exclude_servicegroups: list[str] = OMITTED_FIELD
-    match_exclude_servicegroups_regex: MatchServiceGroupRegex = OMITTED_FIELD
-    match_exclude_services: list[str] = OMITTED_FIELD
-    match_folder: str = OMITTED_FIELD
-    match_host_event: Sequence[HostEvent] = OMITTED_FIELD
-    match_hostgroups: list[str] = OMITTED_FIELD
-    match_hostlabels: dict[str, str] = OMITTED_FIELD
-    match_hosts: list[str] = OMITTED_FIELD
-    match_hosttags: list[str] = OMITTED_FIELD
-    match_notification_comment: str = OMITTED_FIELD
-    match_plugin_output: str = OMITTED_FIELD
-    match_service_event: Sequence[ServiceEvent] = OMITTED_FIELD
-    match_servicegroups: list[str] = OMITTED_FIELD
-    match_servicegroups_regex: MatchServiceGroupRegex = OMITTED_FIELD
-    match_servicelabels: dict[str, str] = OMITTED_FIELD
-    match_services: list[str] = OMITTED_FIELD
-    match_site: list[str] = OMITTED_FIELD
-    match_sl: tuple[int, int] = OMITTED_FIELD
-    match_timeperiod: str = OMITTED_FIELD
-    bulk: NotifyBulk = OMITTED_FIELD
-    match_service_level: tuple[int, int] = OMITTED_FIELD
-    match_only_during_timeperiod: str = OMITTED_FIELD
+    comment: str | Omitted = OMITTED_FIELD
+    docu_url: str | Omitted = OMITTED_FIELD
+    user_id: str | None | Omitted = OMITTED_FIELD
+    contact: str | Omitted = OMITTED_FIELD
+    contact_emails: list[str] | Omitted = OMITTED_FIELD
+    contact_groups: list[str] | Omitted = OMITTED_FIELD
+    contact_match_groups: list[str] | Omitted = OMITTED_FIELD
+    contact_match_macros: list[tuple[str, str]] | Omitted = OMITTED_FIELD
+    contact_users: list[str] | Omitted = OMITTED_FIELD
+    match_attempt: tuple[int, int] | Omitted = OMITTED_FIELD
+    match_checktype: list[str] | Omitted = OMITTED_FIELD
+    match_contactgroups: list[str] | Omitted = OMITTED_FIELD
+    match_contacts: list[str] | Omitted = OMITTED_FIELD
+    match_ec: ConditionEventConsoleAlertsType | Literal[False] | Omitted = OMITTED_FIELD
+    match_escalation: tuple[int, int] | Omitted = OMITTED_FIELD
+    match_escalation_throttle: tuple[int, int] | Omitted = OMITTED_FIELD
+    match_exclude_hosts: list[str] | Omitted = OMITTED_FIELD
+    match_exclude_servicegroups: list[str] | Omitted = OMITTED_FIELD
+    match_exclude_servicegroups_regex: MatchServiceGroupRegex | Omitted = OMITTED_FIELD
+    match_exclude_services: list[str] | Omitted = OMITTED_FIELD
+    match_folder: str | Omitted = OMITTED_FIELD
+    match_host_event: Sequence[HostEvent] | Omitted = OMITTED_FIELD
+    match_hostgroups: list[str] | Omitted = OMITTED_FIELD
+    match_hostlabels: dict[str, str] | Omitted = OMITTED_FIELD
+    match_hosts: list[str] | Omitted = OMITTED_FIELD
+    match_hosttags: list[str] | Omitted = OMITTED_FIELD
+    match_notification_comment: str | Omitted = OMITTED_FIELD
+    match_plugin_output: str | Omitted = OMITTED_FIELD
+    match_service_event: Sequence[ServiceEvent] | Omitted = OMITTED_FIELD
+    match_servicegroups: list[str] | Omitted = OMITTED_FIELD
+    match_servicegroups_regex: MatchServiceGroupRegex | Omitted = OMITTED_FIELD
+    match_servicelabels: dict[str, str] | Omitted = OMITTED_FIELD
+    match_services: list[str] | Omitted = OMITTED_FIELD
+    match_site: list[str] | Omitted = OMITTED_FIELD
+    match_sl: tuple[int, int] | Omitted = OMITTED_FIELD
+    match_timeperiod: str | Omitted = OMITTED_FIELD
+    bulk: NotifyBulk | Omitted = OMITTED_FIELD
+    match_service_level: tuple[int, int] | Omitted = OMITTED_FIELD
+    match_only_during_timeperiod: str | Omitted = OMITTED_FIELD
 
 
 def validate_notification_rules(rules: list) -> None:

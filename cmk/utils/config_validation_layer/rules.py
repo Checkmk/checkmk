@@ -7,7 +7,7 @@ from typing import Any, cast, Mapping
 
 from pydantic import BaseModel, ValidationError
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 from cmk.utils.labels import LabelGroups
 from cmk.utils.rulesets.conditions import HostOrServiceConditions
@@ -16,27 +16,27 @@ from cmk.utils.tags import TagGroupID
 
 
 class RuleConditions(BaseModel):
-    host_folder: str = OMITTED_FIELD
-    host_tags: Mapping[TagGroupID, TagCondition] = OMITTED_FIELD
-    host_label_groups: LabelGroups = OMITTED_FIELD
-    service_label_groups: LabelGroups = OMITTED_FIELD
-    service_description: HostOrServiceConditions | None = OMITTED_FIELD
-    host_name: HostOrServiceConditions | None = OMITTED_FIELD
+    host_folder: str | Omitted = OMITTED_FIELD
+    host_tags: Mapping[TagGroupID, TagCondition] | Omitted = OMITTED_FIELD
+    host_label_groups: LabelGroups | Omitted = OMITTED_FIELD
+    service_label_groups: LabelGroups | Omitted = OMITTED_FIELD
+    service_description: HostOrServiceConditions | None | Omitted = OMITTED_FIELD
+    host_name: HostOrServiceConditions | None | Omitted = OMITTED_FIELD
 
 
 class RuleOptions(BaseModel):
-    disabled: bool = OMITTED_FIELD
-    description: str = OMITTED_FIELD
-    comment: str = OMITTED_FIELD
-    docu_url: str = OMITTED_FIELD
-    predefined_condition_id: str = OMITTED_FIELD
+    disabled: bool | Omitted = OMITTED_FIELD
+    description: str | Omitted = OMITTED_FIELD
+    comment: str | Omitted = OMITTED_FIELD
+    docu_url: str | Omitted = OMITTED_FIELD
+    predefined_condition_id: str | Omitted = OMITTED_FIELD
 
 
 class Rule(BaseModel):
     id: str
     value: Any
     condition: RuleConditions
-    options: RuleOptions = OMITTED_FIELD
+    options: RuleOptions | Omitted = OMITTED_FIELD
 
 
 def validate_rule(rule: RuleSpec) -> None:

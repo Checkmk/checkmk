@@ -5,18 +5,18 @@
 
 from pydantic import BaseModel, field_validator, ValidationError
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 
 
 class PiggybackCreationRules(BaseModel):
     create_folder_path: str
     host_attributes: list[tuple[str, str]]
     delete_hosts: bool
-    matching_hosts: str = OMITTED_FIELD
+    matching_hosts: str | Omitted = OMITTED_FIELD
 
 
 class Piggyback(BaseModel):
-    source_filters: list[str] = OMITTED_FIELD
+    source_filters: list[str] | Omitted = OMITTED_FIELD
     interval: int
     creation_rules: list[PiggybackCreationRules]
     discover_on_creation: bool

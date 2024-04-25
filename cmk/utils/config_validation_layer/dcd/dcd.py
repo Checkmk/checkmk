@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, RootModel, ValidationError
 
-from cmk.utils.config_validation_layer.type_defs import OMITTED_FIELD
+from cmk.utils.config_validation_layer.type_defs import Omitted, OMITTED_FIELD
 from cmk.utils.config_validation_layer.validation_utils import ConfigValidationError
 
 from .piggyback import Piggyback
@@ -15,8 +15,8 @@ from .piggyback import Piggyback
 
 class DCD(BaseModel):
     title: str
-    comment: str = OMITTED_FIELD
-    docu_url: str = OMITTED_FIELD
+    comment: str | Omitted = OMITTED_FIELD
+    docu_url: str | Omitted = OMITTED_FIELD
     disabled: bool
     site: str
     connector: tuple[Literal["piggyback"], Piggyback]

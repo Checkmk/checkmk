@@ -26,7 +26,7 @@ class LDAPConnectionConfigDiscover(BaseModel):
 
 class Fixed(BaseModel):
     server: str
-    failover_servers: list[str] = OMITTED_FIELD
+    failover_servers: list[str] | Omitted = OMITTED_FIELD
 
 
 class LDAPConnectionConfigFixed(BaseModel):
@@ -39,8 +39,8 @@ ACTIVE_DIR = tuple[Literal["ad"], LDAPConnectionConfigFixed | LDAPConnectionConf
 
 
 class DisableNotificationsAttribute(BaseModel):
-    disable: Literal[True] = OMITTED_FIELD
-    timerange: tuple[float, float] = OMITTED_FIELD
+    disable: Literal[True] | Omitted = OMITTED_FIELD
+    timerange: tuple[float, float] | Omitted = OMITTED_FIELD
 
 
 DISABLE_NOTIFICATIONS = tuple[Literal["disable_notifications"], DisableNotificationsAttribute]
@@ -78,37 +78,37 @@ class GroupsToSync(BaseModel):
 
 
 class GroupsToAttributes(BaseModel):
-    nested: Literal[True] = OMITTED_FIELD
-    other_connections: list[str] = OMITTED_FIELD
+    nested: Literal[True] | Omitted = OMITTED_FIELD
+    other_connections: list[str] | Omitted = OMITTED_FIELD
     groups: list[GroupsToSync] = Field(min_length=1)
 
 
 class GroupsToContactGroups(BaseModel):
-    nested: Literal[True] = OMITTED_FIELD
-    other_connections: list[str] = OMITTED_FIELD
+    nested: Literal[True] | Omitted = OMITTED_FIELD
+    other_connections: list[str] | Omitted = OMITTED_FIELD
 
 
 class SyncAttribute(BaseModel):
-    attr: str = OMITTED_FIELD
+    attr: str | Omitted = OMITTED_FIELD
 
 
 class ActivePlugins(BaseModel):
-    alias: SyncAttribute = OMITTED_FIELD
-    auth_expire: SyncAttribute = OMITTED_FIELD
-    groups_to_roles: dict[str, list[tuple[str, str | None]]] = OMITTED_FIELD
-    groups_to_contactgroups: GroupsToContactGroups = OMITTED_FIELD
-    groups_to_attributes: GroupsToAttributes = OMITTED_FIELD
-    disable_notifications: SyncAttribute = OMITTED_FIELD
-    email: SyncAttribute = OMITTED_FIELD
-    icons_per_item: SyncAttribute = OMITTED_FIELD
-    nav_hide_icons_title: SyncAttribute = OMITTED_FIELD
-    pager: SyncAttribute = OMITTED_FIELD
-    show_mode: SyncAttribute = OMITTED_FIELD
-    ui_sidebar_position: SyncAttribute = OMITTED_FIELD
-    start_url: SyncAttribute = OMITTED_FIELD
-    temperature_unit: SyncAttribute = OMITTED_FIELD
-    ui_theme: SyncAttribute = OMITTED_FIELD
-    force_authuser: SyncAttribute = OMITTED_FIELD
+    alias: SyncAttribute | Omitted = OMITTED_FIELD
+    auth_expire: SyncAttribute | Omitted = OMITTED_FIELD
+    groups_to_roles: dict[str, list[tuple[str, str | None]]] | Omitted = OMITTED_FIELD
+    groups_to_contactgroups: GroupsToContactGroups | Omitted = OMITTED_FIELD
+    groups_to_attributes: GroupsToAttributes | Omitted = OMITTED_FIELD
+    disable_notifications: SyncAttribute | Omitted = OMITTED_FIELD
+    email: SyncAttribute | Omitted = OMITTED_FIELD
+    icons_per_item: SyncAttribute | Omitted = OMITTED_FIELD
+    nav_hide_icons_title: SyncAttribute | Omitted = OMITTED_FIELD
+    pager: SyncAttribute | Omitted = OMITTED_FIELD
+    show_mode: SyncAttribute | Omitted = OMITTED_FIELD
+    ui_sidebar_position: SyncAttribute | Omitted = OMITTED_FIELD
+    start_url: SyncAttribute | Omitted = OMITTED_FIELD
+    temperature_unit: SyncAttribute | Omitted = OMITTED_FIELD
+    ui_theme: SyncAttribute | Omitted = OMITTED_FIELD
+    force_authuser: SyncAttribute | Omitted = OMITTED_FIELD
 
 
 class LDAPConnectionModel(BaseModel):
@@ -118,29 +118,29 @@ class LDAPConnectionModel(BaseModel):
     docu_url: str
     disabled: bool
     directory_type: DIR_SERVER_389 | OPEN_LDAP | ACTIVE_DIR
-    bind: tuple[str, tuple[Literal["password", "store"], str]] = OMITTED_FIELD
-    port: int = OMITTED_FIELD
-    use_ssl: Literal[True] = OMITTED_FIELD
-    connect_timeout: float = OMITTED_FIELD
-    version: Literal[2, 3] = OMITTED_FIELD
-    page_size: int = OMITTED_FIELD
-    response_timeout: int = OMITTED_FIELD
-    suffix: str = OMITTED_FIELD
+    bind: tuple[str, tuple[Literal["password", "store"], str]] | Omitted = OMITTED_FIELD
+    port: int | Omitted = OMITTED_FIELD
+    use_ssl: Literal[True] | Omitted = OMITTED_FIELD
+    connect_timeout: float | Omitted = OMITTED_FIELD
+    version: Literal[2, 3] | Omitted = OMITTED_FIELD
+    page_size: int | Omitted = OMITTED_FIELD
+    response_timeout: int | Omitted = OMITTED_FIELD
+    suffix: str | Omitted = OMITTED_FIELD
     user_dn: str
     user_scope: Literal["sub", "base", "one"]
     user_id_umlauts: Literal["keep", "replace"]
-    user_filter: str = OMITTED_FIELD
-    user_filter_group: str = OMITTED_FIELD
-    user_id: str = OMITTED_FIELD
-    lower_user_ids: Literal[True] = OMITTED_FIELD
-    create_only_on_login: Literal[True] = OMITTED_FIELD
+    user_filter: str | Omitted = OMITTED_FIELD
+    user_filter_group: str | Omitted = OMITTED_FIELD
+    user_id: str | Omitted = OMITTED_FIELD
+    lower_user_ids: Literal[True] | Omitted = OMITTED_FIELD
+    create_only_on_login: Literal[True] | Omitted = OMITTED_FIELD
     group_dn: str
     group_scope: Literal["sub", "base", "one"]
-    group_filter: str = OMITTED_FIELD
-    group_member: str = OMITTED_FIELD
+    group_filter: str | Omitted = OMITTED_FIELD
+    group_member: str | Omitted = OMITTED_FIELD
     active_plugins: ActivePlugins
     cache_livetime: int
-    customer: str | None = OMITTED_FIELD
+    customer: str | None | Omitted = OMITTED_FIELD
     type: Literal["ldap"]
 
 

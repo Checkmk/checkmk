@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import argparse
+import os
 import sys
 import urllib.parse
 from argparse import Namespace as Args
@@ -65,12 +66,12 @@ class Registry:
         return self.image_can_be_pulled_enterprise(image, edition)
 
     def image_exists_enterprise(self, image: DockerImage, edition: str) -> bool:
-        url = f"{self.url}/v2/{edition}/check-mk-{edition}/tags/list"
+        url = f"{self.url}/v2/{image.image_name}/tags/list"
         sys.stdout.write(f"Test if {image.tag} can be found in {url}...")
         exists = (
             image.tag
             in requests.get(
-                f"{self.url}/v2/{edition}/check-mk-{edition}/tags/list",
+                url,
                 auth=(self.credentials.username, self.credentials.password),
             ).json()["tags"]
         )
@@ -116,6 +117,14 @@ class Registry:
             case ["raw", "cloud"]:
                 self.url = "https://docker.io"
                 self.image_exists = self.image_exists_docker_hub
+            case ["saas"]:
+                self.url = "https://artifacts.lan.tribe29.com:4000"
+                self.image_exists = self.image_exists_enterprise
+                # For nexus, d-intern is not authorized
+                self.credentials = Credentials(
+                    username=os.environ["NEXUS_USER"],
+                    password=os.environ["NEXUS_PASSWORD"],
+                )
             case _:
                 raise RuntimeError(f"Cannnot match editions to registry: {self.editions}")
 
@@ -135,20 +144,22 @@ def edition_to_registry(ed: str, registries: list[Registry]) -> Registry:
     raise RuntimeError(f"Cannot determine registry for edition: {ed}!")
 
 
-def build_source_artifacts(args: Args, loaded_yaml: dict) -> Iterator[str]:
+def build_source_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
         file_name = (
             f"check-mk-{edition}-{args.version}.{Edition.from_long_edition(edition).short}.tar.gz"
         )
-        yield file_name
-        yield hash_file(file_name)
+        internal_only = edition in loaded_yaml["internal_editions"]
+        yield file_name, internal_only
+        yield hash_file(file_name), internal_only
 
 
-def build_docker_artifacts(args: Args, loaded_yaml: dict) -> Iterator[str]:
+def build_docker_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
         file_name = f"check-mk-{edition}-docker-{args.version}.tar.gz"
-        yield file_name
-        yield hash_file(file_name)
+        internal_only = edition in loaded_yaml["internal_editions"]
+        yield file_name, internal_only
+        yield hash_file(file_name), internal_only
 
 
 def build_docker_image_name_and_registry(
@@ -158,16 +169,18 @@ def build_docker_image_name_and_registry(
         # TODO: Merge with build-cmk-container.py
         match ed:
             case "raw" | "cloud":
-                return "checkmk"
+                return "checkmk/"
             case "enterprise" | "managed":
-                return ed
+                return f"{ed}/"
+            case "saas":
+                return ""
             case _:
                 raise RuntimeError(f"Unknown edition {ed}")
 
     for edition in loaded_yaml["editions"]:
         registry = edition_to_registry(edition, registries)
         yield (
-            DockerImage(tag=args.version, image_name=f"{build_folder(edition)}/check-mk-{edition}"),
+            DockerImage(tag=args.version, image_name=f"{build_folder(edition)}check-mk-{edition}"),
             edition,
             registry,
         )
@@ -179,7 +192,10 @@ def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str
             package_name = ABCPackageManager.factory(code_name(distro)).package_name(
                 Edition.from_long_edition(edition), version=args.version
             )
-            internal_only = distro in loaded_yaml["internal_distros"]
+            internal_only = (
+                distro in loaded_yaml["internal_distros"]
+                or edition in loaded_yaml["internal_editions"]
+            )
             yield package_name, internal_only
             yield hash_file(package_name), internal_only
 
@@ -209,11 +225,16 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
         Registry(
             editions=["raw", "cloud"],
         ),
+        Registry(
+            editions=["saas"],
+        ),
     ]
-    for artifact_name in build_source_artifacts(args, loaded_yaml):
-        assert file_exists_on_download_server(
-            artifact_name, args.version, credentials
-        ), f"{artifact_name} should be available on download server!"
+    for artifact_name, internal_only in build_source_artifacts(args, loaded_yaml):
+        assert (
+            file_exists_on_download_server(artifact_name, args.version, credentials)
+            != internal_only
+        ), f"{artifact_name} should {'not' if internal_only else ''} "
+        "be available on download server!"
 
     for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
         assert (
@@ -224,10 +245,14 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
             f"be available on download server!"
         )
 
-    for artifact_name in build_docker_artifacts(args, loaded_yaml):
-        assert file_exists_on_download_server(
-            artifact_name, args.version, credentials
-        ), f"{artifact_name} should be available on download server!"
+    for artifact_name, internal_only in build_docker_artifacts(args, loaded_yaml):
+        assert (
+            file_exists_on_download_server(artifact_name, args.version, credentials)
+            != internal_only
+        ), (
+            f"{artifact_name} should {'not' if internal_only else ''} "
+            f"be available on download server!"
+        )
 
     for image_name, edition, registry in build_docker_image_name_and_registry(
         args, loaded_yaml, registries

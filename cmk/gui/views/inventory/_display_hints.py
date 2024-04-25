@@ -96,6 +96,7 @@ class NodeDisplayHint:
     _long_title_function: Callable[[], str]
     icon: str
     attributes_hint: AttributesDisplayHint
+    table_hint: TableDisplayHint
 
     @property
     def ident(self) -> str:
@@ -116,6 +117,8 @@ class NodeDisplayHint:
         raw_hint: InventoryHintSpec,
         attributes_key_order: Sequence[str],
         attributes_by_key: Mapping[str, InventoryHintSpec],
+        table_key_order: Sequence[str],
+        table_by_column: Mapping[str, InventoryHintSpec],
     ) -> NodeDisplayHint:
         title = _make_title_function(raw_hint)(path[-1] if path else "")
         return cls(
@@ -136,6 +139,12 @@ class NodeDisplayHint:
                         for key in _complete_key_order(attributes_key_order, set(attributes_by_key))
                     }
                 ),
+            ),
+            table_hint=TableDisplayHint.from_raw(
+                path,
+                raw_hint,
+                _complete_key_order(table_key_order, set(table_by_column)),
+                table_by_column,
             ),
         )
 
@@ -285,9 +294,9 @@ class TableDisplayHint:
         path: SDPath,
         raw_hint: InventoryHintSpec,
         key_order: Sequence[str],
-        by_column: dict[str, InventoryHintSpec],
+        by_column: Mapping[str, InventoryHintSpec],
     ) -> TableDisplayHint:
-        title = _make_title_function(raw_hint)(path[-1] if path else "")
+        title = _make_title_function(raw_hint)(path[-1]) if path else ""
         view_name = "" if "*" in path else _parse_view_name(raw_hint.get("view"))
         return cls(
             path=path,
@@ -504,29 +513,21 @@ _ALLOWED_KEYS: Sequence[
 
 
 class DisplayHints:
-    def __init__(
-        self,
-        *,
-        path: SDPath,
-        node_hint: NodeDisplayHint,
-        table_hint: TableDisplayHint,
-    ) -> None:
+    def __init__(self, path: SDPath, node_hint: NodeDisplayHint) -> None:
         # This inventory path is an 'abc' path because it's the general, abstract path of a display
         # hint and may contain "*" (ie. placeholders).
         # Concrete paths (in trees) contain node names which are inserted into these placeholders
         # while calculating node titles.
         self.abc_path = path
         self.node_hint = node_hint
-        self.table_hint = table_hint
         self.nodes: dict[str, DisplayHints] = {}
 
     @classmethod
     def root(cls) -> DisplayHints:
         path: SDPath = ()
         return DisplayHints(
-            path=path,
-            node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}, [], {}),
-            table_hint=TableDisplayHint.from_raw(path, {}, [], OrderedDict()),
+            path,
+            NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}, [], {}, [], {}),
         )
 
     def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
@@ -545,30 +546,21 @@ class DisplayHints:
                 elif (value := related_raw_hints.for_node.get(key)) is not None:
                     node_or_table_hints[key] = value
 
-            table_keys = _complete_key_order(
-                related_raw_hints.for_table.get("keyorder", []),
-                set(related_raw_hints.by_column),
-            )
-
             parent.nodes.setdefault(
                 path[-1],
                 DisplayHints(
-                    path=path,
+                    path,
                     # Some fields like 'title' or 'keyorder' of legacy display hints are declared
                     # either for
                     # - real nodes, eg. ".hardware.chassis.",
                     # - nodes with attributes, eg. ".hardware.cpu." or
                     # - nodes with a table, eg. ".software.packages:"
-                    node_hint=NodeDisplayHint.from_raw(
+                    NodeDisplayHint.from_raw(
                         path,
                         node_or_table_hints,
                         related_raw_hints.for_node.get("keyorder", []),
                         related_raw_hints.by_key,
-                    ),
-                    table_hint=TableDisplayHint.from_raw(
-                        path,
-                        node_or_table_hints,
-                        table_keys,
+                        related_raw_hints.for_table.get("keyorder", []),
                         related_raw_hints.by_column,
                     ),
                 ),
@@ -589,11 +581,7 @@ class DisplayHints:
             return self.nodes[node_name].get_tree_hints(path[1:])
         if "*" in self.nodes:
             return self.nodes["*"].get_tree_hints(path[1:])
-        return DisplayHints(
-            path=path,
-            node_hint=NodeDisplayHint.from_raw(path, {}, [], {}),
-            table_hint=TableDisplayHint.from_raw(path, {}, [], OrderedDict()),
-        )
+        return DisplayHints(path, NodeDisplayHint.from_raw(path, {}, [], {}, [], {}))
 
 
 DISPLAY_HINTS = DisplayHints.root()

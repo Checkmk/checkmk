@@ -444,7 +444,7 @@ class TreeRenderer:
             self._show_attributes(tree.attributes, hints.node_hint.attributes_hint)
 
         if tree.table:
-            self._show_table(tree.table, hints.table_hint, request_)
+            self._show_table(tree.table, hints.node_hint.table_hint, request_)
 
         for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):

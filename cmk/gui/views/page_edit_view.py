@@ -196,8 +196,10 @@ def view_inventory_join_macros(ds_name: str) -> Dictionary:
                                 choices=[
                                     col_info
                                     for hints in DISPLAY_HINTS
-                                    if hints.table_hint.view_name == ds_name
-                                    for col_info in _get_inventory_column_infos(hints.table_hint)
+                                    if hints.node_hint.table_hint.view_name == ds_name
+                                    for col_info in _get_inventory_column_infos(
+                                        hints.node_hint.table_hint
+                                    )
                                 ],
                             ),
                             TextInput(
@@ -404,18 +406,18 @@ def _get_inventory_column_infos_by_table(
     ds_name: str,
 ) -> Iterator[tuple[InventoryTableInfo, Sequence[InventoryColumnInfo]]]:
     for hints in DISPLAY_HINTS:
-        if hints.table_hint.view_name in ("", ds_name):
+        if hints.node_hint.table_hint.view_name in ("", ds_name):
             # No view, no choices; Also skip in case of same data source:
             # columns are already avail in "normal" column.
             continue
 
         yield (
             InventoryTableInfo(
-                table_view_name=hints.table_hint.view_name,
+                table_view_name=hints.node_hint.table_hint.view_name,
                 path=hints.abc_path,
                 title=hints.node_hint.long_title,
             ),
-            _get_inventory_column_infos(hints.table_hint),
+            _get_inventory_column_infos(hints.node_hint.table_hint),
         )
 
 

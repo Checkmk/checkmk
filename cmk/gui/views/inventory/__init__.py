@@ -625,27 +625,28 @@ class ABCDataSourceInventory(ABCDataSource):
 
 
 def _register_table_view(hints: DisplayHints) -> None:
-    if not hints.table_hint.view_name:
+    table_hint = hints.node_hint.table_hint
+    if not table_hint.view_name:
         return
 
     _register_info_class(
-        hints.table_hint.view_name,
-        hints.table_hint.title,
-        hints.table_hint.title,
+        table_hint.view_name,
+        table_hint.title,
+        table_hint.title,
     )
 
     # Create the datasource (like a database view)
     data_source_registry.register(
         type(
-            "DataSourceInventory%s" % hints.table_hint.view_name.title(),
+            "DataSourceInventory%s" % table_hint.view_name.title(),
             (ABCDataSourceInventory,),
             {
-                "_ident": hints.table_hint.view_name,
+                "_ident": table_hint.view_name,
                 "_inventory_path": inventory.InventoryPath(
                     path=hints.abc_path, source=inventory.TreeSource.table
                 ),
-                "_title": hints.table_hint.long_inventory_title,
-                "_infos": ["host", hints.table_hint.view_name],
+                "_title": table_hint.long_inventory_title,
+                "_infos": ["host", table_hint.view_name],
                 "ident": property(lambda s: s._ident),
                 "title": property(lambda s: s._title),
                 "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
@@ -660,20 +661,20 @@ def _register_table_view(hints: DisplayHints) -> None:
 
     painters: list[ColumnSpec] = []
     filters = []
-    for col_hint in hints.table_hint.by_column.values():
+    for col_hint in table_hint.by_column.values():
         # Declare a painter, sorter and filters for each path with display hint
         _register_table_column(col_hint)
         painters.append(ColumnSpec(col_hint.ident))
         filters.append(col_hint.ident)
 
     _register_views(
-        hints.table_hint.view_name,
-        hints.table_hint.title,
+        table_hint.view_name,
+        table_hint.title,
         painters,
         filters,
         hints.abc_path,
-        hints.table_hint.is_show_more,
-        hints.table_hint.icon,
+        table_hint.is_show_more,
+        table_hint.icon,
     )
 
 

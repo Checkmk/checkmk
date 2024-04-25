@@ -146,7 +146,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
 
 
 @pytest.mark.parametrize(
-    "path, expected_node_hint, expected_table_hint",
+    "path, expected_node_hint",
     [
         (
             (),
@@ -157,15 +157,15 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 short_title="Inventory Tree",
                 _long_title_function=lambda: "Inventory Tree",
                 attributes_hint=AttributesDisplayHint((), OrderedDict()),
-            ),
-            TableDisplayHint(
-                path=(),
-                title="",
-                _long_title_function=lambda: "",
-                icon="",
-                is_show_more=True,
-                view_name="",
-                by_column=OrderedDict(),
+                table_hint=TableDisplayHint(
+                    path=(),
+                    title="",
+                    _long_title_function=lambda: "",
+                    icon="",
+                    is_show_more=True,
+                    view_name="",
+                    by_column=OrderedDict(),
+                ),
             ),
         ),
         (
@@ -180,15 +180,15 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                     (SDNodeName("hardware"),),
                     OrderedDict(),
                 ),
-            ),
-            TableDisplayHint(
-                path=(SDNodeName("hardware"),),
-                title="Hardware",
-                _long_title_function=lambda: "Hardware",
-                icon="hardware",
-                is_show_more=True,
-                view_name="",
-                by_column=OrderedDict(),
+                table_hint=TableDisplayHint(
+                    path=(SDNodeName("hardware"),),
+                    title="Hardware",
+                    _long_title_function=lambda: "Hardware",
+                    icon="hardware",
+                    is_show_more=True,
+                    view_name="",
+                    by_column=OrderedDict(),
+                ),
             ),
         ),
         (
@@ -225,15 +225,15 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         entitlement=AttributeDisplayHint.from_raw((), "entitlement", {}),
                     ),
                 ),
-            ),
-            TableDisplayHint(
-                path=(SDNodeName("hardware"), SDNodeName("cpu")),
-                title="Processor",
-                _long_title_function=lambda: "Hardware ➤ Processor",
-                icon="",
-                is_show_more=True,
-                view_name="",
-                by_column=OrderedDict(),
+                table_hint=TableDisplayHint(
+                    path=(SDNodeName("hardware"), SDNodeName("cpu")),
+                    title="Processor",
+                    _long_title_function=lambda: "Hardware ➤ Processor",
+                    icon="",
+                    is_show_more=True,
+                    view_name="",
+                    by_column=OrderedDict(),
+                ),
             ),
         ),
         (
@@ -258,28 +258,30 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                     ),
                     OrderedDict(),
                 ),
-            ),
-            TableDisplayHint(
-                path=(
-                    SDNodeName("software"),
-                    SDNodeName("applications"),
-                    SDNodeName("docker"),
-                    SDNodeName("images"),
-                ),
-                title="Docker images",
-                _long_title_function=lambda: "Docker ➤ Docker images",
-                icon="",
-                is_show_more=False,
-                view_name="invdockerimages",
-                # The single column hints are not checked here
-                by_column=OrderedDict(
-                    id=ColumnDisplayHint.from_raw("", (), "id", {}),
-                    creation=ColumnDisplayHint.from_raw("", (), "creation", {}),
-                    size=ColumnDisplayHint.from_raw("", (), "size", {}),
-                    labels=ColumnDisplayHint.from_raw("", (), "labels", {}),
-                    amount_containers=ColumnDisplayHint.from_raw("", (), "amount_containers", {}),
-                    repotags=ColumnDisplayHint.from_raw("", (), "repotags", {}),
-                    repodigests=ColumnDisplayHint.from_raw("", (), "repodigests", {}),
+                table_hint=TableDisplayHint(
+                    path=(
+                        SDNodeName("software"),
+                        SDNodeName("applications"),
+                        SDNodeName("docker"),
+                        SDNodeName("images"),
+                    ),
+                    title="Docker images",
+                    _long_title_function=lambda: "Docker ➤ Docker images",
+                    icon="",
+                    is_show_more=False,
+                    view_name="invdockerimages",
+                    # The single column hints are not checked here
+                    by_column=OrderedDict(
+                        id=ColumnDisplayHint.from_raw("", (), "id", {}),
+                        creation=ColumnDisplayHint.from_raw("", (), "creation", {}),
+                        size=ColumnDisplayHint.from_raw("", (), "size", {}),
+                        labels=ColumnDisplayHint.from_raw("", (), "labels", {}),
+                        amount_containers=ColumnDisplayHint.from_raw(
+                            "", (), "amount_containers", {}
+                        ),
+                        repotags=ColumnDisplayHint.from_raw("", (), "repotags", {}),
+                        repodigests=ColumnDisplayHint.from_raw("", (), "repodigests", {}),
+                    ),
                 ),
             ),
         ),
@@ -295,24 +297,20 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                     (SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
                     OrderedDict(),
                 ),
-            ),
-            TableDisplayHint(
-                (SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                title="Node",
-                _long_title_function=lambda: "To ➤ Node",
-                icon="",
-                is_show_more=True,
-                view_name="",
-                by_column=OrderedDict(),
+                table_hint=TableDisplayHint(
+                    (SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
+                    title="Node",
+                    _long_title_function=lambda: "To ➤ Node",
+                    icon="",
+                    is_show_more=True,
+                    view_name="",
+                    by_column=OrderedDict(),
+                ),
             ),
         ),
     ],
 )
-def test_make_node_displayhint(
-    path: SDPath,
-    expected_node_hint: NodeDisplayHint,
-    expected_table_hint: TableDisplayHint,
-) -> None:
+def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint) -> None:
     hints = DISPLAY_HINTS.get_tree_hints(path)
 
     assert hints.node_hint.ident == "_".join(("inv",) + hints.node_hint.path)
@@ -325,17 +323,22 @@ def test_make_node_displayhint(
         expected_node_hint.attributes_hint.by_key
     )
 
-    assert hints.table_hint.title == expected_table_hint.title
-    assert hints.table_hint.long_title == expected_table_hint.long_title
-    assert hints.table_hint.long_inventory_title == expected_table_hint.long_inventory_title
-    assert hints.table_hint.icon == expected_table_hint.icon
-    assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
-    assert hints.table_hint.view_name == expected_table_hint.view_name
-    assert list(hints.table_hint.by_column) == list(expected_table_hint.by_column)
+    assert hints.node_hint.table_hint.title == expected_node_hint.table_hint.title
+    assert hints.node_hint.table_hint.long_title == expected_node_hint.table_hint.long_title
+    assert (
+        hints.node_hint.table_hint.long_inventory_title
+        == expected_node_hint.table_hint.long_inventory_title
+    )
+    assert hints.node_hint.table_hint.icon == expected_node_hint.table_hint.icon
+    assert hints.node_hint.table_hint.is_show_more == expected_node_hint.table_hint.is_show_more
+    assert hints.node_hint.table_hint.view_name == expected_node_hint.table_hint.view_name
+    assert list(hints.node_hint.table_hint.by_column) == list(
+        expected_node_hint.table_hint.by_column
+    )
 
 
 @pytest.mark.parametrize(
-    "raw_path, expected_node_hint,expected_table_hint",
+    "raw_path, expected_node_hint",
     [
         (
             ".foo.bar.",
@@ -349,15 +352,15 @@ def test_make_node_displayhint(
                     (SDNodeName("foo"), SDNodeName("bar")),
                     OrderedDict(),
                 ),
-            ),
-            TableDisplayHint(
-                path=(SDNodeName("foo"), SDNodeName("bar")),
-                title="Bar",
-                _long_title_function=lambda: "Foo ➤ Bar",
-                icon="",
-                is_show_more=True,
-                view_name="",
-                by_column=OrderedDict(),
+                table_hint=TableDisplayHint(
+                    path=(SDNodeName("foo"), SDNodeName("bar")),
+                    title="Bar",
+                    _long_title_function=lambda: "Foo ➤ Bar",
+                    icon="",
+                    is_show_more=True,
+                    view_name="",
+                    by_column=OrderedDict(),
+                ),
             ),
         ),
         (
@@ -371,15 +374,15 @@ def test_make_node_displayhint(
                 attributes_hint=AttributesDisplayHint(
                     (SDNodeName("foo"), SDNodeName("bar")), OrderedDict()
                 ),
-            ),
-            TableDisplayHint(
-                path=(SDNodeName("foo"), SDNodeName("bar")),
-                title="Bar",
-                _long_title_function=lambda: "Foo ➤ Bar",
-                icon="",
-                is_show_more=True,
-                view_name="",
-                by_column=OrderedDict(),
+                table_hint=TableDisplayHint(
+                    path=(SDNodeName("foo"), SDNodeName("bar")),
+                    title="Bar",
+                    _long_title_function=lambda: "Foo ➤ Bar",
+                    icon="",
+                    is_show_more=True,
+                    view_name="",
+                    by_column=OrderedDict(),
+                ),
             ),
         ),
         (
@@ -391,15 +394,15 @@ def test_make_node_displayhint(
                 short_title="Software",
                 _long_title_function=lambda: "Software",
                 attributes_hint=AttributesDisplayHint((SDNodeName("software"),), OrderedDict()),
-            ),
-            TableDisplayHint(
-                path=(SDNodeName("software"),),
-                title="Software",
-                _long_title_function=lambda: "Software",
-                icon="software",
-                is_show_more=True,
-                view_name="",
-                by_column=OrderedDict(),
+                table_hint=TableDisplayHint(
+                    path=(SDNodeName("software"),),
+                    title="Software",
+                    _long_title_function=lambda: "Software",
+                    icon="software",
+                    is_show_more=True,
+                    view_name="",
+                    by_column=OrderedDict(),
+                ),
             ),
         ),
         (
@@ -424,36 +427,34 @@ def test_make_node_displayhint(
                     ),
                     OrderedDict(),
                 ),
-            ),
-            TableDisplayHint(
-                path=(
-                    SDNodeName("software"),
-                    SDNodeName("applications"),
-                    SDNodeName("docker"),
-                    SDNodeName("containers"),
-                ),
-                title="Docker containers",
-                _long_title_function=lambda: "Docker ➤ Docker containers",
-                icon="",
-                is_show_more=False,
-                view_name="invdockercontainers",
-                # The single column hints are not checked here
-                by_column=OrderedDict(
-                    id=ColumnDisplayHint.from_raw("", (), "id", {}),
-                    creation=ColumnDisplayHint.from_raw("", (), "creation", {}),
-                    name=ColumnDisplayHint.from_raw("", (), "name", {}),
-                    labels=ColumnDisplayHint.from_raw("", (), "labels", {}),
-                    status=ColumnDisplayHint.from_raw("", (), "status", {}),
-                    image=ColumnDisplayHint.from_raw("", (), "image", {}),
+                table_hint=TableDisplayHint(
+                    path=(
+                        SDNodeName("software"),
+                        SDNodeName("applications"),
+                        SDNodeName("docker"),
+                        SDNodeName("containers"),
+                    ),
+                    title="Docker containers",
+                    _long_title_function=lambda: "Docker ➤ Docker containers",
+                    icon="",
+                    is_show_more=False,
+                    view_name="invdockercontainers",
+                    # The single column hints are not checked here
+                    by_column=OrderedDict(
+                        id=ColumnDisplayHint.from_raw("", (), "id", {}),
+                        creation=ColumnDisplayHint.from_raw("", (), "creation", {}),
+                        name=ColumnDisplayHint.from_raw("", (), "name", {}),
+                        labels=ColumnDisplayHint.from_raw("", (), "labels", {}),
+                        status=ColumnDisplayHint.from_raw("", (), "status", {}),
+                        image=ColumnDisplayHint.from_raw("", (), "image", {}),
+                    ),
                 ),
             ),
         ),
     ],
 )
 def test_make_node_displayhint_from_hint(
-    raw_path: str,
-    expected_node_hint: NodeDisplayHint,
-    expected_table_hint: TableDisplayHint,
+    raw_path: str, expected_node_hint: NodeDisplayHint
 ) -> None:
     hints = DISPLAY_HINTS.get_tree_hints(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
 
@@ -467,13 +468,18 @@ def test_make_node_displayhint_from_hint(
         expected_node_hint.attributes_hint.by_key
     )
 
-    assert hints.table_hint.title == expected_table_hint.title
-    assert hints.table_hint.long_title == expected_table_hint.long_title
-    assert hints.table_hint.long_inventory_title == expected_table_hint.long_inventory_title
-    assert hints.table_hint.icon == expected_table_hint.icon
-    assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
-    assert hints.table_hint.view_name == expected_table_hint.view_name
-    assert list(hints.table_hint.by_column) == list(expected_table_hint.by_column)
+    assert hints.node_hint.table_hint.title == expected_node_hint.table_hint.title
+    assert hints.node_hint.table_hint.long_title == expected_node_hint.table_hint.long_title
+    assert (
+        hints.node_hint.table_hint.long_inventory_title
+        == expected_node_hint.table_hint.long_inventory_title
+    )
+    assert hints.node_hint.table_hint.icon == expected_node_hint.table_hint.icon
+    assert hints.node_hint.table_hint.is_show_more == expected_node_hint.table_hint.is_show_more
+    assert hints.node_hint.table_hint.view_name == expected_node_hint.table_hint.view_name
+    assert list(hints.node_hint.table_hint.by_column) == list(
+        expected_node_hint.table_hint.by_column
+    )
 
 
 @pytest.mark.parametrize(
@@ -538,7 +544,7 @@ def test_make_node_displayhint_from_hint(
     ],
 )
 def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_tree_hints(path).table_hint.get_column_hint(key)
+    hint = DISPLAY_HINTS.get_tree_hints(path).node_hint.table_hint.get_column_hint(key)
 
     if hint.view_name:
         assert hint.ident == f"{hint.view_name}_{hint.key}"
@@ -622,7 +628,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_tree_hints(inventory_path.path).table_hint.get_column_hint(
+    hint = DISPLAY_HINTS.get_tree_hints(inventory_path.path).node_hint.table_hint.get_column_hint(
         inventory_path.key or ""
     )
 

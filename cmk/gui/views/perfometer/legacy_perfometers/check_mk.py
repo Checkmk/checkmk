@@ -6,9 +6,7 @@
 import cmk.utils.render
 
 import cmk.gui.utils as utils
-from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.type_defs import Perfdata, Row
-from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 from .utils import (
@@ -23,9 +21,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-fileinfo"] = perfometer_fileinfo
-    perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces
-    perfometers["check_mk-ups_eaton_enviroment"] = perfometer_eaton
     perfometers["check_mk-emc_datadomain_nvbat"] = perfometer_battery
     perfometers["check_mk-genu_pfstate"] = perfometer_genu_screen
     perfometers["check_mk-db2_mem"] = perfometer_simple_mem_usage
@@ -127,46 +122,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_fileinfo(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    code = []
-    texts = []
-    for i, color, base, scale, verbfunc in [
-        (0, "#ffcc50", 1000000, 10, lambda v: number_human_readable(v, precision=0)),  # size
-        (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age),
-    ]:  # age
-        val = float(perf_data[i].value)
-        code.append(perfometer_logarithmic(val, base, scale, color))
-        texts.append(verbfunc(val))
-    # perfometer_logarithmic(100, 200, 2, "#883875")
-    return (" / ".join(texts), HTMLWriter.render_div(HTML().join(code), class_="stacked"))
-
-
-def perfometer_mssql_tablespaces(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    reserved = float(perf_data[2].value)
-    data = float(perf_data[3].value)
-    indexes = float(perf_data[4].value)
-    unused = float(perf_data[5].value)
-
-    data_perc = data / reserved * 100  # fixed: true-division
-    indexes_perc = indexes / reserved * 100  # fixed: true-division
-    unused_perc = unused / reserved * 100  # fixed: true-division
-
-    return (
-        "%.1f%%" % (data_perc + indexes_perc),
-        render_perfometer(
-            [(data_perc, "#80c0ff"), (indexes_perc, "#00ff80"), (unused_perc, "#f0b000")]
-        ),
-    )
-
-
-def perfometer_eaton(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
-    return "%s°C" % str(perf[0].value), perfometer_linear(float(perf[0].value), "silver")
 
 
 def perfometer_battery(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:

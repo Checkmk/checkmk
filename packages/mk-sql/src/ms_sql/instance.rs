@@ -313,7 +313,8 @@ impl SqlInstance {
                 log::warn!("Can't access {} instance with err {err}\n", self.id);
                 let instance_section = Section::make_instance_section(); // this is important section always present
                 instance_section.to_plain_header()
-                    + &self.generate_state_entry(false, instance_section.sep())
+                    + &self
+                        .generate_bad_state_entry(instance_section.sep(), format!("{err}").as_str())
             }
         };
         header + &body + &self.generate_footer()
@@ -392,8 +393,12 @@ impl SqlInstance {
         }
     }
 
-    pub fn generate_state_entry(&self, accessible: bool, sep: char) -> String {
-        format!("{}{sep}state{sep}{}\n", self.mssql_name(), accessible as u8)
+    pub fn generate_good_state_entry(&self, sep: char) -> String {
+        format!("{}{sep}state{sep}1{sep}\n", self.mssql_name(),)
+    }
+
+    pub fn generate_bad_state_entry(&self, sep: char, message: &str) -> String {
+        format!("{}{sep}state{sep}0{sep}{}\n", self.mssql_name(), message)
     }
 
     pub async fn generate_section(
@@ -429,7 +434,7 @@ impl SqlInstance {
             let sep = section.sep();
             match section.name() {
                 names::INSTANCE => {
-                    self.generate_state_entry(true, sep)
+                    self.generate_good_state_entry(sep)
                         + &self.generate_details_entry(client, sep).await
                 }
                 names::COUNTERS => self.generate_counters_section(client, &query, sep).await,
@@ -1940,12 +1945,12 @@ mod tests {
         let i = SqlInstanceBuilder::new().name("test_name").build();
 
         assert_eq!(
-            i.generate_state_entry(false, '.'),
-            format!("MSSQL_TEST_NAME.state.0\n")
+            i.generate_bad_state_entry('.', "bad"),
+            format!("MSSQL_TEST_NAME.state.0.bad\n")
         );
         assert_eq!(
-            i.generate_state_entry(true, '.'),
-            format!("MSSQL_TEST_NAME.state.1\n")
+            i.generate_good_state_entry('.'),
+            format!("MSSQL_TEST_NAME.state.1.\n")
         );
     }
 

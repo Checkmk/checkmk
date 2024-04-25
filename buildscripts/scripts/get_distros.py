@@ -219,9 +219,14 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
 def assert_presence_on_download_server(
     args: Args, internal_only: bool, artifact_name: str, credentials: Credentials
 ) -> None:
-    assert (
-        file_exists_on_download_server(artifact_name, args.version, credentials) != internal_only
-    ), f"{artifact_name} should {'not' if internal_only else ''} be available on download server!"
+    if (
+        not file_exists_on_download_server(artifact_name, args.version, credentials)
+        != internal_only
+    ):
+        raise RuntimeError(
+            f"{artifact_name} should {'not' if internal_only else ''} "
+            "be available on download server!"
+        )
 
 
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
@@ -249,7 +254,8 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     for image_name, edition, registry in build_docker_image_name_and_registry(
         args, loaded_yaml, registries
     ):
-        assert registry.image_exists(image_name, edition), f"{image_name} not found!"
+        if not registry.image_exists(image_name, edition):
+            raise RuntimeError(f"{image_name} not found!")
 
     # cloud images
     # TODO

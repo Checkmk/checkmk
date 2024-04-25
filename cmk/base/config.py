@@ -1893,6 +1893,7 @@ class ConfigCache:
         self.__labels: dict[HostName, Labels] = {}
         self.__label_sources: dict[HostName, LabelSources] = {}
         self.__notification_plugin_parameters: dict[tuple[HostName, str], Mapping[str, object]] = {}
+        self.__snmp_backend: dict[HostName, SNMPBackendEnum] = {}
         self.initialize()
 
     def initialize(self) -> ConfigCache:
@@ -2195,6 +2196,7 @@ class ConfigCache:
         self.__labels.clear()
         self.__label_sources.clear()
         self.__notification_plugin_parameters.clear()
+        self.__snmp_backend.clear()
 
     @staticmethod
     def _get_host_paths(config_host_paths: dict[HostName, str]) -> dict[HostName, str]:
@@ -3142,6 +3144,14 @@ class ConfigCache:
         return "netsnmp" in sys.modules and cmk_version.edition() is not cmk_version.Edition.CRE
 
     def get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
+        if result := self.__snmp_backend.get(host_name):
+            return result
+
+        computed_backend = self._get_snmp_backend(host_name)
+        self.__snmp_backend[host_name] = computed_backend
+        return computed_backend
+
+    def _get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
         if self.ruleset_matcher.get_host_bool_value(host_name, usewalk_hosts):
             return SNMPBackendEnum.STORED_WALK
 

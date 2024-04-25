@@ -21,7 +21,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-emc_datadomain_nvbat"] = perfometer_battery
     perfometers["check_mk-genu_pfstate"] = perfometer_genu_screen
     perfometers["check_mk-db2_mem"] = perfometer_simple_mem_usage
     perfometers["check_mk-innovaphone_mem"] = perfometer_simple_mem_usage
@@ -122,10 +121,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_battery(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
-    return "%s%%" % str(perf[0].value), perfometer_linear(float(perf[0].value), "#C98D5C")
 
 
 def perfometer_genu_screen(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:

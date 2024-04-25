@@ -31,3 +31,9 @@ translation_winperf_msx_queues = translations.Translation(
     check_commands=[translations.PassiveCheck("winperf_msx_queues")],
     translations={"length": translations.RenameTo("queue_length")},
 )
+
+translation_emc_datadomain_nvbat = translations.Translation(
+    name="emc_datadomain_nvbat",
+    check_commands=[translations.PassiveCheck("emc_datadomain_nvbat")],
+    translations={"charge": translations.RenameTo("battery_capacity")},
+)

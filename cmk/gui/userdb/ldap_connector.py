@@ -1281,19 +1281,20 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
         changes = []
 
-        def load_user(user_id):
-            if user_id in users:
-                user = copy.deepcopy(users[user_id])
-                mode_create = False
+        def load_user(uid: UserId) -> tuple[bool, UserSpec]:
+            if uid in users:
+                loaded_user = copy.deepcopy(users[uid])
+                create = False
             else:
-                user = new_user_template(self.id)
-                mode_create = True
+                loaded_user = new_user_template(self.id)
+                create = True
                 if cmk_version.edition() is cmk_version.Edition.CME:
                     user["customer"] = self._config.get(
                         "customer", customer_api().default_customer_id()
                     )
 
-            return mode_create, user
+            loaded_user.setdefault("alias", uid)
+            return create, loaded_user
 
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore

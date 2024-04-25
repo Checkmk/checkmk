@@ -21,8 +21,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-docsis_channels_downstream"] = perfometer_dbmv
-    perfometers["check_mk-docsis_cm_status"] = perfometer_dbmv
     perfometers["check_mk-veeam_client"] = perfometer_veeam_client
     perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase
     perfometers["check_mk-f5_bigip_vserver"] = perfometer_f5_bigip_vserver
@@ -106,11 +104,6 @@ def perfometer_airflow_ls(
 ) -> LegacyPerfometerResult:
     value = int(float(perf_data[0].value) * 100)
     return "%sl/s" % perf_data[0].value, perfometer_logarithmic(value, 1000, 2, "#3366cc")
-
-
-def perfometer_dbmv(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
-    dbmv = float(perf_data[0].value)
-    return "%.1f dBmV" % dbmv, perfometer_logarithmic(dbmv, 50, 2, "#da6")
 
 
 def perfometer_veeam_client(

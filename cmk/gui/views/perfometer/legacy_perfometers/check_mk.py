@@ -23,8 +23,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
-    perfometers["check_mk-printer_supply_ricoh"] = perfometer_check_mk_printer_supply
     perfometers["check_mk-printer_pages"] = perfometer_printer_pages
     perfometers["check_mk-canon_pages"] = perfometer_printer_pages
     perfometers["check_mk-winperf_msx_queues"] = perfometer_msx_queues
@@ -154,37 +152,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_check_mk_printer_supply(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    left = utils.savefloat(perf_data[0].value)
-    maxi = utils.savefloat(perf_data[0].max)
-    if maxi < 0:
-        return None  # Printer does not supply a max value
-
-    # If there is no 100% given, calculate the percentage
-    if maxi not in (0.0, 100.0):
-        left = left * 100.0 / maxi
-
-    s = row["service_description"].lower()
-
-    if "black" in s or ("ink" not in s and s[-1] == "k"):
-        colors = ["#000000", "#6E6F00", "#6F0000"]
-    elif "magenta" in s or s[-1] == "m":
-        colors = ["#FC00FF", "#FC7FFF", "#FEDFFF"]
-    elif "yellow" in s or s[-1] == "y":
-        colors = ["#FFFF00", "#FEFF7F", "#FFFFCF"]
-    elif "cyan" in s or s[-1] == "c":
-        colors = ["#00FFFF", "#7FFFFF", "#DFFFFF"]
-    else:
-        colors = ["#CCCCCC", "#ffff00", "#ff0000"]
-
-    st = min(2, row["service_state"])
-    color = colors[st]
-
-    return "%.0f%%" % left, perfometer_linear(left, color)
 
 
 def perfometer_printer_pages(

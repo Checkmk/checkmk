@@ -2064,8 +2064,13 @@ class StatusServer(ECServerThread):
         self.open_tcp_socket()
 
     def reload_configuration(self, config: Config, history: History) -> None:
+        """Reload StatusServer configuration.
+
+        Also the table history is reloaded, because it depends on the history object.
+        """
         self._config = config
         self._history = history
+        self._table_history = StatusTableHistory(self._logger, self._history)
         self._reopen_sockets = True
 
     def serve(self) -> None:  # pylint: disable=too-many-branches

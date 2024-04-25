@@ -54,6 +54,11 @@ def AGENT_LIST = get_agent_list(EDITION)
 def AGENT_BUILDS= [:]
 def DISTRO_LIST = DISTROS.split(' ');
 
+if (EDITION == "raw") {
+    // We don't need cma builds for raw edition (CMK-17067)
+    DISTRO_LIST = DISTRO_LIST - ["cma", "cma-3", "cma-4"]
+}
+
 println("Building for the following Distros:" + DISTRO_LIST)
 currentBuild.description = '\nBuilding for the following Distros:\n' + DISTRO_LIST + '\nFake artifacts: ' + FAKE_WINDOWS_ARTIFACTS + '\nUse package cache: ' + USE_OMD_PACKAGE_CACHE
 

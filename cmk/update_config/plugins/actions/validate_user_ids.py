@@ -70,7 +70,7 @@ update_action_registry.register(
         # Run this validation before any plug-in that deals with UserIds, as those would encounter
         # unexpected errors when UserIds cannot be created.
         # Currently the next to run is UpdateViews, which uses UserIds as view owners.
-        sort_index=5,
+        sort_index=1,
         # Malformed user IDs would cause most other actions to fail as well.
         continue_on_failure=False,
     )

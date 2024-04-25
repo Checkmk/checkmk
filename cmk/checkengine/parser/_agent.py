@@ -241,21 +241,20 @@ class ParserState(abc.ABC):
             return self
 
         try:
-            if line.startswith(b"<<<") and line.endswith(b">>>"):
-                if PiggybackMarker.is_header(line):
-                    return self.on_piggyback_header(
-                        PiggybackMarker.from_headerline(
-                            line,
-                            self.translation,
-                            encoding_fallback=self.encoding_fallback,
-                        )
+            if not line.startswith(b"<<<") or not line.endswith(b">>>"):  # optimization only
+                return self.do_action(line)
+            if PiggybackMarker.is_header(line):
+                return self.on_piggyback_header(
+                    PiggybackMarker.from_headerline(
+                        line, self.translation, encoding_fallback=self.encoding_fallback
                     )
-                if PiggybackMarker.is_footer(line):
-                    return self.on_piggyback_footer()
-                if SectionMarker.is_header(line):
-                    return self.on_section_header(SectionMarker.from_headerline(line))
-                if SectionMarker.is_footer(line):
-                    return self.on_section_footer()
+                )
+            if PiggybackMarker.is_footer(line):
+                return self.on_piggyback_footer()
+            if SectionMarker.is_header(line):
+                return self.on_section_header(SectionMarker.from_headerline(line))
+            if SectionMarker.is_footer(line):
+                return self.on_section_footer()
             return self.do_action(line)
         except Exception:
             if cmk.utils.debug.enabled():

@@ -19,7 +19,7 @@ def inventory_apc_inrow_fanspeed(info):
 
 def check_apc_inrow_fanspeed(_no_item, _no_params, info):
     value = savefloat(info[0][0]) / 10
-    return 0, "Current: %.2f%%" % value, [("fanspeed", value)]
+    return 0, "Current: %.2f%%" % value, [("fan_perc", value)]
 
 
 def parse_apc_inrow_fanspeed(string_table: StringTable) -> StringTable:

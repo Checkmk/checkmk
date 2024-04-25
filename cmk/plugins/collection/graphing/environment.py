@@ -10,3 +10,9 @@ perfometer_battery_capacity = perfometers.Perfometer(
     focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
     segments=["battery_capacity"],
 )
+
+perfometer_fan_perc = perfometers.Perfometer(
+    name="fan_perc",
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
+    segments=["fan_perc"],
+)

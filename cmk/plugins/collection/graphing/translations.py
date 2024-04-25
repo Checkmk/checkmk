@@ -67,3 +67,9 @@ translation_apc_inrow_airflow = translations.Translation(
     check_commands=[translations.PassiveCheck("apc_inrow_airflow")],
     translations={"flow": translations.RenameTo("airflow")},
 )
+
+translation_apc_inrow_fanspeed = translations.Translation(
+    name="apc_inrow_fanspeed",
+    check_commands=[translations.PassiveCheck("apc_inrow_fanspeed")],
+    translations={"fanspeed": translations.RenameTo("fan_perc")},
+)

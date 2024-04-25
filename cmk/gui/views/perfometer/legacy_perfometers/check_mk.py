@@ -21,7 +21,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-apc_inrow_fanspeed"] = perfometer_fanspeed
     perfometers["check_mk-hitachi_hnas_fan"] = perfometer_fanspeed_logarithmic
     perfometers["check_mk-arcserve_backup"] = perfometer_check_mk_arcserve_backup
     perfometers["check_mk-ibm_svc_host"] = perfometer_check_mk_ibm_svc_host
@@ -120,13 +119,6 @@ def perfometer_airflow_ls(
 ) -> LegacyPerfometerResult:
     value = int(float(perf_data[0].value) * 100)
     return "%sl/s" % perf_data[0].value, perfometer_logarithmic(value, 1000, 2, "#3366cc")
-
-
-def perfometer_fanspeed(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    value = float(perf_data[0].value)
-    return "%.2f%%" % value, perfometer_linear(value, "silver")
 
 
 def perfometer_fanspeed_logarithmic(

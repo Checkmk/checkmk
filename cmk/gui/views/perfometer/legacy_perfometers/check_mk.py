@@ -21,7 +21,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-genu_pfstate"] = perfometer_genu_screen
     perfometers["check_mk-db2_mem"] = perfometer_simple_mem_usage
     perfometers["check_mk-innovaphone_mem"] = perfometer_simple_mem_usage
     perfometers["check_mk-juniper_screenos_mem"] = perfometer_simple_mem_usage
@@ -121,11 +120,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_genu_screen(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:
-    value = int(perf[0].value)
-    return "%d Sessions" % value, perfometer_logarithmic(value, 5000, 2, "#7109AA")
 
 
 def perfometer_simple_mem_usage(row: Row, command: str, perf: Perfdata) -> LegacyPerfometerResult:

@@ -219,6 +219,14 @@ def file_exists_on_download_server(filename: str, version: str, credentials: Cre
     return True
 
 
+def assert_presence_on_download_server(
+    args: Args, internal_only: bool, artifact_name: str, credentials: Credentials
+) -> None:
+    assert (
+        file_exists_on_download_server(artifact_name, args.version, credentials) != internal_only
+    ), f"{artifact_name} should {'not' if internal_only else ''} be available on download server!"
+
+
 def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
     credentials = get_credentials()
     registries = [
@@ -233,29 +241,13 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
         ),
     ]
     for artifact_name, internal_only in build_source_artifacts(args, loaded_yaml):
-        assert (
-            file_exists_on_download_server(artifact_name, args.version, credentials)
-            != internal_only
-        ), f"{artifact_name} should {'not' if internal_only else ''} "
-        "be available on download server!"
+        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
 
     for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
-        assert (
-            file_exists_on_download_server(artifact_name, args.version, credentials)
-            != internal_only
-        ), (
-            f"{artifact_name} should {'not' if internal_only else ''} "
-            f"be available on download server!"
-        )
+        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
 
     for artifact_name, internal_only in build_docker_artifacts(args, loaded_yaml):
-        assert (
-            file_exists_on_download_server(artifact_name, args.version, credentials)
-            != internal_only
-        ), (
-            f"{artifact_name} should {'not' if internal_only else ''} "
-            f"be available on download server!"
-        )
+        assert_presence_on_download_server(args, internal_only, artifact_name, credentials)
 
     for image_name, edition, registry in build_docker_image_name_and_registry(
         args, loaded_yaml, registries

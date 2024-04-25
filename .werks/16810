@@ -1,0 +1,9 @@
+Title: Fixed sed command in Werk #16274
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1714046589
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+

@@ -108,7 +108,7 @@ from cmk.gui.watolib.search import match_item_generator_registry
 from cmk.gui.watolib.simple_config_file import config_file_registry
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
-if edition() is not Edition.CRE:
+if edition() not in (Edition.CSE, Edition.CRE):
     from cmk.gui.cee.dcd import _store as dcd_store
 
 
@@ -211,7 +211,8 @@ def register() -> None:
             permission_registry,
         )
 
-        dcd_store.register(config_file_registry)
+        if edition() is not Edition.CRE:
+            dcd_store.register(config_file_registry)
 
     mobile.register(layout_registry)
     userdb_registration.register(

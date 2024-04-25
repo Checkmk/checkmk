@@ -504,13 +504,7 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.docker0.docker0.None', "
-                            "in_ucast: Initialized: 'in_ucast.1.docker0.docker0.None', in_mcast: Initialized: 'in_mcast.1.docker0.docker0.None', "
-                            "in_bcast: Initialized: 'in_bcast.1.docker0.docker0.None', in_disc: Initialized: 'in_disc.1.docker0.docker0.None', "
-                            "in_err: Initialized: 'in_err.1.docker0.docker0.None', out_octets: Initialized: 'out_octets.1.docker0.docker0.None', "
-                            "out_ucast: Initialized: 'out_ucast.1.docker0.docker0.None', out_mcast: Initialized: 'out_mcast.1.docker0.docker0.None', "
-                            "out_bcast: Initialized: 'out_bcast.1.docker0.docker0.None', out_disc: Initialized: 'out_disc.1.docker0.docker0.None', "
-                            "out_err: Initialized: 'out_err.1.docker0.docker0.None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.1.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.1.docker0.docker0.None' has been initialized. Result available on second check execution.",
                         ),
                     ],
                 ),
@@ -525,13 +519,7 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.4.wlp3s0.wlp3s0.None', "
-                            "in_ucast: Initialized: 'in_ucast.4.wlp3s0.wlp3s0.None', in_mcast: Initialized: 'in_mcast.4.wlp3s0.wlp3s0.None', "
-                            "in_bcast: Initialized: 'in_bcast.4.wlp3s0.wlp3s0.None', in_disc: Initialized: 'in_disc.4.wlp3s0.wlp3s0.None', "
-                            "in_err: Initialized: 'in_err.4.wlp3s0.wlp3s0.None', out_octets: Initialized: 'out_octets.4.wlp3s0.wlp3s0.None', "
-                            "out_ucast: Initialized: 'out_ucast.4.wlp3s0.wlp3s0.None', out_mcast: Initialized: 'out_mcast.4.wlp3s0.wlp3s0.None', "
-                            "out_bcast: Initialized: 'out_bcast.4.wlp3s0.wlp3s0.None', out_disc: Initialized: 'out_disc.4.wlp3s0.wlp3s0.None', "
-                            "out_err: Initialized: 'out_err.4.wlp3s0.wlp3s0.None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.",
                         ),
                     ],
                 ),
@@ -669,13 +657,7 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.2.docker0.docker0.None', "
-                            "in_ucast: Initialized: 'in_ucast.2.docker0.docker0.None', in_mcast: Initialized: 'in_mcast.2.docker0.docker0.None', "
-                            "in_bcast: Initialized: 'in_bcast.2.docker0.docker0.None', in_disc: Initialized: 'in_disc.2.docker0.docker0.None', "
-                            "in_err: Initialized: 'in_err.2.docker0.docker0.None', out_octets: Initialized: 'out_octets.2.docker0.docker0.None', "
-                            "out_ucast: Initialized: 'out_ucast.2.docker0.docker0.None', out_mcast: Initialized: 'out_mcast.2.docker0.docker0.None', "
-                            "out_bcast: Initialized: 'out_bcast.2.docker0.docker0.None', out_disc: Initialized: 'out_disc.2.docker0.docker0.None', "
-                            "out_err: Initialized: 'out_err.2.docker0.docker0.None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.2.docker0.docker0.None' has been initialized. Result available on second check execution.",
                         ),
                     ],
                 ),
@@ -690,13 +672,7 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.4.wlp3s0.wlp3s0.None', "
-                            "in_ucast: Initialized: 'in_ucast.4.wlp3s0.wlp3s0.None', in_mcast: Initialized: 'in_mcast.4.wlp3s0.wlp3s0.None', "
-                            "in_bcast: Initialized: 'in_bcast.4.wlp3s0.wlp3s0.None', in_disc: Initialized: 'in_disc.4.wlp3s0.wlp3s0.None', "
-                            "in_err: Initialized: 'in_err.4.wlp3s0.wlp3s0.None', out_octets: Initialized: 'out_octets.4.wlp3s0.wlp3s0.None', "
-                            "out_ucast: Initialized: 'out_ucast.4.wlp3s0.wlp3s0.None', out_mcast: Initialized: 'out_mcast.4.wlp3s0.wlp3s0.None', "
-                            "out_bcast: Initialized: 'out_bcast.4.wlp3s0.wlp3s0.None', out_disc: Initialized: 'out_disc.4.wlp3s0.wlp3s0.None', "
-                            "out_err: Initialized: 'out_err.4.wlp3s0.wlp3s0.None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.",
                         ),
                     ],
                 ),
@@ -834,13 +810,7 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.2.docker0.docker0.None', "
-                            "in_ucast: Initialized: 'in_ucast.2.docker0.docker0.None', in_mcast: Initialized: 'in_mcast.2.docker0.docker0.None', "
-                            "in_bcast: Initialized: 'in_bcast.2.docker0.docker0.None', in_disc: Initialized: 'in_disc.2.docker0.docker0.None', "
-                            "in_err: Initialized: 'in_err.2.docker0.docker0.None', out_octets: Initialized: 'out_octets.2.docker0.docker0.None', "
-                            "out_ucast: Initialized: 'out_ucast.2.docker0.docker0.None', out_mcast: Initialized: 'out_mcast.2.docker0.docker0.None', "
-                            "out_bcast: Initialized: 'out_bcast.2.docker0.docker0.None', out_disc: Initialized: 'out_disc.2.docker0.docker0.None', "
-                            "out_err: Initialized: 'out_err.2.docker0.docker0.None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.2.docker0.docker0.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.2.docker0.docker0.None' has been initialized. Result available on second check execution.",
                         ),
                     ],
                 ),
@@ -855,13 +825,7 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.4.wlp3s0.wlp3s0.None', "
-                            "in_ucast: Initialized: 'in_ucast.4.wlp3s0.wlp3s0.None', in_mcast: Initialized: 'in_mcast.4.wlp3s0.wlp3s0.None', "
-                            "in_bcast: Initialized: 'in_bcast.4.wlp3s0.wlp3s0.None', in_disc: Initialized: 'in_disc.4.wlp3s0.wlp3s0.None', "
-                            "in_err: Initialized: 'in_err.4.wlp3s0.wlp3s0.None', out_octets: Initialized: 'out_octets.4.wlp3s0.wlp3s0.None', "
-                            "out_ucast: Initialized: 'out_ucast.4.wlp3s0.wlp3s0.None', out_mcast: Initialized: 'out_mcast.4.wlp3s0.wlp3s0.None', "
-                            "out_bcast: Initialized: 'out_bcast.4.wlp3s0.wlp3s0.None', out_disc: Initialized: 'out_disc.4.wlp3s0.wlp3s0.None', "
-                            "out_err: Initialized: 'out_err.4.wlp3s0.wlp3s0.None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.",
                         ),
                     ],
                 ),
@@ -909,12 +873,7 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.em0.em0.None', "
-                            "in_ucast: Initialized: 'in_ucast.1.em0.em0.None', in_mcast: Initialized: 'in_mcast.1.em0.em0.None', in_bcast: Initialized: "
-                            "'in_bcast.1.em0.em0.None', in_disc: Initialized: 'in_disc.1.em0.em0.None', in_err: Initialized: 'in_err.1.em0.em0.None', "
-                            "out_octets: Initialized: 'out_octets.1.em0.em0.None', out_ucast: Initialized: 'out_ucast.1.em0.em0.None', "
-                            "out_mcast: Initialized: 'out_mcast.1.em0.em0.None', out_bcast: Initialized: 'out_bcast.1.em0.em0.None', "
-                            "out_disc: Initialized: 'out_disc.1.em0.em0.None', out_err: Initialized: 'out_err.1.em0.em0.None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.1.em0.em0.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.1.em0.em0.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.1.em0.em0.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.1.em0.em0.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.1.em0.em0.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.1.em0.em0.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.1.em0.em0.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.1.em0.em0.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.1.em0.em0.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.1.em0.em0.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.1.em0.em0.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.1.em0.em0.None' has been initialized. Result available on second check execution.",
                         ),
                     ],
                 ),
@@ -928,13 +887,7 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.2.tun0.tun0.None', "
-                            "in_ucast: Initialized: 'in_ucast.2.tun0.tun0.None', in_mcast: Initialized: 'in_mcast.2.tun0.tun0.None', "
-                            "in_bcast: Initialized: 'in_bcast.2.tun0.tun0.None', in_disc: Initialized: 'in_disc.2.tun0.tun0.None', "
-                            "in_err: Initialized: 'in_err.2.tun0.tun0.None', out_octets: Initialized: 'out_octets.2.tun0.tun0.None', "
-                            "out_ucast: Initialized: 'out_ucast.2.tun0.tun0.None', out_mcast: Initialized: 'out_mcast.2.tun0.tun0.None', "
-                            "out_bcast: Initialized: 'out_bcast.2.tun0.tun0.None', out_disc: Initialized: 'out_disc.2.tun0.tun0.None', "
-                            "out_err: Initialized: 'out_err.2.tun0.tun0.None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.2.tun0.tun0.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.2.tun0.tun0.None' has been initialized. Result available on second check execution.",
                         ),
                     ],
                 ),
@@ -948,13 +901,7 @@ def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
                         Metric("outqlen", 0.0),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.3.tun1.tun1.None', "
-                            "in_ucast: Initialized: 'in_ucast.3.tun1.tun1.None', in_mcast: Initialized: 'in_mcast.3.tun1.tun1.None', "
-                            "in_bcast: Initialized: 'in_bcast.3.tun1.tun1.None', in_disc: Initialized: 'in_disc.3.tun1.tun1.None', "
-                            "in_err: Initialized: 'in_err.3.tun1.tun1.None', out_octets: Initialized: 'out_octets.3.tun1.tun1.None', "
-                            "out_ucast: Initialized: 'out_ucast.3.tun1.tun1.None', out_mcast: Initialized: 'out_mcast.3.tun1.tun1.None', "
-                            "out_bcast: Initialized: 'out_bcast.3.tun1.tun1.None', out_disc: Initialized: 'out_disc.3.tun1.tun1.None', "
-                            "out_err: Initialized: 'out_err.3.tun1.tun1.None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.3.tun1.tun1.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.3.tun1.tun1.None' has been initialized. Result available on second check execution.",
                         ),
                     ],
                 ),
@@ -1142,13 +1089,7 @@ def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:
         Metric("outqlen", 0.0),
         Result(
             state=State.OK,
-            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.4.wlp3s0.wlp3s0.None', "
-            "in_ucast: Initialized: 'in_ucast.4.wlp3s0.wlp3s0.None', in_mcast: Initialized: 'in_mcast.4.wlp3s0.wlp3s0.None', "
-            "in_bcast: Initialized: 'in_bcast.4.wlp3s0.wlp3s0.None', in_disc: Initialized: 'in_disc.4.wlp3s0.wlp3s0.None', "
-            "in_err: Initialized: 'in_err.4.wlp3s0.wlp3s0.None', out_octets: Initialized: 'out_octets.4.wlp3s0.wlp3s0.None', "
-            "out_ucast: Initialized: 'out_ucast.4.wlp3s0.wlp3s0.None', out_mcast: Initialized: 'out_mcast.4.wlp3s0.wlp3s0.None', "
-            "out_bcast: Initialized: 'out_bcast.4.wlp3s0.wlp3s0.None', out_disc: Initialized: 'out_disc.4.wlp3s0.wlp3s0.None', "
-            "out_err: Initialized: 'out_err.4.wlp3s0.wlp3s0.None'",
+            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_bcast: Counter 'in_bcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_disc: Counter 'in_disc.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_bcast: Counter 'out_bcast.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_disc: Counter 'out_disc.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.4.wlp3s0.wlp3s0.None' has been initialized. Result available on second check execution.",
         ),
     ]
 

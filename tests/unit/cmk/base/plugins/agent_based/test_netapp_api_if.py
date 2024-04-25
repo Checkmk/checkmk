@@ -122,11 +122,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.GTB1020-2-CL_mgmt..None', "
-                            "in_ucast: Initialized: 'in_ucast.1.GTB1020-2-CL_mgmt..None', in_mcast: Initialized: 'in_mcast.1.GTB1020-2-CL_mgmt..None', "
-                            "in_err: Initialized: 'in_err.1.GTB1020-2-CL_mgmt..None', out_octets: Initialized: 'out_octets.1.GTB1020-2-CL_mgmt..None', "
-                            "out_ucast: Initialized: 'out_ucast.1.GTB1020-2-CL_mgmt..None', out_mcast: Initialized: 'out_mcast.1.GTB1020-2-CL_mgmt..None', "
-                            "out_err: Initialized: 'out_err.1.GTB1020-2-CL_mgmt..None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.1.GTB1020-2-CL_mgmt..None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.1.GTB1020-2-CL_mgmt..None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.1.GTB1020-2-CL_mgmt..None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.1.GTB1020-2-CL_mgmt..None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.1.GTB1020-2-CL_mgmt..None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.1.GTB1020-2-CL_mgmt..None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.1.GTB1020-2-CL_mgmt..None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.1.GTB1020-2-CL_mgmt..None' has been initialized. Result available on second check execution.",
                         ),
                         Result(state=State.OK, summary="Current Port: e0f-112 (is home port)"),
                     ],
@@ -144,11 +140,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.2.GTB1020-2_ic1..None', "
-                            "in_ucast: Initialized: 'in_ucast.2.GTB1020-2_ic1..None', in_mcast: Initialized: 'in_mcast.2.GTB1020-2_ic1..None', "
-                            "in_err: Initialized: 'in_err.2.GTB1020-2_ic1..None', out_octets: Initialized: 'out_octets.2.GTB1020-2_ic1..None', "
-                            "out_ucast: Initialized: 'out_ucast.2.GTB1020-2_ic1..None', out_mcast: Initialized: 'out_mcast.2.GTB1020-2_ic1..None', "
-                            "out_err: Initialized: 'out_err.2.GTB1020-2_ic1..None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.2.GTB1020-2_ic1..None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.2.GTB1020-2_ic1..None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.2.GTB1020-2_ic1..None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.2.GTB1020-2_ic1..None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.2.GTB1020-2_ic1..None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.2.GTB1020-2_ic1..None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.2.GTB1020-2_ic1..None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.2.GTB1020-2_ic1..None' has been initialized. Result available on second check execution.",
                         ),
                         Result(state=State.OK, summary="Current Port: e0f-2231 (is home port)"),
                     ],
@@ -271,11 +263,7 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                         Result(state=State.OK, summary="Speed: 1 GBit/s"),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.5.ifgrp_sto..None', "
-                            "in_ucast: Initialized: 'in_ucast.5.ifgrp_sto..None', in_mcast: Initialized: 'in_mcast.5.ifgrp_sto..None', "
-                            "in_err: Initialized: 'in_err.5.ifgrp_sto..None', out_octets: Initialized: 'out_octets.5.ifgrp_sto..None', "
-                            "out_ucast: Initialized: 'out_ucast.5.ifgrp_sto..None', out_mcast: Initialized: 'out_mcast.5.ifgrp_sto..None', "
-                            "out_err: Initialized: 'out_err.5.ifgrp_sto..None'",
+                            notice="Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.5.ifgrp_sto..None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.5.ifgrp_sto..None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.5.ifgrp_sto..None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.5.ifgrp_sto..None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.5.ifgrp_sto..None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.5.ifgrp_sto..None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.5.ifgrp_sto..None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.5.ifgrp_sto..None' has been initialized. Result available on second check execution.",
                         ),
                         Result(state=State.OK, summary="Physical interfaces: e0c(up)"),
                         Result(state=State.OK, summary="e0d(up)"),
@@ -348,11 +336,9 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                         Result(state=State.OK, summary="Speed: auto"),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.cluster_mgmt..None', "
-                            "in_ucast: Initialized: 'in_ucast.1.cluster_mgmt..None', in_mcast: Initialized: 'in_mcast.1.cluster_mgmt..None', "
-                            "in_err: Initialized: 'in_err.1.cluster_mgmt..None', out_octets: Initialized: 'out_octets.1.cluster_mgmt..None', "
-                            "out_ucast: Initialized: 'out_ucast.1.cluster_mgmt..None', out_mcast: Initialized: 'out_mcast.1.cluster_mgmt..None', "
-                            "out_err: Initialized: 'out_err.1.cluster_mgmt..None'",
+                            notice=(
+                                "Could not compute rates for the following counter(s):\nin_octets: Counter 'in_octets.1.cluster_mgmt..None' has been initialized. Result available on second check execution.\nin_ucast: Counter 'in_ucast.1.cluster_mgmt..None' has been initialized. Result available on second check execution.\nin_mcast: Counter 'in_mcast.1.cluster_mgmt..None' has been initialized. Result available on second check execution.\nin_err: Counter 'in_err.1.cluster_mgmt..None' has been initialized. Result available on second check execution.\nout_octets: Counter 'out_octets.1.cluster_mgmt..None' has been initialized. Result available on second check execution.\nout_ucast: Counter 'out_ucast.1.cluster_mgmt..None' has been initialized. Result available on second check execution.\nout_mcast: Counter 'out_mcast.1.cluster_mgmt..None' has been initialized. Result available on second check execution.\nout_err: Counter 'out_err.1.cluster_mgmt..None' has been initialized. Result available on second check execution."
+                            ),
                         ),
                         Result(state=State.OK, summary="Current Port: e0a (is home port)"),
                     ],
@@ -423,7 +409,17 @@ from cmk.plugins.lib.netapp_api import check_netapp_interfaces
                         Result(state=State.OK, summary="Speed: 10 GBit/s"),
                         Result(
                             state=State.OK,
-                            notice="Could not compute rates for the following counter(s): in_octets: Initialized: 'in_octets.1.some-if-name..None', in_ucast: Initialized: 'in_ucast.1.some-if-name..None', in_mcast: Initialized: 'in_mcast.1.some-if-name..None', in_err: Initialized: 'in_err.1.some-if-name..None', out_octets: Initialized: 'out_octets.1.some-if-name..None', out_ucast: Initialized: 'out_ucast.1.some-if-name..None', out_mcast: Initialized: 'out_mcast.1.some-if-name..None', out_err: Initialized: 'out_err.1.some-if-name..None'",
+                            notice=(
+                                "Could not compute rates for the following counter(s):\n"
+                                "in_octets: Counter 'in_octets.1.some-if-name..None' has been initialized. Result available on second check execution.\n"
+                                "in_ucast: Counter 'in_ucast.1.some-if-name..None' has been initialized. Result available on second check execution.\n"
+                                "in_mcast: Counter 'in_mcast.1.some-if-name..None' has been initialized. Result available on second check execution.\n"
+                                "in_err: Counter 'in_err.1.some-if-name..None' has been initialized. Result available on second check execution.\n"
+                                "out_octets: Counter 'out_octets.1.some-if-name..None' has been initialized. Result available on second check execution.\n"
+                                "out_ucast: Counter 'out_ucast.1.some-if-name..None' has been initialized. Result available on second check execution.\n"
+                                "out_mcast: Counter 'out_mcast.1.some-if-name..None' has been initialized. Result available on second check execution.\n"
+                                "out_err: Counter 'out_err.1.some-if-name..None' has been initialized. Result available on second check execution."
+                            ),
                         ),
                         Result(state=State.OK, summary="Current Port: e0c (is home port)"),
                         Result(

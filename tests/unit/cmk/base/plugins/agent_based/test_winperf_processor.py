@@ -134,9 +134,15 @@ def test_discovery() -> None:
             {},
             {},
             [
-                IgnoreResults("Initialized: 'util'"),
-                IgnoreResults("Initialized: 'user'"),
-                IgnoreResults("Initialized: 'privileged'"),
+                IgnoreResults(
+                    "Counter 'util' has been initialized. Result available on second check execution."
+                ),
+                IgnoreResults(
+                    "Counter 'user' has been initialized. Result available on second check execution."
+                ),
+                IgnoreResults(
+                    "Counter 'privileged' has been initialized. Result available on second check execution."
+                ),
                 Result(state=State.OK, notice="Number of processors: 4"),
                 Metric("cpus", 4),
             ],

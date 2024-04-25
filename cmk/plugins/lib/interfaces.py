@@ -1551,12 +1551,13 @@ def check_single_interface(
     )
 
     if interface.get_rate_errors:
-        overflows_human_readable = (
+
+        overflows_human_readable = "\n".join(
             f"{counter}: {get_rate_excpt}" for counter, get_rate_excpt in interface.get_rate_errors
         )
         yield Result(
             state=State.OK,
-            notice=f"Could not compute rates for the following counter(s): {', '.join(overflows_human_readable)}",
+            notice=f"Could not compute rates for the following counter(s):\n{overflows_human_readable}",
         )
 
 

@@ -177,20 +177,6 @@ class AttributeDisplayHint:
         )
 
 
-@dataclass(frozen=True)
-class AttributesDisplayHint:
-    path: SDPath
-    title: str
-    by_key: OrderedDict[str, AttributeDisplayHint]
-
-    def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
-        return (
-            hint
-            if (hint := self.by_key.get(key))
-            else AttributeDisplayHint.from_raw(self.title if self.path else "", self.path, key, {})
-        )
-
-
 def _parse_column_display_hint_filter_class(
     filter_class: (
         None
@@ -383,7 +369,7 @@ class NodeDisplayHint:
     short_title: str
     long_title: str
     icon: str
-    attributes_hint: AttributesDisplayHint
+    attributes: OrderedDict[str, AttributeDisplayHint]
     table_hint: TableDisplayHint
 
     @property
@@ -401,7 +387,7 @@ class NodeDisplayHint:
         path: SDPath,
         raw_hint: InventoryHintSpec,
         attributes_key_order: Sequence[str],
-        attributes_by_key: Mapping[str, InventoryHintSpec],
+        attributes: Mapping[str, InventoryHintSpec],
         table_key_order: Sequence[str],
         table_by_column: Mapping[str, InventoryHintSpec],
     ) -> NodeDisplayHint:
@@ -412,20 +398,16 @@ class NodeDisplayHint:
             short_title=title,
             long_title=_make_long_title(parent_title, title),
             icon=raw_hint.get("icon", ""),
-            attributes_hint=AttributesDisplayHint(
-                path,
-                title,
-                OrderedDict(
-                    {
-                        key: AttributeDisplayHint.from_raw(
-                            title,
-                            path,
-                            key,
-                            attributes_by_key.get(key, {}),
-                        )
-                        for key in _complete_key_order(attributes_key_order, set(attributes_by_key))
-                    }
-                ),
+            attributes=OrderedDict(
+                {
+                    key: AttributeDisplayHint.from_raw(
+                        title,
+                        path,
+                        key,
+                        attributes.get(key, {}),
+                    )
+                    for key in _complete_key_order(attributes_key_order, set(attributes))
+                }
             ),
             table_hint=TableDisplayHint.from_raw(
                 parent_title,
@@ -434,6 +416,13 @@ class NodeDisplayHint:
                 _complete_key_order(table_key_order, set(table_by_column)),
                 table_by_column,
             ),
+        )
+
+    def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
+        return (
+            hint
+            if (hint := self.attributes.get(key))
+            else AttributeDisplayHint.from_raw(self.title if self.path else "", self.path, key, {})
         )
 
 

@@ -41,7 +41,6 @@ from cmk.gui.utils.user_errors import user_errors
 
 from ._display_hints import (
     AttributeDisplayHint,
-    AttributesDisplayHint,
     ColumnDisplayHint,
     DISPLAY_HINTS,
     NodeDisplayHint,
@@ -335,10 +334,10 @@ class TreeRenderer:
     def _show_attributes(
         self,
         attributes: ImmutableAttributes | ImmutableDeltaAttributes,
-        hint: AttributesDisplayHint,
+        hint: NodeDisplayHint,
     ) -> None:
         sorted_pairs: Sequence[SDItem] | Sequence[_SDDeltaItem]
-        key_order = [SDKey(k) for k in hint.by_key]
+        key_order = [SDKey(k) for k in hint.attributes]
         if isinstance(attributes, ImmutableAttributes):
             sorted_pairs = _sort_pairs(attributes, key_order)
         else:
@@ -441,7 +440,7 @@ class TreeRenderer:
         node_hint = DISPLAY_HINTS.get_node_hint(tree.path)
 
         if tree.attributes:
-            self._show_attributes(tree.attributes, node_hint.attributes_hint)
+            self._show_attributes(tree.attributes, node_hint)
 
         if tree.table:
             self._show_table(tree.table, node_hint.table_hint, request_)

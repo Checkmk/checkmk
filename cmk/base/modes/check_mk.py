@@ -848,14 +848,14 @@ def mode_scan_parents(options: dict, args: list[str]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
 
-    if "procs" in options:
-        config.max_num_processes = options["procs"]
+    max_num_processes = max(options.get("procs", config.max_num_processes), 1)
 
     cmk.base.parent_scan.do_scan_parents(
         config_cache,
         hosts_config,
         HostName(config.monitoring_host) if config.monitoring_host is not None else None,
         [HostName(hn) for hn in args],
+        max_num_processes=max_num_processes,
     )
 
 

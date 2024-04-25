@@ -32,6 +32,8 @@ def do_scan_parents(
     hosts_config: Hosts,
     monitoring_host: HostName | None,
     hosts: list[HostName],
+    *,
+    max_num_processes: int,
 ) -> None:
     # pylint: disable=too-many-branches
     if not hosts:
@@ -47,9 +49,6 @@ def do_scan_parents(
     parent_ips: dict[HostName, HostAddress] = {}
     parent_rules = []
     gateway_hosts: set[HostName] = set()
-
-    # TODO: Sneakily changing a global variable looks like a bad idea!
-    config.max_num_processes = max(config.max_num_processes, 1)
 
     outfilename = Path(cmk.utils.paths.check_mk_config_dir) / "parents.mk"
 
@@ -72,10 +71,10 @@ def do_scan_parents(
                 "the file and try again."
             )
 
-    out.output("Scanning for parents (%d processes)..." % config.max_num_processes)
+    out.output("Scanning for parents (%d processes)..." % max_num_processes)
     while hosts:
         chunk: list[HostName] = []
-        while len(chunk) < config.max_num_processes and hosts:
+        while len(chunk) < max_num_processes and hosts:
             host = hosts.pop()
 
             # skip hosts that already have a parent

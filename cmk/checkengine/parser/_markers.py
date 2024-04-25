@@ -20,14 +20,14 @@ class PiggybackMarker(NamedTuple):
     @staticmethod
     def is_header(line: bytes) -> bool:
         return (
-            line.strip().startswith(b"<<<<")
-            and line.strip().endswith(b">>>>")
+            line.startswith(b"<<<<")
+            and line.endswith(b">>>>")
             and not PiggybackMarker.is_footer(line)
         )
 
     @staticmethod
     def is_footer(line: bytes) -> bool:
-        return line.strip() == b"<<<<>>>>"
+        return line == b"<<<<>>>>"
 
     @classmethod
     def from_headerline(
@@ -39,7 +39,7 @@ class PiggybackMarker(NamedTuple):
     ) -> "PiggybackMarker":
         # ? ensure_str called on a bytes object with different possible encodings
         raw_host_name = ensure_str_with_fallback(
-            line.strip()[4:-4],
+            line[4:-4],
             encoding="utf-8",
             fallback=encoding_fallback,
         )
@@ -66,7 +66,6 @@ class SectionMarker(NamedTuple):
 
     @staticmethod
     def is_header(line: bytes) -> bool:
-        line = line.strip()
         return (
             line.startswith(b"<<<")
             and line.endswith(b">>>")
@@ -79,11 +78,7 @@ class SectionMarker(NamedTuple):
     def is_footer(line: bytes) -> bool:
         # There is no section footer in the protocol but some non-compliant
         # plugins still add one and we accept it.
-        return (
-            len(line) >= 6
-            and line == b"<<<>>>"
-            or (line.startswith(b"<<<:") and line.endswith(b">>>"))
-        )
+        return line == b"<<<>>>" or (line.startswith(b"<<<:") and line.endswith(b">>>"))
 
     @classmethod
     def default(cls, name: SectionName):  # type: ignore[no-untyped-def]

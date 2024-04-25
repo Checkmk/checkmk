@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.render
-
 import cmk.gui.utils as utils
 from cmk.gui.type_defs import Perfdata, Row
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
@@ -14,16 +12,12 @@ from .utils import (
     perfometer_linear,
     perfometer_logarithmic,
     perfometer_logarithmic_dual,
-    perfometer_logarithmic_dual_independent,
     perfometers,
     render_perfometer,
 )
 
 
 def register() -> None:
-    perfometers["check_mk-veeam_client"] = perfometer_veeam_client
-    perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase
-    perfometers["check_mk-f5_bigip_vserver"] = perfometer_f5_bigip_vserver
     perfometers["check_mk-nfsiostat"] = perfometer_nfsiostat
 
 
@@ -106,31 +100,6 @@ def perfometer_airflow_ls(
     return "%sl/s" % perf_data[0].value, perfometer_logarithmic(value, 1000, 2, "#3366cc")
 
 
-def perfometer_veeam_client(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    for graph in perf_data:
-        if graph.metric_name == "avgspeed":
-            avgspeed_bytes = int(graph.value)
-        if graph.metric_name == "duration":
-            duration_secs = int(graph.value)
-    h = perfometer_logarithmic_dual_independent(
-        avgspeed_bytes, "#54b948", 10000000, 2, duration_secs, "#2098cb", 500, 2
-    )
-
-    avgspeed = cmk.utils.render.fmt_bytes(avgspeed_bytes)
-    duration = cmk.utils.render.approx_age(duration_secs)
-
-    return f"{avgspeed}/s&nbsp;&nbsp;&nbsp;{duration}", h
-
-
-def perfometer_ups_outphase(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    load = int(perf_data[2].value)
-    return "%d%%" % load, perfometer_linear(load, "#8050ff")
-
-
 def perfometer_el_inphase(
     row: Row, check_command: str, perf_data: Perfdata
 ) -> LegacyPerfometerResult:
@@ -138,13 +107,6 @@ def perfometer_el_inphase(
         if data.metric_name == "power":
             power = utils.savefloat(data.value)
     return "%.0f W" % power, perfometer_linear(power, "#8050ff")
-
-
-def perfometer_f5_bigip_vserver(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    connections = int(perf_data[0].value)
-    return str(connections), perfometer_logarithmic(connections, 100, 2, "#46a")
 
 
 def perfometer_nfsiostat(

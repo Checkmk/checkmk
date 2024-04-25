@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.render
-from cmk.utils.render import SecondsRenderer
 
 import cmk.gui.utils as utils
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -24,11 +23,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
-    perfometers["check_mk-oracle_dataguard_stats"] = perfometer_check_oracle_dataguard_stats
-    perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
-    perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
-    perfometers["check_mk-oracle_processes"] = perfometer_oracle_sessions
     perfometers["check_mk-ibm_svc_nodestats.iops"] = perfometer_check_mk_iops_r_w
     perfometers["check_mk-ibm_svc_systemstats.iops"] = perfometer_check_mk_iops_r_w
     perfometers["check_mk-ibm_svc_nodestats.disk_latency"] = perfometer_check_mk_disk_latency_r_w
@@ -167,61 +161,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_oracle_tablespaces(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    current = float(perf_data[0].value)
-    used = float(perf_data[1].value)
-    max_ = float(perf_data[2].value)
-    used_perc = used / max_ * 100  # fixed: true-division
-    curr_perc = (current / max_ * 100) - used_perc  # fixed: true-division
-    data = [
-        (used_perc, "#f0b000"),
-        (curr_perc, "#00ff80"),
-        (100 - used_perc - curr_perc, "#80c0ff"),
-    ]
-    return "%.1f%%" % used_perc, render_perfometer(data)
-
-
-def perfometer_check_oracle_dataguard_stats(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    perfdata_found = False
-    perfdata1 = 0.0
-
-    for data in perf_data:
-        if data.metric_name == "apply_lag":
-            color = "#80F000"
-
-            perfdata_found = True
-
-            days, hours, minutes, _seconds = SecondsRenderer.get_tuple(int(data.value))
-            perfdata1 = data.value
-
-    if not perfdata_found:
-        days = 0
-        hours = 0
-        minutes = 0
-        color = "#008f48"
-
-    return "%02dd %02dh %02dm" % (days, hours, minutes), perfometer_logarithmic(
-        perfdata1, 2592000, 2, color
-    )
-
-
-def perfometer_oracle_sessions(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    if check_command != "check_mk-oracle_sessions":
-        color = "#008f48"
-        unit = ""
-    else:
-        color = "#4800ff"
-        unit = "/h"
-    value = int(perf_data[0].value)
-    return "%d%s" % (value, unit), perfometer_logarithmic(value, 50, 2, color)
 
 
 def perfometer_check_mk_iops_r_w(

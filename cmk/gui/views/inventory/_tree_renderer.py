@@ -39,13 +39,7 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
-from ._display_hints import (
-    AttributeDisplayHint,
-    ColumnDisplayHint,
-    DISPLAY_HINTS,
-    NodeDisplayHint,
-    TableDisplayHint,
-)
+from ._display_hints import AttributeDisplayHint, ColumnDisplayHint, DISPLAY_HINTS, NodeDisplayHint
 
 
 def make_table_view_name_of_host(view_name: str) -> str:
@@ -355,9 +349,9 @@ class TreeRenderer:
         html.close_table()
 
     def _show_table(
-        self, table: ImmutableTable | ImmutableDeltaTable, hint: TableDisplayHint, request_: Request
+        self, table: ImmutableTable | ImmutableDeltaTable, hint: NodeDisplayHint, request_: Request
     ) -> None:
-        if hint.view_name:
+        if hint.table_view_name:
             # Link to Multisite view with exactly this table
             html.div(
                 HTMLWriter.render_a(
@@ -365,7 +359,10 @@ class TreeRenderer:
                     href=makeuri_contextless(
                         request_,
                         [
-                            ("view_name", make_table_view_name_of_host(hint.view_name)),
+                            (
+                                "view_name",
+                                make_table_view_name_of_host(hint.table_view_name),
+                            ),
                             ("host", self._hostname),
                         ],
                         filename="view.py",
@@ -374,7 +371,7 @@ class TreeRenderer:
                 class_="invtablelink",
             )
 
-        columns = _make_columns(table.rows, [SDKey(k) for k in hint.by_column])
+        columns = _make_columns(table.rows, [SDKey(k) for k in hint.columns])
         sorted_rows: Sequence[Sequence[SDItem]] | Sequence[Sequence[_SDDeltaItem]]
         if isinstance(table, ImmutableTable):
             sorted_rows = _sort_rows(table, columns)
@@ -443,7 +440,7 @@ class TreeRenderer:
             self._show_attributes(tree.attributes, node_hint)
 
         if tree.table:
-            self._show_table(tree.table, node_hint.table_hint, request_)
+            self._show_table(tree.table, node_hint, request_)
 
         for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):

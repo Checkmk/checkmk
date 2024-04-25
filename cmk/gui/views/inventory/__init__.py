@@ -72,7 +72,6 @@ from ._display_hints import (
     DISPLAY_HINTS,
     NodeDisplayHint,
     PAINT_FUNCTION_NAME_PREFIX,
-    TableDisplayHint,
 )
 from ._tree_renderer import (
     ajax_inv_render_tree,
@@ -91,7 +90,7 @@ from .registry import (
 __all__ = [
     "DISPLAY_HINTS",
     "InventoryHintSpec",
-    "TableDisplayHint",
+    "NodeDisplayHint",
 ]
 
 
@@ -625,28 +624,28 @@ class ABCDataSourceInventory(ABCDataSource):
 
 
 def _register_table_view(node_hint: NodeDisplayHint) -> None:
-    table_hint = node_hint.table_hint
-    if not table_hint.view_name:
+    if not node_hint.table_view_name:
         return
 
+    view_name = node_hint.table_view_name
     _register_info_class(
-        table_hint.view_name,
-        table_hint.title,
-        table_hint.title,
+        view_name,
+        node_hint.title,
+        node_hint.title,
     )
 
     # Create the datasource (like a database view)
     data_source_registry.register(
         type(
-            "DataSourceInventory%s" % table_hint.view_name.title(),
+            "DataSourceInventory%s" % node_hint.table_view_name.title(),
             (ABCDataSourceInventory,),
             {
-                "_ident": table_hint.view_name,
+                "_ident": view_name,
                 "_inventory_path": inventory.InventoryPath(
                     path=node_hint.path, source=inventory.TreeSource.table
                 ),
-                "_title": table_hint.long_inventory_title,
-                "_infos": ["host", table_hint.view_name],
+                "_title": node_hint.long_inventory_table_title,
+                "_infos": ["host", view_name],
                 "ident": property(lambda s: s._ident),
                 "title": property(lambda s: s._title),
                 "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
@@ -661,20 +660,20 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
 
     painters: list[ColumnSpec] = []
     filters = []
-    for col_hint in table_hint.by_column.values():
+    for col_hint in node_hint.columns.values():
         # Declare a painter, sorter and filters for each path with display hint
         _register_table_column(col_hint)
         painters.append(ColumnSpec(col_hint.ident))
         filters.append(col_hint.ident)
 
     _register_views(
-        table_hint.view_name,
-        table_hint.title,
+        view_name,
+        node_hint.title,
         painters,
         filters,
         node_hint.path,
-        table_hint.is_show_more,
-        table_hint.icon,
+        node_hint.table_is_show_more,
+        node_hint.icon,
     )
 
 

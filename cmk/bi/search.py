@@ -71,8 +71,15 @@ class LabelConditionSchema(Schema):
 
 
 class LabelGroupConditionSchema(Schema):
-    operator = ReqString(enum=["and", "or", "not"], description="Condition operator.")
-    label_group = ReqList(fields.Nested(LabelConditionSchema), description="Label conditions.")
+    operator = fields.String(
+        enum=["and", "or", "not"],
+        description="Condition operator.",
+        load_default="and",
+    )
+    label_group = ReqList(
+        fields.Nested(LabelConditionSchema),
+        description="Label conditions.",
+    )
 
     @pre_dump
     def _pre_dump(
@@ -100,8 +107,27 @@ class HostConditionsSchema(Schema):
     host_label_groups = ReqList(
         fields.Nested(LabelGroupConditionSchema),
         dump_default=[],
-        example=[{"operator": "and", "label_group": [{"operator": "and", "label": "db:mssql"}]}],
-        description="Host label conditions.",
+        example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    },
+                ],
+            },
+            {
+                "operator": "and",
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "network/primary:yes",
+                    },
+                ],
+            },
+        ],
+        description="Host label conditions. Although all items in this list have a default operator"
+        " value, the operator value for the the first item in the list does not have any effect.",
     )
     host_tags = ReqDict(dump_default={}, example={}, description="Host tags.")
     host_choice = ReqNested(
@@ -119,8 +145,27 @@ class ServiceConditionsSchema(HostConditionsSchema):
     service_label_groups = ReqList(
         fields.Nested(LabelGroupConditionSchema),
         dump_default=[],
-        example=[{"operator": "and", "label_group": [{"operator": "and", "label": "db:mssql"}]}],
-        description="Service label conditions.",
+        example=[
+            {
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "db:mssql",
+                    },
+                ],
+            },
+            {
+                "operator": "and",
+                "label_group": [
+                    {
+                        "operator": "and",
+                        "label": "network/primary:yes",
+                    },
+                ],
+            },
+        ],
+        description="Service label conditions. Although all items in this list have a default operator"
+        " value, the operator value for the the first item in the list does not have any effect.",
     )
 
 

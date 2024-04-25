@@ -633,3 +633,10 @@ def test_create_rule_with_label_groups(clients: ClientRegistry) -> None:
         resp.json["nodes"][0]["search"]["conditions"]
         == test_rule["nodes"][0]["search"]["conditions"]
     )
+
+
+def test_create_rule_with_label_groups_no_first_operator(clients: ClientRegistry) -> None:
+    test_rule = create_bipack_get_rule_test_data(clients)
+    del test_rule["nodes"][0]["search"]["conditions"]["host_label_groups"][0]["operator"]
+    del test_rule["nodes"][0]["search"]["conditions"]["service_label_groups"][0]["operator"]
+    clients.BiRule.create(rule_id="label_test_rule_id_1", body=test_rule)

@@ -75,9 +75,7 @@ def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
 
 def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], str]:
     return lambda: (
-        DISPLAY_HINTS.get_tree_hints(parent_path).node_hint.title + " ➤ " + title
-        if parent_path
-        else title
+        DISPLAY_HINTS.get_node_hint(parent_path).title + " ➤ " + title if parent_path else title
     )
 
 
@@ -512,23 +510,18 @@ _ALLOWED_KEYS: Sequence[
 ]
 
 
+@dataclass(frozen=True)
 class DisplayHints:
-    def __init__(self, path: SDPath, node_hint: NodeDisplayHint) -> None:
-        # This inventory path is an 'abc' path because it's the general, abstract path of a display
-        # hint and may contain "*" (ie. placeholders).
-        # Concrete paths (in trees) contain node names which are inserted into these placeholders
-        # while calculating node titles.
-        self.abc_path = path
-        self.node_hint = node_hint
-        self.nodes: dict[str, DisplayHints] = {}
+    _nodes_by_path: dict[SDPath, NodeDisplayHint] = field(default_factory=dict)
+
+    def add(self, node_hint: NodeDisplayHint) -> None:
+        self._nodes_by_path[node_hint.path] = node_hint
 
     @classmethod
     def root(cls) -> DisplayHints:
-        path: SDPath = ()
-        return DisplayHints(
-            path,
-            NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}, [], {}, [], {}),
-        )
+        hints = cls()
+        hints.add(NodeDisplayHint.from_raw((), {"title": _l("Inventory Tree")}, [], {}, [], {}))
+        return hints
 
     def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
         for path, related_raw_hints in sorted(
@@ -537,8 +530,6 @@ class DisplayHints:
             if not path:
                 continue
 
-            parent = self.get_tree_hints(path[:-1])
-
             node_or_table_hints = InventoryHintSpec()
             for key in _ALLOWED_KEYS:
                 if (value := related_raw_hints.for_table.get(key)) is not None:
@@ -546,42 +537,43 @@ class DisplayHints:
                 elif (value := related_raw_hints.for_node.get(key)) is not None:
                     node_or_table_hints[key] = value
 
-            parent.nodes.setdefault(
-                path[-1],
-                DisplayHints(
+            # Some fields like 'title' or 'keyorder' of legacy display hints are declared
+            # either for
+            # - real nodes, eg. ".hardware.chassis.",
+            # - nodes with attributes, eg. ".hardware.cpu." or
+            # - nodes with a table, eg. ".software.packages:"
+            self.add(
+                NodeDisplayHint.from_raw(
                     path,
-                    # Some fields like 'title' or 'keyorder' of legacy display hints are declared
-                    # either for
-                    # - real nodes, eg. ".hardware.chassis.",
-                    # - nodes with attributes, eg. ".hardware.cpu." or
-                    # - nodes with a table, eg. ".software.packages:"
-                    NodeDisplayHint.from_raw(
-                        path,
-                        node_or_table_hints,
-                        related_raw_hints.for_node.get("keyorder", []),
-                        related_raw_hints.by_key,
-                        related_raw_hints.for_table.get("keyorder", []),
-                        related_raw_hints.by_column,
-                    ),
-                ),
+                    node_or_table_hints,
+                    related_raw_hints.for_node.get("keyorder", []),
+                    related_raw_hints.by_key,
+                    related_raw_hints.for_table.get("keyorder", []),
+                    related_raw_hints.by_column,
+                )
             )
 
-    def __iter__(self) -> Iterator[DisplayHints]:
-        yield from self.make_inventory_paths_or_hints([])
+    def __iter__(self) -> Iterator[NodeDisplayHint]:
+        yield from self._nodes_by_path.values()
 
-    def make_inventory_paths_or_hints(self, path: list[str]) -> Iterator[DisplayHints]:
-        yield self
-        for node_name, node in self.nodes.items():
-            yield from node.make_inventory_paths_or_hints(path + [node_name])
+    def _find_abc_path(self, path: SDPath) -> SDPath | None:
+        # This inventory path is an 'abc' path because it's the general, abstract path of a display
+        # hint and may contain "*" (ie. placeholders).
+        # Concrete paths (in trees) contain node names which are inserted into these placeholders
+        # while calculating node titles.
+        for abc_path in self._nodes_by_path:
+            if len(path) != len(abc_path):
+                continue
+            if all(r in (l, "*") for l, r in zip(path, abc_path)):
+                return abc_path
+        return None
 
-    def get_tree_hints(self, path: SDPath) -> DisplayHints:
+    def get_node_hint(self, path: SDPath) -> NodeDisplayHint:
         if not path:
-            return self
-        if (node_name := path[0]) in self.nodes:
-            return self.nodes[node_name].get_tree_hints(path[1:])
-        if "*" in self.nodes:
-            return self.nodes["*"].get_tree_hints(path[1:])
-        return DisplayHints(path, NodeDisplayHint.from_raw(path, {}, [], {}, [], {}))
+            return self._nodes_by_path[()]
+        if (abc_path := self._find_abc_path(path)) in self._nodes_by_path:
+            return self._nodes_by_path[abc_path]
+        return NodeDisplayHint.from_raw(path, {}, [], {}, [], {})
 
 
 DISPLAY_HINTS = DisplayHints.root()

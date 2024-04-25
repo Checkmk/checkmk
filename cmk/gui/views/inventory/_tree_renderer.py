@@ -438,15 +438,15 @@ class TreeRenderer:
                 self.show(node, request_)
 
     def show(self, tree: ImmutableTree | ImmutableDeltaTree, request_: Request) -> None:
-        hints = DISPLAY_HINTS.get_tree_hints(tree.path)
+        node_hint = DISPLAY_HINTS.get_node_hint(tree.path)
 
         if tree.attributes:
-            self._show_attributes(tree.attributes, hints.node_hint.attributes_hint)
+            self._show_attributes(tree.attributes, node_hint.attributes_hint)
 
         if tree.table:
-            self._show_table(tree.table, hints.node_hint.table_hint, request_)
+            self._show_table(tree.table, node_hint.table_hint, request_)
 
         for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node, DISPLAY_HINTS.get_tree_hints(node.path).node_hint, request_)
+                self._show_node(node, DISPLAY_HINTS.get_node_hint(node.path), request_)

@@ -70,7 +70,7 @@ from ._display_hints import (
     AttributeDisplayHint,
     ColumnDisplayHint,
     DISPLAY_HINTS,
-    DisplayHints,
+    NodeDisplayHint,
     PAINT_FUNCTION_NAME_PREFIX,
     TableDisplayHint,
 )
@@ -326,8 +326,8 @@ def register_table_views_and_columns() -> None:
 def _register_table_views_and_columns() -> None:
     # create painters for node with a display hint
     painter_options = PainterOptions.get_instance()
-    for hints in DISPLAY_HINTS:
-        if "*" in hints.abc_path:
+    for node_hint in DISPLAY_HINTS:
+        if "*" in node_hint.path:
             # FIXME DYNAMIC-PATHS
             # For now we have to exclude these kind of paths due to the following reason:
             # During registration of table views only these 'abc' paths are available which are
@@ -339,21 +339,21 @@ def _register_table_views_and_columns() -> None:
             #   'DataSourceInventory' uses 'RowTableInventory'
             continue
 
-        _register_node_painter(hints, painter_options=painter_options)
+        _register_node_painter(node_hint, painter_options=painter_options)
 
-        for attr_hint in hints.node_hint.attributes_hint.by_key.values():
+        for attr_hint in node_hint.attributes_hint.by_key.values():
             _register_attribute_column(attr_hint)
 
-        _register_table_view(hints)
+        _register_table_view(node_hint)
 
 
-def _register_node_painter(hints: DisplayHints, *, painter_options: PainterOptions) -> None:
+def _register_node_painter(node_hint: NodeDisplayHint, *, painter_options: PainterOptions) -> None:
     """Declares painters for (sub) trees on all host related datasources."""
     register_painter(
-        hints.node_hint.ident,
+        node_hint.ident,
         {
-            "title": hints.node_hint.long_inventory_title,
-            "short": hints.node_hint.short_title,
+            "title": node_hint.long_inventory_title,
+            "short": node_hint.short_title,
             "columns": ["host_inventory", "host_structured_status"],
             "options": ["show_internal_tree_paths"],
             "params": Dictionary(
@@ -374,16 +374,16 @@ def _register_node_painter(hints: DisplayHints, *, painter_options: PainterOptio
             # not look good for the HW/SW inventory tree
             "printable": False,
             "load_inv": True,
-            "sorter": hints.node_hint.ident,
+            "sorter": node_hint.ident,
             "paint": lambda row: _paint_host_inventory_tree(
-                row, hints.abc_path, painter_options=painter_options
+                row, node_hint.path, painter_options=painter_options
             ),
             "export_for_python": lambda row, cell: (
-                _compute_node_painter_data(row, hints.abc_path).serialize()
+                _compute_node_painter_data(row, node_hint.path).serialize()
             ),
             "export_for_csv": lambda row, cell: _export_node_for_csv(),
             "export_for_json": lambda row, cell: (
-                _compute_node_painter_data(row, hints.abc_path).serialize()
+                _compute_node_painter_data(row, node_hint.path).serialize()
             ),
         },
     )
@@ -624,8 +624,8 @@ class ABCDataSourceInventory(ABCDataSource):
         raise NotImplementedError()
 
 
-def _register_table_view(hints: DisplayHints) -> None:
-    table_hint = hints.node_hint.table_hint
+def _register_table_view(node_hint: NodeDisplayHint) -> None:
+    table_hint = node_hint.table_hint
     if not table_hint.view_name:
         return
 
@@ -643,7 +643,7 @@ def _register_table_view(hints: DisplayHints) -> None:
             {
                 "_ident": table_hint.view_name,
                 "_inventory_path": inventory.InventoryPath(
-                    path=hints.abc_path, source=inventory.TreeSource.table
+                    path=node_hint.path, source=inventory.TreeSource.table
                 ),
                 "_title": table_hint.long_inventory_title,
                 "_infos": ["host", table_hint.view_name],
@@ -672,7 +672,7 @@ def _register_table_view(hints: DisplayHints) -> None:
         table_hint.title,
         painters,
         filters,
-        hints.abc_path,
+        node_hint.path,
         table_hint.is_show_more,
         table_hint.icon,
     )

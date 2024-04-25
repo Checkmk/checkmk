@@ -311,30 +311,26 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
     ],
 )
 def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint) -> None:
-    hints = DISPLAY_HINTS.get_tree_hints(path)
+    node_hint = DISPLAY_HINTS.get_node_hint(path)
 
-    assert hints.node_hint.ident == "_".join(("inv",) + hints.node_hint.path)
-    assert hints.node_hint.icon == expected_node_hint.icon
-    assert hints.node_hint.title == expected_node_hint.title
-    assert hints.node_hint.long_title == expected_node_hint.long_title
-    assert hints.node_hint.long_inventory_title == expected_node_hint.long_inventory_title
+    assert node_hint.ident == "_".join(("inv",) + node_hint.path)
+    assert node_hint.icon == expected_node_hint.icon
+    assert node_hint.title == expected_node_hint.title
+    assert node_hint.long_title == expected_node_hint.long_title
+    assert node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
-    assert list(hints.node_hint.attributes_hint.by_key) == list(
-        expected_node_hint.attributes_hint.by_key
-    )
+    assert list(node_hint.attributes_hint.by_key) == list(expected_node_hint.attributes_hint.by_key)
 
-    assert hints.node_hint.table_hint.title == expected_node_hint.table_hint.title
-    assert hints.node_hint.table_hint.long_title == expected_node_hint.table_hint.long_title
+    assert node_hint.table_hint.title == expected_node_hint.table_hint.title
+    assert node_hint.table_hint.long_title == expected_node_hint.table_hint.long_title
     assert (
-        hints.node_hint.table_hint.long_inventory_title
+        node_hint.table_hint.long_inventory_title
         == expected_node_hint.table_hint.long_inventory_title
     )
-    assert hints.node_hint.table_hint.icon == expected_node_hint.table_hint.icon
-    assert hints.node_hint.table_hint.is_show_more == expected_node_hint.table_hint.is_show_more
-    assert hints.node_hint.table_hint.view_name == expected_node_hint.table_hint.view_name
-    assert list(hints.node_hint.table_hint.by_column) == list(
-        expected_node_hint.table_hint.by_column
-    )
+    assert node_hint.table_hint.icon == expected_node_hint.table_hint.icon
+    assert node_hint.table_hint.is_show_more == expected_node_hint.table_hint.is_show_more
+    assert node_hint.table_hint.view_name == expected_node_hint.table_hint.view_name
+    assert list(node_hint.table_hint.by_column) == list(expected_node_hint.table_hint.by_column)
 
 
 @pytest.mark.parametrize(
@@ -456,30 +452,26 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
 def test_make_node_displayhint_from_hint(
     raw_path: str, expected_node_hint: NodeDisplayHint
 ) -> None:
-    hints = DISPLAY_HINTS.get_tree_hints(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
+    node_hint = DISPLAY_HINTS.get_node_hint(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
 
-    assert hints.node_hint.ident == "_".join(("inv",) + hints.node_hint.path)
-    assert hints.node_hint.icon == expected_node_hint.icon
-    assert hints.node_hint.title == expected_node_hint.title
-    assert hints.node_hint.long_title == expected_node_hint.long_title
-    assert hints.node_hint.long_inventory_title == expected_node_hint.long_inventory_title
+    assert node_hint.ident == "_".join(("inv",) + node_hint.path)
+    assert node_hint.icon == expected_node_hint.icon
+    assert node_hint.title == expected_node_hint.title
+    assert node_hint.long_title == expected_node_hint.long_title
+    assert node_hint.long_inventory_title == expected_node_hint.long_inventory_title
 
-    assert list(hints.node_hint.attributes_hint.by_key) == list(
-        expected_node_hint.attributes_hint.by_key
-    )
+    assert list(node_hint.attributes_hint.by_key) == list(expected_node_hint.attributes_hint.by_key)
 
-    assert hints.node_hint.table_hint.title == expected_node_hint.table_hint.title
-    assert hints.node_hint.table_hint.long_title == expected_node_hint.table_hint.long_title
+    assert node_hint.table_hint.title == expected_node_hint.table_hint.title
+    assert node_hint.table_hint.long_title == expected_node_hint.table_hint.long_title
     assert (
-        hints.node_hint.table_hint.long_inventory_title
+        node_hint.table_hint.long_inventory_title
         == expected_node_hint.table_hint.long_inventory_title
     )
-    assert hints.node_hint.table_hint.icon == expected_node_hint.table_hint.icon
-    assert hints.node_hint.table_hint.is_show_more == expected_node_hint.table_hint.is_show_more
-    assert hints.node_hint.table_hint.view_name == expected_node_hint.table_hint.view_name
-    assert list(hints.node_hint.table_hint.by_column) == list(
-        expected_node_hint.table_hint.by_column
-    )
+    assert node_hint.table_hint.icon == expected_node_hint.table_hint.icon
+    assert node_hint.table_hint.is_show_more == expected_node_hint.table_hint.is_show_more
+    assert node_hint.table_hint.view_name == expected_node_hint.table_hint.view_name
+    assert list(node_hint.table_hint.by_column) == list(expected_node_hint.table_hint.by_column)
 
 
 @pytest.mark.parametrize(
@@ -544,7 +536,7 @@ def test_make_node_displayhint_from_hint(
     ],
 )
 def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_tree_hints(path).node_hint.table_hint.get_column_hint(key)
+    hint = DISPLAY_HINTS.get_node_hint(path).table_hint.get_column_hint(key)
 
     if hint.view_name:
         assert hint.ident == f"{hint.view_name}_{hint.key}"
@@ -628,7 +620,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_tree_hints(inventory_path.path).node_hint.table_hint.get_column_hint(
+    hint = DISPLAY_HINTS.get_node_hint(inventory_path.path).table_hint.get_column_hint(
         inventory_path.key or ""
     )
 
@@ -692,7 +684,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
     ],
 )
 def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_tree_hints(path).node_hint.attributes_hint.get_attribute_hint(key)
+    hint = DISPLAY_HINTS.get_node_hint(path).attributes_hint.get_attribute_hint(key)
 
     assert hint.ident == "_".join(("inv",) + hint.path + (hint.key,))
     assert hint.data_type == expected.data_type
@@ -755,9 +747,9 @@ def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_tree_hints(
-        inventory_path.path
-    ).node_hint.attributes_hint.get_attribute_hint(inventory_path.key or "")
+    hint = DISPLAY_HINTS.get_node_hint(inventory_path.path).attributes_hint.get_attribute_hint(
+        inventory_path.key or ""
+    )
 
     assert hint.ident == "_".join(("inv",) + hint.path + (hint.key,))
     assert hint.data_type == expected.data_type

@@ -22,7 +22,7 @@ class DisableNotifications(BaseModel):
 
 
 class Contact(BaseModel):
-    alias: str | Omitted = OMITTED_FIELD
+    alias: str
     disable_notifications: DisableNotifications = DisableNotifications()
     email: str | Omitted = OMITTED_FIELD
     pager: str | Omitted = OMITTED_FIELD

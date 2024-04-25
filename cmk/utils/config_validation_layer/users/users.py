@@ -16,7 +16,7 @@ SHOW_MODE = Literal["default_show_less", "default_show_more", "enforce_show_more
 
 
 class User(BaseModel):
-    alias: str | Omitted = OMITTED_FIELD
+    alias: str
     connector: str | Omitted = OMITTED_FIELD
     locked: bool | Omitted = OMITTED_FIELD
     roles: list[str] | Omitted = OMITTED_FIELD

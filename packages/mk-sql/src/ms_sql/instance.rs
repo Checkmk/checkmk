@@ -12,8 +12,6 @@ use crate::config::{
     section::names,
     CheckConfig,
 };
-#[cfg(windows)]
-use crate::constants;
 use crate::emit;
 use crate::ms_sql::query::{
     obtain_computer_name, obtain_instance_name, run_custom_query, run_known_query, Answer, Column,
@@ -303,7 +301,7 @@ impl SqlInstance {
 
         // if yes - call generate_section with database parameter
         // else - call generate_section without database parameter
-
+        log::trace!("{:?} @ {:?}", self, endpoint);
         let body = match self.create_client(endpoint, None).await {
             Ok(mut client) => {
                 self._generate_sections(&mut client, endpoint, sections)
@@ -360,6 +358,7 @@ impl SqlInstance {
         endpoint: &Endpoint,
         database: Option<String>,
     ) -> Result<Client> {
+        log::info!("create_client {}", self.name);
         let (auth, conn) = endpoint.split();
         let client = match auth.auth_type() {
             AuthType::SqlServer | AuthType::Windows => {
@@ -374,7 +373,7 @@ impl SqlInstance {
 
             #[cfg(windows)]
             AuthType::Integrated => client::ClientBuilder::new()
-                .browse(&constants::LOCAL_HOST, &self.name, conn.sql_browser_port())
+                .local_by_port(self.port())
                 .database(database),
 
             _ => anyhow::bail!("Not supported authorization type"),
@@ -1046,7 +1045,7 @@ impl SqlInstance {
     }
 
     pub fn port(&self) -> Option<Port> {
-        self.port.clone().or(self.dynamic_port.clone())
+        self.dynamic_port.clone().or(self.port.clone())
     }
 
     pub fn computer_name(&self) -> &Option<ComputerName> {
@@ -1434,7 +1433,15 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
     if instances.is_empty() {
         return Ok("ERROR: Failed to gather SQL server instances".to_string());
     } else {
-        log::info!("Found {} SQL server instances", instances.len())
+        log::info!(
+            "Found {} SQL server instances: [ {} ]",
+            instances.len(),
+            instances
+                .iter()
+                .map(|i| format!("{}:{:?}:{:?}", i.name, i.port, i.dynamic_port))
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
     }
 
     let sections = ms_sql
@@ -1485,9 +1492,10 @@ async fn find_usable_instances(
 ) -> Result<Vec<SqlInstance>> {
     let builders = find_usable_instance_builders(ms_sql).await?;
     if builders.is_empty() {
+        log::warn!("Found NO usable SQL server instances");
         return Ok(Vec::new());
     } else {
-        log::info!("Found {} SQL server instances", builders.len());
+        log::info!("Found {} usable SQL server instances", builders.len());
     }
 
     Ok(builders
@@ -1513,8 +1521,10 @@ async fn find_usable_instance_builders(
 pub async fn find_all_instance_builders(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<Vec<SqlInstanceBuilder>> {
+    let found = find_detectable_instance_builders(ms_sql).await;
+
     let detected = if ms_sql.discovery().detect() {
-        find_detectable_instance_builders(ms_sql).await
+        found
     } else {
         ms_sql
             .discovery()
@@ -1572,8 +1582,8 @@ async fn get_custom_instance_builder(
 ) -> Option<SqlInstanceBuilder> {
     let port = get_reasonable_port(builder, endpoint);
     let instance_name = &builder.get_name();
-    log::debug!("Trying to connect to `{instance_name}` using port {port}");
-    let builder = match client::connect_custom_endpoint(endpoint, port).await {
+    log::debug!("Trying to connect to `{instance_name}` using config port {port}");
+    let result = match client::connect_custom_endpoint(endpoint, port.clone()).await {
         Ok(mut client) => {
             let b = obtain_properties(&mut client, instance_name)
                 .await
@@ -1591,11 +1601,14 @@ async fn get_custom_instance_builder(
         }
     };
     #[cfg(unix)]
-    return builder;
+    return result;
 
     #[cfg(windows)]
-    if builder.is_none() {
-        log::info!("Instance `{instance_name}` not found. Try to use named connection");
+    if result.is_none() {
+        log::info!(
+            "Instance `{instance_name}` at port {} not found. Try to use named connection.",
+            port.clone()
+        );
         match client::connect_custom_instance(endpoint, instance_name).await {
             Ok(mut client) => {
                 let b = obtain_properties(&mut client, instance_name)
@@ -1607,12 +1620,12 @@ async fn get_custom_instance_builder(
                 b
             }
             Err(e) => {
-                log::error!("Error creating client for `{instance_name}`: {e}");
-                None
+                log::warn!("Error creating client for `{instance_name}`: {e}");
+                find_custom_instance(endpoint, instance_name).await
             }
         }
     } else {
-        builder
+        result
     }
 }
 
@@ -1628,10 +1641,11 @@ async fn find_custom_instance(
         });
     match detect_instance_port(instance_name, &builders) {
         Some(port) => {
-            if let Ok(mut client) = client::connect_custom_endpoint(endpoint, port).await {
+            log::info!("Instance `{instance_name}` found at port {port}");
+            if let Ok(mut client) = client::connect_custom_endpoint(endpoint, port.clone()).await {
                 obtain_properties(&mut client, instance_name)
                     .await
-                    .map(|p| to_instance_builder(endpoint, &p))
+                    .map(|p| to_instance_builder(endpoint, &p).port(Some(port)))
             } else {
                 None
             }
@@ -1677,7 +1691,7 @@ async fn obtain_properties(
     match SqlInstanceProperties::obtain_by_query(client).await {
         Ok(properties) => {
             if properties.name == *name {
-                log::info!("Custom instance `{name}` added");
+                log::info!("Custom instance `{name}` added in query");
                 return Some(properties);
             }
             log::error!(
@@ -1857,7 +1871,7 @@ async fn _obtain_instance_builders(
 ) -> Vec<SqlInstanceBuilder> {
     let mut builders = try_find_instances_in_registry(client).await;
     if builders.is_empty() {
-        log::warn!("No instances found in registry, this means you have porblem with permissions");
+        log::warn!("No instances found in registry, this means you have problem with permissions");
         log::warn!("Trying to add current instance");
         match obtain_instance_name(client).await {
             Ok(Some(name)) => {
@@ -1904,6 +1918,7 @@ async fn try_find_instances_in_registry(client: &mut Client) -> Vec<SqlInstanceB
             });
         result.extend(instances);
     }
+    log::debug!("Found in registry {:#?}", result);
     result
 }
 

@@ -23,8 +23,6 @@ from .utils import (
 
 
 def register() -> None:
-    perfometers["check_mk-printer_pages"] = perfometer_printer_pages
-    perfometers["check_mk-canon_pages"] = perfometer_printer_pages
     perfometers["check_mk-winperf_msx_queues"] = perfometer_msx_queues
     perfometers["check_mk-fileinfo"] = perfometer_fileinfo
     perfometers["check_mk-fileinfo.groups"] = perfometer_fileinfo_groups
@@ -152,15 +150,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_printer_pages(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    color = "#909090"
-    return "%d" % int(perf_data[0].value), perfometer_logarithmic(
-        perf_data[0].value, 50000, 6, color
-    )
 
 
 def perfometer_msx_queues(

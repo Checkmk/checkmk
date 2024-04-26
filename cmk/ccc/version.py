@@ -137,7 +137,7 @@ class ReleaseType(enum.IntEnum):
 
 
 @dataclass(order=True)
-class _BuildDate:
+class BuildDate:
     year: int
     month: int
     day: int
@@ -149,7 +149,7 @@ class _BuildDate:
 @dataclass(order=True)
 class _Release:
     release_type: ReleaseType
-    value: int | _BuildDate
+    value: int | BuildDate
 
     def suffix(self) -> str:
         if self.release_type is ReleaseType.na:
@@ -227,7 +227,7 @@ class Version:
                 if all(x is None for x in (major, minor, sub))
                 else _BaseVersion(int(major), int(minor), int(sub))
             ),
-            _Release(ReleaseType.daily, _BuildDate(int(year), int(month), int(day))),
+            _Release(ReleaseType.daily, BuildDate(int(year), int(month), int(day))),
         )
 
     def __init__(self, base: _BaseVersion | None, release: _Release) -> None:

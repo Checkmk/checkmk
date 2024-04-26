@@ -33,6 +33,7 @@ def main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
+    def test_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
     def package_dir = "${checkout_dir}/download";
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -73,7 +74,7 @@ def main() {
     ) {
         withCredentials([
             usernamePassword(
-                credentialsId: registry_credentials_id(EDITION),
+                credentialsId: test_helper.registry_credentials_id(EDITION),
                 passwordVariable: 'DOCKER_PASSPHRASE',
                 usernameVariable: 'DOCKER_USERNAME'),
             usernamePassword(
@@ -188,21 +189,6 @@ def main() {
                 }
             }
         }
-    }
-}
-
-def registry_credentials_id(edition) {
-    switch(edition) {
-        case "raw":
-        case "cloud":
-            return "11fb3d5f-e44e-4f33-a651-274227cc48ab";
-        case "enterprise":
-        case "managed":
-            return "registry.checkmk.com";
-        case "saas":
-            return "nexus";
-        default:
-            throw new Exception("Cannot provide registry credentials id for edition '${edition}'");
     }
 }
 

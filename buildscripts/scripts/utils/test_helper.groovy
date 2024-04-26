@@ -301,4 +301,20 @@ def update_custom_parser(Map config = [:]) {
     }
 }
 
+// Get registry credentials for a specific edition
+def registry_credentials_id(edition) {
+    switch(edition) {
+        case "raw":
+        case "cloud":
+            return "11fb3d5f-e44e-4f33-a651-274227cc48ab";
+        case "enterprise":
+        case "managed":
+            return "registry.checkmk.com";
+        case "saas":
+            return "nexus";
+        default:
+            throw new Exception("Cannot provide registry credentials id for edition '${edition}'");
+    }
+}
+
 return this;

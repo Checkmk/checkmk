@@ -3030,7 +3030,7 @@ def _omd_to_check_mk_version(omd_version: str) -> Version:
     >>> f("2.0.0p3.cee")
     Version(_BaseVersion(major=2, minor=0, sub=0), _Release(release_type=ReleaseType.p, value=3))
     >>> f("2021.12.13.cee")
-    Version(None, _Release(release_type=ReleaseType.daily, value=_BuildDate(year=2021, month=12, day=13)))
+    Version(None, _Release(release_type=ReleaseType.daily, value=BuildDate(year=2021, month=12, day=13)))
     """
     parts = omd_version.split(".")
 

@@ -3,15 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.temperature import check_temperature
-from cmk.base.config import check_info
+from collections.abc import Mapping, MutableMapping, Sequence
+from dataclasses import dataclass
+from typing import Any
 
-from cmk.agent_based.v2 import OIDEnd, SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    OIDEnd,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
-
-# mypy: disable-error-code="var-annotated"
-
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.39 1 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.cpu1-temp
 # .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.40 5 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.cpu2-temp
@@ -30,7 +38,17 @@ from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
 # Suggested by customer
 
 
-def _parse_infoblox_temp(state_table, temp_table):
+@dataclass(frozen=True)
+class TempDescr:
+    state: tuple[int, str]
+    reading: float
+    unit: str
+
+
+Section = Mapping[str, TempDescr]
+
+
+def _parse_infoblox_temp(state_table: Sequence[str], temp_table: Sequence[str]) -> Section:
     map_states = {
         "1": (0, "working"),
         "2": (1, "warning"),
@@ -39,7 +57,7 @@ def _parse_infoblox_temp(state_table, temp_table):
         "5": (3, "unknown"),
     }
 
-    parsed = {}
+    parsed: dict[str, TempDescr] = {}
     # Just for a better handling
     for index, state, descr in list(zip(["1", "2", ""], state_table, temp_table)):
         if ":" not in descr:
@@ -52,19 +70,15 @@ def _parse_infoblox_temp(state_table, temp_table):
         what_name = f"{name} {index}"
         parsed.setdefault(
             what_name.strip(),
-            {
-                "state": map_states[state],
-                "reading": val,
-                "unit": unit.lower(),
-            },
+            TempDescr(state=map_states[state], reading=val, unit=unit.lower()),
         )
 
     return parsed
 
 
-def parse_infoblox_temp(string_table):
+def parse_infoblox_temp(string_table: Sequence[StringTable]) -> Section:
     if not all(string_table):
-        return None
+        return {}
 
     version_raw = string_table[0][0][1].split(".")
     major_version = int(version_raw[0])
@@ -75,27 +89,8 @@ def parse_infoblox_temp(string_table):
     return _parse_infoblox_temp(string_table[1][0][3:], string_table[2][0][3:])
 
 
-def inventory_infoblox_temp(parsed):
-    if parsed is not None:
-        yield from ((name, {}) for name in parsed)
-
-
-def check_infoblox_temp(item, params, parsed):
-    if parsed is None or (sensor := parsed.get(item)) is None:
-        return None
-
-    devstate, devstatename = sensor["state"]
-    return check_temperature(
-        sensor["reading"],
-        params,
-        "infoblox_cpu_temp_%s" % item,
-        dev_status=devstate,
-        dev_status_name=devstatename,
-        dev_unit=sensor["unit"],
-    )
-
-
-check_info["infoblox_temp"] = LegacyCheckDefinition(
+snmp_section_infoblox_temp = SNMPSection(
+    name="infoblox_temp",
     detect=DETECT_INFOBLOX,
     fetch=[
         SNMPTree(
@@ -112,8 +107,40 @@ check_info["infoblox_temp"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_infoblox_temp,
+)
+
+
+def discover_infoblox_temp(section: Section) -> DiscoveryResult:
+    for name in section:
+        yield Service(item=name)
+
+
+def check_temp(
+    item: str, params: TempParamType, section: Section, value_store: MutableMapping[str, Any]
+) -> CheckResult:
+    if (sensor := section.get(item)) is None:
+        return
+
+    devstate, devstatename = sensor.state
+    yield from check_temperature(
+        sensor.reading,
+        params,
+        unique_name=f"infoblox_cpu_temp_{item}",
+        value_store=value_store,
+        dev_status=devstate,
+        dev_status_name=devstatename,
+        dev_unit=sensor.unit,
+    )
+
+
+def check_infoblox_temp(item: str, params: None, section: Section) -> CheckResult:
+    yield from check_temp(item, params, section, get_value_store())
+
+
+check_plugin_infoblox_temp = CheckPlugin(
+    name="infoblox_temp",
     service_name="Temperature %s",
-    discovery_function=inventory_infoblox_temp,
+    discovery_function=discover_infoblox_temp,
     check_function=check_infoblox_temp,
     check_ruleset_name="temperature",
     check_default_parameters={

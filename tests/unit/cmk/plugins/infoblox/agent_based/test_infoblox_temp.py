@@ -2,16 +2,24 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Callable, Mapping
+
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
 
 from tests.testlib.snmp import get_parsed_snmp_section
 
-from cmk.utils.sectionname import SectionName
+from tests.unit.cmk.plugins.lib.test_temperature import mock_value_store
 
-from cmk.base.legacy_checks.infoblox_temp import check_infoblox_temp, inventory_infoblox_temp
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.infoblox.agent_based.infoblox_temp import (
+    check_temp,
+    discover_infoblox_temp,
+    snmp_section_infoblox_temp,
+    TempDescr,
+)
+from cmk.plugins.lib.temperature import TempParamType
 
 WALK_NIOS_7_2_7 = """
 .1.3.6.1.4.1.7779.3.1.1.2.1.7.0 7.2.7
@@ -43,7 +51,6 @@ WALK_NIOS_9_0_3 = """
 """
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     ["input_walk"],
     [
@@ -52,14 +59,13 @@ WALK_NIOS_9_0_3 = """
     ],
 )
 def test_parse_infoblox_temp(input_walk: str, as_path: Callable[[str], Path]) -> None:
-    section = get_parsed_snmp_section(SectionName("infoblox_temp"), as_path(input_walk))
+    section = get_parsed_snmp_section(snmp_section_infoblox_temp, as_path(input_walk))
     assert section == {
-        "CPU_TEMP 1": {"reading": 36.0, "state": (0, "working"), "unit": "c"},
-        "SYS_TEMP": {"reading": 34.0, "state": (0, "working"), "unit": "c"},
+        "CPU_TEMP 1": TempDescr(reading=36.0, state=(0, "working"), unit="c"),
+        "SYS_TEMP": TempDescr(reading=34.0, state=(0, "working"), unit="c"),
     }
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     ["input_walk"],
     [
@@ -68,12 +74,14 @@ def test_parse_infoblox_temp(input_walk: str, as_path: Callable[[str], Path]) ->
     ],
 )
 def test_inventory_infoblox_temp(input_walk: str, as_path: Callable[[str], Path]) -> None:
-    section = get_parsed_snmp_section(SectionName("infoblox_temp"), as_path(input_walk))
+    section = get_parsed_snmp_section(snmp_section_infoblox_temp, as_path(input_walk))
     assert section is not None
-    assert list(inventory_infoblox_temp(section)) == [("CPU_TEMP 1", {}), ("SYS_TEMP", {})]
+    assert list(discover_infoblox_temp(section)) == [
+        Service(item="CPU_TEMP 1"),
+        Service(item="SYS_TEMP"),
+    ]
 
 
-@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     ["input_walk"],
     [
@@ -87,19 +95,49 @@ def test_inventory_infoblox_temp(input_walk: str, as_path: Callable[[str], Path]
         pytest.param(
             "CPU_TEMP 1",
             {"levels": (40.0, 50.0)},
-            [0, "36.0 °C", [("temp", 36.0, 40.0, 50.0)]],
+            [
+                Metric(name="temp", value=36.0, levels=(40.0, 50.0)),
+                Result(
+                    state=State.OK,
+                    summary="Temperature: 36.0 °C",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used user levels)",
+                ),
+            ],
             id="ok",
         ),
         pytest.param(
             "SYS_TEMP",
             {"levels": (30.0, 40.0)},
-            [1, "34.0 °C (warn/crit at 30.0/40.0 °C)", [("temp", 34.0, 30.0, 40.0)]],
+            [
+                Metric(name="temp", value=34.0, levels=(30.0, 40.0)),
+                Result(
+                    state=State.WARN,
+                    summary="Temperature: 34.0 °C (warn/crit at 30.0 °C/40.0 °C)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used user levels)",
+                ),
+            ],
             id="warning",
         ),
         pytest.param(
             "SYS_TEMP",
             {"levels": (20.0, 30.0)},
-            [2, "34.0 °C (warn/crit at 20.0/30.0 °C)", [("temp", 34.0, 20.0, 30.0)]],
+            [
+                Metric(name="temp", value=34.0, levels=(20.0, 30.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Temperature: 34.0 °C (warn/crit at 20.0 °C/30.0 °C)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used user levels)",
+                ),
+            ],
             id="error",
         ),
     ],
@@ -107,11 +145,11 @@ def test_inventory_infoblox_temp(input_walk: str, as_path: Callable[[str], Path]
 def test_check_infoblox_temp(
     input_walk: str,
     item: str,
-    params: Mapping[str, tuple[float, float]],
+    params: TempParamType,
     expected: list,
     as_path: Callable[[str], Path],
 ) -> None:
-    section = get_parsed_snmp_section(SectionName("infoblox_temp"), as_path(input_walk))
+    section = get_parsed_snmp_section(snmp_section_infoblox_temp, as_path(input_walk))
     assert section is not None
 
-    assert list(check_infoblox_temp(item, params, section)) == expected
+    assert list(check_temp(item, params, section, mock_value_store())) == expected

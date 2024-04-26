@@ -74,12 +74,11 @@ from cmk.checkengine.summarize import summarize
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
-import cmk.base.config as config
 from cmk.base import plugin_contexts
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, get_plugin_parameters, lookup_ip_address
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import make_parser, make_sources, Source
@@ -307,7 +306,7 @@ class CMKFetcher:
                     or (
                         None
                         if ip_stack_config is IPStackConfig.NO_IP
-                        else config.lookup_ip_address(self.config_cache, host_name)
+                        else lookup_ip_address(self.config_cache, host_name)
                     ),
                 )
             ]
@@ -319,7 +318,7 @@ class CMKFetcher:
                     (
                         None
                         if ip_stack_config is IPStackConfig.NO_IP
-                        else config.lookup_ip_address(self.config_cache, node)
+                        else lookup_ip_address(self.config_cache, node)
                     ),
                 )
                 for node in self.config_cache.nodes(host_name)
@@ -405,7 +404,7 @@ class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
         return HostLabelPlugin(
             function=plugin.host_label_function,
             parameters=partial(
-                config.get_plugin_parameters,
+                get_plugin_parameters,
                 matcher=self.ruleset_matcher,
                 default_parameters=plugin.host_label_default_parameters,
                 ruleset_name=plugin.host_label_ruleset_name,
@@ -948,7 +947,7 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
             service_name=plugin.service_name,
             function=__discovery_function,
             parameters=partial(
-                config.get_plugin_parameters,
+                get_plugin_parameters,
                 matcher=self.ruleset_matcher,
                 default_parameters=plugin.discovery_default_parameters,
                 ruleset_name=plugin.discovery_ruleset_name,

@@ -5,7 +5,6 @@
 
 # TODO This module should be freed from base deps.
 
-import dataclasses
 import os.path
 from pathlib import Path
 from typing import Final
@@ -95,11 +94,11 @@ class SNMPSource(Source[SNMPRawData]):
 
     def fetcher(self) -> Fetcher[SNMPRawData]:
         snmp_config = self.config_cache.make_snmp_config(
-            self.host_name, self.ipaddress, SourceType.HOST
+            self.host_name,
+            self.ipaddress,
+            SourceType.HOST,
+            backend_override=self._backend_override,
         )
-        if self._backend_override is not None:
-            snmp_config = dataclasses.replace(snmp_config, snmp_backend=self._backend_override)
-
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
@@ -168,10 +167,11 @@ class MgmtSNMPSource(Source[SNMPRawData]):
 
     def fetcher(self) -> Fetcher[SNMPRawData]:
         snmp_config = self.config_cache.make_snmp_config(
-            self.host_name, self.ipaddress, SourceType.MANAGEMENT
+            self.host_name,
+            self.ipaddress,
+            SourceType.MANAGEMENT,
+            backend_override=self._backend_override,
         )
-        if self._backend_override is not None:
-            snmp_config = dataclasses.replace(snmp_config, snmp_backend=self._backend_override)
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,

@@ -2084,7 +2084,12 @@ class ConfigCache:
         )
 
     def make_snmp_config(
-        self, host_name: HostName, ip_address: HostAddress, source_type: SourceType
+        self,
+        host_name: HostName,
+        ip_address: HostAddress,
+        source_type: SourceType,
+        *,
+        backend_override: SNMPBackendEnum | None,
     ) -> SNMPHostConfig:
         with contextlib.suppress(KeyError):
             return self.__snmp_config[(host_name, ip_address, source_type)]
@@ -2114,7 +2119,7 @@ class ConfigCache:
             else self.management_credentials(host_name, "snmp")
         )
 
-        return self.__snmp_config.setdefault(
+        snmp_config = self.__snmp_config.setdefault(
             (host_name, ip_address, source_type),
             SNMPHostConfig(
                 is_ipv6_primary=self.default_address_family(host_name) is socket.AF_INET6,
@@ -2164,6 +2169,9 @@ class ConfigCache:
                 snmp_backend=self.get_snmp_backend(host_name),
             ),
         )
+        if backend_override:
+            return dataclasses.replace(snmp_config, snmp_backend=backend_override)
+        return snmp_config
 
     def make_checking_sections(
         self, hostname: HostName, *, selected_sections: SectionNameCollection

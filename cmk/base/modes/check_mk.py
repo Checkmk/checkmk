@@ -1062,9 +1062,9 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
-        if snmp_backend_override is not None:
-            snmp_config = dataclasses.replace(snmp_config, snmp_backend=snmp_backend_override)
+        snmp_config = config_cache.make_snmp_config(
+            hostname, ipaddress, SourceType.HOST, backend_override=snmp_backend_override
+        )
         _do_snmpwalk(
             options,
             backend=snmp_factory.make_backend(
@@ -1154,10 +1154,12 @@ def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
-        if snmp_backend_override is not None:
-            snmp_config = dataclasses.replace(snmp_config, snmp_backend=snmp_backend_override)
-
+        snmp_config = config_cache.make_snmp_config(
+            hostname,
+            ipaddress,
+            SourceType.HOST,
+            backend_override=snmp_backend_override,
+        )
         backend = snmp_factory.make_backend(
             snmp_config, log.logger, stored_walk_path=stored_walk_path
         )

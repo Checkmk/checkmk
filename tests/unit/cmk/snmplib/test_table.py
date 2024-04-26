@@ -143,13 +143,19 @@ def test_use_advanced_snmp_version(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
     assert (
         config_cache.make_snmp_config(
-            HostName("abc"), HostAddress("1.2.3.4"), SourceType.HOST
+            HostName("abc"),
+            HostAddress("1.2.3.4"),
+            SourceType.HOST,
+            backend_override=None,
         ).use_bulkwalk
         is False
     )
     assert (
         config_cache.make_snmp_config(
-            HostName("localhost"), HostAddress("1.2.3.4"), SourceType.HOST
+            HostName("localhost"),
+            HostAddress("1.2.3.4"),
+            SourceType.HOST,
+            backend_override=None,
         ).use_bulkwalk
         is True
     )

@@ -1922,7 +1922,9 @@ class AutomationDiagHost(Automation):
                 return DiagHostResult(
                     *self._execute_snmp(
                         test,
-                        config_cache.make_snmp_config(host_name, ipaddress, SourceType.HOST),
+                        config_cache.make_snmp_config(
+                            host_name, ipaddress, SourceType.HOST, backend_override=None
+                        ),
                         host_name,
                         ipaddress,
                         snmp_community,
@@ -2482,7 +2484,9 @@ class AutomationGetAgentOutput(Automation):
             else:
                 if not ipaddress:
                     raise MKGeneralException("Failed to gather IP address of %s" % hostname)
-                snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
+                snmp_config = config_cache.make_snmp_config(
+                    hostname, ipaddress, SourceType.HOST, backend_override=None
+                )
                 backend = make_snmp_backend(
                     snmp_config, log.logger, use_cache=False, stored_walk_path=stored_walk_path
                 )

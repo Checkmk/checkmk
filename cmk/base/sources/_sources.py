@@ -93,21 +93,16 @@ class SNMPSource(Source[SNMPRawData]):
         )
 
     def fetcher(self) -> Fetcher[SNMPRawData]:
-        snmp_config = self.config_cache.make_snmp_config(
-            self.host_name,
-            self.ipaddress,
-            SourceType.HOST,
-            backend_override=self._backend_override,
-        )
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
-            snmp_config=snmp_config,
             on_scan_error=self._on_scan_error,
             selected_sections=self._selected_sections,
             oid_cache_dir=self._oid_cache_dir,
             stored_walk_path=self._stored_walk_path,
             walk_cache_path=self._walk_cache_path,
+            source_type=self.source_type,
+            backend_override=self._backend_override,
         )
 
     def file_cache(
@@ -166,21 +161,16 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         )
 
     def fetcher(self) -> Fetcher[SNMPRawData]:
-        snmp_config = self.config_cache.make_snmp_config(
-            self.host_name,
-            self.ipaddress,
-            SourceType.MANAGEMENT,
-            backend_override=self._backend_override,
-        )
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
-            snmp_config=snmp_config,
             on_scan_error=self._on_scan_error,
             selected_sections=self._selected_sections,
             oid_cache_dir=self._oid_cache_dir,
             stored_walk_path=self._stored_walk_path,
             walk_cache_path=self._walk_cache_path,
+            source_type=self.source_type,
+            backend_override=self._backend_override,
         )
 
     def file_cache(

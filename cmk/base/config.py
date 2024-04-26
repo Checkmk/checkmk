@@ -1984,11 +1984,18 @@ class ConfigCache:
         *,
         on_scan_error: OnError,
         selected_sections: SectionNameCollection,
-        snmp_config: SNMPHostConfig,
         oid_cache_dir: Path,
         stored_walk_path: Path,
         walk_cache_path: Path,
+        source_type: SourceType,
+        backend_override: SNMPBackendEnum | None,
     ) -> SNMPFetcher:
+        snmp_config = self.make_snmp_config(
+            host_name,
+            ip_address,
+            source_type,
+            backend_override=backend_override,
+        )
         return SNMPFetcher(
             sections=self._make_snmp_sections(
                 host_name,

@@ -37,7 +37,9 @@ from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
-import cmk.base.config as _config
+from cmk.base.config import CheckContext as _CheckContext
+from cmk.base.config import get_config_cache as _get_config_cache
+from cmk.base.config import get_http_proxy as _get_http_proxy
 from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
 from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
 
@@ -63,7 +65,7 @@ ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
 CheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
 
 
-def get_check_api_context() -> _config.CheckContext:
+def get_check_api_context() -> _CheckContext:
     """This is called from cmk.base code to get the Check API things. Don't
     use this from checks."""
     return {k: v for k, v in globals().items() if not k.startswith("_")}
@@ -111,7 +113,7 @@ def savefloat(f: Any) -> float:
 # These functions were used in some specific checks until 1.6. Don't add it to
 # the future check API. It's kept here for compatibility reasons for now.
 def is_ipv6_primary(hostname: str) -> bool:
-    return _config.get_config_cache().default_address_family(HostName(hostname)) is socket.AF_INET6
+    return _get_config_cache().default_address_family(HostName(hostname)) is socket.AF_INET6
 
 
 def get_age_human_readable(seconds: float) -> str:
@@ -306,7 +308,7 @@ def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
 
     Intended to receive a value configured by the user using the HTTPProxyReference valuespec.
     """
-    return _config.get_http_proxy(http_proxy)
+    return _get_http_proxy(http_proxy)
 
 
 # NOTE: Currently this is not really needed, it is just here to keep any start

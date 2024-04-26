@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-04-22 23:11+0000\n"
+"PO-Revision-Date: 2024-04-25 06:00+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -689,10 +689,6 @@ msgstr "%s pro Sekunde"
 #, python-format
 msgid "%s properties"
 msgstr "%s Eigenschaften"
-
-#, python-format
-msgid "%s rate"
-msgstr "%s-Rate"
 
 #, python-format
 msgid "%s read %s"
@@ -1984,7 +1980,7 @@ msgstr ""
 
 #, python-format
 msgid "<tt>sqlnet.ora</tt> permission group %s"
-msgstr ""
+msgstr "<tt>sqlnet.ora</tt> Berechtigungsgruppe %s"
 
 #, python-format
 msgid "<u>Info</u>: Downtime also applies to all services of the %s."
@@ -2290,7 +2286,7 @@ msgid ""
 "A scheduler job is an object in an ORACLE database which could be compared "
 "to a cron job on Unix. "
 msgstr ""
-"Ein Scheduler-Job ist ein Objekt in einer ORACLE-Datenbank, das mit einem "
+"Ein Scheduler-Job ist ein Objekt in einer Oracle-Datenbank, das mit einem "
 "Cron-Job unter Unix verglichen werden kann. "
 
 msgid ""
@@ -3764,9 +3760,8 @@ msgstr "Graph hinzufügen"
 msgid "Add group"
 msgstr "Gruppe hinzufügen"
 
-#, fuzzy
 msgid "Add group or user"
-msgstr "Gruppe hinzufügen"
+msgstr "Gruppe oder Benutzer hinzufügen"
 
 msgid ""
 "Add here only groups and users which do not have administrator rights but, "
@@ -3774,6 +3769,10 @@ msgid ""
 "it may be dedicated installer account in domain.The values are case "
 "insensitive."
 msgstr ""
+"Fügen Sie hier nur Gruppen und Benutzer hinzu, die keine Administratorrechte "
+"haben, aber aus irgendeinem Grund Schreibzugriff auf die Oracle-Binärdateien "
+"haben müssen. Dies kann z.B. ein dediziertes Installer-Konto in der Domäne "
+"sein. Die Groß- und Kleinschreibung wird nicht beachtet."
 
 msgid "Add host"
 msgstr "Host hinzufügen"
@@ -4114,9 +4113,8 @@ msgstr "Hinzufügen zu"
 msgid "Add to %s"
 msgstr "Hinzufügen zu %s"
 
-#, fuzzy
 msgid "Add to ..."
-msgstr "Hinzufügen zu"
+msgstr "Hinzufügen zu ..."
 
 msgid "Add to bookmark list"
 msgstr "Zu Lesezeichenliste hinzufügen"
@@ -4124,9 +4122,8 @@ msgstr "Zu Lesezeichenliste hinzufügen"
 msgid "Add to condition"
 msgstr "Zur Bedingung hinzufügen"
 
-#, fuzzy
 msgid "Add to custom graph"
-msgstr "Benutzergraph editieren"
+msgstr "Zum benutzerdefinierten Graph hinzufügen"
 
 msgid "Add to dashboard"
 msgstr "Zum Dashboard hinzufügen"
@@ -6660,9 +6657,6 @@ msgstr "Nach einem optionalen Kommentar fragen"
 msgid "Assertion Consumer Service endpoint"
 msgstr "Assertion Consumer Service Endpunkt"
 
-msgid "Asserts / s"
-msgstr "Asserts / s"
-
 msgid "Assign SLA definition to service"
 msgstr "Zuweisung einer SLA definition zu einem Service"
 
@@ -6761,9 +6755,8 @@ msgstr "Asynchron"
 msgid "Asynchronous closing connections"
 msgstr "Asynchrone schließende Verbindungen"
 
-#, fuzzy
 msgid "Asynchronous execution of plug-ins (deprecated)"
-msgstr "Asynchrone Ausführen von Plugins"
+msgstr "Asynchrone Ausführen von Plugins (veraltet)"
 
 msgid "Asynchronous keep alive connections"
 msgstr "Asynchrone Keepalive-verbindungen"
@@ -7207,6 +7200,11 @@ msgstr "Automatisierungspasswort"
 
 msgid "Automation secret for machine accounts"
 msgstr "Automatisierungspasswort für Maschinenkonten"
+
+#, fuzzy
+msgid "Automation user authentication via HTTP parameters"
+msgstr ""
+"Authentifizierung des Automationsbenutzers über HTTP Parameter aktivieren"
 
 msgid "Automation user rejected"
 msgstr "Automationsbenutzer abgelehnt"
@@ -10048,6 +10046,9 @@ msgstr "Verbleibende Kapazität"
 msgid "Capacity usage"
 msgstr "Kapazitätsauslastung"
 
+msgid "Capacity: Array Capacity & Utilization"
+msgstr ""
+
 msgid "Carbon Overflows Rate"
 msgstr "Überlaufrate des Carbon"
 
@@ -11737,7 +11738,7 @@ msgstr "%s für Paketierung klonen"
 
 #, python-format
 msgid "Clone Aggregation %s"
-msgstr "Kopiere Aggregation %s"
+msgstr "Klone Aggregation %s"
 
 msgid "Clone SLA"
 msgstr "Klone SLA"
@@ -11752,10 +11753,10 @@ msgid "Clone built-in view"
 msgstr "Mitgelieferte Tabellenansicht klonen"
 
 msgid "Clone custom graph"
-msgstr "Benutzergraph kopieren"
+msgstr "Benutzerdefinierten Graph klonen"
 
 msgid "Clone element"
-msgstr "Element duplizieren"
+msgstr "Element klonen"
 
 msgid ""
 "Clone existing hosts to create new ones from the existing one.Please also "
@@ -11765,7 +11766,7 @@ msgstr ""
 "Berechtigung <i>Hosts einfügen & löschen</i>."
 
 msgid "Clone forecast graph"
-msgstr "Vorhersagegraph kopieren"
+msgstr "Vorhersagegraph klonen"
 
 msgid "Clone graph collection"
 msgstr "Graphensammlung klonen"
@@ -11781,7 +11782,7 @@ msgstr "Hosts klonen"
 
 #, python-format
 msgid "Clone report schedule entry %s"
-msgstr "Berichtsplan %s klonen"
+msgstr "Berichtsplan-Eintrag %s klonen"
 
 #, python-format
 msgid "Clone rule '%s'"
@@ -11799,22 +11800,22 @@ msgid "Clone this %s for packaging as extension package"
 msgstr "Dieses %s für Paketierung als Erweiterungspaket klonen"
 
 msgid "Clone this connection in order to create a new one"
-msgstr "Eine neue Verbindung auf Basis einer Kopie von dieser anlegen"
+msgstr "Klonen Sie diese Verbindung, um eine neue Verbindung zu erstellen"
 
 msgid "Clone this element"
-msgstr "Dieses Element duplizieren"
+msgstr "Dieses Element klonen"
 
 msgid "Clone this metric"
 msgstr "Diese Metrik klonen"
 
 msgid "Clone this schedule entry"
-msgstr "Diesen Planeintrag duplizieren"
+msgstr "Diesen Planeintrag klonen"
 
 msgid "Clone topic"
 msgstr "Thema klonen"
 
 msgid "Clone view"
-msgstr "Ansicht klonen"
+msgstr "Tabellenansicht klonen"
 
 #, python-format
 msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
@@ -12242,6 +12243,9 @@ msgstr "Zugesicherter Speicher"
 msgid "Common Name"
 msgstr "Common Name"
 
+msgid "Common Provisioning Groups: Virtual Pool Configuration"
+msgstr ""
+
 msgid "Common name (CN)"
 msgstr "Common Name (CN)"
 
@@ -12254,6 +12258,14 @@ msgstr ""
 
 msgid "Community forum"
 msgstr "Community Forum"
+
+#, fuzzy
+msgid "Community translated languages"
+msgstr "Aktivieren Sie Community übersetzte Sprachen"
+
+#, fuzzy
+msgid "Community translated languages (not supported)"
+msgstr "Aktivieren Sie Community übersetzte Sprachen (nicht supported)"
 
 msgid "Compare against discovered state"
 msgstr "Vergleiche gegen den Discovery-Zustand"
@@ -13510,6 +13522,10 @@ msgstr "Core & Setup"
 msgid "Core configuration reloaded"
 msgstr "Konfiguration des Kerns neu geladen"
 
+#, fuzzy
+msgid "Core dumps"
+msgstr "Sammle Dump"
+
 msgid "Core files"
 msgstr "Kerndateien"
 
@@ -13956,7 +13972,7 @@ msgid "Create cluster"
 msgstr "Cluster erstellen"
 
 msgid "Create custom graph"
-msgstr "Benutzergraph erzeugen"
+msgstr "Benutzerdefinierten Graph erzeugen"
 
 msgid "Create element"
 msgstr "Element erzeugen"
@@ -14637,10 +14653,10 @@ msgid "Custom graph"
 msgstr "Benutzerdefinierter Graph"
 
 msgid "Custom graph time ranges"
-msgstr "Benutzerdefinierte Zeiträume für Graphen"
+msgstr "Zeiträume für benutzerdefinierte Graphen"
 
 msgid "Custom graphs"
-msgstr "Benutzergraphen"
+msgstr "Benutzerdefinierte Graphen"
 
 msgid "Custom host attributes"
 msgstr "Eigene Host-Attribute"
@@ -16546,7 +16562,7 @@ msgid "Deploy NFS4 exports plug-in"
 msgstr "NFS4 exports Plugin verteilen"
 
 msgid "Deploy ORACLE databases plug-in"
-msgstr "ORACLE-Datenbank-Plugin verteilen"
+msgstr "Oracle-Datenbank-Plugin verteilen"
 
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitor (kopflos) verteilen"
@@ -17752,7 +17768,8 @@ msgstr "Zeigt eine kombinierte Grafik an"
 
 msgid "Displays a custom graph designed with the graph designer."
 msgstr ""
-"Zeigt einen Benutzergraphen an, der mit dem Graphdesigner erstellt wurde."
+"Zeigt einen benutzerdefinierten Graph an, der mit dem Graphdesigner erstellt "
+"wurde."
 
 msgid "Displays a performance graph of a host or service."
 msgstr "Zeigt den Performance-Graph eines Hosts oder Services an."
@@ -17987,7 +18004,7 @@ msgid "Do not deploy NFS4 exports plug-in"
 msgstr "Das NFS4 exports Plugin nicht verteilen"
 
 msgid "Do not deploy ORACLE databases plug-in"
-msgstr "ORACLE-Datenbank-Plugin nicht verteilen"
+msgstr "Oracle-Datenbank-Plugin nicht verteilen"
 
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitor (ohne GUI) nicht verteilen"
@@ -18753,6 +18770,20 @@ msgid ""
 "to monitor Oracle database.Even if check is enabled you may allow some "
 "groups and/or users to still have write access to the Oracle binaries."
 msgstr ""
+"Aus Sicherheitsgründen wird das Plugin, das als Administrator ausgeführt "
+"wird, die Berechtigungen für ausführbare Oracle-Dateien prüfen. Wenn die "
+"Änderung von Oracle-Binärdateien für Nicht-Admin-Benutzer oder -Gruppen "
+"erlaubt ist, stoppt das Plugin die Verarbeitung und bricht die Oracle-"
+"Überwachung ab: Die Ausführung von normalem Benutzercode auf erhöhter Ebene "
+"bedeutet eine Sicherheitslücke. Sie können diese Option <tt>deaktivieren</"
+"tt>, wenn es die einzige Methode ist, die Überwachung der Oracle-Datenbank "
+"fortzusetzen. Normalerweise müssen Sie die Option nur im folgenden Fall "
+"<tt>deaktivieren</tt>: Es ist unmöglich, die Berechtigungen für Oracle-"
+"Binärdateien korrekt anzupassen, die Modusgruppe mit der Gruppe "
+"Administrator ist nicht anwendbar und es ist nicht möglich, ein "
+"benutzerdefiniertes Konto für die Überwachung der Oracle-Datenbank zu "
+"verwenden.Auch wenn die Option aktiviert ist, können Sie einigen Gruppen und/"
+"oder Benutzern weiterhin Schreibzugriff auf die Oracle-Binärdateien gewähren."
 
 msgid "Dummy"
 msgstr "Platzhalter"
@@ -19238,7 +19269,7 @@ msgid "Edit credential"
 msgstr "Zugangsdaten bearbeiten"
 
 msgid "Edit custom graph"
-msgstr "Benutzergraph editieren"
+msgstr "Benutzerdefinierten Graph editieren"
 
 #, python-format
 msgid "Edit customer %s"
@@ -19784,21 +19815,8 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Automatische Host-Entfernung aktivieren"
 
-msgid "Enable automation user authentication via HTTP parameters"
-msgstr ""
-"Authentifizierung des Automationsbenutzers über HTTP Parameter aktivieren"
-
-msgid "Enable community translated languages"
-msgstr "Aktivieren Sie Community übersetzte Sprachen"
-
-msgid "Enable community translated languages (not supported)"
-msgstr "Aktivieren Sie Community übersetzte Sprachen (nicht supported)"
-
 msgid "Enable controller"
 msgstr "Controller aktivieren"
-
-msgid "Enable core dumps"
-msgstr "Speicherabzüge aktivieren"
 
 msgid "Enable debug mode"
 msgstr "Debugmodus einschalten"
@@ -19844,9 +19862,6 @@ msgstr ""
 
 msgid "Enable logging of logon failures"
 msgstr "Protokollierung von Anmeldefehlern einschalten"
-
-msgid "Enable login via GET requests"
-msgstr "Login über GET-Anfragen aktivieren"
 
 msgid "Enable metrics for high-level keywords"
 msgstr "Aktiviere Metriken für übergeordnete Schlüsselwörter"
@@ -19898,9 +19913,6 @@ msgstr "Zeilenschattierung einschalten"
 
 msgid "Enable service notifications"
 msgstr "Service-Benachrichtigungen ein"
-
-msgid "Enable sounds in views"
-msgstr "Klänge in Ansichten aktivieren"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Synchrone Zustellung per SMTP aktivieren"
@@ -22433,6 +22445,10 @@ msgstr "Unstetig"
 msgid "Flash Space Usage"
 msgstr "Belegung von Flash-Speicher"
 
+#, fuzzy
+msgid "FlashCache: Flash Cache Configuration"
+msgstr "Manuelle Check Konfiguration speichern"
+
 msgid "Flashback"
 msgstr "Flashback"
 
@@ -23107,13 +23123,11 @@ msgstr "Freier Swapspace"
 msgid "Free tapes"
 msgstr "Freie Bänder"
 
-#, fuzzy
 msgid "Free virtual memory"
-msgstr "Gesamter virtueller Speicher"
+msgstr "Freier virtueller Speicher"
 
-#, fuzzy
 msgid "Free virtual memory (averaged)"
-msgstr "Aktivierbarer Speicher (gemittelt)"
+msgstr "Freier virtueller Speicher (gemittelt)"
 
 msgid "Freeze"
 msgstr "Einfrieren"
@@ -24024,9 +24038,11 @@ msgstr "Gruppen"
 
 msgid "Groups and/or users allowed to have write access to Oracle binaries"
 msgstr ""
+"Gruppen und/oder Benutzer, die Schreibzugriff auf Oracle-Binärdateien haben "
+"dürfen"
 
 msgid "Groups and/or users in format Domain\\Name"
-msgstr ""
+msgstr "Gruppen und/oder Benutzer im Format Domain/Name"
 
 msgid "Groups on cluster"
 msgstr "Gruppen auf einem Cluster"
@@ -25017,7 +25033,7 @@ msgid ""
 "levels are applied on the number of used processes in percentage of the "
 "configured limit."
 msgstr ""
-"Hier können Sie die Standard-Level vom ORACLE-Prozesscheck anpassen. Die "
+"Hier können Sie die Standard-Level vom Oracle-Prozesscheck anpassen. Die "
 "Level werden auf die Anzahl der benutzten Prozesse als Prozentwert vom "
 "eingestellten Limit angewandt."
 
@@ -25147,8 +25163,7 @@ msgstr ""
 "automatisch erstellt werden."
 
 msgid "Here you can set levels for the ORACLE Performance metrics."
-msgstr ""
-"Hier können Sie die Level für die Metriken des ORACLE Performance setzen."
+msgstr "Hier können Sie die Level für die Metriken der Oracle Leistung setzen."
 
 msgid ""
 "Here you can set levels on failures in the time range specified in the "
@@ -26174,6 +26189,10 @@ msgstr "Host:"
 msgid "Host: %s"
 msgstr "Host: %s"
 
+#, fuzzy
+msgid "HostSets: Host Set Configuration"
+msgstr "Hostkonfiguration"
+
 msgid "Hostaddress"
 msgstr "Host-Adresse"
 
@@ -26437,6 +26456,10 @@ msgstr "Hosts: %d erstellt, %d geändert, %d gelöscht"
 #, python-format
 msgid "Hosts: %d total (%d succeeded, %d skipped, %d failed)"
 msgstr "Hosts: %d insgesamt ( %d erfolgreich, %d übersprungen, %d gescheitert)"
+
+#, fuzzy
+msgid "Hosts: Host Capacity & Utilization"
+msgstr "Nutanix Host CPU-Auslastung"
 
 msgid "Hostsystem sensor alerts"
 msgstr "Alarme von Host-System-Sensoren"
@@ -33464,6 +33487,10 @@ msgstr "Login-Token"
 msgid "Login username"
 msgstr "Login-Benutzername"
 
+#, fuzzy
+msgid "Login via GET requests"
+msgstr "Login über GET-Anfragen aktivieren"
+
 msgid "Login with the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
 
@@ -36758,7 +36785,6 @@ msgstr "Mehrfache reguläre Ausdrücke"
 msgid "Multiple services"
 msgstr "Mehrere Services"
 
-#, fuzzy
 msgid "Multiple sites"
 msgstr "Mehrere Instanzen"
 
@@ -37534,7 +37560,7 @@ msgid "New connections upper levels"
 msgstr "Obergrenzen für neue Verbindungen"
 
 msgid "New custom graph..."
-msgstr "Neuer Benutzergraph..."
+msgstr "Neuer benutzerdefinierter Graph..."
 
 msgid "New entries"
 msgstr "Neue Einträge"
@@ -37725,7 +37751,7 @@ msgstr "Keine Benutzer-Attribute definiert."
 
 #, python-format
 msgid "No custom graph with the name <tt>%s</tt>"
-msgstr "Kein Benutzergraph mit dem Namen <tt>%s</tt>"
+msgstr "Kein benutzerdefinierter Graph mit dem Namen <tt>%s</tt>"
 
 msgid "No data"
 msgstr "Keine Daten"
@@ -39559,100 +39585,100 @@ msgstr ""
 
 #, python-format
 msgid "ORACLE %s"
-msgstr "ORACLE %s"
+msgstr "Oracle %s"
 
 #, python-format
 msgid "ORACLE %s %s %s"
-msgstr "ORACLE %s %s %s"
+msgstr "Oracle %s %s %s"
 
 #, python-format
 msgid "ORACLE %s wait class"
-msgstr "ORACLE %s wait class"
+msgstr "Oracle %s wait class"
 
 #, python-format
 msgid "ORACLE %s wait class (FG)"
-msgstr "ORACLE %s wait class (FG)"
+msgstr "Oracle %s wait class (FG)"
 
 msgid "ORACLE DB time statistics"
-msgstr "ORACLE DB Zeitstatistik"
+msgstr "Oracle DB Zeitstatistik"
 
 msgid "ORACLE IOSTAT Bytes"
-msgstr "ORACLE IOSTAT Bytes"
+msgstr "Oracle IOSTAT Bytes"
 
 msgid "ORACLE IOSTAT IOs"
-msgstr "ORACLE IOSTAT IOs"
+msgstr "Oracle IOSTAT IOs"
 
 msgid "ORACLE IOSTAT Total Bytes"
-msgstr "ORACLE IOSTAT Total Bytes"
+msgstr "Oracle IOSTAT Gesamt-Bytes"
 
 msgid "ORACLE IOSTAT Total IOs"
-msgstr "ORACLE IOSTAT Total IOs"
+msgstr "Oracle IOSTAT Gesamt-IOs"
 
 msgid "ORACLE Memory"
-msgstr "ORACLE-Speicher"
+msgstr "Oracle-Speicher"
 
 msgid "ORACLE PGA memory statistics"
-msgstr "ORACLE PGA-Speicher-Statistik"
+msgstr "Oracle PGA-Speicher-Statistik"
 
 msgid "ORACLE SGA memory statistics"
-msgstr "ORACLE SGA-Speicher-Statistik"
+msgstr "Oracle SGA-Speicher-Statistik"
 
 msgid "ORACLE SID of the remote database"
-msgstr "ORACLE-SID der Remote-Datenbank"
+msgstr "Oracle-SID der Remote-Datenbank"
 
 msgid "ORACLE Total Large Read Bytes"
-msgstr "ORACLE Summe Large Read in Bytes"
+msgstr "Oracle Summe Large Read in Bytes"
 
 msgid "ORACLE Total Large Reads"
-msgstr "ORACLE Summe Large Reads"
+msgstr "Oracle Summe Large Reads"
 
 msgid "ORACLE Total Large Write Bytes"
-msgstr "ORACLE Summe Large Write in Bytes"
+msgstr "Oracle Summe Large Write in Bytes"
 
 msgid "ORACLE Total Large Writes"
-msgstr "ORACLE Summe Large Writes"
+msgstr "Oracle Summe Large Writes"
 
 msgid "ORACLE Total Small Read Bytes"
-msgstr "ORACLE Summe Small Read in Bytes"
+msgstr "Oracle Summe Small Read in Bytes"
 
 msgid "ORACLE Total Small Reads"
-msgstr "ORACLE Summe Small Reads"
+msgstr "Oracle Summe Small Reads"
 
 msgid "ORACLE Total Small Write Bytes"
-msgstr "ORACLE Summe Small Write in Bytes"
+msgstr "Oracle Summe Small Write in Bytes"
 
 msgid "ORACLE Total Small Writes"
-msgstr "ORACLE Summe Small Writes"
+msgstr "Oracle Summe Small Writes"
 
 msgid "ORACLE Total waited"
-msgstr "ORACLE Gesamte Wartezeit"
+msgstr "Oracle Gesamte Wartezeit"
 
 msgid "ORACLE Total waited (FG)"
-msgstr "ORACLE Gesamte Wartezeit (FG)"
+msgstr "Oracle Gesamte Wartezeit (FG)"
 
 msgid "ORACLE Wait Class (FG lines are downside)"
-msgstr "ORACLE Wait Class (FG Zeilen sind von Nachteil)"
+msgstr "Oracle Warteklasse (FG Zeilen sind von Nachteil)"
 
 msgid "ORACLE buffer pool statistics"
-msgstr "ORACLE Bufferpool Statisik"
+msgstr "Oracle Bufferpool Statistik"
 
 msgid "ORACLE databases (Linux, Solaris, AIX, Windows)"
-msgstr "ORACLE-Datenbanken (Linux, Solaris, AIX, Windows)"
+msgstr "Oracle-Datenbanken (Linux, Solaris, AIX, Windows)"
 
 msgid "ORACLE hit ratio"
-msgstr "ORACLE-Trefferquote"
+msgstr "Oracle-Trefferquote"
 
 msgid "ORACLE library cache statistics"
-msgstr "ORACLE Library Cache Statistik"
+msgstr "Oracle Bibliotheks-Cache Statistik"
 
 msgid "ORACLE physical IO"
-msgstr "ORACLE physikalischer IO"
+msgstr "Oracle physikalischer IO"
 
 msgid "ORACLE release of the remote database"
-msgstr "ORACLE-Release der Remote-Datenbank"
+msgstr "Oracle-Release der Remote-Datenbank"
 
 msgid "ORACLE total Memory"
-msgstr "ORACLE Summe Speicher"
+msgstr "Oracle Gesamt-Speicher"
 
 msgid "OS image"
 msgstr "OS-Image"
@@ -40452,16 +40478,16 @@ msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Statistiken"
 
 msgid "Oracle Instance"
-msgstr "ORACLE-Instanz"
+msgstr "Oracle-Instanz"
 
 msgid "Oracle Locks"
-msgstr "ORACLE Locks"
+msgstr "Oracle Locks"
 
 msgid "Oracle Logswitches"
-msgstr "Oracle Logumschalter"
+msgstr "Oracle Log-Umschalter"
 
 msgid "Oracle Long Active Sessions"
-msgstr "Oracle Long Active Sessions"
+msgstr "Oracle langlaufende Sitzungen"
 
 msgid "Oracle PGA info"
 msgstr "Oracle PGA-Info"
@@ -40470,10 +40496,10 @@ msgid "Oracle Performance"
 msgstr "Oracle Leistung"
 
 msgid "Oracle Processes"
-msgstr "ORACLE Prozesse"
+msgstr "Oracle Prozesse"
 
 msgid "Oracle RMAN Backups"
-msgstr "ORACLE RMAN-Sicherungen"
+msgstr "Oracle RMAN-Sicherungen"
 
 msgid "Oracle Recovery Area"
 msgstr "Oracle Recovery Area"
@@ -40485,7 +40511,7 @@ msgid "Oracle SGA info"
 msgstr "Oracle SGA-Info"
 
 msgid "Oracle Scheduler Job"
-msgstr "ORACLE Schedulerjob"
+msgstr "Oracle Schedulerjob"
 
 msgid "Oracle Sessions"
 msgstr "Oracle Sitzungen"
@@ -40498,7 +40524,7 @@ msgstr "Oracle Undo Retention"
 
 #, python-format
 msgid "Oracle binaries permissions check %s"
-msgstr ""
+msgstr "Berechtigungsprüfung für Oracle-Binärdateien %s"
 
 msgid "Oracle dataguard statistics"
 msgstr "Oracle Dataguard-Statistiken"
@@ -43187,6 +43213,9 @@ msgstr "Verfügbare Ports"
 msgid "Ports to open"
 msgstr "Zu öffnende Ports"
 
+msgid "Ports: Port Utilization (FC and iSCSI)"
+msgstr ""
+
 msgid "Position"
 msgstr "Position"
 
@@ -43195,17 +43224,6 @@ msgstr "Positive Übereinstimmung (Füge der Liste passende Hosts hinzu)"
 
 msgid "Positive match (Add matching services to the set)"
 msgstr "Positive Übereinstimmung (Füge der Liste passende Hosts hinzu)"
-
-msgid ""
-"Possible values are the following: cpgs, volumes, hosts, capacity, system, "
-"ports, remotecopy, hostsets, volumesets, vluns, flashcache, users, roles, "
-"qos.\n"
-"If you do not specify any value the first seven are used as default."
-msgstr ""
-"Die folgenden Werte sind möglich: cpgs, volumes, hosts, capacity, system, "
-"ports, remotecopy, hostsets, volumesets, vluns, flashcache, users, roles, "
-"qos.\n"
-"Wenn Sie keine angeben werden die ersten sieben als Default verwendet."
 
 msgid "Postfix"
 msgstr "Postfix"
@@ -44047,6 +44065,10 @@ msgstr "QoS verworfene Bits"
 
 msgid "QoS outbound bits"
 msgstr "QoS ausgehende Bits"
+
+#, fuzzy
+msgid "QoS: Quality of Service Configuration"
+msgstr "Speichern & zur Servicekonfiguration gehen"
 
 msgid "Qps"
 msgstr "Qps"
@@ -45342,6 +45364,10 @@ msgstr ""
 msgid "Remote: Send events to remote syslog host"
 msgstr "Remote: Ereignisse an Remote Syslog-Host senden"
 
+#, fuzzy
+msgid "RemoteCopy: Remote Copy Configuration"
+msgstr "Remote-Konfiguration"
+
 msgid "Remove"
 msgstr "Entferne"
 
@@ -46570,6 +46596,10 @@ msgstr "Rollen"
 
 msgid "Roles & permissions"
 msgstr "Rollen & Berechtigungen"
+
+#, fuzzy
+msgid "Roles: Role Management"
+msgstr "Benutzer-Verwaltung"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Jeden Tag um 00:00 Ortszeit rotieren"
@@ -51328,6 +51358,14 @@ msgstr "Sortierung"
 msgid "Sorty by column"
 msgstr "Nach Spalte sortieren"
 
+#, fuzzy
+msgid "Sounds"
+msgstr "Rund"
+
+#, fuzzy
+msgid "Sounds in views"
+msgstr "Klänge in Ansichten aktivieren"
+
 msgid "Source"
 msgstr "Quelle"
 
@@ -53975,6 +54013,10 @@ msgstr "Systemzeit-Offset"
 msgid "System uptime"
 msgstr "Systemlaufzeit"
 
+#, fuzzy
+msgid "System: Storage Array Configuration"
+msgstr "Die globale Konfiguration nutzen"
+
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Systemd Timesyncd Zeitsynchronisation"
 
@@ -54644,7 +54686,7 @@ msgstr "Der ARN der zu übernehmenden IAM-Rolle"
 
 msgid "The Active Data-Guard Option needs an addional License from Oracle."
 msgstr ""
-"Die \"Active Data-Guard\" Option benötigt eine zusätzliche Oraclelizenz."
+"Die \"Active Data-Guard\" Option benötigt eine zusätzliche Oracle-Lizenz."
 
 #, python-format
 msgid ""
@@ -55916,7 +55958,7 @@ msgid ""
 msgstr "Das User-ID Attribute \"%s\" existiert nicht für Benutzer \"%s\""
 
 msgid "The configured custom graph does not exist."
-msgstr "Das konfigurierte Benutzergraph existiert nicht."
+msgstr "Der konfigurierte benutzerdefinierte Graph existiert nicht."
 
 msgid "The configured element does not exist."
 msgstr "Das konfigurierte Element ist nicht vorhanden."
@@ -60198,7 +60240,7 @@ msgid ""
 "instance in the last 60 minutes. You can set levels for upper and lower "
 "bounds."
 msgstr ""
-"Dieser Check überwacht die Anzahl von Log Switches von ORACLE Datenbanken "
+"Dieser Check überwacht die Anzahl von Log Switches von Oracle Datenbanken "
 "innerhalb der letzten 60 Minuten. Sie können Level für hoch und tief setzen."
 
 msgid ""
@@ -60321,7 +60363,7 @@ msgid "This crash report"
 msgstr "Dieser Crashbericht"
 
 msgid "This custom graph"
-msgstr "Dieser angepasste Graph"
+msgstr "Dieser benutzerdefinierte Graph"
 
 msgid ""
 "This customer does not exist anymore. This object can not be used nor edit "
@@ -63132,9 +63174,10 @@ msgstr ""
 "verteilen. Hinweise dazu finden Sie in einem <a href='http://mathias-kettner."
 "de/checkmk_sap_r3.html'>Artikel im Checkmk Handbuch</a>."
 
-#, fuzzy
 msgid "This rulespec is deprecated and will be removed in future versions."
-msgstr "Dieser Regel ist veraltet. Bitte nutzen Sie stattdessen \"%s\"."
+msgstr ""
+"Dieser Regelsatz ist veraltet und wird in zukünftigen Versionen entfernt "
+"werden."
 
 msgid "This rulset allow you to configure a SSH check for a host"
 msgstr ""
@@ -67561,7 +67604,7 @@ msgstr "Nicht entschiedene Services - derzeit nicht überwacht"
 
 #, python-format
 msgid "Undefined custom graph '%s'"
-msgstr "Undefinierter Benutzergraph '%s'"
+msgstr "Undefinierter benutzerdefinierter Graph '%s'"
 
 #, python-format
 msgid "Undefined key '%s' in the dictionary. Allowed are %s."
@@ -69014,7 +69057,7 @@ msgid "Use macro to determine port number"
 msgstr "Makro zur Ermittlung der Portnummer verwenden"
 
 msgid "Use manually created ORACLE password wallet"
-msgstr "Manuell erzeugtes ORACLE Passwort-Wallet verwenden"
+msgstr "Manuell erzeugtes Oracle Passwort-Wallet verwenden"
 
 #, python-format
 msgid "Use maximum age from <a href=\"%s\">global settings</a>"
@@ -69681,13 +69724,11 @@ msgstr ""
 "'PrimarySmtpAddress'), falls es sich vom Benutzernamen unterscheidet. Wenn "
 "nicht angegeben, wird der Benutzername in den Anmeldeinformationen verwendet."
 
-#, fuzzy
 msgid "Used virtual memory"
-msgstr "Gesamter virtueller Speicher"
+msgstr "Verwendeter virtueller Speicher"
 
-#, fuzzy
 msgid "Used virtual memory (averaged)"
-msgstr "Aktivierbarer Speicher (gemittelt)"
+msgstr "Verwendeter virtueller Speicher (gemittelt)"
 
 msgid "User"
 msgstr "Benutzer"
@@ -69881,6 +69922,10 @@ msgstr "Benutzer-Benachrichtigungsregel"
 msgid "Users, roles and permissions"
 msgstr "Benutzer, Rollen und Berechtigungen"
 
+#, fuzzy
+msgid "Users: User Management"
+msgstr "Benutzer-Verwaltung"
+
 msgid "Using predefined condition"
 msgstr "Verwendung einer vordefinierten Bedingung"
 
@@ -70042,6 +70087,10 @@ msgstr "VLAN-Typ"
 
 msgid "VLANs"
 msgstr "VLANs"
+
+#, fuzzy
+msgid "VLUNs: Virtual LUN Configuration"
+msgstr "Die globale Konfiguration nutzen"
 
 msgid "VM"
 msgstr "VM"
@@ -70697,8 +70746,16 @@ msgstr "Name des Volumes"
 msgid "Volume parameters"
 msgstr "Volumen-Parameter"
 
+#, fuzzy
+msgid "VolumeSets: Volume Set Configuration"
+msgstr "Konfiguration der Event Console"
+
 msgid "Volumes"
 msgstr "Volumen"
+
+#, fuzzy
+msgid "Volumes: Virtual Volume Summary"
+msgstr "Azure Virtuelle Maschinen Zusammenfassung"
 
 msgid "Voluntary context switches"
 msgstr "Freiwillige Kontextwechsel"
@@ -73611,8 +73668,8 @@ msgid ""
 "the <i>Login for selected databases</i> and for <i>Sections to exclude</i>."
 msgstr ""
 "Sie können auch Instanzen von Datenbanken, die sich auf einem anderen Server "
-"befinden, überwachen. Das kann hilfreich sein, falls Sie ORACLE Datenbanken "
-"auf Windowssystemen überwachen möchten, ohne das mk_oracle für Windows zu "
+"befinden, überwachen. Das kann hilfreich sein, falls Sie Oracle Datenbanken "
+"auf Windows-Systemen überwachen möchten, ohne das mk_oracle für Windows zu "
 "verteilen. Jede Remote-Instanz muss eine eindeutige ID haben, welche auch "
 "die gleiche wie die SID sein kann. Diese ID wird dann als Referenz für die "
 "anderen Konfiguration benutzt, wie z.B. für <i>das Login für ausgewählte "
@@ -75749,9 +75806,6 @@ msgstr "aktiviere optimierte Regel-Ausführung"
 msgid "enable pretty-printing of rules"
 msgstr "aktiviere formatierte Ausgabe für Regeln"
 
-msgid "enable sounds"
-msgstr "aktiviere Tonausgabe"
-
 msgid "enabled"
 msgstr "aktiviert"
 
@@ -76357,6 +76411,15 @@ msgid ""
 "a group here, so the user can read <tt>sqlnet.ora</tt>. For a default oracle "
 "installation <tt>oinstall</tt> can be used."
 msgstr ""
+"mk_oracle für Linux wechselt zu einem unprivilegierten Benutzer, bevor es "
+"irgendwelche Oracle-Binärdateien ausführt. Das bedeutet, dass die Datei "
+"<tt>sqlnet.ora</tt> (die von der Agentenbäckerei erstellt wird) für diesen "
+"Benutzer lesbar sein muss. Zur Laufzeit verwendet der Agent den Eigentümer "
+"der Oracle-Binärdatei als Benutzer, zu dem er wechseln soll. Allerdings "
+"kennen wir diesen Benutzer und seine Gruppen bei der Installation des "
+"Agenten nicht. Sie müssen hier explizit eine Gruppe konfigurieren, damit der "
+"Benutzer <tt>sqlnet.ora</tt> lesen kann. Für eine Standard-Oracle-"
+"Installation kann <tt>oinstall</tt> verwendet werden."
 
 msgid "mm"
 msgstr "mm"
@@ -77286,9 +77349,36 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 msgid "{sa._name} ({sa.dotted_string})"
 msgstr "{sa._name} ({sa.dotted_string})"
 
+msgid "{what.title()} rate"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid ""
+#~ "Possible values are the following: cpgs, volumes, hosts, capacity, "
+#~ "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
+#~ "users, roles, qos.\n"
+#~ "If you do not specify any value the first seven are used as default."
+#~ msgstr ""
+#~ "Die folgenden Werte sind möglich: cpgs, volumes, hosts, capacity, system, "
+#~ "ports, remotecopy, hostsets, volumesets, vluns, flashcache, users, roles, "
+#~ "qos.\n"
+#~ "Wenn Sie keine angeben werden die ersten sieben als Default verwendet."
+
+#, python-format
+#~ msgid "%s rate"
+#~ msgstr "%s-Rate"
+
+#~ msgid "Asserts / s"
+#~ msgstr "Asserts / s"
+
+#~ msgid "Enable core dumps"
+#~ msgstr "Speicherabzüge aktivieren"
+
+#~ msgid "enable sounds"
+#~ msgstr "aktiviere Tonausgabe"
 
 #~ msgid "Commitable memory"
 #~ msgstr "Aktivierbarer Speicher"
@@ -80727,9 +80817,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 #~ msgid "Invalid package name"
 #~ msgstr "Ungültiger Paketname"
 
-#~ msgid "Save & go to service configuration"
-#~ msgstr "Speichern & zur Servicekonfiguration gehen"
-
 #~ msgid "Instance Alias Name"
 #~ msgstr "Alias der Instanz"
 
@@ -82940,9 +83027,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 #~ msgid "User Interface"
 #~ msgstr "Benutzerschnittstelle"
 
-#~ msgid "User Management"
-#~ msgstr "Benutzer-Verwaltung"
-
 #, fuzzy
 #~| msgid "# Containers"
 #~ msgid "Node Containers"
@@ -83821,9 +83905,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Clone snapin"
 #~ msgstr "Element Klonen"
-
-#~ msgid "Collect dump"
-#~ msgstr "Sammle Dump"
 
 #~ msgid "Create snapin"
 #~ msgstr "Element erzeugen"
@@ -88535,9 +88616,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Save &amp; Test"
 #~ msgstr "Speichern &amp; Testen"
-
-#~ msgid "Save manual check configuration"
-#~ msgstr "Manuelle Check Konfiguration speichern"
 
 #~ msgid "Store params in config"
 #~ msgstr "Check-Parameter in Konfiguration des Cores speichern"

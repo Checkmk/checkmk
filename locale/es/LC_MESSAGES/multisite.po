@@ -693,10 +693,6 @@ msgid "%s properties"
 msgstr "%s propiedades"
 
 #, python-format
-msgid "%s rate"
-msgstr "%s tasa"
-
-#, python-format
 msgid "%s read %s"
 msgstr "%s leer %s"
 
@@ -6762,9 +6758,6 @@ msgstr "Pedir un comentario opcional"
 msgid "Assertion Consumer Service endpoint"
 msgstr "Punto final del Servicio de Consumidores de Afirmaciones"
 
-msgid "Asserts / s"
-msgstr "Afirmaciones / s"
-
 msgid "Assign SLA definition to service"
 msgstr "Asignar la definición de SLA al servicio"
 
@@ -7331,6 +7324,10 @@ msgstr "Secreto de automatización"
 
 msgid "Automation secret for machine accounts"
 msgstr "El secreto de la automatización de las cuentas de las máquinas"
+
+#, fuzzy
+msgid "Automation user authentication via HTTP parameters"
+msgstr "No se puede crear la solicitud de autenticación"
 
 msgid "Automation user rejected"
 msgstr "Usuario de automatización rechazado"
@@ -10177,6 +10174,9 @@ msgstr "Capacidad restante"
 msgid "Capacity usage"
 msgstr "Capacidad"
 
+msgid "Capacity: Array Capacity & Utilization"
+msgstr ""
+
 msgid "Carbon Overflows Rate"
 msgstr "Tasa de desbordamientos de carbono"
 
@@ -12450,6 +12450,9 @@ msgstr "Memoria comprometida"
 msgid "Common Name"
 msgstr "Nombre común"
 
+msgid "Common Provisioning Groups: Virtual Pool Configuration"
+msgstr ""
+
 #, fuzzy
 msgid "Common name (CN)"
 msgstr "Nombre común"
@@ -12464,6 +12467,14 @@ msgstr ""
 
 msgid "Community forum"
 msgstr "Foro comunitario"
+
+#, fuzzy
+msgid "Community translated languages"
+msgstr "Permitir idiomas comunitarios traducidos"
+
+#, fuzzy
+msgid "Community translated languages (not supported)"
+msgstr "Habilitar idiomas comunitarios traducidos (no compatible)"
 
 msgid "Compare against discovered state"
 msgstr "Comparar con el estado descubierto"
@@ -13743,6 +13754,10 @@ msgstr "Núcleo y configuración"
 
 msgid "Core configuration reloaded"
 msgstr "Configuración del núcleo recargada"
+
+#, fuzzy
+msgid "Core dumps"
+msgstr "Habilitar los volcados de núcleo"
 
 msgid "Core files"
 msgstr "Archivos principales"
@@ -20231,21 +20246,8 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Activar la eliminación automática de hosts"
 
-#, fuzzy
-msgid "Enable automation user authentication via HTTP parameters"
-msgstr "No se puede crear la solicitud de autenticación"
-
-msgid "Enable community translated languages"
-msgstr "Permitir idiomas comunitarios traducidos"
-
-msgid "Enable community translated languages (not supported)"
-msgstr "Habilitar idiomas comunitarios traducidos (no compatible)"
-
 msgid "Enable controller"
 msgstr "Activar controlador"
-
-msgid "Enable core dumps"
-msgstr "Habilitar los volcados de núcleo"
 
 msgid "Enable debug mode"
 msgstr "Activar el modo de depuración"
@@ -20296,9 +20298,6 @@ msgstr ""
 
 msgid "Enable logging of logon failures"
 msgstr "Habilitar el registro de los fallos de inicio de sesión"
-
-msgid "Enable login via GET requests"
-msgstr "Habilitar el inicio de sesión mediante peticiones GET"
 
 msgid "Enable metrics for high-level keywords"
 msgstr ""
@@ -20355,9 +20354,6 @@ msgstr "Activar el sombreado de las filas"
 
 msgid "Enable service notifications"
 msgstr "Activar las notificaciones de servicio"
-
-msgid "Enable sounds in views"
-msgstr "Activar los sonidos en las vistas"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Habilitar la entrega sincrónica a través de SMTP"
@@ -22929,6 +22925,10 @@ msgstr "Flapping"
 
 msgid "Flash Space Usage"
 msgstr "Uso del espacio de Flash"
+
+#, fuzzy
+msgid "FlashCache: Flash Cache Configuration"
+msgstr "Configuración del modelo de previsión"
 
 msgid "Flashback"
 msgstr "Flashback"
@@ -26739,6 +26739,10 @@ msgstr "host:"
 msgid "Host: %s"
 msgstr "host: %s"
 
+#, fuzzy
+msgid "HostSets: Host Set Configuration"
+msgstr "Configuración de host"
+
 msgid "Hostaddress"
 msgstr "Dirección de correo electrónico"
 
@@ -27016,6 +27020,10 @@ msgstr "Hosts: %d creado, %d modificado, %d borrado"
 #, python-format
 msgid "Hosts: %d total (%d succeeded, %d skipped, %d failed)"
 msgstr "Hosts: %d total (%d exitoso, %d omitido, %d fallido)"
+
+#, fuzzy
+msgid "Hosts: Host Capacity & Utilization"
+msgstr "Utilización de la CPU"
 
 msgid "Hostsystem sensor alerts"
 msgstr "Alertas del sensor del sistema host"
@@ -34153,6 +34161,10 @@ msgstr "Ficha de acceso"
 
 msgid "Login username"
 msgstr "Nombre de usuario"
+
+#, fuzzy
+msgid "Login via GET requests"
+msgstr "Habilitar el inicio de sesión mediante peticiones GET"
 
 msgid "Login with the following credentials"
 msgstr "Inicie sesión con las siguientes credenciales"
@@ -44095,6 +44107,9 @@ msgstr "Puertos disponibles"
 msgid "Ports to open"
 msgstr "Puertos a abrir"
 
+msgid "Ports: Port Utilization (FC and iSCSI)"
+msgstr ""
+
 msgid "Position"
 msgstr "Posición"
 
@@ -44103,17 +44118,6 @@ msgstr "Coincidencia positiva (añadir los hosts coincidentes al conjunto)"
 
 msgid "Positive match (Add matching services to the set)"
 msgstr "Coincidencia positiva (Añadir servicios coincidentes al conjunto)"
-
-msgid ""
-"Possible values are the following: cpgs, volumes, hosts, capacity, system, "
-"ports, remotecopy, hostsets, volumesets, vluns, flashcache, users, roles, "
-"qos.\n"
-"If you do not specify any value the first seven are used as default."
-msgstr ""
-"Los valores posibles son los siguientes: cpgs, volúmenes, hosts, capacidad, "
-"sistema, puertos, remotecopy, hostsets, volumesets, vluns, flashcache, "
-"usuarios, roles, qos.\n"
-"Si no se especifica ningún valor, se utilizan los siete primeros por defecto."
 
 msgid "Postfix"
 msgstr "Postfix"
@@ -44961,6 +44965,10 @@ msgstr "Bits perdidos de QoS"
 
 msgid "QoS outbound bits"
 msgstr "Bits de salida QoS"
+
+#, fuzzy
+msgid "QoS: Quality of Service Configuration"
+msgstr "Guardar e ir a la configuración del servicio"
 
 msgid "Qps"
 msgstr "Qps"
@@ -46282,6 +46290,10 @@ msgstr ""
 msgid "Remote: Send events to remote syslog host"
 msgstr "Remoto: Envía los eventos al host de syslog remoto"
 
+#, fuzzy
+msgid "RemoteCopy: Remote Copy Configuration"
+msgstr "Configuración remota"
+
 msgid "Remove"
 msgstr "Eliminar"
 
@@ -47565,6 +47577,10 @@ msgstr "Roles"
 
 msgid "Roles & permissions"
 msgstr "Funciones y permisos"
+
+#, fuzzy
+msgid "Roles: Role Management"
+msgstr "Gestión del sitio"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Gira todos los días a las 00:00 hora local"
@@ -52417,6 +52433,14 @@ msgstr "Clasificación"
 msgid "Sorty by column"
 msgstr "Clasificación por columnas"
 
+#, fuzzy
+msgid "Sounds"
+msgstr "Redondo"
+
+#, fuzzy
+msgid "Sounds in views"
+msgstr "Activar los sonidos en las vistas"
+
 msgid "Source"
 msgstr "Fuente"
 
@@ -55124,6 +55148,10 @@ msgstr "Desplazamiento horario del sistema"
 
 msgid "System uptime"
 msgstr "Tiempo de funcionamiento del sistema"
+
+#, fuzzy
+msgid "System: Storage Array Configuration"
+msgstr "Utilice la configuración global"
 
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Sincronización horaria Systemd Timesyncd"
@@ -71661,6 +71689,10 @@ msgstr "Norma de notificación a los usuarios"
 msgid "Users, roles and permissions"
 msgstr "Usuarios, funciones y permisos"
 
+#, fuzzy
+msgid "Users: User Management"
+msgstr "Gestión de usuarios"
+
 msgid "Using predefined condition"
 msgstr "Uso de la condición predefinida"
 
@@ -71821,6 +71853,10 @@ msgstr "Tipo de VLAN"
 
 msgid "VLANs"
 msgstr "VLANs"
+
+#, fuzzy
+msgid "VLUNs: Virtual LUN Configuration"
+msgstr "Utilice la configuración global"
 
 #, fuzzy
 msgid "VM"
@@ -72489,8 +72525,16 @@ msgstr "Nombre del volumen"
 msgid "Volume parameters"
 msgstr "Parámetros de volumen"
 
+#, fuzzy
+msgid "VolumeSets: Volume Set Configuration"
+msgstr "Configuración de la consola de eventos"
+
 msgid "Volumes"
 msgstr "Volúmenes"
+
+#, fuzzy
+msgid "Volumes: Virtual Volume Summary"
+msgstr "Resumen de las máquinas virtuales de Azure"
 
 msgid "Voluntary context switches"
 msgstr "Cambios de contexto voluntarios"
@@ -77549,9 +77593,6 @@ msgstr "activar la ejecución optimizada de las reglas"
 msgid "enable pretty-printing of rules"
 msgstr "permitir la impresión bonita de las reglas"
 
-msgid "enable sounds"
-msgstr "habilitar sonidos"
-
 #, fuzzy
 msgid "enabled"
 msgstr "activar"
@@ -79119,9 +79160,34 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 msgid "{sa._name} ({sa.dotted_string})"
 msgstr ""
 
+msgid "{what.title()} rate"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#~ msgid ""
+#~ "Possible values are the following: cpgs, volumes, hosts, capacity, "
+#~ "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
+#~ "users, roles, qos.\n"
+#~ "If you do not specify any value the first seven are used as default."
+#~ msgstr ""
+#~ "Los valores posibles son los siguientes: cpgs, volúmenes, hosts, "
+#~ "capacidad, sistema, puertos, remotecopy, hostsets, volumesets, vluns, "
+#~ "flashcache, usuarios, roles, qos.\n"
+#~ "Si no se especifica ningún valor, se utilizan los siete primeros por "
+#~ "defecto."
+
+#, python-format
+#~ msgid "%s rate"
+#~ msgstr "%s tasa"
+
+#~ msgid "Asserts / s"
+#~ msgstr "Afirmaciones / s"
+
+#~ msgid "enable sounds"
+#~ msgstr "habilitar sonidos"
 
 #, fuzzy
 #~| msgid "Committed memory"
@@ -82646,9 +82712,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 #~ msgid "Invalid package name"
 #~ msgstr "Nombre de paquete no válido"
-
-#~ msgid "Save & go to service configuration"
-#~ msgstr "Guardar e ir a la configuración del servicio"
 
 #~ msgid "Instance Alias Name"
 #~ msgstr "Nombre del alias de la instancia"

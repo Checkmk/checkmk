@@ -691,10 +691,6 @@ msgid "%s properties"
 msgstr "%s eigenschappen"
 
 #, python-format
-msgid "%s rate"
-msgstr "%s ratio"
-
-#, python-format
 msgid "%s read %s"
 msgstr "%s lees %s"
 
@@ -6698,9 +6694,6 @@ msgstr "Vraag om een optionele opmerking"
 msgid "Assertion Consumer Service endpoint"
 msgstr "Assertion Consumer Service eindpunt"
 
-msgid "Asserts / s"
-msgstr "Asserts / s"
-
 msgid "Assign SLA definition to service"
 msgstr "Wijs SLA-definitie toe aan dienst"
 
@@ -7261,6 +7254,10 @@ msgstr "Automatiseringsgeheim"
 
 msgid "Automation secret for machine accounts"
 msgstr "Automatiseringsgeheim voor machinerekeningen"
+
+#, fuzzy
+msgid "Automation user authentication via HTTP parameters"
+msgstr "Kan geen authenticatieverzoek aanmaken"
 
 msgid "Automation user rejected"
 msgstr "Automatisering gebruiker afgewezen"
@@ -10092,6 +10089,9 @@ msgstr "Resterende capaciteit"
 msgid "Capacity usage"
 msgstr "Capaciteit"
 
+msgid "Capacity: Array Capacity & Utilization"
+msgstr ""
+
 msgid "Carbon Overflows Rate"
 msgstr "Koolstofoverschotten Tarief"
 
@@ -12342,6 +12342,9 @@ msgstr "Vastgelegd geheugen"
 msgid "Common Name"
 msgstr "Gebruikelijke naam"
 
+msgid "Common Provisioning Groups: Virtual Pool Configuration"
+msgstr ""
+
 #, fuzzy
 msgid "Common name (CN)"
 msgstr "Gebruikelijke naam"
@@ -12355,6 +12358,14 @@ msgstr ""
 
 msgid "Community forum"
 msgstr "Gemeenschapsforum"
+
+#, fuzzy
+msgid "Community translated languages"
+msgstr "Maak vertaalde gemeenschapstalen mogelijk"
+
+#, fuzzy
+msgid "Community translated languages (not supported)"
+msgstr "Inschakelen van vertaalde gemeenschapstalen (niet ondersteund)"
 
 msgid "Compare against discovered state"
 msgstr "Vergelijken met ontdekte staat"
@@ -13633,6 +13644,10 @@ msgstr "Kern & setup"
 
 msgid "Core configuration reloaded"
 msgstr "Kernconfiguratie opnieuw geladen"
+
+#, fuzzy
+msgid "Core dumps"
+msgstr "Kerndumps inschakelen"
 
 msgid "Core files"
 msgstr "Kernbestanden"
@@ -20058,21 +20073,8 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Automatische hostverwijdering inschakelen"
 
-#, fuzzy
-msgid "Enable automation user authentication via HTTP parameters"
-msgstr "Kan geen authenticatieverzoek aanmaken"
-
-msgid "Enable community translated languages"
-msgstr "Maak vertaalde gemeenschapstalen mogelijk"
-
-msgid "Enable community translated languages (not supported)"
-msgstr "Inschakelen van vertaalde gemeenschapstalen (niet ondersteund)"
-
 msgid "Enable controller"
 msgstr "Controller inschakelen"
-
-msgid "Enable core dumps"
-msgstr "Kerndumps inschakelen"
 
 msgid "Enable debug mode"
 msgstr "Debug modus inschakelen"
@@ -20120,9 +20122,6 @@ msgstr ""
 
 msgid "Enable logging of logon failures"
 msgstr "Loggen van mislukte aanmeldingen inschakelen"
-
-msgid "Enable login via GET requests"
-msgstr "Inloggen via GET-verzoeken mogelijk maken"
 
 msgid "Enable metrics for high-level keywords"
 msgstr ""
@@ -20176,9 +20175,6 @@ msgstr "Rij arcering inschakelen"
 
 msgid "Enable service notifications"
 msgstr "Inschakelen dienst meldingen"
-
-msgid "Enable sounds in views"
-msgstr "Geluiden in views inschakelen"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Synchrone levering via SMTP inschakelen"
@@ -22727,6 +22723,10 @@ msgstr "Flapperen"
 
 msgid "Flash Space Usage"
 msgstr "Gebruik Flash-ruimte"
+
+#, fuzzy
+msgid "FlashCache: Flash Cache Configuration"
+msgstr "Configuratie prognosemodel"
 
 msgid "Flashback"
 msgstr "Flashback"
@@ -26507,6 +26507,10 @@ msgstr "Gastheer:"
 msgid "Host: %s"
 msgstr "Gastheer: %s"
 
+#, fuzzy
+msgid "HostSets: Host Set Configuration"
+msgstr "Host configuratie"
+
 msgid "Hostaddress"
 msgstr "Hostadres"
 
@@ -26783,6 +26787,10 @@ msgstr "Hosts: %d aangemaakt, %d gewijzigd, %d verwijderd"
 #, python-format
 msgid "Hosts: %d total (%d succeeded, %d skipped, %d failed)"
 msgstr "Hosts: %d totaal (%d gelukt, %d overgeslagen, %d mislukt)"
+
+#, fuzzy
+msgid "Hosts: Host Capacity & Utilization"
+msgstr "CPU-gebruik"
 
 msgid "Hostsystem sensor alerts"
 msgstr "Waarschuwingen voor sensors van het gastsysteem"
@@ -33862,6 +33870,10 @@ msgstr "Aanmeldingstoken"
 
 msgid "Login username"
 msgstr "Gebruikersnaam inloggen"
+
+#, fuzzy
+msgid "Login via GET requests"
+msgstr "Inloggen via GET-verzoeken mogelijk maken"
 
 msgid "Login with the following credentials"
 msgstr "Log in met de volgende gegevens"
@@ -43690,6 +43702,9 @@ msgstr "Beschikbare poorten"
 msgid "Ports to open"
 msgstr "Te openen poorten"
 
+msgid "Ports: Port Utilization (FC and iSCSI)"
+msgstr ""
+
 msgid "Position"
 msgstr "Positie"
 
@@ -43698,17 +43713,6 @@ msgstr "Positieve match (Voeg overeenkomende hosts toe aan de set)"
 
 msgid "Positive match (Add matching services to the set)"
 msgstr "Positieve match (voeg overeenkomende diensten toe aan de set)"
-
-msgid ""
-"Possible values are the following: cpgs, volumes, hosts, capacity, system, "
-"ports, remotecopy, hostsets, volumesets, vluns, flashcache, users, roles, "
-"qos.\n"
-"If you do not specify any value the first seven are used as default."
-msgstr ""
-"Mogelijke waarden zijn de volgende: cpgs, volumes, hosts, capacity, system, "
-"ports, remotecopy, hostsets, volumesets, vluns, flashcache, users, roles, "
-"qos.\n"
-"Als u geen waarde opgeeft, worden de eerste zeven als standaard gebruikt."
 
 msgid "Postfix"
 msgstr "Postfix"
@@ -44546,6 +44550,10 @@ msgstr "QoS dropped bits"
 
 msgid "QoS outbound bits"
 msgstr "QoS uitgaande bits"
+
+#, fuzzy
+msgid "QoS: Quality of Service Configuration"
+msgstr "Opslaan en naar service configuratie gaan"
 
 msgid "Qps"
 msgstr "Qps"
@@ -45863,6 +45871,10 @@ msgstr ""
 msgid "Remote: Send events to remote syslog host"
 msgstr "Op afstand: Verzend gebeurtenissen naar syslog host op afstand"
 
+#, fuzzy
+msgid "RemoteCopy: Remote Copy Configuration"
+msgstr "Configuratie op afstand"
+
 msgid "Remove"
 msgstr "Verwijder"
 
@@ -47107,6 +47119,10 @@ msgstr "Rollen"
 
 msgid "Roles & permissions"
 msgstr "Rollen en machtigingen"
+
+#, fuzzy
+msgid "Roles: Role Management"
+msgstr "Beheer van de site"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Draait elke dag om 00:00 lokale tijd"
@@ -51895,6 +51911,14 @@ msgstr "Sorteren"
 msgid "Sorty by column"
 msgstr "Sorteren per kolom"
 
+#, fuzzy
+msgid "Sounds"
+msgstr "Rond"
+
+#, fuzzy
+msgid "Sounds in views"
+msgstr "Geluiden in views inschakelen"
+
 msgid "Source"
 msgstr "Bron"
 
@@ -54575,6 +54599,10 @@ msgstr "Systeemtijd offset"
 
 msgid "System uptime"
 msgstr "Systeem uptime"
+
+#, fuzzy
+msgid "System: Storage Array Configuration"
+msgstr "Gebruik de globale configuratie"
 
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Systemd Timesyncd tijdsynchronisatie"
@@ -70991,6 +71019,10 @@ msgstr "Regel voor kennisgeving aan gebruikers"
 msgid "Users, roles and permissions"
 msgstr "Gebruikers, rollen en machtigingen"
 
+#, fuzzy
+msgid "Users: User Management"
+msgstr "Gebruikersbeheer"
+
 msgid "Using predefined condition"
 msgstr "Gebruik van voorgedefinieerde voorwaarde"
 
@@ -71149,6 +71181,10 @@ msgstr "VLAN-type"
 
 msgid "VLANs"
 msgstr "VLAN's"
+
+#, fuzzy
+msgid "VLUNs: Virtual LUN Configuration"
+msgstr "Gebruik de globale configuratie"
 
 #, fuzzy
 msgid "VM"
@@ -71814,8 +71850,16 @@ msgstr "Naam van het volume"
 msgid "Volume parameters"
 msgstr "Volume parameters"
 
+#, fuzzy
+msgid "VolumeSets: Volume Set Configuration"
+msgstr "Gebeurtenis Console Configuratie"
+
 msgid "Volumes"
 msgstr "Volumes"
+
+#, fuzzy
+msgid "Volumes: Virtual Volume Summary"
+msgstr "Samenvatting Azure virtuele machines"
 
 msgid "Voluntary context switches"
 msgstr "Vrijwillige contextwisselingen"
@@ -76847,9 +76891,6 @@ msgstr "geoptimaliseerde regeluitvoering mogelijk maken"
 msgid "enable pretty-printing of rules"
 msgstr "maak het afdrukken van regels mogelijk"
 
-msgid "enable sounds"
-msgstr "geluiden inschakelen"
-
 #, fuzzy
 msgid "enabled"
 msgstr "inschakelen"
@@ -78412,9 +78453,33 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 msgid "{sa._name} ({sa.dotted_string})"
 msgstr ""
 
+msgid "{what.title()} rate"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "Possible values are the following: cpgs, volumes, hosts, capacity, "
+#~ "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
+#~ "users, roles, qos.\n"
+#~ "If you do not specify any value the first seven are used as default."
+#~ msgstr ""
+#~ "Mogelijke waarden zijn de volgende: cpgs, volumes, hosts, capacity, "
+#~ "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
+#~ "users, roles, qos.\n"
+#~ "Als u geen waarde opgeeft, worden de eerste zeven als standaard gebruikt."
+
+#, python-format
+#~ msgid "%s rate"
+#~ msgstr "%s ratio"
+
+#~ msgid "Asserts / s"
+#~ msgstr "Asserts / s"
+
+#~ msgid "enable sounds"
+#~ msgstr "geluiden inschakelen"
 
 #, fuzzy
 #~| msgid "Committed memory"
@@ -81909,9 +81974,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Invalid package name"
 #~ msgstr "Ongeldige pakketnaam"
-
-#~ msgid "Save & go to service configuration"
-#~ msgstr "Opslaan en naar service configuratie gaan"
 
 #~ msgid "Instance Alias Name"
 #~ msgstr "Instance Alias Naam"

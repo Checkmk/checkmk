@@ -693,10 +693,6 @@ msgid "%s properties"
 msgstr "%s proprietăți"
 
 #, python-format
-msgid "%s rate"
-msgstr "%s rata"
-
-#, python-format
 msgid "%s read %s"
 msgstr "%s citește %s"
 
@@ -6697,9 +6693,6 @@ msgstr "Cereți un comentariu opțional"
 msgid "Assertion Consumer Service endpoint"
 msgstr "Punct final al serviciului de consum al afirmațiilor"
 
-msgid "Asserts / s"
-msgstr "Afirmații / s"
-
 msgid "Assign SLA definition to service"
 msgstr "Atribuiți definiția SLA la serviciu"
 
@@ -7248,6 +7241,12 @@ msgstr "Secretul automatizării"
 
 msgid "Automation secret for machine accounts"
 msgstr "Secretul automatizării pentru conturile de mașini"
+
+#, fuzzy
+msgid "Automation user authentication via HTTP parameters"
+msgstr ""
+"Activați autentificarea automată a utilizatorului prin intermediul "
+"parametrilor HTTP"
 
 msgid "Automation user rejected"
 msgstr "Utilizator de automatizare respins"
@@ -10107,6 +10106,9 @@ msgstr "Capacitate rămasă"
 msgid "Capacity usage"
 msgstr "Utilizarea capacității"
 
+msgid "Capacity: Array Capacity & Utilization"
+msgstr ""
+
 msgid "Carbon Overflows Rate"
 msgstr "Rata de deversare a carbonului"
 
@@ -12346,6 +12348,9 @@ msgstr "Memorie angajată"
 msgid "Common Name"
 msgstr "Denumire comună"
 
+msgid "Common Provisioning Groups: Virtual Pool Configuration"
+msgstr ""
+
 msgid "Common name (CN)"
 msgstr "Denumire comună (NC)"
 
@@ -12358,6 +12363,14 @@ msgstr ""
 
 msgid "Community forum"
 msgstr "Forumul comunitar"
+
+#, fuzzy
+msgid "Community translated languages"
+msgstr "Activați limbile traduse de comunitate"
+
+#, fuzzy
+msgid "Community translated languages (not supported)"
+msgstr "Activați limbile traduse de comunitate (nu sunt acceptate)"
 
 msgid "Compare against discovered state"
 msgstr "Comparați cu starea descoperită"
@@ -13620,6 +13633,10 @@ msgstr "Core & configurare"
 
 msgid "Core configuration reloaded"
 msgstr "Configurație de bază reîncărcată"
+
+#, fuzzy
+msgid "Core dumps"
+msgstr "Numele Aplicatiei"
 
 msgid "Core files"
 msgstr "Fișiere de bază"
@@ -20065,22 +20082,8 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Activați eliminarea automată a gazdei"
 
-msgid "Enable automation user authentication via HTTP parameters"
-msgstr ""
-"Activați autentificarea automată a utilizatorului prin intermediul "
-"parametrilor HTTP"
-
-msgid "Enable community translated languages"
-msgstr "Activați limbile traduse de comunitate"
-
-msgid "Enable community translated languages (not supported)"
-msgstr "Activați limbile traduse de comunitate (nu sunt acceptate)"
-
 msgid "Enable controller"
 msgstr "Activați controlerul"
-
-msgid "Enable core dumps"
-msgstr "Activați descărcările de nucleu"
 
 msgid "Enable debug mode"
 msgstr "Activați modul de depanare"
@@ -20126,9 +20129,6 @@ msgstr ""
 
 msgid "Enable logging of logon failures"
 msgstr "Activați jurnalizarea eșecurilor de logare"
-
-msgid "Enable login via GET requests"
-msgstr "Activați autentificarea prin cereri GET"
 
 msgid "Enable metrics for high-level keywords"
 msgstr "Activați indicatorii pentru cuvinte cheie de nivel înalt"
@@ -20181,9 +20181,6 @@ msgstr "Activați umbrirea rândurilor"
 
 msgid "Enable service notifications"
 msgstr "Activați notificările de serviciu"
-
-msgid "Enable sounds in views"
-msgstr "Activați sunetele în vizualizări"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "Activați livrarea sincronă prin SMTP"
@@ -22731,6 +22728,10 @@ msgstr "Flaps"
 
 msgid "Flash Space Usage"
 msgstr "Utilizarea spațiului flash"
+
+#, fuzzy
+msgid "FlashCache: Flash Cache Configuration"
+msgstr "Activare Configurare"
 
 msgid "Flashback"
 msgstr "Flashback"
@@ -26495,6 +26496,10 @@ msgstr "Gazdă:"
 msgid "Host: %s"
 msgstr "Gazdă: %s"
 
+#, fuzzy
+msgid "HostSets: Host Set Configuration"
+msgstr "Configurație gazdă"
+
 msgid "Hostaddress"
 msgstr "Hostaddress"
 
@@ -26767,6 +26772,10 @@ msgstr "Gazde: %d creat, %d modificat, %d șters"
 #, python-format
 msgid "Hosts: %d total (%d succeeded, %d skipped, %d failed)"
 msgstr "Gazde: %d total (%d a reușit, %d a sărit, %d a eșuat)"
+
+#, fuzzy
+msgid "Hosts: Host Capacity & Utilization"
+msgstr "Utilizare CPU Nutanix Host"
 
 msgid "Hostsystem sensor alerts"
 msgstr "Alerte ale senzorilor sistemului gazdă"
@@ -33862,6 +33871,10 @@ msgstr "Token de autentificare"
 
 msgid "Login username"
 msgstr "Nume de utilizator"
+
+#, fuzzy
+msgid "Login via GET requests"
+msgstr "Activați autentificarea prin cereri GET"
 
 msgid "Login with the following credentials"
 msgstr "Conectați-vă cu următoarele credențiale"
@@ -43689,6 +43702,9 @@ msgstr "Porturi disponibile"
 msgid "Ports to open"
 msgstr "Porturi de deschis"
 
+msgid "Ports: Port Utilization (FC and iSCSI)"
+msgstr ""
+
 msgid "Position"
 msgstr "Poziția"
 
@@ -43697,18 +43713,6 @@ msgstr "Potrivire pozitivă (Adăugați gazdele corespunzătoare la set)"
 
 msgid "Positive match (Add matching services to the set)"
 msgstr "Potrivire pozitivă (Adăugați serviciile corespunzătoare la set)"
-
-msgid ""
-"Possible values are the following: cpgs, volumes, hosts, capacity, system, "
-"ports, remotecopy, hostsets, volumesets, vluns, flashcache, users, roles, "
-"qos.\n"
-"If you do not specify any value the first seven are used as default."
-msgstr ""
-"Valorile posibile sunt următoarele: cpgs, volumes, hosts, capacity, system, "
-"ports, remotecopy, hostsets, volumesets, vluns, flashcache, users, roles, "
-"qos.\n"
-"Dacă nu specificați nicio valoare, primele șapte sunt utilizate ca valoare "
-"implicită."
 
 msgid "Postfix"
 msgstr "Postfix"
@@ -44547,6 +44551,10 @@ msgstr "Biți pierduți QoS"
 
 msgid "QoS outbound bits"
 msgstr "Biți de ieșire QoS"
+
+#, fuzzy
+msgid "QoS: Quality of Service Configuration"
+msgstr "Salveaza configuratia manuala a verificarilor"
 
 msgid "Qps"
 msgstr "Qps"
@@ -45857,6 +45865,10 @@ msgstr ""
 msgid "Remote: Send events to remote syslog host"
 msgstr "La distanță: Trimiteți evenimente la o gazdă syslog la distanță"
 
+#, fuzzy
+msgid "RemoteCopy: Remote Copy Configuration"
+msgstr "Configurație la distanță"
+
 msgid "Remove"
 msgstr "Eliminați"
 
@@ -47102,6 +47114,10 @@ msgstr "Roluri"
 
 msgid "Roles & permissions"
 msgstr "Roluri și permisiuni"
+
+#, fuzzy
+msgid "Roles: Role Management"
+msgstr "Gestionarea sesiunii"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Se rotește în fiecare zi la ora locală 00:00"
@@ -51953,6 +51969,14 @@ msgstr "Sortare"
 msgid "Sorty by column"
 msgstr "Sortiți pe coloană"
 
+#, fuzzy
+msgid "Sounds"
+msgstr "Rotund"
+
+#, fuzzy
+msgid "Sounds in views"
+msgstr "Activați sunetele în vizualizări"
+
 msgid "Source"
 msgstr "Sursa"
 
@@ -54647,6 +54671,10 @@ msgstr "Decalajul de timp al sistemului"
 
 msgid "System uptime"
 msgstr "Timpul de funcționare a sistemului"
+
+#, fuzzy
+msgid "System: Storage Array Configuration"
+msgstr "Utilizați configurația globală"
 
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Systemd Timesyncd sincronizarea timpului"
@@ -71078,6 +71106,10 @@ msgstr "Regula de notificare a utilizatorilor"
 msgid "Users, roles and permissions"
 msgstr "Utilizatori, roluri și permisiuni"
 
+#, fuzzy
+msgid "Users: User Management"
+msgstr "Gestionarea utilizatorilor"
+
 msgid "Using predefined condition"
 msgstr "Utilizarea unei condiții predefinite"
 
@@ -71240,6 +71272,10 @@ msgstr "Tip VLAN"
 
 msgid "VLANs"
 msgstr "VLAN-uri"
+
+#, fuzzy
+msgid "VLUNs: Virtual LUN Configuration"
+msgstr "Utilizați configurația globală"
 
 msgid "VM"
 msgstr "VM"
@@ -71898,8 +71934,16 @@ msgstr "Numele volumului"
 msgid "Volume parameters"
 msgstr "Parametrii de volum"
 
+#, fuzzy
+msgid "VolumeSets: Volume Set Configuration"
+msgstr "Configurarea consolei de evenimente"
+
 msgid "Volumes"
 msgstr "Volumele"
+
+#, fuzzy
+msgid "Volumes: Virtual Volume Summary"
+msgstr "Rezumat al mașinilor virtuale Azure"
 
 msgid "Voluntary context switches"
 msgstr "Schimbarea voluntară a contextului"
@@ -76931,9 +76975,6 @@ msgstr "permite executarea optimizată a regulilor"
 msgid "enable pretty-printing of rules"
 msgstr "să permită tipărirea de tip pretty-printing a regulilor"
 
-msgid "enable sounds"
-msgstr "activați sunetele"
-
 msgid "enabled"
 msgstr "activat"
 
@@ -78485,9 +78526,37 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 msgid "{sa._name} ({sa.dotted_string})"
 msgstr ""
 
+msgid "{what.title()} rate"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid ""
+#~ "Possible values are the following: cpgs, volumes, hosts, capacity, "
+#~ "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
+#~ "users, roles, qos.\n"
+#~ "If you do not specify any value the first seven are used as default."
+#~ msgstr ""
+#~ "Valorile posibile sunt următoarele: cpgs, volumes, hosts, capacity, "
+#~ "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
+#~ "users, roles, qos.\n"
+#~ "Dacă nu specificați nicio valoare, primele șapte sunt utilizate ca "
+#~ "valoare implicită."
+
+#, python-format
+#~ msgid "%s rate"
+#~ msgstr "%s rata"
+
+#~ msgid "Asserts / s"
+#~ msgstr "Afirmații / s"
+
+#~ msgid "Enable core dumps"
+#~ msgstr "Activați descărcările de nucleu"
+
+#~ msgid "enable sounds"
+#~ msgstr "activați sunetele"
 
 #~ msgid "Commitable memory"
 #~ msgstr "Memorie comensurabilă"
@@ -81165,10 +81234,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgstr "Întreruperi adhoc"
 
 #, fuzzy
-#~ msgid "Save & go to service configuration"
-#~ msgstr "Salveaza configuratia manuala a verificarilor"
-
-#, fuzzy
 #~ msgid "Instance Alias Name"
 #~ msgstr "Adaugă instanță NGINX"
 
@@ -81952,10 +82017,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 #~ msgid "Checkmk: Snapins"
 #~ msgstr "(fără parametri)"
-
-#, fuzzy
-#~ msgid "Collect dump"
-#~ msgstr "Numele Aplicatiei"
 
 #, fuzzy
 #~ msgid "Custom snapin"
@@ -83738,10 +83799,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 #~ msgid "Save &amp; go to Services"
 #~ msgstr "Salveaza si mergi la"
-
-#, fuzzy
-#~ msgid "Save manual check configuration"
-#~ msgstr "Activare Configurare"
 
 #, fuzzy
 #~ msgid "Search for rules: "

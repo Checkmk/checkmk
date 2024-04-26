@@ -684,10 +684,6 @@ msgid "%s properties"
 msgstr "%s プロパティ"
 
 #, python-format
-msgid "%s rate"
-msgstr "%sレート"
-
-#, python-format
 msgid "%s read %s"
 msgstr "%s 読み取り%s"
 
@@ -6512,9 +6508,6 @@ msgstr "オプションのコメントを求める"
 msgid "Assertion Consumer Service endpoint"
 msgstr "Assertion Consumer Service のエンドポイント"
 
-msgid "Asserts / s"
-msgstr "アサート/秒"
-
 msgid "Assign SLA definition to service"
 msgstr "SLA定義をサービスに割り当てます"
 
@@ -7062,6 +7055,10 @@ msgstr "自動化の秘密"
 
 msgid "Automation secret for machine accounts"
 msgstr "マシンアカウントの自動化の秘密"
+
+#, fuzzy
+msgid "Automation user authentication via HTTP parameters"
+msgstr "認証リクエスト作成不可"
 
 msgid "Automation user rejected"
 msgstr "自動化ユーザーが拒否されました"
@@ -9821,6 +9818,9 @@ msgstr "残り容量"
 msgid "Capacity usage"
 msgstr "容量使用状況"
 
+msgid "Capacity: Array Capacity & Utilization"
+msgstr ""
+
 msgid "Carbon Overflows Rate"
 msgstr "カーボンオーバーフロー率"
 
@@ -12027,6 +12027,9 @@ msgstr "コミットされたメモリ"
 msgid "Common Name"
 msgstr "コモンネーム"
 
+msgid "Common Provisioning Groups: Virtual Pool Configuration"
+msgstr ""
+
 #, fuzzy
 msgid "Common name (CN)"
 msgstr "コモンネーム"
@@ -12040,6 +12043,14 @@ msgstr ""
 
 msgid "Community forum"
 msgstr "コミュニティ フォーラム"
+
+#, fuzzy
+msgid "Community translated languages"
+msgstr "コミュニティの翻訳言語を有効にする"
+
+#, fuzzy
+msgid "Community translated languages (not supported)"
+msgstr "コミュニティの翻訳言語を有効にする（サポート外）"
 
 msgid "Compare against discovered state"
 msgstr "発見された状態と比較する"
@@ -13262,6 +13273,10 @@ msgstr "コアとセットアップ"
 
 msgid "Core configuration reloaded"
 msgstr "コア構成がリロードされました"
+
+#, fuzzy
+msgid "Core dumps"
+msgstr "コアダンプを有効にする"
 
 msgid "Core files"
 msgstr "コアファイル"
@@ -19608,21 +19623,8 @@ msgstr "自動ホストキー受け入れを有効にする (OpenSSH version >= 
 msgid "Enable automatic host removal"
 msgstr "ホストの自動削除を有効化"
 
-#, fuzzy
-msgid "Enable automation user authentication via HTTP parameters"
-msgstr "認証リクエスト作成不可"
-
-msgid "Enable community translated languages"
-msgstr "コミュニティの翻訳言語を有効にする"
-
-msgid "Enable community translated languages (not supported)"
-msgstr "コミュニティの翻訳言語を有効にする（サポート外）"
-
 msgid "Enable controller"
 msgstr "コントローラを有効化"
-
-msgid "Enable core dumps"
-msgstr "コアダンプを有効にする"
 
 msgid "Enable debug mode"
 msgstr "デバッグモードを有効にする"
@@ -19669,9 +19671,6 @@ msgstr ""
 
 msgid "Enable logging of logon failures"
 msgstr "ログオン失敗のロギングを有効にする"
-
-msgid "Enable login via GET requests"
-msgstr "GETリクエストによるログイン有効化"
 
 msgid "Enable metrics for high-level keywords"
 msgstr ""
@@ -19723,9 +19722,6 @@ msgstr "行のシェーディングを有効にする"
 
 msgid "Enable service notifications"
 msgstr "サービス通知を有効にする"
-
-msgid "Enable sounds in views"
-msgstr "ビューでサウンドを有効にする"
 
 msgid "Enable synchronous delivery via SMTP"
 msgstr "SMTP経由の同期配信を有効にする"
@@ -22243,6 +22239,10 @@ msgstr "フラッピング"
 
 msgid "Flash Space Usage"
 msgstr "フラッシュスペースの使用量"
+
+#, fuzzy
+msgid "FlashCache: Flash Cache Configuration"
+msgstr "予測モデルの設定"
 
 msgid "Flashback"
 msgstr "フラッシュバック"
@@ -25950,6 +25950,10 @@ msgstr "ホスト:"
 msgid "Host: %s"
 msgstr "ホスト: %s"
 
+#, fuzzy
+msgid "HostSets: Host Set Configuration"
+msgstr "ホスト構成"
+
 msgid "Hostaddress"
 msgstr "ホストアドレス"
 
@@ -26217,6 +26221,10 @@ msgstr "ホスト: %d が作成され、 %d が変更され、 %d が削除さ�
 #, python-format
 msgid "Hosts: %d total (%d succeeded, %d skipped, %d failed)"
 msgstr "ホスト:合計%d(%d成功、%dスキップ、%d失敗)"
+
+#, fuzzy
+msgid "Hosts: Host Capacity & Utilization"
+msgstr "NutanixホストのCPU使用率"
 
 msgid "Hostsystem sensor alerts"
 msgstr "ホストシステムセンサーアラート"
@@ -33098,6 +33106,10 @@ msgstr "ログイントークン"
 
 msgid "Login username"
 msgstr "ログインユーザー名"
+
+#, fuzzy
+msgid "Login via GET requests"
+msgstr "GETリクエストによるログイン有効化"
 
 msgid "Login with the following credentials"
 msgstr "次の資格情報でログインします"
@@ -42740,6 +42752,9 @@ msgstr "利用可能なポート"
 msgid "Ports to open"
 msgstr "開くポート"
 
+msgid "Ports: Port Utilization (FC and iSCSI)"
+msgstr ""
+
 msgid "Position"
 msgstr "ポジション"
 
@@ -42748,16 +42763,6 @@ msgstr "正の一致(一致するホストをセットに追加)"
 
 msgid "Positive match (Add matching services to the set)"
 msgstr "ポジティブマッチ(マッチングサービスをセットに追加)"
-
-msgid ""
-"Possible values are the following: cpgs, volumes, hosts, capacity, system, "
-"ports, remotecopy, hostsets, volumesets, vluns, flashcache, users, roles, "
-"qos.\n"
-"If you do not specify any value the first seven are used as default."
-msgstr ""
-"可能な値は次のとおりです:cpgs、volumes、hosts、capacity、system、ports、"
-"remotecopy、hostsets、volumesets、vluns、flashcache、users、roles、qos。\n"
-"値を指定しない場合、最初の7つがデフォルトとして使用されます。"
 
 msgid "Postfix"
 msgstr "Postfix"
@@ -43584,6 +43589,10 @@ msgstr "QoSがビットをドロップした"
 
 msgid "QoS outbound bits"
 msgstr "QoSアウトバウンドビット"
+
+#, fuzzy
+msgid "QoS: Quality of Service Configuration"
+msgstr "保存してサービス設定に移動"
 
 msgid "Qps"
 msgstr "Qps"
@@ -44887,6 +44896,10 @@ msgstr "中央サイトがライセンス状態 %s のとき、リモートサ�
 msgid "Remote: Send events to remote syslog host"
 msgstr "リモート:リモートsyslogホストにイベントを送信します"
 
+#, fuzzy
+msgid "RemoteCopy: Remote Copy Configuration"
+msgstr "リモート設定"
+
 msgid "Remove"
 msgstr "削除する"
 
@@ -46134,6 +46147,10 @@ msgstr "役割"
 
 msgid "Roles & permissions"
 msgstr "役割と権限"
+
+#, fuzzy
+msgid "Roles: Role Management"
+msgstr "セッション管理"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "毎日現地時間00:00でローテーション"
@@ -50838,6 +50855,14 @@ msgstr "並べ替え"
 msgid "Sorty by column"
 msgstr "列ごとに並び替え"
 
+#, fuzzy
+msgid "Sounds"
+msgstr "円形"
+
+#, fuzzy
+msgid "Sounds in views"
+msgstr "ビューでサウンドを有効にする"
+
 msgid "Source"
 msgstr "ソース"
 
@@ -53432,6 +53457,10 @@ msgstr "システム時刻オフセット"
 
 msgid "System uptime"
 msgstr "システムの稼働時間"
+
+#, fuzzy
+msgid "System: Storage Array Configuration"
+msgstr "グローバル構成を使用する"
 
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Systemd Timesyncd時間同期"
@@ -69249,6 +69278,10 @@ msgstr "ユーザーの通知ルール"
 msgid "Users, roles and permissions"
 msgstr "ユーザー、役割と権限"
 
+#, fuzzy
+msgid "Users: User Management"
+msgstr "ユーザー管理"
+
 msgid "Using predefined condition"
 msgstr "事前定義された条件の使用"
 
@@ -69402,6 +69435,10 @@ msgstr "VLANタイプ"
 
 msgid "VLANs"
 msgstr "VLAN"
+
+#, fuzzy
+msgid "VLUNs: Virtual LUN Configuration"
+msgstr "グローバル構成を使用する"
 
 msgid "VM"
 msgstr "VM"
@@ -70057,8 +70094,16 @@ msgstr "ボリューム名"
 msgid "Volume parameters"
 msgstr "ボリュームパラメータ"
 
+#, fuzzy
+msgid "VolumeSets: Volume Set Configuration"
+msgstr "イベントコンソールの設定"
+
 msgid "Volumes"
 msgstr "ボリューム"
+
+#, fuzzy
+msgid "Volumes: Virtual Volume Summary"
+msgstr "Azure仮想マシンの概要"
 
 msgid "Voluntary context switches"
 msgstr "自発的なコンテキストスイッチ"
@@ -74865,9 +74910,6 @@ msgstr "最適化されたルール実行を有効にする"
 msgid "enable pretty-printing of rules"
 msgstr "ルールのプリティプリントを有効にする"
 
-msgid "enable sounds"
-msgstr "サウンドを有効にする"
-
 msgid "enabled"
 msgstr "有効"
 
@@ -76411,9 +76453,32 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "{sa._name} ({sa.dotted_string})"
 msgstr ""
 
+msgid "{what.title()} rate"
+msgstr ""
+
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "Possible values are the following: cpgs, volumes, hosts, capacity, "
+#~ "system, ports, remotecopy, hostsets, volumesets, vluns, flashcache, "
+#~ "users, roles, qos.\n"
+#~ "If you do not specify any value the first seven are used as default."
+#~ msgstr ""
+#~ "可能な値は次のとおりです:cpgs、volumes、hosts、capacity、system、ports、"
+#~ "remotecopy、hostsets、volumesets、vluns、flashcache、users、roles、qos。\n"
+#~ "値を指定しない場合、最初の7つがデフォルトとして使用されます。"
+
+#, python-format
+#~ msgid "%s rate"
+#~ msgstr "%sレート"
+
+#~ msgid "Asserts / s"
+#~ msgstr "アサート/秒"
+
+#~ msgid "enable sounds"
+#~ msgstr "サウンドを有効にする"
 
 #, fuzzy
 #~| msgid "Committed memory"
@@ -79710,9 +79775,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Invalid package name"
 #~ msgstr "パッケージ名が無効です"
-
-#~ msgid "Save & go to service configuration"
-#~ msgstr "保存してサービス設定に移動"
 
 #~ msgid "Instance Alias Name"
 #~ msgstr "インスタンスエイリアス名"

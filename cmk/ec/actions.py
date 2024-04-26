@@ -257,10 +257,7 @@ def _get_event_tags(
 
     tags: dict[str, str] = {}
     for key, value in substs:
-        if isinstance(value, tuple):
-            value = " ".join(map(to_string, value))
-        else:
-            value = to_string(value)
+        value = " ".join(map(to_string, value)) if isinstance(value, tuple) else to_string(value)
 
         tags[key] = value
 

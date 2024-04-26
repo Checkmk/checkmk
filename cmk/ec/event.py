@@ -94,7 +94,7 @@ def create_event_from_syslog_message(
             logger.info("could not parse message %s", message)
         event = _make_event(scrub_string(message.decode("utf-8", "replace")), ipaddress)
     if logger:
-        width = max(len(k) for k in event.keys()) + 1
+        width = max(len(k) for k in event) + 1
         logger.info(
             "parsed message: %s",
             "".join(f'\n {k+":":{width}} {v}' for k, v in sorted(event.items())),

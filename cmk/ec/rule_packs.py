@@ -8,6 +8,7 @@ of Check_MK. The GUI is e.g. accessing this module for gathering the default
 configuration.
 """
 
+import contextlib
 import copy
 import logging
 import pprint
@@ -207,19 +208,15 @@ def save_active_config(
     The rules.mk is handled separately: save filtered rule_packs; see werk 16012.
     """
     active_config_dir = create_paths(cmk.utils.paths.omd_root).active_config_dir.value
-    try:
+    with contextlib.suppress(FileNotFoundError):
         shutil.rmtree(str(active_config_dir))
-    except FileNotFoundError:
-        pass
 
     active_config_dir.mkdir(parents=True, exist_ok=True)
-    try:
+    with contextlib.suppress(FileNotFoundError):
         shutil.copy(
             cmk.utils.paths.ec_main_config_file,
             active_config_dir / "mkeventd.mk",
         )
-    except FileNotFoundError:
-        pass
 
     active_conf_d = active_config_dir / "conf.d"
     for path in cmk.utils.paths.ec_config_dir.glob("**/*.mk"):
@@ -242,10 +239,7 @@ def save_rule_packs(rule_packs: Iterable[ECRulePack], pretty_print: bool, path: 
     """Saves the given rule packs to rules.mk."""
     output = "# Written by WATO\n# encoding: utf-8\n\n"
 
-    if pretty_print:
-        rule_packs_text = pprint.pformat(list(rule_packs))
-    else:
-        rule_packs_text = repr(list(rule_packs))
+    rule_packs_text = pprint.pformat(list(rule_packs)) if pretty_print else repr(list(rule_packs))
 
     output += f"rule_packs += \\\n{rule_packs_text}\n"
 

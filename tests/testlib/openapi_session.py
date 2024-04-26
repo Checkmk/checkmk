@@ -640,7 +640,7 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        value: list[dict[str, Any]] = [_["extensions"] for _ in response.json()["value"]]
+        value: list[dict[str, Any]] = response.json()["value"]
         return value
 
     def get_rulesets(self) -> list[dict[str, Any]]:

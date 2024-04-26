@@ -8,7 +8,8 @@ import socket
 import subprocess
 import sys
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
@@ -23,8 +24,15 @@ from cmk.utils.log import console
 from cmk.automations.results import Gateway, GatewayResult
 
 import cmk.base.obsolete_output as out
-from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import IPStackConfig
+
+
+@dataclass(frozen=True, kw_only=True)
+class ScanConfig:
+    active: bool
+    online: bool
+    ip_stack_config: IPStackConfig
+    parents: Sequence[HostName]
 
 
 class _IpAddressLookup(Protocol):
@@ -34,7 +42,7 @@ class _IpAddressLookup(Protocol):
 
 
 def do_scan_parents(
-    config_cache: ConfigCache,
+    scan_config: Mapping[HostName, ScanConfig],
     hosts_config: Hosts,
     monitoring_host: HostName | None,
     hosts: list[HostName],
@@ -45,11 +53,7 @@ def do_scan_parents(
     # pylint: disable=too-many-branches
     if not hosts:
         hosts = sorted(
-            {
-                hn
-                for hn in hosts_config.hosts
-                if config_cache.is_active(hn) and config_cache.is_online(hn)
-            }
+            {hn for hn in hosts_config.hosts if scan_config[hn].active and scan_config[hn].online}
         )
 
     parent_hosts = []
@@ -85,13 +89,17 @@ def do_scan_parents(
             host = hosts.pop()
 
             # skip hosts that already have a parent
-            if config_cache.parents(host):
+            if scan_config[host].parents:
                 console.verbose("(manual parent) ")
                 continue
             chunk.append(host)
 
         results = scan_parents_of(
-            config_cache, hosts_config, monitoring_host, chunk, lookup_ip_address=lookup_ip_address
+            scan_config,
+            hosts_config,
+            monitoring_host,
+            chunk,
+            lookup_ip_address=lookup_ip_address,
         )
 
         for host, result in zip(chunk, results):
@@ -140,7 +148,7 @@ def traceroute_available() -> str | None:
 
 
 def scan_parents_of(
-    config_cache: ConfigCache,
+    scan_config: Mapping[HostName, ScanConfig],
     hosts_config: Hosts,
     monitoring_host: HostName | None,
     hosts: Iterable[HostName],
@@ -157,7 +165,7 @@ def scan_parents_of(
         None
         if (
             monitoring_host is None
-            or ConfigCache.ip_stack_config(monitoring_host) is IPStackConfig.NO_IP
+            or scan_config[monitoring_host].ip_stack_config is IPStackConfig.NO_IP
         )
         else lookup_ip_address(monitoring_host, family=socket.AddressFamily.AF_INET)
     )
@@ -169,7 +177,7 @@ def scan_parents_of(
     procs: list[tuple[HostName, HostAddress | None, str | subprocess.Popen]] = []
     for host in hosts:
         console.verbose("%s " % host)
-        if ConfigCache.ip_stack_config(host) is IPStackConfig.NO_IP:
+        if scan_config[host].ip_stack_config is IPStackConfig.NO_IP:
             procs.append((host, None, "ERROR: Configured to be a No-IP host"))
             continue
 
@@ -347,7 +355,7 @@ def scan_parents_of(
         # TTLs already have been filtered out)
         gateway_ip = this_route
         gateway = _ip_to_hostname(
-            config_cache, hosts_config, this_route, lookup_ip_address=lookup_ip_address
+            scan_config, hosts_config, this_route, lookup_ip_address=lookup_ip_address
         )
         if gateway:
             console.verbose("%s(%s) ", gateway, gateway_ip)
@@ -376,7 +384,7 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
 
 
 def _ip_to_hostname(
-    config_cache: ConfigCache,
+    scan_config: Mapping[HostName, ScanConfig],
     hosts_config: Hosts,
     ip: HostAddress | None,
     lookup_ip_address: _IpAddressLookup,
@@ -386,7 +394,7 @@ def _ip_to_hostname(
     cache = cache_manager.obtain_cache("ip_to_hostname")
     if absent:
         _fill_ip_to_hostname_cache(
-            cache, config_cache, hosts_config, lookup_ip_address=lookup_ip_address
+            cache, scan_config, hosts_config, lookup_ip_address=lookup_ip_address
         )
 
     return cache.get(ip)
@@ -394,7 +402,7 @@ def _ip_to_hostname(
 
 def _fill_ip_to_hostname_cache(
     cache: DictCache,
-    config_cache: ConfigCache,
+    scan_config: Mapping[HostName, ScanConfig],
     hosts_config: Hosts,
     *,
     lookup_ip_address: _IpAddressLookup,
@@ -405,9 +413,9 @@ def _fill_ip_to_hostname_cache(
         # inconsistent with do_scan_parents where a list of hosts could be passed as an argument
         hn
         for hn in hosts_config.hosts
-        if config_cache.is_active(hn) and config_cache.is_online(hn)
+        if scan_config[hn].active and scan_config[hn].online
     }:
-        if ConfigCache.ip_stack_config(host) is IPStackConfig.NO_IP:
+        if scan_config[host].ip_stack_config is IPStackConfig.NO_IP:
             continue
         try:
             cache[lookup_ip_address(host, family=socket.AddressFamily.AF_INET)] = host

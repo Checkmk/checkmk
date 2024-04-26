@@ -170,6 +170,7 @@ from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
+from cmk.base.parent_scan import ScanConfig
 from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
 
@@ -1806,9 +1807,19 @@ class AutomationScanParents(Automation):
             HostName(config.monitoring_host) if config.monitoring_host is not None else None
         )
 
+        def make_scan_config() -> Mapping[HostName, ScanConfig]:
+            return {
+                host: config_cache.make_parent_scan_config(host)
+                for host in itertools.chain(
+                    hostnames,
+                    hosts_config.hosts,
+                    ([HostName(config.monitoring_host)] if config.monitoring_host else ()),
+                )
+            }
+
         try:
             gateway_results = cmk.base.parent_scan.scan_parents_of(
-                config_cache,
+                make_scan_config(),
                 hosts_config,
                 monitoring_host,
                 hostnames,

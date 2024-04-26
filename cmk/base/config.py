@@ -115,6 +115,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
 )
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import IPStackConfig
+from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
 
 from cmk.server_side_calls import v1 as server_side_calls_api
@@ -1940,6 +1941,14 @@ class ConfigCache:
         )
 
         return self
+
+    def make_parent_scan_config(self, host_name: HostName) -> ParentScanConfig:
+        return ParentScanConfig(
+            active=self.is_active(host_name),
+            online=self.is_online(host_name),
+            ip_stack_config=ConfigCache.ip_stack_config(host_name),
+            parents=self.parents(host_name),
+        )
 
     def make_ipmi_fetcher(self, host_name: HostName, ip_address: HostAddress) -> IPMIFetcher:
         ipmi_credentials = self.management_credentials(host_name, "ipmi")

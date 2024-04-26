@@ -123,6 +123,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
+from cmk.base.parent_scan import ScanConfig
 from cmk.base.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
 
@@ -849,12 +850,23 @@ def mode_scan_parents(options: dict, args: list[str]) -> None:
     hosts_config = config.make_hosts_config()
 
     max_num_processes = max(options.get("procs", config.max_num_processes), 1)
+    hosts = [HostName(hn) for hn in args]
+
+    def make_scan_config() -> Mapping[HostName, ScanConfig]:
+        return {
+            host: config_cache.make_parent_scan_config(host)
+            for host in itertools.chain(
+                hosts,
+                hosts_config.hosts,
+                ([HostName(config.monitoring_host)] if config.monitoring_host else ()),
+            )
+        }
 
     cmk.base.parent_scan.do_scan_parents(
-        config_cache,
+        make_scan_config(),
         hosts_config,
         HostName(config.monitoring_host) if config.monitoring_host is not None else None,
-        [HostName(hn) for hn in args],
+        hosts,
         max_num_processes=max_num_processes,
         lookup_ip_address=partial(config.lookup_ip_address, config_cache),
     )

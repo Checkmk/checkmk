@@ -1814,6 +1814,7 @@ class AutomationScanParents(Automation):
                 hostnames,
                 silent=True,
                 settings=settings,
+                lookup_ip_address=functools.partial(config.lookup_ip_address, config_cache),
             )
             return ScanParentsResult(gateway_results)
         except Exception as e:

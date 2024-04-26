@@ -10,6 +10,7 @@ import sys
 import time
 from collections.abc import Iterable, Sequence
 from pathlib import Path
+from typing import Protocol
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -21,10 +22,15 @@ from cmk.utils.log import console
 
 from cmk.automations.results import Gateway, GatewayResult
 
-import cmk.base.config as config
 import cmk.base.obsolete_output as out
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import IPStackConfig
+
+
+class _IpAddressLookup(Protocol):
+    def __call__(
+        self, hostname: HostName, *, family: socket.AddressFamily
+    ) -> HostAddress | None: ...
 
 
 def do_scan_parents(
@@ -34,6 +40,7 @@ def do_scan_parents(
     hosts: list[HostName],
     *,
     max_num_processes: int,
+    lookup_ip_address: _IpAddressLookup,
 ) -> None:
     # pylint: disable=too-many-branches
     if not hosts:
@@ -83,7 +90,9 @@ def do_scan_parents(
                 continue
             chunk.append(host)
 
-        results = scan_parents_of(config_cache, hosts_config, monitoring_host, chunk)
+        results = scan_parents_of(
+            config_cache, hosts_config, monitoring_host, chunk, lookup_ip_address=lookup_ip_address
+        )
 
         for host, result in zip(chunk, results):
             if gw := result.gateway:
@@ -137,6 +146,8 @@ def scan_parents_of(
     hosts: Iterable[HostName],
     silent: bool = False,
     settings: dict[str, int] | None = None,
+    *,
+    lookup_ip_address: _IpAddressLookup,
 ) -> Sequence[GatewayResult]:
     # pylint: disable=too-many-branches
     if settings is None:
@@ -148,9 +159,7 @@ def scan_parents_of(
             monitoring_host is None
             or ConfigCache.ip_stack_config(monitoring_host) is IPStackConfig.NO_IP
         )
-        else config.lookup_ip_address(
-            config_cache, monitoring_host, family=socket.AddressFamily.AF_INET
-        )
+        else lookup_ip_address(monitoring_host, family=socket.AddressFamily.AF_INET)
     )
 
     os.putenv("LANG", "")
@@ -165,8 +174,7 @@ def scan_parents_of(
             continue
 
         try:
-            ip = config.lookup_ip_address(
-                config_cache,
+            ip = lookup_ip_address(
                 host,
                 # [IPv6] -- what about it?
                 family=socket.AddressFamily.AF_INET,
@@ -338,7 +346,9 @@ def scan_parents_of(
 
         # TTLs already have been filtered out)
         gateway_ip = this_route
-        gateway = _ip_to_hostname(config_cache, hosts_config, this_route)
+        gateway = _ip_to_hostname(
+            config_cache, hosts_config, this_route, lookup_ip_address=lookup_ip_address
+        )
         if gateway:
             console.verbose("%s(%s) ", gateway, gateway_ip)
         else:
@@ -366,19 +376,28 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
 
 
 def _ip_to_hostname(
-    config_cache: ConfigCache, hosts_config: Hosts, ip: HostAddress | None
+    config_cache: ConfigCache,
+    hosts_config: Hosts,
+    ip: HostAddress | None,
+    lookup_ip_address: _IpAddressLookup,
 ) -> HostName | None:
     """Find hostname belonging to an ip address."""
     absent = "ip_to_hostname" not in cache_manager
     cache = cache_manager.obtain_cache("ip_to_hostname")
     if absent:
-        _fill_ip_to_hostname_cache(cache, config_cache, hosts_config)
+        _fill_ip_to_hostname_cache(
+            cache, config_cache, hosts_config, lookup_ip_address=lookup_ip_address
+        )
 
     return cache.get(ip)
 
 
 def _fill_ip_to_hostname_cache(
-    cache: DictCache, config_cache: ConfigCache, hosts_config: Hosts
+    cache: DictCache,
+    config_cache: ConfigCache,
+    hosts_config: Hosts,
+    *,
+    lookup_ip_address: _IpAddressLookup,
 ) -> None:
     """We must not use reverse DNS but the Checkmk mechanisms, since we do not
     want to find the DNS name but the name of a matching host from all_hosts"""
@@ -391,9 +410,7 @@ def _fill_ip_to_hostname_cache(
         if ConfigCache.ip_stack_config(host) is IPStackConfig.NO_IP:
             continue
         try:
-            cache[
-                config.lookup_ip_address(config_cache, host, family=socket.AddressFamily.AF_INET)
-            ] = host
+            cache[lookup_ip_address(host, family=socket.AddressFamily.AF_INET)] = host
         except MKIPAddressLookupError:
             pass
 

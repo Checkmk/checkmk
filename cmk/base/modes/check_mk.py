@@ -856,6 +856,7 @@ def mode_scan_parents(options: dict, args: list[str]) -> None:
         HostName(config.monitoring_host) if config.monitoring_host is not None else None,
         [HostName(hn) for hn in args],
         max_num_processes=max_num_processes,
+        lookup_ip_address=partial(config.lookup_ip_address, config_cache),
     )
 
 

@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="var-annotated"
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
 from cmk.agent_based.v2 import OIDEnd, SNMPTree
 from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
+
+# mypy: disable-error-code="var-annotated"
+
 
 # .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.39 1 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.cpu1-temp
 # .1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2.40 5 --> IB-PLATFORMONE-MIB::ibNodeServiceStatus.cpu2-temp
@@ -30,9 +30,7 @@ from cmk.plugins.lib.infoblox import DETECT_INFOBLOX
 # Suggested by customer
 
 
-def parse_infoblox_temp(string_table):
-    if not all(string_table):
-        return None
+def _parse_infoblox_temp(state_table, temp_table):
     map_states = {
         "1": (0, "working"),
         "2": (1, "warning"),
@@ -43,9 +41,7 @@ def parse_infoblox_temp(string_table):
 
     parsed = {}
     # Just for a better handling
-    for index, state, descr in list(
-        zip(["", "1", "2", ""], string_table[0][0], string_table[1][0])
-    )[1:]:
+    for index, state, descr in list(zip(["1", "2", ""], state_table, temp_table)):
         if ":" not in descr:
             continue
 
@@ -66,12 +62,26 @@ def parse_infoblox_temp(string_table):
     return parsed
 
 
+def parse_infoblox_temp(string_table):
+    if not all(string_table):
+        return None
+
+    version_raw = string_table[0][0][1].split(".")
+    major_version = int(version_raw[0])
+    minor_version = int(version_raw[1])
+
+    if major_version > 8 or (major_version == 8 and minor_version > 6):
+        return _parse_infoblox_temp(string_table[1][0][1:4], string_table[2][0][1:4])
+    return _parse_infoblox_temp(string_table[1][0][3:], string_table[2][0][3:])
+
+
 def inventory_infoblox_temp(parsed):
-    yield from ((name, {}) for name in parsed)
+    if parsed is not None:
+        yield from ((name, {}) for name in parsed)
 
 
 def check_infoblox_temp(item, params, parsed):
-    if (sensor := parsed.get(item)) is None:
+    if parsed is None or (sensor := parsed.get(item)) is None:
         return None
 
     devstate, devstatename = sensor["state"]
@@ -89,12 +99,16 @@ check_info["infoblox_temp"] = LegacyCheckDefinition(
     detect=DETECT_INFOBLOX,
     fetch=[
         SNMPTree(
+            base=".1.3.6.1.4.1.7779.3.1.1.2.1.7",
+            oids=[OIDEnd(), "0"],
+        ),
+        SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2",
-            oids=[OIDEnd(), "39", "40", "41"],
+            oids=[OIDEnd(), "37", "38", "39", "40", "41"],
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.10.1.3",
-            oids=[OIDEnd(), "39", "40", "41"],
+            oids=[OIDEnd(), "37", "38", "39", "40", "41"],
         ),
     ],
     parse_function=parse_infoblox_temp,

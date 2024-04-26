@@ -123,15 +123,15 @@ impl<'a> ClientBuilder<'a> {
 
     pub fn make_config(&self) -> Result<Config> {
         let mut config = Config::new();
+        if let Some(db) = &self.database {
+            config.database(db);
+        }
 
         match &self.client_connection {
             Some(ClientConnection::Remote(connection)) => {
                 let port = connection.port.as_ref().map(|p| p.value());
                 config.host(&connection.host);
                 config.port(port.unwrap_or(defaults::STANDARD_PORT));
-                if let Some(db) = &self.database {
-                    config.database(db);
-                }
                 config.authentication(match connection.credentials {
                     Credentials::SqlServer { user, password } => {
                         AuthMethod::sql_server(user, password)

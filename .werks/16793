@@ -1,0 +1,10 @@
+Title: infoblox_temp: Add support for Nios version > 8.6
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1714114586
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+
+The relevant OIDs have changed for newer Nios versions. The check now differentiates between the different version, meaning the check does not crash anymore when parsing newer sections.

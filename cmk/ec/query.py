@@ -62,7 +62,7 @@ class StatusTable:
         Must return a enumerable type containing fully populated lists (rows) matching the
         columns of the table.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __init__(self, logger: Logger) -> None:
         self._logger = logger.getChild(f"status_table.{self.prefix}")

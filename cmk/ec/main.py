@@ -115,7 +115,7 @@ LimitKind = Literal["overall", "by_rule", "by_host"]
 class ECServerThread(threading.Thread):
     @abc.abstractmethod
     def serve(self) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def __init__(
         self,
@@ -2149,7 +2149,7 @@ class StatusServer(ECServerThread):
                     self.handle_command_request(query.method_arg, allow_commands)
                     response = None  # pylint and mypy are braindead and don't understand that None is a value
                 else:
-                    raise NotImplementedError()  # can never happen
+                    raise NotImplementedError  # can never happen
 
                 try:
                     self._answer_query(client_socket, query, response)
@@ -2170,7 +2170,7 @@ class StatusServer(ECServerThread):
             self._answer_query_python(client_socket, response)
             return
         if response is None:
-            raise NotImplementedError()  # Make mypy happy
+            raise NotImplementedError  # Make mypy happy
 
         if query.output_format == "plain":
             for row in response:
@@ -2183,7 +2183,7 @@ class StatusServer(ECServerThread):
             self._answer_query_python(client_socket, list(response))
 
         else:
-            raise NotImplementedError()
+            raise NotImplementedError
 
     def _answer_query_python(self, client_socket: socket.socket, response: Response) -> None:
         client_socket.sendall((repr(response) + "\n").encode("utf-8"))

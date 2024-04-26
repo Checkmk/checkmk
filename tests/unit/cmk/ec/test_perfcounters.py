@@ -137,4 +137,4 @@ def test_perfcounters_correct_status_values() -> None:
             )
 
         else:
-            raise NotImplementedError()
+            raise NotImplementedError

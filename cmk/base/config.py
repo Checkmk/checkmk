@@ -82,6 +82,7 @@ from cmk.fetchers import (
     IPMICredentials,
     IPMIFetcher,
     PiggybackFetcher,
+    ProgramFetcher,
     SNMPFetcher,
     SNMPSectionMeta,
     TCPEncryptionHandling,
@@ -1988,21 +1989,33 @@ class ConfigCache:
             password=ipmi_credentials.get("password"),
         )
 
+    def make_program_fetcher(
+        self,
+        host_name: HostName,
+        ip_address: HostAddress | None,
+        *,
+        program: str,
+        stdin: str | None,
+    ) -> ProgramFetcher:
+        cmdline = self.make_program_commandline(
+            host_name, ip_address, ConfiguredIPLookup(self, handle_ip_lookup_failure), program
+        )
+        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
+
+    def make_special_agent_fetcher(self, *, cmdline: str, stdin: str | None) -> ProgramFetcher:
+        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
+
+    def datasource_programs(self, host_name: HostName) -> Sequence[str]:
+        return self.ruleset_matcher.get_host_values(host_name, datasource_programs)
+
     def make_program_commandline(
         self,
         host_name: HostName,
         ip_address: HostAddress | None,
         ip_address_of: IPLookup,
+        program: str,
     ) -> str:
-        """
-        raise: LookupError if no datasource is configured.
-        """
-        return self.translate_commandline(
-            host_name,
-            ip_address,
-            self.ruleset_matcher.get_host_values(host_name, datasource_programs)[0],
-            ip_address_of,
-        )
+        return self.translate_commandline(host_name, ip_address, program, ip_address_of)
 
     def make_piggyback_fetcher(
         self, host_name: HostName, ip_address: HostAddress | None

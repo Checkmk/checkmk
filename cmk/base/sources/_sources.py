@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
-from cmk.fetchers import Fetcher, NoFetcher, NoFetcherError, ProgramFetcher
+from cmk.fetchers import Fetcher, NoFetcher, NoFetcherError
 from cmk.fetchers.filecache import (
     AgentFileCache,
     FileCache,
@@ -29,7 +29,6 @@ from cmk.fetchers.filecache import (
 from cmk.checkengine.fetcher import FetcherType, SourceInfo, SourceType
 from cmk.checkengine.parser import SectionNameCollection
 
-import cmk.base.config as config
 from cmk.base.config import ConfigCache
 
 from ._api import Source
@@ -243,6 +242,7 @@ class ProgramSource(Source[AgentRawData]):
         host_name: HostName,
         ipaddress: HostAddress | None,
         *,
+        program: str,
         max_age: MaxAge,
         file_cache_path: Path,
     ) -> None:
@@ -250,17 +250,9 @@ class ProgramSource(Source[AgentRawData]):
         self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
+        self.program: Final = program
         self._max_age: Final = max_age
         self._file_cache_path: Final = file_cache_path
-        # `make_program_commandline()` may raise LookupError if no datasource
-        # is configured.
-        self._cmdline: Final = self.config_cache.make_program_commandline(
-            host_name,
-            ipaddress,
-            config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure),
-        )
-        self._stdin: Final = None
-        self._is_cmc: Final = config.is_cmc()
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -272,7 +264,9 @@ class ProgramSource(Source[AgentRawData]):
         )
 
     def fetcher(self) -> Fetcher[AgentRawData]:
-        return ProgramFetcher(cmdline=self._cmdline, stdin=self._stdin, is_cmc=self._is_cmc)
+        return self.config_cache.make_program_fetcher(
+            self.host_name, self.ipaddress, program=self.program, stdin=None
+        )
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
@@ -433,10 +427,9 @@ class SpecialAgentSource(Source[AgentRawData]):
         )
 
     def fetcher(self) -> Fetcher[AgentRawData]:
-        return ProgramFetcher(
+        return self.config_cache.make_special_agent_fetcher(
             cmdline=self._cmdline,
             stdin=self._stdin,
-            is_cmc=config.is_cmc(),
         )
 
     def file_cache(

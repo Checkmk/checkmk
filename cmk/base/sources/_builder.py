@@ -9,7 +9,6 @@
 
 import logging
 from collections.abc import Iterable, Mapping, Sequence
-from contextlib import suppress
 from pathlib import Path
 from typing import assert_never, Final
 
@@ -344,12 +343,14 @@ class _Builder:
         self._elems[source.source_info().ident] = source
 
     def _add_agent(self) -> None:
-        with suppress(LookupError):
+        datasource_programs = self.config_cache.datasource_programs(self.host_name)
+        if datasource_programs:
             self._add(
                 ProgramSource(
                     self.config_cache,
                     self.host_name,
                     self.ipaddress,
+                    program=datasource_programs[0],
                     max_age=self.max_age_agent,
                     file_cache_path=self._tcp_cache_path,
                 )

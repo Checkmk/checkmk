@@ -17,5 +17,5 @@ def register(sorter_registry: SorterRegistry, painter_registry: PainterRegistry)
 
 
 __all__ = [
-    "Perfometer",
+    "register",
 ]

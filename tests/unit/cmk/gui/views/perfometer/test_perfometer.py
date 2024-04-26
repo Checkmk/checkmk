@@ -16,7 +16,7 @@ from cmk.gui.painter.v0.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.theme import theme
-from cmk.gui.views.perfometer import Perfometer
+from cmk.gui.views.perfometer.base import Perfometer
 from cmk.gui.views.perfometer.sorter import SorterPerfometer
 
 

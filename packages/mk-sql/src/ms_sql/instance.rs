@@ -1213,7 +1213,7 @@ fn to_datafiles_entry(
     let max_size = row.get_bigint_by_name("MaxSize");
     let allocated_size = row.get_bigint_by_name("AllocatedSize");
     let used_size = row.get_bigint_by_name("UsedSize");
-    let unlimited = row.get_bigint_by_name("Unlimited");
+    let unlimited = row.get_value_by_name("Unlimited");
     format!(
         "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
         instance_name,

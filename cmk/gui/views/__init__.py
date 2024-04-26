@@ -110,7 +110,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
     from cmk.gui.plugins.views import icons  # pylint: disable=cmk-module-layer-violation
-    from cmk.gui.views.perfometer.legacy_perfometers import utils as legacy_perfometers_utils
 
     from . import command, layout, sorter, store
 
@@ -246,12 +245,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "IconRegistry",
     ):
         icons.__dict__[name] = icon.__dict__[name]
-
-    globals().update(
-        {
-            "perfometers": legacy_perfometers_utils.perfometers,
-        }
-    )
 
 
 # Transform pre 1.6 icon plugins. Deprecate this one day.

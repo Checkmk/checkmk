@@ -4245,7 +4245,7 @@ class CEEConfigCache(ConfigCache):
 
     @staticmethod
     def cmc_real_time_checks() -> object:
-        return cmc_real_time_checks
+        return cmc_real_time_checks  # type: ignore[name-defined]  # pylint: disable=unused-variable
 
     def agent_config(self, host_name: HostName, default: Mapping[str, Any]) -> Mapping[str, Any]:
         def _impl() -> Mapping[str, Any]:

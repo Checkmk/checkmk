@@ -41,48 +41,54 @@ class TranslationKey:
 
 
 class MetricOperation(BaseModel, ABC, frozen=True):
-    ident: str
-
     @staticmethod
     @abstractmethod
-    def name() -> str:
-        raise NotImplementedError()
+    def operation_name() -> str: ...
 
     @abstractmethod
-    def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
-        raise NotImplementedError()
+    def keys(self) -> Iterator[TranslationKey | RRDDataKey]: ...
 
     @abstractmethod
-    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]:
-        raise NotImplementedError()
+    def compute_time_series(self, rrd_data: RRDData) -> Sequence[AugmentedTimeSeries]: ...
 
     def fade_odd_color(self) -> bool:
         return True
 
+    # mypy does not support other decorators on top of @property:
+    # https://github.com/python/mypy/issues/14461
+    # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
+    @computed_field  # type: ignore[misc]
+    @property
+    @final
+    def ident(self) -> str:
+        return self.operation_name()
+
 
 class MetricOperationRegistry(Registry[type[MetricOperation]]):
     def plugin_name(self, instance: type[MetricOperation]) -> str:
-        return instance.name()
+        return instance.operation_name()
 
 
 metric_operation_registry = MetricOperationRegistry()
 
 
 def parse_metric_operation(raw: object) -> MetricOperation:
-    if isinstance(raw, MetricOperation):
-        return raw
-    if isinstance(raw, dict):
-        return metric_operation_registry[f'metric_op_{raw["ident"]}'].model_validate(raw)
+    match raw:
+        case MetricOperation():
+            return raw
+        case {"ident": str(ident), **rest}:
+            return metric_operation_registry[ident].model_validate(rest)
+        case dict():
+            raise ValueError("Missing 'ident' key in metric operation")
     raise TypeError(raw)
 
 
 class MetricOpConstant(MetricOperation, frozen=True):
-    ident: Literal["constant"] = "constant"
     value: float
 
     @staticmethod
-    def name() -> str:
-        return "metric_op_constant"
+    def operation_name() -> Literal["constant"]:
+        return "constant"
 
     def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
@@ -93,11 +99,9 @@ class MetricOpConstant(MetricOperation, frozen=True):
 
 
 class MetricOpConstantNA(MetricOperation, frozen=True):
-    ident: Literal["constant_na"] = "constant_na"
-
     @staticmethod
-    def name() -> str:
-        return "metric_op_constant_na"
+    def operation_name() -> Literal["constant_na"]:
+        return "constant_na"
 
     def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield from ()
@@ -108,13 +112,12 @@ class MetricOpConstantNA(MetricOperation, frozen=True):
 
 
 class MetricOpOperator(MetricOperation, frozen=True):
-    ident: Literal["operator"] = "operator"
     operator_name: Operators
     operands: Sequence[Annotated[MetricOperation, PlainValidator(parse_metric_operation)]] = []
 
     @staticmethod
-    def name() -> str:
-        return "metric_op_operator"
+    def operation_name() -> Literal["operator"]:
+        return "operator"
 
     def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield from (k for o in self.operands for k in o.keys())
@@ -134,7 +137,6 @@ class MetricOpOperator(MetricOperation, frozen=True):
 
 
 class MetricOpRRDSource(MetricOperation, frozen=True):
-    ident: Literal["rrd"] = "rrd"
     site_id: SiteId
     host_name: HostName
     service_name: ServiceName
@@ -143,8 +145,8 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
     scale: float
 
     @staticmethod
-    def name() -> str:
-        return "metric_op_rrd"
+    def operation_name() -> Literal["rrd"]:
+        return "rrd"
 
     def keys(self) -> Iterator[TranslationKey | RRDDataKey]:
         yield RRDDataKey(

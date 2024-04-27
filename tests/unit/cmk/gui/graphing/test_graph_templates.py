@@ -591,7 +591,6 @@ def test_graph_templates_with_consolidation_function() -> None:
             ["metric-name"],
             [1.0],
             MetricOpRRDSource(
-                ident="rrd",
                 site_id=SiteId("Site-ID"),
                 host_name=HostName("HostName"),
                 service_name="Service Description",
@@ -605,11 +604,9 @@ def test_graph_templates_with_consolidation_function() -> None:
             ["metric-name", "old-metric-name"],
             [1.0, 2.0],
             MetricOpOperator(
-                ident="operator",
                 operator_name="MERGE",
                 operands=[
                     MetricOpRRDSource(
-                        ident="rrd",
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
                         service_name="Service Description",
@@ -618,7 +615,6 @@ def test_graph_templates_with_consolidation_function() -> None:
                         scale=1.0,
                     ),
                     MetricOpRRDSource(
-                        ident="rrd",
                         site_id=SiteId("Site-ID"),
                         host_name=HostName("HostName"),
                         service_name="Service Description",

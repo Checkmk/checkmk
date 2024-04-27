@@ -1,0 +1,9 @@
+Title: Aggregation visualization: Fixed displaying aggregations names containing special characters
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1714227764
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+

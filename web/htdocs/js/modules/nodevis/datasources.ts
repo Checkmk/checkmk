@@ -164,12 +164,18 @@ export class AggregationsDatasource extends AbstractDatasource {
         return "bi_aggregations";
     }
 
-    fetch_aggregations(list_of_aggregations, use_layout_id): void {
-        let url =
-            "ajax_fetch_aggregation_data.py?aggregations=" +
-            JSON.stringify(list_of_aggregations);
-        if (use_layout_id) url += "&layout_id=" + use_layout_id;
-        this.fetch(url);
+    fetch_aggregations(
+        list_of_aggregations: string[],
+        use_layout_id: string
+    ): void {
+        const fetch_params: Record<string, string> = {
+            aggregations: JSON.stringify(list_of_aggregations),
+        };
+        if (use_layout_id) fetch_params["layout_id"] = use_layout_id;
+        this.fetch(
+            "ajax_fetch_aggregation_data.py",
+            new URLSearchParams(fetch_params).toString()
+        );
     }
 }
 

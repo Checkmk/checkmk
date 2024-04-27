@@ -59,7 +59,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
     ] = lambda graph_template, _spec: graph_template
 
-    graph_type: Literal["template"] = "template"
     site: SiteId | None
     host_name: HostName
     service_description: ServiceName
@@ -68,8 +67,8 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     destination: str | None = None
 
     @staticmethod
-    def name() -> str:
-        return "template_graph_specification"
+    def graph_type_name() -> Literal["template"]:
+        return "template"
 
     def recipes(self) -> list[GraphRecipe]:
         row = get_graph_data_from_livestatus(self.site, self.host_name, self.service_description)

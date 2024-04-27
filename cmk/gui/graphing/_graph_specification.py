@@ -9,9 +9,9 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
-from typing import Annotated, Literal, NamedTuple
+from typing import Annotated, final, Literal, NamedTuple
 
-from pydantic import BaseModel, field_validator, PlainValidator, SerializeAsAny
+from pydantic import BaseModel, computed_field, field_validator, PlainValidator, SerializeAsAny
 
 from livestatus import SiteId
 
@@ -186,31 +186,39 @@ class GraphMetric(BaseModel, frozen=True):
 
 
 class GraphSpecification(BaseModel, ABC, frozen=True):
-    graph_type: str
-
     @staticmethod
     @abstractmethod
-    def name() -> str: ...
+    def graph_type_name() -> str: ...
 
     @abstractmethod
     def recipes(self) -> Sequence[GraphRecipe]: ...
 
+    # mypy does not support other decorators on top of @property:
+    # https://github.com/python/mypy/issues/14461
+    # https://docs.pydantic.dev/2.0/usage/computed_fields (mypy warning)
+    @computed_field  # type: ignore[misc]
+    @property
+    @final
+    def graph_type(self) -> str:
+        return self.graph_type_name()
+
 
 class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):
     def plugin_name(self, instance: type[GraphSpecification]) -> str:
-        return instance.name()
+        return instance.graph_type_name()
 
 
 graph_specification_registry = GraphSpecificationRegistry()
 
 
 def parse_raw_graph_specification(raw: object) -> GraphSpecification:
-    if isinstance(raw, GraphSpecification):
-        return raw
-    if isinstance(raw, dict):
-        return graph_specification_registry[
-            f"{raw['graph_type']}_graph_specification"
-        ].model_validate(raw)
+    match raw:
+        case GraphSpecification():
+            return raw
+        case {"graph_type": str(graph_type), **rest}:
+            return graph_specification_registry[graph_type].model_validate(rest)
+        case dict():
+            raise ValueError("Missing 'graph_type' key in graph specification")
     raise TypeError(raw)
 
 

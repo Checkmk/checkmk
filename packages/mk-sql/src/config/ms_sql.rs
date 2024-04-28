@@ -5,11 +5,13 @@
 use super::defines::{defaults, keys, values};
 use super::section::{Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
+use crate::platform;
 use crate::types::{
     CertPath, HostName, InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -150,11 +152,18 @@ impl Config {
         let discovery = Discovery::from_yaml(main)?.unwrap_or_else(|| default.discovery().clone());
         let section_info = Sections::from_yaml(main, &default.sections)?;
 
-        let custom_instances = main
+        let mut custom_instances = main
             .get_yaml_vector(keys::INSTANCES)
             .into_iter()
             .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &section_info))
             .collect::<Result<Vec<CustomInstance>>>()?;
+        if discovery.detect() {
+            let registry_instances =
+                get_additional_registry_instances(&custom_instances, &auth, &conn);
+            custom_instances.extend(registry_instances);
+        } else {
+            log::info!("skipping registry instances: the reason detection disabled");
+        }
         let mode = Mode::from_yaml(main).unwrap_or_else(|_| default.mode().clone());
         let piggyback_host = main.get_string(keys::PIGGYBACK_HOST);
 
@@ -237,6 +246,45 @@ impl Config {
 
         true
     }
+}
+
+fn get_additional_registry_instances(
+    already_found_instances: &[CustomInstance],
+    auth: &Authentication,
+    conn: &Connection,
+) -> Vec<CustomInstance> {
+    let work_host = calc_real_host(auth, conn).to_string().to_lowercase();
+    if work_host != "localhost" {
+        log::info!(
+            "skipping registry instances: the reason the host `{} `is not localhost",
+            work_host
+        );
+        return vec![];
+    }
+
+    let names: HashSet<String> = already_found_instances
+        .iter()
+        .map(|i| i.name().to_string().to_lowercase().clone())
+        .collect();
+    log::info!("localhost is defined, adding registry instances");
+    platform::registry::get_instances()
+        .into_iter()
+        .filter_map(|i| {
+            if names.contains(&i.name.to_string().to_lowercase()) {
+                log::info!(
+                    "{} is ignored as already defined in custom instances",
+                    i.name
+                );
+                return None;
+            }
+
+            if let Some(port) = i.final_port() {
+                Some(CustomInstance::from_registry(&i.name, auth, conn, port))
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<CustomInstance>>()
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -573,7 +621,7 @@ impl TryFrom<&str> for Mode {
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub struct CustomInstance {
     /// also known as sid
     name: InstanceName,
@@ -603,6 +651,22 @@ impl CustomInstance {
             alias: yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
             piggyback: Piggyback::from_yaml(yaml, sections)?,
         })
+    }
+
+    pub fn from_registry(
+        name: &InstanceName,
+        main_auth: &Authentication,
+        main_conn: &Connection,
+        port: &Port,
+    ) -> Self {
+        let (auth, conn) = CustomInstance::make_registry_auth_and_conn(main_auth, main_conn, port);
+        Self {
+            name: name.clone(),
+            auth,
+            conn,
+            alias: None,
+            piggyback: None,
+        }
     }
 
     /// Make auth and conn for custom instance using yaml
@@ -650,6 +714,20 @@ impl CustomInstance {
             };
         }
         Ok((auth, conn))
+    }
+
+    /// Make auth and conn for custom instance using windows registry
+    fn make_registry_auth_and_conn(
+        main_auth: &Authentication,
+        main_conn: &Connection,
+        port: &Port,
+    ) -> (Authentication, Connection) {
+        let conn = Connection {
+            hostname: "localhost".to_string().into(),
+            port: port.clone(),
+            ..main_conn.clone()
+        };
+        (main_auth.clone(), conn)
     }
 
     /// also known as sid
@@ -927,7 +1005,7 @@ piggyback:
     fn test_config_inheritance() {
         let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
         assert_eq!(c.configs.len(), 3);
-        assert_eq!(c.custom_instances.len(), 2);
+        assert_eq!(c.custom_instances.len(), 2 + expected_count_in_registry());
         assert_eq!(c.configs[0].options(), &Options::new(11.into()));
         assert_eq!(c.configs[1].options(), &Options::new(11.into()));
         assert_eq!(c.configs[1].auth(), c.auth());
@@ -1191,6 +1269,13 @@ discovery:
         assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
     }
 
+    fn expected_count_in_registry() -> usize {
+        #[cfg(windows)]
+        return 3;
+        #[cfg(unix)]
+        return 0;
+    }
+
     #[cfg(windows)]
     #[test]
     fn test_custom_instance_integrated() {
@@ -1219,7 +1304,7 @@ connection:
     fn test_config() {
         let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
         assert_eq!(c.options(), &Options::new(5.into()));
-        assert_eq!(c.instances().len(), 2);
+        assert_eq!(c.instances().len(), 2 + expected_count_in_registry());
         assert!(c.instances()[0].piggyback().is_some());
         assert_eq!(
             c.instances()[0].piggyback().unwrap().hostname(),
@@ -1286,6 +1371,53 @@ connection:
         assert!(!c.is_instance_allowed(&"weird"));
         assert!(c.is_instance_allowed(&"a"));
         assert!(c.is_instance_allowed(&"b"));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_get_additional_registry_instances() {
+        // nothing found
+        let auth = Authentication::default();
+        let conn = Connection::default();
+        let found: Vec<CustomInstance> = vec![];
+        let full = get_additional_registry_instances(&found, &auth, &conn);
+        assert_eq!(full.len(), 3);
+        assert!(full.iter().all(|i| i.conn().port() >= Port(1433)));
+
+        // one is found
+        let found: Vec<CustomInstance> = vec![CustomInstance {
+            name: "MSSQLSERVER".to_string().into(),
+            ..Default::default()
+        }];
+        let a = get_additional_registry_instances(&found, &auth, &conn);
+        assert_eq!(a.len(), 2);
+        assert!(a.iter().all(|i| i.conn().port() > Port(10000)));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_get_additional_registry_instances_non_localhost() {
+        let auth = Authentication {
+            username: "ux".to_string(),
+            auth_type: AuthType::SqlServer,
+            ..Default::default()
+        };
+        let conn = Connection {
+            hostname: HostName::from("ux".to_string()),
+            ..Default::default()
+        };
+        let found: Vec<CustomInstance> = vec![];
+        let a = get_additional_registry_instances(&found, &auth, &conn);
+        assert!(a.is_empty());
+    }
+    #[cfg(unix)]
+    #[test]
+    fn test_get_additional_registry_instances() {
+        let auth = Authentication::default();
+        let conn = Connection::default();
+        let found: Vec<CustomInstance> = vec![];
+        let a = get_additional_registry_instances(&found, &auth, &conn);
+        assert!(a.is_empty());
     }
 
     fn make_detect_config(include: &[&str], exclude: &[&str]) -> Config {

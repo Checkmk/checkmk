@@ -7,8 +7,55 @@ use crate::types::{InstanceName, Port};
 #[derive(Debug)]
 pub struct InstanceInfo {
     pub name: InstanceName,
-    pub port: Option<Port>,
-    pub dynamic_port: Option<Port>,
+    port: Option<Port>,
+    dynamic_port: Option<Port>,
+}
+
+impl InstanceInfo {
+    pub fn final_port(&self) -> Option<&Port> {
+        self.dynamic_port
+            .as_ref()
+            .filter(|p| p.0 != 0)
+            .or(self.port.as_ref())
+            .filter(|p| p.0 != 0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        platform::InstanceInfo,
+        types::{InstanceName, Port},
+    };
+
+    #[test]
+    fn test_instance() {
+        let make_i = |port: Option<u16>, dynamic_port: Option<u16>| InstanceInfo {
+            name: InstanceName::from("AAA".to_owned()),
+            port: port.map(|p| p.into()),
+            dynamic_port: dynamic_port.map(|p| p.into()),
+        };
+
+        let std_port = 1;
+        let dyn_port = 2;
+        assert_eq!(
+            make_i(Some(std_port), None).final_port().unwrap(),
+            &Port::from(std_port)
+        );
+        assert_eq!(
+            make_i(Some(std_port), Some(dyn_port)).final_port().unwrap(),
+            &Port::from(dyn_port)
+        );
+        assert_eq!(
+            make_i(Some(std_port), Some(dyn_port)).final_port().unwrap(),
+            &Port::from(dyn_port)
+        );
+        assert_eq!(
+            make_i(Some(std_port), Some(0)).final_port().unwrap(),
+            &Port::from(std_port)
+        );
+        assert!(make_i(Some(0), Some(0)).final_port().is_none());
+    }
 }
 
 #[cfg(windows)]
@@ -26,7 +73,7 @@ pub mod registry {
         instances_std.into_iter().chain(instances_wow).collect()
     }
 
-    pub fn get_instances_on_key(sql_key: &str) -> Vec<InstanceInfo> {
+    fn get_instances_on_key(sql_key: &str) -> Vec<InstanceInfo> {
         let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
         let result = root_key.open_subkey_with_flags(
             sql_key.to_owned() + r"Instance Names\SQL",
@@ -77,7 +124,6 @@ pub mod registry {
         #[test]
         fn test_get_instances() {
             let infos = get_instances();
-            eprintln!("{:?}", infos);
             assert_eq!(infos.len(), 3usize);
         }
     }

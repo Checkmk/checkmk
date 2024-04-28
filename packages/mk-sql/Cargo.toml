@@ -43,6 +43,10 @@ derive_more = { version = "0.99", features = [
   "default",
 ] }
 
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+
 [dev-dependencies]
 tempfile = { version = "*" }
 assert_cmd = { version = "*" }

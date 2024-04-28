@@ -422,3 +422,17 @@ def _annotate_family(
             yield host_config.hostname, host_config, socket.AddressFamily.AF_INET
         if IPStackConfig.IPv6 in host_config.ip_stack_config:
             yield host_config.hostname, host_config, socket.AddressFamily.AF_INET6
+
+
+class CollectFailedHosts:
+    """Collects hosts for which IP lookup fails"""
+
+    def __init__(self) -> None:
+        self._failed_ip_lookups: dict[HostName, Exception] = {}
+
+    @property
+    def failed_ip_lookups(self) -> Mapping[HostName, Exception]:
+        return self._failed_ip_lookups
+
+    def __call__(self, host_name: HostName, exc: Exception) -> None:
+        self._failed_ip_lookups[host_name] = exc

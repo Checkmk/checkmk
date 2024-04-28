@@ -206,7 +206,9 @@ def _create_nagios_config_host(
     cfg.write("# %s\n" % hostname)
     cfg.write("# ----------------------------------------------------\n")
 
-    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
 
     host_attrs = config_cache.get_host_attributes(hostname, ip_address_of)
     if config.generate_hostconf:

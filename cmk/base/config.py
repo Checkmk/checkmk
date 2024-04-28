@@ -25,7 +25,18 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, TypeAlias
+from typing import (
+    Any,
+    AnyStr,
+    assert_never,
+    Final,
+    Generic,
+    Literal,
+    NamedTuple,
+    overload,
+    TypeAlias,
+    TypeVar,
+)
 
 import cmk.utils
 import cmk.utils.check_utils
@@ -368,22 +379,18 @@ class _NestedExitSpec(ExitSpec, total=False):
     individual: dict[str, ExitSpec]
 
 
-_ignore_ip_lookup_failures = False
-_failed_ip_lookups: list[HostName] = []
-
-
 IPLookup = Callable[
     [HostName, Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]],
     HostAddress | None,
 ]
 
+_TErrHandler = TypeVar("_TErrHandler", bound=Callable[[HostName, Exception], None])
 
-class ConfiguredIPLookup:
-    def __init__(
-        self, config_cache: ConfigCache, error_handler: Callable[[HostName, Exception], None]
-    ) -> None:
+
+class ConfiguredIPLookup(Generic[_TErrHandler]):
+    def __init__(self, config_cache: ConfigCache, *, error_handler: _TErrHandler) -> None:
         self._config_cache = config_cache
-        self.error_handler: Final = error_handler
+        self.error_handler: Final[_TErrHandler] = error_handler
 
     def __call__(
         self,
@@ -404,28 +411,13 @@ class ConfiguredIPLookup:
 def handle_ip_lookup_failure(host_name: HostName, exc: Exception) -> None:
     """Error handler for IP lookup failures.
 
-    * collects host for which the lookup failed in global variable
-    * collects error messages for failed lookups in a global variable (maybe)
-    * writesg error messages to the console (maybe)
+    * collects error messages for failed lookups in a global variable
+    * writes error messages to the console
     """
-
-    _failed_ip_lookups.append(host_name)
-    if not _ignore_ip_lookup_failures:
-        config_warnings.warn(
-            f"Cannot lookup IP address of '{host_name}' ({exc}). "
-            "The host will not be monitored correctly."
-        )
-
-
-# TODO: use a simpler version of the above error handler if this is called.
-def ignore_ip_lookup_failures() -> None:
-    global _ignore_ip_lookup_failures
-    _ignore_ip_lookup_failures = True
-
-
-# TODO: use a simpler version of the above error handler unless this is called.
-def failed_ip_lookups() -> list[HostName]:
-    return _failed_ip_lookups
+    config_warnings.warn(
+        f"Cannot lookup IP address of '{host_name}' ({exc}). "
+        "The host will not be monitored correctly."
+    )
 
 
 def get_variable_names() -> list[str]:
@@ -1978,7 +1970,10 @@ class ConfigCache:
         stdin: str | None,
     ) -> ProgramFetcher:
         cmdline = self.make_program_commandline(
-            host_name, ip_address, ConfiguredIPLookup(self, handle_ip_lookup_failure), program
+            host_name,
+            ip_address,
+            ConfiguredIPLookup(self, error_handler=handle_ip_lookup_failure),
+            program,
         )
         return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
 

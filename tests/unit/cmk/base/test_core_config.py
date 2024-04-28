@@ -70,7 +70,9 @@ def test_do_create_config_nagios(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})
-    ip_address_of = config.ConfiguredIPLookup(core_scenario, config.handle_ip_lookup_failure)
+    ip_address_of = config.ConfiguredIPLookup(
+        core_scenario, error_handler=config.handle_ip_lookup_failure
+    )
     core_config.do_create_config(
         create_core("nagios"),
         core_scenario,
@@ -87,7 +89,9 @@ def test_do_create_config_nagios_collects_passwords(
     core_scenario: ConfigCache, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(config, "get_resource_macros", lambda *_: {})  # file IO :-(
-    ip_address_of = config.ConfiguredIPLookup(core_scenario, config.handle_ip_lookup_failure)
+    ip_address_of = config.ConfiguredIPLookup(
+        core_scenario, error_handler=config.handle_ip_lookup_failure
+    )
 
     password_store.save(passwords := {"stored-secret": "123"}, password_store.password_store_path())
 
@@ -148,7 +152,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     assert (
         config_cache.get_host_attributes(
             HostName("test-host"),
-            config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure),
+            config.ConfiguredIPLookup(config_cache, error_handler=config.handle_ip_lookup_failure),
         )
         == expected_attrs
     )
@@ -280,7 +284,7 @@ def test_template_translation(
             hostname,
             ipaddress,
             template,
-            config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure),
+            config.ConfiguredIPLookup(config_cache, error_handler=config.handle_ip_lookup_failure),
         )
         == f"<NOTHING>x{ipaddress or ''}x{hostname}x<host>x<ip>x"
     )

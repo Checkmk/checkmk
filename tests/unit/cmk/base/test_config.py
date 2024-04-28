@@ -349,7 +349,7 @@ def test_ip_address_of(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.default_address_family(localhost) is socket.AddressFamily.AF_INET
     assert config_cache.ip_stack_config(localhost) is IPStackConfig.IPv4
 
-    ip_address_of = ConfiguredIPLookup(config_cache, handle_ip_lookup_failure)
+    ip_address_of = ConfiguredIPLookup(config_cache, error_handler=handle_ip_lookup_failure)
 
     assert (
         ip_address_of(

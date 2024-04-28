@@ -251,7 +251,9 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
                 ipaddress,
                 password_store_file=used_password_store,
                 passwords=passwords,
-                ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
+                ip_address_of=ConfiguredIPLookup(
+                    config_cache, error_handler=handle_ip_lookup_failure
+                ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),
             check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

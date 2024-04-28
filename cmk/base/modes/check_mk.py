@@ -608,7 +608,9 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 ipaddress,
                 passwords=cmk.utils.password_store.load(pending_passwords_file),
                 password_store_file=pending_passwords_file,
-                ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
+                ip_address_of=ConfiguredIPLookup(
+                    config_cache, error_handler=handle_ip_lookup_failure
+                ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),
             check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
@@ -1432,7 +1434,9 @@ def mode_update() -> None:
 
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
-    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
     try:
         with cmk.base.core.activation_lock(mode=config.restart_locking):
             do_create_config(
@@ -1484,7 +1488,9 @@ modes.register(
 def mode_restart(args: Sequence[HostName]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
-    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
     cmk.base.core.do_restart(
         config_cache,
         ip_address_of,
@@ -1531,7 +1537,9 @@ modes.register(
 def mode_reload(args: Sequence[HostName]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
-    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
     cmk.base.core.do_reload(
         config_cache,
         ip_address_of,

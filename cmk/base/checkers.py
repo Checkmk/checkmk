@@ -397,7 +397,7 @@ class CMKFetcher:
                         passwords,
                         self.password_store_file,
                         ip_address_of=ConfiguredIPLookup(
-                            self.config_cache, handle_ip_lookup_failure
+                            self.config_cache, error_handler=handle_ip_lookup_failure
                         ),
                     ),
                     agent_connection_mode=self.config_cache.agent_connection_mode(

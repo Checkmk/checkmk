@@ -419,7 +419,9 @@ def _get_discovery_preview(
     on_error: OnError,
 ) -> ServiceDiscoveryPreviewResult:
     buf = io.StringIO()
-    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
 
@@ -651,7 +653,9 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
 
     config.load()
     config_cache = config.get_config_cache()
-    ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+    ip_address_of = config.ConfiguredIPLookup(
+        config_cache, error_handler=config.handle_ip_lookup_failure
+    )
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache,
@@ -964,15 +968,13 @@ class AutomationRenameHosts(Automation):
             # Start monitoring again
             if core_was_running:
                 # force config generation to succeed. The core *must* start.
-                # TODO: Can't we drop this hack since we have config warnings now?
-                config.ignore_ip_lookup_failures()
                 # In this case the configuration is already locked by the caller of the automation.
                 # If that is on the local site, we can not lock the configuration again during baking!
                 # (If we are on a remote site now, locking *would* work, but we will not bake agents anyway.)
                 config_cache = config.get_config_cache()
                 hosts_config = config.make_hosts_config()
                 ip_address_of = config.ConfiguredIPLookup(
-                    config_cache, config.handle_ip_lookup_failure
+                    config_cache, error_handler=ip_lookup.CollectFailedHosts()
                 )
                 _execute_silently(
                     config_cache,
@@ -982,7 +984,7 @@ class AutomationRenameHosts(Automation):
                     skip_config_locking_for_bakery=True,
                 )
 
-                for hostname in config.failed_ip_lookups():
+                for hostname in ip_address_of.error_handler.failed_ip_lookups:
                     actions.append("dnsfail-" + hostname)
 
         # Convert actions into a dictionary { "what" : count }
@@ -1305,7 +1307,7 @@ class AutomationAnalyseServices(Automation):
                     host_name=host_name,
                     servicedesc=servicedesc,
                     ip_address_of=config.ConfiguredIPLookup(
-                        config_cache, config.handle_ip_lookup_failure
+                        config_cache, error_handler=config.handle_ip_lookup_failure
                     ),
                 )
             )
@@ -1611,7 +1613,9 @@ class AutomationRestart(Automation):
             nodes = None
         config_cache = config.get_config_cache()
         hosts_config = config.make_hosts_config()
-        ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+        ip_address_of = config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        )
         return _execute_silently(
             config_cache, self._mode(), ip_address_of, hosts_config, hosts_to_update=nodes
         )
@@ -1950,7 +1954,7 @@ class AutomationDiagHost(Automation):
                         # Also: This class might write to console. The de-serializer of the automation call will
                         # not be able to handle this I think? At best it will ignore it. We should fix this.
                         ip_address_of=config.ConfiguredIPLookup(
-                            config_cache, config.handle_ip_lookup_failure
+                            config_cache, error_handler=config.handle_ip_lookup_failure
                         ),
                     )
                 )
@@ -2078,7 +2082,9 @@ class AutomationDiagHost(Automation):
                 ipaddress,
                 password_store_file=pending_passwords_file,
                 passwords=passwords,
-                ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
+                ip_address_of=ConfiguredIPLookup(
+                    config_cache, error_handler=handle_ip_lookup_failure
+                ),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
             check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
@@ -2295,7 +2301,9 @@ class AutomationActiveCheck(Automation):
 
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-        ip_address_of = config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure)
+        ip_address_of = config.ConfiguredIPLookup(
+            config_cache, error_handler=config.handle_ip_lookup_failure
+        )
 
         if plugin == "custom":
             for entry in config_cache.custom_checks(host_name):
@@ -2534,7 +2542,9 @@ class AutomationGetAgentOutput(Automation):
                         ipaddress,
                         password_store_file=core_password_store_file,
                         passwords=cmk.utils.password_store.load(core_password_store_file),
-                        ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
+                        ip_address_of=ConfiguredIPLookup(
+                            config_cache, error_handler=handle_ip_lookup_failure
+                        ),
                     ),
                     agent_connection_mode=config_cache.agent_connection_mode(hostname),
                     check_mk_check_interval=config_cache.check_mk_check_interval(hostname),

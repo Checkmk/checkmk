@@ -7,6 +7,7 @@ pub mod config;
 pub mod constants;
 pub mod emit;
 pub mod ms_sql;
+pub mod platform;
 pub mod setup;
 pub mod types;
 pub mod utils;

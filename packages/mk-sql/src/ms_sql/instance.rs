@@ -1827,7 +1827,13 @@ pub async fn obtain_instance_builders(
         Ok(mut client) => Ok(_obtain_instance_builders(&mut client, endpoint).await),
         Err(err) => {
             log::error!("Failed to create main client: {err}");
-            obtain_instance_builders_by_sql_browser(endpoint, instances).await
+            if endpoint.conn().hostname() == &HostName::from("localhost".to_string()) {
+                log::info!("Host is local trying to find entries in registry");
+                obtain_instance_builders_by_sql_browser(endpoint, instances).await
+            } else {
+                log::info!("Trying to connect to localhost using SQL Browser");
+                obtain_instance_builders_by_sql_browser(endpoint, instances).await
+            }
         }
     }
 }

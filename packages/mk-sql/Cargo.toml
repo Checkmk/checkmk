@@ -41,6 +41,10 @@ derive_more = { version = "0.99", features = [
     "default",
 ] }
 
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+
 [dev-dependencies]
 tempfile = { version = "3.10.1" }
 assert_cmd = { version = "<2.0.14" } # needs rustc >= 1.73

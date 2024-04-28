@@ -36,7 +36,10 @@ HARDWARE = Hardware(
     ethernet_ports={
         "CT0.ETH3": Device(
             name="CT0.ETH3", status="unknown", type="eth_port", details="Unknown state"
-        )
+        ),
+        "CT0.ETH4": Device(
+            name="CT0.ETH4", status="not_installed", type="eth_port", details="Not installed"
+        ),
     },
     fibre_channel_ports={
         "CT0.FC0": Device(name="CT0.FC0", status="critical", type="fc_port", details=None)
@@ -61,7 +64,7 @@ HARDWARE = Hardware(
         pytest.param(
             [
                 [
-                    '{"continuation_token": null, "items": [{"details": "Storage bay doing good.", "identify_enabled": false, "index": 3, "model": null, "name": "SH0.BAY3", "serial": "PS-0T2OPQH0", "slot": null, "speed": null, "status": "ok", "temperature": null, "type": "drive_bay", "voltage": null},  {"details": "Still identifying the device.", "identify_enabled": null, "index": 0, "model": null, "name": "SH0.FAN0", "serial": null, "slot": null, "speed": null, "status": "identifying", "temperature": null, "type": "cooling", "voltage": null}, {"details": null, "identify_enabled": null, "index": 0, "model": null, "name": "CT0.FC0", "serial": null, "slot": 6, "speed": 8000000000, "status": "critical", "temperature": null, "type": "fc_port", "voltage": null}, {"details": null, "identify_enabled": null, "index": 0, "model": null, "name": "CT0.IB0", "serial": null, "slot": 4, "speed": 56000000000, "status": "healthy", "temperature": null, "type": "ib_port", "voltage": null}, {"details": null, "identify_enabled": null, "index": 0, "model": null, "name": "CT0.PWR0", "serial": null, "slot": null, "speed": null, "status": "ok", "temperature": null, "type": "power_supply", "voltage": null}, {"details": "Unknown state", "identify_enabled": null, "index": 3, "model": null, "name": "CT0.ETH3", "serial": null, "slot": null, "speed": 10000000000, "status": "unknown", "temperature": null, "type": "eth_port", "voltage": null}], "more_items_remaining": false, "total_item_count": null}'
+                    '{"continuation_token": null, "items": [{"details": "Storage bay doing good.", "identify_enabled": false, "index": 3, "model": null, "name": "SH0.BAY3", "serial": "PS-0T2OPQH0", "slot": null, "speed": null, "status": "ok", "temperature": null, "type": "drive_bay", "voltage": null},  {"details": "Still identifying the device.", "identify_enabled": null, "index": 0, "model": null, "name": "SH0.FAN0", "serial": null, "slot": null, "speed": null, "status": "identifying", "temperature": null, "type": "cooling", "voltage": null}, {"details": null, "identify_enabled": null, "index": 0, "model": null, "name": "CT0.FC0", "serial": null, "slot": 6, "speed": 8000000000, "status": "critical", "temperature": null, "type": "fc_port", "voltage": null}, {"details": null, "identify_enabled": null, "index": 0, "model": null, "name": "CT0.IB0", "serial": null, "slot": 4, "speed": 56000000000, "status": "healthy", "temperature": null, "type": "ib_port", "voltage": null}, {"details": null, "identify_enabled": null, "index": 0, "model": null, "name": "CT0.PWR0", "serial": null, "slot": null, "speed": null, "status": "ok", "temperature": null, "type": "power_supply", "voltage": null}, {"details": "Unknown state", "identify_enabled": null, "index": 3, "model": null, "name": "CT0.ETH3", "serial": null, "slot": null, "speed": 10000000000, "status": "unknown", "temperature": null, "type": "eth_port", "voltage": null}, {"details": "Not installed","identify_enabled": null,"index": 4,"model": null,"name": "CT0.ETH4","serial": null,"slot": null,"speed": 10000000000,"status": "not_installed","temperature": null,"type": "eth_port","voltage": null}], "more_items_remaining": false, "total_item_count": null}'
                 ]
             ],
             HARDWARE,
@@ -128,7 +131,7 @@ def test_check_storage_bay(
     [
         (
             HARDWARE,
-            [Service(item="CT0.ETH3")],
+            [Service(item="CT0.ETH3"), Service(item="CT0.ETH4")],
         )
     ],
 )
@@ -153,6 +156,15 @@ def test_discover_ethernet_port(section: Hardware, expected_services: DiscoveryR
             "Unknown",
             [],
             id="no item in section",
+        ),
+        pytest.param(
+            HARDWARE,
+            "CT0.ETH4",
+            [
+                Result(state=State.OK, summary="Status: not_installed"),
+                Result(state=State.OK, summary="Not installed"),
+            ],
+            id="OK state for not installed",
         ),
     ],
 )

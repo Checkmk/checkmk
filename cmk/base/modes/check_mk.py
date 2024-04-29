@@ -73,6 +73,7 @@ from cmk.snmplib import (
 import cmk.fetchers.snmp as snmp_factory
 from cmk.fetchers import get_raw_data
 from cmk.fetchers import Mode as FetchMode
+from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 import cmk.checkengine.inventory as inventory
@@ -604,7 +605,12 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                     checking_sections=config_cache.make_checking_sections(
                         hostname, selected_sections=NO_SELECTION
                     ),
-                    section_cache_path=section_cache_path,
+                    persisted_section_dir=make_persisted_section_dir(
+                        source_info.hostname,
+                        fetcher_type=source_info.fetcher_type,
+                        ident=source_info.ident,
+                        section_cache_path=section_cache_path,
+                    ),
                     keep_outdated=file_cache_options.keep_outdated,
                     logger=log.logger,
                 ),

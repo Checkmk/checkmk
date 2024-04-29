@@ -118,6 +118,7 @@ from cmk.snmplib import (
 )
 
 from cmk.fetchers import get_raw_data, Mode, ProgramFetcher, TCPFetcher
+from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
@@ -2510,7 +2511,12 @@ class AutomationGetAgentOutput(Automation):
                             checking_sections=config_cache.make_checking_sections(
                                 hostname, selected_sections=NO_SELECTION
                             ),
-                            section_cache_path=section_cache_path,
+                            persisted_section_dir=make_persisted_section_dir(
+                                source_info.hostname,
+                                fetcher_type=source_info.fetcher_type,
+                                ident=source_info.ident,
+                                section_cache_path=section_cache_path,
+                            ),
                             keep_outdated=file_cache_options.keep_outdated,
                             logger=logging.getLogger("cmk.base.checking"),
                         ),

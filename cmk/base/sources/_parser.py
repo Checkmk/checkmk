@@ -11,8 +11,6 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPRawDataElem
 
-from cmk.fetchers.config import make_persisted_section_dir
-
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import AgentRawDataSectionElem, Parser, SectionStore
 
@@ -27,7 +25,7 @@ def make_parser(
     *,
     # Always from NO_SELECTION.
     checking_sections: frozenset[SectionName],
-    section_cache_path: Path,
+    persisted_section_dir: Path,
     keep_outdated: bool,
     logger: logging.Logger,
 ) -> Parser:
@@ -36,12 +34,7 @@ def make_parser(
         return config_cache.make_snmp_parser(
             hostname,
             SectionStore[SNMPRawDataElem](
-                make_persisted_section_dir(
-                    source.hostname,
-                    fetcher_type=source.fetcher_type,
-                    ident=source.ident,
-                    section_cache_path=section_cache_path,
-                ),
+                persisted_section_dir,
                 logger=logger,
             ),
             checking_sections=checking_sections,
@@ -52,12 +45,7 @@ def make_parser(
     return config_cache.make_agent_parser(
         hostname,
         SectionStore[Sequence[AgentRawDataSectionElem]](
-            make_persisted_section_dir(
-                source.hostname,
-                fetcher_type=source.fetcher_type,
-                ident=source.ident,
-                section_cache_path=section_cache_path,
-            ),
+            persisted_section_dir,
             logger=logger,
         ),
         keep_outdated=keep_outdated,

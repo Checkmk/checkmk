@@ -40,6 +40,7 @@ from cmk.utils.timeperiod import timeperiod_active
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
 from cmk.fetchers import Fetcher, get_raw_data, Mode
+from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
 from cmk.checkengine.checking import (
@@ -180,7 +181,12 @@ class CMKParser:
                     checking_sections=self.config_cache.make_checking_sections(
                         source.hostname, selected_sections=NO_SELECTION
                     ),
-                    section_cache_path=section_cache_path,
+                    persisted_section_dir=make_persisted_section_dir(
+                        source.hostname,
+                        fetcher_type=source.fetcher_type,
+                        ident=source.ident,
+                        section_cache_path=section_cache_path,
+                    ),
                     keep_outdated=self.keep_outdated,
                     logger=self.logger,
                 ),

@@ -601,7 +601,8 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             host_sections = parse_raw_data(
                 make_parser(
                     config_cache,
-                    source_info,
+                    source_info.hostname,
+                    source_info.fetcher_type,
                     checking_sections=config_cache.make_checking_sections(
                         hostname, selected_sections=NO_SELECTION
                     ),

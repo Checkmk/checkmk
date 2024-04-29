@@ -7,11 +7,12 @@ import logging
 from collections.abc import Sequence
 from pathlib import Path
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPRawDataElem
 
-from cmk.checkengine.fetcher import FetcherType, SourceInfo
+from cmk.checkengine.fetcher import FetcherType
 from cmk.checkengine.parser import AgentRawDataSectionElem, Parser, SectionStore
 
 from cmk.base.config import ConfigCache
@@ -21,7 +22,8 @@ __all__ = ["make_parser"]
 
 def make_parser(
     config_cache: ConfigCache,
-    source: SourceInfo,
+    hostname: HostName,
+    fetcher_type: FetcherType,
     *,
     # Always from NO_SELECTION.
     checking_sections: frozenset[SectionName],
@@ -29,8 +31,7 @@ def make_parser(
     keep_outdated: bool,
     logger: logging.Logger,
 ) -> Parser:
-    hostname = source.hostname
-    if source.fetcher_type is FetcherType.SNMP:
+    if fetcher_type is FetcherType.SNMP:
         return config_cache.make_snmp_parser(
             hostname,
             SectionStore[SNMPRawDataElem](

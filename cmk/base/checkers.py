@@ -177,7 +177,8 @@ class CMKParser:
             source_result = parse_raw_data(
                 make_parser(
                     self.config_cache,
-                    source,
+                    source.hostname,
+                    source.fetcher_type,
                     checking_sections=self.config_cache.make_checking_sections(
                         source.hostname, selected_sections=NO_SELECTION
                     ),

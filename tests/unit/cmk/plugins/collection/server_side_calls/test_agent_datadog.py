@@ -8,7 +8,8 @@ from typing import Any
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from cmk.plugins.datadog.server_side_calls.agent_datadog import special_agent_datadog
+from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, URLProxy
 
 pytestmark = pytest.mark.checks
 
@@ -19,20 +20,11 @@ pytestmark = pytest.mark.checks
         pytest.param(
             {
                 "instance": {
-                    "api_key": (
-                        "password",
-                        "12345",
-                    ),
-                    "app_key": (
-                        "password",
-                        "powerg",
-                    ),
+                    "api_key": Secret(1),
+                    "app_key": Secret(2),
                     "api_host": "api.datadoghq.eu",
                 },
-                "proxy": (
-                    "url",
-                    "abc:8567",
-                ),
+                "proxy": URLProxy(url="abc:8567"),
                 "monitors": {
                     "tags": [
                         "t1",
@@ -68,8 +60,8 @@ pytestmark = pytest.mark.checks
             },
             [
                 "testhost",
-                "12345",
-                "powerg",
+                Secret(1).unsafe(),
+                Secret(2).unsafe(),
                 "api.datadoghq.eu",
                 "--proxy",
                 "abc:8567",
@@ -116,14 +108,8 @@ pytestmark = pytest.mark.checks
         pytest.param(
             {
                 "instance": {
-                    "api_key": (
-                        "password",
-                        "12345",
-                    ),
-                    "app_key": (
-                        "password",
-                        "powerg",
-                    ),
+                    "api_key": Secret(3),
+                    "app_key": Secret(4),
                     "api_host": "api.datadoghq.eu",
                 },
                 "monitors": {},
@@ -137,8 +123,8 @@ pytestmark = pytest.mark.checks
             },
             [
                 "testhost",
-                "12345",
-                "powerg",
+                Secret(3).unsafe(),
+                Secret(4).unsafe(),
                 "api.datadoghq.eu",
                 "--monitor_tags",
                 "--monitor_monitor_tags",
@@ -161,21 +147,15 @@ pytestmark = pytest.mark.checks
         pytest.param(
             {
                 "instance": {
-                    "api_key": (
-                        "password",
-                        "12345",
-                    ),
-                    "app_key": (
-                        "password",
-                        "powerg",
-                    ),
+                    "api_key": Secret(5),
+                    "app_key": Secret(6),
                     "api_host": "api.datadoghq.eu",
                 },
             },
             [
                 "testhost",
-                "12345",
-                "powerg",
+                Secret(5).unsafe(),
+                Secret(6).unsafe(),
                 "api.datadoghq.eu",
                 "--sections",
             ],
@@ -187,11 +167,13 @@ def test_datadog_argument_parsing(
     params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    assert (
-        SpecialAgent("agent_datadog").argument_func(
+    commands = list(
+        special_agent_datadog(
             params,
-            "testhost",
-            "address",
+            HostConfig(
+                name="testhost",
+                ipv4_config=IPv4Config(address="0.0.0.1"),
+            ),
         )
-        == expected_result
     )
+    assert commands[0].command_arguments == expected_result

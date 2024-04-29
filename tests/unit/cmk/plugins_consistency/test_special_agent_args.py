@@ -110,7 +110,6 @@ UNMIGRATED = {
     "aws_status",
     "azure",
     "couchbase",
-    "datadog",
     "ddn_s2a",
     "emcvnx",
     "gcp_status",

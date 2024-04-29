@@ -23,6 +23,7 @@ HACK_AGENTS = {
     "bi": False,  # needs no secret
     "cisco_meraki": True,
     "cisco_prime": True,
+    "datadog": True,
     "elasticsearch": True,
     "fritzbox": False,  # needs no secret
     "gcp": True,

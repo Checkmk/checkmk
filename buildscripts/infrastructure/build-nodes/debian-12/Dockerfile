@@ -72,6 +72,10 @@ RUN apt-get install -y \
     tk-dev \
     uuid-dev
 
+# remove apt service because we don't need it and we run into problems, see
+# https://jira.lan.tribe29.com/browse/CMK-16607
+RUN rm /etc/cron.daily/apt-compat
+
 # Install our standard tool chain for building in seperate container
 # - gnu-toolchain is needed for compiling all the C++ stuff
 # - cmake is needed for e.g. building re2

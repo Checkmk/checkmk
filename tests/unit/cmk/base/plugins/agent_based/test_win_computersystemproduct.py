@@ -7,17 +7,13 @@ import cmk.base.plugins.agent_based.win_computersystemproduct as wcsp
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 
 # <<<win_computersystemproduct:sep(58):persist(1713282994)>>>
-# IdentifyingNumber:
-# Name: Standard PC (Q35 + ICH9, 2009)
 # UUID: 28926C71-246D-4438-BD02-26F0E721FECD
-# Vendor: QEMU
 
 STRING_TABLE = [
-    ["IdentifyingNumber", ""],
-    ["Name", "Standard PC (Q35 + ICH9, 2009)"],
     ["UUID", "28926C71-246D-4438-BD02-26F0E721FECD"],
-    ["Vendor", "QEMU"],
 ]
+
+STRING_TABLE_EMPTY: list[list[str]] = []
 
 
 def test_inventory_win_computersystemproduct() -> None:
@@ -33,3 +29,11 @@ def test_inventory_win_computersystemproduct() -> None:
             },
         ),
     ]
+
+
+def test_inventory_win_computersystemproduct_empty() -> None:
+    assert not list(
+        wcsp.inventory_win_computersystemproduct(
+            wcsp.parse_win_computersystemproduct(STRING_TABLE_EMPTY),
+        )
+    )

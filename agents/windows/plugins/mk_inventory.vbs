@@ -298,8 +298,8 @@ Call getWMIObject("Win32_ComputerSystem",systemVars)
 
 ' ComputerSystemProduct
 Call startSection("win_computersystemproduct",58,timeUntil)
-systemVars = Array( "IdentifyingNumber","Name","UUID","Vendor" )
-Call getWMIObject("Win32_ComputerSystemProduct",systemVars)
+computerSystemProductVars = Array( "UUID" )
+Call getWMIObject("Win32_ComputerSystemProduct",computerSystemProductVars)
 
 ' Hard-Disk
 Call startSection("win_disks",58,timeUntil)

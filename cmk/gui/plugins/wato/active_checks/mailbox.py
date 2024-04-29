@@ -35,7 +35,7 @@ from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupActiv
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
-# Note: already migrated as `cmk.plugins.email.rulesets.options.smtp`
+# Note: already migrated as `cmk.plugins.emailchecks.rulesets.options.smtp`
 def _smtp_email_parameters() -> Dictionary:
     return Dictionary(
         title="SMTP",
@@ -95,7 +95,7 @@ def _smtp_email_parameters() -> Dictionary:
     )
 
 
-# Note: already migrated as `cmk.plugins.email.rulesets.options.common`
+# Note: already migrated as `cmk.plugins.emailchecks.rulesets.options.common`
 def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
     credentials_basic: tuple[str, str, Tuple] = (
         "basic",
@@ -223,21 +223,7 @@ def validate_common_email_parameters(params: Mapping[str, tuple], varprefix: str
         )
 
 
-# Note: already migrated as `cmk.plugins.email.rulesets.options.sending`
-def _mail_sending_params() -> DictionaryEntry:
-    return (
-        "send",
-        CascadingDropdown(
-            title=_("Mail sending"),
-            choices=[
-                ("SMTP", _("SMTP"), _smtp_email_parameters()),
-                ("EWS", _("EWS"), _common_email_parameters("EWS", "80/443")),
-            ],
-        ),
-    )
-
-
-# Note: already migrated as `cmk.plugins.email.rulesets.options.receiving`
+# Note: already migrated as `cmk.plugins.emailchecks.rulesets.options.receiving`
 def _mail_receiving_params(supported_protocols: Iterable[str]) -> DictionaryEntry:
     return (
         "fetch",
@@ -254,101 +240,6 @@ def _mail_receiving_params(supported_protocols: Iterable[str]) -> DictionaryEntr
             ],
         ),
     )
-
-
-def _valuespec_active_checks_mail_loop() -> Dictionary:
-    return Dictionary(
-        title=_("Check Email Delivery"),
-        help=_(
-            "This active check sends out special emails to a defined mail address using either "
-            "the SMTP protocol or an EWS connection and then tries to receive these mails back "
-            "by querying the inbox of an IMAP, POP3 or EWS mailbox. With this check you can "
-            "verify that your whole mail delivery progress is working."
-        ),
-        optional_keys=[
-            "subject",
-            "connect_timeout",
-            "delete_messages",
-            "duration",
-        ],
-        elements=[
-            (
-                "item",
-                TextInput(
-                    title=_("Name"),
-                    help=_("The service name will be <b>Mail Loop</b> plus this name"),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "subject",
-                TextInput(
-                    title=_("Subject"),
-                    allow_empty=False,
-                    help=_(
-                        "Here you can specify the subject text "
-                        "instead of default text 'Check_MK-Mail-Loop'."
-                    ),
-                ),
-            ),
-            _mail_sending_params(),
-            _mail_receiving_params({"IMAP", "POP3", "EWS"}),
-            (
-                "mail_from",
-                EmailAddress(
-                    title=_("From: email address"),
-                ),
-            ),
-            (
-                "mail_to",
-                EmailAddress(
-                    title=_("Destination email address"),
-                ),
-            ),
-            (
-                "connect_timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    minvalue=1,
-                    default_value=10,
-                    unit=_("sec"),
-                ),
-            ),
-            (
-                "duration",
-                Tuple(
-                    title=_("Loop duration"),
-                    elements=[
-                        Age(title=_("Warning at")),
-                        Age(title=_("Critical at")),
-                    ],
-                ),
-            ),
-            (
-                "delete_messages",
-                FixedValue(
-                    value=True,
-                    title=_("Delete processed messages"),
-                    totext=_("Delete all processed message belonging to this check"),
-                    help=_(
-                        "Delete all messages identified as being related to this "
-                        "check. This is disabled by default, which will make "
-                        "your mailbox grow when you do not clean it up on your own."
-                    ),
-                ),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupActiveChecks,
-        match_type="all",
-        name=RuleGroup.ActiveChecks("mail_loop"),
-        valuespec=_valuespec_active_checks_mail_loop,
-    )
-)
 
 
 def _valuespec_active_checks_mail() -> Dictionary:

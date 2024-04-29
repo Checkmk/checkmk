@@ -5,6 +5,7 @@
 import datetime
 import re
 import typing
+from collections.abc import Mapping
 
 from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
@@ -667,13 +668,13 @@ class MappingConverter(Converter):
 
     """
 
-    def __init__(self, mapping) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, mapping: Mapping[str, str]) -> None:
         self.mapping = mapping
 
-    def to_checkmk(self, data):
+    def to_checkmk(self, data: str) -> str:
         return self.mapping[data]
 
-    def from_checkmk(self, data):
+    def from_checkmk(self, data: str) -> str:
         for key, value in self.mapping.items():
             if data == value:
                 return key

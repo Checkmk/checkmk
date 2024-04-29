@@ -365,8 +365,8 @@ class _ExprNested(base.Nested):
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
-def query_field(  # type: ignore[no-untyped-def]
-    table: type[Table], required: bool = False, example=None
+def query_field(
+    table: type[Table], required: bool = False, example: str | None = None
 ) -> base.Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 

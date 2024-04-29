@@ -369,20 +369,20 @@ class ColumnPainterFromHint(TypedDict):
     export_for_json: Callable[[Row, Cell], SDValue]
 
 
-def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHint) -> CellSpec:
-    if hint.ident not in row:
+def _paint_host_inventory_column(row: Row, ident: str, hint: ColumnDisplayHint) -> CellSpec:
+    if ident not in row:
         return "", ""
     return compute_cell_spec(
         SDItem(
-            SDKey(hint.ident),
-            row[hint.ident],
-            row.get("_".join([hint.ident, "retention_interval"])),
+            SDKey(ident),
+            row[ident],
+            row.get("_".join([ident, "retention_interval"])),
         ),
         hint,
     )
 
 
-def column_painter_from_hint(hint: ColumnDisplayHint) -> ColumnPainterFromHint:
+def column_painter_from_hint(ident: str, hint: ColumnDisplayHint) -> ColumnPainterFromHint:
     return ColumnPainterFromHint(
         title=hint.long_inventory_title,
         # The short titles (used in column headers) may overlap for different painters, e.g.:
@@ -392,16 +392,16 @@ def column_painter_from_hint(hint: ColumnDisplayHint) -> ColumnPainterFromHint:
         # long_title in the column title tooltips
         short=hint.short_title,
         tooltip_title=hint.long_title,
-        columns=[hint.ident],
+        columns=[ident],
         # See views/painter/v0/base.py::Cell.painter_parameters
         # We have to add a dummy value here such that the painter_parameters are not None and
         # the "real" parameters, ie. _painter_params, are used.
         params=FixedValue(PainterParameters(), totext=""),
-        sorter=hint.ident,
-        paint=lambda row: _paint_host_inventory_column(row, hint),
-        export_for_python=lambda row, cell: row.get(hint.ident),
-        export_for_csv=lambda row, cell: "" if (data := row.get(hint.ident)) is None else str(data),
-        export_for_json=lambda row, cell: row.get(hint.ident),
+        sorter=ident,
+        paint=lambda row: _paint_host_inventory_column(row, ident, hint),
+        export_for_python=lambda row, cell: row.get(ident),
+        export_for_csv=lambda row, cell: "" if (data := row.get(ident)) is None else str(data),
+        export_for_json=lambda row, cell: row.get(ident),
     )
 
 

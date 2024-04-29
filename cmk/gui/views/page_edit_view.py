@@ -426,7 +426,7 @@ def _get_inventory_column_infos(hint: NodeDisplayHint) -> Sequence[InventoryColu
             title=str(column_hint.title),
         )
         for column_name, column_hint in hint.columns.items()
-        if painter_registry.get(column_hint.ident)
+        if (col_ident := hint.column_ident(column_name)) and painter_registry.get(col_ident)
     ]
 
 

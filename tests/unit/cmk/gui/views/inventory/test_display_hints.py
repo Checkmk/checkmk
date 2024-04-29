@@ -217,15 +217,13 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 attributes=OrderedDict(),
                 # The single column hints are not checked here
                 columns=OrderedDict(
-                    id=ColumnDisplayHint.from_raw("", "", (), "id", {}),
-                    creation=ColumnDisplayHint.from_raw("", "", (), "creation", {}),
-                    size=ColumnDisplayHint.from_raw("", "", (), "size", {}),
-                    labels=ColumnDisplayHint.from_raw("", "", (), "labels", {}),
-                    amount_containers=ColumnDisplayHint.from_raw(
-                        "", "", (), "amount_containers", {}
-                    ),
-                    repotags=ColumnDisplayHint.from_raw("", "", (), "repotags", {}),
-                    repodigests=ColumnDisplayHint.from_raw("", "", (), "repodigests", {}),
+                    id=ColumnDisplayHint.from_raw("", "id", {}),
+                    creation=ColumnDisplayHint.from_raw("", "creation", {}),
+                    size=ColumnDisplayHint.from_raw("", "size", {}),
+                    labels=ColumnDisplayHint.from_raw("", "labels", {}),
+                    amount_containers=ColumnDisplayHint.from_raw("", "amount_containers", {}),
+                    repotags=ColumnDisplayHint.from_raw("", "repotags", {}),
+                    repodigests=ColumnDisplayHint.from_raw("", "repodigests", {}),
                 ),
                 table_view_name="invdockerimages",
                 table_is_show_more=False,
@@ -324,12 +322,12 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                 attributes=OrderedDict(),
                 # The single column hints are not checked here
                 columns=OrderedDict(
-                    id=ColumnDisplayHint.from_raw("", "", (), "id", {}),
-                    creation=ColumnDisplayHint.from_raw("", "", (), "creation", {}),
-                    name=ColumnDisplayHint.from_raw("", "", (), "name", {}),
-                    labels=ColumnDisplayHint.from_raw("", "", (), "labels", {}),
-                    status=ColumnDisplayHint.from_raw("", "", (), "status", {}),
-                    image=ColumnDisplayHint.from_raw("", "", (), "image", {}),
+                    id=ColumnDisplayHint.from_raw("", "id", {}),
+                    creation=ColumnDisplayHint.from_raw("", "creation", {}),
+                    name=ColumnDisplayHint.from_raw("", "name", {}),
+                    labels=ColumnDisplayHint.from_raw("", "labels", {}),
+                    status=ColumnDisplayHint.from_raw("", "status", {}),
+                    image=ColumnDisplayHint.from_raw("", "image", {}),
                 ),
                 table_view_name="invdockercontainers",
                 table_is_show_more=False,
@@ -362,12 +360,10 @@ def test_make_node_displayhint_from_hint(
             (),
             "key",
             ColumnDisplayHint(
-                view_name="",
-                key=SDKey("key"),
-                paint_function=inv_paint_generic,
                 title="Key",
                 short_title="Key",
                 long_title="Key",
+                paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
             ),
@@ -376,12 +372,10 @@ def test_make_node_displayhint_from_hint(
             ("networking", "interfaces"),
             "oper_status",
             ColumnDisplayHint(
-                view_name="invinterface",
-                key=SDKey("oper_status"),
-                paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 short_title="Operational Status",
                 long_title="Network interfaces ➤ Operational Status",
+                paint_function=inv_paint_if_oper_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
             ),
@@ -390,12 +384,10 @@ def test_make_node_displayhint_from_hint(
             ("path", "to", "node"),
             "key",
             ColumnDisplayHint(
-                view_name="",
-                key=SDKey("key"),
-                paint_function=inv_paint_generic,
                 title="Key",
                 short_title="Key",
                 long_title="Node ➤ Key",
+                paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
             ),
@@ -404,12 +396,10 @@ def test_make_node_displayhint_from_hint(
             ("software", "applications", "check_mk", "sites"),
             "cmc",
             ColumnDisplayHint(
-                view_name="",
-                key=SDKey("cmc"),
-                paint_function=inv_paint_service_status,
                 title="CMC status",
                 short_title="CMC",
                 long_title="Checkmk sites ➤ CMC status",
+                paint_function=inv_paint_service_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
             ),
@@ -418,9 +408,6 @@ def test_make_node_displayhint_from_hint(
 )
 def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
     hint = DISPLAY_HINTS.get_node_hint(path).get_column_hint(key)
-
-    if hint.view_name:
-        assert hint.ident == f"{hint.view_name}_{hint.key}"
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
@@ -435,12 +422,10 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".foo:*.bar",
             ColumnDisplayHint(
-                view_name="",
-                key=SDKey("key"),
-                paint_function=inv_paint_generic,
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
+                paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
             ),
@@ -448,12 +433,10 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.package_version",
             ColumnDisplayHint(
-                view_name="invswpac",
-                key=SDKey("package_version"),
-                paint_function=inv_paint_generic,
                 title="Package Version",
                 short_title="Package Version",
                 long_title="Software packages ➤ Package Version",
+                paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(cmp_version),
                 filter_class=FilterInvtableText,
             ),
@@ -461,12 +444,10 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".software.packages:*.version",
             ColumnDisplayHint(
-                view_name="invswpac",
-                key=SDKey("version"),
-                paint_function=inv_paint_generic,
                 title="Version",
                 short_title="Version",
                 long_title="Software packages ➤ Version",
+                paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(cmp_version),
                 filter_class=FilterInvtableVersion,
             ),
@@ -474,12 +455,10 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.index",
             ColumnDisplayHint(
-                view_name="invinterface",
-                key=SDKey("index"),
-                paint_function=inv_paint_number,
                 title="Index",
                 short_title="Index",
                 long_title="Network interfaces ➤ Index",
+                paint_function=inv_paint_number,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
             ),
@@ -487,12 +466,10 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
         (
             ".networking.interfaces:*.oper_status",
             ColumnDisplayHint(
-                view_name="invinterface",
-                key=SDKey("oper_status"),
-                paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 short_title="Operational Status",
                 long_title="Network interfaces ➤ Operational Status",
+                paint_function=inv_paint_if_oper_status,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=FilterInvtableText,
             ),
@@ -504,10 +481,8 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
     hint = DISPLAY_HINTS.get_node_hint(inventory_path.path).get_column_hint(
         inventory_path.key or ""
     )
-
-    if hint.view_name:
-        assert hint.ident == f"{hint.view_name}_{hint.key}"
     assert hint.title == expected.title
+    assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
     assert hint.long_inventory_title == expected.long_inventory_title
     assert callable(hint.paint_function)

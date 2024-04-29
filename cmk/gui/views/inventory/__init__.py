@@ -330,13 +330,20 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
 
     painters: list[ColumnSpec] = []
     filters = []
-    for col_hint in node_hint.columns.values():
-        _register_painter(col_hint.ident, column_painter_from_hint(col_hint))
-        _register_sorter(col_hint.ident, column_sorter_from_hint(col_hint))
-        filter_registry.register(col_hint.make_filter())
+    for key, col_hint in node_hint.columns.items():
+        col_hint_ident = node_hint.column_ident(key)
+        _register_painter(col_hint_ident, column_painter_from_hint(col_hint_ident, col_hint))
+        _register_sorter(col_hint_ident, column_sorter_from_hint(col_hint_ident, col_hint))
+        filter_registry.register(
+            col_hint.filter_class(
+                inv_info=node_hint.table_view_name,
+                ident=col_hint_ident,
+                title=col_hint.long_title,
+            )
+        )
 
-        painters.append(ColumnSpec(col_hint.ident))
-        filters.append(col_hint.ident)
+        painters.append(ColumnSpec(col_hint_ident))
+        filters.append(col_hint_ident)
 
     _register_views(
         node_hint.table_view_name,

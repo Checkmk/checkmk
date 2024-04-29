@@ -226,8 +226,6 @@ def _parse_column_display_hint_filter_class(
 
 @dataclass(frozen=True)
 class ColumnDisplayHint:
-    view_name: str
-    key: SDKey
     title: str
     short_title: str
     long_title: str
@@ -245,12 +243,6 @@ class ColumnDisplayHint:
     )
 
     @property
-    def ident(self) -> str:
-        if not self.view_name:
-            raise ValueError()
-        return f"{self.view_name}_{self.key}"
-
-    @property
     def long_inventory_title(self) -> str:
         return _("Inventory column: %s") % self.long_title
 
@@ -258,16 +250,12 @@ class ColumnDisplayHint:
     def from_raw(
         cls,
         parent_title: str,
-        view_name: str,
-        path: SDPath,
         key: str,
         raw_hint: InventoryHintSpec,
     ) -> ColumnDisplayHint:
         _data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(key)
         return cls(
-            view_name=view_name,
-            key=SDKey(key),
             title=title,
             short_title=(
                 title if (short_title := raw_hint.get("short")) is None else str(short_title)
@@ -276,24 +264,6 @@ class ColumnDisplayHint:
             paint_function=paint_function,
             sort_function=_make_sort_function(raw_hint),
             filter_class=_parse_column_display_hint_filter_class(raw_hint.get("filter")),
-        )
-
-    def make_filter(
-        self,
-    ) -> (
-        FilterInvtableAdminStatus
-        | FilterInvtableAvailable
-        | FilterInvtableIntegerRange
-        | FilterInvtableInterfaceType
-        | FilterInvtableOperStatus
-        | FilterInvtableText
-        | FilterInvtableTimestampAsAge
-        | FilterInvtableVersion
-    ):
-        return self.filter_class(
-            inv_info=self.view_name,
-            ident=self.ident,
-            title=self.long_title,
         )
 
 
@@ -315,7 +285,7 @@ class NodeDisplayHint:
     long_title: str
     icon: str
     attributes: OrderedDict[str, AttributeDisplayHint]
-    columns: OrderedDict[str, ColumnDisplayHint]
+    columns: OrderedDict[SDKey, ColumnDisplayHint]
     table_view_name: str
     table_is_show_more: bool
 
@@ -363,13 +333,7 @@ class NodeDisplayHint:
             ),
             columns=OrderedDict(
                 {
-                    key: ColumnDisplayHint.from_raw(
-                        title,
-                        table_view_name,
-                        path,
-                        key,
-                        columns.get(key, {}),
-                    )
+                    key: ColumnDisplayHint.from_raw(title, key, columns.get(key, {}))
                     for key in _complete_key_order(table_key_order, set(columns))
                 }
             ),
@@ -384,11 +348,14 @@ class NodeDisplayHint:
             else AttributeDisplayHint.from_raw(self.title if self.path else "", self.path, key, {})
         )
 
+    def column_ident(self, key: SDKey) -> str:
+        return f"{self.table_view_name}_{key}" if self.table_view_name else ""
+
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
         return (
             hint
-            if (hint := self.columns.get(key))
-            else ColumnDisplayHint.from_raw(self.title if self.path else "", "", self.path, key, {})
+            if (hint := self.columns.get(SDKey(key)))
+            else ColumnDisplayHint.from_raw(self.title if self.path else "", key, {})
         )
 
 

@@ -46,6 +46,7 @@ RUN apt-get update \
     golang-go \
     iputils-ping \
     joe \
+    jq \
     libc6-dbg \
     libcurl4-openssl-dev \
     libevent-dev \

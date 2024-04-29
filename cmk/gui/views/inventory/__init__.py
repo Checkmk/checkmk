@@ -155,36 +155,27 @@ def _register_painter(
     painter_registry.register(cls)
 
 
-def register_table_views_and_columns() -> None:
-    # Parse legacy display hints
-    DISPLAY_HINTS.parse(inventory_displayhints)
-
-    # Now register table views or columns (which need new display hints)
-    _register_table_views_and_columns()
-
-
-def _register_table_views_and_columns() -> None:
-    # create painters for node with a display hint
-    painter_options = PainterOptions.get_instance()
-    for node_hint in DISPLAY_HINTS:
-        if "*" in node_hint.path:
-            # FIXME DYNAMIC-PATHS
-            # For now we have to exclude these kind of paths due to the following reason:
-            # During registration of table views only these 'abc' paths are available which are
-            # used to create view names, eg: 'invfoo*bar'.
-            # But in tree views of a host we have concrete paths and therefore view names like
-            #   'invfooNAME1bar', 'invfooNAME2bar', ...
-            # Moreover we would use the 'abc' path in order to find the node/table with these views.
-            # Have a look at the related data sources, eg.
-            #   'DataSourceInventory' uses 'RowTableInventory'
-            continue
-
-        _register_painter(node_hint.ident, node_painter_from_hint(node_hint, painter_options))
-
-        for attr_hint in node_hint.attributes.values():
-            _register_attribute_column(attr_hint)
-
-        _register_table_view(node_hint)
+def _register_sorter(
+    *,
+    ident: str,
+    long_inventory_title: str,
+    load_inv: bool,
+    columns: list[str],
+    hint: AttributeDisplayHint | ColumnDisplayHint,
+    value_extractor: Callable,
+) -> None:
+    register_sorter(
+        ident,
+        {
+            "title": long_inventory_title,
+            "columns": columns,
+            "load_inv": load_inv,
+            "cmp": lambda a, b: hint.sort_function(
+                value_extractor(a),
+                value_extractor(b),
+            ),
+        },
+    )
 
 
 def _register_attribute_column(hint: AttributeDisplayHint) -> None:
@@ -209,102 +200,6 @@ def _register_attribute_column(hint: AttributeDisplayHint) -> None:
     filter_registry.register(hint.make_filter())
 
 
-def _register_table_column(hint: ColumnDisplayHint) -> None:
-    long_inventory_title = hint.long_inventory_title
-
-    # TODO
-    # - Sync this with _register_attribute_column()
-    filter_registry.register(hint.make_filter())
-
-    _register_painter(hint.ident, column_painter_from_hint(hint))
-
-    _register_sorter(
-        ident=hint.ident,
-        long_inventory_title=long_inventory_title,
-        load_inv=False,
-        columns=[hint.ident],
-        hint=hint,
-        value_extractor=lambda v: v.get(hint.ident),
-    )
-
-
-def _register_sorter(
-    *,
-    ident: str,
-    long_inventory_title: str,
-    load_inv: bool,
-    columns: list[str],
-    hint: AttributeDisplayHint | ColumnDisplayHint,
-    value_extractor: Callable,
-) -> None:
-    register_sorter(
-        ident,
-        {
-            "title": long_inventory_title,
-            "columns": columns,
-            "load_inv": load_inv,
-            "cmp": lambda a, b: hint.sort_function(
-                value_extractor(a),
-                value_extractor(b),
-            ),
-        },
-    )
-
-
-def _register_table_view(node_hint: NodeDisplayHint) -> None:
-    if not node_hint.table_view_name:
-        return
-
-    view_name = node_hint.table_view_name
-    _register_info_class(
-        view_name,
-        node_hint.title,
-        node_hint.title,
-    )
-
-    # Create the datasource (like a database view)
-    data_source_registry.register(
-        type(
-            "DataSourceInventory%s" % node_hint.table_view_name.title(),
-            (ABCDataSourceInventory,),
-            {
-                "_ident": view_name,
-                "_inventory_path": inventory.InventoryPath(
-                    path=node_hint.path, source=inventory.TreeSource.table
-                ),
-                "_title": node_hint.long_inventory_table_title,
-                "_infos": ["host", view_name],
-                "ident": property(lambda s: s._ident),
-                "title": property(lambda s: s._title),
-                "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
-                "infos": property(lambda s: s._infos),
-                "keys": property(lambda s: []),
-                "id_keys": property(lambda s: []),
-                "inventory_path": property(lambda s: s._inventory_path),
-                "join": ("services", "host_name"),
-            },
-        )
-    )
-
-    painters: list[ColumnSpec] = []
-    filters = []
-    for col_hint in node_hint.columns.values():
-        # Declare a painter, sorter and filters for each path with display hint
-        _register_table_column(col_hint)
-        painters.append(ColumnSpec(col_hint.ident))
-        filters.append(col_hint.ident)
-
-    _register_views(
-        view_name,
-        node_hint.title,
-        painters,
-        filters,
-        node_hint.path,
-        node_hint.table_is_show_more,
-        node_hint.icon,
-    )
-
-
 def _register_info_class(table_view_name: str, title_singular: str, title_plural: str) -> None:
     # Declare the "info" (like a database table)
     visual_info_registry.register(
@@ -321,6 +216,25 @@ def _register_info_class(table_view_name: str, title_singular: str, title_plural
                 "single_spec": property(lambda self: []),
             },
         )
+    )
+
+
+def _register_table_column(hint: ColumnDisplayHint) -> None:
+    long_inventory_title = hint.long_inventory_title
+
+    # TODO
+    # - Sync this with _register_attribute_column()
+    filter_registry.register(hint.make_filter())
+
+    _register_painter(hint.ident, column_painter_from_hint(hint))
+
+    _register_sorter(
+        ident=hint.ident,
+        long_inventory_title=long_inventory_title,
+        load_inv=False,
+        columns=[hint.ident],
+        hint=hint,
+        value_extractor=lambda v: v.get(hint.ident),
     )
 
 
@@ -437,6 +351,87 @@ def _register_views(
         "packaged": False,
         "megamenu_search_terms": [],
     }
+
+
+def _register_table_view(node_hint: NodeDisplayHint) -> None:
+    if not node_hint.table_view_name:
+        return
+
+    view_name = node_hint.table_view_name
+    _register_info_class(
+        view_name,
+        node_hint.title,
+        node_hint.title,
+    )
+
+    # Create the datasource (like a database view)
+    data_source_registry.register(
+        type(
+            "DataSourceInventory%s" % node_hint.table_view_name.title(),
+            (ABCDataSourceInventory,),
+            {
+                "_ident": view_name,
+                "_inventory_path": inventory.InventoryPath(
+                    path=node_hint.path, source=inventory.TreeSource.table
+                ),
+                "_title": node_hint.long_inventory_table_title,
+                "_infos": ["host", view_name],
+                "ident": property(lambda s: s._ident),
+                "title": property(lambda s: s._title),
+                "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
+                "infos": property(lambda s: s._infos),
+                "keys": property(lambda s: []),
+                "id_keys": property(lambda s: []),
+                "inventory_path": property(lambda s: s._inventory_path),
+                "join": ("services", "host_name"),
+            },
+        )
+    )
+
+    painters: list[ColumnSpec] = []
+    filters = []
+    for col_hint in node_hint.columns.values():
+        # Declare a painter, sorter and filters for each path with display hint
+        _register_table_column(col_hint)
+        painters.append(ColumnSpec(col_hint.ident))
+        filters.append(col_hint.ident)
+
+    _register_views(
+        view_name,
+        node_hint.title,
+        painters,
+        filters,
+        node_hint.path,
+        node_hint.table_is_show_more,
+        node_hint.icon,
+    )
+
+
+def register_table_views_and_columns() -> None:
+    # Parse legacy display hints
+    DISPLAY_HINTS.parse(inventory_displayhints)
+
+    # create painters for node with a display hint
+    painter_options = PainterOptions.get_instance()
+    for node_hint in DISPLAY_HINTS:
+        if "*" in node_hint.path:
+            # FIXME DYNAMIC-PATHS
+            # For now we have to exclude these kind of paths due to the following reason:
+            # During registration of table views only these 'abc' paths are available which are
+            # used to create view names, eg: 'invfoo*bar'.
+            # But in tree views of a host we have concrete paths and therefore view names like
+            #   'invfooNAME1bar', 'invfooNAME2bar', ...
+            # Moreover we would use the 'abc' path in order to find the node/table with these views.
+            # Have a look at the related data sources, eg.
+            #   'DataSourceInventory' uses 'RowTableInventory'
+            continue
+
+        _register_painter(node_hint.ident, node_painter_from_hint(node_hint, painter_options))
+
+        for attr_hint in node_hint.attributes.values():
+            _register_attribute_column(attr_hint)
+
+        _register_table_view(node_hint)
 
 
 # .

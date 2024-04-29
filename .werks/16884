@@ -1,0 +1,12 @@
+Title: seh_ports: support new OIDs from updated sehMIB v2.5
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1715751377
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+The <code>seh_ports</code> check was unable to deal with newer devices sending SNMP data based on
+SEH-MIB v2.5 (2023.10.31) (compared to the already handled format SEH-PSRV-MIB v1.167.
+This change makes <code>seh_ports</code> deal with the new format next to the old one.

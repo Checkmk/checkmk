@@ -1,0 +1,43 @@
+#!/bin/bash
+# Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+set -o pipefail
+
+TOP_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &>/dev/null && pwd)
+
+# shellcheck disable=SC2046  # We want splitting for the find commands
+POT_FILE_CONTENT=$(
+    xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 \
+        --keyword=_l \
+        --keyword=Title:1,1t \
+        --keyword=Help:1,1t \
+        --keyword=Label:1,1t \
+        --keyword=Message:1,1t \
+        -o - \
+        $(find -L "${TOP_DIR}/packages" -type f -name "*.py" -not -path "*/tests/*" -not -path "*/test/*") \
+        $(find -L "${TOP_DIR}/cmk" -type f -name "*.py")
+)
+
+cat <<Header
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+msgid ""
+msgstr ""
+"Project-Id-Version: Checkmk user interface translation 0.1\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"POT-Creation-Date: 2011-05-13 09:42+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: LANGUAGE \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+Header
+printf "%s\n" "${POT_FILE_CONTENT}" | sed "0,/^$/d"

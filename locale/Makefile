@@ -38,19 +38,7 @@ update-pot:
 	git pull --rebase
 	# back in CHECKMK_DIR
 	git pull --rebase
-	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 \
-		--keyword=_l \
-		--keyword=Title:1,1t \
-		--keyword=Help:1,1t \
-		--keyword=Label:1,1t \
-		--keyword=Message:1,1t \
- 		-o scanned.pot \
-		$$(find -L ../packages -type f -name "*.py" -not -path '*/tests/*' -not -path '*/test/*') \
-		$$(find -L ../cmk -type f -name "*.py") 2>&1 | \
-	sed "/format string with unnamed arguments cannot be properly localized/,/and a mapping instead of a tuple for the arguments./d"
-	sed -i "0,/^$$/d" scanned.pot # Remove default header, i.e. everything before first empty line
-	cat header scanned.pot > ../../$$CHECKMK_LOCALE_DIR/$(MULTISITE_POT) # Add our header and write to Checkmk localization repo
-	rm scanned.pot
+	./output_pot_file > ../../$$CHECKMK_LOCALE_DIR/$(MULTISITE_POT)
 	cd ../../$$CHECKMK_LOCALE_DIR; \
 	if [[ $$(git diff | wc -l) -gt 0 ]]; then \
 		git commit $(MULTISITE_POT) -m "Updated $(MULTISITE_POT)"; \

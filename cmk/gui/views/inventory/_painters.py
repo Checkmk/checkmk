@@ -4,24 +4,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from typing import Callable, TypedDict
 
 from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDRawDeltaTree, SDRawTree
+from cmk.utils.structured_data import (
+    ImmutableDeltaTree,
+    ImmutableTree,
+    SDPath,
+    SDRawDeltaTree,
+    SDRawTree,
+)
 
 import cmk.gui.sites as sites
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.base import Cell, Painter
-from cmk.gui.painter_options import paint_age, PainterOption
+from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.valuespec import Checkbox, ValueSpec
+from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 
+from ._display_hints import NodeDisplayHint
 from ._tree_renderer import TreeRenderer
 
 
@@ -262,3 +271,84 @@ class PainterInvhistChanged(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_invhist_count(row, "changed")
+
+
+class NodePainterFromHint(TypedDict):
+    title: str
+    short: str
+    columns: Sequence[str]
+    options: Sequence[str]
+    params: Dictionary
+    printable: bool
+    load_inv: bool
+    sorter: str
+    paint: Callable[[Row], CellSpec]
+    export_for_python: Callable[[Row, Cell], SDRawTree]
+    export_for_csv: Callable[[Row, Cell], str | HTML]
+    export_for_json: Callable[[Row, Cell], SDRawTree]
+
+
+def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
+    try:
+        validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return ImmutableTree()
+
+    return row.get("host_inventory", ImmutableTree()).get_tree(path)
+
+
+def _paint_host_inventory_tree(row: Row, path: SDPath, painter_options: PainterOptions) -> CellSpec:
+    if not (tree := _compute_node_painter_data(row, path)):
+        return "", ""
+
+    tree_renderer = TreeRenderer(
+        row["site"],
+        row["host_name"],
+        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
+    )
+
+    with output_funnel.plugged():
+        tree_renderer.show(tree, request)
+        code = HTML(output_funnel.drain())
+
+    return "invtree", code
+
+
+def _export_node_for_csv() -> str | HTML:
+    raise CSVExportError()
+
+
+def node_painter_from_hint(
+    hint: NodeDisplayHint, painter_options: PainterOptions
+) -> NodePainterFromHint:
+    return NodePainterFromHint(
+        title=hint.long_inventory_title,
+        short=hint.short_title,
+        columns=["host_inventory", "host_structured_status"],
+        options=["show_internal_tree_paths"],
+        params=Dictionary(
+            title=_("Report options"),
+            elements=[
+                (
+                    "use_short",
+                    Checkbox(
+                        title=_("Use short title in reports header"),
+                        default_value=False,
+                    ),
+                ),
+            ],
+            required_keys=["use_short"],
+        ),
+        # Only attributes can be shown in reports. There is currently no way to render trees.
+        # The HTML code would simply be stripped by the default rendering mechanism which does
+        # not look good for the HW/SW inventory tree
+        printable=False,
+        load_inv=True,
+        sorter=hint.ident,
+        paint=lambda row: _paint_host_inventory_tree(row, hint.path, painter_options),
+        export_for_python=lambda row, cell: (
+            _compute_node_painter_data(row, hint.path).serialize()
+        ),
+        export_for_csv=lambda row, cell: _export_node_for_csv(),
+        export_for_json=lambda row, cell: _compute_node_painter_data(row, hint.path).serialize(),
+    )

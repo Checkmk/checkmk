@@ -14,10 +14,9 @@ from cmk.utils.user import UserId
 
 import cmk.gui.inventory as inventory
 from cmk.gui.data_source import data_source_registry, DataSourceRegistry
-from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0.base import PainterRegistry, register_painter
+from cmk.gui.painter.v0.base import Painter, painter_registry, PainterRegistry, register_painter
 from cmk.gui.painter_options import PainterOptionRegistry, PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
@@ -31,10 +30,8 @@ from cmk.gui.type_defs import (
     VisualContext,
     VisualLinkSpec,
 )
-from cmk.gui.utils.html import HTML
-from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue
-from cmk.gui.view_utils import CellSpec, CSVExportError
+from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
@@ -51,6 +48,8 @@ from ._display_hints import (
 )
 from ._painters import (
     MultipleInventoryTreesError,
+    node_painter_from_hint,
+    NodePainterFromHint,
     PainterInventoryTree,
     PainterInvhistChanged,
     PainterInvhistDelta,
@@ -65,7 +64,6 @@ from ._tree_renderer import (
     compute_cell_spec,
     make_table_view_name_of_host,
     SDItem,
-    TreeRenderer,
 )
 from .registry import (
     inv_paint_funtions,
@@ -90,7 +88,7 @@ def register_inv_paint_functions(mapping: Mapping[str, object]) -> None:
 def register(
     page_registry: PageRegistry,
     data_source_registry_: DataSourceRegistry,
-    painter_registry: PainterRegistry,
+    painter_registry_: PainterRegistry,
     painter_option_registry: PainterOptionRegistry,
     multisite_builtin_views_: dict[ViewName, ViewSpec],
 ) -> None:
@@ -101,12 +99,12 @@ def register(
     builtin_display_hints.register(inventory_displayhints)
     page_registry.register_page_handler("ajax_inv_render_tree", ajax_inv_render_tree)
     data_source_registry_.register(DataSourceInventoryHistory)
-    painter_registry.register(PainterInventoryTree)
-    painter_registry.register(PainterInvhistTime)
-    painter_registry.register(PainterInvhistDelta)
-    painter_registry.register(PainterInvhistRemoved)
-    painter_registry.register(PainterInvhistNew)
-    painter_registry.register(PainterInvhistChanged)
+    painter_registry_.register(PainterInventoryTree)
+    painter_registry_.register(PainterInvhistTime)
+    painter_registry_.register(PainterInvhistDelta)
+    painter_registry_.register(PainterInvhistRemoved)
+    painter_registry_.register(PainterInvhistNew)
+    painter_registry_.register(PainterInvhistChanged)
     painter_option_registry.register(PainterOptionShowInternalTreePaths)
 
     declare_1to1_sorter("invhist_time", cmp_simple_number, reverse=True)
@@ -134,6 +132,34 @@ def register(
 #   '----------------------------------------------------------------------'
 
 
+def _register_painter(ident: str, spec: NodePainterFromHint) -> None:
+    # TODO Clean this up one day
+    cls = type(
+        "LegacyPainter%s" % ident.title(),
+        (Painter,),
+        {
+            "_ident": ident,
+            "_spec": spec,
+            "ident": property(lambda s: s._ident),
+            "title": lambda s, cell: s._spec["title"],
+            "short_title": lambda s, cell: s._spec.get("short", s.title),
+            "tooltip_title": lambda s, cell: s._spec.get("tooltip_title", s.title),
+            "columns": property(lambda s: s._spec["columns"]),
+            "render": lambda self, row, cell: spec["paint"](row),
+            "export_for_python": lambda self, row, cell: spec["export_for_python"](row, cell),
+            "export_for_csv": lambda self, row, cell: spec["export_for_csv"](row, cell),
+            "export_for_json": lambda self, row, cell: spec["export_for_json"](row, cell),
+            "group_by": lambda self, row, cell: self._spec.get("groupby"),
+            "parameters": property(lambda s: s._spec.get("params")),
+            "painter_options": property(lambda s: s._spec.get("options", [])),
+            "printable": property(lambda s: s._spec.get("printable", True)),
+            "sorter": property(lambda s: s._spec.get("sorter", None)),
+            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
+        },
+    )
+    painter_registry.register(cls)
+
+
 def register_table_views_and_columns() -> None:
     # Parse legacy display hints
     DISPLAY_HINTS.parse(inventory_displayhints)
@@ -158,86 +184,12 @@ def _register_table_views_and_columns() -> None:
             #   'DataSourceInventory' uses 'RowTableInventory'
             continue
 
-        _register_node_painter(node_hint, painter_options=painter_options)
+        _register_painter(node_hint.ident, node_painter_from_hint(node_hint, painter_options))
 
         for attr_hint in node_hint.attributes.values():
             _register_attribute_column(attr_hint)
 
         _register_table_view(node_hint)
-
-
-def _register_node_painter(node_hint: NodeDisplayHint, *, painter_options: PainterOptions) -> None:
-    """Declares painters for (sub) trees on all host related datasources."""
-    register_painter(
-        node_hint.ident,
-        {
-            "title": node_hint.long_inventory_title,
-            "short": node_hint.short_title,
-            "columns": ["host_inventory", "host_structured_status"],
-            "options": ["show_internal_tree_paths"],
-            "params": Dictionary(
-                title=_("Report options"),
-                elements=[
-                    (
-                        "use_short",
-                        Checkbox(
-                            title=_("Use short title in reports header"),
-                            default_value=False,
-                        ),
-                    ),
-                ],
-                required_keys=["use_short"],
-            ),
-            # Only attributes can be shown in reports. There is currently no way to render trees.
-            # The HTML code would simply be stripped by the default rendering mechanism which does
-            # not look good for the HW/SW inventory tree
-            "printable": False,
-            "load_inv": True,
-            "sorter": node_hint.ident,
-            "paint": lambda row: _paint_host_inventory_tree(
-                row, node_hint.path, painter_options=painter_options
-            ),
-            "export_for_python": lambda row, cell: (
-                _compute_node_painter_data(row, node_hint.path).serialize()
-            ),
-            "export_for_csv": lambda row, cell: _export_node_for_csv(),
-            "export_for_json": lambda row, cell: (
-                _compute_node_painter_data(row, node_hint.path).serialize()
-            ),
-        },
-    )
-
-
-def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
-    try:
-        validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError:
-        return ImmutableTree()
-
-    return row.get("host_inventory", ImmutableTree()).get_tree(path)
-
-
-def _paint_host_inventory_tree(
-    row: Row, path: SDPath, *, painter_options: PainterOptions
-) -> CellSpec:
-    if not (tree := _compute_node_painter_data(row, path)):
-        return "", ""
-
-    tree_renderer = TreeRenderer(
-        row["site"],
-        row["host_name"],
-        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
-    )
-
-    with output_funnel.plugged():
-        tree_renderer.show(tree, request)
-        code = HTML(output_funnel.drain())
-
-    return "invtree", code
-
-
-def _export_node_for_csv() -> str | HTML:
-    raise CSVExportError()
 
 
 def _register_attribute_column(hint: AttributeDisplayHint) -> None:

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from collections.abc import Sequence
 from typing import NamedTuple
 
@@ -44,6 +45,10 @@ class PiggybackMarker(NamedTuple):
         return self.hostname is None or not HostAddress.is_valid(self.hostname)
 
 
+# option values of the form "FOO(BAR, BAZ)"
+_OPTION = re.compile(r"([^(]*?)\((.*)\)")
+
+
 class SectionMarker(NamedTuple):
     name: SectionName
     cached: tuple[int, int] | None
@@ -59,16 +64,12 @@ class SectionMarker(NamedTuple):
     @classmethod
     def from_header(cls, header: bytes) -> "SectionMarker":
         section_name, *elems = header.decode().split(":")
-        options = {}
-        for option in elems:
-            if "(" not in option:
-                continue
-            name, value = option.split("(", 1)
-            # TODO: Why do we have this assert here? If it is *really* used to raise an exception
-            # when there is no closing parenthesis, then it's a bug: With the -O (or -O0) CLI
-            # option, Python will remove all assert statements!
-            assert value[-1] == ")", value
-            options[name] = value[:-1]
+        # NOTE: We silenty ignore some syntactically invalid options below, but throw for others. Hmmm...
+        options = {
+            name_and_value[1]: name_and_value[2]
+            for option in elems
+            if (name_and_value := re.fullmatch(_OPTION, option))
+        }
 
         try:
             cached_ = tuple(map(int, options["cached"].split(",")))

@@ -249,7 +249,6 @@ class NodeDisplayHint:
         columns: Mapping[str, InventoryHintSpec],
     ) -> NodeDisplayHint:
         title = _make_title_function(raw_hint)(path[-1] if path else "")
-        table_view_name = "" if "*" in path else _parse_view_name(raw_hint.get("view"))
         return cls(
             path=path,
             title=title,
@@ -268,7 +267,7 @@ class NodeDisplayHint:
                     for key in _complete_key_order(table_key_order, set(columns))
                 }
             ),
-            table_view_name=table_view_name,
+            table_view_name="" if "*" in path else _parse_view_name(raw_hint.get("view")),
             table_is_show_more=raw_hint.get("is_show_more", True),
         )
 

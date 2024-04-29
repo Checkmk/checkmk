@@ -18,6 +18,13 @@ class TreeSource(Enum):
     attributes = auto()
 
 
+def _sanitize_path(path: Sequence[str]) -> SDPath:
+    # ":": Nested tables, see also lib/structured_data.py
+    return tuple(
+        SDNodeName(p) for part in path for p in (part.split(":") if ":" in part else [part]) if p
+    )
+
+
 @dataclass(frozen=True)
 class InventoryPath:
     path: SDPath
@@ -33,20 +40,19 @@ class InventoryPath:
             )
 
         if raw_path.endswith("."):
-            path = raw_path[:-1].strip(".").split(".")
             return InventoryPath(
-                path=cls._sanitize_path(raw_path[:-1].strip(".").split(".")),
+                path=_sanitize_path(raw_path[:-1].strip(".").split(".")),
                 source=TreeSource.node,
             )
 
         if raw_path.endswith(":"):
             return InventoryPath(
-                path=cls._sanitize_path(raw_path[:-1].strip(".").split(".")),
+                path=_sanitize_path(raw_path[:-1].strip(".").split(".")),
                 source=TreeSource.table,
             )
 
         path = raw_path.strip(".").split(".")
-        sanitized_path = cls._sanitize_path(path[:-1])
+        sanitized_path = _sanitize_path(path[:-1])
         if ":" in path[-2]:
             source = TreeSource.table
             # Forget the last '*' or an index like '17'
@@ -59,16 +65,6 @@ class InventoryPath:
             path=sanitized_path,
             source=source,
             key=SDKey(path[-1]),
-        )
-
-    @staticmethod
-    def _sanitize_path(path: Sequence[str]) -> SDPath:
-        # ":": Nested tables, see also lib/structured_data.py
-        return tuple(
-            SDNodeName(p)
-            for part in path
-            for p in (part.split(":") if ":" in part else [part])
-            if p
         )
 
     @property

@@ -108,7 +108,7 @@ def parse_werk_v1(content: str, werk_id: int) -> WerkV1ParseResult:
         try:
             if in_description:
                 description.append(line)
-            elif not line.strip():
+            elif not line or line.isspace():
                 in_description = True
             else:
                 key, text = line.split(":", 1)

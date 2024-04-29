@@ -171,7 +171,7 @@ def main():  # pylint: disable=too-many-branches
                     raise
 
             for line in ensure_str(fd.read()).split("\n"):
-                if not line.strip():
+                if not line or line.isspace():
                     continue
                 if line.lstrip()[0] == "<":
                     # seems to be html output. Skip this server.

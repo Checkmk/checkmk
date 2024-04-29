@@ -3532,7 +3532,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         compiler.addSearchers(StubSearcher(*baseMibs))
 
         try:
-            if not content.strip():
+            if not content or content.isspace():
                 raise Exception(_("The file is empty"))
 
             results = compiler.compile(mibname, ignoreErrors=True, genTexts=True)

@@ -167,7 +167,7 @@ class _TextSection:
         header = None
         lines: list[str] = []
         for line in self.lines:
-            if not line.strip():
+            if not line or line.isspace():
                 if lines:
                     lines.append(line)
                 continue

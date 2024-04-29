@@ -290,7 +290,7 @@ def main():
         try:
             response_body = get_response_body(proto, cafile, address, portspec, page)
             for line in response_body.split("\n"):
-                if not line.strip():
+                if not line or line.isspace():
                     continue
                 if line.lstrip()[0] == "<":
                     # Seems to be html output. Skip this server.

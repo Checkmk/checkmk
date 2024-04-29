@@ -713,7 +713,7 @@ _VALUE_AND_UNIT = re.compile(r"([0-9.,-]*)(.*)")
 
 def _split_unit(value_text: str) -> tuple[float | None, str | None]:
     "separate value from unit"
-    if not value_text.strip():
+    if not value_text or value_text.isspace():
         return None, None
     value_and_unit = re.match(_VALUE_AND_UNIT, value_text)
     assert value_and_unit is not None  # help mypy a bit, the regex always matches

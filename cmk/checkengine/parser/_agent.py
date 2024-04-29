@@ -237,7 +237,7 @@ class ParserState(abc.ABC):
 
     @final
     def __call__(self, line: bytes) -> ParserState:
-        if not line.strip():
+        if not line or line.isspace():
             return self
 
         try:

@@ -7,21 +7,21 @@
 import base64
 import time
 import traceback
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterable, Iterator
 from typing import cast, Literal, overload
 
 import cmk.utils.render as render
 from cmk.utils.crypto.password import Password
 from cmk.utils.timeperiod import load_timeperiods
 from cmk.utils.user import UserId
-from cmk.utils.version import edition, Edition
+from cmk.utils.version import Edition, edition
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.customer import ABCCustomerAPI, customer_api
 from cmk.gui.exceptions import MKUserError
@@ -134,9 +134,12 @@ class ModeUsers(WatoMode):
     def title(self) -> str:
         return _("Users")
 
+    def _topic_breadcrumb_item(self) -> Iterable[BreadcrumbItem]:
+        # Since we are in the users mode, we don't need to add the
+        # "Users" topic to the breadcrumb. Else we get "Users > Users"
+        return ()
+
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        # Remove the last breadcrumb entry here to avoid the breadcrumb "Users > Users"
-        del breadcrumb[-1]
         topics = (
             [
                 PageMenuTopic(

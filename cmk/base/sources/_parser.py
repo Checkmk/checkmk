@@ -14,7 +14,7 @@ from cmk.snmplib import SNMPRawDataElem
 from cmk.fetchers.config import make_persisted_section_dir
 
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
-from cmk.checkengine.parser import AgentRawDataSectionElem, Parser, SectionStore, SNMPParser
+from cmk.checkengine.parser import AgentRawDataSectionElem, Parser, SectionStore
 
 from cmk.base.config import ConfigCache
 
@@ -33,7 +33,7 @@ def make_parser(
 ) -> Parser:
     hostname = source.hostname
     if source.fetcher_type is FetcherType.SNMP:
-        return SNMPParser(
+        return config_cache.make_snmp_parser(
             hostname,
             SectionStore[SNMPRawDataElem](
                 make_persisted_section_dir(
@@ -44,10 +44,7 @@ def make_parser(
                 ),
                 logger=logger,
             ),
-            check_intervals={
-                section_name: config_cache.snmp_fetch_interval(hostname, section_name)
-                for section_name in checking_sections
-            },
+            checking_sections=checking_sections,
             keep_outdated=keep_outdated,
             logger=logger,
         )

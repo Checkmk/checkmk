@@ -74,6 +74,7 @@ from cmk.snmplib import (  # these are required in the modules' namespace to loa
     SNMPContextConfig,
     SNMPCredentials,
     SNMPHostConfig,
+    SNMPRawDataElem,
     SNMPTiming,
     SNMPVersion,
 )
@@ -103,6 +104,7 @@ from cmk.checkengine.parser import (
     NO_SELECTION,
     SectionNameCollection,
     SectionStore,
+    SNMPParser,
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -2106,6 +2108,26 @@ class ConfigCache:
             translation=get_piggyback_translations(self.ruleset_matcher, host_name),
             encoding_fallback=fallback_agent_output_encoding,
             simulation=agent_simulator,  # name mismatch
+            logger=logger,
+        )
+
+    def make_snmp_parser(
+        self,
+        host_name: HostName,
+        section_store: SectionStore[SNMPRawDataElem],
+        *,
+        keep_outdated: bool,
+        logger: logging.Logger,
+        checking_sections: frozenset[SectionName],
+    ) -> SNMPParser:
+        return SNMPParser(
+            host_name,
+            section_store,
+            check_intervals={
+                section_name: self.snmp_fetch_interval(host_name, section_name)
+                for section_name in checking_sections
+            },
+            keep_outdated=keep_outdated,
             logger=logger,
         )
 

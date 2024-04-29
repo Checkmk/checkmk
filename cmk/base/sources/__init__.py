@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._api import Source
-from ._builder import make_parser, make_sources
+from ._builder import make_sources
+from ._parser import make_parser
 from ._sources import (
     IPMISource,
     MgmtSNMPSource,

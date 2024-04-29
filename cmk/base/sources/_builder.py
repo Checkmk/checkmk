@@ -7,7 +7,6 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-import logging
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import assert_never, Final
@@ -15,23 +14,14 @@ from typing import assert_never, Final
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import SNMPBackendEnum, SNMPRawDataElem
+from cmk.snmplib import SNMPBackendEnum
 
 from cmk.fetchers import SNMPFetcher
-from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkengine.fetcher import FetcherType, SourceInfo
-from cmk.checkengine.parser import (
-    AgentRawDataSectionElem,
-    NO_SELECTION,
-    Parser,
-    SectionNameCollection,
-    SectionStore,
-    SNMPParser,
-)
+from cmk.checkengine.fetcher import FetcherType
+from cmk.checkengine.parser import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -53,54 +43,7 @@ from ._sources import (
     TCPSource,
 )
 
-__all__ = ["make_sources", "make_parser"]
-
-
-def make_parser(
-    config_cache: ConfigCache,
-    source: SourceInfo,
-    *,
-    # Always from NO_SELECTION.
-    checking_sections: frozenset[SectionName],
-    section_cache_path: Path,
-    keep_outdated: bool,
-    logger: logging.Logger,
-) -> Parser:
-    hostname = source.hostname
-    if source.fetcher_type is FetcherType.SNMP:
-        return SNMPParser(
-            hostname,
-            SectionStore[SNMPRawDataElem](
-                make_persisted_section_dir(
-                    source.hostname,
-                    fetcher_type=source.fetcher_type,
-                    ident=source.ident,
-                    section_cache_path=section_cache_path,
-                ),
-                logger=logger,
-            ),
-            check_intervals={
-                section_name: config_cache.snmp_fetch_interval(hostname, section_name)
-                for section_name in checking_sections
-            },
-            keep_outdated=keep_outdated,
-            logger=logger,
-        )
-
-    return config_cache.make_agent_parser(
-        hostname,
-        SectionStore[Sequence[AgentRawDataSectionElem]](
-            make_persisted_section_dir(
-                source.hostname,
-                fetcher_type=source.fetcher_type,
-                ident=source.ident,
-                section_cache_path=section_cache_path,
-            ),
-            logger=logger,
-        ),
-        keep_outdated=keep_outdated,
-        logger=logger,
-    )
+__all__ = ["make_sources"]
 
 
 class _Builder:

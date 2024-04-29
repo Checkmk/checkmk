@@ -8,7 +8,7 @@ from collections import OrderedDict
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
+from cmk.utils.structured_data import SDNodeName, SDPath
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -175,26 +175,26 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 long_title="Hardware ➤ Processor",
                 # The single attribute hints are not checked here
                 attributes=OrderedDict(
-                    arch=AttributeDisplayHint.from_raw("", (), "arch", {}),
-                    max_speed=AttributeDisplayHint.from_raw("", (), "max_speed", {}),
-                    model=AttributeDisplayHint.from_raw("", (), "model", {}),
-                    type=AttributeDisplayHint.from_raw("", (), "type", {}),
-                    threads=AttributeDisplayHint.from_raw("", (), "threads", {}),
-                    smt_threads=AttributeDisplayHint.from_raw("", (), "smt_threads", {}),
-                    cpu_max_capa=AttributeDisplayHint.from_raw("", (), "cpu_max_capa", {}),
-                    cpus=AttributeDisplayHint.from_raw("", (), "cpus", {}),
-                    logical_cpus=AttributeDisplayHint.from_raw("", (), "logical_cpus", {}),
-                    cores=AttributeDisplayHint.from_raw("", (), "cores", {}),
-                    cores_per_cpu=AttributeDisplayHint.from_raw("", (), "cores_per_cpu", {}),
-                    threads_per_cpu=AttributeDisplayHint.from_raw("", (), "threads_per_cpu", {}),
-                    cache_size=AttributeDisplayHint.from_raw("", (), "cache_size", {}),
-                    bus_speed=AttributeDisplayHint.from_raw("", (), "bus_speed", {}),
-                    voltage=AttributeDisplayHint.from_raw("", (), "voltage", {}),
-                    sharing_mode=AttributeDisplayHint.from_raw("", (), "sharing_mode", {}),
+                    arch=AttributeDisplayHint.from_raw("", "arch", {}),
+                    max_speed=AttributeDisplayHint.from_raw("", "max_speed", {}),
+                    model=AttributeDisplayHint.from_raw("", "model", {}),
+                    type=AttributeDisplayHint.from_raw("", "type", {}),
+                    threads=AttributeDisplayHint.from_raw("", "threads", {}),
+                    smt_threads=AttributeDisplayHint.from_raw("", "smt_threads", {}),
+                    cpu_max_capa=AttributeDisplayHint.from_raw("", "cpu_max_capa", {}),
+                    cpus=AttributeDisplayHint.from_raw("", "cpus", {}),
+                    logical_cpus=AttributeDisplayHint.from_raw("", "logical_cpus", {}),
+                    cores=AttributeDisplayHint.from_raw("", "cores", {}),
+                    cores_per_cpu=AttributeDisplayHint.from_raw("", "cores_per_cpu", {}),
+                    threads_per_cpu=AttributeDisplayHint.from_raw("", "threads_per_cpu", {}),
+                    cache_size=AttributeDisplayHint.from_raw("", "cache_size", {}),
+                    bus_speed=AttributeDisplayHint.from_raw("", "bus_speed", {}),
+                    voltage=AttributeDisplayHint.from_raw("", "voltage", {}),
+                    sharing_mode=AttributeDisplayHint.from_raw("", "sharing_mode", {}),
                     implementation_mode=AttributeDisplayHint.from_raw(
-                        "", (), "implementation_mode", {}
+                        "", "implementation_mode", {}
                     ),
-                    entitlement=AttributeDisplayHint.from_raw("", (), "entitlement", {}),
+                    entitlement=AttributeDisplayHint.from_raw("", "entitlement", {}),
                 ),
                 columns=OrderedDict(),
                 table_view_name="",
@@ -496,14 +496,12 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             (),
             "key",
             AttributeDisplayHint(
-                path=(),
-                key=SDKey("key"),
-                data_type="str",
-                paint_function=inv_paint_generic,
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Key",
                 short_title="Key",
                 long_title="Key",
+                paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                data_type="str",
                 is_show_more=True,
             ),
         ),
@@ -511,14 +509,12 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             ("hardware", "storage", "disks"),
             "size",
             AttributeDisplayHint(
-                path=(SDNodeName("hardware"), SDNodeName("storage"), SDNodeName("disks")),
-                key=SDKey("size"),
-                data_type="size",
-                paint_function=inv_paint_size,
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Size",
                 short_title="Size",
                 long_title="Block Devices ➤ Size",
+                paint_function=inv_paint_size,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                data_type="size",
                 is_show_more=True,
             ),
         ),
@@ -526,14 +522,12 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             ("path", "to", "node"),
             "key",
             AttributeDisplayHint(
-                path=(SDNodeName("path"), SDNodeName("to"), SDNodeName("node")),
-                key=SDKey("key"),
-                data_type="str",
-                paint_function=inv_paint_generic,
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Key",
                 short_title="Key",
                 long_title="Node ➤ Key",
+                paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                data_type="str",
                 is_show_more=True,
             ),
         ),
@@ -541,8 +535,6 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
 )
 def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
     hint = DISPLAY_HINTS.get_node_hint(path).get_attribute_hint(key)
-
-    assert hint.ident == "_".join(("inv",) + hint.path + (hint.key,))
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
@@ -558,42 +550,36 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
         (
             ".foo.bar",
             AttributeDisplayHint(
-                path=(SDNodeName("foo"),),
-                key=SDKey("bar"),
-                data_type="str",
-                paint_function=inv_paint_generic,
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
+                paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                data_type="str",
                 is_show_more=True,
             ),
         ),
         (
             ".hardware.cpu.arch",
             AttributeDisplayHint(
-                path=(SDNodeName("hardware"), SDNodeName("cpu")),
-                key=SDKey("arch"),
-                data_type="str",
-                paint_function=inv_paint_generic,
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="CPU Architecture",
                 short_title="CPU Architecture",
                 long_title="Processor ➤ CPU Architecture",
+                paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                data_type="str",
                 is_show_more=True,
             ),
         ),
         (
             ".hardware.system.product",
             AttributeDisplayHint(
-                path=(SDNodeName("hardware"), SDNodeName("system")),
-                key=SDKey("product"),
-                data_type="str",
-                paint_function=inv_paint_generic,
-                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Product",
                 short_title="Product",
                 long_title="System ➤ Product",
+                paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                data_type="str",
                 is_show_more=False,
             ),
         ),
@@ -606,8 +592,6 @@ def test_make_attribute_displayhint_from_hint(
     hint = DISPLAY_HINTS.get_node_hint(inventory_path.path).get_attribute_hint(
         inventory_path.key or ""
     )
-
-    assert hint.ident == "_".join(("inv",) + hint.path + (hint.key,))
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)

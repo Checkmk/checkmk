@@ -6,6 +6,8 @@
 from collections.abc import Sequence
 from typing import TypedDict
 
+from cmk.utils.structured_data import SDKey, SDPath
+
 from ._display_hints import AttributeDisplayHint, ColumnDisplayHint
 from .registry import SortFunction
 
@@ -17,14 +19,16 @@ class SorterFromHint(TypedDict):
     cmp: SortFunction
 
 
-def attribute_sorter_from_hint(hint: AttributeDisplayHint) -> SorterFromHint:
+def attribute_sorter_from_hint(
+    path: SDPath, key: SDKey, hint: AttributeDisplayHint
+) -> SorterFromHint:
     return SorterFromHint(
         title=hint.long_inventory_title,
         columns=["host_inventory", "host_structured_status"],
         load_inv=True,
         cmp=lambda left, right: hint.sort_function(
-            left["host_inventory"].get_attribute(hint.path, hint.key),
-            right["host_inventory"].get_attribute(hint.path, hint.key),
+            left["host_inventory"].get_attribute(path, key),
+            right["host_inventory"].get_attribute(path, key),
         ),
     )
 

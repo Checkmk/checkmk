@@ -300,26 +300,30 @@ def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
     return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
 
 
-def _compute_attribute_painter_data(row: Row, hint: AttributeDisplayHint) -> SDValue:
-    if (attributes := _get_attributes(row, hint.path)) is None:
+def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
+    if (attributes := _get_attributes(row, path)) is None:
         return None
-    return attributes.pairs.get(hint.key)
+    return attributes.pairs.get(key)
 
 
-def _paint_host_inventory_attribute(row: Row, hint: AttributeDisplayHint) -> CellSpec:
-    if (attributes := _get_attributes(row, hint.path)) is None:
+def _paint_host_inventory_attribute(
+    row: Row, path: SDPath, key: SDKey, hint: AttributeDisplayHint
+) -> CellSpec:
+    if (attributes := _get_attributes(row, path)) is None:
         return "", ""
     return compute_cell_spec(
         SDItem(
-            hint.key,
-            attributes.pairs.get(hint.key),
-            attributes.retentions.get(hint.key),
+            key,
+            attributes.pairs.get(key),
+            attributes.retentions.get(key),
         ),
         hint,
     )
 
 
-def attribute_painter_from_hint(hint: AttributeDisplayHint) -> AttributePainterFromHint:
+def attribute_painter_from_hint(
+    path: SDPath, key: SDKey, ident: str, hint: AttributeDisplayHint
+) -> AttributePainterFromHint:
     return AttributePainterFromHint(
         title=hint.long_inventory_title,
         # The short titles (used in column headers) may overlap for different painters, e.g.:
@@ -346,13 +350,13 @@ def attribute_painter_from_hint(hint: AttributeDisplayHint) -> AttributePainterF
         ),
         printable=True,
         load_inv=True,
-        sorter=hint.ident,
-        paint=lambda row: _paint_host_inventory_attribute(row, hint),
-        export_for_python=lambda row, cell: _compute_attribute_painter_data(row, hint),
+        sorter=ident,
+        paint=lambda row: _paint_host_inventory_attribute(row, path, key, hint),
+        export_for_python=lambda row, cell: _compute_attribute_painter_data(row, path, key),
         export_for_csv=lambda row, cell: (
-            "" if (data := _compute_attribute_painter_data(row, hint)) is None else str(data)
+            "" if (data := _compute_attribute_painter_data(row, path, key)) is None else str(data)
         ),
-        export_for_json=lambda row, cell: _compute_attribute_painter_data(row, hint),
+        export_for_json=lambda row, cell: _compute_attribute_painter_data(row, path, key),
     )
 
 

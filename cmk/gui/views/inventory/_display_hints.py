@@ -77,28 +77,15 @@ def _make_long_title(parent_title: str, title: str) -> str:
     return parent_title + " ➤ " + title if parent_title else title
 
 
-def _make_ident(path: SDPath, key: str = "") -> str:
-    parts = ["inv"] + list(path)
-    if key:
-        parts.append(key)
-    return "_".join(parts)
-
-
 @dataclass(frozen=True)
 class AttributeDisplayHint:
-    path: SDPath
-    key: SDKey
     title: str
     short_title: str
     long_title: str
-    data_type: str
     paint_function: PaintFunction
     sort_function: SortFunction
+    data_type: str
     is_show_more: bool
-
-    @property
-    def ident(self) -> str:
-        return _make_ident(self.path, self.key)
 
     @property
     def long_inventory_title(self) -> str:
@@ -108,72 +95,21 @@ class AttributeDisplayHint:
     def from_raw(
         cls,
         parent_title: str,
-        path: SDPath,
         key: str,
         raw_hint: InventoryHintSpec,
     ) -> AttributeDisplayHint:
         data_type, paint_function = _get_paint_function(raw_hint)
         title = _make_title_function(raw_hint)(key)
         return cls(
-            path=path,
-            key=SDKey(key),
             title=title,
             short_title=(
                 title if (short_title := raw_hint.get("short")) is None else str(short_title)
             ),
             long_title=_make_long_title(parent_title, title),
-            data_type=data_type,
             paint_function=paint_function,
             sort_function=_make_sort_function(raw_hint),
+            data_type=data_type,
             is_show_more=raw_hint.get("is_show_more", True),
-        )
-
-    def make_filter(self) -> FilterInvText | FilterInvBool | FilterInvFloat:
-        inventory_path = inventory.InventoryPath(
-            path=self.path,
-            source=inventory.TreeSource.attributes,
-            key=self.key,
-        )
-        if self.data_type == "str":
-            return FilterInvText(
-                ident=self.ident,
-                title=self.long_title,
-                inventory_path=inventory_path,
-                is_show_more=self.is_show_more,
-            )
-
-        if self.data_type == "bool":
-            return FilterInvBool(
-                ident=self.ident,
-                title=self.long_title,
-                inventory_path=inventory_path,
-                is_show_more=self.is_show_more,
-            )
-
-        match self.data_type:
-            case "bytes" | "bytes_rounded":
-                unit = _("MB")
-                scale = 1024 * 1024
-            case "hz":
-                unit = _("MHz")
-                scale = 1000000
-            case "volt":
-                unit = _("Volt")
-                scale = 1
-            case "timestamp":
-                unit = _("secs")
-                scale = 1
-            case _:
-                unit = ""
-                scale = 1
-
-        return FilterInvFloat(
-            ident=self.ident,
-            title=self.long_title,
-            inventory_path=inventory_path,
-            unit=unit,
-            scale=scale,
-            is_show_more=self.is_show_more,
         )
 
 
@@ -284,14 +220,14 @@ class NodeDisplayHint:
     short_title: str
     long_title: str
     icon: str
-    attributes: OrderedDict[str, AttributeDisplayHint]
+    attributes: OrderedDict[SDKey, AttributeDisplayHint]
     columns: OrderedDict[SDKey, ColumnDisplayHint]
     table_view_name: str
     table_is_show_more: bool
 
     @property
     def ident(self) -> str:
-        return _make_ident(self.path)
+        return "_".join(["inv"] + list(self.path))
 
     @property
     def long_inventory_title(self) -> str:
@@ -322,12 +258,7 @@ class NodeDisplayHint:
             icon=raw_hint.get("icon", ""),
             attributes=OrderedDict(
                 {
-                    key: AttributeDisplayHint.from_raw(
-                        title,
-                        path,
-                        key,
-                        attributes.get(key, {}),
-                    )
+                    SDKey(key): AttributeDisplayHint.from_raw(title, key, attributes.get(key, {}))
                     for key in _complete_key_order(attributes_key_order, set(attributes))
                 }
             ),
@@ -341,11 +272,14 @@ class NodeDisplayHint:
             table_is_show_more=raw_hint.get("is_show_more", True),
         )
 
+    def attribute_ident(self, key: SDKey) -> str:
+        return f"{self.ident}_{key}"
+
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
         return (
             hint
-            if (hint := self.attributes.get(key))
-            else AttributeDisplayHint.from_raw(self.title if self.path else "", self.path, key, {})
+            if (hint := self.attributes.get(SDKey(key)))
+            else AttributeDisplayHint.from_raw(self.title if self.path else "", key, {})
         )
 
     def column_ident(self, key: SDKey) -> str:

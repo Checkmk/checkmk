@@ -25,17 +25,15 @@ from cmk.gui.views.sorter import sorter_registry
 
 def test_registered_sorter_cmp() -> None:
     hint = AttributeDisplayHint(
-        path=(),
-        key=SDKey("key"),
-        data_type="str",
-        paint_function=inv_paint_generic,
-        sort_function=_decorate_sort_function(_cmp_inv_generic),
         title="Product",
         short_title="Product",
         long_title="System ➤ Product",
+        paint_function=inv_paint_generic,
+        sort_function=_decorate_sort_function(_cmp_inv_generic),
+        data_type="str",
         is_show_more=False,
     )
-    _register_sorter(hint.ident, attribute_sorter_from_hint(hint))
+    _register_sorter("inv_key", attribute_sorter_from_hint((), SDKey("key"), hint))
     sorter_cls = sorter_registry.get("inv_key")
     assert sorter_cls is not None
     assert (

@@ -5,6 +5,7 @@
 """Module to hold shared code for main module internals and the plugins"""
 
 import http
+import re
 import shlex
 from collections import Counter, OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
@@ -707,25 +708,16 @@ def _parse_perf_values(
     return varname, value, other_parts
 
 
+_VALUE_AND_UNIT = re.compile(r"([0-9.,-]*)(.*)")
+
+
 def _split_unit(value_text: str) -> tuple[float | None, str | None]:
     "separate value from unit"
-
     if not value_text.strip():
         return None, None
-
-    def digit_unit_split(value_text: str) -> int:
-        for i, char in enumerate(value_text):
-            if char not in "0123456789.,-":
-                return i
-        return len(value_text)
-
-    cut_unit = digit_unit_split(value_text)
-
-    unit_name = value_text[cut_unit:]
-    if value_text[:cut_unit]:
-        return _float_or_int(value_text[:cut_unit]), unit_name
-
-    return None, unit_name
+    value_and_unit = re.match(_VALUE_AND_UNIT, value_text)
+    assert value_and_unit is not None  # help mypy a bit, the regex always matches
+    return _float_or_int(value_and_unit[1]) if value_and_unit[1] else None, value_and_unit[2]
 
 
 def _compute_lookup_metric_name(metric_name: str) -> str:

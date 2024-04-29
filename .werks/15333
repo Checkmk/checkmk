@@ -1,0 +1,16 @@
+Title: Fix parsing of win_computersystemproduct
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1714380814
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+On some windows system <code>Win32_ComputerSystemProduct</code> seems to return no data.
+This call was introduced with <a href="https://checkmk.com/werk/15332">Werk #15332</a>
+
+Now the parser of this data (<code>win_computersystemproduct</code>) can handle empty data.
+
+This change also reduces the data transported with the
+<code>win_computersystemproduct</code> section, as we only use the UUID.

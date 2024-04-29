@@ -15,8 +15,10 @@ class _Section:
     uuid: str
 
 
-def parse_win_computersystemproduct(string_table: StringTable) -> _Section:
+def parse_win_computersystemproduct(string_table: StringTable) -> _Section | None:
     raw_section = {k.lower(): " ".join(v).strip() for k, *v in string_table}
+    if "uuid" not in raw_section:
+        return None
     return _Section(
         uuid=raw_section["uuid"],
     )
@@ -28,11 +30,12 @@ register.agent_section(
 )
 
 
-def inventory_win_computersystemproduct(section: _Section) -> InventoryResult:
-    yield Attributes(
-        path=["hardware", "system"],
-        inventory_attributes=asdict(section),
-    )
+def inventory_win_computersystemproduct(section: _Section | None) -> InventoryResult:
+    if section is not None:
+        yield Attributes(
+            path=["hardware", "system"],
+            inventory_attributes=asdict(section),
+        )
 
 
 register.inventory_plugin(

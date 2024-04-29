@@ -10,11 +10,13 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
+    ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTree,
     SDPath,
     SDRawDeltaTree,
     SDRawTree,
+    SDValue,
 )
 
 import cmk.gui.sites as sites
@@ -30,8 +32,8 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 
-from ._display_hints import NodeDisplayHint
-from ._tree_renderer import TreeRenderer
+from ._display_hints import AttributeDisplayHint, NodeDisplayHint
+from ._tree_renderer import compute_cell_spec, SDItem, TreeRenderer
 
 
 @request_memoize()
@@ -48,7 +50,7 @@ class MultipleInventoryTreesError(Exception):
     pass
 
 
-def validate_inventory_tree_uniqueness(row: Row) -> None:
+def _validate_inventory_tree_uniqueness(row: Row) -> None:
     raw_hostname = row.get("host_name")
     assert isinstance(raw_hostname, str)
 
@@ -102,7 +104,7 @@ class PainterInventoryTree(Painter):
 
     def _compute_data(self, row: Row, cell: Cell) -> ImmutableTree:
         try:
-            validate_inventory_tree_uniqueness(row)
+            _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
             return ImmutableTree()
 
@@ -177,7 +179,7 @@ class PainterInvhistDelta(Painter):
 
     def _compute_data(self, row: Row, cell: Cell) -> ImmutableDeltaTree:
         try:
-            validate_inventory_tree_uniqueness(row)
+            _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
             return ImmutableDeltaTree()
 
@@ -273,6 +275,86 @@ class PainterInvhistChanged(Painter):
         return _paint_invhist_count(row, "changed")
 
 
+class AttributePainterFromHint(TypedDict):
+    title: str
+    short: str
+    tooltip_title: str
+    columns: Sequence[str]
+    options: Sequence[str]
+    params: Dictionary
+    printable: bool
+    load_inv: bool
+    sorter: str
+    paint: Callable[[Row], CellSpec]
+    export_for_python: Callable[[Row, Cell], SDValue]
+    export_for_csv: Callable[[Row, Cell], str | HTML]
+    export_for_json: Callable[[Row, Cell], SDValue]
+
+
+def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
+    try:
+        _validate_inventory_tree_uniqueness(row)
+    except MultipleInventoryTreesError:
+        return None
+    return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
+
+
+def _compute_attribute_painter_data(row: Row, hint: AttributeDisplayHint) -> SDValue:
+    if (attributes := _get_attributes(row, hint.path)) is None:
+        return None
+    return attributes.pairs.get(hint.key)
+
+
+def _paint_host_inventory_attribute(row: Row, hint: AttributeDisplayHint) -> CellSpec:
+    if (attributes := _get_attributes(row, hint.path)) is None:
+        return "", ""
+    return compute_cell_spec(
+        SDItem(
+            hint.key,
+            attributes.pairs.get(hint.key),
+            attributes.retentions.get(hint.key),
+        ),
+        hint,
+    )
+
+
+def attribute_painter_from_hint(hint: AttributeDisplayHint) -> AttributePainterFromHint:
+    return AttributePainterFromHint(
+        title=hint.long_inventory_title,
+        # The short titles (used in column headers) may overlap for different painters, e.g.:
+        # - BIOS > Version
+        # - Firmware > Version
+        # We want to keep column titles short, yet, to make up for overlapping we show the
+        # long_title in the column title tooltips
+        short=hint.short_title,
+        tooltip_title=hint.long_title,
+        columns=["host_inventory", "host_structured_status"],
+        options=["show_internal_tree_paths"],
+        params=Dictionary(
+            title=_("Report options"),
+            elements=[
+                (
+                    "use_short",
+                    Checkbox(
+                        title=_("Use short title in reports header"),
+                        default_value=False,
+                    ),
+                ),
+            ],
+            required_keys=["use_short"],
+        ),
+        printable=True,
+        load_inv=True,
+        sorter=hint.ident,
+        paint=lambda row: _paint_host_inventory_attribute(row, hint),
+        export_for_python=lambda row, cell: _compute_attribute_painter_data(row, hint),
+        export_for_csv=lambda row, cell: (
+            "" if (data := _compute_attribute_painter_data(row, hint)) is None else str(data)
+        ),
+        export_for_json=lambda row, cell: _compute_attribute_painter_data(row, hint),
+    )
+
+
 class NodePainterFromHint(TypedDict):
     title: str
     short: str
@@ -290,7 +372,7 @@ class NodePainterFromHint(TypedDict):
 
 def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     try:
-        validate_inventory_tree_uniqueness(row)
+        _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
         return ImmutableTree()
 

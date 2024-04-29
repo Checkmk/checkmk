@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
-from cmk.utils.structured_data import ImmutableAttributes, ImmutableTree, SDKey, SDPath, SDValue
+from cmk.utils.structured_data import SDKey, SDPath
 from cmk.utils.user import UserId
 
 import cmk.gui.inventory as inventory
@@ -30,7 +30,7 @@ from cmk.gui.type_defs import (
     VisualContext,
     VisualLinkSpec,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue
+from cmk.gui.valuespec import FixedValue
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 from cmk.gui.views.store import multisite_builtin_views
@@ -47,7 +47,8 @@ from ._display_hints import (
     PAINT_FUNCTION_NAME_PREFIX,
 )
 from ._painters import (
-    MultipleInventoryTreesError,
+    attribute_painter_from_hint,
+    AttributePainterFromHint,
     node_painter_from_hint,
     NodePainterFromHint,
     PainterInventoryTree,
@@ -57,7 +58,6 @@ from ._painters import (
     PainterInvhistRemoved,
     PainterInvhistTime,
     PainterOptionShowInternalTreePaths,
-    validate_inventory_tree_uniqueness,
 )
 from ._tree_renderer import (
     ajax_inv_render_tree,
@@ -132,7 +132,7 @@ def register(
 #   '----------------------------------------------------------------------'
 
 
-def _register_painter(ident: str, spec: NodePainterFromHint) -> None:
+def _register_painter(ident: str, spec: AttributePainterFromHint | NodePainterFromHint) -> None:
     # TODO Clean this up one day
     cls = type(
         "LegacyPainter%s" % ident.title(),
@@ -198,43 +198,7 @@ def _register_attribute_column(hint: AttributeDisplayHint) -> None:
     long_inventory_title = hint.long_inventory_title
 
     # Declare column painter
-    register_painter(
-        hint.ident,
-        {
-            "title": long_inventory_title,
-            # The short titles (used in column headers) may overlap for different painters, e.g.:
-            # - BIOS > Version
-            # - Firmware > Version
-            # We want to keep column titles short, yet, to make up for overlapping we show the
-            # long_title in the column title tooltips
-            "short": hint.short_title,
-            "tooltip_title": hint.long_title,
-            "columns": ["host_inventory", "host_structured_status"],
-            "options": ["show_internal_tree_paths"],
-            "params": Dictionary(
-                title=_("Report options"),
-                elements=[
-                    (
-                        "use_short",
-                        Checkbox(
-                            title=_("Use short title in reports header"),
-                            default_value=False,
-                        ),
-                    ),
-                ],
-                required_keys=["use_short"],
-            ),
-            "printable": True,
-            "load_inv": True,
-            "sorter": hint.ident,
-            "paint": lambda row: _paint_host_inventory_attribute(row, hint),
-            "export_for_python": lambda row, cell: _compute_attribute_painter_data(row, hint),
-            "export_for_csv": lambda row, cell: (
-                "" if (data := _compute_attribute_painter_data(row, hint)) is None else str(data)
-            ),
-            "export_for_json": lambda row, cell: _compute_attribute_painter_data(row, hint),
-        },
-    )
+    _register_painter(hint.ident, attribute_painter_from_hint(hint))
 
     # Declare sorter. It will detect numbers automatically
     _register_sorter(
@@ -248,33 +212,6 @@ def _register_attribute_column(hint: AttributeDisplayHint) -> None:
 
     # Declare filter. Sync this with _register_table_column()
     filter_registry.register(hint.make_filter())
-
-
-def _get_attributes(row: Row, path: SDPath) -> ImmutableAttributes | None:
-    try:
-        validate_inventory_tree_uniqueness(row)
-    except MultipleInventoryTreesError:
-        return None
-    return row.get("host_inventory", ImmutableTree()).get_tree(path).attributes
-
-
-def _compute_attribute_painter_data(row: Row, hint: AttributeDisplayHint) -> SDValue:
-    if (attributes := _get_attributes(row, hint.path)) is None:
-        return None
-    return attributes.pairs.get(hint.key)
-
-
-def _paint_host_inventory_attribute(row: Row, hint: AttributeDisplayHint) -> CellSpec:
-    if (attributes := _get_attributes(row, hint.path)) is None:
-        return "", ""
-    return compute_cell_spec(
-        SDItem(
-            hint.key,
-            attributes.pairs.get(hint.key),
-            attributes.retentions.get(hint.key),
-        ),
-        hint,
-    )
 
 
 def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHint) -> CellSpec:

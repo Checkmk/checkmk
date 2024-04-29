@@ -693,6 +693,8 @@ section_zfs() {
 }
 
 section_nfs_mounts() {
+    proc_mounts_file=${1}
+
     if inpath waitmax; then
         STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
         STAT_BROKE="5.3.0"
@@ -706,7 +708,7 @@ section_nfs_mounts() {
 
         echo '<<<nfsmounts_v2:sep(0)>>>'
 
-        sed -n '/ nfs4\? /s/\([^ ]*\) \([^ ]*\) .*/\1 \2/p' </proc/mounts |
+        sed -n '/ nfs4\? /s/\([^ ]*\) \([^ ]*\) .*/\1 \2/p' <"${proc_mounts_file}" |
             sed 's/\\040/ /g' |
             while read -r MD MP; do
                 if [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
@@ -719,7 +721,7 @@ section_nfs_mounts() {
             done
 
         echo '<<<cifsmounts>>>'
-        sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' </proc/mounts |
+        sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' <"${proc_mounts_file}" |
             sed 's/\\040/ /g' |
             while read -r MP; do
                 if [ ! -r "${MP}" ]; then
@@ -2051,7 +2053,7 @@ run_purely_synchronous_sections() {
     # Check NFS mounts by accessing them with stat -f (System
     # call statfs()). If this lasts more then 2 seconds we
     # consider it as hanging. We need waitmax.
-    [ -z "${MK_SKIP_NFS_MOUNTS}" ] && _log_section_time section_nfs_mounts
+    [ -z "${MK_SKIP_NFS_MOUNTS}" ] && _log_section_time section_nfs_mounts "/proc/mounts"
 
     # Check mount options. Filesystems may switch to 'ro' in case
     # of a read error.

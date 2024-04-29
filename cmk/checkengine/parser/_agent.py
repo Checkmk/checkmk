@@ -361,7 +361,6 @@ class PiggybackSectionParser(ParserState):
         self.current_section: Final = current_section
 
     def do_action(self, line: bytes) -> ParserState:
-        assert self.piggyback_sections[self.current_host][-1].header == self.current_section
         self.piggyback_sections[self.current_host][-1].section.append(AgentRawData(line))
         return self
 
@@ -470,11 +469,9 @@ class HostSectionParser(ParserState):
         self.current_section: Final = current_section
 
     def do_action(self, line: bytes) -> ParserState:
-        if not self.current_section.nostrip:
-            line = line.strip()
-
-        assert self.sections[-1].header == self.current_section
-        self.sections[-1].section.append(AgentRawData(line))
+        self.sections[-1].section.append(
+            AgentRawData(line if self.current_section.nostrip else line.strip())
+        )
         return self
 
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:

@@ -9,29 +9,25 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
-from cmk.utils.structured_data import SDKey, SDPath
+from cmk.utils.structured_data import SDPath
 from cmk.utils.user import UserId
 
 import cmk.gui.inventory as inventory
 from cmk.gui.data_source import data_source_registry, DataSourceRegistry
 from cmk.gui.i18n import _, _l
 from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0.base import Painter, painter_registry, PainterRegistry, register_painter
+from cmk.gui.painter.v0.base import Painter, painter_registry, PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry, PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
     Icon,
-    PainterParameters,
-    Row,
     SorterSpec,
     ViewName,
     ViewSpec,
     VisualContext,
     VisualLinkSpec,
 )
-from cmk.gui.valuespec import FixedValue
-from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
@@ -49,6 +45,8 @@ from ._display_hints import (
 from ._painters import (
     attribute_painter_from_hint,
     AttributePainterFromHint,
+    column_painter_from_hint,
+    ColumnPainterFromHint,
     node_painter_from_hint,
     NodePainterFromHint,
     PainterInventoryTree,
@@ -59,12 +57,7 @@ from ._painters import (
     PainterInvhistTime,
     PainterOptionShowInternalTreePaths,
 )
-from ._tree_renderer import (
-    ajax_inv_render_tree,
-    compute_cell_spec,
-    make_table_view_name_of_host,
-    SDItem,
-)
+from ._tree_renderer import ajax_inv_render_tree, make_table_view_name_of_host
 from .registry import (
     inv_paint_funtions,
     inventory_displayhints,
@@ -132,7 +125,9 @@ def register(
 #   '----------------------------------------------------------------------'
 
 
-def _register_painter(ident: str, spec: AttributePainterFromHint | NodePainterFromHint) -> None:
+def _register_painter(
+    ident: str, spec: AttributePainterFromHint | ColumnPainterFromHint | NodePainterFromHint
+) -> None:
     # TODO Clean this up one day
     cls = type(
         "LegacyPainter%s" % ident.title(),
@@ -214,19 +209,6 @@ def _register_attribute_column(hint: AttributeDisplayHint) -> None:
     filter_registry.register(hint.make_filter())
 
 
-def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHint) -> CellSpec:
-    if hint.ident not in row:
-        return "", ""
-    return compute_cell_spec(
-        SDItem(
-            SDKey(hint.ident),
-            row[hint.ident],
-            row.get("_".join([hint.ident, "retention_interval"])),
-        ),
-        hint,
-    )
-
-
 def _register_table_column(hint: ColumnDisplayHint) -> None:
     long_inventory_title = hint.long_inventory_title
 
@@ -234,26 +216,7 @@ def _register_table_column(hint: ColumnDisplayHint) -> None:
     # - Sync this with _register_attribute_column()
     filter_registry.register(hint.make_filter())
 
-    register_painter(
-        hint.ident,
-        {
-            "title": long_inventory_title,
-            # The short titles (used in column headers) may overlap for different painters, e.g.:
-            # - BIOS > Version
-            # - Firmware > Version
-            # We want to keep column titles short, yet, to make up for overlapping we show the
-            # long_title in the column title tooltips
-            "short": hint.short_title,
-            "tooltip_title": hint.long_title,
-            "columns": [hint.ident],
-            "paint": lambda row: _paint_host_inventory_column(row, hint),
-            "sorter": hint.ident,
-            # See views/painter/v0/base.py::Cell.painter_parameters
-            # We have to add a dummy value here such that the painter_parameters are not None and
-            # the "real" parameters, ie. _painter_params, are used.
-            "params": FixedValue(PainterParameters(), totext=""),
-        },
-    )
+    _register_painter(hint.ident, column_painter_from_hint(hint))
 
     _register_sorter(
         ident=hint.ident,

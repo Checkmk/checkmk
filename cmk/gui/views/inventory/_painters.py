@@ -13,6 +13,7 @@ from cmk.utils.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTree,
+    SDKey,
     SDPath,
     SDRawDeltaTree,
     SDRawTree,
@@ -26,13 +27,13 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptions
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import ColumnName, PainterParameters, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
+from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError
 
-from ._display_hints import AttributeDisplayHint, NodeDisplayHint
+from ._display_hints import AttributeDisplayHint, ColumnDisplayHint, NodeDisplayHint
 from ._tree_renderer import compute_cell_spec, SDItem, TreeRenderer
 
 
@@ -352,6 +353,55 @@ def attribute_painter_from_hint(hint: AttributeDisplayHint) -> AttributePainterF
             "" if (data := _compute_attribute_painter_data(row, hint)) is None else str(data)
         ),
         export_for_json=lambda row, cell: _compute_attribute_painter_data(row, hint),
+    )
+
+
+class ColumnPainterFromHint(TypedDict):
+    title: str
+    short: str
+    tooltip_title: str
+    columns: Sequence[str]
+    params: FixedValue
+    sorter: str
+    paint: Callable[[Row], CellSpec]
+    export_for_python: Callable[[Row, Cell], SDValue]
+    export_for_csv: Callable[[Row, Cell], str | HTML]
+    export_for_json: Callable[[Row, Cell], SDValue]
+
+
+def _paint_host_inventory_column(row: Row, hint: ColumnDisplayHint) -> CellSpec:
+    if hint.ident not in row:
+        return "", ""
+    return compute_cell_spec(
+        SDItem(
+            SDKey(hint.ident),
+            row[hint.ident],
+            row.get("_".join([hint.ident, "retention_interval"])),
+        ),
+        hint,
+    )
+
+
+def column_painter_from_hint(hint: ColumnDisplayHint) -> ColumnPainterFromHint:
+    return ColumnPainterFromHint(
+        title=hint.long_inventory_title,
+        # The short titles (used in column headers) may overlap for different painters, e.g.:
+        # - BIOS > Version
+        # - Firmware > Version
+        # We want to keep column titles short, yet, to make up for overlapping we show the
+        # long_title in the column title tooltips
+        short=hint.short_title,
+        tooltip_title=hint.long_title,
+        columns=[hint.ident],
+        # See views/painter/v0/base.py::Cell.painter_parameters
+        # We have to add a dummy value here such that the painter_parameters are not None and
+        # the "real" parameters, ie. _painter_params, are used.
+        params=FixedValue(PainterParameters(), totext=""),
+        sorter=hint.ident,
+        paint=lambda row: _paint_host_inventory_column(row, hint),
+        export_for_python=lambda row, cell: row.get(hint.ident),
+        export_for_csv=lambda row, cell: "" if (data := row.get(hint.ident)) is None else str(data),
+        export_for_json=lambda row, cell: row.get(hint.ident),
     )
 
 

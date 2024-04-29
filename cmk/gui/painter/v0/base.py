@@ -322,8 +322,7 @@ class PainterRegistry(Registry[type[Painter]]):
 painter_registry = PainterRegistry()
 
 
-# Kept for pre 1.6 compatibility. But also the inventory.py uses this to
-# register some painters dynamically
+# Kept for pre 1.6 compatibility.
 def register_painter(ident: str, spec: dict[str, Any]) -> None:
     paint_function = spec["paint"]
     cls = type(

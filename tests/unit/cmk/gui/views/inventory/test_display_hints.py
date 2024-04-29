@@ -12,16 +12,8 @@ from cmk.utils.structured_data import SDKey, SDNodeName, SDPath
 
 import cmk.gui.inventory
 import cmk.gui.utils
-from cmk.gui.config import active_config
-from cmk.gui.display_options import display_options
-from cmk.gui.http import request, response
 from cmk.gui.inventory.filters import FilterInvtableText, FilterInvtableVersion
-from cmk.gui.logged_in import user
 from cmk.gui.num_split import cmp_version
-from cmk.gui.painter.v0.helpers import RenderLink
-from cmk.gui.painter_options import PainterOptions
-from cmk.gui.utils.theme import theme
-from cmk.gui.views.inventory import _register_sorter
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
@@ -41,7 +33,6 @@ from cmk.gui.views.inventory._paint_functions import (
     inv_paint_size,
 )
 from cmk.gui.views.inventory.registry import inventory_displayhints
-from cmk.gui.views.sorter import sorter_registry
 
 
 def test_display_hint_titles() -> None:
@@ -664,40 +655,3 @@ def test_make_attribute_displayhint_from_hint(
 )
 def test__parse_view_name(view_name: str | None, expected_view_name: str) -> None:
     assert _parse_view_name(view_name) == expected_view_name
-
-
-def test_registered_sorter_cmp() -> None:
-    hint = AttributeDisplayHint(
-        path=(),
-        key=SDKey("key"),
-        data_type="str",
-        paint_function=inv_paint_generic,
-        sort_function=_decorate_sort_function(_cmp_inv_generic),
-        title="Product",
-        short_title="Product",
-        long_title="System ➤ Product",
-        is_show_more=False,
-    )
-
-    _register_sorter(
-        ident="test_sorter",
-        long_inventory_title="A long title",
-        load_inv=False,
-        columns=["foobar"],
-        hint=hint,
-        value_extractor=lambda v: v.get("key"),
-    )
-
-    sorter_cls = sorter_registry.get("test_sorter")
-    assert sorter_cls is not None
-    assert (
-        sorter_cls(
-            user=user,
-            config=active_config,
-            request=request,
-            painter_options=PainterOptions.get_instance(),
-            theme=theme,
-            url_renderer=RenderLink(request, response, display_options),
-        ).cmp({}, {}, None)
-        == 0
-    )

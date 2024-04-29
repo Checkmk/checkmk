@@ -37,8 +37,7 @@ class SorterRegistry(Registry[type[Sorter]]):
 sorter_registry = SorterRegistry()
 
 
-# Kept for pre 1.6 compatibility. But also the inventory.py uses this to
-# register some painters dynamically
+# Kept for pre 1.6 compatibility.
 def register_sorter(ident: str, spec: dict[str, Any]) -> None:
     cls = type(
         "LegacySorter%s" % str(ident).title(),

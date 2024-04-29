@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from cmk.utils.structured_data import SDPath
 from cmk.utils.user import UserId
@@ -28,7 +28,7 @@ from cmk.gui.type_defs import (
     VisualContext,
     VisualLinkSpec,
 )
-from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
+from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, Sorter, sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry, VisualInfo
@@ -57,6 +57,7 @@ from ._painters import (
     PainterInvhistTime,
     PainterOptionShowInternalTreePaths,
 )
+from ._sorter import attribute_sorter_from_hint, column_sorter_from_hint, SorterFromHint
 from ._tree_renderer import ajax_inv_render_tree, make_table_view_name_of_host
 from .registry import (
     inv_paint_funtions,
@@ -155,46 +156,29 @@ def _register_painter(
     painter_registry.register(cls)
 
 
-def _register_sorter(
-    *,
-    ident: str,
-    long_inventory_title: str,
-    load_inv: bool,
-    columns: list[str],
-    hint: AttributeDisplayHint | ColumnDisplayHint,
-    value_extractor: Callable,
-) -> None:
-    register_sorter(
-        ident,
+def _register_sorter(ident: str, spec: SorterFromHint) -> None:
+    # TODO Clean this up one day
+    cls = type(
+        "LegacySorter%s" % str(ident).title(),
+        (Sorter,),
         {
-            "title": long_inventory_title,
-            "columns": columns,
-            "load_inv": load_inv,
-            "cmp": lambda a, b: hint.sort_function(
-                value_extractor(a),
-                value_extractor(b),
-            ),
+            "_ident": ident,
+            "_spec": spec,
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._spec["title"]),
+            "columns": property(lambda s: s._spec["columns"]),
+            "load_inv": property(lambda s: s._spec.get("load_inv", False)),
+            "cmp": lambda self, r1, r2, p: spec["cmp"](r1, r2),
         },
     )
+    sorter_registry.register(cls)
 
 
 def _register_attribute_column(hint: AttributeDisplayHint) -> None:
     """Declares painters, sorters and filters to be used in views based on all host related
     datasources."""
-    long_inventory_title = hint.long_inventory_title
-
-    # Declare column painter
     _register_painter(hint.ident, attribute_painter_from_hint(hint))
-
-    # Declare sorter. It will detect numbers automatically
-    _register_sorter(
-        ident=hint.ident,
-        long_inventory_title=long_inventory_title,
-        load_inv=True,
-        columns=["host_inventory", "host_structured_status"],
-        hint=hint,
-        value_extractor=lambda row: row["host_inventory"].get_attribute(hint.path, hint.key),
-    )
+    _register_sorter(hint.ident, attribute_sorter_from_hint(hint))
 
     # Declare filter. Sync this with _register_table_column()
     filter_registry.register(hint.make_filter())
@@ -220,22 +204,12 @@ def _register_info_class(table_view_name: str, title_singular: str, title_plural
 
 
 def _register_table_column(hint: ColumnDisplayHint) -> None:
-    long_inventory_title = hint.long_inventory_title
-
     # TODO
     # - Sync this with _register_attribute_column()
     filter_registry.register(hint.make_filter())
 
     _register_painter(hint.ident, column_painter_from_hint(hint))
-
-    _register_sorter(
-        ident=hint.ident,
-        long_inventory_title=long_inventory_title,
-        load_inv=False,
-        columns=[hint.ident],
-        hint=hint,
-        value_extractor=lambda v: v.get(hint.ident),
-    )
+    _register_sorter(hint.ident, column_sorter_from_hint(hint))
 
 
 def _register_views(

@@ -12,7 +12,7 @@ from cmk.gui.utils.html import HTML
 from .utils import expect_validate_failure, expect_validate_success, request_var
 
 
-def test_elements() -> list[tuple[str, vs.ValueSpec]]:
+def _test_elements() -> list[tuple[str, vs.ValueSpec]]:
     return [
         ("a", vs.TextInput(title="A")),
         ("b", vs.Integer()),
@@ -23,71 +23,73 @@ def test_elements() -> list[tuple[str, vs.ValueSpec]]:
 
 class TestValueSpecDictionary:
     def test_init(self) -> None:
-        vs.Dictionary(elements=test_elements(), optional_keys=set())
-        vs.Dictionary(elements=test_elements(), optional_keys=[])
-        vs.Dictionary(elements=test_elements(), optional_keys=False)
-        vs.Dictionary(elements=test_elements(), optional_keys=True)
+        vs.Dictionary(elements=_test_elements(), optional_keys=set())
+        vs.Dictionary(elements=_test_elements(), optional_keys=[])
+        vs.Dictionary(elements=_test_elements(), optional_keys=False)
+        vs.Dictionary(elements=_test_elements(), optional_keys=True)
 
         with pytest.raises(
             TypeError, match="optional_keys and required_keys can not be set at the same time."
         ):
-            vs.Dictionary(elements=test_elements(), optional_keys={"a"}, required_keys=["b"])
+            vs.Dictionary(elements=_test_elements(), optional_keys={"a"}, required_keys=["b"])
 
         with pytest.raises(
             TypeError,
             match="optional_keys = False enforces all keys to be required, so required_keys has no effect.",
         ):
-            vs.Dictionary(elements=test_elements(), optional_keys=False, required_keys=["b"])
+            vs.Dictionary(elements=_test_elements(), optional_keys=False, required_keys=["b"])
 
     def test_validate(self) -> None:
         empty_dict: dict[str, object] = {}
 
-        expect_validate_success(vs.Dictionary(elements=test_elements()), empty_dict)
+        expect_validate_success(vs.Dictionary(elements=_test_elements()), empty_dict)
         expect_validate_success(
-            vs.Dictionary(elements=test_elements()), {"a": "", "b": 0, "c": "", "d": 4}
+            vs.Dictionary(elements=_test_elements()), {"a": "", "b": 0, "c": "", "d": 4}
         )
-        expect_validate_failure(vs.Dictionary(elements=test_elements()), {"z": "z"})
+        expect_validate_failure(vs.Dictionary(elements=_test_elements()), {"z": "z"})
         expect_validate_success(
-            vs.Dictionary(elements=test_elements(), ignored_keys=["z"]), {"z": "z"}
+            vs.Dictionary(elements=_test_elements(), ignored_keys=["z"]), {"z": "z"}
         )
 
-        expect_validate_failure(vs.Dictionary(elements=test_elements()), ["a", "b"])  # type: ignore[misc]
+        expect_validate_failure(vs.Dictionary(elements=_test_elements()), ["a", "b"])  # type: ignore[misc]
 
         # required_keys do what you would expect
         expect_validate_success(
-            vs.Dictionary(elements=test_elements(), required_keys=("a",)), {"a": "a"}
+            vs.Dictionary(elements=_test_elements(), required_keys=("a",)), {"a": "a"}
         )
         expect_validate_failure(
-            vs.Dictionary(elements=test_elements(), required_keys=("a",)), empty_dict
+            vs.Dictionary(elements=_test_elements(), required_keys=("a",)), empty_dict
         )
 
         # optional_keys invert required_keys internally:
         # optional_keys=[a,b,c] == required_keys=[d]
         expect_validate_success(
-            vs.Dictionary(elements=test_elements(), optional_keys=["a", "b", "c"]), {"d": 1}
+            vs.Dictionary(elements=_test_elements(), optional_keys=["a", "b", "c"]), {"d": 1}
         )
         expect_validate_failure(
-            vs.Dictionary(elements=test_elements(), optional_keys=["a", "b", "c"]), empty_dict
+            vs.Dictionary(elements=_test_elements(), optional_keys=["a", "b", "c"]), empty_dict
         )
 
         # child valuespec failure:
-        expect_validate_failure(vs.Dictionary(elements=test_elements()), {"d": 0})
+        expect_validate_failure(vs.Dictionary(elements=_test_elements()), {"d": 0})
         # child valuespec datatype failure:
-        expect_validate_failure(vs.Dictionary(elements=test_elements()), {"d": "asd"})
+        expect_validate_failure(vs.Dictionary(elements=_test_elements()), {"d": "asd"})
 
     def test_default_value(self) -> None:
-        assert vs.Dictionary(elements=test_elements()).default_value() == {}
+        assert vs.Dictionary(elements=_test_elements()).default_value() == {}
         assert vs.Dictionary(
-            elements=test_elements(), required_keys=["a", "c"]
+            elements=_test_elements(), required_keys=["a", "c"]
         ).default_value() == {"a": "", "c": "z"}
-        assert vs.Dictionary(elements=test_elements(), default_keys=["b", "d"]).default_value() == {
+        assert vs.Dictionary(
+            elements=_test_elements(), default_keys=["b", "d"]
+        ).default_value() == {
             "b": 0,
             "d": 1,
         }
         assert vs.Dictionary(
-            elements=test_elements(), optional_keys=["a", "b", "c"]
+            elements=_test_elements(), optional_keys=["a", "b", "c"]
         ).default_value() == {"d": 1}
-        assert vs.Dictionary(elements=test_elements(), optional_keys=False).default_value() == {
+        assert vs.Dictionary(elements=_test_elements(), optional_keys=False).default_value() == {
             "a": "",
             "b": 0,
             "c": "z",
@@ -98,22 +100,23 @@ class TestValueSpecDictionary:
             # default_value was intentionally removed from
             # Dictionary, because it does not have any effect.
             d = vs.Dictionary(  # type: ignore[call-arg] # pylint: disable=unexpected-keyword-arg
-                elements=test_elements(), default_value=None
+                elements=_test_elements(), default_value=None
             )
             _ = d.default_value() == {}
 
     def test_canonical_value(self) -> None:
-        assert vs.Dictionary(elements=test_elements()).canonical_value() == {}
+        assert vs.Dictionary(elements=_test_elements()).canonical_value() == {}
         assert vs.Dictionary(
-            elements=test_elements(), required_keys=["a", "c"]
+            elements=_test_elements(), required_keys=["a", "c"]
         ).canonical_value() == {"a": "", "c": ""}
         assert (
-            vs.Dictionary(elements=test_elements(), default_keys=["b", "d"]).canonical_value() == {}
+            vs.Dictionary(elements=_test_elements(), default_keys=["b", "d"]).canonical_value()
+            == {}
         )
         assert vs.Dictionary(
-            elements=test_elements(), optional_keys=["a", "b", "c"]
+            elements=_test_elements(), optional_keys=["a", "b", "c"]
         ).canonical_value() == {"d": 1}
-        assert vs.Dictionary(elements=test_elements(), optional_keys=False).canonical_value() == {
+        assert vs.Dictionary(elements=_test_elements(), optional_keys=False).canonical_value() == {
             "a": "",
             "b": 0,
             "c": "",
@@ -122,8 +125,8 @@ class TestValueSpecDictionary:
 
     def test_from_html_vars(self, request_context: None) -> None:
         with request_var(v_p_a="a", v_p_b="2", v_p_c="c", v_p_d="4"):
-            assert vs.Dictionary(elements=test_elements()).from_html_vars("v") == {}
-            assert vs.Dictionary(elements=test_elements(), optional_keys=False).from_html_vars(
+            assert vs.Dictionary(elements=_test_elements()).from_html_vars("v") == {}
+            assert vs.Dictionary(elements=_test_elements(), optional_keys=False).from_html_vars(
                 "v"
             ) == {
                 "a": "a",
@@ -133,20 +136,21 @@ class TestValueSpecDictionary:
             }
 
         with request_var(v_p_a="a", v_p_a_USE="1"):
-            assert vs.Dictionary(elements=test_elements()).from_html_vars("v") == {"a": "a"}
+            assert vs.Dictionary(elements=_test_elements()).from_html_vars("v") == {"a": "a"}
 
     def test_value_to_html(self) -> None:
-        assert vs.Dictionary(elements=test_elements()).value_to_html({}) == "(no parameters)"
+        assert vs.Dictionary(elements=_test_elements()).value_to_html({}) == "(no parameters)"
         assert (
-            vs.Dictionary(elements=test_elements(), empty_text="empty").value_to_html({}) == "empty"
+            vs.Dictionary(elements=_test_elements(), empty_text="empty").value_to_html({})
+            == "empty"
         )
         assert (
             vs.Dictionary(
-                elements=test_elements(), required_keys=["a", "c"], default_text="default"
+                elements=_test_elements(), required_keys=["a", "c"], default_text="default"
             ).value_to_html({"a": "", "c": "z"})
             == "default"
         )
-        assert vs.Dictionary(elements=test_elements(), required_keys=["a", "c"]).value_to_html(
+        assert vs.Dictionary(elements=_test_elements(), required_keys=["a", "c"]).value_to_html(
             {"a": "", "c": "z"}
         ) == HTML(
             "<table>"
@@ -176,8 +180,8 @@ class TestValueSpecDictionary:
         assert vs.Dictionary(elements=elements).value_to_json(value) == expected
 
     def test_value_from_json(self) -> None:
-        assert vs.Dictionary(elements=test_elements()).value_from_json({}) == {}
-        assert vs.Dictionary(elements=test_elements()).value_from_json({"a": "a"}) == {"a": "a"}
+        assert vs.Dictionary(elements=_test_elements()).value_from_json({}) == {}
+        assert vs.Dictionary(elements=_test_elements()).value_from_json({"a": "a"}) == {"a": "a"}
 
     def test_mask(self) -> None:
         assert vs.Dictionary(elements=[("the answer", vs.Password())]).mask(

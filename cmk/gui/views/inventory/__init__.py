@@ -111,19 +111,9 @@ def register(
             "inv_host": _INV_VIEW_HOST,
             "inv_hosts_cpu": _INV_VIEW_HOST_CPU,
             "inv_hosts_ports": _INV_VIEW_HOST_PORTS,
+            "inv_host_history": _INV_VIEW_HOST_HISTORY,
         }
     )
-
-
-# .
-#   .--columns-------------------------------------------------------------.
-#   |                          _                                           |
-#   |                 ___ ___ | |_   _ _ __ ___  _ __  ___                 |
-#   |                / __/ _ \| | | | | '_ ` _ \| '_ \/ __|                |
-#   |               | (_| (_) | | |_| | | | | | | | | \__ \                |
-#   |                \___\___/|_|\__,_|_| |_| |_|_| |_|___/                |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
 def _register_painter(
@@ -445,7 +435,6 @@ def register_table_views_and_columns() -> None:
         _register_table_view(node_hint)
 
 
-# .
 #   .--views---------------------------------------------------------------.
 #   |                            _                                         |
 #   |                     __   _(_) _____      _____                       |
@@ -622,50 +611,52 @@ _INV_VIEW_HOST_PORTS = ViewSpec(
     }
 )
 
-multisite_builtin_views["inv_host_history"] = {
-    # General options
-    "datasource": "invhist",
-    "topic": "inventory",
-    "title": _("Inventory history of host"),
-    "description": _("The history for changes in hardware- and software inventory of a host"),
-    "icon": {
-        "icon": "inventory",
-        "emblem": "time",
-    },
-    "hidebutton": False,
-    "public": True,
-    "hidden": True,
-    "is_show_more": True,
-    "link_from": {
+_INV_VIEW_HOST_HISTORY = ViewSpec(
+    {
+        # General options
+        "datasource": "invhist",
+        "topic": "inventory",
+        "title": _("Inventory history of host"),
+        "description": _("The history for changes in hardware- and software inventory of a host"),
+        "icon": {
+            "icon": "inventory",
+            "emblem": "time",
+        },
+        "hidebutton": False,
+        "public": True,
+        "hidden": True,
+        "is_show_more": True,
+        "link_from": {
+            "single_infos": ["host"],
+            "has_inventory_tree_history": tuple(),
+        },
+        # Layout options
+        "layout": "table",
+        "num_columns": 1,
+        "browser_reload": 0,
+        "column_headers": "pergroup",
+        "user_sortable": True,
+        "play_sounds": False,
+        "force_checkboxes": False,
+        "mustsearch": False,
+        "mobile": False,
+        # Columns
+        "group_painters": [],
+        "painters": [
+            ColumnSpec(name="invhist_time"),
+            ColumnSpec(name="invhist_removed"),
+            ColumnSpec(name="invhist_new"),
+            ColumnSpec(name="invhist_changed"),
+            ColumnSpec(name="invhist_delta"),
+        ],
+        "sorters": [SorterSpec(sorter="invhist_time", negate=False)],
+        "owner": UserId.builtin(),
+        "name": "inv_host_history",
         "single_infos": ["host"],
-        "has_inventory_tree_history": tuple(),
-    },
-    # Layout options
-    "layout": "table",
-    "num_columns": 1,
-    "browser_reload": 0,
-    "column_headers": "pergroup",
-    "user_sortable": True,
-    "play_sounds": False,
-    "force_checkboxes": False,
-    "mustsearch": False,
-    "mobile": False,
-    # Columns
-    "group_painters": [],
-    "painters": [
-        ColumnSpec(name="invhist_time"),
-        ColumnSpec(name="invhist_removed"),
-        ColumnSpec(name="invhist_new"),
-        ColumnSpec(name="invhist_changed"),
-        ColumnSpec(name="invhist_delta"),
-    ],
-    "sorters": [SorterSpec(sorter="invhist_time", negate=False)],
-    "owner": UserId.builtin(),
-    "name": "inv_host_history",
-    "single_infos": ["host"],
-    "context": {},
-    "add_context_to_title": True,
-    "sort_index": 99,
-    "packaged": False,
-    "megamenu_search_terms": [],
-}
+        "context": {},
+        "add_context_to_title": True,
+        "sort_index": 99,
+        "packaged": False,
+        "megamenu_search_terms": [],
+    }
+)

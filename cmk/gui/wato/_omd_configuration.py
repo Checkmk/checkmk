@@ -26,6 +26,7 @@ from cmk.gui.valuespec import (
     Integer,
     IPNetwork,
     ListOfStrings,
+    Migrate,
     Optional,
     Tuple,
     ValueSpec,
@@ -172,8 +173,15 @@ def _livestatus_via_tcp() -> Dictionary:
                 ),
             ),
         ],
-        optional_keys=["only_from", "tls"],
+        optional_keys=["tls"],
     )
+
+
+def _migrate_tcp_only_from(livestatus_tcp: dict[str, object]) -> dict[str, object]:
+    if "only_from" in livestatus_tcp:
+        return livestatus_tcp
+    livestatus_tcp["only_from"] = ["0.0.0.0"]
+    return livestatus_tcp
 
 
 class ConfigVariableSiteLivestatusTCP(ConfigVariable):
@@ -188,7 +196,10 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Optional(
-            valuespec=_livestatus_via_tcp(),
+            valuespec=Migrate(
+                _livestatus_via_tcp(),
+                migrate=_migrate_tcp_only_from,
+            ),
             title=_("Access to Livestatus via TCP"),
             help=_(
                 "Check_MK Livestatus usually listens only on a local UNIX socket - "

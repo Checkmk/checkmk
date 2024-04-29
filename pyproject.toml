@@ -83,12 +83,12 @@ use_parentheses = "True"
 ensure_newline_before_comments = "True"
 order_by_type = "False"
 line_length = 100
-py_version = "311"
+py_version = "312"
 
 
 [tool.black]
 line-length = 100
-target-version = ['py311']
+target-version = ['py312']
 
 
 # NOTE: Keep this is sync with mypy-raw.ini!

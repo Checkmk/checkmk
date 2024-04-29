@@ -20,7 +20,7 @@ quiet = true
 profile = "black"
 order_by_type = false
 line_length = 100
-py_version = 311
+py_version = 312
 
 [tool.mypy]
 explicit_package_bases = true

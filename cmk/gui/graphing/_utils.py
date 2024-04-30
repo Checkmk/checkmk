@@ -22,7 +22,7 @@ from cmk.utils.plugin_registry import Registry
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKHTTPException
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
@@ -204,7 +204,7 @@ def _parse_quantity(
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics.WarningOf():
             metric_ = get_extended_metric_info(quantity.metric_name)
@@ -247,7 +247,7 @@ def _parse_quantity(
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics.Product():
             return MetricDefinition(
@@ -257,7 +257,7 @@ def _parse_quantity(
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics.Difference():
             return MetricDefinition(
@@ -267,7 +267,7 @@ def _parse_quantity(
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
         case metrics.Fraction():
             return MetricDefinition(
@@ -278,7 +278,7 @@ def _parse_quantity(
                     explicit_color=parse_color(quantity.color),
                 ),
                 line_type=line_type,
-                title=str(quantity.title.localize(_)),
+                title=str(quantity.title.localize(translate_to_current_language)),
             )
 
 
@@ -375,7 +375,7 @@ class GraphTemplate:
                     metrics_.append(_parse_quantity(line, "line"))
         return cls(
             id=graph.name,
-            title=graph.title.localize(_),
+            title=graph.title.localize(translate_to_current_language),
             range=(
                 None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range)
             ),
@@ -430,7 +430,7 @@ class GraphTemplate:
                     metrics_.append(_parse_quantity(line, "line"))
         return cls(
             id=graph.name,
-            title=graph.title.localize(_),
+            title=graph.title.localize(translate_to_current_language),
             range=(
                 (Minimum(lower_ranges), Maximum(upper_ranges))
                 if lower_ranges and upper_ranges
@@ -622,7 +622,7 @@ def add_graphing_plugins(
             metrics_from_api.register(
                 MetricInfoExtended(
                     name=plugin.name,
-                    title=plugin.title.localize(_),
+                    title=plugin.title.localize(translate_to_current_language),
                     unit=parse_or_add_unit(plugin.unit),
                     color=parse_color(plugin.color),
                 )

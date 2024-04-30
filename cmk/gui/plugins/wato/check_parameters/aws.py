@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Iterable
 
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
@@ -640,9 +640,9 @@ def _vs_limits_vcpu_families():
             choices=[
                 (
                     "%s_vcpu" % inst_fam,
-                    fam_name.localize(_),
+                    fam_name.localize(translate_to_current_language),
                     vs_aws_limits(
-                        fam_name.localize(_),
+                        fam_name.localize(translate_to_current_language),
                         AWSEC2LimitsSpecial.get("%s_vcpu" % inst_fam, AWSEC2LimitsDefault)[0],
                     ),
                 )

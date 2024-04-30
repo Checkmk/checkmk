@@ -17,7 +17,7 @@ import cmk.gui.valuespec as legacy_valuespecs
 from cmk.gui import inventory as legacy_inventory_groups
 from cmk.gui import wato as legacy_wato
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.rule_specs.legacy_converter import (
     _convert_to_custom_group,
@@ -932,7 +932,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
 def test_convert_to_legacy_valuespec(
     new_valuespec: FormSpec, expected: legacy_valuespecs.ValueSpec
 ) -> None:
-    _compare_specs(_convert_to_legacy_valuespec(new_valuespec, _), expected)
+    _compare_specs(
+        _convert_to_legacy_valuespec(new_valuespec, translate_to_current_language), expected
+    )
 
 
 def _get_cascading_single_choice_with_prefill_selection(
@@ -1039,7 +1041,12 @@ def test_convert_to_legacy_rulespec_group(
     new_topic: api_v1.rule_specs.Topic,
     expected: type[legacy_rulespecs.RulespecSubGroup],
 ) -> None:
-    assert _convert_to_legacy_rulespec_group(legacy_main_group, new_topic, _) == expected
+    assert (
+        _convert_to_legacy_rulespec_group(
+            legacy_main_group, new_topic, translate_to_current_language
+        )
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -1482,7 +1489,10 @@ def test_convert_to_legacy_rulespec_group(
 def test_convert_to_legacy_rulespec(
     new_rulespec: APIV1RuleSpec, expected: legacy_rulespecs.Rulespec
 ) -> None:
-    _compare_specs(convert_to_legacy_rulespec(new_rulespec, Edition.CRE, _), expected)
+    _compare_specs(
+        convert_to_legacy_rulespec(new_rulespec, Edition.CRE, translate_to_current_language),
+        expected,
+    )
 
 
 def _compare_specs(actual: object, expected: object) -> None:
@@ -1591,7 +1601,7 @@ def test_convert_validation(
 ) -> None:
     converted_spec = _convert_to_legacy_valuespec(
         api_v1.form_specs.String(custom_validate=validate),
-        _,
+        translate_to_current_language,
     )
 
     expected_spec = legacy_valuespecs.TextInput(
@@ -1643,7 +1653,7 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
         custom_validate=(_v1_custom_list_validate,),
     )
 
-    legacy_list = _convert_to_legacy_valuespec(v1_api_list, _)
+    legacy_list = _convert_to_legacy_valuespec(v1_api_list, translate_to_current_language)
 
     with pytest.raises(MKUserError, match=expected_error):
         legacy_list.validate_value(input_value, "var_prefix")
@@ -2265,7 +2275,9 @@ def test_level_conversion(
     api_levels: api_v1.form_specs.Levels,
     legacy_levels: legacy_valuespecs.Dictionary,
 ) -> None:
-    _compare_specs(_convert_to_legacy_levels(api_levels, _), legacy_levels)
+    _compare_specs(
+        _convert_to_legacy_levels(api_levels, translate_to_current_language), legacy_levels
+    )
 
 
 @pytest.mark.parametrize(
@@ -2362,7 +2374,7 @@ def test_dictionary_groups_datamodel_transformation(
 ) -> None:
     to_convert = api_v1.form_specs.Dictionary(elements=input_elements)
 
-    converted = _convert_to_legacy_valuespec(to_convert, _)
+    converted = _convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     assert isinstance(converted, legacy_valuespecs.Transform)
 
     assert converted.to_valuespec(consumer_model) == form_model
@@ -2422,7 +2434,7 @@ def test_dictionary_groups_ignored_elements() -> None:
         "c": 6,
     }
 
-    converted = _convert_to_legacy_valuespec(to_convert, _)
+    converted = _convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     assert isinstance(converted, legacy_valuespecs.Transform)
 
     assert converted.to_valuespec(consumer_model) == form_model
@@ -2591,7 +2603,9 @@ def test_dictionary_groups_ignored_elements() -> None:
 def test_dictionary_groups_dict_element_properties(
     to_convert: api_v1.form_specs.Dictionary, expected: legacy_valuespecs.Dictionary
 ) -> None:
-    _compare_specs(_convert_to_legacy_valuespec(to_convert, _), expected)
+    _compare_specs(
+        _convert_to_legacy_valuespec(to_convert, translate_to_current_language), expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -2707,7 +2721,7 @@ def test_dictionary_groups_dict_element_properties(
 def test_dictionary_groups_migrate(
     to_convert: api_v1.form_specs.Dictionary, value_to_migrate: object, expected: object
 ) -> None:
-    converted = _convert_to_legacy_valuespec(to_convert, _)
+    converted = _convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     assert converted.transform_value(value_to_migrate) == expected
 
 
@@ -2773,6 +2787,6 @@ def test_dictionary_groups_migrate(
 def test_dictionary_groups_validate(
     to_convert: api_v1.form_specs.Dictionary, value_to_validate: object
 ) -> None:
-    converted = _convert_to_legacy_valuespec(to_convert, _)
+    converted = _convert_to_legacy_valuespec(to_convert, translate_to_current_language)
     with pytest.raises(MKUserError):
         converted.validate_value(value_to_validate, "")

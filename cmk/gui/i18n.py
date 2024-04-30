@@ -38,10 +38,7 @@ translation = request_local_attr("translation", Translation)
 
 
 @request_memoize()
-def _(message: str, /) -> str:
-    """
-    Positional-only argument to simplify additional linting of localized strings.
-    """
+def translate_to_current_language(message: str) -> str:
     # Avoid localizing the empty string. The empty string is reserved for header data in PO files:
     # https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html
     # "An empty untranslated-string is reserved to contain the header entry with the meta
@@ -52,6 +49,13 @@ def _(message: str, /) -> str:
     if translation:
         return translation.translation.gettext(message)
     return str(message)
+
+
+def _(message: str, /) -> str:
+    """
+    Positional-only argument to simplify additional linting of localized strings.
+    """
+    return translate_to_current_language(message)
 
 
 def _l(string: str, /) -> LazyString:
@@ -141,7 +145,7 @@ def _unlocalize() -> None:
 
 
 def localize(lang: str) -> None:
-    _.cache_clear()  # type: ignore[attr-defined]
+    translate_to_current_language.cache_clear()  # type: ignore[attr-defined]
     if lang == "en":
         _unlocalize()
         return None
@@ -211,7 +215,7 @@ def _u(text: str) -> str:
             return text
         return ldict.get(current_language, text)
 
-    return _(text)  # pylint: disable=translation-of-non-string
+    return translate_to_current_language(text)
 
 
 def set_user_localizations(localizations: dict[str, dict[str, str]]) -> None:

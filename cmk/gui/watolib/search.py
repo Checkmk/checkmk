@@ -36,7 +36,13 @@ from cmk.gui.exceptions import MKAuthException
 from cmk.gui.global_config import get_global_config
 from cmk.gui.hooks import register_builtin
 from cmk.gui.http import request
-from cmk.gui.i18n import _, get_current_language, get_languages, localize
+from cmk.gui.i18n import (
+    _,
+    get_current_language,
+    get_languages,
+    localize,
+    translate_to_current_language,
+)
 from cmk.gui.logged_in import user
 from cmk.gui.pages import get_page_handler
 from cmk.gui.session import SuperUserContext
@@ -439,14 +445,13 @@ class IndexSearcher:
                     IndexBuilder.add_to_prefix(prefix_category, idx_matched_item)
                 )
 
-                # This call to i18n._ with a non-constant string is ok. Here, we translate the
-                # topics of our search results. For localization-dependent search results, such as
-                # rulesets, they are already localized anyway. However, for localization-independent
-                # results, such as hosts, they are not. For example, "Hosts" in French is "Hôtes".
-                # Without this call to i18n._, found hosts would be displayed under the topic
-                # "Hosts" instead of "Hôtes" in the setup search.
-                # pylint: disable=translation-of-non-string
-                results[_(match_item_dict["topic"])].append(
+                # We translate the topics of our search results. For localization-dependent search
+                # results, such as rulesets, they are already localized anyway. However, for
+                # localization-independent results, such as hosts, they are not. For example,
+                # "Hosts" in French is "Hôtes". Without this call to translate_to_current_language,
+                # found hosts would be displayed under the topic "Hosts" instead of "Hôtes" in the
+                # setup search.
+                results[translate_to_current_language(match_item_dict["topic"])].append(
                     _SearchResultWithPermissionsCheck(
                         SearchResult(
                             match_item_dict["title"],

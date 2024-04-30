@@ -27,7 +27,7 @@ from cmk.gui.form_specs.vue.vue_types import (
 )
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.log import logger
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.user_errors import user_errors
@@ -178,8 +178,16 @@ class AbstractFormSpecVisitor:
         return ValueAndValidation(vue_value, self._optional_validation(form_spec, disk_value))
 
     def _get_title_and_help(self, form_spec: FormSpec) -> tuple[str, str]:
-        title = "" if form_spec.title is None else form_spec.title.localize(_)
-        help_text = "" if form_spec.help_text is None else form_spec.help_text.localize(_)
+        title = (
+            ""
+            if form_spec.title is None
+            else form_spec.title.localize(translate_to_current_language)
+        )
+        help_text = (
+            ""
+            if form_spec.help_text is None
+            else form_spec.help_text.localize(translate_to_current_language)
+        )
         return title, help_text
 
     def _visit_integer(self, form_spec: Integer, value: int) -> VueVisitorMethodResult:

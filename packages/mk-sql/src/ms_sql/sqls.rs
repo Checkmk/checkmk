@@ -148,7 +148,35 @@ SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Port
     FROM sys.dm_os_waiting_tasks";
 
     pub const DATABASE_NAMES: &str = "SELECT name FROM sys.databases";
-    pub const SPACE_USED: &str = "EXEC sp_spaceused";
+
+    /// Executes `sp_spaceused` for each database parsing output as resuult set
+    /// Requires nvarchar support
+    pub const SPACE_USED: &str = "EXEC sp_spaceused \
+        WITH RESULT SETS \
+        ( \
+        (database_name nvarchar(128),database_size nvarchar(128), unallocated_space nvarchar(128)), \
+        (reserved nvarchar(128),data nvarchar(128), index_size nvarchar(128), unused nvarchar(128)) \
+        )";
+
+    /// TODO(sk): remove this variant.B after confirm that new script works nice
+    /// Executes `sp_spaceused` with storing data in temp table
+    /// This works only on latest SQL Server versions - 2019 at least
+    pub const _SPACE_USED_FOR_LATEST_SQL_SERVERS: &str = "create table #temp (\
+    database_name sysname,\
+    database_size varchar(18),\
+    [unallocated space] varchar(18),\
+    reserved varchar(18),\
+    data varchar(18),\
+    index_size varchar(18),\
+    unused varchar(18)\
+    );\
+    insert into #temp (database_name,database_size,[unallocated space],reserved,data,index_size,unused) \
+    exec sp_spaceused @oneresultset =1;'\
+    Select * from #temp; \
+    drop table #temp";
+
+    /// TODO(sk): remove this reference to legacy code after confirm that new script works nice
+    pub const _SPACE_USED_ORIGINAL: &str = "EXEC sp_spaceused";
 
     pub const BACKUP: &str = r"DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max);
 SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled'));

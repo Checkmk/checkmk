@@ -94,7 +94,7 @@ class AttributeDisplayHint:
     @classmethod
     def from_raw(
         cls,
-        parent_title: str,
+        node_title: str,
         key: str,
         raw_hint: InventoryHintSpec,
     ) -> AttributeDisplayHint:
@@ -105,7 +105,7 @@ class AttributeDisplayHint:
             short_title=(
                 title if (short_title := raw_hint.get("short")) is None else str(short_title)
             ),
-            long_title=_make_long_title(parent_title, title),
+            long_title=_make_long_title(node_title, title),
             paint_function=paint_function,
             sort_function=_make_sort_function(raw_hint),
             data_type=data_type,
@@ -185,7 +185,7 @@ class ColumnDisplayHint:
     @classmethod
     def from_raw(
         cls,
-        parent_title: str,
+        node_title: str,
         key: str,
         raw_hint: InventoryHintSpec,
     ) -> ColumnDisplayHint:
@@ -196,7 +196,7 @@ class ColumnDisplayHint:
             short_title=(
                 title if (short_title := raw_hint.get("short")) is None else str(short_title)
             ),
-            long_title=_make_long_title(parent_title, title),
+            long_title=_make_long_title(node_title, title),
             paint_function=paint_function,
             sort_function=_make_sort_function(raw_hint),
             filter_class=_parse_column_display_hint_filter_class(raw_hint.get("filter")),

@@ -709,8 +709,9 @@ section_nfs_mounts() {
         echo '<<<nfsmounts_v2:sep(0)>>>'
 
         sed -n '/ nfs4\? /s/\([^ ]*\) \([^ ]*\) .*/\1 \2/p' <"${proc_mounts_file}" |
-            sed 's/\\040/ /g' |
             while read -r MD MP; do
+                MD="$(printf "%s" "${MD}" | sed 's/\\040/ /g')"
+                MP="$(printf "%s" "${MP}" | sed 's/\\040/ /g')"
                 if [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then
                     waitmax -s 9 5 stat -f -c "$(json_templ "${MP}" "${MD}")" "${MP}" ||
                         json_templ_empty "${MP}" "${MD}"
@@ -722,8 +723,8 @@ section_nfs_mounts() {
 
         echo '<<<cifsmounts>>>'
         sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' <"${proc_mounts_file}" |
-            sed 's/\\040/ /g' |
             while read -r MP; do
+                MP="$(printf "%s" "${MP}" | sed 's/\\040/ /g')"
                 if [ ! -r "${MP}" ]; then
                     echo "${MP} Permission denied"
                 elif [ "${STAT_VERSION}" != "${STAT_BROKE}" ]; then

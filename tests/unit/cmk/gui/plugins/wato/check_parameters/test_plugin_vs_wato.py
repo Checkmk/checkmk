@@ -448,11 +448,6 @@ class ErrorReporter:
         ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
         (
             "check",
-            "liebert_cooling",
-            RuleGroup.CheckgroupParameters("liebert_cooling"),
-        ),
-        (
-            "check",
             "liebert_cooling_position",
             RuleGroup.CheckgroupParameters("liebert_cooling_position"),
         ),

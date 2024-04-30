@@ -33,7 +33,7 @@ class RuleOptions(BaseModel):
 
 
 class Rule(BaseModel):
-    id: str
+    id: str | Omitted = OMITTED_FIELD
     value: Any
     condition: RuleConditions
     options: RuleOptions | Omitted = OMITTED_FIELD

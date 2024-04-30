@@ -148,7 +148,7 @@ run_eslint() {
 }
 
 run_tests() {
-    python3 scripts/test_scss_content.py
+    npm run test
 }
 
 main() {

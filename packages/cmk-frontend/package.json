@@ -20,6 +20,7 @@
   "scripts": {
     "build": "ENTERPRISE=${ENTERPRISE:=yes} MANAGED=no webpack",
     "build-watch": "WEBPACK_MODE=quick ENTERPRISE=yes MANAGED=no npx webpack --mode development --watch",
+    "test": "python3 scripts/test_scss_content.py",
     "test-eslint": "eslint --max-warnings 0 --no-color './src/js/**/*.{j,t}s'",
     "test-tsc": "tsc",
     "test-prettier": "prettier  --check --no-color --ignore-path ./.prettierignore --loglevel warn '{src/**/,}*.{js,ts,scss}'",

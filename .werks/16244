@@ -1,0 +1,11 @@
+Title: Handle nfs mount dirs with whitespace
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1715000622
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+This werk may affect you, in case you've been monitoring nfs and your mount directory had whitespaces included.
+The result would have been a nfs mount service which is always in state <tt>hanging</tt>.

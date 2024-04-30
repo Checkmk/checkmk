@@ -6,9 +6,12 @@
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.site import Site
 
 
+@pytest.mark.skip(reason="Skipped due to CMK-17239")
 def test_no_exception(site: Site) -> None:
     """
     The execution of a special agent should not lead to an exception

@@ -22,7 +22,7 @@ from cmk.gui.views.inventory._display_hints import (
     _RelatedRawHints,
     AttributeDisplayHint,
     ColumnDisplayHint,
-    DISPLAY_HINTS,
+    inv_display_hints,
     NodeDisplayHint,
 )
 from cmk.gui.views.inventory._paint_functions import (
@@ -246,7 +246,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
     ],
 )
 def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint) -> None:
-    node_hint = DISPLAY_HINTS.get_node_hint(path)
+    node_hint = inv_display_hints.get_node_hint(path)
 
     assert node_hint.ident == "_".join(("inv",) + node_hint.path)
     assert node_hint.icon == expected_node_hint.icon
@@ -338,7 +338,9 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
 def test_make_node_displayhint_from_hint(
     raw_path: str, expected_node_hint: NodeDisplayHint
 ) -> None:
-    node_hint = DISPLAY_HINTS.get_node_hint(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
+    node_hint = inv_display_hints.get_node_hint(
+        cmk.gui.inventory.InventoryPath.parse(raw_path).path
+    )
 
     assert node_hint.ident == "_".join(("inv",) + node_hint.path)
     assert node_hint.icon == expected_node_hint.icon
@@ -407,7 +409,7 @@ def test_make_node_displayhint_from_hint(
     ],
 )
 def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_node_hint(path).get_column_hint(key)
+    hint = inv_display_hints.get_node_hint(path).get_column_hint(key)
     assert hint.title == expected.title
     assert hint.short_title == expected.short_title
     assert hint.long_title == expected.long_title
@@ -478,7 +480,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_node_hint(inventory_path.path).get_column_hint(
+    hint = inv_display_hints.get_node_hint(inventory_path.path).get_column_hint(
         inventory_path.key or ""
     )
     assert hint.title == expected.title
@@ -534,7 +536,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
     ],
 )
 def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_node_hint(path).get_attribute_hint(key)
+    hint = inv_display_hints.get_node_hint(path).get_attribute_hint(key)
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
     assert callable(hint.sort_function)
@@ -589,7 +591,7 @@ def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_node_hint(inventory_path.path).get_attribute_hint(
+    hint = inv_display_hints.get_node_hint(inventory_path.path).get_attribute_hint(
         inventory_path.key or ""
     )
     assert hint.data_type == expected.data_type

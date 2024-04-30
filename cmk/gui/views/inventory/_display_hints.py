@@ -367,26 +367,10 @@ _ALLOWED_KEYS: Sequence[
 
 @dataclass(frozen=True)
 class DisplayHints:
-    _nodes_by_path: dict[SDPath, NodeDisplayHint] = field(default_factory=dict)
+    _nodes_by_path: dict[SDPath, NodeDisplayHint]
 
     def add(self, node_hint: NodeDisplayHint) -> None:
         self._nodes_by_path[node_hint.path] = node_hint
-
-    @classmethod
-    def root(cls) -> DisplayHints:
-        hints = cls()
-        hints.add(
-            NodeDisplayHint.from_raw(
-                "",
-                (),
-                {"title": _l("Inventory Tree")},
-                [],
-                {},
-                [],
-                {},
-            )
-        )
-        return hints
 
     def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
         for path, related_raw_hints in sorted(
@@ -439,15 +423,35 @@ class DisplayHints:
             return self._nodes_by_path[()]
         if (abc_path := self._find_abc_path(path)) in self._nodes_by_path:
             return self._nodes_by_path[abc_path]
-        return NodeDisplayHint.from_raw(
-            self.get_node_hint(path[:-1]).title if path[:-1] else "",
+        title = path[-1].replace("_", " ").title()
+        return NodeDisplayHint(
             path,
-            {},
-            [],
-            {},
-            [],
-            {},
+            title,
+            title,
+            _make_long_title(
+                self.get_node_hint(path[:-1]).title if path[:-1] else "",
+                title,
+            ),
+            "",
+            OrderedDict(),
+            OrderedDict(),
+            "",
+            True,
         )
 
 
-DISPLAY_HINTS = DisplayHints.root()
+inv_display_hints = DisplayHints(
+    {
+        (): NodeDisplayHint(
+            (),
+            str(_l("Inventory Tree")),
+            str(_l("Inventory Tree")),
+            str(_l("Inventory Tree")),
+            "",
+            OrderedDict(),
+            OrderedDict(),
+            "",
+            True,
+        )
+    }
+)

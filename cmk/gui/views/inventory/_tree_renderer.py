@@ -39,7 +39,12 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
-from ._display_hints import AttributeDisplayHint, ColumnDisplayHint, DISPLAY_HINTS, NodeDisplayHint
+from ._display_hints import (
+    AttributeDisplayHint,
+    ColumnDisplayHint,
+    inv_display_hints,
+    NodeDisplayHint,
+)
 
 
 def make_table_view_name_of_host(view_name: str) -> str:
@@ -434,7 +439,7 @@ class TreeRenderer:
                 self.show(node, request_)
 
     def show(self, tree: ImmutableTree | ImmutableDeltaTree, request_: Request) -> None:
-        node_hint = DISPLAY_HINTS.get_node_hint(tree.path)
+        node_hint = inv_display_hints.get_node_hint(tree.path)
 
         if tree.attributes:
             self._show_attributes(tree.attributes, node_hint)
@@ -445,4 +450,4 @@ class TreeRenderer:
         for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node, DISPLAY_HINTS.get_node_hint(node.path), request_)
+                self._show_node(node, inv_display_hints.get_node_hint(node.path), request_)

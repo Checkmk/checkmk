@@ -38,7 +38,7 @@ from . import _paint_functions, builtin_display_hints
 from ._data_sources import ABCDataSourceInventory, DataSourceInventoryHistory, RowTableInventory
 from ._display_hints import (
     AttributeDisplayHint,
-    DISPLAY_HINTS,
+    inv_display_hints,
     NodeDisplayHint,
     PAINT_FUNCTION_NAME_PREFIX,
 )
@@ -67,7 +67,7 @@ from .registry import (
 )
 
 __all__ = [
-    "DISPLAY_HINTS",
+    "inv_display_hints",
     "InventoryHintSpec",
     "NodeDisplayHint",
 ]
@@ -403,11 +403,11 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
 
 def register_table_views_and_columns() -> None:
     # Parse legacy display hints
-    DISPLAY_HINTS.parse(inventory_displayhints)
+    inv_display_hints.parse(inventory_displayhints)
 
     # create painters for node with a display hint
     painter_options = PainterOptions.get_instance()
-    for node_hint in DISPLAY_HINTS:
+    for node_hint in inv_display_hints:
         if "*" in node_hint.path:
             # FIXME DYNAMIC-PATHS
             # For now we have to exclude these kind of paths due to the following reason:

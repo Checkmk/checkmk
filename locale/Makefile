@@ -40,10 +40,10 @@ update-pot:
 	git pull --rebase
 	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 \
 		--keyword=_l \
-		--keyword=Title \
-		--keyword=Help \
-		--keyword=Label \
-		--keyword=Message \
+		--keyword=Title:1,1t \
+		--keyword=Help:1,1t \
+		--keyword=Label:1,1t \
+		--keyword=Message:1,1t \
  		-o scanned.pot \
 		$$(find -L ../packages -type f -name "*.py" -not -path '*/tests/*' -not -path '*/test/*') \
 		$$(find -L ../cmk -type f -name "*.py") 2>&1 | \

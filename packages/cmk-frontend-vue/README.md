@@ -5,10 +5,8 @@ Checkmk vue experiments
 ## development
 
 ```sh
-npm install
-npm run build
-npm run lint
-npm run prettier
+./run --setup-environment
+./run --all
 ```
 
 ### trying out changes in a site

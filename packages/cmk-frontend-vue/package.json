@@ -4,12 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "vite build",
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
-    "build-only": "vite build",
-    "type-check": "vue-tsc --build --force",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "test": "true # we don't have any tests here",
+    "test-eslint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "test-tsc": "vue-tsc --build --force",
     "test-prettier": "prettier  --check src/ *.json *.ts *.html",
     "prettier": "prettier --write src/ *.json *.ts *.html"
   },

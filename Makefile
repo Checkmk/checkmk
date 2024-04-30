@@ -124,7 +124,7 @@ cmk-frontend:
 	cd packages/cmk-frontend && ENTERPRISE=$(ENTERPRISE) ./run --setup-environment --all
 
 frontend-vue:
-	cd packages/cmk-frontend-vue && ./run
+	cd packages/cmk-frontend-vue && ./run --setup-environment --all
 
 announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)

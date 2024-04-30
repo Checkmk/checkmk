@@ -83,9 +83,9 @@ test_section_nfs_mounts_space_in_MD() {
 
     section=$(section_nfs_mounts "${SHUNIT_TMPDIR}/mounts")
     nfs=$(echo "${section}" | grep "\{\"mountpoint")
-    # assertEquals "${MP}" "$(echo "${nfs}" | jq -r '.mountpoint')"         # BUG - should be True
-    # assertEquals "${MD}" "$(echo "${nfs}" | jq -r '.source')"    # BUG - should be True
-    assertEquals "hanging" "$(echo "${nfs}" | jq -r '.state')" # BUG - should be ok
+    assertEquals "${MP}" "$(echo "${nfs}" | jq -r '.mountpoint')"
+    assertEquals "${MD}" "$(echo "${nfs}" | jq -r '.source')"
+    assertEquals "ok" "$(echo "${nfs}" | jq -r '.state')"
 
     clean_up_fake_proc_mounts "${MP}"
 }

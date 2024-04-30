@@ -8,7 +8,7 @@ Checkmk vue experiments
 npm install
 npm run build
 npm run lint
-npm run format
+npm run prettier
 ```
 
 ### trying out changes in a site

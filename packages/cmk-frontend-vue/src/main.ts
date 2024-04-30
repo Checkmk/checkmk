@@ -9,7 +9,6 @@
 
 import 'core-js/stable'
 
-import $ from 'jquery'
 import { createApp } from 'vue'
 
 import D3Table from './views/D3Table.vue'
@@ -58,8 +57,7 @@ function setup_vue() {
   })
 }
 
-$(() => {
-  // -> change to X.onload?
+addEventListener('load', () => {
   setup_vue()
 })
 

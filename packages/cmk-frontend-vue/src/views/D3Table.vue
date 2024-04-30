@@ -1,4 +1,6 @@
 <script setup lang="ts">
+// eslint-disable-next-line
+// @ts-nocheck
 import { type TableCell, type TableRow, type VueTableSpec } from '@/types'
 import { ref, onMounted } from 'vue'
 import crossfilter from 'crossfilter2'

@@ -2137,11 +2137,22 @@ def main() -> None:
     unit_parser = UnitParser()
     if args.filter_standalone_metrics:
         connected_legacy_metric_names = {n for c in all_connected_objects for n in c.metrics}
+        standalone_legacy_metrics = {
+            n: m for n, m in legacy_metric_info.items() if n not in connected_legacy_metric_names
+        }
         migrated_objects = _migrate(
             args.debug,
             migration_errors,
             unit_parser,
-            {n: m for n, m in legacy_metric_info.items() if n not in connected_legacy_metric_names},
+            (
+                {
+                    n: m
+                    for n, m in standalone_legacy_metrics.items()
+                    if n in args.filter_metric_names
+                }
+                if args.filter_metric_names
+                else standalone_legacy_metrics
+            ),
             legacy_check_metrics,
             [],
             {},

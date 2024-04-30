@@ -104,18 +104,27 @@ def html_escape_context(context: PluginNotificationContext) -> PluginNotificatio
     if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
 
-    def _escape_or_not_escape(varname: str, value: str) -> str:
+    def _escape_or_not_escape(context: PluginNotificationContext, varname: str, value: str) -> str:
         """currently we escape by default with a large list of exceptions.
 
         Next step is permissive escaping for certain fields..."""
 
         if varname in unescaped_variables:
+            # HACK for HTML output of ps check
+            if (
+                varname == "LONGSERVICEOUTPUT"
+                and context.get("SERVICECHECKCOMMAND") == "check_mk-ps"
+            ):
+                return value.replace("&bsol;", "\\")
             return value
         if varname in permissive_variables:
             return escape_permissive(value, escape_links=False)
         return escape(value)
 
-    return {variable: _escape_or_not_escape(variable, value) for variable, value in context.items()}
+    return {
+        variable: _escape_or_not_escape(context, variable, value)
+        for variable, value in context.items()
+    }
 
 
 def add_debug_output(template: str, context: PluginNotificationContext) -> str:

@@ -1,0 +1,12 @@
+Title: Do not escape HTML output of ps check in HTML Emails
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1714476264
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+If you configured a process discovery rule with option "Enable per-process
+details in long-output" the "Details" column in HTML Emails showed the escaped
+output.

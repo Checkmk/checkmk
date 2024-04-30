@@ -1128,7 +1128,7 @@ fn to_table_spaces_entry(
         }
     };
     let db_size = extract(rows, 0, "database_size");
-    let unallocated = extract(rows, 0, "unallocated space");
+    let unallocated = extract(rows, 0, "unallocated_space");
     let reserved = extract(rows, 1, "reserved");
     let data = extract(rows, 1, "data");
     let index_size = extract(rows, 1, "index_size");

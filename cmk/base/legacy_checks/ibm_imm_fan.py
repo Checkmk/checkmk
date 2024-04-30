@@ -68,6 +68,6 @@ check_info["ibm_imm_fan"] = LegacyCheckDefinition(
     check_function=check_ibm_imm_fan,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
-        "levels_lower": (28, 25),  # Just a guess. Please give feedback.
+        "levels_lower": (28.0, 25.0),  # Just a guess. Please give feedback.
     },
 )

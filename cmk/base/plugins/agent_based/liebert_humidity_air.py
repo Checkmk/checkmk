@@ -25,8 +25,8 @@ from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTre
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
-    "levels": (50, 55),
-    "levels_lower": (10, 15),
+    "levels": (50.0, 55.0),
+    "levels_lower": (10.0, 15.0),
 }
 
 

@@ -7,6 +7,7 @@
 
 import abc
 import typing as t
+from pprint import pprint
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
@@ -301,34 +302,8 @@ class ErrorReporter:
         # type # plug-in # wato
         (
             "check",
-            "apc_ats_output",
-            RuleGroup.CheckgroupParameters("apc_ats_output"),
-        ),
-        ("check", "apc_humidity", RuleGroup.CheckgroupParameters("humidity")),
-        (
-            "check",
-            "apc_symmetra",
-            RuleGroup.CheckgroupParameters("apc_symentra"),
-        ),
-        (
-            "check",
             "apc_symmetra_temp",
             RuleGroup.CheckgroupParameters("temperature"),
-        ),
-        (
-            "check",
-            "aws_dynamodb_table_read_capacity",
-            RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
-        ),
-        (
-            "check",
-            "aws_dynamodb_table_write_capacity",
-            RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
-        ),
-        (
-            "check",
-            "blade_bx_powerfan",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
         (
             "check",
@@ -351,11 +326,6 @@ class ErrorReporter:
             "check",
             "ceph_status_osds",
             RuleGroup.CheckgroupParameters("ceph_osds"),
-        ),
-        (
-            "check",
-            "cisco_prime_wifi_access_points",
-            RuleGroup.CheckgroupParameters("cisco_prime_wifi_access_points"),
         ),
         (
             "check",
@@ -382,11 +352,6 @@ class ErrorReporter:
             "check",
             "docsis_channels_upstream",
             RuleGroup.CheckgroupParameters("docsis_channels_upstream"),
-        ),
-        (
-            "check",
-            "eltek_fans",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
         ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
         (
@@ -426,11 +391,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "fortimail_disk_usage",
-            RuleGroup.CheckgroupParameters("fortimail_disk_usage"),
-        ),
-        (
-            "check",
             "hivemanager_devices",
             RuleGroup.CheckgroupParameters("hivemanager_devices"),
         ),
@@ -439,39 +399,9 @@ class ErrorReporter:
             "huawei_osn_laser",
             RuleGroup.CheckgroupParameters("huawei_osn_laser"),
         ),
-        (
-            "check",
-            "ibm_imm_fan",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
         ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
-        (
-            "check",
-            "liebert_cooling_position",
-            RuleGroup.CheckgroupParameters("liebert_cooling_position"),
-        ),
-        (
-            "check",
-            "liebert_fans",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        (
-            "check",
-            "liebert_fans_condenser",
-            RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        (
-            "check",
-            "liebert_humidity_air",
-            RuleGroup.CheckgroupParameters("humidity"),
-        ),
         ("check", "lvm_vgs", RuleGroup.CheckgroupParameters("volume_groups")),
-        (
-            "check",
-            "mikrotik_signal",
-            RuleGroup.CheckgroupParameters("signal_quality"),
-        ),
         (
             "check",
             "mongodb_collections",
@@ -517,11 +447,6 @@ class ErrorReporter:
             "check",
             "openhardwaremonitor_fan",
             RuleGroup.CheckgroupParameters("hw_fans"),
-        ),
-        (
-            "check",
-            "openhardwaremonitor_smart",
-            RuleGroup.CheckgroupParameters("openhardwaremonitor_smart"),
         ),
         (
             "check",
@@ -585,11 +510,6 @@ class ErrorReporter:
             "check",
             "tplink_poe_summary",
             RuleGroup.CheckgroupParameters("epower_single"),
-        ),
-        (
-            "check",
-            "watchdog_sensors_humidity",
-            RuleGroup.CheckgroupParameters("humidity"),
         ),
         ("discovery", "domino_tasks", "inv_domino_tasks_rules"),
         ("discovery", "mssql_counters_cache_hits", "inventory_mssql_counters_rules"),
@@ -689,9 +609,9 @@ class ErrorReporter:
         `_known_*` set.
         """
         # ci does not report the variables, so we print them...
-        print(self._known_error_loading_defaults)
-        print(self._known_wato_missing)
-        print(self._known_wato_unused)
+        pprint(self._known_error_loading_defaults)
+        pprint(self._known_wato_missing)
+        pprint(self._known_wato_unused)
         assert len(self._known_error_loading_defaults) == 0
         assert len(self._known_wato_missing) == 0
         assert len(self._known_wato_unused) == 0

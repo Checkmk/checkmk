@@ -348,6 +348,6 @@ check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
     check_function=check_openhardwaremonitor_smart,
     check_ruleset_name="openhardwaremonitor_smart",
     check_default_parameters={
-        "remaining_life": (30, 10),  # wild guess
+        "remaining_life": (30.0, 10.0),  # wild guess
     },
 )

@@ -79,6 +79,6 @@ check_info["apc_ats_output"] = LegacyCheckDefinition(
     check_ruleset_name="apc_ats_output",
     check_default_parameters={
         "output_voltage_max": (240, 250),
-        "load_perc_max": (85, 95),
+        "load_perc_max": (85.0, 95.0),
     },
 )

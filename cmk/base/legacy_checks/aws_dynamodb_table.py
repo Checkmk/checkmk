@@ -180,7 +180,16 @@ check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
     check_function=check_aws_dynamodb_read_capacity,
     check_ruleset_name="aws_dynamodb_capacity",
     check_default_parameters={
-        "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
+        "levels_read": {
+            "levels_average": {
+                "levels_upper": (80.0, 90.0),
+            },
+        },
+        "levels_write": {
+            "levels_average": {
+                "levels_upper": (80.0, 90.0),
+            },
+        },
     },
 )
 
@@ -196,7 +205,16 @@ check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
     check_function=check_aws_dynamodb_write_capacity,
     check_ruleset_name="aws_dynamodb_capacity",
     check_default_parameters={
-        "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
+        "levels_read": {
+            "levels_average": {
+                "levels_upper": (80.0, 90.0),
+            },
+        },
+        "levels_write": {
+            "levels_average": {
+                "levels_upper": (80.0, 90.0),
+            },
+        },
     },
 )
 

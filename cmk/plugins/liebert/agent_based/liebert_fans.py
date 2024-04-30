@@ -63,6 +63,6 @@ check_plugin_liebert_fans = CheckPlugin(
     check_function=check_liebert_fans,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
-        "levels": (80, 90),
+        "levels": (80.0, 90.0),
     },
 )

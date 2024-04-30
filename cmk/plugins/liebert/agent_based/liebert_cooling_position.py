@@ -61,6 +61,6 @@ check_plugin_liebert_cooling_position = CheckPlugin(
     check_function=check_liebert_cooling_position,
     check_ruleset_name="liebert_cooling_position",
     check_default_parameters={
-        "min_capacity": (90, 80),
+        "min_capacity": (90.0, 80.0),
     },
 )

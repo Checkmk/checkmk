@@ -66,7 +66,6 @@ def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict[str, ServiceInf
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.skip(reason="Skipped due to CMK-17237")
 def test_checks_sanity(host_services: dict[str, ServiceInfo]) -> None:
     """Assert sanity of the discovered checks."""
     ok_services = get_services_with_status(host_services, 0)

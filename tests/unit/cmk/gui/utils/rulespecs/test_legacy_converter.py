@@ -1300,13 +1300,17 @@ def test_convert_to_legacy_rulespec_group(
             api_v1.rule_specs.AgentConfig(
                 name="test_rulespec",
                 title=api_v1.Title("rulespec title"),
-                topic=api_v1.rule_specs.Topic.GENERAL,
+                topic=api_v1.rule_specs.Topic.CONFIGURATION_DEPLOYMENT,
                 parameter_form=lambda: api_v1.form_specs.Dictionary(elements={}),
                 help_text=api_v1.Help("help text"),
             ),
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.AgentConfig("test_rulespec"),
-                group=legacy_rulespec_groups.RulespecGroupMonitoringAgentsGenericOptions,
+                group=_to_generated_builtin_sub_group(
+                    legacy_rulespec_groups.RulespecGroupMonitoringAgents,
+                    "Configuration & Deployment",
+                    lambda x: x,
+                ),
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="dict",
@@ -1461,7 +1465,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.SpecialAgents("test_rulespec"),
-                group=legacy_wato_groups.RulespecGroupVMCloudContainer,
+                group=legacy_wato_groups.RulespecGroupDatasourceProgramsCloud,
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="first",
@@ -1478,7 +1482,7 @@ def test_convert_to_legacy_rulespec_group(
             ),
             legacy_rulespecs.HostRulespec(
                 name=RuleGroup.SpecialAgents("gcp"),
-                group=legacy_wato_groups.RulespecGroupVMCloudContainer,
+                group=legacy_wato_groups.RulespecGroupDatasourceProgramsCloud,
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
                 match_type="first",
@@ -1552,12 +1556,6 @@ def _compare_rulespec_groups(actual: object, expected: legacy_rulespecs.Rulespec
         assert expected.main_group == actual.main_group
         assert expected.name == actual.name
         assert expected.sub_group_name == actual.sub_group_name
-        assert expected.title == actual.title
-    elif isinstance(expected, legacy_rulespecs.RulespecGroup):
-        assert isinstance(actual, legacy_rulespecs.RulespecGroup)
-        assert expected.choice_title == actual.choice_title
-        assert expected.help == actual.help
-        assert expected.name == actual.name
         assert expected.title == actual.title
     else:
         raise NotImplementedError()

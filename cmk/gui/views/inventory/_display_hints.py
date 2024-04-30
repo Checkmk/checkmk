@@ -30,6 +30,49 @@ from cmk.gui.inventory.filters import (
 
 from .registry import inv_paint_funtions, InventoryHintSpec, InvValue, PaintFunction, SortFunction
 
+
+@dataclass(frozen=True)
+class _RelatedRawHints:
+    for_node: InventoryHintSpec = field(
+        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
+    )
+    for_table: InventoryHintSpec = field(
+        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
+    )
+    by_column: dict[str, InventoryHintSpec] = field(default_factory=dict)
+    by_key: dict[str, InventoryHintSpec] = field(default_factory=dict)
+
+
+def _get_related_raw_hints(
+    raw_hints: Mapping[str, InventoryHintSpec]
+) -> Mapping[SDPath, _RelatedRawHints]:
+    related_raw_hints_by_path: dict[SDPath, _RelatedRawHints] = {}
+    for raw_path, raw_hint in raw_hints.items():
+        inventory_path = inventory.InventoryPath.parse(raw_path)
+        related_raw_hints = related_raw_hints_by_path.setdefault(
+            inventory_path.path,
+            _RelatedRawHints(),
+        )
+
+        if inventory_path.source == inventory.TreeSource.node:
+            related_raw_hints.for_node.update(raw_hint)
+            continue
+
+        if inventory_path.source == inventory.TreeSource.table:
+            if inventory_path.key:
+                related_raw_hints.by_column.setdefault(inventory_path.key, raw_hint)
+                continue
+
+            related_raw_hints.for_table.update(raw_hint)
+            continue
+
+        if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:
+            related_raw_hints.by_key.setdefault(inventory_path.key, raw_hint)
+            continue
+
+    return related_raw_hints_by_path
+
+
 PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
 
 
@@ -213,6 +256,10 @@ def _parse_view_name(view_name: str | None) -> str:
     return view_name
 
 
+def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> Sequence[str]:
+    return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
+
+
 @dataclass(frozen=True)
 class NodeDisplayHint:
     path: SDPath
@@ -290,52 +337,6 @@ class NodeDisplayHint:
             if (hint := self.columns.get(SDKey(key)))
             else ColumnDisplayHint.from_raw(self.title if self.path else "", key, {})
         )
-
-
-@dataclass(frozen=True)
-class _RelatedRawHints:
-    for_node: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
-    for_table: InventoryHintSpec = field(
-        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
-    )
-    by_column: dict[str, InventoryHintSpec] = field(default_factory=dict)
-    by_key: dict[str, InventoryHintSpec] = field(default_factory=dict)
-
-
-def _get_related_raw_hints(
-    raw_hints: Mapping[str, InventoryHintSpec]
-) -> Mapping[SDPath, _RelatedRawHints]:
-    related_raw_hints_by_path: dict[SDPath, _RelatedRawHints] = {}
-    for raw_path, raw_hint in raw_hints.items():
-        inventory_path = inventory.InventoryPath.parse(raw_path)
-        related_raw_hints = related_raw_hints_by_path.setdefault(
-            inventory_path.path,
-            _RelatedRawHints(),
-        )
-
-        if inventory_path.source == inventory.TreeSource.node:
-            related_raw_hints.for_node.update(raw_hint)
-            continue
-
-        if inventory_path.source == inventory.TreeSource.table:
-            if inventory_path.key:
-                related_raw_hints.by_column.setdefault(inventory_path.key, raw_hint)
-                continue
-
-            related_raw_hints.for_table.update(raw_hint)
-            continue
-
-        if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:
-            related_raw_hints.by_key.setdefault(inventory_path.key, raw_hint)
-            continue
-
-    return related_raw_hints_by_path
-
-
-def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> Sequence[str]:
-    return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
 
 
 # TODO Workaround for InventoryHintSpec (TypedDict)

@@ -93,9 +93,10 @@ class GatewayHosts(OneOfSchema):
 class ParentScan(BaseSchema):
     host_names = fields.List(
         HostField,
-        description="Targeted hosts for parent scan. The selection of hosts should be done in a way",
+        description="Targeted hosts for parent scan.",
         example=["host1", "host2"],
         validate=len,
+        required=True,
     )
     performance = fields.Nested(
         PerformanceSettings,

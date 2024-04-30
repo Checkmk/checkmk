@@ -251,6 +251,12 @@ metric_info["util5"] = {
     "color": "#80f040",
 }
 
+metric_info["util15"] = {
+    "title": _l("CPU utilization last 15 minutes"),
+    "unit": "%",
+    "color": "#008000",
+}
+
 metric_info["util_50"] = {
     "title": _l("CPU utilization (50th percentile)"),
     "unit": "%",

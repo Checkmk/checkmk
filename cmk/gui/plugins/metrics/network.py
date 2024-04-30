@@ -1773,28 +1773,34 @@ graph_info["page_activity"] = {
 
 graph_info["authentication_failures"] = {
     "title": _("Authentication Failures"),
-    "metrics": [("udp_failed_auth", "line"), ("tcp_failed_auth", "line")],
+    "metrics": [
+        ("edge_udp_failed_auth", "line"),
+        ("edge_tcp_failed_auth", "line"),
+    ],
 }
 
 graph_info["allocate_requests_exceeding_port_limit"] = {
     "title": _("Allocate Requests Exceeding Port Limit"),
     "metrics": [
-        ("udp_allocate_requests_exceeding_port_limit", "line"),
-        ("tcp_allocate_requests_exceeding_port_limit", "line"),
+        ("edge_udp_allocate_requests_exceeding_port_limit", "line"),
+        ("edge_tcp_allocate_requests_exceeding_port_limit", "line"),
     ],
 }
 
 graph_info["packets_dropped"] = {
     "title": _("Packets Dropped"),
     "metrics": [
-        ("udp_packets_dropped", "line"),
-        ("tcp_packets_dropped", "line"),
+        ("edge_udp_packets_dropped", "line"),
+        ("edge_tcp_packets_dropped", "line"),
     ],
 }
 
 graph_info["streams"] = {
     "title": _("Streams"),
-    "metrics": [("failed_inbound_streams", "area"), ("failed_outbound_streams", "-area")],
+    "metrics": [
+        ("xmpp_failed_inbound_streams", "area"),
+        ("xmpp_failed_outbound_streams", "-area"),
+    ],
 }
 
 graph_info["dhcp_statistics_received"] = {
@@ -1866,14 +1872,6 @@ graph_info["DB_connections"] = {
         ("connections_max_used", "line"),
         ("connections_conn_threads", "line"),
         ("connections_max", "line"),
-    ],
-}
-
-graph_info["http_errors"] = {
-    "title": _("HTTP Errors"),
-    "metrics": [
-        ("http_5xx_rate", "line"),
-        ("http_4xx_rate", "line"),
     ],
 }
 

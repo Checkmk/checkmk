@@ -1268,7 +1268,7 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "segments",
+        "metric": "shared_memory_segments",
         "half_value": 10,
         "exponent": 2,
     }

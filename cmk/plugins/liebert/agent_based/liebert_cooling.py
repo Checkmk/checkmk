@@ -59,5 +59,5 @@ check_plugin_liebert_cooling = CheckPlugin(
     discovery_function=discover_liebert_cooling,
     check_function=check_liebert_cooling,
     check_ruleset_name="liebert_cooling",
-    check_default_parameters={"min_capacity": (90, 80)},
+    check_default_parameters={"min_capacity": (90.0, 80.0)},
 )

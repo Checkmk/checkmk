@@ -112,6 +112,13 @@ def pytest_addoption(parser):
         default=False,
         help="Disable any skip or skipif markers.",
     )
+    parser.addoption(
+        "--limit",
+        action="store",
+        default=None,
+        type=int,
+        help="Select only the first N tests from the collection list.",
+    )
 
 
 def pytest_configure(config):
@@ -147,6 +154,7 @@ def pytest_configure(config):
 
 def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Config) -> None:
     """Mark collected test types based on their location"""
+    items[:] = items[0 : config.getoption("--limit")]
     for item in items:
         type_marker = item.get_closest_marker("type")
         if type_marker and type_marker.args:

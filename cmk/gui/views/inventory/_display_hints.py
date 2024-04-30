@@ -32,7 +32,7 @@ from .registry import inv_paint_funtions, InventoryHintSpec, InvValue, PaintFunc
 
 
 @dataclass(frozen=True)
-class _RelatedRawHints:
+class _RelatedLegacyHints:
     for_node: InventoryHintSpec = field(
         default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
     )
@@ -43,49 +43,49 @@ class _RelatedRawHints:
     by_key: dict[str, InventoryHintSpec] = field(default_factory=dict)
 
 
-def _get_related_raw_hints(
-    raw_hints: Mapping[str, InventoryHintSpec]
-) -> Mapping[SDPath, _RelatedRawHints]:
-    related_raw_hints_by_path: dict[SDPath, _RelatedRawHints] = {}
-    for raw_path, raw_hint in raw_hints.items():
+def _get_related_legacy_hints(
+    legacy_hints: Mapping[str, InventoryHintSpec]
+) -> Mapping[SDPath, _RelatedLegacyHints]:
+    related_legacy_hints_by_path: dict[SDPath, _RelatedLegacyHints] = {}
+    for raw_path, legacy_hint in legacy_hints.items():
         inventory_path = inventory.InventoryPath.parse(raw_path)
-        related_raw_hints = related_raw_hints_by_path.setdefault(
+        related_legacy_hints = related_legacy_hints_by_path.setdefault(
             inventory_path.path,
-            _RelatedRawHints(),
+            _RelatedLegacyHints(),
         )
 
         if inventory_path.source == inventory.TreeSource.node:
-            related_raw_hints.for_node.update(raw_hint)
+            related_legacy_hints.for_node.update(legacy_hint)
             continue
 
         if inventory_path.source == inventory.TreeSource.table:
             if inventory_path.key:
-                related_raw_hints.by_column.setdefault(inventory_path.key, raw_hint)
+                related_legacy_hints.by_column.setdefault(inventory_path.key, legacy_hint)
                 continue
 
-            related_raw_hints.for_table.update(raw_hint)
+            related_legacy_hints.for_table.update(legacy_hint)
             continue
 
         if inventory_path.source == inventory.TreeSource.attributes and inventory_path.key:
-            related_raw_hints.by_key.setdefault(inventory_path.key, raw_hint)
+            related_legacy_hints.by_key.setdefault(inventory_path.key, legacy_hint)
             continue
 
-    return related_raw_hints_by_path
+    return related_legacy_hints_by_path
 
 
 PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
 
 
-def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
+def _get_paint_function(legacy_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
     # FIXME At the moment  we need it to get tdclass: Clean this up one day.
-    if "paint" in raw_hint:
-        data_type = raw_hint["paint"]
+    if "paint" in legacy_hint:
+        data_type = legacy_hint["paint"]
         return data_type, inv_paint_funtions[PAINT_FUNCTION_NAME_PREFIX + data_type]["func"]
     return "str", inv_paint_funtions["inv_paint_generic"]["func"]
 
 
-def _make_sort_function(raw_hint: InventoryHintSpec) -> SortFunction:
-    return _decorate_sort_function(raw_hint.get("sort", _cmp_inv_generic))
+def _make_sort_function(legacy_hint: InventoryHintSpec) -> SortFunction:
+    return _decorate_sort_function(legacy_hint.get("sort", _cmp_inv_generic))
 
 
 def _decorate_sort_function(sort_function: SortFunction) -> SortFunction:
@@ -105,11 +105,11 @@ def _cmp_inv_generic(val_a: InvValue, val_b: InvValue) -> int:
     return (val_a > val_b) - (val_a < val_b)
 
 
-def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
-    if "title" not in raw_hint:
+def _make_title_function(legacy_hint: InventoryHintSpec) -> Callable[[str], str]:
+    if "title" not in legacy_hint:
         return lambda word: word.replace("_", " ").title()
 
-    if callable(title := raw_hint["title"]):
+    if callable(title := legacy_hint["title"]):
         # TODO Do we still need this?
         return title
 
@@ -139,20 +139,20 @@ class AttributeDisplayHint:
         cls,
         node_title: str,
         key: str,
-        raw_hint: InventoryHintSpec,
+        legacy_hint: InventoryHintSpec,
     ) -> AttributeDisplayHint:
-        data_type, paint_function = _get_paint_function(raw_hint)
-        title = _make_title_function(raw_hint)(key)
+        data_type, paint_function = _get_paint_function(legacy_hint)
+        title = _make_title_function(legacy_hint)(key)
         return cls(
             title=title,
             short_title=(
-                title if (short_title := raw_hint.get("short")) is None else str(short_title)
+                title if (short_title := legacy_hint.get("short")) is None else str(short_title)
             ),
             long_title=_make_long_title(node_title, title),
             paint_function=paint_function,
-            sort_function=_make_sort_function(raw_hint),
+            sort_function=_make_sort_function(legacy_hint),
             data_type=data_type,
-            is_show_more=raw_hint.get("is_show_more", True),
+            is_show_more=legacy_hint.get("is_show_more", True),
         )
 
 
@@ -230,19 +230,19 @@ class ColumnDisplayHint:
         cls,
         node_title: str,
         key: str,
-        raw_hint: InventoryHintSpec,
+        legacy_hint: InventoryHintSpec,
     ) -> ColumnDisplayHint:
-        _data_type, paint_function = _get_paint_function(raw_hint)
-        title = _make_title_function(raw_hint)(key)
+        _data_type, paint_function = _get_paint_function(legacy_hint)
+        title = _make_title_function(legacy_hint)(key)
         return cls(
             title=title,
             short_title=(
-                title if (short_title := raw_hint.get("short")) is None else str(short_title)
+                title if (short_title := legacy_hint.get("short")) is None else str(short_title)
             ),
             long_title=_make_long_title(node_title, title),
             paint_function=paint_function,
-            sort_function=_make_sort_function(raw_hint),
-            filter_class=_parse_column_display_hint_filter_class(raw_hint.get("filter")),
+            sort_function=_make_sort_function(legacy_hint),
+            filter_class=_parse_column_display_hint_filter_class(legacy_hint.get("filter")),
         )
 
 
@@ -258,6 +258,50 @@ def _parse_view_name(view_name: str | None) -> str:
 
 def _complete_key_order(key_order: Sequence[str], additional_keys: set[str]) -> Sequence[str]:
     return list(key_order) + [key for key in sorted(additional_keys) if key not in key_order]
+
+
+@dataclass(frozen=True)
+class _NodeDisplayHint:
+    path: SDPath
+    title: str
+    short_title: str
+    icon: str
+    attributes: OrderedDict[SDKey, AttributeDisplayHint]
+    columns: OrderedDict[SDKey, ColumnDisplayHint]
+    table_view_name: str
+    table_is_show_more: bool
+
+    @classmethod
+    def from_raw(
+        cls,
+        path: SDPath,
+        legacy_hint: InventoryHintSpec,
+        attributes_key_order: Sequence[str],
+        attributes: Mapping[str, InventoryHintSpec],
+        table_key_order: Sequence[str],
+        columns: Mapping[str, InventoryHintSpec],
+    ) -> _NodeDisplayHint:
+        title = _make_title_function(legacy_hint)(path[-1] if path else "")
+        return cls(
+            path=path,
+            title=title,
+            short_title=title,
+            icon=legacy_hint.get("icon", ""),
+            attributes=OrderedDict(
+                {
+                    SDKey(key): AttributeDisplayHint.from_raw(title, key, attributes.get(key, {}))
+                    for key in _complete_key_order(attributes_key_order, set(attributes))
+                }
+            ),
+            columns=OrderedDict(
+                {
+                    key: ColumnDisplayHint.from_raw(title, key, columns.get(key, {}))
+                    for key in _complete_key_order(table_key_order, set(columns))
+                }
+            ),
+            table_view_name="" if "*" in path else _parse_view_name(legacy_hint.get("view")),
+            table_is_show_more=legacy_hint.get("is_show_more", True),
+        )
 
 
 @dataclass(frozen=True)
@@ -284,40 +328,6 @@ class NodeDisplayHint:
     def long_inventory_table_title(self) -> str:
         return _("Inventory table: %s") % self.long_title
 
-    @classmethod
-    def from_raw(
-        cls,
-        parent_title: str,
-        path: SDPath,
-        raw_hint: InventoryHintSpec,
-        attributes_key_order: Sequence[str],
-        attributes: Mapping[str, InventoryHintSpec],
-        table_key_order: Sequence[str],
-        columns: Mapping[str, InventoryHintSpec],
-    ) -> NodeDisplayHint:
-        title = _make_title_function(raw_hint)(path[-1] if path else "")
-        return cls(
-            path=path,
-            title=title,
-            short_title=title,
-            long_title=_make_long_title(parent_title, title),
-            icon=raw_hint.get("icon", ""),
-            attributes=OrderedDict(
-                {
-                    SDKey(key): AttributeDisplayHint.from_raw(title, key, attributes.get(key, {}))
-                    for key in _complete_key_order(attributes_key_order, set(attributes))
-                }
-            ),
-            columns=OrderedDict(
-                {
-                    key: ColumnDisplayHint.from_raw(title, key, columns.get(key, {}))
-                    for key in _complete_key_order(table_key_order, set(columns))
-                }
-            ),
-            table_view_name="" if "*" in path else _parse_view_name(raw_hint.get("view")),
-            table_is_show_more=raw_hint.get("is_show_more", True),
-        )
-
     def attribute_ident(self, key: SDKey) -> str:
         return f"{self.ident}_{key}"
 
@@ -339,70 +349,12 @@ class NodeDisplayHint:
         )
 
 
-# TODO Workaround for InventoryHintSpec (TypedDict)
-# https://github.com/python/mypy/issues/7178
-_ALLOWED_KEYS: Sequence[
-    Literal[
-        "title",
-        "short",
-        "icon",
-        "paint",
-        "view",
-        "keyorder",
-        "sort",
-        "filter",
-        "is_show_more",
-    ]
-] = [
-    "title",
-    "short",
-    "icon",
-    "paint",
-    "view",
-    "keyorder",
-    "sort",
-    "filter",
-    "is_show_more",
-]
-
-
 @dataclass(frozen=True)
 class DisplayHints:
     _nodes_by_path: dict[SDPath, NodeDisplayHint]
 
     def add(self, node_hint: NodeDisplayHint) -> None:
         self._nodes_by_path[node_hint.path] = node_hint
-
-    def parse(self, raw_hints: Mapping[str, InventoryHintSpec]) -> None:
-        for path, related_raw_hints in sorted(
-            _get_related_raw_hints(raw_hints).items(), key=lambda t: t[0]
-        ):
-            if not path:
-                continue
-
-            node_or_table_hints = InventoryHintSpec()
-            for key in _ALLOWED_KEYS:
-                if (value := related_raw_hints.for_table.get(key)) is not None:
-                    node_or_table_hints[key] = value
-                elif (value := related_raw_hints.for_node.get(key)) is not None:
-                    node_or_table_hints[key] = value
-
-            # Some fields like 'title' or 'keyorder' of legacy display hints are declared
-            # either for
-            # - real nodes, eg. ".hardware.chassis.",
-            # - nodes with attributes, eg. ".hardware.cpu." or
-            # - nodes with a table, eg. ".software.packages:"
-            self.add(
-                NodeDisplayHint.from_raw(
-                    self.get_node_hint(path[:-1]).title if path[:-1] else "",
-                    path,
-                    node_or_table_hints,
-                    related_raw_hints.for_node.get("keyorder", []),
-                    related_raw_hints.by_key,
-                    related_raw_hints.for_table.get("keyorder", []),
-                    related_raw_hints.by_column,
-                )
-            )
 
     def __iter__(self) -> Iterator[NodeDisplayHint]:
         yield from self._nodes_by_path.values()
@@ -441,6 +393,64 @@ class DisplayHints:
         )
 
 
+# TODO Workaround for InventoryHintSpec (TypedDict)
+# https://github.com/python/mypy/issues/7178
+_ALLOWED_KEYS: Sequence[
+    Literal[
+        "title",
+        "short",
+        "icon",
+        "paint",
+        "view",
+        "keyorder",
+        "sort",
+        "filter",
+        "is_show_more",
+    ]
+] = [
+    "title",
+    "short",
+    "icon",
+    "paint",
+    "view",
+    "keyorder",
+    "sort",
+    "filter",
+    "is_show_more",
+]
+
+
+def _parse_legacy_display_hints(
+    legacy_hints: Mapping[str, InventoryHintSpec]
+) -> Iterator[_NodeDisplayHint]:
+    for path, related_legacy_hints in sorted(
+        _get_related_legacy_hints(legacy_hints).items(), key=lambda t: t[0]
+    ):
+        if not path:
+            continue
+
+        node_or_table_hints = InventoryHintSpec()
+        for key in _ALLOWED_KEYS:
+            if (value := related_legacy_hints.for_table.get(key)) is not None:
+                node_or_table_hints[key] = value
+            elif (value := related_legacy_hints.for_node.get(key)) is not None:
+                node_or_table_hints[key] = value
+
+        # Some fields like 'title' or 'keyorder' of legacy display hints are declared
+        # either for
+        # - real nodes, eg. ".hardware.chassis.",
+        # - nodes with attributes, eg. ".hardware.cpu." or
+        # - nodes with a table, eg. ".software.packages:"
+        yield _NodeDisplayHint.from_raw(
+            path,
+            node_or_table_hints,
+            related_legacy_hints.for_node.get("keyorder", []),
+            related_legacy_hints.by_key,
+            related_legacy_hints.for_table.get("keyorder", []),
+            related_legacy_hints.by_column,
+        )
+
+
 inv_display_hints = DisplayHints(
     {
         (): NodeDisplayHint(
@@ -456,3 +466,23 @@ inv_display_hints = DisplayHints(
         )
     }
 )
+
+
+def register_display_hints(legacy_hints: Mapping[str, InventoryHintSpec]) -> None:
+    for hint in _parse_legacy_display_hints(legacy_hints):
+        inv_display_hints.add(
+            NodeDisplayHint(
+                hint.path,
+                hint.title,
+                hint.short_title,
+                _make_long_title(
+                    inv_display_hints.get_node_hint(hint.path[:-1]).title if hint.path[:-1] else "",
+                    hint.title,
+                ),
+                hint.icon,
+                hint.attributes,
+                hint.columns,
+                hint.table_view_name,
+                hint.table_is_show_more,
+            )
+        )

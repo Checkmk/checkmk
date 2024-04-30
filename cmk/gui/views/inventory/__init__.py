@@ -41,6 +41,7 @@ from ._display_hints import (
     inv_display_hints,
     NodeDisplayHint,
     PAINT_FUNCTION_NAME_PREFIX,
+    register_display_hints,
 )
 from ._painters import (
     attribute_painter_from_hint,
@@ -402,10 +403,7 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
 
 
 def register_table_views_and_columns() -> None:
-    # Parse legacy display hints
-    inv_display_hints.parse(inventory_displayhints)
-
-    # create painters for node with a display hint
+    register_display_hints(inventory_displayhints)
     painter_options = PainterOptions.get_instance()
     for node_hint in inv_display_hints:
         if "*" in node_hint.path:

@@ -17,9 +17,9 @@ from cmk.gui.num_split import cmp_version
 from cmk.gui.views.inventory._display_hints import (
     _cmp_inv_generic,
     _decorate_sort_function,
-    _get_related_raw_hints,
+    _get_related_legacy_hints,
     _parse_view_name,
-    _RelatedRawHints,
+    _RelatedLegacyHints,
     AttributeDisplayHint,
     ColumnDisplayHint,
     inv_display_hints,
@@ -70,34 +70,36 @@ def test_related_display_hints() -> None:
     #   - nodes with attributes, eg. ".hardware.cpu." or
     #   - nodes with a table, eg. ".software.packages:"
 
-    all_related_raw_hints = _get_related_raw_hints(inventory_displayhints)
+    all_related_legacy_hints = _get_related_legacy_hints(inventory_displayhints)
 
     def _check_path(path: SDPath) -> bool:
-        return all(path[:idx] in all_related_raw_hints for idx in range(1, len(path)))
+        return all(path[:idx] in all_related_legacy_hints for idx in range(1, len(path)))
 
-    def _check_raw_hints(related_raw_hints: _RelatedRawHints) -> bool:
-        return bool(related_raw_hints.for_node) ^ bool(related_raw_hints.for_table)
+    def _check_legacy_hints(related_legacy_hints: _RelatedLegacyHints) -> bool:
+        return bool(related_legacy_hints.for_node) ^ bool(related_legacy_hints.for_table)
 
-    def _check_table_key_order(path: SDPath, related_raw_hints: _RelatedRawHints) -> bool:
+    def _check_table_key_order(path: SDPath, related_legacy_hints: _RelatedLegacyHints) -> bool:
         ignored_keys = set(_IGNORED_KEYS_BY_PATH.get(path, []))
         return (
-            set(related_raw_hints.for_table.get("keyorder", [])) - ignored_keys
-            == set(related_raw_hints.by_column) - ignored_keys
+            set(related_legacy_hints.for_table.get("keyorder", [])) - ignored_keys
+            == set(related_legacy_hints.by_column) - ignored_keys
         )
 
-    def _check_attributes_key_order(path: SDPath, related_raw_hints: _RelatedRawHints) -> bool:
+    def _check_attributes_key_order(
+        path: SDPath, related_legacy_hints: _RelatedLegacyHints
+    ) -> bool:
         ignored_keys = set(_IGNORED_KEYS_BY_PATH.get(path, []))
         return (
-            set(related_raw_hints.for_node.get("keyorder", [])) - ignored_keys
-            == set(related_raw_hints.by_key) - ignored_keys
+            set(related_legacy_hints.for_node.get("keyorder", [])) - ignored_keys
+            == set(related_legacy_hints.by_key) - ignored_keys
         )
 
     assert all(
         _check_path(path)
-        and _check_raw_hints(related_raw_hints)
-        and _check_table_key_order(path, related_raw_hints)
-        and _check_attributes_key_order(path, related_raw_hints)
-        for path, related_raw_hints in _get_related_raw_hints(inventory_displayhints).items()
+        and _check_legacy_hints(related_legacy_hints)
+        and _check_table_key_order(path, related_legacy_hints)
+        and _check_attributes_key_order(path, related_legacy_hints)
+        for path, related_legacy_hints in _get_related_legacy_hints(inventory_displayhints).items()
     )
 
 

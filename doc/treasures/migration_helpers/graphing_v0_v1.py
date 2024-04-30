@@ -2146,7 +2146,7 @@ def main() -> None:
             [],
             {},
         )
-    else:
+    elif all_connected_objects:
         migrated_objects = _migrate(
             args.debug,
             migration_errors,
@@ -2155,6 +2155,20 @@ def main() -> None:
             legacy_check_metrics,
             [p.spec for c in all_connected_objects for p in c.perfometers],
             {g.ident: g.template for c in all_connected_objects for g in c.graph_templates},
+        )
+    else:
+        migrated_objects = _migrate(
+            args.debug,
+            migration_errors,
+            unit_parser,
+            (
+                {n: m for n, m in legacy_metric_info.items() if n in args.filter_metric_names}
+                if args.filter_metric_names
+                else legacy_metric_info
+            ),
+            legacy_check_metrics,
+            [],
+            {},
         )
 
     if args.sanitize:

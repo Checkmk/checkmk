@@ -106,6 +106,12 @@ def pytest_addoption(parser):
         default=False,
         help="Fail test run if any exception was logged.",
     )
+    parser.addoption(
+        "--no-skip",
+        action="store_true",
+        default=False,
+        help="Disable any skip or skipif markers.",
+    )
 
 
 def pytest_configure(config):
@@ -139,7 +145,7 @@ def pytest_configure(config):
         collect_ignore = ["schemathesis_openapi"]
 
 
-def pytest_collection_modifyitems(items):
+def pytest_collection_modifyitems(items: list[pytest.Item], config: pytest.Config) -> None:
     """Mark collected test types based on their location"""
     for item in items:
         type_marker = item.get_closest_marker("type")
@@ -153,6 +159,9 @@ def pytest_collection_modifyitems(items):
                 raise Exception(f"Test in {repo_rel_path} not TYPE marked: {item!r} ({ty!r})")
 
         item.add_marker(pytest.mark.type.with_args(ty))
+
+        if config.getoption("--no-skip"):
+            item.own_markers = [_ for _ in item.own_markers if _.name not in ("skip", "skipif")]
 
 
 def pytest_runtest_setup(item):

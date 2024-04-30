@@ -29,4 +29,5 @@ def test_no_exception(site: Site) -> None:
             stdin=subprocess.DEVNULL,
         )
         stderr = p.communicate()[1]
-        assert "Traceback (most recent call last):" not in stderr
+        assert "Traceback (most recent call last):" not in stderr, stderr
+        assert "Crash-ID:" not in stderr, stderr

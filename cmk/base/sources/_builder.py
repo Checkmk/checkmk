@@ -17,7 +17,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.fetchers import SNMPFetcher
+from cmk.fetchers import SNMPFetcher, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import FetcherType
@@ -66,9 +66,7 @@ class _Builder:
         walk_cache_path: Path,
         file_cache_path: Path,
         tcp_cache_path: Path,
-        cas_dir: Path,
-        ca_store: Path,
-        site_crt: Path,
+        tls_config: TLSConfig,
         password_store_file: Path,
         passwords: Mapping[str, str],
         ip_address_of: config.IPLookup,
@@ -92,9 +90,7 @@ class _Builder:
         self._walk_cache_path: Final = walk_cache_path
         self._file_cache_path: Final = file_cache_path
         self._tcp_cache_path: Final = tcp_cache_path
-        self.cas_dir: Final = cas_dir
-        self.ca_store: Final = ca_store
-        self.site_crt: Final = site_crt
+        self.tls_config: Final = tls_config
         self.password_store_file: Final = password_store_file
         self.passwords: Final = passwords
         self._ip_address_of: Final = ip_address_of
@@ -326,9 +322,7 @@ class _Builder:
                         self.ipaddress,
                         max_age=self.max_age_agent,
                         file_cache_path=self._tcp_cache_path,
-                        cas_dir=self.cas_dir,
-                        ca_store=self.ca_store,
-                        site_crt=self.site_crt,
+                        tls_config=self.tls_config,
                     )
                 )
             case _:
@@ -354,9 +348,7 @@ def make_sources(
     walk_cache_path: Path,
     file_cache_path: Path,
     tcp_cache_path: Path,
-    cas_dir: Path,
-    ca_store: Path,
-    site_crt: Path,
+    tls_config: TLSConfig,
     password_store_file: Path,
     passwords: Mapping[str, str],
 ) -> Sequence[Source]:
@@ -399,9 +391,7 @@ def make_sources(
         walk_cache_path=walk_cache_path,
         file_cache_path=file_cache_path,
         tcp_cache_path=tcp_cache_path,
-        cas_dir=cas_dir,
-        ca_store=ca_store,
-        site_crt=site_crt,
+        tls_config=tls_config,
         password_store_file=password_store_file,
         passwords=passwords,
         # TODO: move this further up the stack and see which type of IP lookup is needed

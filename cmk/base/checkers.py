@@ -39,7 +39,7 @@ from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
-from cmk.fetchers import Fetcher, get_raw_data, Mode
+from cmk.fetchers import Fetcher, get_raw_data, Mode, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
@@ -336,9 +336,11 @@ class CMKFetcher:
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
         file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
         tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
-        cas_dir = Path(cmk.utils.paths.agent_cas_dir)
-        ca_store = Path(cmk.utils.paths.agent_cert_store)
-        site_crt = Path(cmk.utils.paths.site_cert_file)
+        tls_config = TLSConfig(
+            cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+            ca_store=Path(cmk.utils.paths.agent_cert_store),
+            site_crt=Path(cmk.utils.paths.site_cert_file),
+        )
         return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
@@ -363,9 +365,7 @@ class CMKFetcher:
                     walk_cache_path=walk_cache_path,
                     file_cache_path=file_cache_path,
                     tcp_cache_path=tcp_cache_path,
-                    cas_dir=cas_dir,
-                    ca_store=ca_store,
-                    site_crt=site_crt,
+                    tls_config=tls_config,
                     password_store_file=self.password_store_file,
                     passwords=password_store.load(self.password_store_file),
                 )

@@ -19,7 +19,14 @@ from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.snmplib import SNMPBackendEnum, SNMPVersion
 
-from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
+from cmk.fetchers import (
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    TCPFetcher,
+    TLSConfig,
+)
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import SourceType
@@ -193,9 +200,11 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
     file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
     tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
-    cas_dir = Path(cmk.utils.paths.agent_cas_dir)
-    ca_store = Path(cmk.utils.paths.agent_cert_store)
-    site_crt = Path(cmk.utils.paths.site_cert_file)
+    tls_config = TLSConfig(
+        cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+        ca_store=Path(cmk.utils.paths.agent_cert_store),
+        site_crt=Path(cmk.utils.paths.site_cert_file),
+    )
     used_password_store = cmk.utils.password_store.pending_password_store_path()
     agenttypes = [
         dump_source(source)
@@ -214,9 +223,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
             tcp_cache_path=tcp_cache_path,
-            cas_dir=cas_dir,
-            ca_store=ca_store,
-            site_crt=site_crt,
+            tls_config=tls_config,
             password_store_file=used_password_store,
             passwords=cmk.utils.password_store.load(used_password_store),
         )

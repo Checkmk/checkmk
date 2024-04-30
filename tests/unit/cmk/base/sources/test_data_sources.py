@@ -13,7 +13,7 @@ from tests.testlib.base import Scenario
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.fetchers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
+from cmk.fetchers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.base.config import ConfigCache
@@ -44,9 +44,11 @@ def _make_sources(
         walk_cache_path=tmp_path,
         file_cache_path=tmp_path,
         tcp_cache_path=tmp_path,
-        cas_dir=tmp_path,
-        ca_store=tmp_path,
-        site_crt=tmp_path,
+        tls_config=TLSConfig(
+            cas_dir=tmp_path,
+            ca_store=tmp_path,
+            site_crt=tmp_path,
+        ),
         password_store_file=Path("/pw/store"),
         passwords={},
     )

@@ -47,6 +47,7 @@ from cmk.fetchers import (
     SNMPSectionMeta,
     TCPEncryptionHandling,
     TCPFetcher,
+    TLSConfig,
     TransportProtocol,
 )
 from cmk.fetchers._agentprtcl import CompressionType, HeaderV1, Version
@@ -748,9 +749,11 @@ class TestTCPFetcher:
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
-            cas_dir=tmp_path,
-            ca_store=tmp_path,
-            site_crt=tmp_path,
+            tls_config=TLSConfig(
+                cas_dir=tmp_path,
+                ca_store=tmp_path,
+                site_crt=tmp_path,
+            ),
         )
 
     def test_repr(self, fetcher: TCPFetcher) -> None:
@@ -772,9 +775,11 @@ class TestTCPFetcher:
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
-            cas_dir=tmp_path,
-            ca_store=tmp_path,
-            site_crt=tmp_path,
+            tls_config=TLSConfig(
+                cas_dir=tmp_path,
+                ca_store=tmp_path,
+                site_crt=tmp_path,
+            ),
         ) as fetcher:
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK(b"cached_section")
 
@@ -793,9 +798,11 @@ class TestTCPFetcher:
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
-            cas_dir=tmp_path,
-            ca_store=tmp_path,
-            site_crt=tmp_path,
+            tls_config=TLSConfig(
+                cas_dir=tmp_path,
+                ca_store=tmp_path,
+                site_crt=tmp_path,
+            ),
         ) as fetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 

@@ -117,7 +117,7 @@ from cmk.snmplib import (
     walk_for_export,
 )
 
-from cmk.fetchers import get_raw_data, Mode, ProgramFetcher, TCPFetcher
+from cmk.fetchers import get_raw_data, Mode, ProgramFetcher, TCPFetcher, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
@@ -2024,9 +2024,11 @@ class AutomationDiagHost(Automation):
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
         file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
         tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
-        cas_dir = Path(cmk.utils.paths.agent_cas_dir)
-        ca_store = Path(cmk.utils.paths.agent_cert_store)
-        site_crt = Path(cmk.utils.paths.site_cert_file)
+        tls_config = TLSConfig(
+            cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+            ca_store=Path(cmk.utils.paths.agent_cert_store),
+            site_crt=Path(cmk.utils.paths.site_cert_file),
+        )
 
         state, output = 0, ""
         pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
@@ -2049,9 +2051,7 @@ class AutomationDiagHost(Automation):
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
             tcp_cache_path=tcp_cache_path,
-            cas_dir=cas_dir,
-            ca_store=ca_store,
-            site_crt=site_crt,
+            tls_config=tls_config,
             password_store_file=pending_passwords_file,
             passwords=cmk.utils.password_store.load(pending_passwords_file),
         ):
@@ -2080,9 +2080,7 @@ class AutomationDiagHost(Automation):
                     host_name=fetcher.host_name,
                     encryption_handling=fetcher.encryption_handling,
                     pre_shared_secret=fetcher.pre_shared_secret,
-                    cas_dir=cas_dir,
-                    ca_store=ca_store,
-                    site_crt=site_crt,
+                    tls_config=tls_config,
                 )
 
             raw_data = get_raw_data(
@@ -2460,9 +2458,11 @@ class AutomationGetAgentOutput(Automation):
             section_cache_path = Path(var_dir)
             file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
             tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
-            cas_dir = Path(cmk.utils.paths.agent_cas_dir)
-            ca_store = Path(cmk.utils.paths.agent_cert_store)
-            site_crt = Path(cmk.utils.paths.site_cert_file)
+            tls_config = TLSConfig(
+                cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+                ca_store=Path(cmk.utils.paths.agent_cert_store),
+                site_crt=Path(cmk.utils.paths.site_cert_file),
+            )
 
             if ty == "agent":
                 core_password_store_file = cmk.utils.password_store.core_password_store_path(
@@ -2487,9 +2487,7 @@ class AutomationGetAgentOutput(Automation):
                     walk_cache_path=walk_cache_path,
                     file_cache_path=file_cache_path,
                     tcp_cache_path=tcp_cache_path,
-                    cas_dir=cas_dir,
-                    ca_store=ca_store,
-                    site_crt=site_crt,
+                    tls_config=tls_config,
                     password_store_file=core_password_store_file,
                     passwords=cmk.utils.password_store.load(core_password_store_file),
                 ):

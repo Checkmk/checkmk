@@ -17,7 +17,7 @@ from ._nofetcher import NoFetcher, NoFetcherError
 from ._piggyback import PiggybackFetcher
 from ._program import ProgramFetcher
 from ._snmp import SNMPFetcher, SNMPSectionMeta
-from ._tcp import TCPFetcher
+from ._tcp import TCPFetcher, TLSConfig
 
 __all__ = [
     "decrypt_by_agent_protocol",
@@ -34,5 +34,6 @@ __all__ = [
     "SNMPSectionMeta",
     "TCPEncryptionHandling",
     "TCPFetcher",
+    "TLSConfig",
     "TransportProtocol",
 ]

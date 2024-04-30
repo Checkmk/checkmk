@@ -88,6 +88,7 @@ from cmk.fetchers import (
     SNMPSectionMeta,
     TCPEncryptionHandling,
     TCPFetcher,
+    TLSConfig,
 )
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
@@ -2076,9 +2077,7 @@ class ConfigCache:
         host_name: HostName,
         ip_address: HostAddress,
         *,
-        cas_dir: Path,
-        ca_store: Path,
-        site_crt: Path,
+        tls_config: TLSConfig,
     ) -> TCPFetcher:
         return TCPFetcher(
             host_name=host_name,
@@ -2087,9 +2086,7 @@ class ConfigCache:
             timeout=self._tcp_connect_timeout(host_name),
             encryption_handling=self._encryption_handling(host_name),
             pre_shared_secret=self._symmetric_agent_encryption(host_name),
-            cas_dir=cas_dir,
-            ca_store=ca_store,
-            site_crt=site_crt,
+            tls_config=tls_config,
         )
 
     def make_agent_parser(

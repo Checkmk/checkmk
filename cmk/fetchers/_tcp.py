@@ -7,6 +7,7 @@ import logging
 import socket
 import ssl
 from collections.abc import Buffer
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
@@ -25,7 +26,14 @@ from ._agentprtcl import (
     validate_agent_protocol,
 )
 
-__all__ = ["TCPFetcher"]
+__all__ = ["TCPFetcher", "TLSConfig"]
+
+
+@dataclass(frozen=True, kw_only=True)
+class TLSConfig:
+    cas_dir: Path
+    ca_store: Path
+    site_crt: Path
 
 
 def recvall(sock: socket.socket, flags: int = 0) -> bytes:
@@ -42,16 +50,14 @@ def recvall(sock: socket.socket, flags: int = 0) -> bytes:
     return bytes(buffer)
 
 
-def wrap_tls(
-    sock: socket.socket, server_hostname: str, *, cas_dir: Path, ca_store: Path, site_crt: Path
-) -> ssl.SSLSocket:
-    if not ca_store.exists():
+def wrap_tls(sock: socket.socket, server_hostname: str, *, tls_config: TLSConfig) -> ssl.SSLSocket:
+    if not tls_config.ca_store.exists():
         # agent cert store should be written on agent receiver startup.
         # However, if it's missing for some reason, we have to write it.
-        write_cert_store(source_dir=cas_dir, store_path=ca_store)
+        write_cert_store(source_dir=tls_config.cas_dir, store_path=tls_config.ca_store)
     try:
-        ctx = ssl.create_default_context(cafile=str(ca_store))
-        ctx.load_cert_chain(certfile=site_crt)
+        ctx = ssl.create_default_context(cafile=str(tls_config.ca_store))
+        ctx.load_cert_chain(certfile=tls_config.site_crt)
         return ctx.wrap_socket(sock, server_hostname=server_hostname)
     except ssl.SSLError as e:
         raise MKFetcherError("Error establishing TLS connection") from e
@@ -67,9 +73,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         host_name: HostName,
         encryption_handling: TCPEncryptionHandling,
         pre_shared_secret: str | None,
-        cas_dir: Path,
-        ca_store: Path,
-        site_crt: Path,
+        tls_config: TLSConfig,
     ) -> None:
         super().__init__()
         self.family: Final = socket.AddressFamily(family)
@@ -79,9 +83,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self.host_name: Final = host_name
         self.encryption_handling: Final = encryption_handling
         self.pre_shared_secret: Final = pre_shared_secret
-        self.cas_dir: Final = cas_dir
-        self.ca_store: Final = ca_store
-        self.site_crt: Final = site_crt
+        self.tls_config: Final = tls_config
         self._logger: Final = logging.getLogger("cmk.helper.tcp")
         self._opt_socket: socket.socket | None = None
 
@@ -116,9 +118,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
             and self.host_name == other.host_name
             and self.encryption_handling == other.encryption_handling
             and self.pre_shared_secret == other.pre_shared_secret
-            and self.cas_dir == other.cas_dir
-            and self.ca_store == other.ca_store
-            and self.site_crt == other.site_crt
+            and self.tls_config == other.tls_config
         )
 
     def open(self) -> None:
@@ -167,9 +167,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         with wrap_tls(
             self._socket,
             server_hostname,
-            cas_dir=self.cas_dir,
-            ca_store=self.ca_store,
-            site_crt=self.site_crt,
+            tls_config=self.tls_config,
         ) as ssock:
             self._logger.debug("Reading data from agent")
             raw_agent_data = recvall(ssock)

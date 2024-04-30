@@ -73,6 +73,7 @@ from cmk.snmplib import (
 import cmk.fetchers.snmp as snmp_factory
 from cmk.fetchers import get_raw_data
 from cmk.fetchers import Mode as FetchMode
+from cmk.fetchers import TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
@@ -580,9 +581,11 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
             tcp_cache_path=tcp_cache_path,
-            cas_dir=cas_dir,
-            ca_store=ca_store,
-            site_crt=site_crt,
+            tls_config=TLSConfig(
+                cas_dir=cas_dir,
+                ca_store=ca_store,
+                site_crt=site_crt,
+            ),
             password_store_file=pending_passwords_file,
             passwords=cmk.utils.password_store.load(pending_passwords_file),
         ):

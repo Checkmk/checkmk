@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
-from cmk.fetchers import Fetcher, NoFetcher, NoFetcherError
+from cmk.fetchers import Fetcher, NoFetcher, NoFetcherError, TLSConfig
 from cmk.fetchers.filecache import (
     AgentFileCache,
     FileCache,
@@ -345,9 +345,7 @@ class TCPSource(Source[AgentRawData]):
         *,
         max_age: MaxAge,
         file_cache_path: Path,
-        cas_dir: Path,
-        ca_store: Path,
-        site_crt: Path,
+        tls_config: TLSConfig,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
@@ -355,9 +353,7 @@ class TCPSource(Source[AgentRawData]):
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
         self._file_cache_path: Final = file_cache_path
-        self._cas_dir: Final = cas_dir
-        self._ca_store: Final = ca_store
-        self._site_crt: Final = site_crt
+        self._tls_config: Final = tls_config
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -372,9 +368,7 @@ class TCPSource(Source[AgentRawData]):
         return self.config_cache.make_tcp_fetcher(
             self.host_name,
             self.ipaddress,
-            cas_dir=self._cas_dir,
-            ca_store=self._ca_store,
-            site_crt=self._site_crt,
+            tls_config=self._tls_config,
         )
 
     def file_cache(

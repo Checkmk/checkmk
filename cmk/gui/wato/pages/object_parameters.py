@@ -204,7 +204,7 @@ class ModeObjectParameters(WatoMode):
             "auto": _("Inventorized check"),
             "classic": _("Classical check"),
         }[origin]
-        self._render_rule_reason(_("Type of check"), None, "", "", False, origin_txt)
+        self._render_rule_reason(_("Type of check"), "", "", "", False, origin_txt)
 
         handler = {
             "auto": self._handle_auto_origin,
@@ -234,7 +234,7 @@ class ModeObjectParameters(WatoMode):
         not_configurable_render = functools.partial(
             self._render_rule_reason,
             _("Parameters"),
-            None,
+            "",
             "",
             "",
             True,
@@ -303,7 +303,7 @@ class ModeObjectParameters(WatoMode):
             _("Parameters"),
             url,
             _("Determined by discovery"),
-            None,
+            "",
             False,
             rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),
         )
@@ -330,11 +330,11 @@ class ModeObjectParameters(WatoMode):
         if itemspec:
             item_text: ValueSpecText | Item = itemspec.value_to_html(serviceinfo["item"])
             assert rulespec.item_spec is not None
-            title = rulespec.item_spec.title()
+            title = rulespec.item_spec.title() or ""
         else:
             item_text = serviceinfo["item"]
             title = _("Item")
-        self._render_rule_reason(title, None, "", "", False, item_text)
+        self._render_rule_reason(title, "", "", "", False, item_text)
         self._output_analysed_ruleset(
             all_rulesets,
             rulespec,
@@ -469,23 +469,28 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _render_rule_reason(  # type: ignore[no-untyped-def]
-        self, title, title_url, reason, reason_url, is_default, setting: ValueSpecText | Item
+    def _render_rule_reason(
+        self,
+        title: str,
+        title_url: str,
+        reason: str,
+        reason_url: str,
+        is_default: bool,
+        setting: ValueSpecText | Item,
     ) -> None:
-        if title_url:
-            title = HTMLWriter.render_a(title, href=title_url)
-        forms.section(title)
+        forms.section(HTMLWriter.render_a(title, href=title_url) if title_url else title)
 
-        if reason:
-            reason = HTMLWriter.render_a(reason, href=reason_url)
+        reason_html: HTML | str = (
+            HTMLWriter.render_a(reason, href=reason_url) if reason_url else reason
+        )
 
         html.open_table(class_="setting")
         html.open_tr()
         if is_default:
-            html.td(HTMLWriter.render_i(reason), class_="reason")
+            html.td(HTMLWriter.render_i(reason_html), class_="reason")
             html.td(setting, class_=["settingvalue", "unused"])
         else:
-            html.td(reason, class_="reason")
+            html.td(reason_html, class_="reason")
             html.td(setting, class_=["settingvalue", "used"])
         html.close_tr()
         html.close_table()

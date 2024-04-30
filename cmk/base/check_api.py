@@ -15,17 +15,12 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 
 """
 
-import socket
-import time
 from collections.abc import Callable, Generator
-from typing import Any, Literal
-
-import cmk.utils.debug as _debug
+from typing import Any
 
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
-from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 
 # pylint: disable=unused-import
@@ -38,7 +33,6 @@ from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 from cmk.base.config import CheckContext as _CheckContext
-from cmk.base.config import get_config_cache as _get_config_cache
 from cmk.base.config import get_http_proxy as _get_http_proxy
 from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
 from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
@@ -108,40 +102,6 @@ def savefloat(f: Any) -> float:
         return float(f)
     except (TypeError, ValueError):
         return 0.0
-
-
-# These functions were used in some specific checks until 1.6. Don't add it to
-# the future check API. It's kept here for compatibility reasons for now.
-def is_ipv6_primary(hostname: str) -> bool:
-    return _get_config_cache().default_address_family(HostName(hostname)) is socket.AF_INET6
-
-
-def get_age_human_readable(seconds: float) -> str:
-    return _v1.render.timespan(seconds) if seconds >= 0 else f"-{_v1.render.timespan(-seconds)}"
-
-
-def get_bytes_human_readable(
-    bytes_: int,
-    base: Literal[1000, 1024] = 1024,
-    precision: object = None,  # for legacy compatibility
-    unit: str = "B",
-) -> str:
-    if not (
-        renderer := {
-            1000: _v1.render.disksize,
-            1024: _v1.render.bytes,
-        }.get(int(base))
-    ):
-        raise ValueError(f"Unsupported value for 'base' in get_bytes_human_readable: {base=}")
-    return renderer(bytes_)[:-1] + unit
-
-
-def get_timestamp_human_readable(timestamp: float) -> str:
-    """Format a time stamp for humans in "%Y-%m-%d %H:%M:%S" format.
-    In case None is given or timestamp is 0, it returns "never"."""
-    if timestamp:
-        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
-    return "never"
 
 
 def _normalize_levels(levels: Levels) -> Levels:

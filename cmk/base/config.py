@@ -2069,7 +2069,6 @@ class ConfigCache:
             check_interval=self.check_mk_check_interval(host_name),
             translation=get_piggyback_translations(self.ruleset_matcher, host_name),
             encoding_fallback=fallback_agent_output_encoding,
-            simulation=agent_simulator,  # name mismatch
             logger=logger,
         )
 

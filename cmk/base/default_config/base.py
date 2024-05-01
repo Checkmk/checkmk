@@ -63,7 +63,6 @@ piggyback_translation: list[RuleSpec[TranslationOptions]] = []
 service_description_translation: list[RuleSpec[TranslationOptionsSpec]] = []
 simulation_mode = False
 fake_dns: str | None = None
-agent_simulator = False
 perfdata_format: Literal["pnp", "standard"] = "pnp"
 check_mk_perfdata_with_times = True
 # TODO: Remove these options?

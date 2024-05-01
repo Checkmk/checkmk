@@ -50,7 +50,6 @@ def parse(tmp_path: Path, section_raw: AgentRawData) -> StringTable:
         keep_outdated=True,
         translation=TranslationOptions(),
         encoding_fallback="ascii",
-        simulation=False,
         logger=logger,
     )
     ahs = parser.parse(section_raw, selection=NO_SELECTION)

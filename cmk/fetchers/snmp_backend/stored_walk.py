@@ -9,8 +9,6 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Final
 
-import cmk.utils.agent_simulator as agent_simulator
-from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKException, MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
@@ -139,20 +137,14 @@ class StoredWalkSNMPBackend(SNMPBackend):
             index -= 1
         while True:
             line = lines[index]
-            parts = line.split(None, 1)
-            o = parts[0]
+            try:
+                o, value = line.split(None, 1)
+            except ValueError:
+                o, value = line, ""
+
             if o.startswith("."):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
-                if len(parts) > 1:
-                    # FIXME: This encoding ping-pong is horrible...
-                    value = agent_simulator.process(
-                        AgentRawData(
-                            parts[1].encode(),
-                        ),
-                    ).decode()
-                else:
-                    value = ""
                 # Fix for missing starting oids
                 rows.append(("." + o, strip_snmp_value(value)))
                 index += direction

@@ -11,7 +11,6 @@ import time
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import final, Final, NamedTuple
 
-import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
@@ -505,7 +504,6 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         keep_outdated: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
-        simulation: bool,
         logger: logging.Logger,
     ) -> None:
         super().__init__()
@@ -516,7 +514,6 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         self.keep_outdated: Final = keep_outdated
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
-        self.simulation: Final = simulation
         self._logger = logger
 
     def parse(
@@ -525,9 +522,6 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         *,
         selection: SectionNameCollection,
     ) -> HostSections[AgentRawDataSection]:
-        if self.simulation:
-            raw_data = agent_simulator.process(raw_data)
-
         now = int(time.time())
 
         raw_sections, piggyback_sections = self._parse_host_section(raw_data)

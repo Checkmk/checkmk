@@ -84,7 +84,6 @@ def test_registered_configvars() -> None:
     expected_vars = [
         "actions",
         "adhoc_downtime",
-        "agent_simulator",
         "apache_process_tuning",
         "archive_orphans",
         "auth_by_http_header",

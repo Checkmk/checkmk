@@ -5,9 +5,9 @@
 
 # pylint: disable=protected-access
 
+import re
 from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
-from re import Pattern
 from typing import Any
 
 import cmk.utils.store as store
@@ -47,7 +47,7 @@ RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {
     "azure_agent_info",
 }
 
-DEPRECATED_RULESET_PATTERNS: list[Pattern] = []
+DEPRECATED_RULESET_PATTERNS = (re.compile("^agent_simulator$"),)
 
 
 class UpdateRulesets(UpdateAction):
@@ -145,7 +145,7 @@ def transform_condition_labels_to_label_groups(conditions: dict[str, Any]) -> di
 def _delete_deprecated_wato_rulesets(
     logger: Logger,
     all_rulesets: RulesetCollection,
-    deprecated_ruleset_patterns: Sequence[Pattern],
+    deprecated_ruleset_patterns: Sequence[re.Pattern],
 ) -> None:
     for ruleset_name in list(all_rulesets.get_rulesets()):
         if any(p.match(ruleset_name) for p in deprecated_ruleset_patterns):

@@ -202,7 +202,6 @@ def register(
     config_variable_registry.register(ConfigVariableTCPConnectTimeout)
     config_variable_registry.register(ConfigVariableSimulationMode)
     config_variable_registry.register(ConfigVariableRestartLocking)
-    config_variable_registry.register(ConfigVariableAgentSimulator)
     config_variable_registry.register(ConfigVariableDelayPrecompile)
     config_variable_registry.register(ConfigVariableClusterMaxCachefileAge)
     config_variable_registry.register(ConfigVariablePiggybackMaxCachefileAge)
@@ -3041,28 +3040,6 @@ class ConfigVariableRestartLocking(ConfigVariable):
                 ("wait", _("Wait until the other has finished")),
                 (None, _("Disable locking")),
             ],
-        )
-
-
-class ConfigVariableAgentSimulator(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupCheckExecution
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainCore
-
-    def ident(self) -> str:
-        return "agent_simulator"
-
-    def valuespec(self) -> ValueSpec:
-        return Checkbox(
-            title=_("SNMP agent simulator"),
-            label=_("Process stored SNMP walks with agent simulator"),
-            help=_(
-                "When using stored SNMP walks you can place inline code generating "
-                "dynamic simulation data. This feature can be activated here. There "
-                "is a big chance that you will never need this feature..."
-            ),
         )
 
 

@@ -66,7 +66,6 @@ class TestAgentParser:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -951,7 +950,6 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -975,7 +973,6 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -995,7 +992,6 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -1019,7 +1015,6 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -1049,7 +1044,6 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -1082,7 +1076,6 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -1110,7 +1103,6 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=False,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 
@@ -1138,7 +1130,6 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
-            simulation=False,
             logger=logger,
         )
 

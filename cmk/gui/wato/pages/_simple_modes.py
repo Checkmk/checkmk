@@ -14,7 +14,7 @@ b) A edit mode which can be used to create and edit an object.
 import abc
 import copy
 from collections.abc import Mapping
-from typing import Any, Generic, TypeVar
+from typing import Any, cast, Generic, TypeVar
 
 from livestatus import SiteId
 
@@ -322,7 +322,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
         )
 
 
-class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
+class SimpleEditMode(_SimpleWatoModeBase[_T], abc.ABC):
     """Base class for edit modes"""
 
     @abc.abstractmethod
@@ -360,7 +360,6 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
         self._new = True
         self._ident = None
-        self._entry = {}
 
     def title(self) -> str:
         if self._new:
@@ -488,7 +487,8 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         if "ident" in config:
             self._ident = config.pop("ident")
         assert self._ident is not None
-        self._entry = config
+        # No typing support from valuespecs here, so we need to cast
+        self._entry = cast(_T, config)
 
         entries = self._store.load_for_modification()
 
@@ -538,7 +538,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
             vs = self.valuespec()
 
-            vs.render_input("_edit", self._entry)
+            vs.render_input("_edit", dict(self._entry))
             vs.set_focus("_edit")
             forms.end()
 

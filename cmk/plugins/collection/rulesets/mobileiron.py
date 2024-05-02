@@ -78,7 +78,7 @@ def _parameter_form_special_agents_mobileiron() -> Dictionary:
             "proxy": DictElement(parameter_form=Proxy(migrate=migrate_to_proxy), required=False),
             "partition": DictElement(
                 parameter_form=List(
-                    element_template=String(),
+                    element_template=String(macro_support=True),
                     title=Title("Retrieve information about the following partitions"),
                     custom_validate=(LengthInRange(min_value=1),),
                 ),

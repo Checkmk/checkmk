@@ -61,7 +61,9 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                 )
             ),
             "orgs": DictElement(
-                parameter_form=List(element_template=String(), title=Title("Organizations"))
+                parameter_form=List(
+                    element_template=String(macro_support=True), title=Title("Organizations")
+                )
             ),
         },
     )

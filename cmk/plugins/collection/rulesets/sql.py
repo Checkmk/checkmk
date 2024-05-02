@@ -71,6 +71,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                     title=Title("Service Description"),
                     help_text=Help("The name of this active service to be displayed."),
                     custom_validate=(validators.LengthInRange(min_value=1),),
+                    macro_support=True,
                 ),
                 required=True,
             ),
@@ -98,6 +99,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                     title=Title("Database Name"),
                     help_text=Help("The name of the database on the DBMS"),
                     custom_validate=(validators.LengthInRange(min_value=1),),
+                    macro_support=True,
                 ),
                 required=True,
             ),
@@ -211,6 +213,7 @@ def _form_active_checks_sql() -> form_specs.Dictionary:
                     help_text=Help(
                         "This defaults to the host for which the active check is configured."
                     ),
+                    macro_support=True,
                 ),
                 required=False,
             ),

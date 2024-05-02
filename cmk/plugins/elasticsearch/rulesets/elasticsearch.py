@@ -46,7 +46,7 @@ def _parameter_form() -> Dictionary:
                         "connection to the first server fails, the next server will be queried (fallback). "
                         "The check will only output data from the first host that sends a response."
                     ),
-                    element_template=String(),
+                    element_template=String(macro_support=True),
                     custom_validate=(LengthInRange(min_value=1),),
                 ),
                 required=True,

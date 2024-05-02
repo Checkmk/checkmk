@@ -81,7 +81,7 @@ def _parse_arguments() -> argparse.Namespace:
         "--filter-metric-names",
         nargs="+",
         default=[],
-        help="Filter by these metrics names",
+        help="Filter by these metrics names (equal or startswith)",
     )
     parser.add_argument(
         "--filter-standalone-metrics",
@@ -217,6 +217,21 @@ def _load(debug: bool, folders: Sequence[str], load_translations: bool) -> tuple
 
 def _show_exception(e: Exception) -> None:
     _LOGGER.error("".join(traceback.format_exception(e)))
+
+
+@dataclass(frozen=True)
+class _MetricNameFilter:
+    _filter_metric_names: Sequence[str]
+
+    def matches(self, metric_name: str) -> bool:
+        if not self._filter_metric_names:
+            return True
+        if metric_name in self._filter_metric_names:
+            return True
+        for fmn in self._filter_metric_names:
+            if metric_name.startswith(fmn):
+                return True
+        return False
 
 
 #   .--helper--------------------------------------------------------------.
@@ -428,7 +443,7 @@ class ConnectedObjects:
 
 
 def _make_connected_objects(
-    filter_metric_names: Sequence[str],
+    metric_name_filter: _MetricNameFilter,
     migration_errors: MigrationErrors,
     legacy_metric_info: Mapping[str, MetricInfo],
     legacy_perfometer_info: Sequence[PerfometerSpec],
@@ -440,23 +455,22 @@ def _make_connected_objects(
     handled_metric_names: set[str] = set()
     all_connected_metric_names: set[tuple[str, ...]] = set()
     for metric_name in used_metrics:
-        if filter_metric_names and metric_name not in filter_metric_names:
-            continue
-        all_connected_metric_names.add(
-            tuple(
-                sorted(
-                    set(
-                        _find_connected_metric_names(
-                            metric_name,
-                            handled_metric_names,
-                            checked_perfometers,
-                            checked_graph_templates,
-                            used_metrics,
+        if metric_name_filter.matches(metric_name):
+            all_connected_metric_names.add(
+                tuple(
+                    sorted(
+                        set(
+                            _find_connected_metric_names(
+                                metric_name,
+                                handled_metric_names,
+                                checked_perfometers,
+                                checked_graph_templates,
+                                used_metrics,
+                            )
                         )
                     )
                 )
             )
-        )
 
     for connected_metric_names in all_connected_metric_names:
         perfometers_: list[ConnectedPerfometer] = []
@@ -494,7 +508,7 @@ def _make_connected_objects(
 def _compute_connected_objects(
     debug: bool,
     folders: Sequence[str],
-    filter_metric_names: Sequence[str],
+    metric_name_filter: _MetricNameFilter,
     filter_standalone_metrics: bool,
     migration_errors: MigrationErrors,
     legacy_metric_info: Mapping[str, MetricInfo],
@@ -523,7 +537,7 @@ def _compute_connected_objects(
 
     return list(
         _make_connected_objects(
-            filter_metric_names,
+            metric_name_filter,
             migration_errors,
             legacy_metric_info,
             legacy_perfometer_info,
@@ -2113,7 +2127,7 @@ def _obj_repr(
 def main() -> None:
     args = _parse_arguments()
     _setup_logger(args.debug, args.verbose)
-
+    metric_name_filter = _MetricNameFilter(args.filter_metric_names)
     migration_errors = MigrationErrors()
 
     (
@@ -2126,7 +2140,7 @@ def main() -> None:
     all_connected_objects = _compute_connected_objects(
         args.debug,
         args.folders,
-        args.filter_metric_names,
+        metric_name_filter,
         args.filter_standalone_metrics,
         migration_errors,
         legacy_metric_info,
@@ -2144,15 +2158,7 @@ def main() -> None:
             args.debug,
             migration_errors,
             unit_parser,
-            (
-                {
-                    n: m
-                    for n, m in standalone_legacy_metrics.items()
-                    if n in args.filter_metric_names
-                }
-                if args.filter_metric_names
-                else standalone_legacy_metrics
-            ),
+            {n: m for n, m in standalone_legacy_metrics.items() if metric_name_filter.matches(n)},
             legacy_check_metrics,
             [],
             {},
@@ -2172,11 +2178,7 @@ def main() -> None:
             args.debug,
             migration_errors,
             unit_parser,
-            (
-                {n: m for n, m in legacy_metric_info.items() if n in args.filter_metric_names}
-                if args.filter_metric_names
-                else legacy_metric_info
-            ),
+            {n: m for n, m in legacy_metric_info.items() if metric_name_filter.matches(n)},
             legacy_check_metrics,
             [],
             {},

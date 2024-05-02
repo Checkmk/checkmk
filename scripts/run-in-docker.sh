@@ -62,6 +62,10 @@ else
 fi
 
 # Don't map ~/.cache but create a temporary folder inside the shadow workspace
+if [ -e "${CONTAINER_SHADOW_WORKSPACE}/cache" ]; then
+    # Bazel creates files without write permission
+    chmod -R a+w "${CONTAINER_SHADOW_WORKSPACE}/cache"
+fi
 rm -rf "${CONTAINER_SHADOW_WORKSPACE}/cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/cache"
 mkdir -p "${CONTAINER_SHADOW_WORKSPACE}/home/.cache"

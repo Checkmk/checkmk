@@ -320,18 +320,15 @@ export interface ContextMenuElement {
     children?: ContextMenuElement[];
 }
 
-declare module "d3" {
-    export interface HierarchyNode<Datum> {
-        data: Datum;
-        _children?: this[] | undefined | null;
-        x: number;
-        y: number;
-        fx: number | null;
-        fy: number | null;
-        force?: number;
-        use_transition?: boolean;
-        children_backup?: this[];
-    }
+export interface NodeVisHierarchyNode<Datum> extends HierarchyNode<Datum> {
+    _children?: this[] | undefined | null;
+    x: number; // can also be undefined in original type definition
+    y: number; // can also be undefined in original type definition
+    fx: number | null;
+    fy: number | null;
+    force?: number;
+    use_transition?: boolean;
+    children_backup?: this[];
 }
 
 // TODO: add class
@@ -343,9 +340,9 @@ export interface LayoutSettings {
 }
 
 export class NodeConfig {
-    hierarchy: d3.HierarchyNode<NodeData>;
+    hierarchy: NodeVisHierarchyNode<NodeData>;
     link_info: NodevisLink[];
-    nodes_by_id: Record<string, d3.HierarchyNode<NodeData>>;
+    nodes_by_id: Record<string, NodeVisHierarchyNode<NodeData>>;
     constructor(serialized_node_config: SerializedNodeConfig) {
         this.hierarchy = this._create_hierarchy(serialized_node_config);
         this.nodes_by_id = this._create_nodes_by_id_lookup(this.hierarchy);
@@ -364,10 +361,10 @@ export class NodeConfig {
 
     _create_hierarchy(
         serialized_node_config: SerializedNodeConfig
-    ): d3.HierarchyNode<NodeData> {
+    ): NodeVisHierarchyNode<NodeData> {
         const hierarchy = d3.hierarchy<NodeData>(
             serialized_node_config.hierarchy
-        );
+        ) as NodeVisHierarchyNode<NodeData>;
         // Initialize default info of each node
         hierarchy.descendants().forEach(node => {
             node._children = node.children;
@@ -379,8 +376,8 @@ export class NodeConfig {
         return hierarchy;
     }
 
-    _create_nodes_by_id_lookup(hierarchy: d3.HierarchyNode<NodeData>) {
-        const nodes_by_id: Record<string, d3.HierarchyNode<NodeData>> = {};
+    _create_nodes_by_id_lookup(hierarchy: NodeVisHierarchyNode<NodeData>) {
+        const nodes_by_id: Record<string, NodeVisHierarchyNode<NodeData>> = {};
         hierarchy.descendants().forEach(node => {
             nodes_by_id[node.data.id] = node;
         });
@@ -396,8 +393,8 @@ export class NodeConfig {
             link_info.forEach(link => {
                 // Reference by id:string
                 links.push({
-                    source: this.nodes_by_id[link.source],
-                    target: this.nodes_by_id[link.target],
+                    source: this.nodes_by_id[link.source] as NodevisNode,
+                    target: this.nodes_by_id[link.target] as NodevisNode,
                     config: link.config,
                 });
             });
@@ -409,8 +406,8 @@ export class NodeConfig {
         this.hierarchy.descendants().forEach(node => {
             if (!node.parent || node.data.invisible) return;
             links.push({
-                source: node,
-                target: node.parent,
+                source: node as NodevisNode,
+                target: node.parent as NodevisNode,
                 config: {type: "default"},
             });
         });
@@ -418,4 +415,4 @@ export class NodeConfig {
     }
 }
 
-export type NodevisNode = HierarchyNode<NodeData>;
+export type NodevisNode = NodeVisHierarchyNode<NodeData>;

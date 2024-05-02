@@ -474,7 +474,7 @@ export class LayoutStyleExampleGenerator {
 
         _add_hierarchy_children(hierarchy_raw, cancel_delta, 1);
 
-        const hierarchy = d3.hierarchy<NodeData>(hierarchy_raw);
+        const hierarchy = d3.hierarchy<NodeData>(hierarchy_raw) as NodevisNode;
         hierarchy.descendants().forEach(node => {
             node.x = 50;
             node.y = 50;

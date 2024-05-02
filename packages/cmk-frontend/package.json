@@ -60,7 +60,6 @@
     "@types/d3-flextree": "^2.1.1",
     "@types/d3-hexbin": "^0.2.3",
     "@types/d3-sankey": "^0.12.1",
-    "@types/d3-hierarchy": "=3.1.6",
     "@types/dc": "^4.2.1",
     "@types/jquery": "^3.5.13",
     "@types/lodash": "^4.14.191",

@@ -1,0 +1,9 @@
+Title: Simulation mode: Critical discovery service for SNMP hosts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1714639415
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+

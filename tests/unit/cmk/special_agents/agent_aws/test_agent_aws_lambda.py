@@ -55,9 +55,6 @@ class PaginatorProvisionedConcurrencyConfigs:
 
 
 class FakeLambdaClient:
-    def __init__(self, skip_entities=None) -> None:  # type: ignore[no-untyped-def]
-        self._skip_entities = {} if not skip_entities else skip_entities
-
     def get_paginator(self, operation_name: str) -> Any:
         if operation_name == "list_functions":
             return PaginatorListFunctions()
@@ -114,7 +111,7 @@ def get_lambda_sections(
 
     # TODO: FakeLambdaClient shoud actually subclass LambdaClient, etc.
     return _create_lamdba_sections(
-        FakeLambdaClient(False),  # type: ignore[arg-type]
+        FakeLambdaClient(),  # type: ignore[arg-type]
         FakeCloudwatchClient(),  # type: ignore[arg-type]
         FakeCloudwatchClientLogsClient(),  # type: ignore[arg-type]
         "region",

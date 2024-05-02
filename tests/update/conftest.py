@@ -61,17 +61,17 @@ class BaseVersions:
 
     MIN_VERSION = get_min_version()
 
-    with open(Path(__file__).parent.resolve() / "base_versions.json", "r") as f:
-        BASE_VERSIONS_STR = json.load(f)
+    with open(Path(__file__).parent.resolve() / "base_versions_previous_branch.json", "r") as f:
+        BASE_VERSIONS_PB = json.load(f)
+
+    with open(Path(__file__).parent.resolve() / "base_versions_current_branch.json", "r") as f:
+        BASE_VERSIONS_CB = json.load(f)
 
     BASE_VERSIONS = [
         CMKVersion(
-            base_version_str,
-            Edition.CEE,
-            current_base_branch_name(),
-            current_branch_version(),
+            base_version_str, Edition.CEE, current_base_branch_name(), current_branch_version()
         )
-        for base_version_str in BASE_VERSIONS_STR
+        for base_version_str in BASE_VERSIONS_PB + BASE_VERSIONS_CB
     ]
 
 

@@ -59,6 +59,7 @@ def _make_parameter_form() -> Dictionary:
                         "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>LDAP</tt>."
                     ),
                     custom_validate=(validators.LengthInRange(1, None),),
+                    macro_support=True,
                 ),
                 required=True,
             ),
@@ -68,6 +69,7 @@ def _make_parameter_form() -> Dictionary:
                     help_text=Help("LDAP base, e.g. ou=Development, o=Checkmk GmbH, c=de"),
                     custom_validate=(validators.LengthInRange(1, None),),
                     field_size=FieldSize.LARGE,
+                    macro_support=True,
                 ),
                 required=True,
             ),

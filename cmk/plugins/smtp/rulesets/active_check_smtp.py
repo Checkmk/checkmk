@@ -61,6 +61,7 @@ def _make_parameter_form() -> Dictionary:
                         "a caret (<tt>^</tt>), the service description will not be prefixed with <tt>SMTP</tt>."
                     ),
                     custom_validate=(validators.LengthInRange(1, None),),
+                    macro_support=True,
                 ),
                 required=True,
             ),
@@ -72,6 +73,7 @@ def _make_parameter_form() -> Dictionary:
                         "You can specify a hostname or IP address different from the IP address "
                         "of the host as configured in your host properties."
                     ),
+                    macro_support=True,
                 ),
             ),
             "port": DictElement(
@@ -129,6 +131,7 @@ def _make_parameter_form() -> Dictionary:
                         "FROM-address to include in MAIL command, required by Exchange 2000"
                     ),
                     prefill=DefaultValue(""),
+                    macro_support=True,
                 ),
             ),
             "fqdn": DictElement(
@@ -136,6 +139,7 @@ def _make_parameter_form() -> Dictionary:
                     title=Title("FQDN"),
                     help_text=Help("FQDN used for HELO"),
                     prefill=DefaultValue(""),
+                    macro_support=True,
                 )
             ),
             "cert_days": DictElement(

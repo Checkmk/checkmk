@@ -76,6 +76,7 @@ def _make_parameter_form() -> Dictionary:
                         "will be done instead of using the IP address of the host "
                         "as configured in your host properties."
                     ),
+                    macro_support=True,
                 ),
             ),
             "response_time": DictElement(

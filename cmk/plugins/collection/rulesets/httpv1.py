@@ -131,7 +131,8 @@ def _active_checks_http_proxyspec() -> Dictionary:
     return Dictionary(
         elements={
             "address": DictElement(
-                parameter_form=String(title=Title("Name / IP address")), required=True
+                parameter_form=String(title=Title("Name / IP address"), macro_support=True),
+                required=True,
             ),
             "port": DictElement(parameter_form=_active_checks_http_portspec(80)),
             "auth": DictElement(
@@ -185,7 +186,8 @@ def _active_checks_http_hostspec() -> Dictionary:
                             name="direct",
                             title=Title("Hostname / IP address"),
                             parameter_form=String(
-                                custom_validate=(validators.LengthInRange(min_value=1),)
+                                custom_validate=(validators.LengthInRange(min_value=1),),
+                                macro_support=True,
                             ),
                         ),
                         CascadingSingleChoiceElement(
@@ -275,6 +277,7 @@ def _parameter_form_mode() -> CascadingSingleChoice:
                                 ),
                                 custom_validate=(validators.LengthInRange(min_value=1),),
                                 prefill=DefaultValue("/"),
+                                macro_support=True,
                             ),
                         ),
                         "ssl": DictElement(
@@ -610,6 +613,7 @@ def _parameter_form_active_checks_http() -> Dictionary:
                         validators.LengthInRange(min_value=1),
                         _validate_active_check_http_name,
                     ),
+                    macro_support=True,
                 ),
                 required=True,
             ),

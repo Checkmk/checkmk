@@ -80,6 +80,7 @@ def _form_spec_special_agents_pure_storage_fa() -> Dictionary:
                                 help_text=Help(
                                     "Use a custom name for the SSL certificate validation"
                                 ),
+                                macro_support=True,
                             ),
                         ),
                     ],

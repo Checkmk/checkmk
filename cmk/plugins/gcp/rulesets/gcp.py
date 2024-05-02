@@ -96,6 +96,7 @@ def _parameter_form_special_agents_gcp() -> Dictionary:
                                 help_text=Help(
                                     "Prefix for GCE piggyback host names. Defaults to project ID"
                                 ),
+                                macro_support=True,
                             ),
                             required=False,
                         ),

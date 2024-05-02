@@ -62,6 +62,7 @@ def _parameter_form_special_agents_cisco_prime() -> Dictionary:
                                         parameter_form=String(
                                             title=Title("Custom Host"),
                                             custom_validate=(LengthInRange(min_value=1),),
+                                            macro_support=True,
                                         ),
                                         required=True,
                                     ),

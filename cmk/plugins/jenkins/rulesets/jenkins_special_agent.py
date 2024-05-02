@@ -44,6 +44,7 @@ def _formspec_jenkins() -> Dictionary:
                     custom_validate=[
                         LengthInRange(min_value=1, max_value=32),
                     ],
+                    macro_support=True,
                 ),
                 required=True,
             ),

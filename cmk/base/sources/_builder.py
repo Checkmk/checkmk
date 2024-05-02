@@ -7,12 +7,13 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import assert_never, Final
+from typing import assert_never, Final, Literal
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.tags import ComputedDataSources, TagID
 
 from cmk.snmplib import SNMPBackendEnum
 
@@ -23,10 +24,10 @@ from cmk.checkengine.fetcher import FetcherType
 from cmk.checkengine.parser import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import IPStackConfig
+from cmk.base.server_side_calls import SpecialAgentCommandLine
 
 from ._api import Source
 from ._sources import (
@@ -59,15 +60,21 @@ class _Builder:
         snmp_scan_config: SNMPScanConfig,
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
+        snmp_backend: SNMPBackendEnum,
         snmp_backend_override: SNMPBackendEnum | None,
         stored_walk_path: Path,
         walk_cache_path: Path,
         file_cache_path: Path,
         tcp_cache_path: Path,
         tls_config: TLSConfig,
-        password_store_file: Path,
-        passwords: Mapping[str, str],
-        ip_address_of: config.IPLookup,
+        computed_datasources: ComputedDataSources,
+        datasource_programs: Sequence[str],
+        tag_list: Sequence[TagID],
+        management_protocol: Literal["snmp", "ipmi"] | None,
+        management_ip: HostAddress | None,
+        special_agent_command_lines: Iterable[tuple[str, SpecialAgentCommandLine]],
+        agent_connection_mode: HostAgentConnectionMode,
+        check_mk_check_interval: float,
     ) -> None:
         super().__init__()
         assert not is_cluster
@@ -81,26 +88,31 @@ class _Builder:
         self.snmp_scan_config: Final = snmp_scan_config
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
+        self.snmp_backend: Final = snmp_backend
         self.snmp_backend_override: Final = snmp_backend_override
-        self._cds: Final = config_cache.computed_datasources(host_name)
+        self.cds: Final = computed_datasources
+        self.tag_list: Final = tag_list
+        self.management_protocol: Final = management_protocol
+        self.management_ip: Final = management_ip
+        self.special_agent_command_lines: Final = special_agent_command_lines
+        self.datasource_programs: Final = datasource_programs
+        self.agent_connection_mode: Final = agent_connection_mode
+        self.check_mk_check_interval: Final = check_mk_check_interval
         self._stored_walk_path: Final = stored_walk_path
         self._walk_cache_path: Final = walk_cache_path
         self._file_cache_path: Final = file_cache_path
         self._tcp_cache_path: Final = tcp_cache_path
         self.tls_config: Final = tls_config
-        self.password_store_file: Final = password_store_file
-        self.passwords: Final = passwords
-        self._ip_address_of: Final = ip_address_of
 
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
 
-        if self._cds.is_tcp and not self._elems:
+        if self.cds.is_tcp and not self._elems:
             # User wants a special agent, a CheckMK agent, or both.  But
             # we didn't configure anything.  Let's report that.
             self._add(MissingSourceSource(self.host_name, self.ipaddress, "API/agent"))
 
-        if "no-piggyback" not in self.config_cache.tag_list(self.host_name):
+        if TagID("no-piggyback") not in self.tag_list:
             self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
 
         self._initialize_snmp_based()
@@ -119,13 +131,7 @@ class _Builder:
 
     def _initialize_agent_based(self) -> None:
         def make_special_agents() -> Iterable[Source]:
-            for agentname, agent_data in self.config_cache.special_agent_command_lines(
-                self.host_name,
-                self.ipaddress,
-                self.passwords,
-                password_store_file=self.password_store_file,
-                ip_address_of=self._ip_address_of,
-            ):
+            for agentname, agent_data in self.special_agent_command_lines:
                 yield SpecialAgentSource(
                     self.config_cache,
                     self.host_name,
@@ -147,16 +153,16 @@ class _Builder:
         # API, no Checkmk agent      True                False            True
         # no API, no Checkmk agent   False               False            False
 
-        if self._cds.is_all_agents_host:
+        if self.cds.is_all_agents_host:
             self._add_agent()
             for elem in special_agents:
                 self._add(elem)
 
-        elif self._cds.is_all_special_agents_host:
+        elif self.cds.is_all_special_agents_host:
             for elem in special_agents:
                 self._add(elem)
 
-        elif self._cds.is_tcp:
+        elif self.cds.is_tcp:
             if special_agents:
                 self._add(special_agents[0])
             else:
@@ -179,15 +185,12 @@ class _Builder:
             SNMPFetcher.plugin_store = make_plugin_store()
 
     def _initialize_snmp_based(self) -> None:
-        if not self._cds.is_snmp:
+        if not self.cds.is_snmp:
             return
 
         self._initialize_snmp_plugin_store()
 
-        if (
-            self.simulation_mode
-            or self.config_cache.get_snmp_backend(self.host_name) is SNMPBackendEnum.STORED_WALK
-        ):
+        if self.simulation_mode or self.snmp_backend is SNMPBackendEnum.STORED_WALK:
             # Here, we bypass NO_IP and silently set the IP to localhost.  This is to accomodate
             # our file-based simulation modes.  However, NO_IP should really be treated as a
             # configuration error with SNMP.  We should try to find a better solution in the future.
@@ -233,23 +236,21 @@ class _Builder:
         if self.ip_stack_config is IPStackConfig.NO_IP:
             return
 
-        protocol = self.config_cache.management_protocol(self.host_name)
-        if protocol is None:
+        if self.management_protocol is None:
             return
 
-        ip_address = config.lookup_mgmt_board_ip_address(self.config_cache, self.host_name)
-        if ip_address is None:
-            self._add(MissingIPSource(self.host_name, ip_address, f"mgmt_{protocol}"))
+        if self.management_ip is None:
+            self._add(MissingIPSource(self.host_name, None, f"mgmt_{self.management_protocol}"))
             return
 
-        match protocol:
+        match self.management_protocol:
             case "snmp":
                 self._initialize_snmp_plugin_store()
                 self._add(
                     MgmtSNMPSource(
                         self.config_cache,
                         self.host_name,
-                        ip_address,
+                        self.management_ip,
                         max_age=self.max_age_snmp,
                         scan_config=self.snmp_scan_config,
                         selected_sections=self.selected_sections,
@@ -264,37 +265,36 @@ class _Builder:
                     IPMISource(
                         self.config_cache,
                         self.host_name,
-                        ip_address,
+                        self.management_ip,
                         max_age=self.max_age_agent,
                         file_cache_path=self._file_cache_path,
                     )
                 )
             case _:
-                assert_never(protocol)
+                assert_never(self.management_protocol)
 
     def _add(self, source: Source) -> None:
         self._elems[source.source_info().ident] = source
 
     def _add_agent(self) -> None:
-        datasource_programs = self.config_cache.datasource_programs(self.host_name)
-        if datasource_programs:
+        if self.datasource_programs:
             self._add(
                 ProgramSource(
                     self.config_cache,
                     self.host_name,
                     self.ipaddress,
-                    program=datasource_programs[0],
+                    program=self.datasource_programs[0],
                     max_age=self.max_age_agent,
                     file_cache_path=self._tcp_cache_path,
                 )
             )
             return
 
-        connection_mode = self.config_cache.agent_connection_mode(self.host_name)
+        connection_mode = self.agent_connection_mode
         match connection_mode:
             case HostAgentConnectionMode.PUSH:
                 # add grace period
-                interval = int(1.5 * self.config_cache.check_mk_check_interval(self.host_name))
+                interval = int(1.5 * self.check_mk_check_interval)
                 self._add(
                     source=PushAgentSource(
                         self.host_name,
@@ -336,14 +336,21 @@ def make_sources(
     simulation_mode: bool,
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
+    snmp_backend: SNMPBackendEnum,
     snmp_backend_override: SNMPBackendEnum | None,
     stored_walk_path: Path,
     walk_cache_path: Path,
     file_cache_path: Path,
     tcp_cache_path: Path,
     tls_config: TLSConfig,
-    password_store_file: Path,
-    passwords: Mapping[str, str],
+    computed_datasources: ComputedDataSources,
+    datasource_programs: Sequence[str],
+    tag_list: Sequence[TagID],
+    management_ip: HostAddress | None,
+    management_protocol: Literal["snmp", "ipmi"] | None,
+    special_agent_command_lines: Iterable[tuple[str, SpecialAgentCommandLine]],
+    agent_connection_mode: HostAgentConnectionMode,
+    check_mk_check_interval: float,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if is_cluster:
@@ -384,8 +391,13 @@ def make_sources(
         file_cache_path=file_cache_path,
         tcp_cache_path=tcp_cache_path,
         tls_config=tls_config,
-        password_store_file=password_store_file,
-        passwords=passwords,
-        # TODO: move this further up the stack and see which type of IP lookup is needed
-        ip_address_of=config.ConfiguredIPLookup(config_cache, config.handle_ip_lookup_failure),
+        computed_datasources=computed_datasources,
+        datasource_programs=datasource_programs,
+        tag_list=tag_list,
+        management_ip=management_ip,
+        management_protocol=management_protocol,
+        special_agent_command_lines=special_agent_command_lines,
+        agent_connection_mode=agent_connection_mode,
+        check_mk_check_interval=check_mk_check_interval,
+        snmp_backend=snmp_backend,
     ).sources

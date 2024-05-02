@@ -39,7 +39,12 @@ import cmk.base.core
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
-from cmk.base.config import ConfigCache
+from cmk.base.config import (
+    ConfigCache,
+    ConfiguredIPLookup,
+    handle_ip_lookup_failure,
+    lookup_mgmt_board_ip_address,
+)
 from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import Source
 
@@ -224,14 +229,27 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_max_age=MaxAge.zero(),
+            snmp_backend=config_cache.get_snmp_backend(hostname),
             snmp_backend_override=None,
             stored_walk_path=stored_walk_path,
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
             tcp_cache_path=tcp_cache_path,
             tls_config=tls_config,
-            password_store_file=used_password_store,
-            passwords=cmk.utils.password_store.load(used_password_store),
+            computed_datasources=config_cache.computed_datasources(hostname),
+            datasource_programs=config_cache.datasource_programs(hostname),
+            tag_list=config_cache.tag_list(hostname),
+            management_ip=lookup_mgmt_board_ip_address(config_cache, hostname),
+            management_protocol=config_cache.management_protocol(hostname),
+            special_agent_command_lines=config_cache.special_agent_command_lines(
+                hostname,
+                ipaddress,
+                password_store_file=used_password_store,
+                passwords=cmk.utils.password_store.load(used_password_store),
+                ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
+            ),
+            agent_connection_mode=config_cache.agent_connection_mode(hostname),
+            check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
         )
     ]
 

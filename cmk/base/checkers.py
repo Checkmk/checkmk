@@ -79,7 +79,14 @@ from cmk.base import plugin_contexts
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
-from cmk.base.config import ConfigCache, get_plugin_parameters, lookup_ip_address
+from cmk.base.config import (
+    ConfigCache,
+    ConfiguredIPLookup,
+    get_plugin_parameters,
+    handle_ip_lookup_failure,
+    lookup_ip_address,
+    lookup_mgmt_board_ip_address,
+)
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import make_parser, make_sources, Source
@@ -340,6 +347,7 @@ class CMKFetcher:
             ca_store=Path(cmk.utils.paths.agent_cert_store),
             site_crt=Path(cmk.utils.paths.site_cert_file),
         )
+        passwords = password_store.load(self.password_store_file)
         return _fetch_all(
             itertools.chain.from_iterable(
                 make_sources(
@@ -364,14 +372,36 @@ class CMKFetcher:
                     file_cache_max_age=(
                         self.max_cachefile_age or self.config_cache.max_cachefile_age(host_name)
                     ),
+                    snmp_backend=self.config_cache.get_snmp_backend(current_host_name),
                     snmp_backend_override=self.snmp_backend_override,
                     stored_walk_path=stored_walk_path,
                     walk_cache_path=walk_cache_path,
                     file_cache_path=file_cache_path,
                     tcp_cache_path=tcp_cache_path,
                     tls_config=tls_config,
-                    password_store_file=self.password_store_file,
-                    passwords=password_store.load(self.password_store_file),
+                    computed_datasources=self.config_cache.computed_datasources(current_host_name),
+                    datasource_programs=self.config_cache.datasource_programs(current_host_name),
+                    tag_list=self.config_cache.tag_list(current_host_name),
+                    management_ip=lookup_mgmt_board_ip_address(
+                        self.config_cache,
+                        current_host_name,
+                    ),
+                    management_protocol=self.config_cache.management_protocol(current_host_name),
+                    special_agent_command_lines=self.config_cache.special_agent_command_lines(
+                        current_host_name,
+                        current_ip_address,
+                        passwords,
+                        self.password_store_file,
+                        ip_address_of=ConfiguredIPLookup(
+                            self.config_cache, handle_ip_lookup_failure
+                        ),
+                    ),
+                    agent_connection_mode=self.config_cache.agent_connection_mode(
+                        current_host_name
+                    ),
+                    check_mk_check_interval=self.config_cache.check_mk_check_interval(
+                        current_host_name
+                    ),
                 )
                 for current_host_name, current_ip_stack_config, current_ip_address in hosts
             ),

@@ -24,7 +24,7 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.base.config import ConfigCache
+from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.sources import make_sources, Source
 
@@ -37,9 +37,10 @@ def _make_sources(
 ) -> Sequence[Source]:
     # Too many arguments to this function.  Let's wrap it to make it easier
     # to test.
+    ipaddress = HostAddress("127.0.0.1")
     return make_sources(
         hostname,
-        HostAddress("127.0.0.1"),
+        ipaddress,
         IPStackConfig.IPv4,
         config_cache=config_cache,
         snmp_scan_config=SNMPScanConfig(
@@ -51,6 +52,7 @@ def _make_sources(
         simulation_mode=True,
         file_cache_options=FileCacheOptions(),
         file_cache_max_age=MaxAge.zero(),
+        snmp_backend=config_cache.get_snmp_backend(hostname),
         snmp_backend_override=None,
         stored_walk_path=tmp_path,
         walk_cache_path=tmp_path,
@@ -61,8 +63,20 @@ def _make_sources(
             ca_store=tmp_path,
             site_crt=tmp_path,
         ),
-        password_store_file=Path("/pw/store"),
-        passwords={},
+        computed_datasources=config_cache.computed_datasources(hostname),
+        datasource_programs=config_cache.datasource_programs(hostname),
+        tag_list=config_cache.tag_list(hostname),
+        management_ip=ipaddress,
+        management_protocol=config_cache.management_protocol(hostname),
+        special_agent_command_lines=config_cache.special_agent_command_lines(
+            hostname,
+            ipaddress,
+            password_store_file=Path("/pw/store"),
+            passwords={},
+            ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
+        ),
+        agent_connection_mode=config_cache.agent_connection_mode(hostname),
+        check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
     )
 
 

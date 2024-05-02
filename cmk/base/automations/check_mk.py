@@ -166,7 +166,13 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.config import ConfigCache, snmp_default_community
+from cmk.base.config import (
+    ConfigCache,
+    ConfiguredIPLookup,
+    handle_ip_lookup_failure,
+    lookup_mgmt_board_ip_address,
+    snmp_default_community,
+)
 from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
@@ -2051,14 +2057,27 @@ class AutomationDiagHost(Automation):
                 discovery=1.5 * check_interval,
                 inventory=1.5 * check_interval,
             ),
+            snmp_backend=config_cache.get_snmp_backend(host_name),
             snmp_backend_override=None,
             stored_walk_path=stored_walk_path,
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
             tcp_cache_path=tcp_cache_path,
             tls_config=tls_config,
-            password_store_file=pending_passwords_file,
-            passwords=cmk.utils.password_store.load(pending_passwords_file),
+            computed_datasources=config_cache.computed_datasources(host_name),
+            datasource_programs=config_cache.datasource_programs(host_name),
+            tag_list=config_cache.tag_list(host_name),
+            management_ip=lookup_mgmt_board_ip_address(config_cache, host_name),
+            management_protocol=config_cache.management_protocol(host_name),
+            special_agent_command_lines=config_cache.special_agent_command_lines(
+                host_name,
+                ipaddress,
+                password_store_file=pending_passwords_file,
+                passwords=cmk.utils.password_store.load(pending_passwords_file),
+                ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
+            ),
+            agent_connection_mode=config_cache.agent_connection_mode(host_name),
+            check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2491,14 +2510,27 @@ class AutomationGetAgentOutput(Automation):
                         discovery=1.5 * check_interval,
                         inventory=1.5 * check_interval,
                     ),
+                    snmp_backend=config_cache.get_snmp_backend(hostname),
                     snmp_backend_override=None,
                     stored_walk_path=stored_walk_path,
                     walk_cache_path=walk_cache_path,
                     file_cache_path=file_cache_path,
                     tcp_cache_path=tcp_cache_path,
                     tls_config=tls_config,
-                    password_store_file=core_password_store_file,
-                    passwords=cmk.utils.password_store.load(core_password_store_file),
+                    computed_datasources=config_cache.computed_datasources(hostname),
+                    datasource_programs=config_cache.datasource_programs(hostname),
+                    tag_list=config_cache.tag_list(hostname),
+                    management_ip=lookup_mgmt_board_ip_address(config_cache, hostname),
+                    management_protocol=config_cache.management_protocol(hostname),
+                    special_agent_command_lines=config_cache.special_agent_command_lines(
+                        hostname,
+                        ipaddress,
+                        password_store_file=core_password_store_file,
+                        passwords=cmk.utils.password_store.load(core_password_store_file),
+                        ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
+                    ),
+                    agent_connection_mode=config_cache.agent_connection_mode(hostname),
+                    check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

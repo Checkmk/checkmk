@@ -647,7 +647,7 @@ def _valuespec_endpoints() -> List:
             elements={
                 "service_name": DictElement(
                     parameter_form=Dictionary(
-                        title=Title("Service description"),
+                        title=Title("Service name"),
                         elements={
                             "prefix": DictElement(
                                 parameter_form=SingleChoice(
@@ -676,7 +676,7 @@ def _valuespec_endpoints() -> List:
                                         "The name is the individual part of the used service description. Choose a human readable and unique title to be able to find your service later in Checkmk."
                                     ),
                                     custom_validate=(validators.LengthInRange(min_value=1),),
-                                    prefill=InputHint("My HTTP service"),
+                                    prefill=InputHint("My service name"),
                                 ),
                                 required=True,
                             ),

@@ -5,7 +5,7 @@
 
 from ._api import Source
 from ._builder import make_sources
-from ._parser import make_parser
+from ._parser import make_parser, ParserFactory
 from ._sources import (
     FetcherFactory,
     IPMISource,
@@ -24,6 +24,7 @@ __all__ = [
     "FetcherFactory",
     "make_sources",
     "make_parser",
+    "ParserFactory",
     "Source",
     "SNMPSource",
     "MgmtSNMPSource",

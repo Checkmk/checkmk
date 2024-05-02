@@ -6,6 +6,7 @@
 import logging
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Protocol
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
@@ -15,13 +16,32 @@ from cmk.snmplib import SNMPRawDataElem
 from cmk.checkengine.fetcher import FetcherType
 from cmk.checkengine.parser import AgentRawDataSectionElem, Parser, SectionStore
 
-from cmk.base.config import ConfigCache
+__all__ = ["make_parser", "ParserFactory"]
 
-__all__ = ["make_parser"]
+
+class ParserFactory(Protocol):
+    def make_snmp_parser(
+        self,
+        hostname: HostName,
+        section_store: SectionStore[SNMPRawDataElem],
+        *,
+        checking_sections: frozenset[SectionName],
+        keep_outdated: bool,
+        logger: logging.Logger,
+    ) -> Parser: ...
+
+    def make_agent_parser(
+        self,
+        hostname: HostName,
+        section_store: SectionStore[Sequence[AgentRawDataSectionElem]],
+        *,
+        keep_outdated: bool,
+        logger: logging.Logger,
+    ) -> Parser: ...
 
 
 def make_parser(
-    config_cache: ConfigCache,
+    factory: ParserFactory,
     hostname: HostName,
     fetcher_type: FetcherType,
     *,
@@ -32,7 +52,7 @@ def make_parser(
     logger: logging.Logger,
 ) -> Parser:
     if fetcher_type is FetcherType.SNMP:
-        return config_cache.make_snmp_parser(
+        return factory.make_snmp_parser(
             hostname,
             SectionStore[SNMPRawDataElem](
                 persisted_section_dir,
@@ -43,7 +63,7 @@ def make_parser(
             logger=logger,
         )
 
-    return config_cache.make_agent_parser(
+    return factory.make_agent_parser(
         hostname,
         SectionStore[Sequence[AgentRawDataSectionElem]](
             persisted_section_dir,

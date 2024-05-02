@@ -38,8 +38,7 @@ mod query {
     pub const COMPUTER_NAME: &str =
         "SELECT Upper(Cast(SERVERPROPERTY( 'MachineName' ) as varchar)) as MachineName";
     /// Script to be run in SQL instance
-    pub const WINDOWS_REGISTRY_INSTANCES_BASE: &str = r"
-DECLARE @GetInstances TABLE
+    pub const WINDOWS_REGISTRY_INSTANCES_BASE: &str = r"DECLARE @GetInstances TABLE
 ( Value nvarchar(100),
  InstanceNames nvarchar(100),
  Data nvarchar(100))

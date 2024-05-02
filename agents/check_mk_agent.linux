@@ -1803,9 +1803,11 @@ _run_cached_internal() {
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
             # Start it. If the command fails the output is thrown away
             cat <<HERE | nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
-eval '${MK_DEFINE_LOG_SECTION_TIME}'
-exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" || rm -f "${CACHEFILE}.new.\$\$"
+                eval '${MK_DEFINE_LOG_SECTION_TIME}'
+                exec > "${CACHEFILE}.new.\$\$" || exit 1
+                $* \
+                && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${FAIL_REPORT_FILE}" \
+                || rm -f "${CACHEFILE}.new.\$\$"
 HERE
         fi
 

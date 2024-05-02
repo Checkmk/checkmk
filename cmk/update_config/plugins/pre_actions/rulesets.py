@@ -122,12 +122,13 @@ def _validate_rule_values(
                 else:
                     addition_info = []
                 error_message = _error_message(ruleset, folder, index, e, addition_info)
-                return (
-                    conflict_mode is ConflictMode.ASK
-                    and _request_user_input_on_invalid_rule(error_message).lower()
-                    in USER_INPUT_CONTINUE
-                )
-
+                logger.error(error_message)
+                if conflict_mode is ConflictMode.ASK:
+                    user_input = prompt(
+                        "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
+                    )
+                    return user_input.lower() in USER_INPUT_CONTINUE
+                return False
     return True
 
 
@@ -149,13 +150,6 @@ def _error_message(
     if additional_info:
         parts.extend(additional_info)
     return "\n".join(parts)
-
-
-def _request_user_input_on_invalid_rule(error_message: str) -> str:
-    return prompt(
-        error_message
-        + "You can abort the update process (A) or continue (c) the update. Abort update? [A/c]\n"
-    )
 
 
 pre_update_action_registry.register(

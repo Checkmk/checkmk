@@ -7,6 +7,7 @@ from ._api import Source
 from ._builder import make_sources
 from ._parser import make_parser
 from ._sources import (
+    FetcherFactory,
     IPMISource,
     MgmtSNMPSource,
     MissingIPSource,
@@ -20,6 +21,7 @@ from ._sources import (
 )
 
 __all__ = [
+    "FetcherFactory",
     "make_sources",
     "make_parser",
     "Source",

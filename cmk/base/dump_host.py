@@ -226,7 +226,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             ),
             is_cluster=hostname in hosts_config.clusters,
             file_cache_options=FileCacheOptions(),
-            config_cache=config_cache,
+            fetcher_factory=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_max_age=MaxAge.zero(),
             snmp_backend=config_cache.get_snmp_backend(hostname),

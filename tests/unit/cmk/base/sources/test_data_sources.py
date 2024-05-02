@@ -42,7 +42,7 @@ def _make_sources(
         hostname,
         ipaddress,
         IPStackConfig.IPv4,
-        config_cache=config_cache,
+        fetcher_factory=config_cache,
         snmp_scan_config=SNMPScanConfig(
             on_error=OnError.RAISE,
             missing_sys_description=False,

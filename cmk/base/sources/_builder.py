@@ -25,12 +25,12 @@ from cmk.checkengine.parser import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
-from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.server_side_calls import SpecialAgentCommandLine
 
 from ._api import Source
 from ._sources import (
+    FetcherFactory,
     IPMISource,
     MgmtSNMPSource,
     MissingIPSource,
@@ -54,7 +54,7 @@ class _Builder:
         ip_stack_config: IPStackConfig,
         *,
         simulation_mode: bool,
-        config_cache: ConfigCache,
+        fetcher_factory: FetcherFactory,
         is_cluster: bool,
         selected_sections: SectionNameCollection,
         snmp_scan_config: SNMPScanConfig,
@@ -80,7 +80,7 @@ class _Builder:
         assert not is_cluster
 
         self.host_name: Final = host_name
-        self.config_cache: Final = config_cache
+        self.fetcher_factory: Final = fetcher_factory
         self.ipaddress: Final = ipaddress
         self.ip_stack_config: Final = ip_stack_config
         self.simulation_mode: Final = simulation_mode
@@ -113,7 +113,7 @@ class _Builder:
             self._add(MissingSourceSource(self.host_name, self.ipaddress, "API/agent"))
 
         if TagID("no-piggyback") not in self.tag_list:
-            self._add(PiggybackSource(self.config_cache, self.host_name, self.ipaddress))
+            self._add(PiggybackSource(self.fetcher_factory, self.host_name, self.ipaddress))
 
         self._initialize_snmp_based()
         self._initialize_mgmt_boards()
@@ -133,7 +133,7 @@ class _Builder:
         def make_special_agents() -> Iterable[Source]:
             for agentname, agent_data in self.special_agent_command_lines:
                 yield SpecialAgentSource(
-                    self.config_cache,
+                    self.fetcher_factory,
                     self.host_name,
                     self.ipaddress,
                     max_age=self.max_age_agent,
@@ -196,7 +196,7 @@ class _Builder:
             # configuration error with SNMP.  We should try to find a better solution in the future.
             self._add(
                 SNMPSource(
-                    self.config_cache,
+                    self.fetcher_factory,
                     self.host_name,
                     self.ipaddress or HostAddress("127.0.0.1"),
                     scan_config=self.snmp_scan_config,
@@ -219,7 +219,7 @@ class _Builder:
 
         self._add(
             SNMPSource(
-                self.config_cache,
+                self.fetcher_factory,
                 self.host_name,
                 self.ipaddress,
                 max_age=self.max_age_snmp,
@@ -248,7 +248,7 @@ class _Builder:
                 self._initialize_snmp_plugin_store()
                 self._add(
                     MgmtSNMPSource(
-                        self.config_cache,
+                        self.fetcher_factory,
                         self.host_name,
                         self.management_ip,
                         max_age=self.max_age_snmp,
@@ -263,7 +263,7 @@ class _Builder:
             case "ipmi":
                 self._add(
                     IPMISource(
-                        self.config_cache,
+                        self.fetcher_factory,
                         self.host_name,
                         self.management_ip,
                         max_age=self.max_age_agent,
@@ -280,7 +280,7 @@ class _Builder:
         if self.datasource_programs:
             self._add(
                 ProgramSource(
-                    self.config_cache,
+                    self.fetcher_factory,
                     self.host_name,
                     self.ipaddress,
                     program=self.datasource_programs[0],
@@ -311,7 +311,7 @@ class _Builder:
                     return
                 self._add(
                     TCPSource(
-                        self.config_cache,
+                        self.fetcher_factory,
                         self.host_name,
                         self.ipaddress,
                         max_age=self.max_age_agent,
@@ -328,7 +328,7 @@ def make_sources(
     ipaddress: HostAddress | None,
     address_family: IPStackConfig,
     *,
-    config_cache: ConfigCache,
+    fetcher_factory: FetcherFactory,
     is_cluster: bool,
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
@@ -379,7 +379,7 @@ def make_sources(
         ipaddress,
         address_family,
         simulation_mode=simulation_mode,
-        config_cache=config_cache,
+        fetcher_factory=fetcher_factory,
         is_cluster=is_cluster,
         selected_sections=selected_sections,
         snmp_scan_config=snmp_scan_config,

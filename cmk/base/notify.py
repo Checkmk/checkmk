@@ -162,7 +162,7 @@ $LONGSERVICEOUTPUT$
 
 def _initialize_logging() -> None:
     log.logger.setLevel(config.notification_logging)
-    log.open_log(notification_log)
+    log.setup_watched_file_logging_handler(notification_log)
 
 
 # .
@@ -209,18 +209,18 @@ def do_notify(  # pylint: disable=too-many-branches
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
 
+    if not os.path.exists(notification_logdir):
+        os.makedirs(notification_logdir)
+    if not os.path.exists(notification_spooldir):
+        os.makedirs(notification_spooldir)
+    _initialize_logging()
+
     if keepalive and "keepalive" in options:
         keepalive.enable()
 
     convert_legacy_configuration()
 
     try:
-        if not os.path.exists(notification_logdir):
-            os.makedirs(notification_logdir)
-        if not os.path.exists(notification_spooldir):
-            os.makedirs(notification_spooldir)
-        _initialize_logging()
-
         notify_mode = "notify"
         if args:
             notify_mode = args[0]

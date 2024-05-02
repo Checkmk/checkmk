@@ -39,7 +39,7 @@ from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
-from cmk.fetchers import Fetcher, get_raw_data, Mode, TLSConfig
+from cmk.fetchers import Fetcher, get_raw_data, Mode, SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
@@ -331,7 +331,6 @@ class CMKFetcher:
                 for node in self.config_cache.nodes(host_name)
             ]
 
-        oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
         stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
         file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
@@ -348,19 +347,24 @@ class CMKFetcher:
                     current_ip_address,
                     current_ip_stack_config,
                     config_cache=self.config_cache,
+                    snmp_scan_config=SNMPScanConfig(
+                        missing_sys_description=self.config_cache.missing_sys_description(
+                            current_host_name
+                        ),
+                        on_error=self.on_error if not is_cluster else OnError.RAISE,
+                        oid_cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir),
+                    ),
                     is_cluster=current_host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(
                         self.force_snmp_cache_refresh if not is_cluster else False
                     ),
                     selected_sections=self.selected_sections if not is_cluster else NO_SELECTION,
-                    on_scan_error=self.on_error if not is_cluster else OnError.RAISE,
                     simulation_mode=self.simulation_mode,
                     file_cache_options=self.file_cache_options,
                     file_cache_max_age=(
                         self.max_cachefile_age or self.config_cache.max_cachefile_age(host_name)
                     ),
                     snmp_backend_override=self.snmp_backend_override,
-                    oid_cache_dir=oid_cache_dir,
                     stored_walk_path=stored_walk_path,
                     walk_cache_path=walk_cache_path,
                     file_cache_path=file_cache_path,

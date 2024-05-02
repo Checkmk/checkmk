@@ -44,6 +44,7 @@ from cmk.fetchers import (
     PiggybackFetcher,
     ProgramFetcher,
     SNMPFetcher,
+    SNMPScanConfig,
     SNMPSectionMeta,
     TCPEncryptionHandling,
     TCPFetcher,
@@ -367,11 +368,13 @@ class TestSNMPFetcherDeserialization:
     def fetcher(self, tmp_path: Path) -> SNMPFetcher:
         return SNMPFetcher(
             sections={},
-            on_error=OnError.RAISE,
-            missing_sys_description=False,
+            scan_config=SNMPScanConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=False,
+                oid_cache_dir=tmp_path,
+            ),
             do_status_data_inventory=False,
             section_store_path="/tmp/db",
-            oid_cache_dir=tmp_path,
             stored_walk_path=tmp_path,
             walk_cache_path=tmp_path,
             snmp_config=SNMPHostConfig(
@@ -447,11 +450,13 @@ class TestSNMPFetcherFetch:
     def fetcher(self, tmp_path: Path) -> SNMPFetcher:
         return SNMPFetcher(
             sections={},
-            on_error=OnError.RAISE,
-            missing_sys_description=False,
+            scan_config=SNMPScanConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=False,
+                oid_cache_dir=tmp_path,
+            ),
             do_status_data_inventory=False,
             section_store_path="/tmp/db",
-            oid_cache_dir=tmp_path,
             stored_walk_path=tmp_path,
             walk_cache_path=tmp_path,
             snmp_config=SNMPHostConfig(
@@ -665,12 +670,14 @@ class TestSNMPFetcherFetchCache:
     def fetcher(self, monkeypatch: MonkeyPatch, tmp_path: Path) -> SNMPFetcher:
         fetcher = SNMPFetcher(
             sections={},
-            on_error=OnError.RAISE,
-            missing_sys_description=False,
+            scan_config=SNMPScanConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=False,
+                oid_cache_dir=tmp_path,
+            ),
             do_status_data_inventory=False,
             section_store_path="/tmp/db",
             stored_walk_path=tmp_path,
-            oid_cache_dir=tmp_path,
             walk_cache_path=tmp_path,
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,

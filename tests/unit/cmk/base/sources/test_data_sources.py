@@ -10,10 +10,18 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.fetchers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher, TLSConfig
+from cmk.fetchers import (
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    SNMPScanConfig,
+    TCPFetcher,
+    TLSConfig,
+)
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.base.config import ConfigCache
@@ -34,12 +42,16 @@ def _make_sources(
         HostAddress("127.0.0.1"),
         IPStackConfig.IPv4,
         config_cache=config_cache,
+        snmp_scan_config=SNMPScanConfig(
+            on_error=OnError.RAISE,
+            missing_sys_description=False,
+            oid_cache_dir=tmp_path,
+        ),
         is_cluster=False,
         simulation_mode=True,
         file_cache_options=FileCacheOptions(),
         file_cache_max_age=MaxAge.zero(),
         snmp_backend_override=None,
-        oid_cache_dir=tmp_path,
         stored_walk_path=tmp_path,
         walk_cache_path=tmp_path,
         file_cache_path=tmp_path,

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Final
 
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
 
@@ -27,10 +27,10 @@ from cmk.snmplib import (
 from cmk.checkengine.parser import SectionStore
 
 from ._abstract import Fetcher, Mode
-from ._snmpscan import gather_available_raw_section_names
+from ._snmpscan import gather_available_raw_section_names, SNMPScanConfig
 from .snmp import make_backend, SNMPPluginStore
 
-__all__ = ["SNMPFetcher", "SNMPSectionMeta"]
+__all__ = ["SNMPFetcher", "SNMPSectionMeta", "SNMPScanConfig"]
 
 
 class WalkCache(
@@ -163,21 +163,17 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self,
         *,
         sections: SectionMap[SNMPSectionMeta],
-        on_error: OnError,
-        missing_sys_description: bool,
+        scan_config: SNMPScanConfig,
         do_status_data_inventory: bool,
         section_store_path: Path | str,
-        oid_cache_dir: Path | str,
         stored_walk_path: Path | str,
         walk_cache_path: Path | str,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__()
         self.sections: Final = sections
-        self.on_error: Final = on_error
-        self.missing_sys_description: Final = missing_sys_description
+        self.scan_config: Final = scan_config
         self.do_status_data_inventory: Final = do_status_data_inventory
-        self.oid_cache_dir: Final = Path(oid_cache_dir)
         self.stored_walk_path: Final = Path(stored_walk_path)
         self.walk_cache_path: Final = Path(walk_cache_path)
         self.snmp_config: Final = snmp_config
@@ -193,10 +189,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             return False
         return (
             self.sections == other.sections
-            and self.on_error == other.on_error
-            and self.missing_sys_description == other.missing_sys_description
+            and self.scan_config == other.scan_config
             and self.do_status_data_inventory == other.do_status_data_inventory
-            and self.oid_cache_dir == other.oid_cache_dir
             and self.stored_walk_path == other.stored_walk_path
             and self.walk_cache_path == other.walk_cache_path
             and self.snmp_config == other.snmp_config
@@ -224,8 +218,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             + ", ".join(
                 (
                     f"sections={self.sections!r}",
-                    f"on_error={self.on_error!r}",
-                    f"missing_sys_description={self.missing_sys_description!r}",
+                    f"scan_config={self.scan_config!r}",
                     f"do_status_data_inventory={self.do_status_data_inventory!r}",
                     f"section_store_path={self.section_store_path!r}",
                     f"stored_walk_path={self.stored_walk_path!r}",
@@ -250,10 +243,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         """Detect the applicable sections for the device in question"""
         return gather_available_raw_section_names(
             sections=[(name, self.plugin_store[name].detect_spec) for name in select_from],
-            on_error=self.on_error,
-            missing_sys_description=self.missing_sys_description,
+            scan_config=self.scan_config,
             backend=backend,
-            oid_cache_dir=self.oid_cache_dir,
         )
 
     def _get_selection(self, mode: Mode) -> frozenset[SectionName]:

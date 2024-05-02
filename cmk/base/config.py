@@ -47,7 +47,7 @@ from cmk.utils.agent_registration import connection_mode_from_host_config, HostA
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, ParametersTypeAlias, section_name_of
 from cmk.utils.config_path import ConfigPath
-from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, OnError
+from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import Labels, LabelSources
@@ -85,6 +85,7 @@ from cmk.fetchers import (
     PiggybackFetcher,
     ProgramFetcher,
     SNMPFetcher,
+    SNMPScanConfig,
     SNMPSectionMeta,
     TCPEncryptionHandling,
     TCPFetcher,
@@ -2034,9 +2035,8 @@ class ConfigCache:
         host_name: HostName,
         ip_address: HostAddress,
         *,
-        on_scan_error: OnError,
+        scan_config: SNMPScanConfig,
         selected_sections: SectionNameCollection,
-        oid_cache_dir: Path,
         stored_walk_path: Path,
         walk_cache_path: Path,
         source_type: SourceType,
@@ -2055,8 +2055,7 @@ class ConfigCache:
                     host_name, selected_sections=selected_sections
                 ),
             ),
-            on_error=on_scan_error,
-            missing_sys_description=self._missing_sys_description(host_name),
+            scan_config=scan_config,
             do_status_data_inventory=self.hwsw_inventory_parameters(
                 host_name
             ).status_data_inventory,
@@ -2069,7 +2068,6 @@ class ConfigCache:
             snmp_config=snmp_config,
             stored_walk_path=stored_walk_path,
             walk_cache_path=walk_cache_path,
-            oid_cache_dir=oid_cache_dir,
         )
 
     def make_tcp_fetcher(
@@ -2945,7 +2943,7 @@ class ConfigCache:
             return "ok"
         return default_host_check_command
 
-    def _missing_sys_description(self, host_name: HostName) -> bool:
+    def missing_sys_description(self, host_name: HostName) -> bool:
         return self.ruleset_matcher.get_host_bool_value(host_name, snmp_without_sys_descr)
 
     def snmp_fetch_interval(self, host_name: HostName, section_name: SectionName) -> int | None:

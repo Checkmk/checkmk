@@ -16,7 +16,7 @@ from ._ipmi import IPMICredentials, IPMIFetcher
 from ._nofetcher import NoFetcher, NoFetcherError
 from ._piggyback import PiggybackFetcher
 from ._program import ProgramFetcher
-from ._snmp import SNMPFetcher, SNMPSectionMeta
+from ._snmp import SNMPFetcher, SNMPScanConfig, SNMPSectionMeta
 from ._tcp import TCPFetcher, TLSConfig
 
 __all__ = [
@@ -30,6 +30,7 @@ __all__ = [
     "NoFetcher",
     "PiggybackFetcher",
     "ProgramFetcher",
+    "SNMPScanConfig",
     "SNMPFetcher",
     "SNMPSectionMeta",
     "TCPEncryptionHandling",

@@ -12,12 +12,11 @@ from pathlib import Path
 from typing import assert_never, Final
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
-from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.fetchers import SNMPFetcher, TLSConfig
+from cmk.fetchers import SNMPFetcher, SNMPScanConfig, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import FetcherType
@@ -57,11 +56,10 @@ class _Builder:
         config_cache: ConfigCache,
         is_cluster: bool,
         selected_sections: SectionNameCollection,
-        on_scan_error: OnError,
+        snmp_scan_config: SNMPScanConfig,
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
         snmp_backend_override: SNMPBackendEnum | None,
-        oid_cache_dir: Path,
         stored_walk_path: Path,
         walk_cache_path: Path,
         file_cache_path: Path,
@@ -80,12 +78,11 @@ class _Builder:
         self.ip_stack_config: Final = ip_stack_config
         self.simulation_mode: Final = simulation_mode
         self.selected_sections: Final = selected_sections
-        self.on_scan_error: Final = on_scan_error
+        self.snmp_scan_config: Final = snmp_scan_config
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
         self.snmp_backend_override: Final = snmp_backend_override
         self._cds: Final = config_cache.computed_datasources(host_name)
-        self._oid_cache_dir: Final = oid_cache_dir
         self._stored_walk_path: Final = stored_walk_path
         self._walk_cache_path: Final = walk_cache_path
         self._file_cache_path: Final = file_cache_path
@@ -199,11 +196,10 @@ class _Builder:
                     self.config_cache,
                     self.host_name,
                     self.ipaddress or HostAddress("127.0.0.1"),
+                    scan_config=self.snmp_scan_config,
                     max_age=self.max_age_snmp,
-                    on_scan_error=self.on_scan_error,
                     selected_sections=self.selected_sections,
                     backend_override=self.snmp_backend_override,
-                    oid_cache_dir=self._oid_cache_dir,
                     stored_walk_path=self._stored_walk_path,
                     walk_cache_path=self._walk_cache_path,
                     file_cache_path=self._file_cache_path,
@@ -224,10 +220,9 @@ class _Builder:
                 self.host_name,
                 self.ipaddress,
                 max_age=self.max_age_snmp,
-                on_scan_error=self.on_scan_error,
+                scan_config=self.snmp_scan_config,
                 selected_sections=self.selected_sections,
                 backend_override=self.snmp_backend_override,
-                oid_cache_dir=self._oid_cache_dir,
                 stored_walk_path=self._stored_walk_path,
                 walk_cache_path=self._walk_cache_path,
                 file_cache_path=self._file_cache_path,
@@ -256,10 +251,9 @@ class _Builder:
                         self.host_name,
                         ip_address,
                         max_age=self.max_age_snmp,
-                        on_scan_error=self.on_scan_error,
+                        scan_config=self.snmp_scan_config,
                         selected_sections=self.selected_sections,
                         backend_override=self.snmp_backend_override,
-                        oid_cache_dir=self._oid_cache_dir,
                         stored_walk_path=self._stored_walk_path,
                         walk_cache_path=self._walk_cache_path,
                         file_cache_path=self._file_cache_path,
@@ -338,12 +332,11 @@ def make_sources(
     is_cluster: bool,
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
-    on_scan_error: OnError = OnError.RAISE,
+    snmp_scan_config: SNMPScanConfig,
     simulation_mode: bool,
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
     snmp_backend_override: SNMPBackendEnum | None,
-    oid_cache_dir: Path,
     stored_walk_path: Path,
     walk_cache_path: Path,
     file_cache_path: Path,
@@ -382,11 +375,10 @@ def make_sources(
         config_cache=config_cache,
         is_cluster=is_cluster,
         selected_sections=selected_sections,
-        on_scan_error=on_scan_error,
+        snmp_scan_config=snmp_scan_config,
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),
         snmp_backend_override=snmp_backend_override,
-        oid_cache_dir=oid_cache_dir,
         stored_walk_path=stored_walk_path,
         walk_cache_path=walk_cache_path,
         file_cache_path=file_cache_path,

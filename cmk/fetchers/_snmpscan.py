@@ -6,6 +6,7 @@
 import functools
 import re
 from collections.abc import Callable, Collection, Iterable
+from dataclasses import dataclass
 from pathlib import Path
 
 import cmk.utils.tty as tty
@@ -21,32 +22,31 @@ import cmk.fetchers._snmpcache as snmp_cache
 SNMPScanSection = tuple[SectionName, SNMPDetectBaseType]
 
 
+@dataclass(frozen=True, kw_only=True)
+class SNMPScanConfig:
+    on_error: OnError
+    missing_sys_description: bool
+    oid_cache_dir: Path
+
+
 # gather auto_discovered check_plugin_names for this host
 def gather_available_raw_section_names(
     sections: Collection[SNMPScanSection],
     *,
-    on_error: OnError = OnError.RAISE,
-    missing_sys_description: bool,
+    scan_config: SNMPScanConfig,
     backend: SNMPBackend,
-    oid_cache_dir: Path,
 ) -> frozenset[SectionName]:
     if not sections:
         return frozenset()
 
     try:
-        return _snmp_scan(
-            sections,
-            on_error=on_error,
-            missing_sys_description=missing_sys_description,
-            backend=backend,
-            oid_cache_dir=oid_cache_dir,
-        )
+        return _snmp_scan(sections, scan_config=scan_config, backend=backend)
     except MKTimeout:
         raise
     except Exception as e:
-        if on_error is OnError.RAISE:
+        if scan_config.on_error is OnError.RAISE:
             raise
-        if on_error is OnError.WARN:
+        if scan_config.on_error is OnError.WARN:
             console.error("SNMP scan failed: %s\n" % e)
 
     return frozenset()
@@ -59,29 +59,27 @@ OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 def _snmp_scan(
     sections: Iterable[SNMPScanSection],
     *,
-    on_error: OnError,
-    missing_sys_description: bool,
+    scan_config: SNMPScanConfig,
     backend: SNMPBackend,
-    oid_cache_dir: Path,
 ) -> frozenset[SectionName]:
     snmp_cache.initialize_single_oid_cache(
-        backend.config.hostname, backend.config.ipaddress, cache_dir=oid_cache_dir
+        backend.config.hostname, backend.config.ipaddress, cache_dir=scan_config.oid_cache_dir
     )
     console.vverbose("  SNMP scan:\n")
 
-    if missing_sys_description:
+    if scan_config.missing_sys_description:
         _fake_description_object()
     else:
         _prefetch_description_object(backend=backend)
 
     found_sections = _find_sections(
         sections,
-        on_error=on_error,
+        on_error=scan_config.on_error,
         backend=backend,
     )
     _output_snmp_check_plugins("SNMP scan found", found_sections)
     snmp_cache.write_single_oid_cache(
-        backend.config.hostname, backend.config.ipaddress, cache_dir=oid_cache_dir
+        backend.config.hostname, backend.config.ipaddress, cache_dir=scan_config.oid_cache_dir
     )
     return found_sections
 

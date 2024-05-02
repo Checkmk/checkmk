@@ -225,10 +225,12 @@ def test_gather_available_raw_section_names_defaults(backend: SNMPBackend, tmp_p
 
     assert snmp_scan.gather_available_raw_section_names(
         [(s.name, s.detect_spec) for s in agent_based_register.iter_all_snmp_sections()],
-        on_error=OnError.RAISE,
-        missing_sys_description=False,
+        scan_config=snmp_scan.SNMPScanConfig(
+            on_error=OnError.RAISE,
+            missing_sys_description=False,
+            oid_cache_dir=tmp_path,
+        ),
         backend=backend,
-        oid_cache_dir=tmp_path,
     ) == {
         SectionName("hr_mem"),
         SectionName("snmp_info"),

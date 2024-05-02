@@ -73,7 +73,7 @@ from cmk.snmplib import (
 import cmk.fetchers.snmp as snmp_factory
 from cmk.fetchers import get_raw_data
 from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers import TLSConfig
+from cmk.fetchers import SNMPScanConfig, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
@@ -548,7 +548,6 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             else config.lookup_ip_address(config_cache, hostname)
         )
         check_interval = config_cache.check_mk_check_interval(hostname)
-        oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
         stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
         walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
         section_cache_path = Path(cmk.utils.paths.var_dir)
@@ -558,6 +557,11 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             cas_dir=Path(cmk.utils.paths.agent_cas_dir),
             ca_store=Path(cmk.utils.paths.agent_cert_store),
             site_crt=Path(cmk.utils.paths.site_cert_file),
+        )
+        snmp_scan_config = SNMPScanConfig(
+            on_error=OnError.RAISE,
+            missing_sys_description=config_cache.missing_sys_description(hostname),
+            oid_cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir),
         )
 
         output = []
@@ -569,6 +573,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             ipaddress,
             ip_stack_config,
             config_cache=config_cache,
+            snmp_scan_config=snmp_scan_config,
             is_cluster=False,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
@@ -578,7 +583,6 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 inventory=1.5 * check_interval,
             ),
             snmp_backend_override=snmp_backend_override,
-            oid_cache_dir=oid_cache_dir,
             stored_walk_path=stored_walk_path,
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,

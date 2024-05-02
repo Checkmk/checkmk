@@ -10,12 +10,11 @@ from pathlib import Path
 from typing import Final
 
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
-from cmk.fetchers import Fetcher, NoFetcher, NoFetcherError, TLSConfig
+from cmk.fetchers import Fetcher, NoFetcher, NoFetcherError, SNMPScanConfig, TLSConfig
 from cmk.fetchers.filecache import (
     AgentFileCache,
     FileCache,
@@ -60,11 +59,10 @@ class SNMPSource(Source[SNMPRawData]):
         host_name: HostName,
         ipaddress: HostAddress,
         *,
+        scan_config: SNMPScanConfig,
         max_age: MaxAge,
-        on_scan_error: OnError,
         selected_sections: SectionNameCollection,
         backend_override: SNMPBackendEnum | None,
-        oid_cache_dir: Path,
         stored_walk_path: Path,
         walk_cache_path: Path,
         file_cache_path: Path,
@@ -73,11 +71,10 @@ class SNMPSource(Source[SNMPRawData]):
         self.config_cache: Final = config_cache
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
+        self._scan_config: Final = scan_config
         self._max_age: Final = max_age
-        self._on_scan_error: Final = on_scan_error
         self._selected_sections: Final = selected_sections
         self._backend_override: Final = backend_override
-        self._oid_cache_dir: Final = oid_cache_dir
         self._stored_walk_path: Final = stored_walk_path
         self._walk_cache_path: Final = walk_cache_path
         self._file_cache_path: Final = file_cache_path
@@ -95,9 +92,8 @@ class SNMPSource(Source[SNMPRawData]):
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
-            on_scan_error=self._on_scan_error,
+            scan_config=self._scan_config,
             selected_sections=self._selected_sections,
-            oid_cache_dir=self._oid_cache_dir,
             stored_walk_path=self._stored_walk_path,
             walk_cache_path=self._walk_cache_path,
             source_type=self.source_type,
@@ -128,11 +124,10 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         host_name: HostName,
         ipaddress: HostAddress,
         *,
+        scan_config: SNMPScanConfig,
         max_age: MaxAge,
-        on_scan_error: OnError,
         selected_sections: SectionNameCollection,
         backend_override: SNMPBackendEnum | None,
-        oid_cache_dir: Path,
         stored_walk_path: Path,
         walk_cache_path: Path,
         file_cache_path: Path,
@@ -142,10 +137,9 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
-        self._on_scan_error: Final = on_scan_error
+        self._scan_config: Final = scan_config
         self._selected_sections: Final = selected_sections
         self._backend_override: Final = backend_override
-        self._oid_cache_dir: Final = oid_cache_dir
         self._stored_walk_path: Final = stored_walk_path
         self._walk_cache_path: Final = walk_cache_path
         self._file_cache_path: Final = file_cache_path
@@ -163,9 +157,8 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
-            on_scan_error=self._on_scan_error,
+            scan_config=self._scan_config,
             selected_sections=self._selected_sections,
-            oid_cache_dir=self._oid_cache_dir,
             stored_walk_path=self._stored_walk_path,
             walk_cache_path=self._walk_cache_path,
             source_type=self.source_type,

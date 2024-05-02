@@ -12,6 +12,7 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.tty as tty
+from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.paths import tmp_dir
 from cmk.utils.tags import ComputedDataSources
@@ -24,6 +25,7 @@ from cmk.fetchers import (
     PiggybackFetcher,
     ProgramFetcher,
     SNMPFetcher,
+    SNMPScanConfig,
     TCPFetcher,
     TLSConfig,
 )
@@ -212,13 +214,17 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             hostname,
             ipaddress,
             ConfigCache.ip_stack_config(hostname),
+            snmp_scan_config=SNMPScanConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=config_cache.missing_sys_description(hostname),
+                oid_cache_dir=oid_cache_dir,
+            ),
             is_cluster=hostname in hosts_config.clusters,
             file_cache_options=FileCacheOptions(),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_max_age=MaxAge.zero(),
             snmp_backend_override=None,
-            oid_cache_dir=oid_cache_dir,
             stored_walk_path=stored_walk_path,
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,

@@ -117,7 +117,7 @@ from cmk.snmplib import (
     walk_for_export,
 )
 
-from cmk.fetchers import get_raw_data, Mode, ProgramFetcher, TCPFetcher, TLSConfig
+from cmk.fetchers import get_raw_data, Mode, ProgramFetcher, SNMPScanConfig, TCPFetcher, TLSConfig
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
@@ -2032,10 +2032,16 @@ class AutomationDiagHost(Automation):
 
         state, output = 0, ""
         pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
+        snmp_scan_config = SNMPScanConfig(
+            on_error=OnError.RAISE,
+            missing_sys_description=config_cache.missing_sys_description(host_name),
+            oid_cache_dir=oid_cache_dir,
+        )
         for source in sources.make_sources(
             host_name,
             ipaddress,
             ConfigCache.ip_stack_config(host_name),
+            snmp_scan_config=snmp_scan_config,
             config_cache=config_cache,
             is_cluster=host_name in hosts_config.clusters,
             simulation_mode=config.simulation_mode,
@@ -2046,7 +2052,6 @@ class AutomationDiagHost(Automation):
                 inventory=1.5 * check_interval,
             ),
             snmp_backend_override=None,
-            oid_cache_dir=oid_cache_dir,
             stored_walk_path=stored_walk_path,
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
@@ -2452,7 +2457,6 @@ class AutomationGetAgentOutput(Automation):
                 else config.lookup_ip_address(config_cache, hostname)
             )
             check_interval = config_cache.check_mk_check_interval(hostname)
-            oid_cache_dir = Path(cmk.utils.paths.snmp_scan_cache_dir)
             stored_walk_path = Path(cmk.utils.paths.snmpwalks_dir)
             walk_cache_path = Path(cmk.utils.paths.var_dir) / "snmp_cache"
             section_cache_path = Path(var_dir)
@@ -2462,6 +2466,11 @@ class AutomationGetAgentOutput(Automation):
                 cas_dir=Path(cmk.utils.paths.agent_cas_dir),
                 ca_store=Path(cmk.utils.paths.agent_cert_store),
                 site_crt=Path(cmk.utils.paths.site_cert_file),
+            )
+            snmp_scan_config = SNMPScanConfig(
+                on_error=OnError.RAISE,
+                oid_cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir),
+                missing_sys_description=config_cache.missing_sys_description(hostname),
             )
 
             if ty == "agent":
@@ -2473,6 +2482,7 @@ class AutomationGetAgentOutput(Automation):
                     ipaddress,
                     ip_stack_config,
                     config_cache=config_cache,
+                    snmp_scan_config=snmp_scan_config,
                     is_cluster=hostname in hosts_config.clusters,
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,
@@ -2482,7 +2492,6 @@ class AutomationGetAgentOutput(Automation):
                         inventory=1.5 * check_interval,
                     ),
                     snmp_backend_override=None,
-                    oid_cache_dir=oid_cache_dir,
                     stored_walk_path=stored_walk_path,
                     walk_cache_path=walk_cache_path,
                     file_cache_path=file_cache_path,

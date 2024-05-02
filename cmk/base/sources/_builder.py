@@ -17,11 +17,10 @@ from cmk.utils.tags import ComputedDataSources, TagID
 
 from cmk.snmplib import SNMPBackendEnum
 
-from cmk.fetchers import SNMPFetcher, SNMPScanConfig, TLSConfig
+from cmk.fetchers import SNMPFetcher, TLSConfig
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import FetcherType
-from cmk.checkengine.parser import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
@@ -38,6 +37,7 @@ from ._sources import (
     PiggybackSource,
     ProgramSource,
     PushAgentSource,
+    SNMPFetcherConfig,
     SNMPSource,
     SpecialAgentSource,
     TCPSource,
@@ -56,14 +56,10 @@ class _Builder:
         simulation_mode: bool,
         fetcher_factory: FetcherFactory,
         is_cluster: bool,
-        selected_sections: SectionNameCollection,
-        snmp_scan_config: SNMPScanConfig,
+        snmp_fetcher_config: SNMPFetcherConfig,
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
         snmp_backend: SNMPBackendEnum,
-        snmp_backend_override: SNMPBackendEnum | None,
-        stored_walk_path: Path,
-        walk_cache_path: Path,
         file_cache_path: Path,
         tcp_cache_path: Path,
         tls_config: TLSConfig,
@@ -82,14 +78,12 @@ class _Builder:
         self.host_name: Final = host_name
         self.fetcher_factory: Final = fetcher_factory
         self.ipaddress: Final = ipaddress
+        self.snmp_fetcher_config: Final = snmp_fetcher_config
         self.ip_stack_config: Final = ip_stack_config
         self.simulation_mode: Final = simulation_mode
-        self.selected_sections: Final = selected_sections
-        self.snmp_scan_config: Final = snmp_scan_config
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
         self.snmp_backend: Final = snmp_backend
-        self.snmp_backend_override: Final = snmp_backend_override
         self.cds: Final = computed_datasources
         self.tag_list: Final = tag_list
         self.management_protocol: Final = management_protocol
@@ -98,8 +92,6 @@ class _Builder:
         self.datasource_programs: Final = datasource_programs
         self.agent_connection_mode: Final = agent_connection_mode
         self.check_mk_check_interval: Final = check_mk_check_interval
-        self._stored_walk_path: Final = stored_walk_path
-        self._walk_cache_path: Final = walk_cache_path
         self._file_cache_path: Final = file_cache_path
         self._tcp_cache_path: Final = tcp_cache_path
         self.tls_config: Final = tls_config
@@ -199,12 +191,8 @@ class _Builder:
                     self.fetcher_factory,
                     self.host_name,
                     self.ipaddress or HostAddress("127.0.0.1"),
-                    scan_config=self.snmp_scan_config,
+                    fetcher_config=self.snmp_fetcher_config,
                     max_age=self.max_age_snmp,
-                    selected_sections=self.selected_sections,
-                    backend_override=self.snmp_backend_override,
-                    stored_walk_path=self._stored_walk_path,
-                    walk_cache_path=self._walk_cache_path,
                     file_cache_path=self._file_cache_path,
                 )
             )
@@ -222,12 +210,8 @@ class _Builder:
                 self.fetcher_factory,
                 self.host_name,
                 self.ipaddress,
+                fetcher_config=self.snmp_fetcher_config,
                 max_age=self.max_age_snmp,
-                scan_config=self.snmp_scan_config,
-                selected_sections=self.selected_sections,
-                backend_override=self.snmp_backend_override,
-                stored_walk_path=self._stored_walk_path,
-                walk_cache_path=self._walk_cache_path,
                 file_cache_path=self._file_cache_path,
             )
         )
@@ -251,12 +235,8 @@ class _Builder:
                         self.fetcher_factory,
                         self.host_name,
                         self.management_ip,
+                        fetcher_config=self.snmp_fetcher_config,
                         max_age=self.max_age_snmp,
-                        scan_config=self.snmp_scan_config,
-                        selected_sections=self.selected_sections,
-                        backend_override=self.snmp_backend_override,
-                        stored_walk_path=self._stored_walk_path,
-                        walk_cache_path=self._walk_cache_path,
                         file_cache_path=self._file_cache_path,
                     )
                 )
@@ -331,15 +311,11 @@ def make_sources(
     fetcher_factory: FetcherFactory,
     is_cluster: bool,
     force_snmp_cache_refresh: bool = False,
-    selected_sections: SectionNameCollection = NO_SELECTION,
-    snmp_scan_config: SNMPScanConfig,
+    snmp_fetcher_config: SNMPFetcherConfig,
+    snmp_backend: SNMPBackendEnum,
     simulation_mode: bool,
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
-    snmp_backend: SNMPBackendEnum,
-    snmp_backend_override: SNMPBackendEnum | None,
-    stored_walk_path: Path,
-    walk_cache_path: Path,
     file_cache_path: Path,
     tcp_cache_path: Path,
     tls_config: TLSConfig,
@@ -380,14 +356,11 @@ def make_sources(
         address_family,
         simulation_mode=simulation_mode,
         fetcher_factory=fetcher_factory,
+        snmp_fetcher_config=snmp_fetcher_config,
+        snmp_backend=snmp_backend,
         is_cluster=is_cluster,
-        selected_sections=selected_sections,
-        snmp_scan_config=snmp_scan_config,
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),
-        snmp_backend_override=snmp_backend_override,
-        stored_walk_path=stored_walk_path,
-        walk_cache_path=walk_cache_path,
         file_cache_path=file_cache_path,
         tcp_cache_path=tcp_cache_path,
         tls_config=tls_config,
@@ -399,5 +372,4 @@ def make_sources(
         special_agent_command_lines=special_agent_command_lines,
         agent_connection_mode=agent_connection_mode,
         check_mk_check_interval=check_mk_check_interval,
-        snmp_backend=snmp_backend,
     ).sources

@@ -33,6 +33,7 @@ from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parser import NO_SELECTION
 
 import cmk.base.config as config
 import cmk.base.core
@@ -46,7 +47,7 @@ from cmk.base.config import (
     lookup_mgmt_board_ip_address,
 )
 from cmk.base.ip_lookup import IPStackConfig
-from cmk.base.sources import Source
+from cmk.base.sources import SNMPFetcherConfig, Source
 
 
 def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
@@ -219,20 +220,23 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             hostname,
             ipaddress,
             ConfigCache.ip_stack_config(hostname),
-            snmp_scan_config=SNMPScanConfig(
-                on_error=OnError.RAISE,
-                missing_sys_description=config_cache.missing_sys_description(hostname),
-                oid_cache_dir=oid_cache_dir,
+            fetcher_factory=config_cache,
+            snmp_fetcher_config=SNMPFetcherConfig(
+                scan_config=SNMPScanConfig(
+                    on_error=OnError.RAISE,
+                    missing_sys_description=config_cache.missing_sys_description(hostname),
+                    oid_cache_dir=oid_cache_dir,
+                ),
+                selected_sections=NO_SELECTION,
+                backend_override=None,
+                stored_walk_path=stored_walk_path,
+                walk_cache_path=walk_cache_path,
             ),
             is_cluster=hostname in hosts_config.clusters,
             file_cache_options=FileCacheOptions(),
-            fetcher_factory=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_max_age=MaxAge.zero(),
             snmp_backend=config_cache.get_snmp_backend(hostname),
-            snmp_backend_override=None,
-            stored_walk_path=stored_walk_path,
-            walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
             tcp_cache_path=tcp_cache_path,
             tls_config=tls_config,

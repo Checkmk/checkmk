@@ -85,7 +85,6 @@ from cmk.fetchers import (
     PiggybackFetcher,
     ProgramFetcher,
     SNMPFetcher,
-    SNMPScanConfig,
     SNMPSectionMeta,
     TCPEncryptionHandling,
     TCPFetcher,
@@ -122,6 +121,7 @@ from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-
 from cmk.base.ip_lookup import IPStackConfig
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.server_side_calls import load_special_agents, SpecialAgent, SpecialAgentCommandLine
+from cmk.base.sources import SNMPFetcherConfig
 
 from cmk.server_side_calls import v1 as server_side_calls_api
 from cmk.server_side_calls_backend.config_processing import PreprocessingResult
@@ -2035,27 +2035,23 @@ class ConfigCache:
         host_name: HostName,
         ip_address: HostAddress,
         *,
-        scan_config: SNMPScanConfig,
-        selected_sections: SectionNameCollection,
-        stored_walk_path: Path,
-        walk_cache_path: Path,
         source_type: SourceType,
-        backend_override: SNMPBackendEnum | None,
+        fetcher_config: SNMPFetcherConfig,
     ) -> SNMPFetcher:
         snmp_config = self.make_snmp_config(
             host_name,
             ip_address,
             source_type,
-            backend_override=backend_override,
+            backend_override=fetcher_config.backend_override,
         )
         return SNMPFetcher(
             sections=self._make_snmp_sections(
                 host_name,
                 checking_sections=self.make_checking_sections(
-                    host_name, selected_sections=selected_sections
+                    host_name, selected_sections=fetcher_config.selected_sections
                 ),
             ),
-            scan_config=scan_config,
+            scan_config=fetcher_config.scan_config,
             do_status_data_inventory=self.hwsw_inventory_parameters(
                 host_name
             ).status_data_inventory,
@@ -2066,8 +2062,8 @@ class ConfigCache:
                 section_cache_path=Path(cmk.utils.paths.var_dir),
             ),
             snmp_config=snmp_config,
-            stored_walk_path=stored_walk_path,
-            walk_cache_path=walk_cache_path,
+            stored_walk_path=fetcher_config.stored_walk_path,
+            walk_cache_path=fetcher_config.walk_cache_path,
         )
 
     def make_tcp_fetcher(

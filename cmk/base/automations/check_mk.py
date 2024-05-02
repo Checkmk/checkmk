@@ -179,7 +179,7 @@ from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.server_side_calls import load_active_checks
-from cmk.base.sources import make_parser
+from cmk.base.sources import make_parser, SNMPFetcherConfig
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
@@ -2048,7 +2048,13 @@ class AutomationDiagHost(Automation):
             ipaddress,
             ConfigCache.ip_stack_config(host_name),
             fetcher_factory=config_cache,
-            snmp_scan_config=snmp_scan_config,
+            snmp_fetcher_config=SNMPFetcherConfig(
+                scan_config=snmp_scan_config,
+                selected_sections=NO_SELECTION,
+                backend_override=None,
+                stored_walk_path=stored_walk_path,
+                walk_cache_path=walk_cache_path,
+            ),
             is_cluster=host_name in hosts_config.clusters,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
@@ -2058,9 +2064,6 @@ class AutomationDiagHost(Automation):
                 inventory=1.5 * check_interval,
             ),
             snmp_backend=config_cache.get_snmp_backend(host_name),
-            snmp_backend_override=None,
-            stored_walk_path=stored_walk_path,
-            walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
             tcp_cache_path=tcp_cache_path,
             tls_config=tls_config,
@@ -2501,7 +2504,13 @@ class AutomationGetAgentOutput(Automation):
                     ipaddress,
                     ip_stack_config,
                     fetcher_factory=config_cache,
-                    snmp_scan_config=snmp_scan_config,
+                    snmp_fetcher_config=SNMPFetcherConfig(
+                        scan_config=snmp_scan_config,
+                        selected_sections=NO_SELECTION,
+                        backend_override=None,
+                        stored_walk_path=stored_walk_path,
+                        walk_cache_path=walk_cache_path,
+                    ),
                     is_cluster=hostname in hosts_config.clusters,
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,
@@ -2511,9 +2520,6 @@ class AutomationGetAgentOutput(Automation):
                         inventory=1.5 * check_interval,
                     ),
                     snmp_backend=config_cache.get_snmp_backend(hostname),
-                    snmp_backend_override=None,
-                    stored_walk_path=stored_walk_path,
-                    walk_cache_path=walk_cache_path,
                     file_cache_path=file_cache_path,
                     tcp_cache_path=tcp_cache_path,
                     tls_config=tls_config,

@@ -24,9 +24,11 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
+from cmk.checkengine.parser import NO_SELECTION
+
 from cmk.base.config import ConfigCache, ConfiguredIPLookup, handle_ip_lookup_failure
 from cmk.base.ip_lookup import IPStackConfig
-from cmk.base.sources import make_sources, Source
+from cmk.base.sources import make_sources, SNMPFetcherConfig, Source
 
 
 def _make_sources(
@@ -43,19 +45,22 @@ def _make_sources(
         ipaddress,
         IPStackConfig.IPv4,
         fetcher_factory=config_cache,
-        snmp_scan_config=SNMPScanConfig(
-            on_error=OnError.RAISE,
-            missing_sys_description=False,
-            oid_cache_dir=tmp_path,
+        snmp_fetcher_config=SNMPFetcherConfig(
+            scan_config=SNMPScanConfig(
+                on_error=OnError.RAISE,
+                missing_sys_description=False,
+                oid_cache_dir=tmp_path,
+            ),
+            selected_sections=NO_SELECTION,
+            backend_override=None,
+            stored_walk_path=tmp_path,
+            walk_cache_path=tmp_path,
         ),
         is_cluster=False,
         simulation_mode=True,
         file_cache_options=FileCacheOptions(),
         file_cache_max_age=MaxAge.zero(),
         snmp_backend=config_cache.get_snmp_backend(hostname),
-        snmp_backend_override=None,
-        stored_walk_path=tmp_path,
-        walk_cache_path=tmp_path,
         file_cache_path=tmp_path,
         tcp_cache_path=tmp_path,
         tls_config=TLSConfig(

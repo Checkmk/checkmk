@@ -89,7 +89,7 @@ from cmk.base.config import (
 )
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.ip_lookup import IPStackConfig
-from cmk.base.sources import make_parser, make_sources, Source
+from cmk.base.sources import make_parser, make_sources, SNMPFetcherConfig, Source
 
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
@@ -355,27 +355,31 @@ class CMKFetcher:
                     current_ip_address,
                     current_ip_stack_config,
                     fetcher_factory=self.config_cache,
-                    snmp_scan_config=SNMPScanConfig(
-                        missing_sys_description=self.config_cache.missing_sys_description(
-                            current_host_name
+                    snmp_fetcher_config=SNMPFetcherConfig(
+                        scan_config=SNMPScanConfig(
+                            missing_sys_description=self.config_cache.missing_sys_description(
+                                current_host_name
+                            ),
+                            on_error=self.on_error if not is_cluster else OnError.RAISE,
+                            oid_cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir),
                         ),
-                        on_error=self.on_error if not is_cluster else OnError.RAISE,
-                        oid_cache_dir=Path(cmk.utils.paths.snmp_scan_cache_dir),
+                        selected_sections=(
+                            self.selected_sections if not is_cluster else NO_SELECTION
+                        ),
+                        backend_override=self.snmp_backend_override,
+                        stored_walk_path=stored_walk_path,
+                        walk_cache_path=walk_cache_path,
                     ),
                     is_cluster=current_host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(
                         self.force_snmp_cache_refresh if not is_cluster else False
                     ),
-                    selected_sections=self.selected_sections if not is_cluster else NO_SELECTION,
                     simulation_mode=self.simulation_mode,
                     file_cache_options=self.file_cache_options,
                     file_cache_max_age=(
                         self.max_cachefile_age or self.config_cache.max_cachefile_age(host_name)
                     ),
                     snmp_backend=self.config_cache.get_snmp_backend(current_host_name),
-                    snmp_backend_override=self.snmp_backend_override,
-                    stored_walk_path=stored_walk_path,
-                    walk_cache_path=walk_cache_path,
                     file_cache_path=file_cache_path,
                     tcp_cache_path=tcp_cache_path,
                     tls_config=tls_config,

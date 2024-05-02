@@ -6,6 +6,7 @@
 # TODO This module should be freed from base deps.
 
 import os.path
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Protocol
 
@@ -57,6 +58,15 @@ __all__ = [
 _NO_CACHE: Final[FileCache] = NoCache()
 
 
+@dataclass(frozen=True)
+class SNMPFetcherConfig:
+    scan_config: SNMPScanConfig
+    selected_sections: SectionNameCollection
+    backend_override: SNMPBackendEnum | None
+    stored_walk_path: Path
+    walk_cache_path: Path
+
+
 class FetcherFactory(Protocol):
     def make_snmp_fetcher(
         self,
@@ -64,11 +74,7 @@ class FetcherFactory(Protocol):
         ipaddress: HostAddress,
         *,
         source_type: SourceType,
-        scan_config: SNMPScanConfig,
-        selected_sections: SectionNameCollection,
-        backend_override: SNMPBackendEnum | None,
-        stored_walk_path: Path,
-        walk_cache_path: Path,
+        fetcher_config: SNMPFetcherConfig,
     ) -> SNMPFetcher: ...
 
     def make_ipmi_fetcher(
@@ -118,24 +124,16 @@ class SNMPSource(Source[SNMPRawData]):
         host_name: HostName,
         ipaddress: HostAddress,
         *,
-        scan_config: SNMPScanConfig,
+        fetcher_config: SNMPFetcherConfig,
         max_age: MaxAge,
-        selected_sections: SectionNameCollection,
-        backend_override: SNMPBackendEnum | None,
-        stored_walk_path: Path,
-        walk_cache_path: Path,
         file_cache_path: Path,
     ) -> None:
         super().__init__()
         self.factory: Final = factory
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
-        self._scan_config: Final = scan_config
+        self._fetcher_config: Final = fetcher_config
         self._max_age: Final = max_age
-        self._selected_sections: Final = selected_sections
-        self._backend_override: Final = backend_override
-        self._stored_walk_path: Final = stored_walk_path
-        self._walk_cache_path: Final = walk_cache_path
         self._file_cache_path: Final = file_cache_path
 
     def source_info(self) -> SourceInfo:
@@ -151,12 +149,8 @@ class SNMPSource(Source[SNMPRawData]):
         return self.factory.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
-            scan_config=self._scan_config,
-            selected_sections=self._selected_sections,
-            stored_walk_path=self._stored_walk_path,
-            walk_cache_path=self._walk_cache_path,
             source_type=self.source_type,
-            backend_override=self._backend_override,
+            fetcher_config=self._fetcher_config,
         )
 
     def file_cache(
@@ -183,12 +177,8 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         host_name: HostName,
         ipaddress: HostAddress,
         *,
-        scan_config: SNMPScanConfig,
+        fetcher_config: SNMPFetcherConfig,
         max_age: MaxAge,
-        selected_sections: SectionNameCollection,
-        backend_override: SNMPBackendEnum | None,
-        stored_walk_path: Path,
-        walk_cache_path: Path,
         file_cache_path: Path,
     ) -> None:
         super().__init__()
@@ -196,11 +186,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self.host_name: Final = host_name
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
-        self._scan_config: Final = scan_config
-        self._selected_sections: Final = selected_sections
-        self._backend_override: Final = backend_override
-        self._stored_walk_path: Final = stored_walk_path
-        self._walk_cache_path: Final = walk_cache_path
+        self._fetcher_config: Final = fetcher_config
         self._file_cache_path: Final = file_cache_path
 
     def source_info(self) -> SourceInfo:
@@ -216,12 +202,8 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         return self.factory.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
-            scan_config=self._scan_config,
-            selected_sections=self._selected_sections,
-            stored_walk_path=self._stored_walk_path,
-            walk_cache_path=self._walk_cache_path,
             source_type=self.source_type,
-            backend_override=self._backend_override,
+            fetcher_config=self._fetcher_config,
         )
 
     def file_cache(

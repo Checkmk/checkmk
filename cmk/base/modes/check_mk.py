@@ -132,7 +132,7 @@ from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.server_side_calls import load_active_checks
-from cmk.base.sources import make_parser
+from cmk.base.sources import make_parser, SNMPFetcherConfig
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.discover_plugins import discover_families, PluginGroup
@@ -578,7 +578,13 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             ipaddress,
             ip_stack_config,
             fetcher_factory=config_cache,
-            snmp_scan_config=snmp_scan_config,
+            snmp_fetcher_config=SNMPFetcherConfig(
+                scan_config=snmp_scan_config,
+                selected_sections=NO_SELECTION,
+                backend_override=snmp_backend_override,
+                stored_walk_path=stored_walk_path,
+                walk_cache_path=walk_cache_path,
+            ),
             is_cluster=False,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
@@ -588,9 +594,6 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 inventory=1.5 * check_interval,
             ),
             snmp_backend=config_cache.get_snmp_backend(hostname),
-            snmp_backend_override=snmp_backend_override,
-            stored_walk_path=stored_walk_path,
-            walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
             tcp_cache_path=tcp_cache_path,
             tls_config=tls_config,

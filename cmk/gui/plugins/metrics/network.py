@@ -403,12 +403,6 @@ metric_info["relay_log_space"] = {
     "color": "#ffb080",
 }
 
-metric_info["mail_latency"] = {
-    "title": _("Mail latency"),
-    "unit": "s",
-    "color": "#ffb080",
-}
-
 metric_info["p2s_bandwidth"] = {
     "title": _("Point-to-site bandwidth"),
     "unit": "bytes/s",

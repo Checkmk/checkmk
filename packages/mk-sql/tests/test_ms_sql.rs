@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
+use mk_sql::platform;
 use mk_sql::types::InstanceName;
 use std::path::PathBuf;
 use std::{collections::HashSet, fs::create_dir_all};
@@ -1314,7 +1315,7 @@ mssql:
 }
 
 #[test]
-fn test_din_provided_query() {
+fn test_find_provided_query() {
     let s_a = make_section("A");
     let s_a2 = make_section("A2");
     let s_jobs = make_section("jobs");
@@ -1351,4 +1352,21 @@ fn test_din_provided_query() {
         s_jobs.find_provided_query(dir_to_check(), 100).unwrap(),
         "jobs@100.sql"
     );
+}
+
+#[test]
+fn test_get_instances() {
+    let instances = platform::registry::get_instances();
+    #[cfg(windows)]
+    {
+        assert!(!instances.is_empty());
+        for instance in instances {
+            assert!(instance.final_port().is_some());
+            assert!(instance.is_shared_memory());
+            assert!(!instance.is_pipe());
+        }
+    }
+
+    #[cfg(unix)]
+    assert!(instances.is_empty());
 }

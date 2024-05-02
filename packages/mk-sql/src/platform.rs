@@ -9,6 +9,8 @@ pub struct InstanceInfo {
     pub name: InstanceName,
     port: Option<Port>,
     dynamic_port: Option<Port>,
+    shared_memory: bool,
+    pipe: Option<String>,
 }
 
 impl InstanceInfo {
@@ -18,6 +20,14 @@ impl InstanceInfo {
             .filter(|p| p.0 != 0)
             .or(self.port.as_ref())
             .filter(|p| p.0 != 0)
+    }
+
+    pub fn is_shared_memory(&self) -> bool {
+        self.shared_memory
+    }
+
+    pub fn is_pipe(&self) -> bool {
+        self.pipe.is_some()
     }
 }
 
@@ -29,11 +39,13 @@ mod tests {
     };
 
     #[test]
-    fn test_instance() {
+    fn test_instance_final_port() {
         let make_i = |port: Option<u16>, dynamic_port: Option<u16>| InstanceInfo {
             name: InstanceName::from("AAA".to_owned()),
             port: port.map(|p| p.into()),
             dynamic_port: dynamic_port.map(|p| p.into()),
+            shared_memory: false,
+            pipe: None,
         };
 
         let std_port = 1;
@@ -96,12 +108,45 @@ pub mod registry {
             .collect::<Vec<InstanceInfo>>()
     }
 
-    fn get_info(sql_key: &str, name: &str, key_name: &str) -> Option<InstanceInfo> {
-        let instance_name = name;
-        let instance_key = format!(r"{}\MSSQLServer\SuperSocketNetLib\Tcp\IPAll", key_name);
+    fn get_sm(sql_key: &str, key_name: &str) -> bool {
+        let instance_sm_key = format!(r"{}\MSSQLServer\SuperSocketNetLib\Sm", key_name);
         let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
         if let Ok(key) = root_key.open_subkey_with_flags(
-            sql_key.to_owned() + &instance_key,
+            sql_key.to_owned() + &instance_sm_key,
+            winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
+        ) {
+            let shared_memory: u32 = key.get_value("Enabled").unwrap_or_default();
+            shared_memory != 0
+        } else {
+            false
+        }
+    }
+
+    fn get_pipe(sql_key: &str, key_name: &str) -> Option<String> {
+        let instance_sm_key = format!(r"{}\MSSQLServer\SuperSocketNetLib\Np", key_name);
+        let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
+        if let Ok(key) = root_key.open_subkey_with_flags(
+            sql_key.to_owned() + &instance_sm_key,
+            winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
+        ) {
+            let pipe_enabled: u32 = key.get_value("Enabled").unwrap_or_default();
+            if pipe_enabled != 0 {
+                key.get_value("PipeName").ok()
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    fn get_info(sql_key: &str, name: &str, key_name: &str) -> Option<InstanceInfo> {
+        let instance_name = name;
+        let instance_tcp_ip_all_key =
+            format!(r"{}\MSSQLServer\SuperSocketNetLib\Tcp\IPAll", key_name);
+        let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
+        if let Ok(key) = root_key.open_subkey_with_flags(
+            sql_key.to_owned() + &instance_tcp_ip_all_key,
             winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
         ) {
             let port: Option<String> = key.get_value("TcpPort").ok();
@@ -112,9 +157,11 @@ pub mod registry {
                 dynamic_port: dynamic_port
                     .and_then(|s| s.parse::<u16>().ok())
                     .map(Port::from),
+                shared_memory: get_sm(sql_key, key_name),
+                pipe: get_pipe(sql_key, key_name),
             })
         } else {
-            log::warn!("cannot open key: {}", instance_key);
+            log::warn!("cannot open key: {}", instance_tcp_ip_all_key);
             None
         }
     }

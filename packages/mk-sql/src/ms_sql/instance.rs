@@ -23,6 +23,7 @@ use crate::types::{
     InstanceName, InstanceVersion, PiggybackHostName, Port,
 };
 use crate::utils;
+use core::fmt;
 
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
@@ -201,6 +202,26 @@ pub struct SqlInstance {
 impl AsRef<SqlInstance> for SqlInstance {
     fn as_ref(&self) -> &SqlInstance {
         self
+    }
+}
+
+impl fmt::Display for SqlInstance {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{} `{}` `{}` [{}:{}]",
+            self.full_name(),
+            self.version,
+            self.edition,
+            self.port
+                .clone()
+                .map(|p| u16::from(p).to_string())
+                .unwrap_or("None".to_string()),
+            self.dynamic_port
+                .clone()
+                .map(|p| u16::from(p).to_string())
+                .unwrap_or("None".to_string())
+        )
     }
 }
 
@@ -1438,7 +1459,7 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
             instances.len(),
             instances
                 .iter()
-                .map(|i| format!("{}:{:?}:{:?}", i.name, i.port, i.dynamic_port))
+                .map(|i| format!("{}", i))
                 .collect::<Vec<_>>()
                 .join(", ")
         );
@@ -1733,12 +1754,7 @@ fn determine_reconnect(
                 Some(customization)
                     if Some(&customization.endpoint()) != instance_builder.get_endpoint() =>
                 {
-                    log::info!(
-                        "Instance {} to be reconnected `{:?}` `{:?}`",
-                        instance_builder.get_name(),
-                        customization.endpoint(),
-                        instance_builder.get_endpoint()
-                    );
+                    log::info!("Instance {} to be reconnected", instance_builder.get_name(),);
                     (instance_builder, Some(customization.endpoint()))
                 }
                 _ => {
@@ -1828,13 +1844,7 @@ pub async fn obtain_instance_builders(
         Ok(mut client) => Ok(_obtain_instance_builders(&mut client, endpoint).await),
         Err(err) => {
             log::error!("Failed to create main client: {err}");
-            if endpoint.conn().hostname() == &HostName::from("localhost".to_string()) {
-                log::info!("Host is local trying to find entries in registry");
-                obtain_instance_builders_by_sql_browser(endpoint, instances).await
-            } else {
-                log::info!("Trying to connect to localhost using SQL Browser");
-                obtain_instance_builders_by_sql_browser(endpoint, instances).await
-            }
+            obtain_instance_builders_by_sql_browser(endpoint, instances).await
         }
     }
 }
@@ -1844,6 +1854,7 @@ pub async fn obtain_instance_builders_by_sql_browser(
     endpoint: &Endpoint,
     instances: &[&InstanceName],
 ) -> Result<Vec<SqlInstanceBuilder>> {
+    log::info!("Finding instances by SQL Browser");
     for instance in instances {
         match client::ClientBuilder::new()
             .browse(
@@ -1936,7 +1947,10 @@ async fn exec_win_registry_sql_instances_query(
     let answers = run_custom_query(client, query).await?;
     if let Some(rows) = answers.first() {
         let instances = to_sql_instance(rows);
-        log::info!("Instances found {}", instances.len());
+        log::info!(
+            "Instances found in registry by SQL query on main instance {}",
+            instances.len()
+        );
         Ok(instances)
     } else {
         log::warn!("Empty answer by query: {query}");

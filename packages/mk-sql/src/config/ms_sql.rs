@@ -160,6 +160,16 @@ impl Config {
         if discovery.detect() {
             let registry_instances =
                 get_additional_registry_instances(&custom_instances, &auth, &conn);
+            log::info!(
+                "Found {} SQL server instances in REGISTRY: [ {} ]",
+                registry_instances.len(),
+                registry_instances
+                    .iter()
+                    .map(|i| format!("{}:{:?}", i.name, i.conn().port()))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+
             custom_instances.extend(registry_instances);
         } else {
             log::info!("skipping registry instances: the reason detection disabled");

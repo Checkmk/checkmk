@@ -473,21 +473,7 @@ class CEESiteManagement(SiteManagement):
                                     ],
                                 ),
                             ),
-                            (
-                                "tcp",
-                                LivestatusViaTCP(
-                                    title=_("Allow access via TCP"),
-                                    help=_(
-                                        "This option can be useful to build a cascading distributed setup. "
-                                        "The Livestatus Proxy of this site connects to the site configured "
-                                        "here via Livestatus and opens up a TCP port for clients. The "
-                                        "requests of the clients are forwarded to the destination site. "
-                                        "You need to configure a TCP port here that is not used on the "
-                                        "local system yet."
-                                    ),
-                                    tcp_port=6560,
-                                ),
-                            ),
+                            ("tcp", _liveproxyd_via_tcp()),
                         ],
                     ),
                     migrate=cls.migrate_old_connection_params,
@@ -651,6 +637,64 @@ class CEESiteManagement(SiteManagement):
         return domains
 
 
+def _liveproxyd_via_tcp() -> Dictionary:
+    return Dictionary(
+        title=_("Allow access via TCP"),
+        help=_(
+            "This option can be useful to build a cascading distributed setup. "
+            "The Livestatus Proxy of this site connects to the site configured "
+            "here via Livestatus and opens up a TCP port for clients. The "
+            "requests of the clients are forwarded to the destination site. "
+            "You need to configure a TCP port here that is not used on the "
+            "local system yet."
+        ),
+        elements=[
+            (
+                "port",
+                Integer(
+                    title=_("TCP port"),
+                    minvalue=1,
+                    maxvalue=65535,
+                    default_value=6560,
+                ),
+            ),
+            (
+                "only_from",
+                ListOfStrings(
+                    title=_("Restrict access to IP addresses"),
+                    help=_(
+                        "The access to Livestatus via TCP will only be allowed from the "
+                        "configured source IP addresses. You can either configure specific "
+                        "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."
+                    ),
+                    valuespec=IPNetwork(),
+                    orientation="horizontal",
+                    allow_empty=False,
+                    default_value=["0.0.0.0", "::/0"],
+                ),
+            ),
+            (
+                "tls",
+                FixedValue(
+                    value=True,
+                    title=_("Encrypt communication"),
+                    totext=_("Encrypt TCP Livestatus connections"),
+                    help=_(
+                        "Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus "
+                        "connections using SSL. This is enabled by default for sites that "
+                        "enable Livestatus via TCP with 1.6 or newer. Sites that already "
+                        "have this option enabled keep the communication unencrypted for "
+                        "compatibility reasons. However, it is highly recommended to "
+                        "migrate to an encrypted communication."
+                    ),
+                ),
+            ),
+        ],
+        optional_keys=["only_from", "tls"],
+    )
+
+
+# Don't use or change this ValueSpec, it is out-of-date. It can't be removed due to CMK-12228.
 class LivestatusViaTCP(Dictionary):
     def __init__(
         self,

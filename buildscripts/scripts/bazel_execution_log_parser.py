@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 class Summary(NamedTuple):
     overallTargets: int
-    remoteCacheHits: int
+    cacheHits: int
     percentRemoteCacheHits: float
     targetsWithMissedCache: list[str]
     numberUncacheableTargets: int
@@ -23,7 +23,7 @@ class Summary(NamedTuple):
 
 class ExecutionMetrics(BaseModel):
     targetLabel: str
-    remoteCacheHit: bool
+    cacheHit: bool
     cacheable: bool
     remotable: bool
 
@@ -77,13 +77,13 @@ def parse_execution_logs(log_files: list[Path]) -> Iterator[ExecutionMetrics]:
 
 def build_summary(parsed_logs: list[ExecutionMetrics]) -> Summary:
     overall_targets = len(parsed_logs)
-    remote_cache_hits = sum(1 for log in parsed_logs if log.remoteCacheHit)
+    cache_hits = sum(1 for log in parsed_logs if log.cacheHit)
 
     return Summary(
         overallTargets=overall_targets,
-        remoteCacheHits=remote_cache_hits,
-        percentRemoteCacheHits=round(remote_cache_hits / overall_targets * 100, 2),
-        targetsWithMissedCache=[log.targetLabel for log in parsed_logs if not log.remoteCacheHit],
+        cacheHits=cache_hits,
+        percentRemoteCacheHits=round(cache_hits / overall_targets * 100, 2),
+        targetsWithMissedCache=[log.targetLabel for log in parsed_logs if not log.cacheHit],
         numberUncacheableTargets=sum(1 for log in parsed_logs if not log.cacheable),
         numberRemotableTargets=sum(1 for log in parsed_logs if log.remotable),
     )

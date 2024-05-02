@@ -53,7 +53,7 @@ pytest_plugins = ("tests.testlib.playwright.plugin",)
 import tests.testlib as testlib
 from tests.testlib.utils import current_base_branch_name
 
-collect_ignore = []
+collect_ignore: list[str] = []
 
 # Faker creates a bunch of annoying DEBUG level log entries, which clutter the output of test
 # runs and prevent us from spot the important messages easily. Reduce the Reduce the log level

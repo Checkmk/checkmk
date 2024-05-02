@@ -24,13 +24,6 @@ metric_subscriptions = metrics.Metric(
     color=metrics.Color.ORANGE,
 )
 
-metric_clients_connected = metrics.Metric(
-    name="clients_connected",
-    title=Title("Clients connected"),
-    unit=UNIT_NUMBER,
-    color=metrics.Color.PURPLE,
-)
-
 metric_clients_maximum = metrics.Metric(
     name="clients_maximum",
     title=Title("Clients maximum"),

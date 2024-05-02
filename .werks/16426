@@ -1,0 +1,11 @@
+Title: NetApp Snapshot Reserve: Don't Restrict 'Levels for used configured reserve'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1714633309
+Edition: cre
+Level: 1
+Version: 2.2.0p26
+
+Previously, the option <code>Levels for used configured reserve</code> of the rule <code>NetApp Snapshot Reserve</code> did not allow percent values beyond 101.0 %.
+Now any non-negative value can be set.

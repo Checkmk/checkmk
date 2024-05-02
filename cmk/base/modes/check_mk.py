@@ -554,9 +554,11 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
         section_cache_path = Path(cmk.utils.paths.var_dir)
         file_cache_path = Path(cmk.utils.paths.data_source_cache_dir)
         tcp_cache_path = Path(cmk.utils.paths.tcp_cache_dir)
-        cas_dir = Path(cmk.utils.paths.agent_cas_dir)
-        ca_store = Path(cmk.utils.paths.agent_cert_store)
-        site_crt = Path(cmk.utils.paths.site_cert_file)
+        tls_config = TLSConfig(
+            cas_dir=Path(cmk.utils.paths.agent_cas_dir),
+            ca_store=Path(cmk.utils.paths.agent_cert_store),
+            site_crt=Path(cmk.utils.paths.site_cert_file),
+        )
 
         output = []
         # Show errors of problematic data sources
@@ -581,11 +583,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             walk_cache_path=walk_cache_path,
             file_cache_path=file_cache_path,
             tcp_cache_path=tcp_cache_path,
-            tls_config=TLSConfig(
-                cas_dir=cas_dir,
-                ca_store=ca_store,
-                site_crt=site_crt,
-            ),
+            tls_config=tls_config,
             password_store_file=pending_passwords_file,
             passwords=cmk.utils.password_store.load(pending_passwords_file),
         ):

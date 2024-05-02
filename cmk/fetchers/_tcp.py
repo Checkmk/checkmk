@@ -76,9 +76,8 @@ class TCPFetcher(Fetcher[AgentRawData]):
         tls_config: TLSConfig,
     ) -> None:
         super().__init__()
-        self.family: Final = socket.AddressFamily(family)
-        # json has no builtin tuple, we have to convert
-        self.address: Final[tuple[HostAddress, int]] = (address[0], address[1])
+        self.family: Final = family
+        self.address: Final = address
         self.timeout: Final = timeout
         self.host_name: Final = host_name
         self.encryption_handling: Final = encryption_handling

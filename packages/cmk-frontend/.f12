@@ -21,6 +21,7 @@ echo "Update site $SITE..."
 echo "Copy files..."
 sudo rsync -ax --delete \
     --filter "protect /js/vue_min.js*" \
+    --filter "protect /js/vue_stage1.*" \
     ./dist/ \
     "$ROOT/share/check_mk/web/htdocs"
 

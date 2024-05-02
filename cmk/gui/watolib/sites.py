@@ -645,14 +645,13 @@ def _liveproxyd_via_tcp() -> Dictionary:
                 ListOfStrings(
                     title=_("Restrict access to IP addresses"),
                     help=_(
-                        "The access to Livestatus via TCP will only be allowed from the "
-                        "configured source IP addresses. You can either configure specific "
-                        "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."
+                        "The access to the Livestatus Proxy via TCP will only be allowed from the "
+                        "configured source IP addresses. For an IP address to be allowed it must "
+                        "exactly match one of the specified values."
                     ),
-                    valuespec=IPNetwork(),
+                    valuespec=IPNetwork(),  # TODO: This is nonsense.
                     orientation="horizontal",
                     allow_empty=False,
-                    default_value=["0.0.0.0", "::/0"],
                 ),
             ),
             (

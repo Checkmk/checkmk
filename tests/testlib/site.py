@@ -1164,9 +1164,6 @@ class Site:
             crash = json.loads(self.read_file(crash_file))
             crash_type = crash.get("exc_type", "")
             crash_detail = crash.get("exc_value", "")
-            if re.match("Tried to create .*, but this RRD exists", crash_detail):
-                logger.warning("Ignored crash report due to CMK-17237!")
-                continue
             if re.search("check_icmp: No hosts to check", crash_detail):
                 logger.warning("Ignored crash report due to CMK-17285!")
                 continue

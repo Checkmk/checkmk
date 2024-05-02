@@ -482,7 +482,7 @@ def _page_menu(
     return menu
 
 
-def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type: ignore[no-untyped-def]
+def _page_menu_dashboards(name: DashboardName) -> Iterable[PageMenuTopic]:
     if cmk_version.edition() is cmk_version.Edition.CRE:
         linked_dashboards = ["main", "checkmk"]  # problems = main in raw edition
     else:

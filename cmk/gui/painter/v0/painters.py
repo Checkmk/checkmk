@@ -5411,10 +5411,12 @@ class AbstractColumnSpecificMetric(Painter):
             key=lambda x: x[1],
         )
 
-    def _render(  # type: ignore[no-untyped-def]
-        self, row, cell, perf_data_entries, check_command
+    def _render(
+        self, row: Row, cell: Cell, perf_data_entries: str, check_command: str
     ) -> tuple[str, str]:
-        show_metric = cell.painter_parameters()["metric"]
+        parameters = cell.painter_parameters()
+        assert parameters is not None
+        show_metric = parameters["metric"]
         translated_metrics = metrics.translate_perf_data(
             perf_data_entries, config=self.config, check_command=check_command
         )

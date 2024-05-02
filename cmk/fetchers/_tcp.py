@@ -84,13 +84,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self.pre_shared_secret: Final = pre_shared_secret
         self.tls_config: Final = tls_config
         self._logger: Final = logging.getLogger("cmk.helper.tcp")
-        self._opt_socket: socket.socket | None = None
-
-    @property
-    def _socket(self) -> socket.socket:
-        if self._opt_socket is None:
-            raise MKFetcherError("Not connected")
-        return self._opt_socket
+        self._socket: socket.socket | None = None
 
     def __repr__(self) -> str:
         return (
@@ -127,12 +121,13 @@ class TCPFetcher(Fetcher[AgentRawData]):
             self.address[1],
             self.timeout,
         )
-        self._opt_socket = socket.socket(self.family, socket.SOCK_STREAM)
+        self.close()
+        self._socket = socket.socket(self.family, socket.SOCK_STREAM)
         # For an explanation on these options have a look at tcp(7) (man tcp)
-        self._opt_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-        self._opt_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 120)  # start after
-        self._opt_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)  # wait between
-        self._opt_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)  # how many tries
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 120)  # start after
+        self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)  # wait between
+        self._socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)  # how many tries
         try:
             self._socket.settimeout(self.timeout)
             self._socket.connect(self.address)
@@ -141,33 +136,32 @@ class TCPFetcher(Fetcher[AgentRawData]):
             # so we set the KEEPALIVE settings above.
             self._socket.settimeout(None)
         except OSError as e:
-            self._close_socket()
+            self.close()
             raise MKFetcherError("Communication failed: %s" % e)
 
     def close(self) -> None:
-        self._close_socket()
-
-    def _close_socket(self) -> None:
-        if self._opt_socket is None:
+        if self._socket is None:
             return
         self._logger.debug("Closing TCP connection to %s:%d", self.address[0], self.address[1])
-        self._opt_socket.close()
-        self._opt_socket = None
+        self._socket.close()
+        self._socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
+        sock = self._socket
+        if sock is None:
+            raise MKFetcherError("Not connected")
+
         controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
         agent_data = self._get_agent_data(
-            str(controller_uuid) if controller_uuid is not None else None
+            sock, str(controller_uuid) if controller_uuid is not None else None
         )
         return agent_data
 
-    def _from_tls(self, server_hostname: str) -> tuple[TransportProtocol, Buffer]:
+    def _from_tls(
+        self, sock: socket.socket, server_hostname: str
+    ) -> tuple[TransportProtocol, Buffer]:
         self._logger.debug("Reading data from agent via TLS socket")
-        with wrap_tls(
-            self._socket,
-            server_hostname,
-            tls_config=self.tls_config,
-        ) as ssock:
+        with wrap_tls(sock, server_hostname, tls_config=self.tls_config) as ssock:
             self._logger.debug("Reading data from agent")
             raw_agent_data = recvall(ssock)
         try:
@@ -189,9 +183,9 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._logger.debug("Detected transport protocol: %s", protocol)
         return protocol, memoryview(agent_data)[2:]
 
-    def _get_agent_data(self, server_hostname: str | None) -> AgentRawData:
+    def _get_agent_data(self, sock: socket.socket, server_hostname: str | None) -> AgentRawData:
         try:
-            raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
+            raw_protocol = sock.recv(2, socket.MSG_WAITALL)
         except OSError as e:
             raise MKFetcherError(f"Communication failed: {e}") from e
 
@@ -212,10 +206,10 @@ class TCPFetcher(Fetcher[AgentRawData]):
             if server_hostname is None:
                 raise MKFetcherError("Agent controller not registered")
 
-            protocol, output = self._from_tls(server_hostname)
+            protocol, output = self._from_tls(sock, server_hostname)
         else:
             self._logger.debug("Reading data from agent")
-            output = recvall(self._socket, socket.MSG_WAITALL)
+            output = recvall(sock, socket.MSG_WAITALL)
 
         if not output:
             return AgentRawData(b"")  # nothing to to, validation will fail

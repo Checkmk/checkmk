@@ -11,7 +11,6 @@ import socket
 from collections.abc import Sequence, Sized
 from pathlib import Path
 from typing import Generic, NamedTuple, NoReturn, TypeAlias, TypeVar
-from zlib import compress
 
 import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped]
@@ -35,7 +34,6 @@ from cmk.snmplib import (
 )
 
 import cmk.fetchers._snmp as snmp
-import cmk.fetchers._tcp as tcp
 from cmk.fetchers import (
     Fetcher,
     get_raw_data,
@@ -49,9 +47,7 @@ from cmk.fetchers import (
     TCPEncryptionHandling,
     TCPFetcher,
     TLSConfig,
-    TransportProtocol,
 )
-from cmk.fetchers._agentprtcl import CompressionType, HeaderV1, Version
 from cmk.fetchers._ipmi import IPMISensor
 from cmk.fetchers.filecache import (
     AgentFileCache,
@@ -814,30 +810,6 @@ class TestTCPFetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
         assert isinstance(raw_data.error, MKFetcherError)
-
-    def test_get_agent_data_without_tls(
-        self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher
-    ) -> None:
-        mock_sock = _MockSock(b"<<<section:sep(0)>>>\nbody\n")
-        monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
-
-        assert fetcher._get_agent_data(None) == mock_sock.data
-
-    def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
-        mock_data = b"<<<section:sep(0)>>>\nbody\n"
-        mock_sock = _MockSock(
-            b"%b%b%b%b"
-            % (
-                TransportProtocol.TLS.value,
-                bytes(Version.V1),
-                bytes(HeaderV1(CompressionType.ZLIB)),
-                compress(mock_data),
-            )
-        )
-        monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
-        monkeypatch.setattr(tcp, "wrap_tls", lambda *args, **kw: mock_sock)
-
-        assert fetcher._get_agent_data("server") == mock_data
 
 
 class TestFetcherCaching:

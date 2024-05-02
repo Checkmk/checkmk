@@ -539,7 +539,9 @@ def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:
         yield c
     finally:
         # Do not leave inactive containers and anonymous volumes behind
-        c.remove(v=True, force=True)
+        if os.getenv("CLEANUP", "1") == "1":
+            c.stop()
+            c.remove(v=True, force=True)
 
 
 # pep-0692 is not yet finished in mypy...

@@ -4,7 +4,10 @@
 
 mod common;
 use mk_sql::platform;
+#[cfg(windows)]
+use mk_sql::platform::odbc;
 use mk_sql::types::InstanceName;
+
 use std::path::PathBuf;
 use std::{collections::HashSet, fs::create_dir_all};
 
@@ -1370,4 +1373,23 @@ fn test_get_instances() {
 
     #[cfg(unix)]
     assert!(instances.is_empty());
+}
+
+#[cfg(windows)]
+#[test]
+fn test_odbc() {
+    let s = odbc::make_connection_string(
+        &InstanceName::from("SQLEXPRESS_NAME".to_string()),
+        Some("master"),
+        None,
+    );
+    let r = odbc::execute(&s, sqls::find_known_query(sqls::Id::TableSpaces).unwrap()).unwrap();
+    assert_eq!(r.len(), 2);
+    assert_eq!(r[0].headline.len(), 3);
+    assert_eq!(r[1].headline.len(), 4);
+
+    let r = odbc::execute(&s, sqls::find_known_query(sqls::Id::ComputerName).unwrap()).unwrap();
+    assert_eq!(r.len(), 1);
+    assert_eq!(r[0].headline[0], "MachineName");
+    assert!(!r[0].rows[0][0].is_empty());
 }

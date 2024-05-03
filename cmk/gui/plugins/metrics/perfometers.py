@@ -1396,33 +1396,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "emcvnx_consumed_capacity",
-        "half_value": 20 * TB,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "emcvnx_dedupl_remaining_size",
-        "half_value": 20 * TB,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "emcvnx_move_completed",
-        "half_value": 250 * GB,
-        "exponent": 3,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["read_hits"],
         "total": 100.0,

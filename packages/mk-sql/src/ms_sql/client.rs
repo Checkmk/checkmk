@@ -26,7 +26,15 @@ pub struct RemoteConnection<'a> {
 #[cfg(windows)]
 #[derive(Default)]
 pub struct LocalConnection {
+    pub host: HostName,
     pub port: Option<Port>,
+}
+
+#[cfg(windows)]
+impl LocalConnection {
+    pub fn host(&self) -> &HostName {
+        &self.host
+    }
 }
 
 #[cfg(windows)]
@@ -100,9 +108,21 @@ impl<'a> ClientBuilder<'a> {
     }
 
     #[cfg(windows)]
-    pub fn local_by_port(mut self, port: Option<Port>) -> Self {
-        let l = ClientConnection::Local(LocalConnection { port });
-        self.client_connection = Some(l);
+    pub fn local_by_port(mut self, port: Option<Port>, host: Option<HostName>) -> Self {
+        let local_connection = LocalConnection {
+            host: host.unwrap_or(crate::constants::LOCAL_HOST.clone()),
+            port,
+        };
+        log::info!(
+            "Local connection by port `{}:{}`",
+            &local_connection.host,
+            &local_connection
+                .port
+                .as_ref()
+                .map(|p| p.value().to_string())
+                .unwrap_or_default()
+        );
+        self.client_connection = Some(ClientConnection::Local(local_connection));
         self
     }
 
@@ -159,6 +179,7 @@ impl<'a> ClientBuilder<'a> {
             #[cfg(windows)]
             Some(ClientConnection::Local(connection)) => {
                 let port = connection.port.as_ref().map(|p| p.value());
+                config.host(connection.host.clone());
                 config.port(port.unwrap_or(defaults::STANDARD_PORT));
                 config.authentication(AuthMethod::Integrated);
             }
@@ -200,6 +221,10 @@ pub async fn connect_main_endpoint(endpoint: &Endpoint) -> Result<Client> {
 pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<Client> {
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
+        log::warn!(
+            "Timeout: {e} when creating client from config {:?}",
+            conn.timeout()
+        );
         anyhow::anyhow!(
             "Timeout: {e} when creating client from config {:?}",
             conn.timeout()
@@ -211,7 +236,7 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
                 tokio::time::timeout(
                     conn.timeout(),
                     ClientBuilder::new()
-                        .logon_on_port(conn.hostname(), Some(port), credentials)
+                        .logon_on_port(&conn.hostname(), Some(port), credentials)
                         .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                         .trust_server_certificate(conn.trust_server_certificate())
                         .build(),
@@ -227,7 +252,7 @@ pub async fn connect_custom_endpoint(endpoint: &Endpoint, port: Port) -> Result<
         AuthType::Integrated => tokio::time::timeout(
             conn.timeout(),
             ClientBuilder::new()
-                .local_by_port(Some(port))
+                .local_by_port(Some(port), Some(conn.hostname()))
                 .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                 .trust_server_certificate(conn.trust_server_certificate())
                 .build(),
@@ -261,7 +286,7 @@ pub async fn connect_custom_instance(
                 tokio::time::timeout(
                     conn.timeout(),
                     ClientBuilder::new()
-                        .browse(conn.hostname(), instance, conn.sql_browser_port())
+                        .browse(&conn.hostname(), instance, conn.sql_browser_port())
                         .certificate(conn.tls().map(|t| t.client_certificate().to_owned()))
                         .trust_server_certificate(conn.trust_server_certificate())
                         .build(),
@@ -360,14 +385,18 @@ async fn connect_via_tcp(config: Config) -> Result<Client> {
             e
         )
     })?;
+    log::info!("Connected to addr {}", config.get_addr());
     tcp.set_nodelay(true)?; // in documentation and examples
 
     // To be able to use Tokio's tcp, we're using the `compat_write` from
     // the `TokioAsyncWriteCompatExt` to get a stream compatible with the
     // traits from the `futures` crate. The same is for upcoming NamedPipe
-    Client::connect(config, tcp.compat_write())
+    let result = Client::connect(config, tcp.compat_write())
         .await
-        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e))
+        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e));
+    log::info!("Connection success {}", result.is_ok());
+
+    result
 }
 
 /// Create `local` connection to MS SQL `instance`
@@ -450,20 +479,23 @@ mssql:
         pub const MS_SQL_DB_CERT: &str = "CI_TEST_MS_SQL_DB_CERT";
         if let Ok(certificate_path) = std::env::var(MS_SQL_DB_CERT) {
             ClientBuilder::new()
-                .local_by_port(Some(1433u16.into()))
+                .local_by_port(Some(1433u16.into()), None)
                 .certificate(Some(certificate_path))
                 .trust_server_certificate(false)
                 .build()
                 .await
                 .unwrap();
             assert!(ClientBuilder::new()
-                .local_by_port(Some(1433u16.into()))
+                .local_by_port(Some(1433u16.into()), None)
                 .trust_server_certificate(false)
                 .build()
                 .await
                 .is_err());
             assert!(ClientBuilder::new()
-                .local_by_port(Some(1433u16.into()))
+                .local_by_port(
+                    Some(1433u16.into()),
+                    Some(HostName::from("localhost".to_string()))
+                )
                 .trust_server_certificate(true)
                 .build()
                 .await
@@ -515,10 +547,13 @@ mssql:
     fn test_client_builder_local() {
         let local = ClientBuilder::new();
         let port: Option<Port> = Some(123u16.into());
-        let builder = local.local_by_port(port);
+        let builder = local.local_by_port(port, None);
         assert!(matches!(
             builder.client_connection,
-            Some(ClientConnection::Local(LocalConnection { port: _ }))
+            Some(ClientConnection::Local(LocalConnection {
+                host: _,
+                port: _
+            }))
         ));
     }
 }

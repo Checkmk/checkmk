@@ -49,7 +49,7 @@ mssql:
       type: "sql_server" # optional, default: "integrated", values: sql_server, windows, token and integrated(current windows user)
       access_token: "baz" # optional, no default
     connection: # optional
-      hostname: "localhost" # optional, default: "localhost" if type of authentication is integrated value is assumed as a localhost
+      hostname: "localhost" # optional, default: "localhost", empty string: "localhost"
       failoverpartner: "localhost2" # optional, no default
       port: 1433 # optional, default: 1433
       socket: 'C:\path\to\file' # optional, no default
@@ -102,6 +102,6 @@ mssql:
         authentication: # optional, if absent will use main
           username: "foo" # mandatory
         connection: # optional, if absent will use main
-          hostname: "agent" # optional, default: "localhost"
+          hostname: "agent" # optional, default: "localhost", empty string: "localhost"
         instances: # optional, describes how to monitor/access instances, both detected and non-detectable
           - sid: "SQLEXPRESS" # mandatory

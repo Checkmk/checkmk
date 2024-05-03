@@ -83,8 +83,10 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     println("inside_container(image=${image} docker_args: ${run_args_str})");
     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
         image.inside(run_args_str) {
+            dir("${checkout_dir}") {
+                sh("buildscripts/scripts/ensure-workspace-integrity");
+            }
             body();
         }
     }
 }
-

@@ -27,7 +27,7 @@ CHECKOUT_ROOT="$(git rev-parse --show-toplevel)"
 # in case of worktrees $CHECKOUT_ROOT might not contain the actual repository clone
 GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
-CMD="${*:-bash}"
+CMD="buildscripts/scripts/ensure-workspace-integrity; ${*:-bash}"
 
 CONTAINER_SHADOW_WORKSPACE="${CHECKOUT_ROOT}/container_shadow_workspace_local"
 DOCKER_MOUNT_ARGS="-v ${CONTAINER_SHADOW_WORKSPACE}/home:${HOME}"

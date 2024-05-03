@@ -22,7 +22,6 @@ from cmk.gui.painter_options import PainterOptionRegistry, PainterOptions
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
-    Icon,
     SorterSpec,
     ViewName,
     ViewSpec,
@@ -215,24 +214,21 @@ def _make_attribute_filter(
 
 
 def _register_views(
-    table_view_name: str,
-    title_plural: str,
+    hint: NodeDisplayHint,
     painters: Sequence[ColumnSpec],
     filters: Iterable[FilterName],
-    path: SDPath,
-    is_show_more: bool,
-    icon: Icon | None,
 ) -> None:
     """Declare two views: one for searching globally. And one for the items of one host"""
     context: VisualContext = {f: {} for f in filters}
 
     # View for searching for items
-    search_view_name = table_view_name + "_search"
+    search_view_name = hint.table_view_name + "_search"
     multisite_builtin_views[search_view_name] = {
         # General options
-        "title": _l("Search %s") % title_plural.lower(),
-        "description": _l("A view for searching in the inventory data for %s")
-        % title_plural.lower(),
+        "title": _l("Search %s") % hint.title.lower(),
+        "description": (
+            _l("A view for searching in the inventory data for %s") % hint.title.lower()
+        ),
         "hidden": False,
         "hidebutton": False,
         "mustsearch": True,
@@ -266,7 +262,7 @@ def _register_views(
         "link_from": {},
         "icon": None,
         "single_infos": [],
-        "datasource": table_view_name,
+        "datasource": hint.table_view_name,
         "topic": "inventory",
         "sort_index": 30,
         "public": True,
@@ -280,7 +276,7 @@ def _register_views(
         "mobile": False,
         "group_painters": [],
         "sorters": [],
-        "is_show_more": is_show_more,
+        "is_show_more": hint.table_is_show_more,
         "owner": UserId.builtin(),
         "add_context_to_title": True,
         "packaged": False,
@@ -288,26 +284,26 @@ def _register_views(
     }
 
     # View for the items of one host
-    host_view_name = make_table_view_name_of_host(table_view_name)
+    host_view_name = make_table_view_name_of_host(hint.table_view_name)
     multisite_builtin_views[host_view_name] = {
         # General options
-        "title": title_plural,
-        "description": _l("A view for the %s of one host") % title_plural,
+        "title": hint.title,
+        "description": _l("A view for the %s of one host") % hint.title,
         "hidden": True,
         "hidebutton": False,
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
-            "has_inventory_tree": path,
+            "has_inventory_tree": hint.path,
         },
         # Columns
         "painters": painters,
         # Filters
         "context": context,
-        "icon": icon,
+        "icon": hint.icon,
         "name": host_view_name,
         "single_infos": ["host"],
-        "datasource": table_view_name,
+        "datasource": hint.table_view_name,
         "topic": "inventory",
         "sort_index": 30,
         "public": True,
@@ -321,7 +317,7 @@ def _register_views(
         "mobile": False,
         "group_painters": [],
         "sorters": [],
-        "is_show_more": is_show_more,
+        "is_show_more": hint.table_is_show_more,
         "owner": UserId.builtin(),
         "add_context_to_title": True,
         "packaged": False,
@@ -391,15 +387,7 @@ def _register_table_view(node_hint: NodeDisplayHint) -> None:
         painters.append(ColumnSpec(col_hint_ident))
         filters.append(col_hint_ident)
 
-    _register_views(
-        node_hint.table_view_name,
-        node_hint.title,
-        painters,
-        filters,
-        node_hint.path,
-        node_hint.table_is_show_more,
-        node_hint.icon,
-    )
+    _register_views(node_hint, painters, filters)
 
 
 def register_table_views_and_columns() -> None:

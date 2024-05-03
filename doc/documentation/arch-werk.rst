@@ -40,10 +40,13 @@ See ``announce`` sub-command of ``python -m cmk.utils.werks``
 Rewrite Versions of Werks
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-When a second release candidate is created ``bw-release`` needs to modify the
-version from ``p(n)`` to ``p(n-1)``. This is done via ``werk list -version`` and
-a ``sed`` command. At the time of writing the ``sed`` command can only handle v1
-Werks.
+During the release process, a new release candidate may need to be created.
+In this case, dedicated commits will be picked onto the corresponding release
+branch ``release/A.B.CpX``. Potentially picked werks therefore may need a fix-up
+of their version field. In case the ``werk`` script is used, the version field
+will be automatically rewritten. However in the upstream branch ``A.B.C`` the
+version of the corresponding werk would also need to be updated.
+This is a current design flaw and should be fixed in the future.
 
 Precompiled Werks
 ~~~~~~~~~~~~~~~~~

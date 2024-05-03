@@ -139,6 +139,6 @@ See also
 --------
 
 * `User Manual <https://docs.checkmk.com/latest/en/monitoring_kubernetes.html>`_
-* `Kubernetes Crash Course <https://github.com/Checkmk/checkmk/blob/master/cmk/special_agents/utils_kubernetes/README.md>`_
+* `Kubernetes Crash Course <https://github.com/Checkmk/checkmk/blob/master/cmk.plugins.kube/README.md>`_
 * `checkmk_kube_agent repository <https://github.com/Checkmk/checkmk_kube_agent>`_
 * `Checkmk Demo <https://www.youtube.com/watch?v=H9AlO98afUE&t=1s>`_

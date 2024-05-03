@@ -8,10 +8,10 @@ from typing import Final
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.utils.labels import CollectedHostLabels
 from cmk.utils.notify_types import EnrichedEventContext, EventContext
 
 import cmk.base.events
-from cmk.base.core_config import CollectedHostLabels
 from cmk.base.events import (
     _update_enriched_context_with_labels,
     add_to_event_context,

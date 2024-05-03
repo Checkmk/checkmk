@@ -18,9 +18,10 @@ from cmk.utils import config_warnings, password_store, store, tty
 from cmk.utils.config_path import LATEST_CONFIG, VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
-from cmk.utils.labels import Labels
+from cmk.utils.labels import CollectedHostLabels, Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.notify import write_notify_host_file
 from cmk.utils.servicename import MAX_SERVICE_NAME_LEN, ServiceName
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
@@ -36,11 +37,9 @@ import cmk.base.utils
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
-    CollectedHostLabels,
     CoreCommand,
     CoreCommandName,
     get_labels_from_attributes,
-    write_notify_host_file,
 )
 from cmk.base.ip_lookup import IPStackConfig
 

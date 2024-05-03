@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from ast import literal_eval
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Final, Literal, Self, TypedDict
@@ -15,6 +16,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
 
 Labels = Mapping[str, str]
@@ -225,3 +227,9 @@ def single_label_group_from_labels(
             [(operator, label) for label in labels],
         )
     ]
+
+
+@dataclasses.dataclass(frozen=True)
+class CollectedHostLabels:
+    host_labels: Labels
+    service_labels: dict[ServiceName, Labels]

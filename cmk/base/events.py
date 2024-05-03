@@ -23,6 +23,7 @@ import cmk.utils.daemon
 import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
+from cmk.utils.notify import read_notify_host_file
 from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist, in_extraconf_servicelist
@@ -30,8 +31,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
-
-from cmk.base.core_config import read_notify_host_file
 
 ContactList = list  # TODO Improve this
 

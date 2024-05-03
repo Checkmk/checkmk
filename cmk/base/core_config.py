@@ -6,7 +6,6 @@
 # pylint: disable=protected-access
 
 import abc
-import dataclasses
 import os
 import shutil
 import socket
@@ -26,9 +25,8 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path
-from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.servicename import Item, ServiceName
-from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
+from cmk.utils.store import lock_checkmk_configuration
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.parameters import TimespecificParameters
@@ -41,12 +39,6 @@ from cmk.base.nagios_utils import do_check_nagiosconfig
 
 CoreCommandName = str
 CoreCommand = str
-
-
-@dataclasses.dataclass(frozen=True)
-class CollectedHostLabels:
-    host_labels: Labels
-    service_labels: dict[ServiceName, Labels]
 
 
 class MonitoringCore(abc.ABC):
@@ -519,46 +511,6 @@ def _extra_service_attributes(
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
     return attrs
-
-
-def write_notify_host_file(
-    config_path: VersionedConfigPath,
-    labels_per_host: Mapping[HostName, CollectedHostLabels],
-) -> None:
-    notify_labels_path: Path = _get_host_file_path(config_path)
-    for host, labels in labels_per_host.items():
-        host_path = notify_labels_path / host
-        save_object_to_file(
-            host_path,
-            dataclasses.asdict(
-                CollectedHostLabels(
-                    host_labels=labels.host_labels,
-                    service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
-                )
-            ),
-        )
-
-
-def read_notify_host_file(
-    host_name: HostName,
-) -> CollectedHostLabels:
-    host_file_path: Path = _get_host_file_path(host_name=host_name)
-    return CollectedHostLabels(
-        **load_object_from_file(
-            path=host_file_path,
-            default={"host_labels": {}, "service_labels": {}},
-        )
-    )
-
-
-def _get_host_file_path(
-    config_path: VersionedConfigPath | None = None,
-    host_name: HostName | None = None,
-) -> Path:
-    root_path = Path(config_path) if config_path else core_helper_config_dir / Path("latest")
-    if host_name:
-        return root_path / "notify" / "labels" / host_name
-    return root_path / "notify" / "labels"
 
 
 def get_labels_from_attributes(key_value_pairs: list[tuple[str, str]]) -> Labels:

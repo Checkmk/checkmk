@@ -214,6 +214,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
         site_crt=Path(cmk.utils.paths.site_cert_file),
     )
     used_password_store = cmk.utils.password_store.pending_password_store_path()
+    passwords = cmk.utils.password_store.load(used_password_store)
     agenttypes = [
         dump_source(source)
         for source in sources.make_sources(
@@ -249,7 +250,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
                 hostname,
                 ipaddress,
                 password_store_file=used_password_store,
-                passwords=cmk.utils.password_store.load(used_password_store),
+                passwords=passwords,
                 ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(hostname),

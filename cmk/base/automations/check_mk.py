@@ -2038,6 +2038,7 @@ class AutomationDiagHost(Automation):
 
         state, output = 0, ""
         pending_passwords_file = cmk.utils.password_store.pending_password_store_path()
+        passwords = cmk.utils.password_store.load(pending_passwords_file)
         snmp_scan_config = SNMPScanConfig(
             on_error=OnError.RAISE,
             missing_sys_description=config_cache.missing_sys_description(host_name),
@@ -2076,7 +2077,7 @@ class AutomationDiagHost(Automation):
                 host_name,
                 ipaddress,
                 password_store_file=pending_passwords_file,
-                passwords=cmk.utils.password_store.load(pending_passwords_file),
+                passwords=passwords,
                 ip_address_of=ConfiguredIPLookup(config_cache, handle_ip_lookup_failure),
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),

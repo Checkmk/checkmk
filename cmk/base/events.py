@@ -24,7 +24,7 @@ import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
 from cmk.utils.regex import regex
-from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
+from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist, in_extraconf_servicelist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
@@ -841,7 +841,7 @@ def event_match_services(
             return "The rule specifies a list of services, but this is a host notification."
         servicelist = rule["match_services"]
         service = context["SERVICEDESC"]
-        if not config.in_extraconf_servicelist(servicelist, service):
+        if not in_extraconf_servicelist(servicelist, service):
             return (
                 "The service's description '%s' does not match by the list of "
                 "allowed services (%s)" % (service, ", ".join(servicelist))
@@ -858,7 +858,7 @@ def event_match_exclude_services(
         return None
     excludelist = rule.get("match_exclude_services", [])
     service = context["SERVICEDESC"]
-    if config.in_extraconf_servicelist(excludelist, service):
+    if in_extraconf_servicelist(excludelist, service):
         return (
             "The service's description '%s' matches the list of excluded services"
             % context["SERVICEDESC"]

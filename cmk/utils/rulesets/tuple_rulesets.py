@@ -97,6 +97,15 @@ def in_extraconf_hostlist(hostlist, hostname):  # pylint: disable=too-many-branc
     return False
 
 
+# Slow variant of checking wether a service is matched by a list
+# of regexes
+def in_extraconf_servicelist(service_patterns: list[str], service: str) -> bool:
+    if optimized_pattern := convert_pattern_list(service_patterns):
+        return optimized_pattern.match(service) is not None
+
+    return False
+
+
 def hosttags_match_taglist(hosttags: Sequence[TagID], required_tags: Iterable[TagID]) -> bool:
     """Check if a host fulfills the requirements of a tag list.
 

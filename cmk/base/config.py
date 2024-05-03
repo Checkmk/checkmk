@@ -1287,28 +1287,6 @@ def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
 
 
 # .
-#   .--Host matching-------------------------------------------------------.
-#   |  _   _           _                     _       _     _               |
-#   | | | | | ___  ___| |_   _ __ ___   __ _| |_ ___| |__ (_)_ __   __ _   |
-#   | | |_| |/ _ \/ __| __| | '_ ` _ \ / _` | __/ __| '_ \| | '_ \ / _` |  |
-#   | |  _  | (_) \__ \ |_  | | | | | | (_| | || (__| | | | | | | | (_| |  |
-#   | |_| |_|\___/|___/\__| |_| |_| |_|\__,_|\__\___|_| |_|_|_| |_|\__, |  |
-#   |                                                              |___/   |
-#   +----------------------------------------------------------------------+
-#   | Code for calculating the host condition matching of rules            |
-#   '----------------------------------------------------------------------'
-
-
-# Slow variant of checking wether a service is matched by a list
-# of regexes - used e.g. by cmk --notify
-def in_extraconf_servicelist(service_patterns: list[str], service: str) -> bool:
-    if optimized_pattern := tuple_rulesets.convert_pattern_list(service_patterns):
-        return optimized_pattern.match(service) is not None
-
-    return False
-
-
-# .
 #   .--Constants-----------------------------------------------------------.
 #   |              ____                _              _                    |
 #   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |

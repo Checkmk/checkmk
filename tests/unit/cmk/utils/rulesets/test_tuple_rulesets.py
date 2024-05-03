@@ -25,8 +25,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 
-import cmk.base.config as config
-
 
 @pytest.fixture(autouse=True)
 def fake_version(monkeypatch):
@@ -564,4 +562,4 @@ def test_hosttags_match_taglist_negate() -> None:
 def test_in_extraconf_servicelist(
     service_patterns: list[str], service: str, expected: bool
 ) -> None:
-    assert config.in_extraconf_servicelist(service_patterns, service) == expected
+    assert tuple_rulesets.in_extraconf_servicelist(service_patterns, service) == expected

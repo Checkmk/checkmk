@@ -104,7 +104,9 @@ def _validate_rule_values(
             except (MKUserError, AssertionError, ValueError, TypeError) as e:
                 if version.edition() is version.Edition.CME and ruleset.name in (
                     "host_contactgroups",
+                    "host_groups",
                     "service_contactgroups",
+                    "service_groups",
                 ):
                     addition_info = [
                         "Note:",

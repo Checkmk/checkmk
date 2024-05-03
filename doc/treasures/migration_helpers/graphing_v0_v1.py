@@ -2149,39 +2149,33 @@ def main() -> None:
     )
 
     unit_parser = UnitParser()
+    connected_legacy_metric_names = {n for c in all_connected_objects for n in c.metrics}
+    standalone_legacy_metrics = {
+        n: m
+        for n, m in legacy_metric_info.items()
+        if metric_name_filter.matches(n) and n not in connected_legacy_metric_names
+    }
     if args.filter_standalone_metrics:
-        connected_legacy_metric_names = {n for c in all_connected_objects for n in c.metrics}
-        standalone_legacy_metrics = {
-            n: m for n, m in legacy_metric_info.items() if n not in connected_legacy_metric_names
-        }
         migrated_objects = _migrate(
             args.debug,
             migration_errors,
             unit_parser,
-            {n: m for n, m in standalone_legacy_metrics.items() if metric_name_filter.matches(n)},
+            standalone_legacy_metrics,
             legacy_check_metrics,
             [],
             {},
         )
-    elif all_connected_objects:
+    else:
+        metrics_ = {n: m for c in all_connected_objects for n, m in c.metrics.items()}
+        metrics_.update(standalone_legacy_metrics)
         migrated_objects = _migrate(
             args.debug,
             migration_errors,
             unit_parser,
-            {n: m for c in all_connected_objects for n, m in c.metrics.items()},
+            metrics_,
             legacy_check_metrics,
             [p.spec for c in all_connected_objects for p in c.perfometers],
             {g.ident: g.template for c in all_connected_objects for g in c.graph_templates},
-        )
-    else:
-        migrated_objects = _migrate(
-            args.debug,
-            migration_errors,
-            unit_parser,
-            {n: m for n, m in legacy_metric_info.items() if metric_name_filter.matches(n)},
-            legacy_check_metrics,
-            [],
-            {},
         )
 
     if args.sanitize:

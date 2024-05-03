@@ -1735,6 +1735,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
         host_parameters_cb=lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
             hostname, plugin
         ),
+        get_http_proxy=config.get_http_proxy,
     )
 
 

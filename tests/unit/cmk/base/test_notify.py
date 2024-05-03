@@ -5,6 +5,7 @@
 
 import os
 from collections.abc import Mapping
+from typing import Final
 
 import pytest
 from pytest import MonkeyPatch
@@ -21,6 +22,20 @@ from cmk.utils.notify_types import (
 from cmk.utils.store.host_storage import ContactgroupName
 
 from cmk.base import notify
+
+
+class HTTPPRoxyConfig:
+    def to_requests_proxies(self) -> None:
+        return None
+
+    def serialize(self) -> str:
+        return ""
+
+    def __eq__(self, o: object) -> bool:
+        return NotImplemented
+
+
+HTTP_PROXY: Final = HTTPPRoxyConfig()
 
 
 def test_os_environment_does_not_override_notification_script_env(monkeypatch: MonkeyPatch) -> None:
@@ -86,7 +101,14 @@ def test_create_plugin_context(
     params: NotifyPluginParams | list[object],
     expected: NotificationContext,
 ) -> None:
-    assert notify.create_plugin_context(enriched_context, params) == expected
+    assert (
+        notify.create_plugin_context(
+            enriched_context,
+            params,
+            lambda *args, **kw: HTTP_PROXY,
+        )
+        == expected
+    )
 
 
 @pytest.fixture(name="user_groups")

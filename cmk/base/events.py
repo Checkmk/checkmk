@@ -22,6 +22,7 @@ import livestatus
 import cmk.utils.daemon
 import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
+from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist, in_extraconf_servicelist
@@ -279,11 +280,12 @@ def add_rulebased_macros(raw_context: EventContext, contacts_needed: bool) -> No
     raw_context["CONTACTNAME"] = "check-mk-notify"
 
 
-def complete_raw_context(  # pylint: disable=too-many-branches
+def complete_raw_context(
     raw_context: EventContext,
     with_dump: bool,
     contacts_needed: bool,
 ) -> EnrichedEventContext:
+    # pylint: disable=too-many-branches
     """Extend the raw notification context
 
     This ensures that all raw contexts processed in the notification code has specific variables
@@ -956,15 +958,18 @@ def add_context_to_environment(
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
 def add_to_event_context(
-    context: EventContext | dict[str, str], prefix: str, param: object
+    context: EventContext | dict[str, str],
+    prefix: str,
+    param: object,
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
 ) -> None:
     if isinstance(param, (list, tuple)):
         if all(isinstance(p, str) for p in param):
             # TODO: Why on earth do we have these arbitrary differences? Can we unify this?
             suffix, separator = ("S", " ") if isinstance(param, list) else ("", "\t")
-            add_to_event_context(context, prefix + suffix, separator.join(param))
+            add_to_event_context(context, prefix + suffix, separator.join(param), get_http_proxy)
         for nr, value in enumerate(param, start=1):
-            add_to_event_context(context, f"{prefix}_{nr}", value)
+            add_to_event_context(context, f"{prefix}_{nr}", value, get_http_proxy)
     elif isinstance(param, dict):  # NOTE: We only handle Dict[str, Any].
         for key, value in param.items():
             varname = f"{prefix}_{key.upper()}"
@@ -972,8 +977,8 @@ def add_to_event_context(
                 # Compatibility for 1.5 pushover explicitly configured proxy URL format
                 if isinstance(value, str):
                     value = ("url", value)
-                value = config.get_http_proxy(value).serialize()
-            add_to_event_context(context, varname, value)
+                value = get_http_proxy(value).serialize()
+            add_to_event_context(context, varname, value, get_http_proxy)
     elif isinstance(param, (str, int, float)):  # NOTE: bool is a subclass of int!
         # Dynamically added keys...
         context[prefix] = str(param)  # type: ignore[literal-required]

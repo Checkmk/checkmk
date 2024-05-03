@@ -2636,6 +2636,7 @@ class AutomationNotificationReplay(Automation):
             lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
                 hostname, plugin
             ),
+            config.get_http_proxy,
             int(nr),
         )
         return NotificationReplayResult()
@@ -2656,6 +2657,7 @@ class AutomationNotificationAnalyse(Automation):
                 lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
                     hostname, plugin
                 ),
+                config.get_http_proxy,
                 int(nr),
             )
         )
@@ -2678,6 +2680,7 @@ class AutomationNotificationTest(Automation):
                 lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
                     hostname, plugin
                 ),
+                config.get_http_proxy,
                 dispatch=dispatch == "True",
             )
         )

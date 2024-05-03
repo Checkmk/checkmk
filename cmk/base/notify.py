@@ -35,6 +35,7 @@ import cmk.utils.log as log
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
@@ -204,12 +205,14 @@ Available commands:
 # Main function called by cmk --notify. It either starts the
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
-def do_notify(  # pylint: disable=too-many-branches
+def do_notify(
     options: dict[str, bool],
     args: list[str],
     *,
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
 ) -> int | None:
+    # pylint: disable=too-many-branches
     global _log_to_stdout, notify_mode
     _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
 
@@ -244,25 +247,33 @@ def do_notify(  # pylint: disable=too-many-branches
         # -> mknotifyd deletes this file
         if notify_mode == "spoolfile":
             filename = args[1]
-            return handle_spoolfile(filename, host_parameters_cb)
+            return handle_spoolfile(filename, host_parameters_cb, get_http_proxy)
 
         if keepalive and keepalive.enabled():
-            notify_keepalive(host_parameters_cb)
+            notify_keepalive(host_parameters_cb, get_http_proxy)
         elif notify_mode == "replay":
             try:
                 replay_nr = int(args[1])
             except (IndexError, ValueError):
                 replay_nr = 0
-            notify_notify(raw_context_from_backlog(replay_nr), host_parameters_cb)
+            notify_notify(raw_context_from_backlog(replay_nr), host_parameters_cb, get_http_proxy)
         elif notify_mode == "test":
             assert isinstance(args[0], dict)
-            notify_notify(EventContext(args[0]), host_parameters_cb)
+            notify_notify(EventContext(args[0]), host_parameters_cb, get_http_proxy)
         elif notify_mode == "stdin":
-            notify_notify(events.raw_context_from_string(sys.stdin.read()), host_parameters_cb)
+            notify_notify(
+                events.raw_context_from_string(sys.stdin.read()),
+                host_parameters_cb,
+                get_http_proxy,
+            )
         elif notify_mode == "send-bulks":
-            send_ripe_bulks()
+            send_ripe_bulks(get_http_proxy)
         else:
-            notify_notify(raw_context_from_env(os.environ), host_parameters_cb)
+            notify_notify(
+                raw_context_from_env(os.environ),
+                host_parameters_cb,
+                get_http_proxy,
+            )
 
     except Exception:
         crash_dir = Path(cmk.utils.paths.var_dir) / "notify"
@@ -301,6 +312,7 @@ def convert_legacy_configuration() -> None:
 def notify_notify(
     raw_context: EventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     analyse: bool = False,
     dispatch: bool = False,
@@ -354,7 +366,7 @@ def notify_notify(
 
     if config.notification_spooling != "remote":
         return locally_deliver_raw_context(
-            enriched_context, host_parameters_cb, analyse=analyse, dispatch=dispatch
+            enriched_context, host_parameters_cb, get_http_proxy, analyse=analyse, dispatch=dispatch
         )
     return None
 
@@ -362,6 +374,7 @@ def notify_notify(
 def locally_deliver_raw_context(
     enriched_context: EnrichedEventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     analyse: bool = False,
     dispatch: bool = False,
@@ -369,7 +382,7 @@ def locally_deliver_raw_context(
     try:
         logger.debug("Preparing rule based notifications")
         return notify_rulebased(
-            enriched_context, host_parameters_cb, analyse=analyse, dispatch=dispatch
+            enriched_context, host_parameters_cb, get_http_proxy, analyse=analyse, dispatch=dispatch
         )
 
     except Exception:
@@ -382,29 +395,32 @@ def locally_deliver_raw_context(
 
 def notification_replay_backlog(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     nr: int,
 ) -> None:
     global notify_mode
     notify_mode = "replay"
     _initialize_logging()
     raw_context = raw_context_from_backlog(nr)
-    notify_notify(raw_context, host_parameters_cb)
+    notify_notify(raw_context, host_parameters_cb, get_http_proxy)
 
 
 def notification_analyse_backlog(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     nr: int,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "replay"
     _initialize_logging()
     raw_context = raw_context_from_backlog(nr)
-    return notify_notify(raw_context, host_parameters_cb, analyse=True)
+    return notify_notify(raw_context, host_parameters_cb, get_http_proxy, analyse=True)
 
 
 def notification_test(
     raw_context: NotificationContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     dispatch: bool,
 ) -> NotifyAnalysisInfo | None:
@@ -417,7 +433,13 @@ def notification_test(
     raw_context["CONTACTS"] = ",".join(contacts) if contacts else "?"
     plugin_context = EventContext({})
     plugin_context.update(cast(EventContext, raw_context))
-    return notify_notify(plugin_context, host_parameters_cb, analyse=True, dispatch=dispatch)
+    return notify_notify(
+        plugin_context,
+        host_parameters_cb,
+        get_http_proxy,
+        analyse=True,
+        dispatch=dispatch,
+    )
 
 
 # .
@@ -437,11 +459,14 @@ def notification_test(
 # TODO: Make use of the generic do_keepalive() mechanism?
 def notify_keepalive(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
 ) -> None:
     cmk.base.utils.register_sigint_handler()
     events.event_keepalive(
-        event_function=partial(notify_notify, host_parameters_cb=host_parameters_cb),
-        call_every_loop=send_ripe_bulks,
+        event_function=partial(
+            notify_notify, host_parameters_cb=host_parameters_cb, get_http_proxy=get_http_proxy
+        ),
+        call_every_loop=partial(send_ripe_bulks, get_http_proxy),
         loop_interval=config.notification_bulk_interval,
     )
 
@@ -462,6 +487,7 @@ def notify_keepalive(
 def notify_rulebased(
     enriched_context: EnrichedEventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     analyse: bool = False,
     dispatch: bool = False,
@@ -507,6 +533,7 @@ def notify_rulebased(
         notifications,
         num_rule_matches,
         host_parameters_cb,
+        get_http_proxy,
         analyse=analyse,
         dispatch=dispatch,
     )
@@ -592,15 +619,17 @@ def _create_notifications(
     return notifications, rule_info
 
 
-def _process_notifications(  # pylint: disable=too-many-branches
+def _process_notifications(
     enriched_context: EnrichedEventContext,
     notifications: Notifications,
     num_rule_matches: int,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     *,
     analyse: bool,
     dispatch: bool = False,
 ) -> list[NotifyPluginInfo]:
+    # pylint: disable=too-many-branches
     plugin_info: list[NotifyPluginInfo] = []
 
     if not notifications:
@@ -617,7 +646,9 @@ def _process_notifications(  # pylint: disable=too-many-branches
                 fallback_params = rbn_finalize_plugin_parameters(
                     enriched_context["HOSTNAME"], plugin_name, host_parameters_cb, fallback_params
                 )
-                plugin_context = create_plugin_context(enriched_context, fallback_params)
+                plugin_context = create_plugin_context(
+                    enriched_context, fallback_params, get_http_proxy
+                )
                 rbn_add_contact_information(plugin_context, fallback_contacts)
                 plugin_contexts = (
                     [plugin_context]
@@ -647,7 +678,7 @@ def _process_notifications(  # pylint: disable=too-many-branches
             )
 
             try:
-                plugin_context = create_plugin_context(enriched_context, params)
+                plugin_context = create_plugin_context(enriched_context, params, get_http_proxy)
                 rbn_add_contact_information(plugin_context, contacts)
 
                 split_contexts = (
@@ -1363,16 +1394,21 @@ def rbn_emails_contacts(emails: list[str]) -> list[str]:
 # - dict, the new style for scripts with WATO rule. This will lead to
 #         PARAMETER_FOO_BAR for a dict key named "foo_bar".
 def create_plugin_context(
-    enriched_context: EnrichedEventContext, params: list | NotifyPluginParams
+    enriched_context: EnrichedEventContext,
+    params: list | NotifyPluginParams,
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
 ) -> NotificationContext:
     plugin_context = NotificationContext({})
     plugin_context.update(cast(Mapping[str, str], enriched_context))  # Make a real copy
-    events.add_to_event_context(plugin_context, "PARAMETER", params)
+    events.add_to_event_context(plugin_context, "PARAMETER", params, get_http_proxy)
     return plugin_context
 
 
-def create_bulk_parameter_context(params: NotifyPluginParams) -> list[str]:
-    dict_context = create_plugin_context({}, params)
+def create_bulk_parameter_context(
+    params: NotifyPluginParams,
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+) -> list[str]:
+    dict_context = create_plugin_context({}, params, get_http_proxy)
     return [
         "{}={}\n".format(varname, value.replace("\r", "").replace("\n", "\1"))
         for (varname, value) in dict_context.items()
@@ -1531,6 +1567,7 @@ def notification_script_env(plugin_context: NotificationContext) -> PluginNotifi
 def handle_spoolfile(
     spoolfile: str,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
     logger.info("----------------------------------------------------------------------")
@@ -1567,7 +1604,7 @@ def handle_spoolfile(
         )
 
         store_notification_backlog(raw_context)
-        locally_deliver_raw_context(raw_context, host_parameters_cb)
+        locally_deliver_raw_context(raw_context, host_parameters_cb, get_http_proxy)
         # TODO: It is a bug that we don't transport result information and monitoring history
         # entries back to the origin site. The intermediate or final results should be sent back to
         # the origin site. Also log_to_history calls should not log the entries to the local
@@ -1876,20 +1913,25 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
     return bulks
 
 
-def send_ripe_bulks() -> None:
+def send_ripe_bulks(get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig]) -> None:
     ripe = find_bulks(True)
     if ripe:
         logger.info("Sending out %d ripe bulk notifications", len(ripe))
         for bulk in ripe:
             try:
-                notify_bulk(bulk[0], bulk[-1])
+                notify_bulk(bulk[0], bulk[-1], get_http_proxy)
             except Exception:
                 if cmk.utils.debug.enabled():
                     raise
                 logger.exception("Error sending bulk %s:", bulk[0])
 
 
-def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many-branches
+def notify_bulk(
+    dirname: str,
+    uuids: UUIDs,
+    get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+) -> None:
+    # pylint: disable=too-many-branches
     parts = dirname.split("/")
     contact = parts[-3]
     plugin_name = cast(NotificationPluginNameStr, parts[-2])
@@ -1932,7 +1974,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many
 
         assert old_params is not None
         plugin_text = NotificationPluginName("bulk " + (plugin_name))
-        context_lines = create_bulk_parameter_context(old_params)
+        context_lines = create_bulk_parameter_context(old_params, get_http_proxy)
         for context in bulk_context:
             # Do not forget to add this to the monitoring log. We create
             # a single entry for each notification contained in the bulk.
@@ -1964,7 +2006,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many
 
     # Repeat with unhandled uuids (due to different parameters)
     if unhandled_uuids:
-        notify_bulk(dirname, unhandled_uuids)
+        notify_bulk(dirname, unhandled_uuids, get_http_proxy)
 
     # Remove directory. Not necessary if emtpy
     try:

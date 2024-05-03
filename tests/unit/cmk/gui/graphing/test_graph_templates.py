@@ -560,7 +560,6 @@ def test_non_trivial_graph_declarations() -> None:
         "mem_growing",
         "mem_shrinking",
         "oracle_sga_pga_total",
-        "qos_class_traffic",
         "ram_swap_overview",
         "ram_swap_used",
         "savings",

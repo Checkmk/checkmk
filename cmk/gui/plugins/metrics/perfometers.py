@@ -1148,24 +1148,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "linear",
-                "segments": ["qos_dropped_bits_rate"],
-                "total": "qos_dropped_bits_rate:max",
-            },
-            {
-                "type": "linear",
-                "segments": ["qos_outbound_bits_rate"],
-                "total": "qos_outbound_bits_rate:max",
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "semaphore_ids",
         "half_value": 50,

@@ -147,36 +147,6 @@ metric_info["messages_outbound"] = {
     "color": "36/a",
 }
 
-metric_info["licenses"] = {
-    "title": _l("Used licenses"),
-    "unit": "count",
-    "color": "#ff6234",
-}
-
-metric_info["license_percentage"] = {
-    "title": _l("Used licenses"),
-    "unit": "%",
-    "color": "16/a",
-}
-
-metric_info["licenses_total"] = {
-    "title": _l("Total licenses"),
-    "unit": "count",
-    "color": "16/b",
-}
-
-metric_info["license_size"] = {
-    "title": _l("Size of license"),
-    "unit": "bytes",
-    "color": "11/a",
-}
-
-metric_info["license_usage"] = {
-    "title": _l("License usage"),
-    "unit": "%",
-    "color": "13/a",
-}
-
 metric_info["database_apply_lag"] = {
     "title": _l("Database apply lag"),
     "help": _l(
@@ -703,20 +673,6 @@ graph_info["deadlocks_and_waits"] = {
     "metrics": [
         ("deadlocks", "area"),
         ("lockwaits", "stack"),
-    ],
-}
-
-graph_info["licenses"] = {
-    "title": _l("Licenses"),
-    "metrics": [
-        (
-            "licenses_total",
-            "area",
-        ),
-        (
-            "licenses",
-            "area",
-        ),
     ],
 }
 

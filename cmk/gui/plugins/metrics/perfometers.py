@@ -210,15 +210,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "licenses",
-        "half_value": 500,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "sync_latency",
         "half_value": 5,
         "exponent": 2,
@@ -1599,14 +1590,6 @@ perfometer_info.append(
         "metric": "elapsed_time",
         "half_value": 1.0,
         "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["license_percentage"],
-        "total": 100.0,
     }
 )
 

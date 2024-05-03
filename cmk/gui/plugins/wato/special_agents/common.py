@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -15,8 +14,6 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword
-
-from cmk.plugins.aws import constants as aws_constants  # pylint: disable=cmk-module-layer-violation
 
 
 def prometheus_connection() -> TextInput:
@@ -98,43 +95,3 @@ def filter_kubernetes_namespace_element():
             ),
         ),
     )
-
-
-def validate_aws_tags(value, varprefix):
-    used_keys = []
-    # KEY:
-    # ve_p_services_p_ec2_p_choice_1_IDX_0
-    # VALUES:
-    # ve_p_services_p_ec2_p_choice_1_IDX_1_IDX
-    for idx_tag, (tag_key, tag_values) in enumerate(value):
-        tag_field = f"{varprefix}_{idx_tag + 1}_0"
-        if tag_key not in used_keys:
-            used_keys.append(tag_key)
-        else:
-            raise MKUserError(
-                tag_field, _("Each tag must be unique and cannot be used multiple times")
-            )
-        if tag_key.startswith("aws:"):
-            raise MKUserError(tag_field, _("Do not use 'aws:' prefix for the key."))
-        if len(tag_key) > 128:
-            raise MKUserError(tag_field, _("The maximum key length is 128 characters."))
-        if len(tag_values) > 50:
-            raise MKUserError(tag_field, _("The maximum number of tags per resource is 50."))
-
-        for idx_values, v in enumerate(tag_values):
-            values_field = f"{varprefix}_{idx_tag + 1}_1_{idx_values + 1}"
-            if len(v) > 256:
-                raise MKUserError(values_field, _("The maximum value length is 256 characters."))
-            if v.startswith("aws:"):
-                raise MKUserError(values_field, _("Do not use 'aws:' prefix for the values."))
-
-
-def aws_region_to_monitor() -> list[tuple[str, str]]:
-    def key(regionid_display: tuple[str, str]) -> str:
-        return regionid_display[1]
-
-    regions_by_display_order = [
-        *sorted((r for r in aws_constants.AWSRegions if "GovCloud" not in r[1]), key=key),
-        *sorted((r for r in aws_constants.AWSRegions if "GovCloud" in r[1]), key=key),
-    ]
-    return [(id_, " | ".join((region, id_))) for id_, region in regions_by_display_order]

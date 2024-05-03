@@ -9,8 +9,8 @@ from typing import TypeVar
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import aws_region_to_monitor, validate_aws_tags
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -30,7 +30,39 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupVMCloudContainer
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
+# TODO agent rule will be migrated to plugins.aws, this will remove the module layer violation
+from cmk.plugins.aws.lib import aws_region_to_monitor  # pylint: disable=cmk-module-layer-violation
+
 ServicesValueSpec = list[tuple[str, ValueSpec]]
+
+
+def _validate_aws_tags(value, varprefix):
+    used_keys = []
+    # KEY:
+    # ve_p_services_p_ec2_p_choice_1_IDX_0
+    # VALUES:
+    # ve_p_services_p_ec2_p_choice_1_IDX_1_IDX
+    for idx_tag, (tag_key, tag_values) in enumerate(value):
+        tag_field = f"{varprefix}_{idx_tag + 1}_0"
+        if tag_key not in used_keys:
+            used_keys.append(tag_key)
+        else:
+            raise MKUserError(
+                tag_field, _("Each tag must be unique and cannot be used multiple times")
+            )
+        if tag_key.startswith("aws:"):
+            raise MKUserError(tag_field, _("Do not use 'aws:' prefix for the key."))
+        if len(tag_key) > 128:
+            raise MKUserError(tag_field, _("The maximum key length is 128 characters."))
+        if len(tag_values) > 50:
+            raise MKUserError(tag_field, _("The maximum number of tags per resource is 50."))
+
+        for idx_values, v in enumerate(tag_values):
+            values_field = f"{varprefix}_{idx_tag + 1}_1_{idx_values + 1}"
+            if len(v) > 256:
+                raise MKUserError(values_field, _("The maximum value length is 256 characters."))
+            if v.startswith("aws:"):
+                raise MKUserError(values_field, _("Do not use 'aws:' prefix for the values."))
 
 
 def _vs_aws_tags(title):
@@ -49,7 +81,7 @@ def _vs_aws_tags(title):
         add_label=_("Add new tag"),
         movable=False,
         title=title,
-        validate=validate_aws_tags,
+        validate=_validate_aws_tags,
     )
 
 

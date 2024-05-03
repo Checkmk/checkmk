@@ -13,12 +13,12 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp5 sles12sp5 \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles --oldpackage libcurl4-7.60.0-9.8.x86_64 \
     && zypper -n --no-gpg-checks in --replacefiles --oldpackage libpcre1-8.39-8.3.1.x86_64 \
+    && zypper -n --no-gpg-checks in --replacefiles --allow-downgrade krb5-devel \
     && zypper -n --no-gpg-checks in --replacefiles \
     curl \
     cyrus-sasl-devel \
     enchant-devel \
     git \
-    krb5-devel \
     libmysqlclient-devel \
     make \
     openldap2-devel \

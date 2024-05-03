@@ -71,6 +71,119 @@ mod tests {
 }
 
 #[cfg(windows)]
+pub mod odbc {
+    use anyhow::Result;
+    use odbc_api::{
+        buffers::{ColumnarBuffer, TextColumn, TextRowSet},
+        ConnectionOptions, Cursor, Environment, ResultSetMetadata,
+    };
+
+    use crate::types::InstanceName;
+
+    /// creates a local connection string for the ODBC driver
+    /// always SSPI and Trusted connection
+    pub fn make_connection_string(
+        instance: &InstanceName,
+        database: Option<&str>,
+        driver: Option<&str>,
+    ) -> String {
+        format!(
+            "Driver={};SERVER=(local)\\{};Initial Catalog={};Integrated Security=SSPI;Trusted_Connection=yes;",
+            driver.unwrap_or("{ODBC Driver 17 for SQL Server}"),
+            instance,
+            database.unwrap_or("master")
+        )
+    }
+
+    pub struct Block {
+        pub headline: Vec<String>,
+        pub rows: Vec<Vec<String>>,
+    }
+
+    type BufferType = ColumnarBuffer<TextColumn<u8>>;
+
+    pub fn execute(connection_string: &str, query: &str) -> Result<Vec<Block>> {
+        let env = Environment::new()?;
+
+        let conn =
+            env.connect_with_connection_string(connection_string, ConnectionOptions::default())?;
+
+        if let Some(mut cursor) = conn.execute(query, ())? {
+            const BATCH_SIZE: usize = 5000;
+            let mut blocks: Vec<Block> = Vec::new();
+
+            let headline = cursor.column_names()?.collect::<Result<_, _>>()?;
+            let mut buffers = TextRowSet::for_cursor(BATCH_SIZE, &mut cursor, Some(4096))?;
+            let mut row_set_cursor = cursor.bind_buffer(&mut buffers)?;
+
+            let mut rows: Vec<Vec<String>> = Vec::new();
+            while let Some(batch) = row_set_cursor.fetch()? {
+                rows.extend(process_batch(batch));
+            }
+            blocks.push(Block { headline, rows });
+
+            if let Ok((cursor, _buffer)) = row_set_cursor.unbind() {
+                if let Ok(Some(mut c)) = cursor.more_results() {
+                    let headline = c.column_names()?.collect::<Result<_, _>>()?;
+                    let mut rows: Vec<Vec<String>> = Vec::new();
+                    let mut row_set_cursor = c.bind_buffer(&mut buffers)?;
+                    while let Some(batch) = row_set_cursor.fetch()? {
+                        rows.extend(process_batch(batch));
+                    }
+                    blocks.push(Block { headline, rows });
+                }
+            }
+            return Ok(blocks);
+        }
+
+        Ok(vec![])
+    }
+
+    pub fn process_batch(batch: &BufferType) -> Vec<Vec<String>> {
+        let mut rows: Vec<Vec<String>> = Vec::new();
+        for row in 0..batch.num_rows() {
+            let row: Vec<String> = (0..batch.num_cols())
+                .map(|col_index| {
+                    batch
+                        .at_as_str(col_index, row)
+                        .unwrap_or_default()
+                        .unwrap_or_default()
+                        .to_string()
+                })
+                .collect();
+            rows.push(row);
+        }
+        rows
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use crate::platform::odbc;
+        use crate::types::InstanceName;
+
+        #[test]
+        fn test_make_connection_string() {
+            assert_eq!(
+                odbc::make_connection_string(
+                    &InstanceName::from("SQLEXPRESS_NAME".to_string()),
+                    None,
+                    None
+                ),
+                "Driver={ODBC Driver 17 for SQL Server};SERVER=(local)\\SQLEXPRESS_NAME;Initial Catalog=master;Integrated Security=SSPI;Trusted_Connection=yes;"
+            );
+            assert_eq!(
+                odbc::make_connection_string(
+                    &InstanceName::from("Instance".to_string()),
+                    Some("db"),
+                    Some("driver"),
+                ),
+                "Driver=driver;SERVER=(local)\\Instance;Initial Catalog=db;Integrated Security=SSPI;Trusted_Connection=yes;"
+            );
+        }
+    }
+}
+
+#[cfg(windows)]
 pub mod registry {
     use super::InstanceInfo;
     use crate::types::{InstanceName, Port};

@@ -141,11 +141,11 @@ def version_gte(version: str, min_version: str) -> bool:
     logger.debug("min_version=%s; min_version_values=%s", min_version, min_version_values)
 
     # compare the version numbers segment by segment
-    # if any is lower, return False
+    # if any is higher, return True
     for i, min_val in enumerate(min_version_values):
-        if int(cmp_version_values[i]) < int(min_val):
-            return False
-    return True
+        if int(cmp_version_values[i]) > int(min_val):
+            return True
+    return False
 
 
 def get_min_version() -> str:

@@ -1582,26 +1582,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "kube_cpu_usage",
-        "half_value": 0.5,  # no clear guidance was available for chosing these values. If more
-        # information becomes available, we will update them.
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "kube_memory_usage",
-        "half_value": 512 * MB,  # no clear guidance was available for chosing these values. If more
-        # information becomes available, we will update them.
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["io_consumption_percent"],
         "total": 100.0,

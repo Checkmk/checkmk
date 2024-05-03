@@ -1381,7 +1381,7 @@ def test_convert_to_legacy_rulespec_group(
                 ),
                 title=lambda: _("rulespec title"),
                 valuespec=partial(legacy_valuespecs.TextInput),
-                match_type="see discovery_ruleset_type of Checkplugin",
+                match_type="varies",
             ),
             id="ServiceDiscoveryRuleSpec",
         ),

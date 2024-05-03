@@ -53,7 +53,7 @@ from .main_menu import ABCMainModule, MainModuleRegistry
 from .search import ABCMatchItemGenerator, match_item_generator_registry, MatchItem, MatchItems
 from .timeperiods import TimeperiodSelection
 
-MatchType = Literal["first", "all", "list", "dict", "see discovery_ruleset_type of Checkplugin"]
+MatchType = Literal["first", "all", "list", "dict", "varies"]
 
 
 class AllowAll:

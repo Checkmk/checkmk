@@ -289,7 +289,7 @@ def _convert_to_legacy_match_type(
         | ruleset_api_v1.rule_specs.SNMP
         | ruleset_api_v1.rule_specs.SpecialAgent
     ),
-) -> Literal["dict", "all", "first", "see discovery_ruleset_type of Checkplugin"]:
+) -> Literal["first", "all", "list", "dict", "varies"]:
     match to_convert:
         case ruleset_api_v1.rule_specs.ActiveCheck():
             return "all"
@@ -302,7 +302,7 @@ def _convert_to_legacy_match_type(
         ):
             return "dict"
         case ruleset_api_v1.rule_specs.DiscoveryParameters():
-            return "see discovery_ruleset_type of Checkplugin"
+            return "varies"
         case other:
             return "dict" if other.eval_type == ruleset_api_v1.rule_specs.EvalType.MERGE else "all"
 

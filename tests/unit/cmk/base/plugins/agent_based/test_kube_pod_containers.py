@@ -18,7 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render, Result, Stat
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 from cmk.agent_based.v1.type_defs import StringTable
-from cmk.plugins.lib.kube import ContainerStateType, ContainerTerminatedState, PodContainers
+from cmk.plugins.kube.schemata.api import ContainerStateType, ContainerTerminatedState
+from cmk.plugins.kube.schemata.section import PodContainers
 
 TIMESTAMP = 359
 MINUTE = 60

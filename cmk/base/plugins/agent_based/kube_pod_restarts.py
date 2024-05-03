@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
-from cmk.plugins.lib.kube import PodContainers
+from cmk.plugins.kube.schemata.section import PodContainers
 
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE

@@ -3,7 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.lib.kube import OnDelete, Recreate, RollingUpdate, StatefulSetRollingUpdate
+from cmk.plugins.kube.schemata.api import (
+    OnDelete,
+    Recreate,
+    RollingUpdate,
+    StatefulSetRollingUpdate,
+)
 from cmk.plugins.lib.kube_strategy import strategy_text
 
 

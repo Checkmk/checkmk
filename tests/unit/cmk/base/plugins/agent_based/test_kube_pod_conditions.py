@@ -22,7 +22,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 
 from cmk.agent_based.v1 import Result, State
 from cmk.agent_based.v1.type_defs import CheckResult
-from cmk.plugins.lib.kube import PodCondition, PodConditions
+from cmk.plugins.kube.schemata.section import PodCondition, PodConditions
 
 MINUTE = 60
 TIMESTAMP = 359

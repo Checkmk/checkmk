@@ -19,7 +19,7 @@ from cmk.base.plugins.agent_based.kube_pod_resources import (
     VSResultPercent,
 )
 
-from cmk.plugins.lib.kube import AllocatablePods, PodResources, PodSequence
+from cmk.plugins.kube.schemata.section import AllocatablePods, PodResources, PodSequence
 
 
 @pytest.mark.parametrize(

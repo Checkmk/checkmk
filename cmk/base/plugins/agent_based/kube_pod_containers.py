@@ -14,13 +14,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from cmk.plugins.lib.kube import (
+from cmk.plugins.kube.schemata.api import (
     ContainerRunningState,
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
-    PodContainers,
 )
+from cmk.plugins.kube.schemata.section import PodContainers
 
 
 def parse(string_table: StringTable) -> PodContainers | None:

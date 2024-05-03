@@ -8,14 +8,14 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any, Literal
 
-from cmk.plugins.lib.kube import (
+from cmk.plugins.kube.schemata.section import (
     ControllerSpec,
     DaemonSetReplicas,
     DeploymentReplicas,
     StatefulSetReplicas,
     UpdateStrategy,
-    VSResultAge,
 )
+from cmk.plugins.lib.kube import VSResultAge
 from cmk.plugins.lib.kube_strategy import strategy_text
 
 from .agent_based_api.v1 import (

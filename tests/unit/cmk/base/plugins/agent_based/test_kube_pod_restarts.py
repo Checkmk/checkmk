@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based import kube_pod_restarts
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
-from cmk.plugins.lib.kube import PodContainers
+from cmk.plugins.kube.schemata.section import PodContainers
 
 ONE_MINUTE = 60
 ONE_HOUR = 60 * ONE_MINUTE

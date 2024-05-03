@@ -14,7 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from cmk.plugins.lib.kube import ContainerCount
+from cmk.plugins.kube.schemata.section import ContainerCount
 
 OptionalLevels = Literal["no_levels"] | tuple[Literal["levels"], tuple[int, int]]
 KubeContainersLevelsUpperLower = Mapping[str, OptionalLevels]

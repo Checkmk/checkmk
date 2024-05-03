@@ -8,7 +8,7 @@ import enum
 from collections.abc import Sequence
 from typing import Literal, TypedDict
 
-from cmk.plugins.lib.kube import CountableNode, NodeCount
+from cmk.plugins.kube.schemata.section import CountableNode, NodeCount
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

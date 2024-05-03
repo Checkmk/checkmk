@@ -21,12 +21,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
+from cmk.plugins.kube.schemata.section import PodCondition, PodConditions
 from cmk.plugins.lib.kube import (
     condition_detailed_description,
     condition_short_description,
     get_age_levels_for,
-    PodCondition,
-    PodConditions,
     VSResultAge,
 )
 

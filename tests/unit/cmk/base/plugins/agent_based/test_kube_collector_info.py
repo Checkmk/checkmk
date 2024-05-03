@@ -13,7 +13,7 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from cmk.base.plugins.agent_based import kube_collector_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 
-from cmk.plugins.lib.kube import (
+from cmk.plugins.kube.schemata.section import (
     CheckmkKubeAgentMetadata,
     ClusterCollectorMetadata,
     CollectorComponentsMetadata,

@@ -563,7 +563,7 @@ class Replicas(BaseModel):
     unavailable: int
 
 
-class ConditionStatus(str, enum.Enum):
+class ConditionStatus(enum.StrEnum):
     TRUE = "True"
     FALSE = "False"
     UNKNOWN = "Unknown"

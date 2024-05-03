@@ -7,8 +7,7 @@
 from collections.abc import Iterator
 
 from cmk.agent_based.v2 import TableRow
-
-from .kube import Labels, MatchExpressions, MatchLabels
+from cmk.plugins.kube.schemata.api import Labels, MatchExpressions, MatchLabels
 
 
 def match_labels_to_str(match_labels: MatchLabels) -> str:
@@ -61,13 +60,13 @@ def match_expressions_to_str(match_expressions: MatchExpressions) -> str:
     """
     pretty_match_expressions: list[str] = []
     for match_expression in match_expressions:
-        key, operator = match_expression["key"], match_expression["operator"]
+        key, operator = match_expression.key, match_expression.operator
         if operator == "Exists":
             pretty_match_expressions.append(key)
         elif operator == "DoesNotExist":
             pretty_match_expressions.append(f"!{key}")
         elif operator in ("In", "NotIn"):
-            pretty_values = ", ".join(match_expression["values"])
+            pretty_values = ", ".join(match_expression.values)
             pretty_match_expressions.append(f"{key} {operator.lower()} ({pretty_values})")
         else:
             raise AssertionError("Unknown operator in match expression")

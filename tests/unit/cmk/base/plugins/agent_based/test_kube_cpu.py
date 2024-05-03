@@ -14,8 +14,8 @@ from cmk.base.plugins.agent_based import kube_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 import cmk.plugins.lib.kube
+from cmk.plugins.kube.schemata.section import Cpu, PerformanceUsage
 from cmk.plugins.lib import kube_resources
-from cmk.plugins.lib.kube import Cpu, PerformanceUsage
 
 
 class ResourcesFactory(ModelFactory):

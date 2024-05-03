@@ -13,13 +13,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from cmk.plugins.lib.kube import (
-    condition_detailed_description,
-    condition_short_description,
-    NodeCondition,
-    NodeConditions,
-    NodeConditionStatus,
-)
+from cmk.plugins.kube.schemata.api import NodeConditionStatus
+from cmk.plugins.kube.schemata.section import NodeCondition, NodeConditions
+from cmk.plugins.lib.kube import condition_detailed_description, condition_short_description
 
 
 class StateMap(NamedTuple):

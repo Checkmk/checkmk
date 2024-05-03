@@ -27,7 +27,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from cmk.plugins.lib.kube import AllocatablePods, PodResources, PodSequence, VSResultAge
+from cmk.plugins.kube.schemata.section import AllocatablePods, PodResources, PodSequence
+from cmk.plugins.lib.kube import VSResultAge
 
 
 def discovery_kube_pod_resources(

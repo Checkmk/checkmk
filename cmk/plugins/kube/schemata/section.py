@@ -193,6 +193,9 @@ class CollectorProcessingLogs(Section):
     machine: CollectorHandlerLog
 
 
+# TODO: Resources is a bad name, this should be changed to something like Requirements. When
+# choosing a name, other section BaseModel names like AllocatableResource and PerformanceUsage
+# be taken into account
 class Resources(Section):
     """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
 
@@ -648,6 +651,26 @@ class PrometheusResult(BaseModel):
         # match statements are disliked by pylint. The statement below is not reachable, but ensures
         # that pylint knows this function returns a tuple
         return ResultType.response_invalid_data, None
+
+    def summary(self) -> str:
+        match self.type_:
+            case ResultType.request_exception:
+                return f"Request Exception: {self.details}"
+            case ResultType.json_decode_error:
+                return "Invalid response: did not receive JSON"
+            case ResultType.validation_error:
+                return "Invalid response: did not match Prometheus HTTP API"
+            case ResultType.response_error:
+                return f"Prometheus error: {self.details}"
+            case ResultType.response_empty_result:
+                return "Querying endpoint succeeded, but no samples received"
+            case ResultType.response_invalid_data:
+                return (
+                    "Incompatible data received: data did not match format expected from OpenShift"
+                )
+            case ResultType.success:
+                return "Successfully queried usage data from Prometheus"
+        assert_never(self.type_)
 
 
 class OpenShiftEndpoint(Section):

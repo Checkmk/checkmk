@@ -13,11 +13,11 @@ from cmk.base.plugins.agent_based.kube_persistent_volume_claim import (
     VOLUME_DEFAULT_PARAMS,
 )
 
-from cmk.plugins.lib.kube import (
+from cmk.plugins.kube.schemata.api import PersistentVolumeClaimPhase
+from cmk.plugins.kube.schemata.section import (
     AttachedVolume,
     PersistentVolume,
     PersistentVolumeClaim,
-    PersistentVolumeClaimPhase,
     PersistentVolumeClaimStatus,
     StorageRequirement,
 )

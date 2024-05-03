@@ -15,9 +15,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
+from cmk.plugins.kube.schemata.section import CronJobInfo
 from cmk.plugins.lib.kube import (
     check_with_time,
-    CronJobInfo,
     kube_annotations_to_cmk_labels,
     kube_labels_to_cmk_labels,
 )

@@ -6,7 +6,7 @@ import time
 from collections.abc import MutableMapping
 from typing import Any
 
-from cmk.plugins.lib.kube import PerformanceUsage
+from cmk.plugins.kube.schemata.section import PerformanceUsage
 from cmk.plugins.lib.kube_resources import (
     check_resource_quota_resource,
     cpu_render_func,

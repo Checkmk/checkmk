@@ -12,15 +12,8 @@ from pytest_mock import MockerFixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_node import inventory_kube_node
 
-from cmk.plugins.lib.kube import (
-    HealthZ,
-    IpAddress,
-    KubeletInfo,
-    NodeAddress,
-    NodeInfo,
-    NodeName,
-    Timestamp,
-)
+from cmk.plugins.kube.schemata.api import HealthZ, IpAddress, NodeAddress, NodeName, Timestamp
+from cmk.plugins.kube.schemata.section import FilteredAnnotations, KubeletInfo, NodeInfo
 
 from .utils_inventory import sort_inventory_result
 
@@ -38,7 +31,7 @@ from .utils_inventory import sort_inventory_result
                 name=NodeName("minikube"),
                 creation_timestamp=Timestamp(1640000000.0),
                 labels={},
-                annotations={},
+                annotations=FilteredAnnotations({}),
                 addresses=[
                     NodeAddress(type_="Hostname", address=IpAddress("k8-21")),
                     NodeAddress(type_="ExternalIP", address=IpAddress("10.200.3.21")),

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .kube import DisplayableStrategy, RollingUpdate, StatefulSetRollingUpdate
+from cmk.plugins.kube.schemata.api import RollingUpdate, StatefulSetRollingUpdate
+from cmk.plugins.kube.schemata.section import DisplayableStrategy
 
 
 def strategy_text(strategy: DisplayableStrategy) -> str:

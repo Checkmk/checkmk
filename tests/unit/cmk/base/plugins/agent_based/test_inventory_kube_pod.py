@@ -12,11 +12,9 @@ from pytest_mock import MockerFixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_pod import _containers_to_table, inventory_kube_pod
 
-from cmk.plugins.lib.kube import (
+from cmk.plugins.kube.schemata.api import (
     ContainerName,
     ContainerRunningState,
-    ContainerSpec,
-    ContainerSpecs,
     ContainerStateType,
     ContainerStatus,
     ContainerTerminatedState,
@@ -24,10 +22,15 @@ from cmk.plugins.lib.kube import (
     IpAddress,
     NamespaceName,
     NodeName,
-    PodContainers,
-    PodInfo,
     PodUID,
     Timestamp,
+)
+from cmk.plugins.kube.schemata.section import (
+    ContainerSpec,
+    ContainerSpecs,
+    FilteredAnnotations,
+    PodContainers,
+    PodInfo,
 )
 
 
@@ -40,7 +43,7 @@ from cmk.plugins.lib.kube import (
                 name="name",
                 creation_timestamp=Timestamp(1600000000.0),
                 labels={},
-                annotations={},
+                annotations=FilteredAnnotations({}),
                 node=NodeName("minikube"),
                 host_network=None,
                 dns_policy="ClusterFirst",

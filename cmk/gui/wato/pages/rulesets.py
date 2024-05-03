@@ -1107,22 +1107,28 @@ class ModeEditRuleset(WatoMode):
         html.open_div(class_="matching_message")
         html.icon("toggle_details")
         html.b("%s: " % _("Matching"))
-        if match_type == "first":
-            html.write_text(_("The first matching rule defines the parameter."))
 
-        elif match_type == "dict":
-            html.write_text(
-                _(
-                    "Each parameter is defined by the first matching rule where that "
-                    "parameter is set (checked)."
+        match match_type:
+            case "first":
+                html.write_text(_("The first matching rule defines the parameter."))
+            case "dict":
+                html.write_text(
+                    _(
+                        "Each parameter is defined by the first matching rule where that "
+                        "parameter is set (checked)."
+                    )
                 )
-            )
+            case "varies":
+                html.write_text(
+                    _(
+                        "The match type is defined by the discovery ruleset type of the check plugin."
+                    )
+                )
+            case "all" | "list":
+                html.write_text(_("All matching rules will add to the resulting list."))
+            case _:
+                html.write_text(_("Unknown match type: %s") % match_type)
 
-        elif match_type in ("all", "list"):
-            html.write_text(_("All matching rules will add to the resulting list."))
-
-        else:
-            html.write_text(_("Unknown match type: %s") % match_type)
         html.close_div()
 
     def _rule_listing(self, ruleset: Ruleset) -> None:

@@ -888,7 +888,7 @@ def rbn_match_rule(
     return events.apply_matchers(
         [
             rbn_match_rule_disabled,
-            events.event_match_rule,
+            partial(events.event_match_rule, define_servicegroups=config.define_servicegroups),
             rbn_match_escalation,
             rbn_match_escalation_throtte,
             rbn_match_host_event,

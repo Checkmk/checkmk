@@ -13,6 +13,7 @@ import socket
 import sys
 import time
 from collections.abc import Callable, Iterable, Mapping
+from functools import partial
 from typing import Any, cast
 from urllib.parse import quote, urlencode
 
@@ -478,17 +479,26 @@ def apply_matchers(
     return None
 
 
-def event_match_rule(rule: EventRule, context: EventContext, analyse: bool = False) -> str | None:
+def event_match_rule(
+    rule: EventRule,
+    context: EventContext,
+    define_servicegroups: Mapping[str, str],
+    analyse: bool = False,
+) -> str | None:
     return apply_matchers(
         [
             event_match_site,
             event_match_folder,
             event_match_hosttags,
             event_match_hostgroups,
-            event_match_servicegroups_fixed,
-            event_match_exclude_servicegroups_fixed,
-            event_match_servicegroups_regex,
-            event_match_exclude_servicegroups_regex,
+            partial(event_match_servicegroups_fixed, define_servicegroups=define_servicegroups),
+            partial(
+                event_match_exclude_servicegroups_fixed, define_servicegroups=define_servicegroups
+            ),
+            partial(event_match_servicegroups_regex, define_servicegroups=define_servicegroups),
+            partial(
+                event_match_exclude_servicegroups_regex, define_servicegroups=define_servicegroups
+            ),
             event_match_contacts,
             event_match_contactgroups,
             event_match_hosts,
@@ -577,22 +587,29 @@ def event_match_hosttags(
 def event_match_servicegroups_fixed(
     rule: EventRule,
     context: EventContext,
+    define_servicegroups: Mapping[str, str],
     _analyse: bool,
 ) -> str | None:
-    return _event_match_servicegroups(rule, context, is_regex=False)
+    return _event_match_servicegroups(rule, context, define_servicegroups, is_regex=False)
 
 
 def event_match_servicegroups_regex(
     rule: EventRule,
     context: EventContext,
+    define_servicegroups: Mapping[str, str],
     _analyse: bool,
 ) -> str | None:
-    return _event_match_servicegroups(rule, context, is_regex=True)
+    return _event_match_servicegroups(rule, context, define_servicegroups, is_regex=True)
 
 
-def _event_match_servicegroups(  # pylint: disable=too-many-branches
-    rule: EventRule, context: EventContext, is_regex: bool
+def _event_match_servicegroups(
+    rule: EventRule,
+    context: EventContext,
+    define_servicegroups: Mapping[str, str],
+    *,
+    is_regex: bool,
 ) -> str | None:
+    # pylint: disable=too-many-branches
     if is_regex:
         match_type, required_groups = rule.get("match_servicegroups_regex", (None, None))
     else:
@@ -624,9 +641,7 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value = (
-                        config.define_servicegroups[sg] if match_type == "match_alias" else sg
-                    )
+                    match_value = define_servicegroups[sg] if match_type == "match_alias" else sg
                     if r.search(match_value):
                         return None
             elif group in servicegroups:
@@ -637,9 +652,7 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
                 return (
                     "The service is only in the groups %s. None of these patterns match: %s"
                     % (
-                        '"'
-                        + '", "'.join(config.define_servicegroups[x] for x in servicegroups)
-                        + '"',
+                        '"' + '", "'.join(define_servicegroups[x] for x in servicegroups) + '"',
                         '"' + '" or "'.join(required_groups),
                     )
                     + '"'
@@ -662,21 +675,23 @@ def _event_match_servicegroups(  # pylint: disable=too-many-branches
 def event_match_exclude_servicegroups_fixed(
     rule: EventRule,
     context: EventContext,
+    define_servicegroups: Mapping[str, str],
     _analyse: bool,
 ) -> str | None:
-    return _event_match_exclude_servicegroups(rule, context, is_regex=False)
+    return _event_match_exclude_servicegroups(rule, context, define_servicegroups, is_regex=False)
 
 
 def event_match_exclude_servicegroups_regex(
     rule: EventRule,
     context: EventContext,
+    define_servicegroups: Mapping[str, str],
     _analyse: bool,
 ) -> str | None:
-    return _event_match_exclude_servicegroups(rule, context, is_regex=True)
+    return _event_match_exclude_servicegroups(rule, context, define_servicegroups, is_regex=True)
 
 
 def _event_match_exclude_servicegroups(
-    rule: EventRule, context: EventContext, is_regex: bool
+    rule: EventRule, context: EventContext, define_servicegroups: Mapping[str, str], is_regex: bool
 ) -> str | None:
     if is_regex:
         match_type, excluded_groups = rule.get("match_exclude_servicegroups_regex", (None, None))
@@ -699,11 +714,9 @@ def _event_match_exclude_servicegroups(
             if is_regex:
                 r = regex(group)
                 for sg in servicegroups:
-                    match_value = (
-                        config.define_servicegroups[sg] if match_type == "match_alias" else sg
-                    )
+                    match_value = define_servicegroups[sg] if match_type == "match_alias" else sg
                     match_value_inverse = (
-                        sg if match_type == "match_alias" else config.define_servicegroups[sg]
+                        sg if match_type == "match_alias" else define_servicegroups[sg]
                     )
 
                     if r.search(match_value):

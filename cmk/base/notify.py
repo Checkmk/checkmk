@@ -75,7 +75,6 @@ from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import is_timeperiod_active, load_timeperiods, timeperiod_active
 
 import cmk.base.config as config
-import cmk.base.core
 import cmk.base.events as events
 import cmk.base.obsolete_output as out
 import cmk.base.utils

@@ -31,7 +31,6 @@ from cmk.utils.tags import TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
 
 import cmk.base.config as config
-import cmk.base.core
 from cmk.base.core_config import read_notify_host_file
 
 ContactList = list  # TODO Improve this

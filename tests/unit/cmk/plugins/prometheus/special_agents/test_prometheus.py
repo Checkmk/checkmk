@@ -8,7 +8,9 @@ from collections.abc import Mapping
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.special_agents.utils.prometheus import extract_connection_args
+from cmk.plugins.lib.prometheus import (  # pylint: disable=cmk-module-layer-violation
+    extract_connection_args,
+)
 
 
 @pytest.mark.parametrize(

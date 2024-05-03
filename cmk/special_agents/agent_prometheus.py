@@ -17,8 +17,15 @@ from typing import Any
 
 import requests
 
-from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric, SectionStr
-from cmk.special_agents.utils.prometheus import extract_connection_args, generate_api_session
+from cmk.plugins.lib.node_exporter import (  # pylint: disable=cmk-module-layer-violation
+    NodeExporter,
+    PromQLMetric,
+    SectionStr,
+)
+from cmk.plugins.lib.prometheus import (  # pylint: disable=cmk-module-layer-violation
+    extract_connection_args,
+    generate_api_session,
+)
 
 LOGGER = logging.getLogger()  # root logger for now
 

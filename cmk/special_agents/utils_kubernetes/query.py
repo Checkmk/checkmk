@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, RootModel, ValidationError
 
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
-from cmk.special_agents.utils import node_exporter
+from cmk.plugins.lib import node_exporter  # pylint: disable=cmk-module-layer-violation
 from cmk.special_agents.utils_kubernetes.prometheus_api import (
     parse_raw_response,
     Response,

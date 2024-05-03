@@ -6,7 +6,11 @@
 from collections.abc import Iterable, Sequence
 from typing import TypeVar
 
-from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric, SectionStr
+from cmk.plugins.lib.node_exporter import (  # pylint: disable=cmk-module-layer-violation
+    NodeExporter,
+    PromQLMetric,
+    SectionStr,
+)
 from cmk.special_agents.utils_kubernetes import common, prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import section
 

@@ -70,6 +70,7 @@ configure_make(
         "share/snmp/mibs",
         "share/man/",
         "lib/python%s/site-packages/netsnmp" % PYTHON_MAJOR_DOT_MINOR,
+        "tar",
         "lib/perl5/",
     ],
     out_shared_libs = [
@@ -98,6 +99,14 @@ configure_make(
                 INSTALLSITEMAN3DIR=/share/man/man3 \
                 INSTALLARCHLIB=/lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi \
                 install
+
+        chmod u+w -R ${INSTALLDIR}
+        chmod 644 ${INSTALLDIR}/share/snmp/mibs/*
+
+        tar -C ${INSTALLDIR}/../ \
+            --exclude="net-snmp/tar" \
+            -cf ${INSTALLDIR}/tar/net-snmp.tar \
+            net-snmp
     """,
     targets = [
         "",
@@ -106,6 +115,7 @@ configure_make(
         "-C man DESTDIR='/' install",
         "-C mibs DESTDIR='/' mibsinstall",
     ],
+    visibility = ["//visibility:public"],
     deps = ["@python"],
 )
 

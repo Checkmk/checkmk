@@ -59,6 +59,7 @@ configure_make(
     ],
     out_data_dirs = [
         "share",
+        "tar",
         "lib/perl5/lib/perl5/",
         "lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
         "lib/pkgconfig",
@@ -71,6 +72,15 @@ configure_make(
     out_static_libs = [
         "librrd.a",
     ],
+    postfix_script = """
+        chmod u+w -R ${INSTALLDIR}/../
+        tar -C ${INSTALLDIR}/../ \
+            --exclude="rrdtool/home" \
+            --exclude="rrdtool/usr" \
+            --exclude="rrdtool/tar" \
+            -cf ${INSTALLDIR}/tar/rrdtool.tar \
+            rrdtool
+    """,
     targets = [
         "-C po all",
         "-C src all",
@@ -86,5 +96,6 @@ configure_make(
         # DESTDIR for Python, since INSTALLDIR is in prefix
         "DESTDIR=/ -C bindings install",
     ],
+    visibility = ["//visibility:public"],
     deps = ["@python"],
 )

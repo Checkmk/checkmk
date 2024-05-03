@@ -71,6 +71,7 @@ configure_make(
         "all",
         "install",
     ],
+    visibility = ["//visibility:public"],
 )
 
 genrule(

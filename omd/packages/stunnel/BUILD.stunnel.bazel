@@ -31,6 +31,7 @@ configure_make(
     out_shared_libs = [
         "libstunnel.so",
     ],
+    visibility = ["//visibility:public"],
     deps = ["@openssl"],
 )
 
@@ -52,4 +53,5 @@ genrule(
     cmd = """
         cp -r --dereference $(execpath @omd_packages//omd/packages/stunnel:skel) $$(realpath $(RULEDIR))
     """,
+    visibility = ["//visibility:public"],
 )

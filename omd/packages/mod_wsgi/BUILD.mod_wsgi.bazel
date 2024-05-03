@@ -34,5 +34,6 @@ configure_make(
         cp src/server/.libs/mod_wsgi.so $INSTALLDIR/lib
     """,
     targets = [""],
+    visibility = ["//visibility:public"],
     deps = ["@python"],
 )

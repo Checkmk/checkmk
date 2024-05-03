@@ -14,6 +14,7 @@ filegroup(
 
 genrule(
     name = "build",
+    visibility = ["//visibility:public"],
     srcs = [":package_source_files", ":package_root"],
     outs = ["bin/patch", "share/man/man1/patch.1"],
     cmd = """

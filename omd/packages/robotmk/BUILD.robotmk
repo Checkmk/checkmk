@@ -7,6 +7,7 @@ filegroup(
 
 genrule(
     name = "build",
+    visibility = ["//visibility:public"],
     srcs = [":package_source_files"],
     outs = ["robotmk_scheduler.exe", "robotmk_agent_plugin.exe", "rcc.exe"],
     cmd = """

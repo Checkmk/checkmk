@@ -43,6 +43,7 @@ configure_make(
         "all",
         "install-base",
     ],
+    visibility = ["//visibility:public"],
 )
 
 genrule(

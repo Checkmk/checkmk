@@ -69,7 +69,14 @@ configure_make(
     ],
     out_data_dirs=[
         "skel",
+        "tar",
         "lib/pkgconfig",
         "lib/engines-3",
     ],
+    postfix_script = """
+        tar -C ${INSTALLDIR}/../ \
+            --exclude="openssl/tar" \
+            -cf ${INSTALLDIR}/tar/openssl.tar \
+            openssl
+    """
 )

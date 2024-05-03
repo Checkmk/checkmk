@@ -14,6 +14,7 @@ filegroup(
 
 genrule(
     name = "build",
+    visibility = ["//visibility:public"],
     srcs = [":package_source_files", ":package_root", ":skel"],
     outs = ["bin/redis-benchmark", "bin/redis-check-aof", "bin/redis-check-rdb", "bin/redis-cli", "bin/redis-sentinel", "bin/redis-server"],
     cmd = """

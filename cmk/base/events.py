@@ -31,7 +31,6 @@ from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
 
-import cmk.base.config as config
 from cmk.base.core_config import read_notify_host_file
 
 ContactList = list  # TODO Improve this
@@ -252,17 +251,20 @@ def livestatus_fetch_contacts(host: HostName, service: ServiceName | None) -> Co
         return None  # We must allow notifications without Livestatus access
 
 
-def add_rulebased_macros(raw_context: EventContext, contacts_needed: bool) -> None:
+def add_rulebased_macros(
+    raw_context: EventContext,
+    ensure_nagios: Callable[[str], object],
+    contacts_needed: bool,
+) -> None:
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
     if "CONTACTS" not in raw_context and contacts_needed:
         # Ensure that we don't reach this when the Microcore is enabled. Triggering this logic
         # with the Microcore might result in dead locks.
-        if config.is_cmc():
-            raise RuntimeError(
-                "Missing 'CONTACTS' in raw notification context. It should always "
-                "be available when using the Microcore."
-            )
+        ensure_nagios(
+            "Missing 'CONTACTS' in raw notification context. It should always "
+            "be available when using the Microcore."
+        )
 
         contact_list = livestatus_fetch_contacts(
             raw_context["HOSTNAME"], raw_context.get("SERVICEDESC")
@@ -282,6 +284,7 @@ def add_rulebased_macros(raw_context: EventContext, contacts_needed: bool) -> No
 
 def complete_raw_context(
     raw_context: EventContext,
+    ensure_nagios: Callable[[str], object],
     with_dump: bool,
     contacts_needed: bool,
 ) -> EnrichedEventContext:
@@ -355,7 +358,7 @@ def complete_raw_context(
         if (value := enriched_context.get("LASTSERVICEOK")) is not None:
             enriched_context["LASTSERVICEOK_REL"] = get_readable_rel_date(value)
 
-        add_rulebased_macros(enriched_context, contacts_needed)
+        add_rulebased_macros(enriched_context, ensure_nagios, contacts_needed)
 
         # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
         # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)

@@ -1729,6 +1729,10 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
     with store.lock_checkmk_configuration():
         config.load(with_conf_d=True, validate_hosts=False)
 
+    def ensure_nagios(msg: str) -> None:
+        if config.is_cmc():
+            raise RuntimeError(msg)
+
     return notify.do_notify(
         options,
         args,
@@ -1736,6 +1740,7 @@ def mode_notify(options: dict, args: list[str]) -> int | None:
             hostname, plugin
         ),
         get_http_proxy=config.get_http_proxy,
+        ensure_nagios=ensure_nagios,
     )
 
 

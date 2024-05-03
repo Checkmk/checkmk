@@ -211,6 +211,7 @@ def do_notify(
     *,
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
+    ensure_nagios: Callable[[str], object],
 ) -> int | None:
     # pylint: disable=too-many-branches
     global _log_to_stdout, notify_mode
@@ -250,21 +251,27 @@ def do_notify(
             return handle_spoolfile(filename, host_parameters_cb, get_http_proxy)
 
         if keepalive and keepalive.enabled():
-            notify_keepalive(host_parameters_cb, get_http_proxy)
+            notify_keepalive(host_parameters_cb, get_http_proxy, ensure_nagios)
         elif notify_mode == "replay":
             try:
                 replay_nr = int(args[1])
             except (IndexError, ValueError):
                 replay_nr = 0
-            notify_notify(raw_context_from_backlog(replay_nr), host_parameters_cb, get_http_proxy)
+            notify_notify(
+                raw_context_from_backlog(replay_nr),
+                host_parameters_cb,
+                get_http_proxy,
+                ensure_nagios,
+            )
         elif notify_mode == "test":
             assert isinstance(args[0], dict)
-            notify_notify(EventContext(args[0]), host_parameters_cb, get_http_proxy)
+            notify_notify(EventContext(args[0]), host_parameters_cb, get_http_proxy, ensure_nagios)
         elif notify_mode == "stdin":
             notify_notify(
                 events.raw_context_from_string(sys.stdin.read()),
                 host_parameters_cb,
                 get_http_proxy,
+                ensure_nagios,
             )
         elif notify_mode == "send-bulks":
             send_ripe_bulks(get_http_proxy)
@@ -273,6 +280,7 @@ def do_notify(
                 raw_context_from_env(os.environ),
                 host_parameters_cb,
                 get_http_proxy,
+                ensure_nagios,
             )
 
     except Exception:
@@ -313,6 +321,7 @@ def notify_notify(
     raw_context: EventContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    ensure_nagios: Callable[[str], object],
     *,
     analyse: bool = False,
     dispatch: bool = False,
@@ -329,6 +338,7 @@ def notify_notify(
     """
     enriched_context = events.complete_raw_context(
         raw_context,
+        ensure_nagios,
         with_dump=config.notification_logging <= 10,
         contacts_needed=True,
     )
@@ -396,31 +406,40 @@ def locally_deliver_raw_context(
 def notification_replay_backlog(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    ensure_nagios: Callable[[str], object],
     nr: int,
 ) -> None:
     global notify_mode
     notify_mode = "replay"
     _initialize_logging()
     raw_context = raw_context_from_backlog(nr)
-    notify_notify(raw_context, host_parameters_cb, get_http_proxy)
+    notify_notify(raw_context, host_parameters_cb, get_http_proxy, ensure_nagios)
 
 
 def notification_analyse_backlog(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    ensure_nagios: Callable[[str], object],
     nr: int,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "replay"
     _initialize_logging()
     raw_context = raw_context_from_backlog(nr)
-    return notify_notify(raw_context, host_parameters_cb, get_http_proxy, analyse=True)
+    return notify_notify(
+        raw_context,
+        host_parameters_cb,
+        get_http_proxy,
+        ensure_nagios,
+        analyse=True,
+    )
 
 
 def notification_test(
     raw_context: NotificationContext,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    ensure_nagios: Callable[[str], object],
     *,
     dispatch: bool,
 ) -> NotifyAnalysisInfo | None:
@@ -437,6 +456,7 @@ def notification_test(
         plugin_context,
         host_parameters_cb,
         get_http_proxy,
+        ensure_nagios,
         analyse=True,
         dispatch=dispatch,
     )
@@ -460,11 +480,15 @@ def notification_test(
 def notify_keepalive(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: Callable[[tuple[str, str]], HTTPProxyConfig],
+    ensure_nagios: Callable[[str], object],
 ) -> None:
     cmk.base.utils.register_sigint_handler()
     events.event_keepalive(
         event_function=partial(
-            notify_notify, host_parameters_cb=host_parameters_cb, get_http_proxy=get_http_proxy
+            notify_notify,
+            host_parameters_cb=host_parameters_cb,
+            get_http_proxy=get_http_proxy,
+            ensure_nagios=ensure_nagios,
         ),
         call_every_loop=partial(send_ripe_bulks, get_http_proxy),
         loop_interval=config.notification_bulk_interval,

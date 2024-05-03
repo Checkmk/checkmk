@@ -2631,12 +2631,17 @@ class AutomationNotificationReplay(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: list[str]) -> NotificationReplayResult:
+        def ensure_nagios(msg: str) -> None:
+            if config.is_cmc():
+                raise RuntimeError(msg)
+
         nr = args[0]
         notify.notification_replay_backlog(
             lambda hostname, plugin: config.get_config_cache().notification_plugin_parameters(
                 hostname, plugin
             ),
             config.get_http_proxy,
+            ensure_nagios,
             int(nr),
         )
         return NotificationReplayResult()
@@ -2651,6 +2656,10 @@ class AutomationNotificationAnalyse(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: list[str]) -> NotificationAnalyseResult:
+        def ensure_nagios(msg: str) -> None:
+            if config.is_cmc():
+                raise RuntimeError(msg)
+
         nr = args[0]
         return NotificationAnalyseResult(
             notify.notification_analyse_backlog(
@@ -2658,6 +2667,7 @@ class AutomationNotificationAnalyse(Automation):
                     hostname, plugin
                 ),
                 config.get_http_proxy,
+                ensure_nagios,
                 int(nr),
             )
         )
@@ -2672,6 +2682,10 @@ class AutomationNotificationTest(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: list[str]) -> NotificationTestResult:
+        def ensure_nagios(msg: str) -> None:
+            if config.is_cmc():
+                raise RuntimeError(msg)
+
         context = json.loads(args[0])
         dispatch = args[1]
         return NotificationTestResult(
@@ -2681,6 +2695,7 @@ class AutomationNotificationTest(Automation):
                     hostname, plugin
                 ),
                 config.get_http_proxy,
+                ensure_nagios,
                 dispatch=dispatch == "True",
             )
         )

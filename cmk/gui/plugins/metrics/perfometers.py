@@ -969,64 +969,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "logarithmic",
-        "metric": "printer_queue",
-        "half_value": 10,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "pages_total",
-        "half_value": 60000,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_cyan"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_magenta"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_yellow"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_black"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["supply_toner_other"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "linear",
         "segments": ["smoke_ppm"],
         "total": 10,

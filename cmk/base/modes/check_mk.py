@@ -48,6 +48,7 @@ from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console, section
 from cmk.utils.resulttype import Result
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
+from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
@@ -428,7 +429,7 @@ def _list_all_hosts_with_tags(tags: Sequence[TagID]) -> Sequence[HostName]:
 
     hosts = []
     for h in set(hostnames):
-        if config.hosttags_match_taglist(config_cache.tag_list(h), tags):
+        if hosttags_match_taglist(config_cache.tag_list(h), tags):
             hosts.append(h)
     return hosts
 

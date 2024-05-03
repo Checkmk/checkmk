@@ -1298,8 +1298,6 @@ def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
 #   | Code for calculating the host condition matching of rules            |
 #   '----------------------------------------------------------------------'
 
-hosttags_match_taglist = tuple_rulesets.hosttags_match_taglist
-
 
 # Slow variant of checking wether a service is matched by a list
 # of regexes - used e.g. by cmk --notify

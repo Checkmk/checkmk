@@ -23,6 +23,7 @@ import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.notify_types import EnrichedEventContext, EventContext, EventRule
 from cmk.utils.regex import regex
+from cmk.utils.rulesets.tuple_rulesets import hosttags_match_taglist
 from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
@@ -565,7 +566,7 @@ def event_match_hosttags(
     required = rule.get("match_hosttags")
     if required:
         tags = [TagID(ident) for ident in context.get("HOSTTAGS", "").split()]
-        if not config.hosttags_match_taglist(tags, (TagID(_) for _ in required)):
+        if not hosttags_match_taglist(tags, (TagID(_) for _ in required)):
             return "The host's tags {} do not match the required tags {}".format(
                 "|".join(tags),
                 "|".join(required),

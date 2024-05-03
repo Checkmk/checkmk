@@ -1691,32 +1691,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["gpu_utilization"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "linear",
-                "segments": ["encoder_utilization"],
-                "total": 100.0,
-            },
-            {
-                "type": "linear",
-                "segments": ["decoder_utilization"],
-                "total": 100.0,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["power_usage"],
         "total": "power_usage:max",
     }

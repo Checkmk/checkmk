@@ -1565,27 +1565,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": [
-            "docker_running_containers",
-            "docker_paused_containers",
-            "docker_stopped_containers",
-        ],
-        "total": "docker_all_containers",
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "docker_size",
-        "half_value": GB,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "nimble_read_latency_total",
         "half_value": 10,

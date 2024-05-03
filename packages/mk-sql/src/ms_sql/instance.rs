@@ -385,7 +385,7 @@ impl SqlInstance {
             AuthType::SqlServer | AuthType::Windows => {
                 if let Some(credentials) = client::obtain_config_credentials(auth) {
                     client::ClientBuilder::new()
-                        .logon_on_port(conn.hostname(), self.port(), credentials)
+                        .logon_on_port(&conn.hostname(), self.port(), credentials)
                         .database(database)
                 } else {
                     anyhow::bail!("Not provided credentials")
@@ -394,7 +394,7 @@ impl SqlInstance {
 
             #[cfg(windows)]
             AuthType::Integrated => client::ClientBuilder::new()
-                .local_by_port(self.port())
+                .local_by_port(self.port(), Some(conn.hostname()))
                 .database(database),
 
             _ => anyhow::bail!("Not supported authorization type"),
@@ -1857,7 +1857,7 @@ pub async fn obtain_instance_builders_by_sql_browser(
     for instance in instances {
         match client::ClientBuilder::new()
             .browse(
-                endpoint.conn().hostname(),
+                &endpoint.conn().hostname(),
                 instance,
                 endpoint.conn().sql_browser_port(),
             )

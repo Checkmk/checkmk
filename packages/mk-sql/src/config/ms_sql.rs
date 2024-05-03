@@ -418,6 +418,13 @@ impl Connection {
             Self {
                 hostname: conn
                     .get_string(keys::HOSTNAME)
+                    .map(|s| {
+                        if s.is_empty() {
+                            defaults::CONNECTION_HOST_NAME.to_string()
+                        } else {
+                            s
+                        }
+                    })
                     .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
                     .to_lowercase()
                     .into(),
@@ -440,8 +447,8 @@ impl Connection {
             .ensure(auth),
         ))
     }
-    pub fn hostname(&self) -> &HostName {
-        &self.hostname
+    pub fn hostname(&self) -> HostName {
+        self.hostname.clone()
     }
     pub fn fail_over_partner(&self) -> Option<&String> {
         self.fail_over_partner.as_ref()
@@ -468,7 +475,6 @@ impl Connection {
     fn ensure(mut self, auth: Option<&Authentication>) -> Self {
         match auth {
             Some(auth) if auth.auth_type() == &AuthType::Integrated => {
-                self.hostname = "localhost".to_string().into();
                 self.fail_over_partner = None;
                 self.socket = None;
             }
@@ -646,7 +652,7 @@ impl CustomInstance {
                 .context("Bad/Missing sid in instance")?
                 .to_uppercase(),
         );
-        let (auth, conn) = CustomInstance::make_auth_and_conn(yaml, main_auth, main_conn, &name)?;
+        let (auth, conn) = CustomInstance::ensure_auth_and_conn(yaml, main_auth, main_conn, &name)?;
         Ok(Self {
             name,
             auth,
@@ -675,46 +681,28 @@ impl CustomInstance {
     /// Make auth and conn for custom instance using yaml
     /// - fallback on main_auth and main_conn if not defined in yaml
     /// - correct connection hostname if needed
-    fn make_auth_and_conn(
+    fn ensure_auth_and_conn(
         yaml: &Yaml,
         main_auth: &Authentication,
         main_conn: &Connection,
         sid: &InstanceName,
     ) -> Result<(Authentication, Connection)> {
-        let mut auth = Authentication::from_yaml(yaml).unwrap_or(main_auth.clone());
-        let mut conn = Connection::from_yaml(yaml, Some(&auth))?.unwrap_or(main_conn.clone());
+        let auth = Authentication::from_yaml(yaml).unwrap_or(main_auth.clone());
+        let conn = Connection::from_yaml(yaml, Some(&auth))?.unwrap_or(main_conn.clone());
 
         let instance_host = calc_real_host(&auth, &conn);
         let main_host = calc_real_host(main_auth, main_conn);
         if instance_host != main_host {
-            log::error!("Host {instance_host} defined in {sid} doesn't match to main host {main_host}. Try to fall back");
-            if main_auth.auth_type() == auth.auth_type()
-                || main_auth.auth_type() == &AuthType::Integrated
-            {
-                log::warn!("Fall back to main conn host {main_host}");
-                conn = Connection {
-                    hostname: main_host,
-                    ..conn
-                };
-            } else if auth.auth_type() == &AuthType::Integrated {
+            log::warn!(
+                "Host {instance_host} defined in {sid} doesn't match to main host {main_host}"
+            );
+            if main_auth.auth_type() != auth.auth_type() {
                 log::warn!(
-                    "Instance auth is `integrated`, but not main auth: fall back to main auth {:?}",
-                    main_auth.auth_type()
-                );
-                auth = main_auth.clone();
-            } else {
-                log::error!(
-                    "Fall back is impossible {:?} {:?}",
+                    "Auth are different {:?} {:?}",
                     main_auth.auth_type(),
                     auth.auth_type()
                 );
             }
-        }
-        if auth.auth_type() == &AuthType::Integrated {
-            conn = Connection {
-                hostname: "localhost".to_string().into(),
-                ..conn
-            };
         }
         Ok((auth, conn))
     }
@@ -1084,7 +1072,7 @@ authentication:
         let c = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL), None)
             .unwrap()
             .unwrap();
-        assert_eq!(c.hostname(), &"alice".to_string().into());
+        assert_eq!(c.hostname(), "alice".to_string().into());
         assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
         assert_eq!(c.port(), Port(9999));
         assert_eq!(c.socket(), Some(&PathBuf::from(r"C:\path\to\file_socket")));
@@ -1105,7 +1093,7 @@ authentication:
         let c = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL), Some(&a))
             .unwrap()
             .unwrap();
-        assert_eq!(c.hostname(), &"localhost".to_string().into());
+        assert_eq!(c.hostname(), "alice".to_string().into());
         assert_eq!(c.fail_over_partner(), None);
         assert_eq!(c.port(), Port(9999));
         assert_eq!(c.socket(), None);
@@ -1127,6 +1115,21 @@ authentication:
             Connection::default()
         );
         assert_eq!(
+            Connection::from_yaml(&create_connection_yaml_empty_host(), None)
+                .unwrap()
+                .unwrap(),
+            Connection::default()
+        );
+        assert_eq!(
+            Connection::from_yaml(&create_connection_yaml_non_empty_host(), None)
+                .unwrap()
+                .unwrap(),
+            Connection {
+                hostname: HostName::from("aa".to_string()),
+                ..Default::default()
+            }
+        );
+        assert_eq!(
             Connection::from_yaml(&create_yaml("nothing: "), None).unwrap(),
             None
         );
@@ -1136,6 +1139,22 @@ authentication:
         const SOURCE: &str = r#"
 connection:
   _nothing: "nothing"
+"#;
+        create_yaml(SOURCE)
+    }
+
+    fn create_connection_yaml_empty_host() -> Yaml {
+        const SOURCE: &str = r#"
+connection:
+  hostname: ''
+"#;
+        create_yaml(SOURCE)
+    }
+
+    fn create_connection_yaml_non_empty_host() -> Yaml {
+        const SOURCE: &str = r#"
+connection:
+  hostname: 'Aa'
 "#;
         create_yaml(SOURCE)
     }
@@ -1265,8 +1284,8 @@ discovery:
         .unwrap();
         assert_eq!(instance.name().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "u1");
-        assert_eq!(instance.conn().hostname(), &"localhost".to_string().into());
-        assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
+        assert_eq!(instance.conn().hostname(), "h1".to_string().into());
+        assert_eq!(instance.calc_real_host(), "h1".to_string().into());
         assert_eq!(instance.alias(), &Some("a1".to_string().into()));
         assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
         assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
@@ -1286,7 +1305,7 @@ discovery:
 sid: "INST1"
 authentication:
   username: "u1"
-  auth_type: "integrated"
+  type: "integrated"
 connection:
   hostname: "h1"
 "#;
@@ -1299,7 +1318,58 @@ connection:
         .unwrap();
         assert_eq!(instance.name().to_string(), "INST1");
         assert_eq!(instance.auth().username(), "");
-        assert_eq!(instance.conn().hostname(), &"localhost".to_string().into());
+        assert_eq!(instance.conn().hostname(), "h1".to_string().into());
+        assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_custom_instance_integrated_default() {
+        pub const INSTANCE_INTEGRATED: &str = r#"
+sid: "INST1"
+authentication:
+  username: "u1"
+  type: "integrated"
+connection:
+  port: 5555
+"#;
+        let instance = CustomInstance::from_yaml(
+            &create_yaml(INSTANCE_INTEGRATED),
+            &Authentication::default(),
+            &Connection::default(),
+            &Sections::default(),
+        )
+        .unwrap();
+        assert_eq!(instance.name().to_string(), "INST1");
+        assert_eq!(instance.auth().username(), "");
+        assert_eq!(instance.auth().auth_type(), &AuthType::Integrated);
+        assert_eq!(instance.conn().hostname(), "localhost".to_string().into());
+        assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
+    }
+
+    #[test]
+    fn test_custom_instance_remote_default() {
+        pub const INSTANCE_INTEGRATED: &str = r#"
+sid: "INST1"
+authentication:
+  username: "u1"
+  password: "pwd"
+  type: "sql_server"
+connection:
+  port: 5555
+"#;
+        let instance = CustomInstance::from_yaml(
+            &create_yaml(INSTANCE_INTEGRATED),
+            &Authentication::default(),
+            &Connection::default(),
+            &Sections::default(),
+        )
+        .unwrap();
+        assert_eq!(instance.name().to_string(), "INST1");
+        assert_eq!(instance.auth().username(), "u1");
+        assert_eq!(instance.auth().password().unwrap(), "pwd");
+        assert_eq!(instance.auth().auth_type(), &AuthType::SqlServer);
+        assert_eq!(instance.conn().hostname(), "localhost".to_string().into());
         assert_eq!(instance.calc_real_host(), "localhost".to_string().into());
     }
 
@@ -1326,7 +1396,7 @@ connection:
         assert_eq!(c.auth().password().unwrap(), "bar");
         assert_eq!(c.auth().auth_type(), &AuthType::SqlServer);
         assert_eq!(c.auth().access_token().unwrap(), "baz");
-        assert_eq!(c.conn().hostname(), &"localhost".to_string().into());
+        assert_eq!(c.conn().hostname(), "localhost".to_string().into());
         assert_eq!(c.conn().fail_over_partner().unwrap(), "localhost2");
         assert_eq!(c.conn().port(), Port(defaults::CONNECTION_PORT));
         assert!(!c.conn().trust_server_certificate());

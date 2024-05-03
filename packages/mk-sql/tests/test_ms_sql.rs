@@ -75,8 +75,10 @@ fn test_section_select_query() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
+    use mk_sql::ms_sql::defaults;
+
     let mut client = client::ClientBuilder::new()
-        .local_by_port(Some(mk_sql::ms_sql::defaults::STANDARD_PORT.into()))
+        .local_by_port(Some(defaults::STANDARD_PORT.into()), None)
         .certificate(std::env::var(tools::MS_SQL_DB_CERT).ok())
         .build()
         .await
@@ -108,7 +110,7 @@ mssql:
       username: u
       type: integrated
     connection:
-      hostname: your_host
+      hostname: ''
       {}
 "#,
         tools::make_tls_block()

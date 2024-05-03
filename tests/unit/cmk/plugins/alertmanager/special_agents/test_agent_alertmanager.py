@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from cmk.special_agents import agent_alertmanager
+from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 
 ignore_params = agent_alertmanager.IgnoreAlerts(
     ignore_na=True,

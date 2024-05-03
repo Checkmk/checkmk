@@ -14,12 +14,12 @@ from cmk.utils import password_store
 
 from cmk.base.server_side_calls import load_special_agents
 
+from cmk.plugins.alertmanager.special_agents import agent_alertmanager
 from cmk.plugins.fritzbox.lib import agent as agent_fritzbox
 from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.plugins.jenkins.lib import jenkins as agent_jenkins
 from cmk.special_agents import (
     agent_activemq,
-    agent_alertmanager,
     agent_allnet_ip_sensoric,
     agent_aws,
     agent_aws_status,

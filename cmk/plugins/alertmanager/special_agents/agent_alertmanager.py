@@ -15,10 +15,7 @@ from typing import Any, NotRequired, TypedDict
 
 import requests
 
-from cmk.plugins.lib.prometheus import (  # pylint: disable=cmk-module-layer-violation
-    extract_connection_args,
-    generate_api_session,
-)
+from cmk.plugins.lib.prometheus import extract_connection_args, generate_api_session
 from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
 
 

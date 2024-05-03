@@ -1453,8 +1453,8 @@ class SiteFactory:
         else:  # update-process not supported. Still, verify the correct message is displayed
             logger.info(
                 "Updating from version %s to version %s is not supported",
-                min_version,
-                target_version,
+                base_version.version_directory(),
+                target_version.version_directory(),
             )
 
             pexpect_dialogs.extend(

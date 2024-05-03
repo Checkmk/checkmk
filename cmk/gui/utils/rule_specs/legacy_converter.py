@@ -987,11 +987,15 @@ def _convert_to_legacy_regular_expression(
     return legacy_valuespecs.RegExp(mode=mode, case_sensitive=True, **converted_kwargs)
 
 
+def _get_dict_group_key(dict_group: ruleset_api_v1.form_specs.DictGroup) -> str:
+    return repr(dict_group).replace(" ", "")
+
+
 def _get_group_keys(
     dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement]
 ) -> Sequence[str]:
     return [
-        repr(elem.group)
+        _get_dict_group_key(elem.group)
         for elem in dict_elements.values()
         if not isinstance(elem.group, ruleset_api_v1.form_specs.NoGroup)
     ]
@@ -1044,7 +1048,7 @@ def _pack_dict_groups(
                 nested_form, value_to_pack, nested_packed_dict
             )
         else:
-            packed_dict[repr(group)][key_to_pack] = _get_packed_value(
+            packed_dict[_get_dict_group_key(group)][key_to_pack] = _get_packed_value(
                 nested_form, value_to_pack, nested_packed_dict
             )
     return packed_dict
@@ -1228,7 +1232,9 @@ def _group_elements(
             grouped_dict_elements_map[dict_element.group][key] = dict_element
 
     return {
-        repr(g): _make_group_as_nested_dict(g.title, g.help_text, group_elements, localizer)
+        _get_dict_group_key(g): _make_group_as_nested_dict(
+            g.title, g.help_text, group_elements, localizer
+        )
         for g, group_elements in grouped_dict_elements_map.items()
     }
 

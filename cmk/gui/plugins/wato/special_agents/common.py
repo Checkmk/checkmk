@@ -11,7 +11,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryEntry,
     ListOf,
-    Migrate,
     RegExp,
     TextInput,
 )
@@ -20,31 +19,12 @@ from cmk.gui.wato import MigrateToIndividualOrStoredPassword
 from cmk.plugins.aws import constants as aws_constants  # pylint: disable=cmk-module-layer-violation
 
 
-def prometheus_connection() -> Migrate[TextInput]:
-    valuespec = TextInput(
+def prometheus_connection() -> TextInput:
+    return TextInput(
         title=_("URL server address"),
         help=_("Specify a URL to connect to your server. Do not include the protocol."),
         allow_empty=False,
     )
-
-    def migrate(value: object) -> str:
-        match value:
-            case ("url_custom", {"url_address": str(v)}):
-                return v
-            case ("host_name" | "ip_address" as macro_vs, dict() as settings):
-                macro = "$HOSTNAME$" if macro_vs == "host_name" else "$HOSTADDRESS$"
-                port = settings.get("port")
-                port_suffix = f":{port}/" if port is not None else "/"
-                path_prefix = settings.get("path_prefix")
-                path_part = f"{path_prefix}/" if path_prefix else ""
-                base_prefix = settings.get("base_prefix") or ""
-                return f"{base_prefix}{macro}{port_suffix}{path_part}"
-            case str(v) as already_migrated:
-                return already_migrated
-
-        raise ValueError("An error has occured while migrating the ruleset.")
-
-    return Migrate(valuespec=valuespec, migrate=migrate)  # type: ignore[arg-type]
 
 
 def api_request_authentication() -> DictionaryEntry:

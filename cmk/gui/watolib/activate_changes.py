@@ -69,6 +69,7 @@ from cmk.gui.background_job import (
     JobStatusSpec,
 )
 from cmk.gui.config import active_config
+from cmk.gui.crash_handler import crash_dump_message, handle_exception_as_gui_crash_report
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
 from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
@@ -611,18 +612,20 @@ def _set_result(
 def _handle_activation_changes_exception(
     exc_logger: logging.Logger, exc_msg: str, site_activation_status: SiteActivationState
 ) -> None:
-    exc_logger.exception("error activating changes")
+    crash = handle_exception_as_gui_crash_report(fail_silently=True)
     # The text of following exception will be rendered in the GUI and the error message may
     # contain some remotely-fetched data (including HTML) so we are escaping it to avoid
     # executing arbitrary HTML code.
     # The escape function does not escape some simple tags used for formatting.
     # SUP-9840
-    escaped_exception = escaping.escape_text(exc_msg)
+    escaped_details = escaping.escape_text(
+        crash_dump_message(crash, user.may("general.see_crash_reports"))
+    )
     _set_result(
         site_activation_status,
         PHASE_DONE,
         _("Failed"),
-        escaped_exception,
+        escaped_details,
         state=STATE_ERROR,
     )
 
@@ -2291,7 +2294,7 @@ def sync_and_activate(
             )
 
     except Exception:
-        logger.exception("error activating changes")
+        handle_exception_as_gui_crash_report(fail_silently=True)
     finally:
         for activation_site_id in site_activation_states:
             _cleanup_activation(activation_site_id, activation_id, source)

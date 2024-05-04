@@ -58,6 +58,7 @@ HACK_CHECKS = {
     "icmp": False,  # has no secret
     "ldap": True,
     "mail_loop": True,  # TODO
+    "mailboxes": True,  # TODO
     "mkevents": False,  # has no secret
     "notify_count": False,  # has no secret
     "smtp": True,

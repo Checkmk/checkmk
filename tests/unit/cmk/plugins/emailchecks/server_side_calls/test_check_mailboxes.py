@@ -7,9 +7,10 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from .checktestlib import ActiveCheck
+from cmk.plugins.emailchecks.server_side_calls.check_mailboxes import active_check_mailboxes
+from cmk.server_side_calls.v1 import HostConfig, Secret
 
-pytestmark = pytest.mark.checks
+HOST_CONFIG = HostConfig(name="my_test_host")
 
 
 @pytest.mark.parametrize(
@@ -17,6 +18,7 @@ pytestmark = pytest.mark.checks
     [
         (
             {
+                "service_description": "Mailboxes",
                 "fetch": (
                     "IMAP",
                     {
@@ -25,54 +27,63 @@ pytestmark = pytest.mark.checks
                             "disable_tls": True,
                             "port": 143,
                         },
-                        "auth": ("basic", ("hans", "wurst")),
+                        "auth": ("basic", {"username": "hans", "password": Secret(0)}),
                     },
-                )
+                ),
             },
             [
                 "--fetch-protocol=IMAP",
                 "--fetch-server=foo",
                 "--fetch-port=143",
                 "--fetch-username=hans",
-                "--fetch-password=wurst",
+                Secret(0).unsafe("--fetch-password=%s"),
             ],
         ),
         (
             {
+                "service_description": "Mailboxes",
                 "fetch": (
                     "EWS",
                     {
                         "server": "foo",
                         "connection": {},
-                        "auth": ("basic", ("hans", "wurst")),
+                        "auth": ("basic", {"username": "hans", "password": Secret(0)}),
                     },
-                )
+                ),
             },
             [
                 "--fetch-protocol=EWS",
                 "--fetch-server=foo",
                 "--fetch-tls",
                 "--fetch-username=hans",
-                "--fetch-password=wurst",
+                Secret(0).unsafe("--fetch-password=%s"),
             ],
         ),
         (
             {
+                "service_description": "Mailboxes",
                 "fetch": (
                     "EWS",
                     {
                         "server": "foo",
                         "connection": {},
-                        "auth": ("oauth2", ("client_id", "client_secret", "tenant_id")),
+                        "auth": (
+                            "oauth2",
+                            {
+                                "client_id": "client_id",
+                                "client_secret": Secret(1),
+                                "tenant_id": "tenant_id",
+                            },
+                        ),
                     },
-                )
+                ),
             },
             [
                 "--fetch-protocol=EWS",
                 "--fetch-server=foo",
                 "--fetch-tls",
                 "--fetch-client-id=client_id",
-                "--fetch-client-secret=client_secret",
+                Secret(1).unsafe("--fetch-client-secret=%s"),
                 "--fetch-tenant-id=tenant_id",
             ],
         ),
@@ -88,15 +99,14 @@ pytestmark = pytest.mark.checks
                             "disable_cert_validation": True,
                             "port": 10,
                         },
-                        "auth": ("basic", ("user", ("store", "password_1"))),
+                        "auth": ("basic", {"username": "user", "password": Secret(0)}),
                     },
                 ),
                 "connect_timeout": 10,
-                "age": (0, 0),
-                "age_newest": (0, 0),
-                "count": (0, 0),
+                "age": ("fixed", (0, 0)),
+                "age_newest": ("fixed", (0, 0)),
+                "count": ("fixed", (0, 0)),
                 "mailboxes": ["mailbox1", "mailbox2"],
-                "retrieve_max": 100,
             },
             [
                 "--fetch-protocol=IMAP",
@@ -104,9 +114,8 @@ pytestmark = pytest.mark.checks
                 "--fetch-disable-cert-validation",
                 "--fetch-port=10",
                 "--fetch-username=user",
-                ("store", "password_1", "--fetch-password=%s"),
+                Secret(0).unsafe("--fetch-password=%s"),
                 "--connect-timeout=10",
-                "--retrieve-max=100",
                 "--warn-age-oldest=0",
                 "--crit-age-oldest=0",
                 "--warn-age-newest=0",
@@ -124,5 +133,5 @@ def test_check_mailboxes_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    active_check = ActiveCheck("check_mailboxes")
-    assert active_check.run_argument_function(params) == expected_args
+    (command,) = active_check_mailboxes(params, HOST_CONFIG)
+    assert command.command_arguments == expected_args

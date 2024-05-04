@@ -97,7 +97,7 @@ def _valuespec_active_checks_mail_loop() -> Dictionary:
                 parameter_form=TimeSpan(
                     title=Title("Connect Timeout"),
                     custom_validate=(validators.NumberInRange(min_value=1),),
-                    prefill=DefaultValue(10),
+                    prefill=DefaultValue(10.0),
                     displayed_magnitudes=(TimeMagnitude.SECOND,),
                     migrate=float,  # type: ignore[arg-type]  # wrong signature, right behavior
                 ),
@@ -115,7 +115,7 @@ def _valuespec_active_checks_mail_loop() -> Dictionary:
                         ),
                     ),
                     prefill_levels_type=DefaultValue(LevelsType.NONE),
-                    prefill_fixed_levels=InputHint((30, 60)),
+                    prefill_fixed_levels=InputHint((30.0, 60.0)),
                     migrate=migrate_to_float_simple_levels,
                 ),
             ),

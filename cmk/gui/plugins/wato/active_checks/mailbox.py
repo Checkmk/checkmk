@@ -13,7 +13,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import syslog_facilities
 from cmk.gui.valuespec import (
-    Age,
     Alternative,
     CascadingDropdown,
     Checkbox,
@@ -24,7 +23,6 @@ from cmk.gui.valuespec import (
     FixedValue,
     HostAddress,
     Integer,
-    ListOfStrings,
     NetworkPort,
     RegExp,
     TextInput,
@@ -467,84 +465,6 @@ rulespec_registry.register(
     )
 )
 
-
-def _valuespec_active_checks_mailboxes() -> Dictionary:
-    return Dictionary(
-        title=_("Check IMAP/EWS Mailboxes"),
-        help=_("This check monitors count and age of mails in mailboxes."),
-        elements=[
-            (
-                "service_description",
-                TextInput(
-                    title=_("Service name"),
-                    help=_(
-                        "Please make sure that this is unique per host "
-                        "and does not collide with other services."
-                    ),
-                    allow_empty=False,
-                    default_value="Mailboxes",
-                ),
-            ),
-            _mail_receiving_params({"IMAP", "EWS"}),
-            (
-                "connect_timeout",
-                Integer(
-                    title=_("Connect Timeout"),
-                    minvalue=1,
-                    default_value=10,
-                    unit=_("sec"),
-                ),
-            ),
-            (
-                "age",
-                Tuple(
-                    title=_("Message Age of oldest messages"),
-                    elements=[
-                        Age(title=_("Warning if older than")),
-                        Age(title=_("Critical if older than")),
-                    ],
-                ),
-            ),
-            (
-                "age_newest",
-                Tuple(
-                    title=_("Message Age of newest messages"),
-                    elements=[
-                        Age(title=_("Warning if older than")),
-                        Age(title=_("Critical if older than")),
-                    ],
-                ),
-            ),
-            (
-                "count",
-                Tuple(
-                    title=_("Message Count"),
-                    elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
-                ),
-            ),
-            (
-                "mailboxes",
-                ListOfStrings(
-                    title=_("Check only the listed mailboxes"),
-                    help=_(
-                        "By default, all mailboxes are checked with these parameters. "
-                        "If you specify mailboxes here, only those are monitored."
-                    ),
-                ),
-            ),
-        ],
-        required_keys=["service_description", "fetch"],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupActiveChecks,
-        match_type="all",
-        name=RuleGroup.ActiveChecks("mailboxes"),
-        valuespec=_valuespec_active_checks_mailboxes,
-    )
-)
 
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.

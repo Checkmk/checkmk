@@ -10545,10 +10545,6 @@ msgstr "Verificați accesul la serviciul LDAP"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "Verificați starea MK a gazdei piggybacked în această perioadă"
 
-#, fuzzy
-msgid "Check MS SQL Server (Linux, Windows)"
-msgstr "Verificați MS SQL Server- BETA (Linux, Windows)"
-
 msgid "Check Parameter"
 msgstr "Verificați parametrul"
 
@@ -18180,10 +18176,6 @@ msgid "Do not deploy AD-Replication plug-in"
 msgstr "Nu implementați pluginul AD-Replication"
 
 #, fuzzy
-msgid "Do not deploy Check SQL Server plug-in"
-msgstr "Nu implementați pluginul Check SQL Server"
-
-#, fuzzy
 msgid "Do not deploy DB2 memory plug-in"
 msgstr "Nu implementați pluginul de memorie DB2"
 
@@ -18206,6 +18198,10 @@ msgstr "Nu implementați pluginul LVM"
 #, fuzzy
 msgid "Do not deploy Linux filesystem quota plug-in"
 msgstr "Nu implementați pluginul de cote pentru sistemele de fișiere Linux"
+
+#, fuzzy
+msgid "Do not deploy MSSQL Server plug-in"
+msgstr "Nu implementați pluginul Check SQL Server"
 
 #, fuzzy
 msgid "Do not deploy MTR plug-in"
@@ -31762,6 +31758,10 @@ msgstr "Alei"
 msgid "Language"
 msgstr "Limba"
 
+#, fuzzy
+msgid "Large"
+msgstr "Țintă"
+
 msgid "Large pool size"
 msgstr "Dimensiune mare a piscinei"
 
@@ -35473,6 +35473,10 @@ msgid "Maximum expected run time for heart beat packet"
 msgstr ""
 "Timpul maxim de execuție preconizat pentru pachetul de bătăi ale inimii"
 
+#, fuzzy
+msgid "Maximum hexagon size"
+msgstr "Dimensiunea maximă"
+
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Dimensiunea maximă a imaginii: %dx%dpx"
@@ -36175,7 +36179,12 @@ msgstr "Starea Microsoft Azure"
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Starea VM Microsoft Hyper-V Server"
 
-msgid "Microsoft SQL Server (Windows)"
+#, fuzzy
+msgid "Microsoft SQL Server (Linux, Windows)"
+msgstr "Microsoft SQL Server (Windows)"
+
+#, fuzzy
+msgid "Microsoft SQL Server (deprecated)"
 msgstr "Microsoft SQL Server (Windows)"
 
 msgid "Migrate"
@@ -36711,11 +36720,13 @@ msgstr ""
 msgid "Monitor costs and usage"
 msgstr "Monitorizarea costurilor și a utilizării"
 
-msgid "Monitor databases on remote hosts"
-msgstr "Monitorizarea bazelor de date pe gazde la distanță"
+#, fuzzy
+msgid "Monitor databases"
+msgstr "Baza de date a evenimentelor"
 
-msgid "Monitor databases on the local host"
-msgstr "Monitorizarea bazelor de date de pe gazda locală"
+#, fuzzy
+msgid "Monitor databases on other hosts"
+msgstr "Monitorizarea bazelor de date pe gazde la distanță"
 
 msgid "Monitor disabled services"
 msgstr "Monitorizarea serviciilor pentru persoanele cu handicap"
@@ -48863,6 +48874,12 @@ msgstr "Configurația stilului selectat"
 
 #, python-format
 msgid ""
+"Selecting the '%s' option 'Large' can be useful when displaying the '%s' on "
+"large screens, e.g. on a wall monitor."
+msgstr ""
+
+#, python-format
+msgid ""
 "Selecting this option will disable the %s, but it will remain in the "
 "configuration."
 msgstr ""
@@ -50491,9 +50508,6 @@ msgstr "Arată pagina de manual"
 msgid "Show Setup icon"
 msgstr "Afișați pictograma de configurare"
 
-msgid "Show State of"
-msgstr "Arată starea de"
-
 msgid "Show a colored status label"
 msgstr "Afișați o etichetă de stare colorată"
 
@@ -50792,6 +50806,10 @@ msgstr "Afișează spațiul rezervat pentru utilizatorul <tt>root</tt>."
 
 msgid "Show stale hosts and services"
 msgstr "Afișați gazdele și serviciile expirate"
+
+#, fuzzy
+msgid "Show state of"
+msgstr "Arată starea de"
 
 #, python-format
 msgid "Show summary for not %s states"
@@ -62300,27 +62318,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This plug-in can be used to collect information of all running MSSQL servers "
-"on the local system. The current implementation of the check uses the "
-"\"trusted authentication\" where no user/password needs to be created in the "
-"MSSQL server instance by default. Using this method, you needed to grant the "
-"user as which the Checkmk windows agent service is running access to the "
-"MSSQL database. Otherwise you can configure the credentials of a database "
-"user which has the permission to read the needed information from the server "
-"instance."
-msgstr ""
-"Acest plugin poate fi utilizat pentru a colecta informații despre toate "
-"serverele MSSQL care rulează pe sistemul local. Implementarea actuală a "
-"verificării utilizează \"trusted authentication\" în cazul în care nu este "
-"necesară crearea unui utilizator/parolă în instanța serverului MSSQL în mod "
-"implicit. Utilizând această metodă, trebuia să acordați utilizatorului sub "
-"numele căruia se execută serviciul Checkmk windows agent acces la baza de "
-"date MSSQL. În caz contrar, puteți configura acreditările unui utilizator al "
-"bazei de date care are permisiunea de a citi informațiile necesare din "
-"instanța serverului."
-
-#, fuzzy
-msgid ""
 "This plug-in can only be deployed asynchronously because it launches "
 "background processes (one per address). Under systemd, this only works when "
 "being run asynchronously."
@@ -62386,6 +62383,29 @@ msgstr ""
 "fizice ale controllerelor RAID LSI utilizând utilitarul StorCLI. StorCLI "
 "trebuie să fie instalat pe sistemul țintă pentru ca acest plugin să "
 "funcționeze."
+
+#, fuzzy
+msgid ""
+"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see [werk "
+"15844 for details). Please switch to the new ruleset \"Microsoft SQL server "
+"(Linux, Windows)\".This plug-in can be used to collect information of all "
+"running MSSQL servers on the local system. The current implementation of the "
+"check uses the \"trusted authentication\" where no user/password needs to be "
+"created in the MSSQL server instance by default. Using this method, you "
+"needed to grant the user as which the Checkmk windows agent service is "
+"running access to the MSSQL database. Otherwise you can configure the "
+"credentials of a database user which has the permission to read the needed "
+"information from the server instance."
+msgstr ""
+"Acest plugin poate fi utilizat pentru a colecta informații despre toate "
+"serverele MSSQL care rulează pe sistemul local. Implementarea actuală a "
+"verificării utilizează \"trusted authentication\" în cazul în care nu este "
+"necesară crearea unui utilizator/parolă în instanța serverului MSSQL în mod "
+"implicit. Utilizând această metodă, trebuia să acordați utilizatorului sub "
+"numele căruia se execută serviciul Checkmk windows agent acces la baza de "
+"date MSSQL. În caz contrar, puteți configura acreditările unui utilizator al "
+"bazei de date care are permisiunea de a citi informațiile necesare din "
+"instanța serverului."
 
 #, fuzzy
 msgid ""
@@ -76675,13 +76695,6 @@ msgstr "clienți"
 msgid "closed"
 msgstr "închisă"
 
-msgid "cmk/kubernetes/object"
-msgstr "cmk/kubernetes/object"
-
-#, python-brace-format
-msgid "cmk/kubernetes/{self._kubernetes_object_type}"
-msgstr "cmk/kubernetes/{self._kubernetes_object_type}"
-
 msgid "cmk_site_statistics (core PIDs)"
 msgstr "cmk_site_statistics (PID-uri de bază)"
 
@@ -78532,6 +78545,21 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "cmk/kubernetes/object"
+#~ msgstr "cmk/kubernetes/object"
+
+#, python-brace-format
+#~ msgid "cmk/kubernetes/{self._kubernetes_object_type}"
+#~ msgstr "cmk/kubernetes/{self._kubernetes_object_type}"
+
+#~ msgid "Monitor databases on the local host"
+#~ msgstr "Monitorizarea bazelor de date de pe gazda locală"
+
+#, fuzzy
+#~| msgid "Check MS SQL Server- BETA (Linux, Windows)"
+#~ msgid "Check MS SQL Server (Linux, Windows)"
+#~ msgstr "Verificați MS SQL Server- BETA (Linux, Windows)"
 
 #~ msgid ""
 #~ "Possible values are the following: cpgs, volumes, hosts, capacity, "

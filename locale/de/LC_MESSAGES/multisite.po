@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2024-04-26 17:58+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@checkmk.com>\n"
+"PO-Revision-Date: 2024-05-03 06:00+0000\n"
+"Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -4342,28 +4342,28 @@ msgid "Admin"
 msgstr "Admin"
 
 msgid "Admin States"
-msgstr "Verwaltungszustände"
+msgstr "Admin-Status"
 
 msgid "Admin state"
 msgstr "Admin-Status"
 
 msgid "Admin state (SNMP with 64-bit counters only)"
-msgstr "Admin Status (nur SNMP mit 64 bit Zählern)"
+msgstr "Admin-Status (nur SNMP mit 64 bit Zählern)"
 
 msgid "Admin states to discover"
-msgstr "Admin Zustände, die erkannt werden sollen"
+msgstr "Admin-Status, die erkannt werden sollen"
 
 msgid "Administrative Status"
 msgstr "Administrativer Status"
 
 msgid "Administrative port states to discover"
-msgstr "Administrative Status, die erkannt werden sollen"
+msgstr "Administrative Port-Status, die erkannt werden sollen"
 
 msgid "Administrative state"
-msgstr "Verwaltungsstatus"
+msgstr "Administrativer Status"
 
 msgid "Administrative states"
-msgstr "Verwaltungszustände"
+msgstr "Administrative Status"
 
 msgid "Administrator"
 msgstr "Administrator"
@@ -6664,7 +6664,7 @@ msgid "Assign SLA to service"
 msgstr "Zuweisung SLA zu Service"
 
 msgid "Assign plan/test result to piggyback host"
-msgstr "Plan-/Test-Ergebnis dem Piggyback-Host zuweisen"
+msgstr "Plan-/Test-Ergebnis einem Piggyback-Host zuweisen"
 
 msgid "Assign service to following host"
 msgstr "Service dem folgenden Host zuweisen"
@@ -7063,7 +7063,7 @@ msgid ""
 "Automated environment setup (via RCC, %s because Robotmk Core MKP has been "
 "installed)"
 msgstr ""
-"Automatisierte Einrichtung der Umgebung (über RCC, %s, da Robotmk Kern MKP "
+"Automatisierte Einrichtung der Umgebung (über RCC, %s, da Robotmk-Kern-MKP "
 "installiert ist)"
 
 msgid "Automatic"
@@ -10045,7 +10045,7 @@ msgid "Capacity usage"
 msgstr "Kapazitätsauslastung"
 
 msgid "Capacity: Array Capacity & Utilization"
-msgstr ""
+msgstr "Kapazität: Array-Kapazität & Auslastung"
 
 msgid "Carbon Overflows Rate"
 msgstr "Überlaufrate des Carbon"
@@ -10472,9 +10472,6 @@ msgstr "Check Zugriff auf LDAP-Service"
 
 msgid "Check MK status of piggybacked host within this period"
 msgstr "Check_MK-Status der Piggyback-Hosts innerhalb dieses Zeitraums prüfen"
-
-msgid "Check MS SQL Server (Linux, Windows)"
-msgstr "Überprüfe MS SQL-Server (Linux, Windows)"
 
 msgid "Check Parameter"
 msgstr "Check-Parameter"
@@ -12242,7 +12239,7 @@ msgid "Common Name"
 msgstr "Common Name"
 
 msgid "Common Provisioning Groups: Virtual Pool Configuration"
-msgstr ""
+msgstr "Gemeinsame Bereitstellungsgruppen: Konfiguration des virtuellen Pools"
 
 msgid "Common name (CN)"
 msgstr "Common Name (CN)"
@@ -12257,13 +12254,11 @@ msgstr ""
 msgid "Community forum"
 msgstr "Community Forum"
 
-#, fuzzy
 msgid "Community translated languages"
-msgstr "Aktivieren Sie Community übersetzte Sprachen"
+msgstr "Community-übersetzte Sprachen"
 
-#, fuzzy
 msgid "Community translated languages (not supported)"
-msgstr "Aktivieren Sie Community übersetzte Sprachen (nicht supported)"
+msgstr "Community-übersetzte Sprachen (nicht unterstützt)"
 
 msgid "Compare against discovered state"
 msgstr "Vergleiche gegen den Discovery-Zustand"
@@ -13520,9 +13515,8 @@ msgstr "Core & Setup"
 msgid "Core configuration reloaded"
 msgstr "Konfiguration des Kerns neu geladen"
 
-#, fuzzy
 msgid "Core dumps"
-msgstr "Sammle Dump"
+msgstr "Kern-Dumps"
 
 msgid "Core files"
 msgstr "Kerndateien"
@@ -14782,7 +14776,7 @@ msgid "Customer number of hosts in state PENDING"
 msgstr "Kunde: Anzahl von Hosts mit Status PENDING"
 
 msgid "Customer number of hosts in state UNREACH"
-msgstr "Kunde: Anzahl von Hosts mit Status UNREACHABLE"
+msgstr "Kundennummer von Hosts mit Status UNREACH"
 
 msgid "Customer number of hosts in state UP"
 msgstr "Kunde: Anzahl von Hosts mit Status UP"
@@ -16569,7 +16563,7 @@ msgid "Deploy Remote Desktop Licenses plug-in"
 msgstr "Remote-Desktop-Lizenzen-Plugin verteilen"
 
 msgid "Deploy Robotmk Scheduler and Agent Plugin"
-msgstr "Robotmk Scheduler und Agentenplugin verteilen"
+msgstr "Robotmk-Scheduler und Agentenplugin verteilen"
 
 msgid "Deploy SMART plug-in"
 msgstr "SMART Plugin verteilen"
@@ -17971,9 +17965,6 @@ msgstr "Hosts nicht erstellen"
 msgid "Do not deploy AD-Replication plug-in"
 msgstr "Plugin für AD-Replikation nicht verteilen"
 
-msgid "Do not deploy Check SQL Server plug-in"
-msgstr "Check SQL-Server-Plugin nicht verteilen"
-
 msgid "Do not deploy DB2 memory plug-in"
 msgstr "Das DB2 memory Plugin nicht verteilen"
 
@@ -17991,6 +17982,9 @@ msgstr "Das LVM-Plugin nicht verteilen"
 
 msgid "Do not deploy Linux filesystem quota plug-in"
 msgstr "Das Linux filesystem quota Plugin nicht verteilen"
+
+msgid "Do not deploy MSSQL Server plug-in"
+msgstr "MSSQL-Server-Plugin nicht verteilen"
 
 msgid "Do not deploy MTR plug-in"
 msgstr "MTR-Plugin nicht verteilen"
@@ -20968,7 +20962,7 @@ msgstr ""
 
 #, python-format
 msgid "Exclude tests by tag (%s)"
-msgstr "Tests ausschließen mit Tag (%s)"
+msgstr "Tests mit Tag ausschließen (%s)"
 
 msgid "Exclude the following SIDs (if found)"
 msgstr "Folgende SIDs auslassen (falls vorhanden)"
@@ -22443,9 +22437,8 @@ msgstr "Unstetig"
 msgid "Flash Space Usage"
 msgstr "Belegung von Flash-Speicher"
 
-#, fuzzy
 msgid "FlashCache: Flash Cache Configuration"
-msgstr "Manuelle Check Konfiguration speichern"
+msgstr "FlashCache: Flash Cache-Konfiguration"
 
 msgid "Flashback"
 msgstr "Flashback"
@@ -26187,9 +26180,8 @@ msgstr "Host:"
 msgid "Host: %s"
 msgstr "Host: %s"
 
-#, fuzzy
 msgid "HostSets: Host Set Configuration"
-msgstr "Hostkonfiguration"
+msgstr "HostSets: Host-Set-Konfiguration"
 
 msgid "Hostaddress"
 msgstr "Host-Adresse"
@@ -26455,9 +26447,8 @@ msgstr "Hosts: %d erstellt, %d geändert, %d gelöscht"
 msgid "Hosts: %d total (%d succeeded, %d skipped, %d failed)"
 msgstr "Hosts: %d insgesamt ( %d erfolgreich, %d übersprungen, %d gescheitert)"
 
-#, fuzzy
 msgid "Hosts: Host Capacity & Utilization"
-msgstr "Nutanix Host CPU-Auslastung"
+msgstr "Hosts: Host Kapazität & Auslastung"
 
 msgid "Hostsystem sensor alerts"
 msgstr "Alarme von Host-System-Sensoren"
@@ -31393,6 +31384,9 @@ msgstr "Lanes"
 msgid "Language"
 msgstr "Sprache"
 
+msgid "Large"
+msgstr "Groß"
+
 msgid "Large pool size"
 msgstr "Umfangreiche Poolgröße"
 
@@ -33485,9 +33479,8 @@ msgstr "Login-Token"
 msgid "Login username"
 msgstr "Login-Benutzername"
 
-#, fuzzy
 msgid "Login via GET requests"
-msgstr "Login über GET-Anfragen aktivieren"
+msgstr "Login über GET-Anfragen"
 
 msgid "Login with the following credentials"
 msgstr "Mit den folgenden Daten anmelden"
@@ -35057,6 +35050,9 @@ msgstr "Maximale Entfernung (TTL) zum Gateway"
 msgid "Maximum expected run time for heart beat packet"
 msgstr "Maximale erwartete Laufzeit des Lebenszeichens"
 
+msgid "Maximum hexagon size"
+msgstr "Maximale Sechseckgröße"
+
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Maximale Bildgröße: %dx%dpx"
@@ -35762,8 +35758,11 @@ msgstr "Microsoft Azure Status"
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V Server VM-Status"
 
-msgid "Microsoft SQL Server (Windows)"
-msgstr "Microsoft SQL Server (Windows)"
+msgid "Microsoft SQL Server (Linux, Windows)"
+msgstr "Microsoft SQL Server (Linux, Windows)"
+
+msgid "Microsoft SQL Server (deprecated)"
+msgstr "Microsoft SQL Server (veraltet)"
 
 msgid "Migrate"
 msgstr "Migrieren"
@@ -36294,11 +36293,11 @@ msgstr "Überwache die Lanes, wenn ein Port mehrere hat"
 msgid "Monitor costs and usage"
 msgstr "Überwachung von Kosten und Nutzung"
 
-msgid "Monitor databases on remote hosts"
-msgstr "Datenbanken auf Remote-Hosts überwachen"
+msgid "Monitor databases"
+msgstr "Datenbanken überwachen"
 
-msgid "Monitor databases on the local host"
-msgstr "Datenbanken auf dem lokalen Host überwachen"
+msgid "Monitor databases on other hosts"
+msgstr "Datenbanken auf anderen Hosts überwachen"
 
 msgid "Monitor disabled services"
 msgstr "Überwache deaktivierte Services"
@@ -43212,7 +43211,7 @@ msgid "Ports to open"
 msgstr "Zu öffnende Ports"
 
 msgid "Ports: Port Utilization (FC and iSCSI)"
-msgstr ""
+msgstr "Ports: Port-Auslastung (FC und iSCSI)"
 
 msgid "Position"
 msgstr "Position"
@@ -44064,9 +44063,8 @@ msgstr "QoS verworfene Bits"
 msgid "QoS outbound bits"
 msgstr "QoS ausgehende Bits"
 
-#, fuzzy
 msgid "QoS: Quality of Service Configuration"
-msgstr "Speichern & zur Servicekonfiguration gehen"
+msgstr "QoS: Qualität der Servicekonfiguration"
 
 msgid "Qps"
 msgstr "Qps"
@@ -44267,7 +44265,7 @@ msgstr "RCC-Profil-Konfiguration"
 #, python-format
 msgid ""
 "RCC profile configuration (%s because Robotmk Core MKP has been installed)"
-msgstr "RCC-Profilkonfiguration (%s, da Robotmk Kern MKP installiert wurde)"
+msgstr "RCC-Profilkonfiguration (%s, da Robotmk-Kern-MKP installiert wurde)"
 
 msgid ""
 "RCC profile configuration: RCC profiles can define settings for this "
@@ -45362,9 +45360,8 @@ msgstr ""
 msgid "Remote: Send events to remote syslog host"
 msgstr "Remote: Ereignisse an Remote Syslog-Host senden"
 
-#, fuzzy
 msgid "RemoteCopy: Remote Copy Configuration"
-msgstr "Remote-Konfiguration"
+msgstr "RemoteCopy: Remote-Kopie-Konfiguration"
 
 msgid "Remove"
 msgstr "Entferne"
@@ -46549,10 +46546,10 @@ msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-III Units: Temperaturen"
 
 msgid "Robot Framework parameters"
-msgstr "Robot-Framework Parameter"
+msgstr "Robot-Framework-Parameter"
 
 msgid "Robot Framework re-executions"
-msgstr "Erneute Robot-Framework Ausführungen"
+msgstr "Erneute Robot-Framework-Ausführungen"
 
 #, python-format
 msgid "Robot Framework: %s"
@@ -46581,7 +46578,7 @@ msgid "Robotmk scheduler (Windows)"
 msgstr "Robotmk-Scheduler (Windows)"
 
 msgid "Robotmk test"
-msgstr "Robotmk Test"
+msgstr "Robotmk-Test"
 
 msgid "Role"
 msgstr "Rolle"
@@ -46595,9 +46592,8 @@ msgstr "Rollen"
 msgid "Roles & permissions"
 msgstr "Rollen & Berechtigungen"
 
-#, fuzzy
 msgid "Roles: Role Management"
-msgstr "Benutzer-Verwaltung"
+msgstr "Rollen: Rollenverwaltung"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Jeden Tag um 00:00 Ortszeit rotieren"
@@ -48127,7 +48123,7 @@ msgstr "Spezifischen Objekttyp auswählen"
 
 #, python-format
 msgid "Select suites by name (%s)"
-msgstr "Suites nach Name auswählen (%s)"
+msgstr "Suites nach Namen auswählen (%s)"
 
 msgid ""
 "Select test cases that are not to run at all with a tag. (<a href=\"https://"
@@ -48169,7 +48165,7 @@ msgid ""
 "<tt>*</tt>, <tt>?</tt> and <tt>[]</tt> as wildcards. Tags and patterns can "
 "also be combined with <tt>AND</tt>, <tt>OR</tt>, and <tt>NOT</tt> operators."
 msgstr ""
-"Wählen Sie Tests nach Tag aus. (<a href=\"https://robotframework.org/"
+"Wählen Sie Tests nach Tags aus. (<a href=\"https://robotframework.org/"
 "robotframework/latest/RobotFrameworkUserGuide.html#tagging-test-cases\" "
 "target=\"_blank\">Über das Taggen von Testfällen</a>). Ebenso wie Name mit "
 "<tt>--test</tt> ist Tag unabhängig von Groß- und Kleinschreibung und es ist "
@@ -48306,6 +48302,14 @@ msgstr "Ausgewählter Zustand"
 
 msgid "Selected style configuration"
 msgstr "Gewählte Stilkonfiguration"
+
+#, python-format
+msgid ""
+"Selecting the '%s' option 'Large' can be useful when displaying the '%s' on "
+"large screens, e.g. on a wall monitor."
+msgstr ""
+"Die Auswahl der '%s'-Option 'Groß' kann nützlich sein, wenn die '%s' auf "
+"großen Bildschirmen angezeigt werden soll, z. B. auf einem Wandmonitor."
 
 #, python-format
 msgid ""
@@ -49892,9 +49896,6 @@ msgstr "Zeige Manpage"
 msgid "Show Setup icon"
 msgstr "Setup-Symbol anzeigen"
 
-msgid "Show State of"
-msgstr "Zeige Status von"
-
 msgid "Show a colored status label"
 msgstr "Farbiges Status-Label anzeigen"
 
@@ -50190,6 +50191,9 @@ msgstr "Zeige reservierten Platz für <tt>root</tt>-User"
 
 msgid "Show stale hosts and services"
 msgstr "Alle veralteten Hosts und Services zeigen"
+
+msgid "Show state of"
+msgstr "Zeige Status von"
 
 #, python-format
 msgid "Show summary for not %s states"
@@ -51356,13 +51360,11 @@ msgstr "Sortierung"
 msgid "Sorty by column"
 msgstr "Nach Spalte sortieren"
 
-#, fuzzy
 msgid "Sounds"
-msgstr "Rund"
+msgstr "Klänge"
 
-#, fuzzy
 msgid "Sounds in views"
-msgstr "Klänge in Ansichten aktivieren"
+msgstr "Klänge in Ansichten"
 
 msgid "Source"
 msgstr "Quelle"
@@ -54011,9 +54013,8 @@ msgstr "Systemzeit-Offset"
 msgid "System uptime"
 msgstr "Systemlaufzeit"
 
-#, fuzzy
 msgid "System: Storage Array Configuration"
-msgstr "Die globale Konfiguration nutzen"
+msgstr "System: Speicher-Array-Konfiguration"
 
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Systemd Timesyncd Zeitsynchronisation"
@@ -61653,25 +61654,6 @@ msgstr ""
 "auf dem lokalen oder dem Remote-System zu sammeln. "
 
 msgid ""
-"This plug-in can be used to collect information of all running MSSQL servers "
-"on the local system. The current implementation of the check uses the "
-"\"trusted authentication\" where no user/password needs to be created in the "
-"MSSQL server instance by default. Using this method, you needed to grant the "
-"user as which the Checkmk windows agent service is running access to the "
-"MSSQL database. Otherwise you can configure the credentials of a database "
-"user which has the permission to read the needed information from the server "
-"instance."
-msgstr ""
-"Mit diesem Plugin können Sie Informationen über alle laufenden MSSQL-Server "
-"auf dem lokalen System sammeln. Die aktuelle Implementierung verwendet "
-"\"Trusted Authentication\", wobei standardmäßig kein Benutzer/Passwort in "
-"der MSSQL Server-Instanz erstellt werden muss. Bei dieser Methode müssen Sie "
-"dem Benutzer, unter dem der Checkmk Windows Agentendienst läuft, Zugriff auf "
-"die MSSQL-Datenbank gewähren. Andernfalls können Sie die Anmeldedaten eines "
-"Datenbankbenutzers konfigurieren, der die Berechtigung hat, die benötigten "
-"Informationen von der Serverinstanz zu lesen."
-
-msgid ""
 "This plug-in can only be deployed asynchronously because it launches "
 "background processes (one per address). Under systemd, this only works when "
 "being run asynchronously."
@@ -61728,6 +61710,30 @@ msgstr ""
 "Dieses Plugin fragt über StorCLI Informationen über logische Volumes und "
 "physische Platten von LSI RAID-Controllern ab. StorCLI muss auf dem "
 "Zielsystem installiert sein, damit das Plugin funktioniert."
+
+msgid ""
+"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see [werk "
+"15844 for details). Please switch to the new ruleset \"Microsoft SQL server "
+"(Linux, Windows)\".This plug-in can be used to collect information of all "
+"running MSSQL servers on the local system. The current implementation of the "
+"check uses the \"trusted authentication\" where no user/password needs to be "
+"created in the MSSQL server instance by default. Using this method, you "
+"needed to grant the user as which the Checkmk windows agent service is "
+"running access to the MSSQL database. Otherwise you can configure the "
+"credentials of a database user which has the permission to read the needed "
+"information from the server instance."
+msgstr ""
+"Dieses Plugin ist veraltet und wird in Checkmk 2.4.0 entfernt werden (siehe "
+"[Werk 15844 für Details). Bitte wechseln Sie auf den neuen Regelsatz "
+"\"Microsoft SQL Server (Linux, Windows)\". Mit diesem Plugin können Sie "
+"Informationen über alle laufenden MSSQL-Server auf dem lokalen System "
+"sammeln. Die aktuelle Implementierung verwendet \"Trusted Authentication\", "
+"wobei standardmäßig kein Benutzer/Passwort in der MSSQL Server-Instanz "
+"erstellt werden muss. Bei dieser Methode müssen Sie dem Benutzer, unter dem "
+"der Checkmk Windows Agentendienst läuft, Zugriff auf die MSSQL-Datenbank "
+"gewähren. Andernfalls können Sie die Anmeldedaten eines Datenbankbenutzers "
+"konfigurieren, der die Berechtigung hat, die benötigten Informationen von "
+"der Serverinstanz zu lesen."
 
 msgid ""
 "This plug-in monitors Arcserve backups by deploying a plug-in for the "
@@ -69920,9 +69926,8 @@ msgstr "Benutzer-Benachrichtigungsregel"
 msgid "Users, roles and permissions"
 msgstr "Benutzer, Rollen und Berechtigungen"
 
-#, fuzzy
 msgid "Users: User Management"
-msgstr "Benutzer-Verwaltung"
+msgstr "Benutzer: Benutzer-Verwaltung"
 
 msgid "Using predefined condition"
 msgstr "Verwendung einer vordefinierten Bedingung"
@@ -70086,9 +70091,8 @@ msgstr "VLAN-Typ"
 msgid "VLANs"
 msgstr "VLANs"
 
-#, fuzzy
 msgid "VLUNs: Virtual LUN Configuration"
-msgstr "Die globale Konfiguration nutzen"
+msgstr "VLUNs: Virtuelle LUN-Konfiguration"
 
 msgid "VM"
 msgstr "VM"
@@ -70278,7 +70282,7 @@ msgstr "Variable"
 
 #, python-format
 msgid "Variable files (%s)"
-msgstr "Variablen-Dateien (%s)"
+msgstr "Variablendateien (%s)"
 
 #, python-format
 msgid "Variables (%s)"
@@ -70744,16 +70748,14 @@ msgstr "Name des Volumes"
 msgid "Volume parameters"
 msgstr "Volumen-Parameter"
 
-#, fuzzy
 msgid "VolumeSets: Volume Set Configuration"
-msgstr "Konfiguration der Event Console"
+msgstr "VolumeSets: Volume Set-Konfiguration"
 
 msgid "Volumes"
 msgstr "Volumen"
 
-#, fuzzy
 msgid "Volumes: Virtual Volume Summary"
-msgstr "Azure Virtuelle Maschinen Zusammenfassung"
+msgstr "Volumen: Virtuelle Volumenzusammenfassung"
 
 msgid "Voluntary context switches"
 msgstr "Freiwillige Kontextwechsel"
@@ -75509,13 +75511,6 @@ msgstr "Clients"
 msgid "closed"
 msgstr "geschlossen"
 
-msgid "cmk/kubernetes/object"
-msgstr "cmk/kubernetes/object"
-
-#, python-brace-format
-msgid "cmk/kubernetes/{self._kubernetes_object_type}"
-msgstr "cmk/kubernetes/{self._kubernetes_object_type}"
-
 msgid "cmk_site_statistics (core PIDs)"
 msgstr "cmk_site_statistics (core PIDs)"
 
@@ -75982,7 +75977,7 @@ msgid "hide response"
 msgstr "verberge Antwort"
 
 msgid "hide variable names"
-msgstr "blende Variablen-Namen aus"
+msgstr "blende Variablennamen aus"
 
 msgid "hierarchy"
 msgstr "Hierarchie"
@@ -76372,7 +76367,7 @@ msgid "minimum"
 msgstr "Minimum"
 
 msgid "mins"
-msgstr "min"
+msgstr "Min"
 
 msgid "minute"
 msgid_plural "minutes"
@@ -77348,11 +77343,24 @@ msgid "{sa._name} ({sa.dotted_string})"
 msgstr "{sa._name} ({sa.dotted_string})"
 
 msgid "{what.title()} rate"
-msgstr ""
+msgstr "{what.title()} rate"
 
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "cmk/kubernetes/object"
+#~ msgstr "cmk/kubernetes/object"
+
+#, python-brace-format
+#~ msgid "cmk/kubernetes/{self._kubernetes_object_type}"
+#~ msgstr "cmk/kubernetes/{self._kubernetes_object_type}"
+
+#~ msgid "Monitor databases on the local host"
+#~ msgstr "Datenbanken auf dem lokalen Host überwachen"
+
+#~ msgid "Check MS SQL Server (Linux, Windows)"
+#~ msgstr "Überprüfe MS SQL-Server (Linux, Windows)"
 
 #~ msgid ""
 #~ "Possible values are the following: cpgs, volumes, hosts, capacity, "

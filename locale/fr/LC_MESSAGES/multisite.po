@@ -10608,10 +10608,6 @@ msgstr "Vérifier l'accès au service LDAP"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "Vérifier le statut MK de l'hôte du ferroutage pendant cette période"
 
-#, fuzzy
-msgid "Check MS SQL Server (Linux, Windows)"
-msgstr "Microsoft SQL Server (Windows)"
-
 msgid "Check Parameter"
 msgstr "Vérifier le paramètre"
 
@@ -18322,10 +18318,6 @@ msgid "Do not deploy AD-Replication plug-in"
 msgstr "Ne pas déployer le plugin AD-Réplication"
 
 #, fuzzy
-msgid "Do not deploy Check SQL Server plug-in"
-msgstr "Ne pas déployer le plugin MySQL"
-
-#, fuzzy
 msgid "Do not deploy DB2 memory plug-in"
 msgstr "Ne pas déployer le plugin mémoire DB2"
 
@@ -18348,6 +18340,10 @@ msgstr "Ne pas déployer le plugin LVM"
 #, fuzzy
 msgid "Do not deploy Linux filesystem quota plug-in"
 msgstr "Ne pas déployer le plugin de quota de système de fichiers Linux"
+
+#, fuzzy
+msgid "Do not deploy MSSQL Server plug-in"
+msgstr "Ne pas déployer le plugin MySQL"
 
 #, fuzzy
 msgid "Do not deploy MTR plug-in"
@@ -32033,6 +32029,10 @@ msgstr "Allées"
 msgid "Language"
 msgstr "Langue"
 
+#, fuzzy
+msgid "Large"
+msgstr "Cible"
+
 msgid "Large pool size"
 msgstr "Grande taille de la piscine"
 
@@ -35800,6 +35800,10 @@ msgid "Maximum expected run time for heart beat packet"
 msgstr ""
 "Durée maximale d'exécution prévue pour le paquet de battements cardiaques"
 
+#, fuzzy
+msgid "Maximum hexagon size"
+msgstr "Taille maximale"
+
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Taille maximale de l'image : %dx%dpx"
@@ -36512,7 +36516,12 @@ msgstr "Statut de Microsoft Azure"
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "État de la VM du serveur Microsoft Hyper-V"
 
-msgid "Microsoft SQL Server (Windows)"
+#, fuzzy
+msgid "Microsoft SQL Server (Linux, Windows)"
+msgstr "Microsoft SQL Server (Windows)"
+
+#, fuzzy
+msgid "Microsoft SQL Server (deprecated)"
 msgstr "Microsoft SQL Server (Windows)"
 
 msgid "Migrate"
@@ -37056,12 +37065,12 @@ msgid "Monitor costs and usage"
 msgstr "Suivre les coûts et l'utilisation"
 
 #, fuzzy
-msgid "Monitor databases on remote hosts"
-msgstr "Ne pas envoyer à l'hôte distant"
+msgid "Monitor databases"
+msgstr "Base de données des événements"
 
 #, fuzzy
-msgid "Monitor databases on the local host"
-msgstr "Surveiller plusieurs instances sur l'hôte"
+msgid "Monitor databases on other hosts"
+msgstr "Ne pas envoyer à l'hôte distant"
 
 msgid "Monitor disabled services"
 msgstr "Contrôler les services désactivés"
@@ -49340,6 +49349,12 @@ msgstr "Ajouter une configuration d'état"
 
 #, python-format
 msgid ""
+"Selecting the '%s' option 'Large' can be useful when displaying the '%s' on "
+"large screens, e.g. on a wall monitor."
+msgstr ""
+
+#, python-format
+msgid ""
 "Selecting this option will disable the %s, but it will remain in the "
 "configuration."
 msgstr ""
@@ -50945,10 +50960,6 @@ msgstr "Afficher la page d'accueil"
 msgid "Show Setup icon"
 msgstr "Afficher l'icône de configuration"
 
-#, fuzzy
-msgid "Show State of"
-msgstr "Afficher le titre"
-
 msgid "Show a colored status label"
 msgstr "Afficher une étiquette d'état en couleur"
 
@@ -51257,6 +51268,10 @@ msgstr "Afficher l'espace réservé à l'utilisateur <tt>root</tt>"
 
 msgid "Show stale hosts and services"
 msgstr "Afficher les hôtes et services périmés"
+
+#, fuzzy
+msgid "Show state of"
+msgstr "Afficher le titre"
 
 #, python-format
 msgid "Show summary for not %s states"
@@ -62822,27 +62837,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This plug-in can be used to collect information of all running MSSQL servers "
-"on the local system. The current implementation of the check uses the "
-"\"trusted authentication\" where no user/password needs to be created in the "
-"MSSQL server instance by default. Using this method, you needed to grant the "
-"user as which the Checkmk windows agent service is running access to the "
-"MSSQL database. Otherwise you can configure the credentials of a database "
-"user which has the permission to read the needed information from the server "
-"instance."
-msgstr ""
-"Ce plugin peut être utilisé pour collecter des informations sur tous les "
-"serveurs MSSQL en cours d'exécution sur le système local. L'implémentation "
-"actuelle du contrôle utilise l'authentification de confiance où aucun "
-"utilisateur/mot de passe n'a besoin d'être créé dans l'instance du serveur "
-"MSSQL par défaut. En utilisant cette méthode, vous devez accorder à "
-"l'utilisateur sous lequel le service Checkmk windows agent est exécuté "
-"l'accès à la base de données MSSQL. Sinon, vous pouvez configurer les "
-"informations d'identification d'un utilisateur de la base de données qui a "
-"le droit de lire les informations nécessaires dans l'instance du serveur."
-
-#, fuzzy
-msgid ""
 "This plug-in can only be deployed asynchronously because it launches "
 "background processes (one per address). Under systemd, this only works when "
 "being run asynchronously."
@@ -62908,6 +62902,29 @@ msgstr ""
 "physiques des contrôleurs RAID LSI en utilisant l'utilitaire StorCLI. "
 "StorCLI doit être installé sur le système cible pour que ce plugin "
 "fonctionne."
+
+#, fuzzy
+msgid ""
+"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see [werk "
+"15844 for details). Please switch to the new ruleset \"Microsoft SQL server "
+"(Linux, Windows)\".This plug-in can be used to collect information of all "
+"running MSSQL servers on the local system. The current implementation of the "
+"check uses the \"trusted authentication\" where no user/password needs to be "
+"created in the MSSQL server instance by default. Using this method, you "
+"needed to grant the user as which the Checkmk windows agent service is "
+"running access to the MSSQL database. Otherwise you can configure the "
+"credentials of a database user which has the permission to read the needed "
+"information from the server instance."
+msgstr ""
+"Ce plugin peut être utilisé pour collecter des informations sur tous les "
+"serveurs MSSQL en cours d'exécution sur le système local. L'implémentation "
+"actuelle du contrôle utilise l'authentification de confiance où aucun "
+"utilisateur/mot de passe n'a besoin d'être créé dans l'instance du serveur "
+"MSSQL par défaut. En utilisant cette méthode, vous devez accorder à "
+"l'utilisateur sous lequel le service Checkmk windows agent est exécuté "
+"l'accès à la base de données MSSQL. Sinon, vous pouvez configurer les "
+"informations d'identification d'un utilisateur de la base de données qui a "
+"le droit de lire les informations nécessaires dans l'instance du serveur."
 
 #, fuzzy
 msgid ""
@@ -77424,14 +77441,6 @@ msgstr "clients"
 msgid "closed"
 msgstr "fermé"
 
-#, fuzzy
-msgid "cmk/kubernetes/object"
-msgstr "Nombre de nœuds Kubernetes"
-
-#, python-brace-format
-msgid "cmk/kubernetes/{self._kubernetes_object_type}"
-msgstr ""
-
 msgid "cmk_site_statistics (core PIDs)"
 msgstr "cmk_site_statistics (core PIDs)"
 
@@ -79295,6 +79304,21 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#, fuzzy
+#~| msgid "Kubernetes node count"
+#~ msgid "cmk/kubernetes/object"
+#~ msgstr "Nombre de nœuds Kubernetes"
+
+#, fuzzy
+#~| msgid "Monitor multiple instances on the host"
+#~ msgid "Monitor databases on the local host"
+#~ msgstr "Surveiller plusieurs instances sur l'hôte"
+
+#, fuzzy
+#~| msgid "Microsoft SQL Server (Windows)"
+#~ msgid "Check MS SQL Server (Linux, Windows)"
+#~ msgstr "Microsoft SQL Server (Windows)"
 
 #~ msgid ""
 #~ "Possible values are the following: cpgs, volumes, hosts, capacity, "

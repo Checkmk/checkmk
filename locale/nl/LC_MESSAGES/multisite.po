@@ -10529,10 +10529,6 @@ msgstr "Toegang tot LDAP-service controleren"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "Controleer MK status van piggybacked host binnen deze periode"
 
-#, fuzzy
-msgid "Check MS SQL Server (Linux, Windows)"
-msgstr "Microsoft SQL Server (Windows)"
-
 msgid "Check Parameter"
 msgstr "Controleer Parameter"
 
@@ -18170,10 +18166,6 @@ msgid "Do not deploy AD-Replication plug-in"
 msgstr "Implementeer geen AD-Replicatie plugin"
 
 #, fuzzy
-msgid "Do not deploy Check SQL Server plug-in"
-msgstr "De MySQL plugin niet implementeren"
-
-#, fuzzy
 msgid "Do not deploy DB2 memory plug-in"
 msgstr "Implementeer geen DB2 geheugen plugin"
 
@@ -18196,6 +18188,10 @@ msgstr "LVM plugin niet implementeren"
 #, fuzzy
 msgid "Do not deploy Linux filesystem quota plug-in"
 msgstr "Linux bestandssysteem quota plugin niet implementeren"
+
+#, fuzzy
+msgid "Do not deploy MSSQL Server plug-in"
+msgstr "De MySQL plugin niet implementeren"
 
 #, fuzzy
 msgid "Do not deploy MTR plug-in"
@@ -31731,6 +31727,10 @@ msgstr "Lanen"
 msgid "Language"
 msgstr "Taal"
 
+#, fuzzy
+msgid "Large"
+msgstr "Doel"
+
 msgid "Large pool size"
 msgstr "Groot zwembad"
 
@@ -35476,6 +35476,10 @@ msgstr "Maximale afstand (TTL) tot gateway"
 msgid "Maximum expected run time for heart beat packet"
 msgstr "Maximaal verwachte looptijd voor hartslagpakket"
 
+#, fuzzy
+msgid "Maximum hexagon size"
+msgstr "Maximale grootte"
+
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "Maximale afbeeldingsgrootte: %dx%dpx"
@@ -36182,7 +36186,12 @@ msgstr "Microsoft Azure Status"
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V Server VM staat"
 
-msgid "Microsoft SQL Server (Windows)"
+#, fuzzy
+msgid "Microsoft SQL Server (Linux, Windows)"
+msgstr "Microsoft SQL Server (Windows)"
+
+#, fuzzy
+msgid "Microsoft SQL Server (deprecated)"
 msgstr "Microsoft SQL Server (Windows)"
 
 msgid "Migrate"
@@ -36722,12 +36731,12 @@ msgid "Monitor costs and usage"
 msgstr "Bewaking van kosten en gebruik"
 
 #, fuzzy
-msgid "Monitor databases on remote hosts"
-msgstr "Niet verzenden naar host op afstand"
+msgid "Monitor databases"
+msgstr "Gebeurtenisendatabase"
 
 #, fuzzy
-msgid "Monitor databases on the local host"
-msgstr "Bewaak meerdere instanties op de host"
+msgid "Monitor databases on other hosts"
+msgstr "Niet verzenden naar host op afstand"
 
 msgid "Monitor disabled services"
 msgstr "Toezicht op gehandicaptenvoorzieningen"
@@ -48855,6 +48864,12 @@ msgstr "Configuratie toestand toevoegen"
 
 #, python-format
 msgid ""
+"Selecting the '%s' option 'Large' can be useful when displaying the '%s' on "
+"large screens, e.g. on a wall monitor."
+msgstr ""
+
+#, python-format
+msgid ""
 "Selecting this option will disable the %s, but it will remain in the "
 "configuration."
 msgstr ""
@@ -50438,10 +50453,6 @@ msgstr "Toon Manpage"
 msgid "Show Setup icon"
 msgstr "Toon Setup-pictogram"
 
-#, fuzzy
-msgid "Show State of"
-msgstr "Titel tonen"
-
 msgid "Show a colored status label"
 msgstr "Toon een gekleurd status label"
 
@@ -50744,6 +50755,10 @@ msgstr "Toon ruimte gereserveerd voor de <tt>root</tt> gebruiker"
 
 msgid "Show stale hosts and services"
 msgstr "Toon verouderde hosts en diensten"
+
+#, fuzzy
+msgid "Show state of"
+msgstr "Titel tonen"
 
 #, python-format
 msgid "Show summary for not %s states"
@@ -62186,26 +62201,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This plug-in can be used to collect information of all running MSSQL servers "
-"on the local system. The current implementation of the check uses the "
-"\"trusted authentication\" where no user/password needs to be created in the "
-"MSSQL server instance by default. Using this method, you needed to grant the "
-"user as which the Checkmk windows agent service is running access to the "
-"MSSQL database. Otherwise you can configure the credentials of a database "
-"user which has the permission to read the needed information from the server "
-"instance."
-msgstr ""
-"Deze plugin kan worden gebruikt om informatie te verzamelen van alle "
-"draaiende MSSQL-servers op het lokale systeem. De huidige implementatie van "
-"de controle gebruikt de \"trusted authentication\" waarbij standaard geen "
-"gebruiker/wachtwoord hoeft te worden aangemaakt in de MSSQL server instance. "
-"Met deze methode moet je de gebruiker als wie de Checkmk windows agent "
-"service draait toegang geven tot de MSSQL database. Anders kunt u de "
-"credentials van een database gebruiker configureren die de toestemming heeft "
-"om de benodigde informatie van de server instance te lezen."
-
-#, fuzzy
-msgid ""
 "This plug-in can only be deployed asynchronously because it launches "
 "background processes (one per address). Under systemd, this only works when "
 "being run asynchronously."
@@ -62269,6 +62264,28 @@ msgstr ""
 "schijven van LSI RAID controllers met behulp van het StorCLI hulpprogramma. "
 "StorCLI moet op het doelsysteem zijn geïnstalleerd om deze plugin te laten "
 "werken."
+
+#, fuzzy
+msgid ""
+"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see [werk "
+"15844 for details). Please switch to the new ruleset \"Microsoft SQL server "
+"(Linux, Windows)\".This plug-in can be used to collect information of all "
+"running MSSQL servers on the local system. The current implementation of the "
+"check uses the \"trusted authentication\" where no user/password needs to be "
+"created in the MSSQL server instance by default. Using this method, you "
+"needed to grant the user as which the Checkmk windows agent service is "
+"running access to the MSSQL database. Otherwise you can configure the "
+"credentials of a database user which has the permission to read the needed "
+"information from the server instance."
+msgstr ""
+"Deze plugin kan worden gebruikt om informatie te verzamelen van alle "
+"draaiende MSSQL-servers op het lokale systeem. De huidige implementatie van "
+"de controle gebruikt de \"trusted authentication\" waarbij standaard geen "
+"gebruiker/wachtwoord hoeft te worden aangemaakt in de MSSQL server instance. "
+"Met deze methode moet je de gebruiker als wie de Checkmk windows agent "
+"service draait toegang geven tot de MSSQL database. Anders kunt u de "
+"credentials van een database gebruiker configureren die de toestemming heeft "
+"om de benodigde informatie van de server instance te lezen."
 
 #, fuzzy
 msgid ""
@@ -76586,14 +76603,6 @@ msgstr "klanten"
 msgid "closed"
 msgstr "gesloten"
 
-#, fuzzy
-msgid "cmk/kubernetes/object"
-msgstr "Kubernetes knooppunt aantal"
-
-#, python-brace-format
-msgid "cmk/kubernetes/{self._kubernetes_object_type}"
-msgstr ""
-
 msgid "cmk_site_statistics (core PIDs)"
 msgstr "cmk_site_statistics (kern-PID's)"
 
@@ -78459,6 +78468,21 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Kubernetes node count"
+#~ msgid "cmk/kubernetes/object"
+#~ msgstr "Kubernetes knooppunt aantal"
+
+#, fuzzy
+#~| msgid "Monitor multiple instances on the host"
+#~ msgid "Monitor databases on the local host"
+#~ msgstr "Bewaak meerdere instanties op de host"
+
+#, fuzzy
+#~| msgid "Microsoft SQL Server (Windows)"
+#~ msgid "Check MS SQL Server (Linux, Windows)"
+#~ msgstr "Microsoft SQL Server (Windows)"
 
 #~ msgid ""
 #~ "Possible values are the following: cpgs, volumes, hosts, capacity, "

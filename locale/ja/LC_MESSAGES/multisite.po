@@ -10256,10 +10256,6 @@ msgstr "LDAPサービスへのアクセスを確認する"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "この期間内にピギーバックされたホストのMKステータスを確認します"
 
-#, fuzzy
-msgid "Check MS SQL Server (Linux, Windows)"
-msgstr "Microsoft SQL Server(Windows)"
-
 msgid "Check Parameter"
 msgstr "パラメータを確認する"
 
@@ -17741,10 +17737,6 @@ msgid "Do not deploy AD-Replication plug-in"
 msgstr "AD-Replicationプラグインをデプロイしないでください"
 
 #, fuzzy
-msgid "Do not deploy Check SQL Server plug-in"
-msgstr "MySQLプラグインをデプロイしないでください"
-
-#, fuzzy
 msgid "Do not deploy DB2 memory plug-in"
 msgstr "DB2メモリー・プラグインをデプロイしないでください"
 
@@ -17767,6 +17759,10 @@ msgstr "LVMプラグインをデプロイしないでください"
 #, fuzzy
 msgid "Do not deploy Linux filesystem quota plug-in"
 msgstr "Linuxファイルシステムクォータプラグインをデプロイしないでください"
+
+#, fuzzy
+msgid "Do not deploy MSSQL Server plug-in"
+msgstr "MySQLプラグインをデプロイしないでください"
 
 #, fuzzy
 msgid "Do not deploy MTR plug-in"
@@ -31021,6 +31017,10 @@ msgstr "レーン"
 msgid "Language"
 msgstr "言語"
 
+#, fuzzy
+msgid "Large"
+msgstr "ターゲット"
+
 msgid "Large pool size"
 msgstr "大きなプールサイズ"
 
@@ -34685,6 +34685,10 @@ msgstr "ゲートウェイまでの最大距離(TTL)"
 msgid "Maximum expected run time for heart beat packet"
 msgstr "ハートビートパケットの最大予想実行時間"
 
+#, fuzzy
+msgid "Maximum hexagon size"
+msgstr "最大サイズ"
+
 #, python-format
 msgid "Maximum image size: %dx%dpx"
 msgstr "最大画像サイズ: %dx%dpx"
@@ -35381,7 +35385,12 @@ msgstr "Microsoft Azureの状態"
 msgid "Microsoft Hyper-V Server VM state"
 msgstr "Microsoft Hyper-V ServerのVMの状態"
 
-msgid "Microsoft SQL Server (Windows)"
+#, fuzzy
+msgid "Microsoft SQL Server (Linux, Windows)"
+msgstr "Microsoft SQL Server(Windows)"
+
+#, fuzzy
+msgid "Microsoft SQL Server (deprecated)"
 msgstr "Microsoft SQL Server(Windows)"
 
 msgid "Migrate"
@@ -35918,12 +35927,12 @@ msgid "Monitor costs and usage"
 msgstr "コストと使用状況を監視する"
 
 #, fuzzy
-msgid "Monitor databases on remote hosts"
-msgstr "リモートホストに送信しないでください"
+msgid "Monitor databases"
+msgstr "イベントデータベース"
 
 #, fuzzy
-msgid "Monitor databases on the local host"
-msgstr "ホスト上の複数のインスタンスを監視する"
+msgid "Monitor databases on other hosts"
+msgstr "リモートホストに送信しないでください"
 
 msgid "Monitor disabled services"
 msgstr "無効になっているサービスを監視する"
@@ -47854,6 +47863,12 @@ msgstr "状態構成を追加する"
 
 #, python-format
 msgid ""
+"Selecting the '%s' option 'Large' can be useful when displaying the '%s' on "
+"large screens, e.g. on a wall monitor."
+msgstr ""
+
+#, python-format
+msgid ""
 "Selecting this option will disable the %s, but it will remain in the "
 "configuration."
 msgstr "このオプションを選択すると、%sは無効になりますが、設定には残ります。"
@@ -49398,9 +49413,6 @@ msgstr "マンページを表示"
 msgid "Show Setup icon"
 msgstr "セットアップアイコンの表示"
 
-msgid "Show State of"
-msgstr "状態を表示"
-
 msgid "Show a colored status label"
 msgstr "色付きのステータスラベルを表示する"
 
@@ -49703,6 +49715,10 @@ msgstr "<tt>root</tt>ユーザー用に予約されているスペースを表�
 
 msgid "Show stale hosts and services"
 msgstr "古いホストとサービスを表示する"
+
+#, fuzzy
+msgid "Show state of"
+msgstr "状態を表示"
 
 #, python-format
 msgid "Show summary for not %s states"
@@ -60654,25 +60670,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This plug-in can be used to collect information of all running MSSQL servers "
-"on the local system. The current implementation of the check uses the "
-"\"trusted authentication\" where no user/password needs to be created in the "
-"MSSQL server instance by default. Using this method, you needed to grant the "
-"user as which the Checkmk windows agent service is running access to the "
-"MSSQL database. Otherwise you can configure the credentials of a database "
-"user which has the permission to read the needed information from the server "
-"instance."
-msgstr ""
-"このプラグインを使用すると、ローカルシステムで実行中のすべてのMSSQLサーバーの"
-"情報を収集できます。現在のチェックの実装では、デフォルトでMSSQLサーバーインス"
-"タンスにユーザー/パスワードを作成する必要がない「信頼された認証」を使用してい"
-"ます。この方法を使用するには、Checkmk Windowsエージェントサービスが実行されて"
-"いるユーザーに、MSSQLデータベースへのアクセスを許可する必要があります。そうで"
-"なければ、サーバーインスタンスから必要な情報を読み取る権限を持つデータベース"
-"ユーザーの資格情報を設定することができます。"
-
-#, fuzzy
-msgid ""
 "This plug-in can only be deployed asynchronously because it launches "
 "background processes (one per address). Under systemd, this only works when "
 "being run asynchronously."
@@ -60736,6 +60733,27 @@ msgstr ""
 "このプラグインは、StorCLIユーティリティを使用してLSIRAIDコントローラの論理ボ"
 "リュームと物理ディスクに関する情報を収集します。このプラグインを機能させるに"
 "は、StorCLIをターゲットシステムにインストールする必要があります。"
+
+#, fuzzy
+msgid ""
+"This plug-in is deprecated and will be removed in Checkmk 2.4.0 (see [werk "
+"15844 for details). Please switch to the new ruleset \"Microsoft SQL server "
+"(Linux, Windows)\".This plug-in can be used to collect information of all "
+"running MSSQL servers on the local system. The current implementation of the "
+"check uses the \"trusted authentication\" where no user/password needs to be "
+"created in the MSSQL server instance by default. Using this method, you "
+"needed to grant the user as which the Checkmk windows agent service is "
+"running access to the MSSQL database. Otherwise you can configure the "
+"credentials of a database user which has the permission to read the needed "
+"information from the server instance."
+msgstr ""
+"このプラグインを使用すると、ローカルシステムで実行中のすべてのMSSQLサーバーの"
+"情報を収集できます。現在のチェックの実装では、デフォルトでMSSQLサーバーインス"
+"タンスにユーザー/パスワードを作成する必要がない「信頼された認証」を使用してい"
+"ます。この方法を使用するには、Checkmk Windowsエージェントサービスが実行されて"
+"いるユーザーに、MSSQLデータベースへのアクセスを許可する必要があります。そうで"
+"なければ、サーバーインスタンスから必要な情報を読み取る権限を持つデータベース"
+"ユーザーの資格情報を設定することができます。"
 
 #, fuzzy
 msgid ""
@@ -74608,14 +74626,6 @@ msgstr "クライアント"
 msgid "closed"
 msgstr "閉まっている"
 
-#, fuzzy
-msgid "cmk/kubernetes/object"
-msgstr "Kubernetesノード数"
-
-#, python-brace-format
-msgid "cmk/kubernetes/{self._kubernetes_object_type}"
-msgstr ""
-
 msgid "cmk_site_statistics (core PIDs)"
 msgstr "cmk_site_statistics (コア PID)"
 
@@ -76459,6 +76469,21 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Kubernetes node count"
+#~ msgid "cmk/kubernetes/object"
+#~ msgstr "Kubernetesノード数"
+
+#, fuzzy
+#~| msgid "Monitor multiple instances on the host"
+#~ msgid "Monitor databases on the local host"
+#~ msgstr "ホスト上の複数のインスタンスを監視する"
+
+#, fuzzy
+#~| msgid "Microsoft SQL Server (Windows)"
+#~ msgid "Check MS SQL Server (Linux, Windows)"
+#~ msgstr "Microsoft SQL Server(Windows)"
 
 #~ msgid ""
 #~ "Possible values are the following: cpgs, volumes, hosts, capacity, "

@@ -721,7 +721,7 @@ def fetch_sync_state(
         _set_sync_state(site_activation_state)
 
         _set_sync_state(site_activation_state, _("Fetching sync state"))
-        site_logger.debug(site_activation_state, "Starting config sync")
+        site_logger.debug("Starting config sync (%r)", site_activation_state)
 
         remote_file_infos, remote_config_generation = _get_config_sync_state(
             site_id, replication_paths

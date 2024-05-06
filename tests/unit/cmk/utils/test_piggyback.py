@@ -213,7 +213,7 @@ def test_get_piggyback_raw_data_too_old_global() -> None:
     assert raw_data.info.source_hostname == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message.startswith("Piggyback file too old:")
+    assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
@@ -230,7 +230,7 @@ def test_get_piggyback_raw_data_too_old_source() -> None:
     assert raw_data.info.source_hostname == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message.startswith("Piggyback file too old:")
+    assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 
@@ -248,7 +248,7 @@ def test_get_piggyback_raw_data_too_old_piggybacked_host() -> None:
     assert raw_data.info.source_hostname == "source1"
     assert raw_data.info.file_path.parts[-2:] == ("test-host", "source1")
     assert raw_data.info.successfully_processed is False
-    assert raw_data.info.message.startswith("Piggyback file too old:")
+    assert "too old" in raw_data.info.message.lower()
     assert raw_data.info.status == 0
     assert raw_data.raw_data == _PAYLOAD
 

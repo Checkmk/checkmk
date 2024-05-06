@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import errno
 import logging
 import os
@@ -21,7 +22,6 @@ import cmk.utils.store as store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.render import Age
 
 logger = logging.getLogger("cmk.base")
 
@@ -275,12 +275,12 @@ def _get_piggyback_processed_file_info(
             source_hostname, piggyback_file_path, False, "Piggyback file is missing", 0
         )
 
-    if (outdated := file_age - settings.max_cache_age(source_hostname, piggybacked_hostname)) > 0:
+    if file_age > (allowed := settings.max_cache_age(source_hostname, piggybacked_hostname)):
         return PiggybackFileInfo(
             source_hostname,
             piggyback_file_path,
             False,
-            f"Piggyback file too old: {Age(outdated)}",
+            f"Piggyback file too old (age: {_render_time(file_age)}, allowed: {_render_time(allowed)})",
             0,
         )
 
@@ -323,7 +323,7 @@ def _validity_period_message(
 ) -> str:
     if validity_period is None or (time_left := validity_period - file_age) <= 0:
         return ""
-    return f" (still valid, {Age(time_left)} left)"
+    return f" (still valid, {_render_time(time_left)} left)"
 
 
 def _is_piggyback_file_outdated(
@@ -561,9 +561,10 @@ def _cleanup_old_source_status_files(
         if file_age > max_cache_age_of_source:
             logger.log(
                 VERBOSE,
-                "Piggyback source status file '%s' is outdated (File too old: %s). Remove it.",
+                "Piggyback source status file '%s' too old (age: %s, allowed: %s). Remove it.",
                 source_state_file,
-                Age(file_age - max_cache_age_of_source),
+                _render_time(file_age),
+                _render_time(max_cache_age_of_source),
             )
             _remove_piggyback_file(source_state_file)
 
@@ -607,3 +608,16 @@ def _cleanup_old_piggybacked_files(
             "Piggyback folder '%s' is empty. Removed it.",
             piggybacked_host_folder,
         )
+
+
+def _render_time(value: float | int) -> str:
+    """Format time difference seconds into human readable text
+
+    >>> _render_time(184)
+    '0:03:04'
+
+    Unlikely in this context, but still acceptable:
+    >>> _render_time(92635.3)
+    '1 day, 1:43:55'
+    """
+    return str(datetime.timedelta(seconds=round(value)))

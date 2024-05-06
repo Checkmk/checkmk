@@ -10,7 +10,7 @@ from tests.testlib import CMKEventConsole
 from cmk.utils.hostaddress import HostName
 
 import cmk.ec.export as ec
-from cmk.ec.config import Config, ServiceLevel
+from cmk.ec.config import Config, MatchGroups, ServiceLevel
 from cmk.ec.main import create_history, EventServer, StatusTableEvents, StatusTableHistory
 
 RULE = ec.Rule(
@@ -57,7 +57,7 @@ def test_event_rewrite(
     )
     assert "state" not in event
 
-    event_server.rewrite_event(rule=RULE, event=event, match_groups={})
+    event_server.rewrite_event(rule=RULE, event=event, match_groups=MatchGroups())
 
     assert event["text"] == "SUPERWARN"
     assert event["state"] == 2

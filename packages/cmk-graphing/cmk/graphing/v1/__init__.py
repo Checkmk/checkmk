@@ -21,10 +21,10 @@ def entry_point_prefixes() -> Mapping[
     ],
     str,
 ]:
-    """Return the types of plugins and their respective prefixes that can be discovered by Checkmk.
+    """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
-    These types can be used to create plugins that can be discovered by Checkmk.
-    To be discovered, the plugin must be of one of the types returned by this function and its name
+    These types can be used to create plug-ins that can be discovered by Checkmk.
+    To be discovered, the plug-in must be of one of the types returned by this function and its name
     must start with the corresponding prefix.
 
     Example:

@@ -241,7 +241,7 @@ class MultilineText(FormSpec[str]):
     """Display text in the form as monospaced."""
     macro_support: bool = False
     """Hint in the UI that macros can be used in the field.
-    Replacing the macros in the plugin is a responsibility of the plugin developer."""
+    Replacing the macros in the plug-in is a responsibility of the plug-in developer."""
     label: Label | None = None
     """Text displayed in front of the input field."""
     prefill: Prefill[str] = InputHint("")
@@ -289,7 +289,8 @@ class RegularExpression(FormSpec[str]):
     """Adds pre-formulated help text.
     For commonly used matching behavior you can choose from predefined help texts
     to describe how the pattern will be used to match.
-    Implementing it in a way that fulfills this promise is a responsibility of the plugin developer.
+    Implementing it in a way that fulfills this promise is a responsibility of the plug-in
+    developer.
     """
     label: Label | None = None
     """Text displayed in front of the input field."""
@@ -349,7 +350,7 @@ class String(FormSpec[str]):
     """Text displayed in front of the input field."""
     macro_support: bool = False
     """Hint in the UI that macros can be used in the field.
-    Replacing the macros in the plugin is a responsibility of the plugin developer."""
+    Replacing the macros in the plug-in is a responsibility of the plug-in developer."""
     prefill: Prefill[str] = InputHint("")
     """Value to pre-populate the form field with."""
     field_size: FieldSize = FieldSize.MEDIUM

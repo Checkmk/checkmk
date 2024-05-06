@@ -38,7 +38,7 @@ class PredictiveLevels(Generic[_NumberT]):
     """The name of the metric that should be used to compute the prediction.
 
     This value is hardcoded by you, the developer.
-    It is your responsibility to make sure that all plugins subscribing to the ruleset actually
+    It is your responsibility to make sure that all plug-ins subscribing to the ruleset actually
     create this metric.
     Failing to do so will prevent the backend from providing a prediction, currently leading to an
     always OK service.

@@ -228,7 +228,7 @@ class Secret(NamedTuple):
     Surrogate for a secret defined by the user
 
     This is a surrogate for a secret defined in the setup.
-    You, the developer of the plugin, can use it to define
+    You, the developer of the plug-in, can use it to define
 
      * where in the argv list the password will be
      * how it might have to be formatted
@@ -249,7 +249,7 @@ class Secret(NamedTuple):
         >>> my_secret = Secret(42)  # don't create it, it is passed by the backend
         >>> # ideally, you just pass the reference for the password store
         >>> argv = ["--secret-from-store",  my_secret]
-        >>> # plugins might not support the password store, and have special formatting needs:
+        >>> # plug-ins might not support the password store, and have special formatting needs:
         >>> argv = ["--basicauth", my_secret.unsafe("user:%s")]
 
     """
@@ -271,7 +271,7 @@ class Secret(NamedTuple):
                 >>> my_secret = Secret(42)  # don't create it, it is passed by the backend
                 >>> args = ["--basicauth", my_secret.unsafe("user:%s")]
 
-            What the plugin will receive as argv is `[`'--basicauth', 'user:myS3cret!123']``
+            What the plug-in will receive as argv is `[`'--basicauth', 'user:myS3cret!123']``
 
 
         """
@@ -329,7 +329,7 @@ def replace_macros(value: str, macros: Mapping[str, str]) -> str:
 
     Args:
         value: String in which macros are replaced
-        macros: Mapping of host macros names and values. In the plugins, host macros are
+        macros: Mapping of host macros names and values. In the plug-ins, host macros are
                 provided through the host_config.macros attribute.
 
     Example:

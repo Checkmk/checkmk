@@ -65,7 +65,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
 
     def _add_custom_snapins(self, custom_snapins: list[CustomSnapins]) -> None:
         for custom_snapin in custom_snapins:
-            base_snapin_type_id = custom_snapin._["custom_snapin"][0]
+            base_snapin_type_id = custom_snapin.config.custom_snapin[0]
 
             try:
                 base_snapin_type = self[base_snapin_type_id]
@@ -104,7 +104,7 @@ class SnapinRegistry(Registry[type[SidebarSnapin]]):
 
                 @classmethod
                 def parameters(cls):
-                    return cls._custom_snapin._["custom_snapin"][1]
+                    return cls._custom_snapin.config.custom_snapin[1]
 
                 @classmethod
                 def permission_name(cls) -> PermissionName:

@@ -11,6 +11,7 @@ import json
 import textwrap
 import traceback
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from enum import Enum
 from typing import Any, cast, Self
 
@@ -803,6 +804,15 @@ class CustomSpaninsSpec(pagetypes.OverridableSpec):
     custom_snapin: tuple[str, dict]
 
 
+class CustomSnapinsModel(pagetypes.OverridableModel):
+    custom_snapin: tuple[str, dict]
+
+
+@dataclass(kw_only=True)
+class CustomSnapinsConfig(pagetypes.OverridableConfig):
+    custom_snapin: tuple[str, dict]
+
+
 class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
     @classmethod
     def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
@@ -810,7 +820,18 @@ class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
         return cls(cast(CustomSpaninsSpec, page_dict))
 
     def serialize(self) -> CustomSpaninsSpec:
-        return self._
+        return cast(
+            CustomSpaninsSpec,
+            CustomSnapinsModel(
+                name=self.config.name,
+                title=self.config.title,
+                description=self.config.description,
+                owner=self.config.owner,
+                public=self.config.public,
+                hidden=self.config.hidden,
+                custom_snapin=self.config.custom_snapin,
+            ).model_dump(),
+        )
 
     @classmethod
     def type_name(cls) -> str:
@@ -881,6 +902,10 @@ class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
     @classmethod
     def reserved_unique_ids(cls) -> list[str]:
         return [k for k, v in snapin_registry.items() if not v.is_custom_snapin()]
+
+    @property
+    def config(self) -> CustomSnapinsConfig:
+        return CustomSnapinsConfig(**self._)
 
 
 pagetypes.declare(CustomSnapins)

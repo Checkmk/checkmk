@@ -256,7 +256,7 @@ def test_host_folder_matching(
     )
 
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._agent_port(hostname) == result
+    assert config_cache.fetcher_factory()._agent_port(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -828,7 +828,7 @@ def test_agent_port(monkeypatch: MonkeyPatch, hostname: HostName, result: int) -
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._agent_port(hostname) == result
+    assert config_cache.fetcher_factory()._agent_port(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -853,7 +853,7 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._tcp_connect_timeout(hostname) == result
+    assert config_cache.fetcher_factory()._tcp_connect_timeout(hostname) == result
 
 
 @pytest.mark.parametrize(
@@ -879,7 +879,7 @@ def test_encryption_handling(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._encryption_handling(hostname) is result
+    assert config_cache.fetcher_factory()._encryption_handling(hostname) is result
 
 
 @pytest.mark.parametrize(
@@ -905,7 +905,7 @@ def test_symmetric_agent_encryption(
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache._symmetric_agent_encryption(hostname) is result
+    assert config_cache.fetcher_factory()._symmetric_agent_encryption(hostname) is result
 
 
 @pytest.mark.parametrize(

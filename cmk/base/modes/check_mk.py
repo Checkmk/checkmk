@@ -578,7 +578,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             hostname,
             ipaddress,
             ip_stack_config,
-            fetcher_factory=config_cache,
+            fetcher_factory=config_cache.fetcher_factory(),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
                 selected_sections=NO_SELECTION,

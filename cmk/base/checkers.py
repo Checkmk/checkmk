@@ -354,7 +354,7 @@ class CMKFetcher:
                     current_host_name,
                     current_ip_address,
                     current_ip_stack_config,
-                    fetcher_factory=self.config_cache,
+                    fetcher_factory=self.config_cache.fetcher_factory(),
                     snmp_fetcher_config=SNMPFetcherConfig(
                         scan_config=SNMPScanConfig(
                             missing_sys_description=self.config_cache.missing_sys_description(

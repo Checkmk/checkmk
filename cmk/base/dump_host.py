@@ -221,7 +221,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             hostname,
             ipaddress,
             ConfigCache.ip_stack_config(hostname),
-            fetcher_factory=config_cache,
+            fetcher_factory=config_cache.fetcher_factory(),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=SNMPScanConfig(
                     on_error=OnError.RAISE,

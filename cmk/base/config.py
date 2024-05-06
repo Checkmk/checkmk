@@ -1893,7 +1893,6 @@ class ConfigCache:
         self.__contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self.__snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
-        self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
         self.__labels: dict[HostName, Labels] = {}
         self.__label_sources: dict[HostName, LabelSources] = {}
         self.__notification_plugin_parameters: dict[tuple[HostName, str], Mapping[str, object]] = {}
@@ -1945,6 +1944,9 @@ class ConfigCache:
 
         return self
 
+    def fetcher_factory(self) -> FetcherFactory:
+        return FetcherFactory(self, self.ruleset_matcher)
+
     def make_parent_scan_config(self, host_name: HostName) -> ParentScanConfig:
         return ParentScanConfig(
             active=self.is_active(host_name),
@@ -1953,106 +1955,8 @@ class ConfigCache:
             parents=self.parents(host_name),
         )
 
-    def make_ipmi_fetcher(self, host_name: HostName, ip_address: HostAddress) -> IPMIFetcher:
-        ipmi_credentials = self.management_credentials(host_name, "ipmi")
-        return IPMIFetcher(
-            address=ip_address,
-            username=ipmi_credentials.get("username"),
-            password=ipmi_credentials.get("password"),
-        )
-
-    def make_program_fetcher(
-        self,
-        host_name: HostName,
-        ip_address: HostAddress | None,
-        *,
-        program: str,
-        stdin: str | None,
-    ) -> ProgramFetcher:
-        cmdline = self.make_program_commandline(
-            host_name,
-            ip_address,
-            ConfiguredIPLookup(self, error_handler=handle_ip_lookup_failure),
-            program,
-        )
-        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
-
-    def make_special_agent_fetcher(self, *, cmdline: str, stdin: str | None) -> ProgramFetcher:
-        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
-
     def datasource_programs(self, host_name: HostName) -> Sequence[str]:
         return self.ruleset_matcher.get_host_values(host_name, datasource_programs)
-
-    def make_program_commandline(
-        self,
-        host_name: HostName,
-        ip_address: HostAddress | None,
-        ip_address_of: IPLookup,
-        program: str,
-    ) -> str:
-        return self.translate_commandline(host_name, ip_address, program, ip_address_of)
-
-    def make_piggyback_fetcher(
-        self, host_name: HostName, ip_address: HostAddress | None
-    ) -> PiggybackFetcher:
-        return PiggybackFetcher(
-            hostname=host_name,
-            address=ip_address,
-            time_settings=self.get_piggybacked_hosts_time_settings(piggybacked_hostname=host_name),
-        )
-
-    def make_snmp_fetcher(
-        self,
-        host_name: HostName,
-        ip_address: HostAddress,
-        *,
-        source_type: SourceType,
-        fetcher_config: SNMPFetcherConfig,
-    ) -> SNMPFetcher:
-        snmp_config = self.make_snmp_config(
-            host_name,
-            ip_address,
-            source_type,
-            backend_override=fetcher_config.backend_override,
-        )
-        return SNMPFetcher(
-            sections=self._make_snmp_sections(
-                host_name,
-                checking_sections=self.make_checking_sections(
-                    host_name, selected_sections=fetcher_config.selected_sections
-                ),
-            ),
-            scan_config=fetcher_config.scan_config,
-            do_status_data_inventory=self.hwsw_inventory_parameters(
-                host_name
-            ).status_data_inventory,
-            section_store_path=make_persisted_section_dir(
-                host_name,
-                fetcher_type=FetcherType.SNMP,
-                ident="snmp",
-                section_cache_path=Path(cmk.utils.paths.var_dir),
-            ),
-            snmp_config=snmp_config,
-            stored_walk_path=fetcher_config.stored_walk_path,
-            walk_cache_path=fetcher_config.walk_cache_path,
-        )
-
-    def make_tcp_fetcher(
-        self,
-        host_name: HostName,
-        ip_address: HostAddress,
-        *,
-        tls_config: TLSConfig,
-    ) -> TCPFetcher:
-        return TCPFetcher(
-            host_name=host_name,
-            address=(ip_address, self._agent_port(host_name)),
-            family=self.default_address_family(host_name),
-            timeout=self._tcp_connect_timeout(host_name),
-            encryption_handling=self._encryption_handling(host_name),
-            pre_shared_secret=self._symmetric_agent_encryption(host_name),
-            tls_config=tls_config,
-        )
 
     def make_agent_parser(
         self,
@@ -2248,7 +2152,6 @@ class ConfigCache:
         self.__contactgroups.clear()
         self.__explicit_check_command.clear()
         self.__snmp_fetch_interval.clear()
-        self.__disabled_snmp_sections.clear()
         self.__labels.clear()
         self.__label_sources.clear()
         self.__notification_plugin_parameters.clear()
@@ -2942,45 +2845,6 @@ class ConfigCache:
         return self.__snmp_fetch_interval.setdefault(
             (host_name, section_name), snmp_fetch_interval_impl()
         )
-
-    def disabled_snmp_sections(self, host_name: HostName) -> frozenset[SectionName]:
-        def disabled_snmp_sections_impl() -> frozenset[SectionName]:
-            """Return a set of disabled snmp sections"""
-            rules = self.ruleset_matcher.get_host_values(host_name, snmp_exclude_sections)
-            merged_section_settings = {"if64adm": True}
-            for rule in reversed(rules):
-                for section in rule.get("sections_enabled", ()):
-                    merged_section_settings[section] = False
-                for section in rule.get("sections_disabled", ()):
-                    merged_section_settings[section] = True
-
-            return frozenset(
-                SectionName(name)
-                for name, is_disabled in merged_section_settings.items()
-                if is_disabled
-            )
-
-        with contextlib.suppress(KeyError):
-            return self.__disabled_snmp_sections[host_name]
-
-        return self.__disabled_snmp_sections.setdefault(host_name, disabled_snmp_sections_impl())
-
-    def _make_snmp_sections(
-        self,
-        host_name: HostName,
-        *,
-        checking_sections: frozenset[SectionName],
-    ) -> dict[SectionName, SNMPSectionMeta]:
-        disabled_sections = self.disabled_snmp_sections(host_name)
-        return {
-            name: SNMPSectionMeta(
-                checking=name in checking_sections,
-                disabled=name in disabled_sections,
-                redetect=name in checking_sections and agent_based_register.needs_redetection(name),
-                fetch_interval=self.snmp_fetch_interval(host_name, name),
-            )
-            for name in (checking_sections | disabled_sections)
-        }
 
     def _collect_hosttags(self, tag_to_group_map: Mapping[TagID, TagGroupID]) -> None:
         """Calculate the effective tags for all configured hosts
@@ -4014,33 +3878,6 @@ class ConfigCache:
             return "Check_MK Discovery"
         return "Check_MK inventory"
 
-    def _agent_port(self, host_name: HostName) -> int:
-        ports = self.ruleset_matcher.get_host_values(host_name, agent_ports)
-        return ports[0] if ports else agent_port
-
-    def _tcp_connect_timeout(self, host_name: HostName) -> float:
-        timeouts = self.ruleset_matcher.get_host_values(host_name, tcp_connect_timeouts)
-        return timeouts[0] if timeouts else tcp_connect_timeout
-
-    def _encryption_handling(self, host_name: HostName) -> TCPEncryptionHandling:
-        if not (settings := self.ruleset_matcher.get_host_values(host_name, encryption_handling)):
-            return TCPEncryptionHandling.ANY_AND_PLAIN
-        match settings[0]["accept"]:
-            case "tls_encrypted_only":
-                return TCPEncryptionHandling.TLS_ENCRYPTED_ONLY
-            case "any_encrypted":
-                return TCPEncryptionHandling.ANY_ENCRYPTED
-            case "any_and_plain":
-                return TCPEncryptionHandling.ANY_AND_PLAIN
-        raise ValueError("Unknown setting: %r" % settings[0])
-
-    def _symmetric_agent_encryption(self, host_name: HostName) -> str | None:
-        return (
-            settings[0]
-            if (settings := self.ruleset_matcher.get_host_values(host_name, agent_encryption))
-            else None
-        )
-
     def agent_exclude_sections(self, host_name: HostName) -> dict[str, str]:
         settings = self.ruleset_matcher.get_host_values(host_name, agent_exclude_sections)
         return settings[0] if settings else {}
@@ -4184,6 +4021,185 @@ def boil_down_agent_rules(
             assert_never(match_type)
 
     return boiled_down
+
+
+class FetcherFactory:
+    # TODO: better and clearer separation between ConfigCache and this class.
+    def __init__(self, config_cache: ConfigCache, ruleset_matcher_: RulesetMatcher) -> None:
+        self.config_cache: Final = config_cache
+        self.ruleset_matcher: Final = ruleset_matcher_
+        self.__disabled_snmp_sections: dict[HostName, frozenset[SectionName]] = {}
+
+    def clear(self) -> None:
+        self.__disabled_snmp_sections.clear()
+
+    def _disabled_snmp_sections(self, host_name: HostName) -> frozenset[SectionName]:
+        def disabled_snmp_sections_impl() -> frozenset[SectionName]:
+            """Return a set of disabled snmp sections"""
+            rules = self.ruleset_matcher.get_host_values(host_name, snmp_exclude_sections)
+            merged_section_settings = {"if64adm": True}
+            for rule in reversed(rules):
+                for section in rule.get("sections_enabled", ()):
+                    merged_section_settings[section] = False
+                for section in rule.get("sections_disabled", ()):
+                    merged_section_settings[section] = True
+
+            return frozenset(
+                SectionName(name)
+                for name, is_disabled in merged_section_settings.items()
+                if is_disabled
+            )
+
+        with contextlib.suppress(KeyError):
+            return self.__disabled_snmp_sections[host_name]
+
+        return self.__disabled_snmp_sections.setdefault(host_name, disabled_snmp_sections_impl())
+
+    def _make_snmp_sections(
+        self,
+        host_name: HostName,
+        *,
+        checking_sections: frozenset[SectionName],
+    ) -> dict[SectionName, SNMPSectionMeta]:
+        disabled_sections = self._disabled_snmp_sections(host_name)
+        return {
+            name: SNMPSectionMeta(
+                checking=name in checking_sections,
+                disabled=name in disabled_sections,
+                redetect=name in checking_sections and agent_based_register.needs_redetection(name),
+                fetch_interval=self.config_cache.snmp_fetch_interval(host_name, name),
+            )
+            for name in (checking_sections | disabled_sections)
+        }
+
+    def make_snmp_fetcher(
+        self,
+        host_name: HostName,
+        ip_address: HostAddress,
+        *,
+        source_type: SourceType,
+        fetcher_config: SNMPFetcherConfig,
+    ) -> SNMPFetcher:
+        snmp_config = self.config_cache.make_snmp_config(
+            host_name,
+            ip_address,
+            source_type,
+            backend_override=fetcher_config.backend_override,
+        )
+        return SNMPFetcher(
+            sections=self._make_snmp_sections(
+                host_name,
+                checking_sections=self.config_cache.make_checking_sections(
+                    host_name, selected_sections=fetcher_config.selected_sections
+                ),
+            ),
+            scan_config=fetcher_config.scan_config,
+            do_status_data_inventory=self.config_cache.hwsw_inventory_parameters(
+                host_name
+            ).status_data_inventory,
+            section_store_path=make_persisted_section_dir(
+                host_name,
+                fetcher_type=FetcherType.SNMP,
+                ident="snmp",
+                section_cache_path=Path(cmk.utils.paths.var_dir),
+            ),
+            snmp_config=snmp_config,
+            stored_walk_path=fetcher_config.stored_walk_path,
+            walk_cache_path=fetcher_config.walk_cache_path,
+        )
+
+    def _agent_port(self, host_name: HostName) -> int:
+        ports = self.ruleset_matcher.get_host_values(host_name, agent_ports)
+        return ports[0] if ports else agent_port
+
+    def _tcp_connect_timeout(self, host_name: HostName) -> float:
+        timeouts = self.ruleset_matcher.get_host_values(host_name, tcp_connect_timeouts)
+        return timeouts[0] if timeouts else tcp_connect_timeout
+
+    def _encryption_handling(self, host_name: HostName) -> TCPEncryptionHandling:
+        if not (settings := self.ruleset_matcher.get_host_values(host_name, encryption_handling)):
+            return TCPEncryptionHandling.ANY_AND_PLAIN
+        match settings[0]["accept"]:
+            case "tls_encrypted_only":
+                return TCPEncryptionHandling.TLS_ENCRYPTED_ONLY
+            case "any_encrypted":
+                return TCPEncryptionHandling.ANY_ENCRYPTED
+            case "any_and_plain":
+                return TCPEncryptionHandling.ANY_AND_PLAIN
+        raise ValueError("Unknown setting: %r" % settings[0])
+
+    def _symmetric_agent_encryption(self, host_name: HostName) -> str | None:
+        return (
+            settings[0]
+            if (settings := self.ruleset_matcher.get_host_values(host_name, agent_encryption))
+            else None
+        )
+
+    def make_tcp_fetcher(
+        self,
+        host_name: HostName,
+        ip_address: HostAddress,
+        *,
+        tls_config: TLSConfig,
+    ) -> TCPFetcher:
+        return TCPFetcher(
+            host_name=host_name,
+            address=(ip_address, self._agent_port(host_name)),
+            family=self.config_cache.default_address_family(host_name),
+            timeout=self._tcp_connect_timeout(host_name),
+            encryption_handling=self._encryption_handling(host_name),
+            pre_shared_secret=self._symmetric_agent_encryption(host_name),
+            tls_config=tls_config,
+        )
+
+    def make_ipmi_fetcher(self, host_name: HostName, ip_address: HostAddress) -> IPMIFetcher:
+        ipmi_credentials = self.config_cache.management_credentials(host_name, "ipmi")
+        return IPMIFetcher(
+            address=ip_address,
+            username=ipmi_credentials.get("username"),
+            password=ipmi_credentials.get("password"),
+        )
+
+    def _make_program_commandline(
+        self,
+        host_name: HostName,
+        ip_address: HostAddress | None,
+        ip_address_of: IPLookup,
+        program: str,
+    ) -> str:
+        return self.config_cache.translate_commandline(
+            host_name, ip_address, program, ip_address_of
+        )
+
+    def make_program_fetcher(
+        self,
+        host_name: HostName,
+        ip_address: HostAddress | None,
+        *,
+        program: str,
+        stdin: str | None,
+    ) -> ProgramFetcher:
+        cmdline = self._make_program_commandline(
+            host_name,
+            ip_address,
+            ConfiguredIPLookup(self.config_cache, error_handler=handle_ip_lookup_failure),
+            program,
+        )
+        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
+
+    def make_special_agent_fetcher(self, *, cmdline: str, stdin: str | None) -> ProgramFetcher:
+        return ProgramFetcher(cmdline=cmdline, stdin=stdin, is_cmc=is_cmc())
+
+    def make_piggyback_fetcher(
+        self, host_name: HostName, ip_address: HostAddress | None
+    ) -> PiggybackFetcher:
+        return PiggybackFetcher(
+            hostname=host_name,
+            address=ip_address,
+            time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
+                piggybacked_hostname=host_name
+            ),
+        )
 
 
 class CEEConfigCache(ConfigCache):

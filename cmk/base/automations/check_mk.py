@@ -2052,7 +2052,7 @@ class AutomationDiagHost(Automation):
             host_name,
             ipaddress,
             ConfigCache.ip_stack_config(host_name),
-            fetcher_factory=config_cache,
+            fetcher_factory=config_cache.fetcher_factory(),
             snmp_fetcher_config=SNMPFetcherConfig(
                 scan_config=snmp_scan_config,
                 selected_sections=NO_SELECTION,
@@ -2512,7 +2512,7 @@ class AutomationGetAgentOutput(Automation):
                     hostname,
                     ipaddress,
                     ip_stack_config,
-                    fetcher_factory=config_cache,
+                    fetcher_factory=config_cache.fetcher_factory(),
                     snmp_fetcher_config=SNMPFetcherConfig(
                         scan_config=snmp_scan_config,
                         selected_sections=NO_SELECTION,

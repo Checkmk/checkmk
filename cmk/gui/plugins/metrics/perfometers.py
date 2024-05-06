@@ -1404,33 +1404,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "logarithmic",
-        "metric": "total_rate",
-        "half_value": 50.0,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "bypass_rate",
-        "half_value": 2.0,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "fireeye_stat_attachment",
-        "half_value": 50.0,
-        "exponent": 2.0,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
         "metric": "messages_in_queue",
         "half_value": 1.0,
         "exponent": 2.0,

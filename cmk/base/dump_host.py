@@ -35,7 +35,6 @@ from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import NO_SELECTION
 
-import cmk.base.config as config
 import cmk.base.core
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
@@ -44,6 +43,7 @@ from cmk.base.config import (
     ConfigCache,
     ConfiguredIPLookup,
     handle_ip_lookup_failure,
+    lookup_ip_address,
     lookup_mgmt_board_ip_address,
 )
 from cmk.base.ip_lookup import IPStackConfig
@@ -117,7 +117,12 @@ def _agent_description(cds: ComputedDataSources) -> str:
     return "No agent"
 
 
-def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
+def dump_host(
+    config_cache: ConfigCache,
+    hostname: HostName,
+    *,
+    simulation_mode: bool,
+) -> None:
     # pylint: disable=too-many-branches
     out.output("\n")
     hosts_config = config_cache.hosts_config
@@ -235,7 +240,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             ),
             is_cluster=hostname in hosts_config.clusters,
             file_cache_options=FileCacheOptions(),
-            simulation_mode=config.simulation_mode,
+            simulation_mode=simulation_mode,
             file_cache_max_age=MaxAge.zero(),
             snmp_backend=config_cache.get_snmp_backend(hostname),
             file_cache_path=file_cache_path,
@@ -312,7 +317,7 @@ def _ip_address_for_dump_host(
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
 ) -> HostAddress | None:
     try:
-        return config.lookup_ip_address(config_cache, host_name, family=family)
+        return lookup_ip_address(config_cache, host_name, family=family)
     except Exception:
         return (
             HostAddress("")

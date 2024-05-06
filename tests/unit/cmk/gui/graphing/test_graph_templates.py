@@ -461,41 +461,6 @@ def test_non_trivial_perfometer_declarations() -> None:
             "exponent": 5,
         },
         {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_ios_f_total_s_rb,oracle_ios_f_total_l_rb,+",
-            "half_value": 50.0,
-            "exponent": 2,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_ios_f_total_s_wb,oracle_ios_f_total_l_wb,+",
-            "half_value": 50.0,
-            "exponent": 2,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_ios_f_total_s_r,oracle_ios_f_total_l_r,+",
-            "half_value": 50.0,
-            "exponent": 2,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_ios_f_total_s_w,oracle_ios_f_total_l_w,+",
-            "half_value": 50.0,
-            "exponent": 2,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
-            "metric": "oracle_sga_size,oracle_pga_total_pga_allocated,+",
-            "half_value": 16589934592.0,
-            "exponent": 2,
-        },
-        {
             "type": "linear",
             "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
             "segments": ["delivered_notifications,failed_notifications,+,100,+"],
@@ -552,7 +517,6 @@ def test_non_trivial_graph_declarations() -> None:
         "growing",
         "mem_growing",
         "mem_shrinking",
-        "oracle_sga_pga_total",
         "ram_swap_overview",
         "ram_swap_used",
         "savings",

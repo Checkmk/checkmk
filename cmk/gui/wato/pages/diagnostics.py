@@ -463,7 +463,7 @@ class ModeDiagnostics(WatoMode):
                 (
                     OPT_COMP_CMC,
                     Dictionary(
-                        title=_("CMC (Checkmk Microcore)"),
+                        title=_("CMC (Checkmk Micro Core)"),
                         help=_("Core files (config, state and history) from var/check_mk/core.%s")
                         % _CHECKMK_FILES_NOTE,
                         elements=self._get_component_specific_checkmk_files_elements(

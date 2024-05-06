@@ -105,7 +105,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
         excludes.append("var/nagios/archive/")
         # Event console
         excludes.append("var/mkeventd/history/*")
-        # Microcore monitoring history
+        # Micro Core monitoring history
         excludes.append("var/check_mk/core/history")
         excludes.append("var/check_mk/core/archive/*")
         # HW/SW Inventory history

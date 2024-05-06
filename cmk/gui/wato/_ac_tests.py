@@ -229,7 +229,7 @@ class ACTestLivestatusUsage(ACTest):
 
         usage, threads, active_connections, overflows_rate = site_status
 
-        # Microcore has an averaged usage pre-calculated. The Nagios core does not have this column.
+        # Micro Core has an averaged usage pre-calculated. The Nagios core does not have this column.
         # Calculate a non averaged usage instead
         if usage is None:
             usage = float(active_connections) / float(threads)
@@ -253,7 +253,7 @@ class ACTestLivestatusUsage(ACTest):
             text=_("%d of %d connections used") % (active_connections, threads),
         )
 
-        # Only available with Microcore
+        # Only available with Micro Core
         if overflows_rate is not None:
             yield ACSingleResult(
                 state=state,
@@ -845,7 +845,7 @@ class ACTestCheckMKHelperUsage(ACTest):
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
-            "<p>The Checkmk Microcore uses Checkmk helper processes to execute "
+            "<p>The Checkmk Micro Core uses Checkmk helper processes to execute "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough helper processes to handle "
             "the configured checks.</p>"
@@ -861,7 +861,7 @@ class ACTestCheckMKHelperUsage(ACTest):
             "check helpers, because they consume a lot of memory. Your system needs "
             "to be able to handle the memory demand for all of them at once. An additional "
             "problem is that the Checkmk helpers are initialized in parallel during startup "
-            "of the Microcore, which may cause load peaks when having "
+            "of the Micro Core, which may cause load peaks when having "
             "a lot of Checkmk helper processes configured.</p>"
         )
 
@@ -904,7 +904,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
-            "<p>The Checkmk Microcore uses Checkmk fetcher processes to obtain data about "
+            "<p>The Checkmk Micro Core uses Checkmk fetcher processes to obtain data about "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough fetcher processes to handle "
             "the configured checks just in time.</p>"
@@ -919,7 +919,7 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "<p>But you need to be careful that you don't configure too many Checkmk "
             "fetcher helpers, because they consume resources. An additional "
             "problem is that the Checkmk fetchers are initialized in parallel during startup "
-            "of the Microcore, which may cause load peaks when having "
+            "of the Micro Core, which may cause load peaks when having "
             "a lot of Checkmk helper processes configured.</p>"
         )
 
@@ -978,7 +978,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
-            "<p>The Checkmk Microcore uses Checkmk checker processes to execute "
+            "<p>The Checkmk Micro Core uses Checkmk checker processes to execute "
             "the Checkmk and Checkmk Discovery services of the hosts monitored "
             "with Checkmk. There should always be enough helper processes to handle "
             "the configured checks.</p>"
@@ -994,7 +994,7 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "checker helpers, because they consume a lot of memory. Your system has "
             "to be able to handle the memory demand for all of them at once. An additional "
             "problem is that the Checkmk helpers are initialized in parallel during startup "
-            "of the Microcore, which may cause load peaks when having "
+            "of the Micro Core, which may cause load peaks when having "
             "a lot of Checkmk helper processes configured.</p>"
         )
 
@@ -1083,7 +1083,7 @@ class ACTestGenericCheckHelperUsage(ACTest):
     def help(self) -> str:
         return _(
             # xgettext: no-python-format
-            "<p>The Checkmk Microcore uses generic check helper processes to execute "
+            "<p>The Checkmk Micro Core uses generic check helper processes to execute "
             "the active check based services (e.g. check_http, check_...). There should "
             "always be enough helper processes to handle the configured checks.</p>"
             "<p>In case the helper pool is 100% used, checks will not be executed in "
@@ -1386,7 +1386,7 @@ class ACTestCheckMKCheckerNumber(ACTest):
 
     def help(self) -> str:
         return _(
-            "The Checkmk Microcore uses Checkmk checker processes to process the results "
+            "The Checkmk Micro Core uses Checkmk checker processes to process the results "
             "from the Checkmk fetchers. Since the checker processes are not IO bound, they are "
             "most effective when each checker gets a dedicated CPU. Configuring more checkers than "
             "the number of available CPUs has a negative effect, because it increases "

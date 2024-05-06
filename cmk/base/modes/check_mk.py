@@ -1463,7 +1463,7 @@ modes.register(
             "Updates the core configuration based on the current Checkmk "
             "configuration. When using the Nagios core, the precompiled host "
             "checks are created and the nagios configuration is updated. "
-            "When using the CheckMK Microcore, the core configuration is created "
+            "When using the CheckMK Micro Core, the core configuration is created "
             "and the configuration for the Core helper processes is being created.",
             "The agent bakery is updating the agents.",
         ],
@@ -1510,7 +1510,7 @@ modes.register(
         long_help=[
             "You may add hostnames as additional arguments. This enables the incremental "
             "activate mechanism, only compiling these hostnames and using cached data for all "
-            "other hosts. Only supported with Checkmk Microcore."
+            "other hosts. Only supported with Checkmk Micro Core."
         ],
         handler_function=mode_restart,
         short_help="Create core config + core restart",
@@ -1557,7 +1557,7 @@ modes.register(
         long_help=[
             "You may add hostnames as additional arguments. This enables the incremental "
             "activate mechanism, only compiling these hostnames and using cached data for all "
-            "other hosts. Only supported with Checkmk Microcore."
+            "other hosts. Only supported with Checkmk Micro Core."
         ],
         handler_function=mode_reload,
         short_help="Create core config + core reload",

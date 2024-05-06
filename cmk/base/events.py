@@ -258,11 +258,11 @@ def add_rulebased_macros(
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
     if "CONTACTS" not in raw_context and contacts_needed:
-        # Ensure that we don't reach this when the Microcore is enabled. Triggering this logic
-        # with the Microcore might result in dead locks.
+        # Ensure that we don't reach this when the Micro Core is enabled. Triggering this logic
+        # with the Micro Core might result in dead locks.
         ensure_nagios(
             "Missing 'CONTACTS' in raw notification context. It should always "
-            "be available when using the Microcore."
+            "be available when using the Micro Core."
         )
 
         contact_list = livestatus_fetch_contacts(

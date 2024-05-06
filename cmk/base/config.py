@@ -1236,7 +1236,7 @@ def service_depends_on(
 
 
 def is_cmc() -> bool:
-    """Whether or not the site is currently configured to use the Microcore."""
+    """Whether or not the site is currently configured to use the Micro Core."""
     return monitoring_core == "cmc"
 
 

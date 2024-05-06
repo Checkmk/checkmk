@@ -583,7 +583,14 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
     with open(f"{repo_path()}/tests/etc/cse/global-config.json") as f:
         global_content = f.read()
 
-    with _cse_config(cognito_config, cognito_content), _cse_config(global_config, global_content):
+    uap_config = Path("/etc/cse/admin_panel_url.json")
+    uap_content = f'{{"admin_panel_url": "{site_url}"}}'
+
+    with (
+        _cse_config(cognito_config, cognito_content),
+        _cse_config(global_config, global_content),
+        _cse_config(uap_config, uap_content),
+    ):
         idp = urlparse(idp_url)
         auth_provider_proc = execute(
             [

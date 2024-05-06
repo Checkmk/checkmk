@@ -109,7 +109,7 @@ def check_auth() -> tuple[UserId | SiteInternalPseudoUser, AuthType]:
 def is_site_login() -> bool:
     """Determine if login is a site login for connecting central and remote
     site. This login has to be allowed even if site login on remote site is not
-    permitted by rule "Direct login to Web GUI allowed".  This also applies to
+    permitted by rule "Direct login to web GUI allowed".  This also applies to
     all rest-api requests, they should also be allowed in this scenario otherwise
     the agent-receiver won't work."""
 

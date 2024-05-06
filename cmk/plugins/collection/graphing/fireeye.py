@@ -9,49 +9,49 @@ UNIT_PER_SECOND = metrics.Unit(metrics.DecimalNotation("/s"))
 
 metric_analyzed_rate = metrics.Metric(
     name="analyzed_rate",
-    title=Title("Analyzed per Second"),
+    title=Title("Analyzed per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
 )
 metric_bypass_rate = metrics.Metric(
     name="bypass_rate",
-    title=Title("Bypass per Second"),
+    title=Title("Bypass per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.PINK,
 )
 metric_fireeye_stat_attachment = metrics.Metric(
     name="fireeye_stat_attachment",
-    title=Title("Emails containing Attachment per Second"),
+    title=Title("Emails containing Attachment per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.ORANGE,
 )
 metric_fireeye_stat_maliciousattachment = metrics.Metric(
     name="fireeye_stat_maliciousattachment",
-    title=Title("Emails containing Malicious Attachment per Second"),
+    title=Title("Emails containing Malicious Attachment per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.YELLOW,
 )
 metric_fireeye_stat_maliciousurl = metrics.Metric(
     name="fireeye_stat_maliciousurl",
-    title=Title("Emails containing Malicious URL per Second"),
+    title=Title("Emails containing Malicious URL per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_GRAY,
 )
 metric_fireeye_stat_url = metrics.Metric(
     name="fireeye_stat_url",
-    title=Title("Emails containing URL per Second"),
+    title=Title("Emails containing URL per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.PINK,
 )
 metric_infected_rate = metrics.Metric(
     name="infected_rate",
-    title=Title("Infected per Second"),
+    title=Title("Infected per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.DARK_GRAY,
 )
 metric_total_rate = metrics.Metric(
     name="total_rate",
-    title=Title("Total per Second"),
+    title=Title("Total per second"),
     unit=UNIT_PER_SECOND,
     color=metrics.Color.BLUE,
 )

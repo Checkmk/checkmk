@@ -2,27 +2,15 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from cmk.special_agents.agent_kube import create_pvc_sections
 
 
-from tests.unit.cmk.special_agents.agent_kube.factory import (
-    APIPodFactory,
-    MetaDataFactory,
-    PodSpecFactory,
-    PodVolumeFactory,
-    VolumePersistentVolumeClaimSourceFactory,
-)
-
-
-def pod_attached_persistent_volume_claims():
-    APIPodFactory.build(
-        metadata=MetaDataFactory.build(namespace="default", factory_use_construct=True),
-        spec=PodSpecFactory.build(
-            volumes=[
-                PodVolumeFactory.build(
-                    persistent_volume_claim=VolumePersistentVolumeClaimSourceFactory.build(
-                        name="pvc_claim"
-                    )
-                )
-            ]
-        ),
+def test_create_pvc_sections_with_non_existing_api_pvcs():
+    sections = create_pvc_sections(
+        piggyback_name="test",
+        attached_pvc_names=["pvc_claim"],
+        api_pvcs={},
+        api_pvs={},
+        attached_volumes={},
     )
+    assert len(list(sections)) == 0

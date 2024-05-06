@@ -1,0 +1,13 @@
+Title: agent_kube: resolve case when referenced PVC is no longer present
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1714992435
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+Prior to this werk, the Kubernetes special agent failed whenever
+the API returned Kubernetes objects with at least one reference
+to a no longer existing PVC. This werk fixes this issue by ignoring
+such references.

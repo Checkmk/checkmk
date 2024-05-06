@@ -1118,7 +1118,16 @@ def create_pvc_sections(
     if not attached_pvc_names:
         return
 
-    attached_pvcs = {pvc_name: api_pvcs[pvc_name] for pvc_name in attached_pvc_names}
+    attached_pvcs = {
+        pvc_name: pvc_info
+        for pvc_name in attached_pvc_names
+        if (pvc_info := api_pvcs.get(pvc_name))
+    }
+
+    # In certain cases, a Kubernetes object might retain a reference to a PVC even though
+    # the PVC itself no longer exists according to the Core API
+    if not attached_pvcs:
+        return
 
     yield WriteableSection(
         piggyback_name=piggyback_name,

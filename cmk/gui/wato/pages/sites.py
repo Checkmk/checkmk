@@ -504,12 +504,12 @@ class ModeEditSite(WatoMode):
             (
                 "user_login",
                 Checkbox(
-                    title=_("Direct login to Web GUI allowed"),
-                    label=_("Users are allowed to directly login into the Web GUI of this site"),
+                    title=_("Direct login to web GUI allowed"),
+                    label=_("Users are allowed to directly login into the web GUI of this site"),
                     help=_(
-                        "When enabled, this site is marked for synchronisation every time a Web GUI "
+                        "When enabled, this site is marked for synchronisation every time a web GUI "
                         "related option is changed and users are allowed to login "
-                        "to the Web GUI of this site."
+                        "to the web GUI of this site."
                         "The access to the Rest API is unaffected by this option though."
                     ),
                 ),

@@ -395,7 +395,7 @@ class ACTestNumberOfUsers(ACTest):
     def help(self) -> str:
         return _(
             "<p>Having a large number of users configured in Checkmk may decrease the "
-            "performance of the Web GUI.</p>"
+            "performance of the web GUI.</p>"
             "<p>It may be possible that you are using the LDAP sync to create the users. "
             "Please review the filter configuration of the LDAP sync. Maybe you can "
             "decrease the sync scope to get a smaller number of users.</p>"

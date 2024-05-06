@@ -556,67 +556,59 @@ def get_services_with_status(
 
 
 @contextmanager
+def _cse_config(config: Path, content: bytes | str) -> Iterator[None]:
+    write_config = not os.path.exists(config)
+    if write_config:
+        write_file(config.as_posix(), content, sudo=True)
+    else:
+        LOGGER.warning('Skipped writing "%s": File exists!', config)
+    assert config.exists()
+    yield
+    if write_config:
+        execute(["rm", config.as_posix()])
+
+
+@contextmanager
 def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
     idp_url = "http://localhost:5551"
     makedirs("/etc/cse", sudo=True)
     assert os.path.exists("/etc/cse")
 
-    cognito_config = "/etc/cse/cognito-cmk.json"
-    write_cognito_config = not os.path.exists(cognito_config)
-    global_config = "/etc/cse/global-config.json"
-    write_global_config = not os.path.exists(global_config)
-    if write_cognito_config:
-        write_file(
-            cognito_config,
-            check_output(
-                [f"{repo_path()}/scripts/create_cognito_config_cse.sh", idp_url, site_url]
-            ),
-            sudo=True,
-        )
-    else:
-        LOGGER.warning('Skipped writing "%s": File exists!', cognito_config)
-    assert os.path.exists(cognito_config)
-
-    if write_global_config:
-        with open(f"{repo_path()}/tests/etc/cse/global-config.json") as f:
-            write_file(
-                global_config,
-                f.read(),
-                sudo=True,
-            )
-    else:
-        LOGGER.warning('Skipped writing "%s": File exists!', global_config)
-    assert os.path.exists(global_config)
-
-    idp = urlparse(idp_url)
-    auth_provider_proc = execute(
-        [
-            f"{repo_path()}/scripts/run-pipenv",
-            "run",
-            "uvicorn",
-            "tests.testlib.cse.openid_oauth_provider:application",
-            "--host",
-            f"{idp.hostname}",
-            "--port",
-            f"{idp.port}",
-        ],
-        sudo=False,
-        cwd=repo_path(),
-        env=dict(os.environ, URL=idp_url),
-        shell=False,
+    cognito_config = Path("/etc/cse/cognito-cmk.json")
+    cognito_content = check_output(
+        [f"{repo_path()}/scripts/create_cognito_config_cse.sh", idp_url, site_url]
     )
-    assert (
-        auth_provider_proc.poll() is None
-    ), f"Error while starting auth provider! (RC: {auth_provider_proc.returncode})"
-    try:
-        yield auth_provider_proc
-    finally:
-        if auth_provider_proc:
-            auth_provider_proc.kill()
-        if write_cognito_config:
-            execute(["rm", cognito_config])
-        if write_global_config:
-            execute(["rm", global_config])
+
+    global_config = Path("/etc/cse/global-config.json")
+    with open(f"{repo_path()}/tests/etc/cse/global-config.json") as f:
+        global_content = f.read()
+
+    with _cse_config(cognito_config, cognito_content), _cse_config(global_config, global_content):
+        idp = urlparse(idp_url)
+        auth_provider_proc = execute(
+            [
+                f"{repo_path()}/scripts/run-pipenv",
+                "run",
+                "uvicorn",
+                "tests.testlib.cse.openid_oauth_provider:application",
+                "--host",
+                f"{idp.hostname}",
+                "--port",
+                f"{idp.port}",
+            ],
+            sudo=False,
+            cwd=repo_path(),
+            env=dict(os.environ, URL=idp_url),
+            shell=False,
+        )
+        assert (
+            auth_provider_proc.poll() is None
+        ), f"Error while starting auth provider! (RC: {auth_provider_proc.returncode})"
+        try:
+            yield auth_provider_proc
+        finally:
+            if auth_provider_proc:
+                auth_provider_proc.kill()
 
 
 def cse_create_onboarding_dummies(root: str) -> None:

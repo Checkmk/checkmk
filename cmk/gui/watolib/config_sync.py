@@ -14,9 +14,9 @@ import tarfile
 import time
 import traceback
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
-from livestatus import SiteConfiguration, SiteId
+from livestatus import SiteConfiguration, SiteGlobals, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -458,7 +458,7 @@ def is_user_file(filepath: str) -> bool:
     return entry.startswith("user_") or entry in ["tableoptions.mk", "treestates.mk", "sidebar.mk"]
 
 
-def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[str, Any]:
+def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlobals:
     site_globals = site_config.get("globals", {}).copy()
     site_globals.update(
         {

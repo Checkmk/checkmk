@@ -124,9 +124,14 @@ def test_create_rules(
         # set up "Custom icons and actions"
         logged_in_page.main_menu.setup_searchbar.fill("Custom icons and actions")
         logged_in_page.click_and_wait(
-            logged_in_page.main_menu.setup_menu("Custom icons and actions"), navigate=True
+            logged_in_page.main_menu.locator().get_by_role(
+                role="link", name="Custom icons and actions"
+            ),
+            navigate=True,
         )
-        logged_in_page.main_area.locator('[type="button"][value="Add new element"]').click()
+        logged_in_page.main_area.locator().get_by_role(
+            role="button", name="Add new element"
+        ).click()
         logged_in_page.main_area.locator('[name="ve_1_0"]').fill("test")
         logged_in_page.click_and_wait(
             logged_in_page.main_area.get_suggestion("Save"), navigate=True

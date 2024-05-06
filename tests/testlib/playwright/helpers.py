@@ -131,6 +131,11 @@ class LocatorHelper(ABC):
             f"Latest exception:\n{pformat(latest_excp)}\n"
         )
 
+    def _unique_web_element(self, web_element: Locator) -> None:
+        """Validate the web selector under consideration is unique."""
+        expect(web_element).to_be_visible()
+        expect(web_element).to_have_count(1)
+
 
 class Keys(Enum):
     """Keys to control the virtual keyboard in playwright."""

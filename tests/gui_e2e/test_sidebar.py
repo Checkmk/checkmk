@@ -30,7 +30,6 @@ def test_add_remove_snapin(logged_in_page: LoginPage, snapin_id: str) -> None:
 def test_monitor_searchbar(logged_in_page: LoginPage, context: BrowserContext) -> None:
     """Navigate to the CPU inventory from the monitor searchbar."""
 
-    logged_in_page.main_menu.monitor_menu().click()
     logged_in_page.main_menu.monitor_searchbar.fill("all hosts")
 
     expect(logged_in_page.locator("#Monitor")).to_contain_text("All hosts")

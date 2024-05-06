@@ -8,7 +8,7 @@ import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
 import docker.client  # type: ignore[import-untyped]
 import docker.errors  # type: ignore[import-untyped]
@@ -50,59 +50,75 @@ class OracleDatabase:
         self.temp_dir = temp_dir
 
         self.IMAGE: Final[str] = "IMAGE_ORACLE_DB_23C"
-        self.SID: Final[str] = "FREE"  # Cannot be changed for FREE edition docker image!
-        self.PDB: Final[str] = "FREEPDB1"  # Cannot be changed for FREE edition docker image!
-        self.PWD: Final[str] = "oracle"
-        self.CHARSET: Final[str] = "AL32UTF8"
-        self.PREFIX: Final[str] = "ORA FREE"  # Service prefix
-        # user name; use "c##<name>" notation for pluggable databases
-        self.USER: Final[str] = "c##checkmk"
-        self.PASS: Final[str] = "cmk"
+        self.INIT_CMD: Final[str] = "/etc/rc.d/init.d/oracle-free-23c"  # must match container
+        self.ORACLE_HOME: Final[str] = "/opt/oracle/product/23c/dbhomeFree"  # must match container
+        self.SID: Final[str] = "FREE"  # Cannot be changed in FREE edition!
+        self.PDB: Final[str] = "FREEPDB1"  # Cannot be changed in FREE edition!
+        self.SERVICE_PREFIX: Final[str] = "ORA FREE"  # Cannot be changed in FREE edition!
         self.PORT: Final[int] = 1521
-        self.SYS_AUTH: Final[str] = f"sys/{self.PWD}@localhost:{self.PORT}/{self.SID}"
+
+        self.tns_admin_dir = f"{self.ORACLE_HOME}/network/admin"
+        self.password: str = "oracle"
+        self.sys_user_auth: str = f"sys/{self.password}@localhost:{self.PORT}/{self.SID}"
+        self.charset: str = "AL32UTF8"
+        self.wallet_dir: str = "/etc/check_mk/oracle_wallet"
+        self.wallet_password: str = "wallywallet42"
 
         # database root folder
-        self.ROOT: Final[str] = "/opt/oracle"
+        self.ROOT: Final[str] = "/opt/oracle"  # Cannot be changed!
         # database file folder within container
-        self.DATA: Final[str] = "/opt/oracle/oradata"
-
-        self.INIT_CMD: Final[str] = "/etc/rc.d/init.d/oracle-free-23c"
-
+        self.DATA: Final[str] = "/opt/oracle/oradata"  # Cannot be changed!
         # external file system folder for environment file storage
         self.ORAENV: Final[str] = os.getenv("CMK_ORAENV", self.temp_dir.as_posix())
         # external file system folder for database file storage (unset => use container)
         self.ORADATA: Final[str] = os.getenv("CMK_ORADATA", "")
-
         self.reuse_db = self.ORADATA and os.path.exists(f"{self.ORADATA}/{self.SID}")
+
+        self.cmk_conf_dir: str = "/etc/check_mk"
+        self.cmk_var_dir: str = "/var/lib/check_mk_agent"
+        self.cmk_plugin_dir: str = "/usr/lib/check_mk_agent/plugins"
+        # user name; use "c##<name>" notation for pluggable databases
+        self.cmk_username: str = "c##checkmk"
+        self.cmk_password: str = "cmk"
+        self.cmk_credentials_cfg: str = "mk_oracle.credentials.cfg"
+        self.cmk_wallet_cfg: str = "mk_oracle.wallet.cfg"
+        self.cmk_cfg: str = "mk_oracle.cfg"
 
         self.environment = {
             "ORACLE_SID": self.SID,
             "ORACLE_PDB": self.PDB,
-            "ORACLE_PWD": self.PWD,
-            "ORACLE_PASSWORD": self.PWD,
-            "ORACLE_CHARACTERSET": self.CHARSET,
-            "MK_CONFDIR": "/etc/check_mk",
-            "MK_VARDIR": "/var/lib/check_mk_agent",
+            "ORACLE_PWD": self.password,
+            "ORACLE_PASSWORD": self.password,
+            "ORACLE_CHARACTERSET": self.charset,
+            "MK_CONFDIR": self.cmk_conf_dir,
+            "MK_VARDIR": self.cmk_var_dir,
         }
 
-        self.files = {
+        self.sql_files = {
             "create_user.sql": "\n".join(
                 [
-                    f"CREATE USER IF NOT EXISTS {self.USER} IDENTIFIED BY {self.PASS};",
-                    f"ALTER USER {self.USER} SET container_data=all container=current;",
-                    f"GRANT select_catalog_role TO {self.USER} container=all;",
-                    f"GRANT create session TO {self.USER} container=all;",
+                    f"CREATE USER IF NOT EXISTS {self.cmk_username} IDENTIFIED BY {self.cmk_password};",
+                    f"ALTER USER {self.cmk_username} SET container_data=all container=current;",
+                    f"GRANT select_catalog_role TO {self.cmk_username} container=all;",
+                    f"GRANT create session TO {self.cmk_username} container=all;",
                 ]
             ),
             "register_listener.sql": "ALTER SYSTEM REGISTER;",
-            "mk_oracle.cfg": "\n".join(
+        }
+        self.cfg_files = {
+            self.cmk_credentials_cfg: "\n".join(
                 [
                     "MAX_TASKS=10",
-                    f"DBUSER='{self.USER}:{self.PASS}::localhost:1521:{self.SID}'",
+                    f"DBUSER='{self.cmk_username}:{self.cmk_password}::localhost:{self.PORT}:{self.SID}'",
+                ]
+            ),
+            self.cmk_wallet_cfg: "\n".join(
+                [
+                    "MAX_TASKS=10",
+                    "DBUSER='/:'",
                 ]
             ),
         }
-
         self.volumes = []
 
         # CMK_ORADATA can be specified for (re-)using a local, pluggable database folder
@@ -117,6 +133,22 @@ class OracleDatabase:
         self.container = self._start_container()
         self._setup_container()
 
+    def _create_oracle_wallet(self) -> None:
+        logger.info("Creating Oracle wallet...")
+        rc, _ = self.container.exec_run(
+            f"""bash -c 'echo -e "{self.wallet_password}\n{self.wallet_password}" | mkstore -wrl {self.wallet_dir} -create'""",
+            user="root",
+            privileged=True,
+        )
+        assert rc == 0, "Error during wallet creation!"
+        logger.info("Creating Oracle wallet credential...")
+        rc, _ = self.container.exec_run(
+            f"""bash -c 'echo "{self.wallet_password}" | mkstore -wrl {self.wallet_dir} -createCredential localhost:{self.PORT}/{self.SID} {self.cmk_username} {self.cmk_password}'""",
+            user="root",
+            privileged=True,
+        )
+        assert rc == 0, "Error during wallet credential creation!"
+
     def _init_envfiles(self) -> None:
         """Write environment files.
 
@@ -124,7 +156,7 @@ class OracleDatabase:
         NOTE: The folder is never mounted as a volume, but the files are copied
         to the containers ORADATA folder instead."""
 
-        for name, content in self.files.items():
+        for name, content in (self.sql_files | self.cfg_files).items():
             if not os.path.exists(path := f"{self.ORAENV}/{name}"):
                 with open(path, "w", encoding="UTF-8") as oraenv_file:
                     oraenv_file.write(content)
@@ -164,7 +196,7 @@ class OracleDatabase:
     def _setup_container(self) -> None:
         """Initialise the container setup."""
         logger.info("Copying environment files to container...")
-        for name in self.files:
+        for name in self.sql_files:
             assert copy_to_container(
                 self.container, f"{self.ORAENV}/{name}", self.ROOT
             ), "Failed to copy environment files!"
@@ -192,7 +224,7 @@ class OracleDatabase:
         )
         assert rc == 0, "Error during listener registration!"
 
-        logger.info('Creating Checkmk user "%s"...', self.USER)
+        logger.info('Creating Checkmk user "%s"...', self.cmk_username)
         rc, _ = self.container.exec_run(
             f"""bash -c 'sqlplus -s "/ as sysdba" < "{self.ROOT}/create_user.sql"'"""
         )
@@ -230,12 +262,12 @@ class OracleDatabase:
 
         checkmk_docker_wait_for_services(checkmk=self.checkmk, hostname=self.name, min_services=5)
 
+        self._create_oracle_wallet()
+
         logger.info(self.container.logs().decode("utf-8").strip())
 
     def _install_oracle_plugin(self) -> None:
         plugin_source_path = repo_path() / "agents" / "plugins" / "mk_oracle"
-        plugin_target_folder = "/usr/lib/check_mk_agent/plugins"
-
         logger.info(
             "Patching the Oracle plugin: Detect free edition + Use default TNS_ADMIN path..."
         )
@@ -253,12 +285,15 @@ class OracleDatabase:
             plugin_file.write(plugin_script)
 
         logger.info('Installing Oracle plugin "%s"...', plugin_source_path)
-        assert copy_to_container(self.container, f"{self.ORAENV}/mk_oracle.cfg", "/etc/check_mk")
-        assert copy_to_container(self.container, plugin_temp_path.as_posix(), plugin_target_folder)
-
+        assert copy_to_container(self.container, plugin_temp_path.as_posix(), self.cmk_plugin_dir)
         self.container.exec_run(
-            rf'chmod +x "{plugin_target_folder}/mk_oracle"', user="root", privileged=True
+            rf'chmod +x "{self.cmk_plugin_dir}/mk_oracle"', user="root", privileged=True
         )
+        logger.info("Installing Oracle plugin configuration files...")
+        for cfg_file in self.cfg_files:
+            assert copy_to_container(self.container, f"{self.ORAENV}/{cfg_file}", self.cmk_conf_dir)
+        self.use_credentials()
+
         logger.info("Create a link to Perl...")
         self.container.exec_run(
             r"""bash -c 'ln -s "${ORACLE_HOME}/perl/bin/perl" "/usr/bin/perl"'""",
@@ -273,6 +308,40 @@ class OracleDatabase:
         if os.getenv("CLEANUP", "1") == "1":
             self.container.stop(timeout=30)
             self.container.remove(force=True)
+
+    def use_credentials(self) -> None:
+        logger.info("Enabling credential-based authentication...")
+        with open(path := f"{self.ORAENV}/sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
+            oraenv_file.write("NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)")
+        assert copy_to_container(self.container, path, self.tns_admin_dir)
+        self.container.exec_run(
+            rf'cp "{self.cmk_conf_dir}/{self.cmk_credentials_cfg}" "{self.cmk_conf_dir}/{self.cmk_cfg}"',
+            user="root",
+            privileged=True,
+        )
+
+    def use_wallet(self) -> None:
+        logger.info("Enabling wallet authentication...")
+        with open(path := f"{self.ORAENV}/sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
+            oraenv_file.write(
+                "\n".join(
+                    [
+                        "NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)",
+                        "SQLNET.WALLET_OVERRIDE = TRUE",
+                        "WALLET_LOCATION =",
+                        "(SOURCE=",
+                        "    (METHOD = FILE)",
+                        f"    (METHOD_DATA = (DIRECTORY={self.wallet_dir}))",
+                        ")",
+                    ]
+                )
+            )
+        assert copy_to_container(self.container, path, self.tns_admin_dir)
+        self.container.exec_run(
+            rf'cp "{self.cmk_conf_dir}/{self.cmk_wallet_cfg}" "{self.cmk_conf_dir}/{self.cmk_cfg}"',
+            user="root",
+            privileged=True,
+        )
 
 
 @pytest.fixture(name="oracle", scope="session")
@@ -290,37 +359,51 @@ def _oracle(
 
 
 @skip_if_not_enterprise_edition
+@pytest.mark.parametrize("auth_mode", ["wallet", "credential"])
 def test_docker_oracle(
     checkmk: docker.models.containers.Container,
     oracle: OracleDatabase,
+    auth_mode: Literal["wallet", "credential"],
 ) -> None:
+    if auth_mode == "wallet":
+        oracle.use_wallet()
+    else:
+        oracle.use_credentials()
+    rc, _ = oracle.container.exec_run(
+        f"""bash -c '{oracle.cmk_plugin_dir}/mk_oracle -t'""",
+        user="root",
+        privileged=True,
+    )
+    assert (
+        rc == 0
+    ), f"Error: Oracle plugin could not connect to database using {auth_mode} authentication!"
     expected_services = [
         {"state": 0} | _
         for _ in [
-            {"description": f"{oracle.PREFIX}.CDB$ROOT Locks"},
-            {"description": f"{oracle.PREFIX}.CDB$ROOT Long Active Sessions"},
-            {"description": f"{oracle.PREFIX}.CDB$ROOT Performance"},
-            {"description": f"{oracle.PREFIX}.CDB$ROOT Sessions"},
-            {"description": f"{oracle.PREFIX}.{oracle.PDB} Instance"},
-            {"description": f"{oracle.PREFIX}.{oracle.PDB} Locks"},
-            {"description": f"{oracle.PREFIX}.{oracle.PDB} Long Active Sessions"},
-            {"description": f"{oracle.PREFIX}.{oracle.PDB} Performance"},
-            {"description": f"{oracle.PREFIX}.{oracle.PDB} Recovery Status"},
-            {"description": f"{oracle.PREFIX}.{oracle.PDB} Sessions"},
-            {"description": f"{oracle.PREFIX}.{oracle.PDB} Uptime"},
-            {"description": f"{oracle.PREFIX} Instance"},
-            {"description": f"{oracle.PREFIX} Locks"},
-            {"description": f"{oracle.PREFIX} Logswitches"},
-            {"description": f"{oracle.PREFIX} Long Active Sessions"},
-            {"description": f"{oracle.PREFIX}.PDB$SEED Instance"},
-            {"description": f"{oracle.PREFIX}.PDB$SEED Performance"},
-            {"description": f"{oracle.PREFIX}.PDB$SEED Recovery Status"},
-            {"description": f"{oracle.PREFIX}.PDB$SEED Uptime"},
-            {"description": f"{oracle.PREFIX} Processes"},
-            {"description": f"{oracle.PREFIX} Recovery Status"},
-            {"description": f"{oracle.PREFIX} Sessions"},
-            {"description": f"{oracle.PREFIX} Undo Retention"},
-            {"description": f"{oracle.PREFIX} Uptime"},
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT Locks"},
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT Long Active Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT Performance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Instance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Locks"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Long Active Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Performance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Recovery Status"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Uptime"},
+            {"description": f"{oracle.SERVICE_PREFIX} Instance"},
+            {"description": f"{oracle.SERVICE_PREFIX} Locks"},
+            {"description": f"{oracle.SERVICE_PREFIX} Logswitches"},
+            {"description": f"{oracle.SERVICE_PREFIX} Long Active Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.PDB$SEED Instance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.PDB$SEED Performance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.PDB$SEED Recovery Status"},
+            {"description": f"{oracle.SERVICE_PREFIX}.PDB$SEED Uptime"},
+            {"description": f"{oracle.SERVICE_PREFIX} Processes"},
+            {"description": f"{oracle.SERVICE_PREFIX} Recovery Status"},
+            {"description": f"{oracle.SERVICE_PREFIX} Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX} Undo Retention"},
+            {"description": f"{oracle.SERVICE_PREFIX} Uptime"},
         ]
     ]
     actual_services = [
@@ -330,7 +413,7 @@ def test_docker_oracle(
             "get",
             f"/objects/host/{oracle.name}/collections/services?columns=state&columns=description",
         ).json()["value"]
-        if _.get("title").upper().startswith(oracle.PREFIX)
+        if _.get("title").upper().startswith(oracle.SERVICE_PREFIX)
     ]
 
     missing_services = [

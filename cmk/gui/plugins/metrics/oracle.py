@@ -37,12 +37,12 @@ from cmk.gui.i18n import _
 def register_oracle_metrics():
     # waitclass totals
     metric_info["oracle_wait_class_total"] = {
-        "title": _("ORACLE Total waited"),
+        "title": _("Oracle Total waited"),
         "unit": "1/s",
         "color": "#110000",
     }
     metric_info["oracle_wait_class_total_fg"] = {
-        "title": _("ORACLE Total waited (FG)"),
+        "title": _("Oracle Total waited (FG)"),
         "unit": "1/s",
         "color": "#110000",
     }
@@ -50,12 +50,12 @@ def register_oracle_metrics():
     # waitclasses
     for index, waitclass in enumerate(oracle_waitclasses):
         metric_info[waitclass.metric] = {
-            "title": _("ORACLE %s wait class") % waitclass.name,
+            "title": _("Oracle %s wait class") % waitclass.name,
             "unit": "1/s",
             "color": indexed_color(index + 1, len(oracle_waitclasses)),
         }
         metric_info[waitclass.metric_fg] = {
-            "title": _("ORACLE %s wait class (FG)") % waitclass.name,
+            "title": _("Oracle %s wait class (FG)") % waitclass.name,
             "unit": "1/s",
             "color": indexed_color(index + 1, len(oracle_waitclasses)),
         }
@@ -67,49 +67,49 @@ def register_oracle_metrics():
             color_index += 1
             for io_code, io_text, unit in oracle_io_types:
                 metric_info[f"oracle_ios_f_{iofile_id}_{size_code}_{io_code}"] = {
-                    "title": _("ORACLE %s %s %s") % (iofile_name, size_text, io_text),
+                    "title": _("Oracle %s %s %s") % (iofile_name, size_text, io_text),
                     "unit": unit,
                     "color": indexed_color(color_index, len(oracle_iofiles) * len(oracle_io_sizes)),
                 }
 
     # iofiles totals
     metric_info["oracle_ios_f_total_s_rb"] = {
-        "title": _("ORACLE Total Small Read Bytes"),
+        "title": _("Oracle Total Small Read Bytes"),
         "unit": "bytes/s",
         "color": "#50d090",
     }
     metric_info["oracle_ios_f_total_s_wb"] = {
-        "title": _("ORACLE Total Small Write Bytes"),
+        "title": _("Oracle Total Small Write Bytes"),
         "unit": "bytes/s",
         "color": "#5090d0",
     }
     metric_info["oracle_ios_f_total_l_rb"] = {
-        "title": _("ORACLE Total Large Read Bytes"),
+        "title": _("Oracle Total Large Read Bytes"),
         "unit": "bytes/s",
         "color": "#30b070",
     }
     metric_info["oracle_ios_f_total_l_wb"] = {
-        "title": _("ORACLE Total Large Write Bytes"),
+        "title": _("Oracle Total Large Write Bytes"),
         "unit": "bytes/s",
         "color": "#3070b0",
     }
     metric_info["oracle_ios_f_total_s_r"] = {
-        "title": _("ORACLE Total Small Reads"),
+        "title": _("Oracle Total Small Reads"),
         "unit": "1/s",
         "color": "#50d090",
     }
     metric_info["oracle_ios_f_total_s_w"] = {
-        "title": _("ORACLE Total Small Writes"),
+        "title": _("Oracle Total Small Writes"),
         "unit": "1/s",
         "color": "#5090d0",
     }
     metric_info["oracle_ios_f_total_l_r"] = {
-        "title": _("ORACLE Total Large Reads"),
+        "title": _("Oracle Total Large Reads"),
         "unit": "1/s",
         "color": "#30b070",
     }
     metric_info["oracle_ios_f_total_l_w"] = {
-        "title": _("ORACLE Total Large Writes"),
+        "title": _("Oracle Total Large Writes"),
         "unit": "1/s",
         "color": "#3070b0",
     }
@@ -117,24 +117,24 @@ def register_oracle_metrics():
     # SGAs
     for index, sga in enumerate(oracle_sga_fields):
         metric_info[sga.metric] = {
-            "title": _("ORACLE %s") % sga.name,
+            "title": _("Oracle %s") % sga.name,
             "unit": "bytes",
             "color": indexed_color(index + 1, len(oracle_sga_fields)),
         }
 
     # PGAs
     metric_info["oracle_pga_total_pga_allocated"] = {
-        "title": ("ORACLE total PGA allocated"),
+        "title": ("Oracle total PGA allocated"),
         "unit": "bytes",
         "color": "#e0e0e0",
     }
     metric_info["oracle_pga_total_pga_inuse"] = {
-        "title": ("ORACLE total PGA inuse"),
+        "title": ("Oracle total PGA inuse"),
         "unit": "bytes",
         "color": "#71ad9f",
     }
     metric_info["oracle_pga_total_freeable_pga_memory"] = {
-        "title": ("ORACLE total freeable PGA memory"),
+        "title": ("Oracle total freeable PGA memory"),
         "unit": "bytes",
         "color": "#7192ad",
     }
@@ -163,7 +163,7 @@ def register_oracle_metrics():
         ),
     ]:
         metric_info["oracle_%s" % what] = {
-            "title": _("ORACLE %s") % descr,
+            "title": _("Oracle %s") % descr,
             "unit": unit,
             "color": color,
         }
@@ -196,21 +196,21 @@ def _oracle_wait_class_metrics() -> Sequence[tuple[str, LineType]]:
 
 def register_oracle_graphs():
     graph_info["oracle_physical_io"] = {
-        "title": _("ORACLE physical IO"),
+        "title": _("Oracle physical IO"),
         "metrics": [
             ("oracle_physical_reads", "area"),
             ("oracle_physical_writes", "-area"),
         ],
     }
     graph_info["oracle_hit_ratio"] = {
-        "title": _("ORACLE hit ratio"),
+        "title": _("Oracle hit ratio"),
         "metrics": [
             ("oracle_buffer_hit_ratio", "area"),
             ("oracle_library_cache_hit_ratio", "-area"),
         ],
     }
     graph_info["oracle_db_time_statistics"] = {
-        "title": _("ORACLE DB time statistics"),
+        "title": _("Oracle DB time statistics"),
         "metrics": [
             ("oracle_db_cpu", "stack"),
             ("oracle_db_wait_time", "stack"),
@@ -219,7 +219,7 @@ def register_oracle_graphs():
         "optional_metrics": ["oracle_db_wait_time"],
     }
     graph_info["oracle_buffer_pool_statistics"] = {
-        "title": _("ORACLE buffer pool statistics"),
+        "title": _("Oracle buffer pool statistics"),
         "metrics": [
             ("oracle_db_block_gets", "line"),
             ("oracle_db_block_change", "line"),
@@ -229,22 +229,22 @@ def register_oracle_graphs():
         ],
     }
     graph_info["oracle_library_cache_statistics"] = {
-        "title": _("ORACLE library cache statistics"),
+        "title": _("Oracle library cache statistics"),
         "metrics": [
             ("oracle_pins_sum", "line"),
             ("oracle_pin_hits_sum", "line"),
         ],
     }
     graph_info["oracle_sga_pga_total"] = {
-        "title": _("ORACLE Memory"),
+        "title": _("Oracle Memory"),
         "metrics": [
             ("oracle_sga_size#80ff40", "stack"),
             ("oracle_pga_total_pga_allocated#408f20", "stack"),
-            ("oracle_sga_size,oracle_pga_total_pga_allocated,+", "line", _("ORACLE total Memory")),
+            ("oracle_sga_size,oracle_pga_total_pga_allocated,+", "line", _("Oracle total Memory")),
         ],
     }
     graph_info["oracle_sga_info"] = {
-        "title": _("ORACLE SGA memory statistics"),
+        "title": _("Oracle SGA memory statistics"),
         "metrics": [
             ("oracle_sga_size", "line"),
             ("oracle_sga_buffer_cache", "stack"),
@@ -274,12 +274,12 @@ def register_oracle_graphs():
             iostat_ios_metrics.append((f"oracle_ios_f_{iofile.id}_{size}_w", "-line"))
 
     graph_info["oracle_iostat_bytes"] = {
-        "title": _("ORACLE IOSTAT Bytes"),
+        "title": _("Oracle IOSTAT Bytes"),
         "metrics": iostat_bytes_metrics,
         "omit_zero_metrics": True,
     }
     graph_info["oracle_iostat_total_bytes"] = {
-        "title": _("ORACLE IOSTAT Total Bytes"),
+        "title": _("Oracle IOSTAT Total Bytes"),
         "metrics": [
             ("oracle_ios_f_total_s_rb", "line"),
             ("oracle_ios_f_total_s_wb", "-line"),
@@ -288,12 +288,12 @@ def register_oracle_graphs():
         ],
     }
     graph_info["oracle_iostat_ios"] = {
-        "title": _("ORACLE IOSTAT IOs"),
+        "title": _("Oracle IOSTAT IOs"),
         "metrics": iostat_ios_metrics,
         "omit_zero_metrics": True,
     }
     graph_info["oracle_iostat_total_ios"] = {
-        "title": _("ORACLE IOSTAT Total IOs"),
+        "title": _("Oracle IOSTAT Total IOs"),
         "metrics": [
             ("oracle_ios_f_total_s_r", "line"),
             ("oracle_ios_f_total_s_w", "-line"),
@@ -302,14 +302,14 @@ def register_oracle_graphs():
         ],
     }
     graph_info["oracle_wait_class"] = {
-        "title": _("ORACLE Wait Class (FG lines are downside)"),
+        "title": _("Oracle Wait Class (FG lines are downside)"),
         "metrics": _oracle_wait_class_metrics(),
         "omit_zero_metrics": True,
         "optional_metrics": [waitclass.metric for waitclass in oracle_waitclasses]
         + [waitclass.metric_fg for waitclass in oracle_waitclasses],
     }
     graph_info["oracle_pga_memory_info"] = {
-        "title": _("ORACLE PGA memory statistics"),
+        "title": _("Oracle PGA memory statistics"),
         "metrics": [
             ("oracle_pga_total_pga_allocated", "line"),
             ("oracle_pga_total_pga_inuse", "line"),

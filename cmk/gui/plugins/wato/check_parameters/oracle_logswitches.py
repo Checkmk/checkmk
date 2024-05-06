@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 def _parameter_valuespec_oracle_logswitches() -> Dictionary:
     return Dictionary(
         help=_(
-            "This check monitors the number of log switches of an ORACLE "
+            "This check monitors the number of log switches of an Oracle "
             "database instance in the last 60 minutes. You can set levels "
             "for upper and lower bounds."
         ),

@@ -28,7 +28,10 @@ import json
 import os
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
+from dataclasses import asdict, dataclass, replace
 from typing import cast, Generic, Literal, Self, TypedDict, TypeVar
+
+from pydantic import BaseModel as PydanticBaseModel
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -129,6 +132,19 @@ class BaseSpec(_BaseSpecMandatory, total=False):
     description: str
 
 
+class BaseModel(PydanticBaseModel):
+    name: str
+    title: str
+    description: str = ""
+
+
+@dataclass(kw_only=True)
+class BaseConfig:
+    name: str
+    title: str
+    description: str = ""
+
+
 class _OverridableSpecMandatory(BaseSpec):
     owner: UserId
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
@@ -139,6 +155,19 @@ class OverridableSpec(_OverridableSpecMandatory, total=False):
     hidden: bool
 
 
+class OverridableModel(BaseModel):
+    owner: UserId
+    public: bool | tuple[Literal["contact_groups"], Sequence[str]] | None
+    hidden: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
+
+
+@dataclass(kw_only=True)
+class OverridableConfig(BaseConfig):
+    owner: UserId
+    public: bool | tuple[Literal["contact_groups"], Sequence[str]] | None
+    hidden: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
+
+
 ElementSpec = dict
 
 
@@ -147,7 +176,31 @@ class OverridableContainerSpec(OverridableSpec):
     elements: list[ElementSpec]
 
 
+class OverridableContainerModel(OverridableModel):
+    # TODO: Specify element types. Can we make use of the generic typed dicts here?
+    elements: list[ElementSpec] = []
+
+
+@dataclass(kw_only=True)
+class OverridableContainerConfig(OverridableConfig):
+    # TODO: Specify element types. Can we make use of the generic typed dicts here?
+    elements: list[ElementSpec]
+
+
 class PageRendererSpec(OverridableContainerSpec):
+    topic: str
+    sort_index: int
+    is_show_more: bool
+
+
+class PageRendererModel(OverridableContainerModel):
+    topic: str
+    sort_index: int
+    is_show_more: bool
+
+
+@dataclass(kw_only=True)
+class PageRendererConfig(OverridableContainerConfig):
     topic: str
     sort_index: int
     is_show_more: bool
@@ -242,6 +295,21 @@ class PagetypeTopicSpec(_PagetypeTopicSpecMandatory, total=False):
     max_entries: int
     # Seems it is not configurable through the UI. Is it OK?
     hide: bool
+
+
+class PagetypeTopicModel(OverridableModel):
+    icon_name: str
+    sort_index: int
+    max_entries: int = 10
+    hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
+
+
+@dataclass(kw_only=True)
+class PagetypeTopicConfig(OverridableConfig):
+    icon_name: str
+    sort_index: int
+    max_entries: int = 10
+    hide: bool = False  # TODO: Seems it is not configurable through the UI. Is it OK?
 
 
 #   .--Base----------------------------------------------------------------.
@@ -359,16 +427,13 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
     # that pages in question of a dictionary format that is not
     # compatible.
     def name(self) -> str:
-        return self._["name"]
+        return self.config.name
 
     def title(self) -> str:
-        return self._["title"]
+        return self.config.title
 
     def description(self) -> str:
-        try:
-            return self._["description"]
-        except KeyError:
-            return ""
+        return self.config.description
 
     def is_hidden(self) -> bool:
         return False
@@ -396,6 +461,10 @@ class Base(abc.ABC, Generic[_T_BaseSpec]):
     @classmethod
     @abc.abstractmethod
     def type_icon(cls) -> Icon: ...
+
+    @property
+    def config(self) -> BaseConfig:
+        return BaseConfig(**self._)
 
 
 # .
@@ -592,10 +661,7 @@ class Overridable(Base[_T_OverridableSpec]):
 
         This does not only need a flag in the page itself, but also the
         permission from its owner to publish it."""
-        if self._["public"] is False or self._["public"] is None:
-            return False
-
-        return self.publish_is_allowed()
+        return False if not self.config.public else self.publish_is_allowed()
 
     def publish_is_allowed(self) -> bool:
         """Whether publishing an element to other users is allowed by the owner"""
@@ -612,20 +678,17 @@ class Overridable(Base[_T_OverridableSpec]):
         if not user.may("general.see_user_%s" % self.type_name()):
             return False
 
-        if self._["public"] is True:
+        if self.config.public is True:
             return self.publish_is_allowed()
 
-        if isinstance(self._["public"], tuple) and self._["public"][0] == "contact_groups":
-            if set(user.contact_groups).intersection(self._["public"][1]):
+        if isinstance(self.config.public, tuple):
+            if set(user.contact_groups).intersection(self.config.public[1]):
                 return self.publish_is_allowed()
 
         return False
 
     def is_hidden(self) -> bool:
-        try:
-            return self._["hidden"]
-        except KeyError:
-            return False
+        return self.config.hidden
 
     def is_builtin(self) -> bool:
         return not self.owner()
@@ -657,7 +720,7 @@ class Overridable(Base[_T_OverridableSpec]):
         return "general.edit_" + cls.type_name()
 
     def owner(self) -> UserId:
-        return UserId(self._["owner"])
+        return self.config.owner
 
     # Checks if the current user is allowed to see a certain page
     # TODO: Wie is die Semantik hier genau? Umsetzung vervollständigen!
@@ -982,9 +1045,9 @@ class Overridable(Base[_T_OverridableSpec]):
             save_user_file("user_%ss" % cls.type_name(), save_dict_of_owner, page_owner)
 
     def clone(self) -> Self:
-        page_dict = self._.copy()
-        page_dict["owner"] = user.id if user.id else UserId("")
-        new_page = self.__class__(page_dict)
+        page_config = replace(self.config)
+        page_config.owner = user.id if user.id else UserId("")
+        new_page = self.__class__(cast(_T_OverridableSpec, asdict(page_config)))
         return new_page
 
     @classmethod
@@ -1015,6 +1078,10 @@ class Overridable(Base[_T_OverridableSpec]):
         """Used to exclude names from choosing as unique ID, e.g. built-in names
         in sidebar snap-ins"""
         return []
+
+    @property
+    def config(self) -> OverridableConfig:
+        return OverridableConfig(**self._)
 
 
 class ListPage(Page, Generic[_T]):
@@ -1797,21 +1864,25 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec]):
         super().__init__(d)
 
     def elements(self) -> Sequence[ElementSpec]:
-        return self._["elements"]
+        return self.config.elements
 
     def remove_element(self, nr: int) -> None:
-        del self._["elements"][nr]
+        del self.config.elements[nr]
 
     def add_element(self, element: ElementSpec) -> None:
-        self._["elements"].append(element)
+        self.config.elements.append(element)
 
     def move_element(self, nr: int, whither: int) -> None:
-        el = self._["elements"][nr]
-        del self._["elements"][nr]
-        self._["elements"][whither:whither] = [el]
+        el = self.config.elements[nr]
+        del self.config.elements[nr]
+        self.config.elements[whither:whither] = [el]
 
     def is_empty(self) -> bool:
         return not self.elements()
+
+    @property
+    def config(self) -> OverridableContainerConfig:
+        return OverridableContainerConfig(**self._)
 
 
 #   .--PageRenderer--------------------------------------------------------.
@@ -1946,22 +2017,13 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
         return page
 
     def topic(self) -> str:
-        try:
-            return self._["topic"]
-        except KeyError:
-            return "other"
+        return self.config.topic
 
     def sort_index(self) -> int:
-        try:
-            return self._["sort_index"]
-        except KeyError:
-            return 99
+        return self.config.sort_index
 
     def is_show_more(self) -> bool:
-        try:
-            return self._["is_show_more"]
-        except KeyError:
-            return False
+        return self.config.is_show_more
 
     # Helper functions for page handlers and render function
     def page_header(self) -> str:
@@ -1987,24 +2049,28 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
 
     def to_visual(self) -> Visual:
         return {
-            "owner": self._["owner"],
-            "name": self._["name"],
+            "owner": self.config.owner,
+            "name": self.config.name,
             "context": {},
             "single_infos": [],
             "add_context_to_title": False,
-            "title": self._["title"],
-            "description": str(self._.get("description", "")),
-            "topic": self._["topic"],
-            "sort_index": self._["sort_index"],
-            "is_show_more": self._["is_show_more"],
+            "title": self.config.title,
+            "description": self.config.description,
+            "topic": self.config.topic,
+            "sort_index": self.config.sort_index,
+            "is_show_more": self.config.is_show_more,
             "icon": None,
-            "hidden": bool(self._.get("hidden")),
+            "hidden": self.config.hidden,
             "hidebutton": False,
-            "public": self._["public"],
+            "public": False if self.config.public is None else self.config.public,
             "packaged": False,
             "link_from": {},
             "megamenu_search_terms": [],
         }
+
+    @property
+    def config(self) -> PageRendererConfig:
+        return PageRendererConfig(**dict(PageRendererModel.model_validate(self._)))
 
 
 # .
@@ -2074,7 +2140,21 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
         return cls(cast(PagetypeTopicSpec, page_dict))
 
     def serialize(self) -> PagetypeTopicSpec:
-        return self._
+        return cast(
+            PagetypeTopicSpec,
+            PagetypeTopicModel(
+                name=self.config.name,
+                title=self.config.title,
+                description=self.config.description,
+                owner=self.config.owner,
+                public=self.config.public,
+                hidden=self.config.hidden,
+                icon_name=self.config.icon_name,
+                sort_index=self.config.sort_index,
+                max_entries=self.config.max_entries,
+                hide=self.config.hide,
+            ).model_dump(),
+        )
 
     @classmethod
     def type_name(cls) -> str:
@@ -2147,171 +2227,187 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
 
     def render_extra_columns(self, table: Table) -> None:
         """Show some specific useful columns in the list view"""
-        table.cell(_("Icon"), html.render_icon(self._["icon_name"]))
+        table.cell(_("Icon"), html.render_icon(self.config.icon_name))
         table.cell(_("Nr. of items"), str(self.max_entries()))
-        table.cell(_("Sort index"), str(self._["sort_index"]))
+        table.cell(_("Sort index"), str(self.config.sort_index))
 
     @classmethod
     def builtin_pages(cls) -> Mapping[str, PagetypeTopicSpec]:
-        topics: dict[str, PagetypeTopicSpec] = {
-            "overview": {
-                "name": "overview",
-                "title": _("Overview"),
-                "icon_name": "topic_overview",
-                "description": "",
-                "public": True,
-                "sort_index": 20,
-                "owner": UserId.builtin(),
-            },
-            "monitoring": {
-                "name": "monitoring",
-                "title": _("Monitoring"),
-                "icon_name": "topic_monitoring",
-                "description": "",
-                "public": True,
-                "sort_index": 30,
-                "owner": UserId.builtin(),
-            },
-            "problems": {
-                "name": "problems",
-                "title": _("Problems"),
-                "icon_name": "topic_problems",
-                "description": "",
-                "public": True,
-                "sort_index": 40,
-                "owner": UserId.builtin(),
-            },
-            "history": {
-                "name": "history",
-                "title": _("History"),
-                "icon_name": "topic_history",
-                "description": "",
-                "public": True,
-                "sort_index": 50,
-                "owner": UserId.builtin(),
-            },
-            "analyze": {
-                "name": "analyze",
-                "title": _("System"),
-                "icon_name": "topic_checkmk",
-                "description": "",
-                "public": True,
-                "sort_index": 60,
-                "owner": UserId.builtin(),
-            },
-            "cloud": {
-                "name": "cloud",
-                "title": _("Cloud"),
-                "icon_name": "plugins_cloud",
-                "description": "",
-                "public": True,
-                "sort_index": 75,
-                "owner": UserId.builtin(),
-            },
-            "bi": {
-                "name": "bi",
-                "title": _("Business Intelligence"),
-                "icon_name": "topic_bi",
-                "description": "",
-                "sort_index": 80,
-                "public": True,
-                "hide": _no_bi_aggregate_active(),
-                "owner": UserId.builtin(),
-            },
-            "applications": {
-                "name": "applications",
-                "title": _("Applications"),
-                "icon_name": "topic_applications",
-                "description": "",
-                "public": True,
-                "sort_index": 85,
-                "owner": UserId.builtin(),
-            },
-            "inventory": {
-                "name": "inventory",
-                "title": _("Inventory"),
-                "icon_name": "topic_inventory",
-                "description": "",
-                "public": True,
-                "sort_index": 90,
-                "owner": UserId.builtin(),
-            },
-            "network_statistics": {
-                "name": "network_statistics",
-                "title": _("Network statistics"),
-                "icon_name": "topic_network_statistics",
-                "description": "",
-                "sort_index": 95,
-                "public": True,
-                "hide": not is_ntop_configured(),
-                "owner": UserId.builtin(),
-            },
-            "it_efficiency": {
-                "name": "it_efficiency",
-                "title": _("IT infrastructure efficiency"),
-                "icon_name": "topic_analyze",
-                "description": _("Analyze the utilization of your IT infrastructure data center."),
-                "public": True,
-                "sort_index": 100,
-                "owner": UserId.builtin(),
-            },
-            "synthetic_monitoring": {
-                "name": "synthetic_monitoring",
-                "title": _("Synthetic Monitoring"),
-                "icon_name": "synthetic_monitoring_topic",
-                "description": "",
-                "public": True,
-                "sort_index": 105,
-                "owner": UserId.builtin(),
-            },
-            "my_workplace": {
-                "name": "my_workplace",
-                "title": _("Workplace"),
-                "icon_name": "topic_my_workplace",
-                "description": "",
-                "public": True,
-                "sort_index": 110,
-                "owner": UserId.builtin(),
-            },
+        topics: dict[str, object] = {
+            "overview": asdict(
+                PagetypeTopicConfig(
+                    name="overview",
+                    title=_("Overview"),
+                    icon_name="topic_overview",
+                    public=True,
+                    sort_index=20,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "monitoring": asdict(
+                PagetypeTopicConfig(
+                    name="monitoring",
+                    title=_("Monitoring"),
+                    icon_name="topic_monitoring",
+                    public=True,
+                    sort_index=30,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "problems": asdict(
+                PagetypeTopicConfig(
+                    name="problems",
+                    title=_("Problems"),
+                    icon_name="topic_problems",
+                    public=True,
+                    sort_index=40,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "history": asdict(
+                PagetypeTopicConfig(
+                    name="history",
+                    title=_("History"),
+                    icon_name="topic_history",
+                    public=True,
+                    sort_index=50,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "analyze": asdict(
+                PagetypeTopicConfig(
+                    name="analyze",
+                    title=_("System"),
+                    icon_name="topic_checkmk",
+                    public=True,
+                    sort_index=60,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "cloud": asdict(
+                PagetypeTopicConfig(
+                    name="cloud",
+                    title=_("Cloud"),
+                    icon_name="plugins_cloud",
+                    public=True,
+                    sort_index=75,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "bi": asdict(
+                PagetypeTopicConfig(
+                    name="bi",
+                    title=_("Business Intelligence"),
+                    icon_name="topic_bi",
+                    sort_index=80,
+                    public=True,
+                    hide=_no_bi_aggregate_active(),
+                    owner=UserId.builtin(),
+                )
+            ),
+            "applications": asdict(
+                PagetypeTopicConfig(
+                    name="applications",
+                    title=_("Applications"),
+                    icon_name="topic_applications",
+                    public=True,
+                    sort_index=85,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "inventory": asdict(
+                PagetypeTopicConfig(
+                    name="inventory",
+                    title=_("Inventory"),
+                    icon_name="topic_inventory",
+                    public=True,
+                    sort_index=90,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "network_statistics": asdict(
+                PagetypeTopicConfig(
+                    name="network_statistics",
+                    title=_("Network statistics"),
+                    icon_name="topic_network_statistics",
+                    sort_index=95,
+                    public=True,
+                    hide=not is_ntop_configured(),
+                    owner=UserId.builtin(),
+                )
+            ),
+            "it_efficiency": asdict(
+                PagetypeTopicConfig(
+                    name="it_efficiency",
+                    title=_("IT infrastructure efficiency"),
+                    icon_name="topic_analyze",
+                    description=_("Analyze the utilization of your IT infrastructure data center."),
+                    public=True,
+                    sort_index=100,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "synthetic_monitoring": asdict(
+                PagetypeTopicConfig(
+                    name="synthetic_monitoring",
+                    title=_("Synthetic Monitoring"),
+                    icon_name="synthetic_monitoring_topic",
+                    public=True,
+                    sort_index=105,
+                    owner=UserId.builtin(),
+                )
+            ),
+            "my_workplace": asdict(
+                PagetypeTopicConfig(
+                    name="my_workplace",
+                    title=_("Workplace"),
+                    icon_name="topic_my_workplace",
+                    public=True,
+                    sort_index=110,
+                    owner=UserId.builtin(),
+                )
+            ),
             # Only fallback for items without topic
-            "other": {
-                "name": "other",
-                "title": _("Other"),
-                "icon_name": "topic_other",
-                "description": "",
-                "public": True,
-                "sort_index": 115,
-                "owner": UserId.builtin(),
-            },
+            "other": asdict(
+                PagetypeTopicConfig(
+                    name="other",
+                    title=_("Other"),
+                    icon_name="topic_other",
+                    public=True,
+                    sort_index=115,
+                    owner=UserId.builtin(),
+                )
+            ),
         }
         if edition() is not Edition.CSE:  # disabled in CSE
             topics.update(
                 {
-                    "events": {
-                        "name": "events",
-                        "title": _("Event Console"),
-                        "icon_name": "topic_events",
-                        "description": "",
-                        "public": True,
-                        "sort_index": 70,
-                        "owner": UserId.builtin(),
-                    }
+                    "events": asdict(
+                        PagetypeTopicConfig(
+                            name="events",
+                            title=_("Event Console"),
+                            icon_name="topic_events",
+                            public=True,
+                            sort_index=70,
+                            owner=UserId.builtin(),
+                        )
+                    ),
                 }
             )
 
-        return topics
+        return cast(Mapping[str, PagetypeTopicSpec], topics)
 
     def max_entries(self) -> int:
-        return self._.get("max_entries", 10)
+        return self.config.max_entries
 
     def sort_index(self) -> int:
-        return self._["sort_index"]
+        return self.config.sort_index
 
     def icon_name(self) -> str:
-        return self._["icon_name"]
+        return self.config.icon_name
 
     def hide(self) -> bool:
-        return self._.get("hide", False)
+        return self.config.hide
 
     @classmethod
     def choices(cls) -> list[tuple[str, str]]:
@@ -2329,6 +2425,10 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
         other_page = instances.find_page("other")
         assert other_page is not None
         return instances.find_page(topic_id) or other_page
+
+    @property
+    def config(self) -> PagetypeTopicConfig:
+        return PagetypeTopicConfig(**self._)
 
 
 declare(PagetypeTopics)

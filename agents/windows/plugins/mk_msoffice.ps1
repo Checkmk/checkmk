@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.1.0p43"
+$CMK_VERSION = "2.1.0p44"
 ## filename for timestamp
 $MK_CONFDIR = $env:MK_CONFDIR
 

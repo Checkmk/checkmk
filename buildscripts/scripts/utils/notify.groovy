@@ -96,7 +96,7 @@ def notify_error(error) {
 
             /// Inform cloud devs if cloud burns
             if (projectname.contains("build-cmk-cloud-images") || projectname.contains("saas")) {
-                notify_emails.addAll(TEAM_SAAS_MAIL.split(","));
+                notify_emails += "aws-saas-checkmk-dev@checkmk.com";
             }
 
             /// Inform nile devs if our extensions fail

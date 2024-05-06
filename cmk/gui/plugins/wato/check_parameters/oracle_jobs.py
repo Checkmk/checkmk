@@ -43,7 +43,7 @@ def _parameter_valuespec_oracle_jobs() -> Migrate:
     return Migrate(
         Dictionary(
             help=_(
-                "A scheduler job is an object in an ORACLE database which could be "
+                "A scheduler job is an object in an Oracle database which could be "
                 "compared to a cron job on Unix. "
             ),
             elements=[

@@ -14,8 +14,8 @@ from cmk.gui.pagetypes import (
     all_page_types,
     InstanceId,
     Overridable,
+    OverridableConfig,
     OverridableInstances,
-    OverridableSpec,
 )
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -48,7 +48,7 @@ class UpdatePagetypes(UpdateAction):
                 if issubclass(pagetype, updater.target_type):
                     raw_page_dicts = updater(raw_page_dicts)
 
-            instances = OverridableInstances[Overridable[OverridableSpec]]()
+            instances = OverridableInstances[Overridable[OverridableConfig]]()
             for (user_id, name), raw_page_dict in raw_page_dicts.items():
                 instances.add_instance((user_id, name), pagetype.deserialize(raw_page_dict))
 

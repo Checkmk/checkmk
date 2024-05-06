@@ -800,10 +800,6 @@ def move_snapin() -> None:
 #   '----------------------------------------------------------------------'
 
 
-class CustomSpaninsSpec(pagetypes.OverridableSpec):
-    custom_snapin: tuple[str, dict]
-
-
 class CustomSnapinsModel(pagetypes.OverridableModel):
     custom_snapin: tuple[str, dict]
 
@@ -813,25 +809,32 @@ class CustomSnapinsConfig(pagetypes.OverridableConfig):
     custom_snapin: tuple[str, dict]
 
 
-class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
+class CustomSnapins(pagetypes.Overridable[CustomSnapinsConfig]):
     @classmethod
     def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
-        # TODO Remove 'cast' and do real parsing
-        return cls(cast(CustomSpaninsSpec, page_dict))
-
-    def serialize(self) -> CustomSpaninsSpec:
-        return cast(
-            CustomSpaninsSpec,
-            CustomSnapinsModel(
-                name=self.config.name,
-                title=self.config.title,
-                description=self.config.description,
-                owner=self.config.owner,
-                public=self.config.public,
-                hidden=self.config.hidden,
-                custom_snapin=self.config.custom_snapin,
-            ).model_dump(),
+        deserialized = CustomSnapinsModel.model_validate(page_dict)
+        return cls(
+            CustomSnapinsConfig(
+                name=deserialized.name,
+                title=deserialized.title,
+                description=deserialized.description,
+                owner=deserialized.owner,
+                public=deserialized.public,
+                hidden=deserialized.hidden,
+                custom_snapin=deserialized.custom_snapin,
+            )
         )
+
+    def serialize(self) -> dict[str, object]:
+        return CustomSnapinsModel(
+            name=self.config.name,
+            title=self.config.title,
+            description=self.config.description,
+            owner=self.config.owner,
+            public=self.config.public,
+            hidden=self.config.hidden,
+            custom_snapin=self.config.custom_snapin,
+        ).model_dump()
 
     @classmethod
     def type_name(cls) -> str:
@@ -902,10 +905,6 @@ class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
     @classmethod
     def reserved_unique_ids(cls) -> list[str]:
         return [k for k, v in snapin_registry.items() if not v.is_custom_snapin()]
-
-    @property
-    def config(self) -> CustomSnapinsConfig:
-        return CustomSnapinsConfig(**self._)
 
 
 pagetypes.declare(CustomSnapins)

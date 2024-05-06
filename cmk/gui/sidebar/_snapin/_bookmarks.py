@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import urllib.parse
 from collections.abc import Callable, Mapping
-from dataclasses import asdict, dataclass
-from typing import Any, cast, Self, TypedDict
+from dataclasses import dataclass
+from typing import Any, Self, TypedDict
 
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -43,11 +43,6 @@ class BookmarkSpec(TypedDict):
     topic: None | str
 
 
-class BookmarkListSpec(pagetypes.OverridableSpec):
-    default_topic: str
-    bookmarks: list[BookmarkSpec]
-
-
 class BookmarkListModel(pagetypes.OverridableModel):
     default_topic: str
     bookmarks: list[BookmarkSpec]
@@ -59,26 +54,34 @@ class BookmarkListConfig(pagetypes.OverridableConfig):
     bookmarks: list[BookmarkSpec]
 
 
-class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
+class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
     @classmethod
     def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
-        # TODO Remove 'cast' and do real parsing
-        return cls(cast(BookmarkListSpec, page_dict))
-
-    def serialize(self) -> BookmarkListSpec:
-        return cast(
-            BookmarkListSpec,
-            BookmarkListModel(
-                name=self.config.name,
-                title=self.config.title,
-                description=self.config.description,
-                owner=self.config.owner,
-                public=self.config.public,
-                hidden=self.config.hidden,
-                default_topic=self.config.default_topic,
-                bookmarks=self.config.bookmarks,
-            ).model_dump(),
+        deserialized = BookmarkListModel.model_validate(page_dict)
+        return cls(
+            BookmarkListConfig(
+                name=deserialized.name,
+                title=deserialized.title,
+                description=deserialized.description,
+                owner=deserialized.owner,
+                public=deserialized.public,
+                hidden=deserialized.hidden,
+                default_topic=deserialized.default_topic,
+                bookmarks=deserialized.bookmarks,
+            )
         )
+
+    def serialize(self) -> dict[str, object]:
+        return BookmarkListModel(
+            name=self.config.name,
+            title=self.config.title,
+            description=self.config.description,
+            owner=self.config.owner,
+            public=self.config.public,
+            hidden=self.config.hidden,
+            default_topic=self.config.default_topic,
+            bookmarks=self.config.bookmarks,
+        ).model_dump()
 
     @classmethod
     def type_name(cls) -> str:
@@ -231,19 +234,14 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
         instances.add_instance(
             (user_id, "my_bookmarks"),
             cls(
-                cast(
-                    BookmarkListSpec,
-                    asdict(
-                        BookmarkListConfig(
-                            name="my_bookmarks",
-                            title="My Bookmarks",
-                            public=False,
-                            owner=user_id,
-                            description="Your personal bookmarks",
-                            default_topic="My Bookmarks",
-                            bookmarks=[],
-                        )
-                    ),
+                BookmarkListConfig(
+                    name="my_bookmarks",
+                    title="My Bookmarks",
+                    public=False,
+                    owner=user_id,
+                    description="Your personal bookmarks",
+                    default_topic="My Bookmarks",
+                    bookmarks=[],
                 )
             ),
         )
@@ -270,10 +268,6 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
 
     def add_bookmark(self, title: str, url: str) -> None:
         self.config.bookmarks.append(BookmarkList.new_bookmark(title, url))
-
-    @property
-    def config(self) -> BookmarkListConfig:
-        return BookmarkListConfig(**self._)
 
 
 pagetypes.declare(BookmarkList)

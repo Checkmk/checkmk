@@ -5,6 +5,8 @@
 
 from collections.abc import Sequence
 
+from cmk.utils.version import edition, Edition
+
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -34,6 +36,11 @@ class NotificationParameterMail(NotificationParameter):
             title=_("Create notification with the following parameters"),
             # must be called at run time!!
             elements=self._parameter_elements,
+            hidden_keys=(
+                ["from", "url_prefix", "disable_multiplexing", "smtp"]
+                if edition() == Edition.CSE
+                else []
+            ),
         )
 
     def _parameter_elements(self) -> list[DictionaryEntry]:
@@ -180,7 +187,9 @@ $LONGSERVICEOUTPUT$
             ]
         )
         return Dictionary(
-            title=_("Create notification with the following parameters"), elements=elements
+            title=_("Create notification with the following parameters"),
+            elements=elements,
+            hidden_keys=(["from", "disable_multiplexing"] if edition() == Edition.CSE else []),
         )
 
 

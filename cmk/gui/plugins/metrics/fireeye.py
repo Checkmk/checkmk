@@ -31,7 +31,7 @@ def register_fireye_metrics():
     ]:
         metric_info_key = "%s_rate" % what.lower()
         metric_info[metric_info_key] = {
-            "title": _("%s per Second") % what,
+            "title": _("%s per second") % what,
             "unit": "1/s",
             "color": color,
         }
@@ -44,7 +44,7 @@ def register_fireye_metrics():
     ]:
         metric_info_key = "fireeye_stat_%s" % what.replace(" ", "").lower()
         metric_info[metric_info_key] = {
-            "title": _("Emails containing %s per Second") % what,
+            "title": _("Emails containing %s per second") % what,
             "unit": "1/s",
             "color": color,
         }

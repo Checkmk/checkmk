@@ -172,9 +172,9 @@ class ABCQuicksearchConductor(abc.ABC):
 
 
 class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
-    """Passes queries through to a non livestatus plugin
+    """Passes queries through to a non livestatus plug-in
 
-    There is no aggregation done by this conductor. It deals with a single search plugin."""
+    There is no aggregation done by this conductor. It deals with a single search plug-in."""
 
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         super().__init__(used_filters, filter_behaviour)

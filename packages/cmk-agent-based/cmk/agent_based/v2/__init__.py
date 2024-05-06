@@ -7,7 +7,7 @@ New in this version
 -------------------
 
 This section lists the most important changes you have to be
-aware of when migrating your plugin to this API version.
+aware of when migrating your plug-in to this API version.
 
 Note that changes are expressed in relation to the API version 1.
 

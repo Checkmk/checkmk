@@ -56,7 +56,8 @@ class AgentSection(Generic[_Section]):
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
 
-      parsed_section_name: The name under which the parsed section will be available to the plugins.
+      parsed_section_name: The name under which the parsed section will be available to the
+                           plug-ins.
                            Defaults to the original name.
 
       host_label_function: The function responsible for extracting host labels from the parsed data.
@@ -72,7 +73,7 @@ class AgentSection(Generic[_Section]):
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -182,7 +183,8 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
 
-      parsed_section_name: The name under which the parsed section will be available to the plugins.
+      parsed_section_name: The name under which the parsed section will be available to the
+                           plug-ins.
                            Defaults to the original name.
 
       host_label_function: The function responsible for extracting host labels from the parsed data.
@@ -198,7 +200,7 @@ class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -330,7 +332,8 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
 
-      parsed_section_name: The name under which the parsed section will be available to the plugins.
+      parsed_section_name: The name under which the parsed section will be available to the
+                           plug-ins.
                            Defaults to the original name.
 
       host_label_function: The function responsible for extracting host labels from the parsed data.
@@ -346,7 +349,7 @@ class SNMPSection(Generic[_TableTypeT, _Section]):
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugin needs the merged result of the
+                           It describes whether this plug-in needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
       supersedes:          A list of section names which are superseded by this section. If this
@@ -441,23 +444,23 @@ class CheckPlugin:
 
     Args:
 
-      name:                     The unique name of the check plugin. It must only contain the
+      name:                     The unique name of the check plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
-      sections:                 An optional list of section names that this plugin subscribes to.
+      sections:                 An optional list of section names that this plug-in subscribes to.
                                 They correspond to the 'parsed_section_name' specified in
                                 :meth:`agent_section` and :meth:`snmp_section`.
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the check plugin.
+                                a name equal to the name of the check plug-in.
 
       service_name:             The template for the service name. The check function must accept
                                 'item' as first argument if and only if "%s" is present in the value
                                 of "service_name".
 
       discovery_function:       The discovery_function. Arguments must be 'params' (if discovery
-                                parameters are defined) and 'section' (if the plugin subscribes
+                                parameters are defined) and 'section' (if the plug-in subscribes
                                 to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Service` instances.
@@ -469,13 +472,13 @@ class CheckPlugin:
 
       discovery_ruleset_type:   The ruleset type is either :class:`RuleSetType.ALL` or
                                 :class:`RuleSetType.MERGED`.
-                                It describes whether this plugin needs the merged result of the
+                                It describes whether this plug-in needs the merged result of the
                                 effective rules, or every individual rule matching for the current
                                 host.
 
       check_function:           The check_function. Arguments must be 'item' (if the service has an
                                 item), 'params' (if check default parameters are defined) and
-                                'section' (if the plugin subscribes to a single section), or
+                                'section' (if the plug-in subscribes to a single section), or
                                 'section_<name1>, section_<name2>' ect. corresponding to the
                                 `sections`.
 
@@ -514,19 +517,19 @@ class InventoryPlugin:
 
     Args:
 
-      name:                     The unique name of the plugin. It must only contain the
+      name:                     The unique name of the plug-in. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
-      sections:                 An optional list of section names that this plugin subscribes to.
+      sections:                 An optional list of section names that this plug-in subscribes to.
                                 They correspond to the 'parsed_section_name' specified in
                                 :meth:`agent_section` and :meth:`snmp_section`.
                                 The corresponding sections are passed to the discovery and check
                                 function. The functions arguments must be called 'section_<name1>,
                                 section_<name2>' ect. Defaults to a list containing as only element
-                                a name equal to the name of the inventory plugin.
+                                a name equal to the name of the inventory plug-in.
 
       inventory_function:       The inventory_function. Arguments must be 'params' (if inventory
-                                parameters are defined) and 'section' (if the plugin subscribes
+                                parameters are defined) and 'section' (if the plug-in subscribes
                                 to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Attributes` or
@@ -558,10 +561,10 @@ def entry_point_prefixes() -> (  # type: ignore[misc]  # explicit Any
         str,
     ]
 ):
-    """Return the types of plugins and their respective prefixes that can be discovered by Checkmk.
+    """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
-    These types can be used to create plugins that can be discovered by Checkmk.
-    To be discovered, the plugin must be of one of the types returned by this function and its name
+    These types can be used to create plug-ins that can be discovered by Checkmk.
+    To be discovered, the plug-in must be of one of the types returned by this function and its name
     must start with the corresponding prefix.
 
     Example:

@@ -49,7 +49,7 @@ class NotificationParameterMail(NotificationParameter):
                             ("address", _("IP Address of Host")),
                             ("abstime", _("Absolute Time of Alert")),
                             ("reltime", _("Relative Time of Alert")),
-                            ("longoutput", _("Additional Plugin Output")),
+                            ("longoutput", _("Additional plug-in output")),
                             ("ack_author", _("Acknowledgement Author")),
                             ("ack_comment", _("Acknowledgement Comment")),
                             ("notification_author", _("Notification Author")),

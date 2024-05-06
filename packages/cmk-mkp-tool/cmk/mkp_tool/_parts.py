@@ -147,17 +147,17 @@ class PathConfig:
 def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
     match part:
         case PackagePart.CMK_PLUGINS:
-            return _("Shipped Checkmk plugins")
+            return _("Shipped Checkmk plug-ins")
         case PackagePart.CMK_ADDONS_PLUGINS:
-            return _("Additional Checkmk plugins by third parties")
+            return _("Additional Checkmk plug-ins by third parties")
         case PackagePart.EC_RULE_PACKS:
             return _("Event Console rule packs")
         case PackagePart.AGENT_BASED:
-            return _("Agent based plugins (deprecated)")
+            return _("Agent based plug-ins (deprecated)")
         case PackagePart.CHECKS:
-            return _("Legacy check plugins (deprecated)")
+            return _("Legacy check plug-ins (deprecated)")
         case PackagePart.HASI:
-            return _("Legacy inventory plugins (deprecated)")
+            return _("Legacy inventory plug-ins (deprecated)")
         case PackagePart.CHECKMAN:
             return _("Checks' man pages (deprecated)")
         case PackagePart.AGENTS:
@@ -209,7 +209,7 @@ def permissions(part: PackagePart, rel_path: Path) -> int | None:
         ):
             return _PERMISSION_NONEXECUTABLE
         case PackagePart.LIB:
-            # I guess this shows that nagios plugins ought to be their own package part.
+            # I guess this shows that nagios plug-ins ought to be their own package part.
             # For now I prefer to stay compatible.
             return (
                 _PERMISSION_EXECUTABLE

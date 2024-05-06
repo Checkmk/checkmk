@@ -24,7 +24,7 @@ def _do_check_levels(
     render_func: Callable[[float], str],
 ) -> tuple[State, str]:
     # Typing says that levels are either None, or a Tuple of float.
-    # However we also deal with (None, None) to avoid crashes of custom plugins.
+    # However we also deal with (None, None) to avoid crashes of custom plug-ins.
     # CRIT ?
     if levels_upper and levels_upper[1] is not None and value >= levels_upper[1]:
         return State.CRIT, _levelsinfo_ty("at", levels_upper, render_func)

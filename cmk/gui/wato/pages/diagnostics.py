@@ -86,8 +86,8 @@ from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"
     " passwords. These files are marked with 'H'."
-    " Other files may include IP adresses, hostnames, usernames,"
-    " mail adresses or phone numbers and are marked with 'M'."
+    " Other files may include IP addresses, host names, user names,"
+    " mail addresses or phone numbers and are marked with 'M'."
 )
 
 timeout_default = 110

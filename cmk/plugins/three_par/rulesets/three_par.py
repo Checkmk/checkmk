@@ -37,7 +37,7 @@ def _migrate_values(params: object) -> Mapping[str, object]:
 
 def _form_special_agents_3par() -> Dictionary:
     return Dictionary(
-        title=Title("3PAR Configuration"),
+        title=Title("3PAR configuration"),
         elements={
             "user": DictElement(
                 parameter_form=String(
@@ -86,7 +86,7 @@ def _form_special_agents_3par() -> Dictionary:
 
 rule_spec_three_par = SpecialAgent(
     name="three_par",
-    title=Title("3PAR Configuration"),
+    title=Title("3PAR configuration"),
     topic=Topic.SERVER_HARDWARE,
     parameter_form=_form_special_agents_3par,
 )

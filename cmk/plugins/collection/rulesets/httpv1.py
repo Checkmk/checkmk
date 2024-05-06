@@ -618,7 +618,7 @@ def _parameter_form_active_checks_http() -> Dictionary:
             "disable_sni": DictElement(
                 parameter_form=FixedValue(
                     value=True,
-                    title=Title("Advanced: Disable SSL/TLS hostname extension support (SNI)"),
+                    title=Title("Advanced: Disable SSL/TLS host name extension support (SNI)"),
                     help_text=Help(
                         "In earlier versions of Checkmk users had to enable SNI explicitly."
                         " We now assume users allways want SNI support. If you don't, you"

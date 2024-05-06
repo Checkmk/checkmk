@@ -20,7 +20,7 @@ def _valuespec_special_agents_smb_share():
                     title="Hostname",
                     allow_empty=False,
                     help=_(
-                        "<p>Usually Checkmk will use the hostname of the host it is attached to. "
+                        "<p>Usually Checkmk will use the host name of the host it is attached to. "
                         "With this option you can override this parameter.</p>"
                     ),
                 ),

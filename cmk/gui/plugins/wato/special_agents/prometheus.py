@@ -416,7 +416,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                         optional_keys=["host_name"],
                     ),
                     title=_("Service creation using PromQL queries"),
-                    add_label=_("Add new Service"),
+                    add_label=_("Add new service"),
                 ),
             ),
         ],

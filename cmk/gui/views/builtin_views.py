@@ -3436,7 +3436,7 @@ builtin_views.update(
             },
             "datasource": "servicesbyhostgroup",
             "description": _l(
-                "A Matrix of Performance data values from all hosts in a certain host group"
+                "A matrix of performance data values from all hosts in a certain host group"
             ),
             "group_painters": [
                 ColumnSpec(

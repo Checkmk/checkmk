@@ -1186,13 +1186,13 @@ class CommandAcknowledge(Command):
 
     def _vs_date(self) -> DatePicker:
         return DatePicker(
-            title=_("Acknowledge problems datepicker"),
+            title=_("Acknowledge problems date picker"),
             onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
         )
 
     def _vs_time(self) -> TimePicker:
         return TimePicker(
-            title=_("Acknowledge problems timepicker"),
+            title=_("Acknowledge problems time picker"),
             onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
         )
 
@@ -1643,13 +1643,13 @@ class CommandScheduleDowntimes(Command):
 
     def _vs_date(self) -> DatePicker:
         return DatePicker(
-            title=_("Downtime datepicker"),
+            title=_("Downtime date picker"),
             onchange="cmk.page_menu.update_down_duration_button();",
         )
 
     def _vs_time(self) -> TimePicker:
         return TimePicker(
-            title=_("Downtime timepicker"),
+            title=_("Downtime time picker"),
             onchange="cmk.page_menu.update_down_duration_button();",
         )
 

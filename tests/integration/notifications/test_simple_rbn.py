@@ -68,7 +68,6 @@ def fixture_host(site: Site) -> Iterator[HostName]:
 @pytest.mark.usefixtures("test_user")
 @pytest.mark.usefixtures("disable_checks")
 @pytest.mark.usefixtures("disable_flap_detection")
-@pytest.mark.skip("This test is (maybe) flaky - TODO: CMK-17284")
 def test_simple_rbn_host_notification(host: HostName, site: Site) -> None:
     site.send_host_check_result(host, 1, "FAKE DOWN", expected_state=1)
 

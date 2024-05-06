@@ -1291,7 +1291,7 @@ def _contactgroup_members() -> Mapping[ContactgroupName, set[ContactName]]:
     """Get the members of all contact groups
 
     Is computed once  for the process lifetime since it's either a short lived process or in case of
-    the Microcore notify helper, it is restarted once a new configuration is applied to the core.
+    the Micro Core notify helper, it is restarted once a new configuration is applied to the core.
     """
     members: dict[ContactgroupName, set[ContactName]] = {}
     for name, contact in config.contacts.items():

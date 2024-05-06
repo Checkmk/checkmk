@@ -1045,7 +1045,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
     @property
     def description(self) -> str:
         return _(
-            "Configuration, status, and status history data of the CMC (Checkmk Microcore); "
+            "Configuration, status, and status history data of the CMC (Checkmk Micro Core); "
             "cmcdump output of the status and config."
         )
 

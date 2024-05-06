@@ -13,7 +13,7 @@ from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateCoreConfig(UpdateAction):
-    """Ensure we have a fresh microcore config after all update actions were executed"""
+    """Ensure we have a fresh Micro Core config after all update actions were executed"""
 
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         if get_omd_config()["CONFIG_CORE"] == "none":

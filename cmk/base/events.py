@@ -253,12 +253,12 @@ def add_rulebased_macros(raw_context: EventContext, contacts_needed: bool) -> No
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
     if "CONTACTS" not in raw_context and contacts_needed:
-        # Ensure that we don't reach this when the Microcore is enabled. Triggering this logic
+        # Ensure that we don't reach this when the Micro Core is enabled. Triggering this logic
         # with the Microcore might result in dead locks.
         if config.is_cmc():
             raise RuntimeError(
                 "Missing 'CONTACTS' in raw notification context. It should always "
-                "be available when using the Microcore."
+                "be available when using the Micro Core."
             )
 
         contact_list = livestatus_fetch_contacts(

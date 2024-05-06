@@ -1167,6 +1167,15 @@ class Site:
             if re.match("Tried to create .*, but this RRD exists", crash_detail):
                 logger.warning("Ignored crash report due to CMK-17237!")
                 continue
+            if re.search("check_icmp: No hosts to check", crash_detail):
+                logger.warning("Ignored crash report due to CMK-17285!")
+                continue
+            if re.search(r"invalid literal for .* with base 16: 'xx'", crash_detail):
+                logger.warning("Ignored crash report due to CMK-17291!")
+                continue
+            if re.search("list index out of range", crash_detail):
+                logger.warning("Ignored crash report due to CMK-17293!")
+                continue
             pytest_check.fail(
                 f"""Crash report detected! {crash_type}: {crash_detail}.
                 See {crash_file} for more details."""

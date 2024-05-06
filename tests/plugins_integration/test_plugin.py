@@ -21,10 +21,6 @@ from tests.plugins_integration.checks import (
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skip(
-    reason="Experiencing crashes in the test site. "
-    "Re-enable once those crashes are isolated or fixed."
-)
 @pytest.mark.parametrize("host_name", get_host_names())
 def test_plugin(
     test_site: Site,

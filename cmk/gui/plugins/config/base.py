@@ -138,7 +138,7 @@ class CREConfig:
         ]
     )
 
-    # Interval of snapin updates in seconds
+    # Interval of snap-in updates in seconds
     sidebar_update_interval: float = 30.0
 
     # It is possible (but ugly) to enable a scrollbar in the sidebar
@@ -246,7 +246,7 @@ class CREConfig:
     liveproxyd_enabled: bool = False
 
     # Set this to a list in order to globally control which views are
-    # being displayed in the sidebar snapin "Views"
+    # being displayed in the sidebar snap-in "Views"
     visible_views: list[str] | None = None
 
     # Set this list in order to actively hide certain views
@@ -316,7 +316,7 @@ class CREConfig:
     # Escape HTML in plug-in output / log messages
     escape_plugin_output: bool = True
 
-    # Virtual host trees for the "Virtual Host Trees" snapin
+    # Virtual host trees for the "Virtual Host Trees" snap-in
     virtual_host_trees: Sequence[VirtualHostTreeSpec] = field(default_factory=list)
 
     # Target URL for sending crash reports to

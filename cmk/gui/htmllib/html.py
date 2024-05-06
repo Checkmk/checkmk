@@ -817,7 +817,7 @@ class HTMLGenerator(HTMLWriter):
         onclick: str | None,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-        """Shows a colored button with text (used in site and customer status snapins)"""
+        """Shows a colored button with text (used in site and customer status snap-ins)"""
         self.div(
             content,
             title=title,

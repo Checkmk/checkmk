@@ -1395,7 +1395,7 @@ class TagFilter(Filter):
         html.open_table()
         # Show at least three rows of tag filters (hard coded self.query_filter.count) and add more
         # rows if respective values are given via the URL.
-        # E.g. links from the virtual host tree snapin may contain multiple tag filter values
+        # E.g. links from the virtual host tree snap-in may contain multiple tag filter values
         num = 0
         while num < self.query_filter.count or value.get(
             "%s_%d_grp" % (self.query_filter.var_prefix, num)

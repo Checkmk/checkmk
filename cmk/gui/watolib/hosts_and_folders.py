@@ -2118,7 +2118,7 @@ class Folder(FolderProtocol):
     # .-----------------------------------------------------------------------.
     # | MODIFICATIONS                                                         |
     # |                                                                       |
-    # | These methods are for being called by actual Setup modules when they   |
+    # | These methods are for being called by actual Setup modules when they  |
     # | want to modify folders and hosts. They all check permissions and      |
     # | locking. They may raise MKAuthException or MKUserError.               |
     # |                                                                       |
@@ -2133,11 +2133,11 @@ class Folder(FolderProtocol):
     # | - locked()       -> .wato file in the folder must not be modified     |
     # | - locked_subfolders() -> No subfolders may be created/deleted         |
     # |                                                                       |
-    # | Sidebar: some sidebar snapins show the Setup folder tree. Everytime    |
+    # | Sidebar: some sidebar snap-ins show the Setup folder tree. Everytime  |
     # | the tree changes the sidebar needs to be reloaded. This is done here. |
     # |                                                                       |
     # | Validation: these methods do *not* validate the parameters for syntax.|
-    # | This is the task of the actual Setup modes or the API.                 |
+    # | This is the task of the actual Setup modes or the API.                |
     # '-----------------------------------------------------------------------'
 
     def create_subfolder(self, name: str, title: str, attributes: HostAttributes) -> Folder:

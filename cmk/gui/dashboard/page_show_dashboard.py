@@ -110,7 +110,7 @@ def _get_default_dashboard_name() -> str:
 
     1. Those WITH the permission "see all hosts / service". Which are mainly administrative users.
 
-    These are starting with the main overview dashboard which either shows a site drill down snapin
+    These are starting with the main overview dashboard which either shows a site drill down snap-in
     (in case multiple sites are configured) or the hosts of their site (in case there is only a
     single site configured).
 

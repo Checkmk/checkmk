@@ -975,7 +975,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
     # create an alternating match filter to match that attribute when searching by DNs.
     # In OpenLDAP the distinguishedname is no user attribute, therefor it can not be used
     # as filter expression. We have to do one ldap query per group. Maybe, in the future,
-    # we change the role sync plug-in parameters to snapins to make this part a little easier.
+    # we change the role sync plug-in parameters to snap-ins to make this part a little easier.
     def _get_direct_group_memberships(self, filters: list[str], filt_attr: str) -> GroupMemberships:
         groups: GroupMemberships = {}
         filt = self._ldap_filter("groups")

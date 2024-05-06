@@ -144,7 +144,6 @@ def test_discovery() -> None:
                     "Counter 'privileged' has been initialized. Result available on second check execution."
                 ),
                 Result(state=State.OK, notice="Number of processors: 4"),
-                Metric("cpus", 4),
             ],
         ),
         (
@@ -158,7 +157,6 @@ def test_discovery() -> None:
                 Result(state=State.OK, notice="Privileged: <0.01%"),
                 Metric("privileged", 1.687763713080169e-05),
                 Result(state=State.OK, notice="Number of processors: 4"),
-                Metric("cpus", 4),
             ],
         ),
         (
@@ -172,7 +170,6 @@ def test_discovery() -> None:
                 Result(state=State.OK, notice="Privileged: <0.01%"),
                 Metric("privileged", 1.687763713080169e-05),
                 Result(state=State.OK, notice="Number of processors: 4"),
-                Metric("cpus", 4),
             ],
         ),
     ],

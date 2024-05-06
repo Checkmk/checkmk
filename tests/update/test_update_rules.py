@@ -53,7 +53,7 @@ def test_update_rules(
 
     test_site.reschedule_services(host_name)
 
-    # get baseline monitoring data for each host
+    # get baseline monitoring data for each host(s)
     base_data[host_name] = test_site.get_host_services(host_name)
     ignore_data = [
         # OMD status service turning into CRIT after the update (looks like for performance reasons)

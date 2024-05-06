@@ -98,7 +98,7 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVA
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
-	    git rev-parse --short HEAD > COMMIT ; \
+	    git rev-parse HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
 	    if [[ ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \

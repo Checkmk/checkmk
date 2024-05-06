@@ -21,9 +21,8 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.log import VERBOSE
 
-logger = logging.getLogger("cmk.base")
+logger = logging.getLogger(__name__)
 
 
 def cachefile_age(path: Path) -> float:
@@ -93,8 +92,7 @@ def get_piggyback_raw_data(
 
     piggyback_file_infos = _get_piggyback_processed_file_infos(piggybacked_hostname, time_settings)
     if not piggyback_file_infos:
-        logger.log(
-            VERBOSE,
+        logger.debug(
             "No piggyback files for '%s'. Skip processing.",
             piggybacked_hostname,
         )
@@ -106,47 +104,26 @@ def get_piggyback_raw_data(
             # Raw data is always stored as bytes. Later the content is
             # converted to unicode in abstact.py:_parse_info which respects
             # 'encoding' in section options.
-            raw_data = AgentRawData(store.load_bytes_from_file(file_info.file_path))
+            piggyback_raw_data = PiggybackRawDataInfo(
+                info=file_info,
+                raw_data=AgentRawData(store.load_bytes_from_file(file_info.file_path)),
+            )
 
-        except OSError as e:
-            reason = f"Cannot read piggyback raw data from source '{file_info.source_hostname}'"
+        except OSError as exc:
             piggyback_raw_data = PiggybackRawDataInfo(
                 PiggybackFileInfo(
                     source_hostname=file_info.source_hostname,
                     file_path=file_info.file_path,
                     successfully_processed=False,
-                    message=reason,
+                    message=f"Cannot read piggyback raw data from source '{file_info.source_hostname}': {exc}",
                     status=0,
                 ),
                 raw_data=AgentRawData(b""),
             )
-            logger.log(
-                VERBOSE,
-                "Piggyback file '%s': %s, %s",
-                file_info.file_path,
-                reason,
-                e,
-            )
 
-        else:
-            piggyback_raw_data = PiggybackRawDataInfo(
-                file_info,
-                raw_data,
-            )
-            if file_info.successfully_processed:
-                logger.log(
-                    VERBOSE,
-                    "Piggyback file '%s': %s",
-                    file_info.file_path,
-                    file_info.message,
-                )
-            else:
-                logger.log(
-                    VERBOSE,
-                    "Piggyback file '%s' is outdated (%s). Skip processing.",
-                    file_info.file_path,
-                    file_info.message,
-                )
+        logger.debug(
+            "Piggyback file '%s': %s", file_info.file_path, piggyback_raw_data.info.message
+        )
         piggyback_data.append(piggyback_raw_data)
     return piggyback_data
 
@@ -367,11 +344,7 @@ def store_piggyback_raw_data(
     piggyback_file_paths = []
     for piggybacked_hostname, lines in piggybacked_raw_data.items():
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
-        logger.log(
-            VERBOSE,
-            "Storing piggyback data for: %r",
-            piggybacked_hostname,
-        )
+        logger.debug("Storing piggyback data for: %r", piggybacked_hostname)
         # Raw data is always stored as bytes. Later the content is
         # converted to unicode in abstact.py:_parse_info which respects
         # 'encoding' in section options.
@@ -383,7 +356,7 @@ def store_piggyback_raw_data(
     # Only do this for hosts that sent piggyback data this turn, cleanup the status file when no
     # piggyback data was sent this turn.
     if piggybacked_raw_data:
-        logger.log(VERBOSE, "Received piggyback data for %d hosts", len(piggybacked_raw_data))
+        logger.debug("Received piggyback data for %d hosts", len(piggybacked_raw_data))
 
         status_file_path = _get_source_status_file_path(source_hostname)
         _store_status_file_of(status_file_path, piggyback_file_paths)
@@ -494,11 +467,7 @@ def cleanup_piggyback_files(time_settings: PiggybackTimeSettings) -> None:
     # if and only if they have exceeded the maximum cache age configured in the
     # global settings or in the rule 'Piggybacked Host Files'."""
 
-    logger.log(
-        VERBOSE,
-        "Cleanup piggyback files; time settings: %s.",
-        time_settings,
-    )
+    logger.debug("Cleanup piggyback files; time settings: %s.", time_settings)
 
     piggybacked_hosts_settings = _get_piggybacked_hosts_settings(time_settings)
 
@@ -551,16 +520,11 @@ def _cleanup_old_source_status_files(
         # No entry -> no file
         max_cache_age_of_source = max_cache_age_by_sources.get(source_state_file.name)
         if max_cache_age_of_source is None:
-            logger.log(
-                VERBOSE,
-                "No piggyback data from source '%s'",
-                source_state_file.name,
-            )
+            logger.debug("No piggyback data from source '%s'", source_state_file.name)
             continue
 
         if file_age > max_cache_age_of_source:
-            logger.log(
-                VERBOSE,
+            logger.debug(
                 "Piggyback source status file '%s' too old (age: %s, allowed: %s). Remove it.",
                 source_state_file,
                 _render_time(file_age),
@@ -591,9 +555,7 @@ def _cleanup_old_piggybacked_files(
                 # We don't use them anymore, but the DCD still needs to know about them for a while.
                 continue
 
-            logger.log(
-                VERBOSE, "Piggyback file '%s' is outdated. Remove it.", piggybacked_host_source
-            )
+            logger.debug("Piggyback file '%s' is outdated. Remove it.", piggybacked_host_source)
             _remove_piggyback_file(piggybacked_host_source)
 
         # Remove empty backed host directory
@@ -603,8 +565,7 @@ def _cleanup_old_piggybacked_files(
             if e.errno == errno.ENOTEMPTY:
                 continue
             raise
-        logger.log(
-            VERBOSE,
+        logger.debug(
             "Piggyback folder '%s' is empty. Removed it.",
             piggybacked_host_folder,
         )

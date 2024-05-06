@@ -5946,7 +5946,7 @@ def _valuespec_agent_config_only_from():
             "access the agent. IPv6 addresses and networks are also allowed."
         )
         + _(
-            "If you are using the Agent bakery, the configuration will be "
+            "If you are using the Agent Bakery, the configuration will be "
             "used for restricting network access to the baked agents. On Linux, a systemd "
             "installation >= systemd 235 or an xinetd installation is needed. Please note "
             "that the agent will be inaccessible if a Linux host doesn't meet these prerequisites, "

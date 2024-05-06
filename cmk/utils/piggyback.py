@@ -6,6 +6,7 @@
 import errno
 import logging
 import os
+import re
 import tempfile
 import time
 from collections.abc import Container, Iterable, Iterator, Mapping, Sequence
@@ -20,7 +21,6 @@ import cmk.utils.store as store
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.regex import regex
 from cmk.utils.render import Age
 
 logger = logging.getLogger("cmk.base")
@@ -194,7 +194,7 @@ class _TimeSettingsMap:
             # the first entry ('piggybacked-hostname' vs '~piggybacked-[hH]ostname') wins
             if expr is None or expr in source_hostnames or expr == piggybacked_hostname:
                 matching_time_settings.setdefault((expr, key), value)
-            elif expr.startswith("~") and regex(expr[1:]).match(piggybacked_hostname):
+            elif expr.startswith("~") and re.match(expr[1:], piggybacked_hostname):
                 matching_time_settings.setdefault((piggybacked_hostname, key), value)
 
         self._expanded_settings: Final = matching_time_settings

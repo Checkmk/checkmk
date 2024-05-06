@@ -15,7 +15,10 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
-import docker  # type: ignore[import-untyped]
+import docker.client  # type: ignore[import-untyped]
+import docker.errors  # type: ignore[import-untyped]
+import docker.models  # type: ignore[import-untyped]
+import docker.models.containers  # type: ignore[import-untyped]
 import requests
 
 from tests.testlib import repo_path
@@ -36,7 +39,11 @@ def cleanup_old_packages() -> None:
         p.unlink()
 
 
-def copy_to_container(c: docker.models.containers.Container, source: str, target: str) -> bool:
+def copy_to_container(
+    c: docker.models.containers.Container,
+    source: str | Path,
+    target: str | Path,
+) -> bool:
     """Copy a source file to the target folder in the container."""
     stream = io.BytesIO()
     with tarfile.open(fileobj=stream, mode="w|") as tar, open(source, "rb") as f:
@@ -44,7 +51,7 @@ def copy_to_container(c: docker.models.containers.Container, source: str, target
         info.name = os.path.basename(source)
         tar.addfile(info, f)
 
-    return bool(c.put_archive(target, stream.getvalue()))
+    return bool(c.put_archive(Path(target).as_posix(), stream.getvalue()))
 
 
 def get_container_ip(c: docker.models.containers.Container) -> str:
@@ -103,7 +110,7 @@ def prepare_package(version: CMKVersion) -> None:
 
 
 def pull_checkmk(
-    client: docker.DockerClient, version: CMKVersion
+    client: docker.client.DockerClient, version: CMKVersion
 ) -> docker.models.containers.Image:
     if not version.is_raw_edition():
         raise Exception("Can only fetch raw edition at the moment")
@@ -125,7 +132,7 @@ def resolve_image_alias(alias: str) -> str:
 
 
 def build_checkmk(
-    client: docker.DockerClient,
+    client: docker.client.DockerClient,
     version: CMKVersion,
     prepare_pkg: bool = True,
 ) -> tuple[docker.models.containers.Image, Mapping[str, str]]:
@@ -218,7 +225,7 @@ def build_checkmk(
 
 @contextmanager
 def start_checkmk(
-    client: docker.DockerClient,
+    client: docker.client.DockerClient,
     version: CMKVersion | None = None,
     is_update: bool = False,
     site_id: str = "cmk",

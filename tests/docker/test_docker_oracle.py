@@ -10,7 +10,11 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Final
 
-import docker  # type: ignore[import-untyped]
+import docker.client  # type: ignore[import-untyped]
+import docker.errors  # type: ignore[import-untyped]
+import docker.models  # type: ignore[import-untyped]
+import docker.models.containers  # type: ignore[import-untyped]
+import docker.models.images  # type: ignore[import-untyped]
 import pytest
 
 from tests.testlib import repo_path
@@ -35,7 +39,7 @@ class OracleDatabase:
 
     def __init__(
         self,
-        docker_client: docker.DockerClient,
+        docker_client: docker.client.DockerClient,
         checkmk: docker.models.containers.Container,
         name: str = "oracle",
         temp_dir: Path = Path("/tmp"),
@@ -273,7 +277,7 @@ class OracleDatabase:
 
 @pytest.fixture(name="oracle", scope="session")
 def _oracle(
-    client: docker.DockerClient,
+    client: docker.client.DockerClient,
     checkmk: docker.models.containers.Container,
     tmp_path_session: Path,
 ) -> Iterator[OracleDatabase]:

@@ -7,11 +7,10 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
-from cmk.plugins.kube.schemata.section import Cpu, PerformanceUsage
+from cmk.plugins.kube.schemata.section import Cpu, HardResourceRequirement, PerformanceUsage
 from cmk.plugins.lib.kube_resources import (
     check_resource_quota_resource,
     cpu_render_func,
-    HardResourceRequirement,
     Params,
     performance_cpu,
     RESOURCE_QUOTA_DEFAULT_PARAMS,

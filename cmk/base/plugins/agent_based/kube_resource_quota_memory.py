@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.kube.schemata.section import PerformanceUsage
+from cmk.plugins.kube.schemata.section import HardResourceRequirement, PerformanceUsage
 from cmk.plugins.lib.kube_resources import (
     check_resource_quota_resource,
-    HardResourceRequirement,
     Params,
     parse_hard_requirements,
     parse_performance_usage,

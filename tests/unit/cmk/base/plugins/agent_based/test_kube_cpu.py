@@ -14,12 +14,12 @@ from cmk.base.plugins.agent_based import kube_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 
 import cmk.plugins.lib.kube
-from cmk.plugins.kube.schemata.section import Cpu, PerformanceUsage
+from cmk.plugins.kube.schemata.section import AllocatableResource, Cpu, PerformanceUsage, Resources
 from cmk.plugins.lib import kube_resources
 
 
 class ResourcesFactory(ModelFactory):
-    __model__ = kube_resources.Resources
+    __model__ = Resources
 
 
 ONE_MINUTE = 60
@@ -42,7 +42,7 @@ PARAMS = kube_resources.Params(
 )
 
 
-RESOURCES_SECTION = kube_resources.Resources(
+RESOURCES_SECTION = Resources(
     request=0.18,
     limit=0.36,
     count_total=2,
@@ -52,7 +52,7 @@ RESOURCES_SECTION = kube_resources.Resources(
 )
 
 
-ALLOCATABLE_RESOURCE_SECTION = kube_resources.AllocatableResource(context="node", value=ALLOCATABLE)
+ALLOCATABLE_RESOURCE_SECTION = AllocatableResource(context="node", value=ALLOCATABLE)
 
 
 def test_discovery() -> None:

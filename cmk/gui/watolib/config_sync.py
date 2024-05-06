@@ -31,17 +31,16 @@ from cmk.gui.watolib.config_domain_name import wato_fileheader
 Command = list[str]
 
 
-class ReplicationPath(
-    NamedTuple(  # pylint: disable=typing-namedtuple-call
-        "ReplicationPath",
-        [
-            ("ty", str),
-            ("ident", str),
-            ("site_path", str),
-            ("excludes", list[str]),
-        ],
-    )
-):
+class _BaseReplicationPath(NamedTuple):
+    """Needed for the ReplicationPath class to call __new__ method."""
+
+    ty: str
+    ident: str
+    site_path: str
+    excludes: list[str]
+
+
+class ReplicationPath(_BaseReplicationPath):
     def __new__(cls, ty: str, ident: str, site_path: str, excludes: list[str]) -> "ReplicationPath":
         if site_path.startswith("/"):
             raise Exception("ReplicationPath.path must be a path relative to the site root")

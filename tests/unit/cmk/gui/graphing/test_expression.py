@@ -94,8 +94,8 @@ def test_evaluate_cpu_utilization(
             ),
             16.0,
             "bits/s",
-            "#00e060",
-            id="warn, crit, min, max",
+            "#37fa37",
+            id="already_migrated-warn, crit, min, max",
         ),
         pytest.param(
             [PerfDataTuple(n, n, len(n), "", None, None, None, None) for n in ["/", "fs_size"]],

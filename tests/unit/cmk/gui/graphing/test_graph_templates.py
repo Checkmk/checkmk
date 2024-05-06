@@ -456,13 +456,6 @@ def test_non_trivial_perfometer_declarations() -> None:
         {
             # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
             "type": "logarithmic",
-            "metric": "if_out_unicast_octets,if_out_non_unicast_octets,+",
-            "half_value": 5000000,
-            "exponent": 5,
-        },
-        {
-            # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'
-            "type": "logarithmic",
             "metric": "messages_inbound,messages_outbound,+",
             "half_value": 100,
             "exponent": 5,

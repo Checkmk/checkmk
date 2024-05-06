@@ -23,7 +23,7 @@ from cmk.gui.type_defs import Choices, Icon, TopicMenuItem, TopicMenuTopic, Visu
 from cmk.gui.utils.html import HTML
 from cmk.gui.visuals import visual_title
 
-# Constants to be used in snapins
+# Constants to be used in snap-ins
 snapin_width = 240
 
 

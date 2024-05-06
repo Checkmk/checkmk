@@ -356,9 +356,9 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
     @classmethod
     def description(cls):
         return _(
-            "This snapin shows the folders defined in Setup. It can be used to "
+            "This snap-in shows the folders defined in Setup. It can be used to "
             "open views filtered by the Setup folder. It works standalone, without "
-            "interaction with any other snapin."
+            "interaction with any other snap-in."
         )
 
     def show(self):

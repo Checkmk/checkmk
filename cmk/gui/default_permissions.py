@@ -146,7 +146,7 @@ PermissionConfigureSidebar = Permission(
     section=PermissionSectionGeneral,
     name="configure_sidebar",
     title=_l("Configure sidebar"),
-    description=_l("This allows the user to add, move and remove sidebar snapins."),
+    description=_l("This allows the user to add, move and remove sidebar snap-ins."),
     defaults=["admin", "user"],
 )
 
@@ -294,7 +294,7 @@ PermissionSeeStalesInTacticalOverview = Permission(
     name="see_stales_in_tactical_overview",
     title=_l("See stale objects in tactical overview"),
     description=_l(
-        "Show the column for stale host and service checks in the tactical overview snapin."
+        "Show the column for stale host and service checks in the tactical overview snap-in."
     ),
     defaults=config.default_authorized_builtin_role_ids,
 )

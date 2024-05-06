@@ -759,7 +759,7 @@ class ConfigVariableQuicksearchDropdownLimit(ConfigVariable):
         return Integer(
             title=_("Number of elements to show in Quicksearch"),
             help=_(
-                "When typing a texts in the Quicksearch snapin, a dropdown will "
+                "When typing a texts in the Quicksearch snap-in, a dropdown will "
                 "appear listing all matching host names containing that text. "
                 "That list is limited in size so that the dropdown will not get "
                 "too large when you have a huge number of lists. "
@@ -1064,7 +1064,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
             add_label=_("Create new virtual host tree configuration"),
             title=_("Virtual host trees"),
             help=_(
-                "Here you can define tree configurations for the snapin <i>Virtual Host-Trees</i>. "
+                "Here you can define tree configurations for the snap-in <i>Virtual Host-Trees</i>. "
                 "These trees organize your hosts based on their values in certain host tag groups. "
                 "Each host tag group you select will create one level in the tree."
             ),
@@ -1169,9 +1169,9 @@ class ConfigVariableSidebarUpdateInterval(ConfigVariable):
         return Float(
             title=_("Interval of sidebar status updates"),
             help=_(
-                "The information provided by the sidebar snapins is refreshed in a regular "
+                "The information provided by the sidebar snap-ins is refreshed in a regular "
                 "interval. You can change the refresh interval to fit your needs here. This "
-                "value means that all snapnis which request a regular refresh are updated "
+                "value means that all snap-ins which request a regular refresh are updated "
                 "in this interval."
             ),
             minvalue=10.0,

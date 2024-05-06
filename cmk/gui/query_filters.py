@@ -739,7 +739,7 @@ class TagsQuery(ABCTagsQuery):
 
     def parse_value(self, value: FilterHTTPVariables) -> Labels:
         # Do not restrict to a certain number, because we'd like to link to this
-        # via an URL, e.g. from the virtual host tree snapin
+        # via an URL, e.g. from the virtual host tree snap-in
         num = 0
         while value.get("%s_%d_grp" % (self.var_prefix, num)):
             prefix = "%s_%d" % (self.var_prefix, num)
@@ -768,7 +768,7 @@ class AuxTagsQuery(ABCTagsQuery):
 
     def parse_value(self, value: FilterHTTPVariables) -> Labels:
         # Do not restrict to a certain number, because we'd like to link to this
-        # via an URL, e.g. from the virtual host tree snapin
+        # via an URL, e.g. from the virtual host tree snap-in
         num = 0
         while (this_tag := value.get("%s_%d" % (self.var_prefix, num))) is not None:
             if this_tag:

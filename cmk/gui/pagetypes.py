@@ -1015,7 +1015,7 @@ class Overridable(Base[_T_OverridableSpec]):
     @classmethod
     def reserved_unique_ids(cls) -> list[str]:
         """Used to exclude names from choosing as unique ID, e.g. built-in names
-        in sidebar snapins"""
+        in sidebar snap-ins"""
         return []
 
 
@@ -1361,7 +1361,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
                 # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
                 # can we simply move it there?
                 # TODO: This is not true for all cases. e.g. the BookmarkList is not
-                # of type PageRenderer but has a dedicated sidebar snapin. Maybe
+                # of type PageRenderer but has a dedicated sidebar snap-in. Maybe
                 # the best option would be to make a dedicated method to decide whether
                 # or not to reload the sidebar.
                 html.reload_whole_page(redirect_url)
@@ -1825,8 +1825,8 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec]):
 #   |              |___/                                                   |
 #   +----------------------------------------------------------------------+
 #   |  Base class for all things that have an URL and can be rendered as   |
-#   |  an HTML page. And that can be added to the sidebar snapin of all    |
-#   |  pages.
+#   |  an HTML page. And that can be added to the sidebar snap-in of all   |
+#   |  pages.                                                              |
 #   '----------------------------------------------------------------------'
 
 _T_PageRendererSpec = TypeVar("_T_PageRendererSpec", bound=PageRendererSpec)

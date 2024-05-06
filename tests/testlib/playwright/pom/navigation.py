@@ -23,45 +23,65 @@ class MainMenu(LocatorHelper):
 
     def locator(self, selector: str | None = None) -> Locator:
         _loc = self.page.locator("#check_mk_navigation")
-        if selector is None:
-            return _loc
-        return _loc.locator(selector)
+        if selector:
+            _loc = _loc.locator(selector)
+        self._unique_web_element(_loc)
+        return _loc
+
+    def _sub_menu(
+        self,
+        menu: str,
+        sub_menu: str | None,
+        show_more: bool = False,
+        exact: bool = True,
+    ) -> Locator:
+        """Main menu -> Open `menu` -> Show more (optional) -> `sub menu`
+
+        Return `locator` of `menu`, if `sub_menu` is `None`.
+        """
+        _loc = self.locator().get_by_role(role="link", name=menu)
+        if sub_menu:
+            _loc.click()
+            if show_more:
+                self.page.get_by_role(role="link", name="show more", exact=True)
+            _loc = self.page.get_by_role(role="link", name=sub_menu, exact=exact)
+        self._unique_web_element(_loc)
+        return _loc
 
     @property
     def main_page(self) -> Locator:
-        return self.locator('a[title="Go to main page"]')
+        return self._sub_menu("Go to main page", sub_menu=None)
 
-    def _sub_menu(self, menu: str, menu_id: str, item: str | None, show: bool = True) -> Locator:
-        """main menu -> sub menu"""
-        menu_locator = self.locator(f"#{menu_id}")
-        classes = str(menu_locator.get_attribute("class")).split(" ")
-        if ("active" in classes) != show:
-            # show/hide menu
-            self.locator("a.popup_trigger").filter(has=self.page.locator(f'text="{menu}"')).click()
-        if item:
-            item_locator = menu_locator.locator("a").filter(has=self.page.locator(f'text="{item}"'))
-            return item_locator
-        return menu_locator
+    def monitor_menu(
+        self, sub_menu: str | None = None, show_more: bool = False, exact: bool = False
+    ) -> Locator:
+        """main menu -> Open monitor -> show more(optional) -> sub menu"""
+        return self._sub_menu("Monitor", sub_menu, show_more, exact)
 
-    def monitor_menu(self, item: str | None = None, show: bool = True) -> Locator:
-        """main menu -> Monitor"""
-        return self._sub_menu("Monitor", "popup_trigger_mega_menu_monitoring", item, show)
+    def setup_menu(
+        self, sub_menu: str | None = None, show_more: bool = False, exact: bool = False
+    ) -> Locator:
+        """main menu -> Open setup -> show more(optional) -> sub menu"""
+        return self._sub_menu("Setup", sub_menu, show_more, exact)
 
-    def setup_menu(self, item: str | None = None, show: bool = True) -> Locator:
-        """main menu -> Setup"""
-        return self._sub_menu("Setup", "popup_trigger_mega_menu_setup", item, show)
+    def user_menu(self, sub_menu: str | None = None, exact: bool = False) -> Locator:
+        """main menu -> Open user -> show more(optional) -> sub menu"""
+        return self._sub_menu("User", sub_menu, show_more=False, exact=exact)
 
-    def user_menu(self, item: str | None = None, show: bool = True) -> Locator:
-        """main menu -> User"""
-        return self._sub_menu("User", "popup_trigger_mega_menu_user", item, show)
+    def help_menu(self, sub_menu: str | None = None, exact: bool = False) -> Locator:
+        """main menu -> Open help -> show more(optional) -> sub menu"""
+        return self._sub_menu("Help", sub_menu, show_more=False, exact=exact)
 
-    def help_menu(self, item: str | None = None, show: bool = True) -> Locator:
-        """main menu -> Help"""
-        return self._sub_menu("Help", "popup_trigger_mega_menu_help_links", item, show)
+    def _searchbar(self, menu: Literal["Setup", "Monitor"], searchbar_name: str) -> Locator:
+        self._sub_menu(menu, sub_menu=None).click()
+        _location = self.locator().get_by_role(role="textbox", name=searchbar_name)
+        self._unique_web_element(_location)
+        return _location
 
     @property
     def monitor_searchbar(self) -> Locator:
-        return self.monitor_menu().locator("#mk_side_search_field_monitoring_search")
+        """Main menu -> Open monitor -> searchbar"""
+        return self._searchbar(menu="Monitor", searchbar_name="Search with regular expressions")
 
     @property
     def monitor_all_hosts(self) -> Locator:
@@ -70,7 +90,10 @@ class MainMenu(LocatorHelper):
 
     @property
     def setup_searchbar(self) -> Locator:
-        return self.setup_menu().locator("#mk_side_search_field_setup_search")
+        """Main menu -> Open setup -> searchbar"""
+        return self._searchbar(
+            menu="Setup", searchbar_name="Search for menu entries, settings, hosts and rulesets"
+        )
 
     @property
     def setup_hosts(self) -> Locator:
@@ -78,19 +101,24 @@ class MainMenu(LocatorHelper):
 
     @property
     def user_color_theme(self) -> Locator:
-        return self.user_menu("Color theme")
+        """Main menu -> Open user -> Color theme"""
+        return self.user_menu("Color theme", exact=False)
 
     @property
     def user_color_theme_button(self) -> Locator:
-        return self.user_menu().locator("#ui_theme")
+        """Main menu -> Open user -> Color theme button"""
+        self.user_menu().click()
+        return self.locator("#ui_theme")
 
     @property
     def user_sidebar_position(self) -> Locator:
-        return self.user_menu("Sidebar position")
+        return self.user_menu("Sidebar position", exact=False)
 
     @property
     def user_sidebar_position_button(self) -> Locator:
-        return self.user_menu().locator("#sidebar_position")
+        """Main menu -> Open user -> Sidebar position"""
+        self.user_menu().click()
+        return self.locator("#sidebar_position")
 
     @property
     def user_edit_profile(self) -> Locator:

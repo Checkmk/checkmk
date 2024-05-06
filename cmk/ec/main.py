@@ -1329,7 +1329,7 @@ class EventServer(ECServerThread):
                     # Check if a matching event already exists that we need to
                     # count up. If the count reaches the limit, the event will
                     # be opened and its rule actions performed.
-                    existing_event = self._event_status.count_event(self, event, rule, count)
+                    existing_event = self._event_status.count_event(self, event, count)
                     if existing_event:
                         if "delay" in rule:
                             if self._config["debug_rules"]:
@@ -2967,9 +2967,7 @@ class EventStatus:
         event["phase"] = "counting"
         event_server.new_event_respecting_limits(event)
 
-    def count_event(
-        self, event_server: EventServer, event: Event, rule: str, count: Count
-    ) -> Event | None:
+    def count_event(self, event_server: EventServer, event: Event, count: Count) -> Event | None:
         """
         Find previous occurrence of this event and account for
         one new occurrence. In case of negated count (expecting rules)

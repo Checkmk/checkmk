@@ -1,0 +1,13 @@
+Title: Fix unescaped details for process discovery checks in availability
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1715068423
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+Werk #15523 introduced a change in the escaping of ps checks but the
+availability still showed a broken table.
+
+This is fixed now.

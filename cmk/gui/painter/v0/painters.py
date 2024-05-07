@@ -4797,7 +4797,7 @@ class PainterAlertStatsOk(Painter):
         return "alert_stats_ok"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert Statistics: Number of recoveries")
+        return _("Alert statistics: Number of recoveries")
 
     def short_title(self, cell: Cell) -> str:
         return _("OK")
@@ -4819,7 +4819,7 @@ class PainterAlertStatsWarn(Painter):
         return "alert_stats_warn"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert Statistics: Number of warnings")
+        return _("Alert statistics: Number of warnings")
 
     def short_title(self, cell: Cell) -> str:
         return _("WARN")
@@ -4841,7 +4841,7 @@ class PainterAlertStatsCrit(Painter):
         return "alert_stats_crit"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert Statistics: Number of critical alerts")
+        return _("Alert statistics: Number of critical alerts")
 
     def short_title(self, cell: Cell) -> str:
         return _("CRIT")
@@ -4863,7 +4863,7 @@ class PainterAlertStatsUnknown(Painter):
         return "alert_stats_unknown"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert Statistics: Number of unknown alerts")
+        return _("Alert statistics: Number of unknown alerts")
 
     def short_title(self, cell: Cell) -> str:
         return _("UNKN")
@@ -4885,7 +4885,7 @@ class PainterAlertStatsProblem(Painter):
         return "alert_stats_problem"
 
     def title(self, cell: Cell) -> str:
-        return _("Alert Statistics: Number of problem alerts")
+        return _("Alert statistics: Number of problem alerts")
 
     def short_title(self, cell: Cell) -> str:
         return _("Problems")

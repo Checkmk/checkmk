@@ -3272,7 +3272,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("Alert Statistics"),
+            "title": _l("Alert statistics"),
             "topic": "problems",
             "sort_index": 50,
             "icon": "alerts",

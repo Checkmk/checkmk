@@ -727,6 +727,19 @@ async fn test_get_computer_name() {
     }
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn test_get_user_name() {
+    if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
+        let mut client = client::connect_main_endpoint(&endpoint.make_ep())
+            .await
+            .unwrap();
+        let name = query::obtain_system_user(&mut client).await.unwrap();
+        assert_eq!(name.unwrap().to_lowercase(), endpoint.user.to_lowercase());
+    } else {
+        tools::skip_on_lack_of_ms_sql_endpoint();
+    }
+}
+
 fn make_remote_config_string(
     user: &str,
     pwd: &str,

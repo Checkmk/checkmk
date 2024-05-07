@@ -337,9 +337,9 @@ class ModeDiagnostics(WatoMode):
                     totext="",
                     title=_("Checkmk Overview"),
                     help=_(
-                        "Checkmk Agent, Number, version and edition of sites, Cluster host; "
-                        "Number of hosts, services, CMK Helper, Live Helper, "
-                        "Helper usage; State of daemons: Apache, Core, Crontag, "
+                        "Checkmk Agent, Number, version and edition of sites, cluster host; "
+                        "number of hosts, services, CMK Helper, Live Helper, "
+                        "Helper usage; state of daemons: Apache, Core, Crontab, "
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
                         "(Agent plug-in mk_inventory needs to be installed)"
                     ),

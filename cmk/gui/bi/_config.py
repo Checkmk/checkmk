@@ -1703,7 +1703,7 @@ class BIModeEditAggregation(ABCBIMode):
 
     def title(self) -> str:
         if self._clone:
-            return _("Clone Aggregation %s") % request.get_str_input_mandatory("clone")
+            return _("Clone aggregation %s") % request.get_str_input_mandatory("clone")
         if self._new:
             return _("Add Aggregation")
         return _("Edit Aggregation")
@@ -1902,7 +1902,7 @@ class BIModeEditAggregation(ABCBIMode):
                 (
                     "escalate_downtimes_as_warn",
                     Checkbox(
-                        title=_("Aggregation of Downtimes"),
+                        title=_("Aggregation of downtimes"),
                         label=_("Escalate downtimes based on aggregated WARN state"),
                         help=_(
                             "When computing the state 'in scheduled downtime' for an aggregate "

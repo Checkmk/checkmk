@@ -921,7 +921,7 @@ builtin_views.update(
             "play_sounds": False,
             "public": True,
             "sorters": [SorterSpec(sorter="svcdescr", negate=False)],
-            "title": _l("CRIT Services of host"),
+            "title": _l("CRIT services of host"),
             "user_sortable": True,
             "single_infos": ["host"],
             "context": {
@@ -1358,7 +1358,7 @@ builtin_views.update(
             "browser_reload": 60,
             "column_headers": "off",
             "datasource": "services",
-            "description": _l("All ok services of a certain host group"),
+            "description": _l("All OK services of a certain host group"),
             "group_painters": [
                 ColumnSpec(
                     name="sitealias",
@@ -1426,7 +1426,7 @@ builtin_views.update(
             "browser_reload": 60,
             "column_headers": "off",
             "datasource": "services",
-            "description": _l("All warn services of a certain host group"),
+            "description": _l("All WARN services of a certain host group"),
             "group_painters": [
                 ColumnSpec(
                     name="sitealias",
@@ -3040,7 +3040,7 @@ builtin_views.update(
                 SorterSpec(sorter="site_host", negate=False),
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
-            "title": _l("CRIT Services of Site"),
+            "title": _l("CRIT services of site"),
             "user_sortable": True,
             "single_infos": [],
             "context": {

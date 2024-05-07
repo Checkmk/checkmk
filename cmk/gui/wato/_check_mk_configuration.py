@@ -6306,7 +6306,7 @@ def _vs_validity():
             (
                 "check_mk_state",
                 MonitoringState(
-                    title=_("Check MK status of piggybacked host within this period"),
+                    title=_("Check_MK status of piggybacked host within this period"),
                     default_value=0,
                 ),
             ),

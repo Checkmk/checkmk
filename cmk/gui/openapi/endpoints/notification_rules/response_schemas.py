@@ -1016,7 +1016,7 @@ class NotificationBulkingCommonAttributes(CheckboxOutput):
         example=60,
     )
     max_bulk_size = fields.Integer(
-        description="At most that many Notifications are kept back for bulking. A value of 1 essentially turns off notification bulking.",
+        description="At most that many notifications are kept back for bulking. A value of 1 essentially turns off notification bulking.",
         example="1000",
     )
     notification_bulks_based_on = fields.List(

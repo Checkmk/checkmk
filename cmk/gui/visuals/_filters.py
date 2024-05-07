@@ -1841,7 +1841,7 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
                         "As soon as you add your Checkmk server to the "
                         "monitoring, a graph showing the history of your host "
                         "problems will appear here.\n Please also be aware that "
-                        "message might appear as a result of a filtered "
+                        "this message might appear as a result of a filtered "
                         "dashboard. This dashlet currently only supports "
                         "filtering for sites."
                     )

@@ -943,7 +943,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             elements=[
                 CheckTypeGroupSelection(
                     self.check_group_name,
-                    title=_("Checktype"),
+                    title=_("Check type"),
                     help=_("Please choose the check plug-in"),
                 ),
                 self._get_item_spec(),

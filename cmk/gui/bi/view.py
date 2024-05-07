@@ -158,7 +158,7 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
 
     @property
     def title(self) -> str:
-        return _("BI Hostname Aggregations")
+        return _("BI host name aggregations")
 
     @property
     def table(self) -> RowTable:

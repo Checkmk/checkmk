@@ -19,7 +19,7 @@ from cmk.rulesets.v1 import Title
 
 DEFAULT_VALUES = {
     "system": Title("System: Storage Array Configuration"),
-    "cpgs": Title("Common Provisioning Groups: Virtual Pool Configuration"),
+    "cpgs": Title("Common Provisioning Groups: Virtual pool configuration"),
     "volumes": Title("Volumes: Virtual Volume Summary"),
     "hosts": Title("Hosts: Host Capacity & Utilization"),
     "capacity": Title("Capacity: Array Capacity & Utilization"),

@@ -360,9 +360,9 @@ def test_diagnostics_element_checkmk_overview() -> None:
     assert diagnostics_element.ident == "checkmk_overview"
     assert diagnostics_element.title == "Checkmk Overview of Checkmk Server"
     assert diagnostics_element.description == (
-        "Checkmk Agent, Number, version and edition of sites, Cluster host; "
-        "Number of hosts, services, CMK Helper, Live Helper, "
-        "Helper usage; State of daemons: Apache, Core, Crontag, "
+        "Checkmk Agent, Number, version and edition of sites, cluster host; "
+        "number of hosts, services, CMK Helper, Live Helper, "
+        "Helper usage; state of daemons: Apache, Core, Crontab, "
         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
         "(Agent plug-in mk_inventory needs to be installed)"
     )

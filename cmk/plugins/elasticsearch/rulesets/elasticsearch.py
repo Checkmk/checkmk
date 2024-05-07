@@ -103,7 +103,7 @@ def _parameter_form() -> Dictionary:
                     title=Title("Informations to query"),
                     help_text=Help(
                         "Defines what information to query. "
-                        "Checks for Cluster, Indices and Shard statistics follow soon."
+                        "Checks for cluster, indices and shard statistics follow soon."
                     ),
                     elements=[
                         MultipleChoiceElement(
@@ -116,7 +116,7 @@ def _parameter_form() -> Dictionary:
                         ),
                         MultipleChoiceElement(
                             name="stats",
-                            title=Title("Cluster, Indices and Shard statistics"),
+                            title=Title("Cluster, indices and shard statistics"),
                         ),
                     ],
                     custom_validate=(LengthInRange(min_value=1),),

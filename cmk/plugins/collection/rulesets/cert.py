@@ -62,7 +62,7 @@ def _valuespec_validity() -> Dictionary:
                 parameter_form=TimeSpan(
                     title=Title("Maximum allowed validity"),
                     help_text=Help(
-                        "Any certificate should be expire at some point. Usual values "
+                        "Any certificate should expire at some point. Usual values "
                         "are within 90 and 365 days."
                     ),
                     displayed_magnitudes=[TimeMagnitude.DAY],
@@ -229,9 +229,9 @@ def _valuespec_port() -> Integer:
     return Integer(
         title=Title("Port"),
         help_text=Help(
-            "Any valid TCP port may entered here. The host needs to provide a "
+            "Any valid TCP port may be entered here. The host needs to provide a "
             "certificate on this port. Otherwise the service will be CRIT and "
-            "report a handshakre error."
+            "report a handshake error."
         ),
         prefill=DefaultValue(443),
         custom_validate=(validators.NetworkPort(),),

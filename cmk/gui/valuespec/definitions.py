@@ -7900,7 +7900,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
     def _validate_value(self, value: IconSelectorModel, varprefix: str) -> None:
         icon_dict = self._transform_icon_str(value)
 
-        if not self._allow_empty and not icon_dict["icon"]:
+        if not self._allow_empty and (not icon_dict["icon"] or icon_dict["icon"] == "empty"):
             raise MKUserError(varprefix, _("You need to select an icon."))
 
         if icon_dict["icon"] and icon_dict["icon"] not in self.available_icons():

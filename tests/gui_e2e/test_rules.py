@@ -133,6 +133,8 @@ def test_create_rules(
             role="button", name="Add new element"
         ).click()
         logged_in_page.main_area.locator('[name="ve_1_0"]').fill("test")
+        logged_in_page.main_area.locator("#ve_1_1_p_icon_img").click()
+        logged_in_page.main_area.locator("#ve_1_1_p_icon_i_2fa").click()
         logged_in_page.click_and_wait(
             logged_in_page.main_area.get_suggestion("Save"), navigate=True
         )

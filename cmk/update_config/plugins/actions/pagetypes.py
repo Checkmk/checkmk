@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 from logging import Logger
-from typing import Generic, Protocol, TypeVar
+from typing import Final, Generic, Protocol, TypeVar
 
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.user import UserId
@@ -16,6 +16,7 @@ from cmk.gui.pagetypes import (
     Overridable,
     OverridableConfig,
     OverridableInstances,
+    PagetypeTopics,
 )
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -67,3 +68,27 @@ update_action_registry.register(
         sort_index=120,  # can run whenever
     )
 )
+
+
+class PagetypeTopicsUpdater:
+    def __init__(self) -> None:
+        self.target_type: Final = PagetypeTopics
+
+    def __call__(
+        self, page_dicts: Mapping[InstanceId, dict[str, object]]
+    ) -> Mapping[InstanceId, dict[str, object]]:
+        return {
+            instance_id: page_dict
+            | {
+                "icon_name": (
+                    icon_name
+                    if (icon_name := page_dict["icon_name"])
+                    # transparent icon
+                    else "trans"
+                )
+            }
+            for instance_id, page_dict in page_dicts.items()
+        }
+
+
+pagetype_updater_registry.register(PagetypeTopicsUpdater())

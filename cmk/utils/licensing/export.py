@@ -178,17 +178,6 @@ class LicenseUsageExtensions:
     def for_report(self) -> RawLicenseUsageExtensions:
         return {"ntop": self.ntop}
 
-    @classmethod
-    def parse(cls, raw_extensions: object) -> LicenseUsageExtensions:
-        """
-        >>> LicenseUsageExtensions.parse(LicenseUsageExtensions(ntop=True).for_report())
-        LicenseUsageExtensions(ntop=True)
-        """
-        if not isinstance(raw_extensions, dict):
-            raise TypeError("Wrong extensions type: %r" % type(raw_extensions))
-
-        return cls(ntop=raw_extensions.get("ntop", False))
-
 
 class RawLicenseUsageSample(TypedDict):
     instance_id: str | None

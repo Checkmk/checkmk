@@ -420,6 +420,12 @@ def save_extensions(extensions: LicenseUsageExtensions) -> None:
         )
 
 
+def _parse_extensions(raw: object) -> LicenseUsageExtensions:
+    if isinstance(raw, dict):
+        return LicenseUsageExtensions(ntop=raw.get("ntop", False))
+    raise TypeError("Wrong extensions type: %r" % type(raw))
+
+
 def _load_extensions() -> LicenseUsageExtensions:
     extensions_file_path = _get_extensions_file_path()
     with store.locked(extensions_file_path):
@@ -429,7 +435,7 @@ def _load_extensions() -> LicenseUsageExtensions:
                 default=b"{}",
             )
         )
-    return LicenseUsageExtensions.parse(raw_extensions)
+    return _parse_extensions(raw_extensions)
 
 
 # .

@@ -54,7 +54,7 @@ register.agent_section(
 
 register.check_plugin(
     name="proxmox_ve_mem_usage",
-    service_name="Proxmox VE Memory Usage",
+    service_name="Proxmox VE memory usage",
     discovery_function=discover_single,
     check_function=check_proxmox_ve_mem_usage,
     check_ruleset_name="proxmox_ve_mem_usage",

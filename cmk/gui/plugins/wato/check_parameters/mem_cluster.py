@@ -29,7 +29,7 @@ def _parameter_valuespec_mem_cluster():
             ]
         ),
         help=_("Here you can specify the total memory usage levels for clustered hosts."),
-        title=_("Memory Usage"),
+        title=_("Memory usage"),
         add_label=_("Add limits"),
     )
 
@@ -39,7 +39,7 @@ rulespec_registry.register(
         check_group_name="mem_cluster",
         group=RulespecGroupEnforcedServicesNetworking,
         parameter_valuespec=_parameter_valuespec_mem_cluster,
-        title=lambda: _("Memory Usage of Clusters"),
+        title=lambda: _("Memory usage of clusters"),
         is_deprecated=True,
     )
 )

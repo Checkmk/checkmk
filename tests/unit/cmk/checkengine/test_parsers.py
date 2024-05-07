@@ -353,6 +353,26 @@ class TestAgentParser:
         }
         assert not store.load()
 
+    def test_invalid_hosts_are_ignored(self, parser: AgentParser) -> None:
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<section1>>>",
+                    b"one line",
+                    b"<<<<Foo Bar>>>>",  # <- invalid host name
+                    b"<<<this_goes_nowhere>>>",
+                    b"dead line",
+                    b"<<<<>>>>",
+                    b"<<<section2>>>",
+                    b"a first line",
+                    b"a second line",
+                )
+            )
+        )
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert set(ahs.sections) == {SectionName("section1"), SectionName("section2")}
+        assert ahs.piggybacked_raw_data == {}
+
     def test_closing_piggyback_out_of_piggyback_section_closes_section(
         self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
     ) -> None:

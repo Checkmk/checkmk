@@ -26,6 +26,7 @@ from cmk.utils.licensing.export import (
     LicenseUsageSample,
     LicensingProtocolVersion,
     make_parser,
+    parse_protocol_version,
     RawLicenseUsageExtensions,
     RawLicenseUsageReport,
     RawLicenseUsageSample,
@@ -368,16 +369,11 @@ class LocalLicenseUsageHistory:
     def update(
         cls, raw_report: object, *, instance_id: UUID, site_hash: str
     ) -> LocalLicenseUsageHistory:
-        if not isinstance(raw_report, dict):
-            raise TypeError("Wrong report type: %r" % type(raw_report))
-
         if not raw_report:
             return cls([])
-
-        if not isinstance(protocol_version := raw_report.get("VERSION"), str):
-            raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
-
-        parser = make_parser(protocol_version).parse_sample
+        parser = make_parser(parse_protocol_version(raw_report)).parse_sample
+        if not isinstance(raw_report, dict):
+            raise TypeError("Wrong report type: %r" % type(raw_report))
         return cls(
             parser(instance_id, site_hash, raw_sample)
             for raw_sample in raw_report.get("history", [])
@@ -385,16 +381,11 @@ class LocalLicenseUsageHistory:
 
     @classmethod
     def parse(cls, raw_report: object) -> LocalLicenseUsageHistory:
-        if not isinstance(raw_report, dict):
-            raise TypeError("Wrong report type: %r" % type(raw_report))
-
         if not raw_report:
             return cls([])
-
-        if not isinstance(protocol_version := raw_report.get("VERSION"), str):
-            raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
-
-        parser = make_parser(protocol_version).parse_sample
+        parser = make_parser(parse_protocol_version(raw_report)).parse_sample
+        if not isinstance(raw_report, dict):
+            raise TypeError("Wrong report type: %r" % type(raw_report))
         return cls(parser(None, "", raw_sample) for raw_sample in raw_report.get("history", []))
 
     def add_sample(self, sample: LicenseUsageSample) -> None:

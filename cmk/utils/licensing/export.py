@@ -17,7 +17,7 @@ from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 
-LicensingProtocolVersion: Final[str] = "3.0"
+LicensingProtocolVersion: Final = "3.0"
 
 
 class RawLicenseUsageReport(TypedDict):
@@ -574,7 +574,38 @@ class ParserV3_0(Parser):
         )
 
 
-def make_parser(protocol_version: str) -> Parser:
+def parse_protocol_version(
+    raw: object,
+) -> Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]:
+    if not isinstance(raw, dict):
+        raise TypeError(raw)
+    if not isinstance(raw_protocol_version := raw.get("VERSION"), str):
+        raise TypeError(raw_protocol_version)
+    match raw_protocol_version:
+        case "1.0":
+            return "1.0"
+        case "1.1":
+            return "1.1"
+        case "1.2":
+            return "1.2"
+        case "1.3":
+            return "1.3"
+        case "1.4":
+            return "1.4"
+        case "1.5":
+            return "1.5"
+        case "2.0":
+            return "2.0"
+        case "2.1":
+            return "2.1"
+        case "3.0":
+            return "3.0"
+    raise ValueError(f"Unknown protocol version: {raw_protocol_version!r}")
+
+
+def make_parser(
+    protocol_version: Literal["1.0", "1.1", "1.2", "1.3", "1.4", "1.5", "2.0", "2.1", "3.0"]
+) -> Parser:
     match protocol_version:
         case "1.0":
             return ParserV1_0()
@@ -594,7 +625,6 @@ def make_parser(protocol_version: str) -> Parser:
             return ParserV2_1()
         case "3.0":
             return ParserV3_0()
-    raise ValueError("Unknown protocol version: %r" % protocol_version)
 
 
 # .

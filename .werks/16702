@@ -1,0 +1,10 @@
+Title: Log to alert.log and dcd.log after logrotate
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1715074375
+Edition: cee
+Level: 1
+Version: 2.2.0p27
+
+Same as werk #16700 and #16698 for alert.log and dcd.log.

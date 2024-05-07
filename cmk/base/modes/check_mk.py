@@ -1469,7 +1469,7 @@ modes.register(
             "checks are created and the nagios configuration is updated. "
             "When using the CheckMK Micro Core, the core configuration is created "
             "and the configuration for the Core helper processes is being created.",
-            "The agent bakery is updating the agents.",
+            "The Agent Bakery is updating the agents.",
         ],
     )
 )

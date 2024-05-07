@@ -10,7 +10,7 @@ data from the host.
 An introduction to agents can be found in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_monitoringagents.html).
 
-You can find more about the agent bakery and automatic agent updates of checkmk enterprise
+You can find more about the Agent Bakery and automatic agent updates of checkmk enterprise
 in [Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).
 """
 

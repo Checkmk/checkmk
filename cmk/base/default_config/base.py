@@ -320,7 +320,7 @@ custom_service_attributes: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 # Assign tags to services
 service_tag_rules: list[RuleSpec[Sequence[tuple[str, str]]]] = []
 
-# Rulesets for agent bakery
+# Rulesets for Agent Bakery
 agent_config: dict[str, list[RuleSpec[Any]]] = {}
 agent_bakery_logging: int | None = None
 bake_agents_on_restart = False

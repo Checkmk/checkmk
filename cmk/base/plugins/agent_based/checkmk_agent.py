@@ -603,7 +603,7 @@ register.check_plugin(
         "restricted_address_mismatch": 1,
         "legacy_pull_mode": 1,
         # This next entry will be postprocessed by the backend.
-        # The "only_from" configuration is not a check parameter but it is configured as an agent bakery rule,
+        # The "only_from" configuration is not a check parameter but it is configured as an Agent Bakery rule,
         # and controls the *deployment* of the only_from setting.
         # We want to use that very setting to check whether it is deployed correctly.
         # Don't try this hack at home, we are trained professionals.

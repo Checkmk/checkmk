@@ -1947,6 +1947,9 @@ class ConfigCache:
     def fetcher_factory(self) -> FetcherFactory:
         return FetcherFactory(self, self.ruleset_matcher)
 
+    def parser_factory(self) -> ParserFactory:
+        return ParserFactory(self, self.ruleset_matcher)
+
     def make_parent_scan_config(self, host_name: HostName) -> ParentScanConfig:
         return ParentScanConfig(
             active=self.is_active(host_name),
@@ -1957,44 +1960,6 @@ class ConfigCache:
 
     def datasource_programs(self, host_name: HostName) -> Sequence[str]:
         return self.ruleset_matcher.get_host_values(host_name, datasource_programs)
-
-    def make_agent_parser(
-        self,
-        host_name: HostName,
-        section_store: SectionStore[Sequence[AgentRawDataSectionElem]],
-        *,
-        keep_outdated: bool,
-        logger: logging.Logger,
-    ) -> AgentParser:
-        return AgentParser(
-            host_name,
-            section_store,
-            keep_outdated=keep_outdated,
-            check_interval=self.check_mk_check_interval(host_name),
-            translation=get_piggyback_translations(self.ruleset_matcher, host_name),
-            encoding_fallback=fallback_agent_output_encoding,
-            logger=logger,
-        )
-
-    def make_snmp_parser(
-        self,
-        host_name: HostName,
-        section_store: SectionStore[SNMPRawDataElem],
-        *,
-        keep_outdated: bool,
-        logger: logging.Logger,
-        checking_sections: frozenset[SectionName],
-    ) -> SNMPParser:
-        return SNMPParser(
-            host_name,
-            section_store,
-            check_intervals={
-                section_name: self.snmp_fetch_interval(host_name, section_name)
-                for section_name in checking_sections
-            },
-            keep_outdated=keep_outdated,
-            logger=logger,
-        )
 
     def _discovered_labels_of_service(
         self,
@@ -4021,6 +3986,51 @@ def boil_down_agent_rules(
             assert_never(match_type)
 
     return boiled_down
+
+
+class ParserFactory:
+    # TODO: better and clearer separation between ConfigCache and this class.
+    def __init__(self, config_cache: ConfigCache, ruleset_matcher_: RulesetMatcher) -> None:
+        self.config_cache: Final = config_cache
+        self.ruleset_matcher: Final = ruleset_matcher_
+
+    def make_agent_parser(
+        self,
+        host_name: HostName,
+        section_store: SectionStore[Sequence[AgentRawDataSectionElem]],
+        *,
+        keep_outdated: bool,
+        logger: logging.Logger,
+    ) -> AgentParser:
+        return AgentParser(
+            host_name,
+            section_store,
+            keep_outdated=keep_outdated,
+            check_interval=self.config_cache.check_mk_check_interval(host_name),
+            translation=get_piggyback_translations(self.ruleset_matcher, host_name),
+            encoding_fallback=fallback_agent_output_encoding,
+            logger=logger,
+        )
+
+    def make_snmp_parser(
+        self,
+        host_name: HostName,
+        section_store: SectionStore[SNMPRawDataElem],
+        *,
+        keep_outdated: bool,
+        logger: logging.Logger,
+        checking_sections: frozenset[SectionName],
+    ) -> SNMPParser:
+        return SNMPParser(
+            host_name,
+            section_store,
+            check_intervals={
+                section_name: self.config_cache.snmp_fetch_interval(host_name, section_name)
+                for section_name in checking_sections
+            },
+            keep_outdated=keep_outdated,
+            logger=logger,
+        )
 
 
 class FetcherFactory:

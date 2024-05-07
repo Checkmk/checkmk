@@ -1294,61 +1294,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "stacked",
-        "perfometers": [
-            {
-                "type": "logarithmic",
-                "metric": "elasticsearch_size_rate",
-                "half_value": 5000,
-                "exponent": 2,
-            },
-            {
-                "type": "logarithmic",
-                "metric": "elasticsearch_count_rate",
-                "half_value": 10,
-                "exponent": 2,
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "logarithmic",
-        "metric": "number_of_pending_tasks_rate",
-        "half_value": 10,
-        "exponent": 2,
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "dual",
-        "perfometers": [
-            {
-                "type": "linear",
-                "segments": ["active_primary_shards"],
-                "total": "active_shards",
-            },
-            {
-                "type": "linear",
-                "segments": ["active_shards"],
-                "total": "active_shards",
-            },
-        ],
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["active_shards_percent_as_number"],
-        "total": 100.0,
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "nimble_read_latency_total",
         "half_value": 10,

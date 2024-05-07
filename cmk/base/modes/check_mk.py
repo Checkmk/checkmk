@@ -1805,6 +1805,7 @@ def mode_check_discovery(
     discovery_file_cache_max_age = 1.5 * check_interval if file_cache_options.use_outdated else 0
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         mode=FetchMode.DISCOVERY,
@@ -1821,6 +1822,7 @@ def mode_check_discovery(
     )
     parser = CMKParser(
         config_cache,
+        config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2130,12 +2132,14 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     config_cache = config.get_config_cache()
     parser = CMKParser(
         config_cache,
+        config_cache.parser_factory(),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         mode=FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
@@ -2296,6 +2300,7 @@ def mode_check(
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         mode=FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
@@ -2311,6 +2316,7 @@ def mode_check(
     )
     parser = CMKParser(
         config_cache,
+        config_cache.parser_factory(),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.checking"),
@@ -2523,6 +2529,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         mode=FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS,
@@ -2534,6 +2541,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     )
     parser = CMKParser(
         config_cache,
+        config_cache.parser_factory(),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -2768,6 +2776,7 @@ def mode_inventory_as_check(
 
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         mode=FetchMode.INVENTORY,
@@ -2779,6 +2788,7 @@ def mode_inventory_as_check(
     )
     parser = CMKParser(
         config_cache,
+        config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -2916,12 +2926,14 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     config_cache = config.get_config_cache()
     parser = CMKParser(
         config_cache,
+        config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
     )
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         mode=FetchMode.INVENTORY,

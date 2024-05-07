@@ -276,12 +276,14 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         parser = CMKParser(
             config_cache,
+            config_cache.parser_factory(),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
         )
         fetcher = CMKFetcher(
             config_cache,
+            config_cache.fetcher_factory(),
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=force_snmp_cache_refresh,
             mode=Mode.DISCOVERY,
@@ -539,12 +541,14 @@ def _execute_discovery(
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache,
+        config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=perform_scan,
         mode=Mode.DISCOVERY,
@@ -659,12 +663,14 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache,
+        config_cache.parser_factory(),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
     fetcher = CMKFetcher(
         config_cache,
+        config_cache.fetcher_factory(),
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
         mode=Mode.DISCOVERY,

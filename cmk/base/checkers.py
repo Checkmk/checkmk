@@ -89,7 +89,14 @@ from cmk.base.config import (
 )
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.ip_lookup import IPStackConfig
-from cmk.base.sources import make_parser, make_sources, SNMPFetcherConfig, Source
+from cmk.base.sources import (
+    FetcherFactory,
+    make_parser,
+    make_sources,
+    ParserFactory,
+    SNMPFetcherConfig,
+    Source,
+)
 
 from cmk.agent_based.prediction_backend import (
     InjectedParameters,
@@ -155,12 +162,14 @@ class CMKParser:
     def __init__(
         self,
         config_cache: ConfigCache,
+        factory: ParserFactory,
         *,
         selected_sections: SectionNameCollection,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
         self.config_cache: Final = config_cache
+        self.factory: Final = factory
         self.selected_sections: Final = selected_sections
         self.keep_outdated: Final = keep_outdated
         self.logger: Final = logger
@@ -183,7 +192,7 @@ class CMKParser:
         for source, raw_data in fetched:
             source_result = parse_raw_data(
                 make_parser(
-                    self.config_cache.parser_factory(),
+                    self.factory,
                     source.hostname,
                     source.fetcher_type,
                     checking_sections=self.config_cache.make_checking_sections(
@@ -276,6 +285,7 @@ class CMKFetcher:
     def __init__(
         self,
         config_cache: ConfigCache,
+        factory: FetcherFactory,
         *,
         # alphabetically sorted
         file_cache_options: FileCacheOptions,
@@ -289,6 +299,7 @@ class CMKFetcher:
         snmp_backend_override: SNMPBackendEnum | None,
     ) -> None:
         self.config_cache: Final = config_cache
+        self.factory: Final = factory
         self.file_cache_options: Final = file_cache_options
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.mode: Final = mode
@@ -354,7 +365,7 @@ class CMKFetcher:
                     current_host_name,
                     current_ip_address,
                     current_ip_stack_config,
-                    fetcher_factory=self.config_cache.fetcher_factory(),
+                    fetcher_factory=self.factory,
                     snmp_fetcher_config=SNMPFetcherConfig(
                         scan_config=SNMPScanConfig(
                             missing_sys_description=self.config_cache.missing_sys_description(

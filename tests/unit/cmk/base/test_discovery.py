@@ -1332,12 +1332,14 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         file_cache_options = FileCacheOptions()
         parser = CMKParser(
             config_cache,
+            config_cache.parser_factory(),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("tests"),
         )
         fetcher = CMKFetcher(
             config_cache,
+            config_cache.fetcher_factory(),
             file_cache_options=file_cache_options,
             force_snmp_cache_refresh=False,
             mode=Mode.DISCOVERY,

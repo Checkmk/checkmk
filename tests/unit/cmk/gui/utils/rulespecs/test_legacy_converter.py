@@ -2602,6 +2602,99 @@ def test_dictionary_groups_ignored_elements() -> None:
             ),
             id="render_only dictelements",
         ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        render_only=True,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC")),
+                        render_only=True,
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABC'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                hidden_keys=["a", "b"],
+                            ),
+                        ),
+                    ],
+                    required_keys=[],
+                    hidden_keys=["DictGroup(title=Title('ABC'),help_text=None)"],
+                ),
+            ),
+            id="render_only all dictelements",
+        ),
+        pytest.param(
+            api_v1.form_specs.Dictionary(
+                elements={
+                    "a": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC hidden")),
+                        render_only=True,
+                    ),
+                    "b": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC hidden")),
+                        render_only=True,
+                    ),
+                    "c": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC shown")),
+                        render_only=False,
+                    ),
+                    "d": api_v1.form_specs.DictElement(
+                        parameter_form=api_v1.form_specs.Integer(),
+                        group=api_v1.form_specs.DictGroup(title=api_v1.Title("ABC shown")),
+                        render_only=True,
+                    ),
+                }
+            ),
+            legacy_valuespecs.Transform(
+                legacy_valuespecs.Dictionary(
+                    elements=[
+                        (
+                            "DictGroup(title=Title('ABChidden'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC hidden"),
+                                elements=[
+                                    ("a", legacy_valuespecs.Integer()),
+                                    ("b", legacy_valuespecs.Integer()),
+                                ],
+                                hidden_keys=["a", "b"],
+                            ),
+                        ),
+                        (
+                            "DictGroup(title=Title('ABCshown'),help_text=None)",
+                            legacy_valuespecs.Dictionary(
+                                title=_("ABC shown"),
+                                elements=[
+                                    ("c", legacy_valuespecs.Integer()),
+                                    ("d", legacy_valuespecs.Integer()),
+                                ],
+                                hidden_keys=["d"],
+                            ),
+                        ),
+                    ],
+                    required_keys=["DictGroup(title=Title('ABCshown'),help_text=None)"],
+                    hidden_keys=["DictGroup(title=Title('ABChidden'),help_text=None)"],
+                ),
+            ),
+            id="render_only some dictelements",
+        ),
     ],
 )
 def test_dictionary_groups_dict_element_properties(

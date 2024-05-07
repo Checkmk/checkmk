@@ -1143,7 +1143,8 @@ def _convert_to_legacy_dictionary(
     ungrouped_element_key_props, ungrouped_elements = _get_ungrouped_elements(
         to_convert.elements, localizer
     )
-    grouped_elements_map = _group_elements(to_convert.elements, localizer)
+    grouped_elements_map, hidden_group_keys = _group_elements(to_convert.elements, localizer)
+    required_group_keys = set(grouped_elements_map.keys()) - hidden_group_keys
 
     return legacy_valuespecs.Transform(
         legacy_valuespecs.Dictionary(
@@ -1151,9 +1152,9 @@ def _convert_to_legacy_dictionary(
             title=_localize_optional(to_convert.title, localizer),
             help=_localize_optional(to_convert.help_text, localizer),
             empty_text=_localize_optional(to_convert.no_elements_text, localizer),
-            required_keys=ungrouped_element_key_props.required + list(grouped_elements_map.keys()),
+            required_keys=ungrouped_element_key_props.required + list(required_group_keys),
             ignored_keys=list(to_convert.ignored_elements),
-            hidden_keys=ungrouped_element_key_props.hidden,
+            hidden_keys=ungrouped_element_key_props.hidden + list(hidden_group_keys),
             validate=(
                 _convert_to_dict_legacy_validation(
                     to_convert.custom_validate,
@@ -1202,26 +1203,31 @@ def _make_group_as_nested_dict(
     help_text: ruleset_api_v1.Help | None,
     dict_elements: Mapping[str, ruleset_api_v1.form_specs.DictElement],
     localizer: Callable[[str], str],
-) -> legacy_valuespecs.Dictionary:
+) -> tuple[legacy_valuespecs.Dictionary, bool]:
     key_props = _LegacyDictKeyProps.from_elements(dict_elements)
     elements = [
         (key, _convert_to_legacy_valuespec(dict_element.parameter_form, localizer))
         for key, dict_element in dict_elements.items()
     ]
-    return legacy_valuespecs.Dictionary(
-        elements=elements,
-        title=_localize_optional(title, localizer),
-        help=_localize_optional(help_text, localizer),
-        required_keys=key_props.required,
-        hidden_keys=key_props.hidden,
-        horizontal=_get_grouped_dict_orientation(elements, key_props),
+
+    all_group_elements_hidden = set(key_props.hidden) == set(key for key, _ in elements)
+    return (
+        legacy_valuespecs.Dictionary(
+            elements=elements,
+            title=_localize_optional(title, localizer),
+            help=_localize_optional(help_text, localizer),
+            required_keys=key_props.required,
+            hidden_keys=key_props.hidden,
+            horizontal=_get_grouped_dict_orientation(elements, key_props),
+        ),
+        all_group_elements_hidden,
     )
 
 
 def _group_elements(
     dict_elements_map: Mapping[str, ruleset_api_v1.form_specs.DictElement],
     localizer: Callable[[str], str],
-) -> Mapping[str, legacy_valuespecs.Dictionary]:
+) -> tuple[Mapping[str, legacy_valuespecs.Dictionary], set[str]]:
     grouped_dict_elements_map: dict[
         ruleset_api_v1.form_specs.DictGroup,
         dict[str, ruleset_api_v1.form_specs.DictElement],
@@ -1231,12 +1237,18 @@ def _group_elements(
         if isinstance(dict_element.group, ruleset_api_v1.form_specs.DictGroup):
             grouped_dict_elements_map[dict_element.group][key] = dict_element
 
-    return {
-        _get_dict_group_key(g): _make_group_as_nested_dict(
+    hidden_group_keys: set[str] = set()
+    grouped_elements_map: dict[str, legacy_valuespecs.Dictionary] = {}
+    for g, group_elements in grouped_dict_elements_map.items():
+        nested_dict, all_hidden = _make_group_as_nested_dict(
             g.title, g.help_text, group_elements, localizer
         )
-        for g, group_elements in grouped_dict_elements_map.items()
-    }
+        group_key = _get_dict_group_key(g)
+        grouped_elements_map[group_key] = nested_dict
+        if all_hidden:
+            hidden_group_keys.add(group_key)
+
+    return grouped_elements_map, hidden_group_keys
 
 
 def _convert_to_legacy_monitoring_state(

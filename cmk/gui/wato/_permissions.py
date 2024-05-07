@@ -687,8 +687,8 @@ def register(
         Permission(
             section=PermissionSectionWATO,
             name="check_plugins",
-            title=_l("Catalog of check plugins"),
-            description=_l("Use the catalog of check plugins."),
+            title=_l("Catalog of check plug-ins"),
+            description=_l("Use the catalog of check plug-ins."),
             defaults=["admin", "user"],
         )
     )

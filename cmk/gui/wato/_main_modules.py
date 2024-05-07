@@ -373,7 +373,7 @@ class MainModuleNetworkingServices(ABCMainModule):
     @property
     def description(self) -> str:
         return _(
-            "Configure monitoring of networking services using classical nagios plugins"
+            "Configure monitoring of networking services using classical nagios plug-ins"
             " (so called active checks)"
         )
 
@@ -410,7 +410,7 @@ class MainModuleOtherServices(ABCMainModule):
     @property
     def description(self) -> str:
         return _(
-            "Integrate [active_checks#mrpe|custom nagios plugins] into the "
+            "Integrate [active_checks#mrpe|custom nagios plug-ins] into the "
             "monitoring as active checks."
         )
 
@@ -434,7 +434,7 @@ class MainModuleCheckPlugins(ABCMainModule):
 
     @property
     def title(self) -> str:
-        return _("Catalog of check plugins")
+        return _("Catalog of check plug-ins")
 
     @property
     def icon(self) -> Icon:

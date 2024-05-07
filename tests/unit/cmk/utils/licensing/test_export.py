@@ -12,7 +12,6 @@ from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     RawSubscriptionDetailsForAggregation,
     SubscriptionDetails,
-    SubscriptionDetailsError,
     SubscriptionDetailsForAggregation,
     SubscriptionDetailsLimit,
     SubscriptionDetailsLimitType,
@@ -27,7 +26,7 @@ from cmk.utils.licensing.export import (
     ],
 )
 def test_subscription_details_broken(raw_subscription_details: Mapping[str, Any]) -> None:
-    with pytest.raises(SubscriptionDetailsError):
+    with pytest.raises(KeyError):
         SubscriptionDetails.parse(raw_subscription_details)
 
 

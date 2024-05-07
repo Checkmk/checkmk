@@ -40,10 +40,6 @@ class RawLicenseUsageReport(TypedDict):
 #   '----------------------------------------------------------------------'
 
 
-class SubscriptionDetailsError(Exception):
-    pass
-
-
 _SUBSCRIPTION_LIMITS_FIXED = (
     "3000",
     "7000",
@@ -76,10 +72,7 @@ class SubscriptionDetailsLimitType(Enum):
                 return SubscriptionDetailsLimitType.unlimited
             case "custom":
                 return SubscriptionDetailsLimitType.custom
-            case _:
-                raise SubscriptionDetailsError(
-                    f"Unknown subscription details source {raw_subscription_details_limit_type}"
-                ) from None
+        raise ValueError(raw_subscription_details_limit_type)
 
 
 @dataclass(frozen=True)
@@ -98,17 +91,14 @@ class SubscriptionDetailsLimit:
                 return "2000000+"
             case SubscriptionDetailsLimitType.custom:
                 return ("custom", self.value)
-        raise SubscriptionDetailsError()
 
     @classmethod
     def parse(cls, raw_limit: object) -> SubscriptionDetailsLimit:
         if isinstance(raw_limit, (list, tuple)) and len(raw_limit) == 2:
             return cls._parse(raw_limit[0], raw_limit[1])
-
         if isinstance(raw_limit, (str, int, float)):
             return cls._parse(str(raw_limit), raw_limit)
-
-        raise SubscriptionDetailsError()
+        raise TypeError(raw_limit)
 
     @classmethod
     def _parse(cls, raw_type: str, raw_value: str | int | float) -> SubscriptionDetailsLimit:
@@ -144,16 +134,6 @@ class RawSubscriptionDetailsForConfig(TypedDict):
     subscription_limit: str | tuple[str, int]
 
 
-def _validate_detail_values(raw_subscription_details: dict[str, object]) -> None:
-    for key in [
-        "subscription_start",
-        "subscription_end",
-        "subscription_limit",
-    ]:
-        if raw_subscription_details.get(key) is None:
-            raise SubscriptionDetailsError()
-
-
 @dataclass(frozen=True)
 class SubscriptionDetails:
     start: int
@@ -179,19 +159,13 @@ class SubscriptionDetails:
         # Old:      'subscription_details': ['manual', {...}]
         # Current:  'subscription_details': {"source": "manual", ...}
         # Future:   'subscription_details': {"source": 'from_tribe'}/{"source": "manual", ...}
-        if not raw_subscription_details:
-            raise SubscriptionDetailsError()
-
         if (
             isinstance(raw_subscription_details, (list, tuple))
             and len(raw_subscription_details) == 2
         ):
             _source, details = raw_subscription_details
             if not isinstance(details, dict):
-                raise SubscriptionDetailsError()
-
-            _validate_detail_values(details)
-
+                raise TypeError(details)
             return SubscriptionDetails(
                 start=int(details["subscription_start"]),
                 end=int(details["subscription_end"]),
@@ -199,7 +173,6 @@ class SubscriptionDetails:
             )
 
         if isinstance(raw_subscription_details, dict):
-            _validate_detail_values(raw_subscription_details)
             return SubscriptionDetails(
                 start=int(raw_subscription_details["subscription_start"]),
                 end=int(raw_subscription_details["subscription_end"]),
@@ -208,7 +181,7 @@ class SubscriptionDetails:
                 ),
             )
 
-        raise SubscriptionDetailsError()
+        raise TypeError(raw_subscription_details)
 
 
 # .

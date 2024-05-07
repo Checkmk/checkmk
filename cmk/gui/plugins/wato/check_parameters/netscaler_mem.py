@@ -45,6 +45,6 @@ rulespec_registry.register(
         check_group_name="netscaler_mem",
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_netscaler_mem,
-        title=lambda: _("Netscaler Memory Usage"),
+        title=lambda: _("Netscaler memory usage"),
     )
 )

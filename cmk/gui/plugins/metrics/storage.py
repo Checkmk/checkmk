@@ -494,7 +494,7 @@ metric_info["mem_lnx_hardware_corrupted"] = {
     "unit": "bytes",
 }
 
-# Consumed Host Memory usage is defined as the amount of host memory that is allocated to the virtual machine
+# Consumed Host memory usage is defined as the amount of host memory that is allocated to the virtual machine
 metric_info["mem_esx_host"] = {
     "title": _("Consumed host memory"),
     "color": "#70f038",

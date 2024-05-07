@@ -25,16 +25,6 @@ from cmk.utils.hostaddress import HostAddress, HostName
 logger = logging.getLogger(__name__)
 
 
-def cachefile_age(path: Path) -> float:
-    """Return the time difference between the last modification and now.
-
-    Raises:
-        FileNotFoundError if `path` does not exist.
-
-    """
-    return time.time() - path.stat().st_mtime
-
-
 @dataclass(frozen=True)
 class PiggybackFileInfo:
     source_hostname: HostName
@@ -246,7 +236,7 @@ def _get_piggyback_processed_file_info(
     settings: _TimeSettingsMap,
 ) -> PiggybackFileInfo:
     try:
-        file_age = cachefile_age(piggyback_file_path)
+        file_age = _time_since_last_modification(piggyback_file_path)
     except FileNotFoundError:
         return PiggybackFileInfo(
             source_hostname, piggyback_file_path, False, "Piggyback file is missing", 0
@@ -466,8 +456,8 @@ def cleanup_piggyback_files(time_settings: PiggybackTimeSettings) -> None:
     # Source status files and/or piggybacked data files are cleaned up/deleted
     # if and only if they have exceeded the maximum cache age configured in the
     # global settings or in the rule 'Piggybacked Host Files'."""
-
-    logger.debug("Cleanup piggyback files; time settings: %s.", time_settings)
+    logger.debug("Cleanup piggyback files.")
+    logger.debug("Time settings: %r.", time_settings)
 
     piggybacked_hosts_settings = _get_piggybacked_hosts_settings(time_settings)
 
@@ -513,7 +503,7 @@ def _cleanup_old_source_status_files(
 
     for source_state_file in _get_source_state_files():
         try:
-            file_age = cachefile_age(source_state_file)
+            file_age = _time_since_last_modification(source_state_file)
         except FileNotFoundError:
             continue  # File has been removed, that's OK.
 
@@ -544,7 +534,7 @@ def _cleanup_old_piggybacked_files(
             dst = HostName(piggybacked_host_folder.name)
 
             try:
-                file_age = cachefile_age(piggybacked_host_source)
+                file_age = _time_since_last_modification(piggybacked_host_source)
             except FileNotFoundError:
                 continue
 
@@ -569,6 +559,16 @@ def _cleanup_old_piggybacked_files(
             "Piggyback folder '%s' is empty. Removed it.",
             piggybacked_host_folder,
         )
+
+
+def _time_since_last_modification(path: Path) -> float:
+    """Return the time difference between the last modification and now.
+
+    Raises:
+        FileNotFoundError if `path` does not exist.
+
+    """
+    return time.time() - path.stat().st_mtime
 
 
 def _render_time(value: float | int) -> str:

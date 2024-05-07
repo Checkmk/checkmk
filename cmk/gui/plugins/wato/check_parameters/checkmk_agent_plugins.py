@@ -42,7 +42,7 @@ def _parameter_valuespec_checkmk_agent_plugins():
             (
                 "exclude_pattern",
                 RegExp(
-                    title=_("Regular expression to exclude plugins"),
+                    title=_("Regular expression to exclude plug-ins"),
                     mode=RegExp.infix,
                     help=_(
                         "Plugins or local checks matching this pattern will be excluded from the "
@@ -62,7 +62,7 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_checkmk_agent_plugins,
-        title=lambda: _("Checkmk agent plugins"),
+        title=lambda: _("Checkmk agent plug-ins"),
         # only present during 2.1.0b1. remove in 2.2!
         is_deprecated=True,
     )

@@ -772,7 +772,7 @@ class DiscoveryPageRenderer:
             )
 
         table.cell(_("Host labels"), labels_html, css=["expanding"])
-        table.cell(_("Check Plugin"), plugin_names, css=["plugins"])
+        table.cell(_("Check plug-in"), plugin_names, css=["plugins"])
         return
 
     def _show_discovery_details(self, discovery_result: DiscoveryResult, api_request: dict) -> None:

@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Display information about the Checkmk check plugins
+"""Display information about the Checkmk check plug-ins
 
 The maxium depth of the catalog paths is 3. The top level is being rendered
 like the Setup main menu. The second and third level are being rendered like
@@ -71,7 +71,7 @@ class ModeCheckPlugins(WatoMode):
         self._titles = man_pages.CATALOG_TITLES
 
     def title(self) -> str:
-        return _("Catalog of check plugins")
+        return _("Catalog of check plug-ins")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = super().page_menu(breadcrumb)
@@ -128,7 +128,7 @@ class ModeCheckPluginSearch(WatoMode):
         return "{}: {}".format(_("Check plug-ins matching"), self._search)
 
     def page(self) -> None:
-        search_form(title="%s: " % _("Search for check plugins"), mode="check_plugin_search")
+        search_form(title="%s: " % _("Search for check plug-ins"), mode="check_plugin_search")
 
         for path, manpages in self._get_manpages_after_search():
             _render_manpage_list(self._titles, manpages, path, self._titles.get(path, path))
@@ -300,7 +300,7 @@ class ModeCheckPluginTopic(WatoMode):
         text = ""
         if num_cats > 1:
             text += "%d %s<br>" % (num_cats, _("sub categories"))
-        text += "%d %s" % (num_plugins, _("check plugins"))
+        text += "%d %s" % (num_plugins, _("check plug-ins"))
         return text
 
 
@@ -390,7 +390,7 @@ def _man_page_catalog_topics():
         (
             "generic",
             False,
-            _("Generic check plugins"),
+            _("Generic check plug-ins"),
             _("Plugins for local agent extensions or communication with the agent in general"),
         ),
         (
@@ -514,7 +514,7 @@ class ModeCheckManPage(WatoMode):
         return self._manpage.title
 
     # TODO
-    # We could simply detect on how many hosts and services this plugin
+    # We could simply detect on how many hosts and services this plug-in
     # is currently in use (Livestatus query) and display this information
     # together with a link for searching. Then we can remove the dumb context
     # button, that will always be shown - even if the plug-in is not in use.

@@ -90,8 +90,8 @@ def test_info_off(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None
 
 
 def test_warning(stream: io.StringIO) -> None:
-    console.warning("  hello  ", stream=stream)
-    assert read(stream) == console._format_warning("  hello  ")
+    console.warning("  hello  \n", stream=stream)
+    assert read(stream) == console._format_warning("  hello  \n")
 
 
 def test_error(caplog: pytest.LogCaptureFixture, capsys: pytest.CaptureFixture[str]) -> None:

@@ -83,12 +83,10 @@ def warning(text: str, *args: object, **kwargs: TextIO) -> None:
     log(logging.WARNING, _format_warning(text), *args, stream=stream)
 
 
-# TODO: Inconsistent -> Adds newline and other functions don't
 def _format_warning(text: str) -> str:
-    # type (str) -> str
     stripped = text.lstrip()
     indent = text[: len(text) - len(stripped)]
-    return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}\n"
+    return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}"
 
 
 def error(text: str, *args: object) -> None:

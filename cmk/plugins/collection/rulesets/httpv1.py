@@ -591,7 +591,7 @@ def _parameter_form_active_checks_http() -> Dictionary:
     return Dictionary(
         help_text=Help(
             "Check HTTP/HTTPS service using the plug-in <tt>check_http</tt> from the standard "
-            "Monitoring Plugins. This plug-in tests the HTTP service on the specified host. It can "
+            "monitoring plug-ins. This plug-in tests the HTTP service on the specified host. It can "
             "test normal (HTTP) and secure (HTTPS) servers, follow redirects, search for strings "
             "and regular expressions, check connection times, and report on certificate expiration "
             "times. Please note that this plug-in is deprecated and shall not be used anymore. "

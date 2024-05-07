@@ -66,7 +66,7 @@ class MultisiteBiDatasource:
                             Tuple(
                                 elements=[
                                     TextInput(
-                                        title=_("Automation Username"),
+                                        title=_("Automation user name"),
                                         allow_empty=True,
                                     ),
                                     MigrateToIndividualOrStoredPassword(

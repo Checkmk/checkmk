@@ -1906,7 +1906,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                     label=_("Bulk up to"),
                     unit=_("Notifications"),
                     help=_(
-                        "At most that many Notifications are kept back for bulking. A value of "
+                        "At most that many notifications are kept back for bulking. A value of "
                         "1 essentially turns off notification bulking."
                     ),
                     default_value=1000,

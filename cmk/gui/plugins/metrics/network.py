@@ -838,7 +838,7 @@ metric_info["http_5xx"] = {
 }
 
 metric_info["sip_message_processing_time"] = {
-    "title": _("SIP - Average Incoming Message Processing Time"),
+    "title": _("SIP - Average incoming message processing time"),
     "unit": "s",
     "color": "42/a",
 }
@@ -928,7 +928,7 @@ metric_info["usrv_allocation_latency"] = {
 }
 
 metric_info["sip_avg_holding_time_incoming_messages"] = {
-    "title": _("SIP - Average Holding Time For Incoming Messages"),
+    "title": _("SIP - Average holding time For incoming messages"),
     "unit": "s",
     "color": "42/a",
 }

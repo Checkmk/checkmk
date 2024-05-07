@@ -129,7 +129,7 @@ def _make_parameter_form() -> Dictionary:
             ),
             "hostname": DictElement(
                 parameter_form=String(
-                    title=Title("Alternative Hostname"),
+                    title=Title("Alternative host name"),
                     help_text=Help(
                         "Use a alternative field as Hostname in case of SSL Certificate Problems (eg. the Hostalias )"
                     ),

@@ -134,7 +134,7 @@ def view_editor_general_properties(ds_name: str) -> Dictionary:
             (
                 "layout",
                 DropdownChoice(
-                    title=_("Basic Layout"),
+                    title=_("Basic layout"),
                     choices=layout_registry.get_choices(),
                     default_value="table",
                     sorted=True,

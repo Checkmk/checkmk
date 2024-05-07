@@ -254,7 +254,7 @@ class SiteManagement:
                 "in the connection. For example the LDAP connector synchronizes the users every "
                 "five minutes by default. The interval can be changed for each connection "
                 'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
-                "Please note that the synchronization is only performed on the master site in "
+                "Please note that the synchronization is only performed on the central site in "
                 "distributed setups by default.<br>"
                 "The remote sites don't perform automatic user synchronizations with the "
                 "configured connections. But you can configure each site to either "

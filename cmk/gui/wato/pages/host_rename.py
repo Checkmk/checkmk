@@ -302,7 +302,7 @@ class ModeBulkRenameHost(WatoMode):
 
     def _vs_renaming_config(self):
         return Dictionary(
-            title=_("Bulk Renaming"),
+            title=_("Bulk renaming"),
             render="form",
             elements=[
                 (

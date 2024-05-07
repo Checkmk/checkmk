@@ -39,23 +39,23 @@ class CMKEventConsole:
     @classmethod
     def new_event(cls, attrs: Event) -> Event:
         now = time.time()
-        default_event: Event = {
-            "rule_id": "815",
-            "text": "",
-            "phase": "open",
-            "count": 1,
-            "time": now,
-            "first": now,
-            "last": now,
-            "comment": "",
-            "host": HostName("test-host"),
-            "ipaddress": "127.0.0.1",
-            "application": "",
-            "pid": 0,
-            "priority": 3,
-            "facility": 1,  # user
-            "match_groups": (""),
-        }
+        default_event = Event(
+            rule_id="815",
+            text="",
+            phase="open",
+            count=1,
+            time=now,
+            first=now,
+            last=now,
+            comment="",
+            host=HostName("test-host"),
+            ipaddress="127.0.0.1",
+            application="",
+            pid=0,
+            priority=3,
+            facility=1,  # user
+            match_groups=(""),
+        )
 
         event = default_event.copy()
         event.update(attrs)

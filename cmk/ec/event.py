@@ -334,7 +334,7 @@ def parse_syslog_info(content: str) -> Event:
 
 
 def parse_monitoring_info(line: str) -> Event:
-    event: Event = {}
+    event = Event()
     # line starts with '@'
     if line[11] == ";":
         timestamp_str, sl, contact, rest = line[1:].split(";", 3)
@@ -356,7 +356,7 @@ def parse_monitoring_info(line: str) -> Event:
 
 
 def parse_rfc5424_syslog_info(line: str) -> Event:
-    event: Event = {}
+    event = Event()
     (
         _unused_version,
         timestamp,

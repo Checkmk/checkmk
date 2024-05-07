@@ -948,7 +948,7 @@ class EventServer(ECServerThread):
         now = time.time()
         for rule in self._rules:
             if "expect" in rule:
-                if not self._rule_matcher.event_rule_matches_site(rule, event={}):
+                if not self._rule_matcher.event_rule_matches_site(rule, event=Event()):
                     continue
 
                 # Interval is either a number of seconds, or pair of a number of seconds
@@ -1056,26 +1056,26 @@ class EventServer(ECServerThread):
         else:
             # Create artificial event from scratch. Make sure that all important
             # fields are defined.
-            event = {
-                "rule_id": rule["id"],
-                "text": text,
-                "phase": "open",
-                "count": 1,
-                "time": now,
-                "first": now,
-                "last": now,
-                "comment": "",
-                "host": HostName(""),
-                "ipaddress": "",
-                "application": "",
-                "pid": 0,
-                "priority": 3,
-                "facility": 1,  # user
-                "match_groups": (),
-                "match_groups_syslog_application": (),
-                "core_host": HostName(""),
-                "host_in_downtime": False,
-            }
+            event = Event(
+                rule_id=rule["id"],
+                text=text,
+                phase="open",
+                count=1,
+                time=now,
+                first=now,
+                last=now,
+                comment="",
+                host=HostName(""),
+                ipaddress="",
+                application="",
+                pid=0,
+                priority=3,
+                facility=1,  # user
+                match_groups=(),
+                match_groups_syslog_application=(),
+                core_host=HostName(""),
+                host_in_downtime=False,
+            )
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, MatchGroups())
             self._event_status.new_event(event)
@@ -1671,28 +1671,28 @@ class EventServer(ECServerThread):
 
     def _create_overflow_event(self, ty: LimitKind, event: Event, limit: int) -> Event:
         now = time.time()
-        new_event: Event = {
-            "rule_id": None,
-            "phase": "open",
-            "count": 1,
-            "time": now,
-            "first": now,
-            "last": now,
-            "comment": "",
-            "host": HostName(""),
-            "ipaddress": "",
-            "application": "Event Console",
-            "pid": 0,
-            "priority": 2,  # crit
-            "facility": 1,  # user
-            "match_groups": (),
-            "match_groups_syslog_application": (),
-            "state": 2,  # crit
-            "sl": event["sl"],
-            "core_host": None,
-            "host_in_downtime": False,
-        }
-        self._add_rule_contact_groups_to_event({}, new_event)
+        new_event = Event(
+            rule_id=None,
+            phase="open",
+            count=1,
+            time=now,
+            first=now,
+            last=now,
+            comment="",
+            host=HostName(""),
+            ipaddress="",
+            application="Event Console",
+            pid=0,
+            priority=2,  # crit
+            facility=1,  # user
+            match_groups=(),
+            match_groups_syslog_application=(),
+            state=2,  # crit
+            sl=event["sl"],
+            core_host=None,
+            host_in_downtime=False,
+        )
+        self._add_rule_contact_groups_to_event(Rule(), new_event)
 
         match ty:
             case "overall":
@@ -2942,10 +2942,7 @@ class EventStatus:
         but preserve certain attributes from the original (first)
         event.
         """
-        preserve: Event = {
-            "count": found.get("count", 1) + 1,
-            "first": found["first"],
-        }
+        preserve = Event(count=found.get("count", 1) + 1, first=found["first"])
         # When event is already active then do not change
         # comment or contact information anymore
         if found["phase"] == "open":

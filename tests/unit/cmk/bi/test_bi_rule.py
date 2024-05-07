@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
+import pytest
+
 from cmk.bi.actions import BIStateOfServiceAction
 from cmk.bi.data_fetcher import BIStatusFetcher
 from cmk.bi.packs import BIAggregationPacks
@@ -66,4 +70,26 @@ def test_sample_config_networking_rule(
     assert not computed_tree.assumed_result.acknowledged
     assert computed_tree.assumed_result.in_service_period
 
-    #
+
+@pytest.mark.parametrize(
+    "existing_rules, expected_name",
+    [
+        pytest.param(["networking"], "networking_clone1", id="first clone"),
+        pytest.param(
+            ["networking", "networking_clone1"], "networking_clone2", id="clone already exists"
+        ),
+        pytest.param(
+            ["networking", "networking_clone3"],
+            "networking_clone1",
+            id="not all subsequent clones exist",
+        ),
+    ],
+)
+def test_rule_clone_name(
+    existing_rules: Sequence[str], expected_name: str, bi_packs_sample_config: BIAggregationPacks
+) -> None:
+    rule = bi_packs_sample_config.get_rule("networking")
+    assert rule is not None
+
+    cloned_rule = rule.clone(existing_rules)
+    assert cloned_rule.id == expected_name

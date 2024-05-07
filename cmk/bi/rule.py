@@ -95,8 +95,16 @@ class BIRule(ABCBIRule, ABCWithSchema):
             "computation_options": self.computation_options.serialize(),
         }
 
-    def clone(self) -> "BIRule":
+    def clone(self, existing_rule_ids: Sequence[str]) -> "BIRule":
+        def get_clone_id(cloned_rule_id: str, existing_rule_ids: Sequence[str]) -> str:
+            for index in range(1, len(existing_rule_ids) + 2):
+                new_id = f"{cloned_rule_id}_clone{index}"
+                if new_id not in existing_rule_ids:
+                    return new_id
+            raise ValueError("Could not find a unique clone id")
+
         rule_config = self.schema()().dump(self)
+        rule_config["id"] = get_clone_id(rule_config["id"], existing_rule_ids)
         return BIRule(rule_config)
 
     def get_nodes(self) -> Sequence[BINodeGenerator]:

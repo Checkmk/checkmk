@@ -1243,8 +1243,9 @@ class ModeBIEditRule(ABCBIMode):
         if self._new:
             cloneid = request.var("clone")
             if cloneid is not None:
+                existing_rule_ids = [rule.id for rule in self._bi_packs.get_all_rules()]
                 try:
-                    bi_rule = self.bi_pack.get_rule_mandatory(cloneid).clone()
+                    bi_rule = self.bi_pack.get_rule_mandatory(cloneid).clone(existing_rule_ids)
                 except KeyError:
                     raise MKGeneralException(_("This BI rule does not exist"))
             else:

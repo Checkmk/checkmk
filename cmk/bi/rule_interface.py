@@ -102,7 +102,7 @@ class ABCBIRule(ABCWithSchema):
         raise NotImplementedError()
 
     @abstractmethod
-    def clone(self) -> "ABCBIRule":
+    def clone(self, existing_rule_ids: Sequence[str]) -> "ABCBIRule":
         raise NotImplementedError()
 
     @abstractmethod

@@ -7,7 +7,6 @@
 These tests are a single point of truth about supported macros
 in active check and special agent SSC plugins.
 """
-
 from collections.abc import Iterable, Iterator, Sequence
 
 import pytest
@@ -15,6 +14,7 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
 
 import cmk.base.config as base_config
@@ -39,12 +39,14 @@ DOCUMENTED_ACTIVE_CHECK_MACROS = {
         "$_HOSTADDRESSES_6$",
         "$HOST_FILENAME$",
         "$_HOSTFILENAME$",
-        "$HOST_CUSTOMER$",
-        "$_HOSTCUSTOMER$",
         "$USER1$",
         "$USER2$",
         "$USER3$",
         "$USER4$",
+    ],
+    "CME_only": [
+        "$HOST_CUSTOMER$",
+        "$_HOSTCUSTOMER$",
     ],
     "per_tag": [
         "$HOST__TAG_{name}$",
@@ -86,6 +88,8 @@ DOCUMENTED_SPECIAL_AGENT_MACROS = {
         "$_HOSTADDRESSES_6$",
         "$HOST_FILENAME$",
         "$_HOSTFILENAME$",
+    ],
+    "CME_only": [
         "$HOST_CUSTOMER$",
         "$_HOSTCUSTOMER$",
     ],
@@ -158,7 +162,7 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
         attr[1:].upper() for attr in config_cache.explicit_host_attributes(host_name).keys()
     ]
 
-    expected_macros = set(
+    expected_macros = (
         documented["required"]
         + list(_iter_macros(documented["per_tag"], config_cache.tags(host_name).keys()))
         + list(_iter_macros(documented["per_label"], config_cache.labels(host_name).keys()))
@@ -166,6 +170,9 @@ def test_active_checks_macros(config_cache: ConfigCache, resource_cfg_file: None
         + list(_iter_macros(documented["per_custom_host_attribute"], custom_attrs))
         + list(_iter_macros(documented["per_custom_macro"], ["CUSTOM_MACRO"]))
     )
+
+    if cmk_version.edition().short == "cme":
+        expected_macros.extend(documented["CME_only"])
 
     assert len(host_config.macros.keys()) == len(expected_macros)
     assert set(host_config.macros.keys()) == set(expected_macros)
@@ -191,13 +198,16 @@ def test_special_agent_macros(
         attr[1:].upper() for attr in config_cache.explicit_host_attributes(host_name).keys()
     ]
 
-    expected_macros = set(
+    expected_macros = (
         documented["required"]
         + list(_iter_macros(documented["per_tag"], config_cache.tags(host_name).keys()))
         + list(_iter_macros(documented["per_label"], config_cache.labels(host_name).keys()))
         + list(_iter_macros(documented["per_label_source"], label_sources))
         + list(_iter_macros(documented["per_custom_host_attribute"], custom_attrs))
     )
+
+    if cmk_version.edition().short == "cme":
+        expected_macros.extend(documented["CME_only"])
 
     assert len(host_config.macros.keys()) == len(expected_macros)
     assert set(host_config.macros.keys()) == set(expected_macros)

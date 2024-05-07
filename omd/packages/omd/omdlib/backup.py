@@ -75,7 +75,7 @@ def get_exclude_patterns(options: CommandOptions) -> list[str]:
     excludes.append("*.mk.new*")
     excludes.append("var/log/.liveproxyd.state.new*")
 
-    # exclude the "cache" / working directory for the agent bakery
+    # exclude the "cache" / working directory for the Agent Bakery
     excludes.append("var/check_mk/agents/.files_cache/*")
 
     # exclude section cache because files may vanish during backup. It would

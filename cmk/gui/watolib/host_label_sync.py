@@ -133,7 +133,7 @@ def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
 class DiscoveredHostLabelSyncJob(BackgroundJob):
     """This job synchronizes the discovered host labels from remote sites to the central site
 
-    Currently they are only needed for the agent bakery, but may be used in other places in the
+    Currently they are only needed for the Agent Bakery, but may be used in other places in the
     future.
     """
 

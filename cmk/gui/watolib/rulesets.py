@@ -865,7 +865,7 @@ class Ruleset:
     def _matches_group_search(self, search_options: SearchOptions) -> bool:
         # All rulesets are in a single group. Only the two rulesets "agent_ports" and
         # "agent_encryption" are in the RulespecGroupAgentCMKAgent but are also used
-        # by the agent bakery. Users often try to find the ruleset in the wrong group.
+        # by the Agent Bakery. Users often try to find the ruleset in the wrong group.
         # For this reason we make the ruleset available in both groups.
         # Instead of making the ruleset specification more complicated for this special
         # case we hack it here into the ruleset search which is used to populate the

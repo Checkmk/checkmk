@@ -571,6 +571,14 @@ function listof_get_new_entry_html_code(
     const encoded_magic = encodeURIComponent(magic).replace("!", "%21");
 
     let html_code = oPrototype.innerHTML;
+
+    // Remove the "_first_elem" string that's appended to the prototype's indices, in case there is
+    // a specific first element rendering. We do not need it for the visible entries and this makes
+    // retrieving the data from HTTP vars easier.
+    html_code = html_code.replace(
+        new RegExp(magic + "_first_elem", "g"),
+        magic
+    );
     // Replace the magic in simple strings
     ["_entry_", "_indexof_", "_orig_indexof_", "_"].forEach(element => {
         [magic, encoded_magic].forEach(magic => {
@@ -630,6 +638,21 @@ function listof_get_new_entry_html_code(
                 "&quot;, &quot;" +
                 str_count +
                 "&quot;)",
+        ],
+        [
+            "label_group_delete\\(&quot;" +
+                varprefix +
+                "&quot;, &quot;" +
+                magic +
+                "&quot;",
+            // we do not escape the bracket here as we cannot know all the function arguments and
+            // thus cannot close the brackets. escaping only the opening bracket would make the
+            // function call fail.
+            "label_group_delete(&quot;" +
+                varprefix +
+                "&quot;, &quot;" +
+                str_count +
+                "&quot;",
         ],
     ];
     complex_replacements.forEach(element => {
@@ -1630,15 +1653,21 @@ export function label_group_delete(
                     }
                 }
             } else {
-                // first element has a label -> remove dropdown and put in a label span
+                // first element has a label -> remove dropdown and put in a label span with hidden
+                // input for the boolean
                 const next_bool_div =
                     next_row_select.parentNode as HTMLDivElement;
+                const hidden_input = document.getElementsByName(
+                    varprefix + "_" + index + "_bool"
+                )![0] as HTMLInputElement;
+                hidden_input.name = next_row_select.name;
                 next_bool_div.removeChild(next_row_select.nextSibling!); // select2 span
                 next_bool_div.removeChild(next_row_select);
                 next_bool_div.insertBefore(
                     tr.getElementsByClassName("vs_label")[0],
                     next_bool_div.lastChild
                 );
+                next_bool_div.append(hidden_input);
             }
         }
     }

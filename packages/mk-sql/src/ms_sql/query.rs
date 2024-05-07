@@ -172,3 +172,17 @@ pub async fn obtain_instance_name(client: &mut Client) -> Result<Option<Instance
         .map(str::to_string)
         .map(|s| s.into()))
 }
+
+pub async fn obtain_system_user(client: &mut Client) -> Result<Option<String>> {
+    let rows = run_custom_query(client, "select System_User").await?;
+    if rows.is_empty() || rows[0].is_empty() {
+        log::warn!("Can't obtain system user with query `select SystemUser`");
+        return Ok(None);
+    }
+    let row = &rows[0];
+    Ok(row[0]
+        .try_get::<&str, usize>(0)
+        .ok()
+        .flatten()
+        .map(str::to_string))
+}

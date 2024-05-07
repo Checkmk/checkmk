@@ -14,7 +14,8 @@ use crate::config::{
 };
 use crate::emit;
 use crate::ms_sql::query::{
-    obtain_computer_name, obtain_instance_name, run_custom_query, run_known_query, Answer, Column,
+    obtain_computer_name, obtain_instance_name, obtain_system_user, run_custom_query,
+    run_known_query, Answer, Column,
 };
 use crate::ms_sql::sqls;
 use crate::setup::Env;
@@ -325,6 +326,20 @@ impl SqlInstance {
         log::trace!("{:?} @ {:?}", self, endpoint);
         let body = match self.create_client(endpoint, None).await {
             Ok(mut client) => {
+                log::info!(
+                    "PROCESSING instance '{:?}' by '{}' sql name: '{}'",
+                    self.full_name(),
+                    obtain_system_user(&mut client)
+                        .await
+                        .ok()
+                        .unwrap_or_default()
+                        .unwrap_or("???".to_string()),
+                    obtain_instance_name(&mut client)
+                        .await
+                        .ok()
+                        .unwrap_or_default()
+                        .unwrap_or(InstanceName::from("???".to_string()))
+                );
                 self._generate_sections(&mut client, endpoint, sections)
                     .await
             }
@@ -356,7 +371,7 @@ impl SqlInstance {
         }
     }
 
-    pub async fn _generate_sections(
+    async fn _generate_sections(
         &self,
         client: &mut Client,
         endpoint: &Endpoint,
@@ -379,7 +394,7 @@ impl SqlInstance {
         endpoint: &Endpoint,
         database: Option<String>,
     ) -> Result<Client> {
-        log::info!("create_client {}", self.name);
+        log::info!("create client {}", self.name);
         let (auth, conn) = endpoint.split();
         let client = match auth.auth_type() {
             AuthType::SqlServer | AuthType::Windows => {
@@ -1902,8 +1917,13 @@ async fn _obtain_instance_builders(
                 }
                 builders = vec![builder];
             }
-            _ => {
-                log::error!("Can't add current instance");
+            Ok(None) => {
+                log::warn!(
+                    "No instance found in registry, this means you have problem with permissions"
+                );
+            }
+            Err(err) => {
+                log::error!("Can't confirm current instance: {err}");
                 return vec![];
             }
         };

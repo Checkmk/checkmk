@@ -376,7 +376,7 @@ async fn create_named_instance_client(config: Config) -> anyhow::Result<Client> 
 }
 
 async fn connect_via_tcp(config: Config) -> Result<Client> {
-    log::info!("Connection to addr {}", config.get_addr());
+    log::info!("Connecting to addr '{}'...", config.get_addr());
     let tcp = TcpStream::connect(config.get_addr()).await.map_err(|e| {
         anyhow::anyhow!(
             "{} address:{} error:`{}`",
@@ -385,7 +385,7 @@ async fn connect_via_tcp(config: Config) -> Result<Client> {
             e
         )
     })?;
-    log::info!("Connected to addr {}", config.get_addr());
+    log::info!("Connected to addr '{}'", config.get_addr());
     tcp.set_nodelay(true)?; // in documentation and examples
 
     // To be able to use Tokio's tcp, we're using the `compat_write` from

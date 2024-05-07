@@ -124,7 +124,7 @@ def _discover_host_labels_for_source_type(
     try:
         parsed_results = _all_parsing_results(host_key, providers)
 
-        console.vverbose(
+        console.debug(
             "Trying host label discovery with: %s\n"
             % ", ".join(str(r.section_name) for r in parsed_results)
         )
@@ -140,7 +140,7 @@ def _discover_host_labels_for_source_type(
 
             try:
                 for label in host_label_plugin.function(**kwargs):
-                    console.vverbose(f"  {label.name}: {label.value} ({section_name})\n")
+                    console.debug(f"  {label.name}: {label.value} ({section_name})\n")
                     host_labels[label.name] = _HostLabel(label.name, label.value, section_name)
             except (KeyboardInterrupt, MKTimeout):
                 raise

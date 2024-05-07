@@ -54,9 +54,6 @@ def debug(text: str, *args: object, **kwargs: TextIO) -> None:
     log(logging.DEBUG, text, *args, **kwargs)
 
 
-vverbose = debug
-
-
 def verbose(text: str, *args: object, **kwargs: TextIO) -> None:
     """Output text if opt_verbose is set (-v).
 

@@ -97,13 +97,13 @@ class WalkCache(
         for path in self._iterfiles():
             fetchoid, context_hash = self._name2oid(path.name)
 
-            console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
+            console.debug(f"  Loading {fetchoid} from walk cache {path}\n")
             try:
                 read_walk = self._read_row(path)
             except MKTimeout:
                 raise
             except Exception:
-                console.vverbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                console.debug(f"  Failed to load {fetchoid} from walk cache {path}\n")
                 continue
 
             if read_walk is not None:
@@ -117,7 +117,7 @@ class WalkCache(
                 continue
 
             path = self._path / self._oid2name(fetchoid, context_hash)
-            console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
+            console.debug(f"  Saving walk of {fetchoid} to walk cache {path}\n")
             self._write_row(path, rowinfo)
 
 

@@ -61,17 +61,17 @@ def test_verbose_default_stream_off(
     assert not captured.err
 
 
-def test_vverbose_on(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
+def test_debug_on(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.DEBUG, logger="cmk.base")
 
-    console.vverbose("hello", stream=stream)
+    console.debug("hello", stream=stream)
     assert read(stream) == "hello"
 
 
-def test_vverbose_off(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
+def test_debug_off(stream: io.StringIO, caplog: pytest.LogCaptureFixture) -> None:
     caplog.set_level(logging.DEBUG + 1, logger="cmk.base")
 
-    console.vverbose("hello", stream=stream)
+    console.debug("hello", stream=stream)
     assert not read(stream)
 
 

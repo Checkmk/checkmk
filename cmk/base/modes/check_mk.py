@@ -2345,7 +2345,7 @@ def mode_check(
             ValueStoreManager(hostname), store_changes=not dry_run
         ) as value_store_manager,
     ):
-        console.vverbose("Checkmk version %s\n", cmk_version.__version__)
+        console.debug("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_plugins = CheckPluginMapper(
             config_cache,

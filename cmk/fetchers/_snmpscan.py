@@ -65,7 +65,7 @@ def _snmp_scan(
     snmp_cache.initialize_single_oid_cache(
         backend.config.hostname, backend.config.ipaddress, cache_dir=scan_config.oid_cache_dir
     )
-    console.vverbose("  SNMP scan:\n")
+    console.debug("  SNMP scan:\n")
 
     if scan_config.missing_sys_description:
         _fake_description_object()
@@ -106,7 +106,7 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
 
 def _fake_description_object() -> None:
     """Fake OID values to prevent issues with a lot of scan functions"""
-    console.vverbose(
+    console.debug(
         '       Skipping system description OID (Set %s and %s to "")\n',
         OID_SYS_DESCR,
         OID_SYS_OBJ,
@@ -184,7 +184,7 @@ def _output_snmp_check_plugins(
         collection_out = " ".join(str(n) for n in sorted(collection))
     else:
         collection_out = "-"
-    console.vverbose(
+    console.debug(
         "   %-35s%s%s%s%s\n"
         % (
             title,

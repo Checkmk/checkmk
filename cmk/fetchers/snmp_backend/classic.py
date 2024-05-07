@@ -44,7 +44,7 @@ class ClassicSNMPBackend(SNMPBackend):
             oid_prefix,
         ]
 
-        console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
+        console.debug("Running '%s'\n" % subprocess.list2cmdline(command))
 
         with subprocess.Popen(
             command,
@@ -72,7 +72,7 @@ class ClassicSNMPBackend(SNMPBackend):
             return None
         item = parts[0]
         value = parts[1].strip()
-        console.vverbose("SNMP answer: ==> [%s]\n" % value)
+        console.debug("SNMP answer: ==> [%s]\n" % value)
         if (
             value.startswith("No more variables")
             or value.startswith("End of MIB")
@@ -105,7 +105,7 @@ class ClassicSNMPBackend(SNMPBackend):
         portspec = self._snmp_port_spec()
         command = self._snmp_base_command("snmpwalk", context) + ["-Cc"]
         command += ["-OQ", "-OU", "-On", "-Ot", f"{protospec}{ipaddress}{portspec}", oid]
-        console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
+        console.debug("Running '%s'\n" % subprocess.list2cmdline(command))
 
         rowinfo: SNMPRowInfo = []
         with subprocess.Popen(

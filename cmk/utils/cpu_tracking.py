@@ -64,12 +64,12 @@ class CPUTracker:
 
     def __enter__(self) -> CPUTracker:
         self._start = Snapshot.take()
-        console.vverbose("[cpu_tracking] Start [%x]\n", id(self))
+        console.debug("[cpu_tracking] Start [%x]\n", id(self))
         return self
 
     def __exit__(self, *exc_info: object) -> None:
         self._end = Snapshot.take()
-        console.vverbose("[cpu_tracking] Stop [%x - %s]\n", id(self), self.duration)
+        console.debug("[cpu_tracking] Stop [%x - %s]\n", id(self), self.duration)
 
     @property
     def duration(self) -> Snapshot:

@@ -329,7 +329,7 @@ def _collect_inventory_plugin_items(
                     providers, HostKey(host_name, source_type), inventory_plugin.sections
                 )
             ):
-                console.vverbose(
+                console.debug(
                     f" {tty.yellow}{tty.bold}{plugin_name}{tty.normal}: skipped (no data)\n"
                 )
                 continue

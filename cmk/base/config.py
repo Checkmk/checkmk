@@ -118,6 +118,7 @@ from cmk.checkengine.parser import (
     SectionStore,
     SNMPParser,
 )
+from cmk.checkengine.summarize import SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config
@@ -1949,6 +1950,13 @@ class ConfigCache:
 
     def parser_factory(self) -> ParserFactory:
         return ParserFactory(self, self.ruleset_matcher)
+
+    def summary_config(self, host_name: HostName, source_id: str) -> SummaryConfig:
+        return SummaryConfig(
+            exit_spec=self.exit_code_spec(host_name, source_id),
+            time_settings=self.get_piggybacked_hosts_time_settings(piggybacked_hostname=host_name),
+            is_piggyback_host=self.is_piggyback_host(host_name),
+        )
 
     def make_parent_scan_config(self, host_name: HostName) -> ParentScanConfig:
         return ParentScanConfig(

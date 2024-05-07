@@ -30,7 +30,6 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.misc import pnp_cleanup
-from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.prediction import make_updated_predictions, PredictionStore
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
@@ -58,7 +57,6 @@ from cmk.checkengine.checkresults import (
     UnsubmittableServiceCheckResult,
 )
 from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
-from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
 from cmk.checkengine.legacy import LegacyCheckParameters
@@ -71,7 +69,7 @@ from cmk.checkengine.sectionparserutils import (
     get_section_kwargs,
 )
 from cmk.checkengine.submitters import ServiceState
-from cmk.checkengine.summarize import summarize
+from cmk.checkengine.summarize import summarize, SummaryConfig
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
@@ -234,12 +232,8 @@ class CMKSummarizer:
             _summarize_host_sections(
                 host_sections,
                 source,
+                self.config_cache.summary_config(source.hostname, source.ident),
                 override_non_ok_state=self.override_non_ok_state,
-                exit_spec=self.config_cache.exit_code_spec(source.hostname, source.ident),
-                time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
-                    piggybacked_hostname=source.hostname
-                ),
-                is_piggyback=self.config_cache.is_piggyback_host(source.hostname),
             )
             for source, host_sections in host_sections
         ]
@@ -248,11 +242,9 @@ class CMKSummarizer:
 def _summarize_host_sections(
     host_sections: result.Result[HostSections, Exception],
     source: SourceInfo,
+    config: SummaryConfig,
     *,
     override_non_ok_state: ServiceState | None = None,
-    exit_spec: ExitSpec,
-    time_settings: PiggybackTimeSettings,
-    is_piggyback: bool,
 ) -> ActiveCheckResult:
     return ActiveCheckResult.from_subresults(
         *(
@@ -271,9 +263,7 @@ def _summarize_host_sections(
                     source.hostname,
                     source.ipaddress,
                     host_sections,
-                    exit_spec=exit_spec,
-                    time_settings=time_settings,
-                    is_piggyback=is_piggyback,
+                    config,
                     fetcher_type=source.fetcher_type,
                 )
             )

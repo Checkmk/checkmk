@@ -651,11 +651,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 hostname,
                 ipaddress,
                 host_sections,
-                exit_spec=config_cache.exit_code_spec(hostname, source_info.ident),
-                time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
-                    piggybacked_hostname=hostname,
-                ),
-                is_piggyback=config_cache.is_piggyback_host(hostname),
+                config_cache.summary_config(hostname, source_info.ident),
                 fetcher_type=source_info.fetcher_type,
             )
             if any(r.state != 0 for r in source_results):

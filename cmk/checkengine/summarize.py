@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 from typing import Protocol
 
 import cmk.utils.resulttype as result
@@ -24,7 +25,16 @@ from cmk.checkengine.exitspec import ExitSpec
 from cmk.checkengine.fetcher import FetcherType, SourceInfo
 from cmk.checkengine.parser import HostSections
 
-__all__ = ["summarize", "SummarizerFunction"]
+__all__ = ["summarize", "SummarizerFunction", "SummaryConfig"]
+
+
+@dataclass(frozen=True)
+class SummaryConfig:
+    """User config for summary."""
+
+    exit_spec: ExitSpec
+    time_settings: PiggybackTimeSettings
+    is_piggyback_host: bool
 
 
 class SummarizerFunction(Protocol):
@@ -38,27 +48,25 @@ def summarize(
     hostname: HostName,
     ipaddress: HostAddress | None,
     host_sections: result.Result[HostSections, Exception],
+    config: SummaryConfig,
     *,
-    exit_spec: ExitSpec,
-    time_settings: PiggybackTimeSettings,
-    # TODO(ml): Check if the next two parameters are redundant.
+    # TODO(ml): Check if this is redundant with SummaryConfig.is_piggyback
     fetcher_type: FetcherType,
-    is_piggyback: bool,
 ) -> Sequence[ActiveCheckResult]:
     if fetcher_type is FetcherType.PIGGYBACK:
         return host_sections.fold(
             ok=lambda _: summarize_piggyback(
                 hostname=hostname,
                 ipaddress=ipaddress,
-                time_settings=time_settings,
-                is_piggyback=is_piggyback,
+                time_settings=config.time_settings,
+                is_piggyback=config.is_piggyback_host,
             ),
-            error=lambda exc: summarize_failure(exit_spec, exc),
+            error=lambda exc: summarize_failure(config.exit_spec, exc),
         )
 
     return host_sections.fold(
-        ok=lambda _: summarize_success(exit_spec),
-        error=lambda exc: summarize_failure(exit_spec, exc),
+        ok=lambda _: summarize_success(config.exit_spec),
+        error=lambda exc: summarize_failure(config.exit_spec, exc),
     )
 
 

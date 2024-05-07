@@ -521,7 +521,6 @@ def test_non_trivial_graph_declarations() -> None:
         "ram_swap_used",
         "savings",
         "shrinking",
-        "size_per_process",
         "time_offset",
         "used_cpu_time",
         "util_average_1",

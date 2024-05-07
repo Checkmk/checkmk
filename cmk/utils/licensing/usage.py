@@ -25,6 +25,7 @@ from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
     LicensingProtocolVersion,
+    make_parser,
     RawLicenseUsageExtensions,
     RawLicenseUsageReport,
     RawLicenseUsageSample,
@@ -376,9 +377,9 @@ class LocalLicenseUsageHistory:
         if not isinstance(protocol_version := raw_report.get("VERSION"), str):
             raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
 
-        parser = LicenseUsageSample.get_parser(protocol_version)
+        parser = make_parser(protocol_version).parse_sample
         return cls(
-            parser(raw_sample, instance_id=instance_id, site_hash=site_hash)
+            parser(instance_id, site_hash, raw_sample)
             for raw_sample in raw_report.get("history", [])
         )
 
@@ -393,8 +394,8 @@ class LocalLicenseUsageHistory:
         if not isinstance(protocol_version := raw_report.get("VERSION"), str):
             raise TypeError("Wrong protocol version type: %r" % type(protocol_version))
 
-        parser = LicenseUsageSample.get_parser(protocol_version)
-        return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
+        parser = make_parser(protocol_version).parse_sample
+        return cls(parser(None, "", raw_sample) for raw_sample in raw_report.get("history", []))
 
     def add_sample(self, sample: LicenseUsageSample) -> None:
         if sample.sample_time in {s.sample_time for s in self._samples}:

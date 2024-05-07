@@ -570,6 +570,8 @@ def _cse_config(config: Path, content: bytes | str) -> Iterator[None]:
 
 @contextmanager
 def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
+    from cmk.gui.cse.userdb.cognito import oauth2
+
     idp_url = "http://localhost:5551"
     makedirs("/etc/cse", sudo=True)
     assert os.path.exists("/etc/cse")
@@ -584,7 +586,7 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
         global_content = f.read()
 
     uap_config = Path("/etc/cse/admin_panel_url.json")
-    uap_content = f'{{"admin_panel_url": "{site_url}"}}'
+    uap_content = oauth2.AdminPanelUrl(uap_url="https://some.test.url/uap").model_dump_json()
 
     with (
         _cse_config(cognito_config, cognito_content),

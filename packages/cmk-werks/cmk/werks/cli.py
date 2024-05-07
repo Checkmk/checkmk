@@ -508,7 +508,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
     # in one class are orred. Multiple types are anded.
 
     werks: list[Werk] = list(load_werks().values())
-    versions = {werk.content.metadata["version"] for werk in werks}
+    versions = sorted({werk.content.metadata["version"] for werk in werks})
 
     filters: dict[str, list[str]] = {}
 

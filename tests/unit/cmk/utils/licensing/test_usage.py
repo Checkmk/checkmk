@@ -19,7 +19,6 @@ from cmk.utils.licensing.export import (
     LicenseUsageSample,
     LicensingProtocolVersion,
     RawLicenseUsageReport,
-    UnknownSampleParserError,
 )
 from cmk.utils.licensing.usage import (
     _load_extensions,
@@ -793,7 +792,7 @@ def test_license_usage_report(
 
 
 def test_license_usage_report_from_remote() -> None:
-    with pytest.raises(UnknownSampleParserError) as e:
+    with pytest.raises(ValueError) as e:
         LocalLicenseUsageHistory.parse(
             {
                 "VERSION": "-1",

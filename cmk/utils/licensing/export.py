@@ -264,10 +264,6 @@ class LicenseUsageSampleParser(Protocol):
     ) -> LicenseUsageSample: ...
 
 
-class UnknownSampleParserError(Exception):
-    pass
-
-
 def _parse_platform(platform: str) -> str:
     # Restrict platform string to 50 chars due to the restriction of the license DB field.
     return platform[:50]
@@ -333,8 +329,7 @@ class LicenseUsageSample:
                 return cls._parse_v2_0
             case "3.0":
                 return cls._parse_v3_0
-            case _:
-                raise UnknownSampleParserError("Unknown protocol version: %r" % protocol_version)
+        raise ValueError("Unknown protocol version: %r" % protocol_version)
 
     @classmethod
     def _parse_v1_0(

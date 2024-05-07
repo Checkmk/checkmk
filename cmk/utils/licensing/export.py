@@ -295,7 +295,7 @@ class UnknownSampleParserError(Exception):
     pass
 
 
-def _restrict_platform(platform: str) -> str:
+def _parse_platform(platform: str) -> str:
     # Restrict platform string to 50 chars due to the restriction of the license DB field.
     return platform[:50]
 
@@ -383,7 +383,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=_restrict_platform(raw_sample["platform"]),
+            platform=_parse_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -420,7 +420,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=_restrict_platform(raw_sample["platform"]),
+            platform=_parse_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -457,7 +457,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=_restrict_platform(raw_sample["platform"]),
+            platform=_parse_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -497,7 +497,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=_restrict_platform(raw_sample["platform"]),
+            platform=_parse_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -537,7 +537,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=_restrict_platform(raw_sample["platform"]),
+            platform=_parse_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -577,7 +577,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=_restrict_platform(raw_sample["platform"]),
+            platform=_parse_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],

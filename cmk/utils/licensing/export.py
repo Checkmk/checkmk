@@ -144,6 +144,16 @@ class RawSubscriptionDetailsForConfig(TypedDict):
     subscription_limit: str | tuple[str, int]
 
 
+def _validate_detail_values(raw_subscription_details: dict[str, object]) -> None:
+    for key in [
+        "subscription_start",
+        "subscription_end",
+        "subscription_limit",
+    ]:
+        if raw_subscription_details.get(key) is None:
+            raise SubscriptionDetailsError()
+
+
 @dataclass(frozen=True)
 class SubscriptionDetails:
     start: int
@@ -180,7 +190,7 @@ class SubscriptionDetails:
             if not isinstance(details, dict):
                 raise SubscriptionDetailsError()
 
-            cls._validate_detail_values(details)
+            _validate_detail_values(details)
 
             return SubscriptionDetails(
                 start=int(details["subscription_start"]),
@@ -189,7 +199,7 @@ class SubscriptionDetails:
             )
 
         if isinstance(raw_subscription_details, dict):
-            cls._validate_detail_values(raw_subscription_details)
+            _validate_detail_values(raw_subscription_details)
             return SubscriptionDetails(
                 start=int(raw_subscription_details["subscription_start"]),
                 end=int(raw_subscription_details["subscription_end"]),
@@ -199,16 +209,6 @@ class SubscriptionDetails:
             )
 
         raise SubscriptionDetailsError()
-
-    @staticmethod
-    def _validate_detail_values(raw_subscription_details: dict[str, object]) -> None:
-        for key in [
-            "subscription_start",
-            "subscription_end",
-            "subscription_limit",
-        ]:
-            if raw_subscription_details.get(key) is None:
-                raise SubscriptionDetailsError()
 
 
 # .
@@ -295,6 +295,11 @@ class UnknownSampleParserError(Exception):
     pass
 
 
+def _restrict_platform(platform: str) -> str:
+    # Restrict platform string to 50 chars due to the restriction of the license DB field.
+    return platform[:50]
+
+
 @dataclass(frozen=True)
 class LicenseUsageSample:
     instance_id: UUID | None
@@ -378,7 +383,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=cls._restrict_platform(raw_sample["platform"]),
+            platform=_restrict_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -415,7 +420,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=cls._restrict_platform(raw_sample["platform"]),
+            platform=_restrict_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -452,7 +457,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=cls._restrict_platform(raw_sample["platform"]),
+            platform=_restrict_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -492,7 +497,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=cls._restrict_platform(raw_sample["platform"]),
+            platform=_restrict_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -532,7 +537,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=cls._restrict_platform(raw_sample["platform"]),
+            platform=_restrict_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -572,7 +577,7 @@ class LicenseUsageSample:
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
-            platform=cls._restrict_platform(raw_sample["platform"]),
+            platform=_restrict_platform(raw_sample["platform"]),
             is_cma=raw_sample["is_cma"],
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
@@ -588,11 +593,6 @@ class LicenseUsageSample:
             num_synthetic_tests_excluded=raw_sample["num_synthetic_tests_excluded"],
             extension_ntop=extensions.ntop,
         )
-
-    @staticmethod
-    def _restrict_platform(platform: str) -> str:
-        # Restrict platform string to 50 chars due to the restriction of the license DB field.
-        return platform[:50]
 
 
 # .

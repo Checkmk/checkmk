@@ -988,13 +988,13 @@ metric_info["avauth_failed_requests"] = {
 }
 
 metric_info["edge_udp_failed_auth"] = {
-    "title": _("UDP Authentication Failures"),
+    "title": _("UDP Authentication failures"),
     "unit": "1/s",
     "color": "42/a",
 }
 
 metric_info["edge_tcp_failed_auth"] = {
-    "title": _("A/V Edge - TCP Authentication Failures"),
+    "title": _("A/V Edge - TCP Authentication failures"),
     "unit": "1/s",
     "color": "42/a",
 }
@@ -1766,7 +1766,7 @@ graph_info["page_activity"] = {
 }
 
 graph_info["authentication_failures"] = {
-    "title": _("Authentication Failures"),
+    "title": _("Authentication failures"),
     "metrics": [
         ("edge_udp_failed_auth", "line"),
         ("edge_tcp_failed_auth", "line"),

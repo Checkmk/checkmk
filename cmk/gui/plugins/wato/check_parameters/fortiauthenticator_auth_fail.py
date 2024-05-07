@@ -38,6 +38,6 @@ rulespec_registry.register(
         check_group_name="fortiauthenticator_auth_fail",
         group=RulespecGroupCheckParametersNetworking,
         parameter_valuespec=_parameter_valuespec_fortiauthenticator,
-        title=lambda: _("Fortinet FortiAuthenticator Authentication Failures"),
+        title=lambda: _("Fortinet FortiAuthenticator Authentication failures"),
     )
 )

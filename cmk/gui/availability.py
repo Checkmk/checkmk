@@ -1001,6 +1001,8 @@ def get_availability_rawdata(
         columns.append("log_output")
     if include_long_output:
         columns.append("long_log_output")
+        columns.append("service_check_command")
+        columns.append("service_custom_variables")
     if "use_display_name" in avoptions["labelling"]:
         columns.append("service_display_name")
     if "show_alias" in avoptions["labelling"]:
@@ -2151,7 +2153,14 @@ def layout_timeline(  # pylint: disable=too-many-branches
                 if "log_output" in row and row["log_output"]:
                     table[-1]["log_output"] = row["log_output"]
                 if "long_log_output" in row and row["long_log_output"]:
-                    table[-1]["long_log_output"] = row["long_log_output"]
+                    long_log_output = row["long_log_output"]
+                    # see f062002476470213a35787cfd4dd5e676e3fa53d
+                    if (
+                        row["service_check_command"] == "check_mk-ps"
+                        and row["service_custom_variables"].get("ESCAPE_PLUGIN_OUTPUT", "1") == "0"
+                    ):
+                        long_log_output = long_log_output.replace("&bsol%3B", "\\")
+                    table[-1]["long_log_output"] = long_log_output
 
             # If the width is very small then we group several phases into
             # one single "chaos period".

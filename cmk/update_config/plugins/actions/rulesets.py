@@ -316,7 +316,16 @@ def _transform_wato_rulesets_params(
     all_rulesets: RulesetCollection,
 ) -> None:
     for ruleset in all_rulesets.get_rulesets().values():
-        valuespec = ruleset.valuespec()
+        try:
+            valuespec = ruleset.valuespec()
+        except Exception:
+            logger.error(
+                "ERROR: Failed to load Ruleset: %s. "
+                "There is likely an error in the implementation.",
+                ruleset.name,
+            )
+            logger.exception("This is the exception: ")
+            continue
         for folder, folder_index, rule in ruleset.get_rules():
             try:
                 rule.value = valuespec.transform_value(rule.value)

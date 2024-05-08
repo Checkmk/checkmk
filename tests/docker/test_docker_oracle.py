@@ -51,7 +51,13 @@ class OracleDatabase:
 
         self.IMAGE: Final[str] = "IMAGE_ORACLE_DB_23C"
         self.INIT_CMD: Final[str] = "/etc/rc.d/init.d/oracle-free-23c"  # must match container
-        self.ORACLE_HOME: Final[str] = "/opt/oracle/product/23c/dbhomeFree"  # must match container
+        self.image = self._pull_image()
+        # get predefined image environment
+        self.default_environment = {
+            str(_.split("=", 1)[0]): str(_.split("=", 1)[-1])
+            for _ in self.image.attrs["Config"]["Env"]
+        }
+        self.ORACLE_HOME: Final[str] = self.default_environment.get("ORACLE_HOME", "")
         self.SID: Final[str] = "FREE"  # Cannot be changed in FREE edition!
         self.PDB: Final[str] = "FREEPDB1"  # Cannot be changed in FREE edition!
         self.SERVICE_PREFIX: Final[str] = "ORA FREE"  # Cannot be changed in FREE edition!
@@ -129,7 +135,6 @@ class OracleDatabase:
             self.volumes.append(f"{self.ORADATA}:{self.DATA}")
 
         self._init_envfiles()
-        self.image = self._pull_image()
         self.container = self._start_container()
         self._setup_container()
 

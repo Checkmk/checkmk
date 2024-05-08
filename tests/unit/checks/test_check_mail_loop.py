@@ -12,6 +12,55 @@ from .checktestlib import ActiveCheck
 pytestmark = pytest.mark.checks
 
 
+def test_check_mail_loop_basic() -> None:
+    raw_params = {
+        "item": "MailLoop_imap",
+        "subject": "Some subject",
+        "send": (
+            "SMTP",
+            {
+                "server": "smtp.gmx.de",
+                "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+                "connection": {"tls": True, "port": 42},
+            },
+        ),
+        "fetch": (
+            "IMAP",
+            {
+                "server": "imap.gmx.de",
+                "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                "connection": {"disable_tls": False, "port": 123},
+            },
+        ),
+        "mail_from": "me_from@gmx.de",
+        "mail_to": "me_to@gmx.de",
+        "connect_timeout": 23,
+        "duration": (93780, 183840),
+    }
+
+    assert ActiveCheck("check_mail_loop").run_argument_function(raw_params) == [
+        "--fetch-protocol=IMAP",
+        "--fetch-server=imap.gmx.de",
+        "--fetch-tls",
+        "--fetch-port=123",
+        "--fetch-username=me@gmx.de",
+        "--fetch-password=p4ssw0rd",
+        "--connect-timeout=23",
+        "--send-protocol=SMTP",
+        "--send-server=smtp.gmx.de",
+        "--send-port=42",
+        "--send-tls",
+        "--send-username=me@gmx.de",
+        "--send-password=p4ssw0rd",
+        "--mail-from=me_from@gmx.de",
+        "--mail-to=me_to@gmx.de",
+        "--status-suffix=non-existent-testhost-MailLoop_imap",
+        "--warning=93780",
+        "--critical=183840",
+        "--subject=Some subject",
+    ]
+
+
 @pytest.mark.parametrize(
     "params,expected_args",
     [

@@ -36,8 +36,6 @@ _handler.terminator = ""  # TODO: let the handler add '\n'
 _console = logging.getLogger("cmk.base.console")
 _console.propagate = False
 
-isEnabledFor = _console.isEnabledFor
-
 
 def format_warning(text: str) -> str:
     stripped = text.lstrip()

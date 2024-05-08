@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import logging
 
-from tests.testlib import mocklogger
+import pytest
 
 from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.user import UserId
@@ -93,19 +93,25 @@ def test_save_two_factor_credentials_with_totp(user_id: UserId) -> None:
 
 
 def test_missing_totp_in_mfa_mk_file(
-    with_missing_totp: None, run_check: UpdateExistingTwoFactor
+    with_missing_totp: None,
+    run_check: UpdateExistingTwoFactor,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """User's two factor file is missing totp entry"""
-    mock_logger = mocklogger.MockLogger()
-    run_check(mock_logger)  # type: ignore[arg-type]
+    caplog.set_level(logging.INFO)
+    run_check(logging.getLogger())
 
-    assert len(mock_logger.messages) == 1
-    assert "1 user(s) had their two factor" in mock_logger.messages[0]
+    assert len(caplog.messages) == 1
+    assert "1 user(s) had their two factor" in caplog.messages[0]
 
 
-def test_existing_totp_in_mfa_mk_file(with_totp: None, run_check: UpdateExistingTwoFactor) -> None:
+def test_existing_totp_in_mfa_mk_file(
+    with_totp: None,
+    run_check: UpdateExistingTwoFactor,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """User's two factor file is up to date"""
-    mock_logger = mocklogger.MockLogger()
-    run_check(mock_logger)  # type: ignore[arg-type]
+    caplog.set_level(logging.INFO)
+    run_check(logging.getLogger())
 
-    assert len(mock_logger.messages) == 0
+    assert len(caplog.messages) == 0

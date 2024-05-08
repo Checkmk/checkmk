@@ -82,6 +82,14 @@ impl<'a> ClientBuilder<'a> {
         port: Option<Port>,
         credentials: Credentials<'a>,
     ) -> Self {
+        log::info!(
+            "Logon at port `{}:{}`",
+            &host,
+            &port
+                .clone()
+                .map(|p| p.value().to_string())
+                .unwrap_or_default()
+        );
         let r = ClientConnection::Remote(RemoteConnection {
             host: host.to_owned(),
             port,
@@ -98,10 +106,16 @@ impl<'a> ClientBuilder<'a> {
         instance: &InstanceName,
         browser_port: Option<P>,
     ) -> Self {
+        let p = browser_port.map(|p| p.into());
+        log::info!(
+            "Browse connection at port `{}:{}`",
+            &host,
+            &p.clone().map(|p| p.value().to_string()).unwrap_or_default()
+        );
         let i = NamedConnection {
             host: host.to_owned(),
             instance_name: instance.to_owned(),
-            browser_port: browser_port.map(|p| p.into()),
+            browser_port: p,
         };
         self.client_connection = Some(ClientConnection::Named(i));
         self

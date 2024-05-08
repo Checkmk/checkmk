@@ -53,10 +53,9 @@ class OracleDatabase:
         self.IMAGE_NAME: Final[str] = "IMAGE_ORACLE_DB_23C"
         self.image = self._pull_image()
         # get predefined image environment
-        self.default_environment = {
-            str(_.split("=", 1)[0]): str(_.split("=", 1)[-1])
-            for _ in self.image.attrs["Config"]["Env"]
-        }
+        self.default_environment = dict(
+            [str(_).split("=", 1) for _ in self.image.attrs["Config"]["Env"]]
+        )
         self.ORACLE_HOME: Final[str] = self.default_environment.get("ORACLE_HOME", "")
         self.SID: Final[str] = "FREE"  # Cannot be changed in FREE edition!
         self.PDB: Final[str] = "FREEPDB1"  # Cannot be changed in FREE edition!

@@ -68,6 +68,10 @@ class MonitoringCore(abc.ABC):
         self._create_config(
             config_path, config_cache, ip_address_of, licensing_handler, passwords, hosts_to_update
         )
+        if config.ruleset_matching_stats:
+            config_cache.ruleset_matcher.persist_matching_stats(
+                "tmp/ruleset_matching_stats", config.get_ruleset_id_mapping()
+            )
 
     @abc.abstractmethod
     def _create_config(

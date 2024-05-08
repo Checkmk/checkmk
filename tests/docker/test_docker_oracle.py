@@ -31,6 +31,7 @@ from tests.testlib.docker import (
     resolve_image_alias,
 )
 from tests.testlib.pytest_helpers.marks import skip_if_not_enterprise_edition
+from tests.testlib.utils import wait_until
 
 logger = logging.getLogger()
 
@@ -50,7 +51,6 @@ class OracleDatabase:
         self.temp_dir = temp_dir
 
         self.IMAGE: Final[str] = "IMAGE_ORACLE_DB_23C"
-        self.INIT_CMD: Final[str] = "/etc/rc.d/init.d/oracle-free-23c"  # must match container
         self.image = self._pull_image()
         # get predefined image environment
         self.default_environment = {
@@ -186,6 +186,15 @@ class OracleDatabase:
         except docker.errors.NotFound:
             logger.info("Starting container %s from image %s", self.name, self.image.short_id)
             container = self.docker_client.containers.run(
+                command=(
+                    None
+                    if self.reuse_db
+                    else [
+                        "/bin/bash",
+                        "-c",
+                        f"rm -rf '{self.DATA}/'**; /opt/oracle/runOracle.sh",
+                    ]
+                ),
                 image=self.image.id,
                 name=self.name,
                 volumes=self.volumes,
@@ -196,6 +205,17 @@ class OracleDatabase:
                 mem_limit="8G",
                 memswap_limit="8G",
             )
+            try:
+                wait_until(
+                    lambda: "DATABASE IS READY TO USE!" in container.logs().decode("utf-8"),
+                    timeout=600,
+                )
+            except TimeoutError:
+                logger.error(
+                    "TIMEOUT while starting Oracle. Log output: %s",
+                    container.logs().decode("utf-8"),
+                )
+                raise
         return container
 
     def _setup_container(self) -> None:
@@ -205,23 +225,6 @@ class OracleDatabase:
             assert copy_to_container(
                 self.container, f"{self.ORAENV}/{name}", self.ROOT
             ), "Failed to copy environment files!"
-
-        if not self.reuse_db:
-            for command, msg in {
-                f"{self.INIT_CMD} start": "Starting Oracle database...",
-                f"{self.INIT_CMD} delete": "Dropping Oracle database...",
-                f"""/usr/bin/bash -c 'rm -rf "{self.DATA}/{self.SID}"'""": "Cleanup Oracle database...",
-                f"{self.INIT_CMD} configure": "Creating new Oracle database...",
-            }.items():
-                logger.info(msg)
-                print("=" * 80)
-                print(f"$ {command} #{msg}")
-                _, output = self.container.exec_run(
-                    command, environment=self.environment, user="root", privileged=True, stream=True
-                )
-                for chunk in output:
-                    print(chunk.decode("UTF-8").strip())
-                print("=" * 80)
 
         logger.info("Forcing listener registration...")
         rc, _ = self.container.exec_run(

@@ -41,39 +41,10 @@ class RawLicenseUsageReport(TypedDict):
 #   '----------------------------------------------------------------------'
 
 
-_SUBSCRIPTION_LIMITS_FIXED = (
-    "3000",
-    "7000",
-    "12000",
-    "18000",
-    "30000",
-    "60000",
-    "100000",
-    "200000",
-    "300000",
-    "500000",
-    "1000000",
-    "1500000",
-    "2000000",
-    "2000000+",
-)
-
-
 class SubscriptionDetailsLimitType(Enum):
     fixed = auto()
     unlimited = auto()
     custom = auto()
-
-    @classmethod
-    def parse(cls, raw_subscription_details_limit_type: str) -> SubscriptionDetailsLimitType:
-        match raw_subscription_details_limit_type:
-            case "fixed":
-                return SubscriptionDetailsLimitType.fixed
-            case "unlimited":
-                return SubscriptionDetailsLimitType.unlimited
-            case "custom":
-                return SubscriptionDetailsLimitType.custom
-        raise ValueError(raw_subscription_details_limit_type)
 
 
 @dataclass(frozen=True)
@@ -92,35 +63,6 @@ class SubscriptionDetailsLimit:
                 return "2000000+"
             case SubscriptionDetailsLimitType.custom:
                 return ("custom", self.value)
-
-    @classmethod
-    def parse(cls, raw_limit: object) -> SubscriptionDetailsLimit:
-        if isinstance(raw_limit, (list, tuple)) and len(raw_limit) == 2:
-            return cls._parse(raw_limit[0], raw_limit[1])
-        if isinstance(raw_limit, (str, int, float)):
-            return cls._parse(str(raw_limit), raw_limit)
-        raise TypeError(raw_limit)
-
-    @classmethod
-    def _parse(cls, raw_type: str, raw_value: str | int | float) -> SubscriptionDetailsLimit:
-        if raw_type in ["2000000+", "unlimited"] or int(raw_value) == -1:
-            return SubscriptionDetailsLimit(
-                type_=SubscriptionDetailsLimitType.unlimited,
-                # '-1' means unlimited. This value is also used in Django DB
-                # where we have no appropriate 'float("inf")' DB field.
-                value=-1,
-            )
-
-        if str(raw_value) in _SUBSCRIPTION_LIMITS_FIXED:
-            return SubscriptionDetailsLimit(
-                type_=SubscriptionDetailsLimitType.fixed,
-                value=int(raw_value),
-            )
-
-        return SubscriptionDetailsLimit(
-            type_=SubscriptionDetailsLimitType.custom,
-            value=int(raw_value),
-        )
 
 
 class RawSubscriptionDetails(TypedDict):
@@ -258,6 +200,57 @@ class LicenseUsageSample:
 #   '----------------------------------------------------------------------'
 
 
+_SUBSCRIPTION_LIMITS_FIXED = (
+    "3000",
+    "7000",
+    "12000",
+    "18000",
+    "30000",
+    "60000",
+    "100000",
+    "200000",
+    "300000",
+    "500000",
+    "1000000",
+    "1500000",
+    "2000000",
+    "2000000+",
+)
+
+
+def _parse_subscription_details_limit_type_and_value(
+    raw_type: object, raw_value: object
+) -> SubscriptionDetailsLimit:
+    if not isinstance(raw_type, str):
+        raise TypeError(raw_type)
+    if not isinstance(raw_value, (str, int, float)):
+        raise TypeError(raw_value)
+    if raw_type in ["2000000+", "unlimited"] or int(raw_value) == -1:
+        return SubscriptionDetailsLimit(
+            type_=SubscriptionDetailsLimitType.unlimited,
+            # '-1' means unlimited. This value is also used in Django DB
+            # where we have no appropriate 'float("inf")' DB field.
+            value=-1,
+        )
+    if str(raw_value) in _SUBSCRIPTION_LIMITS_FIXED:
+        return SubscriptionDetailsLimit(
+            type_=SubscriptionDetailsLimitType.fixed,
+            value=int(raw_value),
+        )
+    return SubscriptionDetailsLimit(
+        type_=SubscriptionDetailsLimitType.custom,
+        value=int(raw_value),
+    )
+
+
+def _parse_subscription_details_limit(raw: object) -> SubscriptionDetailsLimit:
+    if isinstance(raw, (list, tuple)) and len(raw) == 2:
+        return _parse_subscription_details_limit_type_and_value(raw[0], raw[1])
+    if isinstance(raw, (str, int, float)):
+        return _parse_subscription_details_limit_type_and_value(str(raw), raw)
+    raise TypeError(raw)
+
+
 def _parse_subscription_details(raw: object) -> SubscriptionDetails:
     # Old:      'subscription_details': ['manual', {...}]
     # Current:  'subscription_details': {"source": "manual", ...}
@@ -269,13 +262,13 @@ def _parse_subscription_details(raw: object) -> SubscriptionDetails:
         return SubscriptionDetails(
             start=int(details["subscription_start"]),
             end=int(details["subscription_end"]),
-            limit=SubscriptionDetailsLimit.parse(details["subscription_limit"]),
+            limit=_parse_subscription_details_limit(details["subscription_limit"]),
         )
     if isinstance(raw, dict):
         return SubscriptionDetails(
             start=int(raw["subscription_start"]),
             end=int(raw["subscription_end"]),
-            limit=SubscriptionDetailsLimit.parse(raw["subscription_limit"]),
+            limit=_parse_subscription_details_limit(raw["subscription_limit"]),
         )
     raise TypeError(raw)
 

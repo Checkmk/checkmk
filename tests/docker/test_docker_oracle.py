@@ -142,12 +142,12 @@ class OracleDatabase:
         logger.info("Creating Oracle wallet...")
         wallet_password = f"{self.wallet_password}\n{self.wallet_password}"
         cmd = ["mkstore", "-wrl", self.wallet_dir, "-create"]
-        rc, _ = self.container.exec_run(
+        rc, output = self.container.exec_run(
             f"""bash -c 'echo -e "{wallet_password}" | {" ".join(cmd)}'""",
             user="root",
             privileged=True,
         )
-        assert rc == 0, "Error during wallet creation!"
+        assert rc == 0, f"Error during wallet creation: {output.decode('UTF-8')}"
         logger.info("Creating Oracle wallet credential...")
         cmd = [
             "mkstore",
@@ -156,12 +156,12 @@ class OracleDatabase:
             "-createCredential",
             f"localhost:{self.PORT}/{self.SID} {self.cmk_username} {self.cmk_password}",
         ]
-        rc, _ = self.container.exec_run(
+        rc, output = self.container.exec_run(
             f"""bash -c 'echo "{self.wallet_password}" | {" ".join(cmd)}'""",
             user="root",
             privileged=True,
         )
-        assert rc == 0, "Error during wallet credential creation!"
+        assert rc == 0, f"Error during wallet credential creation: {output.decode('UTF-8')}"
 
     def _init_envfiles(self) -> None:
         """Write environment files.

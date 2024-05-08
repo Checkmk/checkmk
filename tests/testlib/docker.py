@@ -159,9 +159,7 @@ def build_checkmk(
         for entry in e.build_log:
             if "stream" in entry:
                 logger.error(entry["stream"].rstrip())
-            elif "errorDetail" in entry:
-                continue  # Is already part of the exception message
-            else:
+            elif "errorDetail" not in entry:
                 logger.error("UNEXPECTED FORMAT: %r", entry)
         logger.error("= Build log ==================")
         raise
@@ -208,15 +206,6 @@ def build_checkmk(
         "5000/tcp": {},
         "6557/tcp": {},
     }
-
-    # 2018-11-14: 900 -> 920
-    # 2018-11-22: 920 -> 940
-    # 2019-04-10: 940 -> 950
-    # 2019-07-12: 950 -> 1040 (python3)
-    # 2019-07-27: 1040 -> 1054 (numpy)
-    # 2019-11-15: Temporarily disabled because of Python2 => Python3 transition
-    #    assert attrs["Size"] < 1110955410.0, \
-    #        "Docker image size increased: Please verify that this is intended"
 
     assert len(attrs["RootFS"]["Layers"]) == 6
 

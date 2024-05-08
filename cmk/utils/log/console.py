@@ -41,47 +41,31 @@ _console.propagate = False
 isEnabledFor = _console.isEnabledFor
 
 
-def log(level: int, text: str, *args: object, **kwargs: TextIO) -> None:
-    stream = kwargs.pop("stream", sys.stdout)
-    assert not kwargs
-
-    with set_stream(_console, _handler, stream):
-        _console.log(level, text, *args)
-
-
-def debug(text: str, *args: object, **kwargs: TextIO) -> None:
-    """Output text if, opt_verbose >= 2 (-vv)."""
-    log(logging.DEBUG, text, *args, **kwargs)
-
-
-def verbose(text: str, *args: object, **kwargs: TextIO) -> None:
-    """Output text if opt_verbose is set (-v).
-
-    Adds no linefeed.
-
-    """
-    log(VERBOSE, text, *args, **kwargs)
-
-
-def info(text: str, *args: object, **kwargs: TextIO) -> None:
-    """Output text if opt_verbose is set (-v).
-
-    Adds no linefeed.
-
-    """
-    log(logging.INFO, text, *args, **kwargs)
-
-
-def warning(text: str, *args: object, **kwargs: TextIO) -> None:
-    stream = kwargs.pop("stream", sys.stderr)
-    assert not kwargs
-    log(logging.WARNING, text, *args, stream=stream)
-
-
 def format_warning(text: str) -> str:
     stripped = text.lstrip()
     indent = text[: len(text) - len(stripped)]
     return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}"
+
+
+def log(level: int, text: str, *args: object, stream: TextIO | None = None) -> None:
+    with set_stream(_console, _handler, sys.stdout if stream is None else stream):
+        _console.log(level, text, *args)
+
+
+def debug(text: str, *args: object, stream: TextIO | None = None) -> None:
+    log(logging.DEBUG, text, *args, stream=stream)
+
+
+def verbose(text: str, *args: object, stream: TextIO | None = None) -> None:
+    log(VERBOSE, text, *args, stream=stream)
+
+
+def info(text: str, *args: object, stream: TextIO | None = None) -> None:
+    log(logging.INFO, text, *args, stream=stream)
+
+
+def warning(text: str, *args: object, stream: TextIO | None = None) -> None:
+    log(logging.WARNING, text, *args, stream=stream)
 
 
 def error(text: str, *args: object) -> None:

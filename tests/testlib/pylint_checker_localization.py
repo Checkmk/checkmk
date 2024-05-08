@@ -21,8 +21,6 @@ from cmk.utils.escaping import ALLOWED_TAGS
 def register(linter: PyLinter) -> None:
     """Register checkers."""
     linter.register_checker(TranslationStringConstantsChecker(linter))
-    linter.register_checker(EscapingProtectionChecker(linter))
-    linter.register_checker(EscapingChecker(linter))
     linter.register_checker(HTMLTagsChecker(linter))
 
 
@@ -163,95 +161,6 @@ class TranslationStringConstantsChecker(TranslationBaseChecker):
             # The first argument is a constant string! This is good!
             return None
         return _Error(id=self.MESSAGE_ID, message=node.func.name, node=node)
-
-
-class EscapingProtectionChecker(TranslationBaseChecker):
-    """
-    Checks for i18n translation functions (_, ugettext, ungettext, and many
-    others) being called on something that isn't a string literal.
-
-    Bad:
-        HTML(_("hello %s"))
-        HTML(_("hello <tt> World </tt>"))
-
-    Good:
-        HTML(_("hello <div> World </div>"))
-
-    The message id is `protection-of-html-tags`.
-
-    """
-
-    name = "escaping-protection-checker"
-    BASE_ID = 78
-    MESSAGE_ID = "protection-of-html-tags"
-    msgs = {
-        "E%d10"
-        % BASE_ID: (
-            "%s",
-            MESSAGE_ID,
-            "YO!",
-        ),
-    }
-
-    def check(self, node: nodes.Call) -> _Error | None:
-        first = node.args[0]
-        if is_constant_string(first):
-            all_unescapable, tags = all_tags_are_unescapable(first)
-            # Case 1
-            if all_unescapable and parent_is_HTML(node):
-                message = "String is protected by HTML(...) although it needn't be!\n"
-                message += "'''%s'''\n" % (first.value)
-                return _Error(id=self.MESSAGE_ID, message=message, node=node)
-            # Case 2
-            if not all_unescapable and parent_is_HTML(node):
-                if [x for x in tags if x != "img"]:
-                    message = "OK! Is protected by HTML(...)!\n"
-                    message += "'''{}'''\n----> {}".format(first.value, ", ".join(tags))
-                    return _Error(id=self.MESSAGE_ID, message=message, node=node)
-        return None
-
-
-class EscapingChecker(TranslationBaseChecker):
-    """
-    Checks for i18n translation functions (_, ugettext, ungettext, and many
-    others) being called on something that isn't a string literal.
-
-    Bad:
-        _("hello <div> World </div>")
-
-    Good:
-        HTML(_("hello <div> World </div>"))
-        _("hello %s")
-        _("hello <tt> World </tt>")
-        _("This is a &lt;HOST&gt;.")
-
-    The message id is `escaping-of-html-tags`.
-
-    """
-
-    name = "escaping-checker"
-    BASE_ID = 79
-    MESSAGE_ID = "escaping-of-html-tags"
-    msgs = {
-        "E%d10"
-        % BASE_ID: (
-            "%s",
-            MESSAGE_ID,
-            "YO!",
-        ),
-    }
-
-    def check(self, node: nodes.Call) -> _Error | None:
-        first = node.args[0]
-        # The first argument is a constant string! All is well!
-        if is_constant_string(first):
-            all_unescapable, tags = all_tags_are_unescapable(first)
-            # Case 3
-            if not all_unescapable and not parent_is_HTML(node):
-                message = "String contains unprotected tags! Protect them using HTML(...), escape them or replace them!\n"
-                message += "'''{}'''\n----> {}".format(first.value, ", ".join(tags))
-                return _Error(id=self.MESSAGE_ID, message=message, node=node)
-        return None
 
 
 class HTMLTagsChecker(TranslationBaseChecker):

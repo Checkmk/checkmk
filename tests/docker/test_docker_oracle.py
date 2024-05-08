@@ -139,15 +139,24 @@ class OracleDatabase:
 
     def _create_oracle_wallet(self) -> None:
         logger.info("Creating Oracle wallet...")
+        wallet_password = f"{self.wallet_password}\n{self.wallet_password}"
+        cmd = ["mkstore", "-wrl", self.wallet_dir, "-create"]
         rc, _ = self.container.exec_run(
-            f"""bash -c 'echo -e "{self.wallet_password}\n{self.wallet_password}" | mkstore -wrl {self.wallet_dir} -create'""",
+            f"""bash -c 'echo -e "{wallet_password}" | {" ".join(cmd)}'""",
             user="root",
             privileged=True,
         )
         assert rc == 0, "Error during wallet creation!"
         logger.info("Creating Oracle wallet credential...")
+        cmd = [
+            "mkstore",
+            "-wrl",
+            self.wallet_dir,
+            "-createCredential",
+            f"localhost:{self.PORT}/{self.SID} {self.cmk_username} {self.cmk_password}",
+        ]
         rc, _ = self.container.exec_run(
-            f"""bash -c 'echo "{self.wallet_password}" | mkstore -wrl {self.wallet_dir} -createCredential localhost:{self.PORT}/{self.SID} {self.cmk_username} {self.cmk_password}'""",
+            f"""bash -c 'echo "{self.wallet_password}" | {" ".join(cmd)}'""",
             user="root",
             privileged=True,
         )

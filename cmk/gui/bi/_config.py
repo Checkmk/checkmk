@@ -1178,17 +1178,15 @@ class ModeBIEditRule(ABCBIMode):
         vs_rule_config = vs_rule.from_html_vars("rule")
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), "rule")
         schema_validated_config = BIRuleSchema().dump(vs_rule_config)
+        self._validate_rule_id(schema_validated_config["id"])
         new_bi_rule = BIRule(schema_validated_config)
         self._action_modify_rule(new_bi_rule)
         return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
-    def _action_modify_rule(self, new_bi_rule: BIRule) -> None:
-        if self._new:
-            self._rule_id = new_bi_rule.id
-
-        existing_bi_pack = self._bi_packs.get_pack_of_rule(self._rule_id) if self._rule_id else None
-        if self._new and self._rule_id and existing_bi_pack is not None:
-            existing_bi_rule = existing_bi_pack.get_rule(self._rule_id)
+    def _validate_rule_id(self, new_rule_id: str) -> None:
+        existing_bi_pack = self._bi_packs.get_pack_of_rule(new_rule_id)
+        if self._new and existing_bi_pack is not None:
+            existing_bi_rule = existing_bi_pack.get_rule(new_rule_id)
             assert existing_bi_rule is not None
             raise MKUserError(
                 "rule_p_id",
@@ -1196,8 +1194,12 @@ class ModeBIEditRule(ABCBIMode):
                     "There is already a rule with the ID <b>%s</b>. "
                     "It is in the pack <b>%s</b> and as the title <b>%s</b>"
                 )
-                % (self._rule_id, existing_bi_pack.title, existing_bi_rule.title),
+                % (new_rule_id, existing_bi_pack.title, existing_bi_rule.title),
             )
+
+    def _action_modify_rule(self, new_bi_rule: BIRule) -> None:
+        if self._new:
+            self._rule_id = new_bi_rule.id
 
         self.bi_pack.add_rule(new_bi_rule)
         try:

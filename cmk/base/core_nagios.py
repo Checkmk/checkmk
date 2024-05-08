@@ -500,8 +500,6 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         lambda x: config.get_final_service_description(x, translations),
         config.use_new_descriptions_for,
         stored_passwords,
-        # using LATEST_CONFIG here is the result of a refactoring.
-        # I am not sure if we shouldn't explicitly use the one we are creating here.
         password_store.core_password_store_path(LATEST_CONFIG),
         escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
     )

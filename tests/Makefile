@@ -372,7 +372,6 @@ test-unit-doctests: prepare-protobuf-files
 		--override-ini="pythonpath=." \
 		--override-ini="consider_namespace_packages=true" \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
-		--ignore cmk/plugins \
 		-- \
 		cmk/
 

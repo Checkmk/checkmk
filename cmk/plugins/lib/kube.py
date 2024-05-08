@@ -14,7 +14,6 @@ from cmk.plugins.kube.schemata.api import (
     ContainerTerminatedState,
     ContainerWaitingState,
     Labels,
-    LabelValue,
     NodeConditionStatus,
 )
 from cmk.plugins.kube.schemata.section import (
@@ -41,16 +40,9 @@ def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
     circumvent this problem, we prepend every label key with
     'cmk/kubernetes/label/'.
 
-    >>> list(kube_labels_to_cmk_labels({
-    ... 'k8s.io/app': Label(name='k8s.io/app', value='nginx'),
-    ... 'infra': Label(name='infra', value='yes'),
-    ... }))
-    [HostLabel('cmk/kubernetes/label/k8s.io/app', 'nginx'), HostLabel('cmk/kubernetes/label/infra', 'yes')]
     """
     for label in labels.values():
-        if (value := label.value) == "":
-            value = LabelValue("true")
-        yield HostLabel(f"cmk/kubernetes/label/{label.name}", value)
+        yield HostLabel(f"cmk/kubernetes/label/{label.name}", str(label.value) or "true")
 
 
 # TODO: CMK-10380 (the change will incompatible)

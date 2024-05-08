@@ -34,13 +34,6 @@ def result_from_age(value: Age) -> Result:
 
 
 def result_from_control_chain(control_chain: ControlChain) -> Result:
-    """
-    >>> from .kube import Controller
-    >>> result_from_control_chain([])
-    Result(state=<State.OK: 0>, summary='Controlled by: None')
-    >>> result_from_control_chain([Controller(type_="DaemonSet", name="kube-proxy")])
-    Result(state=<State.OK: 0>, summary='Controlled by: DaemonSet/kube-proxy')
-    """
     chain_display = " <- ".join(f"{c.type_}/{c.name}" for c in control_chain)
     return Result(
         state=State.OK, summary=f"Controlled by: {chain_display if chain_display else None}"

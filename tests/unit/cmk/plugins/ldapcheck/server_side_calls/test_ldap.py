@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.ldap.server_side_calls.active_check_ldap import active_check_ldap
+from cmk.plugins.ldapcheck.server_side_calls.active_check_ldap import active_check_ldap
 from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config, Secret
 
 HOST_CONFIG = HostConfig(

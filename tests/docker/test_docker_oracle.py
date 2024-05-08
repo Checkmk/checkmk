@@ -50,7 +50,7 @@ class OracleDatabase:
         self.name: str = name
         self.temp_dir = temp_dir
 
-        self.IMAGE: Final[str] = "IMAGE_ORACLE_DB_23C"
+        self.IMAGE_NAME: Final[str] = "IMAGE_ORACLE_DB_23C"
         self.image = self._pull_image()
         # get predefined image environment
         self.default_environment = {
@@ -170,7 +170,7 @@ class OracleDatabase:
         """Pull the container image from the repository."""
         logger.info("Downloading Oracle Database Free docker image")
 
-        return self.docker_client.images.pull(resolve_image_alias(self.IMAGE))
+        return self.docker_client.images.pull(resolve_image_alias(self.IMAGE_NAME))
 
     def _start_container(self) -> docker.models.containers.Container:
         """Start the container."""

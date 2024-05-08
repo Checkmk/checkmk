@@ -211,7 +211,7 @@ def _u(text: str) -> str:
             return text
         return ldict.get(current_language, text)
 
-    return _(text)  # pylint: disable=translation-of-non-string
+    return _(text)  # pylint: disable=localization-of-non-literal-string
 
 
 def set_user_localizations(localizations: dict[str, dict[str, str]]) -> None:

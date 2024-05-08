@@ -437,7 +437,7 @@ class IndexSearcher:
                 # results, such as hosts, they are not. For example, "Hosts" in French is "Hôtes".
                 # Without this call to i18n._, found hosts would be displayed under the topic
                 # "Hosts" instead of "Hôtes" in the setup search.
-                # pylint: disable=translation-of-non-string
+                # pylint: disable=localization-of-non-literal-string
                 results[_(match_item_dict["topic"])].append(
                     _SearchResultWithPermissionsCheck(
                         SearchResult(

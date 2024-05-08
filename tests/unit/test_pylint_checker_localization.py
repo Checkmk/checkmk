@@ -8,10 +8,7 @@ import pytest
 from pylint.lint import PyLinter
 from pytest_mock import MockerFixture
 
-from tests.testlib.pylint_checker_localization import (
-    HTMLTagsChecker,
-    TranslationStringConstantsChecker,
-)
+from tests.testlib.pylint_checker_localization import HTMLTagsChecker, LiteralStringChecker
 
 
 # Using astroid within a pytest context causes recursion errors. This fixture avoids these errors,
@@ -33,14 +30,11 @@ def deactivate_astroid_bootstrapping(mocker: MockerFixture) -> None:
         pytest.param("_l('{argl} text')", False),
     ],
 )
-def test_translation_string_constants_checker(
+def test_literal_string_checker(
     code: str,
     is_error: bool,
 ) -> None:
-    assert (
-        bool(TranslationStringConstantsChecker(PyLinter()).check(astroid.extract_node(code)))
-        is is_error
-    )
+    assert bool(LiteralStringChecker(PyLinter()).check(astroid.extract_node(code))) is is_error
 
 
 @pytest.mark.parametrize(

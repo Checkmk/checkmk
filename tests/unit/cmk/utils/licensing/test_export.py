@@ -9,6 +9,7 @@ from typing import Any, Literal
 import pytest
 
 from cmk.utils.licensing.export import (
+    _parse_extensions,
     LicenseUsageExtensions,
     make_parser,
     RawSubscriptionDetailsForAggregation,
@@ -387,7 +388,7 @@ def test_subscription_details_for_config(
 def test_LicenseUsageExtensions_parse_from_sample(
     raw_sample: dict, expected_ntop_enabled: bool
 ) -> None:
-    extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
+    extensions = _parse_extensions(raw_sample)
     assert extensions.ntop is expected_ntop_enabled
 
 

@@ -189,20 +189,6 @@ class LicenseUsageExtensions:
 
         return cls(ntop=raw_extensions.get("ntop", False))
 
-    @classmethod
-    def parse_from_sample(cls, raw_sample: object) -> LicenseUsageExtensions:
-        # Old: {..., "extensions": {"ntop": True/False}, ...}
-        # New: {..., "extension_ntop": True/False, ...}
-        if not isinstance(raw_sample, dict):
-            raise TypeError("Wrong sample type: %r" % type(raw_sample))
-
-        parsed_extensions = {
-            ext_key: raw_sample.get(ext_key, raw_sample.get("extensions", {}).get(key, False))
-            for key in ["ntop"]
-            for ext_key in (f"extension_{key}",)
-        }
-        return cls(ntop=parsed_extensions["extension_ntop"])
-
 
 class RawLicenseUsageSample(TypedDict):
     instance_id: str | None
@@ -310,12 +296,28 @@ def _parse_platform(platform: str) -> str:
     return platform[:50]
 
 
+def _parse_extension_value(raw: Mapping[str, object], key: str, extension_key: str) -> bool:
+    if isinstance(value := raw.get(extension_key), bool):
+        return value
+    if isinstance(raw_extensions := raw.get("extensions"), dict):
+        return raw_extensions.get(key, False)
+    return False
+
+
+def _parse_extensions(raw: Mapping[str, object]) -> LicenseUsageExtensions:
+    parsed_extensions = {
+        ext_key: _parse_extension_value(raw, key, ext_key)
+        for key in ["ntop"]
+        for ext_key in (f"extension_{key}",)
+    }
+    return LicenseUsageExtensions(ntop=parsed_extensions["extension_ntop"])
+
+
 def _parse_sample_v1_1(instance_id: UUID | None, site_hash: str, raw: object) -> LicenseUsageSample:
     if not isinstance(raw, dict):
         raise TypeError("Parse sample 1.1/1.2/1.3: Wrong sample type: %r" % type(raw))
     if not (site_hash := raw.get("site_hash", site_hash)):
         raise ValueError("Parse sample 1.1/1.2/1.3: No such site hash")
-    extensions = LicenseUsageExtensions.parse_from_sample(raw)
     return LicenseUsageSample(
         instance_id=instance_id,
         site_hash=site_hash,
@@ -335,7 +337,7 @@ def _parse_sample_v1_1(instance_id: UUID | None, site_hash: str, raw: object) ->
         num_services_excluded=raw["num_services_excluded"],
         num_synthetic_tests=0,
         num_synthetic_tests_excluded=0,
-        extension_ntop=extensions.ntop,
+        extension_ntop=_parse_extensions(raw).ntop,
     )
 
 
@@ -346,7 +348,6 @@ def _parse_sample_v2_0(instance_id: UUID | None, site_hash: str, raw: object) ->
         raise ValueError("Parse sample 2.0/2.1: No such instance ID")
     if not (site_hash := raw.get("site_hash", site_hash)):
         raise ValueError("Parse sample 2.0/2.1: No such site hash")
-    extensions = LicenseUsageExtensions.parse_from_sample(raw)
     return LicenseUsageSample(
         instance_id=UUID(raw_instance_id),
         site_hash=site_hash,
@@ -366,7 +367,7 @@ def _parse_sample_v2_0(instance_id: UUID | None, site_hash: str, raw: object) ->
         num_services_excluded=raw["num_services_excluded"],
         num_synthetic_tests=0,
         num_synthetic_tests_excluded=0,
-        extension_ntop=extensions.ntop,
+        extension_ntop=_parse_extensions(raw).ntop,
     )
 
 
@@ -391,7 +392,6 @@ class ParserV1_0(Parser):
             raise TypeError("Parse sample 1.0: Wrong sample type: %r" % type(raw))
         if not (site_hash := raw.get("site_hash", site_hash)):
             raise ValueError("Parse sample 1.0: No such site hash")
-        extensions = LicenseUsageExtensions.parse_from_sample(raw)
         return LicenseUsageSample(
             instance_id=instance_id,
             site_hash=site_hash,
@@ -411,7 +411,7 @@ class ParserV1_0(Parser):
             num_services_excluded=0,
             num_synthetic_tests=0,
             num_synthetic_tests_excluded=0,
-            extension_ntop=extensions.ntop,
+            extension_ntop=_parse_extensions(raw).ntop,
         )
 
 
@@ -456,7 +456,6 @@ class ParserV1_4(Parser):
             raise TypeError("Parse sample 1.4: Wrong sample type: %r" % type(raw))
         if not (site_hash := raw.get("site_hash", site_hash)):
             raise ValueError("Parse sample 1.4: No such site hash")
-        extensions = LicenseUsageExtensions.parse_from_sample(raw)
         return LicenseUsageSample(
             instance_id=instance_id,
             site_hash=site_hash,
@@ -476,7 +475,7 @@ class ParserV1_4(Parser):
             num_services_excluded=raw["num_services_excluded"],
             num_synthetic_tests=0,
             num_synthetic_tests_excluded=0,
-            extension_ntop=extensions.ntop,
+            extension_ntop=_parse_extensions(raw).ntop,
         )
 
 
@@ -493,7 +492,6 @@ class ParserV1_5(Parser):
             raise ValueError("Parse sample 1.5: No such instance ID")
         if not (site_hash := raw.get("site_hash", site_hash)):
             raise ValueError("Parse sample 1.5: No such site hash")
-        extensions = LicenseUsageExtensions.parse_from_sample(raw)
         return LicenseUsageSample(
             instance_id=UUID(raw_instance_id),
             site_hash=site_hash,
@@ -513,7 +511,7 @@ class ParserV1_5(Parser):
             num_services_excluded=raw["num_services_excluded"],
             num_synthetic_tests=0,
             num_synthetic_tests_excluded=0,
-            extension_ntop=extensions.ntop,
+            extension_ntop=_parse_extensions(raw).ntop,
         )
 
 
@@ -550,7 +548,7 @@ class ParserV3_0(Parser):
             raise ValueError("Parse sample 3.0: No such instance ID")
         if not (site_hash := raw.get("site_hash", site_hash)):
             raise ValueError("Parse sample 3.0: No such site hash")
-        extensions = LicenseUsageExtensions.parse_from_sample(raw)
+        extensions = _parse_extensions(raw)
         return LicenseUsageSample(
             instance_id=UUID(raw_instance_id),
             site_hash=site_hash,

@@ -1331,8 +1331,10 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     with current_host(testhost):
         file_cache_options = FileCacheOptions()
         parser = CMKParser(
-            config_cache,
             config_cache.parser_factory(),
+            checking_sections=lambda hostname: config_cache.make_checking_sections(
+                hostname, selected_sections=NO_SELECTION
+            ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("tests"),

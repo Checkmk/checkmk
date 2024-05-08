@@ -159,16 +159,16 @@ def _do_fetch(
 class CMKParser:
     def __init__(
         self,
-        config_cache: ConfigCache,
         factory: ParserFactory,
         *,
+        checking_sections: Callable[[HostName], Iterable[SectionName]],
         selected_sections: SectionNameCollection,
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
-        self.config_cache: Final = config_cache
         self.factory: Final = factory
         self.selected_sections: Final = selected_sections
+        self.checking_sections: Final = checking_sections
         self.keep_outdated: Final = keep_outdated
         self.logger: Final = logger
 
@@ -193,9 +193,7 @@ class CMKParser:
                     self.factory,
                     source.hostname,
                     source.fetcher_type,
-                    checking_sections=self.config_cache.make_checking_sections(
-                        source.hostname, selected_sections=NO_SELECTION
-                    ),
+                    checking_sections=self.checking_sections(source.hostname),
                     persisted_section_dir=make_persisted_section_dir(
                         source.hostname,
                         fetcher_type=source.fetcher_type,

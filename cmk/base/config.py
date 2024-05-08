@@ -4027,7 +4027,7 @@ class ParserFactory:
         *,
         keep_outdated: bool,
         logger: logging.Logger,
-        checking_sections: frozenset[SectionName],
+        checking_sections: Iterable[SectionName],
     ) -> SNMPParser:
         return SNMPParser(
             host_name,

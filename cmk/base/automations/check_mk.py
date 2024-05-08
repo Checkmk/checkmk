@@ -275,8 +275,10 @@ class AutomationDiscovery(DiscoveryAutomation):
         results: dict[HostName, DiscoveryResult] = {}
 
         parser = CMKParser(
-            config_cache,
             config_cache.parser_factory(),
+            checking_sections=lambda hostname: config_cache.make_checking_sections(
+                hostname, selected_sections=NO_SELECTION
+            ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
             logger=logging.getLogger("cmk.base.discovery"),
@@ -540,8 +542,10 @@ def _execute_discovery(
     hosts_config = config.make_hosts_config()
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
-        config_cache,
         config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -662,8 +666,10 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     )
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
-        config_cache,
         config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),

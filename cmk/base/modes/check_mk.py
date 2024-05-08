@@ -1814,8 +1814,10 @@ def mode_check_discovery(
         password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
     parser = CMKParser(
-        config_cache,
         config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2124,8 +2126,10 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     config_cache = config.get_config_cache()
     parser = CMKParser(
-        config_cache,
         config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
@@ -2308,8 +2312,10 @@ def mode_check(
         ),
     )
     parser = CMKParser(
-        config_cache,
         config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.checking"),
@@ -2533,8 +2539,10 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         password_store_file=cmk.utils.password_store.pending_password_store_path(),
     )
     parser = CMKParser(
-        config_cache,
         config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -2780,8 +2788,10 @@ def mode_inventory_as_check(
         password_store_file=cmk.utils.password_store.core_password_store_path(LATEST_CONFIG),
     )
     parser = CMKParser(
-        config_cache,
         config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
@@ -2918,8 +2928,10 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     config.load()
     config_cache = config.get_config_cache()
     parser = CMKParser(
-        config_cache,
         config_cache.parser_factory(),
+        checking_sections=lambda hostname: config_cache.make_checking_sections(
+            hostname, selected_sections=NO_SELECTION
+        ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Protocol
 
@@ -25,7 +25,7 @@ class ParserFactory(Protocol):
         hostname: HostName,
         section_store: SectionStore[SNMPRawDataElem],
         *,
-        checking_sections: frozenset[SectionName],
+        checking_sections: Iterable[SectionName],
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> Parser: ...
@@ -46,7 +46,7 @@ def make_parser(
     fetcher_type: FetcherType,
     *,
     # Always from NO_SELECTION.
-    checking_sections: frozenset[SectionName],
+    checking_sections: Iterable[SectionName],
     persisted_section_dir: Path,
     keep_outdated: bool,
     logger: logging.Logger,

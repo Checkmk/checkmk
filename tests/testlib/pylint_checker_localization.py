@@ -42,6 +42,10 @@ class LocalizationBaseChecker(ABC, BaseChecker):
         "ugettext_noop",
         "ungettext",
         "ungettext_lazy",
+        "Title",
+        "Help",
+        "Label",
+        "Message",
     }
 
     def visit_call(self, node: nodes.Call) -> None:
@@ -51,6 +55,11 @@ class LocalizationBaseChecker(ABC, BaseChecker):
 
         if node.func.name not in self._TRANSLATION_FUNCTIONS:
             # Not a function we care about.
+            return
+
+        if not len(node.args) == 1 and not node.kwargs:
+            # Exactly one argument and no keyword arguments. This is purely heuristic, we can get
+            # false positives at any time...
             return
 
         if error := self.check(node):

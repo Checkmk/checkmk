@@ -253,7 +253,7 @@ def _send_data() -> Dictionary:
                                                     name=content_type.lower()
                                                     .replace("/", "_")
                                                     .replace("-", "_"),
-                                                    title=Title(content_type),
+                                                    title=Title("%s") % content_type,
                                                 )
                                                 for content_type in [
                                                     "application/json",

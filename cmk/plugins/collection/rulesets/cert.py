@@ -501,7 +501,10 @@ def migrate_from_old_signature_keys(value: object) -> tuple[str, object]:
 
 def _signature_algorithm_choice() -> CascadingSingleChoice:
     def fmt(sa: ObjectIdentifier) -> Title:
-        return Title(f"{sa._name} ({sa.dotted_string})")  # pylint: disable=protected-access
+        return Title("%s (%s)") % (
+            sa._name,  # pylint: disable=protected-access
+            sa.dotted_string,
+        )
 
     return CascadingSingleChoice(
         title=Title("Certificate signature algorithm"),

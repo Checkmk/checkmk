@@ -1823,8 +1823,8 @@ def mode_check_discovery(
         logger=logging.getLogger("cmk.base.discovery"),
     )
     summarizer = CMKSummarizer(
-        config_cache,
         hostname,
+        config_cache.summary_config,
         override_non_ok_state=None,
     )
     error_handler = CheckResultErrorHandler(
@@ -2321,8 +2321,8 @@ def mode_check(
         logger=logging.getLogger("cmk.base.checking"),
     )
     summarizer = CMKSummarizer(
-        config_cache,
         hostname,
+        config_cache.summary_config,
         override_non_ok_state=None,
     )
     dry_run = options.get("no-submit", False)
@@ -2572,8 +2572,8 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         parameters = config_cache.hwsw_inventory_parameters(hostname)
         raw_intervals_from_config = config_cache.inv_retention_intervals(hostname)
         summarizer = CMKSummarizer(
-            config_cache,
             hostname,
+            config_cache.summary_config,
             override_non_ok_state=parameters.fail_status,
         )
 
@@ -2797,8 +2797,8 @@ def mode_inventory_as_check(
         logger=logging.getLogger("cmk.base.inventory"),
     )
     summarizer = CMKSummarizer(
-        config_cache,
         hostname,
+        config_cache.summary_config,
         override_non_ok_state=parameters.fail_status,
     )
     error_handler = CheckResultErrorHandler(
@@ -2951,8 +2951,8 @@ def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
 
     def summarizer(host_name: HostName) -> CMKSummarizer:
         return CMKSummarizer(
-            config_cache,
             host_name,
+            config_cache.summary_config,
             override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,
         )
 

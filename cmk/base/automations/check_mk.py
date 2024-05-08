@@ -325,8 +325,8 @@ class AutomationDiscovery(DiscoveryAutomation):
                     parser=parser,
                     fetcher=fetcher,
                     summarizer=CMKSummarizer(
-                        config_cache,
                         hostname,
+                        config_cache.summary_config,
                         override_non_ok_state=None,
                     ),
                     section_plugins=SectionPluginMapper(),
@@ -592,8 +592,8 @@ def _execute_discovery(
             parser=parser,
             fetcher=fetcher,
             summarizer=CMKSummarizer(
-                config_cache,
                 host_name,
+                config_cache.summary_config,
                 override_non_ok_state=None,
             ),
             section_plugins=SectionPluginMapper(),
@@ -767,7 +767,9 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                             parser=parser,
                             fetcher=fetcher,
                             summarizer=CMKSummarizer(
-                                config_cache, host_name, override_non_ok_state=None
+                                host_name,
+                                config_cache.summary_config,
+                                override_non_ok_state=None,
                             ),
                             section_plugins=section_plugins,
                             section_error_handling=section_error_handling,

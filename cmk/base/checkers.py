@@ -213,13 +213,13 @@ class CMKParser:
 class CMKSummarizer:
     def __init__(
         self,
-        config_cache: ConfigCache,
         host_name: HostName,
+        summary_config: Callable[[HostName, str], SummaryConfig],
         *,
         override_non_ok_state: ServiceState | None = None,
     ) -> None:
-        self.config_cache: Final = config_cache
         self.host_name: Final = host_name
+        self.summary_config: Final = summary_config
         self.override_non_ok_state: Final = override_non_ok_state
 
     def __call__(
@@ -230,7 +230,7 @@ class CMKSummarizer:
             _summarize_host_sections(
                 host_sections,
                 source,
-                self.config_cache.summary_config(source.hostname, source.ident),
+                self.summary_config(source.hostname, source.ident),
                 override_non_ok_state=self.override_non_ok_state,
             )
             for source, host_sections in host_sections

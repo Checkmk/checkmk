@@ -253,9 +253,7 @@ mod tests {
         assert_eq!(section.to_work_header(), "<<<mssql_instance:sep(124)>>>\n");
 
         let section = Section::new(
-            &section::SectionBuilder::new("backup")
-                .set_async(true)
-                .build(),
+            &section::SectionBuilder::new("backup").set_async().build(),
             Some(100),
         );
         assert_eq!(section.to_plain_header(), "<<<mssql_backup:sep(124)>>>\n");
@@ -263,18 +261,6 @@ mod tests {
             .to_work_header()
             .starts_with("<<<mssql_backup:cached("));
         assert!(section.to_work_header().ends_with("100):sep(124)>>>\n"));
-
-        let section = Section::new(&section::SectionBuilder::new("jobs").build(), Some(100));
-        assert!(section
-            .to_work_header()
-            .starts_with("<<<mssql_jobs:cached("));
-        let section = Section::new(
-            &section::SectionBuilder::new("jobs")
-                .set_async(false)
-                .build(),
-            Some(100),
-        );
-        assert_eq!(section.to_work_header(), "<<<mssql_jobs:sep(09)>>>\n");
     }
 
     #[test]

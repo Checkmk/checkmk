@@ -48,11 +48,9 @@ pub trait Get {
 
     fn get_yaml_vector(&self, key: &str) -> Vec<Yaml>;
 
-    fn get_bool(&self, key: &str, default: bool) -> bool {
-        self.get_optional_bool(key).unwrap_or(default)
-    }
-
-    fn get_optional_bool(&self, key: &str) -> Option<bool>;
+    /// load a string from using key with default.
+    /// If obtained string is not bool-like -> error
+    fn get_bool(&self, key: &str, default: bool) -> bool;
 }
 
 impl Get for Yaml {
@@ -115,23 +113,21 @@ impl Get for Yaml {
         self[key].as_vec().unwrap_or(&vec![]).to_vec()
     }
 
-    fn get_optional_bool(&self, key: &str) -> Option<bool> {
+    fn get_bool(&self, key: &str, default: bool) -> bool {
         let result = &self[key];
-        if result.is_badvalue() {
-            return None;
+        if self[key].is_badvalue() {
+            return default;
         }
-
-        let ret = result.as_bool();
-        if ret.is_some() {
-            return ret;
+        if let Some(v) = result.as_bool() {
+            return v;
         }
-
         // for some reason yaml rust doesn't accept yes/no either True/False as bool
-        let ret = result.as_str().map(to_bool).transpose().ok().flatten();
-        if ret.is_none() {
-            log::warn!("{key} is not bool like");
+        if let Some(v) = result.as_str().map(to_bool).transpose().ok().flatten() {
+            v
+        } else {
+            log::warn!("{key} is not bool like, using default {default:?}");
+            default
         }
-        ret
     }
 }
 

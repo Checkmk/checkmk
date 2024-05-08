@@ -108,8 +108,8 @@ impl SectionBuilder {
         }
         self
     }
-    pub fn set_async(mut self, value: bool) -> Self {
-        self.is_async = value;
+    pub fn set_async(mut self) -> Self {
+        self.is_async = true;
         self
     }
 
@@ -245,10 +245,10 @@ impl Section {
         let c = yaml.get_string(keys::SEP).and_then(|s| s.chars().next());
         let builder = SectionBuilder::new(name).sep(c);
 
-        if yaml.get_optional_bool(keys::DISABLED) == Some(true) {
+        if yaml.get_bool(keys::DISABLED, false) {
             builder.set_disabled()
-        } else if let Some(v) = yaml.get_optional_bool(keys::IS_ASYNC) {
-            builder.set_async(v)
+        } else if yaml.get_bool(keys::IS_ASYNC, false) {
+            builder.set_async()
         } else {
             builder
         }

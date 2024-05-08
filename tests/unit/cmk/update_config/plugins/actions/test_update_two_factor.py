@@ -97,7 +97,7 @@ def test_missing_totp_in_mfa_mk_file(
 ) -> None:
     """User's two factor file is missing totp entry"""
     mock_logger = mocklogger.MockLogger()
-    run_check(mock_logger, {})  # type: ignore[arg-type]
+    run_check(mock_logger)  # type: ignore[arg-type]
 
     assert len(mock_logger.messages) == 1
     assert "1 user(s) had their two factor" in mock_logger.messages[0]
@@ -106,6 +106,6 @@ def test_missing_totp_in_mfa_mk_file(
 def test_existing_totp_in_mfa_mk_file(with_totp: None, run_check: UpdateExistingTwoFactor) -> None:
     """User's two factor file is up to date"""
     mock_logger = mocklogger.MockLogger()
-    run_check(mock_logger, {})  # type: ignore[arg-type]
+    run_check(mock_logger)  # type: ignore[arg-type]
 
     assert len(mock_logger.messages) == 0

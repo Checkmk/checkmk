@@ -13,11 +13,10 @@ from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.userdb import load_users, save_users
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateUserAttributes(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         users = load_users(lock=True, skip_validation=True)
         save_users(
             _update_user_attributes(logger, users),

@@ -9,11 +9,10 @@ from cmk.gui.userdb import load_two_factor_credentials, load_users
 from cmk.gui.userdb.store import save_two_factor_credentials
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateExistingTwoFactor(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         """
         Check if a user has an existing two_factor_credentials.mk file,
 

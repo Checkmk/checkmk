@@ -46,7 +46,6 @@ from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 from .registry import pre_update_action_registry, update_action_registry
-from .update_state import UpdateState
 
 
 def main(
@@ -74,11 +73,10 @@ def main(
 
 
 def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
-    update_state = UpdateState.load(Path(paths.var_dir))
     _load_plugins(logger)
 
     try:
-        return update_config(logger, update_state)
+        return update_config(logger)
     except Exception:
         if debug.enabled():
             raise
@@ -237,7 +235,7 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
     logger.info(f"Done ({tty.green}success{tty.normal})\n")
 
 
-def update_config(logger: logging.Logger, update_state: UpdateState) -> Literal[0, 1]:
+def update_config(logger: logging.Logger) -> Literal[0, 1]:
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")
@@ -259,7 +257,7 @@ def update_config(logger: logging.Logger, update_state: UpdateState) -> Literal[
             logger.info(f" {tty.yellow}{num:02d}/{total:02d}{tty.normal} {action.title}...")
             try:
                 with ActivateChangesWriter.disable():
-                    action(logger, update_state.setdefault(action.name))
+                    action(logger)
             except Exception:
                 has_errors = True
                 logger.error(f' + "{action.title}" failed', exc_info=True)
@@ -273,8 +271,6 @@ def update_config(logger: logging.Logger, update_state: UpdateState) -> Literal[
                 "Successfully updated Checkmk configuration",
                 need_sync=True,
             )
-
-    update_state.save()
 
     if has_errors:
         logger.error(f"Done ({tty.red}with errors{tty.normal})")

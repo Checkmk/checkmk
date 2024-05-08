@@ -12,11 +12,10 @@ import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 from cmk.ec.update_config import history_files_to_sqlite
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateECHistory(UpdateAction):  # pylint: disable=too-few-public-methods
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         self.history_files_to_sqlite(cmk.utils.paths.omd_root, logger)
 
     @staticmethod

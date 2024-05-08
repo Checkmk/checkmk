@@ -9,11 +9,10 @@ from logging import Logger
 from cmk.utils.paths import omd_root
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class DeleteOldAgentReceiverCert(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         (omd_root / "etc/ssl/agent_receiver_cert.pem").unlink(missing_ok=True)
 
 

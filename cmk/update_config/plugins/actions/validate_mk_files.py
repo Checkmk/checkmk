@@ -11,11 +11,10 @@ from cmk.utils.config_validation_layer.validation_utils import ConfigValidationE
 from cmk.gui.watolib.simple_config_file import config_file_registry
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class ValidateConfigFiles(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         """
         Validate the data in all registered mk config files.
         """

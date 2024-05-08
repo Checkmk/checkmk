@@ -11,11 +11,10 @@ from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.search import BIHostSearch, BIServiceSearch
 from cmk.update_config.plugins.actions.rulesets import transform_condition_labels_to_label_groups
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateBIConfig(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         # This update action simply loads the bi config (i.e. it instantiates BIAggregationPacks
         # from cache) into aggregation_packs, updates these packs and saves the config again.
         aggregation_packs: BIAggregationPacks = get_cached_bi_packs()

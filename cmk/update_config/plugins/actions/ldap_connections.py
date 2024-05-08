@@ -8,11 +8,10 @@ from logging import Logger
 from cmk.gui.userdb import LDAPUserConnectionConfig, UserConnectionConfigFile
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateLDAPConnections(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         # These changes were actually made a long time ago. The migrations were just only be done
         # during runtime and never persisted, so the we can not be sure that the migration was done for
         # all connections. So we need to keep the migration for the 2.4 here and can drop it afterwards.

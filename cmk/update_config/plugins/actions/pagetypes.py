@@ -19,7 +19,6 @@ from cmk.gui.pagetypes import (
 )
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 _TOverridable_co = TypeVar("_TOverridable_co", bound=Overridable, covariant=True)
 
@@ -42,7 +41,7 @@ pagetype_updater_registry = PagetypeUpdaterRegistry()
 
 
 class UpdatePagetypes(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         for pagetype in all_page_types().values():
             raw_page_dicts = pagetype.load_raw()
             for updater in pagetype_updater_registry.values():

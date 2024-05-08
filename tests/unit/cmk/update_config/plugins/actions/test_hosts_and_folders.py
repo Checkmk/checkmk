@@ -18,7 +18,7 @@ def run_plugin() -> None:
         name="hosts_and_folders",
         title="Hosts and folders",
         sort_index=40,
-    )(logging.getLogger(), {})
+    )(logging.getLogger())
 
 
 def test_update_tuple_contact_groups_in_folder(request_context: None) -> None:

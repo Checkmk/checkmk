@@ -14,11 +14,10 @@ from cmk.utils.store.htpasswd import Htpasswd
 from cmk.gui.userdb import load_users
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class SynchronizeAutomationSecretAndHtpasswd(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         """Set the Htpasswd has of an automation user to its secret
 
         When changing a automation secret in the UI we also change it in the htpasswd file.

@@ -118,7 +118,7 @@ def test_check_password_hashes(
     )
     mock_logger = mocklogger.MockLogger()
 
-    run_check(mock_logger, {})  # type: ignore[arg-type]
+    run_check(mock_logger)  # type: ignore[arg-type]
 
     if should_warn:
         assert len(mock_logger.messages) == 1

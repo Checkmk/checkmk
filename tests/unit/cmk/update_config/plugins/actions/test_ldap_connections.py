@@ -55,7 +55,7 @@ def test_update_ldap_connection_not_changed() -> None:
         name="update_ldap_connections",
         title="Update LDAP connections",
         sort_index=100,  # can run whenever
-    )(logging.getLogger(), {})
+    )(logging.getLogger())
 
     assert UserConnectionConfigFile().load_for_reading() == [connection]
 
@@ -91,7 +91,7 @@ def test_update_ldap_connection_directory_type() -> None:
             name="update_ldap_connections",
             title="Update LDAP connections",
             sort_index=100,  # can run whenever
-        )(logging.getLogger(), {})
+        )(logging.getLogger())
 
     loaded_connection = UserConnectionConfigFile().load_for_reading()[0]
     assert loaded_connection["type"] == "ldap"
@@ -127,7 +127,7 @@ def test_update_ldap_connection_separate_server_and_directory_type() -> None:
             name="update_ldap_connections",
             title="Update LDAP connections",
             sort_index=100,  # can run whenever
-        )(logging.getLogger(), {})
+        )(logging.getLogger())
 
     loaded_connection = UserConnectionConfigFile().load_for_reading()[0]
     assert loaded_connection["type"] == "ldap"

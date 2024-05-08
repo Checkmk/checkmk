@@ -13,11 +13,10 @@ from cmk.utils.user import UserId
 from cmk.gui.userdb import load_contacts, load_multisite_users, load_users
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class ValidateUserIds(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         """
         Check if we can find UserIds that aren't valid in this version of Checkmk.
 

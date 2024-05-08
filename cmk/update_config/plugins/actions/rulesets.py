@@ -29,8 +29,8 @@ from cmk.gui.watolib.rulesets import (
     RulesetCollection,
 )
 
+from cmk.update_config.lib import format_warning
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import format_warning, UpdateActionState
 
 REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "checkgroup_parameters:fileinfo-groups": "checkgroup_parameters:fileinfo_groups_checking",
@@ -51,7 +51,7 @@ DEPRECATED_RULESET_PATTERNS = (re.compile("^agent_simulator$"),)
 
 
 class UpdateRulesets(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         # To transform the given ruleset config files before initialization, we cannot call
         # AllRulesets.load_all_rulesets() here.
         raw_rulesets = AllRulesets(RulesetCollection._initialize_rulesets())

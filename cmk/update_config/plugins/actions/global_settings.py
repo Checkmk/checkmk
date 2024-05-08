@@ -26,7 +26,6 @@ from cmk.gui.watolib.global_settings import (
 from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
 _RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = [
@@ -38,7 +37,7 @@ _REMOVED_OPTIONS: Sequence[str] = [
 
 
 class UpdateGlobalSettings(UpdateAction):
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         _update_installation_wide_global_settings(logger)
         _update_site_specific_global_settings(logger)
         _update_remote_site_specific_global_settings(logger)

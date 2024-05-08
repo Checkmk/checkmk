@@ -9,7 +9,6 @@ from logging import Logger
 from cmk.gui import userdb
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 
 class TerminateUserSessions(UpdateAction):
@@ -21,7 +20,7 @@ class TerminateUserSessions(UpdateAction):
     session to be alive after the update. So we terminate all sessions on update.
     """
 
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         for user_id in userdb.load_users(lock=False):
             session_infos = userdb.session.active_sessions(
                 userdb.session.load_session_infos(user_id, lock=False),

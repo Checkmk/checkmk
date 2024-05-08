@@ -8,7 +8,6 @@ from logging import Logger
 from cmk.utils import version
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
-from cmk.update_config.update_state import UpdateActionState
 
 if version.edition() is version.Edition.CME:
     from cmk.gui.cme.managed_snapshots import save_active_config
@@ -17,7 +16,7 @@ else:
 
 
 class UpdateECRules(UpdateAction):  # pylint: disable=too-few-public-methods
-    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+    def __call__(self, logger: Logger) -> None:
         save_active_config()
 
 

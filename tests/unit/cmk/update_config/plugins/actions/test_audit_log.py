@@ -47,7 +47,7 @@ def test_audit_log(plugin: UpdateAuditLog, mocker: MockerFixture, request_contex
         expected_content = f.read()
 
     with time_machine.travel(datetime.datetime(2023, 11, 8, 13, tzinfo=ZoneInfo("CET"))):
-        plugin(logging.getLogger(), {})
+        plugin(logging.getLogger())
 
     content = b""
     for file in [

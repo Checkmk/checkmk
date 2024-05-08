@@ -50,21 +50,21 @@ def _log(level: int, text: str, *args: object, stream: TextIO | None = None) -> 
         _console.log(level, text, *args)
 
 
-def debug(text: str, *args: object) -> None:
-    _log(logging.DEBUG, text, *args)
+def debug(text: str) -> None:
+    _log(logging.DEBUG, text)
 
 
-def verbose(text: str, *args: object, stream: TextIO | None = None) -> None:
-    _log(VERBOSE, text, *args, stream=stream)
+def verbose(text: str, stream: TextIO | None = None) -> None:
+    _log(VERBOSE, text, stream=stream)
 
 
-def info(text: str, *args: object) -> None:
-    _log(logging.INFO, text, *args)
+def info(text: str) -> None:
+    _log(logging.INFO, text)
 
 
-def warning(text: str, *args: object, stream: TextIO | None = None) -> None:
-    _log(logging.WARNING, text, *args, stream=stream)
+def warning(text: str, stream: TextIO | None = None) -> None:
+    _log(logging.WARNING, text, stream=stream)
 
 
-def error(text: str, *args: object) -> None:
-    _log(logging.ERROR, text, *args, stream=sys.stderr)
+def error(text: str) -> None:
+    _log(logging.ERROR, text, stream=sys.stderr)

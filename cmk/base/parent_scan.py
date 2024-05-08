@@ -249,7 +249,7 @@ def scan_parents_of(
 
         if len(lines) == 1 and lines[0].startswith("ERROR:"):
             message = lines[0][6:].strip()
-            console.verbose("%s: %s\n", host, message, stream=sys.stderr)
+            console.verbose(f"{host}: {message}\n", stream=sys.stderr)
             dot(tty.red, "D")
             gateways.append(GatewayResult(None, "dnserror", 0, message))
             continue
@@ -339,7 +339,7 @@ def scan_parents_of(
             # gateway can be monitored via the standard host check
             if ping_probes:
                 if not gateway_reachable_via_ping(r, ping_probes):
-                    console.verbose("(not using %s, not reachable)\n", r, stream=sys.stderr)
+                    console.verbose(f"(not using {r}, not reachable)\n", stream=sys.stderr)
                     skipped_gateways += 1
                     continue
             this_route = r
@@ -358,9 +358,9 @@ def scan_parents_of(
             scan_config, hosts_config, this_route, lookup_ip_address=lookup_ip_address
         )
         if gateway:
-            console.verbose("%s(%s) ", gateway, gateway_ip)
+            console.verbose(f"{gateway}({gateway_ip}) ")
         else:
-            console.verbose("%s ", gateway_ip)
+            console.verbose(f"{gateway_ip} ")
 
         # Try to find DNS name of host via reverse DNS lookup
         dns_name = _ip_to_dnsname(gateway_ip)

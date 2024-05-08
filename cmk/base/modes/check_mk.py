@@ -659,11 +659,8 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
                 fetcher_type=source_info.fetcher_type,
             )
             if any(r.state != 0 for r in source_results):
-                console.error(
-                    "ERROR [%s]: %s\n",
-                    source_info.ident,
-                    ", ".join(r.summary for r in source_results),
-                )
+                summaries = ", ".join(r.summary for r in source_results)
+                console.error(f"ERROR [{source_info.ident}]: {summaries}\n")
                 has_errors = True
             if raw_data.is_ok():
                 assert raw_data.ok is not None
@@ -2351,7 +2348,7 @@ def mode_check(
             ValueStoreManager(hostname), store_changes=not dry_run
         ) as value_store_manager,
     ):
-        console.debug("Checkmk version %s\n", cmk_version.__version__)
+        console.debug(f"Checkmk version {cmk_version.__version__}\n")
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_plugins = CheckPluginMapper(
             config_cache,

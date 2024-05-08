@@ -129,7 +129,7 @@ def _fetch_all(
         Snapshot,
     ]
 ]:
-    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
+    console.verbose(f"{tty.yellow}+{tty.normal} FETCHING DATA\n")
     return [
         _do_fetch(
             source.source_info(),
@@ -184,7 +184,7 @@ class CMKParser:
         ],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         """Parse fetched data."""
-        console.debug("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
+        console.debug(f"{tty.yellow}+{tty.normal} PARSE FETCHER RESULTS\n")
         output: list[tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
         section_cache_path = Path(cmk.utils.paths.var_dir)
         # Special agents can produce data for the same check_plugin_name on the same host, in this case

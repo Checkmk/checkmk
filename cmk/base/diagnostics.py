@@ -88,9 +88,9 @@ def create_diagnostics_dump(parameters: DiagnosticsOptionalParameters | None) ->
 
     section.section_step("Creating diagnostics dump", verbose=False)
     if dump.tarfile_created:
-        console.info("%s\n", _format_filepath(dump.tarfile_path))
+        console.info(f"{_format_filepath(dump.tarfile_path)}\n")
     else:
-        console.info("%s%s\n", _GAP, "No dump")
+        console.info(f"{_GAP}No dump\n")
 
 
 #   .--format helper-------------------------------------------------------.
@@ -218,7 +218,7 @@ class DiagnosticsDump:
 
     def _create_dump_folder(self) -> None:
         section.section_step("Create dump folder")
-        console.verbose("%s\n", _format_filepath(self.dump_folder))
+        console.verbose(f"{_format_filepath(self.dump_folder)}\n")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
     def _create_tarfile(self) -> None:
@@ -236,19 +236,19 @@ class DiagnosticsDump:
 
         filepaths = []
         for element in self.elements:
-            console.info("%s\n", _format_title(element.title))
-            console.info("%s\n", _format_description(element.description))
+            console.info(f"{_format_title(element.title)}\n")
+            console.info(f"{_format_description(element.description)}\n")
 
             try:
                 for filepath in element.add_or_get_files(tmp_dump_folder):
                     filepaths.append(filepath)
 
             except DiagnosticsElementError as e:
-                console.info("%s\n", _format_error(str(e)))
+                console.info(f"{_format_error(str(e))}\n")
                 continue
 
             except Exception:
-                console.info("%s\n", _format_error(traceback.format_exc()))
+                console.info(f"{_format_error(traceback.format_exc())}\n")
                 continue
 
         return filepaths
@@ -267,7 +267,7 @@ class DiagnosticsDump:
             "Cleanup dump folder", add_info="keep last %d dumps" % self._keep_num_dumps
         )
         for _mtime, filepath in dumps:
-            console.verbose("%s\n", _format_filepath(filepath))
+            console.verbose(f"{_format_filepath(filepath)}\n")
             self._remove_file(filepath)
 
     def _remove_file(self, filepath: Path) -> None:
@@ -1071,7 +1071,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 )
 
             except subprocess.CalledProcessError as e:
-                console.info("%s\n", _format_error(str(e)))
+                console.info(f"{_format_error(str(e))}\n")
                 continue
 
             filepath = tmpdir.joinpath(f"{self.ident}{suffix}")

@@ -84,7 +84,7 @@ class HostCheckStore:
             )
             os.chmod(compiled_filename, 0o750)  # nosec B103 # BNS:c29b0e
 
-        console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
+        console.verbose(f" ==> {compiled_filename}.\n", stream=sys.stderr)
 
 
 def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: ConfigCache) -> None:
@@ -103,14 +103,7 @@ def precompile_hostchecks(config_path: VersionedConfigPath, config_cache: Config
         if config_cache.is_active(hn) and config_cache.is_online(hn)
     }:
         try:
-            console.verbose(
-                "%s%s%-16s%s:",
-                tty.bold,
-                tty.blue,
-                hostname,
-                tty.normal,
-                stream=sys.stderr,
-            )
+            console.verbose(f"{tty.bold}{tty.blue}{hostname:<16}{tty.normal}:", stream=sys.stderr)
             host_check = dump_precompiled_hostcheck(
                 config_cache,
                 config_path,
@@ -179,7 +172,7 @@ def dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     checks_to_load = sorted(_get_legacy_check_file_names_to_load(needed_legacy_check_plugin_names))
 
     for check_plugin_name in sorted(needed_legacy_check_plugin_names):
-        console.verbose(" %s%s%s", tty.green, check_plugin_name, tty.normal, stream=sys.stderr)
+        console.verbose(f" {tty.green}{check_plugin_name}{tty.normal}", stream=sys.stderr)
 
     # IP addresses
     # FIXME:

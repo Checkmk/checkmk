@@ -313,12 +313,6 @@ def _output_check_result(
     weight, state_txt = (
         ("", "PEND ") if submittee.pending else (tty.bold, tty.states[submittee.state])
     )
-    console.verbose(
-        "%-20s %s%s%s%s%s\n",
-        submittee.name,
-        weight,
-        state_txt,
-        submittee.details.split("|", 1)[0].split("\n", 1)[0],
-        tty.normal,
-        f" ({submittee.details.split('|', 1)[1]})" if show_perfdata else "",
-    )
+    details = submittee.details.split("|", 1)[0].split("\n", 1)[0]
+    perfdata = f" ({submittee.details.split('|', 1)[1]})" if show_perfdata else ""
+    console.verbose(f"{submittee.name:<20} {weight}{state_txt}{details}{tty.normal}{perfdata}\n")

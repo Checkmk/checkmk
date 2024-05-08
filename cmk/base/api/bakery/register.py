@@ -67,7 +67,7 @@ def bakery_plugin(
 
 def get_bakery_plugins() -> dict[str, BakeryPlugin]:
     for plugin, exception in load_plugins_with_exceptions("cmk.base.cee.plugins.bakery"):
-        console.error("Error in bakery plug-in %s: %s\n", plugin, exception)
+        console.error(f"Error in bakery plug-in {plugin}: {exception}\n")
         if cmk.utils.debug.enabled():
             raise exception
 

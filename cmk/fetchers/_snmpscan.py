@@ -47,7 +47,7 @@ def gather_available_raw_section_names(
         if scan_config.on_error is OnError.RAISE:
             raise
         if scan_config.on_error is OnError.WARN:
-            console.error("SNMP scan failed: %s\n" % e)
+            console.error(f"SNMP scan failed: {e}\n")
 
     return frozenset()
 
@@ -107,9 +107,7 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
 def _fake_description_object() -> None:
     """Fake OID values to prevent issues with a lot of scan functions"""
     console.debug(
-        '       Skipping system description OID (Set %s and %s to "")\n',
-        OID_SYS_DESCR,
-        OID_SYS_OBJ,
+        f'       Skipping system description OID (Set {OID_SYS_DESCR} and {OID_SYS_OBJ} to "")\n'
     )
     snmp_cache.single_oid_cache()[OID_SYS_DESCR] = ""
     snmp_cache.single_oid_cache()[OID_SYS_OBJ] = ""

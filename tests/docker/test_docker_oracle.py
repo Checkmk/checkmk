@@ -56,34 +56,39 @@ class OracleDatabase:
         self.default_environment = dict(
             [str(_).split("=", 1) for _ in self.image.attrs["Config"]["Env"]]
         )
-        self.ORACLE_HOME: Final[str] = self.default_environment.get("ORACLE_HOME", "")
-        self.INIT_ORA: Final[str] = f"{self.ORACLE_HOME}/dbs/init.ora"
-        assert self.ORACLE_HOME, "ORACLE_HOME is not defined in image!"
+        home_var = "ORACLE_HOME"
+        assert home_var in self.default_environment, f"${home_var} is not defined in image!"
+        self.ORACLE_HOME: Final[Path] = Path(self.default_environment[home_var])
+        self.INIT_ORA: Final[Path] = self.ORACLE_HOME / "dbs" / "init.ora"
         self.SID: Final[str] = "FREE"  # Cannot be changed in FREE edition!
         self.PDB: Final[str] = "FREEPDB1"  # Cannot be changed in FREE edition!
         self.SERVICE_PREFIX: Final[str] = "ORA FREE"  # Cannot be changed in FREE edition!
         self.PORT: Final[int] = 1521
 
-        self.tns_admin_dir = f"{self.ORACLE_HOME}/network/admin"
-        self.password: str = "oracle"
+        self.tns_admin_dir = self.ORACLE_HOME / "network" / "admin"
+        self.password = "oracle"
         self.sys_user_auth: str = f"sys/{self.password}@localhost:{self.PORT}/{self.SID}"
-        self.charset: str = "AL32UTF8"
-        self.wallet_dir: str = "/etc/check_mk/oracle_wallet"
-        self.wallet_password: str = "wallywallet42"
+        self.charset = "AL32UTF8"
+        self.wallet_dir = Path("/etc/check_mk/oracle_wallet")
+        self.wallet_password = "wallywallet42"
 
         # database root folder
-        self.ROOT: Final[str] = "/opt/oracle"  # Cannot be changed!
+        self.ROOT: Final[Path] = Path("/opt/oracle")  # Cannot be changed!
         # database file folder within container
-        self.DATA: Final[str] = "/opt/oracle/oradata"  # Cannot be changed!
+        self.DATA: Final[Path] = self.ROOT / "oradata"  # Cannot be changed!
         # external file system folder for environment file storage
-        self.ORAENV: Final[str] = os.getenv("CMK_ORAENV", self.temp_dir.as_posix())
+        self.ORAENV: Final[Path] = (
+            Path(os.environ["CMK_ORAENV"]) if "CMK_ORAENV" in os.environ else self.temp_dir
+        )
         # external file system folder for database file storage (unset => use container)
-        self.ORADATA: Final[str] = os.getenv("CMK_ORADATA", "")
-        self.reuse_db = self.ORADATA and os.path.exists(f"{self.ORADATA}/{self.SID}")
+        self.ORADATA: Final[Path | None] = (
+            Path(os.environ["CMK_ORADATA"]) if "CMK_ORADATA" in os.environ else None
+        )
+        self.reuse_db = self.ORADATA and os.path.exists(self.ORADATA / self.SID)
 
-        self.cmk_conf_dir: str = "/etc/check_mk"
-        self.cmk_var_dir: str = "/var/lib/check_mk_agent"
-        self.cmk_plugin_dir: str = "/usr/lib/check_mk_agent/plugins"
+        self.cmk_conf_dir = Path("/etc/check_mk")
+        self.cmk_var_dir = Path("/var/lib/check_mk_agent")
+        self.cmk_plugin_dir = Path("/usr/lib/check_mk_agent/plugins")
         # user name; use "c##<name>" notation for pluggable databases
         self.cmk_username: str = "c##checkmk"
         self.cmk_password: str = "cmk"
@@ -97,8 +102,8 @@ class OracleDatabase:
             "ORACLE_PWD": self.password,
             "ORACLE_PASSWORD": self.password,
             "ORACLE_CHARACTERSET": self.charset,
-            "MK_CONFDIR": self.cmk_conf_dir,
-            "MK_VARDIR": self.cmk_var_dir,
+            "MK_CONFDIR": self.cmk_conf_dir.as_posix(),
+            "MK_VARDIR": self.cmk_var_dir.as_posix(),
         }
 
         self.sql_files = {
@@ -133,7 +138,7 @@ class OracleDatabase:
         if self.ORADATA:
             # ORADATA must be writeable to UID 54321
             os.makedirs(self.ORADATA, mode=0o777, exist_ok=True)
-            self.volumes.append(f"{self.ORADATA}:{self.DATA}")
+            self.volumes.append(f"{self.ORADATA.as_posix()}:{self.DATA.as_posix()}")
 
         self._init_envfiles()
         self.container = self._start_container()
@@ -142,7 +147,7 @@ class OracleDatabase:
     def _create_oracle_wallet(self) -> None:
         logger.info("Creating Oracle wallet...")
         wallet_password = f"{self.wallet_password}\n{self.wallet_password}"
-        cmd = ["mkstore", "-wrl", self.wallet_dir, "-create"]
+        cmd = ["mkstore", "-wrl", self.wallet_dir.as_posix(), "-create"]
         rc, output = self.container.exec_run(
             f"""bash -c 'echo -e "{wallet_password}" | {" ".join(cmd)}'""",
             user="root",
@@ -153,7 +158,7 @@ class OracleDatabase:
         cmd = [
             "mkstore",
             "-wrl",
-            self.wallet_dir,
+            self.wallet_dir.as_posix(),
             "-createCredential",
             f"localhost:{self.PORT}/{self.SID} {self.cmk_username} {self.cmk_password}",
         ]
@@ -172,7 +177,7 @@ class OracleDatabase:
         to the containers ORADATA folder instead."""
 
         for name, content in (self.sql_files | self.cfg_files).items():
-            if not os.path.exists(path := f"{self.ORAENV}/{name}"):
+            if not os.path.exists(path := self.ORAENV / name):
                 with open(path, "w", encoding="UTF-8") as oraenv_file:
                     oraenv_file.write(content)
 
@@ -230,7 +235,7 @@ class OracleDatabase:
         logger.info("Copying environment files to container...")
         for name in self.sql_files:
             assert copy_to_container(
-                self.container, f"{self.ORAENV}/{name}", self.ROOT
+                self.container, self.ORAENV / name, self.ROOT
             ), "Failed to copy environment files!"
 
         logger.info("Forcing listener registration...")
@@ -310,7 +315,7 @@ class OracleDatabase:
         assert rc == 0, f"Error while setting ownership: {output.decode('UTF-8')}"
         logger.info("Installing Oracle plugin configuration files...")
         for cfg_file in self.cfg_files:
-            assert copy_to_container(self.container, f"{self.ORAENV}/{cfg_file}", self.cmk_conf_dir)
+            assert copy_to_container(self.container, self.ORAENV / cfg_file, self.cmk_conf_dir)
         self.use_credentials()
 
         logger.info("Create a link to Perl...")
@@ -331,7 +336,7 @@ class OracleDatabase:
 
     def use_credentials(self) -> None:
         logger.info("Enabling credential-based authentication...")
-        with open(path := f"{self.ORAENV}/sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
+        with open(path := self.ORAENV / "sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
             oraenv_file.write("NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)")
         assert copy_to_container(
             self.container, path, self.tns_admin_dir
@@ -345,7 +350,7 @@ class OracleDatabase:
 
     def use_wallet(self) -> None:
         logger.info("Enabling wallet authentication...")
-        with open(path := f"{self.ORAENV}/sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
+        with open(path := self.ORAENV / "sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
             oraenv_file.write(
                 "\n".join(
                     [
@@ -354,7 +359,7 @@ class OracleDatabase:
                         "WALLET_LOCATION =",
                         "(SOURCE=",
                         "    (METHOD = FILE)",
-                        f"    (METHOD_DATA = (DIRECTORY={self.wallet_dir}))",
+                        f"    (METHOD_DATA = (DIRECTORY={self.wallet_dir.as_posix()}))",
                         ")",
                     ]
                 )
@@ -400,7 +405,7 @@ def test_docker_oracle(
     else:
         oracle.use_credentials()
     rc, output = oracle.container.exec_run(
-        f"""bash -c '{oracle.cmk_plugin_dir}/mk_oracle -t'""",
+        f"""bash -c '{oracle.cmk_plugin_dir.as_posix()}/mk_oracle -t'""",
         user="root",
         privileged=True,
     )

@@ -52,7 +52,7 @@ def _formspec_jenkins() -> Dictionary:
                 parameter_form=String(
                     title=Title("Path"),
                     help_text=Help(
-                        "Add (sub) path to the URI, ie. <proto>://<host>:<port>/<path>."
+                        "Add (sub) path to the URI, ie. [proto]://[host]:[port]/[path]."
                     ),
                     custom_validate=[LengthInRange(min_value=1), _validate_sub_path],
                 ),

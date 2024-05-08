@@ -381,7 +381,7 @@ def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> VueFormSpecTy
 
     # If no explicit conversion exist, create an ugly valuespec
     # TODO: raise an exception
-    return String(title=Title(f"UNKNOWN custom_form_spec {custom_form_spec}"))
+    return String(title=Title("UNKNOWN custom_form_spec %s") % str(custom_form_spec))
 
 
 def _compute_default_value(form_spec: FormSpec) -> Any:

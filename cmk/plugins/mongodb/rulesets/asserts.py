@@ -23,7 +23,7 @@ def _parameter_valuespec_mongodb_asserts() -> Dictionary:
             "%s_assert_rate"
             % what: DictElement[SimpleLevelsConfigModel[float]](
                 parameter_form=SimpleLevels[float](
-                    title=Title(f"{what.title()} rate"),
+                    title=Title("%s rate") % what.title(),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((1.0, 2.0)),
                     form_spec_template=Float(unit_symbol="Asserts per second"),

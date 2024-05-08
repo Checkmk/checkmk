@@ -332,9 +332,9 @@ def valuespec_listof(
         help_text=optional_text(vs_instance.help(), Help),
         element_template=valuespec_to_formspec(vs_instance._valuespec),
         custom_validate=(ValueSpecValidator(vs_instance),),
-        add_element_label=Label(vs_instance._add_label),
-        remove_element_label=Label(vs_instance._del_label),
-        no_element_label=Label(vs_instance._text_if_empty),
+        add_element_label=Label("%s") % vs_instance._add_label,
+        remove_element_label=Label("%s") % vs_instance._del_label,
+        no_element_label=Label("%s") % vs_instance._text_if_empty,
         editable_order=vs_instance._movable,
         migrate=migrate_func,
     )
@@ -565,7 +565,7 @@ def valuespec_textinput(
         custom_validators.append(
             validators.MatchRegex(
                 vs_instance._regex,
-                error_msg=Message(vs_instance._regex_error),
+                error_msg=Message("%s") % vs_instance._regex_error,
             )
         )
 
@@ -640,11 +640,11 @@ def valuespec_dropdown_choice(
         title=optional_text(vs_instance.title(), Title),
         help_text=optional_text(vs_instance.help(), Help),
         label=optional_text(vs_instance._label, Label),
-        no_elements_text=Message(vs_instance._empty_text),
+        no_elements_text=Message("%s") % vs_instance._empty_text,
         elements=[
             form_specs.SingleChoiceElement(
                 name=name,
-                title=Title(title),
+                title=Title("%s") % title,
             )
             for name, title in vs_instance.choices()
         ],
@@ -693,7 +693,7 @@ def valuespec_cascading_dropdown(
     # FormSpec combinations is intentionally broken.
     prefill: form_specs.Prefill
     if vs_instance._no_preselect_title is not None:
-        prefill = InputHint(Title(vs_instance._no_preselect_title))
+        prefill = InputHint(Title("%s") % vs_instance._no_preselect_title)
     elif not isinstance(vs_instance._default_value, definitions.Sentinel):
         prefill = DefaultValue(vs_instance._default_value)
     else:
@@ -708,7 +708,7 @@ def valuespec_cascading_dropdown(
         elements=[
             form_specs.CascadingSingleChoiceElement(
                 name=enforce_str(name),
-                title=Title(title),
+                title=Title("%s") % title,
                 parameter_form=valuespec_to_formspec(enforce_valuespec(sub_vs_instance)),
             )
             for name, title, sub_vs_instance in maybe_lazy(vs_instance._choices)
@@ -857,7 +857,7 @@ def valuespec_list_choice(
         elements.append(
             form_specs.MultipleChoiceElement(
                 name=str(ident),
-                title=Title(label),
+                title=Title("%s") % label,
             )
         )
 
@@ -918,4 +918,4 @@ class ValueSpecValidator:
             self.vs_instance.validate_datatype(value, "")
             self.vs_instance.validate_value(value, "")
         except MKUserError as exc:
-            raise validators.ValidationError(Message(str(exc)))
+            raise validators.ValidationError(Message("%s") % str(exc))

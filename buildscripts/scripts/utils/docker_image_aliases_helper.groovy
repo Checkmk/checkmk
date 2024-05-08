@@ -50,6 +50,11 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     def set_docker_group_id = args.get("set_docker_group_id", false).asBoolean();
     def create_cache_folder = args.get("create_cache_folder", true).asBoolean();
     def mount_host_user_files = args.get("mount_host_user_files", true).asBoolean();
+    // ensure-workspace-integrity does currently only work when:
+    // * version.txt exists in the image (valid for the check_mk build images)
+    // * the docker image has lsb_release installed
+    // TODO: make the script more generic to be used in any image
+    def ensure_workspace_integrity = args.get("ensure_workspace_integrity", true).asBoolean();
     def run_args = args.args == null ? [] : args.args;
     def run_args_str = (
         run_args
@@ -83,8 +88,10 @@ inside_container = {Map arg1=[:], Closure arg2 ->
     println("inside_container(image=${image} docker_args: ${run_args_str})");
     docker.withRegistry(DOCKER_REGISTRY, "nexus") {
         image.inside(run_args_str) {
+            if (ensure_workspace_integrity) {
+                sh("${checkout_dir}/buildscripts/scripts/ensure-workspace-integrity");
+            }
             body();
         }
     }
 }
-

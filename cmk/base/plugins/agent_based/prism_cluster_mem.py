@@ -30,7 +30,7 @@ def check_prism_cluster_mem(params: Mapping[str, Any], section: Section) -> Chec
         levels_upper=params["levels"],
         boundaries=(0.0, 100.0),
         render_func=render.percent,
-        label="Total memory usage",
+        label="Total Memory Usage",
     )
 
 

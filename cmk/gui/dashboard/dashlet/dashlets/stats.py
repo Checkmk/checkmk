@@ -344,11 +344,8 @@ class StatsDashletDataGenerator(Generic[S], abc.ABC):
         )
         query = cls._stats_query() + "\n" + filter_headers
         try:
-            if only_sites:
-                with sites.only_sites(only_sites):
-                    result: list[int] = sites.live().query_row(query)
-            else:
-                result = sites.live().query_summed_stats(query)
+            with sites.only_sites(only_sites):
+                result: list[int] = sites.live().query_summed_stats(query)
         except MKLivestatusNotFoundError:
             result = []
 

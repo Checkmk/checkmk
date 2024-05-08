@@ -1,0 +1,11 @@
+Title: Respect all sites in multiple sites filter for statistics dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1715151235
+Edition: cre
+Level: 1
+Version: 2.2.0p27
+
+The dashlets "Host statistics" and "Service statistics" always showed results
+for just one site in a "Multiple sites" filter.

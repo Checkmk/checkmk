@@ -137,14 +137,15 @@ class StoredWalkSNMPBackend(SNMPBackend):
             index -= 1
         while True:
             line = lines[index]
-            try:
-                o, value = line.split(None, 1)
-            except ValueError:
-                o, value = line, ""
-
+            parts = line.split(None, 1)
+            o = parts[0]
             if o.startswith("."):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
+                if len(parts) > 1:
+                    value = parts[1]
+                else:
+                    value = ""
                 # Fix for missing starting oids
                 rows.append(("." + o, strip_snmp_value(value)))
                 index += direction

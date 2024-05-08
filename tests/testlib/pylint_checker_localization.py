@@ -5,7 +5,9 @@
 """Checker for incorrect string translation functions."""
 
 import re
+from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 import astroid  # type: ignore[import-untyped]
 from astroid import nodes
@@ -59,9 +61,14 @@ def all_tags_are_unescapable(first: nodes.NodeNG) -> tuple[bool, Sequence[str]]:
 #
 # Checker classes
 #
+@dataclass(frozen=True, kw_only=True)
+class _Error:
+    id: str
+    message: str
+    node: astroid.NodeNG
 
 
-class TranslationBaseChecker(BaseChecker):
+class TranslationBaseChecker(ABC, BaseChecker):
     """
     Checks for i18n translation functions (_, ugettext, ungettext, and many
     others) being called on something that isn't a string literal.
@@ -96,10 +103,6 @@ class TranslationBaseChecker(BaseChecker):
         ),
     }
 
-    # return true if check worked, else add message and return false
-    def check(self, node: nodes.Call) -> bool:
-        raise NotImplementedError()
-
     @only_required_for_messages(MESSAGE_ID)
     def visit_call(self, node: nodes.Call) -> None:
         """Called for every function call in the source code."""
@@ -115,8 +118,11 @@ class TranslationBaseChecker(BaseChecker):
             # Not a function we care about.
             return
 
-        if self.check(node):
-            return
+        if error := self.check(node):
+            self.add_message(msgid=error.id, args=error.message, node=error.node)
+
+    @abstractmethod
+    def check(self, node: nodes.Call) -> _Error | None: ...
 
 
 class TranslationStringConstantsChecker(TranslationBaseChecker):
@@ -148,13 +154,12 @@ class TranslationStringConstantsChecker(TranslationBaseChecker):
         ),
     }
 
-    def check(self, node: nodes.Call) -> bool:
+    def check(self, node: nodes.Call) -> _Error | None:
         first = node.args[0]
         if is_constant_string(first):
             # The first argument is a constant string! This is good!
-            return True
-        self.add_message(self.MESSAGE_ID, args=node.func.name, node=node)
-        return False
+            return None
+        return _Error(id=self.MESSAGE_ID, message=node.func.name, node=node)
 
 
 class EscapingProtectionChecker(TranslationBaseChecker):
@@ -185,7 +190,7 @@ class EscapingProtectionChecker(TranslationBaseChecker):
         ),
     }
 
-    def check(self, node: nodes.Call) -> bool:
+    def check(self, node: nodes.Call) -> _Error | None:
         first = node.args[0]
         if is_constant_string(first):
             all_unescapable, tags = all_tags_are_unescapable(first)
@@ -193,16 +198,14 @@ class EscapingProtectionChecker(TranslationBaseChecker):
             if all_unescapable and parent_is_HTML(node):
                 message = "String is protected by HTML(...) although it needn't be!\n"
                 message += "'''%s'''\n" % (first.value)
-                self.add_message(self.MESSAGE_ID, args=message, node=node)
-                return False
+                return _Error(id=self.MESSAGE_ID, message=message, node=node)
             # Case 2
             if not all_unescapable and parent_is_HTML(node):
                 if [x for x in tags if x != "img"]:
                     message = "OK! Is protected by HTML(...)!\n"
                     message += "'''{}'''\n----> {}".format(first.value, ", ".join(tags))
-                    self.add_message(self.MESSAGE_ID, args=message, node=node)
-                    return False
-        return True
+                    return _Error(id=self.MESSAGE_ID, message=message, node=node)
+        return None
 
 
 class EscapingChecker(TranslationBaseChecker):
@@ -235,7 +238,7 @@ class EscapingChecker(TranslationBaseChecker):
         ),
     }
 
-    def check(self, node: nodes.Call) -> bool:
+    def check(self, node: nodes.Call) -> _Error | None:
         first = node.args[0]
         # The first argument is a constant string! All is well!
         if is_constant_string(first):
@@ -244,6 +247,5 @@ class EscapingChecker(TranslationBaseChecker):
             if not all_unescapable and not parent_is_HTML(node):
                 message = "String contains unprotected tags! Protect them using HTML(...), escape them or replace them!\n"
                 message += "'''{}'''\n----> {}".format(first.value, ", ".join(tags))
-                self.add_message(self.MESSAGE_ID, args=message, node=node)
-                return False
-        return True
+                return _Error(id=self.MESSAGE_ID, message=message, node=node)
+        return None

@@ -145,7 +145,9 @@ def _find_sections(
             if on_error is OnError.RAISE:
                 raise
             if on_error is OnError.WARN:
-                console.warning(f"   Exception in SNMP scan function of {name}\n")
+                console.warning(
+                    console.format_warning(f"   Exception in SNMP scan function of {name}\n")
+                )
     return frozenset(found_sections)
 
 

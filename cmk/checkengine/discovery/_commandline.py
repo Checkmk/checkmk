@@ -181,4 +181,4 @@ def _commandline_discovery_on_host(
         itertools.chain.from_iterable(resolver.parsing_errors for resolver in providers.values())
     ):
         for line in result.details:
-            console.warning(f"{line}\n")
+            console.warning(console.format_warning(f"{line}\n"))

@@ -403,7 +403,11 @@ class Mode(Option):
                     continue
 
                 if option.is_deprecated_option(o):
-                    console.warning(f"{o!r} is deprecated in favour of option {option.name()!r}\n")
+                    console.warning(
+                        console.format_warning(
+                            f"{o!r} is deprecated in favour of option {option.name()!r}\n"
+                        )
+                    )
 
                 if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)

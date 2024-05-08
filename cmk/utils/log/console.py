@@ -72,18 +72,13 @@ def info(text: str, *args: object, **kwargs: TextIO) -> None:
     log(logging.INFO, text, *args, **kwargs)
 
 
-#
-# More top level wrappers
-#
-
-
 def warning(text: str, *args: object, **kwargs: TextIO) -> None:
     stream = kwargs.pop("stream", sys.stderr)
     assert not kwargs
-    log(logging.WARNING, _format_warning(text), *args, stream=stream)
+    log(logging.WARNING, text, *args, stream=stream)
 
 
-def _format_warning(text: str) -> str:
+def format_warning(text: str) -> str:
     stripped = text.lstrip()
     indent = text[: len(text) - len(stripped)]
     return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}"

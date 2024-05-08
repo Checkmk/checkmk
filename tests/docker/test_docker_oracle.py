@@ -236,16 +236,16 @@ class OracleDatabase:
             ), "Failed to copy environment files!"
 
         logger.info("Forcing listener registration...")
-        rc, _ = self.container.exec_run(
+        rc, output = self.container.exec_run(
             f"""bash -c 'sqlplus -s "/ as sysdba" < "{self.ROOT}/register_listener.sql"'"""
         )
-        assert rc == 0, "Error during listener registration!"
+        assert rc == 0, f"Error during listener registration: {output.decode('UTF-8')}"
 
         logger.info('Creating Checkmk user "%s"...', self.cmk_username)
-        rc, _ = self.container.exec_run(
+        rc, output = self.container.exec_run(
             f"""bash -c 'sqlplus -s "/ as sysdba" < "{self.ROOT}/create_user.sql"'"""
         )
-        assert rc == 0, "Error during user creation!"
+        assert rc == 0, f"Error during user creation: {output.decode('UTF-8')}"
 
         # reload() to make sure all attributes are set (e.g. NetworkSettings)
         self.container.reload()
@@ -302,21 +302,26 @@ class OracleDatabase:
             plugin_file.write(plugin_script)
 
         logger.info('Installing Oracle plugin "%s"...', plugin_source_path)
-        assert copy_to_container(self.container, plugin_temp_path.as_posix(), self.cmk_plugin_dir)
-        self.container.exec_run(
+        assert copy_to_container(
+            self.container, plugin_temp_path.as_posix(), self.cmk_plugin_dir
+        ), "Failed to copy Oracle plugin!"
+        logger.info('Set ownership for Oracle plugin "%s"...', plugin_source_path)
+        rc, output = self.container.exec_run(
             rf'chmod +x "{self.cmk_plugin_dir}/mk_oracle"', user="root", privileged=True
         )
+        assert rc == 0, f"Error while setting ownership: {output.decode('UTF-8')}"
         logger.info("Installing Oracle plugin configuration files...")
         for cfg_file in self.cfg_files:
             assert copy_to_container(self.container, f"{self.ORAENV}/{cfg_file}", self.cmk_conf_dir)
         self.use_credentials()
 
         logger.info("Create a link to Perl...")
-        self.container.exec_run(
+        rc, output = self.container.exec_run(
             r"""bash -c 'ln -s "${ORACLE_HOME}/perl/bin/perl" "/usr/bin/perl"'""",
             user="root",
             privileged=True,
         )
+        assert rc == 0, f"Error while creating a link to Perl: {output.decode('UTF-8')}"
 
     def __enter__(self):
         return self
@@ -330,12 +335,15 @@ class OracleDatabase:
         logger.info("Enabling credential-based authentication...")
         with open(path := f"{self.ORAENV}/sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
             oraenv_file.write("NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)")
-        assert copy_to_container(self.container, path, self.tns_admin_dir)
-        self.container.exec_run(
+        assert copy_to_container(
+            self.container, path, self.tns_admin_dir
+        ), f'Failed to copy "{path}"!'
+        rc, output = self.container.exec_run(
             rf'cp "{self.cmk_conf_dir}/{self.cmk_credentials_cfg}" "{self.cmk_conf_dir}/{self.cmk_cfg}"',
             user="root",
             privileged=True,
         )
+        assert rc == 0, f"Failed to copy cfg file: {output.decode('UTF-8')}"
 
     def use_wallet(self) -> None:
         logger.info("Enabling wallet authentication...")
@@ -353,12 +361,15 @@ class OracleDatabase:
                     ]
                 )
             )
-        assert copy_to_container(self.container, path, self.tns_admin_dir)
-        self.container.exec_run(
+        assert copy_to_container(
+            self.container, path, self.tns_admin_dir
+        ), f'Failed to copy "{path}"!'
+        rc, output = self.container.exec_run(
             rf'cp "{self.cmk_conf_dir}/{self.cmk_wallet_cfg}" "{self.cmk_conf_dir}/{self.cmk_cfg}"',
             user="root",
             privileged=True,
         )
+        assert rc == 0, f"Failed to copy cfg file: {output.decode('UTF-8')}"
 
 
 @pytest.fixture(name="oracle", scope="session")
@@ -386,14 +397,15 @@ def test_docker_oracle(
         oracle.use_wallet()
     else:
         oracle.use_credentials()
-    rc, _ = oracle.container.exec_run(
+    rc, output = oracle.container.exec_run(
         f"""bash -c '{oracle.cmk_plugin_dir}/mk_oracle -t'""",
         user="root",
         privileged=True,
     )
-    assert (
-        rc == 0
-    ), f"Error: Oracle plugin could not connect to database using {auth_mode} authentication!"
+    assert rc == 0, (
+        f"Oracle plugin could not connect to database using {auth_mode} authentication!\n"
+        f"{output.decode('utf-8')}"
+    )
     expected_services = [
         {"state": 0} | _
         for _ in [

@@ -81,7 +81,7 @@ def test_discovery_prism_host_stats(
             [
                 Result(
                     state=State.WARN,
-                    summary="Total memory usage: 73.74% (warn/crit at 70.00%/80.00%)",
+                    summary="Total Memory Usage: 73.74% (warn/crit at 70.00%/80.00%)",
                 ),
                 Metric(
                     "prism_cluster_mem_used", 73.7407, levels=(70.0, 80.0), boundaries=(0.0, 100.0)

@@ -57,6 +57,7 @@ class OracleDatabase:
             [str(_).split("=", 1) for _ in self.image.attrs["Config"]["Env"]]
         )
         self.ORACLE_HOME: Final[str] = self.default_environment.get("ORACLE_HOME", "")
+        assert self.ORACLE_HOME, "ORACLE_HOME is not defined in image!"
         self.SID: Final[str] = "FREE"  # Cannot be changed in FREE edition!
         self.PDB: Final[str] = "FREEPDB1"  # Cannot be changed in FREE edition!
         self.SERVICE_PREFIX: Final[str] = "ORA FREE"  # Cannot be changed in FREE edition!

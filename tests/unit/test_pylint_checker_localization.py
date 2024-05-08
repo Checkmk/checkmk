@@ -8,7 +8,10 @@ import pytest
 from pylint.lint import PyLinter
 from pytest_mock import MockerFixture
 
-from tests.testlib.pylint_checker_localization import TranslationStringConstantsChecker
+from tests.testlib.pylint_checker_localization import (
+    HTMLTagsChecker,
+    TranslationStringConstantsChecker,
+)
 
 
 # Using astroid within a pytest context causes recursion errors. This fixture avoids these errors,
@@ -38,3 +41,22 @@ def test_translation_string_constants_checker(
         bool(TranslationStringConstantsChecker(PyLinter()).check(astroid.extract_node(code)))
         is is_error
     )
+
+
+@pytest.mark.parametrize(
+    ["code", "is_error"],
+    [
+        pytest.param("_('abc')", False),
+        pytest.param("_l('<tt>bold</tt>')", False),
+        pytest.param("_('* ? <a href=\"%s\">%s</a>')", False),
+        pytest.param(
+            '_(\'&copy; <a target="_blank" href="https://checkmk.com">Checkmk GmbH</a>\')', False
+        ),
+        pytest.param("_('123 <script>injection</script>')", True),
+    ],
+)
+def test_html_tags_checker(
+    code: str,
+    is_error: bool,
+) -> None:
+    assert bool(HTMLTagsChecker(PyLinter()).check(astroid.extract_node(code))) is is_error

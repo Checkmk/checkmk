@@ -15,12 +15,15 @@ from pylint.checkers import BaseChecker
 from pylint.checkers.utils import only_required_for_messages
 from pylint.lint.pylinter import PyLinter
 
+from cmk.utils.escaping import ALLOWED_TAGS
+
 
 def register(linter: PyLinter) -> None:
     """Register checkers."""
     linter.register_checker(TranslationStringConstantsChecker(linter))
     linter.register_checker(EscapingProtectionChecker(linter))
     linter.register_checker(EscapingChecker(linter))
+    linter.register_checker(HTMLTagsChecker(linter))
 
 
 #
@@ -249,3 +252,38 @@ class EscapingChecker(TranslationBaseChecker):
                 message += "'''{}'''\n----> {}".format(first.value, ", ".join(tags))
                 return _Error(id=self.MESSAGE_ID, message=message, node=node)
         return None
+
+
+class HTMLTagsChecker(TranslationBaseChecker):
+    name = "html-tags-checker"
+    BASE_ID = 80
+    MESSAGE_ID = "forbidden-html-tags"
+    msgs = {
+        "E%d10"
+        % BASE_ID: (
+            "Argument of i18n function %s() contains forbidden HTML tags",
+            MESSAGE_ID,
+            "i18n functions can only be called with a subset of HTML tags",
+        ),
+    }
+
+    _TAG_PATTERN = re.compile("<.*?>")
+    _ALLOWED_TAGS = (
+        f"{ALLOWED_TAGS}|a|(a.*? href=.*?)"  # unfortunately, we have to allow links at the moment
+    )
+    _ALLOWED_TAGS_PATTERN = re.compile(f"</?({_ALLOWED_TAGS})>")
+
+    def check(self, node: nodes.Call) -> _Error | None:
+        if not is_constant_string(first_arg := node.args[0]):
+            return None
+        return (
+            None
+            if all(
+                re.match(self._ALLOWED_TAGS_PATTERN, tag)
+                for tag in re.findall(
+                    self._TAG_PATTERN,
+                    first_arg.value,
+                )
+            )
+            else _Error(id=self.MESSAGE_ID, message=node.func.name, node=node)
+        )

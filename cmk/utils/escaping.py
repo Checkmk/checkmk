@@ -8,9 +8,8 @@ from html import escape as html_escape
 
 from cmk.utils.urls import is_allowed_url
 
-_UNESCAPER_TEXT = re.compile(
-    r"&lt;(/?)(h1|h2|b|tt|i|u|hr|br(?: /)?|nobr(?: /)?|pre|sup|p|li|ul|ol)&gt;"
-)
+ALLOWED_TAGS = r"h1|h2|b|tt|i|u|hr|br(?: /)?|nobr(?: /)?|pre|sup|p|li|ul|ol"
+_UNESCAPER_TEXT = re.compile(rf"&lt;(/?)({ALLOWED_TAGS})&gt;")
 _CLOSING_A = re.compile(r"&lt;/a&gt;")
 _A_HREF = re.compile(
     r"&lt;a href=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;))(?: target=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)))?&gt;"

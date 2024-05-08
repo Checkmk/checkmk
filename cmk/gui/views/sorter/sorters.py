@@ -67,9 +67,7 @@ def register_sorters(registry: SorterRegistry) -> None:
         "service_display_name",
         cmp_simple_string,
     )
-    declare_simple_sorter(
-        "svcoutput", _("Service plugin output"), "service_plugin_output", cmp_simple_string
-    )
+    declare_simple_sorter("svcoutput", _("Summary"), "service_plugin_output", cmp_simple_string)
     declare_simple_sorter(
         "svc_long_plugin_output",
         _("Long output of check plugin"),

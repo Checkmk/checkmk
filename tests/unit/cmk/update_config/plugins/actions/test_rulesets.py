@@ -5,12 +5,11 @@
 
 # pylint: disable=protected-access
 
+import logging
 from collections.abc import Mapping
-from logging import getLogger
 from typing import Any
 
 import pytest
-from pytest_mock import MockerFixture
 
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
@@ -80,7 +79,7 @@ def _instantiate_ruleset(
 )
 @pytest.mark.usefixtures("request_context")
 def test_validate_rule_values(
-    mocker: MockerFixture,
+    caplog: pytest.LogCaptureFixture,
     rulesets: Mapping[RulesetName, RuleValue],
     n_expected_warnings: int,
 ) -> None:
@@ -93,10 +92,6 @@ def test_validate_rule_values(
             for ruleset_name, rule_value in rulesets.items()
         }
     )
-    logger = getLogger()
-    mock_warner = mocker.patch.object(
-        logger,
-        "warning",
-    )
-    rulesets_updater._validate_rule_values(logger, all_rulesets)
-    assert mock_warner.call_count == n_expected_warnings
+    caplog.set_level(logging.INFO)
+    rulesets_updater._validate_rule_values(logging.getLogger(), all_rulesets)
+    assert len(caplog.messages) == n_expected_warnings

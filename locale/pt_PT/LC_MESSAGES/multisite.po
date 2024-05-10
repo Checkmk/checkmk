@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-10-20 17:46+0000\n"
-"Last-Translator: Martin Hirschvogel <martin.hirschvogel@checkmk.com>\n"
+"PO-Revision-Date: 2024-05-10 13:57+0000\n"
+"Last-Translator: Daniel Nunes Ferreira <danielferreira10@hotmail.com>\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/software/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.17\n"
+"X-Generator: Weblate 5.0.2\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -70,11 +70,11 @@ msgstr " (embalado)"
 
 #, fuzzy
 msgid " (required)"
-msgstr "é necessário"
+msgstr " é necessário"
 
 #, fuzzy
 msgid " (upper levels)"
-msgstr "Níveis superiores"
+msgstr " Níveis superiores"
 
 #, python-format
 msgid " (worst state: %s)"
@@ -419,9 +419,9 @@ msgstr "%d notificações falhadas"
 msgid "%d hour"
 msgstr "Uma hora"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d hours"
-msgstr "horário"
+msgstr "%d horas"
 
 #, python-format
 msgid "%d icons and actions"
@@ -431,7 +431,7 @@ msgstr "%d icons e ações"
 msgid "%d icons customized"
 msgstr "%d icons customizados"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d ignored HW/SW inventory plug-ins found: %s"
 msgstr "%d plug-ins de inventário HW/SW ignorados encontrados: %s"
 
@@ -489,7 +489,7 @@ msgstr "%d sítios com erros: %s"
 msgid "%d specific settings"
 msgstr "%d configurações especificas"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d time ranges"
 msgstr "%d espaço temporal"
 
@@ -583,7 +583,7 @@ msgstr "%s para %d servidores iniciado (%s)..."
 msgid "%s for all hosts started..."
 msgstr "%s para todos os servidores iniciado..."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s has been deleted."
 msgstr "As %s foram eliminadas."
 
@@ -623,9 +623,9 @@ msgstr "%s latência %s"
 msgid "%s left in your Checkmk trial period"
 msgstr "%d dias restantes no período de teste do Checkmk"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s left in your free trial"
-msgstr " à esquerda no seu teste gratuito"
+msgstr "%s de sobra na sua versão de teste gratuito"
 
 #, python-format
 msgid "%s matching labels: %s"
@@ -651,9 +651,9 @@ msgstr "%s não listado na lista explicita de nomes de servidores."
 msgid "%s not monitored by one of the explicitly selected sites."
 msgstr "%s não monitorizado por um dos sites explicitamente selecionados."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s notification rules are matching"
-msgstr "regra de notificação"
+msgstr "%s regras de notificação são correspondentes"
 
 #, python-format
 msgid ""
@@ -731,7 +731,8 @@ msgid ""
 "%s. Checkmk will become unlicensed %s and you will no longer be able to "
 "'Activate changes'."
 msgstr ""
-"%s. Checkmk não está licenciado e já não é possível \"Ativar alterações\"."
+"%s. O Checkmk deixará de estar licenciado e não será possível \"Ativar "
+"alterações\"."
 
 #, python-format
 msgid "%s: %s"
@@ -797,14 +798,13 @@ msgstr "© <a target=\"_blank\" href=\"https://checkmk.com\">Checkmk GmbH</a>"
 msgid "&lt;None&gt;"
 msgstr "&lt;Nenhum&gt;"
 
-#, fuzzy
 msgid ""
 "'Activate changes' is blocked. Distributed monitoring is not available after "
 "trial expiration, including hosts added via CMCDump"
 msgstr ""
 "A opção \"Ativar alterações\" está bloqueada. A monitorização distribuída "
 "não está disponível após a expiração do período experimental, incluindo os "
-"anfitriões adicionados através do CMCDump"
+"hosts adicionados através do CMCDump"
 
 msgid "'Cleared' state"
 msgstr "Estado 'limpo'"
@@ -834,22 +834,20 @@ msgstr "Estado 'Menor'"
 msgid "'Warning' state"
 msgstr "Estado de \"Advertência"
 
-#, fuzzy
 msgid ""
 "'git' command was not found on this system, but it is required for "
 "versioning the configuration.Please either install 'git' or disable git "
 "configuration tracking in setup."
 msgstr ""
 "O comando 'git' não foi encontrado neste sistema, mas é necessário para "
-"versionar a configuração. Por favor, instale o 'git' ou desactive o rastreio "
-"de configuração do git no WATO."
+"versionar a configuração. Por favor, instale o 'git' ou desactive o git no "
+"WATO."
 
 msgid "(0 is current period)"
 msgstr "(0 é o período atual)"
 
-#, fuzzy
 msgid "(Edit presets)"
-msgstr "Editar Relatórios"
+msgstr "Editar Presets"
 
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(Max sugestões alcançadas, seja mais específico)"
@@ -929,9 +927,8 @@ msgstr "(não suportado)"
 msgid "(nothing selected)"
 msgstr "(nada seleccionado)"
 
-#, fuzzy
 msgid "(only works with the Micro Core)"
-msgstr "(só funciona com o microcore)"
+msgstr "(só funciona com o Micro Core)"
 
 msgid "(overrides <b>username</b>)"
 msgstr "(substitui <b>nome de utilizador</b>)"
@@ -1065,13 +1062,11 @@ msgstr "100,0 - 200,0 ms"
 msgid "10x14"
 msgstr "10x14"
 
-#, fuzzy
 msgid "12 Volt output lower levels"
 msgstr "12 Volts de saída Níveis inferiores"
 
-#, fuzzy
 msgid "12 Volt output upper levels"
-msgstr "Níveis superiores de saída de 12 Volts"
+msgstr "12 Volts de saída Níveis superiores"
 
 msgid "15 minutes"
 msgstr "15 minutos"
@@ -1094,13 +1089,11 @@ msgstr "200,0 - 500,0 ms"
 msgid "3 months"
 msgstr "3 meses"
 
-#, fuzzy
 msgid "3.3 Volt output lower levels"
-msgstr "3.3 Saída Volt Níveis inferiores"
+msgstr "3.3 Volts de saída Níveis inferiores"
 
-#, fuzzy
 msgid "3.3 Volt output upper levels"
-msgstr "3.3 Níveis Superiores de Saída em Volts"
+msgstr "3.3 Volts de saída Níveis superiores"
 
 #, fuzzy
 msgid "30 minutes"
@@ -1125,24 +1118,20 @@ msgstr "3PAR Cópia Remota"
 msgid "3PAR capacity (used space and growth)"
 msgstr "3PAR Capacidade (espaço usado e crescimento)"
 
-#, fuzzy
 msgid "3PAR configuration"
 msgstr "Configuração 3PAR"
 
-#, fuzzy
 msgid "3PAR ports"
 msgstr "Portos 3PAR"
 
 msgid "4xx error rate"
 msgstr "Taxa de erro 4xx"
 
-#, fuzzy
 msgid "5 Volt output lower levels"
 msgstr "5 Volts de saída Níveis inferiores"
 
-#, fuzzy
 msgid "5 Volt output upper levels"
-msgstr "5 Volts Níveis Superiores de Saída"
+msgstr "12 Volts de saída Níveis superiores"
 
 msgid "5 minutes"
 msgstr "5 minutos"
@@ -1191,7 +1180,7 @@ msgid "8 days back"
 msgstr "8 dias atrás"
 
 msgid "802.3ad"
-msgstr ""
+msgstr "802.3ad"
 
 #, no-python-format
 msgid "86% - 1.5 standard deviations"
@@ -1304,13 +1293,11 @@ msgstr ""
 "b><br>Utilize esta opção para especificar nomes explícitos. As etiquetas "
 "gerais serão ignoradas para estes serviços."
 
-#, fuzzy
 msgid "<b>Keyword</b> pattern"
-msgstr "Monitorização da rede"
+msgstr "<b>Palavra-chave</b> padrão"
 
-#, fuzzy
 msgid "<b>Keyword</b> runtime"
-msgstr "Monitorização da rede"
+msgstr "<b>Keyword</b> runtime"
 
 msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
 msgstr ""
@@ -1343,7 +1330,6 @@ msgstr ""
 "<b>Nota</b>: Se migrar para o conector <i>htpasswd</i>, os utilizadores "
 "terão de alterar a sua palavra-passe no início de sessão seguinte."
 
-#, fuzzy
 msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
 "Python 3.4 installation (or newer) with installed python packages \"pyOpenSSL"
@@ -1351,7 +1337,7 @@ msgid ""
 msgstr ""
 "<b>Nota<sup>3</sup>:</b> Para implementar este plugin no Solaris, uma "
 "instalação Python 3.4 (ou mais recente) com os pacotes python instalados "
-"\"pyOpenSSL\", \"requests\" e \"PySocks\" é necessária nos hosts alvo."
+"\"pyOpenSSL\", \"requests\" e \"PySocks\" é necessária nos hosts em questão."
 
 #, python-format
 msgid ""
@@ -49640,10 +49626,6 @@ msgstr "Período de serviço para os anfitriões"
 msgid "Service period for services"
 msgstr "Período de serviço para serviços"
 
-#, fuzzy
-msgid "Service plug-in output"
-msgstr "Saída do plugin de serviço"
-
 msgid "Service problem acknowledged"
 msgstr "Problema de serviço reconhecido"
 
@@ -78541,6 +78523,11 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid "Service plugin output"
+#~ msgid "Service plug-in output"
+#~ msgstr "Saída do plugin de serviço"
 
 #~ msgid "Admin States"
 #~ msgstr "Estados de administração"

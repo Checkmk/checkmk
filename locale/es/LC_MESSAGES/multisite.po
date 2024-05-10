@@ -50138,10 +50138,6 @@ msgstr "Período de servicio para los hosts"
 msgid "Service period for services"
 msgstr "Período de servicio para los servicios"
 
-#, fuzzy
-msgid "Service plug-in output"
-msgstr "Salida del plugin de servicio"
-
 msgid "Service problem acknowledged"
 msgstr "Problema de servicio reconocido"
 
@@ -79372,6 +79368,11 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~| msgid "Service plugin output"
+#~ msgid "Service plug-in output"
+#~ msgstr "Salida del plugin de servicio"
 
 #~ msgid "Admin States"
 #~ msgstr "Admin Estados"

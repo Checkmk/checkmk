@@ -49692,10 +49692,6 @@ msgstr "Perioada de service pentru gazde"
 msgid "Service period for services"
 msgstr "Perioada de serviciu pentru servicii"
 
-#, fuzzy
-msgid "Service plug-in output"
-msgstr "Ieșirea plugin-ului de servicii"
-
 msgid "Service problem acknowledged"
 msgstr "Problemă de serviciu recunoscută"
 
@@ -78755,6 +78751,11 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, fuzzy
+#~| msgid "Service plugin output"
+#~ msgid "Service plug-in output"
+#~ msgstr "Ieșirea plugin-ului de servicii"
 
 #~ msgid "Admin States"
 #~ msgstr "Statele administrației"

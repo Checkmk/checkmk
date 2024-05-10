@@ -48649,10 +48649,6 @@ msgstr "ホストのサービス期間"
 msgid "Service period for services"
 msgstr "サービスのサービス期間"
 
-#, fuzzy
-msgid "Service plug-in output"
-msgstr "サービスプラグインの出力"
-
 msgid "Service problem acknowledged"
 msgstr "サービスの問題が確認されました"
 
@@ -76670,6 +76666,11 @@ msgstr ""
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Service plugin output"
+#~ msgid "Service plug-in output"
+#~ msgstr "サービスプラグインの出力"
 
 #~ msgid "Admin States"
 #~ msgstr "管理状態"

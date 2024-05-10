@@ -5,7 +5,7 @@
 
 # pylint: disable=protected-access
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from logging import getLogger
 from typing import Any
 
@@ -25,11 +25,6 @@ from cmk.gui.watolib.rulespecs import Rulespec
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
 
 RuleValue = Any
-
-
-@pytest.fixture(name="ui_context", autouse=True)
-def fixture_ui_context(ui_context: None) -> Iterator[None]:
-    yield
 
 
 @pytest.fixture(name="rulespec_with_migration")

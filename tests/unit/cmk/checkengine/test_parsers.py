@@ -323,44 +323,53 @@ class TestAgentParser:
         }
         assert not store.load()
 
-    def test_invalid_piggyback_hostnames_are_skipped(
-        self,
-        parser: AgentParser,
-        store: SectionStore[Sequence[AgentRawDataSectionElem]],
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
-        monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
-
+    def test_unrecoverably_invalid_hosts_are_ignored(self, parser: AgentParser) -> None:
+        # a too long name can't be a valid hostname -- not even after character replacements
+        too_long = b"piggybackedhost" * 100
         raw_data = AgentRawData(
             b"\n".join(
                 (
-                    b"<<<<.>>>>",  # <- invalid hostname "."
-                    b"<<<ignored_section>>>",
+                    b"<<<section1>>>",
+                    b"one line",
+                    b"<<<<%s>>>>" % too_long,  # <- invalid host name
+                    b"<<<this_goes_nowhere>>>",
+                    b"dead line",
+                    b"<<<<>>>>",
+                    b"<<<section2>>>",
                     b"a first line",
                     b"a second line",
-                    b"<<<ignored_section_2>>>",
-                    b"a third line",
-                    b"a forth line",
-                    b"<<<<>>>>",
-                    b"<<<<piggyback>>>>",
-                    b"<<<keep>>>",
-                    b"first line kept",
-                    b"second line kept",
                 )
             )
         )
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
-        assert ahs.sections == {}
-        assert ahs.cache_info == {}
+        assert set(ahs.sections) == {SectionName("section1"), SectionName("section2")}
+        assert ahs.piggybacked_raw_data == {}
+
+    def test_invalid_hosts_are_projected(
+        self, parser: AgentParser, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
+        monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<section1>>>",
+                    b"one line",
+                    b"<<<<Foo Bar>>>>",  # <- invalid host name
+                    b"<<<this_is_found>>>",
+                    b"some line",
+                    b"<<<<>>>>",
+                    b"<<<section2>>>",
+                    b"a first line",
+                    b"a second line",
+                )
+            )
+        )
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert set(ahs.sections) == {SectionName("section1"), SectionName("section2")}
         assert ahs.piggybacked_raw_data == {
-            "piggyback": [
-                b"<<<keep:cached(1000,900)>>>",
-                b"first line kept",
-                b"second line kept",
-            ]
+            "Foo_Bar": [b"<<<this_is_found:cached(1000,900)>>>", b"some line"]
         }
-        assert not store.load()
 
     def test_closing_piggyback_out_of_piggyback_section_closes_section(
         self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
@@ -444,6 +453,10 @@ class TestAgentParser:
                 b"<<<other_other_section:cached(1000,900)>>>",
                 b"third line",
                 b"forth line",
+            ],
+            "_b_l-u_": [
+                b"<<<section:cached(1000,900)>>>",
+                b"first line",
             ],
         }
         assert not store.load()

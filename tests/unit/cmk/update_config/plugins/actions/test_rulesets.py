@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import logging
 from collections.abc import Mapping
 from typing import Any
@@ -93,5 +91,5 @@ def test_validate_rule_values(
         }
     )
     caplog.set_level(logging.INFO)
-    rulesets_updater._validate_rule_values(logging.getLogger(), all_rulesets)
+    rulesets_updater.validate_rule_values(logging.getLogger(), all_rulesets)
     assert len(caplog.messages) == n_expected_warnings

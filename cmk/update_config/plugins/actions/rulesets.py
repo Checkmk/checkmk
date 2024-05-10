@@ -18,11 +18,11 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         all_rulesets = load_and_transform(logger)
-        _validate_rule_values(logger, all_rulesets)
+        validate_rule_values(logger, all_rulesets)
         all_rulesets.save()
 
 
-def _validate_rule_values(
+def validate_rule_values(
     logger: Logger,
     all_rulesets: RulesetCollection,
 ) -> None:

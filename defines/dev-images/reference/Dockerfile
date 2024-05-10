@@ -10,16 +10,17 @@ ENV \
 # needed because of later installs and apt-cache get's purged
 RUN apt-get update
 
-# golang-go: needed for install-buildifier.sh
-# msitools:  needed for `msiinfo` in test source package
-# libenchant1c2a:  needed for building the software architecture as we're using sphinxcontrib.spelling
 # default-jdk: needed for validating the compiled werks (see compile-all-werks.groovy)
+# golang-go: needed for install-buildifier.sh
+# libenchant1c2a:  needed for building the software architecture as we're using sphinxcontrib.spelling
 # lsb-release: needed for install_docker
+# msitools:  needed for `msiinfo` in test source package
 
 # Those are still unclear:
 #   php7.4-common
 #   upx-ucl
 #   dpatch
+#   wget
 
 RUN apt-get install -y \
     default-jdk-headless \

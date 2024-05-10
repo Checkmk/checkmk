@@ -110,7 +110,7 @@ def test_extract_connection_args(
     expected_result: Mapping[str, object],
 ) -> None:
     mocker.patch(
-        "cmk.utils.password_store.load",
+        "cmk.utils.password_store._pwstore.load",
         return_value={
             "prometheus": "very_secret",
             "something_else": "123",

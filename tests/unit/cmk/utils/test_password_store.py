@@ -57,7 +57,7 @@ def test_extract(
     password_id: PasswordId,
     password_actual: str,
 ) -> None:
-    monkeypatch.setattr(password_store, "load", load_patch)
+    monkeypatch.setattr(password_store._pwstore, "load", load_patch)
     assert password_store.extract(password_id) == password_actual
 
 

@@ -99,7 +99,7 @@ class TestAggregationRawdataGenerator:
         expected_site_url: str,
     ) -> None:
         mocker.patch(
-            "cmk.utils.password_store.load",
+            "cmk.utils.password_store._pwstore.load",
             return_value={
                 "the_dude_secret": "white_russian",
             },

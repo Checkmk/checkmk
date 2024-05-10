@@ -33,7 +33,7 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
                 explicit_vertical_range=self.explicit_vertical_range,
                 omit_zero_metrics=self.omit_zero_metrics,
                 horizontal_rules=self.horizontal_rules,
-                metrics=self.metrics,
+                metrics=list(self.metrics),  # TODO: pydantic-9319
                 specification=self,
                 mark_requested_end_time=self.mark_requested_end_time,
             )

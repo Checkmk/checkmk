@@ -6,9 +6,7 @@
 
 import pytest
 
-from tests.testlib import CMKEventConsole
-
-from tests.unit.cmk.ec.helpers import FakeStatusSocket
+from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
 
 from cmk.utils.hostaddress import HostName
 
@@ -35,7 +33,7 @@ def test_change_event_state(event_status: EventStatus, status_server: StatusServ
         "text": "not important",
         "core_host": HostName("ABC"),
     }
-    event_status.new_event(CMKEventConsole.new_event(event))
+    event_status.new_event(new_event(event))
     assert len(event_status.events()) == 1
 
     s = FakeStatusSocket(b"COMMAND CHANGESTATE;1;testuser;2")
@@ -61,7 +59,7 @@ def test_changetestate_of_multiple_events(
         },
     ]
     for event in events:
-        event_status.new_event(CMKEventConsole.new_event(event))
+        event_status.new_event(new_event(event))
 
     assert len(event_status.events()) == 2
 
@@ -89,7 +87,7 @@ def test_changestate_of_partially_existing_multiple_events(
         },
     ]
     for event in events:
-        event_status.new_event(CMKEventConsole.new_event(event))
+        event_status.new_event(new_event(event))
 
     assert len(event_status.events()) == 2
 

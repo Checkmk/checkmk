@@ -7,9 +7,7 @@ import time
 
 import pytest
 
-from tests.testlib import CMKEventConsole
-
-from tests.unit.cmk.ec.helpers import FakeStatusSocket
+from tests.unit.cmk.ec.helpers import FakeStatusSocket, new_event
 
 from cmk.utils.hostaddress import HostName
 
@@ -32,7 +30,7 @@ def test_mkevent_check_query_perf(
 ) -> None:
     for num in range(10000):
         event_status.new_event(
-            CMKEventConsole.new_event(
+            new_event(
                 {
                     "host": HostName(f"heute-{num}"),
                     "text": f"{time.time()} {num} BLA BLUB DINGELING ABASD AD R#@A AR@AR A@ RA@R A@RARAR ARKNLA@RKA@LRKNA@KRLNA@RLKNA@äRLKA@RNKAL@R"
@@ -127,7 +125,7 @@ def test_mkevent_query_filters(
     status_socket: FakeStatusSocket,
     is_match: bool,
 ) -> None:
-    event_status.new_event(CMKEventConsole.new_event(event))
+    event_status.new_event(new_event(event))
     status_server.handle_client(status_socket, True, "127.0.0.1")
     response = status_socket.get_response()
     assert (len(response) == 2) is is_match

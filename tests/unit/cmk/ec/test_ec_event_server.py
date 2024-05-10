@@ -5,7 +5,7 @@
 
 import logging
 
-from tests.testlib import CMKEventConsole
+from tests.unit.cmk.ec.helpers import new_event
 
 from cmk.utils.hostaddress import HostName
 
@@ -48,7 +48,7 @@ def test_event_rewrite(
         StatusTableHistory.columns,
     )
     event_server.reload_configuration(config_rule_packs, history=history)
-    event = CMKEventConsole.new_event(
+    event = new_event(
         ec.Event(
             host=HostName("heute"),
             text="SUPERWARN",

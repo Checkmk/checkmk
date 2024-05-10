@@ -17,6 +17,7 @@ from contextlib import suppress
 from itertools import chain, starmap
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
+from urllib.parse import unquote
 
 from pydantic import BaseModel
 
@@ -924,6 +925,7 @@ def page_list(  # pylint: disable=too-many-branches
                     edit_vars: HTTPVariables = [
                         ("mode", "edit"),
                         ("load_name", visual_name),
+                        ("back", backurl),
                     ]
                     if owner != user.id:
                         edit_vars.append(("owner", owner))
@@ -1548,7 +1550,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
             return _get_visual("", "builtins")
         raise MKUserError(mode, _("The %s does not exist.") % visual_type.title)
 
-    back_url = request.get_url_input("back", "edit_%s.py" % what)
+    back_url = unquote(request.get_url_input("back", "edit_%s.py" % what))
 
     if visualname:
         owner_id = request.get_validated_type_input_mandatory(UserId, "owner", user.id)

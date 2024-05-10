@@ -22,7 +22,6 @@ import pytest
 import urllib3
 from psutil import Process
 
-from tests.testlib.compare_html import compare_html
 from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
@@ -438,7 +437,6 @@ __all__ = [
     "import_module_hack",
     "APIError",
     "CMKWebSession",
-    "compare_html",
     "current_branch_name",
     "get_cmk_download_credentials",
     "site_id",

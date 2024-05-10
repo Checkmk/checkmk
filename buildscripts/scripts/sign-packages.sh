@@ -34,7 +34,7 @@ export GNUPGHOME=$HOME/.gnupg
 
 is_signed() {
     if [[ "$FILE_PATH" == *rpm ]]; then
-        if rpm -qp "$FILE_PATH" --qf='%-{NAME} %{SIGPGP:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
+        if rpm -qp "$FILE_PATH" --qf='%-{NAME} %{RSAHEADER:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
             return 0
         fi
         return 1
@@ -51,14 +51,13 @@ is_signed() {
 
 sign_package() {
     if [[ "$FILE_PATH" == *rpm ]]; then
-        echo "$GPG_PASSPHRASE" |
-            rpm \
-                -D "%_signature gpg" \
-                -D "%_gpg_path $GNUPGHOME" \
-                -D "%_gpg_name $KEY_DESC" \
-                -D "%__gpg /usr/bin/gpg " -D "%_gpg_sign_cmd_extra_args --batch --passphrase-fd=0 --passphrase-repeat=0 --pinentry-mode loopback" \
-                --resign \
-                "$FILE_PATH"
+        rpm \
+            -D "%_signature gpg" \
+            -D "%_gpg_path $GNUPGHOME" \
+            -D "%_gpg_name $KEY_DESC" \
+            -D "%__gpg /usr/bin/gpg " -D "%_gpg_sign_cmd_extra_args --passphrase=\"${GPG_PASSPHRASE}\" --passphrase-repeat=0 --pinentry-mode loopback" \
+            --resign \
+            "$FILE_PATH"
         return 0
     elif [[ "$FILE_PATH" == *deb ]]; then
         if ! echo "$GPG_PASSPHRASE" |

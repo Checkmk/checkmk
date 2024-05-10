@@ -11,7 +11,7 @@
 
 set -e
 
-: "${REFERENCE_IMAGE_DISTRO:="ubuntu-20.04"}"
+: "${REFERENCE_IMAGE_DISTRO:="ubuntu-22.04"}"
 : "${BUILD_IMAGE_TAG:="master-latest"}"
 : "${DOCKER_REGISTRY:="artifacts.lan.tribe29.com:4000"}"
 : "${DOCKER_REGISTRY_NO_HTTP:="$(echo ${DOCKER_REGISTRY} | sed -e "s/^https*:\/\///")"}"

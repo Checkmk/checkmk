@@ -10,7 +10,7 @@ from typing import NamedTuple
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
-from cmk.utils.translations import translate_hostname, TranslationOptions
+from cmk.utils.translations import translate_raw_host_name, TranslationOptions
 
 __all__ = ["PiggybackMarker", "SectionMarker"]
 
@@ -27,17 +27,23 @@ class PiggybackMarker(NamedTuple):
         encoding_fallback: str,
     ) -> "PiggybackMarker":
         # ? ensure_str called on a bytes object with different possible encodings
-        raw_host_name = ensure_str_with_fallback(
-            header,
-            encoding="utf-8",
-            fallback=encoding_fallback,
+        raw_host_name = translate_raw_host_name(
+            translation,
+            ensure_str_with_fallback(
+                header,
+                encoding="utf-8",
+                fallback=encoding_fallback,
+            ),
         )
-        try:
-            hostname = translate_hostname(translation, raw_host_name)
+
+        if not raw_host_name:
             # NOTE: We are never called with an empty header (otherwise we would be a footer), and
             # decoding won't make a non-empty header empty, so raw_host_name is never empty, either.
             # Nevertheless, host name translation *can* result in an empty name.
-            return cls(hostname or None)
+            return cls(None)
+
+        try:
+            return cls(HostAddress.project_valid(raw_host_name))
         except ValueError:
             return cls(None)
 

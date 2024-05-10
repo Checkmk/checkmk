@@ -34,6 +34,10 @@ def translate_hostname(translation: TranslationOptions, hostname: str) -> HostNa
     return HostName(_translate(translation, hostname))
 
 
+def translate_raw_host_name(translation: TranslationOptions, host_name: str) -> str:
+    return _translate(translation, host_name)
+
+
 def translate_service_description(
     translation: TranslationOptions, service_description: str
 ) -> ServiceName:

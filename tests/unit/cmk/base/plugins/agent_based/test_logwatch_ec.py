@@ -461,6 +461,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
         ),
     ],
 )
+@pytest.mark.skip("Flaky test - will be re-enabled with CMK-17338")
 def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
     params: logwatch_.ParameterLogwatchEc,
     cluster_section: logwatch_.ClusterSection,

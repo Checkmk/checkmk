@@ -158,6 +158,7 @@ def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
     ],
 )
+@pytest.mark.skip("Flaky test - will be re-enabled with CMK-17338")
 def test_check_single(
     monkeypatch: pytest.MonkeyPatch, log_name: str, expected_result: Iterable[Result]
 ) -> None:

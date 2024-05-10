@@ -262,7 +262,7 @@ def diskstat_extract_name_info(
                 name = f"VxVM {group}-{disk}"
                 name_info[major, minor] = name
             elif phase == "disk_id":
-                name = '/'.join(line[0].split('/')[4:])
+                name = "/".join(line[0].split("/")[4:])
                 if (
                     name.startswith("ata-")
                     or name.startswith("scsi-")

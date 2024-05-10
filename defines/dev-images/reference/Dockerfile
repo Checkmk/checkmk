@@ -15,6 +15,7 @@ RUN apt-get update
 # libenchant1c2a:  needed for building the software architecture as we're using sphinxcontrib.spelling
 # lsb-release: needed for install_docker
 # msitools:  needed for `msiinfo` in test source package
+# jq: for parsing json in shell unit tests
 
 # Those are still unclear:
 #   php7.4-common
@@ -25,6 +26,7 @@ RUN apt-get update
 RUN apt-get install -y \
     default-jdk-headless \
     golang-go \
+    jq \
     libenchant1c2a \
     lsb-release \
     msitools \

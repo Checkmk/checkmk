@@ -51,5 +51,5 @@ from ._pwstore import password_store_path as password_store_path
 from ._pwstore import PasswordId as PasswordId
 from ._pwstore import PasswordStore as PasswordStore
 from ._pwstore import pending_password_store_path as pending_password_store_path
-from ._pwstore import replace_passwords as replace_passwords
 from ._pwstore import save as save
+from .hack import replace_passwords as replace_passwords

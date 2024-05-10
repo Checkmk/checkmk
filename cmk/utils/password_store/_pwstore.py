@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
-import sys
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
@@ -16,8 +15,6 @@ from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
 from cmk.utils.crypto.secrets import PasswordStoreSecret
 from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
-
-from . import hack
 
 PasswordLookupType = Literal["password", "store"]
 PasswordId = str | tuple[PasswordLookupType, str]
@@ -55,13 +52,6 @@ def core_password_store_path(config_path: ConfigPath) -> Path:
 def pending_password_store_path() -> Path:
     """file where user-managed passwords and the ones extracted from the configuration are merged."""
     return Path(cmk.utils.paths.var_dir, "passwords_merged")
-
-
-# This function and its questionable bahavior of operating in-place on sys.argv is quasi-public.
-# Many third party plugins rely on it, so we must not change it.
-# One day, when we have a more official versioned API we can hopefully remove it.
-def replace_passwords() -> None:
-    sys.argv[:] = hack.resolve_password_hack(sys.argv, lookup)
 
 
 def save(passwords: Mapping[str, str], store_path: Path) -> None:

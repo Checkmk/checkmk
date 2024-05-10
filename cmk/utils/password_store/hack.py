@@ -13,6 +13,8 @@ from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import NoReturn
 
+from ._pwstore import lookup
+
 HACK_AGENTS = {
     # For the plugins developed against the cmk.server_side_calls.v1 we
     # need to know whether they support the password store natively, or
@@ -164,3 +166,10 @@ def apply_password_hack(
         formatted = [shlex.quote(pw_store_arg)] + formatted
 
     return formatted
+
+
+# This function and its questionable bahavior of operating in-place on sys.argv is quasi-public.
+# Many third party plugins rely on it, so we must not change it.
+# One day, when we have a more official versioned API we can hopefully remove it.
+def replace_passwords() -> None:
+    sys.argv[:] = resolve_password_hack(sys.argv, lookup)

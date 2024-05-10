@@ -259,7 +259,6 @@ def discover_aws_generic_single(
     """
     if requirement(required_metric in section for required_metric in required_metrics):
         yield Service()
-    return []
 
 
 def get_number_with_precision(

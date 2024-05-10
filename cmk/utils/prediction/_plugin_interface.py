@@ -117,7 +117,9 @@ def _compute_levels_from_params(
             reference_deviation = reference / 100.0
         case "stdev":
             match stdev:
-                case 0 | None:
+                case 0:
+                    return None
+                case None:
                     return None
                 case _:
                     reference_deviation = stdev

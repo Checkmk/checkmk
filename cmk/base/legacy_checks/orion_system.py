@@ -41,7 +41,7 @@ def parse_orion_system(string_table):
         system_power,
     ) = string_table[0]
 
-    parsed = {
+    parsed: dict[str, object] = {
         "charging": {
             "Battery": map_charge_states.get(charge_state, (3, "unknown[%s]" % charge_state))
         },

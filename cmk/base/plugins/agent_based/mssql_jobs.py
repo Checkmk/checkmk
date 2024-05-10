@@ -178,7 +178,8 @@ def check_mssql_jobs(
     item: str, params: Mapping[str, Any], section: Mapping[str, JobSpec]
 ) -> CheckResult:
     if (job_specs := section.get(item)) is None:
-        return State(params["status_missing_jobs"]), "Job not found"
+        yield Result(state=State(params["status_missing_jobs"]), summary="Job not found")
+        return
 
     if job_specs.last_run_duration is not None:
         yield from check_levels(
@@ -208,7 +209,6 @@ def check_mssql_jobs(
         yield Result(state=State.OK, summary=f"Next run: {job_specs.next_run_datetime}")
 
     yield Result(state=State.OK, notice=f"Outcome message: {job_specs.last_outcome_message}")
-    return None
 
 
 register.agent_section(

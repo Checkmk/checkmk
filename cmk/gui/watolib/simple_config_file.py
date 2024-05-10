@@ -41,12 +41,10 @@ class WatoConfigFile(ABC, Generic[_G]):
         return self._load_file(lock=True)
 
     @abstractmethod
-    def _load_file(self, lock: bool) -> _G:
-        pass
+    def _load_file(self, lock: bool) -> _G: ...
 
     @abstractmethod
-    def save(self, cfg: _G) -> None:
-        pass
+    def save(self, cfg: _G) -> None: ...
 
     @property
     def name(self) -> str:
@@ -60,14 +58,14 @@ class WatoListConfigFile(WatoConfigFile, Generic[_G]):
         super().__init__(config_file_path)
         self._config_variable = config_variable
 
-    def load_for_reading(self) -> Sequence[_G]:
-        return super().load_for_reading()
+    @abstractmethod
+    def load_for_reading(self) -> Sequence[_G]: ...
 
-    def load_for_modification(self) -> list[_G]:
-        return super().load_for_modification()
+    @abstractmethod
+    def load_for_modification(self) -> list[_G]: ...
 
-    def save(self, cfg: Sequence[_G]) -> None:
-        super().save(cfg)
+    @abstractmethod
+    def save(self, cfg: Sequence[_G]) -> None: ...
 
 
 class WatoSingleConfigFile(WatoConfigFile[_T], Generic[_T]):

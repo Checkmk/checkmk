@@ -65,7 +65,7 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
     base_version = CMKVersion(
-        "2.2.0p8", Edition.CCE, current_base_branch_name(), current_branch_version()
+        "2.3.0", Edition.CCE, current_base_branch_name(), current_branch_version()
     )
     return SiteFactory(version=base_version, prefix="")
 
@@ -152,7 +152,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
 
 @pytest.mark.cce
 @skip_if_not_cloud_edition
-@pytest.mark.skip("Re-generate backup using a 2.3.0 release.")
+@pytest.mark.skip("Update process currently broken. See CMK-17449.")
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:
@@ -160,7 +160,7 @@ def test_update_from_backup_demo(
     lost_services_path = Path(__file__).parent.resolve() / Path("lost_services_demo.json")
 
     # MKPs broken: disabled in the demo site via: 'mkp disable play_checkmk 0.0.1' TODO: investigate
-    backup_path = qa_test_data_path() / Path("update/backups/play.checkmk.com.tar.gz")
+    backup_path = qa_test_data_path() / Path("update/backups/play_2.3.0_backup.tar.gz")
     assert backup_path.exists()
 
     base_site = site_factory_demo.restore_site_from_backup(

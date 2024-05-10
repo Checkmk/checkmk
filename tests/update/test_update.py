@@ -85,9 +85,6 @@ def test_update(  # pylint: disable=too-many-branches
             # Check_MK service turning into CRIT after the update.
             # See CMK-17002. TODO: restore service after ticket is done.
             "Check_MK",
-            # OMD status performance turning into CRIT after the update
-            # See CMK-17016. TODO: restore service after ticket is done.
-            f"OMD {test_site.id} performance",
         ]
 
         for data in ignore_data:
